@@ -27,7 +27,7 @@ interface Blueprint {
 export default function FutureBoxHome() {
   const [activeTab, setActiveTab] = useState<'all' | 'futurebox' | 'masterclasses' | 'creations' | 'radar'>('all');
   
-  // User Plan State (Simuleer Gratis vs PRO)
+  // User Plan State (Free vs PRO)
   const [userPlan, setUserPlan] = useState<'free' | 'pro'>('free');
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
 
@@ -46,11 +46,11 @@ export default function FutureBoxHome() {
 
   // AI Scanner State
   const [isScanning, setIsScanning] = useState(false);
-  const [scanMessage, setScanMessage] = useState('🟢 KI Skandeerder Aktief: Laaste tendense gesinchroniseer 2 minute gelede');
+  const [scanMessage, setScanMessage] = useState('🟢 Autonomous AI Trend Radar: Real-Time Sync Active (Updated 2m ago)');
 
   // Creator Studio Form State
   const [mediumType, setMediumType] = useState<'music_video' | 'podcast' | 'ai_track'>('music_video');
-  const [category, setCategory] = useState('Creative AI & Kuns');
+  const [category, setCategory] = useState('Creative AI & Art');
   const [creatorDomain, setCreatorDomain] = useState('');
   const [title, setTitle] = useState('');
   const [lyricsOrPrompt, setLyricsOrPrompt] = useState('');
@@ -62,25 +62,25 @@ export default function FutureBoxHome() {
   // Marketing Contact Form State
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
-  const [contactBudget, setContactBudget] = useState('R5,000 - R20,000 / maand');
+  const [contactBudget, setContactBudget] = useState('$1,000 - $5,000 / month');
   const [contactMessage, setContactMessage] = useState('');
   const [contactSent, setContactSent] = useState(false);
 
   const availableTools = ['Suno v3.5', 'Udio AI', 'Runway Gen-3', 'Midjourney v6', 'Kling AI', 'Sora', 'ElevenLabs Voice', 'Luma Dream Machine'];
-  const categoriesList = ['Creative AI & Musiekvideos', 'AI Toekoms & AGI', 'Besigheid & Rykdom', 'Sielkunde & Motivering', 'Vibe Apps & Kode'];
+  const categoriesList = ['Creative AI & Music Videos', 'AI Future & AGI', 'Business & Wealth', 'Psychology & Performance', 'Vibe Apps & Code'];
 
   const handleAiScanRefresh = () => {
     setIsScanning(true);
-    setScanMessage('⚡ KI skandeer tans YouTube, X/Twitter, Substack en Navorsingswolk...');
+    setScanMessage('⚡ AI Engine currently scanning YouTube, X/Twitter, arXiv, and Substack...');
     setTimeout(() => {
       setIsScanning(false);
-      setScanMessage('✓ KI Skandering Voltooi: 4 nuwe virale tendense en podcasts bygevoeg!');
+      setScanMessage('✓ AI Sync Complete: 4 new viral breakthroughs & podcasts indexed!');
     }, 2500);
   };
 
   const handleMarketingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const mailtoUrl = `mailto:admin@futurebox.app?subject=Bemarkingsversoek vanaf ${encodeURIComponent(contactName)} (${encodeURIComponent(contactBudget)})&body=${encodeURIComponent(`Naam: ${contactName}\nE-pos: ${contactEmail}\nBegroting: ${contactBudget}\nBoodskap:\n${contactMessage}`)}`;
+    const mailtoUrl = `mailto:admin@futurebox.app?subject=Sponsorship & Marketing Inquiry from ${encodeURIComponent(contactName)} (${encodeURIComponent(contactBudget)})&body=${encodeURIComponent(`Name: ${contactName}\nEmail: ${contactEmail}\nBudget: ${contactBudget}\nMessage:\n${contactMessage}`)}`;
     window.location.href = mailtoUrl;
     setContactSent(true);
     setTimeout(() => setContactSent(false), 5000);
@@ -97,7 +97,7 @@ export default function FutureBoxHome() {
   const handlePublish = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Gaan na as Gratis gebruiker probeer Podcast oplaai sonder PRO
+    // Check if free user attempts to upload a podcast without PRO
     if (mediumType === 'podcast' && userPlan !== 'pro') {
       setPricingModalOpen(true);
       return;
@@ -127,7 +127,7 @@ export default function FutureBoxHome() {
   return (
     <div className="min-h-screen bg-[#07080c] text-zinc-100 selection:bg-emerald-500 selection:text-black flex flex-col justify-between">
       
-      {/* 1. Glowing Futuristic Header */}
+      {/* 1. Futuristic Header */}
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#07080c]/90 border-b border-zinc-800/80 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
@@ -139,7 +139,7 @@ export default function FutureBoxHome() {
               {userPlan === 'pro' && (
                 <span className="text-[10px] bg-gradient-to-r from-amber-400 to-amber-600 text-black font-extrabold px-2 py-0.5 rounded-full flex items-center space-x-1 shadow-[0_0_10px_rgba(245,158,11,0.4)]">
                   <Crown className="w-3 h-3" />
-                  <span>PRO LID</span>
+                  <span>PRO MEMBER</span>
                 </span>
               )}
             </h1>
@@ -153,7 +153,7 @@ export default function FutureBoxHome() {
             { id: 'all', label: 'Spotlight', icon: Compass },
             { id: 'futurebox', label: 'FutureBox Podcasts', icon: Headphones },
             { id: 'masterclasses', label: 'Masterclasses', icon: GraduationCap },
-            { id: 'creations', label: 'Creative AI Musiek & Video', icon: Sparkles },
+            { id: 'creations', label: 'Creative AI Music & Video', icon: Sparkles },
             { id: 'radar', label: 'AI Trends Radar', icon: TrendingUp },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -174,7 +174,7 @@ export default function FutureBoxHome() {
           })}
         </nav>
 
-        {/* Aksie Knoppies */}
+        {/* Action Buttons */}
         <div className="flex items-center space-x-3">
           {userPlan === 'free' ? (
             <button
@@ -182,12 +182,12 @@ export default function FutureBoxHome() {
               className="flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
             >
               <Crown className="w-3.5 h-3.5 fill-current" />
-              <span>Gradeer op na PRO ($19)</span>
+              <span>Upgrade to PRO ($19)</span>
             </button>
           ) : (
             <span className="text-xs font-mono text-emerald-400 flex items-center space-x-1 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
               <Check className="w-3.5 h-3.5" />
-              <span>PRO Geaktiveer</span>
+              <span>PRO Active</span>
             </span>
           )}
 
@@ -204,7 +204,7 @@ export default function FutureBoxHome() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-14 flex-1 w-full">
         
-        {/* 🟢 LEWENDIGE AI TRENDS PULSE & SKANDEERDER BANNER */}
+        {/* 🟢 LIVE AI TRENDS PULSE BANNER */}
         <section className="bg-gradient-to-r from-zinc-900 via-zinc-900/80 to-zinc-950 border border-zinc-800 p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
           <div className="flex items-center space-x-3 text-xs">
             <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
@@ -212,8 +212,8 @@ export default function FutureBoxHome() {
             </div>
             <div>
               <p className="font-bold text-white flex items-center space-x-2">
-                <span>Outonome KI Tendens-Radar</span>
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Intyds</span>
+                <span>Autonomous AI Trends Radar</span>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Real-Time</span>
               </p>
               <p className="text-zinc-400 text-[11px]">{scanMessage}</p>
             </div>
@@ -225,7 +225,7 @@ export default function FutureBoxHome() {
             className="flex items-center space-x-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold rounded-xl transition-all border border-zinc-700 disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${isScanning ? 'animate-spin' : ''}`} />
-            <span>{isScanning ? 'Skandeer tendense...' : 'Her-skandeer met KI'}</span>
+            <span>{isScanning ? 'Scanning Trends...' : 'Re-scan with AI'}</span>
           </button>
         </section>
 
@@ -237,7 +237,7 @@ export default function FutureBoxHome() {
                 <div className="flex items-center space-x-3">
                   <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-semibold rounded-full flex items-center space-x-1.5">
                     <Radio className="w-3 h-3 animate-pulse text-emerald-400" />
-                    <span>GRATIS UITGELIGTE MEESTERKLAS</span>
+                    <span>FREE FEATURED MASTERCLASS</span>
                   </span>
                   <span className="text-xs text-zinc-400 font-mono">1h 00m • Andrej Karpathy</span>
                 </div>
@@ -245,19 +245,19 @@ export default function FutureBoxHome() {
                   Intro to Large Language Models: How Neural Networks Think
                 </h2>
                 <p className="text-sm text-zinc-400 leading-relaxed">
-                  Die wêreldberoemde meesterklas deur Andrej Karpathy (Oud-Hoof van AI by Tesla en medestigter van OpenAI) oor hoe moderne modelle werk en wat kom.
+                  The world-renowned masterclass by Andrej Karpathy (Former Director of AI at Tesla & Co-founder of OpenAI) explaining how modern neural networks work and what lies ahead.
                 </p>
 
                 <div className="bg-black/40 backdrop-blur-md rounded-2xl p-4 border border-zinc-800/80 space-y-2">
-                  <span className="text-[11px] font-mono uppercase text-emerald-400 tracking-wider">Sleutellesse vir Toekomstige Groei</span>
+                  <span className="text-[11px] font-mono uppercase text-emerald-400 tracking-wider">Key Takeaways for Future Growth</span>
                   <ul className="space-y-1.5">
                     <li className="text-xs text-zinc-300 flex items-center space-x-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                      <span>Hoe tokens, transformer-argitektuur en neurone berekeninge doen</span>
+                      <span>How tokens, transformer architectures, and weights perform computation</span>
                     </li>
                     <li className="text-xs text-zinc-300 flex items-center space-x-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                      <span>Die toekoms van outonome agente as bedryfstelsels van die toekoms</span>
+                      <span>The evolution of autonomous agent operating systems</span>
                     </li>
                   </ul>
                 </div>
@@ -274,7 +274,7 @@ export default function FutureBoxHome() {
                     className="flex items-center space-x-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)]"
                   >
                     <Play className="w-4 h-4 fill-current" />
-                    <span>Kyk Gratis Meesterklas</span>
+                    <span>Watch Free Masterclass</span>
                   </button>
 
                   <a 
@@ -283,7 +283,7 @@ export default function FutureBoxHome() {
                     rel="noreferrer"
                     className="text-xs text-zinc-400 hover:text-white flex items-center space-x-1"
                   >
-                    <span>Maak oop op YouTube</span>
+                    <span>Open on YouTube</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
@@ -314,7 +314,7 @@ export default function FutureBoxHome() {
           </section>
         )}
 
-        {/* 🎙️ 2. FUTUREBOX PODCASTS (Diary of a CEO, Lex Fridman, Huberman) */}
+        {/* 🎙️ 2. FUTUREBOX PODCASTS */}
         {(activeTab === 'all' || activeTab === 'futurebox') && (
           <section className="space-y-6">
             <div className="flex items-center justify-between">
@@ -323,10 +323,10 @@ export default function FutureBoxHome() {
                   <Headphones className="w-5 h-5 text-emerald-400" />
                   <span>FutureBox Podcasts</span>
                 </h3>
-                <p className="text-xs text-zinc-400">Diepgaande podcasts oor toekomstige rykdom, AI en lewenssielkunde.</p>
+                <p className="text-xs text-zinc-400">Deep-dive conversations on future wealth, AI disruption, and human potential.</p>
               </div>
               <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                Top Podsendings
+                Top Podcasts
               </span>
             </div>
 
@@ -399,7 +399,7 @@ export default function FutureBoxHome() {
                     <div className="p-5 space-y-3">
                       <p className="text-[11px] font-mono font-bold text-emerald-400">{pod.host}</p>
                       <h4 className="font-bold text-sm text-white group-hover:text-emerald-400 transition-colors leading-snug">{pod.title}</h4>
-                      <p className="text-xs text-zinc-400">Gas: <span className="text-zinc-200 font-semibold">{pod.guest}</span></p>
+                      <p className="text-xs text-zinc-400">Guest: <span className="text-zinc-200 font-semibold">{pod.guest}</span></p>
                     </div>
                   </div>
 
@@ -415,7 +415,7 @@ export default function FutureBoxHome() {
                       className="text-emerald-400 font-semibold flex items-center space-x-1 hover:underline"
                     >
                       <Play className="w-3 h-3 fill-current" />
-                      <span>Speel Episode</span>
+                      <span>Play Episode</span>
                     </button>
 
                     <a 
@@ -434,7 +434,7 @@ export default function FutureBoxHome() {
           </section>
         )}
 
-        {/* 🎓 3. MASTERCLASSES (Insluitend PRO Gated Inhoud) */}
+        {/* 🎓 3. MASTERCLASSES */}
         {(activeTab === 'all' || activeTab === 'masterclasses') && (
           <section className="space-y-6">
             <div className="flex items-center justify-between">
@@ -443,10 +443,10 @@ export default function FutureBoxHome() {
                   <GraduationCap className="w-5 h-5 text-cyan-400" />
                   <span>Masterclasses</span>
                 </h3>
-                <p className="text-xs text-zinc-400">Gevorderde argitektuur en besigheidsbou in die AI era.</p>
+                <p className="text-xs text-zinc-400">Advanced architectures, venture creation, and engineering in the AI era.</p>
               </div>
               <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-                Geverifieerde Meesterklasse
+                Verified Masterclasses
               </span>
             </div>
 
@@ -457,7 +457,7 @@ export default function FutureBoxHome() {
                   title: 'Building & Scaling a $50k/MRR AI Micro-SaaS Solo',
                   instructor: 'Garry Tan (CEO, Y Combinator)',
                   duration: '45m',
-                  level: 'Besigheid & Stigters',
+                  level: 'Business & Founders',
                   thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/sPXZ_y2Yw3I',
                   externalUrl: 'https://www.youtube.com/watch?v=sPXZ_y2Yw3I',
@@ -468,7 +468,7 @@ export default function FutureBoxHome() {
                   title: 'Autonomous Multi-Agent AI Systems & Tool Calling',
                   instructor: 'Harrison Chase (LangChain)',
                   duration: '1h 22m',
-                  level: 'Gevorderde Argitektuur',
+                  level: 'Advanced Architecture',
                   thumbnail: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/sal78ACtGTc',
                   externalUrl: 'https://www.youtube.com/watch?v=sal78ACtGTc',
@@ -479,7 +479,7 @@ export default function FutureBoxHome() {
                   title: 'Generative AI Cinema: Directing Films with Runway & Sora',
                   instructor: 'Kaelen Voss (AI Filmmaker)',
                   duration: '1h 30m',
-                  level: 'PRO Meesterklas',
+                  level: 'PRO Masterclass',
                   thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
                   externalUrl: 'https://runwayml.com',
@@ -495,7 +495,7 @@ export default function FutureBoxHome() {
                     {isLocked && (
                       <div className="absolute top-3 right-3 z-20 bg-amber-500/90 text-black text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center space-x-1 shadow-lg">
                         <Lock className="w-3 h-3" />
-                        <span>PRO SLEGS</span>
+                        <span>PRO ONLY</span>
                       </div>
                     )}
 
@@ -534,7 +534,7 @@ export default function FutureBoxHome() {
                       </div>
 
                       <div className="p-5 space-y-3">
-                        <p className="text-[11px] font-mono text-zinc-400">Instrukteur: <span className="text-white font-semibold">{mc.instructor}</span></p>
+                        <p className="text-[11px] font-mono text-zinc-400">Instructor: <span className="text-white font-semibold">{mc.instructor}</span></p>
                         <h4 className="font-bold text-sm text-white group-hover:text-cyan-400 transition-colors leading-snug">{mc.title}</h4>
                       </div>
                     </div>
@@ -546,7 +546,7 @@ export default function FutureBoxHome() {
                           className="text-amber-400 font-bold flex items-center space-x-1 hover:underline"
                         >
                           <Crown className="w-3.5 h-3.5 fill-current" />
-                          <span>Ontsluit met PRO ($19)</span>
+                          <span>Unlock with PRO ($19)</span>
                         </button>
                       ) : (
                         <button 
@@ -560,7 +560,7 @@ export default function FutureBoxHome() {
                           className="text-cyan-400 font-semibold flex items-center space-x-1 hover:underline"
                         >
                           <Play className="w-3 h-3 fill-current" />
-                          <span>Begin Meesterklas</span>
+                          <span>Start Masterclass</span>
                         </button>
                       )}
                     </div>
@@ -571,19 +571,19 @@ export default function FutureBoxHome() {
           </section>
         )}
 
-        {/* 🎨 4. CREATIVE AI MUSIEK & MUSIEKVIDEOS MET SKEPPER-KANALE */}
+        {/* 🎨 4. CREATIVE AI MUSIC & VIDEOS */}
         {(activeTab === 'all' || activeTab === 'creations') && (
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
                   <Sparkles className="w-5 h-5 text-cyan-400" />
-                  <span>Creative AI Musiek & Musiekvideos</span>
+                  <span>Creative AI Music & Music Videos</span>
                 </h3>
-                <p className="text-xs text-zinc-400">Die sentrale platform soos 'n YouTube vir generatiewe liedjies, musiekvideos en skepper-kanale.</p>
+                <p className="text-xs text-zinc-400">The premier destination for neural music releases, generative videos, and custom creator channels.</p>
               </div>
               <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-                Skepper Kanale
+                Creator Channels
               </span>
             </div>
 
@@ -591,10 +591,10 @@ export default function FutureBoxHome() {
               {[
                 {
                   id: 'ai-1',
-                  title: 'Cybernetic Odyssey (Amptelike AI Musiekvideo)',
+                  title: 'Cybernetic Odyssey (Official AI Music Video)',
                   creator: 'SynthMind Studio',
                   domain: 'futurebox.app/@synthmind',
-                  medium: 'AI Musiekvideo',
+                  medium: 'AI Music Video',
                   tools: ['Suno v3.5', 'Runway Gen-3'],
                   prompt: 'Cyberpunk trance vocal track with ultra-photoreal Tokyo rain visuals.',
                   thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
@@ -607,7 +607,7 @@ export default function FutureBoxHome() {
                   title: 'Neon Horizons: Neural Symphony #4',
                   creator: 'Aura Sound Labs',
                   domain: 'futurebox.app/@aura',
-                  medium: 'Neural AI Musiek',
+                  medium: 'Neural AI Music',
                   tools: ['Udio AI', 'ElevenLabs'],
                   prompt: 'Emotive future electronic ballad with neural vocal harmonization.',
                   thumbnail: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80',
@@ -663,21 +663,21 @@ export default function FutureBoxHome() {
                       </div>
                       <h4 className="font-bold text-white group-hover:text-cyan-400 transition-colors leading-snug">{creation.title}</h4>
                       <p className="text-xs text-zinc-400 font-mono bg-black/30 p-2.5 rounded-lg border border-zinc-800">
-                        <span className="text-cyan-400 font-semibold">Liriek/Prompt: </span>
+                        <span className="text-cyan-400 font-semibold">Prompt/Lyrics: </span>
                         &ldquo;{creation.prompt}&rdquo;
                       </p>
                     </div>
                   </div>
 
                   <div className="p-5 pt-0 flex items-center justify-between text-[11px] text-zinc-400 border-t border-zinc-800/60">
-                    <span>Deur {creation.creator}</span>
+                    <span>By {creation.creator}</span>
                     <a 
                       href={creation.externalUrl} 
                       target="_blank" 
                       rel="noreferrer"
                       className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center space-x-1 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/30"
                     >
-                      <span>Besoek Gereedskap</span>
+                      <span>Visit Tool</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
@@ -695,7 +695,7 @@ export default function FutureBoxHome() {
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
                 <span>AI Trends & Opportunities Radar</span>
               </h3>
-              <p className="text-xs text-zinc-400">Regte tegnologieë, Vibe Coded produkte en markbloudrukke wat vandag gebruik word.</p>
+              <p className="text-xs text-zinc-400">High-margin business blueprints, vibe-coded apps, and emerging market frontiers.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
@@ -703,47 +703,47 @@ export default function FutureBoxHome() {
                 {
                   tag: 'Top Vibe Coded App',
                   title: 'Autonomous Coding & Micro-SaaS with Cursor AI',
-                  desc: 'Hoe ontwikkelaars en nie-kodoreerders volledige programme bou en ontplooi binne 48 uur.',
-                  mrr: '$10k - $50k / maand',
-                  buildTime: '48 Uur met Cursor',
+                  desc: 'How non-coders and engineers build and deploy full applications in under 48 hours.',
+                  mrr: '$10k - $50k / month',
+                  buildTime: '48 Hours (Cursor)',
                   techStack: ['Cursor AI', 'Next.js 14', 'Supabase Database', 'Vercel Deployment'],
-                  opportunity: 'Cursor AI stel solo stigters in staat om 10x vinniger te kodeer deur die hele kodebasis in konteks te neem.',
+                  opportunity: 'Cursor AI enables solo founders to build 10x faster with full codebase context awareness.',
                   steps: [
-                    'Installeer Cursor AI en koppel jou GitHub rekening.',
-                    'Gebruik Vibe-Coding prompts om jou databasis en gebruikerskoppelvlak op te stel.',
-                    'Ontplooi direk na Vercel vir wêreldwye blitsvinnige hosting.'
+                    'Install Cursor AI and connect your GitHub repository.',
+                    'Use Vibe-Coding prompts to structure database tables and frontend UX.',
+                    'Deploy directly to Vercel for instant global hosting.'
                   ],
                   toolName: 'Cursor.com',
                   externalUrl: 'https://www.cursor.com'
                 },
                 {
                   tag: 'Business Opportunity',
-                  title: 'Building AI Voice Agents with LiveKit & Twilio',
-                  desc: 'Stap-vir-stap gids oor hoe om 24/7 stem-KI agente aan besighede te verkoop.',
-                  mrr: '$5,000 - $25,000 / maand',
-                  buildTime: '1-2 Weke',
+                  title: 'Building 24/7 AI Voice Operators with LiveKit & Twilio',
+                  desc: 'A step-by-step breakdown on selling AI phone receptionists to high-ticket local businesses.',
+                  mrr: '$5,000 - $25,000 / month',
+                  buildTime: '1-2 Weeks',
                   techStack: ['LiveKit WebRTC', 'Twilio Voice', 'Gemini Live / OpenAI Realtime', 'Supabase'],
-                  opportunity: 'Diensbesighede (dokters, prokureurs, loodgieters) verloor miljoene weens onbeantwoorde oproepe. Stem-KI los hierdie probleem permanent op.',
+                  opportunity: 'Local services (plumbing, legal, clinics) miss 30% of after-hours calls. Voice AI automates bookings seamlessly.',
                   steps: [
-                    'Stel \'n intydse WebRTC stroom op met LiveKit se amptelike stem-wolk.',
-                    'Koppel telefoonnommers aan Twilio SIP trunking.',
-                    'Laai besigheidsinligting in Supabase sodat die KI vrae akkuraat beantwoord.'
+                    'Configure real-time WebRTC streams with LiveKit Voice Cloud.',
+                    'Connect inbound phone numbers via Twilio SIP.',
+                    'Store business FAQs in Supabase so the agent answers reliably.'
                   ],
                   toolName: 'LiveKit.io',
                   externalUrl: 'https://livekit.io'
                 },
                 {
                   tag: 'Top AI News',
-                  title: 'Vercel v0: Generative Frontend Code Generation',
-                  desc: 'Tik \'n idee in en v0 genereer volledige, pragtige React en Tailwind komponente onmiddellik.',
-                  mrr: 'Industrie Standaard',
-                  buildTime: 'Intyds (Sekondes)',
+                  title: 'Vercel v0: Generative Frontend Code Synthesis',
+                  desc: 'Describe an interface idea and v0 instantly generates production-grade React and Tailwind components.',
+                  mrr: 'Industry Standard',
+                  buildTime: 'Real-Time (Seconds)',
                   techStack: ['React', 'Tailwind CSS', 'Shadcn UI', 'Next.js App Router'],
-                  opportunity: 'Jy hoef nie meer maande te spandeer op ontwerpe nie. v0 skep produksie-gereed frontend kode met een enkele beskrywing.',
+                  opportunity: 'Eliminate weeks of mockup design. v0 synthesizes responsive components from simple natural language prompts.',
                   steps: [
-                    'Maak v0.dev oop en beskryf die webkoppelvlak wat jy wil hê.',
-                    'Kopieer die gegenereerde React kode direk na jou Next.js projek.',
-                    'Koppel aan Supabase vir outentifikasie en data.'
+                    'Open v0.dev and describe your desired UI layout.',
+                    'Copy the synthesized React component code into your Next.js project.',
+                    'Hook up Supabase for authentication and database logic.'
                   ],
                   toolName: 'v0.dev by Vercel',
                   externalUrl: 'https://v0.dev'
@@ -787,7 +787,7 @@ export default function FutureBoxHome() {
 
       </main>
 
-      {/* 👑 PRICING & PRO OPGRADEER MODAL ($19 / MAAND) */}
+      {/* 👑 PRICING & PRO UPGRADE MODAL ($19 / MONTH) */}
       {pricingModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-zinc-900 border border-amber-500/50 w-full max-w-xl rounded-3xl p-6 md:p-8 space-y-6 shadow-[0_0_50px_rgba(245,158,11,0.2)]">
@@ -797,8 +797,8 @@ export default function FutureBoxHome() {
                   <Crown className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-lg text-white">FutureBox PRO Intekening</h3>
-                  <p className="text-xs text-zinc-400">Ontsluit volle toegang tot masterclasses, podcasts en skepper-kanale</p>
+                  <h3 className="font-extrabold text-lg text-white">FutureBox PRO Membership</h3>
+                  <p className="text-xs text-zinc-400">Unlock complete access to 4K masterclasses, podcasts, and creator studios</p>
                 </div>
               </div>
               <button onClick={() => setPricingModalOpen(false)} className="text-zinc-400 hover:text-white">
@@ -810,29 +810,29 @@ export default function FutureBoxHome() {
               <div className="flex items-baseline justify-between">
                 <div>
                   <span className="text-3xl font-black text-white">$19</span>
-                  <span className="text-xs text-zinc-400 font-mono"> / maand</span>
+                  <span className="text-xs text-zinc-400 font-mono"> / month</span>
                 </div>
                 <span className="text-xs font-mono font-bold bg-amber-500 text-black px-2.5 py-1 rounded-full">
-                  Mees Gewild
+                  Most Popular
                 </span>
               </div>
 
               <ul className="space-y-2 text-xs text-zinc-200">
                 <li className="flex items-center space-x-2">
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Onbeperkte toegang tot alle 4K Meesterklasse & Podcasts</span>
+                  <span>Unlimited access to all 4K Masterclasses & Full Podcasts</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span><strong>Vermoë om volle Podcasts & Reeks-inhoud op te laai</strong></span>
+                  <span><strong>Ability to host & publish long-form Podcasts in Creator Studio</strong></span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span><strong>Jou eie Pasgemaakte Skepper-Kanaal</strong> (`futurebox.app/@jou-naam`)</span>
+                  <span><strong>Claim your custom Creator Channel Domain</strong> (`futurebox.app/@your-name`)</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Volledige aflaai van alle Mark-Blueprints & Sagteware Kode</span>
+                  <span>Full source code & blueprint teardown downloads</span>
                 </li>
               </ul>
             </div>
@@ -842,20 +842,20 @@ export default function FutureBoxHome() {
                 onClick={() => {
                   setUserPlan('pro');
                   setPricingModalOpen(false);
-                  alert('🎉 Baie geluk! Jou rekening is nou opgegradeer na FutureBox PRO!');
+                  alert('🎉 Congratulations! Your account has been upgraded to FutureBox PRO!');
                 }}
                 className="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center justify-center space-x-2"
               >
                 <Crown className="w-4 h-4 fill-current" />
-                <span>Aktiveer PRO Lidmaatskap ($19 / Maand)</span>
+                <span>Activate PRO Membership ($19 / Month)</span>
               </button>
-              <p className="text-[10px] text-center text-zinc-500">Kanselleer enige tyd met een klik. Veilige betalings via Stripe.</p>
+              <p className="text-[10px] text-center text-zinc-500">Cancel anytime with 1 click. Powered by Stripe secure billing.</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* 🚀 CREATOR STUDIO MET DOMEIN-KEUSE VIR LIEDJIES & PODCASTS */}
+      {/* 🚀 CREATOR STUDIO MODAL */}
       {uploadModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-lg flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-8">
@@ -866,8 +866,8 @@ export default function FutureBoxHome() {
                   <UploadCloud className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-lg text-white">Creator Studio & Musiek-Ateljee</h3>
-                  <p className="text-xs text-zinc-400">Skryf liedjies, laai musiekvideo's en podcasts op met jou eie kanaal-domein</p>
+                  <h3 className="font-extrabold text-lg text-white">Creator Studio & Music Hub</h3>
+                  <p className="text-xs text-zinc-400">Publish songs, AI music videos, and podcasts with your own creator channel domain</p>
                 </div>
               </div>
               <button onClick={() => { setUploadModalOpen(false); setAuditStatus(null); }} className="text-zinc-400 hover:text-white">
@@ -877,16 +877,16 @@ export default function FutureBoxHome() {
 
             <form onSubmit={handlePublish} className="space-y-6">
               
-              {/* STAP 1: KIES MEDIUM */}
+              {/* STEP 1: CHOOSE MEDIUM */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300">
-                  Stap 1: Kies Medium
+                  Step 1: Choose Medium Format
                 </label>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { id: 'music_video', label: 'AI Musiekvideo', icon: FileVideo, desc: 'Suno + Runway' },
-                    { id: 'ai_track', label: 'Neural Liedjie', icon: Music, desc: 'Suno / Udio Oudio' },
-                    { id: 'podcast', label: 'Podcast Episode', icon: Mic, desc: 'PRO Intekenaars', isProReq: true },
+                    { id: 'music_video', label: 'AI Music Video', icon: FileVideo, desc: 'Suno + Runway' },
+                    { id: 'ai_track', label: 'Neural Song / Audio', icon: Music, desc: 'Suno / Udio' },
+                    { id: 'podcast', label: 'Podcast Episode', icon: Mic, desc: 'PRO Members', isProReq: true },
                   ].map((item) => {
                     const Icon = item.icon;
                     const isSelected = mediumType === item.id;
@@ -917,11 +917,11 @@ export default function FutureBoxHome() {
                 </div>
               </div>
 
-              {/* STAP 2: SKEPPER SE EIE KANAAL DOMEIN */}
+              {/* STEP 2: CUSTOM CREATOR CHANNEL DOMAIN */}
               <div className="space-y-1.5 bg-black/40 p-4 rounded-2xl border border-zinc-800">
                 <label className="block text-xs font-bold uppercase tracking-wider text-cyan-300 flex items-center space-x-1.5">
                   <Globe className="w-3.5 h-3.5" />
-                  <span>Jou Eie Skepper-Kanaal Domein:</span>
+                  <span>Your Custom Creator Channel URL:</span>
                 </label>
                 <div className="flex items-center">
                   <span className="bg-zinc-800 border border-r-0 border-zinc-700 text-zinc-400 px-3 py-2.5 rounded-l-xl text-xs font-mono">
@@ -931,29 +931,29 @@ export default function FutureBoxHome() {
                     type="text"
                     value={creatorDomain}
                     onChange={(e) => setCreatorDomain(e.target.value.toLowerCase().replace(/\s+/g, ''))}
-                    placeholder="jou-kunstenaarsnaam"
+                    placeholder="your-creator-name"
                     className="w-full bg-black/60 border border-zinc-700 rounded-r-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-400 font-mono"
                     required
                   />
                 </div>
-                <p className="text-[10px] text-zinc-500">Mense kan hierdie skakel gebruik om al jou musiekvideos en liedjies op een plek te sien.</p>
+                <p className="text-[10px] text-zinc-500">Audience members can visit this custom channel to stream all your music videos and songs.</p>
               </div>
 
-              {/* STAP 3: TITEL & SKAKEL */}
+              {/* STEP 3: TITLE & MEDIA LINK */}
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-mono text-zinc-400 mb-1">Titel van Liedjie / Video</label>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">Song / Video Title</label>
                   <input 
                     type="text" 
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="bv. Cybernetic Soul (AI Video)"
+                    placeholder="e.g. Cybernetic Odyssey (Official AI Video)"
                     className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono text-zinc-400 mb-1">Media Skakel (YouTube / Suno / MP4)</label>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">Media Link (YouTube / Suno / MP4)</label>
                   <input 
                     type="url" 
                     value={mediaLink}
@@ -965,10 +965,10 @@ export default function FutureBoxHome() {
                 </div>
               </div>
 
-              {/* STAP 4: LIERIEK & AI PROMPTS */}
+              {/* STEP 4: AI MODELS & LYRICS */}
               <div className="space-y-2 bg-black/30 p-4 rounded-2xl border border-zinc-800">
                 <label className="block text-xs font-mono text-cyan-300">
-                  AI Modelle Gebruik:
+                  AI Models Used:
                 </label>
                 <div className="flex flex-wrap gap-1.5">
                   {availableTools.map((tool) => {
@@ -992,22 +992,22 @@ export default function FutureBoxHome() {
 
                 <div className="pt-2">
                   <label className="block text-xs font-mono text-zinc-400 mb-1">
-                    Liedjie-Lirieke & AI Prompts:
+                    Song Lyrics & AI Prompts:
                   </label>
                   <textarea 
                     value={lyricsOrPrompt}
                     onChange={(e) => setLyricsOrPrompt(e.target.value)}
-                    placeholder="Skryf jou lirieke of die AI prompts wat gebruik is om die musiek en video te genereer..."
+                    placeholder="Write song lyrics, vocal arrangement notes, or generative video prompts..."
                     className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 h-20"
                   />
                 </div>
               </div>
 
-              {/* ETIESE HEKWAGTER */}
+              {/* ETHICAL GATEKEEPER */}
               <div className="bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-2xl space-y-2">
                 <div className="flex items-center space-x-2 text-emerald-400">
                   <ShieldCheck className="w-4 h-4" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Etiese Hekwagter & Outeursreg</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">Ethical Gatekeeper & Copyright Policy</span>
                 </div>
                 <label className="flex items-start space-x-3 cursor-pointer pt-1">
                   <input 
@@ -1017,30 +1017,30 @@ export default function FutureBoxHome() {
                     className="mt-0.5 rounded border-zinc-700 text-emerald-500 focus:ring-0"
                   />
                   <span className="text-xs text-zinc-200 font-semibold leading-relaxed">
-                    Ek verklaar dat hierdie inhoud vry is van geweld, haatspraak, pornografie/NSFW, en ek besit die regte om dit op FutureBox te deel.
+                    I certify this content contains zero violence, no NSFW/pornography, no scams, and I hold rights to publish to FutureBox.
                   </span>
                 </label>
               </div>
 
-              {/* Terugvoer */}
+              {/* Feedback */}
               {auditStatus === 'success' && (
                 <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500 text-emerald-300 text-xs font-semibold flex items-center space-x-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                  <span>✓ Etiese Hek Suksesvol Geslaag! Jou inhoud is nou beskikbaar by futurebox.app/@{creatorDomain || 'jou-naam'}</span>
+                  <span>✓ Ethical Gate Passed! Your content is now live at futurebox.app/@{creatorDomain || 'your-name'}</span>
                 </div>
               )}
 
               {auditStatus === 'failed_safety' && (
                 <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500 text-rose-300 text-xs flex items-center space-x-2">
                   <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                  <span>✗ Etiese Hek Verwerping: Gevaarlike of onvanpaste terme bespeur.</span>
+                  <span>✗ Ethical Gate Rejection: Flagged keywords detected violating community standards.</span>
                 </div>
               )}
 
               {auditStatus === 'failed_attestation' && (
                 <div className="p-3 rounded-xl bg-amber-950/60 border border-amber-500 text-amber-300 text-xs flex items-center space-x-2">
                   <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                  <span>⚠ Merk asseblief die Etiese Hekwagter boksie voor jy publiseer.</span>
+                  <span>⚠ Please check the Ethical Gatekeeper box before submitting.</span>
                 </div>
               )}
 
@@ -1049,14 +1049,14 @@ export default function FutureBoxHome() {
                 className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)] flex items-center justify-center space-x-2"
               >
                 <UploadCloud className="w-4 h-4" />
-                <span>Publiseer na My Skepper-Kanaal</span>
+                <span>Publish to My Creator Channel</span>
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* 🎬 / 🎵 UNIVERSELE VIDEO & YOUTUBE SPELER MODAL */}
+      {/* 🎬 / 🎵 UNIVERSAL MEDIA PLAYER MODAL */}
       {selectedMedia && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl">
@@ -1081,14 +1081,14 @@ export default function FutureBoxHome() {
             </div>
 
             <div className="p-4 bg-black/50 border-t border-zinc-800 flex items-center justify-between">
-              <span className="text-xs text-zinc-400">Wil jy die episode direk op YouTube bekyk?</span>
+              <span className="text-xs text-zinc-400">Stream directly on YouTube or source platform</span>
               <a 
                 href={selectedMedia.externalUrl} 
                 target="_blank" 
                 rel="noreferrer"
                 className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center space-x-1"
               >
-                <span>Maak Oop op YouTube</span>
+                <span>Open on YouTube</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -1116,14 +1116,14 @@ export default function FutureBoxHome() {
               <div className="bg-black/40 border border-zinc-800 p-3.5 rounded-2xl flex items-center space-x-3">
                 <DollarSign className="w-5 h-5 text-emerald-400 flex-shrink-0" />
                 <div>
-                  <p className="text-[10px] uppercase font-mono text-zinc-500">Inkomste / Potensiaal</p>
+                  <p className="text-[10px] uppercase font-mono text-zinc-500">Revenue Potential</p>
                   <p className="text-xs font-bold text-white">{selectedBlueprint.mrr}</p>
                 </div>
               </div>
               <div className="bg-black/40 border border-zinc-800 p-3.5 rounded-2xl flex items-center space-x-3">
                 <Clock className="w-5 h-5 text-cyan-400 flex-shrink-0" />
                 <div>
-                  <p className="text-[10px] uppercase font-mono text-zinc-500">Bou-Tyd</p>
+                  <p className="text-[10px] uppercase font-mono text-zinc-500">Build Time</p>
                   <p className="text-xs font-bold text-white">{selectedBlueprint.buildTime}</p>
                 </div>
               </div>
@@ -1132,7 +1132,7 @@ export default function FutureBoxHome() {
             <div className="space-y-2 bg-black/40 p-4 rounded-2xl border border-zinc-800">
               <label className="block text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center space-x-1.5">
                 <Lightbulb className="w-4 h-4" />
-                <span>Die Markgeleentheid:</span>
+                <span>The Market Opportunity:</span>
               </label>
               <p className="text-xs text-zinc-300 leading-relaxed">{selectedBlueprint.opportunity}</p>
             </div>
@@ -1145,25 +1145,25 @@ export default function FutureBoxHome() {
                 className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center space-x-2"
               >
                 <Globe className="w-4 h-4" />
-                <span>Besoek Amptelike Webtuiste ({selectedBlueprint.toolName})</span>
+                <span>Visit Official Website ({selectedBlueprint.toolName})</span>
                 <ExternalLink className="w-3.5 h-3.5 ml-1" />
               </a>
               <button 
                 onClick={() => setSelectedBlueprint(null)}
                 className="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl transition-all"
               >
-                Sluit
+                Close
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 📧 6. PROFESSIONELE BEMARKING & ADVERTENSIE KONTAKVORM FOOTER */}
+      {/* 📧 6. MARKETING & SPONSORSHIP CONTACT FOOTER */}
       <footer className="border-t border-zinc-800/80 bg-[#050608] mt-16 px-6 py-12">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-start">
           
-          {/* Linker kant: Oor FutureBox & Borgskappe */}
+          {/* Left: About FutureBox & Sponsorship */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center">
@@ -1173,30 +1173,30 @@ export default function FutureBoxHome() {
             </div>
             
             <p className="text-xs text-zinc-400 leading-relaxed">
-              Die premier digitale leerplatform en Creative AI ekostelsel vir die toekoms van werk, besigheid en kuns. 
-              Bereik duisende vooruitstrewende entrepreneurs, tegnologieleiers en AI-skeppers.
+              The premier digital learning platform and Creative AI ecosystem designed for the future of work, intelligence, and artistic creation. 
+              Reach thousands of visionary entrepreneurs, AI researchers, and builders worldwide.
             </p>
 
             <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800 space-y-2">
               <span className="text-[11px] font-mono uppercase text-emerald-400 font-bold flex items-center space-x-1.5">
                 <Star className="w-3.5 h-3.5 fill-current" />
-                <span>Bemarkings- & Borgskapvoordele</span>
+                <span>Sponsorship & Partner Benefits</span>
               </span>
               <ul className="text-xs text-zinc-300 space-y-1">
-                <li>• Plasing in die daaglikse AI Trends Radar</li>
-                <li>• Toegewyde borgskap in FutureBox Masterclasses & Podcasts</li>
-                <li>• Direkte blootstelling aan hoë-waarde solo AI-stigters</li>
+                <li>• Prime feature placement on the daily AI Trends Radar</li>
+                <li>• Dedicated brand sponsorship in FutureBox Masterclasses & Podcasts</li>
+                <li>• Direct exposure to high-intent solo AI founders and creators</li>
               </ul>
             </div>
           </div>
 
-          {/* Regter kant: Die Werklike E-pos Kontakvorm */}
+          {/* Right: Real Email Marketing Form */}
           <div className="bg-zinc-900/80 border border-zinc-800 p-6 md:p-8 rounded-3xl space-y-4 shadow-2xl">
             <div className="flex items-center space-x-2 text-white">
               <Mail className="w-5 h-5 text-emerald-400" />
-              <h4 className="font-extrabold text-base">Bemark op FutureBox (Kontak My)</h4>
+              <h4 className="font-extrabold text-base">Advertise on FutureBox (Contact Sponsorship Team)</h4>
             </div>
-            <p className="text-xs text-zinc-400">Vul hierdie vorm in om 'n direkte borgskap- of advertensie-versoek per e-pos aan my te stuur.</p>
+            <p className="text-xs text-zinc-400">Submit this inquiry to send a direct sponsorship request to our partnership desk.</p>
 
             <form onSubmit={handleMarketingSubmit} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -1204,7 +1204,7 @@ export default function FutureBoxHome() {
                   type="text"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
-                  placeholder="Jou Naam / Maatskappy"
+                  placeholder="Your Name / Company"
                   className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
                   required
                 />
@@ -1212,7 +1212,7 @@ export default function FutureBoxHome() {
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder="Jou E-posadres"
+                  placeholder="Your Email Address"
                   className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
                   required
                 />
@@ -1224,16 +1224,16 @@ export default function FutureBoxHome() {
                   onChange={(e) => setContactBudget(e.target.value)}
                   className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
                 >
-                  <option value="R5,000 - R15,000 / maand">Bemarkingsbegroting: R5,000 - R15,000 / maand</option>
-                  <option value="R15,000 - R50,000 / maand">Bemarkingsbegroting: R15,000 - R50,000 / maand</option>
-                  <option value="R50,000+ / Hoofborg">Bemarkingsbegroting: R50,000+ (Hoofborg)</option>
+                  <option value="$500 - $2,500 / month">Marketing Budget: $500 - $2,500 / month</option>
+                  <option value="$2,500 - $10,000 / month">Marketing Budget: $2,500 - $10,000 / month</option>
+                  <option value="$10,000+ / Headline Sponsor">Marketing Budget: $10,000+ (Headline Sponsor)</option>
                 </select>
               </div>
 
               <textarea
                 value={contactMessage}
                 onChange={(e) => setContactMessage(e.target.value)}
-                placeholder="Beskryf jou produk of borgskap-idee..."
+                placeholder="Describe your product, campaign goals, or partnership proposal..."
                 className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 h-20"
                 required
               />
@@ -1241,7 +1241,7 @@ export default function FutureBoxHome() {
               {contactSent && (
                 <div className="p-3 bg-emerald-950/60 border border-emerald-500 text-emerald-300 text-xs rounded-xl flex items-center space-x-2">
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Jou e-posprogram maak nou oop om die boodskap direk te stuur!</span>
+                  <span>Your email client is opening now to dispatch this sponsorship brief directly!</span>
                 </div>
               )}
 
@@ -1250,7 +1250,7 @@ export default function FutureBoxHome() {
                 className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center space-x-2"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Stuur Bemarkingsnavraag</span>
+                <span>Send Sponsorship Inquiry</span>
               </button>
             </form>
           </div>
@@ -1258,11 +1258,11 @@ export default function FutureBoxHome() {
         </div>
 
         <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
-          <p>© 2026 FutureBox Platform. Alle regte voorbehou.</p>
+          <p>© 2026 FutureBox Platform. All rights reserved.</p>
           <div className="flex space-x-6">
-            <span>Privaatheidsbeleid</span>
-            <span>Etiese Riglyne</span>
-            <span>Bepalings & Voorwaardes</span>
+            <span>Privacy Policy</span>
+            <span>Ethical Guidelines</span>
+            <span>Terms of Service</span>
           </div>
         </div>
       </footer>
