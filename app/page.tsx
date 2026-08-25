@@ -23,6 +23,8 @@ import { BASE_PRICES, guessRegion, priceFor, REGIONS, regionByCode, type Region 
 import ThemeStudio from './components/ThemeStudio';
 import QualityRadar from './components/QualityRadar';
 import Songwriter from './components/Songwriter';
+import Masterclasses from './components/Masterclasses';
+import Landing from './components/Landing';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
 import { byArea, describe } from './lib/entitlements';
 
@@ -55,12 +57,7 @@ export default function FutureBoxHome() {
   const [activeTab, setActiveTab] = useState<'all' | 'futurebox' | 'masterclasses' | 'creations' | 'radar'>('all');
   
   // User Authentication & Profile
-  const [user, setUser] = useState<{ email: string; name: string; handle: string; followers: number } | null>({
-    email: 'anre@futurebox.app',
-    name: 'Anre Fourie',
-    handle: '@anrefourie',
-    followers: 187
-  });
+  const [user, setUser] = useState<{ email: string; name: string; handle: string; followers: number } | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [authEmail, setAuthEmail] = useState('');
@@ -522,6 +519,74 @@ export default function FutureBoxHome() {
     };
   }, [anyModalOpen]);
 
+  if (!user) {
+    return (
+      <>
+        <Landing
+          onStart={() => {
+            setAuthMode('signup');
+            setAuthModalOpen(true);
+          }}
+        />
+
+        {/* The auth and pricing overlays are shared with the signed-in app. */}
+        {authModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+            <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+                <h3 className="text-lg font-extrabold text-white">
+                  {authMode === 'signin' ? 'Welcome back' : 'Start free'}
+                </h3>
+                <button onClick={() => setAuthModalOpen(false)} className="text-zinc-500 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <form onSubmit={handleAuthSubmit} className="space-y-3">
+                <input
+                  type="email"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+                />
+                <input
+                  type="password"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  placeholder="Password"
+                  required
+                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm"
+                >
+                  {authMode === 'signin' ? 'Sign in' : 'Create a free account'}
+                </button>
+              </form>
+              <p className="text-sm text-zinc-500 text-center">
+                {authMode === 'signin' ? 'No account yet?' : 'Already have one?'}{' '}
+                <button
+                  onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+                  className="text-emerald-400 hover:underline"
+                >
+                  {authMode === 'signin' ? 'Start free' : 'Sign in'}
+                </button>
+              </p>
+              <p className="text-sm text-zinc-600 text-center leading-relaxed">
+                There is no backend yet — this signs you in locally so you can look around. Nothing is stored anywhere
+                but this browser.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {themeOpen && <ThemeStudio theme={theme} setTheme={setTheme} onClose={() => setThemeOpen(false)} />}
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-emerald-500 selection:text-onAccent flex flex-col justify-between">
       
@@ -910,11 +975,13 @@ export default function FutureBoxHome() {
         {/* 🎓 3. MASTERCLASSES (PRO Gated) */}
         {(activeTab === 'all' || activeTab === 'masterclasses') && (
           <section className="space-y-6">
-            <div className="flex items-center justify-between">
+            <Masterclasses userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
+
+            <div className="flex items-center justify-between pt-2">
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
                   <GraduationCap className="w-5 h-5 text-cyan-400" />
-                  <span>Masterclasses</span>
+                  <span>Featured this week</span>
                 </h3>
                 <p className="text-xs text-zinc-400">Advanced architectures, venture creation, and engineering in the AI era.</p>
               </div>
