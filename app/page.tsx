@@ -10,8 +10,14 @@ import {
   Crown, Lock, Zap, RefreshCw, Send, Mail, Check, Star,
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, Volume2, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
-  Share2, Repeat, Sliders, Smartphone, Monitor, Eye
+  Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy
 } from 'lucide-react';
+import {
+  AI_MODELS, ROLE_LABELS, ROLE_ACCENTS, TRACK_FLAVOURS, groupByRole, modelByName,
+} from './data/studio';
+import { profileFromTracks } from './lib/matching';
+import CollabRadar from './components/CollabRadar';
+import Arena from './components/Arena';
 
 interface Blueprint {
   tag: string;
@@ -75,7 +81,7 @@ export default function FutureBoxHome() {
   const [selectedBlueprint, setSelectedBlueprint] = useState<Blueprint | null>(null);
 
   // Creator Studio Sub-Tabs & Soundboard
-  const [studioTab, setStudioTab] = useState<'director' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels'>('soundboard');
+  const [studioTab, setStudioTab] = useState<'director' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena'>('soundboard');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -86,7 +92,7 @@ export default function FutureBoxHome() {
   const [creatorDomain, setCreatorDomain] = useState('anrefourie');
   const [title, setTitle] = useState('');
   const [lyricsOrPrompt, setLyricsOrPrompt] = useState('');
-  const [selectedTools, setSelectedTools] = useState<string[]>(['Suno v3.5', 'Runway Gen-3', 'ElevenLabs Voice']);
+  const [selectedTools, setSelectedTools] = useState<string[]>(['Suno v5', 'Runway Gen-3', 'ElevenLabs Voice']);
   const [mediaLink, setMediaLink] = useState('');
   const [confirmedSafe, setConfirmedSafe] = useState(false);
   const [auditStatus, setAuditStatus] = useState<string | null>(null);
@@ -310,7 +316,16 @@ export default function FutureBoxHome() {
     'Frontier Business Blueprints & Vibe Coding'
   ];
 
-  const availableTools = ['Suno v3.5', 'Udio AI', 'Runway Gen-3', 'Midjourney v6', 'Kling AI', 'Sora', 'ElevenLabs Voice', 'Luma Dream Machine'];
+  const availableTools = AI_MODELS.map((m) => m.name);
+
+  // The Collab Radar reads what has actually been released rather than what the
+  // creator says they do, so the matches move when the catalogue moves.
+  const creatorProfile = profileFromTracks(
+    user?.name ?? 'FutureBox creator',
+    user?.handle ?? '@futurebox',
+    user?.followers ?? 0,
+    TRACK_FLAVOURS,
+  );
 
   // AI Stream Regeneration
   const podcastPools = [
@@ -1348,7 +1363,9 @@ export default function FutureBoxHome() {
                 { id: 'soundboard', label: '1. Master Genre Soundboard', icon: Volume2 },
                 { id: 'voice_studio', label: '2. Custom Voice Studio', icon: Mic2 },
                 { id: 'director', label: '3. Music Video Director & Publish', icon: Video },
-                { id: 'hooks_feed', label: '4. Hooks & Reels Feed', icon: Smartphone },
+                { id: 'hooks_feed', label: '4. Hooks & Reels', icon: Smartphone },
+                { id: 'collab', label: '5. Collab Radar', icon: Handshake },
+                { id: 'arena', label: '6. The Arena', icon: Trophy },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = studioTab === tab.id;
@@ -1356,7 +1373,7 @@ export default function FutureBoxHome() {
                   <button
                     key={tab.id}
                     onClick={() => setStudioTab(tab.id as any)}
-                    className={`flex-1 py-2.5 px-3 rounded-xl font-bold flex items-center justify-center space-x-2 transition-all ${
+                    className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl font-bold flex items-center justify-center space-x-2 transition-all ${
                       isActive 
                         ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-black shadow-lg shadow-emerald-500/20' 
                         : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
@@ -1367,6 +1384,52 @@ export default function FutureBoxHome() {
                   </button>
                 );
               })}
+            </div>
+
+            {/* Live AI stack strip — the whole point of FutureBox is that a release
+                is made by several different systems, so the stack is on screen the
+                entire time you are in the studio, not buried in one form. */}
+            <div className="bg-black/60 border border-zinc-800 rounded-2xl p-3 space-y-2">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-300 flex items-center space-x-1.5">
+                  <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>AI models on this release</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setStudioTab('director')}
+                  className="text-[10px] font-mono text-cyan-400 hover:underline"
+                >
+                  Change the stack
+                </button>
+              </div>
+              {selectedTools.length === 0 ? (
+                <p className="text-[10px] text-amber-300">
+                  No models selected. A FutureBox release always names what made it.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-3">
+                  {groupByRole(selectedTools).map(({ role, models }) => (
+                    <div key={role} className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-500">
+                        {ROLE_LABELS[role]}
+                      </span>
+                      {models.map((m) => (
+                        <a
+                          key={m.name}
+                          href={m.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`${m.name} by ${m.provider}`}
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-mono border ${ROLE_ACCENTS[role]} hover:opacity-80`}
+                        >
+                          {m.name}
+                        </a>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* TAB 1: MASTER GENRE SOUNDBOARD (EVERY GENRE WITH AUDIO SAMPLES & 1-CLICK USE) */}
@@ -1646,6 +1709,50 @@ export default function FutureBoxHome() {
                   </div>
                 </div>
 
+                {/* AI Models Used — restored, and grouped by the job each model
+                    does so the stack reads as a crew rather than a tag soup. */}
+                <div className="space-y-3 bg-black/40 p-4 rounded-2xl border border-zinc-800">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-cyan-300 flex items-center space-x-1.5">
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>AI Models Used</span>
+                    </label>
+                    <span className="text-[10px] font-mono text-zinc-500">
+                      {selectedTools.length} selected · published with the release
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-zinc-500 leading-relaxed">
+                    Every model you tick is shown on the release page and on the card in the feed. Listing them is not
+                    a formality — it is the thing that separates a FutureBox release from an anonymous upload.
+                  </p>
+
+                  {(['music', 'video', 'voice', 'image'] as const).map((role) => (
+                    <div key={role} className="space-y-1.5">
+                      <p className="text-[9px] font-mono uppercase tracking-wider text-zinc-500">{ROLE_LABELS[role]}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {AI_MODELS.filter((m) => m.role === role).map((model) => {
+                          const isSelected = selectedTools.includes(model.name);
+                          return (
+                            <button
+                              type="button"
+                              key={model.name}
+                              onClick={() => toggleTool(model.name)}
+                              title={`${model.name} — ${model.provider}`}
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all border ${
+                                isSelected
+                                  ? ROLE_ACCENTS[role] + ' font-bold'
+                                  : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                              }`}
+                            >
+                              {isSelected ? `✓ ${model.name}` : `+ ${model.name}`}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 {/* Lyrics & Prompt Generator */}
                 <div className="space-y-2 bg-black/40 p-4 rounded-2xl border border-zinc-800">
                   <div className="flex items-center justify-between">
@@ -1692,7 +1799,10 @@ export default function FutureBoxHome() {
                 {auditStatus === 'success' && (
                   <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500 text-emerald-300 text-xs font-semibold flex items-center space-x-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                    <span>✓ Ethical Gate Passed! Your AI Music Video is live at futurebox.app/@{creatorDomain}</span>
+                    <span>
+                      ✓ Ethical Gate Passed! Your AI Music Video is live at futurebox.app/@{creatorDomain}
+                      {selectedTools.length > 0 && <> — credited to {selectedTools.join(', ')}</>}
+                    </span>
                   </div>
                 )}
 
@@ -1719,6 +1829,12 @@ export default function FutureBoxHome() {
                 </button>
               </form>
             )}
+
+            {/* TAB 5: COLLAB RADAR (PODCASTS, TIKTOK LIVE, FLAVOUR MATCHING, VIRAL POSTS) */}
+            {studioTab === 'collab' && <CollabRadar profile={creatorProfile} />}
+
+            {/* TAB 6: THE ARENA (SKILL-JUDGED COMPETITIONS WITH A FREE ENTRY ROUTE) */}
+            {studioTab === 'arena' && <Arena userPlan={userPlan} />}
 
             {/* TAB 4: HOOKS & REELS FEED (INSPIRED BY SUNO HOOKS & YOUTUBE SHORTS) */}
             {studioTab === 'hooks_feed' && (
