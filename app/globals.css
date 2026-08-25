@@ -116,3 +116,12 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Two-line summaries in the Radar. Written by hand rather than pulling in the
+   line-clamp plugin for one rule. */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

@@ -17,12 +17,11 @@
 
 import React, { useMemo, useState } from 'react';
 import {
-  RefreshCw, ShieldCheck, ChevronDown, ChevronRight, Lock, ExternalLink,
-  Clock, Filter, EyeOff,
+  RefreshCw, ChevronDown, ChevronRight, Lock, EyeOff,
 } from 'lucide-react';
 import { FEED_ITEMS, CATEGORIES } from '../data/feed';
 import {
-  assess, BAR, BAND_LABELS, BAND_STYLES, TIER_LIMITS, type FeedItem, type Verdict,
+  assess, BAR, TIER_LIMITS, type FeedItem, type Verdict,
 } from '../lib/curation';
 
 interface Scored {
@@ -45,6 +44,7 @@ export default function QualityRadar({
   const [syncing, setSyncing] = useState(false);
   const [openItem, setOpenItem] = useState<string | null>(null);
   const [showRejected, setShowRejected] = useState(false);
+  const [showHow, setShowHow] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
 
   React.useEffect(() => setNow(Date.now()), []);
@@ -85,161 +85,137 @@ export default function QualityRadar({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="max-w-2xl">
-          <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            The Radar
-          </h3>
-          <p className="text-sm text-zinc-400 pt-1 leading-relaxed">
-            Everything is scored before it is shown. Items below {BAR}/100 do not appear in the feed — they are counted
-            in the rejected pile with the reason. Scores decay with age, so nothing sits at the top forever.
-          </p>
+      {/* One line, not a paragraph. The explanation is one click away for the
+          few people who want it, and out of the way for everyone else. */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+        <h3 className="text-2xl font-extrabold text-white tracking-tight">The Radar</h3>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowHow((v) => !v)}
+            className="text-sm text-zinc-500 hover:text-zinc-200"
+          >
+            How this is scored
+          </button>
+          <button
+            type="button"
+            onClick={resync}
+            disabled={syncing}
+            className="px-3 py-1.5 rounded-xl text-sm text-zinc-400 hover:text-white flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Scoring' : 'Refresh'}
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={resync}
-          disabled={syncing}
-          className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 text-sm font-semibold flex items-center gap-2 disabled:opacity-60"
-        >
-          <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-          {syncing ? 'Re-scoring…' : 'Re-scan and re-score'}
-        </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-500">
-        <span className="flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5" />
-          {now === null ? 'Scoring…' : `Scored ${new Date(now).toLocaleTimeString()}`}
-        </span>
-        <span>{passing.length} passed</span>
-        <span className="text-rose-400">{rejected.length} below the bar</span>
-        {userPlan === 'free' && locked.length > 0 && <span className="text-amber-400">{locked.length} Pro-only</span>}
-      </div>
+      <p className="text-base text-zinc-400">
+        {now === null ? 'Scoring…' : <><strong className="text-zinc-200">{visible.length}</strong> worth your time today.</>}
+        {rejected.length > 0 && <span className="text-zinc-600"> {rejected.length} didn&apos;t make it.</span>}
+      </p>
 
-      {/* Categories — free plans pick a couple, Pro picks freely */}
-      <div className="space-y-2">
-        <p className="text-sm font-semibold text-zinc-300 flex items-center gap-1.5">
-          <Filter className="w-3.5 h-3.5 text-zinc-500" />
-          Categories
-          <span className="font-normal text-zinc-500">
-            {limits.maxCategories >= 99 ? '· pick as many as you like' : `· ${categories.length}/${limits.maxCategories} on this plan`}
-          </span>
+      {showHow && (
+        <p className="text-sm text-zinc-400 leading-relaxed bg-zinc-900/60 border border-zinc-800 rounded-xl p-3">
+          Everything is scored before it appears: who published it, whether the title describes or baits, whether the
+          summary names anything you could check, length against the claim, and age on a half-life. Below {BAR}/100 it
+          does not show. The rejected pile is counted in the open — a gate whose rejections you never see is the same
+          as no gate. Scoring reads what a feed entry exposes, not the argument inside it.
         </p>
-        <div className="flex flex-wrap gap-1.5">
-          {CATEGORIES.map((c) => {
-            const active = categories.includes(c);
-            return (
-              <button
-                key={c}
-                type="button"
-                onClick={() => toggleCategory(c)}
-                className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-all ${
-                  active
-                    ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
-                    : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
-                }`}
-              >
-                {c}
-              </button>
-            );
-          })}
-          {categories.length > 0 && (
+      )}
+
+      {/* Categories, quiet until you touch them */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {CATEGORIES.map((c) => {
+          const active = categories.includes(c);
+          return (
             <button
+              key={c}
               type="button"
-              onClick={() => setCategories([])}
-              className="px-3 py-1.5 rounded-xl text-sm text-zinc-500 hover:text-zinc-200"
+              onClick={() => toggleCategory(c)}
+              className={`px-3 py-1 rounded-full text-sm transition-all ${
+                active
+                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/60'
+                  : 'text-zinc-500 border border-transparent hover:text-zinc-200'
+              }`}
             >
-              Clear
+              {c}
             </button>
-          )}
-        </div>
+          );
+        })}
+        {categories.length > 0 && (
+          <button type="button" onClick={() => setCategories([])} className="px-2 text-sm text-zinc-600 hover:text-zinc-300">
+            clear
+          </button>
+        )}
       </div>
 
-      {/* The feed */}
-      <div className="space-y-2.5">
+      {/* The feed. One line of metadata, one line of summary, a quiet score. */}
+      <div className="divide-y divide-zinc-800/70 border-y border-zinc-800/70">
         {visible.map(({ item, verdict }) => {
           const open = openItem === item.id;
           return (
-            <article key={item.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 transition-all">
-              <div className="p-4 space-y-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h4 className="text-base font-bold text-white leading-snug">{item.title}</h4>
-                    <p className="text-sm text-zinc-500 pt-0.5">
-                      {item.source} · {item.kind} · {item.minutes} min · {item.category}
-                    </p>
-                  </div>
-                  <span className={`px-2.5 py-1 rounded-lg text-sm font-bold border flex-shrink-0 ${BAND_STYLES[verdict.band]}`}>
-                    {verdict.score} · {BAND_LABELS[verdict.band]}
-                  </span>
-                </div>
-
-                <p className="text-sm text-zinc-400 leading-relaxed">{item.summary}</p>
-
-                <div className="flex items-center gap-3">
-                  <div className="h-1 flex-1 rounded-full bg-zinc-800 overflow-hidden max-w-[160px]">
-                    <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${Math.round(verdict.freshness * 100)}%` }} />
-                  </div>
-                  <span className="text-sm text-zinc-500">{Math.round(verdict.freshness * 100)}% fresh</span>
-
+            <article key={item.id} className="py-4 group">
+              <div className="flex items-start gap-4">
+                <div className="min-w-0 flex-1">
                   <a
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="ml-auto text-sm text-cyan-400 hover:underline flex items-center gap-1"
+                    className="text-lg font-bold text-white leading-snug hover:text-emerald-300 transition-colors"
                   >
-                    Open <ExternalLink className="w-3 h-3" />
+                    {item.title}
                   </a>
+                  <p className="text-sm text-zinc-500 pt-1">
+                    {item.source} · {item.minutes} min
+                    {verdict.freshness < 0.35 && <span className="text-zinc-600"> · older</span>}
+                  </p>
+                  <p className="text-base text-zinc-400 leading-relaxed pt-1.5 line-clamp-2">{item.summary}</p>
+
+                  {limits.seesScoreBreakdown && (
+                    <button
+                      type="button"
+                      onClick={() => setOpenItem(open ? null : item.id)}
+                      className="text-sm text-zinc-600 hover:text-zinc-300 pt-1.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                    >
+                      {open ? 'Hide the scoring' : 'Why this scored ' + verdict.score}
+                    </button>
+                  )}
+
+                  {open && limits.seesScoreBreakdown && (
+                    <ul className="space-y-1 pt-2">
+                      {verdict.signals.map((sig) => (
+                        <li key={sig.label} className="flex items-start gap-2 text-sm">
+                          <span
+                            className={`font-semibold w-9 flex-shrink-0 text-right ${
+                              sig.delta > 0 ? 'text-emerald-400' : sig.delta < 0 ? 'text-rose-400' : 'text-zinc-600'
+                            }`}
+                          >
+                            {sig.delta > 0 ? '+' : ''}{sig.delta}
+                          </span>
+                          <span className="text-zinc-500">
+                            <span className="text-zinc-300">{sig.label}.</span> {sig.detail}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
-                {limits.seesScoreBreakdown ? (
-                  <button
-                    type="button"
-                    onClick={() => setOpenItem(open ? null : item.id)}
-                    className="text-sm text-zinc-400 hover:text-white flex items-center gap-1"
-                  >
-                    {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                    Why it scored {verdict.score}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={onUpgrade}
-                    className="text-sm text-amber-400 hover:underline flex items-center gap-1.5"
-                  >
-                    <Lock className="w-3.5 h-3.5" />
-                    See the score breakdown with Pro
-                  </button>
-                )}
-
-                {open && limits.seesScoreBreakdown && (
-                  <ul className="space-y-1 pt-1 border-t border-zinc-800">
-                    {verdict.signals.map((sig) => (
-                      <li key={sig.label} className="flex items-start gap-2 text-sm">
-                        <span
-                          className={`font-bold w-10 flex-shrink-0 text-right ${
-                            sig.delta > 0 ? 'text-emerald-400' : sig.delta < 0 ? 'text-rose-400' : 'text-zinc-500'
-                          }`}
-                        >
-                          {sig.delta > 0 ? '+' : ''}
-                          {sig.delta}
-                        </span>
-                        <span>
-                          <span className="text-zinc-200 font-medium">{sig.label}.</span>{' '}
-                          <span className="text-zinc-500">{sig.detail}</span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <span
+                  title={`${verdict.score} out of 100`}
+                  className={`flex-shrink-0 text-sm font-bold tabular-nums ${
+                    verdict.band === 'signal' ? 'text-emerald-400' : 'text-zinc-500'
+                  }`}
+                >
+                  {verdict.score}
+                </span>
               </div>
             </article>
           );
         })}
 
         {now !== null && visible.length === 0 && (
-          <p className="text-sm text-zinc-500 p-6 text-center border border-dashed border-zinc-800 rounded-2xl">
+          <p className="text-base text-zinc-500 py-8 text-center">
             Nothing passed the bar in those categories. That is the gate working, not an empty feed.
           </p>
         )}
@@ -310,11 +286,8 @@ export default function QualityRadar({
         )}
       </div>
 
-      <p className="text-sm text-zinc-600 leading-relaxed">
-        These entries are sample data — FutureBox has no ingestion pipeline yet, so nothing here was fetched from a
-        source. The scoring is real and runs on every item; what is missing is the feed behind it. Scoring also only
-        reads what a feed entry exposes: who published it, how the title and summary are written, how long it is and
-        how old. Judging whether an argument is <em>correct</em> needs the full text and, past that, a person.
+      <p className="text-sm text-zinc-600">
+        Sample entries — the scoring is real, the feed behind it is not built yet.
       </p>
     </div>
   );
