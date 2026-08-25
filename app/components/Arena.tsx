@@ -248,8 +248,8 @@ export default function Arena({ userPlan }: { userPlan: 'free' | 'pro' }) {
 
       {/* Entry drawer */}
       {selected && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4 my-8">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4 my-auto">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-extrabold text-white">{selected.title}</p>

@@ -472,3 +472,68 @@ export const COMPETITION_SEEDS = {
     theme: ['a new FutureBox format', 'a reason to come back daily', 'a way to pay creators', 'a collab nobody has done'],
   },
 } as const;
+
+// -----------------------------------------------------------------------------
+// 6. Songwriting
+// -----------------------------------------------------------------------------
+
+/**
+ * Style presets for the songwriter.
+ *
+ * A generator takes a style line and a lyric block, and the style line is where
+ * most attempts are lost: "make it country" produces an average of every country
+ * song, while a tempo, a key and three named instruments produce a specific one.
+ * So each preset carries the things worth stating and nothing decorative.
+ */
+export interface StylePreset {
+  readonly id: string;
+  readonly family: string;
+  readonly name: string;
+  readonly bpm: number;
+  readonly key: string;
+  readonly tags: readonly string[];
+}
+
+export const STYLE_PRESETS: readonly StylePreset[] = [
+  { id: 'sp-melodic-techno', family: 'Electronic', name: 'Melodic techno', bpm: 124, key: 'D Minor', tags: ['analog arps', 'sidechained pads', 'driving kick', 'reverb tails'] },
+  { id: 'sp-afro-house', family: 'Electronic', name: 'Afro house', bpm: 122, key: 'F Minor', tags: ['log drums', 'shakers', 'warm bass', 'chanted vocal'] },
+  { id: 'sp-synthwave', family: 'Electronic', name: 'Synthwave', bpm: 110, key: 'A Minor', tags: ['analog synths', 'gated snare', 'neon pads', 'octave bass'] },
+  { id: 'sp-lofi', family: 'Electronic', name: 'Lo-fi beats', bpm: 88, key: 'C Major', tags: ['dusty drums', 'rhodes', 'vinyl crackle', 'mellow'] },
+  { id: 'sp-anthemic-pop', family: 'Pop', name: 'Anthemic pop', bpm: 120, key: 'G Major', tags: ['stacked chorus vocals', 'punchy kick', 'clapping snare', 'wide guitars'] },
+  { id: 'sp-jingle-pop', family: 'Pop', name: 'Jingle pop', bpm: 96, key: 'C Major', tags: ['hand percussion', 'brushed snare', 'acoustic strums', 'three-part harmony'] },
+  { id: 'sp-country-pop', family: 'Country', name: 'Modern country pop', bpm: 104, key: 'G Major', tags: ['pedal steel', 'fingerpicked acoustic', 'upright bass', 'storytelling'] },
+  { id: 'sp-folk-rock', family: 'Rock', name: 'Folk rock', bpm: 118, key: 'D Major', tags: ['layered electrics', 'close-miked vocal', 'tambourine', 'big last chorus'] },
+  { id: 'sp-indie-rock', family: 'Rock', name: 'Indie rock', bpm: 132, key: 'E Minor', tags: ['jangly guitars', 'dry drums', 'room reverb', 'half-shouted vocal'] },
+  { id: 'sp-soul', family: 'Soul', name: 'Neo-soul', bpm: 84, key: 'B♭ Minor', tags: ['rhodes', 'slippery bass', 'brush kit', 'breathy vocal'] },
+  { id: 'sp-hiphop', family: 'Hip-hop', name: 'Boom bap', bpm: 92, key: 'A Minor', tags: ['sampled loop', 'hard snare', 'upright bass', 'scratch fills'] },
+  { id: 'sp-cinematic', family: 'Score', name: 'Cinematic build', bpm: 70, key: 'D Minor', tags: ['strings', 'low brass', 'taiko', 'no vocal'] },
+];
+
+/** The section tags a generator understands, in the order a song uses them. */
+export const SONG_SECTIONS = [
+  { tag: 'Intro', hint: 'Sets the room. Often instrumental.' },
+  { tag: 'Verse', hint: 'Carries the story. Keep the melody lower than the chorus.' },
+  { tag: 'Pre-Chorus', hint: 'The lift. Two or four lines, rising.' },
+  { tag: 'Chorus', hint: 'The line people remember. Say the title here.' },
+  { tag: 'Post-Chorus', hint: 'A hook without words — oohs, a riff, a chant.' },
+  { tag: 'Bridge', hint: 'Somewhere new. Change the chords or the point of view.' },
+  { tag: 'Drop', hint: 'Dance only. The payoff after the build.' },
+  { tag: 'Instrumental', hint: 'A solo or a break. Name the instrument.' },
+  { tag: 'Outro', hint: 'How it lets go. Fade, cut, or one last line.' },
+] as const;
+
+export const VOCAL_CHOICES = [
+  { id: 'female-pop', label: 'Female pop vocal' },
+  { id: 'male-rock', label: 'Male rock vocal' },
+  { id: 'female-folk', label: 'Female folk vocal, close-miked' },
+  { id: 'male-soul', label: 'Male soul vocal' },
+  { id: 'duet', label: 'Duet, trading lines' },
+  { id: 'choir', label: 'Choir / group vocal' },
+  { id: 'vocoder', label: 'Vocoder / robotic' },
+  { id: 'none', label: 'Instrumental — no vocal' },
+] as const;
+
+export const MOOD_TAGS = [
+  'warm', 'melancholy', 'euphoric', 'hopeful', 'menacing', 'nostalgic',
+  'intimate', 'defiant', 'playful', 'sparse', 'lush', 'raw',
+] as const;

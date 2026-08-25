@@ -22,6 +22,7 @@ import StudioTimeline from './components/StudioTimeline';
 import { BASE_PRICES, guessRegion, priceFor, REGIONS, regionByCode, type Region } from './lib/pricing';
 import ThemeStudio from './components/ThemeStudio';
 import QualityRadar from './components/QualityRadar';
+import Songwriter from './components/Songwriter';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
 
 interface Blueprint {
@@ -110,7 +111,7 @@ export default function FutureBoxHome() {
   const [selectedBlueprint, setSelectedBlueprint] = useState<Blueprint | null>(null);
 
   // Creator Studio Sub-Tabs & Soundboard
-  const [studioTab, setStudioTab] = useState<'director' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio'>('studio');
+  const [studioTab, setStudioTab] = useState<'director' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio' | 'write'>('write');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -614,7 +615,7 @@ export default function FutureBoxHome() {
       </header>
 
       {/* 🔍 SMART FILTERING SUB-BAR */}
-      <div className="bg-zinc-950/80 border-b border-zinc-800/80 px-6 py-2.5 backdrop-blur-md">
+      <div className="relative z-30 bg-zinc-950/80 border-b border-zinc-800/80 px-6 py-2.5 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
           
           <div className="flex flex-wrap items-center gap-3">
@@ -1246,8 +1247,8 @@ export default function FutureBoxHome() {
 
       {/* 🔐 AUTH & SIGN IN / SIGN UP MODAL */}
       {authModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div className="flex items-center space-x-2 text-white">
                 <LogIn className="w-5 h-5 text-emerald-400" />
@@ -1306,8 +1307,8 @@ export default function FutureBoxHome() {
 
       {/* 👑 PRICING & PRO UPGRADE MODAL ($19 / MONTH) */}
       {pricingModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-amber-500/50 w-full max-w-xl rounded-3xl p-6 md:p-8 space-y-6 shadow-[0_0_50px_rgba(245,158,11,0.2)]">
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-amber-500/50 w-full max-w-xl rounded-3xl p-6 md:p-8 space-y-6 shadow-[0_0_50px_rgba(245,158,11,0.2)] my-auto">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
@@ -1400,8 +1401,8 @@ export default function FutureBoxHome() {
 
       {/* 🚀 CREATOR STUDIO & AI MUSIC HUB (WITH MASTER GENRE SOUNDBOARD, VOICE STUDIO & DIRECTOR) */}
       {uploadModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-7xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-8">
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-start justify-center p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-7xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
             
             {/* Top Back Bar */}
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
@@ -1435,6 +1436,7 @@ export default function FutureBoxHome() {
                 }`}
               >
                 {[
+                  { id: 'write', label: 'Songwriter', hint: 'Lyrics and style', icon: Music },
                   { id: 'studio', label: 'Studio', hint: 'Timeline and edits', icon: Sliders },
                   { id: 'soundboard', label: 'Soundboard', hint: 'Every genre, with audio', icon: Volume2 },
                   { id: 'voice_studio', label: 'Voice', hint: 'Your voice or ours', icon: Mic2 },
@@ -1912,6 +1914,19 @@ export default function FutureBoxHome() {
               </form>
             )}
 
+            {/* SONGWRITER: WHERE THE SONG IS ACTUALLY WRITTEN */}
+            {studioTab === 'write' && (
+              <Songwriter
+                onSendToDirector={({ title: t, lyrics, style }) => {
+                  setTitle(t);
+                  // The Director's one field takes both, in the order it reads
+                  // best: what it should sound like, then what it says.
+                  setLyricsOrPrompt(`[Style: ${style}]\n\n${lyrics}`);
+                  setStudioTab('director');
+                }}
+              />
+            )}
+
             {/* STUDIO: THE TIMELINE — point at a bar, say what should change */}
             {studioTab === 'studio' && <StudioTimeline />}
 
@@ -2000,8 +2015,8 @@ export default function FutureBoxHome() {
 
       {/* 🎬 UNIVERSAL MEDIA PLAYER MODAL */}
       {selectedMedia && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl my-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
               <div>
                 <h3 className="font-bold text-white text-sm">{selectedMedia.title}</h3>
@@ -2040,8 +2055,8 @@ export default function FutureBoxHome() {
 
       {/* 🔍 BLUEPRINT MODAL */}
       {selectedBlueprint && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-lg flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-8">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-lg flex items-start justify-center p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div className="space-y-1">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
