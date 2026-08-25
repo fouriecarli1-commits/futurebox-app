@@ -40,7 +40,7 @@ function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) 
           () => setCopied(false),
         );
       }}
-      className="px-2.5 py-1 rounded-lg text-[11px] font-mono bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all flex items-center space-x-1.5"
+      className="px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all flex items-center space-x-1.5"
     >
       {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
       <span>{copied ? 'Copied' : label}</span>
@@ -56,7 +56,7 @@ function ScoreBar({ score }: { score: number }) {
       <div className="h-1.5 flex-1 rounded-full bg-zinc-800 overflow-hidden">
         <div className={`h-full ${tone} rounded-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-[10px] font-mono text-zinc-400 w-8 text-right">{pct}%</span>
+      <span className="text-[13px] font-mono text-zinc-400 w-8 text-right">{pct}%</span>
     </div>
   );
 }
@@ -134,13 +134,13 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
             <Handshake className="w-4 h-4 text-cyan-400" />
             <span>Collab Radar</span>
           </h4>
-          <p className="text-[11px] text-zinc-400 max-w-2xl leading-relaxed pt-1">
+          <p className="text-sm text-zinc-400 max-w-2xl leading-relaxed pt-1">
             Matches are computed from your released tracks — {profile.genres.join(', ') || 'no releases yet'} — and
             scored on tempo, key and shared topics. Nothing here contacts anyone: every pitch is a draft you read,
             edit and send yourself.
           </p>
         </div>
-        <div className="text-[10px] font-mono text-zinc-500 bg-zinc-900/80 border border-zinc-800 rounded-lg px-2.5 py-1.5">
+        <div className="text-[13px] font-mono text-zinc-500 bg-zinc-900/80 border border-zinc-800 rounded-lg px-2.5 py-1.5">
           {profile.handle} · {profile.followers.toLocaleString()} followers
         </div>
       </div>
@@ -154,7 +154,7 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
-              className={`px-3 py-2 rounded-xl text-[11px] font-bold flex items-center space-x-1.5 border transition-all ${
+              className={`px-3 py-2 rounded-xl text-sm font-bold flex items-center space-x-1.5 border transition-all ${
                 isActive
                   ? 'bg-cyan-500/15 border-cyan-500 text-cyan-300'
                   : 'bg-zinc-950/60 border-zinc-800 text-zinc-500 hover:text-zinc-300'
@@ -185,18 +185,18 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-white truncate">{podcast.name}</p>
-                    <p className="text-[10px] text-zinc-500">
+                    <p className="text-[13px] text-zinc-500">
                       {podcast.host} · {podcast.format} · {podcast.audience}
                     </p>
                   </div>
                   <ScoreBar score={score} />
                 </div>
 
-                <p className="text-[10px] text-zinc-400 pt-2 leading-relaxed">{verdict}</p>
+                <p className="text-[13px] text-zinc-400 pt-2 leading-relaxed">{verdict}</p>
 
                 <div className="flex flex-wrap gap-1 pt-2">
                   <span
-                    className={`px-2 py-0.5 rounded-md text-[9px] font-mono border ${
+                    className={`px-2 py-0.5 rounded-md text-xs border ${
                       podcast.reach === 'aspirational'
                         ? 'text-amber-300 border-amber-500/30 bg-amber-500/10'
                         : 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10'
@@ -205,12 +205,12 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                     {REACH_LABELS[podcast.reach]}
                   </span>
                   {shared.slice(0, 4).map((s) => (
-                    <span key={s} className="px-2 py-0.5 rounded-md text-[9px] font-mono text-zinc-400 border border-zinc-800 bg-zinc-950">
+                    <span key={s} className="px-2 py-0.5 rounded-md text-xs text-zinc-400 border border-zinc-800 bg-zinc-950">
                       {s}
                     </span>
                   ))}
                   {podcast.isDemo && (
-                    <span className="px-2 py-0.5 rounded-md text-[9px] font-mono text-zinc-500 border border-zinc-800 bg-zinc-950">
+                    <span className="px-2 py-0.5 rounded-md text-xs text-zinc-500 border border-zinc-800 bg-zinc-950">
                       placeholder — replace with a real show
                     </span>
                   )}
@@ -220,7 +220,7 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                   <button
                     type="button"
                     onClick={() => openPitch(podcast, 'email')}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/25 transition-all flex items-center space-x-1.5"
+                    className="px-2.5 py-1 rounded-lg text-sm font-bold bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/25 transition-all flex items-center space-x-1.5"
                   >
                     <Send className="w-3 h-3" />
                     <span>Draft email</span>
@@ -228,7 +228,7 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                   <button
                     type="button"
                     onClick={() => openPitch(podcast, 'dm')}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-mono bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all"
+                    className="px-2.5 py-1 rounded-lg text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all"
                   >
                     Draft DM
                   </button>
@@ -237,7 +237,7 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                       href={podcast.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-mono text-zinc-400 hover:text-cyan-300 flex items-center space-x-1"
+                      className="px-2.5 py-1 rounded-lg text-sm text-zinc-400 hover:text-cyan-300 flex items-center space-x-1"
                     >
                       <ExternalLink className="w-3 h-3" />
                       <span>Find their contact page</span>
@@ -248,11 +248,11 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
             ))}
 
             <div className="p-3.5 rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/40 space-y-2">
-              <p className="text-[11px] font-bold text-zinc-300 flex items-center space-x-1.5">
+              <p className="text-sm font-bold text-zinc-300 flex items-center space-x-1.5">
                 <Search className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Add a show you found yourself</span>
               </p>
-              <p className="text-[10px] text-zinc-500 leading-relaxed">
+              <p className="text-[13px] text-zinc-500 leading-relaxed">
                 The best targets are shows your size that nobody has pitched yet. FutureBox does not scrape podcast
                 directories — add the ones you find and they join the ranking.
               </p>
@@ -261,12 +261,12 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                   value={ownTargetName}
                   onChange={(e) => setOwnTargetName(e.target.value)}
                   placeholder="Podcast name"
-                  className="flex-1 bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-[11px] text-white focus:outline-none focus:border-cyan-500"
+                  className="flex-1 bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
                 />
                 <button
                   type="button"
                   onClick={addOwnTarget}
-                  className="px-3 py-2 rounded-lg text-[11px] font-bold bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center space-x-1"
+                  className="px-3 py-2 rounded-lg text-sm font-bold bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center space-x-1"
                 >
                   <Plus className="w-3 h-3" />
                   <span>Add</span>
@@ -285,16 +285,16 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                   <CopyButton text={pitchBody} label="Copy draft" />
                 </div>
                 {pitchFormat === 'email' && (
-                  <div className="text-[10px] font-mono text-zinc-400 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2">
+                  <div className="text-[13px] font-mono text-zinc-400 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2">
                     Subject: {buildPitch(profile, selectedPodcast, 'email').subject}
                   </div>
                 )}
                 <textarea
                   value={pitchBody}
                   onChange={(e) => setPitchBody(e.target.value)}
-                  className="w-full h-72 bg-black/60 border border-zinc-800 rounded-xl p-3.5 text-[11px] text-zinc-200 font-mono leading-relaxed focus:outline-none focus:border-emerald-500"
+                  className="w-full h-72 bg-black/60 border border-zinc-800 rounded-xl p-3.5 text-sm text-zinc-200 font-mono leading-relaxed focus:outline-none focus:border-emerald-500"
                 />
-                <div className="flex items-start space-x-2 text-[10px] text-amber-300/90 bg-amber-950/20 border border-amber-500/30 rounded-xl p-2.5">
+                <div className="flex items-start space-x-2 text-[13px] text-amber-300/90 bg-amber-950/20 border border-amber-500/30 rounded-xl p-2.5">
                   <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                   <span>
                     Send this from your own account. FutureBox stores no addresses and mails nobody on your behalf —
@@ -322,7 +322,7 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
               <Video className="w-4 h-4 text-rose-400" />
               <p className="text-xs font-bold text-white">@futurebox on TikTok — not created yet</p>
             </div>
-            <p className="text-[10px] text-zinc-400 leading-relaxed">
+            <p className="text-[13px] text-zinc-400 leading-relaxed">
               A live collab cannot be booked before the room exists, and TikTok gates LIVE behind follower and age
               minimums that change. Work the list, then invite a co-host.
             </p>
@@ -345,19 +345,19 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                         isDone ? 'bg-emerald-500 border-emerald-500' : 'border-zinc-700'
                       }`}
                     >
-                      {isDone && <Check className="w-3 h-3 text-black" />}
+                      {isDone && <Check className="w-3 h-3 text-onAccent" />}
                     </div>
                     <div>
-                      <p className={`text-[11px] font-bold ${isDone ? 'text-emerald-300 line-through' : 'text-zinc-200'}`}>
+                      <p className={`text-sm font-bold ${isDone ? 'text-emerald-300 line-through' : 'text-zinc-200'}`}>
                         {step.label}
                       </p>
-                      <p className="text-[10px] text-zinc-500 leading-relaxed">{step.detail}</p>
+                      <p className="text-[13px] text-zinc-500 leading-relaxed">{step.detail}</p>
                     </div>
                   </button>
                 );
               })}
             </div>
-            <p className="text-[10px] font-mono text-zinc-500 pt-1">
+            <p className="text-[13px] text-zinc-500 pt-1">
               {checked.length}/{TIKTOK_LAUNCH_STEPS.length} done
             </p>
           </div>
@@ -372,26 +372,26 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                 value={coHost}
                 onChange={(e) => setCoHost(e.target.value)}
                 placeholder="Co-host handle (e.g. @someone)"
-                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-[11px] text-white focus:outline-none focus:border-cyan-500"
+                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
               />
               <input
                 value={liveTopic}
                 onChange={(e) => setLiveTopic(e.target.value)}
                 placeholder="Topic (e.g. Build a track from a comment prompt)"
-                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-[11px] text-white focus:outline-none focus:border-cyan-500"
+                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
               />
               <input
                 value={liveSlot}
                 onChange={(e) => setLiveSlot(e.target.value)}
                 placeholder="Slot (e.g. Thu 19:00 SAST / 17:00 UTC)"
-                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-[11px] text-white focus:outline-none focus:border-cyan-500"
+                className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
               />
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-[10px] text-zinc-500">Send this to your co-host before the room opens.</p>
+              <p className="text-[13px] text-zinc-500">Send this to your co-host before the room opens.</p>
               <CopyButton text={buildLiveBrief(profile, coHost, liveTopic, liveSlot)} label="Copy brief" />
             </div>
-            <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-[10px] text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">
+            <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-[13px] text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">
               {buildLiveBrief(profile, coHost, liveTopic, liveSlot)}
             </pre>
           </div>
@@ -404,13 +404,13 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
       {tab === 'flavour' && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-mono text-zinc-400">Match against:</span>
+            <span className="text-sm text-zinc-400">Match against:</span>
             {TRACK_FLAVOURS.filter((t) => t.onChannel).map((t) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => setSourceId(t.id)}
-                className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition-all ${
+                className={`px-2.5 py-1.5 rounded-xl text-sm font-bold border transition-all ${
                   sourceId === t.id
                     ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
                     : 'bg-zinc-950/60 border-zinc-800 text-zinc-500 hover:text-zinc-300'
@@ -421,7 +421,7 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
             ))}
           </div>
 
-          <div className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-mono text-zinc-400">
+          <div className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-zinc-400">
             <span className="text-white font-bold">{source.title}</span>
             <span>{source.genre}</span>
             <span>{source.bpm} BPM</span>
@@ -435,7 +435,7 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-white truncate">{track.title}</p>
-                    <p className="text-[10px] text-zinc-500">
+                    <p className="text-[13px] text-zinc-500">
                       {track.handle} · {track.genre} · {track.bpm} BPM · {track.key}
                     </p>
                   </div>
@@ -444,7 +444,7 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
 
                 <ul className="space-y-0.5">
                   {reasons.map((r) => (
-                    <li key={r} className="text-[10px] text-zinc-400 flex items-start space-x-1.5">
+                    <li key={r} className="text-[13px] text-zinc-400 flex items-start space-x-1.5">
                       <span className="text-zinc-600 mt-0.5">·</span>
                       <span>{r}</span>
                     </li>
@@ -452,15 +452,15 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                 </ul>
 
                 <div className="p-2.5 rounded-xl bg-cyan-950/20 border border-cyan-500/25">
-                  <p className="text-[11px] font-bold text-cyan-300 flex items-center space-x-1.5">
+                  <p className="text-sm font-bold text-cyan-300 flex items-center space-x-1.5">
                     <Sparkles className="w-3 h-3" />
                     <span>{collabFormat}</span>
                   </p>
-                  <p className="text-[10px] text-zinc-400 pt-0.5 leading-relaxed">{collabWhy}</p>
+                  <p className="text-[13px] text-zinc-400 pt-0.5 leading-relaxed">{collabWhy}</p>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-mono text-zinc-500">
+                  <span className="text-xs text-zinc-500">
                     {track.isDemo ? 'demo entry' : 'on channel'} · {track.models.join(', ')}
                   </span>
                   <CopyButton
@@ -481,11 +481,11 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
         <div className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono text-zinc-400">Track</label>
+              <label className="text-sm text-zinc-400">Track</label>
               <select
                 value={postTrackId}
                 onChange={(e) => setPostTrackId(e.target.value)}
-                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-[11px] text-white focus:outline-none focus:border-cyan-500"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
               >
                 {TRACK_FLAVOURS.filter((t) => t.onChannel).map((t) => (
                   <option key={t.id} value={t.id}>
@@ -495,14 +495,14 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-mono text-zinc-400">Channel</label>
+              <label className="text-sm text-zinc-400">Channel</label>
               <div className="flex flex-wrap gap-1.5">
                 {PLATFORMS.map((p) => (
                   <button
                     key={p.id}
                     type="button"
                     onClick={() => setPlatformId(p.id)}
-                    className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition-all ${
+                    className={`px-2.5 py-1.5 rounded-xl text-sm font-bold border transition-all ${
                       platformId === p.id
                         ? 'bg-cyan-500/15 border-cyan-500 text-cyan-300'
                         : 'bg-zinc-950/60 border-zinc-800 text-zinc-500 hover:text-zinc-300'
@@ -517,7 +517,7 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
           </div>
 
           {platform.status === 'not_created' && (
-            <div className="flex items-start space-x-2 text-[10px] text-amber-300/90 bg-amber-950/20 border border-amber-500/30 rounded-xl p-2.5">
+            <div className="flex items-start space-x-2 text-[13px] text-amber-300/90 bg-amber-950/20 border border-amber-500/30 rounded-xl p-2.5">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
               <span>
                 {platform.handle} on {platform.name} does not exist yet. Drafts are still worth writing — but create the
@@ -530,18 +530,18 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
             {posts.map((post, i) => (
               <div key={i} className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-emerald-500/40 transition-all space-y-2">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-[11px] font-bold text-emerald-300 leading-snug">{post.hook}</p>
+                  <p className="text-sm font-bold text-emerald-300 leading-snug">{post.hook}</p>
                   <CopyButton text={`${post.caption}\n\n${post.hashtags.map((h) => `#${h}`).join(' ')}`} />
                 </div>
-                <pre className="text-[10px] text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed">{post.caption}</pre>
+                <pre className="text-[13px] text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed">{post.caption}</pre>
                 <div className="flex flex-wrap gap-1">
                   {post.hashtags.map((h) => (
-                    <span key={h} className="px-2 py-0.5 rounded-md text-[9px] font-mono text-cyan-300/80 border border-cyan-500/20 bg-cyan-500/5">
+                    <span key={h} className="px-2 py-0.5 rounded-md text-xs font-mono text-cyan-300/80 border border-cyan-500/20 bg-cyan-500/5">
                       #{h}
                     </span>
                   ))}
                 </div>
-                <p className="text-[10px] text-zinc-500 flex items-start space-x-1.5 pt-1 border-t border-zinc-800/80">
+                <p className="text-[13px] text-zinc-500 flex items-start space-x-1.5 pt-1 border-t border-zinc-800/80">
                   <Users className="w-3 h-3 flex-shrink-0 mt-0.5" />
                   <span>{post.shotNote}</span>
                 </p>

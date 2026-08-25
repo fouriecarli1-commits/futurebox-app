@@ -363,7 +363,3 @@ export function generateCompetition(category: CompetitionCategory, seed: number)
     brief: `Make it about ${theme}. One hard constraint: ${constraint}. The constraint is the point — entries that ignore it are disqualified before judging, however good they are.`,
   };
 }
-
-export function formatFee(cents: number): string {
-  return `R${(cents / 100).toFixed(2)}`;
-}

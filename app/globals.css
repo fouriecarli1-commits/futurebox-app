@@ -2,8 +2,117 @@
 @tailwind components;
 @tailwind utilities;
 
+/**
+ * Default theme variables — the FutureBox preset, written out so the first
+ * paint is correct before any JavaScript runs. `applyTheme()` overwrites these
+ * on the root element once a saved theme loads.
+ */
+:root {
+  --fb-surface-50: 244 244 245;
+  --fb-surface-100: 231 231 234;
+  --fb-surface-200: 210 210 216;
+  --fb-surface-300: 179 179 188;
+  --fb-surface-400: 143 143 155;
+  --fb-surface-500: 111 111 124;
+  --fb-surface-600: 86 86 97;
+  --fb-surface-700: 67 67 76;
+  --fb-surface-800: 48 48 55;
+  --fb-surface-900: 31 31 36;
+  --fb-surface-950: 17 17 20;
+
+  --fb-primary-50: 232 252 243;
+  --fb-primary-100: 209 249 231;
+  --fb-primary-200: 158 240 205;
+  --fb-primary-300: 105 226 175;
+  --fb-primary-400: 62 205 145;
+  --fb-primary-500: 49 175 122;
+  --fb-primary-600: 41 148 103;
+  --fb-primary-700: 33 120 84;
+  --fb-primary-800: 26 96 67;
+  --fb-primary-900: 20 75 52;
+  --fb-primary-950: 14 51 36;
+
+  --fb-secondary-50: 230 250 254;
+  --fb-secondary-100: 203 245 253;
+  --fb-secondary-200: 148 233 250;
+  --fb-secondary-300: 87 216 245;
+  --fb-secondary-400: 41 190 224;
+  --fb-secondary-500: 26 160 190;
+  --fb-secondary-600: 22 135 161;
+  --fb-secondary-700: 18 110 131;
+  --fb-secondary-800: 14 88 105;
+  --fb-secondary-900: 11 69 82;
+  --fb-secondary-950: 8 47 56;
+
+  --fb-highlight-50: 254 248 230;
+  --fb-highlight-100: 253 240 202;
+  --fb-highlight-200: 251 223 143;
+  --fb-highlight-300: 249 203 82;
+  --fb-highlight-400: 245 180 24;
+  --fb-highlight-500: 208 152 10;
+  --fb-highlight-600: 176 129 9;
+  --fb-highlight-700: 143 105 7;
+  --fb-highlight-800: 115 84 6;
+  --fb-highlight-900: 90 66 4;
+  --fb-highlight-950: 61 45 3;
+
+  --fb-tertiary-50: 243 238 253;
+  --fb-tertiary-100: 233 224 251;
+  --fb-tertiary-200: 211 193 247;
+  --fb-tertiary-300: 185 157 242;
+  --fb-tertiary-400: 157 118 236;
+  --fb-tertiary-500: 131 84 222;
+  --fb-tertiary-600: 110 64 199;
+  --fb-tertiary-700: 89 50 165;
+  --fb-tertiary-800: 71 39 132;
+  --fb-tertiary-900: 56 30 104;
+  --fb-tertiary-950: 38 20 71;
+
+  --fb-danger-50: 254 236 240;
+  --fb-danger-100: 253 217 224;
+  --fb-danger-200: 250 175 191;
+  --fb-danger-300: 246 128 155;
+  --fb-danger-400: 240 79 118;
+  --fb-danger-500: 219 44 87;
+  --fb-danger-600: 186 34 72;
+  --fb-danger-700: 151 27 58;
+  --fb-danger-800: 121 21 47;
+  --fb-danger-900: 95 17 37;
+  --fb-danger-950: 65 11 25;
+
+  --fb-page: 7 8 12;
+  --fb-ink: 231 231 234;
+  --fb-void: 9 9 11;
+  --fb-on-accent: 17 17 20;
+
+  --fb-radius-sm: 2px;
+  --fb-radius: 4px;
+  --fb-radius-md: 6px;
+  --fb-radius-lg: 8px;
+  --fb-radius-xl: 12px;
+  --fb-radius-2xl: 16px;
+  --fb-radius-3xl: 24px;
+
+  --fb-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --fb-root-size: 16px;
+  --fb-motion: 200ms;
+}
+
+html {
+  font-size: var(--fb-root-size);
+}
+
 body {
-  background-color: #07080c;
-  color: #f4f4f5;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: rgb(var(--fb-page));
+  color: rgb(var(--fb-ink));
+  font-family: var(--fb-font-sans);
+}
+
+/* Reduced motion is a theme choice here, and also honoured when the operating
+   system asks for it — the OS preference wins, as it should. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }

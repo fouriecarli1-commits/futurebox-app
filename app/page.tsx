@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Play, Sparkles, Radio, TrendingUp, ShieldCheck, 
   Tv, Cpu, ArrowUpRight, Compass, CheckCircle2, X,
@@ -10,7 +10,7 @@ import {
   Crown, Lock, Zap, RefreshCw, Send, Mail, Check, Star,
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, Volume2, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
-  Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy
+  Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush
 } from 'lucide-react';
 import {
   AI_MODELS, ROLE_LABELS, ROLE_ACCENTS, TRACK_FLAVOURS, groupByRole, modelByName,
@@ -18,6 +18,11 @@ import {
 import { profileFromTracks } from './lib/matching';
 import CollabRadar from './components/CollabRadar';
 import Arena from './components/Arena';
+import StudioTimeline from './components/StudioTimeline';
+import { BASE_PRICES, guessRegion, priceFor, REGIONS, regionByCode, type Region } from './lib/pricing';
+import ThemeStudio from './components/ThemeStudio';
+import QualityRadar from './components/QualityRadar';
+import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
 
 interface Blueprint {
   tag: string;
@@ -60,6 +65,30 @@ export default function FutureBoxHome() {
   const [authPassword, setAuthPassword] = useState('');
   const [userPlan, setUserPlan] = useState<'free' | 'pro'>('free');
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
+  // Resolved after mount: guessing during render would bake one country's
+  // prices into the static HTML that everybody is served.
+  const [region, setRegion] = useState<Region>(REGIONS[0]);
+  const [regionBasis, setRegionBasis] = useState('Working it out…');
+  useEffect(() => {
+    const guess = guessRegion();
+    setRegion(guess.region);
+    setRegionBasis(guess.basis);
+  }, []);
+  const proMonthly = priceFor(BASE_PRICES.proMonthly, region);
+
+  // Appearance. The saved theme is read after mount — reading localStorage
+  // during render would disagree with the server-rendered HTML.
+  const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
+  const [themeOpen, setThemeOpen] = useState(false);
+  useEffect(() => {
+    const saved = loadTheme();
+    setTheme(saved);
+    applyTheme(saved);
+  }, []);
+  useEffect(() => {
+    applyTheme(theme);
+    saveTheme(theme);
+  }, [theme]);
 
   // Filter Dropdowns State
   const [podcasterDropdownOpen, setPodcasterDropdownOpen] = useState(false);
@@ -81,7 +110,7 @@ export default function FutureBoxHome() {
   const [selectedBlueprint, setSelectedBlueprint] = useState<Blueprint | null>(null);
 
   // Creator Studio Sub-Tabs & Soundboard
-  const [studioTab, setStudioTab] = useState<'director' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena'>('soundboard');
+  const [studioTab, setStudioTab] = useState<'director' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio'>('studio');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -476,19 +505,19 @@ export default function FutureBoxHome() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07080c] text-zinc-100 selection:bg-emerald-500 selection:text-black flex flex-col justify-between">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-emerald-500 selection:text-onAccent flex flex-col justify-between">
       
       {/* 1. Header with Auth & Creator Channel Info */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#07080c]/90 border-b border-zinc-800/80 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-zinc-950/90 border-b border-zinc-800/80 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
-            <Cpu className="w-5 h-5 text-black font-bold" />
+            <Cpu className="w-5 h-5 text-onAccent font-bold" />
           </div>
           <div>
             <h1 className="text-lg font-black tracking-wider text-white flex items-center space-x-2">
               <span>FUTURE<span className="text-emerald-400">BOX</span></span>
               {userPlan === 'pro' && (
-                <span className="text-[10px] bg-gradient-to-r from-amber-400 to-amber-600 text-black font-extrabold px-2 py-0.5 rounded-full flex items-center space-x-1 shadow-[0_0_10px_rgba(245,158,11,0.4)]">
+                <span className="text-[10px] bg-gradient-to-r from-amber-400 to-amber-600 text-onAccent font-extrabold px-2 py-0.5 rounded-full flex items-center space-x-1 shadow-[0_0_10px_rgba(245,158,11,0.4)]">
                   <Crown className="w-3 h-3" />
                   <span>PRO</span>
                 </span>
@@ -514,7 +543,7 @@ export default function FutureBoxHome() {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
                   activeTab === tab.id 
-                    ? 'bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' 
+                    ? 'bg-emerald-500 text-onAccent shadow-[0_0_15px_rgba(16,185,129,0.4)]' 
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -532,7 +561,7 @@ export default function FutureBoxHome() {
               onClick={() => { setStudioTab('director'); setUploadModalOpen(true); }}
               className="flex items-center space-x-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
             >
-              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-500 text-black font-extrabold flex items-center justify-center text-[10px]">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-500 text-onAccent font-extrabold flex items-center justify-center text-[10px]">
                 {user.name.charAt(0)}
               </div>
               <div className="hidden sm:block text-left">
@@ -553,10 +582,10 @@ export default function FutureBoxHome() {
           {userPlan === 'free' ? (
             <button
               onClick={() => setPricingModalOpen(true)}
-              className="hidden sm:flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              className="hidden sm:flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-onAccent font-extrabold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
             >
               <Crown className="w-3.5 h-3.5 fill-current" />
-              <span>Upgrade ($19)</span>
+              <span>Upgrade ({proMonthly.display})</span>
             </button>
           ) : (
             <span className="text-xs font-mono text-emerald-400 hidden sm:flex items-center space-x-1 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
@@ -566,8 +595,17 @@ export default function FutureBoxHome() {
           )}
 
           <button
+            onClick={() => setThemeOpen(true)}
+            title="Appearance — colours, type, layout"
+            className="flex items-center space-x-1.5 px-3 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 text-xs font-bold rounded-xl transition-all"
+          >
+            <Paintbrush className="w-4 h-4" />
+            <span className="hidden lg:inline">Appearance</span>
+          </button>
+
+          <button
             onClick={() => setUploadModalOpen(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-black text-xs font-bold rounded-xl hover:opacity-90 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent text-xs font-bold rounded-xl hover:opacity-90 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
           >
             <UploadCloud className="w-4 h-4" />
             <span className="hidden sm:inline">Creator Studio</span>
@@ -676,7 +714,7 @@ export default function FutureBoxHome() {
           <button
             onClick={handleAiScanRefresh}
             disabled={isScanning}
-            className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-black text-xs font-extrabold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50"
+            className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-onAccent text-xs font-extrabold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
             <span>{isScanning ? 'Regenerating Content...' : 'Regenerate Stream with AI'}</span>
@@ -725,7 +763,7 @@ export default function FutureBoxHome() {
                       type: 'youtube',
                       host: 'Andrej Karpathy'
                     })}
-                    className="flex items-center space-x-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)]"
+                    className="flex items-center space-x-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-sm rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)]"
                   >
                     <Play className="w-4 h-4 fill-current" />
                     <span>Watch Free Masterclass</span>
@@ -759,7 +797,7 @@ export default function FutureBoxHome() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
                 />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/90 text-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/90 text-onAccent flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                     <Play className="w-6 h-6 fill-current translate-x-0.5" />
                   </div>
                 </div>
@@ -803,7 +841,7 @@ export default function FutureBoxHome() {
                     >
                       <img src={pod.thumbnail} alt={pod.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-12 h-12 rounded-full bg-emerald-500 text-black flex items-center justify-center shadow-lg">
+                        <div className="w-12 h-12 rounded-full bg-emerald-500 text-onAccent flex items-center justify-center shadow-lg">
                           <Play className="w-5 h-5 fill-current translate-x-0.5" />
                         </div>
                       </div>
@@ -910,7 +948,7 @@ export default function FutureBoxHome() {
                     className="group bg-zinc-900/60 rounded-2xl border border-zinc-800/80 overflow-hidden hover:border-cyan-500/50 transition-all flex flex-col justify-between relative"
                   >
                     {isLocked && (
-                      <div className="absolute top-3 right-3 z-20 bg-amber-500/90 text-black text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center space-x-1 shadow-lg">
+                      <div className="absolute top-3 right-3 z-20 bg-amber-500/90 text-onAccent text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center space-x-1 shadow-lg">
                         <Lock className="w-3 h-3" />
                         <span>PRO ONLY</span>
                       </div>
@@ -936,11 +974,11 @@ export default function FutureBoxHome() {
                         <img src={mc.thumbnail} alt={mc.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           {isLocked ? (
-                            <div className="w-12 h-12 rounded-full bg-amber-500 text-black flex items-center justify-center shadow-lg">
+                            <div className="w-12 h-12 rounded-full bg-amber-500 text-onAccent flex items-center justify-center shadow-lg">
                               <Lock className="w-5 h-5" />
                             </div>
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-cyan-400 text-black flex items-center justify-center shadow-lg">
+                            <div className="w-12 h-12 rounded-full bg-cyan-400 text-onAccent flex items-center justify-center shadow-lg">
                               <Play className="w-5 h-5 fill-current translate-x-0.5" />
                             </div>
                           )}
@@ -963,7 +1001,7 @@ export default function FutureBoxHome() {
                           className="text-amber-400 font-bold flex items-center space-x-1 hover:underline"
                         >
                           <Crown className="w-3.5 h-3.5 fill-current" />
-                          <span>Unlock with PRO ($19)</span>
+                          <span>Unlock with PRO ({proMonthly.display})</span>
                         </button>
                       ) : (
                         <button 
@@ -1107,7 +1145,9 @@ export default function FutureBoxHome() {
         {/* ⚡ 5. INTELLIGENCE RADAR */}
         {(activeTab === 'all' || activeTab === 'radar') && (
           <section className="space-y-6">
-            <div>
+            <QualityRadar userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
+
+            <div className="pt-2">
               <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
                 <span>AI Trends & Opportunities Radar</span>
@@ -1245,7 +1285,7 @@ export default function FutureBoxHome() {
 
               <button
                 type="submit"
-                className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
               >
                 {authMode === 'signin' ? 'Sign In' : 'Create Free Account'}
               </button>
@@ -1286,12 +1326,38 @@ export default function FutureBoxHome() {
             <div className="bg-gradient-to-b from-amber-950/30 to-black/60 border border-amber-500/30 rounded-2xl p-6 space-y-4">
               <div className="flex items-baseline justify-between">
                 <div>
-                  <span className="text-3xl font-black text-white">$19</span>
-                  <span className="text-xs text-zinc-400 font-mono"> / month</span>
+                  <span className="text-3xl font-black text-white">{proMonthly.display}</span>
+                  <span className="text-xs text-zinc-400"> / month</span>
                 </div>
-                <span className="text-xs font-mono font-bold bg-amber-500 text-black px-2.5 py-1 rounded-full">
+                <span className="text-xs font-bold bg-amber-500 text-onAccent px-2.5 py-1 rounded-full">
                   Most Popular
                 </span>
+              </div>
+
+              {/* The buyer should see why the number is what it is, and what
+                  actually settles it. */}
+              <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-amber-500/20">
+                <span className="text-xs text-zinc-400">Priced for</span>
+                <select
+                  value={region.code}
+                  onChange={(e) => {
+                    setRegion(regionByCode(e.target.value));
+                    setRegionBasis('You picked this one');
+                  }}
+                  className="bg-black/60 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-amber-500"
+                >
+                  {REGIONS.map((r) => (
+                    <option key={r.code} value={r.code}>
+                      {r.name} ({r.currency})
+                    </option>
+                  ))}
+                </select>
+                <span className="text-xs text-zinc-500">{regionBasis}</span>
+                <p className="basis-full text-xs text-zinc-500 leading-relaxed">
+                  Adjusted for local purchasing power from a ${BASE_PRICES.proMonthly} base. The amount you are charged
+                  is set at checkout by the country of your payment method — not by this menu, and not by your IP
+                  address.
+                </p>
               </div>
 
               <ul className="space-y-2 text-xs text-zinc-200">
@@ -1321,10 +1387,10 @@ export default function FutureBoxHome() {
                   setPricingModalOpen(false);
                   alert('🎉 Congratulations! Your account has been upgraded to FutureBox PRO!');
                 }}
-                className="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center justify-center space-x-2"
+                className="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-onAccent font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center justify-center space-x-2"
               >
                 <Crown className="w-4 h-4 fill-current" />
-                <span>Activate PRO Membership ($19 / Month)</span>
+                <span>Activate PRO Membership ({proMonthly.display} / month)</span>
               </button>
               <p className="text-[10px] text-center text-zinc-500">Cancel anytime with 1 click. Powered by Stripe secure billing.</p>
             </div>
@@ -1335,7 +1401,7 @@ export default function FutureBoxHome() {
       {/* 🚀 CREATOR STUDIO & AI MUSIC HUB (WITH MASTER GENRE SOUNDBOARD, VOICE STUDIO & DIRECTOR) */}
       {uploadModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-4xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-8">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-7xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-8">
             
             {/* Top Back Bar */}
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
@@ -1348,7 +1414,7 @@ export default function FutureBoxHome() {
               </button>
 
               <div className="flex items-center space-x-2">
-                <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                <span className="text-sm font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
                   futurebox.app/@{creatorDomain}
                 </span>
                 <button onClick={() => { setUploadModalOpen(false); setAuditStatus(null); }} className="text-zinc-400 hover:text-white">
@@ -1357,61 +1423,77 @@ export default function FutureBoxHome() {
               </div>
             </div>
 
-            {/* Studio Navigation Bar */}
-            <div className="flex flex-wrap items-center gap-2 bg-black/60 p-2 rounded-2xl border border-zinc-800 text-xs">
-              {[
-                { id: 'soundboard', label: '1. Master Genre Soundboard', icon: Volume2 },
-                { id: 'voice_studio', label: '2. Custom Voice Studio', icon: Mic2 },
-                { id: 'director', label: '3. Music Video Director & Publish', icon: Video },
-                { id: 'hooks_feed', label: '4. Hooks & Reels', icon: Smartphone },
-                { id: 'collab', label: '5. Collab Radar', icon: Handshake },
-                { id: 'arena', label: '6. The Arena', icon: Trophy },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const isActive = studioTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setStudioTab(tab.id as any)}
-                    className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl font-bold flex items-center justify-center space-x-2 transition-all ${
-                      isActive 
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-black shadow-lg shadow-emerald-500/20' 
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            {/* Studio shell: rail on the left, one working surface on the right. */}
+            <div className={theme.layout === 'top' ? 'flex flex-col gap-6' : 'flex flex-col md:flex-row gap-6'}>
+              <nav
+                className={`flex-shrink-0 flex gap-1 overflow-x-auto md:overflow-visible ${
+                  theme.layout === 'top'
+                    ? 'flex-row flex-wrap'
+                    : theme.layout === 'focus'
+                      ? 'md:w-14 md:flex-col'
+                      : 'md:w-56 md:flex-col'
+                }`}
+              >
+                {[
+                  { id: 'studio', label: 'Studio', hint: 'Timeline and edits', icon: Sliders },
+                  { id: 'soundboard', label: 'Soundboard', hint: 'Every genre, with audio', icon: Volume2 },
+                  { id: 'voice_studio', label: 'Voice', hint: 'Your voice or ours', icon: Mic2 },
+                  { id: 'director', label: 'Director', hint: 'Build and publish', icon: Video },
+                  { id: 'hooks_feed', label: 'Hooks', hint: 'Vertical reels', icon: Smartphone },
+                  { id: 'collab', label: 'Collab Radar', hint: 'Podcasts and creators', icon: Handshake },
+                  { id: 'arena', label: 'Arena', hint: 'Competitions', icon: Trophy },
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = studioTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setStudioTab(tab.id as any)}
+                      title={`${tab.label} — ${tab.hint}`}
+                      className={`flex-shrink-0 text-left rounded-xl flex items-center gap-3 transition-all ${
+                        theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
+                      } ${isActive ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+                    >
+                      <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-emerald-400' : ''}`} />
+                      <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
+                        <span className="block text-sm font-semibold leading-tight">{tab.label}</span>
+                        {theme.layout === 'rail' && (
+                          <span className="hidden md:block text-xs text-zinc-500 leading-tight truncate">{tab.hint}</span>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              <div className="flex-1 min-w-0 space-y-6">
 
             {/* Live AI stack strip — the whole point of FutureBox is that a release
                 is made by several different systems, so the stack is on screen the
                 entire time you are in the studio, not buried in one form. */}
             <div className="bg-black/60 border border-zinc-800 rounded-2xl p-3 space-y-2">
               <div className="flex items-center justify-between gap-3 flex-wrap">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-300 flex items-center space-x-1.5">
+                <p className="text-sm font-bold uppercase tracking-wider text-zinc-300 flex items-center space-x-1.5">
                   <Layers className="w-3.5 h-3.5 text-cyan-400" />
                   <span>AI models on this release</span>
                 </p>
                 <button
                   type="button"
                   onClick={() => setStudioTab('director')}
-                  className="text-[10px] font-mono text-cyan-400 hover:underline"
+                  className="text-[13px] text-cyan-400 hover:underline"
                 >
                   Change the stack
                 </button>
               </div>
               {selectedTools.length === 0 ? (
-                <p className="text-[10px] text-amber-300">
+                <p className="text-[13px] text-amber-300">
                   No models selected. A FutureBox release always names what made it.
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-3">
                   {groupByRole(selectedTools).map(({ role, models }) => (
                     <div key={role} className="flex items-center gap-1.5">
-                      <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-500">
+                      <span className="text-xs uppercase tracking-wider text-zinc-500">
                         {ROLE_LABELS[role]}
                       </span>
                       {models.map((m) => (
@@ -1421,7 +1503,7 @@ export default function FutureBoxHome() {
                           target="_blank"
                           rel="noopener noreferrer"
                           title={`${m.name} by ${m.provider}`}
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-mono border ${ROLE_ACCENTS[role]} hover:opacity-80`}
+                          className={`px-2 py-0.5 rounded-md text-[13px] border ${ROLE_ACCENTS[role]} hover:opacity-80`}
                         >
                           {m.name}
                         </a>
@@ -1453,9 +1535,9 @@ export default function FutureBoxHome() {
                     <button
                       key={cat}
                       onClick={() => setSelectedGenreCategory(cat)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-mono whitespace-nowrap transition-all ${
+                      className={`px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition-all ${
                         selectedGenreCategory === cat 
-                          ? 'bg-emerald-500 text-black font-extrabold shadow-md' 
+                          ? 'bg-emerald-500 text-onAccent font-extrabold shadow-md' 
                           : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
                       }`}
                     >
@@ -1473,17 +1555,17 @@ export default function FutureBoxHome() {
                         <div>
                           <div className="flex items-start justify-between">
                             <div>
-                              <span className="text-[9px] font-mono uppercase text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                              <span className="text-xs uppercase text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                                 {genre.category}
                               </span>
                               <h5 className="font-bold text-sm text-white pt-1">{genre.name}</h5>
-                              <p className="text-[11px] text-zinc-400">{genre.subgenre} • <span className="text-cyan-400 font-mono">{genre.bpm} ({genre.key})</span></p>
+                              <p className="text-sm text-zinc-400">{genre.subgenre} • <span className="text-cyan-400">{genre.bpm} ({genre.key})</span></p>
                             </div>
 
                             <button
                               onClick={() => setPlayingGenreSample(isPlaying ? null : genre.name)}
                               className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-                                isPlaying ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/30 animate-pulse' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                                isPlaying ? 'bg-emerald-500 text-onAccent shadow-lg shadow-emerald-500/30 animate-pulse' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                               }`}
                             >
                               {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current translate-x-0.5" />}
@@ -1500,13 +1582,13 @@ export default function FutureBoxHome() {
                         )}
 
                         <div className="bg-black/60 p-2.5 rounded-xl border border-zinc-800 flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-mono text-zinc-400 truncate">{genre.promptSnippet}</span>
+                          <span className="text-[13px] text-zinc-400 truncate">{genre.promptSnippet}</span>
                           <button
                             onClick={() => {
                               setLyricsOrPrompt(`[Genre & Style: ${genre.promptSnippet}]\n\n[Verse 1]\nWrite your lyrics here...\n\n[Chorus]\n`);
                               setStudioTab('director');
                             }}
-                            className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[11px] font-bold rounded-lg border border-emerald-500/30 flex items-center space-x-1 flex-shrink-0 transition-colors"
+                            className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-sm font-bold rounded-lg border border-emerald-500/30 flex items-center space-x-1 flex-shrink-0 transition-colors"
                           >
                             <Copy className="w-3 h-3" />
                             <span>Use in Song</span>
@@ -1544,7 +1626,7 @@ export default function FutureBoxHome() {
                     <div className="border-2 border-dashed border-zinc-700 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition-colors">
                       <UploadCloud className="w-8 h-8 text-zinc-500 mx-auto mb-2" />
                       <p className="text-xs text-zinc-300 font-semibold">Drop vocal audio file here or click to browse</p>
-                      <p className="text-[10px] text-zinc-500">Supports WAV, MP3, M4A up to 25MB</p>
+                      <p className="text-[13px] text-zinc-500">Supports WAV, MP3, M4A up to 25MB</p>
                     </div>
                   </div>
 
@@ -1571,7 +1653,7 @@ export default function FutureBoxHome() {
                         >
                           <div>
                             <p className="font-bold text-white">{item.label}</p>
-                            <p className="text-[10px] text-zinc-500">{item.desc}</p>
+                            <p className="text-[13px] text-zinc-500">{item.desc}</p>
                           </div>
                           {vocalVoiceChoice === item.id && <Check className="w-4 h-4 text-emerald-400" />}
                         </div>
@@ -1583,7 +1665,7 @@ export default function FutureBoxHome() {
                 <div className="flex justify-end pt-2">
                   <button
                     onClick={() => setStudioTab('director')}
-                    className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center space-x-2"
+                    className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center space-x-2"
                   >
                     <span>Proceed to Music Video Director</span>
                     <ArrowUpRight className="w-4 h-4" />
@@ -1622,7 +1704,7 @@ export default function FutureBoxHome() {
                           >
                             <Icon className={`w-4 h-4 ${isSelected ? 'text-emerald-400' : 'text-zinc-500'}`} />
                             <p className="text-xs font-bold pt-1">{item.label}</p>
-                            <p className="text-[10px] text-zinc-500">{item.desc}</p>
+                            <p className="text-[13px] text-zinc-500">{item.desc}</p>
                           </button>
                         );
                       })}
@@ -1654,7 +1736,7 @@ export default function FutureBoxHome() {
                           >
                             <Icon className={`w-4 h-4 ${isSelected ? 'text-cyan-400' : 'text-zinc-500'}`} />
                             <p className="text-xs font-bold pt-1">{item.label}</p>
-                            <p className="text-[10px] text-zinc-500">{item.desc}</p>
+                            <p className="text-[13px] text-zinc-500">{item.desc}</p>
                           </button>
                         );
                       })}
@@ -1669,7 +1751,7 @@ export default function FutureBoxHome() {
                     <span>Your Custom Creator Channel URL:</span>
                   </label>
                   <div className="flex items-center">
-                    <span className="bg-zinc-800 border border-r-0 border-zinc-700 text-zinc-400 px-3 py-2.5 rounded-l-xl text-xs font-mono">
+                    <span className="bg-zinc-800 border border-r-0 border-zinc-700 text-zinc-400 px-3 py-2.5 rounded-l-xl text-xs">
                       futurebox.app/@
                     </span>
                     <input
@@ -1677,7 +1759,7 @@ export default function FutureBoxHome() {
                       value={creatorDomain}
                       onChange={(e) => setCreatorDomain(e.target.value.toLowerCase().replace(/\s+/g, ''))}
                       placeholder="your-creator-name"
-                      className="w-full bg-black/60 border border-zinc-700 rounded-r-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-400 font-mono"
+                      className="w-full bg-black/60 border border-zinc-700 rounded-r-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-400"
                       required
                     />
                   </div>
@@ -1686,7 +1768,7 @@ export default function FutureBoxHome() {
                 {/* Title & Media Link */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-mono text-zinc-400 mb-1">Song & Music Video Title</label>
+                    <label className="block text-xs text-zinc-400 mb-1">Song & Music Video Title</label>
                     <input 
                       type="text" 
                       value={title}
@@ -1697,7 +1779,7 @@ export default function FutureBoxHome() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-mono text-zinc-400 mb-1">Media Link (YouTube / Suno / MP4)</label>
+                    <label className="block text-xs text-zinc-400 mb-1">Media Link (YouTube / Suno / MP4)</label>
                     <input 
                       type="url" 
                       value={mediaLink}
@@ -1717,18 +1799,18 @@ export default function FutureBoxHome() {
                       <Layers className="w-3.5 h-3.5" />
                       <span>AI Models Used</span>
                     </label>
-                    <span className="text-[10px] font-mono text-zinc-500">
+                    <span className="text-[13px] text-zinc-500">
                       {selectedTools.length} selected · published with the release
                     </span>
                   </div>
-                  <p className="text-[10px] text-zinc-500 leading-relaxed">
+                  <p className="text-[13px] text-zinc-500 leading-relaxed">
                     Every model you tick is shown on the release page and on the card in the feed. Listing them is not
                     a formality — it is the thing that separates a FutureBox release from an anonymous upload.
                   </p>
 
                   {(['music', 'video', 'voice', 'image'] as const).map((role) => (
                     <div key={role} className="space-y-1.5">
-                      <p className="text-[9px] font-mono uppercase tracking-wider text-zinc-500">{ROLE_LABELS[role]}</p>
+                      <p className="text-xs uppercase tracking-wider text-zinc-500">{ROLE_LABELS[role]}</p>
                       <div className="flex flex-wrap gap-1.5">
                         {AI_MODELS.filter((m) => m.role === role).map((model) => {
                           const isSelected = selectedTools.includes(model.name);
@@ -1738,7 +1820,7 @@ export default function FutureBoxHome() {
                               key={model.name}
                               onClick={() => toggleTool(model.name)}
                               title={`${model.name} — ${model.provider}`}
-                              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all border ${
+                              className={`px-2.5 py-1 rounded-lg text-sm transition-all border ${
                                 isSelected
                                   ? ROLE_ACCENTS[role] + ' font-bold'
                                   : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300'
@@ -1756,7 +1838,7 @@ export default function FutureBoxHome() {
                 {/* Lyrics & Prompt Generator */}
                 <div className="space-y-2 bg-black/40 p-4 rounded-2xl border border-zinc-800">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-mono text-cyan-300 font-bold">
+                    <label className="block text-xs text-cyan-300 font-bold">
                       Song Lyrics & AI Video Scene Directions:
                     </label>
                     <button
@@ -1772,7 +1854,7 @@ export default function FutureBoxHome() {
                     value={lyricsOrPrompt}
                     onChange={(e) => setLyricsOrPrompt(e.target.value)}
                     placeholder="[Style: Modern Country Pop, 104 BPM, major key, pedal steel guitar]&#10;&#10;[Verse 1]&#10;Driving down this empty gravel road...&#10;&#10;[Chorus]&#10;Underneath the summer skyline...&#10;&#10;[Video Direction: Anamorphic camera slowly panning over open wheat fields at sunset]"
-                    className="w-full bg-black/60 border border-zinc-800 rounded-xl p-3.5 text-xs text-white font-mono focus:outline-none focus:border-cyan-500 h-28"
+                    className="w-full bg-black/60 border border-zinc-800 rounded-xl p-3.5 text-xs text-white focus:outline-none focus:border-cyan-500 h-28"
                   />
                 </div>
 
@@ -1822,13 +1904,16 @@ export default function FutureBoxHome() {
 
                 <button
                   type="submit"
-                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)] flex items-center justify-center space-x-2"
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)] flex items-center justify-center space-x-2"
                 >
                   <UploadCloud className="w-4 h-4" />
                   <span>Publish to My Channel (futurebox.app/@{creatorDomain})</span>
                 </button>
               </form>
             )}
+
+            {/* STUDIO: THE TIMELINE — point at a bar, say what should change */}
+            {studioTab === 'studio' && <StudioTimeline />}
 
             {/* TAB 5: COLLAB RADAR (PODCASTS, TIKTOK LIVE, FLAVOUR MATCHING, VIRAL POSTS) */}
             {studioTab === 'collab' && <CollabRadar profile={creatorProfile} />}
@@ -1890,7 +1975,7 @@ export default function FutureBoxHome() {
                       <div className="flex items-center justify-between text-xs">
                         <div>
                           <h5 className="font-bold text-white">{hook.title}</h5>
-                          <p className="text-[10px] font-mono text-emerald-400">{hook.handle}</p>
+                          <p className="text-[13px] text-emerald-400">{hook.handle}</p>
                         </div>
                         <div className="flex items-center space-x-3 text-zinc-400">
                           <span className="flex items-center space-x-1"><Heart className="w-3.5 h-3.5 text-rose-500" /> <span>{hook.likes}</span></span>
@@ -1903,9 +1988,15 @@ export default function FutureBoxHome() {
               </div>
             )}
 
+              </div>
+            </div>
+
           </div>
         </div>
       )}
+
+      {/* 🎨 APPEARANCE PANEL */}
+      {themeOpen && <ThemeStudio theme={theme} setTheme={setTheme} onClose={() => setThemeOpen(false)} />}
 
       {/* 🎬 UNIVERSAL MEDIA PLAYER MODAL */}
       {selectedMedia && (
@@ -1993,7 +2084,7 @@ export default function FutureBoxHome() {
                 href={selectedBlueprint.externalUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center space-x-2"
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center space-x-2"
               >
                 <Globe className="w-4 h-4" />
                 <span>Visit Official Website ({selectedBlueprint.toolName})</span>
@@ -2011,13 +2102,13 @@ export default function FutureBoxHome() {
       )}
 
       {/* 📧 6. MARKETING & SPONSORSHIP CONTACT FOOTER */}
-      <footer className="border-t border-zinc-800/80 bg-[#050608] mt-16 px-6 py-12">
+      <footer className="border-t border-zinc-800/80 bg-zinc-950 mt-16 px-6 py-12">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-start">
           
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center">
-                <Cpu className="w-4 h-4 text-black font-bold" />
+                <Cpu className="w-4 h-4 text-onAccent font-bold" />
               </div>
               <span className="text-lg font-black text-white">FUTURE<span className="text-emerald-400">BOX</span></span>
             </div>
@@ -2096,7 +2187,7 @@ export default function FutureBoxHome() {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center space-x-2"
+                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center space-x-2"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>Send Sponsorship Inquiry</span>

@@ -1,0 +1,230 @@
+/**
+ * Sample discovery feed.
+ *
+ * These are illustrative entries, not a live index — FutureBox has no ingestion
+ * pipeline yet, so nothing here was fetched from anywhere. They exist to
+ * exercise the quality gate in `app/lib/curation.ts`, which means the set is
+ * deliberately mixed: some entries are meant to pass, and some are meant to be
+ * rejected in front of you, because a gate you never see reject anything is
+ * indistinguishable from no gate at all.
+ */
+import type { FeedItem } from '../lib/curation';
+
+export const CATEGORIES = [
+  'Frontier AI',
+  'Creative AI',
+  'Vibe Coding',
+  'Business & Money',
+  'Robotics',
+  'Science',
+] as const;
+
+export const FEED_ITEMS: readonly FeedItem[] = [
+  {
+    id: 'f1',
+    title: 'Scaling laws for multimodal training: what breaks past 10B parameters',
+    source: 'arXiv',
+    summary:
+      'Reports an ablation across 14 model sizes showing throughput collapse at a specific batch/latency ratio, with the dataset and methodology open-sourced for replication.',
+    kind: 'paper',
+    minutes: 45,
+    published: '2026-08-04',
+    category: 'Frontier AI',
+    url: 'https://arxiv.org',
+    durability: 'durable',
+  },
+  {
+    id: 'f2',
+    title: 'How interpretability research actually gets done',
+    source: 'Anthropic',
+    summary:
+      'A walkthrough of the methodology behind feature extraction work, including what the team got wrong first and the peer-reviewed follow-up that corrected it.',
+    kind: 'article',
+    minutes: 22,
+    published: '2026-07-28',
+    category: 'Frontier AI',
+    url: 'https://anthropic.com',
+    durability: 'durable',
+  },
+  {
+    id: 'f3',
+    title: 'YOU WON\'T BELIEVE What This AI Did To My Business!!! 🤯🚀',
+    source: 'GrowthHackerDaily',
+    summary:
+      'In today\'s fast-paced world, this game-changer will revolutionize everything you thought you knew. Buckle up.',
+    kind: 'video',
+    minutes: 8,
+    published: '2026-08-20',
+    category: 'Business & Money',
+    url: 'https://example.com',
+    durability: 'timely',
+  },
+  {
+    id: 'f4',
+    title: '10 Ways To Make Money With AI In 2026',
+    source: 'SideHustleTV',
+    summary: 'A list of tools with affiliate links.',
+    kind: 'video',
+    minutes: 11,
+    published: '2026-08-18',
+    category: 'Business & Money',
+    url: 'https://example.com',
+    durability: 'timely',
+  },
+  {
+    id: 'f5',
+    title: 'Directing generative video: continuity across a three-minute cut',
+    source: 'IEEE Spectrum',
+    summary:
+      'Examines why shot-to-shot consistency fails in current video models, with frame-level comparisons across four systems and a 38% improvement from one scheduling change.',
+    kind: 'article',
+    minutes: 18,
+    published: '2026-08-11',
+    category: 'Creative AI',
+    url: 'https://spectrum.ieee.org',
+    durability: 'durable',
+  },
+  {
+    id: 'f6',
+    title: 'The economics of a one-person media company',
+    source: 'Stratechery',
+    summary:
+      'Works through the unit economics of AI-native production: cost per finished minute, the 4x gap between draft and publishable, and where the model stops helping.',
+    kind: 'article',
+    minutes: 26,
+    published: '2026-08-15',
+    category: 'Business & Money',
+    url: 'https://stratechery.com',
+    durability: 'durable',
+  },
+  {
+    id: 'f7',
+    title: 'Building a production app without writing production code',
+    source: 'The Information',
+    summary:
+      'Follows three teams shipping with generated code, including the latency and security regressions that showed up in review and what the methodology looks like now.',
+    kind: 'article',
+    minutes: 20,
+    published: '2026-08-08',
+    category: 'Vibe Coding',
+    url: 'https://theinformation.com',
+    durability: 'timely',
+  },
+  {
+    id: 'f8',
+    title: 'This Changes Everything For Developers (Insane)',
+    source: 'CodeBroTV',
+    summary: 'A reaction video.',
+    kind: 'video',
+    minutes: 3,
+    published: '2026-08-22',
+    category: 'Vibe Coding',
+    url: 'https://example.com',
+    durability: 'timely',
+  },
+  {
+    id: 'f9',
+    title: 'Manipulation without a gripper: soft robotics results from a year of trials',
+    source: 'Nature',
+    summary:
+      'Peer-reviewed. Reports a 62% success rate on deformable-object handling across a 400-trial sample size, with the failure taxonomy published alongside.',
+    kind: 'paper',
+    minutes: 50,
+    published: '2026-06-30',
+    category: 'Robotics',
+    url: 'https://nature.com',
+    durability: 'durable',
+  },
+  {
+    id: 'f10',
+    title: 'What a long conversation with a physicist changed about my model of intelligence',
+    source: 'Dwarkesh',
+    summary:
+      'Two hours on the limits of scaling as an explanation, including a long disagreement neither party resolves.',
+    kind: 'podcast',
+    minutes: 118,
+    published: '2026-07-19',
+    category: 'Frontier AI',
+    url: 'https://dwarkesh.com',
+    durability: 'durable',
+    proOnly: true,
+  },
+  {
+    id: 'f11',
+    title: 'Voice cloning consent: where the law actually sits',
+    source: 'MIT Technology Review',
+    summary:
+      'Surveys statute across four jurisdictions in 2026, naming which ones require documented consent and which have nothing on the books yet.',
+    kind: 'article',
+    minutes: 15,
+    published: '2026-08-01',
+    category: 'Creative AI',
+    url: 'https://technologyreview.com',
+    durability: 'durable',
+    proOnly: true,
+  },
+  {
+    id: 'f12',
+    title: 'The AI bubble is about to pop (2024 predictions)',
+    source: 'MarketWatchDaily',
+    summary: 'Predictions for the year ahead based on the current quarter.',
+    kind: 'video',
+    minutes: 14,
+    published: '2024-01-12',
+    category: 'Business & Money',
+    url: 'https://example.com',
+    durability: 'timely',
+  },
+  {
+    id: 'f13',
+    title: 'Diffusion models for material discovery: 4 candidate compounds synthesised',
+    source: 'Science',
+    summary:
+      'Four of 200 generated candidates were synthesised and held up under test — a 2% hit rate the authors argue is the honest number to plan against.',
+    kind: 'paper',
+    minutes: 40,
+    published: '2026-07-05',
+    category: 'Science',
+    url: 'https://science.org',
+    durability: 'durable',
+    proOnly: true,
+  },
+  {
+    id: 'f14',
+    title: 'Open-weights models are closing the benchmark gap',
+    source: 'Hugging Face',
+    summary:
+      'Benchmark comparison across 11 open-weight releases, with the evaluation harness open-sourced so the numbers can be reproduced rather than taken on trust.',
+    kind: 'article',
+    minutes: 12,
+    published: '2026-08-13',
+    category: 'Frontier AI',
+    url: 'https://huggingface.co',
+    durability: 'timely',
+  },
+  {
+    id: 'f15',
+    title: 'Secret AI Tools The Gurus Hate 🔥🔥',
+    source: 'AIToolsHub',
+    summary: 'In the ever-evolving landscape of AI, unlock the power of these tools.',
+    kind: 'video',
+    minutes: 6,
+    published: '2026-08-21',
+    category: 'Creative AI',
+    url: 'https://example.com',
+    durability: 'timely',
+  },
+  {
+    id: 'f16',
+    title: 'Composing for models that cannot hold a key',
+    source: 'Anre Fourie',
+    summary:
+      'A working writeup of what breaks when a generative model is asked to stay in D minor for three minutes, with 40 attempts logged and the prompts that fixed it.',
+    kind: 'article',
+    minutes: 14,
+    published: '2026-08-19',
+    category: 'Creative AI',
+    url: 'https://futurebox.app',
+    durability: 'durable',
+  },
+];

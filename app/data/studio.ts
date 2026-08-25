@@ -19,6 +19,8 @@
  * carries the role it plays, and the UI groups by role rather than listing
  * names in a row.
  */
+import { BASE_PRICES } from '../lib/pricing';
+
 export type ModelRole = 'music' | 'video' | 'voice' | 'image';
 
 export interface AiModel {
@@ -384,8 +386,8 @@ export interface Competition {
   readonly title: string;
   readonly category: CompetitionCategory;
   readonly brief: string;
-  /** Minor units of ZAR, kept small on purpose. */
-  readonly entryFeeCents: number;
+  /** Base price in US dollars. The local figure is derived per region. */
+  readonly entryUsd: number;
   readonly prize: string;
   readonly runnerUp: string;
   readonly closesOn: string;
@@ -406,7 +408,7 @@ export const COMPETITIONS: readonly Competition[] = [
     title: 'Best AI Song of the Month',
     category: 'music',
     brief: 'One original track, any genre. The prompt and the full model stack must be submitted with it — the prompt is part of the entry, not a secret.',
-    entryFeeCents: 1000,
+    entryUsd: BASE_PRICES.entryMusic,
     prize: 'FutureBox Pro free for 12 months + featured release slot on the channel',
     runnerUp: 'Pro free for 3 months',
     closesOn: '2026-09-30',
@@ -418,7 +420,7 @@ export const COMPETITIONS: readonly Competition[] = [
     title: 'Best AI Music Video',
     category: 'video',
     brief: 'A finished music video, 9:16 or 16:9. Bonus weight for a coherent visual treatment across the whole runtime rather than a reel of pretty shots.',
-    entryFeeCents: 1000,
+    entryUsd: BASE_PRICES.entryMusic,
     prize: 'Pro free for 12 months + a co-directed release with the channel',
     runnerUp: 'Pro free for 3 months',
     closesOn: '2026-10-15',
@@ -430,7 +432,7 @@ export const COMPETITIONS: readonly Competition[] = [
     title: 'Vibe-coded App Sprint',
     category: 'app',
     brief: 'Ship a working app in a weekend. It must run — a repo that does not start is not an entry. Small and finished beats large and broken.',
-    entryFeeCents: 1500,
+    entryUsd: BASE_PRICES.entryApp,
     prize: 'Pro free for 12 months + a VibefyCode assessment of the app',
     runnerUp: 'Pro free for 3 months',
     closesOn: '2026-09-21',
@@ -442,7 +444,7 @@ export const COMPETITIONS: readonly Competition[] = [
     title: 'The FutureBox Idea Prize',
     category: 'idea',
     brief: 'One paragraph. A feature, a format, or a business the channel should build. No prototype needed — the idea is the entry.',
-    entryFeeCents: 500,
+    entryUsd: BASE_PRICES.entryIdea,
     prize: 'Pro free for 12 months + the idea gets built and credited on the channel',
     runnerUp: 'Pro free for 3 months',
     closesOn: '2026-09-14',
