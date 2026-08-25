@@ -18,10 +18,20 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
   Music, Copy, Check, Plus, Sparkles, ArrowRight, Clock, Type, Mic2, Info,
+  RefreshCw, AlertCircle, Wand2, CornerDownLeft,
 } from 'lucide-react';
 import {
   STYLE_PRESETS, SONG_SECTIONS, VOCAL_CHOICES, MOOD_TAGS, type StylePreset,
 } from '../data/studio';
+import { offlineIdeas, type Idea } from '../lib/songideas';
+
+type HelpMode = 'continue' | 'style' | 'polish';
+
+const HELP_LABELS: Record<HelpMode, { button: string; heading: string }> = {
+  continue: { button: 'Help me write', heading: 'Lines to try next' },
+  style: { button: 'Suggest a style', heading: 'Style lines for what you have written' },
+  polish: { button: 'Polish what I have', heading: 'Specific things to fix' },
+};
 
 const KEYS = [
   'C Major', 'G Major', 'D Major', 'A Major', 'E Major', 'F Major', 'B♭ Major',
@@ -66,6 +76,17 @@ export default function Songwriter({
   const [sent, setSent] = useState(false);
   const lyricRef = useRef<HTMLTextAreaElement>(null);
 
+  // Writing help. `roll` drives the re-roll button, and `seen` is sent back so
+  // the model is told what it already offered rather than circling the same
+  // four ideas — which is what makes pressing the button repeatedly worthwhile.
+  const [helpMode, setHelpMode] = useState<HelpMode | null>(null);
+  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [helpLoading, setHelpLoading] = useState(false);
+  const [helpNotice, setHelpNotice] = useState<string | null>(null);
+  const [offline, setOffline] = useState(false);
+  const [roll, setRoll] = useState(0);
+  const seen = useRef<string[]>([]);
+
   const choosePreset = (p: StylePreset) => {
     setPreset(p);
     setBpm(p.bpm);
@@ -91,6 +112,61 @@ export default function Songwriter({
       el.focus();
       el.setSelectionRange(caret, caret);
     });
+  };
+
+  const askForHelp = async (mode: HelpMode, again = false) => {
+    const nextRoll = again ? roll + 1 : 0;
+    if (!again) seen.current = [];
+    setHelpMode(mode);
+    setRoll(nextRoll);
+    setHelpLoading(true);
+    setHelpNotice(null);
+
+    try {
+      const res = await fetch('/api/songwriter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode,
+          title,
+          style: styleLine,
+          lyrics,
+          seen: seen.current.slice(-12),
+        }),
+      });
+      const data = await res.json();
+
+      if (res.ok && Array.isArray(data.suggestions)) {
+        setIdeas(data.suggestions);
+        setOffline(false);
+        seen.current.push(...data.suggestions.map((i: Idea) => i.label));
+        return;
+      }
+
+      // Every failure lands the same way: usable offline ideas plus a plain
+      // sentence about why the model did not answer.
+      setIdeas(offlineIdeas(mode, nextRoll));
+      setOffline(true);
+      setHelpNotice(
+        data?.error === 'no_key'
+          ? 'No AI key is set on this deployment, so these are writing prompts rather than written lines. Add ANTHROPIC_API_KEY and the button starts writing.'
+          : data?.detail ?? 'The writing help could not be reached, so here are prompts instead.',
+      );
+    } catch {
+      setIdeas(offlineIdeas(mode, nextRoll));
+      setOffline(true);
+      setHelpNotice('Could not reach the writing help, so here are prompts instead.');
+    } finally {
+      setHelpLoading(false);
+    }
+  };
+
+  const applyIdea = (idea: Idea) => {
+    if (helpMode === 'style') {
+      setExtraTags((prev) => (prev ? `${prev}, ${idea.text}` : idea.text));
+      return;
+    }
+    setLyrics((prev) => (prev.trimEnd() ? `${prev.trimEnd()}\n\n${idea.text}` : idea.text));
   };
 
   const styleLine = useMemo(() => {
@@ -296,6 +372,79 @@ export default function Songwriter({
             />
           </div>
         </div>
+      </div>
+
+      {/* Writing help */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-bold text-white flex items-center gap-2">
+            <Wand2 className="w-4 h-4 text-cyan-400" />
+            Stuck?
+          </span>
+          {(Object.keys(HELP_LABELS) as HelpMode[]).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => askForHelp(mode)}
+              disabled={helpLoading}
+              className={`px-3 py-1.5 rounded-xl text-sm font-semibold border transition-all disabled:opacity-50 ${
+                helpMode === mode
+                  ? 'bg-cyan-500/15 border-cyan-500 text-cyan-300'
+                  : 'bg-zinc-950/60 border-zinc-800 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300'
+              }`}
+            >
+              {HELP_LABELS[mode].button}
+            </button>
+          ))}
+          {helpMode && (
+            <button
+              type="button"
+              onClick={() => askForHelp(helpMode, true)}
+              disabled={helpLoading}
+              className="ml-auto px-3 py-1.5 rounded-xl text-sm font-semibold bg-zinc-950/60 border border-zinc-800 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${helpLoading ? 'animate-spin' : ''}`} />
+              Roll again
+            </button>
+          )}
+        </div>
+
+        {helpLoading && <p className="text-sm text-zinc-500">Thinking…</p>}
+
+        {helpNotice && (
+          <p className="text-sm text-amber-300/90 flex items-start gap-2 bg-amber-950/20 border border-amber-500/30 rounded-xl p-2.5">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{helpNotice}</span>
+          </p>
+        )}
+
+        {!helpLoading && helpMode && ideas.length > 0 && (
+          <>
+            <p className="text-sm font-semibold text-zinc-300">
+              {HELP_LABELS[helpMode].heading}
+              {offline && <span className="font-normal text-zinc-500"> · written prompts, not AI</span>}
+            </p>
+            <div className="grid md:grid-cols-2 gap-2.5">
+              {ideas.map((idea, i) => (
+                <div key={`${idea.label}-${i}`} className="p-3 rounded-xl bg-black/40 border border-zinc-800 space-y-1.5">
+                  <p className="text-sm font-bold text-cyan-300">{idea.label}</p>
+                  <pre className="text-sm text-zinc-200 whitespace-pre-wrap leading-relaxed">{idea.text}</pre>
+                  <p className="text-sm text-zinc-500">{idea.why}</p>
+                  {!offline && (
+                    <button
+                      type="button"
+                      onClick={() => applyIdea(idea)}
+                      className="text-sm text-emerald-400 hover:underline flex items-center gap-1.5"
+                    >
+                      <CornerDownLeft className="w-3.5 h-3.5" />
+                      {helpMode === 'style' ? 'Add to the style line' : 'Add to the lyrics'}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* The two fields a generator asks for */}
