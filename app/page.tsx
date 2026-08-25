@@ -9,7 +9,8 @@ import {
   BookOpen, Bookmark, GraduationCap, Mic, Disc3, ExternalLink, Globe,
   Crown, Lock, Zap, RefreshCw, Send, Mail, Check, Star,
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, Volume2, 
-  Copy, Video, Flame, Library, PlayCircle
+  Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
+  Share2, Repeat, Sliders, Smartphone, Monitor, Eye
 } from 'lucide-react';
 
 interface Blueprint {
@@ -27,9 +28,11 @@ interface Blueprint {
 }
 
 interface GenreSample {
+  category: string;
   name: string;
   subgenre: string;
   bpm: string;
+  key: string;
   audioUrl: string;
   promptSnippet: string;
   description: string;
@@ -38,8 +41,13 @@ interface GenreSample {
 export default function FutureBoxHome() {
   const [activeTab, setActiveTab] = useState<'all' | 'futurebox' | 'masterclasses' | 'creations' | 'radar'>('all');
   
-  // User Authentication & Plan State
-  const [user, setUser] = useState<{ email: string; name: string } | null>(null);
+  // User Authentication & Profile
+  const [user, setUser] = useState<{ email: string; name: string; handle: string; followers: number } | null>({
+    email: 'anre@futurebox.app',
+    name: 'Anre Fourie',
+    handle: '@anrefourie',
+    followers: 187
+  });
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [authEmail, setAuthEmail] = useState('');
@@ -66,148 +74,223 @@ export default function FutureBoxHome() {
   } | null>(null);
   const [selectedBlueprint, setSelectedBlueprint] = useState<Blueprint | null>(null);
 
-  // Creator Studio Sub-Tabs & Soundboard State
-  const [studioTab, setStudioTab] = useState<'publish' | 'soundboard' | 'channels' | 'prompts'>('publish');
+  // Creator Studio Sub-Tabs & Soundboard
+  const [studioTab, setStudioTab] = useState<'director' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels'>('soundboard');
+  const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
-  // AI Scanner & Stream Regeneration State
-  const [isScanning, setIsScanning] = useState(false);
-  const [streamCycle, setStreamCycle] = useState(0);
-  const [scanMessage, setScanMessage] = useState('🟢 Autonomous AI Trend Radar: Real-Time Sync Active (Updated 2m ago)');
-
-  // Creator Studio Form State
-  const [mediumType, setMediumType] = useState<'music_video' | 'podcast' | 'ai_track'>('music_video');
-  const [category, setCategory] = useState('Creative AI & Art');
-  const [creatorDomain, setCreatorDomain] = useState('');
+  // Studio Form State
+  const [mediumType, setMediumType] = useState<'music_video' | 'ai_track' | 'custom_voice_song' | 'podcast'>('music_video');
+  const [videoAspectRatio, setVideoAspectRatio] = useState<'16:9' | '9:16'>('16:9');
+  const [vocalVoiceChoice, setVocalVoiceChoice] = useState<'my_voice' | 'female_pop' | 'male_rock' | 'cyber_vocoder'>('my_voice');
+  const [creatorDomain, setCreatorDomain] = useState('anrefourie');
   const [title, setTitle] = useState('');
   const [lyricsOrPrompt, setLyricsOrPrompt] = useState('');
-  const [selectedTools, setSelectedTools] = useState<string[]>(['Suno v3.5', 'Runway Gen-3']);
+  const [selectedTools, setSelectedTools] = useState<string[]>(['Suno v3.5', 'Runway Gen-3', 'ElevenLabs Voice']);
   const [mediaLink, setMediaLink] = useState('');
   const [confirmedSafe, setConfirmedSafe] = useState(false);
   const [auditStatus, setAuditStatus] = useState<string | null>(null);
 
-  // Marketing Form State
+  // AI Scanner & Stream Regeneration
+  const [isScanning, setIsScanning] = useState(false);
+  const [streamCycle, setStreamCycle] = useState(0);
+  const [scanMessage, setScanMessage] = useState('🟢 Autonomous AI Trend Radar: Real-Time Sync Active (Updated 2m ago)');
+
+  // Marketing Contact Form
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactBudget, setContactBudget] = useState('$1,000 - $5,000 / month');
   const [contactMessage, setContactMessage] = useState('');
   const [contactSent, setContactSent] = useState(false);
 
-  // 🎧 GENRE SOUNDBOARD PREVIEWS (To hear what Suno/Udio styles sound like before generating)
-  const genreSamples: GenreSample[] = [
+  // 🎧 COMPREHENSIVE MASTER GENRE & SOUNDBOARD DATA (All Genres & Subgenres)
+  const masterGenreSamples: GenreSample[] = [
+    // 1. Electronic & EDM
     {
-      name: 'Cyberpunk Synthwave',
-      subgenre: 'Darksynth / Retro-Electro',
-      bpm: '128 BPM',
+      category: 'Electronic & EDM',
+      name: 'Melodic Techno & Afterlife Sound',
+      subgenre: 'Tale of Us / Anyma Style',
+      bpm: '124 BPM',
+      key: 'D Minor',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
-      promptSnippet: 'cyberpunk synthwave, analog sawtooth bassline, driving retro drums, neon atmosphere, emotive lead synth, 128 bpm',
-      description: 'Energetic electronic pulses with heavy analog bass and retro-futuristic synth arpeggios. Perfect for sci-fi city visuals.'
+      promptSnippet: 'melodic techno, deep hypnotic rolling sub-bass, atmospheric ethereal synth leads, dark emotional drops, afterlife style, 124 bpm, D minor',
+      description: 'Hypnotic rolling bass with stadium synth leads. Ideal for dark visuals, cyber cities, and emotional visual climaxes.'
     },
     {
-      name: 'Cinematic Orchestral Hybrid',
-      subgenre: 'Hans Zimmer Style / Epic Film Score',
-      bpm: '90 BPM',
-      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
-      promptSnippet: 'cinematic orchestral hybrid, massive brass stabs, staccato strings, thunderous sub-bass, epic trailer percussion, 90 bpm',
-      description: 'Grand orchestral arrangements fused with modern sub-bass synthesis. Ideal for heroic reveals and profound masterclasses.'
-    },
-    {
+      category: 'Electronic & EDM',
       name: 'Deep Tech House',
-      subgenre: 'Minimal Groove / Club Sound',
+      subgenre: 'Club Minimal / Fisher Style',
       bpm: '126 BPM',
+      key: 'G Minor',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
-      promptSnippet: 'deep tech house, rolling bassline, crisp four-on-the-floor kick, subtle vocal chops, club sound, 126 bpm',
-      description: 'Hypnotic, continuous rhythmic pulse with refined low-end grooves. Great for background pacing and tech demonstrations.'
+      promptSnippet: 'deep tech house, punchy four-on-the-floor kick, bouncy sub-bassline, filtered vocal chops, crisp hi-hats, 126 bpm',
+      description: 'Energetic club beat with bouncing basslines and infectious rhythm.'
     },
     {
-      name: 'Lo-Fi Future Chillhop',
-      subgenre: 'Study Beats / Relaxed Rhodes',
-      bpm: '82 BPM',
+      category: 'Electronic & EDM',
+      name: 'Liquid Drum & Bass',
+      subgenre: 'Atmospheric DnB',
+      bpm: '174 BPM',
+      key: 'F Major',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3',
-      promptSnippet: 'lo-fi future chillhop, warm Rhodes electric piano, vinyl crackle, gentle head-nod boom-bap drums, relaxed groove, 82 bpm',
-      description: 'Mellow, nostalgic chords with cozy tape warmth and relaxed drums. Ideal for deep learning, focus, and coding streams.'
+      promptSnippet: 'liquid drum and bass, fast rolling breakbeats, lush Rhodes chords, warm 808 reese bass, emotive vocal textures, 174 bpm',
+      description: 'High-speed rolling percussion with super smooth, soulful ambient pads.'
     },
+
+    // 2. Pop & Synthpop
     {
-      name: 'Ethereal Vocal Ambient',
-      subgenre: 'Atmospheric / Neural Choir',
-      bpm: '70 BPM',
-      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
-      promptSnippet: 'ethereal vocal ambient, haunting female vocal textures, lush reverb, floating shimmer pads, cinematic emotional swell',
-      description: 'Dreamy, floating soundscapes featuring layered vocal harmonies and wide acoustic spaces. Perfect for abstract generative art.'
-    },
-    {
-      name: 'Industrial Darkwave',
-      subgenre: 'Cyber-Industrial / Distorted EBM',
-      bpm: '135 BPM',
+      category: 'Pop & Synthpop',
+      name: '80s Retro Synthwave Pop',
+      subgenre: 'The Weeknd / Blinding Lights Style',
+      bpm: '130 BPM',
+      key: 'C Minor',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
-      promptSnippet: 'industrial darkwave, aggressive distorted bassline, metallic percussion, dystopian gothic energy, driving tempo, 135 bpm',
-      description: 'Raw, powerful grit with industrial percussions and high-voltage energy. Tailored for intense action and mechanical AI art.'
+      promptSnippet: '80s synthpop, retro analog synthesizers, gated reverb snare, catchy anthemic vocal melody, driving bassline, 130 bpm',
+      description: 'Nostalgic 1980s neon anthems with driving drums and sparkling analog synths.'
+    },
+    {
+      category: 'Pop & Synthpop',
+      name: 'Modern Hyperpop & Glitch',
+      subgenre: 'Futuristic Cyber Pop',
+      bpm: '145 BPM',
+      key: 'A Major',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
+      promptSnippet: 'hyperpop, pitched vocal hooks, distorted 808s, bright candy synths, glitch transitions, maximalist energy, 145 bpm',
+      description: 'High-energy, glossy futuristic pop with playful glitch effects and pitched vocals.'
+    },
+
+    // 3. Rock & Metal
+    {
+      category: 'Rock & Metal',
+      name: 'Modern Alternative Rock',
+      subgenre: 'Post-Grunge / Stadium Rock',
+      bpm: '120 BPM',
+      key: 'E Minor',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3',
+      promptSnippet: 'alternative rock, layered distorted electric guitars, driving live drums, soaring passionate male/female vocals, anthemic chorus, 120 bpm',
+      description: 'Raw guitar riffs, heavy acoustic drums, and emotionally charged vocals.'
+    },
+    {
+      category: 'Rock & Metal',
+      name: 'Cinematic Nu-Metal & Djent',
+      subgenre: 'Linkin Park / Architects Style',
+      bpm: '135 BPM',
+      key: 'Drop D',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
+      promptSnippet: 'cinematic nu-metal, down-tuned 7-string heavy djent guitar riffs, aggressive synth pads, hybrid electronic rock drums, drop D, 135 bpm',
+      description: 'Thunderous low-tuned heavy riffs fused with electronic synth textures.'
+    },
+
+    // 4. Hip-Hop & Trap
+    {
+      category: 'Hip-Hop & Trap',
+      name: 'Dark Cinematic Drill & Trap',
+      subgenre: 'UK/US Drill / Metro Boomin Style',
+      bpm: '140 BPM',
+      key: 'C# Minor',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3',
+      promptSnippet: 'dark cinematic trap, sliding 808 bass, stuttering hi-hats, ominous piano melody, vocal chants, hard-hitting kick, 140 bpm',
+      description: 'Sliding bass glides, crisp rapid-fire hats, and dramatic minor-key pianos.'
+    },
+    {
+      category: 'Hip-Hop & Trap',
+      name: '90s Golden Era Boom-Bap',
+      subgenre: 'Vinyl Sampled East Coast',
+      bpm: '90 BPM',
+      key: 'E Minor',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3',
+      promptSnippet: '90s boom-bap hip-hop, dusty vinyl jazz piano sample, punchy acoustic drum breaks, upright bassline, classic street vibe, 90 bpm',
+      description: 'Authentic 90s vintage drum chops with soulful sampled jazz harmonies.'
+    },
+
+    // 5. R&B & Neo-Soul
+    {
+      category: 'R&B & Soul',
+      name: 'Contemporary Midnight R&B',
+      subgenre: 'SZA / Frank Ocean Style',
+      bpm: '85 BPM',
+      key: 'Bb Minor',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
+      promptSnippet: 'contemporary R&B, sultry smooth vocal harmonies, warm tape electric piano, laid-back trap drums, deep sub-bass, 85 bpm',
+      description: 'Intimate, late-night acoustic soul with rich vocal harmonies and sub-bass.'
+    },
+
+    // 6. Country & Folk
+    {
+      category: 'Country & Folk',
+      name: 'Modern Country Anthem & Pop',
+      subgenre: 'Morgan Wallen / Luke Combs Style',
+      bpm: '104 BPM',
+      key: 'G Major',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
+      promptSnippet: 'modern country pop, acoustic guitar strums, pedal steel guitar swells, twangy electric lead guitar, punchy drums, raspy storytelling vocals, 104 bpm',
+      description: 'Heartfelt storytelling, acoustic guitars, pedal steel swells, and anthemic choruses.'
+    },
+    {
+      category: 'Country & Folk',
+      name: 'Dark Indie Folk & Americana',
+      subgenre: 'Bon Iver / Lumineers Style',
+      bpm: '78 BPM',
+      key: 'D Major',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
+      promptSnippet: 'indie folk, fingerpicked acoustic guitar, mournful cello, layered choral vocal harmonies, foot stomps, intimate warm mix, 78 bpm',
+      description: 'Intimate acoustic fingerpicking, delicate strings, and rich choral harmonies.'
+    },
+
+    // 7. Cyberpunk & Darksynth
+    {
+      category: 'Cyberpunk & Darksynth',
+      name: 'Industrial Cyberpunk 2077',
+      subgenre: 'Midtempo / Aggressive Cyber Bass',
+      bpm: '105 BPM',
+      key: 'F Minor',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
+      promptSnippet: 'industrial cyberpunk, distorted sawtooth bass, metallic percussion hits, dystopian sci-fi sirens, aggressive midtempo beat, 105 bpm',
+      description: 'High-octane dystopian combat beats with raw distorted synth energy.'
+    },
+
+    // 8. Cinematic & Orchestral
+    {
+      category: 'Cinematic & Orchestral',
+      name: 'Epic Hans Zimmer Hybrid Score',
+      subgenre: 'Blockbuster Film Trailer',
+      bpm: '90 BPM',
+      key: 'D Minor',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
+      promptSnippet: 'epic cinematic hybrid, massive brass horns, staccato violins, thunderous taiko drums, sub-bass braam, emotional choir crescendo, 90 bpm',
+      description: 'Colossal orchestral instruments with ground-shaking brass and percussion.'
+    },
+
+    // 9. Lo-Fi & Ambient
+    {
+      category: 'Lo-Fi & Ambient',
+      name: 'Lo-Fi Chillhop Study Beats',
+      subgenre: 'Relaxed Cafe Vibes',
+      bpm: '78 BPM',
+      key: 'C Major',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3',
+      promptSnippet: 'lo-fi chillhop, vinyl crackle, warm Rhodes piano, relaxed boom-bap drum loop, mellow acoustic guitar, cozy rainy day atmosphere, 78 bpm',
+      description: 'Cozy tape-saturated beats designed for deep learning, focus, and coding.'
+    },
+
+    // 10. Afrobeats & Latin
+    {
+      category: 'Afrobeats & Latin',
+      name: 'Afro-Fusion & Amapiano',
+      subgenre: 'Burna Boy / Asake Style',
+      bpm: '112 BPM',
+      key: 'A Minor',
+      audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
+      promptSnippet: 'afrobeats fusion, log drum bassline, infectious shaker percussions, warm saxophone riffs, uplifting melodic vocal chants, 112 bpm',
+      description: 'Vibrant African percussions with deep log-drums and uplifting melodies.'
     }
   ];
 
-  // 📺 POPULAR CREATIVE AI CHANNELS DIRECTORY
-  const popularAiChannels = [
-    {
-      name: 'SynthMind Studio',
-      handle: '@synthmind',
-      subscribers: '142K',
-      niche: 'Cyberpunk AI Music & Music Videos',
-      topTool: 'Suno v3.5 + Runway Gen-3',
-      thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
-      sampleUrl: 'https://suno.com'
-    },
-    {
-      name: 'Aura Sound Labs',
-      handle: '@aura',
-      subscribers: '89K',
-      niche: 'Neural Vocal Ballads & Ambient AI Cinema',
-      topTool: 'Udio AI + Kling AI',
-      thumbnail: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80',
-      sampleUrl: 'https://runwayml.com'
-    },
-    {
-      name: 'Kling Visionaries',
-      handle: '@klingarts',
-      subscribers: '210K',
-      niche: 'Hyper-Realistic Natural Physics & Sci-Fi',
-      topTool: 'Kling AI + Sora Experimental',
-      thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
-      sampleUrl: 'https://klingai.org'
-    },
-    {
-      name: 'Neural Beats Global',
-      handle: '@neuralbeats',
-      subscribers: '67K',
-      niche: 'Future Electronic & Audio-Reactive Visuals',
-      topTool: 'Suno AI + Midjourney v6',
-      thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80',
-      sampleUrl: 'https://suno.com'
-    }
-  ];
+  const genreCategories = ['All', 'Electronic & EDM', 'Pop & Synthpop', 'Rock & Metal', 'Hip-Hop & Trap', 'R&B & Soul', 'Country & Folk', 'Cyberpunk & Darksynth', 'Cinematic & Orchestral', 'Lo-Fi & Ambient', 'Afrobeats & Latin'];
 
-  // 🎥 VIDEO CREATION PRESET PROMPTS
-  const videoPromptPresets = [
-    {
-      title: 'Anamorphic Cyberpunk City in Rain',
-      tags: 'Runway Gen-3 / Kling',
-      prompt: 'Cinematic wide shot, anamorphic 8k lens flare, hyper-detailed neo-tokyo in heavy rain, glowing volumetric neon lighting, reflections on wet asphalt, 60fps photoreal.'
-    },
-    {
-      title: 'Bioluminescent Microscopic Organism',
-      tags: 'Kling AI / Luma',
-      prompt: 'Macro extreme close-up of pulsing crystalline flora with bio-luminescent spores, cellular division, 8k microscopy, photoreal lighting, iridescent color shift.'
-    },
-    {
-      title: 'High-Speed FPV Drone Dive through Monoliths',
-      tags: 'Sora / Runway Gen-3',
-      prompt: 'Hyper-speed FPV drone dive through futuristic brutalist monoliths, realistic motion blur, golden hour sunset reflections, dust particles floating in light shafts.'
-    },
-    {
-      title: '70s Retro-Futuristic Film Interior',
-      tags: 'Midjourney + Luma',
-      prompt: '70s retro sci-fi space station interior, panavision anamorphic lens, warm Kodachrome 64 film grain, tactile physical control panels, atmospheric haze.'
-    }
-  ];
+  const filteredGenreSamples = selectedGenreCategory === 'All' 
+    ? masterGenreSamples 
+    : masterGenreSamples.filter(g => g.category === selectedGenreCategory);
 
   const approvedPodcasters = [
     { name: 'All Podcasters', key: null },
@@ -229,7 +312,7 @@ export default function FutureBoxHome() {
 
   const availableTools = ['Suno v3.5', 'Udio AI', 'Runway Gen-3', 'Midjourney v6', 'Kling AI', 'Sora', 'ElevenLabs Voice', 'Luma Dream Machine'];
 
-  // Dynamic Content Pools for AI Stream Regeneration
+  // AI Stream Regeneration
   const podcastPools = [
     [
       {
@@ -328,7 +411,9 @@ export default function FutureBoxHome() {
     e.preventDefault();
     setUser({
       email: authEmail,
-      name: authEmail.split('@')[0]
+      name: authEmail.split('@')[0],
+      handle: `@${authEmail.split('@')[0]}`,
+      followers: 1
     });
     setAuthModalOpen(false);
     alert(`✓ Welcome back, ${authEmail.split('@')[0]}! You are successfully signed in.`);
@@ -371,7 +456,6 @@ export default function FutureBoxHome() {
         setAuditStatus(null);
         setTitle('');
         setLyricsOrPrompt('');
-        setCreatorDomain('');
       }, 2000);
     }
   };
@@ -379,7 +463,7 @@ export default function FutureBoxHome() {
   return (
     <div className="min-h-screen bg-[#07080c] text-zinc-100 selection:bg-emerald-500 selection:text-black flex flex-col justify-between">
       
-      {/* 1. Header with Auth & Smart Dropdowns */}
+      {/* 1. Header with Auth & Creator Channel Info */}
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#07080c]/90 border-b border-zinc-800/80 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
@@ -429,11 +513,17 @@ export default function FutureBoxHome() {
         {/* Top Right Action & Auth Portal */}
         <div className="flex items-center space-x-3">
           {user ? (
-            <div className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl text-xs font-semibold">
-              <div className="w-6 h-6 rounded-full bg-emerald-500 text-black font-bold flex items-center justify-center text-[10px]">
-                {user.name.charAt(0).toUpperCase()}
+            <div 
+              onClick={() => { setStudioTab('director'); setUploadModalOpen(true); }}
+              className="flex items-center space-x-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+            >
+              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-500 text-black font-extrabold flex items-center justify-center text-[10px]">
+                {user.name.charAt(0)}
               </div>
-              <span className="text-zinc-200 hidden sm:inline">{user.name}</span>
+              <div className="hidden sm:block text-left">
+                <p className="text-white text-[11px] leading-tight font-bold">{user.name}</p>
+                <p className="text-[9px] font-mono text-emerald-400">{user.handle}</p>
+              </div>
             </div>
           ) : (
             <button
@@ -883,7 +973,7 @@ export default function FutureBoxHome() {
           </section>
         )}
 
-        {/* 🎨 4. CREATIVE AI MUSIC & VIDEOS */}
+        {/* 🎨 4. CREATIVE AI MUSIC & VIDEOS ("HOOKS" SHOWCASE) */}
         {(activeTab === 'all' || activeTab === 'creations') && (
           <section className="space-y-6">
             <div className="flex items-center justify-between">
@@ -892,7 +982,7 @@ export default function FutureBoxHome() {
                   <Sparkles className="w-5 h-5 text-cyan-400" />
                   <span>Creative AI Music & Music Videos</span>
                 </h3>
-                <p className="text-xs text-zinc-400">The premier destination for neural music releases, generative videos, and custom creator channels.</p>
+                <p className="text-xs text-zinc-400">The premier stage for neural music releases, generative music videos, and creator channels.</p>
               </div>
               <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
                 Creator Channels
@@ -903,12 +993,12 @@ export default function FutureBoxHome() {
               {[
                 {
                   id: 'ai-1',
-                  title: 'Cybernetic Odyssey (Official AI Music Video)',
-                  creator: 'SynthMind Studio',
-                  domain: 'futurebox.app/@synthmind',
-                  medium: 'AI Music Video',
-                  tools: ['Suno v3.5', 'Runway Gen-3'],
-                  prompt: 'Cyberpunk trance vocal track with ultra-photoreal Tokyo rain visuals.',
+                  title: 'Cherry Blossom Mail (Official AI Music Video)',
+                  creator: 'Anre Fourie',
+                  domain: 'futurebox.app/@anrefourie',
+                  medium: 'Jingle Pop / Acoustic',
+                  tools: ['Suno v5.5', 'Runway Gen-3'],
+                  prompt: 'jingle style, 96 BPM, major key, claps and hand percussion, brushed snare, pedal steel swells, acoustic guitar strums',
                   thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/bk-nQ7HF6k4',
                   externalUrl: 'https://suno.com',
@@ -916,12 +1006,12 @@ export default function FutureBoxHome() {
                 },
                 {
                   id: 'ai-2',
-                  title: 'Neon Horizons: Neural Symphony #4',
-                  creator: 'Aura Sound Labs',
-                  domain: 'futurebox.app/@aura',
-                  medium: 'Neural AI Music',
-                  tools: ['Udio AI', 'ElevenLabs'],
-                  prompt: 'Emotive future electronic ballad with neural vocal harmonization.',
+                  title: 'Paul Gaan Skool Toe (AI Folk Rock Release)',
+                  creator: 'Anre Fourie',
+                  domain: 'futurebox.app/@anrefourie',
+                  medium: 'Pop Rock & Anthemic Folk',
+                  tools: ['Suno v5.5', 'Kling AI'],
+                  prompt: 'pop rock, anthemic pop, close-miked female vocals, layered electric guitars, punchy kick, clapping snare, upright bass',
                   thumbnail: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/sal78ACtGTc',
                   externalUrl: 'https://runwayml.com',
@@ -929,12 +1019,12 @@ export default function FutureBoxHome() {
                 },
                 {
                   id: 'ai-3',
-                  title: 'Hyper-Realistic Natural Physics Showcase',
-                  creator: 'Kling Visionaries',
-                  domain: 'futurebox.app/@klingarts',
-                  medium: 'AI Visual Reel',
-                  tools: ['Kling AI', 'Luma Dream Machine'],
-                  prompt: 'Cellular division and luminescent bio-spores in 8k cinematic physics.',
+                  title: 'BRICKZ — FORGET YESTERDAY (Official AI Video)',
+                  creator: 'JL Records',
+                  domain: 'futurebox.app/@brickz',
+                  medium: 'Sci-Fi Dance & Visual Hook',
+                  tools: ['Suno AI', 'Sora Experimental'],
+                  prompt: 'retro-futuristic robotic dancers with radio helmets, yellow coat, high-energy synth hook, 128 bpm',
                   thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
                   externalUrl: 'https://klingai.org',
@@ -971,11 +1061,11 @@ export default function FutureBoxHome() {
                     <div className="p-5 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-mono uppercase text-cyan-400 font-bold">{creation.medium}</span>
-                        <span className="text-[10px] font-mono text-zinc-500 bg-black/50 px-2 py-0.5 rounded border border-zinc-800">{creation.domain}</span>
+                        <span className="text-[10px] font-mono text-zinc-400 bg-black/50 px-2 py-0.5 rounded border border-zinc-800">{creation.domain}</span>
                       </div>
                       <h4 className="font-bold text-white group-hover:text-cyan-400 transition-colors leading-snug">{creation.title}</h4>
                       <p className="text-xs text-zinc-400 font-mono bg-black/30 p-2.5 rounded-lg border border-zinc-800">
-                        <span className="text-cyan-400 font-semibold">Prompt/Lyrics: </span>
+                        <span className="text-cyan-400 font-semibold">Prompt: </span>
                         &ldquo;{creation.prompt}&rdquo;
                       </p>
                     </div>
@@ -989,7 +1079,7 @@ export default function FutureBoxHome() {
                       rel="noreferrer"
                       className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center space-x-1 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/30"
                     >
-                      <span>Visit Tool</span>
+                      <span>Explore</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
@@ -1227,46 +1317,38 @@ export default function FutureBoxHome() {
         </div>
       )}
 
-      {/* 🚀 CREATOR STUDIO & AI MUSIC HUB (WITH GENRE SOUNDBOARD, CHANNELS & BACK BUTTON) */}
+      {/* 🚀 CREATOR STUDIO & AI MUSIC HUB (WITH MASTER GENRE SOUNDBOARD, VOICE STUDIO & DIRECTOR) */}
       {uploadModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-lg flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-8">
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-4xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-8">
             
-            {/* Top Back & Close Bar */}
+            {/* Top Back Bar */}
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <button
                 onClick={() => { setUploadModalOpen(false); setAuditStatus(null); }}
-                className="flex items-center space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3.5 py-1.5 rounded-xl transition-all"
+                className="flex items-center space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl transition-all"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Back to Platform</span>
+                <span>Back to FutureBox Platform</span>
               </button>
 
-              <button onClick={() => { setUploadModalOpen(false); setAuditStatus(null); }} className="text-zinc-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Studio Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-                  <UploadCloud className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-lg text-white">Creative AI Studio & Soundboard</h3>
-                  <p className="text-xs text-zinc-400">Discover Suno styles, explore AI channels, and publish music videos</p>
-                </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                  futurebox.app/@{creatorDomain}
+                </span>
+                <button onClick={() => { setUploadModalOpen(false); setAuditStatus(null); }} className="text-zinc-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
               </div>
             </div>
 
-            {/* Studio Mode Switcher Tabs */}
-            <div className="flex items-center space-x-2 bg-black/50 p-1.5 rounded-2xl border border-zinc-800 text-xs">
+            {/* Studio Navigation Bar */}
+            <div className="flex flex-wrap items-center gap-2 bg-black/60 p-2 rounded-2xl border border-zinc-800 text-xs">
               {[
-                { id: 'publish', label: 'Publish & Channel URL', icon: UploadCloud },
-                { id: 'soundboard', label: 'Genre Soundboard & Audio Previews', icon: Volume2 },
-                { id: 'channels', label: 'Top AI Creator Channels', icon: Tv },
-                { id: 'prompts', label: 'Camera & Video Prompts', icon: Video },
+                { id: 'soundboard', label: '1. Master Genre Soundboard', icon: Volume2 },
+                { id: 'voice_studio', label: '2. Custom Voice Studio', icon: Mic2 },
+                { id: 'director', label: '3. Music Video Director & Publish', icon: Video },
+                { id: 'hooks_feed', label: '4. Hooks & Reels Feed', icon: Smartphone },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = studioTab === tab.id;
@@ -1274,61 +1356,250 @@ export default function FutureBoxHome() {
                   <button
                     key={tab.id}
                     onClick={() => setStudioTab(tab.id as any)}
-                    className={`flex-1 py-2 px-3 rounded-xl font-bold flex items-center justify-center space-x-2 transition-all ${
+                    className={`flex-1 py-2.5 px-3 rounded-xl font-bold flex items-center justify-center space-x-2 transition-all ${
                       isActive 
-                        ? 'bg-emerald-500 text-black shadow-lg' 
-                        : 'text-zinc-400 hover:text-white'
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-black shadow-lg shadow-emerald-500/20' 
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-4 h-4" />
                     <span>{tab.label}</span>
                   </button>
                 );
               })}
             </div>
 
-            {/* TAB 1: PUBLISH & CUSTOM CHANNEL DOMAIN */}
-            {studioTab === 'publish' && (
-              <form onSubmit={handlePublish} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300">
-                    Step 1: Choose Medium Format
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { id: 'music_video', label: 'AI Music Video', icon: FileVideo, desc: 'Suno + Runway' },
-                      { id: 'ai_track', label: 'Neural Song / Audio', icon: Music, desc: 'Suno / Udio' },
-                      { id: 'podcast', label: 'Podcast Episode', icon: Mic, desc: 'PRO Members', isProReq: true },
-                    ].map((item) => {
-                      const Icon = item.icon;
-                      const isSelected = mediumType === item.id;
-                      return (
-                        <button
-                          type="button"
-                          key={item.id}
-                          onClick={() => setMediumType(item.id as any)}
-                          className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between space-y-2 relative ${
-                            isSelected 
-                              ? 'bg-emerald-950/50 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.25)]' 
-                              : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                          }`}
-                        >
-                          {item.isProReq && (
-                            <span className="absolute top-2 right-2 text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/40 px-1.5 py-0.5 rounded font-mono font-bold">
-                              PRO
-                            </span>
-                          )}
-                          <Icon className={`w-5 h-5 ${isSelected ? 'text-emerald-400' : 'text-zinc-500'}`} />
-                          <div>
-                            <p className="text-xs font-bold leading-tight">{item.label}</p>
-                            <p className="text-[10px] text-zinc-500">{item.desc}</p>
-                          </div>
-                        </button>
-                      );
-                    })}
+            {/* TAB 1: MASTER GENRE SOUNDBOARD (EVERY GENRE WITH AUDIO SAMPLES & 1-CLICK USE) */}
+            {studioTab === 'soundboard' && (
+              <div className="space-y-5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-cyan-950/20 border border-cyan-500/30 p-4 rounded-2xl">
+                  <div>
+                    <h4 className="text-sm font-bold text-cyan-300 flex items-center space-x-2">
+                      <Volume2 className="w-4 h-4" />
+                      <span>Complete Genre & Subgenre Soundboard</span>
+                    </h4>
+                    <p className="text-xs text-zinc-400 pt-0.5">
+                      Listen to high-fidelity audio demos of every music style before creating, so you can make calculated prompt choices!
+                    </p>
                   </div>
                 </div>
 
+                {/* Genre Category Pills */}
+                <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-thin">
+                  {genreCategories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedGenreCategory(cat)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-mono whitespace-nowrap transition-all ${
+                        selectedGenreCategory === cat 
+                          ? 'bg-emerald-500 text-black font-extrabold shadow-md' 
+                          : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Genre Cards Grid */}
+                <div className="grid sm:grid-cols-2 gap-3.5 max-h-[420px] overflow-y-auto pr-1">
+                  {filteredGenreSamples.map((genre, i) => {
+                    const isPlaying = playingGenreSample === genre.name;
+                    return (
+                      <div key={i} className="bg-zinc-950 border border-zinc-800/80 p-4 rounded-2xl space-y-3 hover:border-emerald-500/40 transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <span className="text-[9px] font-mono uppercase text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                {genre.category}
+                              </span>
+                              <h5 className="font-bold text-sm text-white pt-1">{genre.name}</h5>
+                              <p className="text-[11px] text-zinc-400">{genre.subgenre} • <span className="text-cyan-400 font-mono">{genre.bpm} ({genre.key})</span></p>
+                            </div>
+
+                            <button
+                              onClick={() => setPlayingGenreSample(isPlaying ? null : genre.name)}
+                              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                                isPlaying ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/30 animate-pulse' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                              }`}
+                            >
+                              {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current translate-x-0.5" />}
+                            </button>
+                          </div>
+
+                          <p className="text-xs text-zinc-400 leading-relaxed pt-2">{genre.description}</p>
+                        </div>
+
+                        {isPlaying && (
+                          <div className="pt-2 border-t border-zinc-800">
+                            <audio src={genre.audioUrl} autoPlay controls className="w-full h-8" />
+                          </div>
+                        )}
+
+                        <div className="bg-black/60 p-2.5 rounded-xl border border-zinc-800 flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-mono text-zinc-400 truncate">{genre.promptSnippet}</span>
+                          <button
+                            onClick={() => {
+                              setLyricsOrPrompt(`[Genre & Style: ${genre.promptSnippet}]\n\n[Verse 1]\nWrite your lyrics here...\n\n[Chorus]\n`);
+                              setStudioTab('director');
+                            }}
+                            className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[11px] font-bold rounded-lg border border-emerald-500/30 flex items-center space-x-1 flex-shrink-0 transition-colors"
+                          >
+                            <Copy className="w-3 h-3" />
+                            <span>Use in Song</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: CUSTOM VOICE STUDIO (USE YOUR OWN VOICE OR CLONE) */}
+            {studioTab === 'voice_studio' && (
+              <div className="space-y-6">
+                <div className="bg-emerald-950/20 border border-emerald-500/30 p-5 rounded-2xl space-y-2">
+                  <h4 className="text-sm font-bold text-emerald-300 flex items-center space-x-2">
+                    <Mic2 className="w-4 h-4" />
+                    <span>Neural Vocal Studio & Custom Voice Cloning</span>
+                  </h4>
+                  <p className="text-xs text-zinc-400">
+                    Just like Suno’s voice engine, upload or record your own voice timbre to sing your songs, or pick from our studio-trained AI vocalists!
+                  </p>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="bg-black/40 border border-zinc-800 p-5 rounded-2xl space-y-3">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-white flex items-center space-x-2">
+                      <Mic className="w-4 h-4 text-emerald-400" />
+                      <span>Option A: Upload or Record Your Voice</span>
+                    </label>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      Upload a 15-30 second clear audio file (.wav or .mp3) of your speaking or singing voice.
+                    </p>
+                    <div className="border-2 border-dashed border-zinc-700 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition-colors">
+                      <UploadCloud className="w-8 h-8 text-zinc-500 mx-auto mb-2" />
+                      <p className="text-xs text-zinc-300 font-semibold">Drop vocal audio file here or click to browse</p>
+                      <p className="text-[10px] text-zinc-500">Supports WAV, MP3, M4A up to 25MB</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-black/40 border border-zinc-800 p-5 rounded-2xl space-y-3">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-white flex items-center space-x-2">
+                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                      <span>Option B: Choose Studio Vocal Persona</span>
+                    </label>
+                    <div className="space-y-2">
+                      {[
+                        { id: 'my_voice', label: 'My Cloned Voice (Anre Fourie)', desc: 'Custom trained profile timbre' },
+                        { id: 'female_pop', label: 'Aura Pop Diva (Female)', desc: 'Soaring contemporary pop & vibrato' },
+                        { id: 'male_rock', label: 'Titan Baritone Rocker (Male)', desc: 'Raspy, powerful rock vocal lead' },
+                        { id: 'cyber_vocoder', label: 'Cyber Vocoder Synthesizer', desc: 'Daft Punk / The Weeknd neural vocoder' }
+                      ].map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => setVocalVoiceChoice(item.id as any)}
+                          className={`p-3 rounded-xl border text-xs cursor-pointer flex items-center justify-between transition-all ${
+                            vocalVoiceChoice === item.id 
+                              ? 'bg-emerald-950/40 border-emerald-500 text-white' 
+                              : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                          }`}
+                        >
+                          <div>
+                            <p className="font-bold text-white">{item.label}</p>
+                            <p className="text-[10px] text-zinc-500">{item.desc}</p>
+                          </div>
+                          {vocalVoiceChoice === item.id && <Check className="w-4 h-4 text-emerald-400" />}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={() => setStudioTab('director')}
+                    className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center space-x-2"
+                  >
+                    <span>Proceed to Music Video Director</span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: MUSIC VIDEO DIRECTOR & PUBLISH (THE UNIFIED CREATIVE STUDIO) */}
+            {studioTab === 'director' && (
+              <form onSubmit={handlePublish} className="space-y-6">
+                
+                {/* Format & Aspect Ratio */}
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300">
+                      Step 1: Release Medium
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'music_video', label: 'AI Music Video', icon: FileVideo, desc: 'Audio + Cinema Video' },
+                        { id: 'ai_track', label: 'Neural Song', icon: Music, desc: 'Audio Stems Only' },
+                      ].map((item) => {
+                        const Icon = item.icon;
+                        const isSelected = mediumType === item.id;
+                        return (
+                          <button
+                            type="button"
+                            key={item.id}
+                            onClick={() => setMediumType(item.id as any)}
+                            className={`p-3 rounded-2xl border text-left transition-all ${
+                              isSelected 
+                                ? 'bg-emerald-950/50 border-emerald-500 text-white shadow-lg' 
+                                : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                            }`}
+                          >
+                            <Icon className={`w-4 h-4 ${isSelected ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                            <p className="text-xs font-bold pt-1">{item.label}</p>
+                            <p className="text-[10px] text-zinc-500">{item.desc}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Video Aspect Ratio */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300">
+                      Video Screen Aspect Ratio
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: '16:9', label: '16:9 Cinema Widescreen', icon: Monitor, desc: 'For YouTube & TVs' },
+                        { id: '9:16', label: '9:16 Vertical Video Hook', icon: Smartphone, desc: 'For Reels & TikTok' },
+                      ].map((item) => {
+                        const Icon = item.icon;
+                        const isSelected = videoAspectRatio === item.id;
+                        return (
+                          <button
+                            type="button"
+                            key={item.id}
+                            onClick={() => setVideoAspectRatio(item.id as any)}
+                            className={`p-3 rounded-2xl border text-left transition-all ${
+                              isSelected 
+                                ? 'bg-cyan-950/50 border-cyan-400 text-white shadow-lg' 
+                                : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                            }`}
+                          >
+                            <Icon className={`w-4 h-4 ${isSelected ? 'text-cyan-400' : 'text-zinc-500'}`} />
+                            <p className="text-xs font-bold pt-1">{item.label}</p>
+                            <p className="text-[10px] text-zinc-500">{item.desc}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Custom Creator Channel Domain */}
                 <div className="space-y-1.5 bg-black/40 p-4 rounded-2xl border border-zinc-800">
                   <label className="block text-xs font-bold uppercase tracking-wider text-cyan-300 flex items-center space-x-1.5">
                     <Globe className="w-3.5 h-3.5" />
@@ -1347,17 +1618,17 @@ export default function FutureBoxHome() {
                       required
                     />
                   </div>
-                  <p className="text-[10px] text-zinc-500">Audience members can visit this custom channel to stream all your music videos and songs.</p>
                 </div>
 
+                {/* Title & Media Link */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-mono text-zinc-400 mb-1">Song / Video Title</label>
+                    <label className="block text-xs font-mono text-zinc-400 mb-1">Song & Music Video Title</label>
                     <input 
                       type="text" 
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="e.g. Cybernetic Odyssey (Official AI Video)"
+                      placeholder="e.g. Cherry Blossom Mail (Official AI Video)"
                       className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
                       required
                     />
@@ -1375,43 +1646,30 @@ export default function FutureBoxHome() {
                   </div>
                 </div>
 
-                <div className="space-y-2 bg-black/30 p-4 rounded-2xl border border-zinc-800">
-                  <label className="block text-xs font-mono text-cyan-300">
-                    AI Models Used:
-                  </label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {availableTools.map((tool) => {
-                      const isSelected = selectedTools.includes(tool);
-                      return (
-                        <button
-                          type="button"
-                          key={tool}
-                          onClick={() => toggleTool(tool)}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all ${
-                            isSelected 
-                              ? 'bg-cyan-500/20 border border-cyan-400 text-cyan-300 font-bold' 
-                              : 'bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-zinc-300'
-                          }`}
-                        >
-                          {isSelected ? `✓ ${tool}` : `+ ${tool}`}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="pt-2">
-                    <label className="block text-xs font-mono text-zinc-400 mb-1">
-                      Song Lyrics & AI Prompts:
+                {/* Lyrics & Prompt Generator */}
+                <div className="space-y-2 bg-black/40 p-4 rounded-2xl border border-zinc-800">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-mono text-cyan-300 font-bold">
+                      Song Lyrics & AI Video Scene Directions:
                     </label>
-                    <textarea 
-                      value={lyricsOrPrompt}
-                      onChange={(e) => setLyricsOrPrompt(e.target.value)}
-                      placeholder="Write song lyrics, vocal arrangement notes, or generative video prompts..."
-                      className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 h-20"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setStudioTab('soundboard')}
+                      className="text-xs text-emerald-400 hover:underline flex items-center space-x-1"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                      <span>Browse Soundboard for Style Tags</span>
+                    </button>
                   </div>
+                  <textarea 
+                    value={lyricsOrPrompt}
+                    onChange={(e) => setLyricsOrPrompt(e.target.value)}
+                    placeholder="[Style: Modern Country Pop, 104 BPM, major key, pedal steel guitar]&#10;&#10;[Verse 1]&#10;Driving down this empty gravel road...&#10;&#10;[Chorus]&#10;Underneath the summer skyline...&#10;&#10;[Video Direction: Anamorphic camera slowly panning over open wheat fields at sunset]"
+                    className="w-full bg-black/60 border border-zinc-800 rounded-xl p-3.5 text-xs text-white font-mono focus:outline-none focus:border-cyan-500 h-28"
+                  />
                 </div>
 
+                {/* Ethical Gatekeeper */}
                 <div className="bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-2xl space-y-2">
                   <div className="flex items-center space-x-2 text-emerald-400">
                     <ShieldCheck className="w-4 h-4" />
@@ -1430,10 +1688,11 @@ export default function FutureBoxHome() {
                   </label>
                 </div>
 
+                {/* Audit Feedbacks */}
                 {auditStatus === 'success' && (
                   <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500 text-emerald-300 text-xs font-semibold flex items-center space-x-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                    <span>✓ Ethical Gate Passed! Your content is now live at futurebox.app/@{creatorDomain || 'your-name'}</span>
+                    <span>✓ Ethical Gate Passed! Your AI Music Video is live at futurebox.app/@{creatorDomain}</span>
                   </div>
                 )}
 
@@ -1453,158 +1712,74 @@ export default function FutureBoxHome() {
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)] flex items-center justify-center space-x-2"
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)] flex items-center justify-center space-x-2"
                 >
                   <UploadCloud className="w-4 h-4" />
-                  <span>Publish to My Creator Channel</span>
+                  <span>Publish to My Channel (futurebox.app/@{creatorDomain})</span>
                 </button>
               </form>
             )}
 
-            {/* TAB 2: GENRE SOUNDBOARD & AUDIO PREVIEWS (Hear what Suno styles sound like!) */}
-            {studioTab === 'soundboard' && (
+            {/* TAB 4: HOOKS & REELS FEED (INSPIRED BY SUNO HOOKS & YOUTUBE SHORTS) */}
+            {studioTab === 'hooks_feed' && (
               <div className="space-y-4">
                 <div className="bg-cyan-950/20 border border-cyan-500/30 p-4 rounded-2xl">
-                  <h4 className="text-xs font-bold text-cyan-300 flex items-center space-x-1.5">
-                    <Volume2 className="w-4 h-4" />
-                    <span>Suno & Udio Style Soundboard</span>
+                  <h4 className="text-xs font-bold text-cyan-300 flex items-center space-x-2">
+                    <Smartphone className="w-4 h-4" />
+                    <span>Viral Hooks & AI Music Videos Stream</span>
                   </h4>
-                  <p className="text-xs text-zinc-400 pt-1">
-                    Listen to audio samples of common AI music genres before generating, so you know exactly what prompt to use!
+                  <p className="text-xs text-zinc-400 pt-0.5">
+                    Watch short-form viral music videos with real-time lyric hooks and remix prompts from creators worldwide.
                   </p>
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1">
-                  {genreSamples.map((genre, i) => {
-                    const isPlaying = playingGenreSample === genre.name;
-                    return (
-                      <div key={i} className="bg-zinc-950 border border-zinc-800 p-4 rounded-2xl space-y-3 hover:border-emerald-500/40 transition-colors">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h5 className="font-bold text-sm text-white">{genre.name}</h5>
-                            <p className="text-[11px] text-zinc-400">{genre.subgenre} • <span className="text-emerald-400 font-mono">{genre.bpm}</span></p>
-                          </div>
-                          <button
-                            onClick={() => setPlayingGenreSample(isPlaying ? null : genre.name)}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                              isPlaying ? 'bg-emerald-500 text-black shadow-lg animate-pulse' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                            }`}
-                          >
-                            <Play className="w-3.5 h-3.5 fill-current" />
-                          </button>
-                        </div>
-
-                        <p className="text-xs text-zinc-400 leading-relaxed">{genre.description}</p>
-
-                        {isPlaying && (
-                          <div className="pt-2 border-t border-zinc-800">
-                            <audio src={genre.audioUrl} autoPlay controls className="w-full h-8" />
-                          </div>
-                        )}
-
-                        <div className="bg-black/50 p-2 rounded-xl border border-zinc-800/80 flex items-center justify-between">
-                          <span className="text-[10px] font-mono text-zinc-400 truncate max-w-[200px]">{genre.promptSnippet}</span>
-                          <button
-                            onClick={() => {
-                              setLyricsOrPrompt(genre.promptSnippet);
-                              setStudioTab('publish');
-                            }}
-                            className="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center space-x-1 flex-shrink-0 ml-2"
-                          >
-                            <Copy className="w-3 h-3" />
-                            <span>Use Style</span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 3: POPULAR AI CREATOR CHANNELS (Our own AI YouTube directory) */}
-            {studioTab === 'channels' && (
-              <div className="space-y-4">
-                <div className="bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-2xl">
-                  <h4 className="text-xs font-bold text-emerald-300 flex items-center space-x-1.5">
-                    <Tv className="w-4 h-4" />
-                    <span>Top Featured Creative AI Channels</span>
-                  </h4>
-                  <p className="text-xs text-zinc-400 pt-1">
-                    Explore high-velocity creators using Suno, Kling, and Runway to spark ideas for your next release.
-                  </p>
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1">
-                  {popularAiChannels.map((channel, i) => (
-                    <div key={i} className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden hover:border-cyan-500/40 transition-colors flex flex-col justify-between">
-                      <div className="aspect-video relative overflow-hidden">
-                        <img src={channel.thumbnail} alt={channel.name} className="w-full h-full object-cover" />
-                        <div className="absolute top-2 left-2 bg-black/80 px-2 py-0.5 rounded text-[10px] font-mono text-cyan-300 border border-cyan-500/30">
-                          {channel.subscribers} Subscribers
+                <div className="grid md:grid-cols-2 gap-4">
+                  {[
+                    {
+                      title: 'BRICKZ — FORGET YESTERDAY',
+                      creator: 'JL Records',
+                      handle: '@brickz',
+                      likes: '978',
+                      comments: '75',
+                      hookSnippet: 'Forget yesterday, the neural dawn is here...',
+                      thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
+                      embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g'
+                    },
+                    {
+                      title: 'Cherry Blossom Mail (Remix)',
+                      creator: 'Anre Fourie',
+                      handle: '@anrefourie',
+                      likes: '1.4K',
+                      comments: '112',
+                      hookSnippet: 'Sending letters through the digital ether...',
+                      thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
+                      embedUrl: 'https://www.youtube.com/embed/bk-nQ7HF6k4'
+                    }
+                  ].map((hook, i) => (
+                    <div key={i} className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden space-y-3 p-4">
+                      <div className="aspect-video relative rounded-xl overflow-hidden group cursor-pointer"
+                        onClick={() => setSelectedMedia({
+                          title: hook.title,
+                          embedUrl: hook.embedUrl,
+                          externalUrl: 'https://suno.com',
+                          type: 'youtube'
+                        })}
+                      >
+                        <img src={hook.thumbnail} alt={hook.title} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <Play className="w-10 h-10 text-emerald-400 fill-current" />
                         </div>
                       </div>
 
-                      <div className="p-4 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h5 className="font-bold text-sm text-white">{channel.name}</h5>
-                          <span className="text-[10px] font-mono text-emerald-400">{channel.handle}</span>
+                      <div className="flex items-center justify-between text-xs">
+                        <div>
+                          <h5 className="font-bold text-white">{hook.title}</h5>
+                          <p className="text-[10px] font-mono text-emerald-400">{hook.handle}</p>
                         </div>
-                        <p className="text-xs text-zinc-400">{channel.niche}</p>
-                        <p className="text-[10px] font-mono text-zinc-500">Tools: {channel.topTool}</p>
-
-                        <a 
-                          href={channel.sampleUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold rounded-xl flex items-center justify-center space-x-1.5 transition-colors pt-2"
-                        >
-                          <span>Explore Channel Releases</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 4: CAMERA & VIDEO PROMPTS PRESET LIBRARY */}
-            {studioTab === 'prompts' && (
-              <div className="space-y-4">
-                <div className="bg-cyan-950/20 border border-cyan-500/30 p-4 rounded-2xl">
-                  <h4 className="text-xs font-bold text-cyan-300 flex items-center space-x-1.5">
-                    <Video className="w-4 h-4" />
-                    <span>Calibrated Video & Camera Prompts</span>
-                  </h4>
-                  <p className="text-xs text-zinc-400 pt-1">
-                    Click any preset to copy calibrated camera directions, lighting parameters, and aspect ratios into your prompt.
-                  </p>
-                </div>
-
-                <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-                  {videoPromptPresets.map((preset, i) => (
-                    <div key={i} className="bg-zinc-950 border border-zinc-800 p-4 rounded-2xl space-y-2 hover:border-emerald-500/40 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <h5 className="font-bold text-xs text-white">{preset.title}</h5>
-                        <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
-                          {preset.tags}
-                        </span>
-                      </div>
-                      <p className="text-xs font-mono text-zinc-300 bg-black/40 p-3 rounded-xl border border-zinc-800/80 leading-relaxed">
-                        {preset.prompt}
-                      </p>
-                      <div className="flex justify-end">
-                        <button
-                          onClick={() => {
-                            setLyricsOrPrompt(preset.prompt);
-                            setStudioTab('publish');
-                          }}
-                          className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/30 flex items-center space-x-1 transition-colors"
-                        >
-                          <Copy className="w-3 h-3" />
-                          <span>Apply to Video Generator</span>
-                        </button>
+                        <div className="flex items-center space-x-3 text-zinc-400">
+                          <span className="flex items-center space-x-1"><Heart className="w-3.5 h-3.5 text-rose-500" /> <span>{hook.likes}</span></span>
+                          <span className="flex items-center space-x-1"><Repeat className="w-3.5 h-3.5 text-cyan-400" /> <span>Remix</span></span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1616,7 +1791,7 @@ export default function FutureBoxHome() {
         </div>
       )}
 
-      {/* 🎬 / 🎵 UNIVERSAL MEDIA PLAYER MODAL */}
+      {/* 🎬 UNIVERSAL MEDIA PLAYER MODAL */}
       {selectedMedia && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl">
