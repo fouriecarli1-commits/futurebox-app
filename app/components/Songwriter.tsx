@@ -24,6 +24,7 @@ import {
   STYLE_PRESETS, SONG_SECTIONS, VOCAL_CHOICES, MOOD_TAGS, type StylePreset,
 } from '../data/studio';
 import { offlineIdeas, type Idea } from '../lib/songideas';
+import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 
 type HelpMode = 'continue' | 'style' | 'polish';
 
@@ -62,8 +63,12 @@ function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) 
 
 export default function Songwriter({
   onSendToDirector,
+  userPlan,
+  onUpgrade,
 }: {
   onSendToDirector: (payload: { title: string; lyrics: string; style: string }) => void;
+  userPlan: Plan;
+  onUpgrade: () => void;
 }) {
   const [title, setTitle] = useState('');
   const [preset, setPreset] = useState<StylePreset>(STYLE_PRESETS[5]);
@@ -117,6 +122,19 @@ export default function Songwriter({
   const askForHelp = async (mode: HelpMode, again = false) => {
     const nextRoll = again ? roll + 1 : 0;
     if (!again) seen.current = [];
+    // The cap is on the model calls only. Running out drops you to the offline
+    // prompts rather than to a wall — the screen still helps, it just stops
+    // spending on your behalf.
+    const gate = check('songwriter.help', userPlan);
+    if (!gate.allowed) {
+      setHelpMode(mode);
+      setRoll(nextRoll);
+      setIdeas(offlineIdeas(mode, nextRoll));
+      setOffline(true);
+      setHelpNotice(`${gate.reason} These are writing prompts in the meantime.`);
+      return;
+    }
+
     setHelpMode(mode);
     setRoll(nextRoll);
     setHelpLoading(true);
@@ -137,6 +155,8 @@ export default function Songwriter({
       const data = await res.json();
 
       if (res.ok && Array.isArray(data.suggestions)) {
+        // Counted only once the model actually answered.
+        record('songwriter.help');
         setIdeas(data.suggestions);
         setOffline(false);
         seen.current.push(...data.suggestions.map((i: Idea) => i.label));
@@ -396,6 +416,16 @@ export default function Songwriter({
               {HELP_LABELS[mode].button}
             </button>
           ))}
+          <span className="text-sm text-zinc-500">
+            {userPlan === 'pro'
+              ? 'Unlimited on Pro'
+              : `${check('songwriter.help', userPlan).remaining ?? 0} of ${ENTITLEMENTS['songwriter.help'].free} rolls left today`}
+          </span>
+          {userPlan === 'free' && (check('songwriter.help', userPlan).remaining ?? 0) === 0 && (
+            <button type="button" onClick={onUpgrade} className="text-sm text-amber-400 hover:underline">
+              Remove the cap
+            </button>
+          )}
           {helpMode && (
             <button
               type="button"

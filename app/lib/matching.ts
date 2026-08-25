@@ -13,9 +13,9 @@ import {
   COMPETITION_SEEDS,
   type CompetitionCategory,
   type PodcastTarget,
-  type SocialPlatform,
   type TrackFlavour,
 } from '../data/studio';
+import type { Platform } from '../data/social';
 
 // -----------------------------------------------------------------------------
 // Harmonic and tempo compatibility
@@ -313,7 +313,7 @@ const HOOK_SHAPES = [
   (t: TrackFlavour) => `Stop scrolling — the drop on "${t.title}" is at 0:14.`,
 ];
 
-export function buildPosts(track: TrackFlavour, platform: SocialPlatform): PostIdea[] {
+export function buildPosts(track: TrackFlavour, platform: Platform): PostIdea[] {
   const base = ['aimusic', 'futurebox', 'aicreator', 'sunoai', 'madewithai'];
   const tags = [...base, ...track.tags.map((t) => t.replace(/[^a-z0-9]/gi, ''))]
     .filter(Boolean)
@@ -329,7 +329,7 @@ export function buildPosts(track: TrackFlavour, platform: SocialPlatform): PostI
       i % 2 === 0 ? 'Full track and the exact prompt on futurebox.app.' : 'Prompt in the comments. Steal it.',
     ].join('\n'),
     hashtags: tags,
-    shotNote: `${platform.bestFormat}. Land the hook inside ${platform.hookWindow.toLowerCase()} — on ${platform.name} nothing after that is watched by people who left.`,
+    shotNote: `${platform.bestFormat}. Land the hook inside ${platform.hookWindow} — on ${platform.name} nothing after that is watched by people who left.`,
   }));
 }
 

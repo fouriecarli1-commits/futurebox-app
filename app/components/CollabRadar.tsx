@@ -10,15 +10,22 @@
  * and the creator has to be able to disagree with it before they send.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Mic, Radio, Music, Send, Copy, Check, ExternalLink, Users, Sparkles,
   AlertCircle, Video, Flame, ListChecks, Handshake, Search, Plus,
+  Link as LinkIcon, Lock,
 } from 'lucide-react';
 import {
-  PODCAST_TARGETS, TRACK_FLAVOURS, PLATFORMS, TIKTOK_LAUNCH_STEPS,
+  PODCAST_TARGETS, TRACK_FLAVOURS, TIKTOK_LAUNCH_STEPS,
   REACH_LABELS, type PodcastTarget, type TrackFlavour,
 } from '../data/studio';
+import { PLATFORMS as SOCIAL_PLATFORMS, FUTUREBOX_CHANNELS, FUTUREBOX_TAG } from '../data/social';
+import {
+  buildCaption, loadHandles, saveHandles, profileUrlFor, shareUrlFor, platformById,
+  loadBoosts, saveBoosts, type Handles, type BoostRequest,
+} from '../lib/social';
+import { check, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import {
   matchPodcasts, matchTracks, buildPitch, buildLiveBrief, buildPosts,
   type CreatorProfile,
@@ -61,7 +68,17 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
+export default function CollabRadar({
+  profile,
+  userPlan,
+  onUpgrade,
+}: {
+  profile: CreatorProfile;
+  userPlan: Plan;
+  onUpgrade: () => void;
+}) {
+  const canPost = check('collab.post', userPlan).allowed;
+  const canBoost = check('collab.boost', userPlan).allowed;
   const [tab, setTab] = useState<RadarTab>('podcasts');
 
   // Podcast outreach
@@ -84,13 +101,27 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
 
   // Viral posts
   const [postTrackId, setPostTrackId] = useState(sourceId);
-  const [platformId, setPlatformId] = useState(PLATFORMS[0].id);
+  const [platformId, setPlatformId] = useState(SOCIAL_PLATFORMS[0].id);
+  const [handles, setHandles] = useState<Handles>({});
+  const [boosts, setBoosts] = useState<BoostRequest[]>([]);
+  const [collaborator, setCollaborator] = useState('');
+  const [creditFuturebox, setCreditFuturebox] = useState(true);
+  const [showConnectNote, setShowConnectNote] = useState(false);
+  const [boostFor, setBoostFor] = useState<string | null>(null);
+  const [boostUrl, setBoostUrl] = useState('');
+
+  // Read after mount: localStorage during render would disagree with the
+  // server-rendered HTML.
+  useEffect(() => {
+    setHandles(loadHandles());
+    setBoosts(loadBoosts());
+  }, []);
 
   const allTargets = useMemo(() => [...PODCAST_TARGETS, ...ownTargets], [ownTargets]);
   const podcastMatches = useMemo(() => matchPodcasts(profile, allTargets), [profile, allTargets]);
   const trackMatches = useMemo(() => matchTracks(source), [source]);
   const postTrack = TRACK_FLAVOURS.find((t) => t.id === postTrackId) as TrackFlavour;
-  const platform = PLATFORMS.find((p) => p.id === platformId) as (typeof PLATFORMS)[number];
+  const platform = platformById(platformId);
   const posts = useMemo(() => buildPosts(postTrack, platform), [postTrack, platform]);
 
   const openPitch = (podcast: PodcastTarget, format: 'email' | 'dm') => {
@@ -479,7 +510,112 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
       {/* ---------------------------------------------------------------- */}
       {tab === 'posts' && (
         <div className="space-y-4">
-          <div className="grid sm:grid-cols-2 gap-3">
+          {/* Your accounts. Handles live in this browser and reach no server —
+              there is none — so the panel says that rather than implying a
+              connected account. */}
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-bold text-white flex items-center gap-2">
+                <LinkIcon className="w-4 h-4 text-cyan-400" />
+                Your channels
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowConnectNote((v) => !v)}
+                className="text-sm text-zinc-400 hover:text-white"
+              >
+                {showConnectNote ? 'Hide' : 'What would real posting take?'}
+              </button>
+            </div>
+
+            {showConnectNote && (
+              <div className="text-sm text-zinc-400 leading-relaxed bg-black/40 border border-zinc-800 rounded-xl p-3 space-y-1.5">
+                <p>
+                  Posting to your account on your behalf is not a link — it is OAuth against each platform&apos;s API,
+                  and every one of them gates that behind an approved developer app. That needs a backend FutureBox
+                  does not have yet, plus a review queue measured in weeks. Per platform:
+                </p>
+                <ul className="space-y-0.5">
+                  {SOCIAL_PLATFORMS.map((pf) => (
+                    <li key={pf.id}>
+                      <strong className="text-zinc-200">{pf.name}:</strong> {pf.connectRequires}
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  Until then this does the part that is real: your handles become working links, and each post opens
+                  that platform&apos;s own composer with the caption ready to paste.
+                </p>
+              </div>
+            )}
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {SOCIAL_PLATFORMS.map((pf) => {
+                const url = profileUrlFor(pf, handles[pf.id] ?? '');
+                return (
+                  <div key={pf.id} className="space-y-1">
+                    <label className="text-sm text-zinc-400">{pf.name}</label>
+                    <input
+                      value={handles[pf.id] ?? ''}
+                      onChange={(e) => {
+                        const next = { ...handles, [pf.id]: e.target.value };
+                        setHandles(next);
+                        saveHandles(next);
+                      }}
+                      placeholder="handle or paste your profile URL"
+                      className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
+                    />
+                    {url && (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-cyan-400 hover:underline flex items-center gap-1 truncate"
+                      >
+                        {url.replace(/^https:\/\//, '')}
+                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-sm text-zinc-500">Saved in this browser only. Clearing site data clears them.</p>
+          </div>
+
+          {/* FutureBox's own channels */}
+          <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4 space-y-2">
+            <p className="text-sm font-bold text-white">FutureBox channels</p>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {FUTUREBOX_CHANNELS.map((ch) => {
+                const pf = platformById(ch.platformId);
+                const url = profileUrlFor(pf, ch.handle);
+                return (
+                  <div key={ch.platformId} className="p-2.5 rounded-xl bg-zinc-950 border border-zinc-800">
+                    <p className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+                      {pf.name} · @{ch.handle}
+                      <span className={ch.live ? 'text-emerald-400' : 'text-amber-400'}>
+                        {ch.live ? 'live' : 'not created yet'}
+                      </span>
+                    </p>
+                    <p className="text-sm text-zinc-500">{ch.role}</p>
+                    {ch.live && url && (
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-cyan-400 hover:underline">
+                        Open
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-sm text-zinc-500 leading-relaxed">
+              Tag FutureBox in a post and the collab becomes findable — an untagged one is invisible to the channel
+              that would boost it. A boost is a request to a person, not an automatic repost.
+            </p>
+          </div>
+
+          {/* Compose */}
+          <div className="grid sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <label className="text-sm text-zinc-400">Track</label>
               <select
@@ -488,66 +624,164 @@ export default function CollabRadar({ profile }: { profile: CreatorProfile }) {
                 className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
               >
                 {TRACK_FLAVOURS.filter((t) => t.onChannel).map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.title}
-                  </option>
+                  <option key={t.id} value={t.id}>{t.title}</option>
                 ))}
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-zinc-400">Channel</label>
-              <div className="flex flex-wrap gap-1.5">
-                {PLATFORMS.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setPlatformId(p.id)}
-                    className={`px-2.5 py-1.5 rounded-xl text-sm font-bold border transition-all ${
-                      platformId === p.id
-                        ? 'bg-cyan-500/15 border-cyan-500 text-cyan-300'
-                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    {p.name}
-                    {p.status === 'not_created' && <span className="text-amber-400"> ·</span>}
-                  </button>
+              <label className="text-sm text-zinc-400">Post to</label>
+              <select
+                value={platformId}
+                onChange={(e) => setPlatformId(e.target.value)}
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+              >
+                {SOCIAL_PLATFORMS.map((pf) => (
+                  <option key={pf.id} value={pf.id}>{pf.name}</option>
                 ))}
-              </div>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm text-zinc-400">Collaborator (optional)</label>
+              <input
+                value={collaborator}
+                onChange={(e) => setCollaborator(e.target.value)}
+                placeholder="@their-handle"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
+              />
             </div>
           </div>
 
-          {platform.status === 'not_created' && (
-            <div className="flex items-start space-x-2 text-[13px] text-amber-300/90 bg-amber-950/20 border border-amber-500/30 rounded-xl p-2.5">
-              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+          {!canPost && (
+            <p className="text-sm text-amber-300/90 flex items-start gap-2 bg-amber-950/20 border border-amber-500/30 rounded-xl p-2.5">
+              <Lock className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>
-                {platform.handle} on {platform.name} does not exist yet. Drafts are still worth writing — but create the
-                account before you promise anyone a cross-post.
+                {ENTITLEMENTS['collab.post'].freeNote} Writing the caption, the hooks and the hashtags stays free —
+                copy them and post yourself, or upgrade to do it from here and to ask the channel for a boost.
               </span>
+            </p>
+          )}
+
+          <label className="flex items-center gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={creditFuturebox}
+              onChange={(e) => setCreditFuturebox(e.target.checked)}
+              className="rounded border-zinc-700 text-emerald-500 focus:ring-0"
+            />
+            <span className="text-sm text-zinc-300">Credit {FUTUREBOX_TAG} in the caption</span>
+          </label>
+
+          <div className="grid md:grid-cols-2 gap-3">
+            {posts.map((post, i) => {
+              const caption = buildCaption(post.caption, post.hashtags, {
+                creditFuturebox,
+                collaborator,
+              });
+              return (
+                <div key={i} className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-emerald-500/40 transition-all space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-bold text-emerald-300 leading-snug">{post.hook}</p>
+                    <CopyButton text={caption} />
+                  </div>
+                  <pre className="text-[13px] text-zinc-300 whitespace-pre-wrap leading-relaxed">{caption}</pre>
+                  <p className="text-[13px] text-zinc-500 flex items-start gap-1.5 pt-1 border-t border-zinc-800/80">
+                    <Users className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                    <span>{post.shotNote}</span>
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    {canPost ? (
+                      <a
+                        href={shareUrlFor(platform, caption)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1 rounded-lg text-sm font-semibold bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/25 flex items-center gap-1.5"
+                      >
+                        <Send className="w-3 h-3" />
+                        {platform.shareIntent ? `Post on ${platform.name}` : `Open ${platform.name} composer`}
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={onUpgrade}
+                        className="px-2.5 py-1 rounded-lg text-sm font-semibold bg-amber-500/15 border border-amber-500/50 text-amber-300 hover:bg-amber-500/25 flex items-center gap-1.5"
+                      >
+                        <Lock className="w-3 h-3" />
+                        Posting is Pro
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => (canBoost ? setBoostFor(caption) : onUpgrade())}
+                      className="px-2.5 py-1 rounded-lg text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
+                    >
+                      {!canBoost && <Lock className="w-3 h-3 text-amber-400" />}
+                      Ask FutureBox to boost
+                    </button>
+                  </div>
+                  {!platform.shareIntent && (
+                    <p className="text-[13px] text-zinc-600">
+                      Copy the caption first — no public URL can attach your video for you.
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {boostFor !== null && (
+            <div className="rounded-2xl border border-cyan-500/40 bg-cyan-950/20 p-4 space-y-2.5">
+              <p className="text-sm font-bold text-cyan-300">Boost request</p>
+              <input
+                value={boostUrl}
+                onChange={(e) => setBoostUrl(e.target.value)}
+                placeholder="Paste the link to your post once it is live"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={!boostUrl.trim()}
+                  onClick={() => {
+                    const next = [
+                      ...boosts,
+                      {
+                        id: `${platform.id}-${boosts.length}`,
+                        platformId: platform.id,
+                        postUrl: boostUrl.trim(),
+                        note: boostFor.slice(0, 120),
+                        createdAt: new Date().toISOString(),
+                      },
+                    ];
+                    setBoosts(next);
+                    saveBoosts(next);
+                    setBoostFor(null);
+                    setBoostUrl('');
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-cyan-500/20 border border-cyan-500 text-cyan-200 disabled:opacity-40"
+                >
+                  Queue it
+                </button>
+                <button type="button" onClick={() => setBoostFor(null)} className="text-sm text-zinc-400 hover:text-white">
+                  Cancel
+                </button>
+              </div>
+              <p className="text-[13px] text-zinc-400 leading-relaxed">
+                This queues locally. There is no backend to deliver it yet, and a boost is a person at the FutureBox end
+                deciding to repost — so the queue is a to-do list, not a promise.
+              </p>
             </div>
           )}
 
-          <div className="grid md:grid-cols-2 gap-3">
-            {posts.map((post, i) => (
-              <div key={i} className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-emerald-500/40 transition-all space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-bold text-emerald-300 leading-snug">{post.hook}</p>
-                  <CopyButton text={`${post.caption}\n\n${post.hashtags.map((h) => `#${h}`).join(' ')}`} />
-                </div>
-                <pre className="text-[13px] text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed">{post.caption}</pre>
-                <div className="flex flex-wrap gap-1">
-                  {post.hashtags.map((h) => (
-                    <span key={h} className="px-2 py-0.5 rounded-md text-xs font-mono text-cyan-300/80 border border-cyan-500/20 bg-cyan-500/5">
-                      #{h}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-[13px] text-zinc-500 flex items-start space-x-1.5 pt-1 border-t border-zinc-800/80">
-                  <Users className="w-3 h-3 flex-shrink-0 mt-0.5" />
-                  <span>{post.shotNote}</span>
+          {boosts.length > 0 && (
+            <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4 space-y-1.5">
+              <p className="text-sm font-bold text-white">Queued for a boost · {boosts.length}</p>
+              {boosts.map((b) => (
+                <p key={b.id} className="text-sm text-zinc-400 truncate">
+                  {platformById(b.platformId).name} — {b.postUrl}
                 </p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

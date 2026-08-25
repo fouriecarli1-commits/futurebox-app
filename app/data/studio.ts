@@ -313,57 +313,11 @@ export const TRACK_FLAVOURS: readonly TrackFlavour[] = [
 ];
 
 // -----------------------------------------------------------------------------
-// 4. Social platforms
+// 4. TikTok Live
+//
+// The platform table itself now lives in `app/data/social.ts`, alongside the
+// real profile and composer URLs it needs to be useful.
 // -----------------------------------------------------------------------------
-
-export interface SocialPlatform {
-  readonly id: string;
-  readonly name: string;
-  readonly handle: string;
-  readonly status: 'live' | 'not_created';
-  readonly bestFormat: string;
-  readonly hookWindow: string;
-  readonly maxHashtags: number;
-}
-
-export const PLATFORMS: readonly SocialPlatform[] = [
-  {
-    id: 'tiktok',
-    name: 'TikTok',
-    handle: '@futurebox',
-    status: 'not_created',
-    bestFormat: '9:16 vertical, 15–34s',
-    hookWindow: 'First 1.5 seconds',
-    maxHashtags: 5,
-  },
-  {
-    id: 'youtube',
-    name: 'YouTube Shorts',
-    handle: '@futurebox',
-    status: 'live',
-    bestFormat: '9:16 vertical, up to 60s',
-    hookWindow: 'First 3 seconds',
-    maxHashtags: 3,
-  },
-  {
-    id: 'instagram',
-    name: 'Instagram Reels',
-    handle: '@futurebox',
-    status: 'not_created',
-    bestFormat: '9:16 vertical, 15–30s',
-    hookWindow: 'First 2 seconds',
-    maxHashtags: 5,
-  },
-  {
-    id: 'x',
-    name: 'X',
-    handle: '@futurebox',
-    status: 'not_created',
-    bestFormat: 'Native video, under 2:20',
-    hookWindow: 'The first line of text',
-    maxHashtags: 2,
-  },
-];
 
 /** What has to exist before a TikTok Live collab is even bookable. */
 export const TIKTOK_LAUNCH_STEPS: readonly { id: string; label: string; detail: string }[] = [

@@ -24,6 +24,7 @@ import ThemeStudio from './components/ThemeStudio';
 import QualityRadar from './components/QualityRadar';
 import Songwriter from './components/Songwriter';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
+import { byArea, describe } from './lib/entitlements';
 
 interface Blueprint {
   tag: string;
@@ -1377,24 +1378,41 @@ export default function FutureBoxHome() {
                 </p>
               </div>
 
-              <ul className="space-y-2 text-xs text-zinc-200">
-                <li className="flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Unlimited access to all 4K Masterclasses & Full Podcasts</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span><strong>Ability to host & publish long-form Podcasts in Creator Studio</strong></span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span><strong>Claim your custom Creator Channel Domain</strong> (`futurebox.app/@your-name`)</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Full source code & blueprint teardown downloads</span>
-                </li>
-              </ul>
+              {/* Generated from the same table the app enforces, so the sales
+                  copy cannot drift from what the code actually does. */}
+              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                {byArea().map((group) => (
+                  <div key={group.area} className="space-y-1.5">
+                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">{group.area}</p>
+                    {group.rows.map((row) => {
+                      const same = row.free === row.pro;
+                      return (
+                        <div key={row.key} className="grid grid-cols-[1fr_auto_auto] gap-2 items-baseline text-xs">
+                          <span className="text-zinc-200">{row.label}</span>
+                          <span className={`text-right w-20 ${row.free === 0 ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                            {describe(row.free, row.unit)}
+                          </span>
+                          <span className={`text-right w-20 font-semibold ${same ? 'text-zinc-400' : 'text-amber-300'}`}>
+                            {describe(row.pro, row.unit)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+                <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-xs pt-2 border-t border-zinc-800">
+                  <span className="text-zinc-500">Column order</span>
+                  <span className="text-right w-20 text-zinc-500">Free</span>
+                  <span className="text-right w-20 text-amber-300 font-semibold">Pro</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                Every part of FutureBox does something real without paying — you can write a song, score the feed,
+                find a collaborator and enter a competition on a free account, and competitions are never gated at all.
+                What Pro buys is volume and distribution: the daily caps come off, and publishing outward — posting to
+                your channels and asking the channel to boost a collab — turns on.
+              </p>
             </div>
 
             <div className="space-y-3">
@@ -1933,6 +1951,8 @@ export default function FutureBoxHome() {
             {/* SONGWRITER: WHERE THE SONG IS ACTUALLY WRITTEN */}
             {studioTab === 'write' && (
               <Songwriter
+                userPlan={userPlan}
+                onUpgrade={() => setPricingModalOpen(true)}
                 onSendToDirector={({ title: t, lyrics, style }) => {
                   setTitle(t);
                   // The Director's one field takes both, in the order it reads
@@ -1947,7 +1967,13 @@ export default function FutureBoxHome() {
             {studioTab === 'studio' && <StudioTimeline />}
 
             {/* TAB 5: COLLAB RADAR (PODCASTS, TIKTOK LIVE, FLAVOUR MATCHING, VIRAL POSTS) */}
-            {studioTab === 'collab' && <CollabRadar profile={creatorProfile} />}
+            {studioTab === 'collab' && (
+              <CollabRadar
+                profile={creatorProfile}
+                userPlan={userPlan}
+                onUpgrade={() => setPricingModalOpen(true)}
+              />
+            )}
 
             {/* TAB 6: THE ARENA (SKILL-JUDGED COMPETITIONS WITH A FREE ENTRY ROUTE) */}
             {studioTab === 'arena' && <Arena userPlan={userPlan} />}
