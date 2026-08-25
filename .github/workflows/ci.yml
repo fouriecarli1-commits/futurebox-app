@@ -1,0 +1,30 @@
+# Runs the two checks that would otherwise only ever run on somebody's laptop:
+# the types have to resolve, and the app has to build. Both are quick, and a PR
+# that fails either one is not ready to read, never mind merge.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      # `ci`, not `install`: it installs exactly what the lockfile pins and
+      # fails if the lockfile and package.json have drifted apart.
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npx next build
