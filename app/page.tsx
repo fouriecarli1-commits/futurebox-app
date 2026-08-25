@@ -91,6 +91,7 @@ export default function FutureBoxHome() {
     saveTheme(theme);
   }, [theme]);
 
+
   // Filter Dropdowns State
   const [podcasterDropdownOpen, setPodcasterDropdownOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
@@ -504,6 +505,21 @@ export default function FutureBoxHome() {
       }, 2000);
     }
   };
+
+  // One scrollbar, not two: while a modal is open the page behind it must not
+  // scroll, or the scrollbar the eye goes to is the page's, sits at the top
+  // forever, and contradicts what the modal is actually doing.
+  const anyModalOpen =
+    uploadModalOpen || authModalOpen || pricingModalOpen || themeOpen ||
+    selectedMedia !== null || selectedBlueprint !== null;
+  useEffect(() => {
+    if (!anyModalOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [anyModalOpen]);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-emerald-500 selection:text-onAccent flex flex-col justify-between">
@@ -1401,11 +1417,11 @@ export default function FutureBoxHome() {
 
       {/* 🚀 CREATOR STUDIO & AI MUSIC HUB (WITH MASTER GENRE SOUNDBOARD, VOICE STUDIO & DIRECTOR) */}
       {uploadModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-start justify-center p-4 overflow-y-auto">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-7xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-hidden">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-7xl h-full max-h-[94vh] rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col gap-5 overflow-hidden">
             
             {/* Top Back Bar */}
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+            <div className="flex-shrink-0 flex items-center justify-between border-b border-zinc-800 pb-4">
               <button
                 onClick={() => { setUploadModalOpen(false); setAuditStatus(null); }}
                 className="flex items-center space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl transition-all"
@@ -1425,14 +1441,14 @@ export default function FutureBoxHome() {
             </div>
 
             {/* Studio shell: rail on the left, one working surface on the right. */}
-            <div className={theme.layout === 'top' ? 'flex flex-col gap-6' : 'flex flex-col md:flex-row gap-6'}>
+            <div className={`flex-1 min-h-0 ${theme.layout === 'top' ? 'flex flex-col gap-6' : 'flex flex-col md:flex-row gap-6'}`}>
               <nav
                 className={`flex-shrink-0 flex gap-1 overflow-x-auto md:overflow-visible ${
                   theme.layout === 'top'
                     ? 'flex-row flex-wrap'
                     : theme.layout === 'focus'
-                      ? 'md:w-14 md:flex-col'
-                      : 'md:w-56 md:flex-col'
+                      ? 'md:w-14 md:flex-col md:overflow-y-auto'
+                      : 'md:w-56 md:flex-col md:overflow-y-auto'
                 }`}
               >
                 {[
@@ -1468,12 +1484,12 @@ export default function FutureBoxHome() {
                 })}
               </nav>
 
-              <div className="flex-1 min-w-0 space-y-6">
+              <div className="flex-1 min-w-0 min-h-0 overflow-y-auto space-y-6 pr-1">
 
             {/* Live AI stack strip — the whole point of FutureBox is that a release
                 is made by several different systems, so the stack is on screen the
                 entire time you are in the studio, not buried in one form. */}
-            <div className="bg-black/60 border border-zinc-800 rounded-2xl p-3 space-y-2">
+            <div className="flex-shrink-0 bg-black/60 border border-zinc-800 rounded-2xl p-3 space-y-2">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <p className="text-sm font-bold uppercase tracking-wider text-zinc-300 flex items-center space-x-1.5">
                   <Layers className="w-3.5 h-3.5 text-cyan-400" />
