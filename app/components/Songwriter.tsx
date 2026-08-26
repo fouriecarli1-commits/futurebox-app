@@ -62,11 +62,11 @@ function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) 
 }
 
 export default function Songwriter({
-  onSendToDirector,
+  onSendToMake,
   userPlan,
   onUpgrade,
 }: {
-  onSendToDirector: (payload: { title: string; lyrics: string; style: string }) => void;
+  onSendToMake: (payload: { title: string; lyrics: string; style: string }) => void;
   userPlan: Plan;
   onUpgrade: () => void;
 }) {
@@ -511,14 +511,14 @@ export default function Songwriter({
         <button
           type="button"
           onClick={() => {
-            onSendToDirector({ title, lyrics, style: styleLine });
+            onSendToMake({ title, lyrics, style: styleLine });
             setSent(true);
             setTimeout(() => setSent(false), 2500);
           }}
           disabled={!title.trim() && !lyrics.trim()}
           className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Send to Director
+          Send to Make
           <ArrowRight className="w-4 h-4" />
         </button>
         {sent && (
@@ -528,7 +528,7 @@ export default function Songwriter({
         )}
         <span className="ml-auto text-sm text-zinc-500 flex items-center gap-1.5 max-w-md">
           <Info className="w-4 h-4 flex-shrink-0" />
-          Once you have the audio, publish it in Director — and use the Studio timeline to ask for changes.
+          Take this to Make a song, and use the Studio timeline to ask for changes afterwards.
         </span>
       </div>
     </div>

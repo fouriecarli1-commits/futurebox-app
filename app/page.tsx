@@ -24,6 +24,7 @@ import ThemeStudio from './components/ThemeStudio';
 import QualityRadar from './components/QualityRadar';
 import Songwriter from './components/Songwriter';
 import MakeMusic from './components/MakeMusic';
+import Hooks from './components/Hooks';
 import Masterclasses from './components/Masterclasses';
 import Landing from './components/Landing';
 import LanguagePicker from './components/LanguagePicker';
@@ -1545,7 +1546,6 @@ export default function FutureBoxHome() {
                   { id: 'studio', label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
                   { id: 'soundboard', label: t('rail.sound'), hint: t('rail.sound.hint'), icon: Volume2 },
                   { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
-                  { id: 'director', label: t('rail.director'), hint: t('rail.director.hint'), icon: Video },
                   { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
                   { id: 'collab', label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
                   { id: 'arena', label: t('rail.arena'), hint: t('rail.arena.hint'), icon: Trophy },
@@ -1586,7 +1586,7 @@ export default function FutureBoxHome() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setStudioTab('director')}
+                  onClick={() => setStudioTab('make')}
                   className="text-[13px] text-cyan-400 hover:underline"
                 >
                   Change the stack
@@ -1771,7 +1771,7 @@ export default function FutureBoxHome() {
 
                 <div className="flex justify-end pt-2">
                   <button
-                    onClick={() => setStudioTab('director')}
+                    onClick={() => setStudioTab('make')}
                     className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center space-x-2"
                   >
                     <span>Proceed to Music Video Director</span>
@@ -2019,9 +2019,18 @@ export default function FutureBoxHome() {
               </form>
             )}
 
+            {/* HOOKS: cut the bit worth posting, from your own tracks */}
+            {studioTab === 'hooks_feed' && <Hooks />}
+
             {/* MAKE: the button people came for */}
             {studioTab === 'make' && (
-              <MakeMusic userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} incoming={handoff} />
+              <MakeMusic
+                userPlan={userPlan}
+                onUpgrade={() => setPricingModalOpen(true)}
+                incoming={handoff}
+                selectedTools={selectedTools}
+                toggleTool={toggleTool}
+              />
             )}
 
             {/* SONGWRITER: WHERE THE SONG IS ACTUALLY WRITTEN */}
@@ -2029,13 +2038,13 @@ export default function FutureBoxHome() {
               <Songwriter
                 userPlan={userPlan}
                 onUpgrade={() => setPricingModalOpen(true)}
-                onSendToDirector={({ title: t, lyrics, style }) => {
+                onSendToMake={({ title: t, lyrics, style }) => {
                   setHandoff({ title: t, lyrics, style });
                   setTitle(t);
                   // The Director's one field takes both, in the order it reads
                   // best: what it should sound like, then what it says.
                   setLyricsOrPrompt(`[Style: ${style}]\n\n${lyrics}`);
-                  setStudioTab('director');
+                  setStudioTab('make');
                 }}
               />
             )}
@@ -2058,13 +2067,13 @@ export default function FutureBoxHome() {
             {/* TAB 4: HOOKS & REELS FEED (INSPIRED BY SUNO HOOKS & YOUTUBE SHORTS) */}
             {studioTab === 'hooks_feed' && (
               <div className="space-y-4">
-                <div className="bg-cyan-950/20 border border-cyan-500/30 p-4 rounded-2xl">
-                  <h4 className="text-xs font-bold text-cyan-300 flex items-center space-x-2">
-                    <Smartphone className="w-4 h-4" />
-                    <span>Viral Hooks & AI Music Videos Stream</span>
+                <div className="pt-4 border-t border-zinc-800">
+                  <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-cyan-400" />
+                    <span>What other people are posting</span>
                   </h4>
-                  <p className="text-xs text-zinc-400 pt-0.5">
-                    Watch short-form viral music videos with real-time lyric hooks and remix prompts from creators worldwide.
+                  <p className="text-sm text-zinc-400 pt-0.5">
+                    Short clips from other creators, for when you want to see what is working.
                   </p>
                 </div>
 

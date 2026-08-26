@@ -167,6 +167,22 @@ export const STRINGS: Dict = {
   "video.unsupported": { en: "This browser cannot record video. Chrome, Edge or Firefox will.", af: "Hierdie blaaier kan nie video opneem nie. Chrome, Edge of Firefox kan." },
   "video.what": { en: "The picture moves to your song \u2014 every bar you see is that moment of the audio.", af: "Die prent beweeg op jou snit \u2014 elke stafie wat jy sien is daai oomblik van die klank." },
   "video.close": { en: "Close", af: "Maak toe" },
+  "hooks.title": { en: "Hooks", af: "Hooks" },
+  "hooks.sub": { en: "The bit of your song worth posting. We look for where something arrives \u2014 the beat dropping in, the chorus landing \u2014 because the first fifteen seconds are usually the part people skip.", af: "Die stukkie van jou snit wat werd is om te post. Ons soek waar iets aankom \u2014 waar die beat inval, waar die chorus land \u2014 want die eerste vyftien sekondes is gewoonlik net die deel wat mense oorslaan." },
+  "hooks.pick": { en: "Pick a song", af: "Kies 'n snit" },
+  "hooks.none": { en: "Make a song first and its hooks show up here.", af: "Maak eers 'n snit, dan wys sy hooks hier." },
+  "hooks.looking": { en: "Listening to it\u2026", af: "Luister daarna\u2026" },
+  "hooks.found": { en: "Three moments worth cutting", af: "Drie oomblikke werd om te sny" },
+  "hooks.at": { en: "At", af: "By" },
+  "hooks.strongest": { en: "Strongest", af: "Sterkste" },
+  "hooks.cut": { en: "Cut this one", af: "Sny hierdie een" },
+  "hooks.cutting": { en: "Cutting \u2014 it plays through in real time", af: "Besig \u2014 dit speel in regte tyd deur" },
+  "hooks.ready": { en: "Ready. Save it or post it.", af: "Gereed. Hou dit of post dit." },
+  "hooks.clipLength": { en: "Clip length", af: "Clip-lengte" },
+  "hooks.arrives": { en: "Something arrives here", af: "Hier kom iets aan" },
+  "hooks.fullest": { en: "The fullest part of the track", af: "Die volste deel van die snit" },
+  "hooks.safe": { en: "Steady and clear \u2014 safe pick", af: "Bestendig en helder \u2014 veilige keuse" },
+  "make.credit": { en: "Which AI made it \u2014 shown with the song", af: "Watter AI dit gemaak het \u2014 wys saam met die snit" },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';

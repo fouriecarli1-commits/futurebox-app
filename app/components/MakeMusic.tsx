@@ -25,7 +25,7 @@ import {
 } from '../lib/library';
 import { engines } from '../lib/engines';
 import { renderVideo, styleFor, videoSupported, extensionFor, type Aspect } from '../lib/video';
-import { STYLE_PRESETS } from '../data/studio';
+import { STYLE_PRESETS, AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
 
@@ -39,11 +39,15 @@ export default function MakeMusic({
   userPlan,
   onUpgrade,
   incoming,
+  selectedTools,
+  toggleTool,
 }: {
   userPlan: Plan;
   onUpgrade: () => void;
   /** Carried over from the Songwriter, when you came from there. */
   incoming?: { title: string; lyrics: string; style: string } | null;
+  selectedTools: string[];
+  toggleTool: (tool: string) => void;
 }) {
   const [title, setTitle] = useState(incoming?.title ?? '');
   const { t } = useLang();
@@ -366,6 +370,36 @@ export default function MakeMusic({
               ))}
             </div>
           </div>
+        </div>
+
+        <div className="space-y-3 pt-1 border-t border-zinc-800">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <label className="text-sm text-zinc-400">{t('make.credit')}</label>
+            <span className="text-sm text-zinc-600">{selectedTools.length}</span>
+          </div>
+          {(['music', 'video', 'voice', 'image'] as const).map((role) => (
+            <div key={role} className="space-y-1.5">
+              <p className="text-xs uppercase tracking-wider text-zinc-600">{ROLE_LABELS[role]}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {AI_MODELS.filter((m) => m.role === role).map((model) => {
+                  const on = selectedTools.includes(model.name);
+                  return (
+                    <button
+                      type="button"
+                      key={model.name}
+                      onClick={() => toggleTool(model.name)}
+                      title={`${model.name} — ${model.provider}`}
+                      className={`px-2.5 py-1 rounded-lg text-sm transition-all border ${
+                        on ? ROLE_ACCENTS[role] + ' font-semibold' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                      }`}
+                    >
+                      {on ? `✓ ${model.name}` : `+ ${model.name}`}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
 
         <button
