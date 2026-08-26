@@ -14,7 +14,10 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { GraduationCap, Clock, Lock, ExternalLink, Sparkles, RefreshCw, Route } from 'lucide-react';
+import {
+  GraduationCap, Clock, Lock, Sparkles, RefreshCw, Route, PlayCircle,
+  Music, Video, Code2, Cpu, TrendingUp, Microscope,
+} from 'lucide-react';
 import {
   MASTERCLASSES, PATHS, BRIEF_SEEDS, TRACK_LABELS, LEVEL_LABELS,
   PROVENANCE_LABELS, PROVENANCE_NOTES,
@@ -22,66 +25,73 @@ import {
 } from '../data/masterclasses';
 import type { Plan } from '../lib/entitlements';
 
+const TRACK_ICONS: Record<Track, typeof Music> = {
+  'ai-music': Music,
+  'ai-video': Video,
+  vibecoding: Code2,
+  'which-ai': Cpu,
+  business: TrendingUp,
+  research: Microscope,
+};
+
 const PROVENANCE_STYLE: Record<Provenance, string> = {
   curated: 'text-cyan-300',
   original: 'text-emerald-300',
   ai_video: 'text-amber-300',
 };
 
-function Row({ item, userPlan, onUpgrade }: { item: Masterclass; userPlan: Plan; onUpgrade: () => void }) {
+function Card({ item, userPlan, onUpgrade }: { item: Masterclass; userPlan: Plan; onUpgrade: () => void }) {
   const locked = item.proOnly && userPlan === 'free';
   const unavailable = !item.url;
+  const Icon = TRACK_ICONS[item.track];
 
   return (
-    <article className="py-4 flex items-start gap-4">
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2 flex-wrap">
-          {locked || unavailable ? (
-            <span className="text-lg font-bold text-white leading-snug">{item.title}</span>
-          ) : (
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-lg font-bold text-white leading-snug hover:text-emerald-300 transition-colors"
-            >
-              {item.title}
-            </a>
-          )}
-          <span className={`text-sm ${PROVENANCE_STYLE[item.provenance]}`}>
-            {item.provenance === 'ai_video' ? 'AI-generated' : item.provenance === 'curated' ? 'Curated' : 'Original'}
-          </span>
+    <article className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 flex flex-col gap-3 hover:border-emerald-500/40 transition-all">
+      <div className="flex items-start justify-between gap-3">
+        <div className="w-10 h-10 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center flex-shrink-0">
+          <Icon className="w-5 h-5 text-emerald-400" />
         </div>
-
-        <p className="text-sm text-zinc-500 pt-1">
-          {item.instructor}
-          {item.source && ` · ${item.source}`} · {item.minutes} min · {LEVEL_LABELS[item.level]}
-          {item.status && item.status !== 'published' && (
-            <span className="text-amber-400"> · {item.status === 'in-production' ? 'in production' : 'planned'}</span>
-          )}
-        </p>
-
-        <p className="text-base text-zinc-400 leading-relaxed pt-1.5">
-          <span className="text-zinc-500">Afterwards you can: </span>
-          {item.outcome}
-        </p>
-
-        {locked && (
-          <button type="button" onClick={onUpgrade} className="text-sm text-amber-400 hover:underline pt-1.5 flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5" />
-            Pro
-          </button>
-        )}
+        <span className={`text-sm font-semibold ${PROVENANCE_STYLE[item.provenance]}`}>
+          {item.provenance === 'ai_video' ? 'AI-made' : item.provenance === 'curated' ? 'Picked for you' : 'Ours'}
+        </span>
       </div>
 
-      {!locked && !unavailable && (
+      <div className="flex-1">
+        <h4 className="text-lg font-bold text-white leading-snug">{item.title}</h4>
+        <p className="text-sm text-zinc-500 pt-1">
+          {item.instructor} · {item.minutes} min · {LEVEL_LABELS[item.level]}
+          {item.status && item.status !== 'published' && (
+            <span className="text-amber-400"> · {item.status === 'in-production' ? 'coming soon' : 'planned'}</span>
+          )}
+        </p>
+        <p className="text-base text-zinc-400 leading-relaxed pt-2">
+          <span className="text-zinc-500">You will be able to: </span>
+          {item.outcome}
+        </p>
+      </div>
+
+      {locked ? (
+        <button
+          type="button"
+          onClick={onUpgrade}
+          className="w-full py-2.5 rounded-xl text-sm font-semibold bg-amber-500/15 border border-amber-500/50 text-amber-300 hover:bg-amber-500/25 flex items-center justify-center gap-1.5"
+        >
+          <Lock className="w-3.5 h-3.5" />
+          Pro only
+        </button>
+      ) : unavailable ? (
+        <span className="w-full py-2.5 rounded-xl text-sm text-center text-zinc-600 border border-zinc-800">
+          Not out yet
+        </span>
+      ) : (
         <a
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-shrink-0 text-sm text-zinc-500 hover:text-emerald-300 flex items-center gap-1"
+          className="w-full py-2.5 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-1.5"
         >
-          Watch <ExternalLink className="w-3 h-3" />
+          <PlayCircle className="w-4 h-4" />
+          Watch it
         </a>
       )}
     </article>
@@ -143,34 +153,48 @@ export default function Masterclasses({
         </div>
       )}
 
-      {/* Tracks */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      {/* Sections, as things you can see and choose */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
         <button
           type="button"
           onClick={() => setTrack(null)}
-          className={`px-3 py-1 rounded-full text-sm transition-all ${
-            track === null ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/60' : 'text-zinc-500 border border-transparent hover:text-zinc-200'
+          className={`p-3 rounded-2xl border text-left transition-all ${
+            track === null
+              ? 'bg-emerald-500/15 border-emerald-500 text-white'
+              : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
           }`}
         >
-          Everything
+          <GraduationCap className={`w-5 h-5 ${track === null ? 'text-emerald-400' : ''}`} />
+          <p className="text-sm font-bold pt-1.5 leading-tight">Everything</p>
+          <p className="text-sm text-zinc-500">{MASTERCLASSES.length}</p>
         </button>
-        {(Object.keys(TRACK_LABELS) as Track[]).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTrack(t)}
-            className={`px-3 py-1 rounded-full text-sm transition-all ${
-              track === t ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/60' : 'text-zinc-500 border border-transparent hover:text-zinc-200'
-            }`}
-          >
-            {TRACK_LABELS[t]}
-          </button>
-        ))}
+
+        {(Object.keys(TRACK_LABELS) as Track[]).map((t) => {
+          const Icon = TRACK_ICONS[t];
+          const count = MASTERCLASSES.filter((m) => m.track === t).length;
+          const active = track === t;
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTrack(t)}
+              className={`p-3 rounded-2xl border text-left transition-all ${
+                active
+                  ? 'bg-emerald-500/15 border-emerald-500 text-white'
+                  : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+              }`}
+            >
+              <Icon className={`w-5 h-5 ${active ? 'text-emerald-400' : ''}`} />
+              <p className="text-sm font-bold pt-1.5 leading-tight">{TRACK_LABELS[t]}</p>
+              <p className="text-sm text-zinc-500">{count}</p>
+            </button>
+          );
+        })}
       </div>
 
-      <div className="divide-y divide-zinc-800/70 border-y border-zinc-800/70">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
         {shown.map((m) => (
-          <Row key={m.id} item={m} userPlan={userPlan} onUpgrade={onUpgrade} />
+          <Card key={m.id} item={m} userPlan={userPlan} onUpgrade={onUpgrade} />
         ))}
       </div>
 

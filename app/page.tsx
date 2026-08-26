@@ -23,6 +23,7 @@ import { BASE_PRICES, guessRegion, priceFor, REGIONS, regionByCode, type Region 
 import ThemeStudio from './components/ThemeStudio';
 import QualityRadar from './components/QualityRadar';
 import Songwriter from './components/Songwriter';
+import MakeMusic from './components/MakeMusic';
 import Masterclasses from './components/Masterclasses';
 import Landing from './components/Landing';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
@@ -110,7 +111,8 @@ export default function FutureBoxHome() {
   const [selectedBlueprint, setSelectedBlueprint] = useState<Blueprint | null>(null);
 
   // Creator Studio Sub-Tabs & Soundboard
-  const [studioTab, setStudioTab] = useState<'director' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio' | 'write'>('write');
+  const [handoff, setHandoff] = useState<{ title: string; lyrics: string; style: string } | null>(null);
+  const [studioTab, setStudioTab] = useState<'director' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio' | 'write' | 'make'>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -1533,7 +1535,8 @@ export default function FutureBoxHome() {
                 }`}
               >
                 {[
-                  { id: 'write', label: 'Songwriter', hint: 'Lyrics and style', icon: Music },
+                  { id: 'make', label: 'Make a song', hint: 'Press one button', icon: Sparkles },
+                  { id: 'write', label: 'Write the words', hint: 'Lyrics and style', icon: Music },
                   { id: 'studio', label: 'Studio', hint: 'Timeline and edits', icon: Sliders },
                   { id: 'soundboard', label: 'Soundboard', hint: 'Every genre, with audio', icon: Volume2 },
                   { id: 'voice_studio', label: 'Voice', hint: 'Your voice or ours', icon: Mic2 },
@@ -2011,12 +2014,18 @@ export default function FutureBoxHome() {
               </form>
             )}
 
+            {/* MAKE: the button people came for */}
+            {studioTab === 'make' && (
+              <MakeMusic userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} incoming={handoff} />
+            )}
+
             {/* SONGWRITER: WHERE THE SONG IS ACTUALLY WRITTEN */}
             {studioTab === 'write' && (
               <Songwriter
                 userPlan={userPlan}
                 onUpgrade={() => setPricingModalOpen(true)}
                 onSendToDirector={({ title: t, lyrics, style }) => {
+                  setHandoff({ title: t, lyrics, style });
                   setTitle(t);
                   // The Director's one field takes both, in the order it reads
                   // best: what it should sound like, then what it says.
