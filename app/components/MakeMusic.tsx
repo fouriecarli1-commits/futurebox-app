@@ -16,6 +16,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Music, Play, Pause, Download, Share2, Repeat, Trash2, Sparkles, Wand2, Loader2,
+  Video as VideoIcon, X,
 } from 'lucide-react';
 import { renderSketch, encodeWav, familyFor, sketchDurationSeconds } from '../lib/audio';
 import {
@@ -23,6 +24,7 @@ import {
   type Track,
 } from '../lib/library';
 import { engines } from '../lib/engines';
+import { renderVideo, styleFor, videoSupported, extensionFor, type Aspect } from '../lib/video';
 import { STYLE_PRESETS } from '../data/studio';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
@@ -58,6 +60,16 @@ export default function MakeMusic({
   const [shared, setShared] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
+
+  // Video is made per track, in real time, so only one can be running.
+  const [videoFor, setVideoFor] = useState<Track | null>(null);
+  const [aspect, setAspect] = useState<Aspect>('9:16');
+  const [clipSeconds, setClipSeconds] = useState(15);
+  const [startAt, setStartAt] = useState(0);
+  const [videoBusy, setVideoBusy] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [videoBlob, setVideoBlob] = useState<{ blob: Blob; ext: string } | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => setTracks(loadTracks()), []);
   useEffect(() => {
@@ -216,6 +228,45 @@ export default function MakeMusic({
     const next = tracks.filter((t) => t.id !== track.id);
     setTracks(next);
     saveTracks(next);
+  };
+
+  const makeVideo = async () => {
+    if (!videoFor) return;
+    const audio = await getAudio(videoFor.id);
+    if (!audio) {
+      setStatus(t('make.missing'));
+      return;
+    }
+    setVideoBusy(true);
+    setVideoProgress(0);
+    if (videoUrl) URL.revokeObjectURL(videoUrl);
+    setVideoUrl(null);
+    setVideoBlob(null);
+    try {
+      const result = await renderVideo({
+        audio,
+        aspect,
+        seconds: clipSeconds === 0 ? videoFor.seconds : clipSeconds,
+        startSeconds: startAt,
+        style: styleFor(videoFor.title, videoFor.genre, videoFor.bpm),
+        onProgress: setVideoProgress,
+      });
+      const ext = extensionFor(result.mimeType);
+      setVideoBlob({ blob: result.blob, ext });
+      setVideoUrl(URL.createObjectURL(result.blob));
+    } catch {
+      setStatus(t('make.failed'));
+    } finally {
+      setVideoBusy(false);
+    }
+  };
+
+  const closeVideo = () => {
+    if (videoUrl) URL.revokeObjectURL(videoUrl);
+    setVideoUrl(null);
+    setVideoBlob(null);
+    setVideoFor(null);
+    setVideoProgress(0);
   };
 
   const left = check('publish.release', userPlan).remaining;
@@ -412,6 +463,18 @@ export default function MakeMusic({
                   </button>
                   <button
                     type="button"
+                    onClick={() => {
+                      closeVideo();
+                      setVideoFor(track);
+                      setStartAt(0);
+                    }}
+                    className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-amber-500 hover:text-amber-300 flex items-center gap-1.5"
+                  >
+                    <VideoIcon className="w-3.5 h-3.5" />
+                    {t('video.make')}
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => remove(track)}
                     aria-label="Delete"
                     className="ml-auto text-zinc-600 hover:text-rose-400"
@@ -421,6 +484,129 @@ export default function MakeMusic({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {videoFor && (
+          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-4 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-base font-bold text-white flex items-center gap-2">
+                  <VideoIcon className="w-4 h-4 text-amber-400" />
+                  {t('video.title')} — {videoFor.title}
+                </p>
+                <p className="text-sm text-zinc-400 pt-1 max-w-xl">{t('video.what')}</p>
+              </div>
+              <button type="button" onClick={closeVideo} aria-label={t('video.close')} className="text-zinc-500 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {!videoSupported() ? (
+              <p className="text-sm text-amber-300">{t('video.unsupported')}</p>
+            ) : (
+              <>
+                <div className="grid sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-sm text-zinc-400">{t('video.shape')}</label>
+                    <div className="flex gap-1.5 mt-1.5">
+                      {(['9:16', '16:9'] as Aspect[]).map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setAspect(option)}
+                          className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
+                            aspect === option
+                              ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
+                              : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
+                          }`}
+                        >
+                          {option === '9:16' ? t('video.tall') : t('video.wide')}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-zinc-400">{t('video.length')}</label>
+                    <div className="flex gap-1.5 mt-1.5">
+                      {[15, 30, 0].map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setClipSeconds(option)}
+                          className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
+                            clipSeconds === option
+                              ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
+                              : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
+                          }`}
+                        >
+                          {option === 15 ? '15s' : option === 30 ? '30s' : t('video.whole')}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-zinc-400">
+                      {t('video.from')} {Math.floor(startAt / 60)}:{String(Math.floor(startAt % 60)).padStart(2, '0')}
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={Math.max(0, videoFor.seconds - 5)}
+                      value={startAt}
+                      onChange={(e) => setStartAt(Number(e.target.value))}
+                      className="w-full mt-3 accent-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={makeVideo}
+                  disabled={videoBusy}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-400 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {videoBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <VideoIcon className="w-4 h-4" />}
+                  {videoBusy ? t('video.making') : t('video.go')}
+                </button>
+
+                {videoBusy && (
+                  <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                    <div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(videoProgress * 100)}%` }} />
+                  </div>
+                )}
+
+                {videoUrl && videoBlob && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-emerald-300">{t('video.done')}</p>
+                    <video
+                      src={videoUrl}
+                      controls
+                      className={`rounded-xl border border-zinc-800 bg-black ${aspect === '9:16' ? 'max-h-96 mx-auto' : 'w-full'}`}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => downloadBlob(videoBlob.blob, safeFilename(videoFor.title, videoBlob.ext))}
+                        className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        {t('video.save')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={makeVideo}
+                        className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-amber-500 hover:text-amber-300"
+                      >
+                        {t('video.again')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 
