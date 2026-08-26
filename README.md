@@ -17,9 +17,25 @@ missing key means one screen does less, never that the app breaks.
 
 Copy `.env.example` to `.env.local`.
 
-**`ANTHROPIC_API_KEY`** — turns on the writing help, the song ideas and the
-scoring behind the trends radar. Without it those screens say the writing help
-is switched off rather than quietly returning nothing.
+**`ELEVENLABS_API_KEY`** — turns on real music. With it, pressing *Make my song*
+sends your style and your words to ElevenLabs Music and returns a sung, produced
+track. Without it the studio makes a browser sketch instead, and says so.
+
+Get the key at [elevenlabs.io](https://elevenlabs.io). Two things worth knowing
+before you build on it: music costs roughly 900 credits per minute of audio, and
+the **commercial licence starts at the paid plans** — a track made on the free
+tier cannot legally be released. The studio never spends credits without asking:
+anything that costs shows a cost card first, and only a yes goes through.
+
+Why not Suno: it has no public generation API. The wrappers people pass around
+scrape a private endpoint, so they break without warning and breach its terms.
+ElevenLabs Music is the closest legitimate equivalent — it takes lyrics per
+section, which is what a songwriter actually has.
+
+**`ANTHROPIC_API_KEY`** — turns on the copilot (the panel on the right of the
+studio), the writing help, the song ideas and the scoring behind the trends
+radar. Without it those screens say they are switched off rather than quietly
+returning nothing.
 
 **`NEXT_PUBLIC_SUPABASE_URL`** and **`NEXT_PUBLIC_SUPABASE_ANON_KEY`** — turn on
 accounts, so your songs follow you between devices instead of living in one
@@ -55,7 +71,9 @@ both and tells you which one happened.
 | `app/lib/hooks.ts` | Finds the moments in a track worth cutting a clip from. |
 | `app/lib/library.ts` | Your channel on this device: IndexedDB for the audio, localStorage for the details. |
 | `app/lib/cloud.ts` | The same channel, on an account, when Supabase is configured. |
-| `app/lib/engines.ts` | The one seam where a real music or video engine plugs in. Answers `false` until one is. |
+| `app/api/music/route.ts` | Calls ElevenLabs Music server-side, so the key never reaches the browser. |
+| `app/api/copilot/route.ts` | The copilot. Answers with one action the studio applies; never spends money on its own. |
+| `app/lib/engines.ts` | The seam the studio calls. Answers `false` for music until a key is set, and for video always — videos are made in your browser. |
 
 ## What the app makes today
 

@@ -37,12 +37,24 @@ const LENGTHS = [
   { bars: 48, label: 'Long' },
 ];
 
+export interface Canvas {
+  title: string;
+  lyrics: string;
+  /** Free text, so the copilot can set a sound no preset covers. */
+  style: string;
+}
+
 export default function MakeMusic({
   userPlan,
   onUpgrade,
   incoming,
   selectedTools,
   toggleTool,
+  canvas,
+  setCanvas,
+  makeSignal,
+  onMade,
+  engineReady,
 }: {
   userPlan: Plan;
   onUpgrade: () => void;
@@ -50,14 +62,24 @@ export default function MakeMusic({
   incoming?: { title: string; lyrics: string; style: string } | null;
   selectedTools: string[];
   toggleTool: (tool: string) => void;
+  /** Held by the studio, because the copilot writes to it too. */
+  canvas: Canvas;
+  setCanvas: (next: Canvas) => void;
+  /** Bumped by the copilot to press the button from over there. */
+  makeSignal: number;
+  /** Fires when a track lands, so the studio can offer a video. */
+  onMade: (track: Track) => void;
+  engineReady: boolean;
 }) {
-  const [title, setTitle] = useState(incoming?.title ?? '');
   const { t } = useLang();
+  const title = canvas.title;
+  const lyrics = canvas.lyrics;
+  const setTitle = (value: string) => setCanvas({ ...canvas, title: value });
+  const setLyrics = (value: string) => setCanvas({ ...canvas, lyrics: value });
   const [preset, setPreset] = useState(STYLE_PRESETS[5]);
   const [bpm, setBpm] = useState(STYLE_PRESETS[5].bpm);
   const [songKey, setSongKey] = useState(STYLE_PRESETS[5].key);
   const [bars, setBars] = useState(32);
-  const [lyrics, setLyrics] = useState(incoming?.lyrics ?? '');
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [busy, setBusy] = useState(false);
@@ -70,6 +92,10 @@ export default function MakeMusic({
   // Making a video is the same job here as on its own tab, so it is the same
   // component. This screen only decides which track it is pointed at.
   const [videoFor, setVideoFor] = useState<Track | null>(null);
+
+  /** What the music engine is told. Free text from the copilot wins over the
+   *  preset chips, because it is the more specific thing the person asked for. */
+  const styleText = canvas.style || preset.tags.join(', ');
 
   useEffect(() => {
     const local = loadTracks();
@@ -87,6 +113,18 @@ export default function MakeMusic({
       live = false;
     };
   }, []);
+
+  // A bump means the copilot asked for the song, and the person said yes.
+  const madeFor = useRef(0);
+  useEffect(() => {
+    if (makeSignal > madeFor.current) {
+      madeFor.current = makeSignal;
+      void make();
+    }
+    // `make` is stable enough for this: re-running on its identity would fire
+    // the generation again every time a field changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [makeSignal]);
 
   useEffect(() => {
     if (incoming?.style) {
@@ -141,7 +179,7 @@ export default function MakeMusic({
         if (engines.available('audio')) {
           const result = await engines.generateAudio({
             title: name,
-            style: preset.tags.join(', '),
+            style: styleText,
             lyrics,
             bpm: spec.bpm,
             key: spec.key,
@@ -154,6 +192,7 @@ export default function MakeMusic({
           blob = encodeWav(renderSketch(spec));
         }
 
+
         const id = `t-${Date.now()}`;
         await putAudio(id, blob);
 
@@ -164,7 +203,7 @@ export default function MakeMusic({
           bpm: spec.bpm,
           key: spec.key,
           lyrics,
-          style: preset.tags.join(', '),
+          style: styleText,
           models,
           source,
           seconds: Math.round(sketchDurationSeconds(spec)),
@@ -184,13 +223,14 @@ export default function MakeMusic({
         cloud.pushTrack(track, blob).then((stored) => {
           if (stored) setStatus(t('auth.savedToAccount'));
         });
+        onMade(track);
       } catch {
         setStatus(t('make.failed'));
       } finally {
         setBusy(false);
       }
     },
-    [bars, bpm, lyrics, preset, songKey, t, title, tracks, userPlan],
+    [bars, bpm, lyrics, onMade, preset, songKey, styleText, t, title, tracks, userPlan],
   );
 
   const toggle = async (track: Track) => {
@@ -278,6 +318,26 @@ export default function MakeMusic({
             placeholder={t('make.namePlaceholder')}
             className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
           />
+        </div>
+
+        {/* The words, on the same page as the button that sings them. With a
+            real engine these are what gets sung; without one they still travel
+            with the track, so nothing typed here is lost. */}
+        <div>
+          <div className="flex items-baseline justify-between gap-3">
+            <label className="text-sm text-zinc-400">{t('make.words')}</label>
+            {canvas.style && <span className="text-sm text-emerald-400 truncate max-w-[60%]">{canvas.style}</span>}
+          </div>
+          <textarea
+            value={lyrics}
+            onChange={(e) => setLyrics(e.target.value)}
+            placeholder={t('make.wordsPlaceholder')}
+            rows={8}
+            className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y"
+          />
+          <p className="text-sm text-zinc-500 pt-1">
+            {engineReady ? t('make.wordsReal') : t('make.wordsSketch')}
+          </p>
         </div>
 
         <div>

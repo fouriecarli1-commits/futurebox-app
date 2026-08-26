@@ -26,6 +26,10 @@ import Songwriter from './components/Songwriter';
 import MakeMusic from './components/MakeMusic';
 import Hooks from './components/Hooks';
 import MusicVideo from './components/MusicVideo';
+import Copilot, { type CopilotAction } from './components/Copilot';
+import type { Canvas } from './components/MakeMusic';
+import type { Track } from './lib/library';
+import { probeAudio } from './lib/engines';
 import Masterclasses from './components/Masterclasses';
 import Landing from './components/Landing';
 import LanguagePicker from './components/LanguagePicker';
@@ -65,6 +69,25 @@ export default function FutureBoxHome() {
   
   // User Authentication & Profile
   const [user, setUser] = useState<{ email: string; name: string; handle: string; followers: number } | null>(null);
+  // The canvas the middle pane edits and the copilot writes to. It lives here
+  // because two panes share it; neither owns it.
+  const [canvas, setCanvas] = useState<Canvas>({ title: '', lyrics: '', style: '' });
+  const [makeSignal, setMakeSignal] = useState(0);
+  const [madeTrack, setMadeTrack] = useState<Track | null>(null);
+  const [trackCount, setTrackCount] = useState(0);
+  const [engineReady, setEngineReady] = useState(false);
+
+  // Only the server knows whether a music key is set, so ask once.
+  useEffect(() => {
+    let live = true;
+    probeAudio().then((ready) => {
+      if (live) setEngineReady(ready);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
@@ -1627,52 +1650,6 @@ export default function FutureBoxHome() {
 
               <div className="flex-1 min-w-0 min-h-0 overflow-y-auto space-y-6 pr-1">
 
-            {/* Live AI stack strip — the whole point of FutureBox is that a release
-                is made by several different systems, so the stack is on screen the
-                entire time you are in the studio, not buried in one form. */}
-            <div className="flex-shrink-0 bg-black/60 border border-zinc-800 rounded-2xl p-3 space-y-2">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <p className="text-sm font-bold uppercase tracking-wider text-zinc-300 flex items-center space-x-1.5">
-                  <Layers className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>AI models on this release</span>
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setStudioTab('make')}
-                  className="text-[13px] text-cyan-400 hover:underline"
-                >
-                  Change the stack
-                </button>
-              </div>
-              {selectedTools.length === 0 ? (
-                <p className="text-[13px] text-amber-300">
-                  No models selected. A FutureBox release always names what made it.
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-3">
-                  {groupByRole(selectedTools).map(({ role, models }) => (
-                    <div key={role} className="flex items-center gap-1.5">
-                      <span className="text-xs uppercase tracking-wider text-zinc-500">
-                        {ROLE_LABELS[role]}
-                      </span>
-                      {models.map((m) => (
-                        <a
-                          key={m.name}
-                          href={m.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title={`${m.name} by ${m.provider}`}
-                          className={`px-2 py-0.5 rounded-md text-[13px] border ${ROLE_ACCENTS[role]} hover:opacity-80`}
-                        >
-                          {m.name}
-                        </a>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {/* TAB 1: MASTER GENRE SOUNDBOARD (EVERY GENRE WITH AUDIO SAMPLES & 1-CLICK USE) */}
             {studioTab === 'soundboard' && (
               <div className="space-y-5">
@@ -1744,7 +1721,7 @@ export default function FutureBoxHome() {
                           <span className="text-[13px] text-zinc-400 truncate">{genre.promptSnippet}</span>
                           <button
                             onClick={() => {
-                              setHandoff({ title: '', lyrics: '', style: genre.promptSnippet });
+                              setCanvas({ ...canvas, style: genre.promptSnippet });
                               setStudioTab('make');
                             }}
                             className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-sm font-bold rounded-lg border border-emerald-500/30 flex items-center space-x-1 flex-shrink-0 transition-colors"
@@ -1845,6 +1822,14 @@ export default function FutureBoxHome() {
                 incoming={handoff}
                 selectedTools={selectedTools}
                 toggleTool={toggleTool}
+                canvas={canvas}
+                setCanvas={setCanvas}
+                makeSignal={makeSignal}
+                engineReady={engineReady}
+                onMade={(track) => {
+                  setMadeTrack(track);
+                  setTrackCount((count) => count + 1);
+                }}
               />
             )}
 
@@ -1855,6 +1840,7 @@ export default function FutureBoxHome() {
                 onUpgrade={() => setPricingModalOpen(true)}
                 onSendToMake={({ title: t, lyrics, style }) => {
                   setHandoff({ title: t, lyrics, style });
+                  setCanvas({ title: t, lyrics, style });
                   setStudioTab('make');
                 }}
               />
@@ -1943,8 +1929,67 @@ export default function FutureBoxHome() {
             )}
 
               </div>
+
+              {/* Third pane: the thing you talk to. It writes to the same canvas
+                  the middle pane edits, so asking for something and typing it
+                  yourself land in exactly the same place. */}
+              <aside className="flex-shrink-0 w-full md:w-80 lg:w-96 min-h-0 md:h-auto h-96">
+                <Copilot
+                  context={{
+                    title: canvas.title,
+                    style: canvas.style,
+                    lyrics: canvas.lyrics,
+                    trackCount,
+                    engineReady,
+                  }}
+                  onAction={(action: CopilotAction) => {
+                    if (action.kind === 'set_title') setCanvas({ ...canvas, title: action.value });
+                    if (action.kind === 'set_style') setCanvas({ ...canvas, style: action.value });
+                    if (action.kind === 'set_lyrics') setCanvas({ ...canvas, lyrics: action.value });
+                    if (action.kind === 'generate') {
+                      setStudioTab('make');
+                      setMakeSignal((n) => n + 1);
+                    }
+                    if (action.kind === 'go') {
+                      const allowed = ['make', 'video', 'write', 'hooks_feed', 'studio', 'arena', 'collab'];
+                      const tab = action.value === 'hooks' ? 'hooks_feed' : action.value;
+                      // The model names a screen; only a real one is honoured.
+                      if (allowed.indexOf(tab) !== -1) setStudioTab(tab as typeof studioTab);
+                    }
+                  }}
+                />
+              </aside>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* After a song lands: the one thing most people want next. Asked once,
+          and dismissable — it is a suggestion, not a funnel. */}
+      {madeTrack && (
+        <div className="fixed bottom-6 right-6 z-[60] max-w-sm rounded-2xl border border-amber-500/40 bg-zinc-900 shadow-2xl p-4 space-y-3">
+          <p className="text-sm font-bold text-white">{t('video.suggest')}</p>
+          <p className="text-sm text-zinc-400 leading-relaxed">{madeTrack.title}</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setStudioTab('video');
+                setUploadModalOpen(true);
+                setMadeTrack(null);
+              }}
+              className="px-3 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-500 to-orange-400 text-onAccent"
+            >
+              {t('video.suggestGo')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMadeTrack(null)}
+              className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300"
+            >
+              {t('video.suggestNo')}
+            </button>
           </div>
         </div>
       )}
