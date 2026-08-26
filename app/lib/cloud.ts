@@ -66,6 +66,12 @@ export async function currentAccount(): Promise<Account | null> {
   return user ? toAccount(user) : null;
 }
 
+/**
+ * `account: null` with `ok: true` means the sign-up landed but there is no
+ * session yet — Supabase is waiting on the confirmation email. That is not a
+ * failure, and it is not being signed in either. Treating it as signed in is
+ * exactly the bug this shape exists to prevent.
+ */
 export type AuthResult = { ok: true; account: Account | null } | { ok: false; message: string };
 
 export async function signUp(email: string, password: string): Promise<AuthResult> {
@@ -73,8 +79,10 @@ export async function signUp(email: string, password: string): Promise<AuthResul
   if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) return { ok: false, message: error.message };
-  // With email confirmation on, there is no session until the link is clicked.
-  return { ok: true, account: data.user ? toAccount(data.user) : null };
+  // With email confirmation on, Supabase still returns a user — but no session.
+  // The session is what every later request is authorised by, so it, not the
+  // user object, decides whether this person is signed in.
+  return { ok: true, account: data.session?.user ? toAccount(data.session.user) : null };
 }
 
 export async function signIn(email: string, password: string): Promise<AuthResult> {
@@ -147,16 +155,35 @@ function audioPath(owner: string, trackId: string): string {
  * account or no project — the caller has already saved locally either way, so
  * a false here means "stayed on this device", not "lost".
  */
-export async function pushTrack(track: Track, audio: Blob): Promise<boolean> {
+/**
+ * Why a save did not happen. `off` and `local` are ordinary — no project, or no
+ * account — and the track is safely on the device either way. The other two are
+ * real faults, and the caller shows them rather than swallowing them: a song
+ * that silently failed to reach your channel is indistinguishable from one that
+ * was never sent, which is how an empty table goes unnoticed for a day.
+ */
+export type PushResult =
+  | { saved: true }
+  | { saved: false; reason: 'off' | 'local' | 'upload' | 'row'; message: string };
+
+export async function pushTrack(track: Track, audio: Blob): Promise<PushResult> {
   const supabase = getClient();
-  if (!supabase) return false;
+  if (!supabase) return { saved: false, reason: 'off', message: '' };
   const account = await currentAccount();
-  if (!account) return false;
+  if (!account) {
+    return {
+      saved: false,
+      reason: 'local',
+      message: 'Kept on this device — you are not signed in to an account.',
+    };
+  }
 
   const upload = await supabase.storage
     .from(BUCKET)
     .upload(audioPath(account.id, track.id), audio, { contentType: 'audio/wav', upsert: true });
-  if (upload.error) return false;
+  if (upload.error) {
+    return { saved: false, reason: 'upload', message: `Audio did not upload: ${upload.error.message}` };
+  }
 
   const row: TrackRow = {
     id: track.id,
@@ -175,7 +202,8 @@ export async function pushTrack(track: Track, audio: Blob): Promise<boolean> {
     seed: track.seed,
   };
   const { error } = await supabase.from('tracks').upsert(row);
-  return !error;
+  if (error) return { saved: false, reason: 'row', message: `Song did not save: ${error.message}` };
+  return { saved: true };
 }
 
 /** Every track on the account, newest first. Empty when signed out. */

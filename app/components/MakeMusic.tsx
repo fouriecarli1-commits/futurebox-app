@@ -220,8 +220,15 @@ export default function MakeMusic({
 
         // The song is already playable. Copying it to the account happens after,
         // so a slow upload never holds up the thing you just made.
-        cloud.pushTrack(track, blob).then((stored) => {
-          if (stored) setStatus(t('auth.savedToAccount'));
+        cloud.pushTrack(track, blob).then((result) => {
+          if (result.saved) {
+            setStatus(t('auth.savedToAccount'));
+          } else if (result.reason !== 'off') {
+            // The song is safe on the device either way, but if it did not reach
+            // the account you have to be told — otherwise you find out by
+            // opening your phone and seeing an empty channel.
+            setStatus(result.message);
+          }
         });
         onMade(track);
       } catch {
