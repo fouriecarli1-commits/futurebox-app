@@ -1,0 +1,81 @@
+'use client';
+
+/**
+ * Music video — the screen that turns one of your songs into something to watch.
+ *
+ * It replaced a page that asked for a link to a song made somewhere else and
+ * then talked about publishing. This one only knows about songs you made here:
+ * pick one, choose the shape and the length, and the video is drawn in this
+ * browser from the track's own audio. It plays on this page when it is done.
+ * Saving it or sharing it is your call, afterwards.
+ */
+
+import React, { useEffect, useState } from 'react';
+import { Video as VideoIcon, Music } from 'lucide-react';
+import { loadTracks, type Track } from '../lib/library';
+import * as cloud from '../lib/cloud';
+import { getAudio } from '../lib/library';
+import VideoPanel from './VideoPanel';
+import { useLang } from '../lib/i18n';
+
+export default function MusicVideo() {
+  const { t } = useLang();
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [selected, setSelected] = useState<Track | null>(null);
+
+  useEffect(() => {
+    const local = loadTracks();
+    setTracks(local);
+    if (!cloud.configured()) return;
+    let live = true;
+    cloud.syncChannel(local, getAudio).then((merged) => {
+      if (live) setTracks(merged);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h4 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+          <VideoIcon className="w-6 h-6 text-amber-400" />
+          {t('rail.video')}
+        </h4>
+        <p className="text-base text-zinc-400 pt-1 max-w-2xl leading-relaxed">{t('video.sub')}</p>
+      </div>
+
+      {tracks.length === 0 ? (
+        <p className="text-base text-zinc-500 py-10 text-center border border-dashed border-zinc-800 rounded-2xl">
+          {t('video.none')}
+        </p>
+      ) : (
+        <>
+          <div className="space-y-2">
+            <p className="text-sm text-zinc-400">{t('video.pick')}</p>
+            <div className="flex flex-wrap gap-2">
+              {tracks.map((track) => (
+                <button
+                  key={track.id}
+                  type="button"
+                  onClick={() => setSelected(track)}
+                  className={`px-3 py-2 rounded-xl text-sm border transition-all flex items-center gap-2 ${
+                    selected?.id === track.id
+                      ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
+                      : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                  }`}
+                >
+                  <Music className="w-3.5 h-3.5" />
+                  {track.title}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {selected && <VideoPanel track={selected} onClose={() => setSelected(null)} />}
+        </>
+      )}
+    </div>
+  );
+}

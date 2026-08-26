@@ -14,7 +14,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Smartphone, Loader2, Download, Scissors, Music } from 'lucide-react';
-import { loadTracks, getAudio, downloadBlob, safeFilename, type Track } from '../lib/library';
+import { loadTracks, downloadBlob, safeFilename, type Track } from '../lib/library';
+import { readAudio } from '../lib/trackaudio';
 import { findHooks, decodeTrack, formatMoment, type Hook } from '../lib/hooks';
 import { renderVideo, styleFor, videoSupported, extensionFor } from '../lib/video';
 import { useLang } from '../lib/i18n';
@@ -42,7 +43,7 @@ export default function Hooks() {
       if (clip) URL.revokeObjectURL(clip.url);
       setClip(null);
       try {
-        const audio = await getAudio(track.id);
+        const audio = await readAudio(track.id);
         if (!audio) return;
         const buffer = await decodeTrack(audio);
         setHooks(findHooks(buffer, clipSeconds, 3));
@@ -55,7 +56,7 @@ export default function Hooks() {
 
   const cut = async (hook: Hook, index: number) => {
     if (!selected) return;
-    const audio = await getAudio(selected.id);
+    const audio = await readAudio(selected.id);
     if (!audio) return;
     setCutting(index);
     setProgress(0);

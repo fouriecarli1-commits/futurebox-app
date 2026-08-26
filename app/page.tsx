@@ -25,12 +25,14 @@ import QualityRadar from './components/QualityRadar';
 import Songwriter from './components/Songwriter';
 import MakeMusic from './components/MakeMusic';
 import Hooks from './components/Hooks';
+import MusicVideo from './components/MusicVideo';
 import Masterclasses from './components/Masterclasses';
 import Landing from './components/Landing';
 import LanguagePicker from './components/LanguagePicker';
 import { useLang } from './lib/i18n';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
 import { byArea, describe } from './lib/entitlements';
+import * as cloud from './lib/cloud';
 
 interface Blueprint {
   tag: string;
@@ -63,6 +65,9 @@ export default function FutureBoxHome() {
   
   // User Authentication & Profile
   const [user, setUser] = useState<{ email: string; name: string; handle: string; followers: number } | null>(null);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [authEmail, setAuthEmail] = useState('');
@@ -94,6 +99,23 @@ export default function FutureBoxHome() {
     saveTheme(theme);
   }, [theme]);
 
+  // With an account behind the app, a refresh should not sign you out and a
+  // sign-out in another tab should not leave this one looking signed in.
+  useEffect(() => {
+    if (!cloud.configured()) return;
+    let live = true;
+    cloud.currentAccount().then((account) => {
+      if (live && account) setUser({ ...account, followers: 1 });
+    });
+    const stop = cloud.onAccountChange((account) => {
+      setUser(account ? { ...account, followers: 1 } : null);
+    });
+    return () => {
+      live = false;
+      stop();
+    };
+  }, []);
+
 
   // Filter Dropdowns State
   const [podcasterDropdownOpen, setPodcasterDropdownOpen] = useState(false);
@@ -116,21 +138,17 @@ export default function FutureBoxHome() {
 
   // Creator Studio Sub-Tabs & Soundboard
   const [handoff, setHandoff] = useState<{ title: string; lyrics: string; style: string } | null>(null);
-  const [studioTab, setStudioTab] = useState<'director' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio' | 'write' | 'make'>('make');
+  const [studioTab, setStudioTab] = useState<'video' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio' | 'write' | 'make'>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
   // Studio Form State
-  const [mediumType, setMediumType] = useState<'music_video' | 'ai_track' | 'custom_voice_song' | 'podcast'>('music_video');
   const [videoAspectRatio, setVideoAspectRatio] = useState<'16:9' | '9:16'>('16:9');
   const [vocalVoiceChoice, setVocalVoiceChoice] = useState<'my_voice' | 'female_pop' | 'male_rock' | 'cyber_vocoder'>('my_voice');
   const [creatorDomain, setCreatorDomain] = useState('anrefourie');
   const [title, setTitle] = useState('');
-  const [lyricsOrPrompt, setLyricsOrPrompt] = useState('');
   const [selectedTools, setSelectedTools] = useState<string[]>(['Suno v5', 'Runway Gen-3', 'ElevenLabs Voice']);
   const [mediaLink, setMediaLink] = useState('');
-  const [confirmedSafe, setConfirmedSafe] = useState(false);
-  const [auditStatus, setAuditStatus] = useState<string | null>(null);
 
   // AI Scanner & Stream Regeneration
   const [isScanning, setIsScanning] = useState(false);
@@ -457,16 +475,51 @@ export default function FutureBoxHome() {
     }, 2000);
   };
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUser({
-      email: authEmail,
-      name: authEmail.split('@')[0],
-      handle: `@${authEmail.split('@')[0]}`,
-      followers: 1
-    });
+    setAuthError(null);
+
+    // Without a Supabase project behind the app there is nothing to sign in to,
+    // so the account stays on this device — which the modal says out loud.
+    if (!cloud.configured()) {
+      const name = authEmail.split('@')[0];
+      setUser({ email: authEmail, name, handle: `@${name}`, followers: 1 });
+      setAuthModalOpen(false);
+      return;
+    }
+
+    setAuthBusy(true);
+    const result =
+      authMode === 'signin'
+        ? await cloud.signIn(authEmail, authPassword)
+        : await cloud.signUp(authEmail, authPassword);
+    setAuthBusy(false);
+
+    if (!result.ok) {
+      setAuthError(result.message);
+      return;
+    }
+    if (!result.account) {
+      // Sign-up with email confirmation switched on: there is no session yet.
+      setAuthError(null);
+      setAuthNotice(t('auth.checkEmail'));
+      return;
+    }
+    setUser({ ...result.account, followers: 1 });
     setAuthModalOpen(false);
-    alert(`✓ Welcome back, ${authEmail.split('@')[0]}! You are successfully signed in.`);
+  };
+
+  const handleSignOut = async () => {
+    await cloud.signOut();
+    setUser(null);
+  };
+
+  // Reopening the modal should not show the last attempt's error.
+  const openAuth = (mode: 'signin' | 'signup') => {
+    setAuthMode(mode);
+    setAuthError(null);
+    setAuthNotice(null);
+    setAuthModalOpen(true);
   };
 
   const handleMarketingSubmit = (e: React.FormEvent) => {
@@ -482,31 +535,6 @@ export default function FutureBoxHome() {
       setSelectedTools(selectedTools.filter(t => t !== tool));
     } else {
       setSelectedTools([...selectedTools, tool]);
-    }
-  };
-
-  const handlePublish = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mediumType === 'podcast' && userPlan !== 'pro') {
-      setPricingModalOpen(true);
-      return;
-    }
-    if (!confirmedSafe) {
-      setAuditStatus('failed_attestation');
-      return;
-    }
-    const combined = `${title} ${lyricsOrPrompt}`.toLowerCase();
-    const banned = ['porn', 'xxx', 'violence', 'kill', 'scam', 'nude', 'hate'];
-    if (banned.some(w => combined.includes(w))) {
-      setAuditStatus('failed_safety');
-    } else {
-      setAuditStatus('success');
-      setTimeout(() => {
-        setUploadModalOpen(false);
-        setAuditStatus(null);
-        setTitle('');
-        setLyricsOrPrompt('');
-      }, 2000);
     }
   };
 
@@ -529,10 +557,7 @@ export default function FutureBoxHome() {
     return (
       <>
         <Landing
-          onStart={() => {
-            setAuthMode('signup');
-            setAuthModalOpen(true);
-          }}
+          onStart={() => openAuth('signup')}
         />
 
         {/* The auth and pricing overlays are shared with the signed-in app. */}
@@ -566,23 +591,36 @@ export default function FutureBoxHome() {
                 />
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm"
+                  disabled={authBusy}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm disabled:opacity-60"
                 >
-                  {authMode === 'signin' ? t('common.signIn') : t('common.createAccount')}
+                  {authBusy
+                    ? t('auth.working')
+                    : authMode === 'signin'
+                      ? t('common.signIn')
+                      : t('common.createAccount')}
                 </button>
               </form>
+              {authError && (
+                <p className="text-sm text-rose-400 text-center leading-relaxed">{authError}</p>
+              )}
+              {authNotice && (
+                <p className="text-sm text-emerald-400 text-center leading-relaxed">{authNotice}</p>
+              )}
               <p className="text-sm text-zinc-500 text-center">
                 {authMode === 'signin' ? t('common.noAccount') : t('common.haveAccount')}{' '}
                 <button
-                  onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+                  onClick={() => openAuth(authMode === 'signin' ? 'signup' : 'signin')}
                   className="text-emerald-400 hover:underline"
                 >
                   {authMode === 'signin' ? t('landing.startFree') : t('common.signIn')}
                 </button>
               </p>
-              <p className="text-sm text-zinc-600 text-center leading-relaxed">
-                {t('common.localOnly')}
-              </p>
+              {!cloud.configured() && (
+                <p className="text-sm text-zinc-600 text-center leading-relaxed">
+                  {t('common.localOnly')}
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -645,21 +683,30 @@ export default function FutureBoxHome() {
         {/* Top Right Action & Auth Portal */}
         <div className="flex items-center space-x-3">
           {user ? (
-            <div 
-              onClick={() => { setStudioTab('director'); setUploadModalOpen(true); }}
-              className="flex items-center space-x-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
-            >
-              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-500 text-onAccent font-extrabold flex items-center justify-center text-[10px]">
-                {user.name.charAt(0)}
-              </div>
-              <div className="hidden sm:block text-left">
-                <p className="text-white text-[11px] leading-tight font-bold">{user.name}</p>
-                <p className="text-[9px] font-mono text-emerald-400">{user.handle}</p>
-              </div>
+            <div className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl">
+              <button
+                onClick={() => setStudioTab('make')}
+                title={t('auth.yourChannel')}
+                className="flex items-center space-x-2 text-xs font-semibold"
+              >
+                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-500 text-onAccent font-extrabold flex items-center justify-center text-[10px]">
+                  {user.name.charAt(0)}
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-white text-[11px] leading-tight font-bold">{user.name}</p>
+                  <p className="text-[10px] text-emerald-400">{user.handle}</p>
+                </div>
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="text-[11px] text-zinc-500 hover:text-white border-l border-zinc-800 pl-2"
+              >
+                {t('auth.signOut')}
+              </button>
             </div>
           ) : (
             <button
-              onClick={() => setAuthModalOpen(true)}
+              onClick={() => openAuth('signin')}
               className="flex items-center space-x-1.5 px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold rounded-xl border border-zinc-700 transition-all"
             >
               <LogIn className="w-3.5 h-3.5 text-emerald-400" />
@@ -1374,16 +1421,20 @@ export default function FutureBoxHome() {
 
               <button
                 type="submit"
-                className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                disabled={authBusy}
+                className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:opacity-60"
               >
-                {authMode === 'signin' ? 'Sign In' : 'Create Free Account'}
+                {authBusy ? t('auth.working') : authMode === 'signin' ? 'Sign In' : 'Create Free Account'}
               </button>
             </form>
+
+            {authError && <p className="text-sm text-rose-400 text-center leading-relaxed">{authError}</p>}
+            {authNotice && <p className="text-sm text-emerald-400 text-center leading-relaxed">{authNotice}</p>}
 
             <div className="text-center pt-2">
               <button
                 type="button"
-                onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+                onClick={() => openAuth(authMode === 'signin' ? 'signup' : 'signin')}
                 className="text-xs text-zinc-400 hover:text-emerald-400 transition-colors"
               >
                 {authMode === 'signin' ? "Don't have an account? Sign up free" : 'Already have an account? Sign in'}
@@ -1512,7 +1563,7 @@ export default function FutureBoxHome() {
             {/* Top Back Bar */}
             <div className="flex-shrink-0 flex items-center justify-between border-b border-zinc-800 pb-4">
               <button
-                onClick={() => { setUploadModalOpen(false); setAuditStatus(null); }}
+                onClick={() => setUploadModalOpen(false)}
                 className="flex items-center space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl transition-all"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
@@ -1523,7 +1574,7 @@ export default function FutureBoxHome() {
                 <span className="text-sm font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
                   futurebox.app/@{creatorDomain}
                 </span>
-                <button onClick={() => { setUploadModalOpen(false); setAuditStatus(null); }} className="text-zinc-400 hover:text-white">
+                <button onClick={() => setUploadModalOpen(false)} className="text-zinc-400 hover:text-white">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -1542,6 +1593,7 @@ export default function FutureBoxHome() {
               >
                 {[
                   { id: 'make', label: t('rail.make'), hint: t('rail.make.hint'), icon: Sparkles },
+                  { id: 'video', label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
                   { id: 'write', label: t('rail.write'), hint: t('rail.write.hint'), icon: Music },
                   { id: 'studio', label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
                   { id: 'soundboard', label: t('rail.sound'), hint: t('rail.sound.hint'), icon: Volume2 },
@@ -1692,8 +1744,8 @@ export default function FutureBoxHome() {
                           <span className="text-[13px] text-zinc-400 truncate">{genre.promptSnippet}</span>
                           <button
                             onClick={() => {
-                              setLyricsOrPrompt(`[Genre & Style: ${genre.promptSnippet}]\n\n[Verse 1]\nWrite your lyrics here...\n\n[Chorus]\n`);
-                              setStudioTab('director');
+                              setHandoff({ title: '', lyrics: '', style: genre.promptSnippet });
+                              setStudioTab('make');
                             }}
                             className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-sm font-bold rounded-lg border border-emerald-500/30 flex items-center space-x-1 flex-shrink-0 transition-colors"
                           >
@@ -1781,245 +1833,8 @@ export default function FutureBoxHome() {
               </div>
             )}
 
-            {/* TAB 3: MUSIC VIDEO DIRECTOR & PUBLISH (THE UNIFIED CREATIVE STUDIO) */}
-            {studioTab === 'director' && (
-              <form onSubmit={handlePublish} className="space-y-6">
-                
-                {/* Format & Aspect Ratio */}
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300">
-                      Step 1: Release Medium
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { id: 'music_video', label: 'AI Music Video', icon: FileVideo, desc: 'Audio + Cinema Video' },
-                        { id: 'ai_track', label: 'Neural Song', icon: Music, desc: 'Audio Stems Only' },
-                      ].map((item) => {
-                        const Icon = item.icon;
-                        const isSelected = mediumType === item.id;
-                        return (
-                          <button
-                            type="button"
-                            key={item.id}
-                            onClick={() => setMediumType(item.id as any)}
-                            className={`p-3 rounded-2xl border text-left transition-all ${
-                              isSelected 
-                                ? 'bg-emerald-950/50 border-emerald-500 text-white shadow-lg' 
-                                : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                            }`}
-                          >
-                            <Icon className={`w-4 h-4 ${isSelected ? 'text-emerald-400' : 'text-zinc-500'}`} />
-                            <p className="text-xs font-bold pt-1">{item.label}</p>
-                            <p className="text-[13px] text-zinc-500">{item.desc}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Video Aspect Ratio */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-300">
-                      Video Screen Aspect Ratio
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { id: '16:9', label: '16:9 Cinema Widescreen', icon: Monitor, desc: 'For YouTube & TVs' },
-                        { id: '9:16', label: '9:16 Vertical Video Hook', icon: Smartphone, desc: 'For Reels & TikTok' },
-                      ].map((item) => {
-                        const Icon = item.icon;
-                        const isSelected = videoAspectRatio === item.id;
-                        return (
-                          <button
-                            type="button"
-                            key={item.id}
-                            onClick={() => setVideoAspectRatio(item.id as any)}
-                            className={`p-3 rounded-2xl border text-left transition-all ${
-                              isSelected 
-                                ? 'bg-cyan-950/50 border-cyan-400 text-white shadow-lg' 
-                                : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                            }`}
-                          >
-                            <Icon className={`w-4 h-4 ${isSelected ? 'text-cyan-400' : 'text-zinc-500'}`} />
-                            <p className="text-xs font-bold pt-1">{item.label}</p>
-                            <p className="text-[13px] text-zinc-500">{item.desc}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Custom Creator Channel Domain */}
-                <div className="space-y-1.5 bg-black/40 p-4 rounded-2xl border border-zinc-800">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-cyan-300 flex items-center space-x-1.5">
-                    <Globe className="w-3.5 h-3.5" />
-                    <span>Your Custom Creator Channel URL:</span>
-                  </label>
-                  <div className="flex items-center">
-                    <span className="bg-zinc-800 border border-r-0 border-zinc-700 text-zinc-400 px-3 py-2.5 rounded-l-xl text-xs">
-                      futurebox.app/@
-                    </span>
-                    <input
-                      type="text"
-                      value={creatorDomain}
-                      onChange={(e) => setCreatorDomain(e.target.value.toLowerCase().replace(/\s+/g, ''))}
-                      placeholder="your-creator-name"
-                      className="w-full bg-black/60 border border-zinc-700 rounded-r-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-400"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Title & Media Link */}
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-zinc-400 mb-1">Song & Music Video Title</label>
-                    <input 
-                      type="text" 
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="e.g. Cherry Blossom Mail (Official AI Video)"
-                      className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-zinc-400 mb-1">Media Link (YouTube / Suno / MP4)</label>
-                    <input 
-                      type="url" 
-                      value={mediaLink}
-                      onChange={(e) => setMediaLink(e.target.value)}
-                      placeholder="https://youtube.com/watch?v=..."
-                      className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* AI Models Used — restored, and grouped by the job each model
-                    does so the stack reads as a crew rather than a tag soup. */}
-                <div className="space-y-3 bg-black/40 p-4 rounded-2xl border border-zinc-800">
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-cyan-300 flex items-center space-x-1.5">
-                      <Layers className="w-3.5 h-3.5" />
-                      <span>AI Models Used</span>
-                    </label>
-                    <span className="text-[13px] text-zinc-500">
-                      {selectedTools.length} selected · published with the release
-                    </span>
-                  </div>
-                  <p className="text-[13px] text-zinc-500 leading-relaxed">
-                    Every model you tick is shown on the release page and on the card in the feed. Listing them is not
-                    a formality — it is the thing that separates a FutureBox release from an anonymous upload.
-                  </p>
-
-                  {(['music', 'video', 'voice', 'image'] as const).map((role) => (
-                    <div key={role} className="space-y-1.5">
-                      <p className="text-xs uppercase tracking-wider text-zinc-500">{ROLE_LABELS[role]}</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {AI_MODELS.filter((m) => m.role === role).map((model) => {
-                          const isSelected = selectedTools.includes(model.name);
-                          return (
-                            <button
-                              type="button"
-                              key={model.name}
-                              onClick={() => toggleTool(model.name)}
-                              title={`${model.name} — ${model.provider}`}
-                              className={`px-2.5 py-1 rounded-lg text-sm transition-all border ${
-                                isSelected
-                                  ? ROLE_ACCENTS[role] + ' font-bold'
-                                  : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300'
-                              }`}
-                            >
-                              {isSelected ? `✓ ${model.name}` : `+ ${model.name}`}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Lyrics & Prompt Generator */}
-                <div className="space-y-2 bg-black/40 p-4 rounded-2xl border border-zinc-800">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs text-cyan-300 font-bold">
-                      Song Lyrics & AI Video Scene Directions:
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setStudioTab('soundboard')}
-                      className="text-xs text-emerald-400 hover:underline flex items-center space-x-1"
-                    >
-                      <Volume2 className="w-3.5 h-3.5" />
-                      <span>Browse Soundboard for Style Tags</span>
-                    </button>
-                  </div>
-                  <textarea 
-                    value={lyricsOrPrompt}
-                    onChange={(e) => setLyricsOrPrompt(e.target.value)}
-                    placeholder="[Style: Modern Country Pop, 104 BPM, major key, pedal steel guitar]&#10;&#10;[Verse 1]&#10;Driving down this empty gravel road...&#10;&#10;[Chorus]&#10;Underneath the summer skyline...&#10;&#10;[Video Direction: Anamorphic camera slowly panning over open wheat fields at sunset]"
-                    className="w-full bg-black/60 border border-zinc-800 rounded-xl p-3.5 text-xs text-white focus:outline-none focus:border-cyan-500 h-28"
-                  />
-                </div>
-
-                {/* Ethical Gatekeeper */}
-                <div className="bg-emerald-950/20 border border-emerald-500/30 p-4 rounded-2xl space-y-2">
-                  <div className="flex items-center space-x-2 text-emerald-400">
-                    <ShieldCheck className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Ethical Gatekeeper & Copyright Policy</span>
-                  </div>
-                  <label className="flex items-start space-x-3 cursor-pointer pt-1">
-                    <input 
-                      type="checkbox"
-                      checked={confirmedSafe}
-                      onChange={(e) => setConfirmedSafe(e.target.checked)}
-                      className="mt-0.5 rounded border-zinc-700 text-emerald-500 focus:ring-0"
-                    />
-                    <span className="text-xs text-zinc-200 font-semibold leading-relaxed">
-                      I certify this content contains zero violence, no NSFW/pornography, no scams, and I hold rights to publish to FutureBox.
-                    </span>
-                  </label>
-                </div>
-
-                {/* Audit Feedbacks */}
-                {auditStatus === 'success' && (
-                  <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500 text-emerald-300 text-xs font-semibold flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                    <span>
-                      ✓ Ethical Gate Passed! Your AI Music Video is live at futurebox.app/@{creatorDomain}
-                      {selectedTools.length > 0 && <> — credited to {selectedTools.join(', ')}</>}
-                    </span>
-                  </div>
-                )}
-
-                {auditStatus === 'failed_safety' && (
-                  <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500 text-rose-300 text-xs flex items-center space-x-2">
-                    <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                    <span>✗ Ethical Gate Rejection: Flagged keywords detected violating community standards.</span>
-                  </div>
-                )}
-
-                {auditStatus === 'failed_attestation' && (
-                  <div className="p-3 rounded-xl bg-amber-950/60 border border-amber-500 text-amber-300 text-xs flex items-center space-x-2">
-                    <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                    <span>⚠ Please check the Ethical Gatekeeper box before submitting.</span>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)] flex items-center justify-center space-x-2"
-                >
-                  <UploadCloud className="w-4 h-4" />
-                  <span>Publish to My Channel (futurebox.app/@{creatorDomain})</span>
-                </button>
-              </form>
-            )}
-
             {/* HOOKS: cut the bit worth posting, from your own tracks */}
+            {studioTab === 'video' && <MusicVideo />}
             {studioTab === 'hooks_feed' && <Hooks />}
 
             {/* MAKE: the button people came for */}
@@ -2040,10 +1855,6 @@ export default function FutureBoxHome() {
                 onUpgrade={() => setPricingModalOpen(true)}
                 onSendToMake={({ title: t, lyrics, style }) => {
                   setHandoff({ title: t, lyrics, style });
-                  setTitle(t);
-                  // The Director's one field takes both, in the order it reads
-                  // best: what it should sound like, then what it says.
-                  setLyricsOrPrompt(`[Style: ${style}]\n\n${lyrics}`);
                   setStudioTab('make');
                 }}
               />
