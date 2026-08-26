@@ -25,6 +25,7 @@ import {
 import { engines } from '../lib/engines';
 import { STYLE_PRESETS } from '../data/studio';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
+import { useLang } from '../lib/i18n';
 
 const LENGTHS = [
   { bars: 16, label: 'Short' },
@@ -43,6 +44,7 @@ export default function MakeMusic({
   incoming?: { title: string; lyrics: string; style: string } | null;
 }) {
   const [title, setTitle] = useState(incoming?.title ?? '');
+  const { t } = useLang();
   const [preset, setPreset] = useState(STYLE_PRESETS[5]);
   const [bpm, setBpm] = useState(STYLE_PRESETS[5].bpm);
   const [songKey, setSongKey] = useState(STYLE_PRESETS[5].key);
@@ -88,9 +90,9 @@ export default function MakeMusic({
         setStatus(gate.reason);
         return;
       }
-      const name = (remixOf ? `${remixOf.title} (another take)` : title).trim() || 'Untitled';
+      const name = (remixOf ? `${remixOf.title} ${t('make.takeSuffix')}` : title).trim() || 'Untitled';
       setBusy(true);
-      setStatus('Making your song…');
+      setStatus(t('make.going'));
 
       // Yields once so the button visibly changes before the work starts.
       await new Promise((resolve) => setTimeout(resolve, 60));
@@ -147,14 +149,14 @@ export default function MakeMusic({
         setTracks(next);
         saveTracks(next);
         record('publish.release');
-        setStatus(remixOf ? 'Another take is ready.' : 'Done — it is in your channel below.');
+        setStatus(remixOf ? t('make.doneTake') : t('make.done'));
       } catch {
-        setStatus('That did not work. Try again.');
+        setStatus(t('make.failed'));
       } finally {
         setBusy(false);
       }
     },
-    [bars, bpm, lyrics, preset, songKey, title, tracks, userPlan],
+    [bars, bpm, lyrics, preset, songKey, t, title, tracks, userPlan],
   );
 
   const toggle = async (track: Track) => {
@@ -167,7 +169,7 @@ export default function MakeMusic({
     }
     const blob = await getAudio(track.id);
     if (!blob) {
-      setStatus('That file is missing from this device.');
+      setStatus(t('make.missing'));
       return;
     }
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
@@ -223,28 +225,27 @@ export default function MakeMusic({
       <div>
         <h4 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
           <Music className="w-6 h-6 text-emerald-400" />
-          Make a song
+          {t('make.title')}
         </h4>
         <p className="text-base text-zinc-400 pt-1 max-w-2xl">
-          Pick a sound, press the button, and listen. It takes a few seconds. Everything you make stays in your channel
-          at the bottom of this page.
+          {t('make.sub')}
         </p>
       </div>
 
       {/* Set it up */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-4">
         <div>
-          <label className="text-sm text-zinc-400">What is it called?</label>
+          <label className="text-sm text-zinc-400">{t('make.name')}</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Give it a name"
+            placeholder={t('make.namePlaceholder')}
             className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
           />
         </div>
 
         <div>
-          <label className="text-sm text-zinc-400">What should it sound like?</label>
+          <label className="text-sm text-zinc-400">{t('make.sound')}</label>
           <div className="flex flex-wrap gap-1.5 mt-1.5">
             {STYLE_PRESETS.map((p) => (
               <button
@@ -269,7 +270,7 @@ export default function MakeMusic({
 
         <div className="grid sm:grid-cols-3 gap-4">
           <div>
-            <label className="text-sm text-zinc-400">Speed — {bpm} beats a minute</label>
+            <label className="text-sm text-zinc-400">{t('make.speed')} — {bpm} {t('make.bpm')}</label>
             <input
               type="range"
               min={60}
@@ -278,25 +279,25 @@ export default function MakeMusic({
               onChange={(e) => setBpm(Number(e.target.value))}
               className="w-full mt-2 accent-emerald-500"
             />
-            <p className="text-sm text-zinc-600">{bpm < 95 ? 'Slow and easy' : bpm < 125 ? 'Steady' : 'Fast'}</p>
+            <p className="text-sm text-zinc-600">{bpm < 95 ? t('make.slow') : bpm < 125 ? t('make.steady') : t('make.fast')}</p>
           </div>
           <div>
-            <label className="text-sm text-zinc-400">Mood</label>
+            <label className="text-sm text-zinc-400">{t('make.mood')}</label>
             <select
               value={songKey}
               onChange={(e) => setSongKey(e.target.value)}
               className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
             >
-              <option value={preset.key}>Like the style ({preset.key})</option>
-              <option value="C Major">Bright</option>
-              <option value="G Major">Warm</option>
-              <option value="A Minor">Thoughtful</option>
-              <option value="D Minor">Dark</option>
-              <option value="F Minor">Heavy</option>
+              <option value={preset.key}>{t('make.mood.likeStyle')} ({preset.key})</option>
+              <option value="C Major">{t('make.mood.bright')}</option>
+              <option value="G Major">{t('make.mood.warm')}</option>
+              <option value="A Minor">{t('make.mood.thoughtful')}</option>
+              <option value="D Minor">{t('make.mood.dark')}</option>
+              <option value="F Minor">{t('make.mood.heavy')}</option>
             </select>
           </div>
           <div>
-            <label className="text-sm text-zinc-400">How long?</label>
+            <label className="text-sm text-zinc-400">{t('make.length')}</label>
             <div className="flex gap-1.5 mt-1.5">
               {LENGTHS.map((l) => (
                 <button
@@ -309,7 +310,7 @@ export default function MakeMusic({
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                   }`}
                 >
-                  {l.label}
+                  {t(`make.${l.label.toLowerCase()}`)}
                 </button>
               ))}
             </div>
@@ -323,18 +324,18 @@ export default function MakeMusic({
           className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-extrabold text-base flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
         >
           {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-          {busy ? 'Making your song…' : 'Make my song'}
+          {busy ? t('make.going') : t('make.go')}
         </button>
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-zinc-500">
             {userPlan === 'pro'
-              ? 'As many as you like on Pro.'
-              : `${left ?? 0} of ${ENTITLEMENTS['publish.release'].free} left today.`}
+              ? t('make.unlimited')
+              : `${left ?? 0} / ${ENTITLEMENTS['publish.release'].free} ${t('make.leftToday')}`}
           </p>
           {userPlan === 'free' && (left ?? 0) === 0 && (
             <button type="button" onClick={onUpgrade} className="text-sm text-amber-400 hover:underline">
-              Get more
+              {t('make.getMore')}
             </button>
           )}
         </div>
@@ -344,9 +345,7 @@ export default function MakeMusic({
         {!engines.available('audio') && (
           <p className="text-sm text-zinc-500 leading-relaxed border-t border-zinc-800 pt-3">
             <Wand2 className="w-3.5 h-3.5 inline mr-1.5 text-zinc-600" />
-            What you get right now is a <strong className="text-zinc-300">rough sketch</strong> — real music, made on
-            your device, so you can hear whether the speed and the mood are right before you commit. It is not sung and
-            it is not the finished thing.
+            {t('make.sketch')}
           </p>
         )}
       </div>
@@ -354,13 +353,13 @@ export default function MakeMusic({
       {/* Your channel */}
       <div className="space-y-3">
         <div className="flex items-baseline justify-between gap-3">
-          <h5 className="text-lg font-bold text-white">Your channel</h5>
-          <span className="text-sm text-zinc-500">{tracks.length} {tracks.length === 1 ? 'song' : 'songs'}</span>
+          <h5 className="text-lg font-bold text-white">{t('make.channel')}</h5>
+          <span className="text-sm text-zinc-500">{tracks.length} {tracks.length === 1 ? t('make.song') : t('make.songs')}</span>
         </div>
 
         {tracks.length === 0 ? (
           <p className="text-base text-zinc-500 py-8 text-center border border-dashed border-zinc-800 rounded-2xl">
-            Nothing here yet. Make your first song above.
+            {t('make.empty')}
           </p>
         ) : (
           <div className="grid sm:grid-cols-2 gap-3">
@@ -392,7 +391,7 @@ export default function MakeMusic({
                     className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    Save it
+                    {t('make.save')}
                   </button>
                   <button
                     type="button"
@@ -400,7 +399,7 @@ export default function MakeMusic({
                     className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
                   >
                     <Share2 className="w-3.5 h-3.5" />
-                    {shared === track.id ? 'Copied' : 'Share'}
+                    {shared === track.id ? t('make.copied') : t('make.share')}
                   </button>
                   <button
                     type="button"
@@ -409,7 +408,7 @@ export default function MakeMusic({
                     className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-violet-500 hover:text-violet-300 flex items-center gap-1.5 disabled:opacity-50"
                   >
                     <Repeat className="w-3.5 h-3.5" />
-                    Another take
+                    {t('make.again')}
                   </button>
                   <button
                     type="button"
@@ -427,7 +426,7 @@ export default function MakeMusic({
 
         {tracks.length > 0 && (
           <p className="text-sm text-zinc-500">
-            Your songs are kept on this device. Save the ones you want to keep for good.
+            {t('make.kept')}
           </p>
         )}
       </div>

@@ -24,6 +24,8 @@ import { MASTERCLASSES, PROVENANCE_LABELS, type Provenance } from '../data/maste
 import { TRACK_FLAVOURS } from '../data/studio';
 import { byArea, describe } from '../lib/entitlements';
 import { BASE_PRICES, guessRegion, priceFor, REGIONS, type Region } from '../lib/pricing';
+import { useLang } from '../lib/i18n';
+import LanguagePicker from './LanguagePicker';
 
 const PROVENANCE_STYLE: Record<Provenance, string> = {
   curated: 'text-cyan-300',
@@ -33,6 +35,7 @@ const PROVENANCE_STYLE: Record<Provenance, string> = {
 
 export default function Landing({ onStart }: { onStart: () => void }) {
   const toPricing = () => document.getElementById('pro')?.scrollIntoView({ behavior: 'smooth' });
+  const { t } = useLang();
   const [now, setNow] = useState<number | null>(null);
   const [region, setRegion] = useState<Region>(REGIONS[0]);
   useEffect(() => {
@@ -56,25 +59,26 @@ export default function Landing({ onStart }: { onStart: () => void }) {
     <div className="min-h-screen">
       {/* Hero */}
       <header className="max-w-4xl mx-auto px-6 pt-24 pb-16">
-        <div className="flex items-center gap-2.5 pb-8">
+        <div className="flex items-center justify-between gap-4 pb-8 flex-wrap">
+          <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center">
             <Cpu className="w-5 h-5 text-onAccent" />
           </div>
-          <span className="text-xl font-extrabold tracking-tight text-white">
-            FUTURE<span className="text-emerald-400">BOX</span>
-          </span>
+            <span className="text-xl font-extrabold tracking-tight text-white">
+              FUTURE<span className="text-emerald-400">BOX</span>
+            </span>
+          </div>
+          <LanguagePicker />
         </div>
 
         <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-[1.1]">
-          Everything here is made with AI.
+          {t('landing.hero1')}
           <br />
-          <span className="text-zinc-500">Everything here says so.</span>
+          <span className="text-zinc-500">{t('landing.hero2')}</span>
         </h1>
 
         <p className="text-lg text-zinc-400 leading-relaxed pt-6 max-w-2xl">
-          A studio for writing songs and videos with AI, and a feed that scores what it shows you before it shows you.
-          Not another wall of generated content — the model stack is printed under every release, and the things that
-          did not make the bar are counted where you can see them.
+          {t('landing.sub')}
         </p>
 
         <div className="flex flex-wrap items-center gap-3 pt-8">
@@ -83,16 +87,16 @@ export default function Landing({ onStart }: { onStart: () => void }) {
             onClick={onStart}
             className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold flex items-center gap-2 hover:opacity-90 transition-opacity"
           >
-            Start free
+            {t('landing.startFree')}
             <ArrowRight className="w-4 h-4" />
           </button>
           <button type="button" onClick={toPricing} className="px-4 py-3 text-zinc-400 hover:text-white font-semibold">
-            What Pro adds — {price.display}/month
+            {t('landing.whatPro')} — {price.display}/month
           </button>
         </div>
 
         <p className="text-sm text-zinc-600 pt-4">
-          No card to start. Competitions are open to free accounts on identical terms.
+          {t('landing.noCard')}
         </p>
       </header>
 
@@ -101,18 +105,18 @@ export default function Landing({ onStart }: { onStart: () => void }) {
         {[
           {
             icon: ShieldCheck,
-            title: 'A feed with a bar',
-            body: `Every item is scored on who published it, whether the title describes or baits, and whether the summary names anything you could check. Below ${BAR}/100 it does not appear.`,
+            title: t('landing.col1.title'),
+            body: t('landing.col1.body'),
           },
           {
             icon: Layers,
-            title: 'The stack, on the release',
-            body: 'Which model wrote the music, which made the video, which did the voice — printed under the track, not buried in a caption.',
+            title: t('landing.col2.title'),
+            body: t('landing.col2.body'),
           },
           {
             icon: Sliders,
-            title: 'Point at a bar, say what changes',
-            body: 'The studio lays a song out in bars. Click a spot, describe the change, and it becomes an instruction precise enough to be worth a generation.',
+            title: t('landing.col3.title'),
+            body: t('landing.col3.body'),
           },
         ].map((col) => {
           const Icon = col.icon;
@@ -128,7 +132,7 @@ export default function Landing({ onStart }: { onStart: () => void }) {
 
       {/* The gate, running */}
       <section className="max-w-4xl mx-auto px-6 py-12 border-t border-zinc-800/70">
-        <h2 className="text-2xl font-extrabold text-white tracking-tight">Today, scored in front of you</h2>
+        <h2 className="text-2xl font-extrabold text-white tracking-tight">{t('landing.today')}</h2>
         <p className="text-base text-zinc-400 pt-2">
           {now === null ? (
             'Scoring…'
@@ -154,7 +158,7 @@ export default function Landing({ onStart }: { onStart: () => void }) {
 
         {scored.rejected.length > 0 && (
           <div className="pt-6">
-            <p className="text-sm text-zinc-500 pb-2">And what it threw out, with the reason:</p>
+            <p className="text-sm text-zinc-500 pb-2">{t('landing.leftOut')}</p>
             {scored.rejected.slice(0, 2).map(({ item, verdict }) => {
               const worst = [...verdict.signals].sort((a, b) => a.delta - b.delta)[0];
               return (
@@ -170,7 +174,7 @@ export default function Landing({ onStart }: { onStart: () => void }) {
 
       {/* Masterclasses */}
       <section className="max-w-4xl mx-auto px-6 py-12 border-t border-zinc-800/70">
-        <h2 className="text-2xl font-extrabold text-white tracking-tight">Classes that say who made them</h2>
+        <h2 className="text-2xl font-extrabold text-white tracking-tight">{t('landing.classes')}</h2>
         <p className="text-base text-zinc-400 pt-2 max-w-2xl">
           Curated lectures from people who did the work, FutureBox originals, and generated explainers — each labelled
           before you click. A generated class may explain a method; it never asserts a finding.
@@ -192,7 +196,7 @@ export default function Landing({ onStart }: { onStart: () => void }) {
 
       {/* Releases */}
       <section className="max-w-4xl mx-auto px-6 py-12 border-t border-zinc-800/70">
-        <h2 className="text-2xl font-extrabold text-white tracking-tight">On the channel now</h2>
+        <h2 className="text-2xl font-extrabold text-white tracking-tight">{t('landing.onChannel')}</h2>
         <div className="grid sm:grid-cols-3 gap-4 pt-6">
           {TRACK_FLAVOURS.filter((t) => t.onChannel).map((t) => (
             <div key={t.id} className="space-y-1.5">
@@ -209,7 +213,7 @@ export default function Landing({ onStart }: { onStart: () => void }) {
 
       {/* Free vs Pro */}
       <section id="pro" className="max-w-4xl mx-auto px-6 py-12 border-t border-zinc-800/70 scroll-mt-8">
-        <h2 className="text-2xl font-extrabold text-white tracking-tight">What you get without paying</h2>
+        <h2 className="text-2xl font-extrabold text-white tracking-tight">{t('landing.freeTitle')}</h2>
         <p className="text-base text-zinc-400 pt-2 max-w-2xl">
           Not a trial and not a demo. You can write a song, score the feed, find a collaborator, use the timeline, take
           every theme, and enter competitions on exactly the same terms as Pro. What Pro buys is volume and
@@ -265,7 +269,7 @@ export default function Landing({ onStart }: { onStart: () => void }) {
 
       {/* Close */}
       <section className="max-w-3xl mx-auto px-6 py-16 border-t border-zinc-800/70 text-center">
-        <h2 className="text-3xl font-extrabold text-white tracking-tight">Write something today.</h2>
+        <h2 className="text-3xl font-extrabold text-white tracking-tight">{t('landing.close')}</h2>
         <p className="text-base text-zinc-400 pt-3">
           Three AI writing rolls, two releases and the whole soundboard, free, from now.
         </p>
@@ -276,7 +280,7 @@ export default function Landing({ onStart }: { onStart: () => void }) {
             className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold flex items-center gap-2 hover:opacity-90"
           >
             <Sparkles className="w-4 h-4" />
-            Start free
+            {t('landing.startFree')}
           </button>
           <button type="button" onClick={toPricing} className="px-4 py-3.5 text-zinc-400 hover:text-white font-semibold flex items-center gap-1.5">
             <Check className="w-4 h-4" />

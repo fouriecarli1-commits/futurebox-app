@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { LanguageProvider } from './lib/i18n';
 
 export const metadata: Metadata = {
   title: 'FutureBox — Digital Learning & Creative AI Platform',
@@ -14,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen antialiased selection:bg-emerald-500 selection:text-onAccent">
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );

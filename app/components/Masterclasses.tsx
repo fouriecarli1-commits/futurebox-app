@@ -24,6 +24,7 @@ import {
   type Track, type Provenance, type Masterclass,
 } from '../data/masterclasses';
 import type { Plan } from '../lib/entitlements';
+import { useLang } from '../lib/i18n';
 
 const TRACK_ICONS: Record<Track, typeof Music> = {
   'ai-music': Music,
@@ -106,6 +107,7 @@ export default function Masterclasses({
   onUpgrade: () => void;
 }) {
   const [track, setTrack] = useState<Track | null>(null);
+  const { t } = useLang();
   const [showProvenance, setShowProvenance] = useState(false);
   const [planTrack, setPlanTrack] = useState<Track>('ai-music');
   const [seed, setSeed] = useState(0);
@@ -128,14 +130,14 @@ export default function Masterclasses({
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h3 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
           <GraduationCap className="w-6 h-6 text-emerald-400" />
-          Masterclasses
+          {t('mc.title')}
         </h3>
         <button
           type="button"
           onClick={() => setShowProvenance((v) => !v)}
           className="text-sm text-zinc-500 hover:text-zinc-200"
         >
-          How we label these
+          {t('mc.howLabel')}
         </button>
       </div>
 
@@ -165,7 +167,7 @@ export default function Masterclasses({
           }`}
         >
           <GraduationCap className={`w-5 h-5 ${track === null ? 'text-emerald-400' : ''}`} />
-          <p className="text-sm font-bold pt-1.5 leading-tight">Everything</p>
+          <p className="text-sm font-bold pt-1.5 leading-tight">{t('common.everything')}</p>
           <p className="text-sm text-zinc-500">{MASTERCLASSES.length}</p>
         </button>
 

@@ -23,6 +23,7 @@ import { FEED_ITEMS, CATEGORIES } from '../data/feed';
 import {
   assess, BAR, TIER_LIMITS, type FeedItem, type Verdict,
 } from '../lib/curation';
+import { useLang } from '../lib/i18n';
 
 interface Scored {
   readonly item: FeedItem;
@@ -37,6 +38,7 @@ export default function QualityRadar({
   onUpgrade: () => void;
 }) {
   const limits = TIER_LIMITS[userPlan];
+  const { t } = useLang();
 
   // The clock is captured on the client after mount, not during render: a
   // timestamp baked into the static HTML would be wrong the moment it is served.
@@ -96,14 +98,14 @@ export default function QualityRadar({
       {/* One line, not a paragraph. The explanation is one click away for the
           few people who want it, and out of the way for everyone else. */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-        <h3 className="text-2xl font-extrabold text-white tracking-tight">The Radar</h3>
+        <h3 className="text-2xl font-extrabold text-white tracking-tight">{t('radar.title')}</h3>
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setShowHow((v) => !v)}
             className="text-sm text-zinc-500 hover:text-zinc-200"
           >
-            How we choose
+            {t('radar.howWeChoose')}
           </button>
           <button
             type="button"
@@ -112,27 +114,27 @@ export default function QualityRadar({
             className="px-3 py-1.5 rounded-xl text-sm text-zinc-400 hover:text-white flex items-center gap-1.5 disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Looking' : 'Find new stories'}
+            {syncing ? t('radar.looking') : t('radar.findNew')}
           </button>
         </div>
       </div>
 
       <p className="text-base text-zinc-400">
         {now === null ? (
-          'Reading…'
+          t('radar.reading')
         ) : (
           <>
-            <strong className="text-zinc-200">{visible.length} things worth your time</strong> today.
-            {rejected.length > 0 && <span className="text-zinc-600"> We left {rejected.length} out.</span>}
+            <strong className="text-zinc-200">{visible.length} {t('radar.worth')}</strong> {t('radar.today')}
+            {rejected.length > 0 && (
+              <span className="text-zinc-600"> {t('radar.leftOut')} {rejected.length} {t('radar.leftOutEnd')}</span>
+            )}
           </>
         )}
       </p>
 
       {showHow && (
         <p className="text-sm text-zinc-400 leading-relaxed bg-zinc-900/60 border border-zinc-800 rounded-xl p-3">
-          Every story gets a mark out of 100 before it reaches this page. It loses marks for a headline written to be
-          clicked rather than read, for saying nothing you could check, and for being old news. Under {BAR} and it does
-          not make the page. We show you what we left out and why, so you do not have to take our word for it.
+          {t('radar.explain')}
         </p>
       )}
 
@@ -190,7 +192,7 @@ export default function QualityRadar({
                       onClick={() => setOpenItem(open ? null : item.id)}
                       className="text-sm text-zinc-600 hover:text-zinc-300 pt-1.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                     >
-                      {open ? 'Close' : 'Why we picked this'}
+                      {open ? t('radar.closeWhy') : t('radar.why')}
                     </button>
                   )}
 
@@ -229,7 +231,7 @@ export default function QualityRadar({
 
         {now !== null && visible.length === 0 && (
           <p className="text-base text-zinc-500 py-8 text-center">
-            Nothing in those topics made the cut today. Try another one.
+            {t('radar.nothing')}
           </p>
         )}
       </div>
@@ -242,10 +244,10 @@ export default function QualityRadar({
           className="w-full p-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 text-left hover:bg-amber-500/15 transition-all"
         >
           <p className="text-sm font-bold text-amber-300">
-            There are {passing.length - visible.length} more good ones today
+            {passing.length - visible.length} {t('radar.moreGood')}
           </p>
           <p className="text-sm text-zinc-400 pt-0.5">
-            Pro shows you everything we found, in every topic, and why each story earned its mark.
+            {t('radar.proShows')}
           </p>
         </button>
       )}
@@ -258,12 +260,12 @@ export default function QualityRadar({
         >
           <span className="flex items-center gap-2">
             <EyeOff className="w-4 h-4 text-rose-400" />
-            <span className="text-sm font-bold text-white">{rejected.length} stories didn&apos;t make it today</span>
+            <span className="text-sm font-bold text-white">{rejected.length} {t('radar.didntMake')}</span>
           </span>
           <span className="text-sm text-zinc-400 flex items-center gap-1">
             {limits.seesRejected ? (
               <>
-                {showRejected ? 'Hide' : 'Show me why'}
+                {showRejected ? t('radar.hide') : t('radar.showWhy')}
                 {showRejected ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
               </>
             ) : (

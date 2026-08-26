@@ -26,6 +26,8 @@ import Songwriter from './components/Songwriter';
 import MakeMusic from './components/MakeMusic';
 import Masterclasses from './components/Masterclasses';
 import Landing from './components/Landing';
+import LanguagePicker from './components/LanguagePicker';
+import { useLang } from './lib/i18n';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
 import { byArea, describe } from './lib/entitlements';
 
@@ -55,6 +57,7 @@ interface GenreSample {
 }
 
 export default function FutureBoxHome() {
+  const { t } = useLang();
   const [activeTab, setActiveTab] = useState<'all' | 'futurebox' | 'masterclasses' | 'creations' | 'radar'>('all');
   
   // User Authentication & Profile
@@ -537,7 +540,7 @@ export default function FutureBoxHome() {
             <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
               <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                 <h3 className="text-lg font-extrabold text-white">
-                  {authMode === 'signin' ? 'Welcome back' : 'Start free'}
+                  {authMode === 'signin' ? t('common.welcomeBack') : t('landing.startFree')}
                 </h3>
                 <button onClick={() => setAuthModalOpen(false)} className="text-zinc-500 hover:text-white">
                   <X className="w-5 h-5" />
@@ -564,20 +567,20 @@ export default function FutureBoxHome() {
                   type="submit"
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm"
                 >
-                  {authMode === 'signin' ? 'Sign in' : 'Create a free account'}
+                  {authMode === 'signin' ? t('common.signIn') : t('common.createAccount')}
                 </button>
               </form>
               <p className="text-sm text-zinc-500 text-center">
-                {authMode === 'signin' ? 'No account yet?' : 'Already have one?'}{' '}
+                {authMode === 'signin' ? t('common.noAccount') : t('common.haveAccount')}{' '}
                 <button
                   onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
                   className="text-emerald-400 hover:underline"
                 >
-                  {authMode === 'signin' ? 'Start free' : 'Sign in'}
+                  {authMode === 'signin' ? t('landing.startFree') : t('common.signIn')}
                 </button>
               </p>
               <p className="text-sm text-zinc-600 text-center leading-relaxed">
-                This is an early preview: your account lives on this device only.
+                {t('common.localOnly')}
               </p>
             </div>
           </div>
@@ -669,7 +672,7 @@ export default function FutureBoxHome() {
               className="hidden sm:flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-onAccent font-extrabold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
             >
               <Crown className="w-3.5 h-3.5 fill-current" />
-              <span>Upgrade ({proMonthly.display})</span>
+              <span>{t('common.upgrade')} ({proMonthly.display})</span>
             </button>
           ) : (
             <span className="text-xs font-mono text-emerald-400 hidden sm:flex items-center space-x-1 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
@@ -678,13 +681,15 @@ export default function FutureBoxHome() {
             </span>
           )}
 
+          <LanguagePicker compact />
+
           <button
             onClick={() => setThemeOpen(true)}
             title="Appearance — colours, type, layout"
             className="flex items-center space-x-1.5 px-3 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 text-xs font-bold rounded-xl transition-all"
           >
             <Paintbrush className="w-4 h-4" />
-            <span className="hidden lg:inline">Appearance</span>
+            <span className="hidden lg:inline">{t('common.appearance')}</span>
           </button>
 
           <button
@@ -692,7 +697,7 @@ export default function FutureBoxHome() {
             className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent text-xs font-bold rounded-xl hover:opacity-90 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
           >
             <UploadCloud className="w-4 h-4" />
-            <span className="hidden sm:inline">Creator Studio</span>
+            <span className="hidden sm:inline">{t('common.studio')}</span>
           </button>
         </div>
       </header>
@@ -1535,15 +1540,15 @@ export default function FutureBoxHome() {
                 }`}
               >
                 {[
-                  { id: 'make', label: 'Make a song', hint: 'Press one button', icon: Sparkles },
-                  { id: 'write', label: 'Write the words', hint: 'Lyrics and style', icon: Music },
-                  { id: 'studio', label: 'Studio', hint: 'Timeline and edits', icon: Sliders },
-                  { id: 'soundboard', label: 'Soundboard', hint: 'Every genre, with audio', icon: Volume2 },
-                  { id: 'voice_studio', label: 'Voice', hint: 'Your voice or ours', icon: Mic2 },
-                  { id: 'director', label: 'Director', hint: 'Build and publish', icon: Video },
-                  { id: 'hooks_feed', label: 'Hooks', hint: 'Vertical reels', icon: Smartphone },
-                  { id: 'collab', label: 'Collab Radar', hint: 'Podcasts and creators', icon: Handshake },
-                  { id: 'arena', label: 'Arena', hint: 'Competitions', icon: Trophy },
+                  { id: 'make', label: t('rail.make'), hint: t('rail.make.hint'), icon: Sparkles },
+                  { id: 'write', label: t('rail.write'), hint: t('rail.write.hint'), icon: Music },
+                  { id: 'studio', label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
+                  { id: 'soundboard', label: t('rail.sound'), hint: t('rail.sound.hint'), icon: Volume2 },
+                  { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
+                  { id: 'director', label: t('rail.director'), hint: t('rail.director.hint'), icon: Video },
+                  { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
+                  { id: 'collab', label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
+                  { id: 'arena', label: t('rail.arena'), hint: t('rail.arena.hint'), icon: Trophy },
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = studioTab === tab.id;
