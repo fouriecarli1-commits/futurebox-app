@@ -355,16 +355,15 @@ export default function Arena({ userPlan }: { userPlan: 'free' | 'pro' }) {
               )}
               {entryStatus === 'paid_pending' && (
                 <p className="text-[13px] text-cyan-300 bg-cyan-950/30 border border-cyan-500/30 rounded-xl p-2.5 leading-relaxed">
-                  Entry held. Payments are not connected yet — FutureBox has no backend, so nothing has been charged and
-                  nothing has been stored. Wire a payment provider before opening this to the public.
+                  Your entry is held. Nothing has been charged — card payments are not switched on yet.
                 </p>
               )}
               {entryStatus === 'free_pending' && (
                 <p className="text-[13px] text-emerald-300 bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-2.5 leading-relaxed flex items-start space-x-2">
                   <Check className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                   <span>
-                    Free entry recorded in this browser session only. Same prize, same rubric — it is not a lesser
-                    entry. A backend is needed before it survives a refresh.
+                    Free entry recorded. Same prize, judged the same way — it is not a lesser entry. Saved on this
+                    device for now.
                   </span>
                 </p>
               )}

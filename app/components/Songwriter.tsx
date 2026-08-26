@@ -169,7 +169,7 @@ export default function Songwriter({
       setOffline(true);
       setHelpNotice(
         data?.error === 'no_key'
-          ? 'No AI key is set on this deployment, so these are writing prompts rather than written lines. Add ANTHROPIC_API_KEY and the button starts writing.'
+          ? 'The writing help is switched off at the moment, so here are prompts to work from instead.'
           : data?.detail ?? 'The writing help could not be reached, so here are prompts instead.',
       );
     } catch {
@@ -223,9 +223,8 @@ export default function Songwriter({
           Songwriter
         </h4>
         <p className="text-sm text-zinc-400 pt-1 max-w-3xl leading-relaxed">
-          Write the lyrics, build the style line, then take both to whatever generates the audio. FutureBox has no
-          model behind this — so rather than a Generate button that cannot work, you get the two fields a generator
-          actually asks for, built properly and visible before you send them.
+          Write the lyrics, build the style line, then take both to whatever makes your audio. These are the two
+          things every music generator asks for, built properly and visible before you send them.
         </p>
       </div>
 
@@ -529,7 +528,7 @@ export default function Songwriter({
         )}
         <span className="ml-auto text-sm text-zinc-500 flex items-center gap-1.5 max-w-md">
           <Info className="w-4 h-4 flex-shrink-0" />
-          Once the audio exists, the Director publishes it and the Studio timeline is where you ask for changes.
+          Once you have the audio, publish it in Director — and use the Studio timeline to ask for changes.
         </span>
       </div>
     </div>

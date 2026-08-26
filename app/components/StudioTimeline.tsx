@@ -423,9 +423,8 @@ export default function StudioTimeline() {
           <p className="text-sm text-zinc-400 leading-relaxed flex items-start gap-2">
             <Info className="w-4 h-4 text-zinc-500 flex-shrink-0 mt-0.5" />
             <span>
-              FutureBox does not render audio — this screen produces the instruction, not the new mix. Paste it into
-              the tool that made the track. Bars and timecodes are included because a generation spent on
-              &ldquo;make the chorus bigger&rdquo; is a generation wasted.
+              Copy this into the tool that made the track. The bars and timecodes are the point — a generation spent
+              on &ldquo;make the chorus bigger&rdquo; is a generation wasted.
             </span>
           </p>
         </div>

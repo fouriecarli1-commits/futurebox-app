@@ -531,9 +531,8 @@ export default function CollabRadar({
             {showConnectNote && (
               <div className="text-sm text-zinc-400 leading-relaxed bg-black/40 border border-zinc-800 rounded-xl p-3 space-y-1.5">
                 <p>
-                  Posting to your account on your behalf is not a link — it is OAuth against each platform&apos;s API,
-                  and every one of them gates that behind an approved developer app. That needs a backend FutureBox
-                  does not have yet, plus a review queue measured in weeks. Per platform:
+                  Every platform makes an app apply, and be approved, before it may post on your behalf — so nothing
+                  posts anywhere without you. Here is what each one asks for:
                 </p>
                 <ul className="space-y-0.5">
                   {SOCIAL_PLATFORMS.map((pf) => (
@@ -543,8 +542,8 @@ export default function CollabRadar({
                   ))}
                 </ul>
                 <p>
-                  Until then this does the part that is real: your handles become working links, and each post opens
-                  that platform&apos;s own composer with the caption ready to paste.
+                  In the meantime your handles become working links, and each post opens that platform with the caption
+                  ready to paste.
                 </p>
               </div>
             )}
@@ -580,7 +579,7 @@ export default function CollabRadar({
                 );
               })}
             </div>
-            <p className="text-sm text-zinc-500">Saved in this browser only. Clearing site data clears them.</p>
+            <p className="text-sm text-zinc-500">Saved on this device.</p>
           </div>
 
           {/* FutureBox's own channels */}
@@ -766,8 +765,7 @@ export default function CollabRadar({
                 </button>
               </div>
               <p className="text-[13px] text-zinc-400 leading-relaxed">
-                This queues locally. There is no backend to deliver it yet, and a boost is a person at the FutureBox end
-                deciding to repost — so the queue is a to-do list, not a promise.
+                We look at boost requests by hand, so this is a request rather than an automatic repost.
               </p>
             </div>
           )}

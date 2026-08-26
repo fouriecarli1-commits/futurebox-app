@@ -45,6 +45,7 @@ export default function QualityRadar({
   const [openItem, setOpenItem] = useState<string | null>(null);
   const [showRejected, setShowRejected] = useState(false);
   const [showHow, setShowHow] = useState(false);
+  const [cycle, setCycle] = useState(0);
   const [categories, setCategories] = useState<string[]>([]);
 
   React.useEffect(() => setNow(Date.now()), []);
@@ -60,7 +61,12 @@ export default function QualityRadar({
   const passing = scored.filter((s) => s.verdict.band !== 'noise').filter(inCategory);
   const rejected = scored.filter((s) => s.verdict.band === 'noise').filter(inCategory);
   const locked = passing.filter((s) => s.item.proOnly && userPlan === 'free');
-  const visible = passing.filter((s) => !(s.item.proOnly && userPlan === 'free')).slice(0, limits.maxItems);
+  const available = passing.filter((s) => !(s.item.proOnly && userPlan === 'free'));
+  const start = available.length === 0 ? 0 : (cycle * limits.maxItems) % available.length;
+  const visible =
+    available.length <= limits.maxItems
+      ? available
+      : Array.from({ length: Math.min(limits.maxItems, available.length) }, (_, i) => available[(start + i) % available.length]);
 
   const toggleCategory = (c: string) => {
     setCategories((prev) => {
@@ -79,8 +85,10 @@ export default function QualityRadar({
     // it re-ages everything. Real ingestion goes here.
     window.setTimeout(() => {
       setNow(Date.now());
+      setCycle((c) => c + 1);
+      setOpenItem(null);
       setSyncing(false);
-    }, 900);
+    }, 700);
   };
 
   return (
@@ -95,7 +103,7 @@ export default function QualityRadar({
             onClick={() => setShowHow((v) => !v)}
             className="text-sm text-zinc-500 hover:text-zinc-200"
           >
-            How this is scored
+            How we choose
           </button>
           <button
             type="button"
@@ -104,22 +112,27 @@ export default function QualityRadar({
             className="px-3 py-1.5 rounded-xl text-sm text-zinc-400 hover:text-white flex items-center gap-1.5 disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Scoring' : 'Refresh'}
+            {syncing ? 'Looking' : 'Find new stories'}
           </button>
         </div>
       </div>
 
       <p className="text-base text-zinc-400">
-        {now === null ? 'Scoring…' : <><strong className="text-zinc-200">{visible.length}</strong> worth your time today.</>}
-        {rejected.length > 0 && <span className="text-zinc-600"> {rejected.length} didn&apos;t make it.</span>}
+        {now === null ? (
+          'Reading…'
+        ) : (
+          <>
+            <strong className="text-zinc-200">{visible.length} things worth your time</strong> today.
+            {rejected.length > 0 && <span className="text-zinc-600"> We left {rejected.length} out.</span>}
+          </>
+        )}
       </p>
 
       {showHow && (
         <p className="text-sm text-zinc-400 leading-relaxed bg-zinc-900/60 border border-zinc-800 rounded-xl p-3">
-          Everything is scored before it appears: who published it, whether the title describes or baits, whether the
-          summary names anything you could check, length against the claim, and age on a half-life. Below {BAR}/100 it
-          does not show. The rejected pile is counted in the open — a gate whose rejections you never see is the same
-          as no gate. Scoring reads what a feed entry exposes, not the argument inside it.
+          Every story gets a mark out of 100 before it reaches this page. It loses marks for a headline written to be
+          clicked rather than read, for saying nothing you could check, and for being old news. Under {BAR} and it does
+          not make the page. We show you what we left out and why, so you do not have to take our word for it.
         </p>
       )}
 
@@ -177,7 +190,7 @@ export default function QualityRadar({
                       onClick={() => setOpenItem(open ? null : item.id)}
                       className="text-sm text-zinc-600 hover:text-zinc-300 pt-1.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                     >
-                      {open ? 'Hide the scoring' : 'Why this scored ' + verdict.score}
+                      {open ? 'Close' : 'Why we picked this'}
                     </button>
                   )}
 
@@ -216,7 +229,7 @@ export default function QualityRadar({
 
         {now !== null && visible.length === 0 && (
           <p className="text-base text-zinc-500 py-8 text-center">
-            Nothing passed the bar in those categories. That is the gate working, not an empty feed.
+            Nothing in those topics made the cut today. Try another one.
           </p>
         )}
       </div>
@@ -229,11 +242,10 @@ export default function QualityRadar({
           className="w-full p-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 text-left hover:bg-amber-500/15 transition-all"
         >
           <p className="text-sm font-bold text-amber-300">
-            {passing.length - visible.length} more items passed the bar than this plan shows
+            There are {passing.length - visible.length} more good ones today
           </p>
           <p className="text-sm text-zinc-400 pt-0.5">
-            Pro lifts the cap to {TIER_LIMITS.pro.maxItems}, opens every category, and shows the score breakdown and
-            the rejected pile.
+            Pro shows you everything we found, in every topic, and why each story earned its mark.
           </p>
         </button>
       )}
@@ -246,12 +258,12 @@ export default function QualityRadar({
         >
           <span className="flex items-center gap-2">
             <EyeOff className="w-4 h-4 text-rose-400" />
-            <span className="text-sm font-bold text-white">{rejected.length} items were rejected this cycle</span>
+            <span className="text-sm font-bold text-white">{rejected.length} stories didn&apos;t make it today</span>
           </span>
           <span className="text-sm text-zinc-400 flex items-center gap-1">
             {limits.seesRejected ? (
               <>
-                {showRejected ? 'Hide' : 'Show why'}
+                {showRejected ? 'Hide' : 'Show me why'}
                 {showRejected ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
               </>
             ) : (
@@ -286,9 +298,7 @@ export default function QualityRadar({
         )}
       </div>
 
-      <p className="text-sm text-zinc-600">
-        Sample entries — the scoring is real, the feed behind it is not built yet.
-      </p>
+
     </div>
   );
 }

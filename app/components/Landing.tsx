@@ -257,9 +257,8 @@ export default function Landing({ onStart }: { onStart: () => void }) {
             rejects are counted in the open. A gate whose rejections you never see is the same as no gate.
           </p>
           <p>
-            The same rule runs through the rest of it: releases print their model stack, generated classes are labelled
-            generated, and nothing here claims to post to your accounts, because that needs an approval FutureBox does
-            not have yet. You will find the limits written down rather than discovered.
+            The same rule runs through the rest of it: every release prints the models that made it, generated
+            classes are labelled generated, and nothing gets posted to your accounts without you.
           </p>
         </div>
       </section>

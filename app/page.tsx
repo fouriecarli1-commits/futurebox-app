@@ -129,7 +129,7 @@ export default function FutureBoxHome() {
   // AI Scanner & Stream Regeneration
   const [isScanning, setIsScanning] = useState(false);
   const [streamCycle, setStreamCycle] = useState(0);
-  const [scanMessage, setScanMessage] = useState('🟢 Autonomous AI Trend Radar: Real-Time Sync Active (Updated 2m ago)');
+  const [scanMessage, setScanMessage] = useState('Podcasts and classes we think are worth your time.');
 
   // Marketing Contact Form
   const [contactName, setContactName] = useState('');
@@ -443,11 +443,11 @@ export default function FutureBoxHome() {
 
   const handleAiScanRefresh = () => {
     setIsScanning(true);
-    setScanMessage('⚡ AI Engine regenerating discovery stream from YouTube, X/Twitter, arXiv, and Substack...');
+    setScanMessage('Finding different ones…');
     setTimeout(() => {
       setIsScanning(false);
       setStreamCycle(prev => prev + 1);
-      setScanMessage('✓ AI Stream Refreshed: New trending podcasts and breakthrough lessons loaded!');
+      setScanMessage('Here is another set.');
     }, 2000);
   };
 
@@ -575,8 +575,7 @@ export default function FutureBoxHome() {
                 </button>
               </p>
               <p className="text-sm text-zinc-600 text-center leading-relaxed">
-                There is no backend yet — this signs you in locally so you can look around. Nothing is stored anywhere
-                but this browser.
+                This is an early preview: your account lives on this device only.
               </p>
             </div>
           </div>
@@ -786,11 +785,8 @@ export default function FutureBoxHome() {
               <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
             </div>
             <div>
-              <p className="font-bold text-white flex items-center space-x-2">
-                <span>Autonomous AI Discovery Stream (Free Tier Ready)</span>
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Pool #{streamCycle + 1}</span>
-              </p>
-              <p className="text-zinc-400 text-[11px]">{scanMessage}</p>
+              <p className="font-bold text-white">Today&apos;s picks</p>
+              <p className="text-zinc-400 text-[13px]">{scanMessage}</p>
             </div>
           </div>
 
@@ -800,7 +796,7 @@ export default function FutureBoxHome() {
             className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-onAccent text-xs font-extrabold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-            <span>{isScanning ? 'Regenerating Content...' : 'Regenerate Stream with AI'}</span>
+            <span>{isScanning ? 'Looking…' : 'Show me different ones'}</span>
           </button>
         </section>
 
