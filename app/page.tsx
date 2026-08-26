@@ -167,7 +167,33 @@ export default function FutureBoxHome() {
 
   // Studio Form State
   const [videoAspectRatio, setVideoAspectRatio] = useState<'16:9' | '9:16'>('16:9');
-  const [vocalVoiceChoice, setVocalVoiceChoice] = useState<'my_voice' | 'female_pop' | 'male_rock' | 'cyber_vocoder'>('my_voice');
+  const [vocalVoiceChoice, setVocalVoiceChoice] = useState<'female_pop' | 'male_rock' | 'soft_close' | 'cyber_vocoder'>('female_pop');
+
+  /** What the voice choice means to a music model, in words it reads. */
+  const VOICE_DIRECTION: Record<string, string> = {
+    female_pop: 'bright higher vocal, clear and forward',
+    male_rock: 'lower rough vocal, raspy and pushed',
+    soft_close: 'soft close-mic vocal, quiet and almost spoken',
+    cyber_vocoder: 'heavily vocoded stacked vocal',
+  };
+
+  /**
+   * Swaps the voice direction in a style line. Picking a second voice should
+   * replace the first, not sing in both — and the directions contain commas, so
+   * they have to come out as whole strings rather than as comma-separated parts.
+   */
+  const withVoice = (style: string, choice: string): string => {
+    let rest = style;
+    Object.keys(VOICE_DIRECTION).forEach((key) => {
+      rest = rest.split(VOICE_DIRECTION[key]).join('');
+    });
+    const cleaned = rest
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .join(', ');
+    return [cleaned, VOICE_DIRECTION[choice]].filter(Boolean).join(', ');
+  };
   const [creatorDomain, setCreatorDomain] = useState('anrefourie');
   const [title, setTitle] = useState('');
   const [selectedTools, setSelectedTools] = useState<string[]>(['Suno v5', 'Runway Gen-3', 'ElevenLabs Voice']);
@@ -191,17 +217,17 @@ export default function FutureBoxHome() {
     {
       category: 'Electronic & EDM',
       name: 'Melodic Techno & Afterlife Sound',
-      subgenre: 'Tale of Us / Anyma Style',
+      subgenre: 'Dark, hypnotic, built for a big room',
       bpm: '124 BPM',
       key: 'D Minor',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
-      promptSnippet: 'melodic techno, deep hypnotic rolling sub-bass, atmospheric ethereal synth leads, dark emotional drops, afterlife style, 124 bpm, D minor',
+      promptSnippet: 'melodic techno, deep hypnotic rolling sub-bass, atmospheric ethereal synth leads, dark emotional drops, 124 bpm, D minor',
       description: 'Hypnotic rolling bass with stadium synth leads. Ideal for dark visuals, cyber cities, and emotional visual climaxes.'
     },
     {
       category: 'Electronic & EDM',
       name: 'Deep Tech House',
-      subgenre: 'Club Minimal / Fisher Style',
+      subgenre: 'Stripped-back club, all groove',
       bpm: '126 BPM',
       key: 'G Minor',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
@@ -223,7 +249,7 @@ export default function FutureBoxHome() {
     {
       category: 'Pop & Synthpop',
       name: '80s Retro Synthwave Pop',
-      subgenre: 'The Weeknd / Blinding Lights Style',
+      subgenre: 'Neon 80s, gated snare, big chorus',
       bpm: '130 BPM',
       key: 'C Minor',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
@@ -255,7 +281,7 @@ export default function FutureBoxHome() {
     {
       category: 'Rock & Metal',
       name: 'Cinematic Nu-Metal & Djent',
-      subgenre: 'Linkin Park / Architects Style',
+      subgenre: 'Heavy riffs against clean electronics',
       bpm: '135 BPM',
       key: 'Drop D',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
@@ -267,7 +293,7 @@ export default function FutureBoxHome() {
     {
       category: 'Hip-Hop & Trap',
       name: 'Dark Cinematic Drill & Trap',
-      subgenre: 'UK/US Drill / Metro Boomin Style',
+      subgenre: 'Sliding 808s, sparse and menacing',
       bpm: '140 BPM',
       key: 'C# Minor',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3',
@@ -289,7 +315,7 @@ export default function FutureBoxHome() {
     {
       category: 'R&B & Soul',
       name: 'Contemporary Midnight R&B',
-      subgenre: 'SZA / Frank Ocean Style',
+      subgenre: 'Hazy, intimate, unhurried',
       bpm: '85 BPM',
       key: 'Bb Minor',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
@@ -301,7 +327,7 @@ export default function FutureBoxHome() {
     {
       category: 'Country & Folk',
       name: 'Modern Country Anthem & Pop',
-      subgenre: 'Morgan Wallen / Luke Combs Style',
+      subgenre: 'Country with a modern low end',
       bpm: '104 BPM',
       key: 'G Major',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
@@ -311,7 +337,7 @@ export default function FutureBoxHome() {
     {
       category: 'Country & Folk',
       name: 'Dark Indie Folk & Americana',
-      subgenre: 'Bon Iver / Lumineers Style',
+      subgenre: 'Close-mic folk, room and harmony',
       bpm: '78 BPM',
       key: 'D Major',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
@@ -359,7 +385,7 @@ export default function FutureBoxHome() {
     {
       category: 'Afrobeats & Latin',
       name: 'Afro-Fusion & Amapiano',
-      subgenre: 'Burna Boy / Asake Style',
+      subgenre: 'Afrobeats, log drum, sung hooks',
       bpm: '112 BPM',
       key: 'A Minor',
       audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
@@ -1655,12 +1681,12 @@ export default function FutureBoxHome() {
               <div className="space-y-5">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-cyan-950/20 border border-cyan-500/30 p-4 rounded-2xl">
                   <div>
-                    <h4 className="text-sm font-bold text-cyan-300 flex items-center space-x-2">
+                    <h4 className="text-base font-bold text-cyan-300 flex items-center space-x-2">
                       <Volume2 className="w-4 h-4" />
-                      <span>Complete Genre & Subgenre Soundboard</span>
+                      <span>Every sound, with an example</span>
                     </h4>
-                    <p className="text-xs text-zinc-400 pt-0.5">
-                      Listen to high-fidelity audio demos of every music style before creating, so you can make calculated prompt choices!
+                    <p className="text-sm text-zinc-400 pt-0.5">
+                      Hear one before you pick it. &ldquo;Use in Song&rdquo; drops it on the canvas.
                     </p>
                   </div>
                 </div>
@@ -1743,10 +1769,10 @@ export default function FutureBoxHome() {
                 <div className="bg-emerald-950/20 border border-emerald-500/30 p-5 rounded-2xl space-y-2">
                   <h4 className="text-sm font-bold text-emerald-300 flex items-center space-x-2">
                     <Mic2 className="w-4 h-4" />
-                    <span>Neural Vocal Studio & Custom Voice Cloning</span>
+                    <span>Voice</span>
                   </h4>
-                  <p className="text-xs text-zinc-400">
-                    Just like Suno’s voice engine, upload or record your own voice timbre to sing your songs, or pick from our studio-trained AI vocalists!
+                  <p className="text-sm text-zinc-400">
+                    Pick the voice a song should be sung in. Choosing here sets it for the next song you make.
                   </p>
                 </div>
 
@@ -1754,33 +1780,36 @@ export default function FutureBoxHome() {
                   <div className="bg-black/40 border border-zinc-800 p-5 rounded-2xl space-y-3">
                     <label className="block text-xs font-bold uppercase tracking-wider text-white flex items-center space-x-2">
                       <Mic className="w-4 h-4 text-emerald-400" />
-                      <span>Option A: Upload or Record Your Voice</span>
+                      <span>Your own voice</span>
                     </label>
-                    <p className="text-xs text-zinc-400 leading-relaxed">
-                      Upload a 15-30 second clear audio file (.wav or .mp3) of your speaking or singing voice.
+                    <p className="text-sm text-zinc-400 leading-relaxed">
+                      Singing in your own voice needs a recording of it, and a voice model to match it
+                      against. Neither is connected yet, so this is not switched on.
                     </p>
-                    <div className="border-2 border-dashed border-zinc-700 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition-colors">
-                      <UploadCloud className="w-8 h-8 text-zinc-500 mx-auto mb-2" />
-                      <p className="text-xs text-zinc-300 font-semibold">Drop vocal audio file here or click to browse</p>
-                      <p className="text-[13px] text-zinc-500">Supports WAV, MP3, M4A up to 25MB</p>
+                    <div className="border-2 border-dashed border-zinc-800 rounded-2xl p-6 text-center">
+                      <UploadCloud className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
+                      <p className="text-sm text-zinc-500">Not switched on</p>
                     </div>
                   </div>
 
                   <div className="bg-black/40 border border-zinc-800 p-5 rounded-2xl space-y-3">
                     <label className="block text-xs font-bold uppercase tracking-wider text-white flex items-center space-x-2">
                       <Sparkles className="w-4 h-4 text-cyan-400" />
-                      <span>Option B: Choose Studio Vocal Persona</span>
+                      <span>Or pick a voice</span>
                     </label>
                     <div className="space-y-2">
                       {[
-                        { id: 'my_voice', label: 'My Cloned Voice (Anre Fourie)', desc: 'Custom trained profile timbre' },
-                        { id: 'female_pop', label: 'Aura Pop Diva (Female)', desc: 'Soaring contemporary pop & vibrato' },
-                        { id: 'male_rock', label: 'Titan Baritone Rocker (Male)', desc: 'Raspy, powerful rock vocal lead' },
-                        { id: 'cyber_vocoder', label: 'Cyber Vocoder Synthesizer', desc: 'Daft Punk / The Weeknd neural vocoder' }
+                        { id: 'female_pop', label: 'Higher, bright', desc: 'Clear and forward, sits on top of the track' },
+                        { id: 'male_rock', label: 'Lower, rough', desc: 'Raspy and pushed, carries a loud chorus' },
+                        { id: 'soft_close', label: 'Soft and close', desc: 'Quiet, near the mic, almost spoken' },
+                        { id: 'cyber_vocoder', label: 'Cyber Vocoder Synthesizer', desc: 'Robot-choir vocal, hard-tuned and stacked' }
                       ].map((item) => (
                         <div
                           key={item.id}
-                          onClick={() => setVocalVoiceChoice(item.id as any)}
+                          onClick={() => {
+                            setVocalVoiceChoice(item.id as typeof vocalVoiceChoice);
+                            setCanvas({ ...canvas, style: withVoice(canvas.style, item.id) });
+                          }}
                           className={`p-3 rounded-xl border text-xs cursor-pointer flex items-center justify-between transition-all ${
                             vocalVoiceChoice === item.id 
                               ? 'bg-emerald-950/40 border-emerald-500 text-white' 
@@ -1803,7 +1832,7 @@ export default function FutureBoxHome() {
                     onClick={() => setStudioTab('make')}
                     className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center space-x-2"
                   >
-                    <span>Proceed to Music Video Director</span>
+                    <span>Back to the song</span>
                     <ArrowUpRight className="w-4 h-4" />
                   </button>
                 </div>
