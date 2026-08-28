@@ -462,9 +462,9 @@ export default function MakeMusic({
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-zinc-500">
-            {userPlan === 'pro'
+            {userPlan !== 'free'
               ? t('make.unlimited')
-              : `${left ?? 0} / ${ENTITLEMENTS['publish.release'].free} ${t('make.leftToday')}`}
+              : `${left ?? 0} / ${ENTITLEMENTS['publish.release'].caps.free} ${t('make.leftToday')}`}
           </p>
           {userPlan === 'free' && (left ?? 0) === 0 && (
             <button type="button" onClick={onUpgrade} className="text-sm text-amber-400 hover:underline">

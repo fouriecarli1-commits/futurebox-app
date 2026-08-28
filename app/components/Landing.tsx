@@ -227,11 +227,11 @@ export default function Landing({ onStart }: { onStart: () => void }) {
               {group.rows.map((row) => (
                 <div key={row.key} className="grid grid-cols-[1fr_auto_auto] gap-3 items-baseline py-1 text-base">
                   <span className="text-zinc-300">{row.label}</span>
-                  <span className={`text-right w-24 text-sm ${row.free === 0 ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                    {describe(row.free, row.unit)}
+                  <span className={`text-right w-24 text-sm ${row.caps.free === 0 ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                    {describe(row.caps.free, row.unit)}
                   </span>
                   <span className="text-right w-24 text-sm font-semibold text-amber-300">
-                    {describe(row.pro, row.unit)}
+                    {describe(row.caps.studio, row.unit)}
                   </span>
                 </div>
               ))}

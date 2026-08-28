@@ -20,7 +20,14 @@
  * hangs off them.
  */
 
-export type Plan = 'free' | 'pro';
+/**
+ * The tiers as sold. `plans.ts` holds their prices and what each is for; this
+ * file holds only what each may do, so a cap and a price cannot disagree.
+ */
+export type Plan = 'free' | 'maker' | 'studio' | 'label';
+
+/** What `pro` used to mean, for anything still thinking in two tiers. */
+export const DEFAULT_PAID: Plan = 'studio';
 
 export type Capability =
   | 'songwriter.help'
@@ -41,9 +48,8 @@ export interface Entitlement {
   readonly label: string;
   /** Where it lives, for grouping in the comparison. */
   readonly area: string;
-  /** A per-day cap, `0` for blocked, `null` for unlimited. */
-  readonly free: number | null;
-  readonly pro: number | null;
+  /** Per-day caps by tier. `0` blocks, `null` is unlimited. */
+  readonly caps: Readonly<Record<Plan, number | null>>;
   /** How the limit reads to a person. */
   readonly unit: string;
   readonly freeNote: string;
@@ -53,104 +59,91 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
   'songwriter.help': {
     label: 'AI writing help',
     area: 'Songwriter',
-    free: 3,
-    pro: null,
+    caps: { free: 3, maker: null, studio: null, label: null },
     unit: 'rolls a day',
     freeNote: 'Enough to get unstuck on one song. The offline writing prompts stay unlimited.',
   },
   'publish.release': {
     label: 'Publish a release',
     area: 'Songwriter',
-    free: 2,
-    pro: null,
+    caps: { free: 2, maker: null, studio: null, label: null },
     unit: 'a day',
     freeNote: 'Two finished releases a day is more than most people write.',
   },
   soundboard: {
     label: 'Genre soundboard and voice studio',
     area: 'Songwriter',
-    free: null,
-    pro: null,
+    caps: { free: null, maker: null, studio: null, label: null },
     unit: '',
     freeNote: 'Free, in full. Hearing what a genre sounds like should never be behind a paywall.',
   },
   'studio.edits': {
     label: 'Queued timeline edits',
     area: 'Studio',
-    free: 5,
-    pro: null,
+    caps: { free: 5, maker: null, studio: null, label: null },
     unit: 'a day',
     freeNote: 'Enough to fix a chorus. The timeline itself is free to use.',
   },
   'radar.items': {
     label: 'Items in the feed',
     area: 'Radar',
-    free: 6,
-    pro: 40,
+    caps: { free: 6, maker: 40, studio: 40, label: 40 },
     unit: 'per scan',
     freeNote: 'The six highest-scoring items. They are the same six Pro sees at the top.',
   },
   'radar.categories': {
     label: 'Categories at once',
     area: 'Radar',
-    free: 2,
-    pro: null,
+    caps: { free: 2, maker: null, studio: null, label: null },
     unit: '',
     freeNote: 'Pick the two you care about.',
   },
   'radar.breakdown': {
     label: 'Why an item scored what it did',
     area: 'Radar',
-    free: 0,
-    pro: null,
+    caps: { free: 0, maker: null, studio: null, label: null },
     unit: '',
     freeNote: 'The score is shown to everyone; the signal-by-signal breakdown is Pro.',
   },
   'radar.rejected': {
     label: 'The rejected pile and its reasons',
     area: 'Radar',
-    free: 0,
-    pro: null,
+    caps: { free: 0, maker: null, studio: null, label: null },
     unit: '',
     freeNote: 'The count of what was rejected is always shown. The reasons are Pro.',
   },
   'collab.pitch': {
     label: 'Podcast pitch drafts',
     area: 'Collab Radar',
-    free: 2,
-    pro: null,
+    caps: { free: 2, maker: null, studio: null, label: null },
     unit: 'a day',
     freeNote: 'Matching and scoring are free. Drafting the letter is what is capped.',
   },
   'collab.post': {
     label: 'Post to your channels',
     area: 'Collab Radar',
-    free: 0,
-    pro: null,
+    caps: { free: 0, maker: null, studio: null, label: null },
     unit: '',
     freeNote: 'Captions and hooks are free to write and copy. Posting from FutureBox is Pro.',
   },
   'collab.boost': {
     label: 'Ask FutureBox to boost a collab',
     area: 'Collab Radar',
-    free: 0,
-    pro: null,
+    caps: { free: 0, maker: null, studio: null, label: null },
     unit: '',
     freeNote: 'Being amplified by the channel is the thing Pro actually buys.',
   },
   'arena.enter': {
     label: 'Enter a competition',
     area: 'Arena',
-    free: null,
-    pro: null,
+    caps: { free: null, maker: null, studio: null, label: null },
     unit: '',
     freeNote: 'Free and Pro enter on identical terms, including the free entry route. Never gated.',
   },
   appearance: {
     label: 'Every theme and layout',
     area: 'Everywhere',
-    free: null,
-    pro: null,
+    caps: { free: null, maker: null, studio: null, label: null },
     unit: '',
     freeNote: 'Free. Charging for a dark mode is not a business.',
   },
@@ -207,7 +200,7 @@ export interface Check {
 
 export function check(capability: Capability, plan: Plan): Check {
   const entitlement = ENTITLEMENTS[capability];
-  const limit = plan === 'pro' ? entitlement.pro : entitlement.free;
+  const limit = entitlement.caps[plan];
   const count = used(capability);
 
   if (limit === null) return { allowed: true, used: count, limit: null, remaining: null, reason: null };
@@ -217,7 +210,7 @@ export function check(capability: Capability, plan: Plan): Check {
       used: count,
       limit: 0,
       remaining: 0,
-      reason: `${entitlement.label} is a Pro feature.`,
+      reason: `${entitlement.label} needs a paid plan.`,
     };
   }
   const remaining = Math.max(0, limit - count);

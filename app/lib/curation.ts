@@ -228,7 +228,12 @@ export interface TierLimits {
   readonly seesScoreBreakdown: boolean;
 }
 
-export const TIER_LIMITS: Record<'free' | 'pro', TierLimits> = {
+/** Every paid tier sees the whole radar; the split is free against paid. */
+const PAID: TierLimits = { maxItems: 40, maxCategories: 99, seesRejected: true, seesScoreBreakdown: true };
+
+export const TIER_LIMITS: Record<'free' | 'maker' | 'studio' | 'label', TierLimits> = {
   free: { maxItems: 6, maxCategories: 2, seesRejected: false, seesScoreBreakdown: false },
-  pro: { maxItems: 40, maxCategories: 99, seesRejected: true, seesScoreBreakdown: true },
+  maker: PAID,
+  studio: PAID,
+  label: PAID,
 };
