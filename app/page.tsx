@@ -8,7 +8,7 @@ import {
   Link as LinkIcon, AlertCircle, Layers, DollarSign, Clock, 
   BookOpen, Bookmark, GraduationCap, Mic, Disc3, ExternalLink, Globe,
   Crown, Lock, Zap, RefreshCw, Send, Mail, Check, Star,
-  ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, Volume2, 
+  ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
   Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush
 } from 'lucide-react';
@@ -18,11 +18,10 @@ import {
 import { profileFromTracks } from './lib/matching';
 import CollabRadar from './components/CollabRadar';
 import Arena from './components/Arena';
-import StudioTimeline from './components/StudioTimeline';
+import SongSections from './components/SongSections';
 import { guessRegion, REGIONS, regionByCode, type Region } from './lib/pricing';
 import ThemeStudio from './components/ThemeStudio';
 import QualityRadar from './components/QualityRadar';
-import Songwriter from './components/Songwriter';
 import MakeMusic from './components/MakeMusic';
 import Hooks from './components/Hooks';
 import MusicVideo from './components/MusicVideo';
@@ -220,7 +219,16 @@ export default function FutureBoxHome() {
 
   // Creator Studio Sub-Tabs & Soundboard
   const [handoff, setHandoff] = useState<{ title: string; lyrics: string; style: string } | null>(null);
-  const [studioTab, setStudioTab] = useState<'video' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio' | 'write' | 'make' | 'podcast'>('make');
+  /**
+   * The studio's screens.
+   *
+   * 'soundboard' and 'write' were removed rather than hidden: the soundboard is
+   * a reference for writing a style line, so it belongs inside making a song
+   * and is now the shelf there; and writing the words is what making a song
+   * already is, so a second screen for it was the same job behind a second
+   * button.
+   */
+  const [studioTab, setStudioTab] = useState<'video' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio' | 'make' | 'podcast'>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -1731,9 +1739,7 @@ export default function FutureBoxHome() {
                 {[
                   { id: 'make', label: t('rail.make'), hint: t('rail.make.hint'), icon: Sparkles },
                   { id: 'video', label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
-                  { id: 'write', label: t('rail.write'), hint: t('rail.write.hint'), icon: Music },
                   { id: 'studio', label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
-                  { id: 'soundboard', label: t('rail.sound'), hint: t('rail.sound.hint'), icon: Volume2 },
                   { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
                   { id: 'podcast', label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
                   { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
@@ -1765,92 +1771,6 @@ export default function FutureBoxHome() {
 
               <div className="flex-1 min-w-0 min-h-0 overflow-y-auto space-y-6 pr-1">
 
-            {/* TAB 1: MASTER GENRE SOUNDBOARD (EVERY GENRE WITH AUDIO SAMPLES & 1-CLICK USE) */}
-            {studioTab === 'soundboard' && (
-              <div className="space-y-5">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-cyan-950/20 border border-cyan-500/30 p-4 rounded-2xl">
-                  <div>
-                    <h4 className="text-base font-bold text-cyan-300 flex items-center space-x-2">
-                      <Volume2 className="w-4 h-4" />
-                      <span>Every sound, with an example</span>
-                    </h4>
-                    <p className="text-sm text-zinc-400 pt-0.5">
-                      Hear one before you pick it. &ldquo;Use in Song&rdquo; drops it on the canvas.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Genre Category Pills */}
-                <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-thin">
-                  {genreCategories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedGenreCategory(cat)}
-                      className={`px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition-all ${
-                        selectedGenreCategory === cat 
-                          ? 'bg-emerald-500 text-onAccent font-extrabold shadow-md' 
-                          : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Genre Cards Grid */}
-                <div className="grid sm:grid-cols-2 gap-3.5 max-h-[420px] overflow-y-auto pr-1">
-                  {filteredGenreSamples.map((genre, i) => {
-                    const isPlaying = playingGenreSample === genre.name;
-                    return (
-                      <div key={i} className="bg-zinc-950 border border-zinc-800/80 p-4 rounded-2xl space-y-3 hover:border-emerald-500/40 transition-all flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <span className="text-xs uppercase text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                                {genre.category}
-                              </span>
-                              <h5 className="font-bold text-sm text-white pt-1">{genre.name}</h5>
-                              <p className="text-sm text-zinc-400">{genre.subgenre} • <span className="text-cyan-400">{genre.bpm} ({genre.key})</span></p>
-                            </div>
-
-                            <button
-                              onClick={() => setPlayingGenreSample(isPlaying ? null : genre.name)}
-                              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-                                isPlaying ? 'bg-emerald-500 text-onAccent shadow-lg shadow-emerald-500/30 animate-pulse' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                              }`}
-                            >
-                              {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current translate-x-0.5" />}
-                            </button>
-                          </div>
-
-                          <p className="text-xs text-zinc-400 leading-relaxed pt-2">{genre.description}</p>
-                        </div>
-
-                        {isPlaying && (
-                          <div className="pt-2 border-t border-zinc-800">
-                            <audio src={genre.audioUrl} autoPlay controls className="w-full h-8" />
-                          </div>
-                        )}
-
-                        <div className="bg-black/60 p-2.5 rounded-xl border border-zinc-800 flex items-center justify-between gap-2">
-                          <span className="text-[13px] text-zinc-400 truncate">{genre.promptSnippet}</span>
-                          <button
-                            onClick={() => {
-                              setCanvas({ ...canvas, style: genre.promptSnippet });
-                              setStudioTab('make');
-                            }}
-                            className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-sm font-bold rounded-lg border border-emerald-500/30 flex items-center space-x-1 flex-shrink-0 transition-colors"
-                          >
-                            <Copy className="w-3 h-3" />
-                            <span>Use in Song</span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* TAB 2: CUSTOM VOICE STUDIO (USE YOUR OWN VOICE OR CLONE) */}
             {studioTab === 'voice_studio' && (
@@ -1951,22 +1871,20 @@ export default function FutureBoxHome() {
               />
             )}
 
-            {/* SONGWRITER: WHERE THE SONG IS ACTUALLY WRITTEN */}
-            {studioTab === 'write' && (
-              <Songwriter
-                userPlan={userPlan}
-                onUpgrade={() => setPricingModalOpen(true)}
-                onSendToMake={({ title: t, lyrics, style }) => {
-                  setHandoff({ title: t, lyrics, style });
-                  setCanvas({ title: t, lyrics, style });
+            {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
+
+            {/* STUDIO: your own song, in its own sections, over its own audio */}
+            {studioTab === 'studio' && (
+              <SongSections
+                reloadKey={trackCount}
+                onRemake={(next) => {
+                  setHandoff(next);
+                  setCanvas(next);
                   setStudioTab('make');
+                  setMakeSignal((n) => n + 1);
                 }}
               />
             )}
-
-            {/* STUDIO: THE TIMELINE — point at a bar, say what should change */}
-            {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
-            {studioTab === 'studio' && <StudioTimeline />}
 
             {/* TAB 5: COLLAB RADAR (PODCASTS, TIKTOK LIVE, FLAVOUR MATCHING, VIRAL POSTS) */}
             {studioTab === 'collab' && (
@@ -1980,72 +1898,6 @@ export default function FutureBoxHome() {
             {/* TAB 6: THE ARENA (SKILL-JUDGED COMPETITIONS WITH A FREE ENTRY ROUTE) */}
             {studioTab === 'arena' && <Arena userPlan={userPlan} />}
 
-            {/* TAB 4: HOOKS & REELS FEED (INSPIRED BY SUNO HOOKS & YOUTUBE SHORTS) */}
-            {studioTab === 'hooks_feed' && (
-              <div className="space-y-4">
-                <div className="pt-4 border-t border-zinc-800">
-                  <h4 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Smartphone className="w-4 h-4 text-cyan-400" />
-                    <span>What other people are posting</span>
-                  </h4>
-                  <p className="text-sm text-zinc-400 pt-0.5">
-                    Short clips from other creators, for when you want to see what is working.
-                  </p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  {[
-                    {
-                      title: 'BRICKZ — FORGET YESTERDAY',
-                      creator: 'JL Records',
-                      handle: '@brickz',
-                      likes: '978',
-                      comments: '75',
-                      hookSnippet: 'Forget yesterday, the neural dawn is here...',
-                      thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
-                      embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g'
-                    },
-                    {
-                      title: 'Cherry Blossom Mail (Remix)',
-                      creator: 'Anre Fourie',
-                      handle: '@anrefourie',
-                      likes: '1.4K',
-                      comments: '112',
-                      hookSnippet: 'Sending letters through the digital ether...',
-                      thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
-                      embedUrl: 'https://www.youtube.com/embed/bk-nQ7HF6k4'
-                    }
-                  ].map((hook, i) => (
-                    <div key={i} className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden space-y-3 p-4">
-                      <div className="aspect-video relative rounded-xl overflow-hidden group cursor-pointer"
-                        onClick={() => setSelectedMedia({
-                          title: hook.title,
-                          embedUrl: hook.embedUrl,
-                          externalUrl: 'https://suno.com',
-                          type: 'youtube'
-                        })}
-                      >
-                        <img src={hook.thumbnail} alt={hook.title} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                          <Play className="w-10 h-10 text-emerald-400 fill-current" />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs">
-                        <div>
-                          <h5 className="font-bold text-white">{hook.title}</h5>
-                          <p className="text-[13px] text-emerald-400">{hook.handle}</p>
-                        </div>
-                        <div className="flex items-center space-x-3 text-zinc-400">
-                          <span className="flex items-center space-x-1"><Heart className="w-3.5 h-3.5 text-rose-500" /> <span>{hook.likes}</span></span>
-                          <span className="flex items-center space-x-1"><Repeat className="w-3.5 h-3.5 text-cyan-400" /> <span>Remix</span></span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
               </div>
 
@@ -2070,7 +1922,7 @@ export default function FutureBoxHome() {
                       setMakeSignal((n) => n + 1);
                     }
                     if (action.kind === 'go') {
-                      const allowed = ['make', 'video', 'write', 'hooks_feed', 'studio', 'arena', 'collab'];
+                      const allowed = ['make', 'video', 'podcast', 'hooks_feed', 'studio', 'arena', 'collab'];
                       const tab = action.value === 'hooks' ? 'hooks_feed' : action.value;
                       // The model names a screen; only a real one is honoured.
                       if (allowed.indexOf(tab) !== -1) setStudioTab(tab as typeof studioTab);
