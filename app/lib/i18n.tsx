@@ -249,6 +249,7 @@ export const STRINGS: Dict = {
   "make.credit": { en: "Which AI made it \u2014 shown with the song", af: "Watter AI dit gemaak het \u2014 wys saam met die snit" },
 
   "counters.title": { en: "What has actually happened here", af: "Wat hier regtig gebeur het" },
+  "counters.live": { en: "On FutureBox so far", af: "Op FutureBox tot dusver" },
   "counters.since": { en: "Since", af: "Sedert" },
   "counters.breakdown": { en: "By category", af: "Per kategorie" },
   "counters.visitors": { en: "People here", af: "Mense hier" },

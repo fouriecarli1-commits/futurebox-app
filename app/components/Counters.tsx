@@ -21,7 +21,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Users, CreditCard, Music2, Video, GraduationCap, BookOpen, Headphones, type LucideIcon,
+  Users, CreditCard, Music2, Video, GraduationCap, BookOpen, Headphones, Eye, type LucideIcon,
 } from 'lucide-react';
 import type { Board, EventKind } from '../lib/server/stats';
 import { useLang } from '../lib/i18n';
@@ -107,6 +107,33 @@ function Rolling({ value }: { value: number }): React.ReactElement {
   return <span className="tabular-nums">{grouped(shown)}</span>;
 }
 
+/**
+ * How many people opened this one thing.
+ *
+ * A bare number on a card reads as a price, a duration, or nothing at all —
+ * the eye is what makes it a view count without a word of explanation. Hidden
+ * at zero: a card announcing that nobody has opened it is worse than a card
+ * that says nothing, and it is not information anybody acts on.
+ */
+export function Views({
+  board,
+  kind,
+  reference,
+}: {
+  board: Board | null;
+  kind: EventKind;
+  reference: string;
+}): React.ReactElement | null {
+  const row = board?.byRef.find((entry) => entry.kind === kind && entry.ref === reference);
+  if (!row || row.count < 1) return null;
+  return (
+    <span className="inline-flex items-center gap-1 text-zinc-400" title={`${grouped(row.count)} opened this`}>
+      <Eye className="w-3.5 h-3.5" />
+      <span className="tabular-nums">{grouped(row.count)}</span>
+    </span>
+  );
+}
+
 interface Tile {
   readonly key: string;
   readonly icon: LucideIcon;
@@ -116,64 +143,65 @@ interface Tile {
   readonly note: string;
 }
 
-function tilesFor(scope: Scope, board: Board, t: (key: string, fallback?: string) => string): Tile[] {
-  const totals = board.totals;
-  const visitors: Tile = {
-    key: 'visitors',
-    icon: Users,
-    label: t('counters.visitors', 'People here'),
-    value: totals.visitors,
-    note: t('counters.visitors.note', 'Counted once a day each'),
-  };
-  const payers: Tile = {
-    key: 'payers',
-    icon: CreditCard,
-    label: t('counters.payers', 'Paying'),
-    value: totals.payers,
-    note: t('counters.payers.note', 'A song bought, or on a plan'),
-  };
-  const songs: Tile = {
-    key: 'songs',
-    icon: Music2,
-    label: t('counters.songs', 'Songs made'),
-    value: totals.songs,
-    note: t('counters.songs.note', 'Finished, not attempted'),
-  };
-  const videos: Tile = {
-    key: 'videos',
-    icon: Video,
-    label: t('counters.videos', 'Videos made'),
-    value: totals.videos,
-    note: t('counters.videos.note', 'Rendered and saved'),
-  };
-  const classes: Tile = {
-    key: 'masterclasses',
-    icon: GraduationCap,
-    label: t('counters.classes', 'Masterclasses opened'),
-    value: totals.masterclasses,
-    note: t('counters.classes.note', 'Once per person per class, per day'),
-  };
-  const articles: Tile = {
-    key: 'articles',
-    icon: BookOpen,
-    label: t('counters.articles', 'Articles read'),
-    value: totals.articles,
-    note: t('counters.articles.note', 'Opened from the feed'),
-  };
-  const podcasts: Tile = {
-    key: 'podcasts',
-    icon: Headphones,
-    label: t('counters.podcasts', 'Episodes opened'),
-    value: totals.podcasts,
-    note: t('counters.podcasts.note', 'Played or opened elsewhere'),
-  };
+type TileKey = 'visitors' | 'payers' | 'songs' | 'videos' | 'masterclasses' | 'articles' | 'podcasts';
 
-  if (scope === 'masterclasses') return [classes, visitors];
-  if (scope === 'futurebox') return [podcasts, visitors];
-  if (scope === 'creations') return [songs, videos, payers];
-  if (scope === 'radar') return [articles, visitors];
-  return [visitors, payers, songs, videos, classes, articles];
+function allTiles(board: Board, t: (key: string, fallback?: string) => string): Record<TileKey, Tile> {
+  const totals = board.totals;
+  return {
+    visitors: {
+      key: 'visitors', icon: Users, value: totals.visitors,
+      label: t('counters.visitors', 'People here'),
+      note: t('counters.visitors.note', 'Counted once a day each'),
+    },
+    payers: {
+      key: 'payers', icon: CreditCard, value: totals.payers,
+      label: t('counters.payers', 'Paying'),
+      note: t('counters.payers.note', 'A song bought, or on a plan'),
+    },
+    songs: {
+      key: 'songs', icon: Music2, value: totals.songs,
+      label: t('counters.songs', 'Songs made'),
+      note: t('counters.songs.note', 'Finished, not attempted'),
+    },
+    videos: {
+      key: 'videos', icon: Video, value: totals.videos,
+      label: t('counters.videos', 'Videos made'),
+      note: t('counters.videos.note', 'Rendered and saved'),
+    },
+    masterclasses: {
+      key: 'masterclasses', icon: GraduationCap, value: totals.masterclasses,
+      label: t('counters.classes', 'Masterclasses opened'),
+      note: t('counters.classes.note', 'Once per person per class, per day'),
+    },
+    articles: {
+      key: 'articles', icon: BookOpen, value: totals.articles,
+      label: t('counters.articles', 'Articles read'),
+      note: t('counters.articles.note', 'Opened from the feed'),
+    },
+    podcasts: {
+      key: 'podcasts', icon: Headphones, value: totals.podcasts,
+      label: t('counters.podcasts', 'Episodes opened'),
+      note: t('counters.podcasts.note', 'Played or opened elsewhere'),
+    },
+  };
 }
+
+/** Which counters belong on which page, and in what order. */
+const ON_PAGE: Record<Scope, TileKey[]> = {
+  all: ['visitors', 'payers', 'songs', 'videos', 'masterclasses', 'articles'],
+  masterclasses: ['masterclasses', 'visitors'],
+  futurebox: ['podcasts', 'visitors'],
+  creations: ['songs', 'videos', 'payers'],
+  radar: ['articles', 'visitors'],
+};
+
+/**
+ * The three that answer "is anybody actually here".
+ *
+ * They lead the Spotlight board at a size you cannot miss, because that page's
+ * job is to show the place is alive. The rest are true and quieter.
+ */
+const LEADING: TileKey[] = ['visitors', 'songs', 'videos'];
 
 /** Which event kind a page's breakdown is about. */
 const BREAKDOWN: Partial<Record<Scope, EventKind>> = {
@@ -194,7 +222,11 @@ export function Counters({
 }): React.ReactElement | null {
   const { t, lang } = useLang();
 
-  const tiles = useMemo(() => (board ? tilesFor(scope, board, t) : []), [board, scope, t]);
+  const tiles = useMemo(() => {
+    if (!board) return [];
+    const made = allTiles(board, t);
+    return ON_PAGE[scope].map((key) => made[key]);
+  }, [board, scope, t]);
 
   const breakdown = useMemo(() => {
     if (!board) return [];
@@ -213,6 +245,68 @@ export function Counters({
         year: 'numeric',
       })
     : null;
+
+  // Spotlight leads with three numbers at a size nobody scrolls past. That page
+  // has one job — show the place is being used — and a row of small tiles reads
+  // as an admin panel rather than as a room with people in it.
+  if (scope === 'all') {
+    const made = allTiles(board, t);
+    const lead = LEADING.map((key) => made[key]);
+    const rest = ON_PAGE.all.filter((key) => LEADING.indexOf(key) === -1).map((key) => made[key]);
+
+    return (
+      <section className="relative overflow-hidden rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/10 via-zinc-900/70 to-zinc-950 p-6 md:p-10 space-y-8 shadow-2xl">
+        {/* A soft light behind the numbers, so the panel reads as the top of
+            the page rather than as another card in the stack. */}
+        <div className="pointer-events-none absolute -top-24 -right-16 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl" />
+
+        <div className="relative flex items-baseline justify-between gap-3 flex-wrap">
+          <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-emerald-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            {t('counters.live', 'On FutureBox so far')}
+          </span>
+          {since && (
+            <span className="text-sm text-zinc-500">
+              {t('counters.since', 'Since')} {since}
+            </span>
+          )}
+        </div>
+
+        <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8">
+          {lead.map((tile) => {
+            const Icon = tile.icon;
+            return (
+              <div key={tile.key} className="space-y-1">
+                <Icon className="w-5 h-5 text-emerald-400" />
+                <span className="block text-5xl md:text-6xl font-black text-white leading-none tracking-tight">
+                  <Rolling value={tile.value} />
+                </span>
+                <span className="block text-base font-bold text-zinc-200 pt-1">{tile.label}</span>
+                <span className="block text-sm text-zinc-500 leading-snug">{tile.note}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="relative grid grid-cols-3 gap-4 pt-5 border-t border-white/10">
+          {rest.map((tile) => {
+            const Icon = tile.icon;
+            return (
+              <div key={tile.key} className="flex items-center gap-2.5 min-w-0">
+                <Icon className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+                <span className="min-w-0">
+                  <span className="block text-xl font-extrabold text-white leading-none">
+                    <Rolling value={tile.value} />
+                  </span>
+                  <span className="block text-sm text-zinc-400 leading-snug truncate">{tile.label}</span>
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-5 md:p-6 space-y-4">

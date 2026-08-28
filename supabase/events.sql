@@ -98,6 +98,19 @@ as $$
         ) p
       )
     ),
+    -- Per item, so a card can show how many people opened that one thing.
+    -- Capped: a runaway list would be sent to every visitor on every load, and
+    -- nothing on a page can show more of these than fits on it anyway.
+    'byRef', (
+      select coalesce(json_agg(row_to_json(r)), '[]'::json) from (
+        select kind, ref, count(*)::bigint as count
+        from public.events
+        where ref is not null
+        group by kind, ref
+        order by count(*) desc
+        limit 500
+      ) r
+    ),
     -- The same events split by category, for the page each category lives on.
     'byCategory', (
       select coalesce(json_agg(row_to_json(c)), '[]'::json) from (
