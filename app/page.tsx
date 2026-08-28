@@ -38,7 +38,7 @@ import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './l
 import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
 import * as cloud from './lib/cloud';
 import { TIER_SPECS, ONE_OFF, tierPrice, oneOffPrice } from './lib/plans';
-import { startCheckout } from './lib/purchases';
+import { startCheckout, loadOwned } from './lib/purchases';
 
 interface Blueprint {
   tag: string;
@@ -79,6 +79,24 @@ export default function FutureBoxHome() {
   const [trackCount, setTrackCount] = useState(0);
   const [engineReady, setEngineReady] = useState(false);
   const [planBusy, setPlanBusy] = useState<string | null>(null);
+
+  /**
+   * The tier comes from the server, not from this page.
+   *
+   * The page keeps its own copy of the caps so it can dim a button before you
+   * press it, but that copy has to agree with what the routes enforce. When it
+   * did not, the page won — it refused before the request was ever sent, so a
+   * server-side allowance like OWNER_EMAIL never got a chance to say yes.
+   */
+  useEffect(() => {
+    let live = true;
+    loadOwned().then((owned) => {
+      if (live) setUserPlan(owned.tier);
+    });
+    return () => {
+      live = false;
+    };
+  }, [user]);
   const [planNote, setPlanNote] = useState<string | null>(null);
 
   // Only the server knows whether a music key is set, so ask once.
