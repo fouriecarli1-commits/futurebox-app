@@ -29,7 +29,10 @@ import VideoPanel from './VideoPanel';
 import { STYLE_PRESETS, AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
+import { ONE_OFF } from '../lib/plans';
 import * as cloud from '../lib/cloud';
+import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } from '../lib/purchases';
+import { markBlob } from '../lib/watermark';
 
 const LENGTHS = [
   { bars: 16, label: 'Short' },
@@ -92,6 +95,12 @@ export default function MakeMusic({
   // Making a video is the same job here as on its own tab, so it is the same
   // component. This screen only decides which track it is pointed at.
   const [videoFor, setVideoFor] = useState<Track | null>(null);
+  /** What has been paid for. Refreshed after a payment returns. */
+  const [owned, setOwned] = useState<Owned>(NOTHING);
+  const [buying, setBuying] = useState<string | null>(null);
+  useEffect(() => {
+    loadOwned().then(setOwned);
+  }, []);
 
   /** What the music engine is told. Free text from the copilot wins over the
    *  preset chips, because it is the more specific thing the person asked for. */
@@ -253,16 +262,39 @@ export default function MakeMusic({
       setStatus(t('make.missing'));
       return;
     }
+    // A track nobody has bought plays with the mark on it. The clean file is
+    // what the download gate hands over, and only once it is paid for.
+    const playable = levelOf(owned, track.id) === 'owned' ? blob : await markBlob(blob);
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-    urlRef.current = URL.createObjectURL(blob);
+    urlRef.current = URL.createObjectURL(playable);
     element.src = urlRef.current;
     await element.play();
     setPlaying(track.id);
   };
 
   const save = async (track: Track) => {
-    const blob = await readAudio(track.id);
-    if (blob) downloadBlob(blob, safeFilename(track.title, 'wav'));
+    const answer = await downloadLink(track.id);
+    if ('url' in answer) {
+      // A signed URL from the private bucket — the clean file, never the marked
+      // one, because reaching this line means it has been paid for.
+      window.location.href = answer.url;
+      return;
+    }
+    if (!answer.message) {
+      // No accounts configured, so there is nothing to check and nothing
+      // stored: the device's own copy is the download, as it always was.
+      const blob = await readAudio(track.id);
+      if (blob) downloadBlob(blob, safeFilename(track.title, 'wav'));
+      return;
+    }
+    setStatus(answer.message);
+  };
+
+  const buy = async (track: Track, kind: 'open' | 'keep') => {
+    setBuying(track.id);
+    const problem = await startCheckout({ kind, trackId: track.id });
+    setBuying(null);
+    if (problem) setStatus(problem);
   };
 
   const share = async (track: Track) => {
@@ -518,9 +550,36 @@ export default function MakeMusic({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
+                  {/* The ladder, one rung at a time. Somebody who has bought
+                      nothing is offered the smaller step; somebody who opened
+                      it is offered the one that makes it theirs; somebody who
+                      owns it just gets the file. */}
+                  {levelOf(owned, track.id) === 'none' && (
+                    <button
+                      type="button"
+                      disabled={buying === track.id}
+                      onClick={() => buy(track, 'open')}
+                      className="px-3 py-1.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent flex items-center gap-1.5 disabled:opacity-60"
+                    >
+                      {buying === track.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                      {t('buy.open')} R{ONE_OFF.open.rand}
+                    </button>
+                  )}
+                  {levelOf(owned, track.id) === 'opened' && (
+                    <button
+                      type="button"
+                      disabled={buying === track.id}
+                      onClick={() => buy(track, 'keep')}
+                      className="px-3 py-1.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-400 to-amber-500 text-onAccent flex items-center gap-1.5 disabled:opacity-60"
+                    >
+                      {buying === track.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                      {t('buy.keep')} +R{ONE_OFF.keep.rand}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => save(track)}
+                    title={levelOf(owned, track.id) === 'owned' ? undefined : t('buy.needsOwning')}
                     className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                   >
                     <Download className="w-3.5 h-3.5" />
