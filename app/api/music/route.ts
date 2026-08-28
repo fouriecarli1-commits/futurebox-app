@@ -105,20 +105,31 @@ function buildRequest(body: Body): Record<string, unknown> {
     .map((section) => ({ ...section, lines: toLines(section.lines ?? []) }))
     .filter((section) => section.lines.length > 0);
 
-  if (sections.length > 0 && !body.instrumental) {
+  if (sections.length > 0) {
+    // A backing track to sing over is still a structured song: same sections,
+    // same lengths, no voice. Dropping to the plain-prompt path would have lost
+    // the section timing, and that timing is what lets the words follow the
+    // music on the way back.
+    const wordless = Boolean(body.instrumental);
+    const leading = wordless ? ['instrumental', 'no vocals'].concat(styles) : styles;
+    const against = wordless
+      ? ['vocals', 'singing', 'spoken word', 'muddy mix', 'distorted']
+      : ['muddy mix', 'distorted', 'off-key vocal'];
+
     return {
       model_id: MODEL_ID,
       composition_plan: {
         chunks: sections.map((section, index) => ({
           // The section name in square brackets is how v2 is told what this
-          // part of the song is; the lines follow it, one per line.
-          text: `[${section.name}]\n${section.lines.join('\n')}`,
+          // part of the song is; the lines follow it, one per line — unless
+          // nobody is singing them, in which case the name is the whole text.
+          text: wordless ? `[${section.name}]` : `[${section.name}]\n${section.lines.join('\n')}`,
           duration_ms: clamp((section.seconds || 20) * 1000, SECTION_MIN_MS, SECTION_MAX_MS),
           // The first chunk's styles set the whole song, so it carries the full
           // list and later chunks carry a shorter one. That is the SDK's own
           // advice, and it is why these are not simply the same array copied.
-          positive_styles: index === 0 ? withDefaults(styles) : styles.slice(0, 6),
-          negative_styles: index === 0 ? ['muddy mix', 'distorted', 'off-key vocal'] : [],
+          positive_styles: index === 0 ? withDefaults(leading) : leading.slice(0, 6),
+          negative_styles: index === 0 ? against : [],
         })),
       },
     };

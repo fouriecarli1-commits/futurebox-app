@@ -285,6 +285,33 @@ export const STRINGS: Dict = {
   "style.listen": { en: "Hear what a style sounds like", af: "Hoor hoe \u2019n styl klink" },
   "style.sketch": { en: "A sketch of the groove, made here in your browser \u2014 not a generated song.", af: "\u2019n Skets van die groove, hier in jou blaaier gemaak \u2014 nie \u2019n gegenereerde snit nie." },
   "style.use": { en: "Use this style", af: "Gebruik hierdie styl" },
+
+  "make.singSelf": { en: "I will sing it myself", af: "Ek sing dit self" },
+  "make.singSelfNote": { en: "Makes the backing only — same sections, same lengths, no voice. Record yours over it afterwards.", af: "Maak net die begeleiding \u2014 dieselfde afdelings, dieselfde lengtes, geen stem nie. Neem joune daarna daaroor op." },
+  "make.singOver": { en: "Sing over it", af: "Sing daaroor" },
+
+  "make.withYourVoice": { en: "with your voice", af: "met jou stem" },
+  "take.kept": { en: "Your take is in your channel.", af: "Jou opname is in jou kanaal." },
+  "take.title": { en: "Sing it yourself", af: "Sing dit self" },
+  "take.note": { en: "The backing plays, you sing over it, and the two are mixed. Headphones, or the microphone will pick the music up as well.", af: "Die begeleiding speel, jy sing daaroor, en die twee word gemeng. Gebruik oorfone, anders vang die mikrofoon die musiek ook op." },
+  "take.start": { en: "Record a take", af: "Neem \u2019n opname" },
+  "take.loading": { en: "Reading the backing\u2026", af: "Lees die begeleiding\u2026" },
+  "take.stop": { en: "Stop", af: "Stop" },
+  "take.again": { en: "Again", af: "Weer" },
+  "take.listen": { en: "Listen to both", af: "Luister na albei" },
+  "take.stopPreview": { en: "Stop", af: "Stop" },
+  "take.keep": { en: "Keep this take", af: "Hou hierdie opname" },
+  "take.nudge": { en: "Nudge the voice", af: "Skuif die stem" },
+  "take.nudgeNote": { en: "Left pulls the voice earlier. Measured from the recording, then set by ear.", af: "Links trek die stem vroe\u00ebr. Uit die opname gemeet, dan met die oor reggestel." },
+  "take.musicLevel": { en: "Backing", af: "Begeleiding" },
+  "take.voiceLevel": { en: "Your voice", af: "Jou stem" },
+  "take.denied": { en: "The microphone was not allowed. Turn it on for this site and try again.", af: "Die mikrofoon is nie toegelaat nie. Skakel dit vir hierdie werf aan en probeer weer." },
+  "take.noMic": { en: "No microphone could be opened.", af: "Geen mikrofoon kon oopgemaak word nie." },
+  "take.unreadable": { en: "That recording could not be read back.", af: "Daardie opname kon nie teruggelees word nie." },
+  "take.mixFailed": { en: "The mix could not be made.", af: "Die mengsel kon nie gemaak word nie." },
+  "take.credit": { en: "The voice on this is yours \u2014 recorded, not generated. It is credited that way.", af: "Die stem hierop is joune \u2014 opgeneem, nie gegenereer nie. Dit staan so op die snit." },
+
+  "play.followNote": { en: "Sections are timed from the plan the song was made with. Inside a section the lines are spread evenly, so one can sit a second or two out. Click a line to jump there.", af: "Afdelings word getel uit die plan waarmee die snit gemaak is. Binne 'n afdeling is die re\u00eels eweredig versprei, so een kan 'n sekonde of twee uit wees. Klik 'n re\u00eel om soontoe te spring." },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';

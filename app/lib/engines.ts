@@ -51,6 +51,13 @@ export interface AudioRequest {
   readonly bpm: number;
   readonly key: string;
   readonly seconds: number;
+  /**
+   * Ask for a backing track with no voice on it.
+   *
+   * The sections still go, so the song keeps its shape and its timing — this
+   * is a song with the singing left out, not a loop.
+   */
+  readonly instrumental?: boolean;
   /** Told what is happening, as it happens. Optional; nothing depends on it. */
   readonly onStage?: (stage: Stage) => void;
 }
@@ -257,7 +264,7 @@ export const engines: Engines = {
         sections,
         prompt: request.title ? `A song called "${request.title}"` : undefined,
         seconds: request.seconds,
-        instrumental: sections.length === 0,
+        instrumental: Boolean(request.instrumental) || sections.length === 0,
         }),
       });
     } catch (error) {
