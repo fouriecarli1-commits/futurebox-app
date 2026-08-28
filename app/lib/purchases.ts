@@ -7,6 +7,7 @@
  */
 
 import { accessToken, configured } from './cloud';
+import type { Plan } from './entitlements';
 
 export type Level = 'none' | 'opened' | 'owned';
 
@@ -14,9 +15,19 @@ export interface Owned {
   readonly levels: Record<string, Level>;
   /** Somebody on a plan owns everything they make, so no per-track buying. */
   readonly onAPlan: boolean;
+  /**
+   * The tier the server believes this person is on.
+   *
+   * The page has its own copy of the caps, which is how it dims a button
+   * before you press it. That copy has to come from the same place the server
+   * reads, or the two disagree — and when they disagree the page wins, because
+   * it refuses before the request is ever sent. That is what happened with
+   * OWNER_EMAIL: the server would have allowed it and the browser never asked.
+   */
+  readonly tier: Plan;
 }
 
-export const NOTHING: Owned = { levels: {}, onAPlan: false };
+export const NOTHING: Owned = { levels: {}, onAPlan: false, tier: 'free' };
 
 /**
  * With no Supabase project there is nobody to charge and nothing to record, so
@@ -25,7 +36,7 @@ export const NOTHING: Owned = { levels: {}, onAPlan: false };
  * watermark in front of someone who has no way to pay, which is the worst of
  * both: a wall with no door in it.
  */
-const EVERYTHING: Owned = { levels: {}, onAPlan: true };
+const EVERYTHING: Owned = { levels: {}, onAPlan: true, tier: 'label' };
 
 export async function loadOwned(): Promise<Owned> {
   if (!configured()) return EVERYTHING;
@@ -35,8 +46,9 @@ export async function loadOwned(): Promise<Owned> {
   try {
     const response = await fetch('/api/purchases', { headers: { Authorization: `Bearer ${token}` } });
     if (!response.ok) return NOTHING;
-    const data = (await response.json()) as { levels?: Record<string, Level>; tier?: string };
-    return { levels: data.levels ?? {}, onAPlan: Boolean(data.tier && data.tier !== 'free') };
+    const data = (await response.json()) as { levels?: Record<string, Level>; tier?: Plan };
+    const tier: Plan = data.tier ?? 'free';
+    return { levels: data.levels ?? {}, onAPlan: tier !== 'free', tier };
   } catch {
     return NOTHING;
   }
