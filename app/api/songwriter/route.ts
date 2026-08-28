@@ -17,6 +17,9 @@ import { z } from 'zod';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/** Same reason as the other model routes: 10 seconds is not enough. */
+export const maxDuration = 60;
+
 const SuggestionsSchema = z.object({
   suggestions: z
     .array(
