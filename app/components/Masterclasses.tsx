@@ -27,6 +27,7 @@ import type { Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
 import { signal } from '../lib/signal';
 import { Views, type Board } from './Counters';
+import Cover from './Cover';
 
 const TRACK_ICONS: Record<Track, typeof Music> = {
   'ai-music': Music,
@@ -53,7 +54,12 @@ function Card({
   const Icon = TRACK_ICONS[item.track];
 
   return (
-    <article className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 flex flex-col gap-3 hover:border-emerald-500/40 transition-all">
+    <article className="rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden flex flex-col hover:border-emerald-500/40 transition-all">
+      {/* A real lecture shows its own thumbnail; everything else gets artwork
+          drawn from its title. Never a stock photo of a stranger at a laptop. */}
+      <Cover seed={item.id} label={item.title} url={item.url} className="aspect-video" />
+
+      <div className="p-4 flex flex-col gap-3 flex-1">
       <div className="flex items-start justify-between gap-3">
         <div className="w-10 h-10 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center flex-shrink-0">
           <Icon className="w-5 h-5 text-emerald-400" />
@@ -108,6 +114,7 @@ function Card({
           Watch it
         </a>
       )}
+      </div>
     </article>
   );
 }

@@ -21,6 +21,7 @@ import {
   RefreshCw, ChevronDown, ChevronRight, Lock, EyeOff,
 } from 'lucide-react';
 import { FEED_ITEMS, CATEGORIES } from '../data/feed';
+import Cover from './Cover';
 import {
   assess, BAR, TIER_LIMITS, type FeedItem, type Verdict,
 } from '../lib/curation';
@@ -172,6 +173,22 @@ export default function QualityRadar({
           return (
             <article key={item.id} className="py-4 group">
               <div className="flex items-start gap-4">
+                {/* Something to look at. A paper has no thumbnail, so it gets
+                    artwork drawn from its own title — the same every time, so
+                    a row you have seen before is recognisable. */}
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:block w-32 flex-shrink-0"
+                >
+                  <Cover
+                    seed={item.id + item.title}
+                    label={item.title}
+                    url={item.url}
+                    className="aspect-video rounded-xl border border-zinc-800"
+                  />
+                </a>
                 <div className="min-w-0 flex-1">
                   <a
                     href={item.url}
