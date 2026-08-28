@@ -17,6 +17,7 @@ import {
 } from './data/studio';
 import { profileFromTracks } from './lib/matching';
 import CollabRadar from './components/CollabRadar';
+import CollabFinder from './components/CollabFinder';
 import Arena from './components/Arena';
 import SongSections from './components/SongSections';
 import { guessRegion, REGIONS, regionByCode, type Region } from './lib/pricing';
@@ -1888,11 +1889,17 @@ export default function FutureBoxHome() {
 
             {/* TAB 5: COLLAB RADAR (PODCASTS, TIKTOK LIVE, FLAVOUR MATCHING, VIRAL POSTS) */}
             {studioTab === 'collab' && (
-              <CollabRadar
+              <div className="space-y-6">
+                {/* Real people first: songs their makers chose to show, matched
+                    against yours. The pitch tools below work on real podcasts
+                    and stay as they are. */}
+                <CollabFinder reloadKey={trackCount} />
+                <CollabRadar
                 profile={creatorProfile}
                 userPlan={userPlan}
                 onUpgrade={() => setPricingModalOpen(true)}
-              />
+                />
+              </div>
             )}
 
             {/* TAB 6: THE ARENA (SKILL-JUDGED COMPETITIONS WITH A FREE ENTRY ROUTE) */}
