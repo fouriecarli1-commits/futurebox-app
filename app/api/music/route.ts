@@ -37,7 +37,13 @@ export const maxDuration = 300;
 
 const ENDPOINT = 'https://api.elevenlabs.io/v1/music';
 const OUTPUT_FORMAT = 'mp3_44100_128';
-const MODEL_ID = 'music_v1';
+/**
+ * music_v1 is marked deprecated in ElevenLabs' own SDK. v2 is current, and it
+ * takes a different plan: a flat list of chunks, each with its own text, length
+ * and styles, rather than v1's sections under a global style. The field names
+ * below come from the SDK's serialisers, not from memory.
+ */
+const MODEL_ID = 'music_v2';
 
 /** ElevenLabs' own bounds. Sending outside them is a 422, so clamp first. */
 const MIN_MS = 3_000;
@@ -103,16 +109,16 @@ function buildRequest(body: Body): Record<string, unknown> {
     return {
       model_id: MODEL_ID,
       composition_plan: {
-        positive_global_styles: styles.length ? styles : ['modern production', 'clear vocal'],
-        // Named rather than left empty: these are the failure modes of generated
-        // music, and saying so up front is cheaper than regenerating.
-        negative_global_styles: ['muddy mix', 'distorted', 'off-key vocal'],
-        sections: sections.map((section) => ({
-          section_name: section.name.slice(0, 100),
-          positive_local_styles: styles.slice(0, 6),
-          negative_local_styles: [],
+        chunks: sections.map((section, index) => ({
+          // The section name in square brackets is how v2 is told what this
+          // part of the song is; the lines follow it, one per line.
+          text: `[${section.name}]\n${section.lines.join('\n')}`,
           duration_ms: clamp((section.seconds || 20) * 1000, SECTION_MIN_MS, SECTION_MAX_MS),
-          lines: section.lines,
+          // The first chunk's styles set the whole song, so it carries the full
+          // list and later chunks carry a shorter one. That is the SDK's own
+          // advice, and it is why these are not simply the same array copied.
+          positive_styles: index === 0 ? withDefaults(styles) : styles.slice(0, 6),
+          negative_styles: index === 0 ? ['muddy mix', 'distorted', 'off-key vocal'] : [],
         })),
       },
     };
@@ -125,6 +131,30 @@ function buildRequest(body: Body): Record<string, unknown> {
     music_length_ms: clamp((body.seconds || 60) * 1000, MIN_MS, MAX_MS),
     force_instrumental: Boolean(body.instrumental),
   };
+}
+
+/**
+ * The first chunk wants six or seven styles before the direction is settled,
+ * so a request carrying two gets padded rather than under-specified.
+ */
+function withDefaults(styles: string[]): string[] {
+  const base = styles.length ? styles.slice() : ['modern production', 'clear vocal'];
+  // Enough of these to reach seven from a two-word style. Deliberately generic:
+  // they describe how it should be made, not what it should sound like, so they
+  // never argue with whatever the person actually asked for.
+  const padding = [
+    'great production quality',
+    'balanced mix',
+    'clear vocal',
+    'warm analogue character',
+    'tight low end',
+    'natural stereo width',
+    'dynamic performance',
+  ];
+  padding.forEach((extra) => {
+    if (base.length < 7 && base.indexOf(extra) === -1) base.push(extra);
+  });
+  return base;
 }
 
 export async function POST(request: Request): Promise<Response> {

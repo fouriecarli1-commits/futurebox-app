@@ -240,8 +240,14 @@ export default function MakeMusic({
           }
         });
         onMade(track);
-      } catch {
-        setStatus(t('make.failed'));
+      } catch (error) {
+        // The reason travels all the way here and used to be dropped on the
+        // floor: `catch {}` without binding it, then a generic line. The music
+        // route answers with something specific — out of credits, key rejected,
+        // request too long — and that is the only thing that tells anyone what
+        // to do next.
+        const reason = error instanceof Error ? error.message.trim() : '';
+        setStatus(reason || t('make.failed'));
       } finally {
         setBusy(false);
       }
