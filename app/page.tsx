@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  Play, Sparkles, Radio, TrendingUp, ShieldCheck, 
+  Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, 
   Tv, Cpu, ArrowUpRight, Compass, CheckCircle2, X,
   UploadCloud, FileVideo, Music, Headphones, Lightbulb, Code2, 
   Link as LinkIcon, AlertCircle, Layers, DollarSign, Clock, 
@@ -18,6 +18,7 @@ import {
 import { profileFromTracks } from './lib/matching';
 import CollabRadar from './components/CollabRadar';
 import CollabFinder from './components/CollabFinder';
+import Channel from './components/Channel';
 import Arena from './components/Arena';
 import SongSections from './components/SongSections';
 import { guessRegion, REGIONS, regionByCode, type Region } from './lib/pricing';
@@ -1742,6 +1743,7 @@ export default function FutureBoxHome() {
                   { id: 'video', label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
                   { id: 'studio', label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
                   { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
+                  { id: 'channels', label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
                   { id: 'podcast', label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
                   { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
                   { id: 'collab', label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
@@ -1872,6 +1874,7 @@ export default function FutureBoxHome() {
               />
             )}
 
+            {studioTab === 'channels' && <Channel reloadKey={trackCount} />}
             {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
 
             {/* STUDIO: your own song, in its own sections, over its own audio */}
