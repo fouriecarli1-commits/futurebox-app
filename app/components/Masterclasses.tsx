@@ -26,6 +26,7 @@ import {
 import type { Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
 import { signal } from '../lib/signal';
+import { Views, type Board } from './Counters';
 
 const TRACK_ICONS: Record<Track, typeof Music> = {
   'ai-music': Music,
@@ -42,7 +43,11 @@ const PROVENANCE_STYLE: Record<Provenance, string> = {
   ai_video: 'text-amber-300',
 };
 
-function Card({ item, userPlan, onUpgrade }: { item: Masterclass; userPlan: Plan; onUpgrade: () => void }) {
+function Card({
+  item, userPlan, onUpgrade, board,
+}: {
+  item: Masterclass; userPlan: Plan; onUpgrade: () => void; board: Board | null;
+}) {
   const locked = item.proOnly && userPlan === 'free';
   const unavailable = !item.url;
   const Icon = TRACK_ICONS[item.track];
@@ -53,8 +58,11 @@ function Card({ item, userPlan, onUpgrade }: { item: Masterclass; userPlan: Plan
         <div className="w-10 h-10 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center flex-shrink-0">
           <Icon className="w-5 h-5 text-emerald-400" />
         </div>
-        <span className={`text-sm font-semibold ${PROVENANCE_STYLE[item.provenance]}`}>
-          {item.provenance === 'ai_video' ? 'AI-made' : item.provenance === 'curated' ? 'Picked for you' : 'Ours'}
+        <span className="flex items-center gap-2.5 text-sm">
+          <Views board={board} kind="masterclass" reference={item.id} />
+          <span className={`font-semibold ${PROVENANCE_STYLE[item.provenance]}`}>
+            {item.provenance === 'ai_video' ? 'AI-made' : item.provenance === 'curated' ? 'Picked for you' : 'Ours'}
+          </span>
         </span>
       </div>
 
@@ -107,9 +115,12 @@ function Card({ item, userPlan, onUpgrade }: { item: Masterclass; userPlan: Plan
 export default function Masterclasses({
   userPlan,
   onUpgrade,
+  board = null,
 }: {
   userPlan: Plan;
   onUpgrade: () => void;
+  /** The counters, so each class can say how many people opened it. */
+  board?: Board | null;
 }) {
   const [track, setTrack] = useState<Track | null>(null);
   const { t } = useLang();
@@ -201,7 +212,7 @@ export default function Masterclasses({
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
         {shown.map((m) => (
-          <Card key={m.id} item={m} userPlan={userPlan} onUpgrade={onUpgrade} />
+          <Card key={m.id} item={m} userPlan={userPlan} onUpgrade={onUpgrade} board={board} />
         ))}
       </div>
 

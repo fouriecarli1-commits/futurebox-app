@@ -23,6 +23,17 @@ export interface Track {
   /** Set when this came from remixing another track. */
   readonly remixOf?: string;
   readonly seed: number;
+  /**
+   * The composition plan this song was made from: which words are in which
+   * section, and how long each section was asked to be.
+   *
+   * Kept because it is the only reliable timing information that exists — the
+   * app wrote it, so it knows where the chorus starts without asking anybody.
+   * It is what makes the words follow the music while it plays.
+   */
+  readonly parts?: readonly { name: string; lines: readonly string[]; seconds: number }[];
+  /** What those parts added up to when they were sent, for spotting a preview. */
+  readonly plannedSeconds?: number;
 }
 
 const META_KEY = 'futurebox.tracks.v1';

@@ -31,7 +31,7 @@ import type { Canvas } from './components/MakeMusic';
 import type { Track } from './lib/library';
 import { probeAudio } from './lib/engines';
 import Masterclasses from './components/Masterclasses';
-import { Counters, useBoard } from './components/Counters';
+import { Counters, Views, useBoard } from './components/Counters';
 import { signal } from './lib/signal';
 import { TRACK_LABELS } from './data/masterclasses';
 import type { EventKind } from './lib/server/stats';
@@ -41,7 +41,7 @@ import { useLang } from './lib/i18n';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
 import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
 import * as cloud from './lib/cloud';
-import { TIER_SPECS, ONE_OFF, tierPrice, oneOffPrice } from './lib/plans';
+import { TIER_SPECS, ONE_OFF, SPONSORSHIP, sponsorshipBand, tierPrice, oneOffPrice } from './lib/plans';
 import { startCheckout, loadOwned } from './lib/purchases';
 
 interface Blueprint {
@@ -264,7 +264,19 @@ export default function FutureBoxHome() {
   // Marketing Contact Form
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
-  const [contactBudget, setContactBudget] = useState('$1,000 - $5,000 / month');
+  const [contactBudget, setContactBudget] = useState('');
+  /**
+   * The rate card as this region reads it, and which rung is selected.
+   *
+   * Held as a derived value rather than as the initial state because the region
+   * is worked out after the first render: a default stored at mount would be a
+   * dollar figure that no longer matches any option, and that stale string —
+   * not the one on screen — is what would have been emailed.
+   */
+  const budgetOptions = SPONSORSHIP.map(
+    (rung) => `${rung.name} — ${sponsorshipBand(rung, region)} / month`,
+  );
+  const budget = budgetOptions.indexOf(contactBudget) !== -1 ? contactBudget : budgetOptions[0];
   const [contactMessage, setContactMessage] = useState('');
   const [contactSent, setContactSent] = useState(false);
 
@@ -630,7 +642,7 @@ export default function FutureBoxHome() {
 
   const handleMarketingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const mailtoUrl = `mailto:admin@futurebox.app?subject=Sponsorship & Marketing Inquiry from ${encodeURIComponent(contactName)} (${encodeURIComponent(contactBudget)})&body=${encodeURIComponent(`Name: ${contactName}\nEmail: ${contactEmail}\nBudget: ${contactBudget}\nMessage:\n${contactMessage}`)}`;
+    const mailtoUrl = `mailto:admin@futurebox.app?subject=Sponsorship & Marketing Inquiry from ${encodeURIComponent(contactName)} (${encodeURIComponent(budget)})&body=${encodeURIComponent(`Name: ${contactName}\nEmail: ${contactEmail}\nBudget: ${budget}\nMessage:\n${contactMessage}`)}`;
     window.location.href = mailtoUrl;
     setContactSent(true);
     setTimeout(() => setContactSent(false), 5000);
@@ -1099,7 +1111,10 @@ export default function FutureBoxHome() {
                     </div>
 
                     <div className="p-5 space-y-3">
-                      <p className="text-[11px] font-mono font-bold text-emerald-400">{pod.host}</p>
+                      <p className="text-[11px] font-mono font-bold text-emerald-400 flex items-center justify-between gap-2">
+                        <span>{pod.host}</span>
+                        <Views board={board} kind="podcast" reference={pod.id} />
+                      </p>
                       <h4 className="font-bold text-sm text-white group-hover:text-emerald-400 transition-colors leading-snug">{pod.title}</h4>
                       <p className="text-xs text-zinc-400">Guest: <span className="text-zinc-200 font-semibold">{pod.guest}</span></p>
                     </div>
@@ -1143,7 +1158,7 @@ export default function FutureBoxHome() {
             {activeTab === 'masterclasses' && (
               <Counters board={board} scope="masterclasses" labels={TRACK_LABELS} />
             )}
-            <Masterclasses userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
+            <Masterclasses userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} board={board} />
 
             <div className="flex items-center justify-between pt-2">
               <div>
@@ -2221,11 +2236,22 @@ export default function FutureBoxHome() {
                 <Star className="w-3.5 h-3.5 fill-current" />
                 <span>Sponsorship & Partner Benefits</span>
               </span>
-              <ul className="text-xs text-zinc-300 space-y-1">
-                <li>• Prime feature placement on the daily AI Trends Radar</li>
-                <li>• Dedicated brand sponsorship in FutureBox Masterclasses & Podcasts</li>
-                <li>• Direct exposure to high-intent solo AI founders and creators</li>
+              <ul className="text-xs text-zinc-300 space-y-1.5">
+                {SPONSORSHIP.map((rung) => (
+                  <li key={rung.id}>
+                    <span className="font-bold text-white">{rung.name}</span>
+                    <span className="text-emerald-400"> · {sponsorshipBand(rung, region)}</span>
+                    <span className="block text-zinc-400 leading-snug">{rung.gets}</span>
+                  </li>
+                ))}
               </ul>
+              {/* Said plainly, because it is the reason to sponsor this rather
+                  than buy impressions somewhere with more of them. */}
+              <p className="text-xs text-zinc-500 leading-relaxed pt-1">
+                No banners, no pop-ups, nothing down the sides — there is nothing of that
+                kind to buy here. What a sponsor gets is their name on something worth
+                putting it on, and the counters on this page as the report.
+              </p>
             </div>
           </div>
 
@@ -2258,13 +2284,17 @@ export default function FutureBoxHome() {
 
               <div>
                 <select
-                  value={contactBudget}
+                  value={budget}
                   onChange={(e) => setContactBudget(e.target.value)}
                   className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
                 >
-                  <option value="$500 - $2,500 / month">Marketing Budget: $500 - $2,500 / month</option>
-                  <option value="$2,500 - $10,000 / month">Marketing Budget: $2,500 - $10,000 / month</option>
-                  <option value="$10,000+ / Headline Sponsor">Marketing Budget: $10,000+ (Headline Sponsor)</option>
+                  {/* Priced in rand, because the audience is. The floor is
+                      deliberately high: it is the filter. */}
+                  {SPONSORSHIP.map((rung) => (
+                    <option key={rung.id} value={`${rung.name} — ${sponsorshipBand(rung, region)} / month`}>
+                      {rung.name} — {sponsorshipBand(rung, region)} / month
+                    </option>
+                  ))}
                 </select>
               </div>
 

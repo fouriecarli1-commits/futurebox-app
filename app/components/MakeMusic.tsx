@@ -16,7 +16,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Music, Play, Pause, Download, Share2, Repeat, Trash2, Sparkles, Wand2, Loader2,
-  Video as VideoIcon, X,
+  Video as VideoIcon, X, Mic,
 } from 'lucide-react';
 import { renderSketch, encodeWav, familyFor, sketchDurationSeconds } from '../lib/audio';
 import {
@@ -24,9 +24,11 @@ import {
   type Track,
 } from '../lib/library';
 import { durationOf, readAudio } from '../lib/trackaudio';
-import { engines, type Stage } from '../lib/engines';
+import { engines, splitSections, type Stage } from '../lib/engines';
 import { expect as expectWait, remember } from '../lib/timing';
 import VideoPanel from './VideoPanel';
+import NowPlaying from './NowPlaying';
+import VoiceTake from './VoiceTake';
 import StyleFinder from './StyleFinder';
 import { AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
 import { STARTERS, VOICES, LENGTH_CHOICES, POLISH } from '../data/sound';
@@ -80,6 +82,16 @@ export default function MakeMusic({
   const [songKey, setSongKey] = useState('A Minor');
   const [seconds, setSeconds] = useState(60);
   const [voice, setVoice] = useState(VOICES[1]);
+  /**
+   * Ask for a backing track instead of a sung one, so you can sing it yourself.
+   *
+   * The words still go into the plan's section names, so the song keeps its
+   * shape and the lyrics still follow the music on the way back — there is just
+   * nobody singing them yet.
+   */
+  const [singItYourself, setSingItYourself] = useState(false);
+  /** Which track a vocal is being recorded over, if any. */
+  const [takeFor, setTakeFor] = useState<{ track: Track; music: Blob } | null>(null);
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [busy, setBusy] = useState(false);
@@ -110,6 +122,14 @@ export default function MakeMusic({
   const [stage, setStage] = useState<Stage | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
+  /**
+   * Exactly what is coming out of the speakers.
+   *
+   * Not the stored file: an unbought track plays watermarked, and a waveform
+   * drawn from the clean copy would be a picture of a different piece of audio
+   * than the one you are listening to.
+   */
+  const [playingBlob, setPlayingBlob] = useState<Blob | null>(null);
   const [shared, setShared] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
@@ -236,11 +256,15 @@ export default function MakeMusic({
             // The chosen length, not the sketch's own — the engine is being
             // asked for a song, and the sketch is only a fallback.
             seconds,
+            instrumental: singItYourself,
             onStage: setStage,
           });
           blob = result.blob;
           source = 'engine';
-          models = [result.model];
+          // Said on the release, because a backing with no voice on it is a
+          // different thing from a finished song and the channel should not
+          // present them as the same.
+          models = singItYourself ? [result.model, 'Backing — no vocal'] : [result.model];
         } else {
           blob = encodeWav(renderSketch(spec));
         }
@@ -256,6 +280,11 @@ export default function MakeMusic({
         // the chosen length stands in only if it cannot be read.
         const length =
           source === 'engine' ? ((await durationOf(blob)) ?? seconds) : sketchDurationSeconds(spec);
+
+        // The plan this song was made from, kept so the words can follow the
+        // music later. Only for a real generation: a sketch has no singing in
+        // it, so following a lyric sheet over one would be following nothing.
+        const plan = source === 'engine' ? splitSections(lyrics, seconds) : [];
 
         const id = `t-${Date.now()}`;
         await putAudio(id, blob);
@@ -273,6 +302,9 @@ export default function MakeMusic({
           seconds: Math.round(length),
           createdAt: new Date().toISOString(),
           seed: spec.seed,
+          ...(plan.length
+            ? { parts: plan, plannedSeconds: plan.reduce((total, part) => total + part.seconds, 0) }
+            : {}),
           ...(remixOf ? { remixOf: remixOf.id } : {}),
         };
 
@@ -308,7 +340,7 @@ export default function MakeMusic({
         setStage(null);
       }
     },
-    [bpm, canvas.style, lyrics, onMade, seconds, songKey, styleText, t, title, tracks, userPlan],
+    [bpm, canvas.style, lyrics, onMade, seconds, singItYourself, songKey, styleText, t, title, tracks, userPlan],
   );
 
   const toggle = async (track: Track) => {
@@ -319,6 +351,7 @@ export default function MakeMusic({
       setPlaying(null);
       return;
     }
+    setPlayingBlob(null);
     const blob = await readAudio(track.id);
     if (!blob) {
       setStatus(t('make.missing'));
@@ -332,6 +365,38 @@ export default function MakeMusic({
     element.src = urlRef.current;
     await element.play();
     setPlaying(track.id);
+    setPlayingBlob(playable);
+  };
+
+  /**
+   * A finished take becomes its own track rather than replacing the backing.
+   *
+   * The backing is worth keeping: you may want a second take, or a different
+   * singer, and overwriting it would make the first take a decision you cannot
+   * undo. The words and the section plan carry across, so the lyrics still
+   * follow the music on the new one.
+   */
+  const keepTake = async (over: Track, mixed: Blob) => {
+    const id = `t-${Date.now()}`;
+    await putAudio(id, mixed);
+    const length = (await durationOf(mixed)) ?? over.seconds;
+    const sung: Track = {
+      ...over,
+      id,
+      title: `${over.title} — ${t('make.withYourVoice', 'with your voice')}`,
+      // Named for what it is. The vocal here is a recording of a person, and
+      // that is a stronger thing to print on a release than any clone.
+      models: over.models.filter((name) => name !== 'Backing — no vocal').concat('Your voice (recorded)'),
+      seconds: Math.round(length),
+      createdAt: new Date().toISOString(),
+    };
+    const next = [sung, ...tracks];
+    setTracks(next);
+    saveTracks(next);
+    setTakeFor(null);
+    setStatus(t('take.kept', 'Your take is in your channel.'));
+    onMade(sung);
+    void cloud.pushTrack(sung, mixed);
   };
 
   const save = async (track: Track) => {
@@ -491,7 +556,23 @@ export default function MakeMusic({
             Music API. These words lean on breath, room and imperfection, because
             the usual complaint about generated singing is that it is too clean,
             and asking for the flaw works better than asking for "realistic". */}
-        <div>
+        {/* Sing it yourself. ElevenLabs cannot be handed your voice — their
+            cloning is for speech and the Music API takes no voice at all — so
+            the honest route is a backing track and a real recording. */}
+        <label className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={singItYourself}
+            onChange={(event) => setSingItYourself(event.target.checked)}
+            className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+          />
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold text-zinc-200">{t('make.singSelf')}</span>
+            <span className="block text-sm text-zinc-500 leading-snug">{t('make.singSelfNote')}</span>
+          </span>
+        </label>
+
+        <div className={singItYourself ? 'opacity-40 pointer-events-none' : undefined}>
           <label className="text-sm text-zinc-400">{t('make.voice')}</label>
           <div className="grid sm:grid-cols-3 gap-2 mt-1.5">
             {VOICES.map((choice) => (
@@ -667,6 +748,19 @@ export default function MakeMusic({
                   </div>
                 </div>
 
+                {playing === track.id && (
+                  <NowPlaying track={track} audio={audioRef.current} blob={playingBlob} />
+                )}
+
+                {takeFor?.track.id === track.id && (
+                  <VoiceTake
+                    track={track}
+                    music={takeFor.music}
+                    onKeep={(mixed) => keepTake(track, mixed)}
+                    onClose={() => setTakeFor(null)}
+                  />
+                )}
+
                 <div className="flex flex-wrap items-center gap-2">
                   {/* The ladder, one rung at a time. Somebody who has bought
                       nothing is offered the smaller step; somebody who opened
@@ -702,6 +796,21 @@ export default function MakeMusic({
                   >
                     <Download className="w-3.5 h-3.5" />
                     {t('make.save')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const music = await readAudio(track.id);
+                      if (!music) {
+                        setStatus(t('make.missing'));
+                        return;
+                      }
+                      setTakeFor({ track, music });
+                    }}
+                    className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                  >
+                    <Mic className="w-3.5 h-3.5" />
+                    {t('make.singOver')}
                   </button>
                   <button
                     type="button"

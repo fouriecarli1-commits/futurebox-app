@@ -239,12 +239,26 @@ function asDollarBurden(rand: number): number {
  * turns R35 into R34, and then opening a song plus keeping it no longer adds
  * up to the R49 the app promises it will.
  */
+/** 12000 → "12 000". Written out so it cannot differ between two renders. */
+function grouped(value: number): string {
+  const digits = String(Math.round(value));
+  let out = '';
+  for (let i = 0; i < digits.length; i += 1) {
+    if (i > 0 && (digits.length - i) % 3 === 0) out += '\u00a0';
+    out += digits[i];
+  }
+  return out;
+}
+
 function localised(rand: number, region: Region): LocalPrice {
   if (region.code === 'ZA') {
     return {
       amount: rand,
       currency: 'ZAR',
-      display: `R${rand.toLocaleString('en-ZA')}`,
+      // Grouped with a space, which is how a rand figure is written here.
+      // `toLocaleString` gives commas, which reads as a foreign price card —
+      // invisible at R49 and glaring at R180,000.
+      display: `R${grouped(rand)}`,
       usd: asDollarBurden(rand),
     };
   }
@@ -261,4 +275,69 @@ export function tierPrice(tier: Tier, region: Region): LocalPrice {
 
 export function oneOffPrice(rand: number, region: Region): LocalPrice {
   return localised(rand, region);
+}
+/**
+ * What it costs to put your name on something here.
+ *
+ * In rand, because the audience is South African and a dollar figure on a
+ * South African rate card tells a local advertiser nothing about what they are
+ * being asked for. Everywhere else it converts the same way every other price
+ * in this app converts.
+ *
+ * The entry rung is deliberately high. A rate card starting at pocket money
+ * fills the inbox with people who want a backlink, and every hour spent on
+ * those is an hour not spent on the one sponsor worth having. The floor is the
+ * filter.
+ *
+ * What is sold is the thing itself, never the sides of the page: a class, a
+ * season, a competition prize, or one month as the named partner. There are no
+ * banners to buy because there are no banners. A sponsor's return is the
+ * counters — real numbers, already on the page, the same ones everybody sees.
+ */
+export interface Sponsorship {
+  readonly id: string;
+  /** What they are actually buying. */
+  readonly name: string;
+  readonly from: number;
+  /** Null on the top rung: above this it is a conversation, not a price. */
+  readonly to: number | null;
+  readonly gets: string;
+}
+
+export const SPONSORSHIP: readonly Sponsorship[] = [
+  {
+    id: 'class',
+    name: 'One masterclass',
+    from: 12_000,
+    to: 30_000,
+    gets: 'Your name on one class, set in the same type as everything else on it.',
+  },
+  {
+    id: 'season',
+    name: 'A season',
+    from: 30_000,
+    to: 75_000,
+    gets: 'A run of classes or episodes, named once at the top of each.',
+  },
+  {
+    id: 'arena',
+    name: 'An Arena prize',
+    from: 75_000,
+    to: 180_000,
+    gets: 'You put up the prize. Your name is on the competition and on whoever wins it.',
+  },
+  {
+    id: 'headline',
+    name: 'Headline partner',
+    from: 180_000,
+    to: null,
+    gets: 'One a month, named on the Spotlight page. Nowhere else, and nothing that blinks.',
+  },
+];
+
+/** A rung as a person in this region reads it: "R12 000 – R30 000 a month". */
+export function sponsorshipBand(rung: Sponsorship, region: Region): string {
+  const from = localised(rung.from, region).display;
+  if (rung.to === null) return `${from}+`;
+  return `${from} – ${localised(rung.to, region).display}`;
 }

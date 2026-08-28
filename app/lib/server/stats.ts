@@ -38,11 +38,19 @@ export interface CategoryCount {
   readonly count: number;
 }
 
+/** How many people opened one particular thing. What a card shows. */
+export interface RefCount {
+  readonly kind: EventKind;
+  readonly ref: string;
+  readonly count: number;
+}
+
 export interface Board {
   /** When the first thing was recorded, so the page can say what period this is. */
   readonly since: string | null;
   readonly totals: Totals;
   readonly byCategory: readonly CategoryCount[];
+  readonly byRef: readonly RefCount[];
 }
 
 /**
@@ -106,6 +114,7 @@ export async function board(): Promise<Board | null> {
     since?: string | null;
     totals?: Partial<Record<keyof Totals, number>>;
     byCategory?: Array<{ kind?: string; category?: string; count?: number }>;
+    byRef?: Array<{ kind?: string; ref?: string; count?: number }>;
   };
 
   const board: Board = {
@@ -124,6 +133,11 @@ export async function board(): Promise<Board | null> {
         isEventKind(row.kind) && typeof row.category === 'string',
       )
       .map((row) => ({ kind: row.kind as EventKind, category: row.category, count: whole(row.count) })),
+    byRef: (raw.byRef ?? [])
+      .filter((row): row is { kind: string; ref: string; count: number } =>
+        isEventKind(row.kind) && typeof row.ref === 'string',
+      )
+      .map((row) => ({ kind: row.kind as EventKind, ref: row.ref, count: whole(row.count) })),
   };
 
   cached = { at: Date.now(), board };
