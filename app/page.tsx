@@ -32,6 +32,8 @@ import type { Track } from './lib/library';
 import { probeAudio } from './lib/engines';
 import Masterclasses from './components/Masterclasses';
 import { Counters, Views, useBoard } from './components/Counters';
+import Placement from './components/Placement';
+import PodcastStudio from './components/PodcastStudio';
 import { signal } from './lib/signal';
 import { TRACK_LABELS } from './data/masterclasses';
 import type { EventKind } from './lib/server/stats';
@@ -218,7 +220,7 @@ export default function FutureBoxHome() {
 
   // Creator Studio Sub-Tabs & Soundboard
   const [handoff, setHandoff] = useState<{ title: string; lyrics: string; style: string } | null>(null);
-  const [studioTab, setStudioTab] = useState<'video' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio' | 'write' | 'make'>('make');
+  const [studioTab, setStudioTab] = useState<'video' | 'soundboard' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio' | 'write' | 'make' | 'podcast'>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -277,6 +279,7 @@ export default function FutureBoxHome() {
     (rung) => `${rung.name} — ${sponsorshipBand(rung, region)} / month`,
   );
   const budget = budgetOptions.indexOf(contactBudget) !== -1 ? contactBudget : budgetOptions[0];
+  const chosenRung = SPONSORSHIP[Math.max(0, budgetOptions.indexOf(budget))];
   const [contactMessage, setContactMessage] = useState('');
   const [contactSent, setContactSent] = useState(false);
 
@@ -642,7 +645,7 @@ export default function FutureBoxHome() {
 
   const handleMarketingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const mailtoUrl = `mailto:admin@futurebox.app?subject=Sponsorship & Marketing Inquiry from ${encodeURIComponent(contactName)} (${encodeURIComponent(budget)})&body=${encodeURIComponent(`Name: ${contactName}\nEmail: ${contactEmail}\nBudget: ${budget}\nMessage:\n${contactMessage}`)}`;
+    const mailtoUrl = `mailto:admin@futurebox.app?subject=Sponsorship & Marketing Inquiry from ${encodeURIComponent(contactName)} (${encodeURIComponent(budget)})&body=${encodeURIComponent(`Name: ${contactName}\nEmail: ${contactEmail}\nBudget: ${budget}\nWhat that includes: ${chosenRung.gets}\nMessage:\n${contactMessage}`)}`;
     window.location.href = mailtoUrl;
     setContactSent(true);
     setTimeout(() => setContactSent(false), 5000);
@@ -1732,6 +1735,7 @@ export default function FutureBoxHome() {
                   { id: 'studio', label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
                   { id: 'soundboard', label: t('rail.sound'), hint: t('rail.sound.hint'), icon: Volume2 },
                   { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
+                  { id: 'podcast', label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
                   { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
                   { id: 'collab', label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
                   { id: 'arena', label: t('rail.arena'), hint: t('rail.arena.hint'), icon: Trophy },
@@ -1961,6 +1965,7 @@ export default function FutureBoxHome() {
             )}
 
             {/* STUDIO: THE TIMELINE — point at a bar, say what should change */}
+            {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
             {studioTab === 'studio' && <StudioTimeline />}
 
             {/* TAB 5: COLLAB RADAR (PODCASTS, TIKTOK LIVE, FLAVOUR MATCHING, VIRAL POSTS) */}
@@ -2282,7 +2287,7 @@ export default function FutureBoxHome() {
                 />
               </div>
 
-              <div>
+              <div className="space-y-2.5">
                 <select
                   value={budget}
                   onChange={(e) => setContactBudget(e.target.value)}
@@ -2296,6 +2301,9 @@ export default function FutureBoxHome() {
                     </option>
                   ))}
                 </select>
+
+                {/* The answer to "what do I get", before they have to ask it. */}
+                <Placement rung={chosenRung} who={contactName} />
               </div>
 
               <textarea
