@@ -416,9 +416,9 @@ export default function Songwriter({
             </button>
           ))}
           <span className="text-sm text-zinc-500">
-            {userPlan === 'pro'
+            {userPlan !== 'free'
               ? 'Unlimited on Pro'
-              : `${check('songwriter.help', userPlan).remaining ?? 0} of ${ENTITLEMENTS['songwriter.help'].free} rolls left today`}
+              : `${check('songwriter.help', userPlan).remaining ?? 0} of ${ENTITLEMENTS['songwriter.help'].caps.free} rolls left today`}
           </span>
           {userPlan === 'free' && (check('songwriter.help', userPlan).remaining ?? 0) === 0 && (
             <button type="button" onClick={onUpgrade} className="text-sm text-amber-400 hover:underline">

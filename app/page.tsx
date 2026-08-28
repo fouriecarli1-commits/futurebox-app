@@ -19,7 +19,7 @@ import { profileFromTracks } from './lib/matching';
 import CollabRadar from './components/CollabRadar';
 import Arena from './components/Arena';
 import StudioTimeline from './components/StudioTimeline';
-import { BASE_PRICES, guessRegion, priceFor, REGIONS, regionByCode, type Region } from './lib/pricing';
+import { guessRegion, REGIONS, regionByCode, type Region } from './lib/pricing';
 import ThemeStudio from './components/ThemeStudio';
 import QualityRadar from './components/QualityRadar';
 import Songwriter from './components/Songwriter';
@@ -35,8 +35,9 @@ import Landing from './components/Landing';
 import LanguagePicker from './components/LanguagePicker';
 import { useLang } from './lib/i18n';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
-import { byArea, describe } from './lib/entitlements';
+import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
 import * as cloud from './lib/cloud';
+import { TIER_SPECS, ONE_OFF, tierPrice, oneOffPrice } from './lib/plans';
 
 interface Blueprint {
   tag: string;
@@ -95,7 +96,7 @@ export default function FutureBoxHome() {
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
-  const [userPlan, setUserPlan] = useState<'free' | 'pro'>('free');
+  const [userPlan, setUserPlan] = useState<Plan>('free');
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
   // Resolved after mount: guessing during render would bake one country's
   // prices into the static HTML that everybody is served.
@@ -106,7 +107,9 @@ export default function FutureBoxHome() {
     setRegion(guess.region);
     setRegionBasis(guess.basis);
   }, []);
-  const proMonthly = priceFor(BASE_PRICES.proMonthly, region);
+  // The header and the locked cards advertise the cheapest paid tier, since
+  // that is the smallest step someone is actually being asked to take.
+  const entryPrice = tierPrice('maker', region);
 
   // Appearance. The saved theme is read after mount — reading localStorage
   // during render would disagree with the server-rendered HTML.
@@ -691,7 +694,7 @@ export default function FutureBoxHome() {
           <div>
             <h1 className="text-lg font-black tracking-wider text-white flex items-center space-x-2">
               <span>FUTURE<span className="text-emerald-400">BOX</span></span>
-              {userPlan === 'pro' && (
+              {userPlan !== 'free' && (
                 <span className="text-[10px] bg-gradient-to-r from-amber-400 to-amber-600 text-onAccent font-extrabold px-2 py-0.5 rounded-full flex items-center space-x-1 shadow-[0_0_10px_rgba(245,158,11,0.4)]">
                   <Crown className="w-3 h-3" />
                   <span>PRO</span>
@@ -769,7 +772,7 @@ export default function FutureBoxHome() {
               className="hidden sm:flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-onAccent font-extrabold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
             >
               <Crown className="w-3.5 h-3.5 fill-current" />
-              <span>{t('common.upgrade')} ({proMonthly.display})</span>
+              <span>{t('common.upgrade')} ({entryPrice.display})</span>
             </button>
           ) : (
             <span className="text-xs font-mono text-emerald-400 hidden sm:flex items-center space-x-1 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
@@ -1126,7 +1129,7 @@ export default function FutureBoxHome() {
                   isPro: true
                 }
               ].map((mc) => {
-                const isLocked = mc.isPro && userPlan !== 'pro';
+                const isLocked = mc.isPro && userPlan === 'free';
                 return (
                   <div 
                     key={mc.id}
@@ -1186,7 +1189,7 @@ export default function FutureBoxHome() {
                           className="text-amber-400 font-bold flex items-center space-x-1 hover:underline"
                         >
                           <Crown className="w-3.5 h-3.5 fill-current" />
-                          <span>Unlock with PRO ({proMonthly.display})</span>
+                          <span>{t('common.upgrade')} ({entryPrice.display})</span>
                         </button>
                       ) : (
                         <button 
@@ -1496,110 +1499,98 @@ export default function FutureBoxHome() {
       {/* 👑 PRICING & PRO UPGRADE MODAL ($19 / MONTH) */}
       {pricingModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
-          <div className="bg-zinc-900 border border-amber-500/50 w-full max-w-xl rounded-3xl p-6 md:p-8 space-y-6 shadow-[0_0_50px_rgba(245,158,11,0.2)] my-auto">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
-                  <Crown className="w-5 h-5 text-amber-400" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-lg text-white">FutureBox PRO Membership</h3>
-                  <p className="text-xs text-zinc-400">Unlock complete access to 4K masterclasses, podcasts, and creator studios</p>
-                </div>
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
+            <div className="flex items-start justify-between border-b border-zinc-800 pb-4">
+              <div>
+                <h3 className="font-extrabold text-lg text-white">{t('pay.title')}</h3>
+                <p className="text-sm text-zinc-400 pt-1">{t('pay.sub')}</p>
               </div>
-              <button onClick={() => setPricingModalOpen(false)} className="text-zinc-400 hover:text-white">
+              <button onClick={() => setPricingModalOpen(false)} className="text-zinc-400 hover:text-white flex-shrink-0">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="bg-gradient-to-b from-amber-950/30 to-black/60 border border-amber-500/30 rounded-2xl p-6 space-y-4">
-              <div className="flex items-baseline justify-between">
-                <div>
-                  <span className="text-3xl font-black text-white">{proMonthly.display}</span>
-                  <span className="text-xs text-zinc-400"> / month</span>
+            {/* Buy one song, for anyone who will never subscribe. Two steps,
+                because opening the whole thing is a much smaller decision than
+                keeping it, and the first payment makes the second one easy. */}
+            <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4 space-y-3">
+              <p className="text-sm font-bold text-white">{t('pay.oneOff')}</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
+                  <p className="text-2xl font-black text-white">
+                    {oneOffPrice(ONE_OFF.open.rand, region).display}
+                  </p>
+                  <p className="text-sm font-semibold text-zinc-200 pt-0.5">{t('pay.open')}</p>
+                  <p className="text-sm text-zinc-500 pt-1 leading-relaxed">{t('pay.openNote')}</p>
                 </div>
-                <span className="text-xs font-bold bg-amber-500 text-onAccent px-2.5 py-1 rounded-full">
-                  Most Popular
-                </span>
+                <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3">
+                  <p className="text-2xl font-black text-white">
+                    +{oneOffPrice(ONE_OFF.keep.rand, region).display}
+                  </p>
+                  <p className="text-sm font-semibold text-emerald-300 pt-0.5">{t('pay.keep')}</p>
+                  <p className="text-sm text-zinc-400 pt-1 leading-relaxed">{t('pay.keepNote')}</p>
+                </div>
               </div>
+            </div>
 
-              {/* The buyer should see why the number is what it is, and what
-                  actually settles it. */}
-              <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-amber-500/20">
-                <span className="text-xs text-zinc-400">Priced for</span>
-                <select
-                  value={region.code}
-                  onChange={(e) => {
-                    setRegion(regionByCode(e.target.value));
-                    setRegionBasis('You picked this one');
-                  }}
-                  className="bg-black/60 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-amber-500"
-                >
-                  {REGIONS.map((r) => (
-                    <option key={r.code} value={r.code}>
-                      {r.name} ({r.currency})
-                    </option>
-                  ))}
-                </select>
-                <span className="text-xs text-zinc-500">{regionBasis}</span>
-                <p className="basis-full text-xs text-zinc-500 leading-relaxed">
-                  Adjusted for local purchasing power from a ${BASE_PRICES.proMonthly} base. The amount you are charged
-                  is set at checkout by the country of your payment method — not by this menu, and not by your IP
-                  address.
-                </p>
-              </div>
-
-              {/* Generated from the same table the app enforces, so the sales
-                  copy cannot drift from what the code actually does. */}
-              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                {byArea().map((group) => (
-                  <div key={group.area} className="space-y-1.5">
-                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">{group.area}</p>
-                    {group.rows.map((row) => {
-                      const same = row.free === row.pro;
-                      return (
-                        <div key={row.key} className="grid grid-cols-[1fr_auto_auto] gap-2 items-baseline text-xs">
-                          <span className="text-zinc-200">{row.label}</span>
-                          <span className={`text-right w-20 ${row.free === 0 ? 'text-zinc-600' : 'text-zinc-400'}`}>
-                            {describe(row.free, row.unit)}
+            {/* The monthly tiers, rendered from the same table the caps come
+                from, so the sales copy cannot drift from what the code allows. */}
+            <div className="grid md:grid-cols-3 gap-3">
+              {(['maker', 'studio', 'label'] as const).map((id) => {
+                const spec = TIER_SPECS[id];
+                const current = userPlan === id;
+                const featured = id === 'studio';
+                return (
+                  <div
+                    key={id}
+                    className={`rounded-2xl border p-4 space-y-3 flex flex-col ${
+                      featured ? 'border-amber-500/50 bg-amber-500/5' : 'border-zinc-800 bg-black/40'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-white">{spec.name}</p>
+                        {featured && (
+                          <span className="text-[11px] uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded">
+                            {t('pay.most')}
                           </span>
-                          <span className={`text-right w-20 font-semibold ${same ? 'text-zinc-400' : 'text-amber-300'}`}>
-                            {describe(row.pro, row.unit)}
-                          </span>
-                        </div>
-                      );
-                    })}
+                        )}
+                      </div>
+                      <p className="text-3xl font-black text-white pt-1">{tierPrice(id, region).display}</p>
+                      <p className="text-sm text-zinc-500">{t('pay.perMonth')}</p>
+                      <p className="text-sm text-zinc-400 pt-2 leading-relaxed">{spec.who}</p>
+                    </div>
+                    <ul className="space-y-1.5 flex-1">
+                      {spec.includes.map((line) => (
+                        <li key={line} className="text-sm text-zinc-300 flex gap-2 leading-relaxed">
+                          <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-1" />
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      type="button"
+                      disabled={current}
+                      onClick={() => {
+                        setUserPlan(id);
+                        setPricingModalOpen(false);
+                      }}
+                      className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50 ${
+                        featured
+                          ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-onAccent'
+                          : 'bg-zinc-800 text-white hover:bg-zinc-700'
+                      }`}
+                    >
+                      {current ? t('pay.current') : t('pay.choose')}
+                    </button>
                   </div>
-                ))}
-                <div className="grid grid-cols-[1fr_auto_auto] gap-2 text-xs pt-2 border-t border-zinc-800">
-                  <span className="text-zinc-500">Column order</span>
-                  <span className="text-right w-20 text-zinc-500">Free</span>
-                  <span className="text-right w-20 text-amber-300 font-semibold">Pro</span>
-                </div>
-              </div>
-
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                Every part of FutureBox does something real without paying — you can write a song, score the feed,
-                find a collaborator and enter a competition on a free account, and competitions are never gated at all.
-                What Pro buys is volume and distribution: the daily caps come off, and publishing outward — posting to
-                your channels and asking the channel to boost a collab — turns on.
-              </p>
+                );
+              })}
             </div>
 
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  setUserPlan('pro');
-                  setPricingModalOpen(false);
-                  alert('🎉 Congratulations! Your account has been upgraded to FutureBox PRO!');
-                }}
-                className="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-onAccent font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center justify-center space-x-2"
-              >
-                <Crown className="w-4 h-4 fill-current" />
-                <span>Activate PRO Membership ({proMonthly.display} / month)</span>
-              </button>
-              <p className="text-[10px] text-center text-zinc-500">Cancel anytime with 1 click. Powered by Stripe secure billing.</p>
-            </div>
+            <p className="text-sm text-zinc-500 text-center leading-relaxed">
+              {t('pay.noCharge')}
+            </p>
           </div>
         </div>
       )}

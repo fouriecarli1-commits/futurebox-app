@@ -20,6 +20,7 @@
  * offer a shape that is obviously unlawful, and it does.
  */
 
+import { type Plan } from '../lib/entitlements';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Trophy, Crown, Clock, Users, Shield, Sparkles, Check, AlertCircle,
@@ -43,7 +44,7 @@ function daysLeft(closesOn: string): number {
   return Math.max(0, Math.ceil(diff / 86_400_000));
 }
 
-export default function Arena({ userPlan }: { userPlan: 'free' | 'pro' }) {
+export default function Arena({ userPlan }: { userPlan: Plan }) {
   // Region is resolved after mount, never during render: guessing on the server
   // would bake one country's prices into the static HTML for everybody.
   const [region, setRegion] = useState<Region>(REGIONS[0]);

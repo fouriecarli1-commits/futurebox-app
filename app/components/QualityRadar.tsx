@@ -15,6 +15,7 @@
  *      spinning icon.
  */
 
+import { type Plan } from '../lib/entitlements';
 import React, { useMemo, useState } from 'react';
 import {
   RefreshCw, ChevronDown, ChevronRight, Lock, EyeOff,
@@ -34,7 +35,7 @@ export default function QualityRadar({
   userPlan,
   onUpgrade,
 }: {
-  userPlan: 'free' | 'pro';
+  userPlan: Plan;
   onUpgrade: () => void;
 }) {
   const limits = TIER_LIMITS[userPlan];

@@ -22,15 +22,18 @@
  * and raw audio bytes — not JSON — back.
  */
 
+import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
  * Generating a minute of music takes tens of seconds upstream, so the 10-second
  * default would fail every request before the first one could ever succeed.
- * 60 is the ceiling on Vercel's Hobby plan; a long song may still need Pro.
+ * 300 is the Pro ceiling and comfortably covers a full-length song. On Hobby
+ * the cap is 60, which is enough for a short one and not for a long one.
  */
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const ENDPOINT = 'https://api.elevenlabs.io/v1/music';
 const OUTPUT_FORMAT = 'mp3_44100_128';
@@ -141,6 +144,35 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'bad_request', message: 'Could not read the request.' }, { status: 400 });
   }
 
+  // What this person may spend, decided here and not by the page that asked.
+  // Without accounts configured there is nobody to meter, so the request goes
+  // through as it always did — that keeps a local or half-configured install
+  // working rather than locking everyone out of a feature they had.
+  let record: (() => Promise<void>) | null = null;
+  if (metered()) {
+    const caller = await callerFrom(request);
+    const allowance = await allowanceFor(caller);
+    if (!allowance.allowed) {
+      return Response.json(
+        {
+          error: caller ? 'out_of_allowance' : 'signed_out',
+          message: allowance.reason,
+          usedToday: allowance.usedToday,
+          limit: allowance.limit,
+        },
+        { status: caller ? 402 : 401 },
+      );
+    }
+    // A free account gets a short preview whatever the request asked for. This
+    // is the line the whole cost model rests on, so it is enforced by
+    // overwriting the request rather than by trusting it.
+    if (allowance.kind === 'preview') {
+      body = { ...body, seconds: allowance.seconds, sections: undefined };
+    }
+    const seconds = allowance.kind === 'preview' ? allowance.seconds : (body.seconds ?? 60);
+    if (caller) record = () => recordGeneration(caller, allowance.kind, seconds);
+  }
+
   let upstream: Response;
   try {
     upstream = await fetch(`${ENDPOINT}?output_format=${OUTPUT_FORMAT}`, {
@@ -169,6 +201,10 @@ export async function POST(request: Request): Promise<Response> {
             : 'The music service could not make that one.';
     return Response.json({ error: 'upstream', status: upstream.status, message, detail: detail.slice(0, 500) }, { status: 502 });
   }
+
+  // Counted only now, after upstream said yes: a rejected request costs
+  // nothing and must not spend someone's allowance.
+  if (record) await record();
 
   // Audio bytes, streamed straight through — no point buffering a whole song
   // in this process just to hand it on.
