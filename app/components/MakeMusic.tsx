@@ -573,7 +573,7 @@ export default function MakeMusic({
                       className="px-3 py-1.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-400 to-amber-500 text-onAccent flex items-center gap-1.5 disabled:opacity-60"
                     >
                       {buying === track.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                      {t('buy.keep')} +R{ONE_OFF.keep.rand}
+                      {t('buy.keep')} R{ONE_OFF.keep.rand}
                     </button>
                   )}
                   <button

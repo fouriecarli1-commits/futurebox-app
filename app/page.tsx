@@ -1525,7 +1525,7 @@ export default function FutureBoxHome() {
                 </div>
                 <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3">
                   <p className="text-2xl font-black text-white">
-                    +{oneOffPrice(ONE_OFF.keep.rand, region).display}
+                    {oneOffPrice(ONE_OFF.keep.rand, region).display}
                   </p>
                   <p className="text-sm font-semibold text-emerald-300 pt-0.5">{t('pay.keep')}</p>
                   <p className="text-sm text-zinc-400 pt-1 leading-relaxed">{t('pay.keepNote')}</p>
