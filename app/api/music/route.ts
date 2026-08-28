@@ -218,18 +218,53 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (!upstream.ok) {
-    // Their error body is JSON; ours must be too, so the UI can say what went
-    // wrong instead of showing a blank failure.
-    const detail = await upstream.text().catch(() => '');
-    const message =
+    const raw = await upstream.text().catch(() => '');
+
+    // Their own words first. Summarising an upstream error into one of four
+    // buckets throws away the only sentence that says what to change, and the
+    // bucket for "anything else" is where every unfamiliar failure lands —
+    // which is exactly when the detail matters most.
+    let theirs = '';
+    try {
+      const parsed = JSON.parse(raw) as {
+        detail?: unknown;
+        message?: string;
+        error?: { message?: string };
+      };
+      const detail = parsed.detail;
+      theirs =
+        (typeof detail === 'string' ? detail : '') ||
+        (detail && typeof detail === 'object'
+          ? ((detail as { message?: string }).message ?? JSON.stringify(detail))
+          : '') ||
+        parsed.message ||
+        parsed.error?.message ||
+        '';
+    } catch {
+      theirs = raw.slice(0, 300);
+    }
+
+    const known =
       upstream.status === 401
         ? 'The music service rejected the key.'
         : upstream.status === 422
-          ? 'The music service could not use that request. Try a shorter song or fewer lines.'
+          ? 'The music service could not use that request.'
           : upstream.status === 429
             ? 'Out of music credits, or too many requests at once.'
-            : 'The music service could not make that one.';
-    return Response.json({ error: 'upstream', status: upstream.status, message, detail: detail.slice(0, 500) }, { status: 502 });
+            : '';
+
+    // The status number is included on an unrecognised failure. It is not
+    // pretty, and it is the difference between a fixable report and "it broke".
+    // Trailing full stop dropped before appending, or the line reads "…request.:"
+    const lead = (known || `The music service said no (${upstream.status})`).replace(/\.$/, '');
+    const message = theirs
+      ? `${lead}: ${theirs}`.slice(0, 400)
+      : known || `The music service said no (${upstream.status}), without saying why.`;
+
+    return Response.json(
+      { error: 'upstream', status: upstream.status, message, detail: raw.slice(0, 800) },
+      { status: 502 },
+    );
   }
 
   // Counted only now, after upstream said yes: a rejected request costs
