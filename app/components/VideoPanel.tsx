@@ -11,6 +11,7 @@
 import React, { useEffect, useState } from 'react';
 import { Video as VideoIcon, X, Loader2, Download } from 'lucide-react';
 import { renderVideo, styleFor, videoSupported, extensionFor, type Aspect } from '../lib/video';
+import { signal } from '../lib/signal';
 import { downloadBlob, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { useLang } from '../lib/i18n';
@@ -65,6 +66,8 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
         onProgress: setProgress,
       });
       setMade({ blob: result.blob, ext: extensionFor(result.mimeType) });
+      // Counted here, where a file exists — not when the button was pressed.
+      signal('video', { category: track.genre, ref: track.id });
     } catch {
       setError(t('make.failed'));
     } finally {

@@ -31,6 +31,10 @@ import type { Canvas } from './components/MakeMusic';
 import type { Track } from './lib/library';
 import { probeAudio } from './lib/engines';
 import Masterclasses from './components/Masterclasses';
+import { Counters, useBoard } from './components/Counters';
+import { signal } from './lib/signal';
+import { TRACK_LABELS } from './data/masterclasses';
+import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
 import LanguagePicker from './components/LanguagePicker';
 import { useLang } from './lib/i18n';
@@ -110,6 +114,14 @@ export default function FutureBoxHome() {
     };
   }, []);
 
+  // Counted once per browser per day — by the database, not by this line.
+  useEffect(() => {
+    signal('visit');
+  }, []);
+
+  /** The totals shown at the top of each page. Null until they are read. */
+  const board = useBoard();
+
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
@@ -180,7 +192,28 @@ export default function FutureBoxHome() {
     host?: string; 
     prompt?: string;
     isPro?: boolean;
+    /**
+     * What opening this counts as, for the counters on each page.
+     *
+     * Carried on the media itself rather than fired at each call site, because
+     * the same thing is opened from two or three places — a thumbnail, a play
+     * button, a link — and an event recorded at only some of them is a number
+     * that is quietly wrong rather than obviously missing.
+     */
+    counts?: { kind: EventKind; category?: string; ref?: string };
   } | null>(null);
+
+  /**
+   * Opening something is what the counters count, and it is counted here —
+   * once — rather than at each of the three places a thing can be opened from.
+   */
+  useEffect(() => {
+    if (!selectedMedia?.counts) return;
+    signal(selectedMedia.counts.kind, {
+      category: selectedMedia.counts.category,
+      ref: selectedMedia.counts.ref,
+    });
+  }, [selectedMedia]);
   const [selectedBlueprint, setSelectedBlueprint] = useState<Blueprint | null>(null);
 
   // Creator Studio Sub-Tabs & Soundboard
@@ -928,6 +961,9 @@ export default function FutureBoxHome() {
           </button>
         </section>
 
+        {/* The counters. Real numbers or nothing — see components/Counters.tsx. */}
+        {activeTab === 'all' && <Counters board={board} scope="all" />}
+
         {/* 🎬 1. FEATURED SPOTLIGHT */}
         {(activeTab === 'all') && (
           <section className="relative rounded-3xl overflow-hidden border border-zinc-800 bg-gradient-to-b from-zinc-900/60 to-zinc-950/80 p-8 md:p-12 shadow-2xl">
@@ -968,7 +1004,8 @@ export default function FutureBoxHome() {
                       embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
                       externalUrl: 'https://www.youtube.com/watch?v=zjkBMFhNj_g',
                       type: 'youtube',
-                      host: 'Andrej Karpathy'
+                      host: 'Andrej Karpathy',
+                      counts: { kind: 'masterclass', category: 'which-ai', ref: 'karpathy-intro-to-llms' }
                     })}
                     className="flex items-center space-x-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-sm rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)]"
                   >
@@ -994,7 +1031,8 @@ export default function FutureBoxHome() {
                   embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
                   externalUrl: 'https://www.youtube.com/watch?v=zjkBMFhNj_g',
                   type: 'youtube',
-                  host: 'Andrej Karpathy'
+                  host: 'Andrej Karpathy',
+                  counts: { kind: 'masterclass', category: 'which-ai', ref: 'karpathy-intro-to-llms' }
                 })}
                 className="relative group rounded-2xl overflow-hidden border border-zinc-700/60 aspect-video shadow-2xl cursor-pointer"
               >
@@ -1016,6 +1054,7 @@ export default function FutureBoxHome() {
         {/* 🎙️ 2. FUTUREBOX PODCASTS */}
         {(activeTab === 'all' || activeTab === 'futurebox') && (
           <section className="space-y-6">
+            {activeTab === 'futurebox' && <Counters board={board} scope="futurebox" />}
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
@@ -1042,7 +1081,8 @@ export default function FutureBoxHome() {
                         embedUrl: pod.embedUrl,
                         externalUrl: pod.externalUrl,
                         type: 'youtube',
-                        host: pod.host
+                        host: pod.host,
+                        counts: { kind: 'podcast', category: pod.host, ref: pod.id }
                       })}
                       className="aspect-video relative overflow-hidden cursor-pointer"
                     >
@@ -1072,7 +1112,8 @@ export default function FutureBoxHome() {
                         embedUrl: pod.embedUrl,
                         externalUrl: pod.externalUrl,
                         type: 'youtube',
-                        host: pod.host
+                        host: pod.host,
+                        counts: { kind: 'podcast', category: pod.host, ref: pod.id }
                       })}
                       className="text-emerald-400 font-semibold flex items-center space-x-1 hover:underline"
                     >
@@ -1099,6 +1140,9 @@ export default function FutureBoxHome() {
         {/* 🎓 3. MASTERCLASSES (PRO Gated) */}
         {(activeTab === 'all' || activeTab === 'masterclasses') && (
           <section className="space-y-6">
+            {activeTab === 'masterclasses' && (
+              <Counters board={board} scope="masterclasses" labels={TRACK_LABELS} />
+            )}
             <Masterclasses userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
 
             <div className="flex items-center justify-between pt-2">
@@ -1174,7 +1218,8 @@ export default function FutureBoxHome() {
                               embedUrl: mc.embedUrl,
                               externalUrl: mc.externalUrl,
                               type: 'youtube',
-                              host: mc.instructor
+                              host: mc.instructor,
+                              counts: { kind: 'masterclass', category: 'featured', ref: mc.id }
                             });
                           }
                         }}
@@ -1219,7 +1264,8 @@ export default function FutureBoxHome() {
                             embedUrl: mc.embedUrl,
                             externalUrl: mc.externalUrl,
                             type: 'youtube',
-                            host: mc.instructor
+                            host: mc.instructor,
+                            counts: { kind: 'masterclass', category: 'featured', ref: mc.id }
                           })}
                           className="text-cyan-400 font-semibold flex items-center space-x-1 hover:underline"
                         >
@@ -1238,6 +1284,7 @@ export default function FutureBoxHome() {
         {/* 🎨 4. CREATIVE AI MUSIC & VIDEOS ("HOOKS" SHOWCASE) */}
         {(activeTab === 'all' || activeTab === 'creations') && (
           <section className="space-y-6">
+            {activeTab === 'creations' && <Counters board={board} scope="creations" />}
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
@@ -1303,7 +1350,8 @@ export default function FutureBoxHome() {
                         title: creation.title,
                         embedUrl: creation.embedUrl,
                         externalUrl: creation.externalUrl,
-                        type: 'youtube'
+                        type: 'youtube',
+                        counts: { kind: 'article', category: 'Creative AI', ref: creation.id }
                       })}
                       className="aspect-video relative overflow-hidden cursor-pointer"
                     >
@@ -1354,6 +1402,7 @@ export default function FutureBoxHome() {
         {/* ⚡ 5. INTELLIGENCE RADAR */}
         {(activeTab === 'all' || activeTab === 'radar') && (
           <section className="space-y-6">
+            {activeTab === 'radar' && <Counters board={board} scope="radar" />}
             <QualityRadar userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
 
             <div className="pt-2">

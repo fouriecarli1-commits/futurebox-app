@@ -54,7 +54,7 @@ export function metered(): boolean {
 }
 
 /** The privileged client. Never hand this, or its output, to a page. */
-function admin(): SupabaseClient | null {
+export function admin(): SupabaseClient | null {
   if (!URL || !SERVICE) return null;
   return createClient(URL, SERVICE, { auth: { persistSession: false } });
 }

@@ -25,6 +25,25 @@
 
 import { accessToken } from './cloud';
 
+/**
+ * Where a generation has got to.
+ *
+ * Every one of these is something observed, never a guess dressed as progress.
+ * There is no percentage during the long part because there is nothing to
+ * measure: the music service takes a single request and answers when it is
+ * finished, with nothing in between. Inventing a bar that creeps to 90% and
+ * waits there would be the easy thing to build and a lie about what is known.
+ *
+ * What is real: the plan that was sent, the moment the service began answering,
+ * and the bytes arriving after that — which is a genuine measurement, so that
+ * is the only stage that carries a number.
+ */
+export type Stage =
+  | { readonly at: 'plan'; readonly parts: number; readonly seconds: number }
+  | { readonly at: 'sent' }
+  | { readonly at: 'receiving'; readonly received: number; readonly expected: number | null }
+  | { readonly at: 'saving' };
+
 export interface AudioRequest {
   readonly title: string;
   readonly style: string;
@@ -32,6 +51,8 @@ export interface AudioRequest {
   readonly bpm: number;
   readonly key: string;
   readonly seconds: number;
+  /** Told what is happening, as it happens. Optional; nothing depends on it. */
+  readonly onStage?: (stage: Stage) => void;
 }
 
 export interface VideoRequest {
@@ -161,6 +182,38 @@ function fit(weights: number[], total: number): number[] {
   return lengths;
 }
 
+/**
+ * The audio, read as it arrives.
+ *
+ * `response.blob()` would be one line and would wait in silence for the whole
+ * file. Reading the stream costs a few more and buys the one honest measure of
+ * progress in the whole operation: bytes actually received out of bytes
+ * expected. Where the server sends no Content-Length, the expected size is
+ * worked out from the format — 128 kbit/s is 16 000 bytes a second — and is a
+ * stated estimate rather than a number pretending to be exact.
+ */
+async function collect(response: Response, request: AudioRequest): Promise<Blob> {
+  const type = response.headers.get('content-type') ?? 'audio/mpeg';
+  const declared = Number(response.headers.get('content-length') ?? '');
+  const expected = Number.isFinite(declared) && declared > 0 ? declared : request.seconds * 16_000;
+
+  const reader = response.body?.getReader();
+  // Older browsers, and any proxy that hands back a body without a reader.
+  if (!reader) return response.blob();
+
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    chunks.push(value);
+    received += value.length;
+    request.onStage?.({ at: 'receiving', received, expected });
+  }
+  return new Blob(chunks as BlobPart[], { type });
+}
+
 export const engines: Engines = {
   available: (kind) => (kind === 'audio' ? audioReady === true : false),
 
@@ -168,6 +221,11 @@ export const engines: Engines = {
     // The chosen length is what the plan has to add up to, so it is part of
     // the split rather than something the server is asked to apply after.
     const sections = splitSections(request.lyrics, request.seconds);
+    request.onStage?.({
+      at: 'plan',
+      parts: sections.length,
+      seconds: sections.reduce((total, section) => total + section.seconds, 0) || request.seconds,
+    });
     // The server decides what this account may spend, so it has to be told who
     // is asking. Without a token it treats the caller as signed out.
     const token = await accessToken();
@@ -179,6 +237,11 @@ export const engines: Engines = {
     // reported as itself rather than pre-empted here.
     const abort = new AbortController();
     const bell = setTimeout(() => abort.abort(), 310_000);
+
+    // Announced before the wait, not after it. Reported once the fetch resolved,
+    // this stage could only ever appear at the moment it stopped being true —
+    // the whole minute of waiting showed as "working out the plan".
+    request.onStage?.({ at: 'sent' });
 
     let response: Response;
     try {
@@ -213,10 +276,8 @@ export const engines: Engines = {
       throw new Error(detail.message ?? 'The music service could not make that one.');
     }
 
-    return {
-      blob: await response.blob(),
-      model: response.headers.get('X-Music-Model') ?? 'ElevenLabs Music',
-    };
+    const model = response.headers.get('X-Music-Model') ?? 'ElevenLabs Music';
+    return { blob: await collect(response, request), model };
   },
 
   generateVideo: async () => {
