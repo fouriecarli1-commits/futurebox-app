@@ -72,6 +72,21 @@ export async function currentAccount(): Promise<Account | null> {
  * failure, and it is not being signed in either. Treating it as signed in is
  * exactly the bug this shape exists to prevent.
  */
+/**
+ * The current access token, for calling our own server routes.
+ *
+ * The routes that spend money verify this with Supabase before they spend
+ * anything, so a request without it is treated as signed out rather than as
+ * trusted. Null when there is no session — which is the honest answer, not an
+ * error.
+ */
+export async function accessToken(): Promise<string | null> {
+  const supabase = getClient();
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
 export type AuthResult = { ok: true; account: Account | null } | { ok: false; message: string };
 
 export async function signUp(email: string, password: string): Promise<AuthResult> {

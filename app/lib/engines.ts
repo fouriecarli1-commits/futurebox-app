@@ -23,6 +23,8 @@
  * lyrics per section, vocals, and a commercial licence on paid plans.
  */
 
+import { accessToken } from './cloud';
+
 export interface AudioRequest {
   readonly title: string;
   readonly style: string;
@@ -110,9 +112,15 @@ export const engines: Engines = {
 
   async generateAudio(request: AudioRequest): Promise<EngineResult> {
     const sections = splitSections(request.lyrics);
+    // The server decides what this account may spend, so it has to be told who
+    // is asking. Without a token it treats the caller as signed out.
+    const token = await accessToken();
     const response = await fetch('/api/music', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({
         style: request.style,
         sections,
@@ -124,6 +132,8 @@ export const engines: Engines = {
 
     if (!response.ok) {
       const detail = (await response.json().catch(() => ({}))) as { message?: string };
+      // 401 and 402 are the allowance answering, not a failure — the message is
+      // written for the person and is shown as-is.
       throw new Error(detail.message ?? 'The music service could not make that one.');
     }
 
