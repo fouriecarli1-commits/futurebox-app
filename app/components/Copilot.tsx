@@ -90,8 +90,15 @@ export default function Copilot({
         return;
       }
       if (!response.ok) {
+        // A gateway timeout answers with an HTML page, not JSON, so parsing it
+        // gives nothing and the reason disappears. Falling back to the status
+        // keeps "it took too long" distinguishable from "it was refused".
         const detail = (await response.json().catch(() => ({}))) as { message?: string };
-        setTurns([...asked, { role: 'assistant', text: detail.message ?? t('copilot.failed') }]);
+        const because =
+          response.status === 504 || response.status === 408
+            ? t('copilot.slow')
+            : (detail.message ?? `${t('copilot.failed')} (${response.status})`);
+        setTurns([...asked, { role: 'assistant', text: because }]);
         return;
       }
 

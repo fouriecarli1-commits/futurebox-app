@@ -19,6 +19,14 @@ import { z } from 'zod';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/**
+ * Vercel kills a function at 10 seconds unless it is told otherwise, and a
+ * reasoning model answering a chat turn regularly needs longer than that. The
+ * timeout comes back as an HTML gateway page rather than JSON, so it does not
+ * even reach the error handling below — the panel just goes quiet.
+ */
+export const maxDuration = 60;
+
 const ReplySchema = z.object({
   reply: z
     .string()

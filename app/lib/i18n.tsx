@@ -170,6 +170,7 @@ export const STRINGS: Dict = {
   "copilot.offPlaceholder": { en: "The copilot is switched off", af: "Die copilot is af" },
   "copilot.send": { en: "Send", af: "Stuur" },
   "copilot.thinking": { en: "Thinking", af: "Dink" },
+  "copilot.slow": { en: "That took too long and was cut off. Try a shorter question.", af: "Dit het te lank gevat en is afgesny. Probeer 'n korter vraag." },
   "copilot.failed": { en: "That did not come through. Try again.", af: "Dit het nie deurgekom nie. Probeer weer." },
   "copilot.off": { en: "The copilot is switched off for this app. Everything else still works.", af: "Die copilot is af vir hierdie app. Al die ander werk nog." },
   "copilot.costs": { en: "This one uses your music credits. Go ahead?", af: "Hierdie een gebruik jou musiek-krediete. Gaan voort?" },

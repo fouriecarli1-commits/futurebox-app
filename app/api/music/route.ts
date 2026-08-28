@@ -25,6 +25,13 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/**
+ * Generating a minute of music takes tens of seconds upstream, so the 10-second
+ * default would fail every request before the first one could ever succeed.
+ * 60 is the ceiling on Vercel's Hobby plan; a long song may still need Pro.
+ */
+export const maxDuration = 60;
+
 const ENDPOINT = 'https://api.elevenlabs.io/v1/music';
 const OUTPUT_FORMAT = 'mp3_44100_128';
 const MODEL_ID = 'music_v1';
