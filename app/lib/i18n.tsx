@@ -142,6 +142,8 @@ export const STRINGS: Dict = {
   "pay.most": { en: "Most pick this", af: "Meeste kies dit" },
   "pay.choose": { en: "Choose this", af: "Kies dit" },
   "pay.current": { en: "Your plan", af: "Jou plan" },
+  "pay.starting": { en: "Opening checkout\u2026", af: "Maak afreken oop\u2026" },
+  "pay.afterPaying": { en: "A plan switches on once the payment goes through, not before \u2014 the app reads it from your account, not from this page.", af: "'n Plan skakel aan sodra die betaling deurkom, nie voor nie \u2014 die app lees dit van jou rekening af, nie van hierdie blad nie." },
   "pay.noCharge": { en: "Nothing is charged. Choosing a plan here switches the app so you can see what it unlocks.", af: "Niks word gehef nie. Om 'n plan te kies wys jou net wat dit oopmaak." },
   "common.upgrade": { en: "Upgrade", af: "Kry Pro" },
   "common.appearance": { en: "Appearance", af: "Voorkoms" },
