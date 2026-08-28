@@ -66,7 +66,10 @@ export function levelOf(owned: Owned, trackId: string): Level {
  * that silently does nothing is the failure this whole app keeps running into.
  */
 export async function startCheckout(
-  want: { kind: 'open' | 'keep'; trackId: string } | { kind: 'plan'; tier: string },
+  want:
+    | { kind: 'open' | 'keep'; trackId: string }
+    | { kind: 'plan'; tier: string }
+    | { kind: 'entry'; competitionId: string },
 ): Promise<string | null> {
   const token = await accessToken();
   if (!token) return 'Sign in before paying.';

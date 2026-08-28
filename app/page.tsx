@@ -19,6 +19,7 @@ import { profileFromTracks } from './lib/matching';
 import CollabRadar from './components/CollabRadar';
 import CollabFinder from './components/CollabFinder';
 import Channel from './components/Channel';
+import ArenaLive from './components/ArenaLive';
 import Arena from './components/Arena';
 import SongSections from './components/SongSections';
 import { guessRegion, REGIONS, regionByCode, type Region } from './lib/pricing';
@@ -1906,7 +1907,14 @@ export default function FutureBoxHome() {
             )}
 
             {/* TAB 6: THE ARENA (SKILL-JUDGED COMPETITIONS WITH A FREE ENTRY ROUTE) */}
-            {studioTab === 'arena' && <Arena userPlan={userPlan} />}
+            {studioTab === 'arena' && (
+              <div className="space-y-6">
+                {/* Real competitions first; the rules and the reasoning below
+                    are what they are run under. */}
+                <ArenaLive reloadKey={trackCount} />
+                <Arena userPlan={userPlan} />
+              </div>
+            )}
 
 
               </div>
