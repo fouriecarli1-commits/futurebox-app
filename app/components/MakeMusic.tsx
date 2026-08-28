@@ -23,7 +23,7 @@ import {
   loadTracks, saveTracks, putAudio, getAudio, deleteAudio, downloadBlob, safeFilename,
   type Track,
 } from '../lib/library';
-import { readAudio } from '../lib/trackaudio';
+import { durationOf, readAudio } from '../lib/trackaudio';
 import { engines } from '../lib/engines';
 import VideoPanel from './VideoPanel';
 import { AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
@@ -235,6 +235,12 @@ export default function MakeMusic({
         }
 
 
+        // What the library will print. The sketch's arithmetic describes the
+        // sketch; when a real engine made this, the file itself is asked, and
+        // the chosen length stands in only if it cannot be read.
+        const length =
+          source === 'engine' ? ((await durationOf(blob)) ?? seconds) : sketchDurationSeconds(spec);
+
         const id = `t-${Date.now()}`;
         await putAudio(id, blob);
 
@@ -248,7 +254,7 @@ export default function MakeMusic({
           style: styleText,
           models,
           source,
-          seconds: Math.round(sketchDurationSeconds(spec)),
+          seconds: Math.round(length),
           createdAt: new Date().toISOString(),
           seed: spec.seed,
           ...(remixOf ? { remixOf: remixOf.id } : {}),
