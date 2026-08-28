@@ -26,19 +26,14 @@ import {
 import { readAudio } from '../lib/trackaudio';
 import { engines } from '../lib/engines';
 import VideoPanel from './VideoPanel';
-import { STYLE_PRESETS, AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
+import { AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
+import { STARTERS, VOICES, LENGTH_CHOICES, POLISH } from '../data/sound';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
 import { ONE_OFF } from '../lib/plans';
 import * as cloud from '../lib/cloud';
 import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } from '../lib/purchases';
 import { markBlob } from '../lib/watermark';
-
-const LENGTHS = [
-  { bars: 16, label: 'Short' },
-  { bars: 32, label: 'Normal' },
-  { bars: 48, label: 'Long' },
-];
 
 export interface Canvas {
   title: string;
@@ -79,13 +74,32 @@ export default function MakeMusic({
   const lyrics = canvas.lyrics;
   const setTitle = (value: string) => setCanvas({ ...canvas, title: value });
   const setLyrics = (value: string) => setCanvas({ ...canvas, lyrics: value });
-  const [preset, setPreset] = useState(STYLE_PRESETS[5]);
-  const [bpm, setBpm] = useState(STYLE_PRESETS[5].bpm);
-  const [songKey, setSongKey] = useState(STYLE_PRESETS[5].key);
-  const [bars, setBars] = useState(32);
+  const [bpm, setBpm] = useState(112);
+  const [songKey, setSongKey] = useState('A Minor');
+  const [seconds, setSeconds] = useState(60);
+  const [voice, setVoice] = useState(VOICES[1]);
+  /** Which starter was last added, only so the chip can look pressed. */
+  const [lastStarter, setLastStarter] = useState<string | null>(null);
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [busy, setBusy] = useState(false);
+  /**
+   * Seconds since the button was pressed.
+   *
+   * A real generation takes thirty to sixty seconds, which is long enough that
+   * a static line reads as a frozen screen. A number that keeps moving is the
+   * difference between waiting and wondering whether to reload.
+   */
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!busy) {
+      setElapsed(0);
+      return;
+    }
+    const started = Date.now();
+    const tick = setInterval(() => setElapsed(Math.round((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(tick);
+  }, [busy]);
   const [status, setStatus] = useState<string | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
   const [shared, setShared] = useState<string | null>(null);
@@ -104,7 +118,23 @@ export default function MakeMusic({
 
   /** What the music engine is told. Free text from the copilot wins over the
    *  preset chips, because it is the more specific thing the person asked for. */
-  const styleText = canvas.style || preset.tags.join(', ');
+  /**
+   * What the engine is actually told.
+   *
+   * The written field leads, because it is the specific thing this person
+   * asked for. The voice direction follows, then generic production words to
+   * reach the six or seven styles the model works best with. Order matters:
+   * the model weights early styles more heavily.
+   */
+  const styleText = (() => {
+    const written = canvas.style.trim();
+    const parts = written ? written.split(',').map((p) => p.trim()).filter(Boolean) : [];
+    if (voice.words) voice.words.split(',').forEach((w) => parts.push(w.trim()));
+    POLISH.forEach((extra) => {
+      if (parts.length < 8 && parts.indexOf(extra) === -1) parts.push(extra);
+    });
+    return parts.join(', ');
+  })();
 
   useEffect(() => {
     const local = loadTracks();
@@ -136,14 +166,13 @@ export default function MakeMusic({
   }, [makeSignal]);
 
   useEffect(() => {
-    if (incoming?.style) {
-      const match = STYLE_PRESETS.find((p) => incoming.style.toLowerCase().includes(p.name.toLowerCase()));
-      if (match) {
-        setPreset(match);
-        setBpm(match.bpm);
-        setSongKey(match.key);
-      }
-    }
+    // A style handed over from the Songwriter is text, and the field is text.
+    // It used to be matched against a fixed list and thrown away when nothing
+    // matched, which quietly lost whatever the writer had actually asked for.
+    const starter = STARTERS.find((entry) =>
+      (incoming?.style ?? '').toLowerCase().includes(entry.name.toLowerCase()),
+    );
+    if (starter) setBpm(starter.bpm);
   }, [incoming?.style]);
 
   // One audio element for the whole screen, so pressing play on a second track
@@ -167,7 +196,7 @@ export default function MakeMusic({
       }
       const name = (remixOf ? `${remixOf.title} ${t('make.takeSuffix')}` : title).trim() || 'Untitled';
       setBusy(true);
-      setStatus(t('make.going'));
+      setStatus(t('make.goingNote'));
 
       // Yields once so the button visibly changes before the work starts.
       await new Promise((resolve) => setTimeout(resolve, 60));
@@ -176,8 +205,10 @@ export default function MakeMusic({
         const spec = {
           bpm: remixOf?.bpm ?? bpm,
           key: remixOf?.key ?? songKey,
-          family: familyFor(remixOf?.genre ?? preset.name, preset.tags),
-          bars,
+          family: familyFor(remixOf?.genre ?? canvas.style, canvas.style.split(',')),
+          // The sketch engine counts bars; the person chose seconds. Four beats
+          // to a bar at the chosen tempo is the conversion.
+          bars: Math.max(8, Math.round((seconds * bpm) / 240)),
           seed: Math.floor(Math.random() * 1_000_000),
         };
 
@@ -192,7 +223,9 @@ export default function MakeMusic({
             lyrics,
             bpm: spec.bpm,
             key: spec.key,
-            seconds: sketchDurationSeconds(spec),
+            // The chosen length, not the sketch's own — the engine is being
+            // asked for a song, and the sketch is only a fallback.
+            seconds,
           });
           blob = result.blob;
           source = 'engine';
@@ -208,7 +241,7 @@ export default function MakeMusic({
         const track: Track = {
           id,
           title: name,
-          genre: remixOf?.genre ?? preset.name,
+          genre: remixOf?.genre ?? (canvas.style.split(',')[0] || 'Untitled style').trim(),
           bpm: spec.bpm,
           key: spec.key,
           lyrics,
@@ -252,7 +285,7 @@ export default function MakeMusic({
         setBusy(false);
       }
     },
-    [bars, bpm, lyrics, onMade, preset, songKey, styleText, t, title, tracks, userPlan],
+    [bpm, canvas.style, lyrics, onMade, seconds, songKey, styleText, t, title, tracks, userPlan],
   );
 
   const toggle = async (track: Track) => {
@@ -385,31 +418,96 @@ export default function MakeMusic({
           </p>
         </div>
 
+        {/* The style field is the whole instrument: ElevenLabs Music has no
+            genre setting and no voice picker, only a list of plain-English
+            directions. So this is open text, and the chips below add to it
+            rather than replacing it — twelve fixed buttons was a smaller
+            instrument than the model can play. */}
         <div>
-          <label className="text-sm text-zinc-400">{t('make.sound')}</label>
-          <div className="flex flex-wrap gap-1.5 mt-1.5">
-            {STYLE_PRESETS.map((p) => (
+          <div className="flex items-baseline justify-between gap-3">
+            <label className="text-sm text-zinc-400">{t('make.sound')}</label>
+            {canvas.style && (
               <button
-                key={p.id}
                 type="button"
                 onClick={() => {
-                  setPreset(p);
-                  setBpm(p.bpm);
-                  setSongKey(p.key);
+                  setCanvas({ ...canvas, style: '' });
+                  setLastStarter(null);
+                }}
+                className="text-sm text-zinc-500 hover:text-white"
+              >
+                {t('make.clear')}
+              </button>
+            )}
+          </div>
+          <textarea
+            value={canvas.style}
+            onChange={(e) => setCanvas({ ...canvas, style: e.target.value })}
+            placeholder={t('make.soundPlaceholder')}
+            rows={3}
+            className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y"
+          />
+          <p className="text-sm text-zinc-500 pt-1">{t('make.soundNote')}</p>
+
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {STARTERS.map((starter) => (
+              <button
+                key={starter.id}
+                type="button"
+                title={starter.sounds}
+                onClick={() => {
+                  const current = canvas.style.trim();
+                  setCanvas({
+                    ...canvas,
+                    style: current ? `${current}, ${starter.words}` : starter.words,
+                  });
+                  setBpm(starter.bpm);
+                  setLastStarter(starter.id);
                 }}
                 className={`px-3 py-2 rounded-xl text-sm border transition-all ${
-                  preset.id === p.id
+                  lastStarter === starter.id
                     ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                     : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
                 }`}
               >
-                {p.name}
+                + {starter.name}
+              </button>
+            ))}
+          </div>
+          {lastStarter && (
+            <p className="text-sm text-zinc-400 pt-2 leading-relaxed">
+              {STARTERS.find((entry) => entry.id === lastStarter)?.sounds}
+            </p>
+          )}
+        </div>
+
+        {/* A voice is described, not chosen — there is no voice parameter in the
+            Music API. These words lean on breath, room and imperfection, because
+            the usual complaint about generated singing is that it is too clean,
+            and asking for the flaw works better than asking for "realistic". */}
+        <div>
+          <label className="text-sm text-zinc-400">{t('make.voice')}</label>
+          <div className="grid sm:grid-cols-3 gap-2 mt-1.5">
+            {VOICES.map((choice) => (
+              <button
+                key={choice.id}
+                type="button"
+                onClick={() => setVoice(choice)}
+                className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                  voice.id === choice.id
+                    ? 'bg-emerald-500/15 border-emerald-500'
+                    : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
+                }`}
+              >
+                <span className={`block text-sm font-semibold ${voice.id === choice.id ? 'text-emerald-300' : 'text-zinc-200'}`}>
+                  {choice.name}
+                </span>
+                <span className="block text-sm text-zinc-500 leading-snug pt-0.5">{choice.sounds}</span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label className="text-sm text-zinc-400">{t('make.speed')} — {bpm} {t('make.bpm')}</label>
             <input
@@ -429,7 +527,6 @@ export default function MakeMusic({
               onChange={(e) => setSongKey(e.target.value)}
               className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
             >
-              <option value={preset.key}>{t('make.mood.likeStyle')} ({preset.key})</option>
               <option value="C Major">{t('make.mood.bright')}</option>
               <option value="G Major">{t('make.mood.warm')}</option>
               <option value="A Minor">{t('make.mood.thoughtful')}</option>
@@ -437,24 +534,30 @@ export default function MakeMusic({
               <option value="F Minor">{t('make.mood.heavy')}</option>
             </select>
           </div>
-          <div>
-            <label className="text-sm text-zinc-400">{t('make.length')}</label>
-            <div className="flex gap-1.5 mt-1.5">
-              {LENGTHS.map((l) => (
-                <button
-                  key={l.bars}
-                  type="button"
-                  onClick={() => setBars(l.bars)}
-                  className={`flex-1 px-2 py-2.5 rounded-xl text-sm border transition-all ${
-                    bars === l.bars
-                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
-                      : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
-                  }`}
-                >
-                  {t(`make.${l.label.toLowerCase()}`)}
-                </button>
-              ))}
-            </div>
+        </div>
+
+        {/* Lengths in seconds. Bars only mean something once you know the tempo,
+            so "32 bars" answered a question nobody asked. */}
+        <div>
+          <label className="text-sm text-zinc-400">{t('make.length')}</label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
+            {LENGTH_CHOICES.map((choice) => (
+              <button
+                key={choice.seconds}
+                type="button"
+                onClick={() => setSeconds(choice.seconds)}
+                className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                  seconds === choice.seconds
+                    ? 'bg-emerald-500/15 border-emerald-500'
+                    : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
+                }`}
+              >
+                <span className={`block text-sm font-semibold ${seconds === choice.seconds ? 'text-emerald-300' : 'text-zinc-200'}`}>
+                  {choice.label}
+                </span>
+                <span className="block text-sm text-zinc-500 leading-snug">{choice.note}</span>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -495,7 +598,7 @@ export default function MakeMusic({
           className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-extrabold text-base flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
         >
           {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-          {busy ? t('make.going') : t('make.go')}
+          {busy ? `${t('make.going')} ${elapsed}s` : t('make.go')}
         </button>
 
         <div className="flex flex-wrap items-center justify-between gap-2">
