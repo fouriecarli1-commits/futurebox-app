@@ -115,20 +115,40 @@ export const engines: Engines = {
     // The server decides what this account may spend, so it has to be told who
     // is asking. Without a token it treats the caller as signed out.
     const token = await accessToken();
-    const response = await fetch('/api/music', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
+
+    // The server may take up to five minutes; the browser had no limit at all,
+    // so anything that stalled — a dropped connection, a proxy holding the
+    // socket open — left the button spinning forever with nothing to press.
+    // A little past the server's own ceiling, so a real timeout there is
+    // reported as itself rather than pre-empted here.
+    const abort = new AbortController();
+    const bell = setTimeout(() => abort.abort(), 310_000);
+
+    let response: Response;
+    try {
+      response = await fetch('/api/music', {
+        signal: abort.signal,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       body: JSON.stringify({
         style: request.style,
         sections,
         prompt: request.title ? `A song called "${request.title}"` : undefined,
         seconds: request.seconds,
         instrumental: sections.length === 0,
-      }),
-    });
+        }),
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error('That took longer than five minutes and was given up on. Try a shorter song.');
+      }
+      throw new Error('Could not reach the music service.');
+    } finally {
+      clearTimeout(bell);
+    }
 
     if (!response.ok) {
       const detail = (await response.json().catch(() => ({}))) as { message?: string };

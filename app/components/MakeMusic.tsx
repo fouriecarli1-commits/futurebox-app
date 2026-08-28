@@ -86,6 +86,23 @@ export default function MakeMusic({
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [busy, setBusy] = useState(false);
+  /**
+   * Seconds since the button was pressed.
+   *
+   * A real generation takes thirty to sixty seconds, which is long enough that
+   * a static line reads as a frozen screen. A number that keeps moving is the
+   * difference between waiting and wondering whether to reload.
+   */
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!busy) {
+      setElapsed(0);
+      return;
+    }
+    const started = Date.now();
+    const tick = setInterval(() => setElapsed(Math.round((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(tick);
+  }, [busy]);
   const [status, setStatus] = useState<string | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
   const [shared, setShared] = useState<string | null>(null);
@@ -167,7 +184,7 @@ export default function MakeMusic({
       }
       const name = (remixOf ? `${remixOf.title} ${t('make.takeSuffix')}` : title).trim() || 'Untitled';
       setBusy(true);
-      setStatus(t('make.going'));
+      setStatus(t('make.goingNote'));
 
       // Yields once so the button visibly changes before the work starts.
       await new Promise((resolve) => setTimeout(resolve, 60));
@@ -495,7 +512,7 @@ export default function MakeMusic({
           className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-extrabold text-base flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
         >
           {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
-          {busy ? t('make.going') : t('make.go')}
+          {busy ? `${t('make.going')} ${elapsed}s` : t('make.go')}
         </button>
 
         <div className="flex flex-wrap items-center justify-between gap-2">

@@ -89,6 +89,7 @@ export const STRINGS: Dict = {
   "make.short": { en: "Short", af: "Kort" },
   "make.normal": { en: "Normal", af: "Normaal" },
   "make.long": { en: "Long", af: "Lank" },
+  "make.goingNote": { en: "Making it. A real song takes thirty to sixty seconds \u2014 longer for a long one.", af: "Besig. 'n Regte snit vat dertig tot sestig sekondes \u2014 langer vir 'n lang een." },
   "make.go": { en: "Make my song", af: "Maak my snit" },
   "make.going": { en: "Making your song\u2026", af: "Besig om te maak\u2026" },
   "make.done": { en: "Done \u2014 it is in your channel below.", af: "Klaar \u2014 dit is in jou kanaal hier onder." },
