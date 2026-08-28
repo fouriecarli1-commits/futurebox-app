@@ -56,6 +56,8 @@ export const STRINGS: Dict = {
   "rail.write.hint": { en: "Lyrics and style", af: "Woorde en styl" },
   "rail.studio": { en: "Studio", af: "Studio" },
   "rail.studio.hint": { en: "Timeline and edits", af: "Tydlyn en fixes" },
+  "rail.podcast": { en: "Podcast", af: "Podcast" },
+  "rail.podcast.hint": { en: "A show with its own feed", af: "'n Program met sy eie feed" },
   "rail.sound": { en: "Soundboard", af: "Klankbord" },
   "rail.sound.hint": { en: "Every genre, with audio", af: "Elke genre, met klank" },
   "rail.voice": { en: "Voice", af: "Stem" },

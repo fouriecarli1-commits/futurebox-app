@@ -341,3 +341,31 @@ export function sponsorshipBand(rung: Sponsorship, region: Region): string {
   if (rung.to === null) return `${from}+`;
   return `${from} – ${localised(rung.to, region).display}`;
 }
+
+/**
+ * What each tier may do in the podcast studio.
+ *
+ * The free tier can hear what the thing does — a short script, in a stock
+ * voice, a few times a day — and cannot clone or publish. That is the line
+ * that matters: a clone is the expensive, consequential thing, and publishing
+ * puts a file on the open internet under somebody's name. Neither belongs
+ * behind no commitment at all.
+ */
+export interface PodcastCaps {
+  /** How many cloned voices this tier may keep. Zero means none. */
+  readonly voices: number;
+  /** Characters in one script. A cap here is a cap on the bill. */
+  readonly speakChars: number;
+  readonly speakPerDay: number;
+  /** Their audio isolation, on a recording made here. */
+  readonly clean: boolean;
+  /** A show with a feed that podcast apps can subscribe to. */
+  readonly publish: boolean;
+}
+
+export const PODCAST_CAPS: Record<Tier, PodcastCaps> = {
+  free: { voices: 0, speakChars: 400, speakPerDay: 3, clean: false, publish: false },
+  maker: { voices: 1, speakChars: 3_000, speakPerDay: 20, clean: true, publish: true },
+  studio: { voices: 3, speakChars: 6_000, speakPerDay: 60, clean: true, publish: true },
+  label: { voices: 10, speakChars: 12_000, speakPerDay: 200, clean: true, publish: true },
+};
