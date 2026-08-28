@@ -24,8 +24,10 @@ import {
   type Track,
 } from '../lib/library';
 import { durationOf, readAudio } from '../lib/trackaudio';
-import { engines } from '../lib/engines';
+import { engines, type Stage } from '../lib/engines';
+import { expect as expectWait, remember } from '../lib/timing';
 import VideoPanel from './VideoPanel';
+import StyleFinder from './StyleFinder';
 import { AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
 import { STARTERS, VOICES, LENGTH_CHOICES, POLISH } from '../data/sound';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
@@ -78,8 +80,6 @@ export default function MakeMusic({
   const [songKey, setSongKey] = useState('A Minor');
   const [seconds, setSeconds] = useState(60);
   const [voice, setVoice] = useState(VOICES[1]);
-  /** Which starter was last added, only so the chip can look pressed. */
-  const [lastStarter, setLastStarter] = useState<string | null>(null);
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [busy, setBusy] = useState(false);
@@ -100,6 +100,14 @@ export default function MakeMusic({
     const tick = setInterval(() => setElapsed(Math.round((Date.now() - started) / 1000)), 1000);
     return () => clearInterval(tick);
   }, [busy]);
+  /**
+   * Where the generation has got to, as reported by the engine.
+   *
+   * Only ever set from something observed. The long middle stretch has no
+   * progress to report because the music service reports none, and the panel
+   * below says exactly that rather than drawing a bar that moves on a timer.
+   */
+  const [stage, setStage] = useState<Stage | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
   const [shared, setShared] = useState<string | null>(null);
@@ -195,7 +203,9 @@ export default function MakeMusic({
         return;
       }
       const name = (remixOf ? `${remixOf.title} ${t('make.takeSuffix')}` : title).trim() || 'Untitled';
+      const began = Date.now();
       setBusy(true);
+      setStage(null);
       setStatus(t('make.goingNote'));
 
       // Yields once so the button visibly changes before the work starts.
@@ -226,6 +236,7 @@ export default function MakeMusic({
             // The chosen length, not the sketch's own — the engine is being
             // asked for a song, and the sketch is only a fallback.
             seconds,
+            onStage: setStage,
           });
           blob = result.blob;
           source = 'engine';
@@ -234,6 +245,11 @@ export default function MakeMusic({
           blob = encodeWav(renderSketch(spec));
         }
 
+
+        setStage({ at: 'saving' });
+        // How long that really took, kept so the next one can be told what to
+        // expect. Only real runs are recorded, and only ones that finished.
+        if (source === 'engine') remember(seconds, Math.round((Date.now() - began) / 1000));
 
         // What the library will print. The sketch's arithmetic describes the
         // sketch; when a real engine made this, the file itself is asked, and
@@ -289,6 +305,7 @@ export default function MakeMusic({
         setStatus(reason || t('make.failed'));
       } finally {
         setBusy(false);
+        setStage(null);
       }
     },
     [bpm, canvas.style, lyrics, onMade, seconds, songKey, styleText, t, title, tracks, userPlan],
@@ -437,7 +454,6 @@ export default function MakeMusic({
                 type="button"
                 onClick={() => {
                   setCanvas({ ...canvas, style: '' });
-                  setLastStarter(null);
                 }}
                 className="text-sm text-zinc-500 hover:text-white"
               >
@@ -454,36 +470,21 @@ export default function MakeMusic({
           />
           <p className="text-sm text-zinc-500 pt-1">{t('make.soundNote')}</p>
 
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            {STARTERS.map((starter) => (
-              <button
-                key={starter.id}
-                type="button"
-                title={starter.sounds}
-                onClick={() => {
-                  const current = canvas.style.trim();
-                  setCanvas({
-                    ...canvas,
-                    style: current ? `${current}, ${starter.words}` : starter.words,
-                  });
-                  setBpm(starter.bpm);
-                  setLastStarter(starter.id);
-                }}
-                className={`px-3 py-2 rounded-xl text-sm border transition-all ${
-                  lastStarter === starter.id
-                    ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
-                    : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
-                }`}
-              >
-                + {starter.name}
-              </button>
-            ))}
+          <div className="mt-3">
+            <StyleFinder
+              style={canvas.style}
+              title={title}
+              lyrics={lyrics}
+              onBpm={setBpm}
+              onStyle={(next, how) => {
+                const current = canvas.style.trim();
+                setCanvas({
+                  ...canvas,
+                  style: how === 'append' && current ? `${current}, ${next}` : next,
+                });
+              }}
+            />
           </div>
-          {lastStarter && (
-            <p className="text-sm text-zinc-400 pt-2 leading-relaxed">
-              {STARTERS.find((entry) => entry.id === lastStarter)?.sounds}
-            </p>
-          )}
         </div>
 
         {/* A voice is described, not chosen — there is no voice parameter in the
@@ -606,6 +607,8 @@ export default function MakeMusic({
           {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
           {busy ? `${t('make.going')} ${elapsed}s` : t('make.go')}
         </button>
+
+        {busy && <Progress stage={stage} elapsed={elapsed} asked={seconds} t={t} />}
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-zinc-500">
@@ -747,6 +750,94 @@ export default function MakeMusic({
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+
+/**
+ * What is happening, while it happens.
+ *
+ * The old screen said "Making your song" and nothing else for up to a minute,
+ * which is indistinguishable from a screen that has stopped. This says which
+ * step it is on, how long it has been, and — once there is anything to base it
+ * on — roughly how long it usually takes.
+ *
+ * The estimate is a measurement, not a promise: it is the median of real runs
+ * on this device, and the line says so, including when there are none. A bar
+ * appears only while bytes are genuinely arriving, because that is the only
+ * part of this with a measurable proportion. The rest pulses to show it is
+ * alive without claiming to know how far along it is.
+ */
+function Progress({
+  stage,
+  elapsed,
+  asked,
+  t,
+}: {
+  stage: Stage | null;
+  elapsed: number;
+  asked: number;
+  t: (key: string, fallback?: string) => string;
+}): React.ReactElement {
+  // Read once per generation rather than every second: it cannot change while
+  // this is on screen, and localStorage on a render path is a bad habit.
+  const [guess] = useState(() => expectWait(asked));
+
+  const line =
+    stage?.at === 'plan'
+      ? // No parts means no lyrics, which is an instrumental — and "0 × 60s"
+        // is not a sentence about anything.
+        stage.parts > 0
+        ? `${t('make.stage.plan')} — ${stage.parts} × ${stage.seconds}s`
+        : `${t('make.stage.plan')} — ${stage.seconds}s`
+      : stage?.at === 'receiving'
+        ? t('make.stage.receiving')
+        : stage?.at === 'saving'
+          ? t('make.stage.saving')
+          : // The long stretch. The request is away and the service is writing;
+            // there is nothing else true to say until bytes start arriving.
+            stage?.at === 'sent'
+            ? t('make.stage.waiting')
+            : t('make.stage.plan');
+
+  const share =
+    stage?.at === 'receiving' && stage.expected
+      ? Math.min(100, Math.round((stage.received / stage.expected) * 100))
+      : null;
+
+  const late = guess ? elapsed > guess.seconds * 1.5 : elapsed > 120;
+
+  const expectation = guess
+    ? late
+      ? t('make.wait.late', 'Longer than usual. It gives up at five minutes.')
+      : `${t('make.wait.usually', 'Usually about')} ${guess.seconds}s — ${guess.runs} ${
+          guess.runs === 1 ? t('make.wait.run', 'song so far') : t('make.wait.runs', 'songs so far')
+        }`
+    : t(
+        'make.wait.first',
+        'Nothing to compare this to yet. Thirty seconds to two minutes is normal; it gives up at five.',
+      );
+
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-3.5 space-y-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-sm font-semibold text-emerald-300">{line}</span>
+        <span className="text-sm text-zinc-500 tabular-nums">{elapsed}s</span>
+      </div>
+
+      <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+        {share === null ? (
+          <div className="h-full w-1/3 rounded-full bg-emerald-500/50 animate-pulse" />
+        ) : (
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-[width] duration-200"
+            style={{ width: `${share}%` }}
+          />
+        )}
+      </div>
+
+      <p className={`text-sm leading-snug ${late ? 'text-amber-400' : 'text-zinc-500'}`}>{expectation}</p>
     </div>
   );
 }

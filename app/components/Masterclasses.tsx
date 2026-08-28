@@ -25,6 +25,7 @@ import {
 } from '../data/masterclasses';
 import type { Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
+import { signal } from '../lib/signal';
 
 const TRACK_ICONS: Record<Track, typeof Music> = {
   'ai-music': Music,
@@ -89,6 +90,10 @@ function Card({ item, userPlan, onUpgrade }: { item: Masterclass; userPlan: Plan
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
+          // Counted when it is opened, which is the only moment anybody can
+          // honestly claim a class was watched from here — where the viewer
+          // goes next happens on somebody else's site.
+          onClick={() => signal('masterclass', { category: item.track, ref: item.id })}
           className="w-full py-2.5 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-1.5"
         >
           <PlayCircle className="w-4 h-4" />
