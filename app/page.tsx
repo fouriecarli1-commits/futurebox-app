@@ -38,6 +38,7 @@ import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './l
 import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
 import * as cloud from './lib/cloud';
 import { TIER_SPECS, ONE_OFF, tierPrice, oneOffPrice } from './lib/plans';
+import { startCheckout } from './lib/purchases';
 
 interface Blueprint {
   tag: string;
@@ -77,6 +78,8 @@ export default function FutureBoxHome() {
   const [madeTrack, setMadeTrack] = useState<Track | null>(null);
   const [trackCount, setTrackCount] = useState(0);
   const [engineReady, setEngineReady] = useState(false);
+  const [planBusy, setPlanBusy] = useState<string | null>(null);
+  const [planNote, setPlanNote] = useState<string | null>(null);
 
   // Only the server knows whether a music key is set, so ask once.
   useEffect(() => {
@@ -1525,7 +1528,7 @@ export default function FutureBoxHome() {
                 </div>
                 <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3">
                   <p className="text-2xl font-black text-white">
-                    +{oneOffPrice(ONE_OFF.keep.rand, region).display}
+                    {oneOffPrice(ONE_OFF.keep.rand, region).display}
                   </p>
                   <p className="text-sm font-semibold text-emerald-300 pt-0.5">{t('pay.keep')}</p>
                   <p className="text-sm text-zinc-400 pt-1 leading-relaxed">{t('pay.keepNote')}</p>
@@ -1570,10 +1573,16 @@ export default function FutureBoxHome() {
                     </ul>
                     <button
                       type="button"
-                      disabled={current}
-                      onClick={() => {
-                        setUserPlan(id);
-                        setPricingModalOpen(false);
+                      disabled={current || planBusy !== null}
+                      onClick={async () => {
+                        // The server reads the tier from the memberships table,
+                        // so flipping it in the browser would show an upgrade
+                        // that nothing behind the page believes in. Either this
+                        // starts a real checkout, or it says why it cannot.
+                        setPlanBusy(id);
+                        const problem = await startCheckout({ kind: 'plan', tier: id });
+                        setPlanBusy(null);
+                        if (problem) setPlanNote(problem);
                       }}
                       className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50 ${
                         featured
@@ -1581,15 +1590,18 @@ export default function FutureBoxHome() {
                           : 'bg-zinc-800 text-white hover:bg-zinc-700'
                       }`}
                     >
-                      {current ? t('pay.current') : t('pay.choose')}
+                      {current ? t('pay.current') : planBusy === id ? t('pay.starting') : t('pay.choose')}
                     </button>
                   </div>
                 );
               })}
             </div>
 
+            {planNote && (
+              <p className="text-sm text-amber-300 text-center leading-relaxed">{planNote}</p>
+            )}
             <p className="text-sm text-zinc-500 text-center leading-relaxed">
-              {t('pay.noCharge')}
+              {t('pay.afterPaying')}
             </p>
           </div>
         </div>

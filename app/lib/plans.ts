@@ -14,10 +14,14 @@
  *             with a watermark. Costs almost nothing to give away, which is
  *             what makes it survivable — see the note on abuse below.
  *   R14       open one preview into the full-length song. Still watermarked.
- *   +R35      keep that song: clean, downloadable, the rights are yours.
- *             R14 + R35 = R49, so opening first never costs extra. Charging
- *             the full R49 on top of the R14 would earn more per sale and is
- *             the reason this reads as a credit rather than a second price.
+ *             A taster, priced to be an easy yes rather than to cover itself.
+ *   R49       keep that song: clean, downloadable, the rights are yours.
+ *             Charged in full, not as an upgrade — somebody who opens first
+ *             and then keeps pays R63 in total. That is a deliberate choice by
+ *             the owner: the R14 is a separate, smaller product rather than a
+ *             deposit against the R49, and it earns more per buyer who does
+ *             both. It also means the app must never describe opening as free
+ *             or as credited, because it is neither.
  *   monthly   for people making more than a couple of songs.
  *
  * ── Why the free tier is two 15-second previews ──────────────────────────
@@ -146,7 +150,7 @@ export const ONE_OFF = {
    * Keep it clean and downloadable. Priced so that open + keep equals what
    * keeping costs on its own — opening first is never punished.
    */
-  keep: { rand: 35, label: 'Keep it, clean', fullRand: 49 },
+  keep: { rand: 49, label: 'Keep it, clean' },
 } as const;
 
 /* ────────────────────────────────────────────────────── what it costs us ─ */

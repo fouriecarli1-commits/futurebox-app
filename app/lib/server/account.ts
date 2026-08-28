@@ -27,6 +27,27 @@ const URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 
+/**
+ * Accounts that always have full access, whatever the database says.
+ *
+ * For the owner, and for anyone demonstrating the app: testing the paid product
+ * should not need a hand-written SQL insert every time, and a demo that hits a
+ * free-tier wall in front of an audience is a bad demo.
+ *
+ * Comma-separated, matched case-insensitively on the verified email from the
+ * token — not on anything the request claims about itself. It has no
+ * NEXT_PUBLIC_ prefix, so the list never reaches a browser and nobody can read
+ * off who is privileged.
+ */
+const OWNERS = (process.env.OWNER_EMAIL ?? '')
+  .split(',')
+  .map((entry) => entry.trim().toLowerCase())
+  .filter(Boolean);
+
+function isOwner(email: string): boolean {
+  return email !== '' && OWNERS.indexOf(email.toLowerCase()) !== -1;
+}
+
 /** True when metering can actually be enforced. */
 export function metered(): boolean {
   return Boolean(URL && ANON && SERVICE);
@@ -60,7 +81,12 @@ export async function callerFrom(request: Request): Promise<Caller | null> {
   const { data, error } = await client.auth.getUser(token);
   if (error || !data.user) return null;
 
-  return { id: data.user.id, email: data.user.email ?? '', tier: await tierOf(data.user.id) };
+  const email = data.user.email ?? '';
+  // The owner check comes first and skips the database read entirely: it must
+  // keep working even when the memberships table is missing or empty, which is
+  // exactly the state it exists to get someone out of.
+  const tier = isOwner(email) ? 'label' : await tierOf(data.user.id);
+  return { id: data.user.id, email, tier };
 }
 
 /** Which tier someone is on, from the database. Free unless told otherwise. */
