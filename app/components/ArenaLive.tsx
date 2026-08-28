@@ -79,6 +79,30 @@ const DEFAULT_RUBRIC = [
 
 const CATEGORIES: CompetitionCategory[] = ['music', 'video', 'app', 'idea'];
 
+/**
+ * The rules, shown before the money rather than behind a link.
+ *
+ * The Consumer Protection Act asks for them to be available before anybody
+ * enters, and they are the same on every competition here — so they are stated
+ * once, in full, on the competition rather than summarised into a tick box
+ * that says "I accept the rules" with nothing above it.
+ */
+const RULES: ReadonlyArray<{ head: string; body: string }> = [
+  { head: 'Judging', body: 'Scored against the published rubric above by a panel. Never drawn at random.' },
+  { head: 'Free entry', body: 'The free route wins the same prize, judged identically. You never have to pay to win.' },
+  { head: 'Eligibility', body: '18 or older. One entry per person per competition, whichever route.' },
+  { head: 'Your work stays yours', body: 'Entering grants FutureBox a licence to show it on the channel with credit — nothing more.' },
+  { head: 'AI disclosure', body: 'The full model stack must be submitted with the entry. An undisclosed stack is disqualified.' },
+  { head: 'Results', body: "Published with the judges' scores on the announcement date above." },
+];
+
+/** Three things an entrant states for themselves. Entry is closed until all three. */
+const DECLARATIONS = [
+  'I have read the rules and accept them.',
+  'This is my own work, I hold the rights to it, and the AI models that made it are listed.',
+  'I am 18 or older.',
+];
+
 function when(value: string): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
@@ -105,6 +129,8 @@ export default function ArenaLive({ reloadKey }: { reloadKey: number }): React.R
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 1000));
+  /** One box per declaration, per competition. Empty means none ticked. */
+  const [declared, setDeclared] = useState<Record<string, boolean[]>>({});
   const [draft, setDraft] = useState<{ title: string; category: CompetitionCategory; brief: string; constraint: string } | null>(null);
   const [closes, setCloses] = useState('');
   const [announce, setAnnounce] = useState('');
@@ -176,6 +202,12 @@ export default function ArenaLive({ reloadKey }: { reloadKey: number }): React.R
   const ideas = useMemo(
     () => CATEGORIES.slice(0, 3).map((category, i) => generateCompetition(category, seed + i * 7)),
     [seed],
+  );
+
+  /** All three declarations ticked. Both routes wait on it, not only the paid one. */
+  const ready = useCallback(
+    (id: string) => (declared[id] ?? []).filter(Boolean).length === DECLARATIONS.length,
+    [declared],
   );
 
   const enteredIn = useCallback(
@@ -251,6 +283,16 @@ export default function ArenaLive({ reloadKey }: { reloadKey: number }): React.R
 
   return (
     <div className="space-y-4">
+      <div>
+        <p className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+          <Trophy className="w-6 h-6 text-amber-400" />
+          {t('arena.title', 'The Arena')}
+        </p>
+        <p className="text-base text-zinc-400 pt-1 max-w-2xl leading-relaxed">
+          {t('arena.sub', 'A real prize, judged on the work against a published rubric — never drawn at random — and every competition has a free entry route that wins exactly the same prize.')}
+        </p>
+      </div>
+
       {/* ── What is open ─────────────────────────────────────────────────── */}
       {competitions.filter((one) => one.status === 'open').length === 0 ? (
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 text-center space-y-1.5">
@@ -325,6 +367,32 @@ export default function ArenaLive({ reloadKey }: { reloadKey: number }): React.R
                   <p className="text-sm text-zinc-500">{t('arena.signIn', 'Sign in to enter.')}</p>
                 ) : (
                   <div className="space-y-2">
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-2.5 space-y-1">
+                      <p className="text-sm font-semibold text-zinc-300">{t('arena.rules', 'Rules — read before you enter')}</p>
+                      {RULES.map((rule) => (
+                        <p key={rule.head} className="text-sm text-zinc-500 leading-snug">
+                          · <span className="text-zinc-400">{rule.head}:</span> {rule.body}
+                        </p>
+                      ))}
+                    </div>
+
+                    {DECLARATIONS.map((line, i) => (
+                      <label key={line} className="flex items-start gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(declared[competition.id]?.[i])}
+                          onChange={(event) => {
+                            const was = declared[competition.id] ?? [false, false, false];
+                            const next = was.slice();
+                            next[i] = event.target.checked;
+                            setDeclared({ ...declared, [competition.id]: next });
+                          }}
+                          className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+                        />
+                        <span className="text-sm text-zinc-400 leading-snug">{line}</span>
+                      </label>
+                    ))}
+
                     <select
                       id={`pick-${competition.id}`}
                       className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
@@ -339,7 +407,7 @@ export default function ArenaLive({ reloadKey }: { reloadKey: number }): React.R
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        disabled={busy === competition.id}
+                        disabled={busy === competition.id || !ready(competition.id)}
                         onClick={() => {
                           const pick = document.getElementById(`pick-${competition.id}`) as HTMLSelectElement | null;
                           void enterFree(competition, pick?.value ?? '');
@@ -350,7 +418,7 @@ export default function ArenaLive({ reloadKey }: { reloadKey: number }): React.R
                       </button>
                       <button
                         type="button"
-                        disabled={busy === competition.id || competition.entry_rand <= 0}
+                        disabled={busy === competition.id || competition.entry_rand <= 0 || !ready(competition.id)}
                         onClick={() => void enterPaid(competition)}
                         className="py-2.5 rounded-xl bg-amber-500 text-onAccent text-sm font-bold disabled:opacity-40"
                       >

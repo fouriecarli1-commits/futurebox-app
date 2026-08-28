@@ -20,9 +20,8 @@ import CollabRadar from './components/CollabRadar';
 import CollabFinder from './components/CollabFinder';
 import Channel from './components/Channel';
 import ArenaLive from './components/ArenaLive';
-import Arena from './components/Arena';
 import SongSections from './components/SongSections';
-import { guessRegion, REGIONS, regionByCode, type Region } from './lib/pricing';
+import { guessRegion, priceFor, REGIONS, regionByCode, type Region } from './lib/pricing';
 import ThemeStudio from './components/ThemeStudio';
 import QualityRadar from './components/QualityRadar';
 import MakeMusic from './components/MakeMusic';
@@ -52,7 +51,18 @@ interface Blueprint {
   tag: string;
   title: string;
   desc: string;
-  mrr?: string;
+  /**
+   * What operators of this kind of business are reported to make, in US
+   * dollars a month, as a range.
+   *
+   * Held as numbers rather than as a written string so it can be shown in the
+   * reader's own currency — a rand figure is what a South African can judge —
+   * and so the label can say what it is. It was "$10k - $50k / month" with
+   * nothing beside it, which reads as a forecast this app is making. It is
+   * not: it is a reported range, it is not verified here, and the card now
+   * says so where the number is.
+   */
+  mrrUsd?: readonly [number, number];
   buildTime?: string;
   techStack: string[];
   opportunity: string;
@@ -1448,7 +1458,7 @@ export default function FutureBoxHome() {
                   tag: 'Top Vibe Coded App',
                   title: 'Autonomous Coding & Micro-SaaS with Cursor AI',
                   desc: 'How non-coders and engineers build and deploy full applications in under 48 hours.',
-                  mrr: '$10k - $50k / month',
+                  mrrUsd: [10_000, 50_000] as const,
                   buildTime: '48 Hours (Cursor)',
                   techStack: ['Cursor AI', 'Next.js 14', 'Supabase Database', 'Vercel Deployment'],
                   opportunity: 'Cursor AI enables solo founders to build 10x faster with full codebase context awareness.',
@@ -1464,7 +1474,7 @@ export default function FutureBoxHome() {
                   tag: 'Business Opportunity',
                   title: 'Building 24/7 AI Voice Operators with LiveKit & Twilio',
                   desc: 'A step-by-step breakdown on selling AI phone receptionists to high-ticket local businesses.',
-                  mrr: '$5,000 - $25,000 / month',
+                  mrrUsd: [5_000, 25_000] as const,
                   buildTime: '1-2 Weeks',
                   techStack: ['LiveKit WebRTC', 'Twilio Voice', 'Gemini Live / OpenAI Realtime', 'Supabase'],
                   opportunity: 'Local services (plumbing, legal, clinics) miss 30% of after-hours calls. Voice AI automates bookings seamlessly.',
@@ -1480,7 +1490,7 @@ export default function FutureBoxHome() {
                   tag: 'Top AI News',
                   title: 'Vercel v0: Generative Frontend Code Synthesis',
                   desc: 'Describe an interface idea and v0 instantly generates production-grade React and Tailwind components.',
-                  mrr: 'Industry Standard',
+
                   buildTime: 'Real-Time (Seconds)',
                   techStack: ['React', 'Tailwind CSS', 'Shadcn UI', 'Next.js App Router'],
                   opportunity: 'Eliminate weeks of mockup design. v0 synthesizes responsive components from simple natural language prompts.',
@@ -1595,7 +1605,7 @@ export default function FutureBoxHome() {
         </div>
       )}
 
-      {/* 👑 PRICING & PRO UPGRADE MODAL ($19 / MONTH) */}
+      {/* Plans and one-off prices. Every figure comes from plans.ts, in rand. */}
       {pricingModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
@@ -1907,14 +1917,7 @@ export default function FutureBoxHome() {
             )}
 
             {/* TAB 6: THE ARENA (SKILL-JUDGED COMPETITIONS WITH A FREE ENTRY ROUTE) */}
-            {studioTab === 'arena' && (
-              <div className="space-y-6">
-                {/* Real competitions first; the rules and the reasoning below
-                    are what they are run under. */}
-                <ArenaLive reloadKey={trackCount} />
-                <Arena userPlan={userPlan} />
-              </div>
-            )}
+            {studioTab === 'arena' && <ArenaLive reloadKey={trackCount} />}
 
 
               </div>
@@ -2043,13 +2046,22 @@ export default function FutureBoxHome() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-black/40 border border-zinc-800 p-3.5 rounded-2xl flex items-center space-x-3">
-                <DollarSign className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                <div>
-                  <p className="text-[10px] uppercase font-mono text-zinc-500">Revenue Potential</p>
-                  <p className="text-xs font-bold text-white">{selectedBlueprint.mrr}</p>
+              {selectedBlueprint.mrrUsd && (
+                <div className="bg-black/40 border border-zinc-800 p-3.5 rounded-2xl flex items-center space-x-3">
+                  <DollarSign className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                  <div className="min-w-0">
+                    {/* Said as what it is. A bare figure under "Revenue
+                        Potential" reads as a forecast this app is making. */}
+                    <p className="text-[10px] uppercase font-mono text-zinc-500">
+                      Reported by operators · not verified here
+                    </p>
+                    <p className="text-xs font-bold text-white">
+                      {priceFor(selectedBlueprint.mrrUsd[0], region).display} –{' '}
+                      {priceFor(selectedBlueprint.mrrUsd[1], region).display} a month
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="bg-black/40 border border-zinc-800 p-3.5 rounded-2xl flex items-center space-x-3">
                 <Clock className="w-5 h-5 text-cyan-400 flex-shrink-0" />
                 <div>

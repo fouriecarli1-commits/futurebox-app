@@ -154,11 +154,45 @@ export interface LocalPrice {
   readonly usd: number;
 }
 
+/**
+ * A rand figure, grouped the way one is written here: R12 000, not R12,000.
+ *
+ * Written out rather than left to `Intl`, whose en-ZA grouping differs between
+ * Node and the browsers — and because the same figure has to look the same
+ * whether it came through here or through `plans.ts`. Two rand formats on one
+ * page reads as carelessness about money, which is the last thing to be
+ * careless about.
+ */
+export function randDisplay(amount: number): string {
+  const whole = Math.floor(Math.abs(amount));
+  const cents = Math.round((Math.abs(amount) - whole) * 100);
+  const digits = String(whole);
+  let grouped = '';
+  for (let i = 0; i < digits.length; i += 1) {
+    if (i > 0 && (digits.length - i) % 3 === 0) grouped += '\u00a0';
+    grouped += digits[i];
+  }
+  // Cents only where they mean something. On a figure in the tens of thousands
+  // they are spurious precision.
+  return whole >= 1000 || cents === 0
+    ? `R${grouped}`
+    : `R${grouped},${String(cents).padStart(2, '0')}`;
+}
+
 export function priceFor(usdAmount: number, region: Region): LocalPrice {
   const raw = usdAmount * region.pppFactor;
   const amount = tidy(raw, region.currency);
-  const zeroDecimal = ['JPY', 'IDR', 'NGN', 'ARS', 'KES'].includes(region.currency);
+  /**
+   * Cents on a figure in the tens of thousands are noise, and they read as
+   * spurious precision on a number that is a range in the first place. Above a
+   * thousand units the decimals go, whatever the currency normally does.
+   */
+  const zeroDecimal =
+    amount >= 1000 || ['JPY', 'IDR', 'NGN', 'ARS', 'KES'].includes(region.currency);
   let display: string;
+  if (region.currency === 'ZAR') {
+    return { amount, currency: 'ZAR', display: randDisplay(amount), usd: usdAmount };
+  }
   try {
     display = new Intl.NumberFormat(region.locale, {
       style: 'currency',
