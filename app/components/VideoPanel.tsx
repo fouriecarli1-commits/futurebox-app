@@ -12,6 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { Video as VideoIcon, X, Loader2, Download } from 'lucide-react';
 import { renderVideo, styleFor, videoSupported, extensionFor, type Aspect } from '../lib/video';
 import { signal } from '../lib/signal';
+import { timelineOf, type Part } from '../lib/timeline';
 import { downloadBlob, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { useLang } from '../lib/i18n';
@@ -25,6 +26,14 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [made, setMade] = useState<{ blob: Blob; ext: string } | null>(null);
+  /**
+   * Put the words on screen.
+   *
+   * On by default where the song has a plan, because a lyric video is the
+   * format a new song actually gets posted as, and this one can be made
+   * honestly: the app wrote the plan, so it knows where each line lands.
+   */
+  const [withWords, setWithWords] = useState(true);
   const [url, setUrl] = useState<string | null>(null);
 
   // Switching to a different song should not leave the last video on screen.
@@ -57,9 +66,17 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
     setError(null);
     setMade(null);
     try {
+      // The plan, scaled to the file's real length. Empty when the song has
+      // none — a sketch, or one made before plans were kept — and the
+      // visualiser runs on its own.
+      const parts = (track.parts ?? []) as readonly Part[];
+      const lyrics =
+        withWords && parts.length ? timelineOf(parts, track.seconds || 0) : [];
+
       const result = await renderVideo({
         audio,
         aspect,
+        lyrics,
         seconds: clipSeconds === 0 ? track.seconds : clipSeconds,
         startSeconds: startAt,
         style: styleFor(track.title, track.genre, track.bpm),
@@ -149,6 +166,24 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
               />
             </div>
           </div>
+
+          {/* Only offered where it can be done properly. A song with no plan
+              has no line timings, and guessing them would put the chorus in
+              the wrong place on somebody's release. */}
+          {(track.parts ?? []).length > 0 && (
+            <label className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={withWords}
+                onChange={(event) => setWithWords(event.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-amber-500 flex-shrink-0"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-zinc-200">{t('video.words')}</span>
+                <span className="block text-sm text-zinc-500 leading-snug">{t('video.wordsNote')}</span>
+              </span>
+            </label>
+          )}
 
           <button
             type="button"

@@ -791,7 +791,7 @@ export default function FutureBoxHome() {
                 </span>
               )}
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-zinc-400">Digital Learning & Creative AI Ecosystem</p>
+            <p className="text-[10px] uppercase tracking-widest text-zinc-400">{t('feed.tagline')}</p>
           </div>
         </div>
 
@@ -965,7 +965,7 @@ export default function FutureBoxHome() {
               onClick={() => { setSelectedPodcasterFilter(null); setSelectedCategoryFilter(null); }}
               className="text-zinc-400 hover:text-white flex items-center space-x-1 text-[11px] underline"
             >
-              <span>Reset All Filters</span>
+              <span>{t('feed.resetFilters')}</span>
             </button>
           )}
 
@@ -1008,7 +1008,7 @@ export default function FutureBoxHome() {
                 <div className="flex items-center space-x-3">
                   <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-semibold rounded-full flex items-center space-x-1.5">
                     <Radio className="w-3 h-3 animate-pulse text-emerald-400" />
-                    <span>FREE FEATURED MASTERCLASS</span>
+                    <span>{t('feed.freeClass')}</span>
                   </span>
                   <span className="text-xs text-zinc-400 font-mono">1h 00m • Andrej Karpathy</span>
                 </div>
@@ -1020,15 +1020,15 @@ export default function FutureBoxHome() {
                 </p>
 
                 <div className="bg-black/40 backdrop-blur-md rounded-2xl p-4 border border-zinc-800/80 space-y-2">
-                  <span className="text-[11px] font-mono uppercase text-emerald-400 tracking-wider">Key Takeaways for Future Growth</span>
+                  <span className="text-[11px] font-mono uppercase text-emerald-400 tracking-wider">{t('feed.takeaways')}</span>
                   <ul className="space-y-1.5">
                     <li className="text-xs text-zinc-300 flex items-center space-x-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                      <span>How tokens, transformer architectures, and weights perform computation</span>
+                      <span>{t('feed.take1')}</span>
                     </li>
                     <li className="text-xs text-zinc-300 flex items-center space-x-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                      <span>The evolution of autonomous agent operating systems</span>
+                      <span>{t('feed.take2')}</span>
                     </li>
                   </ul>
                 </div>
@@ -1046,7 +1046,7 @@ export default function FutureBoxHome() {
                     className="flex items-center space-x-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-sm rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)]"
                   >
                     <Play className="w-4 h-4 fill-current" />
-                    <span>Watch Free Masterclass</span>
+                    <span>{t('feed.watchFree')}</span>
                   </button>
 
                   <a 
@@ -1055,7 +1055,7 @@ export default function FutureBoxHome() {
                     rel="noreferrer"
                     className="text-xs text-zinc-400 hover:text-white flex items-center space-x-1"
                   >
-                    <span>Open on YouTube</span>
+                    <span>{t('feed.openYouTube')}</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
@@ -1097,7 +1097,7 @@ export default function FutureBoxHome() {
                   <Headphones className="w-5 h-5 text-emerald-400" />
                   <span>FutureBox Podcasts {selectedPodcasterFilter && `(${selectedPodcasterFilter})`}</span>
                 </h3>
-                <p className="text-xs text-zinc-400">Deep-dive conversations on future wealth, AI disruption, and human potential.</p>
+                <p className="text-xs text-zinc-400">{t('feed.podSub')}</p>
               </div>
               <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
                 {activePodcasts.length} Curated Episodes Available
@@ -1188,9 +1188,9 @@ export default function FutureBoxHome() {
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
                   <GraduationCap className="w-5 h-5 text-cyan-400" />
-                  <span>Featured this week</span>
+                  <span>{t('feed.featured')}</span>
                 </h3>
-                <p className="text-xs text-zinc-400">Advanced architectures, venture creation, and engineering in the AI era.</p>
+                <p className="text-xs text-zinc-400">{t('feed.featuredSub')}</p>
               </div>
               <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
                 Verified Masterclasses
@@ -1309,7 +1309,7 @@ export default function FutureBoxHome() {
                           className="text-cyan-400 font-semibold flex items-center space-x-1 hover:underline"
                         >
                           <Play className="w-3 h-3 fill-current" />
-                          <span>Start Masterclass</span>
+                          <span>{t('feed.startClass')}</span>
                         </button>
                       )}
                     </div>
@@ -1328,9 +1328,9 @@ export default function FutureBoxHome() {
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
                   <Sparkles className="w-5 h-5 text-cyan-400" />
-                  <span>Creative AI Music & Music Videos</span>
+                  <span>{t('feed.creations')}</span>
                 </h3>
-                <p className="text-xs text-zinc-400">The premier stage for neural music releases, generative music videos, and creator channels.</p>
+                <p className="text-xs text-zinc-400">{t('feed.creationsSub')}</p>
               </div>
               <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
                 Creator Channels
@@ -1421,7 +1421,7 @@ export default function FutureBoxHome() {
                   </div>
 
                   <div className="p-5 pt-0 flex items-center justify-between text-[11px] text-zinc-400 border-t border-zinc-800/60">
-                    <span>By {creation.creator}</span>
+                    <span>{t('feed.by')} {creation.creator}</span>
                     <a 
                       href={creation.externalUrl} 
                       target="_blank" 
@@ -1447,9 +1447,9 @@ export default function FutureBoxHome() {
             <div className="pt-2">
               <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
-                <span>AI Trends & Opportunities Radar</span>
+                <span>{t('feed.radar')}</span>
               </h3>
-              <p className="text-xs text-zinc-400">High-margin business blueprints, vibe-coded apps, and emerging market frontiers.</p>
+              <p className="text-xs text-zinc-400">{t('feed.radarSub')}</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
@@ -1529,7 +1529,7 @@ export default function FutureBoxHome() {
                       onClick={() => setSelectedBlueprint(item)}
                       className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center space-x-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg border border-emerald-500/30 transition-colors"
                     >
-                      <span>Inspect Blueprint</span>
+                      <span>{t('feed.inspect')}</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -1557,7 +1557,7 @@ export default function FutureBoxHome() {
 
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono text-zinc-400 mb-1">Email Address</label>
+                <label className="block text-xs font-mono text-zinc-400 mb-1">{t('feed.emailAddress')}</label>
                 <input
                   type="email"
                   value={authEmail}
@@ -1725,7 +1725,7 @@ export default function FutureBoxHome() {
                 className="flex items-center space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl transition-all"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Back to FutureBox Platform</span>
+                <span>{t('feed.backToPlatform')}</span>
               </button>
 
               <div className="flex items-center space-x-2">
@@ -1803,7 +1803,7 @@ export default function FutureBoxHome() {
                   <div className="bg-black/40 border border-zinc-800 p-5 rounded-2xl space-y-3">
                     <label className="block text-xs font-bold uppercase tracking-wider text-white flex items-center space-x-2">
                       <Mic className="w-4 h-4 text-emerald-400" />
-                      <span>Your own voice</span>
+                      <span>{t('voice.yoursHead')}</span>
                     </label>
                     <p className="text-sm text-zinc-400 leading-relaxed">
                       Singing in your own voice needs a recording of it, and a voice model to match it
@@ -1811,14 +1811,14 @@ export default function FutureBoxHome() {
                     </p>
                     <div className="border-2 border-dashed border-zinc-800 rounded-2xl p-6 text-center">
                       <UploadCloud className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
-                      <p className="text-sm text-zinc-500">Not switched on</p>
+                      <p className="text-sm text-zinc-500">{t('video.notOn')}</p>
                     </div>
                   </div>
 
                   <div className="bg-black/40 border border-zinc-800 p-5 rounded-2xl space-y-3">
                     <label className="block text-xs font-bold uppercase tracking-wider text-white flex items-center space-x-2">
                       <Sparkles className="w-4 h-4 text-cyan-400" />
-                      <span>Or pick a voice</span>
+                      <span>{t('voice.orPick')}</span>
                     </label>
                     <div className="space-y-2">
                       {[
@@ -1855,7 +1855,7 @@ export default function FutureBoxHome() {
                     onClick={() => setStudioTab('make')}
                     className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center space-x-2"
                   >
-                    <span>Back to the song</span>
+                    <span>{t('feed.backToSong')}</span>
                     <ArrowUpRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -2014,14 +2014,14 @@ export default function FutureBoxHome() {
             </div>
 
             <div className="p-4 bg-black/50 border-t border-zinc-800 flex items-center justify-between">
-              <span className="text-xs text-zinc-400">Stream directly on YouTube or source platform</span>
+              <span className="text-xs text-zinc-400">{t('feed.streamNote')}</span>
               <a 
                 href={selectedMedia.externalUrl} 
                 target="_blank" 
                 rel="noreferrer"
                 className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center space-x-1"
               >
-                <span>Open on YouTube</span>
+                <span>{t('feed.openYouTube')}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -2074,7 +2074,7 @@ export default function FutureBoxHome() {
             <div className="space-y-2 bg-black/40 p-4 rounded-2xl border border-zinc-800">
               <label className="block text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center space-x-1.5">
                 <Lightbulb className="w-4 h-4" />
-                <span>The Market Opportunity:</span>
+                <span>{t('feed.marketOpp')}</span>
               </label>
               <p className="text-xs text-zinc-300 leading-relaxed">{selectedBlueprint.opportunity}</p>
             </div>
@@ -2121,7 +2121,7 @@ export default function FutureBoxHome() {
             <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800 space-y-2">
               <span className="text-[11px] font-mono uppercase text-emerald-400 font-bold flex items-center space-x-1.5">
                 <Star className="w-3.5 h-3.5 fill-current" />
-                <span>Sponsorship & Partner Benefits</span>
+                <span>{t('spon.benefits')}</span>
               </span>
               <ul className="text-xs text-zinc-300 space-y-1.5">
                 {SPONSORSHIP.map((rung) => (
@@ -2147,7 +2147,7 @@ export default function FutureBoxHome() {
               <Mail className="w-5 h-5 text-emerald-400" />
               <h4 className="font-extrabold text-base">Advertise on FutureBox (Contact Sponsorship Team)</h4>
             </div>
-            <p className="text-xs text-zinc-400">Submit this inquiry to send a direct sponsorship request to our partnership desk.</p>
+            <p className="text-xs text-zinc-400">{t('spon.intro')}</p>
 
             <form onSubmit={handleMarketingSubmit} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -2163,7 +2163,7 @@ export default function FutureBoxHome() {
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder="Your Email Address"
+                  placeholder={t('feed.emailAddress')}
                   className="bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
                   required
                 />
@@ -2208,7 +2208,7 @@ export default function FutureBoxHome() {
                 className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center space-x-2"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Send Sponsorship Inquiry</span>
+                <span>{t('spon.send')}</span>
               </button>
             </form>
           </div>
@@ -2218,9 +2218,9 @@ export default function FutureBoxHome() {
         <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
           <p>© 2026 FutureBox Platform. All rights reserved.</p>
           <div className="flex space-x-6">
-            <span>Privacy Policy</span>
-            <span>Ethical Guidelines</span>
-            <span>Terms of Service</span>
+            <span>{t('feed.privacy')}</span>
+            <span>{t('feed.ethics')}</span>
+            <span>{t('feed.terms')}</span>
           </div>
         </div>
       </footer>
