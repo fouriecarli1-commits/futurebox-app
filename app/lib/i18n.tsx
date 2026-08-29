@@ -363,6 +363,10 @@ export const STRINGS: Dict = {
   "pod.publicWarning": { en: "Publishing is public. The audio goes to an address anybody can open, and podcast apps will keep fetching it.", af: "Publiseer is publiek. Die klank gaan na \u2019n adres wat enigiemand kan oopmaak, en podcast-apps hou aan om dit af te laai." },
   "pod.publish": { en: "Publish it", af: "Publiseer dit" },
 
+  "voice.screen": { en: "Voice", af: "Stem" },
+  "voice.screenSub": { en: "Clone your own voice and have it read a script. To sing on a track, make the song first \u2014 the recording goes over the backing, so it needs one.", af: "Kloon jou eie stem en laat dit \u2019n skrif lees. Om op \u2019n snit te sing, maak eers die snit \u2014 die opname gaan oor die begeleiding, so dit het een nodig." },
+  "voice.sing": { en: "Sing on a track yourself", af: "Sing self op \u2019n snit" },
+  "voice.singNote": { en: "In Make a song: tick \u201cI will sing it myself\u201d for a backing with no vocal, then press \u201cSing over it\u201d on the track. The take is mixed with the music and kept as its own song.", af: "Onder Maak \u2019n snit: merk \u201cEk sing dit self\u201d vir \u2019n begeleiding sonder stem, druk dan \u201cSing daaroor\u201d op die snit. Die opname word met die musiek gemeng en as sy eie snit gehou." },
   "voice.yours": { en: "Your own voice", af: "Jou eie stem" },
   "voice.yoursNote": { en: "Record about a minute and this can read scripts in your voice. It reads \u2014 it does not sing.", af: "Neem omtrent \u2019n minuut op, dan kan dit skrifte in jou stem lees. Dit lees \u2014 dit sing nie." },
   "voice.forget": { en: "Delete this voice", af: "Vee hierdie stem uit" },

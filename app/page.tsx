@@ -19,6 +19,7 @@ import { profileFromTracks } from './lib/matching';
 import CollabRadar from './components/CollabRadar';
 import CollabFinder from './components/CollabFinder';
 import Channel from './components/Channel';
+import VoiceScreen from './components/VoiceScreen';
 import ArenaLive from './components/ArenaLive';
 import SongSections from './components/SongSections';
 import { guessRegion, priceFor, REGIONS, regionByCode, type Region } from './lib/pricing';
@@ -247,33 +248,6 @@ export default function FutureBoxHome() {
 
   // Studio Form State
   const [videoAspectRatio, setVideoAspectRatio] = useState<'16:9' | '9:16'>('16:9');
-  const [vocalVoiceChoice, setVocalVoiceChoice] = useState<'female_pop' | 'male_rock' | 'soft_close' | 'cyber_vocoder'>('female_pop');
-
-  /** What the voice choice means to a music model, in words it reads. */
-  const VOICE_DIRECTION: Record<string, string> = {
-    female_pop: 'bright higher vocal, clear and forward',
-    male_rock: 'lower rough vocal, raspy and pushed',
-    soft_close: 'soft close-mic vocal, quiet and almost spoken',
-    cyber_vocoder: 'heavily vocoded stacked vocal',
-  };
-
-  /**
-   * Swaps the voice direction in a style line. Picking a second voice should
-   * replace the first, not sing in both — and the directions contain commas, so
-   * they have to come out as whole strings rather than as comma-separated parts.
-   */
-  const withVoice = (style: string, choice: string): string => {
-    let rest = style;
-    Object.keys(VOICE_DIRECTION).forEach((key) => {
-      rest = rest.split(VOICE_DIRECTION[key]).join('');
-    });
-    const cleaned = rest
-      .split(',')
-      .map((part) => part.trim())
-      .filter(Boolean)
-      .join(', ');
-    return [cleaned, VOICE_DIRECTION[choice]].filter(Boolean).join(', ');
-  };
   const [creatorDomain, setCreatorDomain] = useState('anrefourie');
   const [title, setTitle] = useState('');
   const [selectedTools, setSelectedTools] = useState<string[]>(['Suno v5', 'Runway Gen-3', 'ElevenLabs Voice']);
@@ -1788,78 +1762,10 @@ export default function FutureBoxHome() {
 
             {/* TAB 2: CUSTOM VOICE STUDIO (USE YOUR OWN VOICE OR CLONE) */}
             {studioTab === 'voice_studio' && (
-              <div className="space-y-6">
-                <div className="bg-emerald-950/20 border border-emerald-500/30 p-5 rounded-2xl space-y-2">
-                  <h4 className="text-sm font-bold text-emerald-300 flex items-center space-x-2">
-                    <Mic2 className="w-4 h-4" />
-                    <span>Voice</span>
-                  </h4>
-                  <p className="text-sm text-zinc-400">
-                    Pick the voice a song should be sung in. Choosing here sets it for the next song you make.
-                  </p>
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="bg-black/40 border border-zinc-800 p-5 rounded-2xl space-y-3">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-white flex items-center space-x-2">
-                      <Mic className="w-4 h-4 text-emerald-400" />
-                      <span>{t('voice.yoursHead')}</span>
-                    </label>
-                    <p className="text-sm text-zinc-400 leading-relaxed">
-                      Singing in your own voice needs a recording of it, and a voice model to match it
-                      against. Neither is connected yet, so this is not switched on.
-                    </p>
-                    <div className="border-2 border-dashed border-zinc-800 rounded-2xl p-6 text-center">
-                      <UploadCloud className="w-8 h-8 text-zinc-700 mx-auto mb-2" />
-                      <p className="text-sm text-zinc-500">{t('video.notOn')}</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-black/40 border border-zinc-800 p-5 rounded-2xl space-y-3">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-white flex items-center space-x-2">
-                      <Sparkles className="w-4 h-4 text-cyan-400" />
-                      <span>{t('voice.orPick')}</span>
-                    </label>
-                    <div className="space-y-2">
-                      {[
-                        { id: 'female_pop', label: 'Higher, bright', desc: 'Clear and forward, sits on top of the track' },
-                        { id: 'male_rock', label: 'Lower, rough', desc: 'Raspy and pushed, carries a loud chorus' },
-                        { id: 'soft_close', label: 'Soft and close', desc: 'Quiet, near the mic, almost spoken' },
-                        { id: 'cyber_vocoder', label: 'Cyber Vocoder Synthesizer', desc: 'Robot-choir vocal, hard-tuned and stacked' }
-                      ].map((item) => (
-                        <div
-                          key={item.id}
-                          onClick={() => {
-                            setVocalVoiceChoice(item.id as typeof vocalVoiceChoice);
-                            setCanvas({ ...canvas, style: withVoice(canvas.style, item.id) });
-                          }}
-                          className={`p-3 rounded-xl border text-xs cursor-pointer flex items-center justify-between transition-all ${
-                            vocalVoiceChoice === item.id 
-                              ? 'bg-emerald-950/40 border-emerald-500 text-white' 
-                              : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                          }`}
-                        >
-                          <div>
-                            <p className="font-bold text-white">{item.label}</p>
-                            <p className="text-[13px] text-zinc-500">{item.desc}</p>
-                          </div>
-                          {vocalVoiceChoice === item.id && <Check className="w-4 h-4 text-emerald-400" />}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    onClick={() => setStudioTab('make')}
-                    className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center space-x-2"
-                  >
-                    <span>{t('feed.backToSong')}</span>
-                    <ArrowUpRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+              <VoiceScreen
+                onUpgrade={() => setPricingModalOpen(true)}
+                onGoToMake={() => setStudioTab('make')}
+              />
             )}
 
             {/* HOOKS: cut the bit worth posting, from your own tracks */}
