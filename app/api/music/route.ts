@@ -192,7 +192,9 @@ export async function POST(request: Request): Promise<Response> {
   let record: (() => Promise<void>) | null = null;
   if (metered()) {
     const caller = await callerFrom(request);
-    const allowance = await allowanceFor(caller);
+    // The request goes with it: the address it came from is one of the three
+    // things the free allowance is counted against.
+    const allowance = await allowanceFor(caller, request);
     if (!allowance.allowed) {
       return Response.json(
         {
@@ -211,7 +213,7 @@ export async function POST(request: Request): Promise<Response> {
       body = { ...body, seconds: allowance.seconds, sections: undefined };
     }
     const seconds = allowance.kind === 'preview' ? allowance.seconds : (body.seconds ?? 60);
-    if (caller) record = () => recordGeneration(caller, allowance.kind, seconds);
+    if (caller) record = () => recordGeneration(caller, allowance.kind, seconds, undefined, request);
   }
 
   let upstream: Response;

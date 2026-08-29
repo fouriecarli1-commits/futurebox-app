@@ -22,6 +22,7 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { TIER_SPECS, type Tier } from '../plans';
+import { addressKey, addressOf, emailKey, isDisposable } from './identity';
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
@@ -119,6 +120,16 @@ async function tierOf(owner: string): Promise<Tier> {
 /* ─────────────────────────────────────────────────────────── allowances ─── */
 
 export const FREE_PREVIEWS_PER_DAY = 2;
+
+/**
+ * Free previews from one address in a day, whatever the accounts say.
+ *
+ * Higher than the per-account cap on purpose: a household, an office or a
+ * campus share an address, and three real people who each make their two
+ * should not lock each other out. It is low enough that a hundred sign-ups
+ * from one machine stop after six.
+ */
+export const FREE_PREVIEWS_PER_ADDRESS = 6;
 export const PREVIEW_SECONDS = 15;
 
 /**
@@ -148,7 +159,7 @@ export interface Allowance {
  * cost model. At a 5% purchase rate one buyer carries twenty free users, so
  * whatever the free tier costs gets multiplied by twenty before anyone pays.
  */
-export async function allowanceFor(caller: Caller | null): Promise<Allowance> {
+export async function allowanceFor(caller: Caller | null, request?: Request): Promise<Allowance> {
   if (!caller) {
     return {
       kind: 'preview',
@@ -170,15 +181,59 @@ export async function allowanceFor(caller: Caller | null): Promise<Allowance> {
   }
 
   if (caller.tier === 'free') {
-    const used = counts.preview;
+    // A throwaway inbox is a free tier with no ceiling, because the next one
+    // is thirty seconds away. Signing up and paying are both still open.
+    if (isDisposable(caller.email)) {
+      return {
+        kind: 'preview',
+        seconds: PREVIEW_SECONDS,
+        allowed: false,
+        reason:
+          'The free previews need an address that will still exist tomorrow. Sign in with a real one, or pick a plan.',
+        usedToday: 0,
+        limit: FREE_PREVIEWS_PER_DAY,
+      };
+    }
+
+    // Counted three ways at once: this account, this inbox — a hundred Gmail
+    // aliases are one inbox — and this machine. Whichever is fullest decides.
+    const inbox = emailKey(caller.email);
+    const machine = request ? addressKey(addressOf(request)) : '';
+    let byOwner = counts.preview;
+    let byEmail = counts.preview;
+    let byAddress = 0;
+    if (db) {
+      const { data } = await db.rpc('free_usage_today', {
+        p_owner: caller.id,
+        p_email_key: inbox,
+        p_ip_hash: machine || null,
+      });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row) {
+        byOwner = Number((row as { by_owner: number }).by_owner) || 0;
+        byEmail = Number((row as { by_email: number }).by_email) || 0;
+        byAddress = Number((row as { by_ip: number }).by_ip) || 0;
+      }
+    }
+
+    const used = Math.max(byOwner, byEmail);
+    const overAddress = byAddress >= FREE_PREVIEWS_PER_ADDRESS;
+    const overAccount = used >= FREE_PREVIEWS_PER_DAY;
+
     return {
       kind: 'preview',
       seconds: PREVIEW_SECONDS,
-      allowed: used < FREE_PREVIEWS_PER_DAY,
-      reason:
-        used < FREE_PREVIEWS_PER_DAY
-          ? ''
-          : 'That is both previews for today. Open one into the full song, or pick a plan.',
+      allowed: !overAccount && !overAddress,
+      reason: overAccount
+        ? // Named as the inbox rather than the account when aliases are what
+          // filled it, or the message reads as wrong to somebody who knows
+          // this account has made none.
+          byEmail > byOwner
+          ? 'That is both previews for today for this inbox — a plus sign or a dot does not make a new one. Open one into the full song, or pick a plan.'
+          : 'That is both previews for today. Open one into the full song, or pick a plan.'
+        : overAddress
+          ? 'That is the day\u2019s free previews from this connection. They come back tomorrow, and a plan lifts it now.'
+          : '',
       usedToday: used,
       limit: FREE_PREVIEWS_PER_DAY,
     };
@@ -202,15 +257,22 @@ export async function recordGeneration(
   kind: 'preview' | 'full',
   seconds: number,
   trackId?: string,
+  /** Carried so the row can be counted against the inbox and the machine too. */
+  request?: Request,
 ): Promise<void> {
   const db = admin();
   if (!db) return;
+  const machine = request ? addressKey(addressOf(request)) : '';
   await db.from('generations').insert({
     owner: caller.id,
     kind,
     seconds: Math.round(seconds),
     track_id: trackId ?? null,
     credits: Math.round((seconds / 60) * 900),
+    email_key: emailKey(caller.email),
+    // Empty when there is no salt configured, and null is "not known" to the
+    // counting function rather than a value everybody shares.
+    ip_hash: machine || null,
   });
 }
 
