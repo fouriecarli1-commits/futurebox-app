@@ -48,6 +48,17 @@ function isOwner(email: string): boolean {
   return email !== '' && OWNERS.indexOf(email.toLowerCase()) !== -1;
 }
 
+/**
+ * Whether this caller runs the place.
+ *
+ * Used where an action is the operator's alone — opening a competition,
+ * naming a winner. Matched on the verified email from the token, never on
+ * anything the request says about itself.
+ */
+export function callerIsOwner(caller: Caller | null): boolean {
+  return Boolean(caller && isOwner(caller.email));
+}
+
 /** True when metering can actually be enforced. */
 export function metered(): boolean {
   return Boolean(URL && ANON && SERVICE);

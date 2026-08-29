@@ -27,10 +27,9 @@
  * makes everything else on the page suspect.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Loader2, Pause, Play, Sparkles, Wand2 } from 'lucide-react';
-import { STARTERS, type Starter } from '../data/sound';
-import { encodeWav, familyFor, renderSketch } from '../lib/audio';
+import { GENRE_CATEGORIES, GENRE_SAMPLES, type GenreSample } from '../data/genres';
 import { useLang } from '../lib/i18n';
 
 interface Idea {
@@ -39,8 +38,12 @@ interface Idea {
   readonly why: string;
 }
 
-/** Four bars is long enough to hear the groove and short enough to render now. */
-const PREVIEW_BARS = 4;
+/** The number out of "124 BPM", for the sketch engine that stands in offline. */
+function bpmOf(label: string): number {
+  const found = label.match(/\d+/);
+  const value = found ? Number(found[0]) : 0;
+  return value >= 40 && value <= 220 ? value : 112;
+}
 
 export default function StyleFinder({
   style,
@@ -55,11 +58,11 @@ export default function StyleFinder({
   lyrics: string;
   /**
    * Sets the style field. A written style replaces what is there, because it is
-   * a whole answer; a starter off the shelf appends, so two grooves can be
-   * combined — which was the point of making the field text in the first place.
+   * a whole answer; a genre off the shelf appends, so two can be combined —
+   * which was the point of making the field text in the first place.
    */
   onStyle: (next: string, how: 'replace' | 'append') => void;
-  /** A starter carries a tempo, and the sketch fallback needs to know it. */
+  /** A genre carries a tempo, and the sketch fallback needs to know it. */
   onBpm: (bpm: number) => void;
 }): React.ReactElement {
   const { t } = useLang();
@@ -70,52 +73,40 @@ export default function StyleFinder({
   const [problem, setProblem] = useState<string | null>(null);
 
   const [open, setOpen] = useState(false);
+  const [category, setCategory] = useState<string>('All');
   const [playing, setPlaying] = useState<string | null>(null);
 
-  // One element and one cache for the whole shelf, so pressing play on a second
-  // starter stops the first rather than layering two grooves.
+  // One element for the whole shelf, so pressing play on a second genre stops
+  // the first rather than layering two pieces of music.
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const madeRef = useRef<Record<string, string>>({});
 
   useEffect(() => {
     const element = new Audio();
     element.addEventListener('ended', () => setPlaying(null));
     audioRef.current = element;
-    return () => {
-      element.pause();
-      Object.keys(madeRef.current).forEach((id) => URL.revokeObjectURL(madeRef.current[id]));
-    };
+    return () => element.pause();
   }, []);
 
-  const preview = useCallback((starter: Starter) => {
-    const element = audioRef.current;
-    if (!element) return;
+  const shelf = useMemo(
+    () => (category === 'All' ? GENRE_SAMPLES : GENRE_SAMPLES.filter((one) => one.category === category)),
+    [category],
+  );
 
-    if (playing === starter.id) {
-      element.pause();
-      setPlaying(null);
-      return;
-    }
-
-    let url = madeRef.current[starter.id];
-    if (!url) {
-      const samples = renderSketch({
-        bpm: starter.bpm,
-        key: 'A Minor',
-        family: familyFor(starter.name, starter.words.split(',')),
-        bars: PREVIEW_BARS,
-        // Fixed, so the same starter sounds the same every time you come back
-        // to compare it against another one.
-        seed: 1,
-      });
-      url = URL.createObjectURL(encodeWav(samples));
-      madeRef.current[starter.id] = url;
-    }
-
-    element.src = url;
-    void element.play();
-    setPlaying(starter.id);
-  }, [playing]);
+  const hear = useCallback(
+    (sample: GenreSample) => {
+      const element = audioRef.current;
+      if (!element) return;
+      if (playing === sample.name) {
+        element.pause();
+        setPlaying(null);
+        return;
+      }
+      element.src = sample.audioUrl;
+      void element.play().catch(() => setPlaying(null));
+      setPlaying(sample.name);
+    },
+    [playing],
+  );
 
   const write = useCallback(async () => {
     setAsking(true);
@@ -214,43 +205,69 @@ export default function StyleFinder({
         </button>
 
         {open && (
-          <div className="px-3.5 pb-3.5 space-y-2">
-            <p className="text-sm text-zinc-500 leading-snug">{t('style.sketch')}</p>
-            {STARTERS.map((starter) => (
-              <div
-                key={starter.id}
-                className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-2.5 flex items-start gap-2.5"
-              >
+          <div className="px-3.5 pb-3.5 space-y-2.5">
+            <p className="text-sm text-zinc-500 leading-snug">{t('style.examples')}</p>
+
+            {/* Ten categories. The list is long on purpose — this is the
+                reference you scan before you write anything. */}
+            <div className="flex flex-wrap gap-1.5">
+              {GENRE_CATEGORIES.map((one) => (
                 <button
+                  key={one}
                   type="button"
-                  onClick={() => preview(starter)}
-                  aria-label={starter.name}
-                  className="w-9 h-9 rounded-full bg-zinc-950 border border-zinc-700 text-emerald-400 flex items-center justify-center flex-shrink-0 hover:border-emerald-500"
+                  onClick={() => setCategory(one)}
+                  className={`px-2.5 py-1 rounded-lg text-sm border transition-all ${
+                    category === one
+                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
+                      : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                  }`}
                 >
-                  {playing === starter.id ? (
-                    <Pause className="w-4 h-4" />
-                  ) : (
-                    <Play className="w-4 h-4 translate-x-0.5" />
-                  )}
+                  {one}
                 </button>
-                <div className="flex-1 min-w-0">
-                  <span className="block text-sm font-semibold text-zinc-200">
-                    {starter.name} <span className="text-zinc-600">· {starter.bpm} BPM</span>
-                  </span>
-                  <span className="block text-sm text-zinc-500 leading-snug">{starter.sounds}</span>
+              ))}
+            </div>
+
+            <div className="max-h-96 overflow-y-auto space-y-2 pr-1">
+              {shelf.map((sample) => (
+                <div
+                  key={sample.name}
+                  className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-2.5 flex items-start gap-2.5"
+                >
+                  <button
+                    type="button"
+                    onClick={() => hear(sample)}
+                    aria-label={sample.name}
+                    className="w-9 h-9 rounded-full bg-zinc-950 border border-zinc-700 text-emerald-400 flex items-center justify-center flex-shrink-0 hover:border-emerald-500"
+                  >
+                    {playing === sample.name ? (
+                      <Pause className="w-4 h-4" />
+                    ) : (
+                      <Play className="w-4 h-4 translate-x-0.5" />
+                    )}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-sm font-semibold text-zinc-200">
+                      {sample.name}{' '}
+                      <span className="text-zinc-600">· {sample.bpm} · {sample.key}</span>
+                    </span>
+                    <span className="block text-sm text-zinc-400 leading-snug">{sample.subgenre}</span>
+                    <span className="block text-sm text-zinc-500 leading-snug">{sample.description}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // The snippet is the whole reason the list exists: the
+                      // sound and the words that produce it, together.
+                      onStyle(sample.promptSnippet, 'append');
+                      onBpm(bpmOf(sample.bpm));
+                    }}
+                    className="text-sm font-semibold text-emerald-300 hover:underline flex-shrink-0 pt-1"
+                  >
+                    {t('style.use')}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onStyle(starter.words, 'append');
-                    onBpm(starter.bpm);
-                  }}
-                  className="text-sm font-semibold text-emerald-300 hover:underline flex-shrink-0 pt-1"
-                >
-                  {t('style.use')}
-                </button>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>

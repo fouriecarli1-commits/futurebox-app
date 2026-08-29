@@ -23,7 +23,8 @@ import { assess, BAR } from '../lib/curation';
 import { MASTERCLASSES, PROVENANCE_LABELS, type Provenance } from '../data/masterclasses';
 import { TRACK_FLAVOURS } from '../data/studio';
 import { byArea, describe } from '../lib/entitlements';
-import { BASE_PRICES, guessRegion, priceFor, REGIONS, type Region } from '../lib/pricing';
+import { guessRegion, REGIONS, type Region } from '../lib/pricing';
+import { tierPrice } from '../lib/plans';
 import { useLang } from '../lib/i18n';
 import LanguagePicker from './LanguagePicker';
 
@@ -52,7 +53,14 @@ export default function Landing({ onStart }: { onStart: () => void }) {
     };
   }, [now]);
 
-  const price = priceFor(BASE_PRICES.proMonthly, region);
+  /**
+   * The entry plan's real price, from `plans.ts`.
+   *
+   * It was derived from an old dollar figure and came out at R139 while the
+   * plan itself costs R149 — the first number a visitor sees, and the one
+   * number that has to match what they are later charged.
+   */
+  const price = tierPrice('maker', region);
   const teaserClasses = MASTERCLASSES.slice(0, 4);
 
   return (

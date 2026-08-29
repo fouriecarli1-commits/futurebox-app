@@ -30,6 +30,7 @@ import VideoPanel from './VideoPanel';
 import NowPlaying from './NowPlaying';
 import VoiceTake from './VoiceTake';
 import StyleFinder from './StyleFinder';
+import LyricHelp from './LyricHelp';
 import { AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
 import { STARTERS, VOICES, LENGTH_CHOICES, POLISH } from '../data/sound';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
@@ -504,6 +505,18 @@ export default function MakeMusic({
           <p className="text-sm text-zinc-500 pt-1">
             {engineReady ? t('make.wordsReal') : t('make.wordsSketch')}
           </p>
+
+          {/* Help with the words, beside the words. This used to be its own
+              screen, which meant the lyrics you were helped with lived
+              somewhere other than the box you generate from. */}
+          <div className="pt-2">
+            <LyricHelp
+              title={title}
+              style={canvas.style}
+              lyrics={lyrics}
+              onLyrics={setLyrics}
+            />
+          </div>
         </div>
 
         {/* The style field is the whole instrument: ElevenLabs Music has no

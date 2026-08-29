@@ -65,7 +65,7 @@
  * ceiling actually binds, not before.
  */
 
-import { priceFor, regionByCode, type LocalPrice, type Region } from './pricing';
+import { priceFor, randDisplay, regionByCode, type LocalPrice, type Region } from './pricing';
 
 export type Tier = 'free' | 'maker' | 'studio' | 'label';
 
@@ -239,17 +239,6 @@ function asDollarBurden(rand: number): number {
  * turns R35 into R34, and then opening a song plus keeping it no longer adds
  * up to the R49 the app promises it will.
  */
-/** 12000 → "12 000". Written out so it cannot differ between two renders. */
-function grouped(value: number): string {
-  const digits = String(Math.round(value));
-  let out = '';
-  for (let i = 0; i < digits.length; i += 1) {
-    if (i > 0 && (digits.length - i) % 3 === 0) out += '\u00a0';
-    out += digits[i];
-  }
-  return out;
-}
-
 function localised(rand: number, region: Region): LocalPrice {
   if (region.code === 'ZA') {
     return {
@@ -258,7 +247,7 @@ function localised(rand: number, region: Region): LocalPrice {
       // Grouped with a space, which is how a rand figure is written here.
       // `toLocaleString` gives commas, which reads as a foreign price card —
       // invisible at R49 and glaring at R180,000.
-      display: `R${grouped(rand)}`,
+      display: randDisplay(rand),
       usd: asDollarBurden(rand),
     };
   }

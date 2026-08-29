@@ -16,7 +16,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Smartphone, Loader2, Download, Scissors, Music } from 'lucide-react';
 import { loadTracks, downloadBlob, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
-import { findHooks, decodeTrack, formatMoment, type Hook } from '../lib/hooks';
+import { findHooks, sectionHooks, decodeTrack, formatMoment, type Hook } from '../lib/hooks';
 import { renderVideo, styleFor, videoSupported, extensionFor } from '../lib/video';
 import { useLang } from '../lib/i18n';
 
@@ -46,7 +46,15 @@ export default function Hooks() {
         const audio = await readAudio(track.id);
         if (!audio) return;
         const buffer = await decodeTrack(audio);
-        setHooks(findHooks(buffer, clipSeconds, 3));
+        // The plan first, where there is one: the app knows where the chorus
+        // is, and a known boundary beats a loudness peak. Analysis fills in
+        // behind it, and a duplicate start is dropped rather than offered
+        // twice under two names.
+        const named = sectionHooks(track.parts ?? [], buffer.duration, clipSeconds);
+        const found = findHooks(buffer, clipSeconds, 3).filter(
+          (one) => !named.some((part) => Math.abs(part.startSeconds - one.startSeconds) < 2),
+        );
+        setHooks(named.concat(found).slice(0, 5));
       } finally {
         setFinding(false);
       }
@@ -77,8 +85,17 @@ export default function Hooks() {
     }
   };
 
-  const reasonFor = (why: string): string =>
-    why.startsWith('Something') ? t('hooks.arrives') : why.startsWith('The fullest') ? t('hooks.fullest') : t('hooks.safe');
+  /**
+   * Why a moment was picked. Switched on a value, not on the first word of an
+   * English sentence — matching prose is how the section reasons were quietly
+   * turning into "safe pick".
+   */
+  const reasonFor = (hook: Hook): string => {
+    if (hook.kind === 'section') return `${hook.label} — ${t('hooks.fromPlan')}`;
+    if (hook.kind === 'arrival') return t('hooks.arrives');
+    if (hook.kind === 'fullest') return t('hooks.fullest');
+    return t('hooks.safe');
+  };
 
   return (
     <div className="space-y-5">
@@ -154,7 +171,7 @@ export default function Hooks() {
                         <span className="text-sm text-emerald-400 font-semibold">{t('hooks.strongest')}</span>
                       )}
                     </div>
-                    <p className="text-sm text-zinc-400">{reasonFor(hook.why)}</p>
+                    <p className="text-sm text-zinc-400">{reasonFor(hook)}</p>
                     <div className="h-1 rounded-full bg-zinc-800 overflow-hidden">
                       <div className="h-full bg-emerald-400" style={{ width: `${Math.round(hook.score * 100)}%` }} />
                     </div>

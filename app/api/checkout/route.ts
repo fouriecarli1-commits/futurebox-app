@@ -19,7 +19,7 @@
  */
 
 import { ONE_OFF, TIER_SPECS, type Tier } from '@/app/lib/plans';
-import { callerFrom, metered } from '@/app/lib/server/account';
+import { admin, callerFrom, metered } from '@/app/lib/server/account';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -31,11 +31,27 @@ const PAYSTACK = 'https://api.paystack.co/transaction/initialize';
 type Want =
   | { kind: 'open'; trackId: string }
   | { kind: 'keep'; trackId: string }
-  | { kind: 'plan'; tier: Tier };
+  | { kind: 'plan'; tier: Tier }
+  | { kind: 'entry'; competitionId: string };
 
-function priceOf(want: Want): { cents: number; label: string } | null {
+async function priceOf(want: Want): Promise<{ cents: number; label: string } | null> {
   if (want.kind === 'open') return { cents: ONE_OFF.open.rand * 100, label: ONE_OFF.open.label };
   if (want.kind === 'keep') return { cents: ONE_OFF.keep.rand * 100, label: ONE_OFF.keep.label };
+  if (want.kind === 'entry') {
+    // An entry fee is whatever that competition says it is, read from the
+    // database. Taking it from the request would let a page enter a R500
+    // competition for a rand.
+    const client = admin();
+    if (!client) return null;
+    const { data } = await client
+      .from('competitions')
+      .select('title, entry_rand, status, closes_at')
+      .eq('id', want.competitionId)
+      .maybeSingle();
+    if (!data || data.status !== 'open' || data.entry_rand <= 0) return null;
+    if (new Date(data.closes_at) < new Date()) return null;
+    return { cents: data.entry_rand * 100, label: `Entry — ${data.title}` };
+  }
   const spec = TIER_SPECS[want.tier];
   if (!spec || spec.rand === 0) return null;
   return { cents: spec.rand * 100, label: `${spec.name}, a month` };
@@ -70,7 +86,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'bad_request', message: 'Could not read that.' }, { status: 400 });
   }
 
-  const price = priceOf(want);
+  const price = await priceOf(want);
   if (!price) {
     return Response.json({ error: 'unknown_item', message: 'Nothing is sold at that name.' }, { status: 400 });
   }
@@ -91,8 +107,9 @@ export async function POST(request: Request): Promise<Response> {
         metadata: {
           owner: caller.id,
           kind: want.kind,
-          trackId: want.kind === 'plan' ? null : want.trackId,
+          trackId: want.kind === 'open' || want.kind === 'keep' ? want.trackId : null,
           tier: want.kind === 'plan' ? want.tier : null,
+          competitionId: want.kind === 'entry' ? want.competitionId : null,
           label: price.label,
         },
       }),
