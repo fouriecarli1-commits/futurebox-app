@@ -20,6 +20,7 @@ import CollabRadar from './components/CollabRadar';
 import CollabFinder from './components/CollabFinder';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
+import Spend from './components/Spend';
 import ArenaLive from './components/ArenaLive';
 import SongSections from './components/SongSections';
 import { guessRegion, priceFor, REGIONS, regionByCode, type Region } from './lib/pricing';
@@ -973,6 +974,10 @@ export default function FutureBoxHome() {
 
         {/* The counters. Real numbers or nothing — see components/Counters.tsx. */}
         {activeTab === 'all' && <Counters board={board} scope="all" />}
+
+        {/* What the engine costs. Renders for nobody but the owner — the route
+            answers with nothing at all to anybody else. */}
+        {activeTab === 'all' && <Spend />}
 
         {/* 🎬 1. FEATURED SPOTLIGHT */}
         {(activeTab === 'all') && (
