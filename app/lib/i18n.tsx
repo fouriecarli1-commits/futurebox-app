@@ -277,6 +277,8 @@ export const STRINGS: Dict = {
   "video.hook15": { en: "15 seconds", af: "15 sekondes" },
   "video.hook30": { en: "30 seconds", af: "30 sekondes" },
   "video.whole": { en: "The whole song", af: "Die hele snit" },
+  "video.words": { en: "Put the words on screen", af: "Sit die woorde op die skerm" },
+  "video.wordsNote": { en: "Timed from the plan this song was made with, and the colour changes with each section.", af: "Getel uit die plan waarmee die snit gemaak is, en die kleur verander by elke afdeling." },
   "video.from": { en: "Start at", af: "Begin by" },
   "video.go": { en: "Make it", af: "Maak dit" },
   "video.making": { en: "Making it \u2014 this plays through in real time", af: "Besig \u2014 dit speel in regte tyd deur" },
