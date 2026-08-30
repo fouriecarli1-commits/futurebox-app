@@ -954,6 +954,61 @@ export default function FutureBoxHome() {
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-14 flex-1 w-full">
         
+        {/*
+          What this place is, before anything else on the page.
+
+          Somebody arriving here has about a second to work out what they can
+          do, and a feed of picks does not tell them. Three sentences and the
+          number of people in the building do.
+        */}
+        {activeTab === 'all' && (
+          <section className="rounded-3xl border border-zinc-800 bg-gradient-to-b from-zinc-900/70 to-zinc-950/80 p-8 md:p-12 shadow-2xl">
+            <div className="max-w-3xl space-y-5">
+              <HereNow />
+              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white leading-[1.1]">
+                {t('hero.make', 'Make your own music.')}{' '}
+                <span className="text-emerald-400">
+                  {t('hero.record', 'Professional recordings of your own voice.')}
+                </span>{' '}
+                {t('hero.video', 'Make music videos.')}
+              </h2>
+              <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+                {t('hero.style', 'This is the app that lets you choose your own style.')}{' '}
+                <button
+                  type="button"
+                  onClick={() => setThemeOpen(true)}
+                  className="text-cyan-400 hover:text-cyan-300 underline underline-offset-4 font-semibold"
+                >
+                  {t('hero.appearance', 'Click on appearance')}
+                </button>
+                .
+              </p>
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadModalOpen(true);
+                    setStudioTab('make');
+                  }}
+                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent text-sm font-extrabold shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                >
+                  {t('hero.start', 'Make a song')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadModalOpen(true);
+                    setStudioTab('voice_studio');
+                  }}
+                  className="px-5 py-3 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-bold hover:border-emerald-500 hover:text-emerald-300"
+                >
+                  {t('hero.sing', 'Record your voice')}
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* 🟢 REGENERATION & AI TRENDS RADAR BANNER */}
         <section className="bg-gradient-to-r from-zinc-900 via-zinc-900/80 to-zinc-950 border border-zinc-800 p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
           <div className="flex items-center space-x-3 text-xs">
@@ -976,12 +1031,17 @@ export default function FutureBoxHome() {
           </button>
         </section>
 
-        {/* The counters. Real numbers or nothing — see components/Counters.tsx. */}
-        {activeTab === 'all' && <Counters board={board} scope="all" />}
+        {/*
+          Spotlight carries no counters and no bill.
 
-        {/* What the engine costs. Renders for nobody but the owner — the route
-            answers with nothing at all to anybody else. */}
-        {activeTab === 'all' && <Spend />}
+          The numbers are real and they are also small, because the site is
+          new, and a board of small numbers on the first screen says "nobody is
+          here" louder than it says anything else. They go back up when there
+          is traffic to report — the table keeps counting in the meantime, so
+          nothing is lost by waiting. The engine's running cost was on here
+          too; it is the owner's business and not the first thing a visitor
+          should meet. Both still live on their own pages.
+        */}
 
         {/* 🎬 1. FEATURED SPOTLIGHT */}
         {(activeTab === 'all') && (
@@ -1786,6 +1846,12 @@ export default function FutureBoxHome() {
             {studioTab === 'hooks_feed' && <Hooks />}
 
             {/* MAKE: the button people came for */}
+            {/* What the engine has cost. It came off the Spotlight page, where it
+                was the first thing a visitor met; it belongs here, beside the
+                button that spends it. The route answers with nothing at all to
+                anybody but the owner, so nobody else sees this. */}
+            {studioTab === 'make' && <Spend />}
+
             {studioTab === 'make' && (
               <MakeMusic
                 userPlan={userPlan}
