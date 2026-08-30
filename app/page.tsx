@@ -627,6 +627,29 @@ export default function FutureBoxHome() {
     setAuthModalOpen(false);
   };
 
+  /**
+   * Signing in with Google.
+   *
+   * This leaves the page, so there is nothing to await and no modal to close:
+   * the browser goes to Google and comes back with a session already in place.
+   * The only thing that can fail here fails before the redirect — Google not
+   * switched on in the Supabase project — and that message is worth showing
+   * rather than a silent button.
+   */
+  const handleGoogle = async () => {
+    setAuthError(null);
+    if (!cloud.configured()) {
+      setAuthError(t('auth.noAccounts', 'Accounts are not switched on for this app yet.'));
+      setAuthModalOpen(true);
+      return;
+    }
+    const result = await cloud.signInWithGoogle();
+    if (!result.ok) {
+      setAuthError(result.message);
+      setAuthModalOpen(true);
+    }
+  };
+
   const handleSignOut = async () => {
     await cloud.signOut();
     setUser(null);
@@ -676,6 +699,7 @@ export default function FutureBoxHome() {
       <>
         <Landing
           onStart={() => openAuth('signup')}
+          onGoogle={() => void handleGoogle()}
         />
 
         {/* The auth and pricing overlays are shared with the signed-in app. */}
@@ -689,6 +713,29 @@ export default function FutureBoxHome() {
                 <button onClick={() => setAuthModalOpen(false)} className="text-zinc-500 hover:text-white">
                   <X className="w-5 h-5" />
                 </button>
+              </div>
+              {/* Above the form, not below it: for most people this is the
+                  whole sign-in, and burying it under two fields makes them
+                  invent a password they will have to reset. */}
+              <button
+                type="button"
+                onClick={() => void handleGoogle()}
+                className="w-full py-3 rounded-xl bg-white text-zinc-900 font-bold text-sm flex items-center justify-center gap-2.5 hover:opacity-90"
+              >
+                <svg viewBox="0 0 48 48" className="w-4 h-4" aria-hidden="true">
+                  <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.6 9.5 24 9.5z" />
+                  <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.1 5.5c4.2-3.8 6.6-9.5 6.6-16.2z" />
+                  <path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.8-6.1C1 17 0 20.4 0 24s1 7 2.6 10.1l7.8-5.4z" />
+                  <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.1-5.5c-2 1.3-4.5 2.1-8.8 2.1-6.4 0-11.7-3.7-13.6-9.1l-7.8 5.4C6.5 42.6 14.6 48 24 48z" />
+                </svg>
+                {t('welcome.google', 'Continue with Google')}
+              </button>
+              <div className="flex items-center gap-3">
+                <span className="h-px flex-1 bg-zinc-800" />
+                <span className="text-xs text-zinc-600 uppercase tracking-wider">
+                  {t('auth.or', 'or')}
+                </span>
+                <span className="h-px flex-1 bg-zinc-800" />
               </div>
               <form onSubmit={handleAuthSubmit} className="space-y-3">
                 <input

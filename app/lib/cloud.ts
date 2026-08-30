@@ -108,6 +108,35 @@ export async function signIn(email: string, password: string): Promise<AuthResul
   return { ok: true, account: data.user ? toAccount(data.user) : null };
 }
 
+/**
+ * Signing in with a Google account.
+ *
+ * This is a redirect, not a request: the browser leaves for Google and comes
+ * back to `redirectTo` with a session already in place, so there is nothing to
+ * await and no account to hand back — `onAccountChange` fires on return and
+ * every screen picks it up from there.
+ *
+ * It works only once Google is switched on as a provider in the Supabase
+ * project, with this app's address in that project's redirect list. Until then
+ * Supabase answers with a message saying exactly that, which is passed
+ * straight through rather than replaced with a guess.
+ */
+export async function signInWithGoogle(): Promise<{ ok: true } | { ok: false; message: string }> {
+  const supabase = getClient();
+  if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      // Back to wherever they started, not to a hard-coded address: this app
+      // runs on a preview domain and a real one, and a fixed redirect sends
+      // half the people to the wrong site after a successful sign-in.
+      redirectTo: typeof window === 'undefined' ? undefined : window.location.origin,
+    },
+  });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true };
+}
+
 export async function signOut(): Promise<void> {
   const supabase = getClient();
   if (supabase) await supabase.auth.signOut();

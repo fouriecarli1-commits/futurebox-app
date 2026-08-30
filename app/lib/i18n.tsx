@@ -575,6 +575,41 @@ export const STRINGS: Dict = {
     af: "Alles wat hier gemaak word, s\u00ea wat dit gemaak het, op die vrystelling gedruk. En jy kies hoe die hele app lyk.",
   },
   "hero.podcast": { en: "Start a podcast", af: "Begin \u2019n podsending" },
+
+  "welcome.line1": { en: "Put your voice in.", af: "Sit jou stem in." },
+  "welcome.line2": { en: "Take a record out.", af: "Vat \u2019n plaat uit." },
+  "welcome.sub": {
+    en: "FutureBox is the black box of the future \u2014 the whole studio in one place. Write it with AI, sing it yourself, clone your voice for the show, and put a video to it.",
+    af: "FutureBox is die swartkas van die toekoms \u2014 die hele ateljee op een plek. Skryf dit met KI, sing dit self, kloon jou stem vir die program, en sit \u2019n video daarby.",
+  },
+  "welcome.tag1": { en: "Songs you sing on", af: "Liedjies waarop jy sing" },
+  "welcome.tag2": { en: "Your voice, cloned", af: "Jou stem, gekloon" },
+  "welcome.tag3": { en: "Podcasts with a real feed", af: "Podsendings met \u2019n regte voer" },
+  "welcome.tag4": { en: "Music videos", af: "Musiekvideo\u2019s" },
+  "welcome.google": { en: "Continue with Google", af: "Gaan voort met Google" },
+  "welcome.seePlans": { en: "See the plans", af: "Sien die planne" },
+  "welcome.plansTitle": { en: "What it costs", af: "Wat dit kos" },
+  "welcome.plansNote": {
+    en: "A month at a time, cancelled from inside the app whenever you like. Everything included is a monthly allowance \u2014 songs, videos, and the voice work that goes with them.",
+    af: "Een maand op \u2019n slag, gekanselleer binne-in die app wanneer jy wil. Alles wat ingesluit is, is \u2019n maandelikse toelae \u2014 liedjies, video\u2019s, en die stemwerk wat daarby kom.",
+  },
+  "welcome.most": { en: "Most people", af: "Meeste mense" },
+  "welcome.free": { en: "Free", af: "Gratis" },
+  "welcome.month": { en: "month", af: "maand" },
+  "welcome.choose": { en: "Choose", af: "Kies" },
+  "welcome.plansSmall": {
+    en: "Prices are in rand and converted for where you are. A month you have paid for runs to its end even if you cancel on the first day.",
+    af: "Pryse is in rand en word omgereken vir waar jy is. \u2019n Maand waarvoor jy betaal het, loop tot sy einde selfs al kanselleer jy op die eerste dag.",
+  },
+  "welcome.footer": {
+    en: "Everything made here says what made it, on the release.",
+    af: "Alles wat hier gemaak word, s\u00ea wat dit gemaak het, op die vrystelling.",
+  },
+  "auth.or": { en: "or", af: "of" },
+  "auth.noAccounts": {
+    en: "Accounts are not switched on for this app yet.",
+    af: "Rekeninge is nog nie vir hierdie app aangeskakel nie.",
+  },
   "hero.style": {
     en: "This is the app that lets you choose your own style.",
     af: "Dit is die app wat jou jou eie styl laat kies.",

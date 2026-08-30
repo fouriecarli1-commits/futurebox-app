@@ -18,6 +18,7 @@ import crypto from 'node:crypto';
 import { admin, recordPurchase } from '@/app/lib/server/account';
 import { createClient } from '@supabase/supabase-js';
 import type { Tier } from '@/app/lib/plans';
+import { arrangementOf, payerOf } from '@/app/lib/server/paystack';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -93,6 +94,60 @@ async function setMembership(owner: string, tier: Tier, reference: string): Prom
   });
 }
 
+/**
+ * The service-role client, or null when this deployment has no database.
+ *
+ * Built where it is used rather than shared, which is how `setMembership`
+ * already does it: the client carries no schema types here, so a shared one
+ * would infer its rows as `never` and every insert would stop compiling.
+ */
+function db() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+  const service = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+  if (!url || !service) return null;
+  return createClient(url, service, { auth: { persistSession: false } });
+}
+
+/**
+ * Write down the arrangement behind a subscription charge.
+ *
+ * The customer code is the important one: a renewal months from now carries
+ * none of the checkout's metadata, so this row is the only thing that will
+ * still know whose money that is. The subscription code and email token are
+ * what a cancellation needs, and they exist on Paystack's side only after the
+ * first charge has gone through — which is exactly when this runs.
+ */
+async function rememberArrangement(owner: string, tier: Tier, customerCode: string): Promise<void> {
+  const client = db();
+  if (!client) return;
+  const arrangement = await arrangementOf(customerCode);
+  await client.from('subscriptions').upsert({
+    owner,
+    customer_code: customerCode,
+    subscription_code: arrangement?.subscriptionCode || null,
+    email_token: arrangement?.emailToken || null,
+    plan_code: arrangement?.planCode || null,
+    tier: arrangement?.tier ?? tier,
+    status: arrangement?.status ?? 'active',
+    next_payment_at: arrangement?.nextPaymentAt ?? null,
+    updated_at: new Date().toISOString(),
+  });
+}
+
+/** Whose subscription this customer code belongs to, from the first charge. */
+async function ownerOfCustomer(customerCode: string): Promise<{ owner: string; tier: Tier } | null> {
+  const client = db();
+  if (!client) return null;
+  const { data } = await client
+    .from('subscriptions')
+    .select('owner, tier')
+    .eq('customer_code', customerCode)
+    .maybeSingle();
+  const row = data as { owner?: string; tier?: Tier } | null;
+  if (!row?.owner) return null;
+  return { owner: row.owner, tier: (row.tier ?? 'maker') as Tier };
+}
+
 export async function POST(request: Request): Promise<Response> {
   const secret = process.env.PAYSTACK_SECRET_KEY;
   if (!secret) return new Response('not configured', { status: 503 });
@@ -122,10 +177,31 @@ export async function POST(request: Request): Promise<Response> {
   const owner = meta.owner;
   const reference = event.data.reference ?? '';
   const cents = event.data.amount ?? 0;
-  if (!owner) return new Response('no owner', { status: 200 });
+
+  if (!owner) {
+    // No metadata means this was not started from a checkout of ours, which
+    // for a signed charge means one thing: Paystack raised it themselves, from
+    // a subscription. The customer code is asked for rather than read off the
+    // event, and the row written at the first charge says whose it is.
+    if (!reference) return new Response('no owner', { status: 200 });
+    const payer = await payerOf(reference);
+    if (!payer) return new Response('no owner', { status: 200 });
+
+    const known = await ownerOfCustomer(payer.customerCode);
+    if (!known) return new Response('no owner', { status: 200 });
+
+    const arrangement = await arrangementOf(payer.customerCode);
+    await setMembership(known.owner, arrangement?.tier ?? known.tier, reference);
+    await rememberArrangement(known.owner, arrangement?.tier ?? known.tier, payer.customerCode);
+    return new Response('renewed', { status: 200 });
+  }
 
   if (meta.kind === 'plan' && meta.tier) {
     await setMembership(owner, meta.tier, reference);
+    // Only where it really is a subscription: a tier with no Paystack plan set
+    // up is a single month's charge and has no arrangement to remember.
+    const payer = reference ? await payerOf(reference) : null;
+    if (payer) await rememberArrangement(owner, meta.tier, payer.customerCode);
     return new Response('ok', { status: 200 });
   }
 

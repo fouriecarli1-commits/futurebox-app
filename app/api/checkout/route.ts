@@ -20,6 +20,7 @@
 
 import { ONE_OFF, TIER_SPECS, type Tier } from '@/app/lib/plans';
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { planCode } from '@/app/lib/server/paystack';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -102,6 +103,14 @@ export async function POST(request: Request): Promise<Response> {
         amount: price.cents,
         currency: 'ZAR',
         callback_url: `${origin}/?paid=1`,
+        // A plan turns this checkout into a subscription: Paystack charges it
+        // now and again every month until it is cancelled. Sent only when the
+        // account actually has a plan set up for that tier — without one the
+        // charge still goes through, as a single month, which is what this
+        // app did before subscriptions existed.
+        ...(want.kind === 'plan' && planCode(want.tier)
+          ? { plan: planCode(want.tier) }
+          : {}),
         // Read back verbatim by the webhook. This is what ties a payment to a
         // person and a track; without it a successful charge has nowhere to go.
         metadata: {
