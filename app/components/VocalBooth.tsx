@@ -36,7 +36,8 @@ import { melodyOf, readable, type Note } from '../lib/melody';
 import { failed, loadStems, separate, type Stems } from '../lib/stems';
 import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
-import { alignTo, partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
+import { alignTo, fitInto, partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
+import { vocalSpanOf } from '../lib/vocalspan';
 import { phrasesOf } from '../lib/phrases';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
@@ -166,6 +167,22 @@ export default function VocalBooth({
     [guideBuffer],
   );
 
+  /**
+   * Where the singing starts and stops in a song nobody has separated.
+   *
+   * Estimated off the mix, which is a far easier question than what the tune
+   * is: a lead vocal sits in the middle of the picture and in a band the bass
+   * and the cymbals mostly are not. It is still an estimate, so the desk
+   * carries the number and a person can move it.
+   */
+  const span = useMemo(
+    () => (backing && !phrases.length ? vocalSpanOf(backing) : null),
+    [backing, phrases],
+  );
+  /** Moved by hand. Null means whatever was measured or estimated. */
+  const [introAt, setIntroAt] = useState<number | null>(null);
+  const singingFrom = introAt ?? span?.from ?? 0;
+
   const lines = useMemo<TimedLine[]>(() => {
     const stored = (track.parts ?? []) as readonly Part[];
     // Falling back to the lyric sheet matters more than it looks. Only songs
@@ -174,8 +191,14 @@ export default function VocalBooth({
     // had no words to show at all, which is the whole point of the screen.
     const parts = stored.length ? stored : partsOf(track.lyrics ?? '');
     const even = parts.length && duration ? timelineOf(parts, duration) : [];
-    return phrases.length ? alignTo(even, phrases) : even;
-  }, [duration, phrases, track.lyrics, track.parts]);
+    if (phrases.length) return alignTo(even, phrases);
+    // Laid into the part of the song somebody sings, rather than across the
+    // whole file. The plan knows nothing about the bars of music in front of
+    // the first word, and nearly every song has some.
+    const to = span?.to ?? duration;
+    if (!even.length || !(to > singingFrom)) return even;
+    return fitInto(even, singingFrom, to);
+  }, [duration, phrases, singingFrom, span, track.lyrics, track.parts]);
 
   /** Every word with its own moment, for writing under the stave. */
   const words = useMemo(() => wordsOf(lines), [lines]);
@@ -790,7 +813,9 @@ export default function VocalBooth({
           <p className="text-sm text-zinc-600 leading-snug flex-1 min-w-0">
             {phrases.length
               ? `${t('booth.wordsMeasured', 'The words are lined up with where the voice actually sings.')} `
-              : ''}
+              : span
+                ? `${t('booth.wordsFitted', 'The words start where the singing seems to start, not at the top of the file. The desk has that number if it is out.')} `
+                : ''}
             {guide.length
               ? t('booth.barGuide', 'The notes are read off the singing. Your voice draws on the stave as you sing.')
               : guideRead
@@ -1006,6 +1031,18 @@ export default function VocalBooth({
               step={0.02}
               onChange={setDoubleLevel}
               format={(value) => (value > 0 ? `${Math.round(value * 100)}%` : t('booth.off', 'Off'))}
+            />
+          )}
+
+          {!phrases.length && duration > 0 && (
+            <Fader
+              label={t('booth.introAt', 'Singing starts at')}
+              hint={t('booth.introHint', 'Read off the song, and an estimate. Move it if the words are ahead of the singer or behind them, and the whole song follows.')}
+              value={singingFrom}
+              max={Math.max(1, Math.min(90, duration * 0.6))}
+              step={0.25}
+              onChange={setIntroAt}
+              format={(value) => `${value.toFixed(2).replace(/\.?0+$/, '')} s`}
             />
           )}
 

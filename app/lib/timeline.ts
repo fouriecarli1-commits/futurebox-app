@@ -242,3 +242,31 @@ export function alignTo(lines: readonly TimedLine[], phrases: readonly { from: n
 
   return out;
 }
+
+/**
+ * The same lines squeezed into the part of the song somebody actually sings.
+ *
+ * `timelineOf` lays the plan across the whole file, first word at zero and
+ * last word at the end, because the plan says nothing about the bars of music
+ * in front of the singing or the ones after it. Nearly every produced song has
+ * both, and the result is words that run ahead of the singer for the whole
+ * song.
+ *
+ * Given a window — measured off the separated voice, estimated off the mix, or
+ * moved by hand — the same proportions are mapped into it. Nothing about which
+ * line is longer than which changes; the whole thing simply starts when the
+ * singing starts.
+ */
+export function fitInto(lines: readonly TimedLine[], from: number, to: number): TimedLine[] {
+  if (!lines.length || !(to > from)) return lines.slice();
+  const first = lines[0].start;
+  const last = lines[lines.length - 1].end;
+  const span = last - first;
+  if (!(span > 0)) return lines.slice();
+  const scale = (to - from) / span;
+  return lines.map((line) => ({
+    ...line,
+    start: from + (line.start - first) * scale,
+    end: from + (line.end - first) * scale,
+  }));
+}
