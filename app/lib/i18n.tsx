@@ -113,7 +113,7 @@ export const STRINGS: Dict = {
   "rail.podcast.hint": { en: "A show with its own feed", af: "'n Program met sy eie feed" },
   "rail.sound": { en: "Soundboard", af: "Klankbord" },
   "rail.sound.hint": { en: "Every genre, with audio", af: "Elke genre, met klank" },
-  "rail.voice": { en: "Script my voice", af: "Skryf vir my stem" },
+  "rail.voice": { en: "Script my voice", af: "Lees in my stem" },
   "rail.voice.hint": { en: "Your voice or ours", af: "Joune of ons s'n" },
   "rail.director": { en: "Director", af: "Regisseur" },
   "rail.director.hint": { en: "Build and publish", af: "Bou en sit uit" },
@@ -504,6 +504,10 @@ export const STRINGS: Dict = {
   "booth.doubleHint": {
     en: "A second voice under a lead is what a producer uses to make one sound sure of itself. It only works once your take is in time and on the note \u2014 under a take that is late or flat it beats against you and prints the problem twice. Tune it first, then bring this up. The song credits say the AI voice is in it.",
     af: "\u2019n Tweede stem onder \u2019n hoofstem is wat \u2019n vervaardiger gebruik om een seker van homself te laat klink. Dit werk net sodra jou opname in tyd en op die noot is \u2014 onder \u2019n opname wat laat of vals is, klop dit teen jou en druk die probleem twee keer. Stem dit eers, bring dan hierdie op. Die liedjie se krediete s\u00ea die KI-stem is daarin.",
+  },
+  "booth.holdStave": {
+    en: "Hold the stave and drag it to move through the song.",
+    af: "Hou die notebalk vas en sleep dit om deur die liedjie te beweeg.",
   },
   "booth.wordsStart": { en: "Words start at", af: "Woorde begin by" },
   "booth.aGuess": { en: "(a guess)", af: "(\u2019n raaiskoot)" },

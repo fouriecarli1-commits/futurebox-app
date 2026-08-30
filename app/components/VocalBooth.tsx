@@ -183,6 +183,8 @@ export default function VocalBooth({
   const [introAt, setIntroAt] = useState<number | null>(null);
   /** True while the next click on the waveform means "the singing starts here". */
   const [pointing, setPointing] = useState(false);
+  /** Whether the song was playing when somebody took hold of the stave. */
+  const wasPlayingRef = useRef(false);
   const singingFrom = introAt ?? span?.from ?? 0;
 
   const lines = useMemo<TimedLine[]>(() => {
@@ -788,6 +790,39 @@ export default function VocalBooth({
           be guessed from an empty bar. */}
       <div className="flex-shrink-0 px-5 pb-2 space-y-1.5">
         <NoteBar
+          {...(busyOrLive
+            ? {}
+            : {
+                /*
+                  Take hold of the stave and the song waits where it is; drag
+                  and it comes with your hand, backwards to read a line again
+                  or forwards to skip ahead; let go and it carries on from
+                  there. Not while recording — the take is being measured
+                  against this clock, and moving it would put the voice
+                  somewhere it was never sung.
+                */
+                onHold: () => {
+                  wasPlayingRef.current = phase === 'playing';
+                  audioRef.current?.pause();
+                  hush();
+                  setPhase('idle');
+                },
+                onSeek: (seconds_: number) => {
+                  const element = audioRef.current;
+                  const to = Math.max(0, Math.min(duration || 0, seconds_));
+                  if (element) element.currentTime = to;
+                  setAt(to);
+                },
+                onRelease: () => {
+                  if (!wasPlayingRef.current) return;
+                  wasPlayingRef.current = false;
+                  const element = audioRef.current;
+                  if (!element) return;
+                  void element.play();
+                  withGuide(element.currentTime);
+                  setPhase('playing');
+                },
+              })}
           at={at}
           guide={guide}
           sung={sung}
@@ -833,6 +868,7 @@ export default function VocalBooth({
               : span && introAt === null
                 ? `${t('booth.wordsFitted', 'The words start where the singing seems to start. If that is out, set it under the wave.')} `
                 : ''}
+            {!busyOrLive ? `${t('booth.holdStave', 'Hold the stave and drag it to move through the song.')} ` : ''}
             {guide.length
               ? t('booth.barGuide', 'The notes are read off the singing. Your voice draws on the stave as you sing.')
               : guideRead

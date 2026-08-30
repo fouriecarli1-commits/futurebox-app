@@ -107,6 +107,9 @@ export default function NoteBar({
   scale,
   bpm,
   live,
+  onHold,
+  onSeek,
+  onRelease,
 }: {
   /** Where the song is, in seconds. */
   at: number;
@@ -123,8 +126,15 @@ export default function NoteBar({
   /** The song's tempo, for the bar lines. Zero draws none. */
   bpm: number;
   live: boolean;
+  /** Somebody has taken hold of the stave. The song should wait. */
+  onHold?: () => void;
+  /** Pull the song to this moment while they drag. */
+  onSeek?: (seconds: number) => void;
+  onRelease?: () => void;
 }): React.ReactElement {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  /** Where the drag began: the pointer's x, and the song's time then. */
+  const heldRef = useRef<{ x: number; at: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -366,13 +376,52 @@ export default function NoteBar({
     context.textBaseline = 'alphabetic';
   }, [at, bpm, guide, live, scale, sung, trail, words]);
 
+  /**
+   * Taking hold of the stave.
+   *
+   * A song can go past faster than somebody can read the line they are meant
+   * to sing, and the answer they asked for is the obvious one: let me grab it.
+   * Holding it stops the music where it is; dragging pulls the song along with
+   * your hand, backwards to read a line again or forwards to skip ahead; and
+   * letting go carries on from wherever you left it.
+   *
+   * The arithmetic is the same as the drawing's, in reverse: the window is six
+   * seconds wide across everything but the clef, so a pixel is worth that much
+   * divided by the width.
+   */
+  const pull = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    const held = heldRef.current;
+    if (!held || !onSeek) return;
+    const width = event.currentTarget.clientWidth - HEADER;
+    if (width <= 0) return;
+    onSeek(held.at - ((event.clientX - held.x) * WINDOW_S) / width);
+  };
+
+  const letGo = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    if (!heldRef.current) return;
+    heldRef.current = null;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    onRelease?.();
+  };
+
   // The stave gives way on a short window rather than pushing the words off
   // the top of the screen, which is what a fixed height did.
   return (
     <canvas
       ref={canvasRef}
-      className="w-full rounded-2xl bg-zinc-950 border border-zinc-800"
+      className={`w-full rounded-2xl bg-zinc-950 border border-zinc-800 touch-none ${
+        onSeek ? 'cursor-grab active:cursor-grabbing' : ''
+      }`}
       style={{ height: 'clamp(6.5rem, 18vh, 10rem)' }}
+      onPointerDown={(event) => {
+        if (!onSeek) return;
+        heldRef.current = { x: event.clientX, at };
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        onHold?.();
+      }}
+      onPointerMove={pull}
+      onPointerUp={letGo}
+      onPointerCancel={letGo}
     />
   );
 }
