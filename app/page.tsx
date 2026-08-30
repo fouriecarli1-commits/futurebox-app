@@ -1729,15 +1729,19 @@ export default function FutureBoxHome() {
                 }`}
               >
                 {[
+                  /* The rail follows the order the work happens in: write and
+                     generate the song, arrange it, sing on it, put a video to
+                     it. Everything after that is what you do with a finished
+                     song. */
                   { id: 'make', label: t('rail.make'), hint: t('rail.make.hint'), icon: Sparkles },
-                  { id: 'video', label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
                   { id: 'studio', label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
                   { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
-                  { id: 'channels', label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
-                  { id: 'podcast', label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
+                  { id: 'video', label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
                   { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
+                  { id: 'channels', label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
                   { id: 'collab', label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
                   { id: 'arena', label: t('rail.arena'), hint: t('rail.arena.hint'), icon: Trophy },
+                  { id: 'podcast', label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = studioTab === tab.id;

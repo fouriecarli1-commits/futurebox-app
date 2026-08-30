@@ -93,24 +93,26 @@ function Drawn({ seed, label }: { seed: string; label: string }): React.ReactEle
           texture, and placed from the same number so they never move. */}
       <circle
         cx={30 + (n % 260)}
-        cy={20 + ((n >> 7) % 60)}
+        cy={20 + ((n >>> 7) % 60)}
         r={60 + (n % 50)}
         fill={`hsl(${(second + 30) % 360} 90% 70%)`}
         opacity={0.35}
       />
       <circle
-        cx={260 - ((n >> 11) % 200)}
-        cy={150 - ((n >> 5) % 50)}
-        r={40 + ((n >> 3) % 40)}
+        cx={260 - ((n >>> 11) % 200)}
+        cy={150 - ((n >>> 5) % 50)}
+        r={40 + ((n >>> 3) % 40)}
         fill={`hsl(${(hue + 180) % 360} 90% 65%)`}
         opacity={0.28}
       />
 
       {/* A skyline along the bottom: the item's signature, and the thing that
-          makes two covers tell each other apart at a glance. */}
+          makes two covers tell each other apart at a glance. The shifts are
+          unsigned: the hash fills all 32 bits, and a signed shift turns it
+          negative, which the browser rejects as a bar height. */}
       {Array.from({ length: bars }, (_, i) => {
         const step = 320 / bars;
-        const height = 30 + ((n >> (i * 4)) % 90);
+        const height = 30 + ((n >>> (i * 4)) % 90);
         return (
           <rect
             key={i}
@@ -120,7 +122,7 @@ function Drawn({ seed, label }: { seed: string; label: string }): React.ReactEle
             height={height}
             rx={6}
             fill="#fff"
-            opacity={0.16 + ((n >> (i * 2)) % 4) * 0.07}
+            opacity={0.16 + ((n >>> (i * 2)) % 4) * 0.07}
           />
         );
       })}
