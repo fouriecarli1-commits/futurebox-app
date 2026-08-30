@@ -20,7 +20,6 @@ import CollabRadar from './components/CollabRadar';
 import CollabFinder from './components/CollabFinder';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
-import Spend from './components/Spend';
 import ArenaLive from './components/ArenaLive';
 import SongSections from './components/SongSections';
 import { guessRegion, priceFor, REGIONS, regionByCode, type Region } from './lib/pricing';
@@ -1846,12 +1845,6 @@ export default function FutureBoxHome() {
             {studioTab === 'hooks_feed' && <Hooks />}
 
             {/* MAKE: the button people came for */}
-            {/* What the engine has cost. It came off the Spotlight page, where it
-                was the first thing a visitor met; it belongs here, beside the
-                button that spends it. The route answers with nothing at all to
-                anybody but the owner, so nobody else sees this. */}
-            {studioTab === 'make' && <Spend />}
-
             {studioTab === 'make' && (
               <MakeMusic
                 userPlan={userPlan}
