@@ -27,7 +27,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Ear, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
+import { Check, Circle, Ear, Layers, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
 import { decode, knownLatency, mixdown } from '../lib/mixdown';
 import { encodeWav } from '../lib/wav';
 import { accessToken } from '../lib/cloud';
@@ -46,6 +46,7 @@ import {
 } from '../lib/transcript';
 import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
+import ProBooth from './ProBooth';
 import { alignTo, fitInto, partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
 import { vocalSpanOf } from '../lib/vocalspan';
 import { phrasesOf } from '../lib/phrases';
@@ -158,6 +159,8 @@ export default function VocalBooth({
 
   // ── the desk ──────────────────────────────────────────────────────────────
   const [deskOpen, setDeskOpen] = useState(false);
+  /** The multitrack view, over this one. */
+  const [proOpen, setProOpen] = useState(false);
   const [guideLevel, setGuideLevel] = useState(0.7);
   const [backingLevel, setBackingLevel] = useState(0.85);
   const [takeLevel, setTakeLevel] = useState(1);
@@ -921,6 +924,17 @@ export default function VocalBooth({
 
   const busyOrLive = phase === 'recording' || phase === 'counting';
 
+  if (proOpen) {
+    return (
+      <ProBooth
+        title={track.title}
+        backing={backing}
+        onKeep={(mixed) => onKeep(mixed, guideBuffer !== null && doubleLevel > 0, take ? encodeWav(take) : mixed)}
+        onClose={() => setProOpen(false)}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col">
       <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
@@ -1514,6 +1528,15 @@ export default function VocalBooth({
                 plays and the words move with it. Calling that "listen back"
                 describes something else. */}
             {take ? t('booth.listen', 'Listen back') : t('booth.playAlong', 'Play it and follow the words')}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setProOpen(true)}
+            className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5"
+          >
+            <Layers className="w-4 h-4" />
+            {t('booth.pro', 'Pro')}
           </button>
 
           <button
