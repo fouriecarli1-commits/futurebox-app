@@ -18,7 +18,7 @@
  * one that keeps the video engine's ceiling servable.
  */
 
-import { admin, type Caller } from './account';
+import { admin, callerFrom, metered, type Caller } from './account';
 import {
   capFor, FREE_WEEKLY, monthKey, TIER_CREDITS, weekKey,
 } from '@/app/lib/credits';
@@ -125,4 +125,78 @@ export async function settle(caller: Caller): Promise<number> {
   }
 
   return balanceOf(caller.id);
+}
+
+/* ─────────────────────────────────────────────── one pattern, one place ─ */
+
+export interface Charged {
+  readonly ok: true;
+  /** Null when nothing is metered, so a refund is a no-op. */
+  readonly owner: string | null;
+  /** Put the credits back. Call it when the work then failed. */
+  refund(): Promise<void>;
+}
+
+export interface Refused {
+  readonly ok: false;
+  readonly response: Response;
+}
+
+/**
+ * Take the credits for a piece of work, or hand back the refusal to send.
+ *
+ * Every route that costs money calls this before doing anything, and calls
+ * `refund()` if the engine then fails. Having it in one function is the point:
+ * eight routes each writing their own version of "check who this is, settle
+ * what they are owed, spend, and answer nicely when they cannot" is eight
+ * chances to get the order wrong.
+ *
+ * The refusal carries `needsCredits`, which is what opens the top-up panel in
+ * the browser. That panel exists nowhere else — running out is the only moment
+ * anybody is shown what a pack costs.
+ */
+export async function charge(
+  request: Request,
+  amount: number,
+  reason: string,
+  ref?: string,
+): Promise<Charged | Refused> {
+  const noop: Charged = { ok: true, owner: null, refund: async () => {} };
+
+  // No accounts configured: nothing is metered anywhere in this app, and this
+  // is not the place to start.
+  if (!metered()) return noop;
+
+  const caller = await callerFrom(request);
+  if (!caller) {
+    return {
+      ok: false,
+      response: Response.json(
+        { message: 'Sign in first — credits belong to an account.', signedIn: false },
+        { status: 401 },
+      ),
+    };
+  }
+
+  // Whatever is owed lands before the balance is read, so somebody arriving on
+  // the first of the month is not told they are short of their own allowance.
+  const balance = await settle(caller);
+
+  if (!(await spend(caller.id, amount, reason, ref))) {
+    return {
+      ok: false,
+      response: Response.json(
+        {
+          message: `That needs ${amount} credits and you have ${balance}.`,
+          needsCredits: true,
+          need: amount,
+          balance,
+        },
+        { status: 402 },
+      ),
+    };
+  }
+
+  const owner = caller.id;
+  return { ok: true, owner, refund: () => refund(owner, amount, ref) };
 }

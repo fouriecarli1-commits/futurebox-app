@@ -13,6 +13,8 @@
 import { callerFrom, metered } from '@/app/lib/server/account';
 import { configured, isolate } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
+import { CREDITS } from '@/app/lib/credits';
+import { charge } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,8 +52,16 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'That file is too big to clean up here.' }, { status: 413 });
   }
 
+  const paid = await charge(request, CREDITS.clean, 'clean');
+  if (!paid.ok) return paid.response;
+
   const cleaned = await isolate(audio);
-  if (!cleaned.ok) return Response.json({ message: cleaned.message }, { status: cleaned.status });
+  if (!cleaned.ok) {
+    // The engine refused, so the credits go back. A charge for work that did
+    // not happen is the one thing a person never forgives.
+    await paid.refund();
+    return Response.json({ message: cleaned.message }, { status: cleaned.status });
+  }
 
   return new Response(cleaned.audio, {
     headers: { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'no-store' },

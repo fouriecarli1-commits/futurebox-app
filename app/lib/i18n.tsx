@@ -441,6 +441,21 @@ export const STRINGS: Dict = {
   "make.noOwnSoundNote": { en: "Whatever the style words ask for.", af: "Net wat die stylwoorde vra." },
   "make.ownSoundSongs": { en: "of your songs", af: "van jou liedjies" },
 
+  "credits.credits": { en: "credits", af: "krediete" },
+  "credits.short": { en: "You are short by", af: "Jy kort" },
+  "credits.shortNote": { en: "That needed", af: "Dit het" },
+  "credits.andYouHave": { en: "and you have", af: "nodig gehad, en jy het" },
+  "credits.topUpNote": {
+    en: "A pack never expires, and it is used before next month\u2019s allowance.",
+    af: "\u2019n Pakket verval nooit, en dit word voor volgende maand se toelae gebruik.",
+  },
+  "credits.close": { en: "Close", af: "Maak toe" },
+  "credits.balanceTitle": { en: "What you have left to spend", af: "Wat jy oor het om te spandeer" },
+  "credits.subNote": {
+    en: "A subscription is the cheaper way to get the first few hundred every month. A pack is for the month you needed more than usual.",
+    af: "\u2019n Intekening is die goedkoper manier om elke maand die eerste paar honderd te kry. \u2019n Pakket is vir die maand toe jy meer as gewoonlik nodig gehad het.",
+  },
+
   "spend.title": { en: "What the engine has cost you", af: "Wat die enjin jou gekos het" },
   "spend.sub": { en: "The last 30 days, counted from what was actually generated. Only you see this.", af: "Die laaste 30 dae, getel uit wat werklik gemaak is. Net jy sien dit." },
   "spend.previews": { en: "Free previews", af: "Gratis previews" },

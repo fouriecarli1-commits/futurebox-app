@@ -16,6 +16,8 @@
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { configured, restage, stockVoices, type Performance } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
+import { CREDITS } from '@/app/lib/credits';
+import { charge } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -109,8 +111,14 @@ export async function POST(request: Request): Promise<Response> {
     speakerBoost: form.get('speakerBoost') === 'true',
   };
 
+  const paid = await charge(request, CREDITS.voiceChange, 'voiceChange');
+  if (!paid.ok) return paid.response;
+
   const done = await restage(voiceId, audio, MODEL, how, form.get('removeNoise') === 'true');
-  if (!done.ok) return Response.json({ message: done.message }, { status: done.status });
+  if (!done.ok) {
+    await paid.refund();
+    return Response.json({ message: done.message }, { status: done.status });
+  }
 
   // Counted after it worked, so a failure never costs somebody their day.
   if (caller && client) {

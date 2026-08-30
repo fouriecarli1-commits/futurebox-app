@@ -60,6 +60,17 @@ export const CREDITS = {
 } as const;
 
 /**
+ * A song, by its length.
+ *
+ * Five credits a minute, rounded up, which is what makes the free format
+ * exactly half a song: one minute for five, two minutes for ten. Nobody has to
+ * be told the rule — it is the same rule everywhere.
+ */
+export function songCost(seconds: number): number {
+  return Math.max(CREDITS.halfSong, Math.ceil(Math.max(0, seconds) / 60) * CREDITS.halfSong);
+}
+
+/**
  * A script read aloud, by length.
  *
  * Estimated. ElevenLabs charge speech per character, and a long episode is a

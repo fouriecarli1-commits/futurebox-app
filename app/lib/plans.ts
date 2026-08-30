@@ -180,7 +180,15 @@ const CREDITS_PER_MINUTE = 900;
 /** Rand per credit on the Business plan: $990 for 11,000,000, at R16/USD. */
 const RAND_PER_CREDIT = (990 * 16) / 11_000_000;
 
-export const PREVIEW_SECONDS = 15;
+/**
+ * The free format: half a song.
+ *
+ * It was fifteen seconds, because nothing capped how many of those one person
+ * could ask for and the free tier was therefore priced by the clip. Credits
+ * cap the month instead, so the clip itself can be worth listening to: one
+ * minute, watermarked, five credits — and a full song is the same rule twice.
+ */
+export const PREVIEW_SECONDS = 60;
 export const FREE_PREVIEWS = 2;
 /** What a full song is, in minutes, for both costing and generation. */
 export const SONG_MINUTES = 2;

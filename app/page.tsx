@@ -43,6 +43,11 @@ import Landing from './components/Landing';
 import Spotlight from './components/Spotlight';
 import HereNow from './components/HereNow';
 import LanguagePicker from './components/LanguagePicker';
+import Balance from './components/Balance';
+import OutOfCredits from './components/OutOfCredits';
+import { PACKS } from './lib/credits';
+import type { Short } from './lib/wallet';
+import type { Pack } from './lib/credits';
 import { useLang } from './lib/i18n';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
 import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
@@ -141,6 +146,17 @@ export default function FutureBoxHome() {
 
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  /**
+   * What is left to spend, and the panel that opens when it runs out.
+   *
+   * `spent` is bumped by anything that costs, so the number in the header
+   * follows without every screen having to know about the header. `short` is
+   * set only from a route's own refusal — the panel never opens on a guess.
+   */
+  const [spent, setSpent] = useState(0);
+  const [short, setShort] = useState<Short | null>(null);
+  const [packs, setPacks] = useState<readonly Pack[]>(PACKS);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
@@ -896,6 +912,16 @@ export default function FutureBoxHome() {
               <span>PRO Active</span>
             </span>
           )}
+
+          <Balance
+            reloadKey={spent}
+            onTopUp={(wallet) => {
+              setPacks(wallet.packs);
+              // Opened from the balance rather than from a refusal, so nothing
+              // is actually short. Zero and zero reads as "nothing missing".
+              setShort({ need: 0, balance: wallet.balance, message: '' });
+            }}
+          />
 
           <LanguagePicker compact />
 
@@ -1769,6 +1795,9 @@ export default function FutureBoxHome() {
           </div>
         </div>
       )}
+
+      {/* The packs, at the only moment they are ever shown. */}
+      <OutOfCredits short={short} packs={packs} onClose={() => setShort(null)} />
 
       {/* 🚀 CREATOR STUDIO & AI MUSIC HUB (WITH MASTER GENRE SOUNDBOARD, VOICE STUDIO & DIRECTOR) */}
       {uploadModalOpen && (

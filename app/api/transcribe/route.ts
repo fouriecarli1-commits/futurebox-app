@@ -22,6 +22,8 @@
  */
 
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
+import { CREDITS } from '@/app/lib/credits';
+import { charge } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -102,11 +104,15 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   let upstream: Response | null = null;
+  const paid = await charge(request, CREDITS.transcribe, 'transcribe');
+  if (!paid.ok) return paid.response;
+
   let raw = '';
   for (const model of MODELS) {
     try {
       upstream = await ask(key, file, model);
     } catch {
+      await paid.refund();
       return Response.json(
         { error: 'unreachable', message: 'Could not reach the music service. Try again in a moment.' },
         { status: 502 },
@@ -119,6 +125,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (!upstream || !upstream.ok) {
+    await paid.refund();
     let theirs = '';
     try {
       const parsed = JSON.parse(raw) as { detail?: unknown; message?: string };

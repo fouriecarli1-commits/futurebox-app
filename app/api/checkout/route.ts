@@ -21,6 +21,7 @@
 import { ONE_OFF, TIER_SPECS, type Tier } from '@/app/lib/plans';
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { planCode } from '@/app/lib/server/paystack';
+import { packById } from '@/app/lib/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,7 +34,8 @@ type Want =
   | { kind: 'open'; trackId: string }
   | { kind: 'keep'; trackId: string }
   | { kind: 'plan'; tier: Tier }
-  | { kind: 'entry'; competitionId: string };
+  | { kind: 'entry'; competitionId: string }
+  | { kind: 'credits'; pack: string };
 
 async function priceOf(want: Want): Promise<{ cents: number; label: string } | null> {
   if (want.kind === 'open') return { cents: ONE_OFF.open.rand * 100, label: ONE_OFF.open.label };
@@ -52,6 +54,13 @@ async function priceOf(want: Want): Promise<{ cents: number; label: string } | n
     if (!data || data.status !== 'open' || data.entry_rand <= 0) return null;
     if (new Date(data.closes_at) < new Date()) return null;
     return { cents: data.entry_rand * 100, label: `Entry — ${data.title}` };
+  }
+  if (want.kind === 'credits') {
+    // The pack's price comes from the same table the panel showed, never from
+    // the request. A page that can name its own price eventually will.
+    const pack = packById(want.pack);
+    if (!pack) return null;
+    return { cents: pack.rand * 100, label: `${pack.credits} credits` };
   }
   const spec = TIER_SPECS[want.tier];
   if (!spec || spec.rand === 0) return null;
@@ -119,6 +128,9 @@ export async function POST(request: Request): Promise<Response> {
           trackId: want.kind === 'open' || want.kind === 'keep' ? want.trackId : null,
           tier: want.kind === 'plan' ? want.tier : null,
           competitionId: want.kind === 'entry' ? want.competitionId : null,
+          // The pack's name, not its size: the webhook looks the credits up
+          // for itself, so a tampered checkout cannot buy a thousand for R99.
+          pack: want.kind === 'credits' ? want.pack : null,
           label: price.label,
         },
       }),

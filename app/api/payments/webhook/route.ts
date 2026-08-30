@@ -19,6 +19,8 @@ import { admin, recordPurchase } from '@/app/lib/server/account';
 import { createClient } from '@supabase/supabase-js';
 import type { Tier } from '@/app/lib/plans';
 import { arrangementOf, payerOf } from '@/app/lib/server/paystack';
+import { packById } from '@/app/lib/credits';
+import { topUp } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -31,10 +33,11 @@ interface PaystackEvent {
     status?: string;
     metadata?: {
       owner?: string;
-      kind?: 'open' | 'keep' | 'plan' | 'entry';
+      kind?: 'open' | 'keep' | 'plan' | 'entry' | 'credits';
       trackId?: string | null;
       tier?: Tier | null;
       competitionId?: string | null;
+      pack?: string | null;
     };
   };
 }
@@ -202,6 +205,16 @@ export async function POST(request: Request): Promise<Response> {
     // up is a single month's charge and has no arrangement to remember.
     const payer = reference ? await payerOf(reference) : null;
     if (payer) await rememberArrangement(owner, meta.tier, payer.customerCode);
+    return new Response('ok', { status: 200 });
+  }
+
+  if (meta.kind === 'credits' && meta.pack) {
+    // How many credits that pack holds is read here, from our own table. The
+    // charge only says which pack was paid for; it does not get to say how big
+    // it was. `add_credits` refuses a reference it has already seen, so a
+    // retried webhook cannot double it.
+    const pack = packById(meta.pack);
+    if (pack) await topUp(owner, pack.credits, reference);
     return new Response('ok', { status: 200 });
   }
 

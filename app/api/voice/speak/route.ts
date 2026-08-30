@@ -14,6 +14,8 @@
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { configured, speak, stockVoices, type Performance } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
+import { readCost } from '@/app/lib/credits';
+import { charge } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -144,13 +146,21 @@ export async function POST(request: Request): Promise<Response> {
     voiceId = stock[0].id;
   }
 
+  // A long episode is a real bill rather than a rounding error, so this is
+  // charged by the character rather than per reading.
+  const paid = await charge(request, readCost(text.length), 'read');
+  if (!paid.ok) return paid.response;
+
   const read = await speak(
     voiceId,
     text,
     MODELS[String(body.model ?? 'steady')] ?? MODELS.steady,
     performance(body.how),
   );
-  if (!read.ok) return Response.json({ message: read.message }, { status: read.status });
+  if (!read.ok) {
+    await paid.refund();
+    return Response.json({ message: read.message }, { status: read.status });
+  }
 
   // Recorded after it worked, so a failure never counts against the day.
   if (caller && client) {

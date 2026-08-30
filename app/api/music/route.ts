@@ -24,6 +24,8 @@
 
 import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
 import { buildRequest, type Body } from '@/app/lib/server/musicplan';
+import { songCost } from '@/app/lib/credits';
+import { charge } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -61,6 +63,7 @@ export async function POST(request: Request): Promise<Response> {
   // through as it always did — that keeps a local or half-configured install
   // working rather than locking everyone out of a feature they had.
   let record: (() => Promise<void>) | null = null;
+  let length = body.seconds ?? 60;
   if (metered()) {
     const caller = await callerFrom(request);
 
@@ -105,7 +108,14 @@ export async function POST(request: Request): Promise<Response> {
     }
     const seconds = allowance.kind === 'preview' ? allowance.seconds : (body.seconds ?? 60);
     if (caller) record = () => recordGeneration(caller, allowance.kind, seconds, undefined, request);
+    length = seconds;
   }
+
+  // Paid for before a byte is asked for, and given back below if the engine
+  // then refuses. Charging afterwards would hand free work to whoever is
+  // quickest, because two requests can both pass a check that is not a write.
+  const paid = await charge(request, songCost(length), 'song');
+  if (!paid.ok) return paid.response;
 
   let upstream: Response;
   try {
@@ -115,6 +125,7 @@ export async function POST(request: Request): Promise<Response> {
       body: JSON.stringify(buildRequest(body)),
     });
   } catch {
+    await paid.refund();
     return Response.json(
       { error: 'unreachable', message: 'Could not reach the music service. Try again in a moment.' },
       { status: 502 },
@@ -122,6 +133,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (!upstream.ok) {
+    await paid.refund();
     const raw = await upstream.text().catch(() => '');
 
     // Their own words first. Summarising an upstream error into one of four

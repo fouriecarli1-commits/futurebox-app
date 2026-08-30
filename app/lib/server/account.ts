@@ -130,7 +130,7 @@ export const FREE_PREVIEWS_PER_DAY = 2;
  * from one machine stop after six.
  */
 export const FREE_PREVIEWS_PER_ADDRESS = 6;
-export const PREVIEW_SECONDS = 15;
+export const PREVIEW_SECONDS = 60;
 
 /**
  * A month's songs spread across the month, so one enthusiastic day cannot eat

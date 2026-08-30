@@ -24,6 +24,8 @@
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { configured, createFinetune, dropFinetune, finetuneStatus } from '@/app/lib/server/eleven';
 import { SOUND_CAPS } from '@/app/lib/plans';
+import { CREDITS } from '@/app/lib/credits';
+import { charge } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -191,6 +193,14 @@ export async function POST(request: Request): Promise<Response> {
   const genre = String(form.get('genre') ?? '').trim().slice(0, 60);
   if (!genre) return Response.json({ message: 'Say what kind of music this is.' }, { status: 400 });
 
+  // The most expensive thing this app can be asked to do — ten minutes of
+  // somebody else's GPUs, and the model then sits on the account until it is
+  // deleted. It is charged before a byte goes up, and there is no free route
+  // to it at any tier: the plan gate above already refuses free accounts, and
+  // this refuses anybody who has not got the credits.
+  const paid = await charge(request, CREDITS.finetune, 'finetune');
+  if (!paid.ok) return paid.response;
+
   const made = await createFinetune(
     // Prefixed with the account, so the owner is visible from the ElevenLabs
     // dashboard too and a support question does not need this database.
@@ -199,7 +209,10 @@ export async function POST(request: Request): Promise<Response> {
     files.map((file, index) => ({ blob: file, filename: file.name || `track-${index + 1}.mp3` })),
     MODEL_ID,
   );
-  if (!made.ok) return Response.json({ message: made.message }, { status: made.status });
+  if (!made.ok) {
+    await paid.refund();
+    return Response.json({ message: made.message }, { status: made.status });
+  }
 
   await client.from('finetunes').insert({
     id: made.finetune.id,
