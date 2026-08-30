@@ -476,6 +476,16 @@ export const STRINGS: Dict = {
   "booth.ready": { en: "Ready", af: "Gereed" },
   "booth.noWords": { en: "This song has no words on it, so there is nothing to follow. Sing anyway \u2014 the waveform and the note still work.", af: "Hierdie snit het geen woorde nie, so daar is niks om te volg nie. Sing maar \u2014 die klankbaan en die noot werk steeds." },
   "booth.listening": { en: "Listening\u2026", af: "Luister\u2026" },
+  "booth.playAlong": { en: "Play it and follow the words", af: "Speel dit en volg die woorde" },
+  "booth.barGuide": {
+    en: "The notes to sing are read off the backing. Your voice draws on the same lines.",
+    af: "Die note om te sing is van die begeleiding af gelees. Jou stem teken op dieselfde lyne.",
+  },
+  "booth.barNoGuide": {
+    en: "The tune cannot be read out of a finished mix \u2014 a bass line under it reads as the melody, and wrong notes are worse than none. The lines are the notes of the key; your voice draws on them, and once you have sung a take its notes stay on the bar to follow.",
+    af: "Die wysie kan nie uit \u2019n klaar mengsel gelees word nie \u2014 \u2019n basslyn daaronder lees soos die melodie, en verkeerde note is erger as geen. Die lyne is die note van die toonaard; jou stem teken daarop, en sodra jy een keer gesing het bly daardie note op die balk om te volg.",
+  },
+  "booth.barReading": { en: "Reading the backing\u2026", af: "Lees die begeleiding\u2026" },
   "booth.tune": { en: "Tuning", af: "Stemming" },
   "booth.gentle": { en: "Gentle", af: "Sag" },
   "booth.strong": { en: "Strong", af: "Sterk" },

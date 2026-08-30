@@ -32,7 +32,9 @@ import { decode, knownLatency, mixdown } from '../lib/mixdown';
 import { decodeAt, shapeOf, spliceTake } from '../lib/takes';
 import { detectPitch, noteOf } from '../lib/pitch';
 import { scaleOf, tuneBuffer, type Tuned } from '../lib/tune';
-import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
+import { melodyOf, readable, type Note } from '../lib/melody';
+import NoteBar, { type Trail } from './NoteBar';
+import { partsOf, timelineOf, type Part, type TimedLine } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
 
@@ -102,11 +104,24 @@ export default function VocalBooth({
   const duration = backing?.duration || track.seconds || 0;
   /** The song's own key, when it says one, so tuning can stay inside it. */
   const scale = useMemo(() => scaleOf(track.key ?? ''), [track.key]);
+  /** Notes read off the backing, when it is a single line clear enough to read. */
+  const [guide, setGuide] = useState<Note[]>([]);
+  /** Whether the backing was even worth trying, so the screen can say why not. */
+  const [guideRead, setGuideRead] = useState(false);
+  /** The notes of the take, read back off it. */
+  const [sung, setSung] = useState<Note[]>([]);
+  /** The last couple of seconds of what the microphone heard. */
+  const trailRef = useRef<Trail[]>([]);
 
   const lines = useMemo<TimedLine[]>(() => {
-    const parts = (track.parts ?? []) as readonly Part[];
+    const stored = (track.parts ?? []) as readonly Part[];
+    // Falling back to the lyric sheet matters more than it looks. Only songs
+    // made since the plan was stored carry one, so on everything made before
+    // that — and on anything written straight into the words box — the booth
+    // had no words to show at all, which is the whole point of the screen.
+    const parts = stored.length ? stored : partsOf(track.lyrics ?? '');
     return parts.length && duration ? timelineOf(parts, duration) : [];
-  }, [duration, track.parts]);
+  }, [duration, track.lyrics, track.parts]);
 
   const current = lines.findIndex((line) => at >= line.start && at < line.end);
   const next = current >= 0 ? lines[current + 1] : lines.find((line) => line.start > at);
@@ -174,6 +189,12 @@ export default function VocalBooth({
         // Only when the reading is confident. A note that flickers is worse
         // than no note at all, because a singer will chase it.
         setNote(reading ? noteOf(reading.hz) : null);
+        if (reading) {
+          const trail = trailRef.current;
+          trail.push({ at: element.currentTime, midi: 69 + 12 * Math.log2(reading.hz / 440) });
+          // Only what is still on screen is worth keeping.
+          while (trail.length && element.currentTime - trail[0].at > 4) trail.shift();
+        }
       }
       frame = requestAnimationFrame(step);
     };
@@ -186,6 +207,44 @@ export default function VocalBooth({
       setNote(null);
     };
   }, [phase]);
+
+  /**
+   * The backing read for a melody, once, when it arrives.
+   *
+   * Deferred rather than done inline: it is a second or two of arithmetic on a
+   * full-length song, and it must not sit in front of the record button.
+   */
+  useEffect(() => {
+    if (!backing) return;
+    let dropped = false;
+    const timer = window.setTimeout(() => {
+      const notes = melodyOf(backing.getChannelData(0), backing.sampleRate);
+      if (dropped) return;
+      setGuide(readable(notes, backing.duration) ? notes : []);
+      setGuideRead(true);
+    }, 60);
+    return () => {
+      dropped = true;
+      window.clearTimeout(timer);
+    };
+  }, [backing]);
+
+  /** The same for the take, so you can see the notes you actually sang. */
+  useEffect(() => {
+    if (!take) {
+      setSung([]);
+      return;
+    }
+    let dropped = false;
+    const timer = window.setTimeout(() => {
+      const notes = melodyOf(take.getChannelData(0), take.sampleRate);
+      if (!dropped) setSung(notes);
+    }, 60);
+    return () => {
+      dropped = true;
+      window.clearTimeout(timer);
+    };
+  }, [take]);
 
   // ── drawing ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -448,7 +507,7 @@ export default function VocalBooth({
       </div>
 
       {/* ── The words ─────────────────────────────────────────────────────── */}
-      <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-6 text-center gap-3">
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col items-center justify-center px-6 text-center gap-3">
         {phase === 'counting' ? (
           <span className="text-7xl font-black text-emerald-400 tabular-nums">{count}</span>
         ) : lines.length === 0 ? (
@@ -510,6 +569,24 @@ export default function VocalBooth({
             </span>
           )}
         </div>
+
+      </div>
+
+      {/* ── The note bar ────────────────────────────────────────────────────
+          Where you are and whether you are on it. It sits with the waveform
+          rather than under the words: the words are what a singer looks at,
+          and crowding them off the top of the screen defeats them. What the
+          bar can honestly show is written underneath it rather than left to
+          be guessed from an empty bar. */}
+      <div className="flex-shrink-0 px-5 pb-2 space-y-1.5">
+        <NoteBar at={at} guide={guide} sung={sung} trail={trailRef.current} scale={scale} live={busyOrLive} />
+        <p className="text-sm text-zinc-600 leading-snug">
+          {guide.length
+            ? t('booth.barGuide', 'The notes to sing are read off the backing. Your voice draws on the same lines.')
+            : guideRead
+              ? t('booth.barNoGuide', 'The tune cannot be read out of a finished mix — a bass line under it reads as the melody, and wrong notes are worse than none. The lines are the notes of the key; your voice draws on them, and once you have sung a take its notes stay on the bar to follow.')
+              : t('booth.barReading', 'Reading the backing…')}
+        </p>
       </div>
 
       {/* ── The waveform ──────────────────────────────────────────────────── */}
@@ -685,7 +762,10 @@ export default function VocalBooth({
             className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
           >
             {phase === 'playing' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            {t('booth.listen', 'Listen back')}
+            {/* Before there is a take this button is a rehearsal: the song
+                plays and the words move with it. Calling that "listen back"
+                describes something else. */}
+            {take ? t('booth.listen', 'Listen back') : t('booth.playAlong', 'Play it and follow the words')}
           </button>
 
           <span className="flex-1" />

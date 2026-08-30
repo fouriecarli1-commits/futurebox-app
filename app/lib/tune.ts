@@ -37,7 +37,7 @@
 import { detectPitch } from './pitch';
 
 /** How often the pitch is measured. Twelve milliseconds is about 80 times a second. */
-const HOP_S = 0.012;
+export const HOP_S = 0.012;
 /** The rate the first, rough search runs at. A voice fits under 2 kHz easily. */
 const COARSE_HZ = 4000;
 /** The furthest anything is moved, in semitones. Past this it is a wrong note. */
@@ -196,22 +196,30 @@ function around(samples: Float32Array, at: number, rate: number, guessHz: number
  * So both octaves are measured at the full rate, where the scores mean
  * something, and the higher one is taken unless it is clearly worse.
  */
-function refine(samples: Float32Array, at: number, rate: number, guessHz: number, spread: number): number {
+function refine(samples: Float32Array, at: number, rate: number, guessHz: number, spread: number): Local {
   const here = around(samples, at, rate, guessHz, spread);
-  if (!here) return guessHz;
+  if (!here) return { hz: guessHz, score: 0 };
   const octaveUp = around(samples, at, rate, guessHz * 2, Math.max(1, spread / 2));
-  if (octaveUp && octaveUp.score >= here.score * 0.93) return octaveUp.hz;
-  return here.hz;
+  if (octaveUp && octaveUp.score >= here.score * 0.93) return octaveUp;
+  return here;
 }
 
-/** The pitch of every frame, in hertz, and zero where there is no pitch. */
-function track(samples: Float32Array, rate: number, hop: number): Float32Array {
+export interface Track {
+  /** Hertz per frame, zero where there is no pitch. */
+  readonly hz: Float32Array;
+  /** How sure the reading is, 0–1, in the same frames. */
+  readonly score: Float32Array;
+}
+
+/** The pitch of every frame, and how sure each reading is. */
+export function pitchTrack(samples: Float32Array, rate: number, hop: number): Track {
   const factor = Math.max(1, Math.round(rate / COARSE_HZ));
   const small = downsample(samples, factor);
   const smallRate = rate / factor;
   const window = Math.max(192, Math.round(0.048 * smallRate));
   const frames = Math.max(0, Math.ceil(samples.length / hop));
   const f0 = new Float32Array(frames);
+  const score = new Float32Array(frames);
 
   for (let i = 0; i < frames; i += 1) {
     const at = i * hop;
@@ -219,7 +227,9 @@ function track(samples: Float32Array, rate: number, hop: number): Float32Array {
     if (smallAt + window > small.length) break;
     const coarse = detectPitch(small.subarray(smallAt, smallAt + window), smallRate);
     if (!coarse) continue;
-    f0[i] = refine(samples, at, rate, coarse.hz, factor);
+    const reading = refine(samples, at, rate, coarse.hz, factor);
+    f0[i] = reading.hz;
+    score[i] = reading.score;
   }
 
   // A three-frame median, because one wrong frame in a held note is a click.
@@ -230,7 +240,7 @@ function track(samples: Float32Array, rate: number, hop: number): Float32Array {
     const c = f0[Math.min(frames - 1, i + 1)];
     smoothed[i] = Math.max(Math.min(a, b), Math.min(Math.max(a, b), c));
   }
-  return smoothed;
+  return { hz: smoothed, score };
 }
 
 /**
@@ -303,7 +313,7 @@ export function tune(samples: Float32Array, rate: number, tuning: Tuning): Tuned
   const strength = Math.max(0, Math.min(1, tuning.strength));
   const glideMs = Math.max(5, tuning.glideMs ?? DEFAULT_GLIDE_MS);
   const hop = Math.max(1, Math.round(HOP_S * rate));
-  const f0 = track(samples, rate, hop);
+  const f0 = pitchTrack(samples, rate, hop).hz;
   const frames = f0.length;
 
   const midi = new Float32Array(frames);
