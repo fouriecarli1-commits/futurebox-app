@@ -505,14 +505,16 @@ export const STRINGS: Dict = {
     en: "A second voice under a lead is what a producer uses to make one sound sure of itself. It only works once your take is in time and on the note \u2014 under a take that is late or flat it beats against you and prints the problem twice. Tune it first, then bring this up. The song credits say the AI voice is in it.",
     af: "\u2019n Tweede stem onder \u2019n hoofstem is wat \u2019n vervaardiger gebruik om een seker van homself te laat klink. Dit werk net sodra jou opname in tyd en op die noot is \u2014 onder \u2019n opname wat laat of vals is, klop dit teen jou en druk die probleem twee keer. Stem dit eers, bring dan hierdie op. Die liedjie se krediete s\u00ea die KI-stem is daarin.",
   },
-  "booth.introAt": { en: "Singing starts at", af: "Sang begin by" },
-  "booth.introHint": {
-    en: "Read off the song, and an estimate. Move it if the words are ahead of the singer or behind them, and the whole song follows.",
-    af: "Van die liedjie af gelees, en \u2019n skatting. Skuif dit as die woorde voor of agter die sanger is, en die hele liedjie volg.",
-  },
+  "booth.wordsStart": { en: "Words start at", af: "Woorde begin by" },
+  "booth.aGuess": { en: "(a guess)", af: "(\u2019n raaiskoot)" },
+  "booth.startHere": { en: "Start them here", af: "Begin hulle hier" },
+  "booth.point": { en: "Point at it on the wave", af: "Wys dit op die klankbaan" },
+  "booth.pointCancel": { en: "Cancel", af: "Kanselleer" },
+  "booth.pointNow": { en: "Click where the voice comes in", af: "Klik waar die stem inkom" },
+  "booth.startBack": { en: "Back to the guess", af: "Terug na die raaiskoot" },
   "booth.wordsFitted": {
-    en: "The words start where the singing seems to start, not at the top of the file. The desk has that number if it is out.",
-    af: "Die woorde begin waar die sang lyk of dit begin, nie by die begin van die l\u00eaer nie. Die klankbank het daardie getal as dit uit is.",
+    en: "The words start where the singing seems to start. If that is out, set it under the wave.",
+    af: "Die woorde begin waar die sang lyk of dit begin. As dit uit is, stel dit onder die klankbaan.",
   },
   "booth.speed": { en: "Speed", af: "Spoed" },
   "booth.speedHint": {

@@ -181,6 +181,8 @@ export default function VocalBooth({
   );
   /** Moved by hand. Null means whatever was measured or estimated. */
   const [introAt, setIntroAt] = useState<number | null>(null);
+  /** True while the next click on the waveform means "the singing starts here". */
+  const [pointing, setPointing] = useState(false);
   const singingFrom = introAt ?? span?.from ?? 0;
 
   const lines = useMemo<TimedLine[]>(() => {
@@ -202,6 +204,8 @@ export default function VocalBooth({
 
   /** Every word with its own moment, for writing under the stave. */
   const words = useMemo(() => wordsOf(lines), [lines]);
+  /** Where the first word lands, however that was arrived at. */
+  const wordsFrom = lines.length ? lines[0].start : 0;
 
   const current = lines.findIndex((line) => at >= line.start && at < line.end);
   const next = current >= 0 ? lines[current + 1] : lines.find((line) => line.start > at);
@@ -436,10 +440,23 @@ export default function VocalBooth({
       context.strokeRect(from, 0, Math.max(2, to - from), height);
     }
 
+    // Where the words are set to start, so the guess can be seen against the
+    // wave rather than only read as a number.
+    if (duration > 0 && wordsFrom > 0.05) {
+      const line = (wordsFrom / duration) * width;
+      context.fillStyle = 'rgb(245,158,11)';
+      context.fillRect(line - 1, 0, 2, height);
+      context.beginPath();
+      context.moveTo(line - 5, 0);
+      context.lineTo(line + 5, 0);
+      context.lineTo(line, 7);
+      context.fill();
+    }
+
     const head = duration > 0 ? (at / duration) * width : 0;
     context.fillStyle = '#fff';
     context.fillRect(head - 1, 0, 2, height);
-  }, [at, backing, duration, lines, region, take]);
+  }, [at, backing, duration, lines, region, take, wordsFrom]);
 
   // ── recording ──────────────────────────────────────────────────────────────
   /**
@@ -813,8 +830,8 @@ export default function VocalBooth({
           <p className="text-sm text-zinc-600 leading-snug flex-1 min-w-0">
             {phrases.length
               ? `${t('booth.wordsMeasured', 'The words are lined up with where the voice actually sings.')} `
-              : span
-                ? `${t('booth.wordsFitted', 'The words start where the singing seems to start, not at the top of the file. The desk has that number if it is out.')} `
+              : span && introAt === null
+                ? `${t('booth.wordsFitted', 'The words start where the singing seems to start. If that is out, set it under the wave.')} `
                 : ''}
             {guide.length
               ? t('booth.barGuide', 'The notes are read off the singing. Your voice draws on the stave as you sing.')
@@ -829,9 +846,17 @@ export default function VocalBooth({
       <div className="flex-shrink-0 px-5 pb-4 space-y-2">
         <canvas
           ref={canvasRef}
-          className="w-full rounded-xl bg-zinc-900/60 cursor-crosshair"
+          className={`w-full rounded-xl bg-zinc-900/60 ${pointing ? 'cursor-copy ring-2 ring-amber-400' : 'cursor-crosshair'}`}
           style={{ height: 'clamp(3.25rem, 9vh, 6rem)' }}
           onMouseDown={(event) => {
+            // Pointing at the entry wins over selecting a part to re-sing:
+            // the waveform is where the voice coming in is actually visible,
+            // and that is the whole reason this mode exists.
+            if (pointing) {
+              setIntroAt(seconds(event));
+              setPointing(false);
+              return;
+            }
             if (busyOrLive) return;
             dragRef.current = seconds(event);
           }}
@@ -861,10 +886,59 @@ export default function VocalBooth({
           <span>
             {region
               ? `${t('booth.selected', 'Selected')} ${clock(region.from)} – ${clock(region.to)}`
-              : t('booth.dragToPunch', 'Drag across a part to sing it again')}
+              : pointing
+                ? t('booth.pointNow', 'Click where the voice comes in')
+                : t('booth.dragToPunch', 'Drag across a part to sing it again')}
           </span>
           <span>{clock(duration)}</span>
         </div>
+
+        {/*
+          Where the words start, and two ways to put it right.
+
+          The estimate is an estimate, and on a real record it can be wrong in
+          ways no amount of arithmetic here will fix — a song can open with an
+          ad-lib or a hummed line, and no measurement can know that it is not
+          the first word of the verse. What can be known for certain is where
+          somebody points, so the number is on screen with the waveform it
+          belongs to, and both ways of setting it take about a second.
+        */}
+        {lines.length > 0 && !phrases.length && (
+          <div className="flex items-center gap-2 flex-wrap text-sm">
+            <span className="text-zinc-500">
+              {t('booth.wordsStart', 'Words start at')}{' '}
+              <span className="text-amber-400 font-semibold tabular-nums">{clock(singingFrom)}</span>
+              {introAt === null && span ? ` ${t('booth.aGuess', '(a guess)')}` : ''}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIntroAt(at)}
+              className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-amber-400 hover:text-amber-300"
+            >
+              {t('booth.startHere', 'Start them here')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPointing((on) => !on)}
+              className={`px-2.5 py-1 rounded-lg border ${
+                pointing
+                  ? 'bg-amber-500/20 border-amber-400 text-amber-300'
+                  : 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:border-amber-400 hover:text-amber-300'
+              }`}
+            >
+              {pointing ? t('booth.pointCancel', 'Cancel') : t('booth.point', 'Point at it on the wave')}
+            </button>
+            {introAt !== null && (
+              <button
+                type="button"
+                onClick={() => setIntroAt(null)}
+                className="px-2.5 py-1 rounded-lg text-zinc-500 hover:text-zinc-300"
+              >
+                {t('booth.startBack', 'Back to the guess')}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* The microphone's level, so a dead mic is obvious before a take. */}
         <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
@@ -1031,18 +1105,6 @@ export default function VocalBooth({
               step={0.02}
               onChange={setDoubleLevel}
               format={(value) => (value > 0 ? `${Math.round(value * 100)}%` : t('booth.off', 'Off'))}
-            />
-          )}
-
-          {!phrases.length && duration > 0 && (
-            <Fader
-              label={t('booth.introAt', 'Singing starts at')}
-              hint={t('booth.introHint', 'Read off the song, and an estimate. Move it if the words are ahead of the singer or behind them, and the whole song follows.')}
-              value={singingFrom}
-              max={Math.max(1, Math.min(90, duration * 0.6))}
-              step={0.25}
-              onChange={setIntroAt}
-              format={(value) => `${value.toFixed(2).replace(/\.?0+$/, '')} s`}
             />
           )}
 
