@@ -25,7 +25,7 @@ const SENT_KEY = 'fb.signalled';
  * known inaccuracy and the honest direction to be wrong in — it can only
  * overcount reach slightly, never invent an event that did not happen.
  */
-function visitor(): string {
+export function visitorId(): string {
   try {
     const kept = localStorage.getItem(VISITOR_KEY);
     if (kept && /^[0-9a-f]{32}$/.test(kept)) return kept;
@@ -65,7 +65,7 @@ function alreadySent(key: string): boolean {
 /** Records that something happened. Silent, and never throws. */
 export function signal(kind: EventKind, about?: { category?: string; ref?: string }): void {
   if (typeof window === 'undefined') return;
-  const who = visitor();
+  const who = visitorId();
   if (!who) return;
 
   const key = `${kind}:${about?.ref ?? ''}`;

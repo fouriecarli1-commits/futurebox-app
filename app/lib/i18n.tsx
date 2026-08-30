@@ -490,6 +490,31 @@ export const STRINGS: Dict = {
     af: "Nog geen note nie: die wysie kan nie uit \u2019n klaar mengsel gelees word sonder om dit verkeerd te kry nie. Skei die stem hieronder af en die note verskyn.",
   },
   "booth.barReading": { en: "Reading the backing\u2026", af: "Lees die begeleiding\u2026" },
+  "make.editMix": { en: "Open it up again", af: "Maak dit weer oop" },
+  "make.sourceGone": {
+    en: "The song this was sung over is not on this device any more.",
+    af: "Die liedjie waaroor dit gesing is, is nie meer op hierdie toestel nie.",
+  },
+  "here.title": { en: "People on FutureBox right now", af: "Mense op FutureBox op die oomblik" },
+  "here.one": { en: "here now", af: "nou hier" },
+  "here.many": { en: "here now", af: "nou hier" },
+  "booth.voices": { en: "The voices in this song", af: "Die stemme in hierdie liedjie" },
+  "booth.yourVoice": { en: "Your voice", af: "Jou stem" },
+  "booth.aiVoice": { en: "The AI voice", af: "Die KI-stem" },
+  "booth.clean": { en: "Take the room off it", af: "Haal die vertrek daaraf" },
+  "booth.cleaning": { en: "Cleaning it up\u2026", af: "Maak dit skoon\u2026" },
+  "booth.cleanNote": {
+    en: "Takes away the fan, the traffic and the shape of the room. It does not touch pitch or timing.",
+    af: "Haal die waaier, die verkeer en die vorm van die vertrek weg. Dit raak nie toonhoogte of tydsberekening nie.",
+  },
+  "booth.aiVoiceNote": {
+    en: "Keep it in the song at whatever level you want, or leave it out. Under your own it steadies a lead that is not quite carrying \u2014 but only once your take is in time and on the note. When any of it is kept, the song credits say so.",
+    af: "Hou dit in die liedjie op watter vlak jy ook al wil, of los dit uit. Onder joune maak dit \u2019n hoofstem vas wat nie heeltemal dra nie \u2014 maar net sodra jou opname in tyd en op die noot is. As enige daarvan gehou word, s\u00ea die liedjie se krediete so.",
+  },
+  "booth.aiVoiceLocked": {
+    en: "Separate the voice above and you can keep it in the song at any level, or leave it out.",
+    af: "Skei die stem hierbo af, dan kan jy dit op enige vlak in die liedjie hou, of dit uitlos.",
+  },
   "booth.desk": { en: "Desk", af: "Klankbank" },
   "booth.guideLevel": { en: "AI voice in your ear", af: "KI-stem in jou oor" },
   "booth.guideHint": {

@@ -17,6 +17,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Music, Play, Pause, Download, Share2, Repeat, Trash2, Sparkles, Wand2, Loader2,
   Video as VideoIcon, X, Mic,
+  Sliders,
 } from 'lucide-react';
 import { renderSketch, encodeWav, familyFor, sketchDurationSeconds } from '../lib/audio';
 import {
@@ -92,7 +93,7 @@ export default function MakeMusic({
    */
   const [singItYourself, setSingItYourself] = useState(false);
   /** Which track a vocal is being recorded over, if any. */
-  const [takeFor, setTakeFor] = useState<{ track: Track; music: Blob } | null>(null);
+  const [takeFor, setTakeFor] = useState<{ track: Track; music: Blob; take?: Blob | null } | null>(null);
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [busy, setBusy] = useState(false);
@@ -389,9 +390,11 @@ export default function MakeMusic({
     saveTracks(next);
   };
 
-  const keepTake = async (over: Track, mixed: Blob, doubled: boolean) => {
+  const keepTake = async (over: Track, mixed: Blob, doubled: boolean, take: Blob) => {
     const id = `t-${Date.now()}`;
     await putAudio(id, mixed);
+    // Kept beside the mix so the song can be opened up and changed again.
+    await putAudio(`${id}:take`, take);
     const length = (await durationOf(mixed)) ?? over.seconds;
     const sung: Track = {
       ...over,
@@ -412,6 +415,7 @@ export default function MakeMusic({
       // it came from, and carrying the flag across would claim stems that are
       // not on the device under this id.
       stems: undefined,
+      mixOf: { source: over.id },
     };
     const next = [sung, ...tracks];
     setTracks(next);
@@ -493,7 +497,8 @@ export default function MakeMusic({
         <VocalBooth
           track={takeFor.track}
           music={takeFor.music}
-          onKeep={(mixed, doubled) => keepTake(takeFor.track, mixed, doubled)}
+          startTake={takeFor.take ?? null}
+          onKeep={(mixed, doubled, take) => keepTake(takeFor.track, mixed, doubled, take)}
           onSplit={() => markSplit(takeFor.track)}
           onClose={() => setTakeFor(null)}
         />
@@ -840,6 +845,32 @@ export default function MakeMusic({
                     <Download className="w-3.5 h-3.5" />
                     {t('make.save')}
                   </button>
+                  {/* A mix somebody sang on can be opened up again: the take
+                      was kept beside it, so the tuning, the levels and the AI
+                      voice are all still yours to change. Long after posting. */}
+                  {track.mixOf && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const source = tracks.find((one) => one.id === track.mixOf?.source);
+                        if (!source) {
+                          setStatus(t('make.sourceGone', 'The song this was sung over is not on this device any more.'));
+                          return;
+                        }
+                        const music = await readAudio(source.id);
+                        const take = await getAudio(`${track.id}:take`);
+                        if (!music || !take) {
+                          setStatus(t('make.missing'));
+                          return;
+                        }
+                        setTakeFor({ track: source, music, take });
+                      }}
+                      className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                    >
+                      <Sliders className="w-3.5 h-3.5" />
+                      {t('make.editMix', 'Open it up again')}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={async () => {
