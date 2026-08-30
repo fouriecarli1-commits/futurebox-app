@@ -259,6 +259,12 @@ export async function recordGeneration(
   trackId?: string,
   /** Carried so the row can be counted against the inbox and the machine too. */
   request?: Request,
+  /**
+   * What it actually cost, where that is not the music rate. Separating stems
+   * is billed at half of generating the same length, and a credits column that
+   * says otherwise is a spend page that lies.
+   */
+  credits?: number,
 ): Promise<void> {
   const db = admin();
   if (!db) return;
@@ -268,7 +274,7 @@ export async function recordGeneration(
     kind,
     seconds: Math.round(seconds),
     track_id: trackId ?? null,
-    credits: Math.round((seconds / 60) * 900),
+    credits: credits ?? Math.round((seconds / 60) * 900),
     email_key: emailKey(caller.email),
     // Empty when there is no salt configured, and null is "not known" to the
     // counting function rather than a value everybody shares.
