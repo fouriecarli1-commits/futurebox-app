@@ -257,7 +257,9 @@ export default function MakeMusic({
             // The chosen length, not the sketch's own — the engine is being
             // asked for a song, and the sketch is only a fallback.
             seconds,
-            instrumental: singItYourself,
+            // "No vocal" has to mean no vocal. Leaving the style words empty
+            // asked for nothing in particular and the engine sang anyway.
+            instrumental: singItYourself || voice.id === 'none',
             onStage: setStage,
           });
           blob = result.blob;
@@ -341,7 +343,7 @@ export default function MakeMusic({
         setStage(null);
       }
     },
-    [bpm, canvas.style, lyrics, onMade, seconds, singItYourself, songKey, styleText, t, title, tracks, userPlan],
+    [bpm, canvas.style, lyrics, onMade, seconds, singItYourself, songKey, styleText, t, title, tracks, userPlan, voice.id],
   );
 
   const toggle = async (track: Track) => {
@@ -619,6 +621,9 @@ export default function MakeMusic({
 
         <div className={singItYourself ? 'opacity-40 pointer-events-none' : undefined}>
           <label className="text-sm text-zinc-400">{t('make.voice')}</label>
+          <p className="text-sm text-zinc-600 leading-snug pt-0.5">
+            {t('make.voiceNote', 'A direction, not a switch: the engine has no voice setting, so this goes to it in words. It usually follows, and now and then it does not.')}
+          </p>
           <div className="grid sm:grid-cols-3 gap-2 mt-1.5">
             {VOICES.map((choice) => (
               <button
