@@ -108,7 +108,7 @@ export default function NoteBar({
   bpm,
   live,
   onHold,
-  onSeek,
+  onDrag,
   onRelease,
 }: {
   /** Where the song is, in seconds. */
@@ -126,10 +126,10 @@ export default function NoteBar({
   /** The song's tempo, for the bar lines. Zero draws none. */
   bpm: number;
   live: boolean;
-  /** Somebody has taken hold of the stave. The song should wait. */
+  /** Somebody has taken hold of the words. */
   onHold?: () => void;
-  /** Pull the song to this moment while they drag. */
-  onSeek?: (seconds: number) => void;
+  /** How far they have pulled, in seconds. Positive is later. */
+  onDrag?: (seconds: number) => void;
   onRelease?: () => void;
 }): React.ReactElement {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -377,24 +377,26 @@ export default function NoteBar({
   }, [at, bpm, guide, live, scale, sung, trail, words]);
 
   /**
-   * Taking hold of the stave.
+   * Taking hold of the words.
    *
-   * A song can go past faster than somebody can read the line they are meant
-   * to sing, and the answer they asked for is the obvious one: let me grab it.
-   * Holding it stops the music where it is; dragging pulls the song along with
-   * your hand, backwards to read a line again or forwards to skip ahead; and
-   * letting go carries on from wherever you left it.
+   * The hand moves the words and nothing else. It does not move the song, it
+   * does not touch the microphone, and it works in the middle of a take —
+   * which is the whole point of it. When the words are running ahead of the
+   * singer there is no way to fix that while singing except to reach up and
+   * hold them back, and this is that: hold, and they stop while the song
+   * carries on underneath; drag right and they arrive later; drag left and
+   * they arrive sooner.
    *
-   * The arithmetic is the same as the drawing's, in reverse: the window is six
-   * seconds wide across everything but the clef, so a pixel is worth that much
-   * divided by the width.
+   * The arithmetic is the drawing's own, in reverse: the window is six seconds
+   * wide across everything but the clef, so a pixel is worth that divided by
+   * the width.
    */
   const pull = (event: React.PointerEvent<HTMLCanvasElement>): void => {
     const held = heldRef.current;
-    if (!held || !onSeek) return;
+    if (!held || !onDrag) return;
     const width = event.currentTarget.clientWidth - HEADER;
     if (width <= 0) return;
-    onSeek(held.at - ((event.clientX - held.x) * WINDOW_S) / width);
+    onDrag(((event.clientX - held.x) * WINDOW_S) / width);
   };
 
   const letGo = (event: React.PointerEvent<HTMLCanvasElement>): void => {
@@ -410,11 +412,11 @@ export default function NoteBar({
     <canvas
       ref={canvasRef}
       className={`w-full rounded-2xl bg-zinc-950 border border-zinc-800 touch-none ${
-        onSeek ? 'cursor-grab active:cursor-grabbing' : ''
+        onDrag ? 'cursor-grab active:cursor-grabbing' : ''
       }`}
       style={{ height: 'clamp(6.5rem, 18vh, 10rem)' }}
       onPointerDown={(event) => {
-        if (!onSeek) return;
+        if (!onDrag) return;
         heldRef.current = { x: event.clientX, at };
         event.currentTarget.setPointerCapture?.(event.pointerId);
         onHold?.();

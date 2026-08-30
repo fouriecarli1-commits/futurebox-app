@@ -183,11 +183,23 @@ export default function VocalBooth({
   const [introAt, setIntroAt] = useState<number | null>(null);
   /** True while the next click on the waveform means "the singing starts here". */
   const [pointing, setPointing] = useState(false);
-  /** Whether the song was playing when somebody took hold of the stave. */
-  const wasPlayingRef = useRef(false);
+  /**
+   * How far the words have been moved by hand, in seconds.
+   *
+   * Separate from everything that decides *where* the words go, and separate
+   * from the song, because it has to work in the middle of a take. The take is
+   * recorded against the backing; the words are only a thing to read. Moving
+   * what you are reading must not move what is being recorded, and until now
+   * the hand was locked out during a take for fear of exactly that — which
+   * left a singer watching the words run away with no way to catch them.
+   */
+  const [wordsShift, setWordsShift] = useState(0);
+  /** Where the song and the shift were when the hand went down. */
+  const holdRef = useRef<{ at: number; shift: number } | null>(null);
+  const pulledRef = useRef(0);
   const singingFrom = introAt ?? span?.from ?? 0;
 
-  const lines = useMemo<TimedLine[]>(() => {
+  const placed = useMemo<TimedLine[]>(() => {
     const stored = (track.parts ?? []) as readonly Part[];
     // Falling back to the lyric sheet matters more than it looks. Only songs
     // made since the plan was stored carry one, so on everything made before
@@ -204,10 +216,32 @@ export default function VocalBooth({
     return fitInto(even, singingFrom, to);
   }, [duration, phrases, singingFrom, span, track.lyrics, track.parts]);
 
+  /** The same lines, moved by however much the hand has pulled them. */
+  const lines = useMemo(
+    () =>
+      wordsShift
+        ? placed.map((line) => ({ ...line, start: line.start + wordsShift, end: line.end + wordsShift }))
+        : placed,
+    [placed, wordsShift],
+  );
+
   /** Every word with its own moment, for writing under the stave. */
   const words = useMemo(() => wordsOf(lines), [lines]);
   /** Where the first word lands, however that was arrived at. */
   const wordsFrom = lines.length ? lines[0].start : 0;
+
+  /**
+   * While the hand is down, the words stay where they are.
+   *
+   * The song keeps moving, so the shift has to grow by exactly as much as the
+   * song does. That is the whole trick: holding still is a correction, and it
+   * is applied at the speed the mistake is being made.
+   */
+  useEffect(() => {
+    const held = holdRef.current;
+    if (!held) return;
+    setWordsShift(held.shift + (at - held.at) + pulledRef.current);
+  }, [at]);
 
   const current = lines.findIndex((line) => at >= line.start && at < line.end);
   const next = current >= 0 ? lines[current + 1] : lines.find((line) => line.start > at);
@@ -790,39 +824,19 @@ export default function VocalBooth({
           be guessed from an empty bar. */}
       <div className="flex-shrink-0 px-5 pb-2 space-y-1.5">
         <NoteBar
-          {...(busyOrLive
-            ? {}
-            : {
-                /*
-                  Take hold of the stave and the song waits where it is; drag
-                  and it comes with your hand, backwards to read a line again
-                  or forwards to skip ahead; let go and it carries on from
-                  there. Not while recording — the take is being measured
-                  against this clock, and moving it would put the voice
-                  somewhere it was never sung.
-                */
-                onHold: () => {
-                  wasPlayingRef.current = phase === 'playing';
-                  audioRef.current?.pause();
-                  hush();
-                  setPhase('idle');
-                },
-                onSeek: (seconds_: number) => {
-                  const element = audioRef.current;
-                  const to = Math.max(0, Math.min(duration || 0, seconds_));
-                  if (element) element.currentTime = to;
-                  setAt(to);
-                },
-                onRelease: () => {
-                  if (!wasPlayingRef.current) return;
-                  wasPlayingRef.current = false;
-                  const element = audioRef.current;
-                  if (!element) return;
-                  void element.play();
-                  withGuide(element.currentTime);
-                  setPhase('playing');
-                },
-              })}
+          onHold={() => {
+            holdRef.current = { at, shift: wordsShift };
+            pulledRef.current = 0;
+          }}
+          onDrag={(pulled) => {
+            pulledRef.current = pulled;
+            const held = holdRef.current;
+            if (held) setWordsShift(held.shift + (at - held.at) + pulled);
+          }}
+          onRelease={() => {
+            holdRef.current = null;
+            pulledRef.current = 0;
+          }}
           at={at}
           guide={guide}
           sung={sung}
@@ -868,7 +882,7 @@ export default function VocalBooth({
               : span && introAt === null
                 ? `${t('booth.wordsFitted', 'The words start where the singing seems to start. If that is out, set it under the wave.')} `
                 : ''}
-            {!busyOrLive ? `${t('booth.holdStave', 'Hold the stave and drag it to move through the song.')} ` : ''}
+            {`${t('booth.holdStave', 'Hold the words on the stave to stop them, or drag them to where you actually sing them. It works while you record and it does not touch the take.')} `}
             {guide.length
               ? t('booth.barGuide', 'The notes are read off the singing. Your voice draws on the stave as you sing.')
               : guideRead
@@ -939,7 +953,7 @@ export default function VocalBooth({
           somebody points, so the number is on screen with the waveform it
           belongs to, and both ways of setting it take about a second.
         */}
-        {lines.length > 0 && !phrases.length && (
+        {lines.length > 0 && (!phrases.length || wordsShift !== 0) && (
           <div className="flex items-center gap-2 flex-wrap text-sm">
             <span className="text-zinc-500">
               {t('booth.wordsStart', 'Words start at')}{' '}
@@ -964,10 +978,19 @@ export default function VocalBooth({
             >
               {pointing ? t('booth.pointCancel', 'Cancel') : t('booth.point', 'Point at it on the wave')}
             </button>
-            {introAt !== null && (
+            {wordsShift !== 0 && (
+              <span className="text-amber-400 tabular-nums">
+                {t('booth.pulled', 'pulled')} {wordsShift > 0 ? '+' : ''}
+                {wordsShift.toFixed(1)} s
+              </span>
+            )}
+            {(introAt !== null || wordsShift !== 0) && (
               <button
                 type="button"
-                onClick={() => setIntroAt(null)}
+                onClick={() => {
+                  setIntroAt(null);
+                  setWordsShift(0);
+                }}
                 className="px-2.5 py-1 rounded-lg text-zinc-500 hover:text-zinc-300"
               >
                 {t('booth.startBack', 'Back to the guess')}

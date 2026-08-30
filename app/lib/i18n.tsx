@@ -506,9 +506,10 @@ export const STRINGS: Dict = {
     af: "\u2019n Tweede stem onder \u2019n hoofstem is wat \u2019n vervaardiger gebruik om een seker van homself te laat klink. Dit werk net sodra jou opname in tyd en op die noot is \u2014 onder \u2019n opname wat laat of vals is, klop dit teen jou en druk die probleem twee keer. Stem dit eers, bring dan hierdie op. Die liedjie se krediete s\u00ea die KI-stem is daarin.",
   },
   "booth.holdStave": {
-    en: "Hold the stave and drag it to move through the song.",
-    af: "Hou die notebalk vas en sleep dit om deur die liedjie te beweeg.",
+    en: "Hold the words on the stave to stop them, or drag them to where you actually sing them. It works while you record and it does not touch the take.",
+    af: "Hou die woorde op die notebalk vas om hulle te stop, of sleep hulle na waar jy hulle werklik sing. Dit werk terwyl jy opneem en dit raak nie aan die opname nie.",
   },
+  "booth.pulled": { en: "pulled", af: "getrek" },
   "booth.wordsStart": { en: "Words start at", af: "Woorde begin by" },
   "booth.aGuess": { en: "(a guess)", af: "(\u2019n raaiskoot)" },
   "booth.startHere": { en: "Start them here", af: "Begin hulle hier" },
