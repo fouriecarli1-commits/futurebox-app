@@ -509,6 +509,23 @@ export const STRINGS: Dict = {
     en: "Hold the words on the stave to stop them, or drag them to where you actually sing them. It works while you record and it does not touch the take.",
     af: "Hou die woorde op die notebalk vas om hulle te stop, of sleep hulle na waar jy hulle werklik sing. Dit werk terwyl jy opneem en dit raak nie aan die opname nie.",
   },
+  "make.voiceNote": {
+    en: "A direction, not a switch: the engine has no voice setting, so this goes to it in words. It usually follows, and now and then it does not.",
+    af: "\u2019n Aanwysing, nie \u2019n skakelaar nie: die enjin het geen steminstelling nie, so dit gaan in woorde daarheen. Dit volg meestal, en so nou en dan nie.",
+  },
+  "booth.readWords": { en: "Read the words off the song", af: "Lees die woorde van die liedjie af" },
+  "booth.reading": { en: "Listening to the song\u2026", af: "Luister na die liedjie\u2026" },
+  "booth.asSung": { en: "As sung", af: "Soos gesing" },
+  "booth.asWritten": { en: "As written", af: "Soos geskryf" },
+  "booth.readAgain": { en: "Read again", af: "Lees weer" },
+  "booth.heardWhy": {
+    en: "Singing something the words do not quite match? The engine does not always sing what it was given. This reads the words off the recording itself, with the time of every one.",
+    af: "Sing jy iets wat nie heeltemal by die woorde pas nie? Die enjin sing nie altyd wat dit gekry het nie. Dit lees die woorde van die opname self af, met die tyd van elkeen.",
+  },
+  "booth.heardOn": {
+    en: "These are the words the song actually sings, read off the recording, each one timed to where it lands.",
+    af: "Dit is die woorde wat die liedjie werklik sing, van die opname af gelees, elkeen getyd op die plek waar dit val.",
+  },
   "booth.pulled": { en: "pulled", af: "getrek" },
   "booth.wordsStart": { en: "Words start at", af: "Woorde begin by" },
   "booth.aGuess": { en: "(a guess)", af: "(\u2019n raaiskoot)" },

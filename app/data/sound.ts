@@ -131,6 +131,15 @@ export interface VoiceChoice {
   readonly words: string;
 }
 
+/**
+ * Named for who is singing, because that is what people come here to choose.
+ *
+ * These used to be called "Higher, warm" and "Lower, rough" — an attempt not
+ * to put a man or a woman on a list, which had the effect of hiding the choice
+ * from the person making it. The style words underneath always did say male
+ * and female; only the labels were coy about it. Somebody who wants a woman's
+ * voice on their song should be able to see that they can have one.
+ */
 export const VOICES: readonly VoiceChoice[] = [
   {
     id: 'none',
@@ -140,31 +149,31 @@ export const VOICES: readonly VoiceChoice[] = [
   },
   {
     id: 'female-warm',
-    name: 'Higher, warm',
+    name: 'Woman, warm',
     sounds: 'A woman singing close to the mic, breath audible, not belting.',
     words: 'warm female vocal, close-mic, breathy, natural vibrato, unprocessed, one honest take',
   },
   {
     id: 'female-power',
-    name: 'Higher, powerful',
+    name: 'Woman, powerful',
     sounds: 'Full chest voice, room around it, carries a big chorus.',
     words: 'powerful female vocal, full chest voice, live room ambience, soaring chorus, real dynamics',
   },
   {
     id: 'male-low',
-    name: 'Lower, rough',
+    name: 'Man, low and rough',
     sounds: 'Gravel in it, pushed rather than smooth, sits under the music.',
     words: 'low male vocal, slight rasp, pushed delivery, warm chest tone, lived-in, minimal tuning',
   },
   {
     id: 'male-soft',
-    name: 'Lower, gentle',
+    name: 'Man, gentle',
     sounds: 'Almost spoken, very close, more confession than performance.',
     words: 'soft male vocal, near-whisper, very close mic, intimate, barely accompanied, human breath',
   },
   {
     id: 'choir',
-    name: 'Group',
+    name: 'A group',
     sounds: 'Several voices together, harmony rather than a lead.',
     words: 'layered group vocal, natural harmony, choir stacking, slight timing spread, live feel',
   },

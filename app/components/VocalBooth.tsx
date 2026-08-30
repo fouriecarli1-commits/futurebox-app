@@ -27,13 +27,21 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, X } from 'lucide-react';
+import { Check, Circle, Ear, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, X } from 'lucide-react';
 import { decode, knownLatency, mixdown } from '../lib/mixdown';
 import { decodeAt, shapeOf, spliceTake } from '../lib/takes';
 import { detectPitch, noteOf } from '../lib/pitch';
 import { scaleOf, tuneBuffer, type Tuned } from '../lib/tune';
 import { melodyOf, readable, type Note } from '../lib/melody';
 import { failed, loadStems, separate, type Stems } from '../lib/stems';
+import {
+  failed as heardFailed,
+  forgetHeard,
+  linesFrom,
+  loadHeard,
+  transcribe,
+  type Heard,
+} from '../lib/transcript';
 import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
 import { alignTo, fitInto, partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
@@ -179,6 +187,19 @@ export default function VocalBooth({
     () => (backing && !phrases.length ? vocalSpanOf(backing) : null),
     [backing, phrases],
   );
+  /**
+   * The words the record actually sings, with a time on every one.
+   *
+   * The written lyric sheet is what was *asked for*; a music engine sings
+   * something close to it and not the same as it. When these exist they win,
+   * because they are the song rather than the request, and because they carry
+   * their own timing and nothing has to be estimated at all.
+   */
+  const [heard, setHeard] = useState<Heard[] | null>(null);
+  const [reading, setReading] = useState(false);
+  /** Set when somebody wants the words they wrote back on screen. */
+  const [preferWritten, setPreferWritten] = useState(false);
+
   /** Moved by hand. Null means whatever was measured or estimated. */
   const [introAt, setIntroAt] = useState<number | null>(null);
   /** True while the next click on the waveform means "the singing starts here". */
@@ -200,6 +221,9 @@ export default function VocalBooth({
   const singingFrom = introAt ?? span?.from ?? 0;
 
   const placed = useMemo<TimedLine[]>(() => {
+    // Nothing to time and nothing to guess: every word came back with a start
+    // and an end on it.
+    if (heard && !preferWritten) return linesFrom(heard);
     const stored = (track.parts ?? []) as readonly Part[];
     // Falling back to the lyric sheet matters more than it looks. Only songs
     // made since the plan was stored carry one, so on everything made before
@@ -214,7 +238,7 @@ export default function VocalBooth({
     const to = span?.to ?? duration;
     if (!even.length || !(to > singingFrom)) return even;
     return fitInto(even, singingFrom, to);
-  }, [duration, phrases, singingFrom, span, track.lyrics, track.parts]);
+  }, [duration, heard, phrases, preferWritten, singingFrom, span, track.lyrics, track.parts]);
 
   /** The same lines, moved by however much the hand has pulled them. */
   const lines = useMemo(
@@ -295,6 +319,10 @@ export default function VocalBooth({
       if (guideUrlRef.current) URL.revokeObjectURL(guideUrlRef.current);
     };
   }, [stems]);
+
+  useEffect(() => {
+    setHeard(loadHeard(track.id));
+  }, [track.id]);
 
   /** Anything already split for this song is on the device. */
   useEffect(() => {
@@ -740,6 +768,26 @@ export default function VocalBooth({
     onSplit?.();
   }, [duration, music, onSplit, track.id, track.seconds]);
 
+  /**
+   * Read the words off the song.
+   *
+   * The separated voice where there is one — a transcriber given one voice is
+   * doing a far easier job than one given a band as well.
+   */
+  const readWords = useCallback(async () => {
+    setProblem(null);
+    setReading(true);
+    const result = await transcribe(track.id, stems?.vocals ?? music, duration || track.seconds || 0);
+    setReading(false);
+    if (heardFailed(result)) {
+      setProblem(result.message);
+      return;
+    }
+    setHeard(result);
+    setPreferWritten(false);
+    setWordsShift(0);
+  }, [duration, music, stems, track.id, track.seconds]);
+
   const seconds = (event: React.MouseEvent<HTMLCanvasElement>): number => {
     const box = event.currentTarget.getBoundingClientRect();
     return Math.max(0, Math.min(1, (event.clientX - box.left) / box.width)) * duration;
@@ -1005,6 +1053,60 @@ export default function VocalBooth({
             className={`h-full rounded-full ${hot ? 'bg-red-500' : 'bg-emerald-500'}`}
             style={{ width: `${Math.round(level * 100)}%` }}
           />
+        </div>
+
+        {/* ── The words the record actually sings ─────────────────────────
+            The lyric sheet is what was asked for. A music engine sings
+            something close to it and not the same as it — a line repeated, a
+            word swapped, a phrase bent to fit the melody — and no amount of
+            moving the words about in time fixes a word that is not there. */}
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex items-center gap-3 flex-wrap">
+          <Ear className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <p className="text-sm text-zinc-400 leading-snug flex-1 min-w-[240px]">
+            {heard && !preferWritten
+              ? t('booth.heardOn', 'These are the words the song actually sings, read off the recording, each one timed to where it lands.')
+              : t('booth.heardWhy', 'Singing something the words do not quite match? The engine does not always sing what it was given. This reads the words off the recording itself, with the time of every one.')}
+          </p>
+          {heard ? (
+            <div className="flex rounded-xl border border-zinc-700 overflow-hidden flex-shrink-0">
+              {[
+                { written: false, label: t('booth.asSung', 'As sung') },
+                { written: true, label: t('booth.asWritten', 'As written') },
+              ].map((choice) => (
+                <button
+                  key={String(choice.written)}
+                  type="button"
+                  onClick={() => setPreferWritten(choice.written)}
+                  className={`px-3 py-1.5 text-sm font-semibold ${
+                    preferWritten === choice.written ? 'bg-emerald-500 text-onAccent' : 'bg-zinc-950 text-zinc-400'
+                  }`}
+                >
+                  {choice.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  forgetHeard(track.id);
+                  setHeard(null);
+                  setPreferWritten(false);
+                }}
+                className="px-3 py-1.5 text-sm bg-zinc-950 text-zinc-600 hover:text-zinc-300"
+              >
+                {t('booth.readAgain', 'Read again')}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void readWords()}
+              disabled={reading || busy || busyOrLive}
+              className="px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ear className="w-4 h-4" />}
+              {reading ? t('booth.reading', 'Listening to the song…') : t('booth.readWords', 'Read the words off the song')}
+            </button>
+          )}
         </div>
 
         {/* ── Singing with the singer ─────────────────────────────────────
