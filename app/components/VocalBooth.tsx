@@ -27,12 +27,14 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Loader2, Mic, Pause, Play, Scissors, Sparkles, Square, X } from 'lucide-react';
+import { Check, Circle, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, X } from 'lucide-react';
 import { decode, knownLatency, mixdown } from '../lib/mixdown';
 import { decodeAt, shapeOf, spliceTake } from '../lib/takes';
 import { detectPitch, noteOf } from '../lib/pitch';
 import { scaleOf, tuneBuffer, type Tuned } from '../lib/tune';
 import { melodyOf, readable, type Note } from '../lib/melody';
+import { failed, loadStems, separate, type Stems } from '../lib/stems';
+import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
 import { partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
@@ -54,12 +56,15 @@ export default function VocalBooth({
   track,
   music,
   onKeep,
+  onSplit,
   onClose,
 }: {
   track: Track;
   /** The backing to sing over. */
   music: Blob;
   onKeep: (mixed: Blob) => void | Promise<void>;
+  /** Told once the song has been split, so the track can remember it. */
+  onSplit?: () => void;
   onClose: () => void;
 }): React.ReactElement {
   const { t } = useLang();
@@ -98,6 +103,7 @@ export default function VocalBooth({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const micCtxRef = useRef<AudioContext | null>(null);
   const punchAtRef = useRef(0);
+  const sungAtRef = useRef(1);
   const playCtxRef = useRef<AudioContext | null>(null);
   const takeSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
@@ -112,6 +118,31 @@ export default function VocalBooth({
   const [sung, setSung] = useState<Note[]>([]);
   /** The last couple of seconds of what the microphone heard. */
   const trailRef = useRef<Trail[]>([]);
+
+  /**
+   * The song split in two: the AI voice on its own, and everything else.
+   *
+   * With it, the voice becomes a guide you sing beside and then turn down, the
+   * stave gets notes it can trust — one voice reads, a full mix does not — and
+   * what you keep is your voice on the backing, with the AI singer gone.
+   */
+  const [stems, setStems] = useState<Stems | null>(null);
+  const [splitting, setSplitting] = useState(false);
+  /** The AI voice's own buffer, for reading its melody. */
+  const [guideBuffer, setGuideBuffer] = useState<AudioBuffer | null>(null);
+
+  // ── the desk ──────────────────────────────────────────────────────────────
+  const [deskOpen, setDeskOpen] = useState(false);
+  const [guideLevel, setGuideLevel] = useState(0.7);
+  const [backingLevel, setBackingLevel] = useState(0.85);
+  const [takeLevel, setTakeLevel] = useState(1);
+  /** Playing speed, pitch held. Below one for a song that is too fast to sing. */
+  const [speed, setSpeed] = useState(1);
+  /** Hand alignment, in milliseconds, on top of the measured latency. */
+  const [nudge, setNudge] = useState(0);
+
+  const guideRef = useRef<HTMLAudioElement | null>(null);
+  const guideUrlRef = useRef<string | null>(null);
 
   const lines = useMemo<TimedLine[]>(() => {
     const stored = (track.parts ?? []) as readonly Part[];
@@ -145,9 +176,13 @@ export default function VocalBooth({
       }
     });
     audioRef.current = element;
-    urlRef.current = URL.createObjectURL(music);
+    // Once the song has been split, what plays and what gets mixed into is the
+    // backing without the AI voice on it. The voice comes back separately, on
+    // its own fader, and only into your ears.
+    const played = stems?.music ?? music;
+    urlRef.current = URL.createObjectURL(played);
     element.src = urlRef.current;
-    void decode(music).then(setBacking);
+    void decode(played).then(setBacking);
     return () => {
       element.pause();
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
@@ -155,7 +190,52 @@ export default function VocalBooth({
       void micCtxRef.current?.close();
       void playCtxRef.current?.close();
     };
-  }, [music]);
+  }, [music, stems]);
+
+  /** The guide voice: a second player, so its level is yours to set. */
+  useEffect(() => {
+    if (!stems) {
+      setGuideBuffer(null);
+      return;
+    }
+    const element = new Audio();
+    guideRef.current = element;
+    guideUrlRef.current = URL.createObjectURL(stems.vocals);
+    element.src = guideUrlRef.current;
+    void decode(stems.vocals).then(setGuideBuffer);
+    return () => {
+      element.pause();
+      guideRef.current = null;
+      if (guideUrlRef.current) URL.revokeObjectURL(guideUrlRef.current);
+    };
+  }, [stems]);
+
+  /** Anything already split for this song is on the device. */
+  useEffect(() => {
+    let dropped = false;
+    void loadStems(track.id).then((found) => {
+      if (!dropped && found) setStems(found);
+    });
+    return () => {
+      dropped = true;
+    };
+  }, [track.id]);
+
+  // Level and speed are live: moving a fader while it plays has to be heard.
+  useEffect(() => {
+    const element = guideRef.current;
+    if (element) element.volume = guideLevel;
+  }, [guideLevel]);
+
+  useEffect(() => {
+    [audioRef.current, guideRef.current].forEach((element) => {
+      if (!element) return;
+      // Pitch held, or slowing a song down to sing it moves it out of key,
+      // which would defeat the whole point of slowing it down.
+      (element as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;
+      element.playbackRate = speed;
+    });
+  }, [speed, stems]);
 
   // The clock, and the microphone's live readings, on one frame loop.
   useEffect(() => {
@@ -218,19 +298,24 @@ export default function VocalBooth({
    * full-length song, and it must not sit in front of the record button.
    */
   useEffect(() => {
-    if (!backing) return;
+    // The AI voice on its own where the song has been split, and the whole
+    // song otherwise. That difference is the difference between a stave with
+    // the tune on it and a stave with nothing on it: one voice can be read,
+    // and a mix with a bass line under it reads as the bass.
+    const source = guideBuffer ?? backing;
+    if (!source) return;
     let dropped = false;
     const timer = window.setTimeout(() => {
-      const notes = melodyOf(backing.getChannelData(0), backing.sampleRate);
+      const notes = melodyOf(source.getChannelData(0), source.sampleRate);
       if (dropped) return;
-      setGuide(readable(notes, backing.duration) ? notes : []);
+      setGuide(readable(notes, source.duration) ? notes : []);
       setGuideRead(true);
     }, 60);
     return () => {
       dropped = true;
       window.clearTimeout(timer);
     };
-  }, [backing]);
+  }, [backing, guideBuffer]);
 
   /** The same for the take, so you can see the notes you actually sang. */
   useEffect(() => {
@@ -315,6 +400,7 @@ export default function VocalBooth({
    * started and stopped by hand.
    */
   const hush = useCallback(() => {
+    guideRef.current?.pause();
     const source = takeSourceRef.current;
     takeSourceRef.current = null;
     if (!source) return;
@@ -324,6 +410,17 @@ export default function VocalBooth({
       // Already finished. Nothing to stop.
     }
   }, []);
+
+  /** The guide voice, started at wherever the backing is. */
+  const withGuide = useCallback((from: number) => {
+    const element = guideRef.current;
+    if (!element) return;
+    element.volume = guideLevel;
+    (element as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;
+    element.playbackRate = speed;
+    element.currentTime = Math.max(0, Math.min(from, element.duration || from));
+    void element.play().catch(() => undefined);
+  }, [guideLevel, speed]);
 
   const openMic = useCallback(async (): Promise<MediaStream | null> => {
     if (streamRef.current) return streamRef.current;
@@ -385,12 +482,17 @@ export default function VocalBooth({
       recorder.start();
       const began = performance.now();
       await element.play();
+      withGuide(element.currentTime);
       const music_ = performance.now();
       setOffset(-((music_ - began) / 1000 + knownLatency()));
       punchAtRef.current = Math.max(0, from);
+      // The speed it was actually sung at, kept because the slider is allowed
+      // to move afterwards and the take has to be pulled back by the speed it
+      // was recorded at, not by whatever the slider says later.
+      sungAtRef.current = speed;
       setPhase('recording');
     },
-    [hush, openMic],
+    [hush, openMic, speed, withGuide],
   );
 
   const stop = useCallback(async () => {
@@ -410,16 +512,28 @@ export default function VocalBooth({
 
     const raw = await finished;
     const rate = backing?.sampleRate ?? 48_000;
-    const piece = await decodeAt(raw, rate);
-    setBusy(false);
-    if (!piece) {
+    const decoded = await decodeAt(raw, rate);
+    if (!decoded) {
+      setBusy(false);
       setProblem(t('take.unreadable', 'That recording could not be read back.'));
       return;
     }
 
+    /**
+     * A take sung against a slowed song is itself slow, so it is pulled back
+     * to speed before anything else touches it. After this it is on the song's
+     * clock like any other take, which is what keeps the rest of the screen —
+     * splicing, tuning, the waveform, the mix — from having to know about the
+     * speed control at all.
+     */
+    const wasAt = sungAtRef.current;
+    const piece = wasAt !== 1 ? (stretchBuffer(decoded, wasAt) ?? decoded) : decoded;
+    setBusy(false);
+
     // Where this piece belongs on the song's clock: where recording started,
-    // pushed by the measured latency.
-    const landsAt = Math.max(0, punchAtRef.current + offset);
+    // pushed by the measured latency — which was measured in real seconds, and
+    // a real second is `wasAt` song seconds.
+    const landsAt = Math.max(0, punchAtRef.current + offset * wasAt);
     // Spliced onto the untouched take, not onto a tuned one: tuning reads the
     // whole thing at once, so it is re-run over the result rather than left
     // half applied.
@@ -456,8 +570,9 @@ export default function VocalBooth({
       takeSourceRef.current = source;
     }
     void element.play();
+    withGuide(element.currentTime);
     setPhase('playing');
-  }, [hush, phase, take]);
+  }, [hush, phase, take, withGuide]);
 
   /**
    * The take moved onto the note.
@@ -486,14 +601,39 @@ export default function VocalBooth({
   const keep = useCallback(async () => {
     if (!backing || !take) return;
     setBusy(true);
-    const mixed = await mixdown({ music: backing, take, offset: 0, musicGain: 0.85, takeGain: 1 });
+    const mixed = await mixdown({
+      music: backing,
+      take,
+      offset: nudge / 1000,
+      musicGain: backingLevel,
+      takeGain: takeLevel,
+    });
     setBusy(false);
     if (!mixed) {
       setProblem(t('take.mixFailed', 'The mix could not be made.'));
       return;
     }
     await onKeep(mixed);
-  }, [backing, onKeep, t, take]);
+  }, [backing, backingLevel, nudge, onKeep, t, take, takeLevel]);
+
+  /**
+   * Split the song into the AI voice and the backing.
+   *
+   * It costs money upstream, so nothing does it on its own: a person asks for
+   * it, having been told on the button what it is for.
+   */
+  const split = useCallback(async () => {
+    setProblem(null);
+    setSplitting(true);
+    const result = await separate(track.id, music, duration || track.seconds || 0);
+    setSplitting(false);
+    if (failed(result)) {
+      setProblem(result.message);
+      return;
+    }
+    setStems(result);
+    onSplit?.();
+  }, [duration, music, onSplit, track.id, track.seconds]);
 
   const seconds = (event: React.MouseEvent<HTMLCanvasElement>): number => {
     const box = event.currentTarget.getBoundingClientRect();
@@ -603,9 +743,9 @@ export default function VocalBooth({
           )}
           <p className="text-sm text-zinc-600 leading-snug flex-1 min-w-0">
             {guide.length
-              ? t('booth.barGuide', 'The notes are read off the backing and the words sit under them. Your voice draws on the stave as you sing.')
+              ? t('booth.barGuide', 'The notes are read off the singing and the words sit under them. Your voice draws on the stave as you sing.')
               : guideRead
-                ? t('booth.barNoGuide', 'No notes: the tune cannot be read out of a finished mix without getting it wrong. The stave carries the words, your voice, and your own take once you have sung one.')
+                ? t('booth.barNoGuide', 'No notes yet: the tune cannot be read out of a finished mix without getting it wrong. Separate the voice below and the notes appear.')
                 : t('booth.barReading', 'Reading the backing…')}
           </p>
         </div>
@@ -658,6 +798,28 @@ export default function VocalBooth({
             style={{ width: `${Math.round(level * 100)}%` }}
           />
         </div>
+
+        {/* ── Singing with the singer ─────────────────────────────────────
+            People sing better beside somebody already on the note. That is
+            most of why a choir works, and it is why this is offered rather
+            than left as a fader nobody finds. */}
+        {!stems && (
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex items-center gap-3 flex-wrap">
+            <Users className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <p className="text-sm text-zinc-400 leading-snug flex-1 min-w-[240px]">
+              {t('booth.splitWhy', 'Sing next to the AI voice: it is taken off the song, played in your ear at whatever level you want, and left out of what you keep. It also puts the tune on the stave, which a full mix cannot.')}
+            </p>
+            <button
+              type="button"
+              onClick={() => void split()}
+              disabled={splitting || busy || busyOrLive}
+              className="px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {splitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
+              {splitting ? t('booth.splitting', 'Separating the voice…') : t('booth.split', 'Separate the voice')}
+            </button>
+          </div>
+        )}
 
         {/* ── Tuning ──────────────────────────────────────────────────────
             Only once there is something to tune. Everything it did is said in
@@ -790,6 +952,17 @@ export default function VocalBooth({
             {take ? t('booth.listen', 'Listen back') : t('booth.playAlong', 'Play it and follow the words')}
           </button>
 
+          <button
+            type="button"
+            onClick={() => setDeskOpen((open) => !open)}
+            className={`px-3.5 py-2.5 rounded-xl border text-sm font-semibold flex items-center gap-1.5 ${
+              deskOpen ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-900 border-zinc-700 text-zinc-200'
+            }`}
+          >
+            <Sliders className="w-4 h-4" />
+            {t('booth.desk', 'Desk')}
+          </button>
+
           <span className="flex-1" />
 
           <button
@@ -803,11 +976,121 @@ export default function VocalBooth({
           </button>
         </div>
 
+        {/* ── The desk ──────────────────────────────────────────────────────
+            For somebody who records for a living and wants the levels in their
+            own hands. Every fader here does something real: three of them are
+            in the mix that gets kept, one changes what you hear while you sing,
+            and one changes the speed you sing at. Nothing here is decoration. */}
+        {deskOpen && (
+          <div className="absolute right-5 bottom-24 w-[23rem] max-w-[calc(100vw-2.5rem)] max-h-[70vh] overflow-y-auto rounded-2xl border border-zinc-700 bg-zinc-900 shadow-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                <Sliders className="w-4 h-4 text-emerald-400" />
+                {t('booth.desk', 'Desk')}
+              </p>
+              <button type="button" onClick={() => setDeskOpen(false)} className="text-zinc-500 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {stems && (
+              <Fader
+                label={t('booth.guideLevel', 'AI voice in your ear')}
+                hint={t('booth.guideHint', 'Only in your headphones. It is never in the song you keep.')}
+                value={guideLevel}
+                onChange={setGuideLevel}
+                format={(value) => `${Math.round(value * 100)}%`}
+              />
+            )}
+
+            <Fader
+              label={t('booth.speed', 'Speed')}
+              hint={t('booth.speedHint', 'The song plays slower without changing key, and your take is pulled back to full speed afterwards. Below about three-quarters that pulling starts to smear the words.')}
+              value={speed}
+              min={0.5}
+              max={1}
+              step={0.05}
+              onChange={setSpeed}
+              format={(value) => `${value.toFixed(2)}×`}
+            />
+
+            <Fader
+              label={t('booth.backingLevel', 'Backing in the mix')}
+              value={backingLevel}
+              onChange={setBackingLevel}
+              format={(value) => `${Math.round(value * 100)}%`}
+            />
+
+            <Fader
+              label={t('booth.takeLevel', 'Your voice in the mix')}
+              value={takeLevel}
+              onChange={setTakeLevel}
+              format={(value) => `${Math.round(value * 100)}%`}
+            />
+
+            <Fader
+              label={t('booth.nudge', 'Timing')}
+              hint={t('booth.nudgeHint', 'On top of the round trip the browser already measured. Minus pulls your voice earlier.')}
+              value={nudge}
+              min={-250}
+              max={250}
+              step={5}
+              onChange={setNudge}
+              format={(value) => `${value > 0 ? '+' : ''}${Math.round(value)} ms`}
+            />
+          </div>
+        )}
+
         <p className="text-sm text-zinc-600 leading-snug flex items-start gap-1.5">
           <Mic className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
           {t('booth.headphones', 'Headphones, or the microphone picks up the backing as well. The note shown is what you are singing — the words and the backing say what it should be.')}
         </p>
       </div>
     </div>
+  );
+}
+
+/**
+ * One fader on the desk.
+ *
+ * Its number is always on screen. A fader whose value you cannot read is a
+ * guess, and somebody setting a vocal level against a backing is not guessing.
+ */
+function Fader({
+  label,
+  hint,
+  value,
+  min = 0,
+  max = 1,
+  step = 0.05,
+  onChange,
+  format,
+}: {
+  label: string;
+  hint?: string;
+  value: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  onChange: (value: number) => void;
+  format: (value: number) => string;
+}): React.ReactElement {
+  return (
+    <label className="block space-y-1">
+      <span className="flex items-baseline justify-between gap-3">
+        <span className="text-sm font-semibold text-zinc-200">{label}</span>
+        <span className="text-sm text-zinc-400 tabular-nums">{format(value)}</span>
+      </span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="w-full accent-emerald-500"
+      />
+      {hint && <span className="block text-sm text-zinc-600 leading-snug">{hint}</span>}
+    </label>
   );
 }

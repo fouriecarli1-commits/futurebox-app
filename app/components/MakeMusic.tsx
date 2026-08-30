@@ -377,6 +377,16 @@ export default function MakeMusic({
    * undo. The words and the section plan carry across, so the lyrics still
    * follow the music on the new one.
    */
+  /**
+   * Remember that a song has been split, so the booth can offer what that
+   * makes possible without going to the database to find out.
+   */
+  const markSplit = (over: Track) => {
+    const next = tracks.map((one) => (one.id === over.id ? { ...one, stems: true } : one));
+    setTracks(next);
+    saveTracks(next);
+  };
+
   const keepTake = async (over: Track, mixed: Blob) => {
     const id = `t-${Date.now()}`;
     await putAudio(id, mixed);
@@ -390,6 +400,10 @@ export default function MakeMusic({
       models: over.models.filter((name) => name !== 'Backing — no vocal').concat('Your voice (recorded)'),
       seconds: Math.round(length),
       createdAt: new Date().toISOString(),
+      // The new song is a new file. Whatever was separated belongs to the one
+      // it came from, and carrying the flag across would claim stems that are
+      // not on the device under this id.
+      stems: undefined,
     };
     const next = [sung, ...tracks];
     setTracks(next);
@@ -472,6 +486,7 @@ export default function MakeMusic({
           track={takeFor.track}
           music={takeFor.music}
           onKeep={(mixed) => keepTake(takeFor.track, mixed)}
+          onSplit={() => markSplit(takeFor.track)}
           onClose={() => setTakeFor(null)}
         />
       )}

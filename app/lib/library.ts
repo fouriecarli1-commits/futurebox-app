@@ -34,6 +34,14 @@ export interface Track {
   readonly parts?: readonly { name: string; lines: readonly string[]; seconds: number }[];
   /** What those parts added up to when they were sent, for spotting a preview. */
   readonly plannedSeconds?: number;
+  /**
+   * Whether this song has been split into the voice and the backing.
+   *
+   * The stems themselves live in IndexedDB beside the song, under the song's
+   * id with a suffix. This is only the note that they are there, so a screen
+   * can offer what they make possible without opening the database first.
+   */
+  readonly stems?: boolean;
 }
 
 const META_KEY = 'futurebox.tracks.v1';
