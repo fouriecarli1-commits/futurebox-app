@@ -16,7 +16,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, Loader2, Mic, Play, Square, Trash2, Wand2 } from 'lucide-react';
+import { Check, Loader2, Mic, Play, Square, Trash2, Upload, Wand2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 
@@ -50,6 +50,47 @@ const READ_THIS =
   'Numbers: one, seven, twenty-four, nineteen ninety-eight. ' +
   'A question, to hear how I lift at the end — does that sound like me?';
 
+/**
+ * One dial, with the plain-language note beside it.
+ *
+ * The numbers ElevenLabs takes are all 0 to 1 and none of them say what they
+ * do, so the note is the point of this component, not the slider.
+ */
+function Dial({
+  label,
+  note,
+  value,
+  low,
+  high,
+  onChange,
+}: {
+  label: string;
+  note: string;
+  value: number;
+  low: number;
+  high: number;
+  onChange: (value: number) => void;
+}): React.ReactElement {
+  return (
+    <label className="block space-y-1">
+      <span className="flex items-baseline justify-between gap-2">
+        <span className="text-sm font-semibold text-zinc-300">{label}</span>
+        <span className="text-xs tabular-nums text-zinc-500">{value.toFixed(2)}</span>
+      </span>
+      <input
+        type="range"
+        min={low}
+        max={high}
+        step={0.05}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="w-full accent-emerald-500"
+      />
+      <span className="block text-xs text-zinc-600 leading-snug">{note}</span>
+    </label>
+  );
+}
+
 export default function VoiceLab({
   state,
   onChanged,
@@ -76,16 +117,45 @@ export default function VoiceLab({
   const [model, setModel] = useState<'steady' | 'wide'>('steady');
   const [spoken, setSpoken] = useState<Blob | null>(null);
 
+  /**
+   * How it is read, rather than who reads it.
+   *
+   * These are the four dials ElevenLabs puts beside a voice, and until now
+   * every reading came back at whatever their defaults happened to be. For a
+   * podcast that is the difference between a presenter and an announcement.
+   * The defaults here are their own.
+   */
+  const [stability, setStability] = useState(0.5);
+  const [similarity, setSimilarity] = useState(0.75);
+  const [style, setStyle] = useState(0);
+  const [speed, setSpeed] = useState(1);
+  const [speakerBoost, setSpeakerBoost] = useState(true);
+  const [removeNoise, setRemoveNoise] = useState(false);
+  /** A recording to be said again in the chosen voice. */
+  const [toChange, setToChange] = useState<File | null>(null);
+  const [changed, setChanged] = useState<Blob | null>(null);
+  const [takingClip, setTakingClip] = useState(false);
+
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const playerRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
 
+  // The changer records on its own so it can never fight the cloning sample
+  // for the recorder — they are different lengths and different consents.
+  const clipRecRef = useRef<MediaRecorder | null>(null);
+  const clipStreamRef = useRef<MediaStream | null>(null);
+  const clipChunksRef = useRef<BlobPart[]>([]);
+  const changedRef = useRef<HTMLAudioElement | null>(null);
+  const changedUrlRef = useRef<string | null>(null);
+
   useEffect(() => {
     return () => {
       streamRef.current?.getTracks().forEach((one) => one.stop());
+      clipStreamRef.current?.getTracks().forEach((one) => one.stop());
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      if (changedUrlRef.current) URL.revokeObjectURL(changedUrlRef.current);
     };
   }, []);
 
@@ -193,7 +263,12 @@ export default function VoiceLab({
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ voiceId, text: script, model }),
+        body: JSON.stringify({
+          voiceId,
+          text: script,
+          model,
+          how: { stability, similarity, style, speed, speakerBoost },
+        }),
       });
       if (!response.ok) {
         const data = (await response.json().catch(() => ({}))) as { message?: string; needsPlan?: boolean };
@@ -213,7 +288,97 @@ export default function VoiceLab({
     } finally {
       setBusy(null);
     }
-  }, [model, onUpgrade, script, voiceId]);
+  }, [model, onUpgrade, script, similarity, speakerBoost, speed, stability, style, voiceId]);
+
+  const takeClip = useCallback(async () => {
+    setProblem(null);
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } });
+    } catch {
+      setProblem(t('take.denied', 'The microphone was not allowed. Turn it on for this site and try again.'));
+      return;
+    }
+    clipStreamRef.current = stream;
+    clipChunksRef.current = [];
+
+    const recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = (event) => {
+      if (event.data.size) clipChunksRef.current.push(event.data);
+    };
+    clipRecRef.current = recorder;
+    // A chunk a second, so a recorder that dies still leaves everything but
+    // the last second behind.
+    recorder.start(1000);
+    setTakingClip(true);
+  }, [t]);
+
+  const endClip = useCallback(async () => {
+    const recorder = clipRecRef.current;
+    if (!recorder) return;
+
+    // onstop is not promised. Waiting on it alone is how the booth used to
+    // hang, so take whatever has arrived if it does not come.
+    const gather = (): Blob => new Blob(clipChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+    const finished = new Promise<Blob>((resolve) => {
+      const done = (): void => resolve(gather());
+      recorder.onstop = done;
+      recorder.onerror = done;
+      window.setTimeout(done, 3000);
+    });
+    try {
+      recorder.stop();
+    } catch {
+      /* Already down. */
+    }
+    clipStreamRef.current?.getTracks().forEach((one) => one.stop());
+    clipStreamRef.current = null;
+    setTakingClip(false);
+
+    const clip = await finished;
+    setToChange(new File([clip], 'clip.webm', { type: clip.type || 'audio/webm' }));
+  }, []);
+
+  const change = useCallback(async () => {
+    if (!toChange) return;
+    setProblem(null);
+    setBusy('change');
+    setChanged(null);
+    try {
+      const form = new FormData();
+      form.append('audio', toChange, toChange.name);
+      if (voiceId) form.append('voiceId', voiceId);
+      form.append('stability', String(stability));
+      form.append('similarity', String(similarity));
+      form.append('style', String(style));
+      form.append('speakerBoost', String(speakerBoost));
+      form.append('removeNoise', String(removeNoise));
+
+      const token = await accessToken();
+      const response = await fetch('/api/voice/change', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: form,
+      });
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { message?: string; needsPlan?: boolean };
+        setProblem(data.message ?? 'That did not work.');
+        if (data.needsPlan) onUpgrade();
+        return;
+      }
+      const audio = await response.blob();
+      setChanged(audio);
+      const player = changedRef.current;
+      if (player) {
+        if (changedUrlRef.current) URL.revokeObjectURL(changedUrlRef.current);
+        changedUrlRef.current = URL.createObjectURL(audio);
+        player.src = changedUrlRef.current;
+        void player.play();
+      }
+    } finally {
+      setBusy(null);
+    }
+  }, [onUpgrade, removeNoise, similarity, speakerBoost, stability, style, toChange, voiceId]);
 
   const over = Boolean(caps && script.length > caps.speakChars);
 
@@ -343,6 +508,57 @@ export default function VoiceLab({
           </select>
         </div>
 
+        <details className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+          <summary className="cursor-pointer select-none text-sm font-semibold text-zinc-300">
+            {t('voice.how', 'How it is read')}
+          </summary>
+          <div className="space-y-3 pt-3">
+            <Dial
+              label={t('voice.stability', 'Stability')}
+              note={t('voice.stabilityNote', 'Low wanders and acts; high stays level. A long read wants it high.')}
+              value={stability}
+              low={0}
+              high={1}
+              onChange={setStability}
+            />
+            <Dial
+              label={t('voice.similarity', 'Similarity')}
+              note={t('voice.similarityNote', 'How hard it holds to the original voice. Very high also copies whatever noise the sample had.')}
+              value={similarity}
+              low={0}
+              high={1}
+              onChange={setSimilarity}
+            />
+            <Dial
+              label={t('voice.style', 'Style')}
+              note={t('voice.styleNote', 'Pushes the speaker\u2019s own manner. Slower to make, and past about a third it starts inventing.')}
+              value={style}
+              low={0}
+              high={1}
+              onChange={setStyle}
+            />
+            <Dial
+              label={t('voice.speed', 'Speed')}
+              note={t('voice.speedNote', 'Slower or faster than they naturally speak.')}
+              value={speed}
+              low={0.7}
+              high={1.2}
+              onChange={setSpeed}
+            />
+            <label className="flex cursor-pointer items-center gap-2.5">
+              <input
+                type="checkbox"
+                checked={speakerBoost}
+                onChange={(event) => setSpeakerBoost(event.target.checked)}
+                className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+              />
+              <span className="text-sm text-zinc-400 leading-snug">
+                {t('voice.boost', 'Speaker boost \u2014 hold the likeness harder')}
+              </span>
+            </label>
+          </div>
+        </details>
+
         <textarea
           value={script}
           onChange={(event) => setScript(event.target.value)}
@@ -384,6 +600,101 @@ export default function VoiceLab({
         </div>
 
         <audio ref={playerRef} controls className={spoken ? 'w-full' : 'hidden'} />
+      </div>
+
+      {/* ── The same words, another voice ─────────────────────────── */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
+        <div>
+          <p className="text-base font-bold text-white">{t('voice.changer', 'Say it again in another voice')}</p>
+          <p className="text-sm text-zinc-500 leading-snug">
+            {t(
+              'voice.changerNote',
+              'Bring in a recording, or make one here, and it comes back in the voice picked above \u2014 your timing and your delivery, their tone.',
+            )}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <label className="flex-1 min-w-[9rem] cursor-pointer px-3 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-300 flex items-center justify-center gap-1.5 hover:border-zinc-700">
+            <Upload className="w-4 h-4" />
+            {t('voice.bringIn', 'Bring in a recording')}
+            <input
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+                if (file) setToChange(file);
+                event.target.value = '';
+              }}
+            />
+          </label>
+          {takingClip ? (
+            <button
+              type="button"
+              onClick={() => void endClip()}
+              className="flex-1 min-w-[9rem] px-3 py-2.5 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-semibold flex items-center justify-center gap-1.5"
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+              {t('take.stop', 'Stop')}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void takeClip()}
+              className="flex-1 min-w-[9rem] px-3 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-300 flex items-center justify-center gap-1.5 hover:border-zinc-700"
+            >
+              <Mic className="w-4 h-4" />
+              {t('voice.sayItHere', 'Say it here')}
+            </button>
+          )}
+        </div>
+
+        {toChange && (
+          <p className="text-sm text-zinc-400 truncate">
+            {t('voice.ready', 'Ready:')} <span className="text-zinc-200 font-semibold">{toChange.name}</span>
+          </p>
+        )}
+
+        <label className="flex cursor-pointer items-center gap-2.5">
+          <input
+            type="checkbox"
+            checked={removeNoise}
+            onChange={(event) => setRemoveNoise(event.target.checked)}
+            className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+          />
+          <span className="text-sm text-zinc-400 leading-snug">
+            {t('voice.removeNoise', 'Take the room out of it first')}
+          </span>
+        </label>
+
+        <p className="text-xs text-zinc-600 leading-snug">
+          {t('voice.changerDials', 'The dials above apply here too, apart from speed \u2014 the timing comes from your recording.')}
+        </p>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => void change()}
+            disabled={!toChange || busy === 'change'}
+            className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {busy === 'change' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+            {busy === 'change' ? t('voice.changing', 'Changing\u2026') : t('voice.changeIt', 'Change the voice')}
+          </button>
+          {changed && (
+            <button
+              type="button"
+              onClick={() => onAudio(changed, 'spoken')}
+              className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-emerald-500/50 text-emerald-300 text-sm font-semibold flex items-center gap-1.5"
+            >
+              <Check className="w-3.5 h-3.5" />
+              {t('voice.useIt', 'Use as an episode')}
+            </button>
+          )}
+        </div>
+
+        <audio ref={changedRef} controls className={changed ? 'w-full' : 'hidden'} />
       </div>
     </div>
   );
