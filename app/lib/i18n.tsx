@@ -476,6 +476,22 @@ export const STRINGS: Dict = {
   "booth.ready": { en: "Ready", af: "Gereed" },
   "booth.noWords": { en: "This song has no words on it, so there is nothing to follow. Sing anyway \u2014 the waveform and the note still work.", af: "Hierdie snit het geen woorde nie, so daar is niks om te volg nie. Sing maar \u2014 die klankbaan en die noot werk steeds." },
   "booth.listening": { en: "Listening\u2026", af: "Luister\u2026" },
+  "booth.tune": { en: "Tuning", af: "Stemming" },
+  "booth.gentle": { en: "Gentle", af: "Sag" },
+  "booth.strong": { en: "Strong", af: "Sterk" },
+  "booth.stayInKey": { en: "Stay in", af: "Bly in" },
+  "booth.tuneIt": { en: "Tune the take", af: "Stem die opname" },
+  "booth.tuneAgain": { en: "Tune again", af: "Stem weer" },
+  "booth.hearRaw": { en: "As sung", af: "Soos gesing" },
+  "booth.hearTuned": { en: "Tuned", af: "Gestem" },
+  "booth.tuneFailed": {
+    en: "The take could not be tuned on this browser.",
+    af: "Die opname kon nie op hierdie blaaier gestem word nie.",
+  },
+  "booth.tuneReport": {
+    en: "Of the {seconds} seconds you sang, {inTune}% was already inside ten cents. Across all of it you were {off} cents off on average, and {moved} cents of that was taken out.",
+    af: "Van die {seconds} sekondes wat jy gesing het was {inTune}% al binne tien sent. Oor die hele opname was jy gemiddeld {off} sent uit, en {moved} sent daarvan is uitgehaal.",
+  },
   "booth.noteHint": {
     en: "The note you are singing shows here while you record.",
     af: "Die noot wat jy sing wys hier terwyl jy opneem.",

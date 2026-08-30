@@ -27,10 +27,11 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Loader2, Mic, Pause, Play, Scissors, Square, X } from 'lucide-react';
+import { Check, Circle, Loader2, Mic, Pause, Play, Scissors, Sparkles, Square, X } from 'lucide-react';
 import { decode, knownLatency, mixdown } from '../lib/mixdown';
 import { decodeAt, shapeOf, spliceTake } from '../lib/takes';
 import { detectPitch, noteOf } from '../lib/pitch';
+import { scaleOf, tuneBuffer, type Tuned } from '../lib/tune';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
@@ -68,7 +69,14 @@ export default function VocalBooth({
   const [busy, setBusy] = useState(false);
 
   const [backing, setBacking] = useState<AudioBuffer | null>(null);
-  const [take, setTake] = useState<AudioBuffer | null>(null);
+  const [recorded, setRecorded] = useState<AudioBuffer | null>(null);
+  /** The tuned version of the take, and what tuning it found to do. */
+  const [tuned, setTuned] = useState<{ buffer: AudioBuffer; report: Tuned } | null>(null);
+  const [hearRaw, setHearRaw] = useState(false);
+  const [strength, setStrength] = useState(0.4);
+  const [inKey, setInKey] = useState(true);
+  /** What is heard, drawn and kept: the tuned take unless it is being compared. */
+  const take = hearRaw ? recorded : tuned?.buffer ?? recorded;
   const [offset, setOffset] = useState(0);
   const [level, setLevel] = useState(0);
   const [hot, setHot] = useState(false);
@@ -88,8 +96,12 @@ export default function VocalBooth({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const micCtxRef = useRef<AudioContext | null>(null);
   const punchAtRef = useRef(0);
+  const playCtxRef = useRef<AudioContext | null>(null);
+  const takeSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
   const duration = backing?.duration || track.seconds || 0;
+  /** The song's own key, when it says one, so tuning can stay inside it. */
+  const scale = useMemo(() => scaleOf(track.key ?? ''), [track.key]);
 
   const lines = useMemo<TimedLine[]>(() => {
     const parts = (track.parts ?? []) as readonly Part[];
@@ -104,7 +116,16 @@ export default function VocalBooth({
   // ── setup ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     const element = new Audio();
-    element.addEventListener('ended', () => setPhase('idle'));
+    element.addEventListener('ended', () => {
+      setPhase('idle');
+      const source = takeSourceRef.current;
+      takeSourceRef.current = null;
+      try {
+        source?.stop();
+      } catch {
+        // Already finished.
+      }
+    });
     audioRef.current = element;
     urlRef.current = URL.createObjectURL(music);
     element.src = urlRef.current;
@@ -114,6 +135,7 @@ export default function VocalBooth({
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       streamRef.current?.getTracks().forEach((one) => one.stop());
       void micCtxRef.current?.close();
+      void playCtxRef.current?.close();
     };
   }, [music]);
 
@@ -223,6 +245,24 @@ export default function VocalBooth({
   }, [at, backing, duration, lines, region, take]);
 
   // ── recording ──────────────────────────────────────────────────────────────
+  /**
+   * The take, stopped.
+   *
+   * It plays through Web Audio rather than through the audio element the
+   * backing uses, because it is a buffer rather than a file, so it has to be
+   * started and stopped by hand.
+   */
+  const hush = useCallback(() => {
+    const source = takeSourceRef.current;
+    takeSourceRef.current = null;
+    if (!source) return;
+    try {
+      source.stop();
+    } catch {
+      // Already finished. Nothing to stop.
+    }
+  }, []);
+
   const openMic = useCallback(async (): Promise<MediaStream | null> => {
     if (streamRef.current) return streamRef.current;
     try {
@@ -254,6 +294,7 @@ export default function VocalBooth({
   const start = useCallback(
     async (from: number) => {
       setProblem(null);
+      hush();
       const stream = await openMic();
       const element = audioRef.current;
       if (!stream || !element) return;
@@ -282,12 +323,13 @@ export default function VocalBooth({
       punchAtRef.current = Math.max(0, from);
       setPhase('recording');
     },
-    [openMic],
+    [hush, openMic],
   );
 
   const stop = useCallback(async () => {
     const recorder = recorderRef.current;
     audioRef.current?.pause();
+    hush();
     if (!recorder || recorder.state !== 'recording') {
       setPhase('idle');
       return;
@@ -311,21 +353,68 @@ export default function VocalBooth({
     // Where this piece belongs on the song's clock: where recording started,
     // pushed by the measured latency.
     const landsAt = Math.max(0, punchAtRef.current + offset);
-    setTake(spliceTake(punchAtRef.current > 0 ? take : null, piece, landsAt, duration));
+    // Spliced onto the untouched take, not onto a tuned one: tuning reads the
+    // whole thing at once, so it is re-run over the result rather than left
+    // half applied.
+    setRecorded(spliceTake(punchAtRef.current > 0 ? recorded : null, piece, landsAt, duration));
+    setTuned(null);
     setRegion(null);
-  }, [backing, duration, offset, t, take]);
+  }, [backing, duration, hush, offset, recorded, t]);
 
   const play = useCallback(() => {
     const element = audioRef.current;
     if (!element) return;
     if (phase === 'playing') {
       element.pause();
+      hush();
       setPhase('idle');
       return;
     }
+
+    // Listening back has to mean listening back to the voice as well. Playing
+    // only the backing was the first version of this and it made the button a
+    // lie: there is nothing to judge in a backing track you have already heard.
+    hush();
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (take && Ctx) {
+      const ctx = playCtxRef.current ?? new Ctx();
+      playCtxRef.current = ctx;
+      void ctx.resume();
+      const source = ctx.createBufferSource();
+      source.buffer = take;
+      source.connect(ctx.destination);
+      // The take sits on the song's clock, so it starts from wherever the
+      // backing is rather than from its own beginning.
+      source.start(0, Math.min(element.currentTime, take.duration));
+      takeSourceRef.current = source;
+    }
     void element.play();
     setPhase('playing');
-  }, [phase]);
+  }, [hush, phase, take]);
+
+  /**
+   * The take moved onto the note.
+   *
+   * A couple of seconds of arithmetic for a three-minute song, so the spinner
+   * is given a frame to paint before it starts — otherwise the screen sits
+   * still and the button looks broken.
+   */
+  const straighten = useCallback(() => {
+    if (!recorded) return;
+    setProblem(null);
+    setBusy(true);
+    window.setTimeout(() => {
+      const chosen = inKey ? scale ?? undefined : undefined;
+      const done = tuneBuffer(recorded, { strength, scale: chosen });
+      setBusy(false);
+      if (!done) {
+        setProblem(t('booth.tuneFailed', 'The take could not be tuned on this browser.'));
+        return;
+      }
+      setTuned(done);
+      setHearRaw(false);
+    }, 30);
+  }, [inKey, recorded, scale, strength, t]);
 
   const keep = useCallback(async () => {
     if (!backing || !take) return;
@@ -470,6 +559,100 @@ export default function VocalBooth({
             style={{ width: `${Math.round(level * 100)}%` }}
           />
         </div>
+
+        {/* ── Tuning ──────────────────────────────────────────────────────
+            Only once there is something to tune. Everything it did is said in
+            numbers underneath, because "improved" is not a claim anybody can
+            check and "pulled 22 cents" is. */}
+        {recorded && (
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2.5">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                {t('booth.tune', 'Tuning')}
+              </span>
+              <label className="flex items-center gap-2 flex-1 min-w-[220px]">
+                <span className="text-sm text-zinc-500">{t('booth.gentle', 'Gentle')}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={Math.round(strength * 100)}
+                  onChange={(event) => {
+                    setStrength(Number(event.target.value) / 100);
+                    // What you hear must match where the slider is, so the old
+                    // result goes rather than sitting there being wrong.
+                    setTuned(null);
+                  }}
+                  className="flex-1 accent-emerald-500"
+                  aria-label={t('booth.tune', 'Tuning')}
+                />
+                <span className="text-sm text-zinc-500">{t('booth.strong', 'Strong')}</span>
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              {scale && (
+                <label className="flex items-center gap-2 text-sm text-zinc-400">
+                  <input
+                    type="checkbox"
+                    checked={inKey}
+                    onChange={(event) => {
+                      setInKey(event.target.checked);
+                      setTuned(null);
+                    }}
+                    className="accent-emerald-500"
+                  />
+                  {t('booth.stayInKey', 'Stay in')} {track.key}
+                </label>
+              )}
+              <span className="flex-1" />
+              <button
+                type="button"
+                onClick={straighten}
+                disabled={busy || busyOrLive || strength === 0}
+                className="px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                {tuned ? t('booth.tuneAgain', 'Tune again') : t('booth.tuneIt', 'Tune the take')}
+              </button>
+            </div>
+
+            {tuned && (
+              <div className="flex items-center gap-3 flex-wrap border-t border-zinc-800 pt-2.5">
+                <p className="text-sm text-zinc-400 leading-snug flex-1 min-w-[240px]">
+                  {t('booth.tuneReport', 'Of the {seconds} seconds you sang, {inTune}% was already inside ten cents. Across all of it you were {off} cents off on average, and {moved} cents of that was taken out.')
+                    .replace('{seconds}', Math.round(tuned.report.voicedSeconds).toString())
+                    .replace('{inTune}', Math.round(tuned.report.alreadyInTune * 100).toString())
+                    .replace('{off}', Math.round(tuned.report.averageCents).toString())
+                    .replace('{moved}', Math.round(tuned.report.movedCents).toString())}
+                </p>
+                <div className="flex rounded-xl border border-zinc-700 overflow-hidden flex-shrink-0">
+                  {[
+                    { raw: true, label: t('booth.hearRaw', 'As sung') },
+                    { raw: false, label: t('booth.hearTuned', 'Tuned') },
+                  ].map((choice) => (
+                    <button
+                      key={String(choice.raw)}
+                      type="button"
+                      onClick={() => {
+                        setHearRaw(choice.raw);
+                        hush();
+                        if (phase === 'playing') setPhase('idle');
+                      }}
+                      className={`px-3 py-1.5 text-sm font-semibold ${
+                        hearRaw === choice.raw ? 'bg-emerald-500 text-onAccent' : 'bg-zinc-950 text-zinc-400'
+                      }`}
+                    >
+                      {choice.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
 
