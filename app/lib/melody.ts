@@ -104,6 +104,13 @@ export function melodyOf(samples: Float32Array, rate: number): Note[] {
  * not pass, and it is not supposed to — reading a tune out of a full mix is a
  * different and much harder job than this, and pretending otherwise would put
  * the wrong notes in front of somebody who is trusting them.
+ *
+ * `seconds` is how long there was *to* read, which is not always the length of
+ * the file. On a separated voice it is the time somebody is actually singing:
+ * a song with a long intro, a solo and an outro can be four minutes of file
+ * and one minute of singing, and measuring the coverage against four minutes
+ * would throw away notes that are all correct for the sole reason that the
+ * band plays for a while.
  */
 export function readable(notes: readonly Note[], seconds: number): boolean {
   if (!notes.length || seconds <= 0) return false;

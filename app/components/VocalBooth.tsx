@@ -36,7 +36,8 @@ import { melodyOf, readable, type Note } from '../lib/melody';
 import { failed, loadStems, separate, type Stems } from '../lib/stems';
 import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
-import { partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
+import { alignTo, partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
+import { phrasesOf } from '../lib/phrases';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
 
@@ -153,6 +154,18 @@ export default function VocalBooth({
   const guideRef = useRef<HTMLAudioElement | null>(null);
   const guideUrlRef = useRef<string | null>(null);
 
+  /**
+   * Where the AI voice actually sings, once it is on its own.
+   *
+   * This is what stops the words running ahead of the singing. The plan says a
+   * verse starts at zero; the recording usually has a bar or two of music in
+   * front of it, and every word after that is early by the same amount.
+   */
+  const phrases = useMemo(
+    () => (guideBuffer ? phrasesOf(guideBuffer.getChannelData(0), guideBuffer.sampleRate) : []),
+    [guideBuffer],
+  );
+
   const lines = useMemo<TimedLine[]>(() => {
     const stored = (track.parts ?? []) as readonly Part[];
     // Falling back to the lyric sheet matters more than it looks. Only songs
@@ -160,8 +173,9 @@ export default function VocalBooth({
     // that — and on anything written straight into the words box — the booth
     // had no words to show at all, which is the whole point of the screen.
     const parts = stored.length ? stored : partsOf(track.lyrics ?? '');
-    return parts.length && duration ? timelineOf(parts, duration) : [];
-  }, [duration, track.lyrics, track.parts]);
+    const even = parts.length && duration ? timelineOf(parts, duration) : [];
+    return phrases.length ? alignTo(even, phrases) : even;
+  }, [duration, phrases, track.lyrics, track.parts]);
 
   /** Every word with its own moment, for writing under the stave. */
   const words = useMemo(() => wordsOf(lines), [lines]);
@@ -317,14 +331,18 @@ export default function VocalBooth({
     const timer = window.setTimeout(() => {
       const notes = melodyOf(source.getChannelData(0), source.sampleRate);
       if (dropped) return;
-      setGuide(readable(notes, source.duration) ? notes : []);
+      // Judged against the singing where the singing is known, and against the
+      // whole file otherwise. An instrumental stretch is not a failure to read
+      // the tune; it is a stretch with no tune in it.
+      const sung_ = phrases.reduce((total, phrase) => total + (phrase.to - phrase.from), 0);
+      setGuide(readable(notes, sung_ || source.duration) ? notes : []);
       setGuideRead(true);
     }, 60);
     return () => {
       dropped = true;
       window.clearTimeout(timer);
     };
-  }, [backing, guideBuffer]);
+  }, [backing, guideBuffer, phrases]);
 
   /** The same for the take, so you can see the notes you actually sang. */
   useEffect(() => {
@@ -666,7 +684,13 @@ export default function VocalBooth({
       </div>
 
       {/* ── The words ─────────────────────────────────────────────────────── */}
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col items-center justify-center px-6 text-center gap-3">
+      {/* The words scroll rather than being cut off. Hiding the overflow was
+          the first attempt and it is not a fix: on a short window it takes the
+          top line away silently, and the top line is the one being sung. The
+          type is sized against the window's height as well, so it rarely comes
+          to scrolling. */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-6">
+        <div className="min-h-full flex flex-col items-center justify-center text-center gap-3 py-3">
         {/* The count belongs to the recording, not to the words: a song with
             no words on it still has to be counted in. */}
         {phase === 'counting' && (
@@ -682,12 +706,15 @@ export default function VocalBooth({
             {phase !== 'counting' && current > 0 && (
               <p className="text-base text-zinc-600 truncate max-w-3xl">{lines[current - 1].text}</p>
             )}
-            <p className="text-3xl md:text-5xl font-black text-white leading-tight max-w-4xl">
+            <p
+              className="font-black text-white leading-tight max-w-4xl"
+              style={{ fontSize: 'clamp(1.35rem, 5.2vh, 3rem)' }}
+            >
               {/* Always something to read: the line you are in, or the one you
                   are about to be in. "Ready" only when the song is over. */}
               {current >= 0 ? lines[current].text : next ? next.text : t('booth.ready', 'Ready')}
             </p>
-            {next && (
+            {current >= 0 && next && (
               <p className="text-lg text-zinc-500 max-w-3xl truncate">{next.text}</p>
             )}
             {/* The run-up. A bar that empties is easier to sing to than a number. */}
@@ -701,8 +728,7 @@ export default function VocalBooth({
             )}
           </>
         )}
-
-
+        </div>
       </div>
 
       {/* ── The note bar ────────────────────────────────────────────────────
@@ -753,8 +779,11 @@ export default function VocalBooth({
             </span>
           )}
           <p className="text-sm text-zinc-600 leading-snug flex-1 min-w-0">
+            {phrases.length
+              ? `${t('booth.wordsMeasured', 'The words are lined up with where the voice actually sings.')} `
+              : ''}
             {guide.length
-              ? t('booth.barGuide', 'The notes are read off the singing and the words sit under them. Your voice draws on the stave as you sing.')
+              ? t('booth.barGuide', 'The notes are read off the singing. Your voice draws on the stave as you sing.')
               : guideRead
                 ? t('booth.barNoGuide', 'No notes yet: the tune cannot be read out of a finished mix without getting it wrong. Separate the voice below and the notes appear.')
                 : t('booth.barReading', 'Reading the backing…')}

@@ -477,9 +477,13 @@ export const STRINGS: Dict = {
   "booth.noWords": { en: "This song has no words on it, so there is nothing to follow. Sing anyway \u2014 the waveform and the note still work.", af: "Hierdie snit het geen woorde nie, so daar is niks om te volg nie. Sing maar \u2014 die klankbaan en die noot werk steeds." },
   "booth.listening": { en: "Listening\u2026", af: "Luister\u2026" },
   "booth.playAlong": { en: "Play it and follow the words", af: "Speel dit en volg die woorde" },
+  "booth.wordsMeasured": {
+    en: "The words are lined up with where the voice actually sings.",
+    af: "Die woorde is belyn met waar die stem werklik sing.",
+  },
   "booth.barGuide": {
-    en: "The notes are read off the singing and the words sit under them. Your voice draws on the stave as you sing.",
-    af: "Die note is van die sang af gelees en die woorde staan daaronder. Jou stem teken op die balk terwyl jy sing.",
+    en: "The notes are read off the singing. Your voice draws on the stave as you sing.",
+    af: "Die note is van die sang af gelees. Jou stem teken op die balk terwyl jy sing.",
   },
   "booth.barNoGuide": {
     en: "No notes yet: the tune cannot be read out of a finished mix without getting it wrong. Separate the voice below and the notes appear.",
