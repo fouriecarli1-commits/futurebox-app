@@ -41,6 +41,7 @@ import { signal } from './lib/signal';
 import { TRACK_LABELS } from './data/masterclasses';
 import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
+import HereNow from './components/HereNow';
 import LanguagePicker from './components/LanguagePicker';
 import { useLang } from './lib/i18n';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
@@ -766,7 +767,10 @@ export default function FutureBoxHome() {
                 </span>
               )}
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-zinc-400">{t('feed.tagline')}</p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <p className="text-[10px] uppercase tracking-widest text-zinc-400">{t('feed.tagline')}</p>
+              <HereNow />
+            </div>
           </div>
         </div>
 

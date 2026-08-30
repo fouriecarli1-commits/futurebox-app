@@ -42,6 +42,16 @@ export interface Track {
    * can offer what they make possible without opening the database first.
    */
   readonly stems?: boolean;
+  /**
+   * The song this mix was made from, when it is one somebody sang on.
+   *
+   * A kept mix is a file: the voice and the backing are the same samples by
+   * then and no amount of editing separates them again. So the take is kept
+   * beside it under `<id>:take`, and this points back at the song it was sung
+   * over. Together they are enough to open the whole thing up again and change
+   * the tuning, the levels or the AI voice, long after it was posted.
+   */
+  readonly mixOf?: { readonly source: string };
 }
 
 const META_KEY = 'futurebox.tracks.v1';

@@ -27,8 +27,10 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Ear, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, X } from 'lucide-react';
+import { Check, Circle, Ear, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
 import { decode, knownLatency, mixdown } from '../lib/mixdown';
+import { encodeWav } from '../lib/wav';
+import { accessToken } from '../lib/cloud';
 import { decodeAt, shapeOf, spliceTake } from '../lib/takes';
 import { detectPitch, noteOf } from '../lib/pitch';
 import { scaleOf, tuneBuffer, type Tuned } from '../lib/tune';
@@ -65,6 +67,7 @@ function clock(seconds: number): string {
 export default function VocalBooth({
   track,
   music,
+  startTake,
   onKeep,
   onSplit,
   onClose,
@@ -73,7 +76,17 @@ export default function VocalBooth({
   /** The backing to sing over. */
   music: Blob;
   /** `doubled` is true when the AI voice was left in the mix under yours. */
-  onKeep: (mixed: Blob, doubled: boolean) => void | Promise<void>;
+  onKeep: (mixed: Blob, doubled: boolean, take: Blob) => void | Promise<void>;
+  /**
+   * A take to start from, when a finished song is being opened up again.
+   *
+   * A mix that has been kept is a file, and a file cannot be re-tuned: the
+   * voice and the backing are the same samples by then. So the take is kept
+   * beside the mix, and opening the song for editing hands it back here — at
+   * which point everything on this screen works exactly as it did the moment
+   * before it was first kept.
+   */
+  startTake?: Blob | null;
   /** Told once the song has been split, so the track can remember it. */
   onSplit?: () => void;
   onClose: () => void;
@@ -139,6 +152,7 @@ export default function VocalBooth({
    */
   const [stems, setStems] = useState<Stems | null>(null);
   const [splitting, setSplitting] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
   /** The AI voice's own buffer, for reading its melody. */
   const [guideBuffer, setGuideBuffer] = useState<AudioBuffer | null>(null);
 
@@ -323,6 +337,17 @@ export default function VocalBooth({
   useEffect(() => {
     setHeard(loadHeard(track.id));
   }, [track.id]);
+
+  useEffect(() => {
+    if (!startTake || !backing) return;
+    let dropped = false;
+    void decodeAt(startTake, backing.sampleRate).then((buffer) => {
+      if (!dropped && buffer) setRecorded(buffer);
+    });
+    return () => {
+      dropped = true;
+    };
+  }, [backing, startTake]);
 
   /** Anything already split for this song is on the device. */
   useEffect(() => {
@@ -746,8 +771,50 @@ export default function VocalBooth({
       setProblem(t('take.mixFailed', 'The mix could not be made.'));
       return;
     }
-    await onKeep(mixed, guideBuffer !== null && doubleLevel > 0);
+    // The take goes with it, so this mix can be opened up and changed again.
+    await onKeep(mixed, guideBuffer !== null && doubleLevel > 0, encodeWav(take));
   }, [backing, backingLevel, doubleLevel, guideBuffer, nudge, onKeep, t, take, takeLevel]);
+
+  /**
+   * The take with the room taken off it.
+   *
+   * ElevenLabs' audio isolation, which the podcast screen has had all along
+   * and the booth — the one place in the app where somebody actually records
+   * — did not. It does not touch pitch or timing; it takes away the fan, the
+   * traffic and the shape of the room, which is most of what makes a recording
+   * made at a kitchen table sound like one.
+   */
+  const cleanUp = useCallback(async () => {
+    if (!recorded) return;
+    setProblem(null);
+    setCleaning(true);
+    try {
+      const form = new FormData();
+      form.append('audio', encodeWav(recorded), 'take.wav');
+      const token = await accessToken();
+      const response = await fetch('/api/voice/clean', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: form,
+      });
+      if (!response.ok) {
+        const problem_ = (await response.json().catch(() => ({}))) as { message?: string };
+        setProblem(problem_.message ?? `The recording could not be cleaned up (${response.status}).`);
+        return;
+      }
+      const cleaned = await decodeAt(await response.blob(), recorded.sampleRate);
+      if (!cleaned) {
+        setProblem(t('take.unreadable', 'That recording could not be read back.'));
+        return;
+      }
+      setRecorded(cleaned);
+      setTuned(null);
+    } catch {
+      setProblem('Could not reach the app’s server. Check your connection and try again.');
+    } finally {
+      setCleaning(false);
+    }
+  }, [recorded, t]);
 
   /**
    * Split the song into the AI voice and the backing.
@@ -1131,15 +1198,72 @@ export default function VocalBooth({
           </div>
         )}
 
-        {/* ── Tuning ──────────────────────────────────────────────────────
-            Only once there is something to tune. Everything it did is said in
-            numbers underneath, because "improved" is not a claim anybody can
-            check and "pulled 22 cents" is. */}
+        {/* ── The voices ──────────────────────────────────────────────────
+            Two voices can end up in this song, and each is somebody's to set:
+            yours, which can be tuned and cleaned, and the AI's, which can stay
+            in at any level or be left out. They were scattered across three
+            places — a fader in the desk, a panel here, and one feature only
+            the podcast screen had. One panel, one voice to a row. */}
         {recorded && (
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2.5">
+            <p className="text-sm font-bold text-white flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              {t('booth.voices', 'The voices in this song')}
+            </p>
+
+            <div className="flex items-center gap-3 flex-wrap border-t border-zinc-800 pt-2.5">
+              <span className="text-sm font-semibold text-zinc-200 w-28 flex-shrink-0">
+                {t('booth.yourVoice', 'Your voice')}
+              </span>
+              <button
+                type="button"
+                onClick={() => void cleanUp()}
+                disabled={cleaning || busy || busyOrLive}
+                className="px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {cleaning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                {cleaning ? t('booth.cleaning', 'Cleaning it up…') : t('booth.clean', 'Take the room off it')}
+              </button>
+              <span className="text-sm text-zinc-600 leading-snug flex-1 min-w-[200px]">
+                {t('booth.cleanNote', 'Takes away the fan, the traffic and the shape of the room. It does not touch pitch or timing.')}
+              </span>
+            </div>
+
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-sm font-bold text-white flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm font-semibold text-zinc-200 w-28 flex-shrink-0">
+                {t('booth.aiVoice', 'The AI voice')}
+              </span>
+              {stems ? (
+                <>
+                  <label className="flex items-center gap-2 flex-1 min-w-[220px]">
+                    <span className="text-sm text-zinc-500">{t('booth.off', 'Off')}</span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={2}
+                      value={Math.round(doubleLevel * 100)}
+                      onChange={(event) => setDoubleLevel(Number(event.target.value) / 100)}
+                      className="flex-1 accent-emerald-500"
+                      aria-label={t('booth.aiVoice', 'The AI voice')}
+                    />
+                    <span className="text-sm text-zinc-400 tabular-nums w-10">
+                      {doubleLevel > 0 ? `${Math.round(doubleLevel * 100)}%` : t('booth.off', 'Off')}
+                    </span>
+                  </label>
+                  <span className="text-sm text-zinc-600 leading-snug w-full">
+                    {t('booth.aiVoiceNote', 'Keep it in the song at whatever level you want, or leave it out. Under your own it steadies a lead that is not quite carrying — but only once your take is in time and on the note. When any of it is kept, the song credits say so.')}
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm text-zinc-600 leading-snug flex-1 min-w-[200px]">
+                  {t('booth.aiVoiceLocked', 'Separate the voice above and you can keep it in the song at any level, or leave it out.')}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap border-t border-zinc-800 pt-2.5">
+              <span className="text-sm font-semibold text-zinc-200 w-28 flex-shrink-0">
                 {t('booth.tune', 'Tuning')}
               </span>
               <label className="flex items-center gap-2 flex-1 min-w-[220px]">
@@ -1254,18 +1378,6 @@ export default function VocalBooth({
               value={guideLevel}
               onChange={setGuideLevel}
               format={(value) => `${Math.round(value * 100)}%`}
-            />
-          )}
-
-          {stems && (
-            <Fader
-              label={t('booth.doubleLevel', 'AI voice under yours, in the song')}
-              hint={t('booth.doubleHint', 'A second voice under a lead is what a producer uses to make one sound sure of itself. It only works once your take is in time and on the note — under a take that is late or flat it beats against you and prints the problem twice. Tune it first, then bring this up. The song credits say the AI voice is in it.')}
-              value={doubleLevel}
-              max={0.6}
-              step={0.02}
-              onChange={setDoubleLevel}
-              format={(value) => (value > 0 ? `${Math.round(value * 100)}%` : t('booth.off', 'Off'))}
             />
           )}
 
