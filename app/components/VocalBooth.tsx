@@ -684,13 +684,23 @@ export default function VocalBooth({
       </div>
 
       {/* ── The words ─────────────────────────────────────────────────────── */}
-      {/* The words scroll rather than being cut off. Hiding the overflow was
-          the first attempt and it is not a fix: on a short window it takes the
-          top line away silently, and the top line is the one being sung. The
-          type is sized against the window's height as well, so it rarely comes
-          to scrolling. */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-6">
-        <div className="min-h-full flex flex-col items-center justify-center text-center gap-3 py-3">
+      {/*
+        Everything between the header and the buttons scrolls together.
+
+        Before this, the words were the only flexible thing on the screen and
+        every panel underneath them had a fixed height, so the words were the
+        first thing squeezed and the last thing that should be: on a short
+        window the line being sung was cut in half by the header. Now the whole
+        middle gives way at once, the buttons stay where they are, and the
+        words keep a floor they cannot be pushed below.
+      */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {/* Centred while it fits, and from the top once it does not. When the
+            content is taller than the window this container is exactly as tall
+            as its content, so there is no free space to centre and nothing
+            gets pushed above the top edge. */}
+        <div className="min-h-full flex flex-col justify-center">
+        <div className="px-6 min-h-[7rem] flex flex-col items-center justify-center text-center gap-3 py-4">
         {/* The count belongs to the recording, not to the words: a song with
             no words on it still has to be counted in. */}
         {phase === 'counting' && (
@@ -729,7 +739,6 @@ export default function VocalBooth({
           </>
         )}
         </div>
-      </div>
 
       {/* ── The note bar ────────────────────────────────────────────────────
           Where you are and whether you are on it. It sits with the waveform
@@ -795,7 +804,8 @@ export default function VocalBooth({
       <div className="flex-shrink-0 px-5 pb-4 space-y-2">
         <canvas
           ref={canvasRef}
-          className="w-full h-24 rounded-xl bg-zinc-900/60 cursor-crosshair"
+          className="w-full rounded-xl bg-zinc-900/60 cursor-crosshair"
+          style={{ height: 'clamp(3.25rem, 9vh, 6rem)' }}
           onMouseDown={(event) => {
             if (busyOrLive) return;
             dragRef.current = seconds(event);
@@ -956,8 +966,91 @@ export default function VocalBooth({
         )}
 
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
+      </div>
+      </div>
+      </div>
 
-        <div className="flex flex-wrap items-center gap-2 pt-1">
+        {/* ── The desk ──────────────────────────────────────────────────────
+          For somebody who records for a living and wants the levels in their
+          own hands. Every fader here does something real: three of them are
+          in the mix that gets kept, one changes what you hear while you sing,
+          and one changes the speed you sing at. Nothing here is decoration. */}
+      {deskOpen && (
+        <div className="absolute right-5 bottom-24 w-[23rem] max-w-[calc(100vw-2.5rem)] max-h-[70vh] overflow-y-auto rounded-2xl border border-zinc-700 bg-zinc-900 shadow-2xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-white flex items-center gap-1.5">
+              <Sliders className="w-4 h-4 text-emerald-400" />
+              {t('booth.desk', 'Desk')}
+            </p>
+            <button type="button" onClick={() => setDeskOpen(false)} className="text-zinc-500 hover:text-white">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {stems && (
+            <Fader
+              label={t('booth.guideLevel', 'AI voice in your ear')}
+              hint={t('booth.guideHint', 'Only in your headphones. It is never in the song you keep.')}
+              value={guideLevel}
+              onChange={setGuideLevel}
+              format={(value) => `${Math.round(value * 100)}%`}
+            />
+          )}
+
+          {stems && (
+            <Fader
+              label={t('booth.doubleLevel', 'AI voice under yours, in the song')}
+              hint={t('booth.doubleHint', 'A second voice under a lead is what a producer uses to make one sound sure of itself. It only works once your take is in time and on the note — under a take that is late or flat it beats against you and prints the problem twice. Tune it first, then bring this up. The song credits say the AI voice is in it.')}
+              value={doubleLevel}
+              max={0.6}
+              step={0.02}
+              onChange={setDoubleLevel}
+              format={(value) => (value > 0 ? `${Math.round(value * 100)}%` : t('booth.off', 'Off'))}
+            />
+          )}
+
+          <Fader
+            label={t('booth.speed', 'Speed')}
+            hint={t('booth.speedHint', 'The song plays slower without changing key, and your take is pulled back to full speed afterwards. Below about three-quarters that pulling starts to smear the words.')}
+            value={speed}
+            min={0.5}
+            max={1}
+            step={0.05}
+            onChange={setSpeed}
+            format={(value) => `${value.toFixed(2)}×`}
+          />
+
+          <Fader
+            label={t('booth.backingLevel', 'Backing in the mix')}
+            value={backingLevel}
+            onChange={setBackingLevel}
+            format={(value) => `${Math.round(value * 100)}%`}
+          />
+
+          <Fader
+            label={t('booth.takeLevel', 'Your voice in the mix')}
+            value={takeLevel}
+            onChange={setTakeLevel}
+            format={(value) => `${Math.round(value * 100)}%`}
+          />
+
+          <Fader
+            label={t('booth.nudge', 'Timing')}
+            hint={t('booth.nudgeHint', 'On top of the round trip the browser already measured. Minus pulls your voice earlier.')}
+            value={nudge}
+            min={-250}
+            max={250}
+            step={5}
+            onChange={setNudge}
+            format={(value) => `${value > 0 ? '+' : ''}${Math.round(value)} ms`}
+          />
+        </div>
+      )}
+
+      {/* The buttons stay put. Scrolling to find "stop" is not a thing anybody
+          should have to do with a microphone open. */}
+      <div className="flex-shrink-0 px-5 pt-2 pb-3 border-t border-zinc-800 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
           {busyOrLive ? (
             <button
               type="button"
@@ -1015,83 +1108,6 @@ export default function VocalBooth({
             {t('take.keep', 'Keep this take')}
           </button>
         </div>
-
-        {/* ── The desk ──────────────────────────────────────────────────────
-            For somebody who records for a living and wants the levels in their
-            own hands. Every fader here does something real: three of them are
-            in the mix that gets kept, one changes what you hear while you sing,
-            and one changes the speed you sing at. Nothing here is decoration. */}
-        {deskOpen && (
-          <div className="absolute right-5 bottom-24 w-[23rem] max-w-[calc(100vw-2.5rem)] max-h-[70vh] overflow-y-auto rounded-2xl border border-zinc-700 bg-zinc-900 shadow-2xl p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-white flex items-center gap-1.5">
-                <Sliders className="w-4 h-4 text-emerald-400" />
-                {t('booth.desk', 'Desk')}
-              </p>
-              <button type="button" onClick={() => setDeskOpen(false)} className="text-zinc-500 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {stems && (
-              <Fader
-                label={t('booth.guideLevel', 'AI voice in your ear')}
-                hint={t('booth.guideHint', 'Only in your headphones. It is never in the song you keep.')}
-                value={guideLevel}
-                onChange={setGuideLevel}
-                format={(value) => `${Math.round(value * 100)}%`}
-              />
-            )}
-
-            {stems && (
-              <Fader
-                label={t('booth.doubleLevel', 'AI voice under yours, in the song')}
-                hint={t('booth.doubleHint', 'A second voice under a lead is what a producer uses to make one sound sure of itself. It only works once your take is in time and on the note — under a take that is late or flat it beats against you and prints the problem twice. Tune it first, then bring this up. The song credits say the AI voice is in it.')}
-                value={doubleLevel}
-                max={0.6}
-                step={0.02}
-                onChange={setDoubleLevel}
-                format={(value) => (value > 0 ? `${Math.round(value * 100)}%` : t('booth.off', 'Off'))}
-              />
-            )}
-
-            <Fader
-              label={t('booth.speed', 'Speed')}
-              hint={t('booth.speedHint', 'The song plays slower without changing key, and your take is pulled back to full speed afterwards. Below about three-quarters that pulling starts to smear the words.')}
-              value={speed}
-              min={0.5}
-              max={1}
-              step={0.05}
-              onChange={setSpeed}
-              format={(value) => `${value.toFixed(2)}×`}
-            />
-
-            <Fader
-              label={t('booth.backingLevel', 'Backing in the mix')}
-              value={backingLevel}
-              onChange={setBackingLevel}
-              format={(value) => `${Math.round(value * 100)}%`}
-            />
-
-            <Fader
-              label={t('booth.takeLevel', 'Your voice in the mix')}
-              value={takeLevel}
-              onChange={setTakeLevel}
-              format={(value) => `${Math.round(value * 100)}%`}
-            />
-
-            <Fader
-              label={t('booth.nudge', 'Timing')}
-              hint={t('booth.nudgeHint', 'On top of the round trip the browser already measured. Minus pulls your voice earlier.')}
-              value={nudge}
-              min={-250}
-              max={250}
-              step={5}
-              onChange={setNudge}
-              format={(value) => `${value > 0 ? '+' : ''}${Math.round(value)} ms`}
-            />
-          </div>
-        )}
 
         <p className="text-sm text-zinc-600 leading-snug flex items-start gap-1.5">
           <Mic className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />

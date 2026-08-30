@@ -366,5 +366,13 @@ export default function NoteBar({
     context.textBaseline = 'alphabetic';
   }, [at, bpm, guide, live, scale, sung, trail, words]);
 
-  return <canvas ref={canvasRef} className="w-full h-40 rounded-2xl bg-zinc-950 border border-zinc-800" />;
+  // The stave gives way on a short window rather than pushing the words off
+  // the top of the screen, which is what a fixed height did.
+  return (
+    <canvas
+      ref={canvasRef}
+      className="w-full rounded-2xl bg-zinc-950 border border-zinc-800"
+      style={{ height: 'clamp(6.5rem, 18vh, 10rem)' }}
+    />
+  );
 }
