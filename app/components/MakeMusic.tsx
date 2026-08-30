@@ -28,7 +28,7 @@ import { engines, splitSections, type Stage } from '../lib/engines';
 import { expect as expectWait, remember } from '../lib/timing';
 import VideoPanel from './VideoPanel';
 import NowPlaying from './NowPlaying';
-import VoiceTake from './VoiceTake';
+import VocalBooth from './VocalBooth';
 import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
 import { AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
@@ -465,6 +465,17 @@ export default function MakeMusic({
 
   return (
     <div className="space-y-6">
+      {/* Full screen and over everything: singing wants the whole window, not a
+          panel inside a form. */}
+      {takeFor && (
+        <VocalBooth
+          track={takeFor.track}
+          music={takeFor.music}
+          onKeep={(mixed) => keepTake(takeFor.track, mixed)}
+          onClose={() => setTakeFor(null)}
+        />
+      )}
+
       <div>
         <h4 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
           <Music className="w-6 h-6 text-emerald-400" />
@@ -765,14 +776,7 @@ export default function MakeMusic({
                   <NowPlaying track={track} audio={audioRef.current} blob={playingBlob} />
                 )}
 
-                {takeFor?.track.id === track.id && (
-                  <VoiceTake
-                    track={track}
-                    music={takeFor.music}
-                    onKeep={(mixed) => keepTake(track, mixed)}
-                    onClose={() => setTakeFor(null)}
-                  />
-                )}
+
 
                 <div className="flex flex-wrap items-center gap-2">
                   {/* The ladder, one rung at a time. Somebody who has bought
