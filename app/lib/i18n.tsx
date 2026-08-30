@@ -492,6 +492,15 @@ export const STRINGS: Dict = {
     en: "Only in your headphones. It is never in the song you keep.",
     af: "Net in jou oorfone. Dit is nooit in die liedjie wat jy hou nie.",
   },
+  "booth.off": { en: "Off", af: "Af" },
+  "booth.doubleLevel": {
+    en: "AI voice under yours, in the song",
+    af: "KI-stem onder joune, in die liedjie",
+  },
+  "booth.doubleHint": {
+    en: "A second voice under a lead is what a producer uses to make one sound sure of itself. It only works once your take is in time and on the note \u2014 under a take that is late or flat it beats against you and prints the problem twice. Tune it first, then bring this up. The song credits say the AI voice is in it.",
+    af: "\u2019n Tweede stem onder \u2019n hoofstem is wat \u2019n vervaardiger gebruik om een seker van homself te laat klink. Dit werk net sodra jou opname in tyd en op die noot is \u2014 onder \u2019n opname wat laat of vals is, klop dit teen jou en druk die probleem twee keer. Stem dit eers, bring dan hierdie op. Die liedjie se krediete s\u00ea die KI-stem is daarin.",
+  },
   "booth.speed": { en: "Speed", af: "Spoed" },
   "booth.speedHint": {
     en: "The song plays slower without changing key, and your take is pulled back to full speed afterwards. Below about three-quarters that pulling starts to smear the words.",

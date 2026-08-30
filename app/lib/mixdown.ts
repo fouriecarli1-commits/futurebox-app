@@ -51,6 +51,19 @@ export interface Mix {
   readonly music: AudioBuffer;
   readonly take: AudioBuffer;
   /**
+   * The AI voice, kept quietly under the real one.
+   *
+   * This is doubling, and it is what a producer does with a lead that is not
+   * quite carrying: a second voice underneath thickens it and holds the pitch
+   * steady, and the ear hears one confident singer rather than two. It only
+   * works if the two are together — a double under a take that is late or off
+   * the note does not hide the problem, it beats against it and prints it
+   * twice. So it is off unless somebody turns it up, and the screen says what
+   * to fix first.
+   */
+  readonly double?: AudioBuffer | null;
+  readonly doubleGain?: number;
+  /**
    * Where the take starts against the music, in seconds.
    *
    * Positive delays the voice, negative pulls it earlier. Negative is normal:
@@ -78,6 +91,7 @@ export async function mixdown(mix: Mix): Promise<Blob | null> {
   const takeEnd = Math.max(0, mix.offset) + mix.take.duration;
   const seconds = Math.max(mix.music.duration, takeEnd);
   const channels = Math.max(mix.music.numberOfChannels, mix.take.numberOfChannels, 2);
+  const doubleGain = mix.doubleGain ?? 0;
 
   const offline = new Ctx(Math.min(2, channels), Math.ceil(seconds * rate), rate);
 
@@ -98,6 +112,18 @@ export async function mixdown(mix: Mix): Promise<Blob | null> {
   // measured against and it must not move.
   if (mix.offset >= 0) take.start(mix.offset);
   else take.start(0, Math.min(-mix.offset, mix.take.duration));
+
+  // The AI voice under the real one, where it was asked for. It stays on the
+  // song's own clock: it was always in time, and moving it would only take it
+  // away from the backing it was sung against.
+  if (mix.double && doubleGain > 0) {
+    const double = offline.createBufferSource();
+    double.buffer = mix.double;
+    const level = offline.createGain();
+    level.gain.value = doubleGain;
+    double.connect(level).connect(offline.destination);
+    double.start(0);
+  }
 
   try {
     const rendered = await offline.startRendering();

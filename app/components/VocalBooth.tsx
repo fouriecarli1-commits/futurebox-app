@@ -62,7 +62,8 @@ export default function VocalBooth({
   track: Track;
   /** The backing to sing over. */
   music: Blob;
-  onKeep: (mixed: Blob) => void | Promise<void>;
+  /** `doubled` is true when the AI voice was left in the mix under yours. */
+  onKeep: (mixed: Blob, doubled: boolean) => void | Promise<void>;
   /** Told once the song has been split, so the track can remember it. */
   onSplit?: () => void;
   onClose: () => void;
@@ -140,6 +141,14 @@ export default function VocalBooth({
   const [speed, setSpeed] = useState(1);
   /** Hand alignment, in milliseconds, on top of the measured latency. */
   const [nudge, setNudge] = useState(0);
+  /**
+   * How much of the AI voice stays in the finished song, under yours.
+   *
+   * Off by default, because a double is a production choice and not a
+   * correction, and because turning it up on a take that is not yet in time
+   * makes things worse rather than better.
+   */
+  const [doubleLevel, setDoubleLevel] = useState(0);
 
   const guideRef = useRef<HTMLAudioElement | null>(null);
   const guideUrlRef = useRef<string | null>(null);
@@ -607,14 +616,16 @@ export default function VocalBooth({
       offset: nudge / 1000,
       musicGain: backingLevel,
       takeGain: takeLevel,
+      double: guideBuffer,
+      doubleGain: guideBuffer ? doubleLevel : 0,
     });
     setBusy(false);
     if (!mixed) {
       setProblem(t('take.mixFailed', 'The mix could not be made.'));
       return;
     }
-    await onKeep(mixed);
-  }, [backing, backingLevel, nudge, onKeep, t, take, takeLevel]);
+    await onKeep(mixed, guideBuffer !== null && doubleLevel > 0);
+  }, [backing, backingLevel, doubleLevel, guideBuffer, nudge, onKeep, t, take, takeLevel]);
 
   /**
    * Split the song into the AI voice and the backing.
@@ -1000,6 +1011,18 @@ export default function VocalBooth({
                 value={guideLevel}
                 onChange={setGuideLevel}
                 format={(value) => `${Math.round(value * 100)}%`}
+              />
+            )}
+
+            {stems && (
+              <Fader
+                label={t('booth.doubleLevel', 'AI voice under yours, in the song')}
+                hint={t('booth.doubleHint', 'A second voice under a lead is what a producer uses to make one sound sure of itself. It only works once your take is in time and on the note — under a take that is late or flat it beats against you and prints the problem twice. Tune it first, then bring this up. The song credits say the AI voice is in it.')}
+                value={doubleLevel}
+                max={0.6}
+                step={0.02}
+                onChange={setDoubleLevel}
+                format={(value) => (value > 0 ? `${Math.round(value * 100)}%` : t('booth.off', 'Off'))}
               />
             )}
 

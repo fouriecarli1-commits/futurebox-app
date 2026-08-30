@@ -387,7 +387,7 @@ export default function MakeMusic({
     saveTracks(next);
   };
 
-  const keepTake = async (over: Track, mixed: Blob) => {
+  const keepTake = async (over: Track, mixed: Blob, doubled: boolean) => {
     const id = `t-${Date.now()}`;
     await putAudio(id, mixed);
     const length = (await durationOf(mixed)) ?? over.seconds;
@@ -397,7 +397,13 @@ export default function MakeMusic({
       title: `${over.title} — ${t('make.withYourVoice', 'with your voice')}`,
       // Named for what it is. The vocal here is a recording of a person, and
       // that is a stronger thing to print on a release than any clone.
-      models: over.models.filter((name) => name !== 'Backing — no vocal').concat('Your voice (recorded)'),
+      models: over.models
+        .filter((name) => name !== 'Backing — no vocal')
+        .concat('Your voice (recorded)')
+        // Said out loud when it is true. A double is a real production choice
+        // and a good one, and a song that quietly has a generated voice in it
+        // while the credits say otherwise is the one thing this must not be.
+        .concat(doubled ? ['AI voice, kept under yours'] : []),
       seconds: Math.round(length),
       createdAt: new Date().toISOString(),
       // The new song is a new file. Whatever was separated belongs to the one
@@ -485,7 +491,7 @@ export default function MakeMusic({
         <VocalBooth
           track={takeFor.track}
           music={takeFor.music}
-          onKeep={(mixed) => keepTake(takeFor.track, mixed)}
+          onKeep={(mixed, doubled) => keepTake(takeFor.track, mixed, doubled)}
           onSplit={() => markSplit(takeFor.track)}
           onClose={() => setTakeFor(null)}
         />
