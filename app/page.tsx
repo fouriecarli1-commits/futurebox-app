@@ -40,6 +40,7 @@ import { signal } from './lib/signal';
 import { TRACK_LABELS } from './data/masterclasses';
 import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
+import Spotlight from './components/Spotlight';
 import HereNow from './components/HereNow';
 import LanguagePicker from './components/LanguagePicker';
 import { useLang } from './lib/i18n';
@@ -957,55 +958,22 @@ export default function FutureBoxHome() {
           What this place is, before anything else on the page.
 
           Somebody arriving here has about a second to work out what they can
-          do, and a feed of picks does not tell them. Three sentences and the
-          number of people in the building do.
+          do, and a feed of picks does not tell them. So: what they will walk
+          away with, then the four things this app does that the other ones do
+          not, then a door into each.
+
+          Every claim below is a thing that is actually built. A landing page
+          that promises a feature is a landing page that gets found out on the
+          second click, and this one is the first thing anybody sees.
         */}
         {activeTab === 'all' && (
-          <section className="rounded-3xl border border-zinc-800 bg-gradient-to-b from-zinc-900/70 to-zinc-950/80 p-8 md:p-12 shadow-2xl">
-            <div className="max-w-3xl space-y-5">
-              <HereNow />
-              <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white leading-[1.1]">
-                {t('hero.make', 'Make your own music.')}{' '}
-                <span className="text-emerald-400">
-                  {t('hero.record', 'Professional recordings of your own voice.')}
-                </span>{' '}
-                {t('hero.video', 'Make music videos.')}
-              </h2>
-              <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
-                {t('hero.style', 'This is the app that lets you choose your own style.')}{' '}
-                <button
-                  type="button"
-                  onClick={() => setThemeOpen(true)}
-                  className="text-cyan-400 hover:text-cyan-300 underline underline-offset-4 font-semibold"
-                >
-                  {t('hero.appearance', 'Click on appearance')}
-                </button>
-                .
-              </p>
-              <div className="flex flex-wrap items-center gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUploadModalOpen(true);
-                    setStudioTab('make');
-                  }}
-                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent text-sm font-extrabold shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-                >
-                  {t('hero.start', 'Make a song')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUploadModalOpen(true);
-                    setStudioTab('voice_studio');
-                  }}
-                  className="px-5 py-3 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-bold hover:border-emerald-500 hover:text-emerald-300"
-                >
-                  {t('hero.sing', 'Record your voice')}
-                </button>
-              </div>
-            </div>
-          </section>
+          <Spotlight
+            onGo={(tab) => {
+              setUploadModalOpen(true);
+              setStudioTab(tab);
+            }}
+            onAppearance={() => setThemeOpen(true)}
+          />
         )}
 
         {/* 🟢 REGENERATION & AI TRENDS RADAR BANNER */}
@@ -1863,7 +1831,9 @@ export default function FutureBoxHome() {
               />
             )}
 
-            {studioTab === 'channels' && <Channel reloadKey={trackCount} />}
+            {studioTab === 'channels' && (
+              <Channel reloadKey={trackCount} onUpgrade={() => setPricingModalOpen(true)} />
+            )}
             {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
 
             {/* STUDIO: your own song, in its own sections, over its own audio */}

@@ -358,3 +358,18 @@ export const PODCAST_CAPS: Record<Tier, PodcastCaps> = {
   studio: { voices: 3, speakChars: 6_000, speakPerDay: 60, clean: true, publish: true },
   label: { voices: 10, speakChars: 12_000, speakPerDay: 200, clean: true, publish: true },
 };
+
+/**
+ * How many trained sounds of your own a tier may keep.
+ *
+ * Training is not a request, it is ten minutes of somebody else's GPUs, and
+ * the model then sits on the account until it is deleted. So this is a small
+ * number everywhere and zero on free — not to withhold the feature, but
+ * because an unbounded one is a bill nobody agreed to.
+ */
+export const SOUND_CAPS: Record<Tier, number> = {
+  free: 0,
+  maker: 1,
+  studio: 3,
+  label: 10,
+};

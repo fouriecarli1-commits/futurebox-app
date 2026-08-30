@@ -30,6 +30,7 @@ import {
 } from '../lib/playlists';
 import { fetchCreator, type Creator } from '../lib/radar';
 import Cover from './Cover';
+import SoundTrainer from './SoundTrainer';
 import { useLang } from '../lib/i18n';
 
 function clock(seconds: number): string {
@@ -37,7 +38,13 @@ function clock(seconds: number): string {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 }
 
-export default function Channel({ reloadKey }: { reloadKey: number }): React.ReactElement {
+export default function Channel({
+  reloadKey,
+  onUpgrade,
+}: {
+  reloadKey: number;
+  onUpgrade: () => void;
+}): React.ReactElement {
   const { t } = useLang();
 
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -170,6 +177,8 @@ export default function Channel({ reloadKey }: { reloadKey: number }): React.Rea
           </button>
         </div>
       </div>
+
+      <SoundTrainer reloadKey={reloadKey} onUpgrade={onUpgrade} />
 
       {/* ── Playlists ────────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">

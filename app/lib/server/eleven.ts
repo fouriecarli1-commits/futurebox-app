@@ -240,3 +240,92 @@ export async function stockVoices(): Promise<StockVoice[]> {
     .map((one) => ({ id: one.voice_id as string, name: one.name as string }))
     .slice(0, 8);
 }
+
+/**
+ * A sound of your own: their music finetunes.
+ *
+ * Training takes a handful of finished tracks and comes back with a model that
+ * generates in that sound. It runs for five or ten minutes on their side, so
+ * nothing here waits for it — creating returns immediately with a status, and
+ * the screen asks again later.
+ *
+ * The wire names below are read from their own published package (the
+ * multipart fields are `name`, `primary_genre`, repeated `files` and `tags`,
+ * `visibility`, `model_id`), not from memory. Visibility is always private:
+ * a workspace finetune would be visible to every other person on this app's
+ * single ElevenLabs account, which is precisely what must not happen.
+ */
+export interface Finetune {
+  readonly id: string;
+  readonly name: string;
+  readonly genre: string;
+  /** pending | in_progress | completed | failed | blocked. */
+  readonly status: string;
+  /** 0 to 1. */
+  readonly progress: number;
+  /** Set when it failed or was blocked — copyright_violation among them. */
+  readonly why?: string;
+}
+
+/** Their shape, flattened to ours, so nothing downstream reads snake_case. */
+function toFinetune(row: Record<string, unknown>): Finetune {
+  return {
+    id: String(row.id ?? ''),
+    name: String(row.name ?? ''),
+    genre: String(row.primary_genre ?? ''),
+    status: String(row.status ?? 'pending'),
+    progress: typeof row.training_progress === 'number' ? row.training_progress : 0,
+    why: typeof row.failure_reason === 'string' ? row.failure_reason : undefined,
+  };
+}
+
+export async function createFinetune(
+  name: string,
+  genre: string,
+  files: readonly { blob: Blob; filename: string }[],
+  modelId: string,
+): Promise<{ ok: true; finetune: Finetune } | Upstream> {
+  const form = new FormData();
+  form.append('name', name);
+  form.append('primary_genre', genre);
+  for (const file of files) form.append('files', file.blob, file.filename);
+  form.append('visibility', 'private');
+  form.append('model_id', modelId);
+
+  const response = await fetch(`${BASE}/music/finetunes`, {
+    method: 'POST',
+    headers: { 'xi-api-key': key() },
+    body: form,
+  });
+  if (!response.ok) return complain(response);
+
+  const data = (await response.json()) as Record<string, unknown>;
+  if (!data.id) {
+    return { ok: false, status: 502, message: 'The music service answered without a finetune id.' };
+  }
+  return { ok: true, finetune: toFinetune(data) };
+}
+
+/**
+ * Where one has got to.
+ *
+ * Asked one at a time rather than listing everything: the list on their side
+ * is every finetune on the app's account, and walking it to find one person's
+ * is both slower and a way to hand somebody a row that is not theirs.
+ */
+export async function finetuneStatus(id: string): Promise<Finetune | null> {
+  const response = await fetch(`${BASE}/music/finetunes/${encodeURIComponent(id)}`, {
+    headers: { 'xi-api-key': key() },
+  });
+  if (!response.ok) return null;
+  return toFinetune((await response.json()) as Record<string, unknown>);
+}
+
+/** Removes a finetune from the account, for when somebody deletes theirs. */
+export async function dropFinetune(id: string): Promise<boolean> {
+  const response = await fetch(`${BASE}/music/finetunes/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { 'xi-api-key': key() },
+  });
+  return response.ok;
+}

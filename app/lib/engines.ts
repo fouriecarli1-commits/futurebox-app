@@ -58,6 +58,14 @@ export interface AudioRequest {
    * is a song with the singing left out, not a loop.
    */
   readonly instrumental?: boolean;
+  /**
+   * A sound of the caller's own, trained on their own songs.
+   *
+   * Passed through as an id and nothing more: the server checks it belongs to
+   * whoever is asking before it reaches ElevenLabs, so a browser that made one
+   * up gets an ordinary song rather than somebody else's sound.
+   */
+  readonly finetuneId?: string;
   /** Told what is happening, as it happens. Optional; nothing depends on it. */
   readonly onStage?: (stage: Stage) => void;
 }
@@ -265,6 +273,7 @@ export const engines: Engines = {
         prompt: request.title ? `A song called "${request.title}"` : undefined,
         seconds: request.seconds,
         instrumental: Boolean(request.instrumental) || sections.length === 0,
+        finetuneId: request.finetuneId || undefined,
         }),
       });
     } catch (error) {
