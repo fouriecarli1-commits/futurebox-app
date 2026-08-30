@@ -478,12 +478,12 @@ export const STRINGS: Dict = {
   "booth.listening": { en: "Listening\u2026", af: "Luister\u2026" },
   "booth.playAlong": { en: "Play it and follow the words", af: "Speel dit en volg die woorde" },
   "booth.barGuide": {
-    en: "The notes to sing are read off the backing. Your voice draws on the same lines.",
-    af: "Die note om te sing is van die begeleiding af gelees. Jou stem teken op dieselfde lyne.",
+    en: "The notes are read off the backing and the words sit under them. Your voice draws on the stave as you sing.",
+    af: "Die note is van die begeleiding af gelees en die woorde staan daaronder. Jou stem teken op die balk terwyl jy sing.",
   },
   "booth.barNoGuide": {
-    en: "The tune cannot be read out of a finished mix \u2014 a bass line under it reads as the melody, and wrong notes are worse than none. The lines are the notes of the key; your voice draws on them, and once you have sung a take its notes stay on the bar to follow.",
-    af: "Die wysie kan nie uit \u2019n klaar mengsel gelees word nie \u2014 \u2019n basslyn daaronder lees soos die melodie, en verkeerde note is erger as geen. Die lyne is die note van die toonaard; jou stem teken daarop, en sodra jy een keer gesing het bly daardie note op die balk om te volg.",
+    en: "No notes: the tune cannot be read out of a finished mix without getting it wrong. The stave carries the words, your voice, and your own take once you have sung one.",
+    af: "Geen note nie: die wysie kan nie uit \u2019n klaar mengsel gelees word sonder om dit verkeerd te kry nie. Die balk dra die woorde, jou stem, en jou eie opname sodra jy een keer gesing het.",
   },
   "booth.barReading": { en: "Reading the backing\u2026", af: "Lees die begeleiding\u2026" },
   "booth.tune": { en: "Tuning", af: "Stemming" },
@@ -503,8 +503,8 @@ export const STRINGS: Dict = {
     af: "Van die {seconds} sekondes wat jy gesing het was {inTune}% al binne tien sent. Oor die hele opname was jy gemiddeld {off} sent uit, en {moved} sent daarvan is uitgehaal.",
   },
   "booth.noteHint": {
-    en: "The note you are singing shows here while you record.",
-    af: "Die noot wat jy sing wys hier terwyl jy opneem.",
+    en: "Your note shows here as you sing.",
+    af: "Jou noot wys hier terwyl jy sing.",
   },
   "booth.selected": { en: "Selected", af: "Gekies" },
   "booth.dragToPunch": { en: "Drag across a part to sing it again", af: "Sleep oor \u2019n stuk om dit weer te sing" },

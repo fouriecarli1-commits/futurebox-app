@@ -34,7 +34,7 @@ import { detectPitch, noteOf } from '../lib/pitch';
 import { scaleOf, tuneBuffer, type Tuned } from '../lib/tune';
 import { melodyOf, readable, type Note } from '../lib/melody';
 import NoteBar, { type Trail } from './NoteBar';
-import { partsOf, timelineOf, type Part, type TimedLine } from '../lib/timeline';
+import { partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
 
@@ -122,6 +122,9 @@ export default function VocalBooth({
     const parts = stored.length ? stored : partsOf(track.lyrics ?? '');
     return parts.length && duration ? timelineOf(parts, duration) : [];
   }, [duration, track.lyrics, track.parts]);
+
+  /** Every word with its own moment, for writing under the stave. */
+  const words = useMemo(() => wordsOf(lines), [lines]);
 
   const current = lines.findIndex((line) => at >= line.start && at < line.end);
   const next = current >= 0 ? lines[current + 1] : lines.find((line) => line.start > at);
@@ -358,6 +361,12 @@ export default function VocalBooth({
       const element = audioRef.current;
       if (!stream || !element) return;
 
+      // The song is moved to where the take starts *before* the count, so the
+      // words, the stave and the clock all show the place you are counting
+      // into. Counting into a blank screen and then being shown the words on
+      // the beat you were meant to sing them is too late to be any use.
+      element.currentTime = Math.max(0, from);
+      setAt(Math.max(0, from));
       setPhase('counting');
       for (let n = COUNT_IN; n > 0; n -= 1) {
         setCount(n);
@@ -373,7 +382,6 @@ export default function VocalBooth({
 
       // Recorder first, then the music, and the gap between them measured — it
       // is silence at the front of the recording and most of the alignment.
-      element.currentTime = Math.max(0, from);
       recorder.start();
       const began = performance.now();
       await element.play();
@@ -508,19 +516,25 @@ export default function VocalBooth({
 
       {/* ── The words ─────────────────────────────────────────────────────── */}
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col items-center justify-center px-6 text-center gap-3">
-        {phase === 'counting' ? (
-          <span className="text-7xl font-black text-emerald-400 tabular-nums">{count}</span>
-        ) : lines.length === 0 ? (
+        {/* The count belongs to the recording, not to the words: a song with
+            no words on it still has to be counted in. */}
+        {phase === 'counting' && (
+          <span className="text-5xl font-black text-emerald-400 tabular-nums leading-none">{count}</span>
+        )}
+
+        {lines.length === 0 ? (
           <p className="text-base text-zinc-500 max-w-md leading-relaxed">
             {t('booth.noWords', 'This song has no words on it, so there is nothing to follow. Sing anyway — the waveform and the note still work.')}
           </p>
         ) : (
           <>
-            {current > 0 && (
+            {phase !== 'counting' && current > 0 && (
               <p className="text-base text-zinc-600 truncate max-w-3xl">{lines[current - 1].text}</p>
             )}
             <p className="text-3xl md:text-5xl font-black text-white leading-tight max-w-4xl">
-              {current >= 0 ? lines[current].text : t('booth.ready', 'Ready')}
+              {/* Always something to read: the line you are in, or the one you
+                  are about to be in. "Ready" only when the song is over. */}
+              {current >= 0 ? lines[current].text : next ? next.text : t('booth.ready', 'Ready')}
             </p>
             {next && (
               <p className="text-lg text-zinc-500 max-w-3xl truncate">{next.text}</p>
@@ -537,38 +551,6 @@ export default function VocalBooth({
           </>
         )}
 
-        {/* The note, when the microphone is confident about one. */}
-        <div className="h-14 flex items-center gap-4">
-          {note ? (
-            <>
-              <span className="text-3xl font-black text-white tabular-nums">
-                {note.name}
-                <span className="text-zinc-500 text-xl">{note.octave}</span>
-              </span>
-              <span className="w-40 h-2 rounded-full bg-zinc-800 relative overflow-hidden">
-                {/* Middle is in tune. Left is flat, right is sharp. */}
-                <span className="absolute inset-y-0 left-1/2 w-px bg-zinc-600" />
-                <span
-                  className={`absolute inset-y-0 w-2 rounded-full ${
-                    Math.abs(note.cents) < 15 ? 'bg-emerald-400' : 'bg-amber-400'
-                  }`}
-                  style={{ left: `calc(${50 + Math.max(-50, Math.min(50, note.cents))}% - 4px)` }}
-                />
-              </span>
-              <span className="text-sm text-zinc-500 tabular-nums w-16 text-left">
-                {note.cents > 0 ? '+' : ''}{note.cents}
-              </span>
-            </>
-          ) : (
-            /* Only claim to be listening while the microphone is actually
-               open. Idle, the honest thing to say is what the row is for. */
-            <span className="text-sm text-zinc-700">
-              {busyOrLive
-                ? t('booth.listening', 'Listening…')
-                : t('booth.noteHint', 'The note you are singing shows here while you record.')}
-            </span>
-          )}
-        </div>
 
       </div>
 
@@ -579,21 +561,61 @@ export default function VocalBooth({
           bar can honestly show is written underneath it rather than left to
           be guessed from an empty bar. */}
       <div className="flex-shrink-0 px-5 pb-2 space-y-1.5">
-        <NoteBar at={at} guide={guide} sung={sung} trail={trailRef.current} scale={scale} live={busyOrLive} />
-        <p className="text-sm text-zinc-600 leading-snug">
-          {guide.length
-            ? t('booth.barGuide', 'The notes to sing are read off the backing. Your voice draws on the same lines.')
-            : guideRead
-              ? t('booth.barNoGuide', 'The tune cannot be read out of a finished mix — a bass line under it reads as the melody, and wrong notes are worse than none. The lines are the notes of the key; your voice draws on them, and once you have sung a take its notes stay on the bar to follow.')
-              : t('booth.barReading', 'Reading the backing…')}
-        </p>
+        <NoteBar
+          at={at}
+          guide={guide}
+          sung={sung}
+          trail={trailRef.current}
+          words={words}
+          scale={scale}
+          bpm={track.bpm ?? 0}
+          live={busyOrLive}
+        />
+        {/* The note being sung, beside the stave it is being sung on, with what
+            the stave can honestly show next to it. */}
+        <div className="flex items-center gap-4">
+          {note ? (
+            <>
+              <span className="text-2xl font-black text-white tabular-nums flex-shrink-0">
+                {note.name}
+                <span className="text-zinc-500 text-base">{note.octave}</span>
+              </span>
+              <span className="w-28 h-2 rounded-full bg-zinc-800 relative overflow-hidden flex-shrink-0">
+                {/* Middle is in tune. Left is flat, right is sharp. */}
+                <span className="absolute inset-y-0 left-1/2 w-px bg-zinc-600" />
+                <span
+                  className={`absolute inset-y-0 w-2 rounded-full ${
+                    Math.abs(note.cents) < 15 ? 'bg-emerald-400' : 'bg-amber-400'
+                  }`}
+                  style={{ left: `calc(${50 + Math.max(-50, Math.min(50, note.cents))}% - 4px)` }}
+                />
+              </span>
+              <span className="text-sm text-zinc-500 tabular-nums w-12 flex-shrink-0">
+                {note.cents > 0 ? '+' : ''}{note.cents}
+              </span>
+            </>
+          ) : (
+            /* Only claim to be listening while the microphone is actually
+               open. Idle, the honest thing to say is what the row is for. */
+            <span className="text-sm text-zinc-700 flex-shrink-0">
+              {busyOrLive ? t('booth.listening', 'Listening…') : t('booth.noteHint', 'Your note shows here as you sing.')}
+            </span>
+          )}
+          <p className="text-sm text-zinc-600 leading-snug flex-1 min-w-0">
+            {guide.length
+              ? t('booth.barGuide', 'The notes are read off the backing and the words sit under them. Your voice draws on the stave as you sing.')
+              : guideRead
+                ? t('booth.barNoGuide', 'No notes: the tune cannot be read out of a finished mix without getting it wrong. The stave carries the words, your voice, and your own take once you have sung one.')
+                : t('booth.barReading', 'Reading the backing…')}
+          </p>
+        </div>
       </div>
 
       {/* ── The waveform ──────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 px-5 pb-4 space-y-2">
         <canvas
           ref={canvasRef}
-          className="w-full h-28 rounded-xl bg-zinc-900/60 cursor-crosshair"
+          className="w-full h-24 rounded-xl bg-zinc-900/60 cursor-crosshair"
           onMouseDown={(event) => {
             if (busyOrLive) return;
             dragRef.current = seconds(event);

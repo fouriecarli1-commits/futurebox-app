@@ -93,3 +93,42 @@ export function lineAt(timed: readonly TimedLine[], at: number): number {
   // stays lit rather than the screen going blank.
   return timed.length && at >= timed[timed.length - 1].end ? timed.length - 1 : -1;
 }
+
+export interface TimedWord {
+  readonly text: string;
+  readonly start: number;
+  readonly end: number;
+}
+
+/**
+ * Every word with a moment of its own.
+ *
+ * A line's words are spread across the line by how long each one takes to say
+ * — a share proportional to its length, not an equal slice, because "the" and
+ * "tomorrow" are not the same amount of singing. It is still an estimate, and
+ * a smaller one than the line timing it sits inside: the line is real, the
+ * word is a sensible division of it. The screen says so rather than implying
+ * that each word is pinned to the beat it lands on.
+ */
+export function wordsOf(lines: readonly TimedLine[]): TimedWord[] {
+  const out: TimedWord[] = [];
+  lines.forEach((line) => {
+    const words = line.text.split(/\s+/).filter(Boolean);
+    if (!words.length) return;
+    let total = 0;
+    // A floor, so a one-letter word still gets a moment rather than a sliver.
+    const weights = words.map((word) => {
+      const weight = Math.max(2, word.length);
+      total += weight;
+      return weight;
+    });
+    const span = Math.max(0.001, line.end - line.start);
+    let at = line.start;
+    words.forEach((word, index) => {
+      const length = (weights[index] / total) * span;
+      out.push({ text: word, start: at, end: at + length });
+      at += length;
+    });
+  });
+  return out;
+}
