@@ -29,9 +29,9 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Video as VideoIcon, Loader2, Download, Quote, AlertTriangle } from 'lucide-react';
+import { Video as VideoIcon, Loader2, Download, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap } from 'lucide-react';
 import { SCENES, spokenLines, looksUnquoted, type Scene } from '../lib/videoscenes';
-import { engines, probeVideo } from '../lib/engines';
+import { engines, probeVideoEngine, type VideoEngine } from '../lib/engines';
 import { CREDITS } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { signal } from '../lib/signal';
@@ -55,7 +55,8 @@ const SHAPES: { id: Aspect; label: string; note: string }[] = [
 export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
   const { t } = useLang();
 
-  const [ready, setReady] = useState<boolean | null>(null);
+  const [engine, setEngine] = useState<VideoEngine | null>(null);
+  const ready = engine === null ? null : engine.available;
   const [scene, setScene] = useState<Scene | null>(null);
   const [prompt, setPrompt] = useState('');
   const [aspect, setAspect] = useState<Aspect>('16:9');
@@ -66,8 +67,8 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
 
   useEffect(() => {
     let alive = true;
-    void probeVideo().then((can) => {
-      if (alive) setReady(can);
+    void probeVideoEngine().then((found) => {
+      if (alive) setEngine(found);
     });
     return () => {
       alive = false;
@@ -139,11 +140,69 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
         </p>
       </div>
 
-      {ready === false && (
-        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-4">
-          <p className="text-sm text-amber-300">
-            {t('canvas.off', 'The video engine is not switched on for this app yet. Music videos drawn in your browser still work, on any song.')}
-          </p>
+      {/* ── Is this thing plugged in ───────────────────────────────────
+          Written for the person who set the keys up, in the place they
+          already are. Finding out whether your own app is connected should
+          not require opening an API route and reading JSON, and until this
+          strip existed it did. */}
+      {engine && (
+        <div
+          className={`rounded-2xl border p-4 space-y-2 ${
+            engine.available ? 'border-zinc-800 bg-zinc-950/60' : 'border-amber-500/40 bg-amber-500/5'
+          }`}
+        >
+          {engine.available ? (
+            <>
+              <p className="text-sm text-zinc-300 flex items-center gap-2">
+                <PlugZap className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>
+                  {t('canvas.on', 'The engine is connected')} — <code className="text-zinc-400">{engine.model}</code>
+                </span>
+              </p>
+              <p className="text-sm text-zinc-400 flex items-center gap-2">
+                {engine.sound ? (
+                  <Volume2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                ) : (
+                  <VolumeX className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                )}
+                <span>
+                  {engine.sound
+                    ? t('canvas.soundOn', 'Quoted lines will be spoken aloud.')
+                    : t('canvas.soundOff', 'This model cannot speak, so quoted lines will come back silent.')}
+                </span>
+              </p>
+              {/* Only the operator ever sees this one. */}
+              {engine.month && (
+                <div className="pt-1 space-y-1.5">
+                  <p className="text-sm text-zinc-400">
+                    {t('canvas.month', "This month's engine allowance")}:{' '}
+                    <span className="text-zinc-200 font-semibold">
+                      {engine.month.used} / {engine.month.ceiling}
+                    </span>
+                  </p>
+                  <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                    <div
+                      className={`h-full transition-all ${
+                        engine.month.used / engine.month.ceiling > 0.85 ? 'bg-rose-500' : 'bg-emerald-500'
+                      }`}
+                      style={{
+                        width: `${Math.min(100, Math.round((engine.month.used / Math.max(1, engine.month.ceiling)) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-amber-300 flex items-start gap-2">
+              <Plug className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>
+                {engine.auth === 'none'
+                  ? t('canvas.noKey', 'No key for the video engine reached this app. Music videos drawn in your browser still work, on any song.')
+                  : t('canvas.off', 'The video engine is not switched on for this app yet. Music videos drawn in your browser still work, on any song.')}
+              </span>
+            </p>
+          )}
         </div>
       )}
 

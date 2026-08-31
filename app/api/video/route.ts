@@ -19,7 +19,7 @@
  * week is not a video they were sold.
  */
 
-import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { admin, callerFrom, callerIsOwner, metered } from '@/app/lib/server/account';
 import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { CREDITS } from '@/app/lib/credits';
@@ -31,6 +31,7 @@ import {
   MODEL_NAME,
   monthlyCeiling,
   scheme,
+  speaks,
   startVideo,
   type Aspect,
 } from '@/app/lib/server/kling';
@@ -55,7 +56,35 @@ export async function GET(request: Request): Promise<Response> {
     // The probe the studio asks before it offers the engine at all. `auth`
     // says which of the two key schemes was found, so somebody setting this up
     // can tell a missing key from a half-set pair without guessing.
-    return Response.json({ available: configured(), model: MODEL_NAME, auth: scheme() });
+    //
+    // The month's spend is added for whoever runs the place, and only for
+    // them. It is the answer to "is this actually connected and how much of
+    // the allowance is gone", which is a question the operator should be able
+    // to answer by opening the video desk rather than by reading JSON — but it
+    // is also the size of somebody's bill, and that is nobody else's business.
+    const caller = metered() ? await callerFrom(request) : null;
+    let month: { used: number; ceiling: number } | undefined;
+
+    if (callerIsOwner(caller)) {
+      const client = admin();
+      const { data, error } = client
+        ? await client.rpc('kling_spend_this_month')
+        : { data: null, error: true };
+      // Left out rather than reported as zero: a migration that has not been
+      // run and an allowance that has not been touched look identical from
+      // here, and only one of them is fine.
+      if (!error && typeof data === 'number') month = { used: data, ceiling: monthlyCeiling() };
+    }
+
+    return Response.json({
+      available: configured(),
+      model: MODEL_NAME,
+      auth: scheme(),
+      // Whether a quoted line will come back as audio. The desk teaches
+      // quotation marks, so it has to know whether they will do anything.
+      sound: speaks(),
+      ...(month ? { month } : {}),
+    });
   }
 
   if (!metered()) return Response.json({ message: 'Accounts are not configured.' }, { status: 503 });

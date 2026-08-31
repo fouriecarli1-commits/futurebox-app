@@ -122,25 +122,70 @@ export async function probeAudio(): Promise<boolean> {
   return audioProbe;
 }
 
-/** The same question about video, asked the same way and for the same reason. */
-let videoReady: boolean | null = null;
-let videoProbe: Promise<boolean> | null = null;
+/**
+ * The same question about video, and rather more of an answer.
+ *
+ * Whether the engine is on is not the only thing worth knowing about it. Which
+ * model, whether a quoted line will actually be spoken, and — for whoever runs
+ * the place — how much of the month's allowance is gone. All of that used to
+ * be findable only by opening /api/video and reading JSON, which is a thing
+ * nobody should have to do to find out whether their own app is plugged in.
+ */
+export interface VideoEngine {
+  readonly available: boolean;
+  readonly model: string;
+  /** 'api-key', 'signed' or 'none' — which credentials the server found. */
+  readonly auth: string;
+  /** True where a quoted line in a prompt comes back as audio. */
+  readonly sound: boolean;
+  /** Present only for the operator. */
+  readonly month?: { readonly used: number; readonly ceiling: number };
+}
 
-export async function probeVideo(): Promise<boolean> {
-  if (videoReady !== null) return videoReady;
+const NO_ENGINE: VideoEngine = { available: false, model: '', auth: 'none', sound: false };
+
+let videoState: VideoEngine | null = null;
+let videoProbe: Promise<VideoEngine> | null = null;
+
+/**
+ * Ask the server what the video engine is.
+ *
+ * Carries the token when there is one, because the month's spend is only
+ * answered for the operator and there is no way to ask as them without it.
+ */
+export async function probeVideoEngine(): Promise<VideoEngine> {
+  if (videoState !== null) return videoState;
   if (!videoProbe) {
-    videoProbe = fetch('/api/video')
-      .then((response) => (response.ok ? response.json() : { available: false }))
-      .then((data: { available?: boolean }) => {
-        videoReady = Boolean(data.available);
-        return videoReady;
-      })
-      .catch(() => {
-        videoReady = false;
-        return false;
-      });
+    videoProbe = (async () => {
+      try {
+        const token = await accessToken();
+        const response = await fetch('/api/video', {
+          headers: token ? { authorization: `Bearer ${token}` } : undefined,
+        });
+        if (!response.ok) throw new Error('probe');
+        const data = (await response.json()) as Partial<VideoEngine>;
+        videoState = {
+          available: Boolean(data.available),
+          model: String(data.model ?? ''),
+          auth: String(data.auth ?? 'none'),
+          sound: Boolean(data.sound),
+          ...(data.month ? { month: data.month } : {}),
+        };
+      } catch {
+        videoState = NO_ENGINE;
+      }
+      videoReady = videoState.available;
+      return videoState;
+    })();
   }
   return videoProbe;
+}
+
+/** The plain yes or no, for screens that only need that much. */
+let videoReady: boolean | null = null;
+
+export async function probeVideo(): Promise<boolean> {
+  return (await probeVideoEngine()).available;
 }
 
 /**
