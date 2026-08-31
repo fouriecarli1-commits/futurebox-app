@@ -103,19 +103,92 @@ export async function cloneVoice(name: string, sample: Blob): Promise<
   return { ok: true, voiceId: data.voice_id };
 }
 
+/**
+ * How a voice is performed, rather than which voice it is.
+ *
+ * These are the four dials ElevenLabs' own screen puts next to a voice, and
+ * the difference between "a voice" and "this voice, read like this". Leaving
+ * them out meant every read came back at whatever the defaults happened to be,
+ * which for a podcast is the difference between a presenter and a announcement.
+ */
+export interface Performance {
+  /** 0–1. Low is more expressive and less predictable; high is steady, and flat. */
+  readonly stability?: number;
+  /** 0–1. How closely it holds to the original speaker. */
+  readonly similarity?: number;
+  /** 0–1. How far it pushes the speaker's own manner. Costs latency above zero. */
+  readonly style?: number;
+  /** Below 1 is slower, above is faster. */
+  readonly speed?: number;
+  readonly speakerBoost?: boolean;
+}
+
+/** Their field names, from the SDK's own serialisers rather than memory. */
+function settings(how?: Performance): Record<string, unknown> | undefined {
+  if (!how) return undefined;
+  const out: Record<string, unknown> = {};
+  if (typeof how.stability === 'number') out.stability = how.stability;
+  if (typeof how.similarity === 'number') out.similarity_boost = how.similarity;
+  if (typeof how.style === 'number') out.style = how.style;
+  if (typeof how.speed === 'number') out.speed = how.speed;
+  if (typeof how.speakerBoost === 'boolean') out.use_speaker_boost = how.speakerBoost;
+  return Object.keys(out).length ? out : undefined;
+}
+
 /** Reads a script aloud. Returns audio bytes, not JSON. */
 export async function speak(
   voiceId: string,
   text: string,
   modelId: string,
+  how?: Performance,
 ): Promise<{ ok: true; audio: ArrayBuffer } | Upstream> {
+  const voiceSettings = settings(how);
   const response = await fetch(
     `${BASE}/text-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`,
     {
       method: 'POST',
       headers: { 'xi-api-key': key(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, model_id: modelId }),
+      body: JSON.stringify({
+        text,
+        model_id: modelId,
+        ...(voiceSettings ? { voice_settings: voiceSettings } : {}),
+      }),
     },
+  );
+  if (!response.ok) return complain(response);
+  return { ok: true, audio: await response.arrayBuffer() };
+}
+
+/**
+ * The same words, in a different voice: their speech-to-speech.
+ *
+ * A recording goes up and comes back performed by the chosen voice, with the
+ * timing and the phrasing of whoever actually said it. For a podcast that is
+ * the useful direction — a host who does not like the sound of their own
+ * voice keeps their delivery and loses their tone, and a story can be read by
+ * several people who are all one person.
+ *
+ * POST /v1/speech-to-speech/{voice_id}, multipart, `audio` alongside
+ * `model_id`, `voice_settings` and `remove_background_noise`. Read off the
+ * SDK's serialisers.
+ */
+export async function restage(
+  voiceId: string,
+  audio: Blob,
+  modelId: string,
+  how?: Performance,
+  removeNoise = false,
+): Promise<{ ok: true; audio: ArrayBuffer } | Upstream> {
+  const form = new FormData();
+  form.append('audio', audio, 'take.webm');
+  form.append('model_id', modelId);
+  const voiceSettings = settings(how);
+  if (voiceSettings) form.append('voice_settings', JSON.stringify(voiceSettings));
+  if (removeNoise) form.append('remove_background_noise', 'true');
+
+  const response = await fetch(
+    `${BASE}/speech-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`,
+    { method: 'POST', headers: { 'xi-api-key': key() }, body: form },
   );
   if (!response.ok) return complain(response);
   return { ok: true, audio: await response.arrayBuffer() };
@@ -166,4 +239,93 @@ export async function stockVoices(): Promise<StockVoice[]> {
     .filter((one) => one.category === 'premade' && one.voice_id && one.name)
     .map((one) => ({ id: one.voice_id as string, name: one.name as string }))
     .slice(0, 8);
+}
+
+/**
+ * A sound of your own: their music finetunes.
+ *
+ * Training takes a handful of finished tracks and comes back with a model that
+ * generates in that sound. It runs for five or ten minutes on their side, so
+ * nothing here waits for it — creating returns immediately with a status, and
+ * the screen asks again later.
+ *
+ * The wire names below are read from their own published package (the
+ * multipart fields are `name`, `primary_genre`, repeated `files` and `tags`,
+ * `visibility`, `model_id`), not from memory. Visibility is always private:
+ * a workspace finetune would be visible to every other person on this app's
+ * single ElevenLabs account, which is precisely what must not happen.
+ */
+export interface Finetune {
+  readonly id: string;
+  readonly name: string;
+  readonly genre: string;
+  /** pending | in_progress | completed | failed | blocked. */
+  readonly status: string;
+  /** 0 to 1. */
+  readonly progress: number;
+  /** Set when it failed or was blocked — copyright_violation among them. */
+  readonly why?: string;
+}
+
+/** Their shape, flattened to ours, so nothing downstream reads snake_case. */
+function toFinetune(row: Record<string, unknown>): Finetune {
+  return {
+    id: String(row.id ?? ''),
+    name: String(row.name ?? ''),
+    genre: String(row.primary_genre ?? ''),
+    status: String(row.status ?? 'pending'),
+    progress: typeof row.training_progress === 'number' ? row.training_progress : 0,
+    why: typeof row.failure_reason === 'string' ? row.failure_reason : undefined,
+  };
+}
+
+export async function createFinetune(
+  name: string,
+  genre: string,
+  files: readonly { blob: Blob; filename: string }[],
+  modelId: string,
+): Promise<{ ok: true; finetune: Finetune } | Upstream> {
+  const form = new FormData();
+  form.append('name', name);
+  form.append('primary_genre', genre);
+  for (const file of files) form.append('files', file.blob, file.filename);
+  form.append('visibility', 'private');
+  form.append('model_id', modelId);
+
+  const response = await fetch(`${BASE}/music/finetunes`, {
+    method: 'POST',
+    headers: { 'xi-api-key': key() },
+    body: form,
+  });
+  if (!response.ok) return complain(response);
+
+  const data = (await response.json()) as Record<string, unknown>;
+  if (!data.id) {
+    return { ok: false, status: 502, message: 'The music service answered without a finetune id.' };
+  }
+  return { ok: true, finetune: toFinetune(data) };
+}
+
+/**
+ * Where one has got to.
+ *
+ * Asked one at a time rather than listing everything: the list on their side
+ * is every finetune on the app's account, and walking it to find one person's
+ * is both slower and a way to hand somebody a row that is not theirs.
+ */
+export async function finetuneStatus(id: string): Promise<Finetune | null> {
+  const response = await fetch(`${BASE}/music/finetunes/${encodeURIComponent(id)}`, {
+    headers: { 'xi-api-key': key() },
+  });
+  if (!response.ok) return null;
+  return toFinetune((await response.json()) as Record<string, unknown>);
+}
+
+/** Removes a finetune from the account, for when somebody deletes theirs. */
+export async function dropFinetune(id: string): Promise<boolean> {
+  const response = await fetch(`${BASE}/music/finetunes/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { 'xi-api-key': key() },
+  });
+  return response.ok;
 }

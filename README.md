@@ -62,6 +62,64 @@ Under Authentication → Providers you decide whether new accounts have to confi
 their email address first. Leaving that on is the safer default; the app handles
 both and tells you which one happened.
 
+## Setting up the paid side
+
+Three things, in this order. Each is done once, and none of them can live in
+this repository — they are facts about your Supabase project and your Paystack
+account.
+
+**1. The tables.** In the Supabase SQL editor, run these in order. Each is safe
+to run again, so if you are not sure whether one has been run, run it.
+
+| File | What it adds |
+| --- | --- |
+| [`supabase/schema.sql`](supabase/schema.sql) | Tracks, storage, the base policies. The one everything else assumes. |
+| [`supabase/usage.sql`](supabase/usage.sql) | Memberships, purchases, and the counting the free tier rests on. |
+| [`supabase/subscriptions.sql`](supabase/subscriptions.sql) | The Paystack handles behind a membership, so a renewal can be recognised and a cancellation can be sent. |
+| [`supabase/finetunes.sql`](supabase/finetunes.sql) | A sound of your own, trained on your own songs. |
+
+The others — `podcast.sql`, `arena.sql`, `radar.sql`, `events.sql`,
+`abuse.sql`, `collab.sql`, `presence.sql` — turn on the features they are named
+for and can be run whenever you want those.
+
+**2. The Paystack plans.** A membership is a subscription, and a subscription
+needs a plan on Paystack's side. Create all three at once:
+
+```
+PAYSTACK_SECRET_KEY=sk_test_xxx node scripts/paystack-plans.mjs
+```
+
+It reads the prices out of `plans.ts` — the same table the pricing cards show
+and the checkout charges from, so the plans cannot be created at an amount the
+app never quoted — and prints three codes. Put them in `.env.local` and in your
+host's environment settings as `PAYSTACK_PLAN_MAKER`, `PAYSTACK_PLAN_STUDIO`
+and `PAYSTACK_PLAN_LABEL`.
+
+Test-mode plans only work with test-mode payments. When you swap
+`PAYSTACK_SECRET_KEY` for a live key, run the script again and swap the three
+codes too.
+
+Paystack also needs to know where to tell you about renewals: under Settings →
+API Keys & Webhooks, set the webhook URL to `https://your-domain/api/payments/webhook`.
+That endpoint is the only place a payment is ever recorded — the browser cannot
+do it, which is the point.
+
+Without any of this the app still sells plans, as a single month's charge
+rather than a subscription. A missing environment variable should cost you a
+renewal, not the sale.
+
+**3. Google sign-in.** In the Supabase dashboard, under Authentication →
+Providers → Google, switch it on and paste a client ID and secret from a Google
+Cloud OAuth 2.0 client. Google's own console needs Supabase's callback address
+in that client's authorised redirect URIs — Supabase shows you the exact
+address on the same screen.
+
+Then, under Authentication → URL Configuration, add every address this app runs
+on to the redirect list: `http://localhost:3000` while you are working on it,
+and your real domain. The app sends people back to wherever they started rather
+than to a fixed address, so an address missing from that list is a sign-in that
+lands nowhere.
+
 ## How the pieces fit
 
 | Where | What it does |
@@ -86,3 +144,32 @@ Connecting a full generation engine is a contained job, and `app/lib/engines.ts`
 documents it. Suno has no public generation API, so the wrappers people pass
 around both break and breach its terms — ElevenLabs Music, Stability, Replicate
 and Runway do publish real ones.
+
+## Competitions, switched off
+
+The Arena — skill-judged competitions with a free entry route — is not in the
+app. It was taken out deliberately, not abandoned.
+
+Promotional competitions are regulated in South Africa under the Consumer
+Protection Act, and a paid entry raises the bar further: published terms,
+record-keeping, and rules about what may be asked of entrants. That is cheap
+to get right before the first entry and expensive to fix after it. So the
+whole surface is gone rather than hidden, and in particular **no payment path
+can reach it**: `/api/checkout` no longer prices an entry and the webhook no
+longer records one, so there is nothing to switch on by accident.
+
+What remains in the repository, for when it comes back:
+
+| Still here | Removed |
+| --- | --- |
+| `supabase/arena.sql` — competitions, entries, judging | `app/components/ArenaLive.tsx` |
+| `app/data/studio.ts` — the sample competitions and the generator | `app/api/arena/` |
+| `app/lib/matching.ts` — judging and the competition generator | The `entry` kind in checkout and the webhook |
+| | The Arena rail item and its screen |
+
+Bringing it back means restoring those files from git history, re-adding the
+`entry` kind to `Want` in `app/api/checkout/route.ts` and to the webhook's
+metadata, and putting the rail item back in `app/page.tsx`. The database side
+never went away, so nothing has to be migrated.
+
+Do the legal work first.

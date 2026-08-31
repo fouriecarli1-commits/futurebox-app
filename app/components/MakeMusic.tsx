@@ -36,10 +36,10 @@ import { AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
 import { STARTERS, VOICES, LENGTH_CHOICES, POLISH } from '../data/sound';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
-import { ONE_OFF } from '../lib/plans';
 import * as cloud from '../lib/cloud';
 import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } from '../lib/purchases';
 import { markBlob } from '../lib/watermark';
+import { loadSounds, NO_SOUNDS, type Sounds } from '../lib/sounds';
 
 export interface Canvas {
   title: string;
@@ -85,6 +85,15 @@ export default function MakeMusic({
   const [seconds, setSeconds] = useState(60);
   const [voice, setVoice] = useState(VOICES[1]);
   /**
+   * A sound of your own, trained in the channel on your own songs.
+   *
+   * Empty means the ordinary model. Only finished ones are ever offered — a
+   * finetune that is still training would be refused upstream, and a person
+   * watching a spinner does not need a second one.
+   */
+  const [sounds, setSounds] = useState<Sounds>(NO_SOUNDS);
+  const [ownSound, setOwnSound] = useState('');
+  /**
    * Ask for a backing track instead of a sung one, so you can sing it yourself.
    *
    * The words still go into the plan's section names, so the song keeps its
@@ -97,6 +106,12 @@ export default function MakeMusic({
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [busy, setBusy] = useState(false);
+
+  // Asked once. A trained sound is made in the channel, not here, so this
+  // screen only ever reads the list.
+  useEffect(() => {
+    loadSounds().then(setSounds);
+  }, []);
   /**
    * Seconds since the button was pressed.
    *
@@ -261,6 +276,7 @@ export default function MakeMusic({
             // "No vocal" has to mean no vocal. Leaving the style words empty
             // asked for nothing in particular and the engine sang anyway.
             instrumental: singItYourself || voice.id === 'none',
+            finetuneId: ownSound || undefined,
             onStage: setStage,
           });
           blob = result.blob;
@@ -268,7 +284,12 @@ export default function MakeMusic({
           // Said on the release, because a backing with no voice on it is a
           // different thing from a finished song and the channel should not
           // present them as the same.
-          models = singItYourself ? [result.model, 'Backing — no vocal'] : [result.model];
+          // A trained sound is part of what made the record, so it is named
+          // on the release like everything else that was.
+          const trained = sounds.mine.find((one) => one.id === ownSound);
+          models = [result.model]
+            .concat(singItYourself ? ['Backing — no vocal'] : [])
+            .concat(trained ? [`Trained on your own songs — ${trained.name}`] : []);
         } else {
           blob = encodeWav(renderSketch(spec));
         }
@@ -344,7 +365,7 @@ export default function MakeMusic({
         setStage(null);
       }
     },
-    [bpm, canvas.style, lyrics, onMade, seconds, singItYourself, songKey, styleText, t, title, tracks, userPlan, voice.id],
+    [bpm, canvas.style, lyrics, onMade, ownSound, seconds, singItYourself, songKey, sounds.mine, styleText, t, title, tracks, userPlan, voice.id],
   );
 
   const toggle = async (track: Track) => {
@@ -442,13 +463,6 @@ export default function MakeMusic({
       return;
     }
     setStatus(answer.message);
-  };
-
-  const buy = async (track: Track, kind: 'open' | 'keep') => {
-    setBuying(track.id);
-    const problem = await startCheckout({ kind, trackId: track.id });
-    setBuying(null);
-    if (problem) setStatus(problem);
   };
 
   const share = async (track: Track) => {
@@ -650,6 +664,60 @@ export default function MakeMusic({
           </div>
         </div>
 
+        {/* A sound of your own, if one has finished training in the channel.
+            Absent entirely when there is none — an empty picker explaining a
+            feature you do not have is a screen telling you off. */}
+        {sounds.mine.some((one) => one.status === 'completed') && (
+          <div>
+            <label className="text-sm text-zinc-400">{t('make.ownSound', 'Your own sound')}</label>
+            <p className="text-sm text-zinc-600 leading-snug pt-0.5">
+              {t(
+                'make.ownSoundNote',
+                'Trained in your channel on your own songs. This one is a real setting, not a direction in words — the engine generates in that sound.',
+              )}
+            </p>
+            <div className="grid sm:grid-cols-3 gap-2 mt-1.5">
+              <button
+                type="button"
+                onClick={() => setOwnSound('')}
+                className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                  ownSound === ''
+                    ? 'bg-emerald-500/15 border-emerald-500'
+                    : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
+                }`}
+              >
+                <span className={`block text-sm font-semibold ${ownSound === '' ? 'text-emerald-300' : 'text-zinc-200'}`}>
+                  {t('make.noOwnSound', 'The ordinary engine')}
+                </span>
+                <span className="block text-sm text-zinc-500 leading-snug pt-0.5">
+                  {t('make.noOwnSoundNote', 'Whatever the style words ask for.')}
+                </span>
+              </button>
+              {sounds.mine
+                .filter((one) => one.status === 'completed')
+                .map((one) => (
+                  <button
+                    key={one.id}
+                    type="button"
+                    onClick={() => setOwnSound(one.id)}
+                    className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                      ownSound === one.id
+                        ? 'bg-emerald-500/15 border-emerald-500'
+                        : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
+                    }`}
+                  >
+                    <span className={`block text-sm font-semibold ${ownSound === one.id ? 'text-emerald-300' : 'text-zinc-200'}`}>
+                      {one.name}
+                    </span>
+                    <span className="block text-sm text-zinc-500 leading-snug pt-0.5">
+                      {one.genre} · {one.tracks} {t('make.ownSoundSongs', 'of your songs')}
+                    </span>
+                  </button>
+                ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label className="text-sm text-zinc-400">{t('make.speed')} — {bpm} {t('make.bpm')}</label>
@@ -814,28 +882,6 @@ export default function MakeMusic({
                       nothing is offered the smaller step; somebody who opened
                       it is offered the one that makes it theirs; somebody who
                       owns it just gets the file. */}
-                  {levelOf(owned, track.id) === 'none' && (
-                    <button
-                      type="button"
-                      disabled={buying === track.id}
-                      onClick={() => buy(track, 'open')}
-                      className="px-3 py-1.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent flex items-center gap-1.5 disabled:opacity-60"
-                    >
-                      {buying === track.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                      {t('buy.open')} R{ONE_OFF.open.rand}
-                    </button>
-                  )}
-                  {levelOf(owned, track.id) === 'opened' && (
-                    <button
-                      type="button"
-                      disabled={buying === track.id}
-                      onClick={() => buy(track, 'keep')}
-                      className="px-3 py-1.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-400 to-amber-500 text-onAccent flex items-center gap-1.5 disabled:opacity-60"
-                    >
-                      {buying === track.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                      {t('buy.keep')} R{ONE_OFF.keep.rand}
-                    </button>
-                  )}
                   <button
                     type="button"
                     onClick={() => save(track)}

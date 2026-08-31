@@ -19,6 +19,8 @@
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { cloneVoice, configured, forgetVoice } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
+import { CREDITS } from '@/app/lib/credits';
+import { charge } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -87,8 +89,14 @@ export async function POST(request: Request): Promise<Response> {
   const name = String(form.get('name') ?? '').trim().slice(0, 60) || caller.email.split('@')[0];
   // Prefixed with the account, so the owner is visible from the ElevenLabs
   // dashboard too and a support question does not need this database.
+  const paid = await charge(request, CREDITS.clone, 'clone');
+  if (!paid.ok) return paid.response;
+
   const made = await cloneVoice(`${name} · ${caller.id.slice(0, 8)}`, sample);
-  if (!made.ok) return Response.json({ message: made.message }, { status: made.status });
+  if (!made.ok) {
+    await paid.refund();
+    return Response.json({ message: made.message }, { status: made.status });
+  }
 
   await client.from('voices').insert({ id: made.voiceId, owner: caller.id, name });
   return Response.json({ id: made.voiceId, name });

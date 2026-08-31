@@ -39,7 +39,7 @@ const ReplySchema = z.object({
       value: z
         .string()
         .describe(
-          'The title, the style, or the full lyric sheet. For go, one of: make, video, write, hooks, studio, arena, collab. Empty for none and generate.',
+          'The title, the style, or the full lyric sheet. For go, one of: make, video, write, hooks, studio, collab. Empty for none and generate.',
         ),
     })
     .describe('One action, or none. Never more than one.'),

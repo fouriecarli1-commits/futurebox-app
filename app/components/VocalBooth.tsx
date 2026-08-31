@@ -27,7 +27,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Ear, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
+import { Check, Circle, Ear, Layers, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
 import { decode, knownLatency, mixdown } from '../lib/mixdown';
 import { encodeWav } from '../lib/wav';
 import { accessToken } from '../lib/cloud';
@@ -46,6 +46,7 @@ import {
 } from '../lib/transcript';
 import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
+import ProBooth from './ProBooth';
 import { alignTo, fitInto, partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
 import { vocalSpanOf } from '../lib/vocalspan';
 import { phrasesOf } from '../lib/phrases';
@@ -158,6 +159,8 @@ export default function VocalBooth({
 
   // ── the desk ──────────────────────────────────────────────────────────────
   const [deskOpen, setDeskOpen] = useState(false);
+  /** The multitrack view, over this one. */
+  const [proOpen, setProOpen] = useState(false);
   const [guideLevel, setGuideLevel] = useState(0.7);
   const [backingLevel, setBackingLevel] = useState(0.85);
   const [takeLevel, setTakeLevel] = useState(1);
@@ -628,6 +631,10 @@ export default function VocalBooth({
 
       chunksRef.current = [];
       const recorder = new MediaRecorder(stream);
+      // A second at a time. Started without an interval, a MediaRecorder hands
+      // over the whole recording in one piece at the very end — so if that one
+      // event does not arrive, there is no take at all. This way the audio is
+      // already in hand before stop is ever pressed.
       recorder.ondataavailable = (event) => {
         if (event.data.size) chunksRef.current.push(event.data);
       };
@@ -635,7 +642,7 @@ export default function VocalBooth({
 
       // Recorder first, then the music, and the gap between them measured — it
       // is silence at the front of the recording and most of the alignment.
-      recorder.start();
+      recorder.start(1000);
       const began = performance.now();
       await element.play();
       withGuide(element.currentTime);
@@ -659,43 +666,76 @@ export default function VocalBooth({
       setPhase('idle');
       return;
     }
+    const gather = (): Blob => new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+
+    /**
+     * The recording, however it ends.
+     *
+     * `onstop` is the tidy way and it is not a promise anybody should stake a
+     * screen on: a recorder whose track has gone, or which errors on the way
+     * down, never fires it. Waiting on it alone is what left the booth stuck —
+     * the take never arrived, so "busy" never cleared, so neither the keep
+     * button nor the record button would do anything ever again. Three seconds
+     * and then take what has already been handed over, which since the change
+     * above is nearly all of it.
+     */
     const finished = new Promise<Blob>((resolve) => {
-      recorder.onstop = () => resolve(new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' }));
+      const done = (): void => resolve(gather());
+      recorder.onstop = done;
+      recorder.onerror = done;
+      window.setTimeout(done, 3000);
     });
-    recorder.stop();
+
+    try {
+      recorder.stop();
+    } catch {
+      // Already down. Whatever it handed over is still in hand.
+    }
     setPhase('idle');
     setBusy(true);
 
-    const raw = await finished;
-    const rate = backing?.sampleRate ?? 48_000;
-    const decoded = await decodeAt(raw, rate);
-    if (!decoded) {
-      setBusy(false);
+    // Everything from here can throw — decoding, stretching, splicing — and a
+    // throw that leaves `busy` set is a booth nobody can use again without
+    // reloading the page. So it clears in a finally, always.
+    try {
+      const raw = await finished;
+      const rate = backing?.sampleRate ?? 48_000;
+      const decoded = raw.size > 0 ? await decodeAt(raw, rate) : null;
+      if (!decoded) {
+        setProblem(t('take.unreadable', 'That recording could not be read back.'));
+        return;
+      }
+
+      /**
+       * A take sung against a slowed song is itself slow, so it is pulled back
+       * to speed before anything else touches it. After this it is on the
+       * song's clock like any other take, which is what keeps the rest of the
+       * screen — splicing, tuning, the waveform, the mix — from having to know
+       * about the speed control at all.
+       */
+      const wasAt = sungAtRef.current;
+      const piece = wasAt !== 1 ? (stretchBuffer(decoded, wasAt) ?? decoded) : decoded;
+
+      // Where this piece belongs on the song's clock: where recording started,
+      // pushed by the measured latency — which was measured in real seconds,
+      // and a real second is `wasAt` song seconds.
+      const landsAt = Math.max(0, punchAtRef.current + offset * wasAt);
+      // Spliced onto the untouched take, not onto a tuned one: tuning reads the
+      // whole thing at once, so it is re-run over the result rather than left
+      // half applied.
+      const joined = spliceTake(punchAtRef.current > 0 ? recorded : null, piece, landsAt, duration);
+      if (!joined) {
+        setProblem(t('take.unreadable', 'That recording could not be read back.'));
+        return;
+      }
+      setRecorded(joined);
+      setTuned(null);
+      setRegion(null);
+    } catch {
       setProblem(t('take.unreadable', 'That recording could not be read back.'));
-      return;
+    } finally {
+      setBusy(false);
     }
-
-    /**
-     * A take sung against a slowed song is itself slow, so it is pulled back
-     * to speed before anything else touches it. After this it is on the song's
-     * clock like any other take, which is what keeps the rest of the screen —
-     * splicing, tuning, the waveform, the mix — from having to know about the
-     * speed control at all.
-     */
-    const wasAt = sungAtRef.current;
-    const piece = wasAt !== 1 ? (stretchBuffer(decoded, wasAt) ?? decoded) : decoded;
-    setBusy(false);
-
-    // Where this piece belongs on the song's clock: where recording started,
-    // pushed by the measured latency — which was measured in real seconds, and
-    // a real second is `wasAt` song seconds.
-    const landsAt = Math.max(0, punchAtRef.current + offset * wasAt);
-    // Spliced onto the untouched take, not onto a tuned one: tuning reads the
-    // whole thing at once, so it is re-run over the result rather than left
-    // half applied.
-    setRecorded(spliceTake(punchAtRef.current > 0 ? recorded : null, piece, landsAt, duration));
-    setTuned(null);
-    setRegion(null);
   }, [backing, duration, hush, offset, recorded, t]);
 
   const play = useCallback(() => {
@@ -742,37 +782,49 @@ export default function VocalBooth({
     setProblem(null);
     setBusy(true);
     window.setTimeout(() => {
-      const chosen = inKey ? scale ?? undefined : undefined;
-      const done = tuneBuffer(recorded, { strength, scale: chosen });
-      setBusy(false);
-      if (!done) {
+      try {
+        const chosen = inKey ? scale ?? undefined : undefined;
+        const done = tuneBuffer(recorded, { strength, scale: chosen });
+        if (!done) {
+          setProblem(t('booth.tuneFailed', 'The take could not be tuned on this browser.'));
+          return;
+        }
+        setTuned(done);
+        setHearRaw(false);
+      } catch {
         setProblem(t('booth.tuneFailed', 'The take could not be tuned on this browser.'));
-        return;
+      } finally {
+        setBusy(false);
       }
-      setTuned(done);
-      setHearRaw(false);
     }, 30);
   }, [inKey, recorded, scale, strength, t]);
 
   const keep = useCallback(async () => {
     if (!backing || !take) return;
     setBusy(true);
-    const mixed = await mixdown({
-      music: backing,
-      take,
-      offset: nudge / 1000,
-      musicGain: backingLevel,
-      takeGain: takeLevel,
-      double: guideBuffer,
-      doubleGain: guideBuffer ? doubleLevel : 0,
-    });
-    setBusy(false);
-    if (!mixed) {
+    // In a finally, for the same reason as stopping: a throw in here used to
+    // leave the booth unusable until the page was reloaded.
+    try {
+      const mixed = await mixdown({
+        music: backing,
+        take,
+        offset: nudge / 1000,
+        musicGain: backingLevel,
+        takeGain: takeLevel,
+        double: guideBuffer,
+        doubleGain: guideBuffer ? doubleLevel : 0,
+      });
+      if (!mixed) {
+        setProblem(t('take.mixFailed', 'The mix could not be made.'));
+        return;
+      }
+      // The take goes with it, so this mix can be opened up and changed again.
+      await onKeep(mixed, guideBuffer !== null && doubleLevel > 0, encodeWav(take));
+    } catch {
       setProblem(t('take.mixFailed', 'The mix could not be made.'));
-      return;
+    } finally {
+      setBusy(false);
     }
-    // The take goes with it, so this mix can be opened up and changed again.
-    await onKeep(mixed, guideBuffer !== null && doubleLevel > 0, encodeWav(take));
   }, [backing, backingLevel, doubleLevel, guideBuffer, nudge, onKeep, t, take, takeLevel]);
 
   /**
@@ -825,14 +877,19 @@ export default function VocalBooth({
   const split = useCallback(async () => {
     setProblem(null);
     setSplitting(true);
-    const result = await separate(track.id, music, duration || track.seconds || 0);
-    setSplitting(false);
-    if (failed(result)) {
-      setProblem(result.message);
-      return;
+    try {
+      const result = await separate(track.id, music, duration || track.seconds || 0);
+      if (failed(result)) {
+        setProblem(result.message);
+        return;
+      }
+      setStems(result);
+      onSplit?.();
+    } catch {
+      setProblem('The voice could not be separated. Try again in a moment.');
+    } finally {
+      setSplitting(false);
     }
-    setStems(result);
-    onSplit?.();
   }, [duration, music, onSplit, track.id, track.seconds]);
 
   /**
@@ -844,15 +901,20 @@ export default function VocalBooth({
   const readWords = useCallback(async () => {
     setProblem(null);
     setReading(true);
-    const result = await transcribe(track.id, stems?.vocals ?? music, duration || track.seconds || 0);
-    setReading(false);
-    if (heardFailed(result)) {
-      setProblem(result.message);
-      return;
+    try {
+      const result = await transcribe(track.id, stems?.vocals ?? music, duration || track.seconds || 0);
+      if (heardFailed(result)) {
+        setProblem(result.message);
+        return;
+      }
+      setHeard(result);
+      setPreferWritten(false);
+      setWordsShift(0);
+    } catch {
+      setProblem('The words could not be read off the song. Try again in a moment.');
+    } finally {
+      setReading(false);
     }
-    setHeard(result);
-    setPreferWritten(false);
-    setWordsShift(0);
   }, [duration, music, stems, track.id, track.seconds]);
 
   const seconds = (event: React.MouseEvent<HTMLCanvasElement>): number => {
@@ -861,6 +923,17 @@ export default function VocalBooth({
   };
 
   const busyOrLive = phase === 'recording' || phase === 'counting';
+
+  if (proOpen) {
+    return (
+      <ProBooth
+        title={track.title}
+        backing={backing}
+        onKeep={(mixed) => onKeep(mixed, guideBuffer !== null && doubleLevel > 0, take ? encodeWav(take) : mixed)}
+        onClose={() => setProOpen(false)}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col">
@@ -1455,6 +1528,15 @@ export default function VocalBooth({
                 plays and the words move with it. Calling that "listen back"
                 describes something else. */}
             {take ? t('booth.listen', 'Listen back') : t('booth.playAlong', 'Play it and follow the words')}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setProOpen(true)}
+            className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5"
+          >
+            <Layers className="w-4 h-4" />
+            {t('booth.pro', 'Pro')}
           </button>
 
           <button

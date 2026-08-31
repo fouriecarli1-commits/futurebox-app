@@ -18,8 +18,10 @@
  * service in this app.
  */
 
-import { ONE_OFF, TIER_SPECS, type Tier } from '@/app/lib/plans';
+import { TIER_SPECS, type Tier } from '@/app/lib/plans';
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { planCode } from '@/app/lib/server/paystack';
+import { packById } from '@/app/lib/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,28 +31,16 @@ const PAYSTACK = 'https://api.paystack.co/transaction/initialize';
 
 /** What can be bought, and what it costs. Decided here, in rand. */
 type Want =
-  | { kind: 'open'; trackId: string }
-  | { kind: 'keep'; trackId: string }
   | { kind: 'plan'; tier: Tier }
-  | { kind: 'entry'; competitionId: string };
+  | { kind: 'credits'; pack: string };
 
 async function priceOf(want: Want): Promise<{ cents: number; label: string } | null> {
-  if (want.kind === 'open') return { cents: ONE_OFF.open.rand * 100, label: ONE_OFF.open.label };
-  if (want.kind === 'keep') return { cents: ONE_OFF.keep.rand * 100, label: ONE_OFF.keep.label };
-  if (want.kind === 'entry') {
-    // An entry fee is whatever that competition says it is, read from the
-    // database. Taking it from the request would let a page enter a R500
-    // competition for a rand.
-    const client = admin();
-    if (!client) return null;
-    const { data } = await client
-      .from('competitions')
-      .select('title, entry_rand, status, closes_at')
-      .eq('id', want.competitionId)
-      .maybeSingle();
-    if (!data || data.status !== 'open' || data.entry_rand <= 0) return null;
-    if (new Date(data.closes_at) < new Date()) return null;
-    return { cents: data.entry_rand * 100, label: `Entry — ${data.title}` };
+  if (want.kind === 'credits') {
+    // The pack's price comes from the same table the panel showed, never from
+    // the request. A page that can name its own price eventually will.
+    const pack = packById(want.pack);
+    if (!pack) return null;
+    return { cents: pack.rand * 100, label: `${pack.credits} credits` };
   }
   const spec = TIER_SPECS[want.tier];
   if (!spec || spec.rand === 0) return null;
@@ -102,14 +92,23 @@ export async function POST(request: Request): Promise<Response> {
         amount: price.cents,
         currency: 'ZAR',
         callback_url: `${origin}/?paid=1`,
+        // A plan turns this checkout into a subscription: Paystack charges it
+        // now and again every month until it is cancelled. Sent only when the
+        // account actually has a plan set up for that tier — without one the
+        // charge still goes through, as a single month, which is what this
+        // app did before subscriptions existed.
+        ...(want.kind === 'plan' && planCode(want.tier)
+          ? { plan: planCode(want.tier) }
+          : {}),
         // Read back verbatim by the webhook. This is what ties a payment to a
         // person and a track; without it a successful charge has nowhere to go.
         metadata: {
           owner: caller.id,
           kind: want.kind,
-          trackId: want.kind === 'open' || want.kind === 'keep' ? want.trackId : null,
           tier: want.kind === 'plan' ? want.tier : null,
-          competitionId: want.kind === 'entry' ? want.competitionId : null,
+          // The pack's name, not its size: the webhook looks the credits up
+          // for itself, so a tampered checkout cannot buy a thousand for R99.
+          pack: want.kind === 'credits' ? want.pack : null,
           label: price.label,
         },
       }),

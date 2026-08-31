@@ -20,8 +20,6 @@ import CollabRadar from './components/CollabRadar';
 import CollabFinder from './components/CollabFinder';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
-import Spend from './components/Spend';
-import ArenaLive from './components/ArenaLive';
 import SongSections from './components/SongSections';
 import { guessRegion, priceFor, REGIONS, regionByCode, type Region } from './lib/pricing';
 import ThemeStudio from './components/ThemeStudio';
@@ -41,13 +39,19 @@ import { signal } from './lib/signal';
 import { TRACK_LABELS } from './data/masterclasses';
 import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
+import Spotlight from './components/Spotlight';
 import HereNow from './components/HereNow';
 import LanguagePicker from './components/LanguagePicker';
+import Balance from './components/Balance';
+import OutOfCredits from './components/OutOfCredits';
+import { PACKS } from './lib/credits';
+import type { Short } from './lib/wallet';
+import type { Pack } from './lib/credits';
 import { useLang } from './lib/i18n';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
 import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
 import * as cloud from './lib/cloud';
-import { TIER_SPECS, ONE_OFF, SPONSORSHIP, sponsorshipBand, tierPrice, oneOffPrice } from './lib/plans';
+import { TIER_SPECS, TIERS, SPONSORSHIP, sponsorshipBand, tierPrice } from './lib/plans';
 import { startCheckout, loadOwned } from './lib/purchases';
 
 interface Blueprint {
@@ -141,6 +145,17 @@ export default function FutureBoxHome() {
 
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  /**
+   * What is left to spend, and the panel that opens when it runs out.
+   *
+   * `spent` is bumped by anything that costs, so the number in the header
+   * follows without every screen having to know about the header. `short` is
+   * set only from a route's own refusal — the panel never opens on a guess.
+   */
+  const [spent, setSpent] = useState(0);
+  const [short, setShort] = useState<Short | null>(null);
+  const [packs, setPacks] = useState<readonly Pack[]>(PACKS);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
@@ -148,6 +163,22 @@ export default function FutureBoxHome() {
   const [authPassword, setAuthPassword] = useState('');
   const [userPlan, setUserPlan] = useState<Plan>('free');
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
+  /**
+   * Whether a payment can actually be started.
+   *
+   * The subtitle used to say "no payment provider is connected" whatever was
+   * true, which was right for months and became a lie the day Paystack went
+   * in — on the one screen where a person is deciding whether to trust us with
+   * a card. Asked now, not assumed.
+   */
+  const [canCharge, setCanCharge] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!pricingModalOpen || canCharge !== null) return;
+    fetch('/api/checkout')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setCanCharge(Boolean(d?.available)))
+      .catch(() => setCanCharge(false));
+  }, [pricingModalOpen, canCharge]);
   // Resolved after mount: guessing during render would bake one country's
   // prices into the static HTML that everybody is served.
   const [region, setRegion] = useState<Region>(REGIONS[0]);
@@ -244,7 +275,7 @@ export default function FutureBoxHome() {
    * already is, so a second screen for it was the same job behind a second
    * button.
    */
-  const [studioTab, setStudioTab] = useState<'video' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio' | 'make' | 'podcast'>('make');
+  const [studioTab, setStudioTab] = useState<'video' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'podcast'>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -627,6 +658,29 @@ export default function FutureBoxHome() {
     setAuthModalOpen(false);
   };
 
+  /**
+   * Signing in with Google.
+   *
+   * This leaves the page, so there is nothing to await and no modal to close:
+   * the browser goes to Google and comes back with a session already in place.
+   * The only thing that can fail here fails before the redirect — Google not
+   * switched on in the Supabase project — and that message is worth showing
+   * rather than a silent button.
+   */
+  const handleGoogle = async () => {
+    setAuthError(null);
+    if (!cloud.configured()) {
+      setAuthError(t('auth.noAccounts', 'Accounts are not switched on for this app yet.'));
+      setAuthModalOpen(true);
+      return;
+    }
+    const result = await cloud.signInWithGoogle();
+    if (!result.ok) {
+      setAuthError(result.message);
+      setAuthModalOpen(true);
+    }
+  };
+
   const handleSignOut = async () => {
     await cloud.signOut();
     setUser(null);
@@ -676,6 +730,7 @@ export default function FutureBoxHome() {
       <>
         <Landing
           onStart={() => openAuth('signup')}
+          onGoogle={() => void handleGoogle()}
         />
 
         {/* The auth and pricing overlays are shared with the signed-in app. */}
@@ -689,6 +744,29 @@ export default function FutureBoxHome() {
                 <button onClick={() => setAuthModalOpen(false)} className="text-zinc-500 hover:text-white">
                   <X className="w-5 h-5" />
                 </button>
+              </div>
+              {/* Above the form, not below it: for most people this is the
+                  whole sign-in, and burying it under two fields makes them
+                  invent a password they will have to reset. */}
+              <button
+                type="button"
+                onClick={() => void handleGoogle()}
+                className="w-full py-3 rounded-xl bg-white text-zinc-900 font-bold text-sm flex items-center justify-center gap-2.5 hover:opacity-90"
+              >
+                <svg viewBox="0 0 48 48" className="w-4 h-4" aria-hidden="true">
+                  <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.6 9.5 24 9.5z" />
+                  <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.1 5.5c4.2-3.8 6.6-9.5 6.6-16.2z" />
+                  <path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.8-6.1C1 17 0 20.4 0 24s1 7 2.6 10.1l7.8-5.4z" />
+                  <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.1-5.5c-2 1.3-4.5 2.1-8.8 2.1-6.4 0-11.7-3.7-13.6-9.1l-7.8 5.4C6.5 42.6 14.6 48 24 48z" />
+                </svg>
+                {t('welcome.google', 'Continue with Google')}
+              </button>
+              <div className="flex items-center gap-3">
+                <span className="h-px flex-1 bg-zinc-800" />
+                <span className="text-xs text-zinc-600 uppercase tracking-wider">
+                  {t('auth.or', 'or')}
+                </span>
+                <span className="h-px flex-1 bg-zinc-800" />
               </div>
               <form onSubmit={handleAuthSubmit} className="space-y-3">
                 <input
@@ -850,6 +928,16 @@ export default function FutureBoxHome() {
             </span>
           )}
 
+          <Balance
+            reloadKey={spent}
+            onTopUp={(wallet) => {
+              setPacks(wallet.packs);
+              // Opened from the balance rather than from a refusal, so nothing
+              // is actually short. Zero and zero reads as "nothing missing".
+              setShort({ need: 0, balance: wallet.balance, message: '' });
+            }}
+          />
+
           <LanguagePicker compact />
 
           <button
@@ -954,6 +1042,28 @@ export default function FutureBoxHome() {
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-14 flex-1 w-full">
         
+        {/*
+          What this place is, before anything else on the page.
+
+          Somebody arriving here has about a second to work out what they can
+          do, and a feed of picks does not tell them. So: what they will walk
+          away with, then the four things this app does that the other ones do
+          not, then a door into each.
+
+          Every claim below is a thing that is actually built. A landing page
+          that promises a feature is a landing page that gets found out on the
+          second click, and this one is the first thing anybody sees.
+        */}
+        {activeTab === 'all' && (
+          <Spotlight
+            onGo={(tab) => {
+              setUploadModalOpen(true);
+              setStudioTab(tab);
+            }}
+            onAppearance={() => setThemeOpen(true)}
+          />
+        )}
+
         {/* 🟢 REGENERATION & AI TRENDS RADAR BANNER */}
         <section className="bg-gradient-to-r from-zinc-900 via-zinc-900/80 to-zinc-950 border border-zinc-800 p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
           <div className="flex items-center space-x-3 text-xs">
@@ -976,12 +1086,17 @@ export default function FutureBoxHome() {
           </button>
         </section>
 
-        {/* The counters. Real numbers or nothing — see components/Counters.tsx. */}
-        {activeTab === 'all' && <Counters board={board} scope="all" />}
+        {/*
+          Spotlight carries no counters and no bill.
 
-        {/* What the engine costs. Renders for nobody but the owner — the route
-            answers with nothing at all to anybody else. */}
-        {activeTab === 'all' && <Spend />}
+          The numbers are real and they are also small, because the site is
+          new, and a board of small numbers on the first screen says "nobody is
+          here" louder than it says anything else. They go back up when there
+          is traffic to report — the table keeps counting in the meantime, so
+          nothing is lost by waiting. The engine's running cost was on here
+          too; it is the owner's business and not the first thing a visitor
+          should meet. Both still live on their own pages.
+        */}
 
         {/* 🎬 1. FEATURED SPOTLIGHT */}
         {(activeTab === 'all') && (
@@ -1595,40 +1710,20 @@ export default function FutureBoxHome() {
             <div className="flex items-start justify-between border-b border-zinc-800 pb-4">
               <div>
                 <h3 className="font-extrabold text-lg text-white">{t('pay.title')}</h3>
-                <p className="text-sm text-zinc-400 pt-1">{t('pay.sub')}</p>
+                <p className="text-sm text-zinc-400 pt-1">
+                  {canCharge === false ? t('pay.sub') : t('pay.subLive', 'A month at a time. Cancel from inside the app whenever you like.')}
+                </p>
               </div>
               <button onClick={() => setPricingModalOpen(false)} className="text-zinc-400 hover:text-white flex-shrink-0">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Buy one song, for anyone who will never subscribe. Two steps,
-                because opening the whole thing is a much smaller decision than
-                keeping it, and the first payment makes the second one easy. */}
-            <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4 space-y-3">
-              <p className="text-sm font-bold text-white">{t('pay.oneOff')}</p>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
-                  <p className="text-2xl font-black text-white">
-                    {oneOffPrice(ONE_OFF.open.rand, region).display}
-                  </p>
-                  <p className="text-sm font-semibold text-zinc-200 pt-0.5">{t('pay.open')}</p>
-                  <p className="text-sm text-zinc-500 pt-1 leading-relaxed">{t('pay.openNote')}</p>
-                </div>
-                <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3">
-                  <p className="text-2xl font-black text-white">
-                    {oneOffPrice(ONE_OFF.keep.rand, region).display}
-                  </p>
-                  <p className="text-sm font-semibold text-emerald-300 pt-0.5">{t('pay.keep')}</p>
-                  <p className="text-sm text-zinc-400 pt-1 leading-relaxed">{t('pay.keepNote')}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* The monthly tiers, rendered from the same table the caps come
-                from, so the sales copy cannot drift from what the code allows. */}
-            <div className="grid md:grid-cols-3 gap-3">
-              {(['maker', 'studio', 'label'] as const).map((id) => {
+            {/* Every tier, free included. Leaving free off this screen made an
+                upgrade look like the only way to use the app, and left the
+                person on it with no idea what they already had. */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {TIERS.map((id) => {
                 const spec = TIER_SPECS[id];
                 const current = userPlan === id;
                 const featured = id === 'studio';
@@ -1649,7 +1744,7 @@ export default function FutureBoxHome() {
                         )}
                       </div>
                       <p className="text-3xl font-black text-white pt-1">{tierPrice(id, region).display}</p>
-                      <p className="text-sm text-zinc-500">{t('pay.perMonth')}</p>
+                      {spec.rand > 0 && <p className="text-sm text-zinc-500">{t('pay.perMonth')}</p>}
                       <p className="text-sm text-zinc-400 pt-2 leading-relaxed">{spec.who}</p>
                     </div>
                     <ul className="space-y-1.5 flex-1">
@@ -1662,8 +1757,11 @@ export default function FutureBoxHome() {
                     </ul>
                     <button
                       type="button"
-                      disabled={current || planBusy !== null}
+                      // Free is not something anybody buys, so its button never
+                      // starts a checkout — it only ever says where you are.
+                      disabled={current || id === 'free' || planBusy !== null}
                       onClick={async () => {
+                        if (id === 'free') return;
                         // The server reads the tier from the memberships table,
                         // so flipping it in the browser would show an upgrade
                         // that nothing behind the page believes in. Either this
@@ -1679,7 +1777,13 @@ export default function FutureBoxHome() {
                           : 'bg-zinc-800 text-white hover:bg-zinc-700'
                       }`}
                     >
-                      {current ? t('pay.current') : planBusy === id ? t('pay.starting') : t('pay.choose')}
+                      {current
+                        ? t('pay.current')
+                        : id === 'free'
+                          ? t('pay.freeAlways', 'Always free')
+                          : planBusy === id
+                            ? t('pay.starting')
+                            : t('pay.choose')}
                     </button>
                   </div>
                 );
@@ -1695,6 +1799,9 @@ export default function FutureBoxHome() {
           </div>
         </div>
       )}
+
+      {/* The packs, at the only moment they are ever shown. */}
+      <OutOfCredits short={short} packs={packs} onClose={() => setShort(null)} />
 
       {/* 🚀 CREATOR STUDIO & AI MUSIC HUB (WITH MASTER GENRE SOUNDBOARD, VOICE STUDIO & DIRECTOR) */}
       {uploadModalOpen && (
@@ -1744,7 +1851,6 @@ export default function FutureBoxHome() {
                   { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
                   { id: 'channels', label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
                   { id: 'collab', label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
-                  { id: 'arena', label: t('rail.arena'), hint: t('rail.arena.hint'), icon: Trophy },
                   { id: 'podcast', label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
                 ].map((tab) => {
                   const Icon = tab.icon;
@@ -1804,7 +1910,9 @@ export default function FutureBoxHome() {
               />
             )}
 
-            {studioTab === 'channels' && <Channel reloadKey={trackCount} />}
+            {studioTab === 'channels' && (
+              <Channel reloadKey={trackCount} onUpgrade={() => setPricingModalOpen(true)} />
+            )}
             {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
 
             {/* STUDIO: your own song, in its own sections, over its own audio */}
@@ -1835,8 +1943,6 @@ export default function FutureBoxHome() {
               </div>
             )}
 
-            {/* TAB 6: THE ARENA (SKILL-JUDGED COMPETITIONS WITH A FREE ENTRY ROUTE) */}
-            {studioTab === 'arena' && <ArenaLive reloadKey={trackCount} />}
 
 
               </div>
@@ -1862,7 +1968,7 @@ export default function FutureBoxHome() {
                       setMakeSignal((n) => n + 1);
                     }
                     if (action.kind === 'go') {
-                      const allowed = ['make', 'video', 'podcast', 'hooks_feed', 'studio', 'arena', 'collab'];
+                      const allowed = ['make', 'video', 'podcast', 'hooks_feed', 'studio', 'collab'];
                       const tab = action.value === 'hooks' ? 'hooks_feed' : action.value;
                       // The model names a screen; only a real one is honoured.
                       if (allowed.indexOf(tab) !== -1) setStudioTab(tab as typeof studioTab);

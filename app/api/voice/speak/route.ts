@@ -12,8 +12,10 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
-import { configured, speak, stockVoices } from '@/app/lib/server/eleven';
+import { configured, speak, stockVoices, type Performance } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
+import { readCost } from '@/app/lib/credits';
+import { charge } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,12 +31,52 @@ const MODELS: Record<string, string> = {
   wide: 'eleven_v3',
 };
 
+/**
+ * The performance dials, clamped here rather than trusted.
+ *
+ * They arrive from a browser, and a browser can send anything. Out-of-range
+ * numbers are a 422 from upstream and a confusing message for somebody who
+ * only moved a slider, so they are brought into range instead.
+ */
+function performance(how?: {
+  stability?: number;
+  similarity?: number;
+  style?: number;
+  speed?: number;
+  speakerBoost?: boolean;
+}): Performance | undefined {
+  if (!how) return undefined;
+  const within = (value: unknown, low: number, high: number): number | undefined =>
+    typeof value === 'number' && Number.isFinite(value)
+      ? Math.min(high, Math.max(low, value))
+      : undefined;
+  return {
+    stability: within(how.stability, 0, 1),
+    similarity: within(how.similarity, 0, 1),
+    style: within(how.style, 0, 1),
+    speed: within(how.speed, 0.7, 1.2),
+    speakerBoost: typeof how.speakerBoost === 'boolean' ? how.speakerBoost : undefined,
+  };
+}
+
 export async function POST(request: Request): Promise<Response> {
   if (!configured()) {
     return Response.json({ message: 'Voices are not switched on for this app yet.' }, { status: 503 });
   }
 
-  let body: { voiceId?: string; text?: string; model?: string };
+  let body: {
+    voiceId?: string;
+    text?: string;
+    model?: string;
+    /** How it should be read, rather than who reads it. */
+    how?: {
+      stability?: number;
+      similarity?: number;
+      style?: number;
+      speed?: number;
+      speakerBoost?: boolean;
+    };
+  };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -104,8 +146,21 @@ export async function POST(request: Request): Promise<Response> {
     voiceId = stock[0].id;
   }
 
-  const read = await speak(voiceId, text, MODELS[String(body.model ?? 'steady')] ?? MODELS.steady);
-  if (!read.ok) return Response.json({ message: read.message }, { status: read.status });
+  // A long episode is a real bill rather than a rounding error, so this is
+  // charged by the character rather than per reading.
+  const paid = await charge(request, readCost(text.length), 'read');
+  if (!paid.ok) return paid.response;
+
+  const read = await speak(
+    voiceId,
+    text,
+    MODELS[String(body.model ?? 'steady')] ?? MODELS.steady,
+    performance(body.how),
+  );
+  if (!read.ok) {
+    await paid.refund();
+    return Response.json({ message: read.message }, { status: read.status });
+  }
 
   // Recorded after it worked, so a failure never counts against the day.
   if (caller && client) {

@@ -22,6 +22,8 @@
  */
 
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
+import { CREDITS } from '@/app/lib/credits';
+import { charge } from '@/app/lib/server/credits';
 import { pick, unzip } from '@/app/lib/server/zip';
 
 export const runtime = 'nodejs';
@@ -108,6 +110,9 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
+  const paid = await charge(request, CREDITS.stems, 'stems');
+  if (!paid.ok) return paid.response;
+
   const outgoing = new FormData();
   outgoing.append('file', file, 'song.mp3');
   outgoing.append('stem_variation_id', VARIATION);
@@ -120,6 +125,7 @@ export async function POST(request: Request): Promise<Response> {
       body: outgoing,
     });
   } catch {
+    await paid.refund();
     return Response.json(
       { error: 'unreachable', message: 'Could not reach the music service. Try again in a moment.' },
       { status: 502 },
@@ -127,6 +133,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (!upstream.ok) {
+    await paid.refund();
     const raw = await upstream.text().catch(() => '');
     let theirs = '';
     try {
