@@ -1914,7 +1914,11 @@ export default function FutureBoxHome() {
             )}
 
             {studioTab === 'channels' && (
-              <Channel reloadKey={trackCount} onUpgrade={() => setPricingModalOpen(true)} />
+              <Channel
+                reloadKey={trackCount}
+                onUpgrade={() => setPricingModalOpen(true)}
+                email={user?.email}
+              />
             )}
             {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
 
@@ -2249,15 +2253,10 @@ export default function FutureBoxHome() {
 
         <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
           <p>© 2026 FutureBox Platform. All rights reserved.</p>
-          {/* These were three plain spans — words that looked like policies and
-              led nowhere. A dead link is worse than a missing one: it says the
-              document exists. Privacy is real now; the other two are not
-              written yet and so are not pretended at. */}
-          <div className="flex space-x-6">
-            <a href="/privacy" className="hover:text-zinc-300 underline underline-offset-4">
-              {t('feed.privacy')}
-            </a>
-          </div>
+          {/* These were three plain spans — words that looked like policies
+              and led nowhere. Privacy and Terms are real documents now and are
+              linked from the site footer just below, once, rather than from
+              every page's own footer. */}
         </div>
       </footer>
 

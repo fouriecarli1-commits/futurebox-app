@@ -11,6 +11,14 @@
  * The assessment behind it is point-in-time and scope-limited. That sentence
  * is carried in the image's alt text, where a screen reader will read it and
  * where it travels with the mark if the image is ever quoted elsewhere.
+ *
+ * The two policy links live here rather than in each page's own footer, which
+ * is what makes them reachable from the policy pages themselves and from
+ * anywhere somebody lands without signing in. An outside assessment found no
+ * way to reach a policy from the front door; this is that way, and there is
+ * one of it. Plain <a> and plain English: this is a server component, so it
+ * cannot read the language context, and a link a reader cannot find because
+ * the translation failed is worse than an English word they can.
  */
 export function SiteFooter() {
   const year = new Date().getFullYear();
@@ -18,7 +26,17 @@ export function SiteFooter() {
   return (
     <footer className="mt-24 border-t border-zinc-800/80">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 py-10 text-sm text-zinc-400 sm:flex-row sm:justify-between">
-        <p>© {year} FutureBox. All rights reserved.</p>
+        <div className="flex flex-col items-center gap-2 sm:items-start">
+          <p>© {year} FutureBox. All rights reserved.</p>
+          <nav className="flex gap-5">
+            <a href="/privacy" className="underline underline-offset-4 hover:text-zinc-200">
+              Privacy
+            </a>
+            <a href="/terms" className="underline underline-offset-4 hover:text-zinc-200">
+              Terms
+            </a>
+          </nav>
+        </div>
 
         <a
           href="https://vibefy-web-lyart.vercel.app/a/futurebox-app-afed88"

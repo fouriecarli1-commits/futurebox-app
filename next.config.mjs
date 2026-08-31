@@ -19,6 +19,8 @@
  *   img.youtube.com    thumbnails for real lectures, in Cover
  *   youtube.com        the embedded player for those lectures
  *   images.unsplash.com, assets.mixkit.co   sample imagery and audio
+ *   vibefy-web-lyart.vercel.app  the VibefyCode badge in the footer, which
+ *                      is deliberately served live rather than copied here
  *   blob:, data:       generated audio and artwork, made in the page itself
  *
  * `'unsafe-inline'` is on styles because Next inlines critical CSS, and on
@@ -40,7 +42,7 @@ const CSP = [
   "object-src 'none'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data: https://*.supabase.co https://img.youtube.com https://i.ytimg.com https://images.unsplash.com",
+  "img-src 'self' blob: data: https://*.supabase.co https://img.youtube.com https://i.ytimg.com https://images.unsplash.com https://vibefy-web-lyart.vercel.app",
   "media-src 'self' blob: data: https://*.supabase.co https://assets.mixkit.co",
   "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
