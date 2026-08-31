@@ -19,9 +19,7 @@
  */
 
 import { admin, callerFrom, metered, type Caller } from './account';
-import {
-  budgetFor, capFor, FREE_WEEKLY, monthKey, TIER_CREDITS, weekKey,
-} from '@/app/lib/credits';
+import { budgetFor, capFor, monthKey, TIER_CREDITS } from '@/app/lib/credits';
 
 /**
  * What is left, or null when the question could not be asked.
@@ -104,26 +102,22 @@ export async function topUp(owner: string, credits: number, reference: string): 
 /**
  * Hand over whatever this account is owed, then say what it has.
  *
- * Two grants can be due. The monthly one, on every tier. And on free only, a
- * weekly refill — a reason to come back that can never lift somebody above the
- * month they were already going to get, because the cap is the monthly
- * allowance itself.
+ * One grant, once a month, on every tier. The budget makes calling it twice
+ * harmless, which matters because this runs on every visit rather than from a
+ * clock.
  */
 export async function settle(caller: Caller): Promise<number | null> {
   const client = admin();
   if (!client) return null;
 
   const cap = capFor(caller.tier);
-  // What may be handed over this month across every grant. Without it the
-  // weekly refill below is not a delivery of the allowance, it is a second one.
+  // What may be handed over this month across every grant, so that calling
+  // this on every visit cannot become a second month's worth.
   const budget = budgetFor(caller.tier);
 
-  // A paid tier gets its whole month at once. Free gets one week's worth now
-  // and the rest on Mondays — but it has to get *something* now, or somebody
-  // who signs up on a Tuesday sits looking at zero until the weekend.
   const monthly = await client.rpc('grant_credits', {
     p_owner: caller.id,
-    p_amount: caller.tier === 'free' ? FREE_WEEKLY : TIER_CREDITS[caller.tier],
+    p_amount: TIER_CREDITS[caller.tier],
     p_reason: 'monthly',
     p_period: monthKey(caller.tier),
     p_cap: cap,
@@ -134,18 +128,6 @@ export async function settle(caller: Caller): Promise<number | null> {
   // balance reading zero with nothing to say why, which is indistinguishable
   // from having spent it — the same confusion the balance itself had.
   if (monthly.error) return null;
-
-  if (caller.tier === 'free') {
-    const weekly = await client.rpc('grant_credits', {
-      p_owner: caller.id,
-      p_amount: FREE_WEEKLY,
-      p_reason: 'weekly',
-      p_period: weekKey(),
-      p_cap: cap,
-      p_budget: budget,
-    });
-    if (weekly.error) return null;
-  }
 
   return balanceOf(caller.id);
 }
