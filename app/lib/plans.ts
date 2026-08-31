@@ -43,7 +43,6 @@
  *   ElevenLabs Business   R15,840   the only genuinely expensive input
  *   Anthropic (copilot)    ~R1,500   small per message, adds up at volume
  *   Workshops               R4,000   production, or arranging the real thing
- *   Competitions            R3,000   prizes
  *   Supabase Pro              R400
  *   Vercel Pro                R320
  *   GitHub                     R64
@@ -109,7 +108,6 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Two 15-second sung previews, watermarked',
       'One music video a month, watermarked',
       'Hooks, the timeline, the soundboard and the radar',
-      'Enter competitions on the same terms as everyone',
     ],
   },
   maker: {
@@ -142,7 +140,6 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Everything in Maker',
       'Ask FutureBox to boost a collab',
       'The full radar — every item, every reason',
-      'Priority in competition judging queues',
     ],
   },
   label: {
@@ -222,7 +219,6 @@ export const FIXED_MONTHLY: Record<string, number> = {
   'ElevenLabs Business': 990 * 16,
   'Anthropic (copilot)': 1500,
   Workshops: 4000,
-  Competitions: 3000,
   'Supabase Pro': 400,
   'Vercel Pro': 320,
   GitHub: 64,
@@ -335,13 +331,6 @@ export const SPONSORSHIP: readonly Sponsorship[] = [
     from: 30_000,
     to: 75_000,
     gets: 'A run of classes or episodes, named once at the top of each.',
-  },
-  {
-    id: 'arena',
-    name: 'An Arena prize',
-    from: 75_000,
-    to: 180_000,
-    gets: 'You put up the prize. Your name is on the competition and on whoever wins it.',
   },
   {
     id: 'headline',

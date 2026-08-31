@@ -63,17 +63,6 @@ export default function Placement({
         </div>
       )}
 
-      {rung.id === 'arena' && (
-        <div className="rounded-xl border border-amber-500/30 bg-zinc-900/70 p-3 space-y-1.5">
-          <Trophy className="w-4 h-4 text-amber-400" />
-          <p className="text-xs font-bold text-white leading-snug">
-            The {name} Prize — best song of the month
-          </p>
-          <p className="text-[11px] text-zinc-500">Entries close 30 September · Winner announced 3 October</p>
-          <p className="text-[11px] text-amber-300">Won by @thabo · prize put up by {name}</p>
-        </div>
-      )}
-
       {rung.id === 'headline' && (
         <div className="rounded-xl border border-emerald-500/25 bg-gradient-to-r from-emerald-500/10 to-transparent p-3 space-y-1">
           <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-emerald-400">

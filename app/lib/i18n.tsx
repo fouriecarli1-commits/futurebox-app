@@ -36,7 +36,7 @@ export const STRINGS: Dict = {
   "landing.sub": { en: "A studio for writing songs and videos with AI, and a feed that scores what it shows you before it shows you. Not another wall of generated content \u2014 the model stack is printed under every release, and the things that did not make the bar are counted where you can see them.", af: "'n Studio om snitte en video's met AI te maak, en 'n stroom wat elke storie eers punte gee voor jy dit sien. Nie nog 'n muur vol AI-gemors nie \u2014 onder elke snit staan watter AI wat gedoen het, en wat nie deurgekom het nie, tel ons oop en bloot." },
   "landing.startFree": { en: "Start free", af: "Begin verniet" },
   "landing.whatPro": { en: "What Pro adds", af: "Wat Pro bysit" },
-  "landing.noCard": { en: "No card to start. Competitions are open to free accounts on identical terms.", af: "Geen kaart nodig nie. Kompetisies is oop vir gratis rekeninge, presies dieselfde re\u00ebls." },
+  "landing.noCard": { en: "No card to start. The free tier is a real one, not a trial.", af: "Geen kaart nodig nie. Die gratis vlak is \u2019n regte een, nie \u2019n proeftydperk nie." },
   "landing.col1.title": { en: "A feed with a bar", af: "'n Stroom met 'n standaard" },
   "landing.col1.body": { en: "Every item is scored on who published it, whether the title describes or baits, and whether the summary names anything you could check.", af: "Elke storie kry punte vir wie dit geskryf het, of die opskrif beskryf en of dit net lok, en of daar iets in staan wat jy kan nagaan." },
   "landing.col2.title": { en: "The stack, on the release", af: "Die AI staan op die snit" },

@@ -144,3 +144,32 @@ Connecting a full generation engine is a contained job, and `app/lib/engines.ts`
 documents it. Suno has no public generation API, so the wrappers people pass
 around both break and breach its terms — ElevenLabs Music, Stability, Replicate
 and Runway do publish real ones.
+
+## Competitions, switched off
+
+The Arena — skill-judged competitions with a free entry route — is not in the
+app. It was taken out deliberately, not abandoned.
+
+Promotional competitions are regulated in South Africa under the Consumer
+Protection Act, and a paid entry raises the bar further: published terms,
+record-keeping, and rules about what may be asked of entrants. That is cheap
+to get right before the first entry and expensive to fix after it. So the
+whole surface is gone rather than hidden, and in particular **no payment path
+can reach it**: `/api/checkout` no longer prices an entry and the webhook no
+longer records one, so there is nothing to switch on by accident.
+
+What remains in the repository, for when it comes back:
+
+| Still here | Removed |
+| --- | --- |
+| `supabase/arena.sql` — competitions, entries, judging | `app/components/ArenaLive.tsx` |
+| `app/data/studio.ts` — the sample competitions and the generator | `app/api/arena/` |
+| `app/lib/matching.ts` — judging and the competition generator | The `entry` kind in checkout and the webhook |
+| | The Arena rail item and its screen |
+
+Bringing it back means restoring those files from git history, re-adding the
+`entry` kind to `Want` in `app/api/checkout/route.ts` and to the webhook's
+metadata, and putting the rail item back in `app/page.tsx`. The database side
+never went away, so nothing has to be migrated.
+
+Do the legal work first.

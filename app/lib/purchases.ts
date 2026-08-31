@@ -69,7 +69,6 @@ export async function startCheckout(
   want:
     | { kind: 'open' | 'keep'; trackId: string }
     | { kind: 'plan'; tier: string }
-    | { kind: 'entry'; competitionId: string }
     | { kind: 'credits'; pack: string },
 ): Promise<string | null> {
   const token = await accessToken();

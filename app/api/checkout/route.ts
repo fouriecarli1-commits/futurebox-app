@@ -34,27 +34,11 @@ type Want =
   | { kind: 'open'; trackId: string }
   | { kind: 'keep'; trackId: string }
   | { kind: 'plan'; tier: Tier }
-  | { kind: 'entry'; competitionId: string }
   | { kind: 'credits'; pack: string };
 
 async function priceOf(want: Want): Promise<{ cents: number; label: string } | null> {
   if (want.kind === 'open') return { cents: ONE_OFF.open.rand * 100, label: ONE_OFF.open.label };
   if (want.kind === 'keep') return { cents: ONE_OFF.keep.rand * 100, label: ONE_OFF.keep.label };
-  if (want.kind === 'entry') {
-    // An entry fee is whatever that competition says it is, read from the
-    // database. Taking it from the request would let a page enter a R500
-    // competition for a rand.
-    const client = admin();
-    if (!client) return null;
-    const { data } = await client
-      .from('competitions')
-      .select('title, entry_rand, status, closes_at')
-      .eq('id', want.competitionId)
-      .maybeSingle();
-    if (!data || data.status !== 'open' || data.entry_rand <= 0) return null;
-    if (new Date(data.closes_at) < new Date()) return null;
-    return { cents: data.entry_rand * 100, label: `Entry — ${data.title}` };
-  }
   if (want.kind === 'credits') {
     // The pack's price comes from the same table the panel showed, never from
     // the request. A page that can name its own price eventually will.
@@ -127,7 +111,6 @@ export async function POST(request: Request): Promise<Response> {
           kind: want.kind,
           trackId: want.kind === 'open' || want.kind === 'keep' ? want.trackId : null,
           tier: want.kind === 'plan' ? want.tier : null,
-          competitionId: want.kind === 'entry' ? want.competitionId : null,
           // The pack's name, not its size: the webhook looks the credits up
           // for itself, so a tampered checkout cannot buy a thousand for R99.
           pack: want.kind === 'credits' ? want.pack : null,

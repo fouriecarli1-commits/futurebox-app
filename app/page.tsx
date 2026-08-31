@@ -20,7 +20,6 @@ import CollabRadar from './components/CollabRadar';
 import CollabFinder from './components/CollabFinder';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
-import ArenaLive from './components/ArenaLive';
 import SongSections from './components/SongSections';
 import { guessRegion, priceFor, REGIONS, regionByCode, type Region } from './lib/pricing';
 import ThemeStudio from './components/ThemeStudio';
@@ -260,7 +259,7 @@ export default function FutureBoxHome() {
    * already is, so a second screen for it was the same job behind a second
    * button.
    */
-  const [studioTab, setStudioTab] = useState<'video' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'arena' | 'studio' | 'make' | 'podcast'>('make');
+  const [studioTab, setStudioTab] = useState<'video' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'podcast'>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -1847,7 +1846,6 @@ export default function FutureBoxHome() {
                   { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
                   { id: 'channels', label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
                   { id: 'collab', label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
-                  { id: 'arena', label: t('rail.arena'), hint: t('rail.arena.hint'), icon: Trophy },
                   { id: 'podcast', label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
                 ].map((tab) => {
                   const Icon = tab.icon;
@@ -1940,8 +1938,6 @@ export default function FutureBoxHome() {
               </div>
             )}
 
-            {/* TAB 6: THE ARENA (SKILL-JUDGED COMPETITIONS WITH A FREE ENTRY ROUTE) */}
-            {studioTab === 'arena' && <ArenaLive reloadKey={trackCount} />}
 
 
               </div>
@@ -1967,7 +1963,7 @@ export default function FutureBoxHome() {
                       setMakeSignal((n) => n + 1);
                     }
                     if (action.kind === 'go') {
-                      const allowed = ['make', 'video', 'podcast', 'hooks_feed', 'studio', 'arena', 'collab'];
+                      const allowed = ['make', 'video', 'podcast', 'hooks_feed', 'studio', 'collab'];
                       const tab = action.value === 'hooks' ? 'hooks_feed' : action.value;
                       // The model names a screen; only a real one is honoured.
                       if (allowed.indexOf(tab) !== -1) setStudioTab(tab as typeof studioTab);

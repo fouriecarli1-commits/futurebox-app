@@ -7,7 +7,7 @@
  *
  * The shape of the free tier is deliberate: every part of the platform does
  * something real without paying, and none of it is a demo. You can write a
- * song, score the feed, find a collaborator and enter a competition on a free
+ * song, score the feed and find a collaborator on a free
  * account. What free does not get is *volume* and *distribution* — the daily
  * counts are small, and publishing outward (posting to your channels, asking
  * for a boost, white-labelled exports) is the paid line. That is the honest
@@ -40,7 +40,6 @@ export type Capability =
   | 'collab.post'
   | 'collab.boost'
   | 'publish.release'
-  | 'arena.enter'
   | 'appearance'
   | 'soundboard';
 
@@ -132,13 +131,6 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
     caps: { free: 0, maker: null, studio: null, label: null },
     unit: '',
     freeNote: 'Being amplified by the channel is the thing Pro actually buys.',
-  },
-  'arena.enter': {
-    label: 'Enter a competition',
-    area: 'Arena',
-    caps: { free: null, maker: null, studio: null, label: null },
-    unit: '',
-    freeNote: 'Free and Pro enter on identical terms, including the free entry route. Never gated.',
   },
   appearance: {
     label: 'Every theme and layout',
@@ -232,7 +224,7 @@ export function record(capability: Capability): void {
 
 /** Grouped for the comparison table in the pricing panel. */
 export function byArea(): Array<{ area: string; rows: Array<Entitlement & { key: Capability }> }> {
-  const order = ['Songwriter', 'Studio', 'Collab Radar', 'Radar', 'Arena', 'Everywhere'];
+  const order = ['Songwriter', 'Studio', 'Collab Radar', 'Radar', 'Everywhere'];
   return order
     .map((area) => ({
       area,

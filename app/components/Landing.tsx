@@ -124,7 +124,7 @@ export default function Landing({
         </div>
 
         <p className="text-sm text-zinc-600 pt-5">
-          {t('landing.noCard', 'No card to start. Competitions are open to free accounts on identical terms.')}
+          {t('landing.noCard', 'No card to start. The free tier is a real one, not a trial.')}
         </p>
       </section>
 

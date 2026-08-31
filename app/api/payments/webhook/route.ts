@@ -33,39 +33,12 @@ interface PaystackEvent {
     status?: string;
     metadata?: {
       owner?: string;
-      kind?: 'open' | 'keep' | 'plan' | 'entry' | 'credits';
+      kind?: 'open' | 'keep' | 'plan' | 'credits';
       trackId?: string | null;
       tier?: Tier | null;
-      competitionId?: string | null;
       pack?: string | null;
     };
   };
-}
-
-/**
- * A paid entry into a competition.
- *
- * This is the only place a paid entry is ever written. The browser can start a
- * checkout but cannot record its outcome — an entry a page could claim to have
- * paid for is an entry that costs nothing.
- *
- * Somebody who already entered by the free route and then paid keeps their one
- * entry and it becomes a paid one; the unique constraint is on the person and
- * the competition, not on the route.
- */
-async function recordEntry(owner: string, competitionId: string, reference: string): Promise<void> {
-  const client = admin();
-  if (!client) return;
-  await client.from('entries').upsert(
-    {
-      id: `e-${Date.now()}-${owner.slice(0, 6)}`,
-      competition_id: competitionId,
-      owner,
-      route: 'paid',
-      paid_reference: reference,
-    },
-    { onConflict: 'competition_id,owner' },
-  );
 }
 
 /**
@@ -220,11 +193,6 @@ export async function POST(request: Request): Promise<Response> {
 
   if ((meta.kind === 'open' || meta.kind === 'keep') && meta.trackId) {
     await recordPurchase(owner, meta.trackId, meta.kind === 'keep' ? 'owned' : 'opened', cents, reference);
-    return new Response('ok', { status: 200 });
-  }
-
-  if (meta.kind === 'entry' && meta.competitionId) {
-    await recordEntry(owner, meta.competitionId, reference);
     return new Response('ok', { status: 200 });
   }
 
