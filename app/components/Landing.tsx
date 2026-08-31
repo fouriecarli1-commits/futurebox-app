@@ -20,6 +20,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, Check, Cpu } from 'lucide-react';
+import WelcomeVideo from './WelcomeVideo';
 import { guessRegion, REGIONS, type Region } from '../lib/pricing';
 import { TIER_SPECS, TIERS, tierPrice } from '../lib/plans';
 import { useLang } from '../lib/i18n';
@@ -60,32 +61,57 @@ export default function Landing({
         </div>
       </header>
 
-      {/* ── The line ──────────────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 md:pt-28 md:pb-24">
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white tracking-tight leading-[0.98]">
-          {t('welcome.line1', 'Put your voice in.')}
-          <br />
+      {/* ── The mark, at the size it deserves ─────────────────────────────
+          The name is the first thing and it is drawn rather than mentioned:
+          somebody who lands here and leaves in four seconds should still be
+          able to say afterwards what it was called. The small mark stays in
+          the header for every page below this one. */}
+      <section className="max-w-4xl mx-auto px-6 pt-16 pb-16 md:pt-20 md:pb-24">
+        <div className="flex items-center gap-4 md:gap-5">
+          <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center flex-shrink-0 shadow-[0_0_60px_rgba(16,185,129,0.25)]">
+            <Cpu className="w-9 h-9 md:w-14 md:h-14 text-onAccent" />
+          </div>
+          <p className="text-5xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">
+            FUTURE<span className="text-emerald-400">BOX</span>
+          </p>
+        </div>
+
+        <p className="text-xl md:text-2xl text-zinc-300 font-semibold pt-6 tracking-tight">
+          {t('welcome.black', 'The black box of the future.')}
+        </p>
+
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-[1.02] pt-8">
+          {t('welcome.line1', 'Put your voice in.')}{' '}
           <span className="text-emerald-400">{t('welcome.line2', 'Take a record out.')}</span>
         </h1>
 
-        <p className="text-lg md:text-xl text-zinc-400 leading-relaxed pt-7 max-w-2xl">
+        <p className="text-lg md:text-xl text-zinc-400 leading-relaxed pt-5 max-w-2xl">
           {t(
             'welcome.sub',
             'FutureBox is the black box of the future — the whole studio in one place. Write it with AI, sing it yourself, clone your voice for the show, and put a video to it.',
           )}
         </p>
 
-        {/* Four words each. Anything longer and nobody reads the fourth. */}
-        <div className="flex flex-wrap gap-x-6 gap-y-2 pt-7 text-base text-zinc-300">
+        {/* ── What it gives you ───────────────────────────────────────────
+            Six, each one a thing that is built and reachable from the rail
+            inside. Nothing aspirational: a landing page listing a feature the
+            code does not have is the one mistake here that cannot be argued
+            away afterwards. */}
+        <div className="grid sm:grid-cols-2 gap-x-8 gap-y-3.5 pt-9 max-w-3xl">
           {[
-            t('welcome.tag1', 'Songs you sing on'),
-            t('welcome.tag2', 'Your voice, cloned'),
-            t('welcome.tag3', 'Podcasts with a real feed'),
-            t('welcome.tag4', 'Music videos'),
-          ].map((tag) => (
-            <span key={tag} className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              {tag}
+            [t('welcome.offer1', 'Songs you sing on'), t('welcome.offer1n', 'Write it with the copilot, generate it, keep the stems')],
+            [t('welcome.offer2', 'Your own voice, cloned'), t('welcome.offer2n', 'Read a script in it, with your consent on record')],
+            [t('welcome.offer3', 'Podcasts with a real feed'), t('welcome.offer3n', 'A show Apple and Spotify will accept')],
+            [t('welcome.offer4', 'Music videos'), t('welcome.offer4n', 'Drawn from your own audio, or made by the engine')],
+            [t('welcome.offer5', 'Masterclasses'), t('welcome.offer5n', 'Real lectures, not a course somebody spun up')],
+            [t('welcome.offer6', 'Collaboration'), t('welcome.offer6n', 'Ask another maker, and work in a room together')],
+          ].map(([title, note]) => (
+            <span key={title} className="flex gap-2.5">
+              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-1" />
+              <span className="min-w-0">
+                <span className="block text-base text-zinc-200 font-semibold leading-snug">{title}</span>
+                <span className="block text-sm text-zinc-500 leading-snug">{note}</span>
+              </span>
             </span>
           ))}
         </div>
@@ -126,6 +152,13 @@ export default function Landing({
         <p className="text-sm text-zinc-600 pt-5">
           {t('landing.noCard', 'No card to start. The free tier is a real one, not a trial.')}
         </p>
+
+        {/* Below the buttons on purpose: somebody already convinced should
+            reach the way in before they reach a ten-second wait. Renders
+            nothing on the Afrikaans page — see WelcomeVideo. */}
+        <div className="pt-12">
+          <WelcomeVideo />
+        </div>
       </section>
 
       {/* ── What it costs ─────────────────────────────────────────────────── */}
