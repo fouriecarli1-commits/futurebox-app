@@ -1,4 +1,13 @@
-import { buildRequest } from './lib/musicplan.ts';
+// The music request the server actually builds.
+//
+//   node --experimental-strip-types .probe/musicplan.mjs
+//
+// This imported `./lib/musicplan.ts` — a copy — and the copy was deleted on
+// purpose, because a check that reads a copy passes after the original has
+// changed. Deleting it switched this check off entirely, with a
+// module-not-found that reads as "the harness is broken" rather than as
+// "nothing is being tested". It reads the real module now.
+import { buildRequest } from '../app/lib/server/musicplan.ts';
 
 const problems = [];
 const say = (ok, what) => { if (!ok) problems.push(what); };

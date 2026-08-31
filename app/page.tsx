@@ -1847,16 +1847,27 @@ export default function FutureBoxHome() {
                   /* The rail follows the order the work happens in: write and
                      generate the song, arrange it, sing on it, put a video to
                      it. Everything after that is what you do with a finished
-                     song. */
+                     song.
+
+                     The last two are the rooms about speaking rather than
+                     about a song, and they sit together on purpose. Voice used
+                     to be stranded in the middle of the song-making run, where
+                     it read as a step in making one — and somebody looking for
+                     podcasting opened it, found a screen that plainly did
+                     something, and had no reason to think they were in the
+                     wrong room. A wrong room that looks empty is a better
+                     signpost than a wrong room that looks busy, so the two now
+                     stand next to each other and each says what the other is
+                     for. */
                   { id: 'make', label: t('rail.make'), hint: t('rail.make.hint'), icon: Sparkles },
                   { id: 'studio', label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
                   { id: 'booth', label: t('rail.booth'), hint: t('rail.booth.hint'), icon: Mic },
-                  { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
                   { id: 'video', label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
                   { id: 'canvas', label: t('rail.canvas'), hint: t('rail.canvas.hint'), icon: Clapperboard },
                   { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
                   { id: 'channels', label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
                   { id: 'collab', label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
+                  { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
                   { id: 'podcast', label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
                 ].map((tab) => {
                   const Icon = tab.icon;
@@ -1889,7 +1900,8 @@ export default function FutureBoxHome() {
             {studioTab === 'voice_studio' && (
               <VoiceScreen
                 onUpgrade={() => setPricingModalOpen(true)}
-                onGoToMake={() => setStudioTab('make')}
+                onGoToBooth={() => setStudioTab('booth')}
+                onGoToPodcast={() => setStudioTab('podcast')}
               />
             )}
 

@@ -18,10 +18,32 @@
  * which is a different thing from an edit and is labelled as one. Miming an
  * in-place edit and quietly returning a fresh song would be worse than
  * refusing.
+ *
+ * ## Arranging
+ *
+ * Renaming a section and rewriting its words was all this could do, and the
+ * report was fair: that is proofreading, not editing. Most of what anybody
+ * does to a song is *arrangement* — move the bridge before the last chorus,
+ * cut the second verse, say the chorus twice, put a bridge in that was never
+ * written. All four are here now.
+ *
+ * They are honest through the round trip, which is why these four and not
+ * others. The plan travels back to the make screen as a lyric sheet, so the
+ * order of the sections is the order of the tags, deleting one removes a
+ * block, and adding one inserts a block. Nothing is inferred and nothing is
+ * lost.
+ *
+ * A section's **length** is deliberately not editable, and the screen says so
+ * rather than drawing a slider that does nothing. Lengths are not carried in
+ * the sheet: `splitSections` recomputes them from how many lines each section
+ * has against the song's total. A number you could drag that was thrown away
+ * on the way out is worse than no number, so the screen explains what actually
+ * decides a section's length — more lines, and the total you choose when you
+ * make it.
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, Music4, Pause, Play, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Loader2, Music4, Pause, Play, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { loadTracks } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { peaksOf, type Peaks } from '../lib/peaks';
@@ -214,6 +236,46 @@ export default function SongSections({
     setAt(seconds);
   }, []);
 
+  /**
+   * Arrangement.
+   *
+   * Each of these is a change to the order or the presence of a section, and
+   * every one survives the trip back through the lyric sheet unchanged — which
+   * is the reason these four exist and a length slider does not.
+   */
+  const move = useCallback((from: number, to: number) => {
+    setParts((current) => {
+      if (to < 0 || to >= current.length) return current;
+      const next = current.slice();
+      const [taken] = next.splice(from, 1);
+      next.splice(to, 0, taken);
+      return next;
+    });
+  }, []);
+
+  const drop = useCallback((at_: number) => {
+    setParts((current) => current.filter((_, index) => index !== at_));
+  }, []);
+
+  /**
+   * Say it again.
+   *
+   * A chorus that comes round twice is the commonest arrangement change there
+   * is, and typing it out a second time is how somebody ends up with two
+   * choruses that are almost the same.
+   */
+  const again = useCallback((at_: number) => {
+    setParts((current) => {
+      const next = current.slice();
+      next.splice(at_ + 1, 0, { ...current[at_], lines: [...current[at_].lines] });
+      return next;
+    });
+  }, []);
+
+  const add = useCallback(() => {
+    setParts((current) => [...current, { name: 'Bridge', lines: [''], seconds: 0 }]);
+  }, []);
+
   const remake = useCallback(() => {
     if (!track) return;
     // Back into a lyric sheet, which is the shape the Make screen and the plan
@@ -304,13 +366,56 @@ export default function SongSections({
                   }}
                   className="bg-transparent text-sm font-bold text-white focus:outline-none min-w-0 flex-1"
                 />
-                <button
-                  type="button"
-                  onClick={() => mark && seek(mark.start)}
-                  className="text-sm text-zinc-400 hover:text-emerald-300 tabular-nums flex-shrink-0"
-                >
-                  {mark ? clock(mark.start) : '—'}
-                </button>
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => mark && seek(mark.start)}
+                    className="text-sm text-zinc-400 hover:text-emerald-300 tabular-nums px-1.5"
+                  >
+                    {mark ? clock(mark.start) : '—'}
+                  </button>
+                  {/* Arrangement. Disabled at the ends rather than hidden, so
+                      the row does not change shape as things move. */}
+                  <button
+                    type="button"
+                    onClick={() => move(index, index - 1)}
+                    disabled={index === 0}
+                    title={t('sec.up', 'Move it earlier')}
+                    aria-label={t('sec.up', 'Move it earlier')}
+                    className="p-1.5 rounded-lg text-zinc-500 hover:text-emerald-300 hover:bg-zinc-800 disabled:opacity-25 disabled:hover:bg-transparent"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => move(index, index + 1)}
+                    disabled={index === parts.length - 1}
+                    title={t('sec.down', 'Move it later')}
+                    aria-label={t('sec.down', 'Move it later')}
+                    className="p-1.5 rounded-lg text-zinc-500 hover:text-emerald-300 hover:bg-zinc-800 disabled:opacity-25 disabled:hover:bg-transparent"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => again(index)}
+                    title={t('sec.again', 'Say it again')}
+                    aria-label={t('sec.again', 'Say it again')}
+                    className="p-1.5 rounded-lg text-zinc-500 hover:text-emerald-300 hover:bg-zinc-800"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => drop(index)}
+                    disabled={parts.length <= 1}
+                    title={t('sec.drop', 'Take it out')}
+                    aria-label={t('sec.drop', 'Take it out')}
+                    className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-800 disabled:opacity-25 disabled:hover:bg-transparent"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
               <textarea
                 value={part.lines.join('\n')}
@@ -327,7 +432,20 @@ export default function SongSections({
         })}
       </div>
 
+      <button
+        type="button"
+        onClick={add}
+        className="w-full py-2.5 rounded-xl border border-dashed border-zinc-700 text-sm font-semibold text-zinc-400 hover:border-emerald-500/60 hover:text-emerald-300 flex items-center justify-center gap-1.5"
+      >
+        <Plus className="w-4 h-4" />
+        {t('sec.add', 'Put another section in')}
+      </button>
+
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-2.5">
+        {/* Said here rather than as a slider that does nothing: lengths are not
+            carried in the lyric sheet, so a draggable number would be thrown
+            away on the way out. */}
+        <p className="text-sm text-zinc-500 leading-snug">{t('sec.lengthNote')}</p>
         <p className="text-sm text-zinc-400 leading-snug">{t('sec.remakeNote')}</p>
         <button
           type="button"
