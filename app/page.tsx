@@ -2249,10 +2249,14 @@ export default function FutureBoxHome() {
 
         <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
           <p>© 2026 FutureBox Platform. All rights reserved.</p>
+          {/* These were three plain spans — words that looked like policies and
+              led nowhere. A dead link is worse than a missing one: it says the
+              document exists. Privacy is real now; the other two are not
+              written yet and so are not pretended at. */}
           <div className="flex space-x-6">
-            <span>{t('feed.privacy')}</span>
-            <span>{t('feed.ethics')}</span>
-            <span>{t('feed.terms')}</span>
+            <a href="/privacy" className="hover:text-zinc-300 underline underline-offset-4">
+              {t('feed.privacy')}
+            </a>
           </div>
         </div>
       </footer>

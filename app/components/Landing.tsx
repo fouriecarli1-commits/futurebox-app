@@ -207,10 +207,17 @@ export default function Landing({
         </p>
       </section>
 
-      <footer className="max-w-6xl mx-auto px-6 py-12 border-t border-zinc-800/70">
+      {/* The privacy policy belongs here, on the page a visitor and a store's
+          reviewer actually land on. It was on the signed-in app's footer only,
+          which is behind a sign-in — so from outside there was no policy at
+          all, which is what an outside assessment found. */}
+      <footer className="max-w-6xl mx-auto px-6 py-12 border-t border-zinc-800/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <p className="text-sm text-zinc-600">
           {t('welcome.footer', 'Everything made here says what made it, on the release.')}
         </p>
+        <a href="/privacy" className="text-sm text-zinc-500 hover:text-zinc-300 underline underline-offset-4">
+          {t('feed.privacy', 'Privacy')}
+        </a>
       </footer>
     </div>
   );
