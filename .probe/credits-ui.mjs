@@ -34,6 +34,27 @@ await page.addInitScript(([key, expires]) => {
 await page.goto(`${base}/probe-credits`, { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 
+// This check drives a purchase, and `startCheckout` refuses without a session.
+// It never reaches a Supabase — every request here is intercepted — but the
+// client has to exist for a session to be stored against, so the build needs
+// NEXT_PUBLIC_SUPABASE_URL and _ANON_KEY set. Said here, plainly, because the
+// failure otherwise is "checkout got kind undefined", which reads as a broken
+// checkout rather than a build without a Supabase in it.
+const configured = (await page.locator('[data-cloud]').getAttribute('data-cloud')) === 'yes';
+if (!configured) {
+  console.error('credits-ui: this build has no Supabase configured, so no session can be stored and');
+  console.error('           the purchase half of this check cannot run. Rebuild with:');
+  console.error('');
+  console.error('             PROBE=1 \\');
+  console.error('               NEXT_PUBLIC_SUPABASE_URL=https://probe.supabase.co \\');
+  console.error('               NEXT_PUBLIC_SUPABASE_ANON_KEY=probe-anon-key \\');
+  console.error('               npm run build');
+  console.error('');
+  console.error('           See .probe/README.md.');
+  await browser.close();
+  process.exit(1);
+}
+
 // The balance shows, and reads low against a 25 monthly.
 const chip = page.locator('button[title]').first();
 say((await chip.innerText()).trim() === '12', `the chip read "${(await chip.innerText()).trim()}"`);

@@ -66,6 +66,8 @@ export const CREDITS = {
   clone: 20,
   /** Training a sound of your own. Estimated, and deliberately high. */
   finetune: 300,
+  /** A minute of an episode dubbed into another language. Estimated. */
+  dub: 15,
 } as const;
 
 /**
@@ -99,6 +101,24 @@ export function videoCost(grade: VideoGrade): number {
 
 export function songCost(seconds: number): number {
   return Math.max(CREDITS.halfSong, Math.ceil(Math.max(0, seconds) / 60) * CREDITS.halfSong);
+}
+
+/**
+ * An episode dubbed into another language, by its length.
+ *
+ * ElevenLabs bill dubbing by the minute of source audio, and it is the dearest
+ * thing this app asks them for by some distance — a translation, a voice match
+ * and a re-performance of every speaker, not a read. Priced per minute and
+ * rounded up, with a floor so that dubbing a thirty-second trailer still costs
+ * something.
+ *
+ * Estimated, like the read, and for the same reason: the exact rate is not
+ * knowable from a pricing page with any confidence. What it should be checked
+ * against is what the account is actually billed, once there are real dubs to
+ * measure — the same conclusion `video_costs` exists for.
+ */
+export function dubCost(seconds: number): number {
+  return Math.max(CREDITS.dub, Math.ceil(Math.max(0, seconds) / 60) * CREDITS.dub);
 }
 
 /**

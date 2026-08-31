@@ -19,6 +19,7 @@ import React, { useEffect, useState } from 'react';
 import Balance from '../components/Balance';
 import OutOfCredits from '../components/OutOfCredits';
 import { loadWallet, NO_WALLET, type Short, type Wallet } from '../lib/wallet';
+import { configured } from '../lib/cloud';
 
 /** What the pretend refusal asked for. Twelve held against it is short by 18. */
 const NEEDED = 30;
@@ -32,7 +33,9 @@ export default function P(): React.ReactElement {
   }, []);
 
   return (
-    <div className="p-6 space-y-4">
+    // Said out loud so the check can tell "the purchase is broken" apart
+    // from "this build has no Supabase in it, so no session can exist".
+    <div className="p-6 space-y-4" data-cloud={configured() ? 'yes' : 'no'}>
       <Balance
         reloadKey={0}
         onTopUp={(next) => setShort({ need: 0, balance: next.balance, message: '' })}
