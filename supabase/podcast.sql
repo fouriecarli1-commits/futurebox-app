@@ -30,8 +30,26 @@ create table if not exists public.voices (
   -- Recorded, and confirmed by the person that it is their own voice. Stored
   -- because consent that cannot be produced later is not consent.
   consented_at timestamptz not null default now(),
+  -- The proof, rather than the assertion. A checkbox that leaves no trace is
+  -- worth nothing the moment somebody says "I never agreed to that", so what
+  -- is kept is the exact sentence that was on the screen and a salted hash of
+  -- the address it was accepted from. Not an argument — a record.
+  --
+  -- `consent_text` is the English wording from app/lib/consent.ts even where
+  -- the screen showed Afrikaans: a record needs one wording rather than one
+  -- per language, and the terms say the English version governs.
+  consent_ip_hash text,
+  consent_text text,
   created_at  timestamptz not null default now()
 );
+
+-- For projects where `voices` was created before those two columns existed.
+-- Voices cloned then keep a null `consent_text`, which is the truthful value:
+-- the confirmation was required and given, it was simply not written down, and
+-- backfilling one would be inventing evidence.
+alter table public.voices
+  add column if not exists consent_ip_hash text,
+  add column if not exists consent_text text;
 
 create index if not exists voices_owner_idx on public.voices (owner);
 

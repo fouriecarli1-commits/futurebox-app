@@ -30,6 +30,7 @@ import {
   klingCost,
   MODEL_NAME,
   monthlyCeiling,
+  scheme,
   startVideo,
   type Aspect,
 } from '@/app/lib/server/kling';
@@ -51,8 +52,10 @@ interface Body {
 export async function GET(request: Request): Promise<Response> {
   const id = new URL(request.url).searchParams.get('id');
   if (!id) {
-    // The probe the studio asks before it offers the engine at all.
-    return Response.json({ available: configured(), model: MODEL_NAME });
+    // The probe the studio asks before it offers the engine at all. `auth`
+    // says which of the two key schemes was found, so somebody setting this up
+    // can tell a missing key from a half-set pair without guessing.
+    return Response.json({ available: configured(), model: MODEL_NAME, auth: scheme() });
   }
 
   if (!metered()) return Response.json({ message: 'Accounts are not configured.' }, { status: 503 });

@@ -6,12 +6,19 @@
  * free; this is the other thing — a hosted model that makes footage from a
  * sentence, on a plan that is paid for by the month.
  *
- * ── Authentication ───────────────────────────────────────────────────────
+ * ── Authentication, which comes in two shapes ────────────────────────────
  *
- * Kling does not take a bearer key. It takes a JWT you sign yourself with your
- * secret key, valid for half an hour: HS256, `iss` is the access key, `nbf`
- * five seconds ago because clocks disagree. Signed per request with Web
- * Crypto, which is available in both runtimes and needs no dependency.
+ * Kling's console now issues a single API key, sent straight through as a
+ * bearer token. Older accounts have an AccessKey and a SecretKey instead, and
+ * with those the bearer token is a JWT you sign yourself: HS256, `iss` is the
+ * access key, valid half an hour, `nbf` five seconds back because two clocks
+ * are never one clock. Signed per request with Web Crypto, which is in both
+ * runtimes and needs no dependency.
+ *
+ * Both are supported and the single key wins where both are set, because that
+ * is the one Kling hands out now. Which one an account has is not something
+ * this repository can know, and finding out by having somebody's first video
+ * fail is not a way to find out.
  *
  * The wire format below — the endpoints, the field names, the shape of the
  * envelope and the task states — is taken from the AI SDK's own KlingAI
@@ -26,10 +33,10 @@
  * for five minutes would fail on the platform's own timeout and lose the work
  * that had already been paid for.
  *
- * Two keys switch it on, and neither may ever carry a NEXT_PUBLIC_ prefix:
+ * Set either of these, and none of them may ever carry a NEXT_PUBLIC_ prefix:
  *
- *   KLINGAI_ACCESS_KEY   from the Kling API console
- *   KLINGAI_SECRET_KEY   the same, and secret in the way the name says
+ *   KLINGAI_API_KEY                          the single key the console issues
+ *   KLINGAI_ACCESS_KEY + KLINGAI_SECRET_KEY  the older pair
  *
  * Optional, with the defaults below: KLINGAI_BASE_URL, KLING_MODEL,
  * KLING_MONTHLY_CREDITS.
@@ -67,7 +74,16 @@ export type Progress =
   | { readonly state: 'unknown'; readonly message: string };
 
 export function configured(): boolean {
-  return Boolean(process.env.KLINGAI_ACCESS_KEY && process.env.KLINGAI_SECRET_KEY);
+  if (process.env.KLINGAI_API_KEY?.trim()) return true;
+  return Boolean(process.env.KLINGAI_ACCESS_KEY?.trim() && process.env.KLINGAI_SECRET_KEY?.trim());
+}
+
+/** Which of the two an account is using. Reported by the probe, so a setup
+ *  that is half done says which half. */
+export function scheme(): 'api-key' | 'signed' | 'none' {
+  if (process.env.KLINGAI_API_KEY?.trim()) return 'api-key';
+  if (process.env.KLINGAI_ACCESS_KEY?.trim() && process.env.KLINGAI_SECRET_KEY?.trim()) return 'signed';
+  return 'none';
 }
 
 /**
@@ -95,13 +111,17 @@ export function monthlyCeiling(): number {
 const base64url = (text: string): string => Buffer.from(text, 'utf8').toString('base64url');
 
 /**
- * A token that lives for half an hour, signed here.
+ * The bearer token for one request.
  *
- * `nbf` is five seconds in the past because the two clocks are not the same
- * clock, and a token that is not yet valid is rejected exactly as firmly as a
- * forged one.
+ * A single API key is already one and goes through untouched. A key pair has
+ * to be turned into a JWT that lives half an hour: `nbf` is five seconds in
+ * the past because the two clocks are not the same clock, and a token that is
+ * not yet valid is rejected exactly as firmly as a forged one.
  */
 async function token(): Promise<string> {
+  const direct = process.env.KLINGAI_API_KEY?.trim();
+  if (direct) return direct;
+
   const access = process.env.KLINGAI_ACCESS_KEY ?? '';
   const secret = process.env.KLINGAI_SECRET_KEY ?? '';
   const now = Math.floor(Date.now() / 1000);

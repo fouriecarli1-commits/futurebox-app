@@ -117,11 +117,13 @@ export async function POST(request: Request): Promise<Response> {
     request.headers.get('x-real-ip') ??
     '';
 
+  // `consented_at` defaults to now() in the table, so the moment is already
+  // kept; what is added here is the wording that was on the screen and where
+  // it was accepted from.
   await client.from('voices').insert({
     id: made.voiceId,
     owner: caller.id,
     name,
-    consent_at: new Date().toISOString(),
     consent_ip_hash: addressKey(address) || null,
     consent_text: VOICE_CONSENT,
   });
