@@ -51,8 +51,25 @@ const CSP = [
   'upgrade-insecure-requests',
 ].join('; ');
 
+/**
+ * Probe pages: in the repository, out of the build.
+ *
+ * The browser checks in `.probe/` need somewhere to mount a component. Until
+ * now each one created a page, ran, and deleted it — which meant a check could
+ * be run exactly once and never again, and re-running one silently read a 404
+ * page instead of the app. A test that cannot be repeated is a test that told
+ * you something on one afternoon.
+ *
+ * So they live as `*.probe.tsx` beside the code, and this extension is only a
+ * page when PROBE=1. A production build cannot see them, and there is nothing
+ * to remember to delete.
+ */
+const pageExtensions = ['tsx', 'ts', 'jsx', 'js'];
+if (process.env.PROBE === '1') pageExtensions.push('probe.tsx');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  pageExtensions,
   async headers() {
     return [
       {
