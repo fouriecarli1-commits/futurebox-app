@@ -8,6 +8,7 @@
 
 process.env.ELEVENLABS_API_KEY = 'xi-test';
 process.env.KLINGAI_API_KEY = 'kl-test';
+process.env.ELEVEN_SEEDANCE_READY = '1';
 
 const { PROVIDERS, candidates, gradesAvailable, nearestLength, providerById, suits } =
   await import('../app/lib/server/video/index.ts');
@@ -64,6 +65,20 @@ say(!kling.configured(), 'Kling reports itself configured with no keys at all');
 say(candidates('premium', shot, free).length === 0, 'an unconfigured engine was offered the work');
 say(!gradesAvailable().includes('premium'), 'a grade with no working engine is still offered');
 process.env.KLINGAI_API_KEY = 'kl-test';
+
+// ── Seedance without its approval must not take the default grade ──────
+//
+// A key alone cannot tell whether ByteDance is enabled on the workspace. If
+// this engine reported itself ready anyway it would take Standard — the
+// default — charge, fail and refund, which is a worse first run than simply
+// not being on the shelf yet.
+delete process.env.ELEVEN_SEEDANCE_READY;
+say(!seedance.configured(), 'Seedance reports itself ready without the approval flag');
+say(!gradesAvailable().includes('standard'), 'Standard is offered with no engine that can serve it');
+say(candidates('standard', shot, free).length === 0, 'an unapproved engine was still handed the work');
+say(gradesAvailable().includes('better'), 'Better disappeared along with Standard');
+process.env.ELEVEN_SEEDANCE_READY = '1';
+say(seedance.configured(), 'Seedance stayed off after the approval flag was set');
 
 // ── What ElevenLabs is actually sent ───────────────────────────────────
 const seen = [];

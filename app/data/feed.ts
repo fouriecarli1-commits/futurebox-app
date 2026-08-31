@@ -17,9 +17,72 @@ export const CATEGORIES = [
   'Business & Money',
   'Robotics',
   'Science',
+  // Games are their own thing, not a corner of Creative AI. The people who
+  // make them read different sources, argue about different problems, and are
+  // the largest group of makers already using generative tools daily — for
+  // assets, dialogue, level layout and playtesting. A category rather than a
+  // tag, so a reader can sit in it.
+  'Games & Worlds',
 ] as const;
 
 export const FEED_ITEMS: readonly FeedItem[] = [
+  // ── Games & Worlds ──────────────────────────────────────────────────
+  //
+  // Mixed on purpose, like the rest of this file: the last one is here to be
+  // rejected in front of the reader, because a gate nobody sees reject
+  // anything is indistinguishable from no gate at all.
+  {
+    id: 'g1',
+    title: 'Procedural level generation with learned constraints: 40,000 layouts, human-rated',
+    source: 'arXiv',
+    summary:
+      'Trains a layout generator against designer-written constraints rather than raw examples, and reports a human study over 40,000 generated rooms with the annotation methodology and dataset open-sourced.',
+    kind: 'paper',
+    minutes: 38,
+    published: '2026-07-19',
+    category: 'Games & Worlds',
+    url: 'https://arxiv.org',
+    durability: 'durable',
+  },
+  {
+    id: 'g2',
+    title: 'What generated dialogue actually costs at runtime',
+    source: 'IEEE Spectrum',
+    summary:
+      'Measures latency and cost per line for in-game dialogue generated on demand versus written ahead, across three model sizes, and states where the break-even sits for a studio shipping to console.',
+    kind: 'article',
+    minutes: 19,
+    published: '2026-08-11',
+    category: 'Games & Worlds',
+    url: 'https://spectrum.ieee.org',
+    durability: 'timely',
+  },
+  {
+    id: 'g3',
+    title: 'Building an NPC that remembers you, and the memory bill that comes with it',
+    source: 'Hugging Face',
+    summary:
+      'A walkthrough of retrieval-backed NPC memory with the throughput numbers for a hundred concurrent players, and an honest section on what broke first.',
+    kind: 'article',
+    minutes: 26,
+    published: '2026-06-30',
+    category: 'Games & Worlds',
+    url: 'https://huggingface.co',
+    durability: 'durable',
+  },
+  {
+    id: 'g4',
+    title: 'AI-generated game art is INSANE — this changes everything for indie devs',
+    source: 'GameDevDaily',
+    summary:
+      'In today’s fast-paced world, generative tools are a game-changer that will revolutionise how indie studios work. Buckle up.',
+    kind: 'video',
+    minutes: 6,
+    published: '2026-08-20',
+    category: 'Games & Worlds',
+    url: 'https://example.com',
+    durability: 'timely',
+  },
   {
     id: 'f1',
     title: 'Scaling laws for multimodal training: what breaks past 10B parameters',

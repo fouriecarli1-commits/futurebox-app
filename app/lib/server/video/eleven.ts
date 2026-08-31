@@ -14,15 +14,23 @@
  * Both are behind the same endpoint and differ only by `model_id`, which is
  * why they are one file.
  *
- * ── Seedance has to be switched on ───────────────────────────────────────
+ * ── Seedance has to be switched on, and the app has to be told ───────────
  *
  * ElevenLabs' own SDK says it plainly: ByteDance models are disabled by
- * default and need explicit approval on the workspace. `configured()` cannot
- * see that from here — a key is a key — so a workspace without approval gets a
- * refusal from the API rather than from this file, and the route falls through
- * to the next engine. That is the correct behaviour and it is why failover
- * exists, but it means the cheap path is silently the expensive path until
- * somebody writes to support.
+ * default and need explicit approval on the workspace. Nothing here can see
+ * that — a key is a key — so without help this engine reports itself ready,
+ * takes the default grade, charges, fails, and refunds. The member gets their
+ * credits back and a bad first impression, which is the worse of the two
+ * costs.
+ *
+ * So the approval is stated rather than guessed: ELEVEN_SEEDANCE_READY=1 once
+ * support confirms it. Until then Standard simply does not appear, and the
+ * cheapest *working* grade is the cheapest thing offered — which is the honest
+ * shape of a shelf with one item still on order.
+ *
+ * A flag somebody must remember to set is a poor mechanism and this is the
+ * only place in the app that has one. It earns its place because the
+ * alternative is charging people for a request that cannot succeed.
  *
  * ── The wire format ──────────────────────────────────────────────────────
  *
@@ -162,7 +170,9 @@ export const seedance: Provider = {
   name: 'Seedance (ElevenLabs)',
   grade: 'standard',
   model: SEEDANCE,
-  configured: () => Boolean(key()),
+  // Both halves, and neither is optional: the key gets us to the API, the flag
+  // says the API will take this model.
+  configured: () => Boolean(key()) && process.env.ELEVEN_SEEDANCE_READY === '1',
   can: {
     seconds: [5, 10],
     aspects: ASPECTS,
