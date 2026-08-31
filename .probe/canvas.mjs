@@ -51,10 +51,22 @@ for (const label of ['Music video', 'Marketing', 'Podcast', 'Reel', 'Product', '
 }
 
 // ── A tile fills the box rather than generating anything ───────────────
-await page.getByRole('button', { name: /Podcast/i }).first().click();
+const podcast = page.getByRole('button', { name: /Podcast/i }).first();
+await podcast.click();
 const filled = await box.inputValue();
 say(filled.length > 80, `the podcast tile put ${filled.length} characters in the box`);
 say(/microphone/i.test(filled), 'the podcast scaffold is not about a podcast');
+
+// ── Pressing it again gives a different idea, not the same words ───────
+//
+// A tile with one scaffold is a template; a tile you can press for another is
+// inspiration, which is what somebody staring at an empty box actually needs.
+await podcast.click();
+const second = await box.inputValue();
+say(second !== filled, 'pressing the tile again wrote the same words back');
+say(second.length > 80, 'the second idea is thinner than the first');
+say(/2\/\d/.test(await podcast.innerText()), `the tile does not say which idea it is on: ${await podcast.innerText()}`);
+await podcast.click();
 
 // ── The quoted line is read back before anything is spent ──────────────
 const spoken = await page.getByText(/Will be spoken/i).count();
@@ -77,6 +89,24 @@ say(
   await page.getByText(/will be drawn at, not said/i).count() === 0,
   'a correctly quoted line was still warned about',
 );
+
+// ── Every length says what it is for ───────────────────────────────────
+//
+// Choosing between five seconds and thirty with nothing but a price to go on
+// is a guess, which is what the desk offered before.
+const lengths = page.locator('button', { hasText: /^\d+s$/ });
+say(await lengths.count() >= 2, `${await lengths.count()} lengths offered`);
+// Whichever length is selected — not a particular one. With no engine
+// connected the desk falls back to the two lengths every engine has, so
+// asserting on the 5s note would be asserting on the fallback rather than on
+// the rule.
+const notes = [
+  /single beat/i, /one shot, one idea/i, /short line to be spoken/i,
+  /can breathe/i, /whole moment/i, /an advert/i, /beats in sequence/i, /full spot/i,
+];
+let explained = 0;
+for (const note of notes) explained += await page.getByText(note).count();
+say(explained >= 1, 'the chosen length does not say what it is for');
 
 // ── The cost is on the button, not hidden ──────────────────────────────
 const button = page.getByRole('button', { name: /Make it/i }).first();

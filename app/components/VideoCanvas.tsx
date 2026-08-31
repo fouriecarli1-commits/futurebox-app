@@ -30,7 +30,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Video as VideoIcon, Loader2, Download, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap } from 'lucide-react';
-import { SCENES, spokenLines, looksUnquoted, type Scene } from '../lib/videoscenes';
+import { SCENES, spokenLines, looksUnquoted, LENGTHS, type Scene } from '../lib/videoscenes';
 import { engines, probeVideoEngine, type VideoEngine } from '../lib/engines';
 import { CREDITS, videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
@@ -64,9 +64,11 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
   const [engine, setEngine] = useState<VideoEngine | null>(null);
   const ready = engine === null ? null : engine.available;
   const [scene, setScene] = useState<Scene | null>(null);
+  /** Which of a kind's scaffolds is showing, so "another" can walk them. */
+  const [variant, setVariant] = useState(0);
   const [prompt, setPrompt] = useState('');
   const [aspect, setAspect] = useState<Aspect>('16:9');
-  const [seconds, setSeconds] = useState<5 | 10>(5);
+  const [seconds, setSeconds] = useState<number>(5);
   /**
    * What the member is buying — never which engine serves it.
    *
@@ -103,12 +105,44 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
   // Object URLs are the one thing the browser will not tidy up on its own.
   useEffect(() => () => made.forEach((one) => URL.revokeObjectURL(one.url)), [made]);
 
+  /**
+   * What this grade can make, from the server rather than from a guess here.
+   * Falls back to the two lengths every engine has while the answer is still
+   * in flight, so the row is never empty and never wrong for long.
+   */
+  const able = engine?.can?.[grade];
+  const lengths = useMemo(
+    () => LENGTHS.filter((one) => (able?.seconds ?? [5, 10]).includes(one.seconds)),
+    [able],
+  );
+  const shapes = able?.aspects ?? ['16:9', '9:16'];
+
+  // A grade that cannot make the chosen length gets the nearest it can, rather
+  // than a button that looks selected and generates something else.
+  useEffect(() => {
+    if (lengths.length && !lengths.some((one) => one.seconds === seconds)) {
+      const nearest = lengths.reduce((best, one) =>
+        Math.abs(one.seconds - seconds) < Math.abs(best.seconds - seconds) ? one : best,
+      );
+      setSeconds(nearest.seconds);
+    }
+  }, [lengths, seconds]);
+
+  useEffect(() => {
+    if (!shapes.includes(aspect)) setAspect(shapes[0] as Aspect);
+  }, [shapes, aspect]);
+
   const spoken = useMemo(() => spokenLines(prompt), [prompt]);
   const unquoted = useMemo(() => looksUnquoted(prompt), [prompt]);
 
   const pick = (chosen: Scene) => {
+    // Pressing the same tile again walks to its next scaffold rather than
+    // rewriting what is already there with the same words — the tile is the
+    // way to ask for another idea, not just the way to choose a kind.
+    const next = scene?.id === chosen.id ? (variant + 1) % chosen.scaffolds.length : 0;
     setScene(chosen);
-    setPrompt(chosen.scaffold);
+    setVariant(next);
+    setPrompt(chosen.scaffolds[next]);
     setAspect(chosen.aspect);
     setSeconds(chosen.seconds);
     setError(null);
@@ -116,6 +150,7 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
 
   const clear = () => {
     setScene(null);
+    setVariant(0);
     setPrompt('');
     setError(null);
   };
@@ -257,6 +292,13 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
               <span className="block text-xs text-zinc-500 leading-snug pt-0.5">
                 {t(`canvas.note.${one.id}`, one.note)}
               </span>
+              {one.scaffolds.length > 1 && (
+                <span className="block text-[11px] text-zinc-600 pt-1">
+                  {active
+                    ? `${t('canvas.another', 'Press again for another')} · ${variant + 1}/${one.scaffolds.length}`
+                    : `${one.scaffolds.length} ${t('canvas.ideas', 'ideas')}`}
+                </span>
+              )}
               {one.speaks && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 pt-1.5">
                   <Quote className="w-3 h-3" />
@@ -399,7 +441,7 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
           <div>
             <span className="text-sm text-zinc-400">{t('canvas.shape', 'Shape')}</span>
             <div className="flex gap-1.5 mt-1.5">
-              {SHAPES.map((one) => (
+              {SHAPES.filter((one) => shapes.includes(one.id)).map((one) => (
                 <button
                   key={one.id}
                   type="button"
@@ -418,22 +460,28 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
           </div>
           <div>
             <span className="text-sm text-zinc-400">{t('canvas.length', 'Length')}</span>
-            <div className="flex gap-1.5 mt-1.5">
-              {([5, 10] as const).map((one) => (
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {lengths.map((one) => (
                 <button
-                  key={one}
+                  key={one.seconds}
                   type="button"
-                  onClick={() => setSeconds(one)}
-                  className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
-                    seconds === one
+                  onClick={() => setSeconds(one.seconds)}
+                  title={t(`canvas.len.${one.seconds}`, one.note)}
+                  className={`px-3 py-2 rounded-xl text-sm border transition-all ${
+                    seconds === one.seconds
                       ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                   }`}
                 >
-                  {one}s
+                  {one.label}
                 </button>
               ))}
             </div>
+            {/* Said, not hidden in a tooltip. Choosing between five seconds and
+                thirty with nothing but a price to go on is a guess. */}
+            <p className="text-xs text-zinc-500 leading-snug pt-1.5">
+              {t(`canvas.len.${seconds}`, lengths.find((one) => one.seconds === seconds)?.note ?? '')}
+            </p>
           </div>
         </div>
 

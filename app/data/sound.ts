@@ -193,11 +193,27 @@ export interface LengthChoice {
   readonly note: string;
 }
 
+/**
+ * How long a song may be.
+ *
+ * The music API takes up to ten minutes and this list stopped at three, so two
+ * thirds of what the engine can do was not on the screen at all. Nobody was
+ * told; it simply was not offered.
+ *
+ * Longer costs more, and visibly: `songCost` charges five credits a minute, so
+ * the price beside each of these is a real number the route will really take.
+ * That is what makes it safe to offer ten — it is not a way to spend somebody's
+ * month by accident.
+ */
 export const LENGTH_CHOICES: readonly LengthChoice[] = [
   { seconds: 30, label: '30 seconds', note: 'A hook, for a reel' },
   { seconds: 60, label: '1 minute', note: 'Verse and chorus' },
   { seconds: 120, label: '2 minutes', note: 'A short song, right through' },
   { seconds: 180, label: '3 minutes', note: 'A full release' },
+  { seconds: 240, label: '4 minutes', note: 'Room for a bridge and a last chorus' },
+  { seconds: 300, label: '5 minutes', note: 'A long one — an outro that goes somewhere' },
+  { seconds: 420, label: '7 minutes', note: 'Album length. Give it a plan or it wanders' },
+  { seconds: 600, label: '10 minutes', note: 'The longest the engine makes in one go' },
 ];
 
 /** Production words worth appending to almost anything. */

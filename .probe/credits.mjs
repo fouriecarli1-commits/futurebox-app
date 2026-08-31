@@ -62,3 +62,38 @@ say(
 
 console.log(problems.length ? problems.map((p) => `FAIL ${p}`).join('\n') : 'all good');
 process.exit(problems.length ? 1 : 0);
+
+// ── Every length the screen offers is one the server will really make ──
+//
+// The picker stopped at three minutes while the music API took ten, so two
+// thirds of the engine was never on screen. Widening it is only safe if the
+// price shown is the price charged, and if nothing offered exceeds what the
+// route will accept.
+const { LENGTH_CHOICES } = await import('../app/data/sound.ts');
+
+// The music route clamps to these; a choice outside them is silently cut.
+const API_MIN = 3;
+const API_MAX = 600;
+
+for (const choice of LENGTH_CHOICES) {
+  say(
+    choice.seconds >= API_MIN && choice.seconds <= API_MAX,
+    `${choice.label} is ${choice.seconds}s, outside what the music API accepts`,
+  );
+  say(choice.note.length > 10, `${choice.label} does not say what it is for`);
+  // The number beside it on screen comes from here, so it is the real one.
+  say(songCost(choice.seconds) > 0, `${choice.label} costs nothing, which cannot be right`);
+}
+say(
+  LENGTH_CHOICES.some((one) => one.seconds >= 300),
+  'nothing longer than five minutes is offered, and the engine makes ten',
+);
+say(
+  LENGTH_CHOICES.every((one, i) => i === 0 || one.seconds > LENGTH_CHOICES[i - 1].seconds),
+  'the song lengths are not in order',
+);
+// Longer has to cost more, or the long one is the only rational choice.
+say(
+  LENGTH_CHOICES.every((one, i) => i === 0 || songCost(one.seconds) > songCost(LENGTH_CHOICES[i - 1].seconds)),
+  'a longer song does not cost more than a shorter one',
+);

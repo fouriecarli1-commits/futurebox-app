@@ -104,7 +104,29 @@ function reason(body: Envelope | null): string | null {
   return null;
 }
 
-async function start(model: string, request: StartRequest): Promise<Started> {
+/**
+ * What each model will accept, which is not the same for the two of them.
+ *
+ * Seedance takes square, and 21:9 and 4:3 besides; Veo takes wide and tall
+ * only. The first version of this file sent `16:9` for a square request to
+ * both, which quietly gave a Seedance user a different shape from the one they
+ * pressed. Silently substituting is worse than refusing — the member cannot
+ * see it happen and has no idea why the crop is wrong.
+ *
+ * Resolution likewise: the mini tops out at 720p, Veo goes to 4K. Asking for
+ * 720p from Veo was leaving the better half of what was paid for on the table.
+ */
+interface Wire {
+  readonly aspects: readonly string[];
+  readonly resolution: string;
+}
+
+const WIRE: Record<string, Wire> = {
+  seedance: { aspects: ['16:9', '9:16', '1:1'], resolution: '720p' },
+  veo: { aspects: ['16:9', '9:16'], resolution: '1080p' },
+};
+
+async function start(model: string, request: StartRequest, wire: Wire): Promise<Started> {
   if (!key()) {
     return { ok: false, status: 503, message: 'The video engine is not switched on for this app yet.' };
   }
@@ -118,8 +140,11 @@ async function start(model: string, request: StartRequest): Promise<Started> {
       // the moment the clip is cut.
       negative_prompt: 'text, watermark, logo, subtitles, captions, distorted faces, extra limbs',
       duration_secs: request.seconds,
-      aspect_ratio: request.aspect === '1:1' ? '16:9' : request.aspect,
-      resolution: '720p',
+      // A shape the model does not take falls back to wide, and `suits()` in
+      // ./types stops that request reaching here in the first place — so this
+      // is a floor, not a substitution anybody will meet.
+      aspect_ratio: wire.aspects.includes(request.aspect) ? request.aspect : '16:9',
+      resolution: wire.resolution,
       generate_audio: request.speak,
     }),
   });
@@ -162,8 +187,7 @@ async function check(taskId: string): Promise<Progress> {
   return { state: 'running' };
 }
 
-/** Aspects both models accept. 1:1 is asked for as wide and cropped by the page. */
-const ASPECTS = ['16:9', '9:16', '1:1'] as const;
+
 
 export const seedance: Provider = {
   id: 'seedance',
@@ -174,8 +198,10 @@ export const seedance: Provider = {
   // says the API will take this model.
   configured: () => Boolean(key()) && process.env.ELEVEN_SEEDANCE_READY === '1',
   can: {
-    seconds: [5, 10],
-    aspects: ASPECTS,
+    // Seedance takes a length rather than a step, so this is a shelf of useful
+    // ones rather than a limit the model imposes.
+    seconds: [5, 10, 15, 20, 30],
+    aspects: ['16:9', '9:16', '1:1'],
     // Left false deliberately. The cheap rung is for pictures; a spoken line
     // goes to a rung that charges for one, or — better and far cheaper — to
     // ElevenLabs speech laid over silent footage, which is also the only way
@@ -187,8 +213,8 @@ export const seedance: Provider = {
   // ~20 credits a clip at the advertised rate, doubled for ten seconds. A
   // reading of a pricing page, and recorded as such: what each generation
   // really costs is written to the videos row.
-  cost: (seconds) => (seconds >= 10 ? 40 : 20),
-  start: (request) => start(SEEDANCE, request),
+  cost: (seconds) => Math.max(20, Math.ceil(seconds / 5) * 20),
+  start: (request) => start(SEEDANCE, request, WIRE.seedance),
   check,
 };
 
@@ -200,12 +226,14 @@ export const veo: Provider = {
   configured: () => Boolean(key()),
   can: {
     seconds: [4, 6, 8],
-    aspects: ['16:9', '9:16', '1:1'],
+    // Not square. Veo's own request type takes wide and tall only, and
+    // offering a shape it will refuse is a button that cannot work.
+    aspects: ['16:9', '9:16'],
     speaks: true,
     maxPromptChars: 2000,
   },
   ceiling: () => allowance('ELEVEN_VIDEO_CREDITS', 13_000),
   cost: (seconds) => (seconds >= 8 ? 120 : 60),
-  start: (request) => start(VEO, request),
+  start: (request) => start(VEO, request, WIRE.veo),
   check,
 };
