@@ -234,6 +234,11 @@ export const STRINGS: Dict = {
   // ── The video desk ────────────────────────────────────────────────
   "canvas.title": { en: "Video desk", af: "Videolessenaar" },
   "canvas.what": { en: "Describe a shot and the engine makes it. Pick a kind of video to start from — everything it writes is yours to rewrite.", af: "Beskryf \u2019n skoot en die enjin maak dit. Kies \u2019n soort video om mee te begin \u2014 alles wat dit skryf is joune om oor te skryf." },
+  "canvas.on": { en: "The engine is connected", af: "Die enjin is gekoppel" },
+  "canvas.noKey": { en: "No key for the video engine reached this app. Music videos drawn in your browser still work, on any song.", af: "Geen sleutel vir die video-enjin het by hierdie app uitgekom nie. Musiekvideos wat in jou blaaier geteken word, werk steeds, op enige liedjie." },
+  "canvas.soundOn": { en: "Quoted lines will be spoken aloud.", af: "Sinne tussen aanhalingstekens word hardop ges\u00ea." },
+  "canvas.soundOff": { en: "This model cannot speak, so quoted lines will come back silent.", af: "Hierdie model kan nie praat nie, so sinne tussen aanhalingstekens kom stil terug." },
+  "canvas.month": { en: "This month's engine allowance", af: "Hierdie maand se enjintoelae" },
   "canvas.off": { en: "The video engine is not switched on for this app yet. Music videos drawn in your browser still work, on any song.", af: "Die video-enjin is nog nie vir hierdie app aangeskakel nie. Musiekvideos wat in jou blaaier geteken word, werk steeds, op enige liedjie." },
   "canvas.shot": { en: "The shot", af: "Die skoot" },
   "canvas.clear": { en: "Clear", af: "Maak skoon" },

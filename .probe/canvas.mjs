@@ -82,8 +82,16 @@ say(
 const button = page.getByRole('button', { name: /Make it/i }).first();
 say(/\d+\s*credits/i.test(await button.innerText()), `the button reads "${await button.innerText()}"`);
 
-// ── With no engine, it says so and does not offer to generate ──────────
-say(await page.getByText(/not switched on/i).count() === 1, 'no word that the engine is off');
+// ── With no engine, it says so in plain words and refuses to pretend ───
+//
+// This is the state the operator sees before the keys are set, and it is the
+// state a check like this must cover: the strip has to name the problem rather
+// than leave somebody reading an API route to find out.
+say(
+  await page.getByText(/No key for the video engine reached this app/i).count() === 1,
+  'the strip does not say that no key arrived',
+);
+say(await page.getByText(/engine is connected/i).count() === 0, 'it claims a connection it does not have');
 say(await button.isDisabled(), 'the make button is live with no engine behind it');
 
 // ── Nothing broken on the way ──────────────────────────────────────────
