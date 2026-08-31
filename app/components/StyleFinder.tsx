@@ -31,6 +31,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Loader2, Pause, Play, Sparkles, Wand2 } from 'lucide-react';
 import { GENRE_CATEGORIES, GENRE_SAMPLES, type GenreSample } from '../data/genres';
 import { useLang } from '../lib/i18n';
+import { sketch, supported, SKETCH_SECONDS, type Sketch } from '../lib/preview';
 
 interface Idea {
   readonly label: string;
@@ -75,17 +76,13 @@ export default function StyleFinder({
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<string>('All');
   const [playing, setPlaying] = useState<string | null>(null);
+  const [noSound, setNoSound] = useState<string | null>(null);
 
-  // One element for the whole shelf, so pressing play on a second genre stops
-  // the first rather than layering two pieces of music.
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // One sketch at a time, so pressing play on a second genre stops the first
+  // rather than layering two pieces of music.
+  const sketchRef = useRef<Sketch | null>(null);
 
-  useEffect(() => {
-    const element = new Audio();
-    element.addEventListener('ended', () => setPlaying(null));
-    audioRef.current = element;
-    return () => element.pause();
-  }, []);
+  useEffect(() => () => sketchRef.current?.stop(), []);
 
   const shelf = useMemo(
     () => (category === 'All' ? GENRE_SAMPLES : GENRE_SAMPLES.filter((one) => one.category === category)),
@@ -94,18 +91,30 @@ export default function StyleFinder({
 
   const hear = useCallback(
     (sample: GenreSample) => {
-      const element = audioRef.current;
-      if (!element) return;
+      sketchRef.current?.stop();
+      sketchRef.current = null;
+
       if (playing === sample.name) {
-        element.pause();
         setPlaying(null);
         return;
       }
-      element.src = sample.audioUrl;
-      void element.play().catch(() => setPlaying(null));
+      // Said rather than left as a silence. The old version swallowed every
+      // failure into `.catch(() => setPlaying(null))`, so a button that could
+      // not make a sound looked exactly like a button that had made one — and
+      // that is the bug this whole file was rewritten for.
+      if (!supported()) {
+        setPlaying(null);
+        setNoSound(t('style.noAudio', 'This browser cannot play a sketch. The words below still work.'));
+        return;
+      }
+      setNoSound(null);
+      sketchRef.current = sketch(sample);
       setPlaying(sample.name);
+      window.setTimeout(() => {
+        setPlaying((was) => (was === sample.name ? null : was));
+      }, (SKETCH_SECONDS + 0.6) * 1000);
     },
-    [playing],
+    [playing, t],
   );
 
   const write = useCallback(async () => {
@@ -207,6 +216,15 @@ export default function StyleFinder({
         {open && (
           <div className="px-3.5 pb-3.5 space-y-2.5">
             <p className="text-sm text-zinc-500 leading-snug">{t('style.examples')}</p>
+            {/* Four oscillators, and the screen says so. Claiming a recording
+                of the genre would be the easy copy and a false one. */}
+            <p className="text-sm text-zinc-600 leading-snug">
+              {t(
+                'style.sketchNote',
+                'Play draws a sketch in your browser — the tempo, the key and the shape of the groove. It is a direction, not a recording of the genre.',
+              )}
+            </p>
+            {noSound && <p className="text-sm text-amber-300 leading-snug">{noSound}</p>}
 
             {/* Ten categories. The list is long on purpose — this is the
                 reference you scan before you write anything. */}

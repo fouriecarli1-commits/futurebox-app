@@ -9,6 +9,13 @@
  * Each entry carries a `promptSnippet`, which is the actual text that goes into
  * the style field. That is the point of the whole list: hearing "melodic
  * techno" is only useful if the words that produce it come with it.
+ *
+ * There was an `audioUrl` here and it is gone. Seventeen genres pointed at
+ * three mp3s on somebody else's CDN — so half the list was mislabelled even
+ * when it worked, and when the host stopped answering every button went silent
+ * at once with nothing on screen to say why. The sound is drawn from `bpm`,
+ * `key` and `category` now (app/lib/preview.ts), which cannot be wrong about
+ * which genre it is and cannot be taken away.
  */
 
 export interface GenreSample {
@@ -17,8 +24,6 @@ export interface GenreSample {
   subgenre: string;
   bpm: string;
   key: string;
-  /** An example of the genre, hosted elsewhere — not this app's own output. */
-  audioUrl: string;
   /** The words this drops into the style field. The reason the list exists. */
   promptSnippet: string;
   description: string;
@@ -32,7 +37,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Dark, hypnotic, built for a big room',
     bpm: '124 BPM',
     key: 'D Minor',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
     promptSnippet: 'melodic techno, deep hypnotic rolling sub-bass, atmospheric ethereal synth leads, dark emotional drops, 124 bpm, D minor',
     description: 'Hypnotic rolling bass with stadium synth leads. Ideal for dark visuals, cyber cities, and emotional visual climaxes.'
   },
@@ -42,7 +46,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Stripped-back club, all groove',
     bpm: '126 BPM',
     key: 'G Minor',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
     promptSnippet: 'deep tech house, punchy four-on-the-floor kick, bouncy sub-bassline, filtered vocal chops, crisp hi-hats, 126 bpm',
     description: 'Energetic club beat with bouncing basslines and infectious rhythm.'
   },
@@ -52,7 +55,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Atmospheric DnB',
     bpm: '174 BPM',
     key: 'F Major',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3',
     promptSnippet: 'liquid drum and bass, fast rolling breakbeats, lush Rhodes chords, warm 808 reese bass, emotive vocal textures, 174 bpm',
     description: 'High-speed rolling percussion with super smooth, soulful ambient pads.'
   },
@@ -64,7 +66,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Neon 80s, gated snare, big chorus',
     bpm: '130 BPM',
     key: 'C Minor',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
     promptSnippet: '80s synthpop, retro analog synthesizers, gated reverb snare, catchy anthemic vocal melody, driving bassline, 130 bpm',
     description: 'Nostalgic 1980s neon anthems with driving drums and sparkling analog synths.'
   },
@@ -74,7 +75,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Futuristic Cyber Pop',
     bpm: '145 BPM',
     key: 'A Major',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
     promptSnippet: 'hyperpop, pitched vocal hooks, distorted 808s, bright candy synths, glitch transitions, maximalist energy, 145 bpm',
     description: 'High-energy, glossy futuristic pop with playful glitch effects and pitched vocals.'
   },
@@ -86,7 +86,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Post-Grunge / Stadium Rock',
     bpm: '120 BPM',
     key: 'E Minor',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3',
     promptSnippet: 'alternative rock, layered distorted electric guitars, driving live drums, soaring passionate male/female vocals, anthemic chorus, 120 bpm',
     description: 'Raw guitar riffs, heavy acoustic drums, and emotionally charged vocals.'
   },
@@ -96,7 +95,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Heavy riffs against clean electronics',
     bpm: '135 BPM',
     key: 'Drop D',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
     promptSnippet: 'cinematic nu-metal, down-tuned 7-string heavy djent guitar riffs, aggressive synth pads, hybrid electronic rock drums, drop D, 135 bpm',
     description: 'Thunderous low-tuned heavy riffs fused with electronic synth textures.'
   },
@@ -108,7 +106,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Sliding 808s, sparse and menacing',
     bpm: '140 BPM',
     key: 'C# Minor',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3',
     promptSnippet: 'dark cinematic trap, sliding 808 bass, stuttering hi-hats, ominous piano melody, vocal chants, hard-hitting kick, 140 bpm',
     description: 'Sliding bass glides, crisp rapid-fire hats, and dramatic minor-key pianos.'
   },
@@ -118,7 +115,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Vinyl Sampled East Coast',
     bpm: '90 BPM',
     key: 'E Minor',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3',
     promptSnippet: '90s boom-bap hip-hop, dusty vinyl jazz piano sample, punchy acoustic drum breaks, upright bassline, classic street vibe, 90 bpm',
     description: 'Authentic 90s vintage drum chops with soulful sampled jazz harmonies.'
   },
@@ -130,7 +126,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Hazy, intimate, unhurried',
     bpm: '85 BPM',
     key: 'Bb Minor',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
     promptSnippet: 'contemporary R&B, sultry smooth vocal harmonies, warm tape electric piano, laid-back trap drums, deep sub-bass, 85 bpm',
     description: 'Intimate, late-night acoustic soul with rich vocal harmonies and sub-bass.'
   },
@@ -142,7 +137,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Country with a modern low end',
     bpm: '104 BPM',
     key: 'G Major',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
     promptSnippet: 'modern country pop, acoustic guitar strums, pedal steel guitar swells, twangy electric lead guitar, punchy drums, raspy storytelling vocals, 104 bpm',
     description: 'Heartfelt storytelling, acoustic guitars, pedal steel swells, and anthemic choruses.'
   },
@@ -152,7 +146,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Close-mic folk, room and harmony',
     bpm: '78 BPM',
     key: 'D Major',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
     promptSnippet: 'indie folk, fingerpicked acoustic guitar, mournful cello, layered choral vocal harmonies, foot stomps, intimate warm mix, 78 bpm',
     description: 'Intimate acoustic fingerpicking, delicate strings, and rich choral harmonies.'
   },
@@ -164,7 +157,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Midtempo / Aggressive Cyber Bass',
     bpm: '105 BPM',
     key: 'F Minor',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
     promptSnippet: 'industrial cyberpunk, distorted sawtooth bass, metallic percussion hits, dystopian sci-fi sirens, aggressive midtempo beat, 105 bpm',
     description: 'High-octane dystopian combat beats with raw distorted synth energy.'
   },
@@ -176,7 +168,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Blockbuster Film Trailer',
     bpm: '90 BPM',
     key: 'D Minor',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3',
     promptSnippet: 'epic cinematic hybrid, massive brass horns, staccato violins, thunderous taiko drums, sub-bass braam, emotional choir crescendo, 90 bpm',
     description: 'Colossal orchestral instruments with ground-shaking brass and percussion.'
   },
@@ -188,7 +179,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Relaxed Cafe Vibes',
     bpm: '78 BPM',
     key: 'C Major',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3',
     promptSnippet: 'lo-fi chillhop, vinyl crackle, warm Rhodes piano, relaxed boom-bap drum loop, mellow acoustic guitar, cozy rainy day atmosphere, 78 bpm',
     description: 'Cozy tape-saturated beats designed for deep learning, focus, and coding.'
   },
@@ -200,7 +190,6 @@ export const GENRE_SAMPLES: readonly GenreSample[] = [
     subgenre: 'Afrobeats, log drum, sung hooks',
     bpm: '112 BPM',
     key: 'A Minor',
-    audioUrl: 'https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3',
     promptSnippet: 'afrobeats fusion, log drum bassline, infectious shaker percussions, warm saxophone riffs, uplifting melodic vocal chants, 112 bpm',
     description: 'Vibrant African percussions with deep log-drums and uplifting melodies.'
   }

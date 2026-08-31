@@ -3,14 +3,22 @@
 /**
  * The only place a top-up price is ever shown.
  *
- * Not on the billing page, not in a menu, not beside the plans. It appears at
- * the moment somebody asked for something and was told they were short — which
- * is the one moment they actually want to know what a pack costs, and the one
- * moment a price list is help rather than a sales pitch.
+ * Not on the billing page, not in a menu, not beside the plans. Prices belong
+ * where somebody is asking, and there are exactly two moments when they are:
  *
- * It says how short they were, so the smallest pack that gets them there is
- * the one drawn as the answer. Making somebody work out which of three numbers
- * clears a shortfall of forty is a needless sum at the worst moment.
+ *   **Refused.** They asked for something and were told they were short. It
+ *   says by how much, and the smallest pack that clears the gap is drawn as
+ *   the answer — making somebody work out which of three numbers covers a
+ *   shortfall of forty is a needless sum at the worst moment.
+ *
+ *   **Asking.** They pressed their own balance to buy more. Nothing is short,
+ *   nothing needs clearing, and no pack is the answer because there is no
+ *   question. It says what they have and shows the shelf.
+ *
+ * Those two need different words, and until now they shared one set: opening
+ * it from the balance with 1570 credits read "You are short by 0. That needed
+ * 0, and you have 1570." A panel that reports a shortfall of nothing to
+ * somebody who is not short reads as a bug, because it is one.
  */
 
 import React, { useState } from 'react';
@@ -36,9 +44,16 @@ export default function OutOfCredits({
 
   if (!short) return null;
 
+  // `need: 0` is how the balance chip opens this: a request to see the shelf,
+  // not a refusal to explain.
+  const refused = short.need > 0;
   const missing = Math.max(0, short.need - short.balance);
   // The smallest pack that actually covers the gap, or the largest if none do.
-  const enough = packs.find((one) => one.credits >= missing) ?? packs[packs.length - 1];
+  // Nothing is highlighted when nothing was refused — there is no answer to
+  // point at when no question was asked.
+  const enough = refused
+    ? packs.find((one) => one.credits >= missing) ?? packs[packs.length - 1]
+    : null;
 
   const buy = async (pack: Pack): Promise<void> => {
     setProblem(null);
@@ -59,11 +74,19 @@ export default function OutOfCredits({
           <div className="min-w-0">
             <p className="text-xl font-black text-white flex items-center gap-2">
               <Zap className="w-5 h-5 text-amber-400 flex-shrink-0" />
-              {t('credits.short', 'You are short by')} {missing}
+              {refused
+                ? `${t('credits.short', 'You are short by')} ${missing}`
+                : `${short.balance} ${t('credits.youHave', 'credits')}`}
             </p>
             <p className="text-sm text-zinc-400 leading-snug pt-1">
-              {t('credits.shortNote', 'That needed')} {short.need},{' '}
-              {t('credits.andYouHave', 'and you have')} {short.balance}.{' '}
+              {refused ? (
+                <>
+                  {t('credits.shortNote', 'That needed')} {short.need},{' '}
+                  {t('credits.andYouHave', 'and you have')} {short.balance}.{' '}
+                </>
+              ) : (
+                <>{t('credits.browsing', 'Nothing is short — this is the shelf.')} </>
+              )}
               {t('credits.topUpNote', 'A pack never expires, and it is used before next month’s allowance.')}
             </p>
           </div>
@@ -79,7 +102,7 @@ export default function OutOfCredits({
 
         <div className="space-y-2">
           {packs.map((pack) => {
-            const answers = pack.id === enough.id;
+            const answers = enough !== null && pack.id === enough.id;
             return (
               <button
                 key={pack.id}
