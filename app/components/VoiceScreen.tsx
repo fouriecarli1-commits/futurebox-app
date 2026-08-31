@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Voice — the screen somebody opens when they want to hear themselves.
+ * Your voice — the screen for the voice itself, not for what is made with it.
  *
  * It used to say "Neither is connected yet, so this is not switched on". That
  * was true when it was written and stopped being true twice over: you can
@@ -17,10 +17,19 @@
  * The singing half stays with the song, and this screen says so rather than
  * offering a button that cannot work: recording a vocal needs a backing track
  * to sing over, which means it needs a song in hand.
+ *
+ * What it also has to say is where it *is not*. Two rooms here are about
+ * speaking — this one and Podcast — and somebody who opens the wrong one finds
+ * a screen that plainly does something, which is worse than an empty one,
+ * because it does not look like the wrong room. So both directions are printed
+ * here: a voice of your own is made in this room and used in the others; a show
+ * with episodes and a feed is Podcast; singing on your own song is the Booth,
+ * which now has its own rung and no longer needs to be reached through a
+ * button on a song row.
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { ArrowUpRight, Mic, Music } from 'lucide-react';
+import { ArrowUpRight, Mic, Music, Radio } from 'lucide-react';
 import VoiceLab, { type VoiceState } from './VoiceLab';
 import { accessToken } from '../lib/cloud';
 import { downloadBlob } from '../lib/library';
@@ -28,10 +37,12 @@ import { useLang } from '../lib/i18n';
 
 export default function VoiceScreen({
   onUpgrade,
-  onGoToMake,
+  onGoToBooth,
+  onGoToPodcast,
 }: {
   onUpgrade: () => void;
-  onGoToMake: () => void;
+  onGoToBooth: () => void;
+  onGoToPodcast: () => void;
 }): React.ReactElement {
   const { t } = useLang();
   const [state, setState] = useState<VoiceState>({ configured: false, mine: [], stock: [] });
@@ -58,10 +69,10 @@ export default function VoiceScreen({
       <div>
         <p className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
           <Mic className="w-6 h-6 text-emerald-400" />
-          {t('voice.screen', 'Voice')}
+          {t('voice.screen')}
         </p>
         <p className="text-base text-zinc-400 pt-1 max-w-2xl leading-relaxed">
-          {t('voice.screenSub', 'Clone your own voice and have it read a script. To sing on a track, make the song first — the recording goes over the backing, so it needs one.')}
+          {t('voice.screenSub')}
         </p>
       </div>
 
@@ -74,21 +85,37 @@ export default function VoiceScreen({
         onUpgrade={onUpgrade}
       />
 
-      {/* Where the other half is, said plainly instead of duplicated here. */}
-      <button
-        type="button"
-        onClick={onGoToMake}
-        className="w-full rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-left hover:border-emerald-500/50 transition-all flex items-start gap-3"
-      >
-        <Music className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-        <span className="min-w-0 flex-1">
-          <span className="block text-base font-bold text-white">{t('voice.sing', 'Sing on a track yourself')}</span>
-          <span className="block text-sm text-zinc-500 leading-snug">
-            {t('voice.singNote', 'In Make a song: tick "I will sing it myself" for a backing with no vocal, then press "Sing over it" on the track. The take is mixed with the music and kept as its own song.')}
+      {/* Where the other rooms are, said plainly instead of duplicated here.
+          Both of these used to be one panel giving directions to a button
+          inside another screen. The booth has its own rung now, so the
+          directions were wrong as well as long. */}
+      <div className="grid gap-2 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={onGoToBooth}
+          className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-left hover:border-emerald-500/50 transition-all flex items-start gap-3"
+        >
+          <Music className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-base font-bold text-white">{t('voice.sing')}</span>
+            <span className="block text-sm text-zinc-500 leading-snug">{t('voice.singNote')}</span>
           </span>
-        </span>
-        <ArrowUpRight className="w-4 h-4 text-zinc-600 flex-shrink-0 mt-1" />
-      </button>
+          <ArrowUpRight className="w-4 h-4 text-zinc-600 flex-shrink-0 mt-1" />
+        </button>
+
+        <button
+          type="button"
+          onClick={onGoToPodcast}
+          className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 text-left hover:border-emerald-500/50 transition-all flex items-start gap-3"
+        >
+          <Radio className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-base font-bold text-white">{t('voice.show')}</span>
+            <span className="block text-sm text-zinc-500 leading-snug">{t('voice.showNote')}</span>
+          </span>
+          <ArrowUpRight className="w-4 h-4 text-zinc-600 flex-shrink-0 mt-1" />
+        </button>
+      </div>
     </div>
   );
 }
