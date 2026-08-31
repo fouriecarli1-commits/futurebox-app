@@ -23,6 +23,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { TIER_SPECS, type Tier } from '../plans';
 import { addressKey, addressOf, emailKey, isDisposable } from './identity';
+import { isOwnerEmail } from './owners';
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
@@ -40,14 +41,9 @@ const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
  * NEXT_PUBLIC_ prefix, so the list never reaches a browser and nobody can read
  * off who is privileged.
  */
-const OWNERS = (process.env.OWNER_EMAIL ?? '')
-  .split(',')
-  .map((entry) => entry.trim().toLowerCase())
-  .filter(Boolean);
-
-function isOwner(email: string): boolean {
-  return email !== '' && OWNERS.indexOf(email.toLowerCase()) !== -1;
-}
+// The list and the match live in ./owners, with no imports, so they can be
+// tested on their own — see .probe/owner-credits.mjs.
+const isOwner = isOwnerEmail;
 
 /**
  * Whether this caller runs the place.
