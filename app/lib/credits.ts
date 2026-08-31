@@ -99,6 +99,15 @@ export function readCost(characters: number): number {
  * There is air between them now.
  */
 export const TIER_CREDITS: Record<Tier, number> = {
+  // Two half songs, given whole on the first visit of the month.
+  //
+  // There was a weekly refill on top of this — five now, five on Monday — as a
+  // reason to come back. It was not one. The month's budget is ten, so the
+  // second Monday's five was the last, and "five every Monday" then said
+  // nothing for the rest of the month. A weekly promise that stops halfway
+  // through is worse than no weekly promise, and making it genuinely weekly
+  // costs 20 to 25 a month — which puts what the engines can serve *below*
+  // what break-even needs. So it is one grant, and the card says one grant.
   free: 10,
   maker: 120,
   studio: 350,
@@ -106,26 +115,12 @@ export const TIER_CREDITS: Record<Tier, number> = {
 };
 
 /**
- * Handed to a free account every Monday, within the month's budget.
- *
- * Two half songs a month, arriving one a week. The budget is what makes that
- * true: a ceiling on the *balance* is not a ceiling on the month, and the
- * first version of this handed out 65 credits a month rather than 25 —
- * somebody who spent down every week was refilled every Monday because their
- * balance was under the cap. `grant_credits` counts what has actually been
- * given since the first of the month, so the number on the card is the number
- * that is given.
- */
-export const FREE_WEEKLY = 5;
-
-/**
  * The most credits an account may hold.
  *
  * Not meanness — the video engine has a hard monthly ceiling, and a hundred
  * people who saved six months of credits and spent them in one week would go
  * through it in a day. On a paid tier the cap is three months of the
- * allowance, which nobody reaches by using the product normally. On free it is
- * the monthly allowance itself: the weekly top-up refills, it does not stack.
+ * allowance, which nobody reaches by using the product normally.
  */
 export function capFor(tier: Tier): number {
   return tier === 'free' ? TIER_CREDITS.free : TIER_CREDITS[tier] * 3;
@@ -134,8 +129,8 @@ export function capFor(tier: Tier): number {
 /**
  * The most that may be *granted* in one calendar month, whatever the balance.
  *
- * The same number as the monthly allowance, which is the point: a weekly
- * refill is a way of delivering that allowance, not a way of exceeding it.
+ * The same number as the monthly allowance, which is the point: this runs on
+ * every visit, and a second visit must not be a second month.
  */
 export function budgetFor(tier: Tier): number {
   return TIER_CREDITS[tier];
@@ -200,16 +195,4 @@ export function monthKey(tier: Tier, when: Date = new Date()): string {
   return `${tier}-${month}`;
 }
 
-/**
- * The period key for a free account's weekly top-up.
- *
- * ISO weeks, counted from the Thursday of the week — the ordinary definition,
- * and the one that does not hand out two top-ups in the days around New Year.
- */
-export function weekKey(when: Date = new Date()): string {
-  const date = new Date(Date.UTC(when.getUTCFullYear(), when.getUTCMonth(), when.getUTCDate()));
-  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  const week = Math.ceil(((date.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
-  return `weekly-${date.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
-}
+

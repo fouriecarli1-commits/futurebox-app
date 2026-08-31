@@ -27,7 +27,10 @@ export async function GET(request: Request): Promise<Response> {
   return Response.json({
     metered: true,
     signedIn: true,
-    balance,
+    // False when the credit tables are not there yet. The screen shows a dash
+    // rather than a zero, because a zero here reads as "you have used them up".
+    ready: balance !== null,
+    balance: balance ?? 0,
     tier: caller.tier,
     monthly: TIER_CREDITS[caller.tier],
     cap: capFor(caller.tier),
