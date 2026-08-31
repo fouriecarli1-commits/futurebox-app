@@ -88,23 +88,8 @@ $$;
 revoke all on function public.moderation_strikes(uuid, text, integer) from public, anon, authenticated;
 grant execute on function public.moderation_strikes(uuid, text, integer) to service_role;
 
--- ── The consent record ───────────────────────────────────────────────────
---
--- Cloning a voice already requires a confirmation that the voice is the
--- caller's own; without it the request is refused. What was missing is the
--- proof that the confirmation happened.
---
--- A checkbox that leaves no trace is worth nothing the moment somebody says
--- "I never agreed to that". These three columns are the trace: the exact
--- words that were on the screen, the moment they were accepted, and a salted
--- hash of the address they were accepted from. Not an argument — a record.
---
--- Existing voices, cloned before this migration, get a null `consent_at`.
--- That is the truthful value: the confirmation was required and given, but it
--- was not written down, and backfilling a timestamp would be inventing
--- evidence. Anything cloned from now on carries one.
-
-alter table public.voices
-  add column if not exists consent_at timestamptz,
-  add column if not exists consent_ip_hash text,
-  add column if not exists consent_text text;
+-- The consent record that goes with a cloned voice lives in podcast.sql,
+-- beside the table it describes. It was here, and this file then failed on any
+-- project where the podcast migration had not been run yet — a migration that
+-- reaches into another one's table is a migration with an order nobody was
+-- told about.
