@@ -27,6 +27,8 @@ curl -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3111/probe-bal
 
 | File | Checks |
 | --- | --- |
+| `booth.mjs` | That the Booth has a rung on the rail, and that both doors into it file a take in the same place |
+| `booth-screen.mjs` | An empty booth explains itself; a full one lists the songs, and one already sung on reopens rather than restarts |
 | `balance.mjs` | The credit chip in all eight of its states — a number only when the system is genuinely working |
 | `collab.mjs` | Ask, accept, talk, drop a song in; and that the room is shut until both agreed |
 | `csp.mjs` | That the content policy does not refuse anything the app needs |

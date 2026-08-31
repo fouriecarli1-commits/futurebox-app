@@ -25,6 +25,7 @@ import {
   type Track,
 } from '../lib/library';
 import { durationOf, readAudio } from '../lib/trackaudio';
+import { keepMix, takeId } from '../lib/takekeep';
 import { engines, splitSections, type Stage } from '../lib/engines';
 import { expect as expectWait, remember } from '../lib/timing';
 import VideoPanel from './VideoPanel';
@@ -414,32 +415,7 @@ export default function MakeMusic({
   };
 
   const keepTake = async (over: Track, mixed: Blob, doubled: boolean, take: Blob) => {
-    const id = `t-${Date.now()}`;
-    await putAudio(id, mixed);
-    // Kept beside the mix so the song can be opened up and changed again.
-    await putAudio(`${id}:take`, take);
-    const length = (await durationOf(mixed)) ?? over.seconds;
-    const sung: Track = {
-      ...over,
-      id,
-      title: `${over.title} — ${t('make.withYourVoice', 'with your voice')}`,
-      // Named for what it is. The vocal here is a recording of a person, and
-      // that is a stronger thing to print on a release than any clone.
-      models: over.models
-        .filter((name) => name !== 'Backing — no vocal')
-        .concat('Your voice (recorded)')
-        // Said out loud when it is true. A double is a real production choice
-        // and a good one, and a song that quietly has a generated voice in it
-        // while the credits say otherwise is the one thing this must not be.
-        .concat(doubled ? ['AI voice, kept under yours'] : []),
-      seconds: Math.round(length),
-      createdAt: new Date().toISOString(),
-      // The new song is a new file. Whatever was separated belongs to the one
-      // it came from, and carrying the flag across would claim stems that are
-      // not on the device under this id.
-      stems: undefined,
-      mixOf: { source: over.id },
-    };
+    const sung = await keepMix(over, mixed, doubled, take, t('make.withYourVoice', 'with your voice'));
     const next = [sung, ...tracks];
     setTracks(next);
     saveTracks(next);
@@ -931,7 +907,7 @@ export default function MakeMusic({
                           return;
                         }
                         const music = await readAudio(source.id);
-                        const take = await getAudio(`${track.id}:take`);
+                        const take = await getAudio(takeId(track.id));
                         if (!music || !take) {
                           setStatus(t('make.missing'));
                           return;

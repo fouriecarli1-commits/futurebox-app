@@ -56,6 +56,41 @@ export const STRINGS: Dict = {
   "rail.write.hint": { en: "Lyrics and style", af: "Woorde en styl" },
   "rail.studio": { en: "Studio", af: "Studio" },
   "rail.studio.hint": { en: "Timeline and edits", af: "Tydlyn en fixes" },
+  "rail.booth": { en: "The Booth", af: "Die opnamekamer" },
+  "rail.booth.hint": { en: "Sing on your own song", af: "Sing op jou eie snit" },
+  "booth.room.sub": {
+    en: "Record yourself over one of your songs. Everything stays on this device until you keep the take.",
+    af: "Neem jouself op oor een van jou snitte. Alles bly op hierdie toestel totdat jy die opname hou.",
+  },
+  "booth.room.sing": {
+    en: "Sing on your own song, with the words in time and a count-in before you come in.",
+    af: "Sing op jou eie snit, met die woorde op tyd en 'n intel voordat jy inkom.",
+  },
+  "booth.room.see": {
+    en: "The backing above and your take below, on one clock, so you can see where you are.",
+    af: "Die begeleiding bo en jou opname onder, op een klok, sodat jy kan sien waar jy is.",
+  },
+  "booth.room.punch": {
+    en: "Drag across the line that went wrong and sing only that. The rest of the take is kept.",
+    af: "Sleep oor die re\u00ebl wat verkeerd geloop het en sing net dit. Die res van die opname bly.",
+  },
+  "booth.room.split": {
+    en: "Split the song, lift the generated voice out, and put yours where it was.",
+    af: "Split die snit, haal die gegenereerde stem uit, en sit joune in sy plek.",
+  },
+  "booth.room.lanes": {
+    en: "Lanes, levels, mutes and solos when one voice over one song is not enough.",
+    af: "Bane, vlakke, mutes en solo's wanneer een stem oor een snit nie genoeg is nie.",
+  },
+  "booth.room.none": {
+    en: "There is nothing to sing on yet. Make a song first \u2014 a backing track with no vocal on it is the one to ask for if you plan to sing it yourself.",
+    af: "Daar is nog niks om op te sing nie. Maak eers 'n snit \u2014 vra vir 'n begeleidingsbaan sonder sang as jy dit self wil sing.",
+  },
+  "booth.room.goMake": { en: "Make a song", af: "Maak 'n snit" },
+  "booth.room.pick": { en: "Pick a song to sing on.", af: "Kies 'n snit om op te sing." },
+  "booth.room.open": { en: "Open the booth", af: "Maak die opnamekamer oop" },
+  "booth.room.sungOn": { en: "you sang on this", af: "jy het hierop gesing" },
+  "booth.room.isSplit": { en: "split", af: "gesplit" },
   "arena.title": { en: "The Arena", af: "Die Arena" },
   "arena.sub": { en: "A real prize, judged on the work against a published rubric \u2014 never drawn at random \u2014 and every competition has a free entry route that wins exactly the same prize.", af: "\u2019n Regte prys, beoordeel op die werk teen \u2019n gepubliseerde maatstaf \u2014 nooit lukraak getrek nie \u2014 en elke kompetisie het \u2019n gratis roete wat presies dieselfde prys wen." },
   "arena.none": { en: "Nothing running right now", af: "Niks aan die gang op die oomblik nie" },
