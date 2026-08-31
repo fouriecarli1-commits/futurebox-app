@@ -20,7 +20,7 @@
 
 import { admin, callerFrom, metered, type Caller } from './account';
 import {
-  capFor, FREE_WEEKLY, monthKey, TIER_CREDITS, weekKey,
+  budgetFor, capFor, FREE_WEEKLY, monthKey, TIER_CREDITS, weekKey,
 } from '@/app/lib/credits';
 
 /** What is left. Zero when there is no database to ask. */
@@ -105,13 +105,20 @@ export async function settle(caller: Caller): Promise<number> {
   if (!client) return 0;
 
   const cap = capFor(caller.tier);
+  // What may be handed over this month across every grant. Without it the
+  // weekly refill below is not a delivery of the allowance, it is a second one.
+  const budget = budgetFor(caller.tier);
 
+  // A paid tier gets its whole month at once. Free gets one week's worth now
+  // and the rest on Mondays — but it has to get *something* now, or somebody
+  // who signs up on a Tuesday sits looking at zero until the weekend.
   await client.rpc('grant_credits', {
     p_owner: caller.id,
-    p_amount: TIER_CREDITS[caller.tier],
+    p_amount: caller.tier === 'free' ? FREE_WEEKLY : TIER_CREDITS[caller.tier],
     p_reason: 'monthly',
     p_period: monthKey(caller.tier),
     p_cap: cap,
+    p_budget: budget,
   });
 
   if (caller.tier === 'free') {
@@ -121,6 +128,7 @@ export async function settle(caller: Caller): Promise<number> {
       p_reason: 'weekly',
       p_period: weekKey(),
       p_cap: cap,
+      p_budget: budget,
     });
   }
 

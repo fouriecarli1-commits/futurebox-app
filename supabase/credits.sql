@@ -115,29 +115,42 @@ $$;
 
 -- ────────────────────────────────────────────────────────────── grant ────
 
--- Give credits, up to a ceiling, once per window.
+-- Give credits, up to a ceiling, once per window, within a month's budget.
 --
 -- Returns how many were actually given, which is not always what was asked
--- for. Two things trim it:
+-- for. Three things trim it:
 --
---   * the period. Called twice for the same month it writes nothing the second
---     time, so a page that refreshes does not hand out a second month.
---   * the cap. Somebody sitting on nearly a full balance gets topped up to the
---     ceiling and no further. Credits that pile up unspent are a bill that
---     arrives all at once — and with a hard monthly ceiling on the video
---     engine, all at once is exactly what cannot be served.
+--   * the period. Called twice for the same window it writes nothing the
+--     second time, so a page that refreshes does not hand out a second month.
+--   * the balance cap. Somebody sitting on nearly a full balance is topped up
+--     to the ceiling and no further. Credits that pile up unspent are a bill
+--     that arrives all at once, and the video engine's hard monthly ceiling is
+--     exactly what cannot serve all at once.
+--   * the month's budget, which is the important one and was missing.
+--
+-- Why the budget exists. A cap on the *balance* is not a cap on the month. A
+-- free account given 25 with a weekly top-up of 10 spends down to nothing each
+-- week, is refilled every Monday because its balance is under the ceiling, and
+-- ends the month having been given 65 — two and a half times the number on the
+-- pricing card, and the free tier's whole cost model with it. The budget
+-- counts what has actually been handed over since the first of the month, so
+-- the number on the card is the number that is given.
 create or replace function public.grant_credits(
   p_owner  uuid,
   p_amount integer,
   p_reason text,
   p_period text,
-  p_cap    integer
+  p_cap    integer,
+  -- The most that may be granted in this calendar month, across every grant.
+  -- Null means no monthly budget, which is right for a one-off.
+  p_budget integer default null
 )
 returns integer
 language plpgsql
 as $$
 declare
   balance integer;
+  given   integer;
   room    integer;
   give    integer;
 begin
@@ -160,6 +173,20 @@ begin
   where owner = p_owner;
 
   room := greatest(0, p_cap - balance);
+
+  -- What this account has already been *given* this month, as opposed to what
+  -- it happens to be holding. Purchases and refunds are not grants and do not
+  -- count against the allowance somebody is entitled to.
+  if p_budget is not null then
+    select coalesce(sum(amount), 0) into given
+    from public.credit_entries
+    where owner = p_owner
+      and amount > 0
+      and reason in ('monthly', 'weekly')
+      and created_at >= date_trunc('month', now());
+    room := least(room, greatest(0, p_budget - given));
+  end if;
+
   give := least(p_amount, room);
   if give <= 0 then
     return 0;

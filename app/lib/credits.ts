@@ -85,22 +85,38 @@ export function readCost(characters: number): number {
 
 /* ────────────────────────────────────────────────── what each tier gets ─ */
 
-/** Credits included every month. Free is a monthly allowance like any other. */
+/**
+ * Credits included every month. Free is a monthly allowance like any other.
+ *
+ * These are sized against the engines rather than against the price. Both
+ * engines are fixed monthly buckets — 12,222 minutes of music and 371 videos —
+ * so the question is not what a tier can afford to give away, it is how many
+ * members the buckets hold if everybody spends everything.
+ *
+ * At 200/600/1600 they held 96, and break-even was 136: the two numbers never
+ * met, and a full month would have run the music engine dry before the
+ * business worked. At these numbers they hold 155 against a break-even of 109.
+ * There is air between them now.
+ */
 export const TIER_CREDITS: Record<Tier, number> = {
-  free: 25,
-  maker: 200,
-  studio: 600,
-  label: 1600,
+  free: 10,
+  maker: 120,
+  studio: 350,
+  label: 800,
 };
 
 /**
- * Handed to a free account every Monday, up to the monthly ceiling.
+ * Handed to a free account every Monday, within the month's budget.
  *
- * A reason to come back that costs nothing extra: it can never lift somebody
- * above the 25 they were already going to get, it only refills what they
- * actually spent.
+ * Two half songs a month, arriving one a week. The budget is what makes that
+ * true: a ceiling on the *balance* is not a ceiling on the month, and the
+ * first version of this handed out 65 credits a month rather than 25 —
+ * somebody who spent down every week was refilled every Monday because their
+ * balance was under the cap. `grant_credits` counts what has actually been
+ * given since the first of the month, so the number on the card is the number
+ * that is given.
  */
-export const FREE_WEEKLY = 10;
+export const FREE_WEEKLY = 5;
 
 /**
  * The most credits an account may hold.
@@ -113,6 +129,16 @@ export const FREE_WEEKLY = 10;
  */
 export function capFor(tier: Tier): number {
   return tier === 'free' ? TIER_CREDITS.free : TIER_CREDITS[tier] * 3;
+}
+
+/**
+ * The most that may be *granted* in one calendar month, whatever the balance.
+ *
+ * The same number as the monthly allowance, which is the point: a weekly
+ * refill is a way of delivering that allowance, not a way of exceeding it.
+ */
+export function budgetFor(tier: Tier): number {
+  return TIER_CREDITS[tier];
 }
 
 /* ─────────────────────────────────────────────────────────── the packs ─ */
