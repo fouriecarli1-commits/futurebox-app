@@ -94,6 +94,20 @@ say(
 say(await page.getByText(/engine is connected/i).count() === 0, 'it claims a connection it does not have');
 say(await button.isDisabled(), 'the make button is live with no engine behind it');
 
+// ── The three rungs, priced, and never an engine name ──────────────────
+for (const rung of ['Standard', 'Better', 'Premium']) {
+  say(await page.getByText(rung, { exact: true }).count() >= 1, `no ${rung} grade on the desk`);
+}
+const words = await page.locator('body').innerText();
+for (const secret of ['Kling', 'Seedance', 'Veo', 'ByteDance', 'ElevenLabs']) {
+  say(!words.includes(secret), `the desk names "${secret}" — the engine is ours to choose and ours to change`);
+}
+// Standard is the default, and it is the one that pays.
+const standard = page.getByRole('button', { name: /Standard/i }).first();
+say(/30 credits/i.test(await standard.innerText()), `standard reads "${await standard.innerText()}"`);
+say(/60 credits/i.test(await page.getByRole('button', { name: /Better/i }).first().innerText()), 'better is not twice standard');
+say(/120 credits/i.test(await page.getByRole('button', { name: /Premium/i }).first().innerText()), 'premium is not four times standard');
+
 // ── Nothing broken on the way ──────────────────────────────────────────
 say(broken.length === 0, `the page broke: ${broken.slice(0, 3).join(' | ')}`);
 

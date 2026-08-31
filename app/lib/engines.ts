@@ -76,8 +76,16 @@ export interface AudioRequest {
 export interface VideoRequest {
   readonly title: string;
   readonly treatment: string;
-  readonly aspect: '16:9' | '9:16';
+  readonly aspect: '16:9' | '9:16' | '1:1';
   readonly seconds: number;
+  /**
+   * What was paid for, not which engine. The server picks the engine, because
+   * the cheapest and dearest differ by thirteen times the money and nobody
+   * buying a video has any way to know that.
+   */
+  readonly grade?: 'standard' | 'better' | 'premium';
+  /** Whether a quoted line should be spoken by the engine itself. */
+  readonly speak?: boolean;
 }
 
 export interface EngineResult {
@@ -131,29 +139,44 @@ export async function probeAudio(): Promise<boolean> {
  * be findable only by opening /api/video and reading JSON, which is a thing
  * nobody should have to do to find out whether their own app is plugged in.
  */
-export interface VideoEngine {
+export interface VideoGrades {
   readonly available: boolean;
-  readonly model: string;
-  /** 'api-key', 'signed' or 'none' — which credentials the server found. */
+  /** 'api-key', 'signed' or 'none' — which Kling credentials the server found. */
   readonly auth: string;
-  /** True where a quoted line in a prompt comes back as audio. */
+  /** Which rungs have a working engine behind them right now. */
+  readonly grades: readonly string[];
+  /** True where some available engine can speak a quoted line aloud. */
   readonly sound: boolean;
-  /** Present only for the operator. */
-  readonly month?: { readonly used: number; readonly ceiling: number };
+  /**
+   * Every engine and what it has spent this month. Present only for whoever
+   * runs the place — it is the size of a bill, and the member buying a video
+   * has no business with it and no use for it.
+   */
+  readonly engines?: readonly {
+    readonly id: string;
+    readonly name: string;
+    readonly grade: string;
+    readonly model: string;
+    readonly used: number;
+    readonly ceiling: number;
+  }[];
 }
 
-const NO_ENGINE: VideoEngine = { available: false, model: '', auth: 'none', sound: false };
+/** Kept as the old name so screens that only wanted a yes or no still read. */
+export type VideoEngine = VideoGrades;
 
-let videoState: VideoEngine | null = null;
-let videoProbe: Promise<VideoEngine> | null = null;
+const NO_ENGINE: VideoGrades = { available: false, auth: 'none', grades: [], sound: false };
+
+let videoState: VideoGrades | null = null;
+let videoProbe: Promise<VideoGrades> | null = null;
 
 /**
- * Ask the server what the video engine is.
+ * Ask the server what video can do right now.
  *
- * Carries the token when there is one, because the month's spend is only
+ * Carries the token when there is one, because the per-engine spend is only
  * answered for the operator and there is no way to ask as them without it.
  */
-export async function probeVideoEngine(): Promise<VideoEngine> {
+export async function probeVideoEngine(): Promise<VideoGrades> {
   if (videoState !== null) return videoState;
   if (!videoProbe) {
     videoProbe = (async () => {
@@ -163,13 +186,13 @@ export async function probeVideoEngine(): Promise<VideoEngine> {
           headers: token ? { authorization: `Bearer ${token}` } : undefined,
         });
         if (!response.ok) throw new Error('probe');
-        const data = (await response.json()) as Partial<VideoEngine>;
+        const data = (await response.json()) as Partial<VideoGrades>;
         videoState = {
           available: Boolean(data.available),
-          model: String(data.model ?? ''),
           auth: String(data.auth ?? 'none'),
+          grades: Array.isArray(data.grades) ? data.grades : [],
           sound: Boolean(data.sound),
-          ...(data.month ? { month: data.month } : {}),
+          ...(data.engines ? { engines: data.engines } : {}),
         };
       } catch {
         videoState = NO_ENGINE;
@@ -387,6 +410,8 @@ export const engines: Engines = {
         prompt: `${request.title}. ${request.treatment}`.trim(),
         aspect: request.aspect,
         seconds: request.seconds > 7 ? 10 : 5,
+        grade: request.grade ?? 'standard',
+        speak: request.speak === true,
       }),
     });
 

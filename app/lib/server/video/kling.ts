@@ -67,32 +67,15 @@ const MODEL = process.env.KLING_MODEL || 'kling-v3';
  * this is a list rather than an always-on. `KLING_SOUND=off` turns it off
  * everywhere for anybody who wants silent footage to score themselves.
  */
-export function speaks(): boolean {
+function speaks(): boolean {
   if (process.env.KLING_SOUND === 'off') return false;
   if (process.env.KLING_SOUND === 'on') return true;
   return /^kling-v3\b/.test(MODEL);
 }
 
-export type Aspect = '16:9' | '9:16' | '1:1';
+import type { Progress, Provider, StartRequest, Started } from './types.ts';
 
-export interface StartRequest {
-  readonly prompt: string;
-  readonly aspect: Aspect;
-  /** Kling takes five or ten, and nothing between. */
-  readonly seconds: 5 | 10;
-}
-
-export type Started =
-  | { readonly ok: true; readonly taskId: string }
-  | { readonly ok: false; readonly status: number; readonly message: string };
-
-export type Progress =
-  | { readonly state: 'running' }
-  | { readonly state: 'done'; readonly url: string }
-  | { readonly state: 'failed'; readonly message: string }
-  | { readonly state: 'unknown'; readonly message: string };
-
-export function configured(): boolean {
+function isConfigured(): boolean {
   if (process.env.KLINGAI_API_KEY?.trim()) return true;
   return Boolean(process.env.KLINGAI_ACCESS_KEY?.trim() && process.env.KLINGAI_SECRET_KEY?.trim());
 }
@@ -123,7 +106,7 @@ export function scheme(): 'api-key' | 'signed' | 'none' {
  * costs twice five) rather than as the truth about a bill, and set
  * KLING_MONTHLY_CREDITS from the balance actually shown on the account.
  */
-export function klingCost(seconds: 5 | 10): number {
+function klingCost(seconds: 5 | 10): number {
   return seconds === 10 ? 70 : 35;
 }
 
@@ -141,7 +124,7 @@ export function klingCost(seconds: 5 | 10): number {
  * in KLING_MONTHLY_CREDITS. Until you do, this app will make about fifteen
  * ten-second clips a month and then stop, politely.
  */
-export function monthlyCeiling(): number {
+function monthlyCeiling(): number {
   const set = Number(process.env.KLING_MONTHLY_CREDITS);
   return Number.isFinite(set) && set > 0 ? set : 1_000;
 }
@@ -210,8 +193,8 @@ async function call(path: string, init?: RequestInit): Promise<Envelope | null> 
   }
 }
 
-export async function startVideo(request: StartRequest): Promise<Started> {
-  if (!configured()) {
+async function startVideo(request: StartRequest): Promise<Started> {
+  if (!isConfigured()) {
     return { ok: false, status: 503, message: 'The video engine is not switched on for this app yet.' };
   }
 
@@ -228,7 +211,7 @@ export async function startVideo(request: StartRequest): Promise<Started> {
       negative_prompt: 'text, watermark, logo, subtitles, captions, distorted faces, extra limbs',
       mode: 'pro',
       aspect_ratio: request.aspect,
-      duration: String(request.seconds),
+      duration: String(request.seconds >= 10 ? 10 : 5),
       // Quoted lines in the prompt come back spoken. Only sent where the model
       // can do it — see `speaks()`.
       ...(speaks() ? { sound: 'on' } : {}),
@@ -246,8 +229,8 @@ export async function startVideo(request: StartRequest): Promise<Started> {
   return { ok: true, taskId: body.data.task_id };
 }
 
-export async function checkVideo(taskId: string): Promise<Progress> {
-  if (!configured()) return { state: 'unknown', message: 'The video engine is not switched on.' };
+async function checkVideo(taskId: string): Promise<Progress> {
+  if (!isConfigured()) return { state: 'unknown', message: 'The video engine is not switched on.' };
 
   const body = await call(`${PATH}/${encodeURIComponent(taskId)}`);
   if (!body) return { state: 'unknown', message: 'The video engine could not be reached.' };
@@ -270,5 +253,34 @@ export async function checkVideo(taskId: string): Promise<Progress> {
   // would refund a video that is about to arrive.
   return { state: 'running' };
 }
+
+/**
+ * Kling, as a provider.
+ *
+ * Premium, and that is a measurement rather than a compliment: R33.48 a clip
+ * against R2.62 for the cheapest engine on the shelf, from this project's own
+ * invoices. It earns its place on native audio and motion, and it is the one
+ * engine that must never be reached by a member who has not specifically paid
+ * for it.
+ */
+export const kling: Provider = {
+  id: 'kling',
+  name: 'Kling',
+  grade: 'premium',
+  model: MODEL,
+  configured: isConfigured,
+  can: {
+    seconds: [5, 10],
+    aspects: ['16:9', '9:16', '1:1'],
+    get speaks() {
+      return speaks();
+    },
+    maxPromptChars: 2500,
+  },
+  ceiling: monthlyCeiling,
+  cost: (seconds) => klingCost(seconds >= 10 ? 10 : 5),
+  start: startVideo,
+  check: checkVideo,
+};
 
 export const MODEL_NAME = MODEL;

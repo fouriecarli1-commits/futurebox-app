@@ -5,6 +5,14 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    // Lets a module import "./kling.ts" by its real filename. Next resolves it
+    // either way; Node's type stripping only resolves the explicit one, and
+    // that is what the checks in .probe/ run under. Without this they cannot
+    // import the app's own code, and the last time that was true somebody
+    // solved it by keeping *copies* under .probe/lib — copies that then went
+    // stale and one of which was deleted, silently switching three checks off.
+    // Safe here because tsc never emits: Next compiles with SWC.
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
