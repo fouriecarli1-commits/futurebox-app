@@ -66,6 +66,28 @@ export const CREDITS = {
  * exactly half a song: one minute for five, two minutes for ten. Nobody has to
  * be told the rule — it is the same rule everywhere.
  */
+/**
+ * What a video costs the member, by grade.
+ *
+ * Three rungs because the engines behind them differ by thirteen times the
+ * money — R2.62, R10.72 and R33.48 a clip, from this project's own invoices —
+ * and a single price would either lose money on the dear one or overcharge for
+ * the cheap one. At 30 credits ≈ R30 on Studio, every rung clears its cost
+ * with room for the failures and the retries.
+ *
+ * Read by the desk to label the button and by the route to take the money.
+ * They must never be two numbers: a button promising one price while the
+ * server charges another is the sort of thing people are right to be angry
+ * about.
+ */
+export type VideoGrade = 'standard' | 'better' | 'premium';
+
+export function videoCost(grade: VideoGrade): number {
+  if (grade === 'premium') return CREDITS.video * 4;
+  if (grade === 'better') return CREDITS.video * 2;
+  return CREDITS.video;
+}
+
 export function songCost(seconds: number): number {
   return Math.max(CREDITS.halfSong, Math.ceil(Math.max(0, seconds) / 60) * CREDITS.halfSong);
 }

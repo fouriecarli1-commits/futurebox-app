@@ -32,7 +32,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Video as VideoIcon, Loader2, Download, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap } from 'lucide-react';
 import { SCENES, spokenLines, looksUnquoted, type Scene } from '../lib/videoscenes';
 import { engines, probeVideoEngine, type VideoEngine } from '../lib/engines';
-import { CREDITS } from '../lib/credits';
+import { CREDITS, videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { signal } from '../lib/signal';
 import { useLang } from '../lib/i18n';
@@ -45,6 +45,12 @@ interface Made {
   readonly prompt: string;
   readonly aspect: Aspect;
 }
+
+const GRADES: { id: VideoGrade; label: string; note: string }[] = [
+  { id: 'standard', label: 'Standard', note: 'Most shots. Silent.' },
+  { id: 'better', label: 'Better', note: 'Sharper, and it can speak.' },
+  { id: 'premium', label: 'Premium', note: 'The best picture there is.' },
+];
 
 const SHAPES: { id: Aspect; label: string; note: string }[] = [
   { id: '9:16', label: 'Tall', note: 'TikTok, Reels, Shorts' },
@@ -61,6 +67,25 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
   const [prompt, setPrompt] = useState('');
   const [aspect, setAspect] = useState<Aspect>('16:9');
   const [seconds, setSeconds] = useState<5 | 10>(5);
+  /**
+   * What the member is buying — never which engine serves it.
+   *
+   * Standard is the default and it is the one that pays: the cheap engine
+   * costs a thirteenth of the dear one, and most shots do not need the
+   * difference. The dearer rungs are chosen deliberately, with the price on
+   * them, by somebody who has decided this particular shot is worth it.
+   */
+  const [grade, setGrade] = useState<VideoGrade>('standard');
+  /**
+   * Whether the engine itself should speak the quoted line.
+   *
+   * Off by default, and that default is the whole language strategy. The
+   * picture costs about a hundred times what the voice costs, and the video
+   * models are English-first — so silent footage with an ElevenLabs voice laid
+   * over it is cheaper, keeps one voice across every clip, and is the only way
+   * this app speaks Afrikaans at all.
+   */
+  const [speak, setSpeak] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [made, setMade] = useState<Made[]>([]);
@@ -107,10 +132,10 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
       const result = await engines.generateVideo({
         title: scene?.label ?? 'Video',
         treatment: said,
-        // The engine takes the two Kling offers; a square clip is asked for as
-        // itself and the request carries the aspect through untouched.
-        aspect: aspect === '1:1' ? '16:9' : aspect,
+        aspect,
         seconds,
+        grade,
+        speak,
       });
       const url = URL.createObjectURL(result.blob);
       setMade((held) => [{ blob: result.blob, url, prompt: said, aspect }, ...held]);
@@ -156,7 +181,10 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
               <p className="text-sm text-zinc-300 flex items-center gap-2">
                 <PlugZap className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <span>
-                  {t('canvas.on', 'The engine is connected')} — <code className="text-zinc-400">{engine.model}</code>
+                  {t('canvas.on', 'The engine is connected')} —{' '}
+                  {engine.grades
+                    .map((one) => t(`canvas.grade.${one}`, one))
+                    .join(', ')}
                 </span>
               </p>
               <p className="text-sm text-zinc-400 flex items-center gap-2">
@@ -167,31 +195,33 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
                 )}
                 <span>
                   {engine.sound
-                    ? t('canvas.soundOn', 'Quoted lines will be spoken aloud.')
-                    : t('canvas.soundOff', 'This model cannot speak, so quoted lines will come back silent.')}
+                    ? t('canvas.soundOn', 'Quoted lines can be spoken aloud on the higher grades.')
+                    : t('canvas.soundOff', 'No connected engine can speak, so quoted lines will come back silent.')}
                 </span>
               </p>
-              {/* Only the operator ever sees this one. */}
-              {engine.month && (
-                <div className="pt-1 space-y-1.5">
+
+              {/* Only the operator ever sees this. It is the size of a bill. */}
+              {engine.engines?.map((one) => (
+                <div key={one.id} className="pt-1 space-y-1.5">
                   <p className="text-sm text-zinc-400">
-                    {t('canvas.month', "This month's engine allowance")}:{' '}
+                    {one.name}{' '}
                     <span className="text-zinc-200 font-semibold">
-                      {engine.month.used} / {engine.month.ceiling}
-                    </span>
+                      {one.used} / {one.ceiling}
+                    </span>{' '}
+                    <span className="text-zinc-600">· {one.model}</span>
                   </p>
                   <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                     <div
                       className={`h-full transition-all ${
-                        engine.month.used / engine.month.ceiling > 0.85 ? 'bg-rose-500' : 'bg-emerald-500'
+                        one.used / Math.max(1, one.ceiling) > 0.85 ? 'bg-rose-500' : 'bg-emerald-500'
                       }`}
                       style={{
-                        width: `${Math.min(100, Math.round((engine.month.used / Math.max(1, engine.month.ceiling)) * 100))}%`,
+                        width: `${Math.min(100, Math.round((one.used / Math.max(1, one.ceiling)) * 100))}%`,
                       }}
                     />
                   </div>
                 </div>
-              )}
+              ))}
             </>
           ) : (
             <p className="text-sm text-amber-300 flex items-start gap-2">
@@ -299,6 +329,71 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
           )}
         </div>
 
+        {/* ── What you are buying ─────────────────────────────────────
+            Three rungs, priced, in words about the result. The engine behind
+            each is ours to choose and ours to change; naming it here would
+            move a decision worth thirteen times the money onto somebody with
+            less information than we have. */}
+        <div>
+          <span className="text-sm text-zinc-400">{t('canvas.quality', 'Quality')}</span>
+          <div className="grid sm:grid-cols-3 gap-1.5 mt-1.5">
+            {GRADES.map((one) => {
+              const there = engine?.grades.includes(one.id) ?? false;
+              const active = grade === one.id;
+              return (
+                <button
+                  key={one.id}
+                  type="button"
+                  disabled={!there}
+                  onClick={() => setGrade(one.id)}
+                  className={`text-left px-3 py-2.5 rounded-xl text-sm border transition-all disabled:opacity-40 ${
+                    active
+                      ? 'bg-amber-500/15 border-amber-500 text-amber-300'
+                      : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
+                  }`}
+                >
+                  <span className="block font-semibold">{t(`canvas.grade.${one.id}`, one.label)}</span>
+                  <span className="block text-xs text-zinc-500 leading-snug">
+                    {t(`canvas.gradeNote.${one.id}`, one.note)}
+                  </span>
+                  <span className="block text-xs pt-0.5">
+                    {videoCost(one.id)} {t('video.credits', 'credits')}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* The engine speaking is a deliberate, dearer choice — see `speak`. */}
+        {spoken.length > 0 && (
+          <label className="flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={speak}
+              disabled={!engine?.sound}
+              onChange={(event) => {
+                setSpeak(event.target.checked);
+                if (event.target.checked && grade === 'standard') setGrade('better');
+              }}
+              className="mt-0.5 w-4 h-4 accent-amber-500 flex-shrink-0"
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-zinc-200">
+                {t('canvas.letItSpeak', 'Let the engine say the line')}
+              </span>
+              <span className="block text-xs text-zinc-500 leading-snug">
+                {engine?.sound
+                  ? t(
+                      'canvas.letItSpeakNote',
+                      'Costs more, and only in English. Leave this off and record the line in your own voice under Script my voice — it is cheaper, it is the same voice every time, and it is the only way to get Afrikaans.',
+                    )
+                  : t('canvas.cannotSpeak', 'No connected engine can speak a line. Record it under Script my voice instead.')}
+              </span>
+            </span>
+          </label>
+        )}
+
         {/* ── Shape and length ────────────────────────────────────────── */}
         <div className="grid sm:grid-cols-2 gap-3">
           <div>
@@ -351,7 +446,7 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <VideoIcon className="w-4 h-4" />}
           {busy
             ? t('canvas.making', 'Making it')
-            : `${t('canvas.go', 'Make it')} — ${CREDITS.video} ${t('video.credits', 'credits')}`}
+            : `${t('canvas.go', 'Make it')} — ${videoCost(grade)} ${t('video.credits', 'credits')}`}
         </button>
 
         {busy && (

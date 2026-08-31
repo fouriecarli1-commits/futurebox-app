@@ -12,8 +12,8 @@ import crypto from 'node:crypto';
 process.env.KLINGAI_ACCESS_KEY = 'AK-test-123';
 process.env.KLINGAI_SECRET_KEY = 'SK-test-secret-456';
 
-const { startVideo, checkVideo, klingCost, monthlyCeiling, configured, scheme } =
-  await import('../app/lib/server/kling.ts');
+const { kling, scheme } =
+  await import('../app/lib/server/video/kling.ts');
 
 const problems = [];
 const say = (ok, what) => { if (!ok) problems.push(what); };
@@ -25,6 +25,7 @@ globalThis.fetch = async (url, init) => {
   return { json: async () => reply };
 };
 
+const { start: startVideo, check: checkVideo, cost: klingCost, ceiling: monthlyCeiling, configured } = kling;
 say(configured(), 'two keys are set and it says it is not configured');
 say(scheme() === 'signed', `a key pair reported itself as ${scheme()}`);
 
