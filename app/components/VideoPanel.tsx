@@ -22,9 +22,10 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Video as VideoIcon, X, Loader2, Download } from 'lucide-react';
+import { Video as VideoIcon, X, Loader2, Download, Quote, AlertTriangle } from 'lucide-react';
 import { renderVideo, styleFor, videoSupported, extensionFor, type Aspect } from '../lib/video';
 import { engines, probeVideo } from '../lib/engines';
+import { spokenLines, looksUnquoted } from '../lib/videoscenes';
 import { CREDITS } from '../lib/credits';
 import { signal } from '../lib/signal';
 import { timelineOf, type Part } from '../lib/timeline';
@@ -229,13 +230,39 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                 id="video-treatment"
                 value={treatment}
                 onChange={(event) => setTreatment(event.target.value)}
-                rows={3}
+                rows={4}
                 placeholder={t(
                   'video.shotHint',
                   'A lonely tar road at dusk, wide shot, slow push in, dust in the headlights',
                 )}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none leading-relaxed resize-y"
               />
+
+              {/* The same rule the video desk teaches, in the same words. Two
+                  screens that generate through one engine must not disagree
+                  about how to talk to it. */}
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2">
+                <p className="text-xs text-zinc-400 leading-relaxed flex gap-2">
+                  <Quote className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <span>{t('canvas.quotes')}</span>
+                </p>
+                {spokenLines(treatment).length > 0 && (
+                  <div className="space-y-1 pl-5">
+                    <p className="text-xs text-emerald-400">{t('canvas.willSay')}</p>
+                    {spokenLines(treatment).map((line, index) => (
+                      <p key={index} className="text-xs text-zinc-300 italic">
+                        &ldquo;{line}&rdquo;
+                      </p>
+                    ))}
+                  </div>
+                )}
+                {looksUnquoted(treatment) && (
+                  <p className="text-xs text-amber-300 leading-relaxed flex gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span>{t('canvas.unquoted')}</span>
+                  </p>
+                )}
+              </div>
               <div>
                 <label className="text-sm text-zinc-400">{t('video.length')}</label>
                 <div className="flex gap-1.5 mt-1.5">

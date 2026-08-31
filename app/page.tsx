@@ -10,8 +10,7 @@ import {
   Crown, Lock, Zap, RefreshCw, Send, Mail, Check, Star,
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
-  Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush
-} from 'lucide-react';
+  Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard} from 'lucide-react';
 import {
   AI_MODELS, ROLE_LABELS, ROLE_ACCENTS, TRACK_FLAVOURS, groupByRole, modelByName,
 } from './data/studio';
@@ -28,6 +27,7 @@ import QualityRadar from './components/QualityRadar';
 import MakeMusic from './components/MakeMusic';
 import Hooks from './components/Hooks';
 import MusicVideo from './components/MusicVideo';
+import VideoCanvas from './components/VideoCanvas';
 import Copilot, { type CopilotAction } from './components/Copilot';
 import type { Canvas } from './components/MakeMusic';
 import type { Track } from './lib/library';
@@ -278,7 +278,7 @@ export default function FutureBoxHome() {
    * already is, so a second screen for it was the same job behind a second
    * button.
    */
-  const [studioTab, setStudioTab] = useState<'video' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'podcast'>('make');
+  const [studioTab, setStudioTab] = useState<'video' | 'canvas' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'podcast'>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -1851,6 +1851,7 @@ export default function FutureBoxHome() {
                   { id: 'studio', label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
                   { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
                   { id: 'video', label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
+                  { id: 'canvas', label: t('rail.canvas'), hint: t('rail.canvas.hint'), icon: Clapperboard },
                   { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
                   { id: 'channels', label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
                   { id: 'collab', label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
@@ -1892,6 +1893,7 @@ export default function FutureBoxHome() {
 
             {/* HOOKS: cut the bit worth posting, from your own tracks */}
             {studioTab === 'video' && <MusicVideo />}
+            {studioTab === 'canvas' && <VideoCanvas onUpgrade={() => setPricingModalOpen(true)} />}
             {studioTab === 'hooks_feed' && <Hooks />}
 
             {/* MAKE: the button people came for */}
