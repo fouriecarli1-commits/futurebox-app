@@ -385,7 +385,11 @@ export const PODCAST_CAPS: Record<Tier, PodcastCaps> = {
  */
 export const SOUND_CAPS: Record<Tier, number> = {
   free: 0,
-  maker: 1,
+  // Not on Maker. Training costs 300 credits and Maker's whole month is 120,
+  // so "one trained sound" on that card was a thing the plan could not pay
+  // for — a promise redeemable only by buying a pack. Better to say plainly
+  // that it starts at Studio.
+  maker: 0,
   studio: 3,
   label: 10,
 };

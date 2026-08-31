@@ -21,6 +21,8 @@ import { Loader2, Music4, Sparkles, Trash2, Upload } from 'lucide-react';
 import { loadTracks, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { forgetSound, loadSounds, NO_SOUNDS, training, train, type Sounds } from '../lib/sounds';
+import { CREDITS } from '../lib/credits';
+import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { useLang } from '../lib/i18n';
 
 /** How often to ask again while something is still training. */
@@ -47,6 +49,8 @@ export default function SoundTrainer({
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  /** So the cost can be shown against what they actually have. */
+  const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
 
   const load = useCallback(() => {
     loadSounds().then(setSounds);
@@ -55,6 +59,7 @@ export default function SoundTrainer({
   useEffect(() => {
     setTracks(loadTracks());
     load();
+    loadWallet().then(setWallet);
   }, [load, reloadKey]);
 
   // Ask again only while something is actually training, and stop when it is
@@ -153,6 +158,17 @@ export default function SoundTrainer({
               'Train on a handful of your own songs and new ones come out sounding like them. It takes five or ten minutes, and you can close this while it runs.',
             )}
           </p>
+          {/* The most expensive thing this app does, said before anybody
+              starts rather than at the moment they are refused. */}
+          <p className="text-sm font-semibold text-amber-300 leading-snug pt-1.5">
+            {CREDITS.finetune} {t('sound.creditsEach', 'credits each time')}
+            {wallet.signedIn && (
+              <span className="text-zinc-500 font-normal">
+                {' · '}
+                {t('sound.youHave', 'you have')} {wallet.balance}
+              </span>
+            )}
+          </p>
         </div>
       </div>
 
@@ -197,7 +213,7 @@ export default function SoundTrainer({
           onClick={onUpgrade}
           className="w-full py-2.5 rounded-xl bg-amber-500/15 border border-amber-500/50 text-amber-300 text-sm font-semibold"
         >
-          {t('sound.needsPlan', 'Training a sound of your own needs a paid plan')}
+          {t('sound.needsPlan', 'Training a sound of your own starts on Studio')}
         </button>
       ) : sounds.mine.length >= sounds.keep ? (
         <p className="text-sm text-zinc-500">
@@ -309,7 +325,7 @@ export default function SoundTrainer({
               {busy === 'train' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {busy === 'train'
                 ? t('sound.sending', 'Sending the songs up…')
-                : `${t('sound.trainOn', 'Train on')} ${chosen}`}
+                : `${t('sound.trainOn', 'Train on')} ${chosen} — ${CREDITS.finetune} ${t('sound.credits', 'credits')}`}
             </button>
             <button
               type="button"

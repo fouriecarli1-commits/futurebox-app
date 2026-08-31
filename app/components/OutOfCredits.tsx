@@ -109,10 +109,12 @@ export default function OutOfCredits({
 
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
 
-        <p className="text-xs text-zinc-600 leading-snug">
+        {/* Said plainly, because it is true and because a pack that quietly
+            undercut the plans would make the plans pointless. */}
+        <p className="text-xs text-zinc-500 leading-snug">
           {t(
             'credits.subNote',
-            'A subscription is the cheaper way to get the first few hundred every month. A pack is for the month you needed more than usual.',
+            'A pack costs more per credit than any monthly plan — it is for the month you needed more than usual. If you need more every month, a plan is the cheaper way.',
           )}
         </p>
       </div>

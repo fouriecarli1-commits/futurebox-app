@@ -152,18 +152,31 @@ export interface Pack {
 /**
  * Top-ups, shown when somebody runs out and nowhere else.
  *
+ * ── The rule these have to obey ──────────────────────────────────────────
+ *
+ * **Every pack must cost more per credit than every plan.** Not most of them,
+ * and not on average: every one against every one. A pack that undercuts a
+ * subscription is a reason not to subscribe, and a subscription business whose
+ * own shop sells the same thing cheaper has no subscribers.
+ *
+ * The first version of this got it exactly backwards — the packs were 47% to
+ * 60% *cheaper* per credit than the dearest plan, because they were designed
+ * to reward a heavy user. A heavy user rewarded with a better rate than the
+ * plan is a heavy user who cancels the plan.
+ *
+ * So the rate here sits above the dearest plan (Maker, at R1.24 a credit),
+ * and `capacity.test` refuses to pass if a pack ever slips under it.
+ *
+ * A volume discount *between the packs* is still fine, and still true here —
+ * it is the comparison against the plans that has to hold.
+ *
  * Nothing under R99: the gateway takes R2 flat on every charge, which is 13%
  * of a R20 pack and 6% of a R99 one. A cheap pack is a donation to Paystack.
- *
- * The bigger packs are cheaper per credit than a subscription is. That is
- * deliberate — it rewards the heavy user without making the subscription look
- * like the worse deal for everybody else, because the subscription is still
- * the cheaper way to get the first few hundred.
  */
 export const PACKS: readonly Pack[] = [
-  { id: 'small', credits: 150, rand: 99 },
-  { id: 'mid', credits: 400, rand: 229 },
-  { id: 'large', credits: 1000, rand: 499 },
+  { id: 'small', credits: 60, rand: 99 },
+  { id: 'mid', credits: 150, rand: 239 },
+  { id: 'large', credits: 400, rand: 599 },
 ];
 
 export function packById(id: string): Pack | null {

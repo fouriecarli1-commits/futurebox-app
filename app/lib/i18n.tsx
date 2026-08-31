@@ -418,7 +418,7 @@ export const STRINGS: Dict = {
   "sound.failed": { en: "training failed", af: "die leer het misluk" },
   "sound.blocked": { en: "refused \u2014 the music service did not accept the songs", af: "geweier \u2014 die musiekdiens het die liedjies nie aanvaar nie" },
   "sound.forget": { en: "Delete this sound", af: "Vee hierdie klank uit" },
-  "sound.needsPlan": { en: "Training a sound of your own needs a paid plan", af: "Om \u2019n eie klank te leer verg \u2019n betaalde plan" },
+  "sound.needsPlan": { en: "Training a sound of your own starts on Studio", af: "Om \u2019n eie klank te leer begin op Studio" },
   "sound.atLimit": { en: "Your plan keeps", af: "Jou plan hou" },
   "sound.removeFirst": { en: "Delete one to train another.", af: "Vee een uit om nog een te leer." },
   "sound.start": { en: "Train a sound", af: "Leer \u2019n klank" },
@@ -433,6 +433,8 @@ export const STRINGS: Dict = {
   "sound.tooFew": { en: "Pick at least three songs. Fewer than that teaches it one song, not a sound.", af: "Kies ten minste drie liedjies. Minder as dit leer dit een liedjie, nie \u2019n klank nie." },
   "sound.sending": { en: "Sending the songs up\u2026", af: "Stuur die liedjies op\u2026" },
   "sound.trainOn": { en: "Train on", af: "Leer op" },
+  "sound.creditsEach": { en: "credits each time", af: "krediete elke keer" },
+  "sound.youHave": { en: "you have", af: "jy het" },
   "sound.cancel": { en: "Cancel", af: "Kanselleer" },
 
   "make.ownSound": { en: "Your own sound", af: "Jou eie klank" },
@@ -452,8 +454,8 @@ export const STRINGS: Dict = {
   "credits.close": { en: "Close", af: "Maak toe" },
   "credits.balanceTitle": { en: "What you have left to spend", af: "Wat jy oor het om te spandeer" },
   "credits.subNote": {
-    en: "A subscription is the cheaper way to get the first few hundred every month. A pack is for the month you needed more than usual.",
-    af: "\u2019n Intekening is die goedkoper manier om elke maand die eerste paar honderd te kry. \u2019n Pakket is vir die maand toe jy meer as gewoonlik nodig gehad het.",
+    en: "A pack costs more per credit than any monthly plan \u2014 it is for the month you needed more than usual. If you need more every month, a plan is the cheaper way.",
+    af: "\u2019n Pakket kos meer per krediet as enige maandplan \u2014 dit is vir die maand toe jy meer as gewoonlik nodig gehad het. Het jy elke maand meer nodig, is \u2019n plan die goedkoper pad.",
   },
 
   "spend.title": { en: "What the engine has cost you", af: "Wat die enjin jou gekos het" },
