@@ -117,10 +117,26 @@ export async function GET(request: Request): Promise<Response> {
       }
     }
 
+    // What each grade can actually make, so the desk offers lengths and shapes
+    // that exist rather than ones it will later refuse.
+    const can: Record<string, { seconds: number[]; aspects: string[]; speaks: boolean }> = {};
+    for (const one of PROVIDERS) {
+      if (!one.configured()) continue;
+      const found = can[one.grade];
+      can[one.grade] = found
+        ? {
+            seconds: Array.from(new Set([...found.seconds, ...one.can.seconds])).sort((a, b) => a - b),
+            aspects: Array.from(new Set([...found.aspects, ...one.can.aspects])),
+            speaks: found.speaks || one.can.speaks,
+          }
+        : { seconds: [...one.can.seconds], aspects: [...one.can.aspects], speaks: one.can.speaks };
+    }
+
     return Response.json({
       available: configured(),
       auth: scheme(),
       grades,
+      can,
       // Whether any available engine can speak a quoted line. The desk teaches
       // quotation marks, so it has to know whether they will do anything —
       // and on the cheap rung, deliberately, they will not.

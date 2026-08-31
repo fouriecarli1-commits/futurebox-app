@@ -34,6 +34,7 @@ import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
 import { AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
 import { STARTERS, VOICES, LENGTH_CHOICES, POLISH } from '../data/sound';
+import { songCost } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
 import * as cloud from '../lib/cloud';
@@ -767,6 +768,9 @@ export default function MakeMusic({
                   {choice.label}
                 </span>
                 <span className="block text-sm text-zinc-500 leading-snug">{choice.note}</span>
+                <span className="block text-xs text-zinc-500 pt-0.5">
+                  {songCost(choice.seconds)} {t('video.credits', 'credits')}
+                </span>
               </button>
             ))}
           </div>

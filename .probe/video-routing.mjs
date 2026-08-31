@@ -56,6 +56,12 @@ say(nearestLength(veo.can, 5) === 4 || nearestLength(veo.can, 5) === 6, `Veo rou
 say(nearestLength(veo.can, 10) === 8, `Veo rounded 10s to ${nearestLength(veo.can, 8)}`);
 say(nearestLength(kling.can, 7) === 5 || nearestLength(kling.can, 7) === 10, 'Kling rounded 7s to something it cannot make');
 say(nearestLength(seedance.can, 10) === 10, 'Seedance would not make ten seconds');
+say(nearestLength(seedance.can, 30) === 30, 'Seedance would not make thirty seconds');
+say(nearestLength(seedance.can, 22) === 20, `22s rounded to ${nearestLength(seedance.can, 22)}`);
+// Longer costs more, in step. A flat price per clip would make the long ones
+// the only rational choice.
+say(seedance.cost(30) === seedance.cost(5) * 6, 'thirty seconds is not six times five');
+say(seedance.cost(5) === 20, `five seconds is ${seedance.cost(5)} units`);
 
 // ── An engine with no key is never offered ─────────────────────────────
 delete process.env.KLINGAI_API_KEY;
@@ -108,11 +114,24 @@ await veo.start({ ...shot, speak: true, seconds: 8 });
 say(JSON.parse(seen[0].init.body).generate_audio === true, 'Veo was not asked for audio on a spoken line');
 say(JSON.parse(seen[0].init.body).model_id === 'veo-3.1-fast-generate-001', 'Veo model id is wrong');
 
-// A square frame is asked for as wide: neither model takes 1:1, and the page
-// crops. Better than a refusal the member cannot act on.
+// Square is real on one model and not on the other, and the app must not
+// paper over the difference. Silently substituting a shape is worse than
+// refusing one: the member cannot see it happen and has no idea why the crop
+// is wrong.
 seen.length = 0;
 await seedance.start({ ...shot, aspect: '1:1' });
-say(JSON.parse(seen[0].init.body).aspect_ratio === '16:9', 'a square request was sent as 1:1, which is refused');
+say(JSON.parse(seen[0].init.body).aspect_ratio === '1:1', 'Seedance takes square and was sent something else');
+say(suits(seedance, { ...shot, aspect: '1:1' }), 'Seedance was refused a shape it supports');
+say(!suits(veo, { ...shot, aspect: '1:1' }), 'Veo was offered square, which its request type refuses');
+say(candidates('better', { ...shot, aspect: '1:1' }, free).length === 0, 'a square request routed to an engine that cannot make one');
+
+// And each model is asked for the best it can give rather than the least.
+seen.length = 0;
+await seedance.start(shot);
+say(JSON.parse(seen[0].init.body).resolution === '720p', 'the mini was asked for a resolution it does not have');
+seen.length = 0;
+await veo.start(shot);
+say(JSON.parse(seen[0].init.body).resolution === '1080p', 'Veo was left at 720p when it goes to 4K');
 
 // ── Reading a generation back ──────────────────────────────────────────
 reply = { id: 'g', status: 'generating' };

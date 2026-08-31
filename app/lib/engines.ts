@@ -145,6 +145,12 @@ export interface VideoGrades {
   readonly auth: string;
   /** Which rungs have a working engine behind them right now. */
   readonly grades: readonly string[];
+  /**
+   * What each rung can actually make. The desk reads this rather than
+   * guessing — a length or a shape nobody can generate is not a choice, it is
+   * a refusal waiting to happen four minutes later.
+   */
+  readonly can?: Record<string, { seconds: number[]; aspects: string[]; speaks: boolean }>;
   /** True where some available engine can speak a quoted line aloud. */
   readonly sound: boolean;
   /**
@@ -192,6 +198,7 @@ export async function probeVideoEngine(): Promise<VideoGrades> {
           auth: String(data.auth ?? 'none'),
           grades: Array.isArray(data.grades) ? data.grades : [],
           sound: Boolean(data.sound),
+          ...(data.can ? { can: data.can } : {}),
           ...(data.engines ? { engines: data.engines } : {}),
         };
       } catch {
