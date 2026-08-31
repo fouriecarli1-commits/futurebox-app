@@ -29,6 +29,7 @@ import { engines, splitSections, type Stage } from '../lib/engines';
 import { expect as expectWait, remember } from '../lib/timing';
 import VideoPanel from './VideoPanel';
 import NowPlaying from './NowPlaying';
+import Sleeve from './Sleeve';
 import VocalBooth from './VocalBooth';
 import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
@@ -855,7 +856,18 @@ export default function MakeMusic({
         ) : (
           <div className="grid sm:grid-cols-2 gap-3">
             {tracks.map((track) => (
-              <div key={track.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-3">
+              /* The one that is playing takes the whole row. A waveform is
+                 there to find the chorus with, and you cannot do that in half
+                 a column — it was the reason the panel felt cramped. Every
+                 other card stays small, because a list of songs is a list. */
+              <div
+                key={track.id}
+                className={`rounded-2xl border bg-zinc-900/60 p-4 space-y-3 ${
+                  playing === track.id
+                    ? 'sm:col-span-2 border-emerald-500/60 bg-emerald-500/[0.04]'
+                    : 'border-zinc-800'
+                }`}
+              >
                 <div className="flex items-start gap-3">
                   <button
                     type="button"
@@ -875,8 +887,19 @@ export default function MakeMusic({
                   </div>
                 </div>
 
+                {/* The sleeve and the waveform side by side while it plays,
+                    because a record is a picture and a shape together, and
+                    neither is much use in half a column on its own. */}
                 {playing === track.id && (
-                  <NowPlaying track={track} audio={audioRef.current} blob={playingBlob} />
+                  <div className="grid sm:grid-cols-[220px_1fr] gap-4 items-start">
+                    <Sleeve
+                      trackId={track.id}
+                      title={track.title}
+                      genre={track.genre}
+                      style={track.style ?? ''}
+                    />
+                    <NowPlaying track={track} audio={audioRef.current} blob={playingBlob} />
+                  </div>
                 )}
 
 

@@ -234,6 +234,12 @@ export const STRINGS: Dict = {
   // ── The video desk ────────────────────────────────────────────────
   "canvas.title": { en: "Video desk", af: "Videolessenaar" },
   "canvas.what": { en: "Describe a shot and the engine makes it. Pick a kind of video to start from — everything it writes is yours to rewrite.", af: "Beskryf \u2019n skoot en die enjin maak dit. Kies \u2019n soort video om mee te begin \u2014 alles wat dit skryf is joune om oor te skryf." },
+  "cover.make": { en: "Make a cover", af: "Maak \u2019n omslag" },
+  "cover.making": { en: "Drawing the sleeve", af: "Teken die omslag" },
+  "cover.again": { en: "Another", af: "Nog een" },
+  "cover.alt": { en: "Cover art for this song", af: "Omslagkuns vir hierdie liedjie" },
+  "cover.failed": { en: "The cover could not be made.", af: "Die omslag kon nie gemaak word nie." },
+  "cover.slow": { en: "That is taking longer than usual. Try again in a moment.", af: "Dit vat langer as gewoonlik. Probeer netnou weer." },
   "canvas.another": { en: "Press again for another", af: "Druk weer vir nog een" },
   "canvas.ideas": { en: "ideas", af: "idees" },
   "canvas.len.4": { en: "A single beat. A logo sting, a cutaway.", af: "Een slag. \u2019n Logo-stoot, \u2019n oorsnit." },

@@ -43,6 +43,15 @@ export const CREDITS = {
   halfSong: 5,
   /** Ten seconds from the video engine. */
   video: 30,
+  /**
+   * A cover for a song.
+   *
+   * Two, because it is genuinely cheap: one square from the lightest image
+   * model, which is a fraction of a cent. Priced above zero anyway — a free
+   * button gets pressed forty times in a row by somebody deciding, and forty
+   * of anything is a bill.
+   */
+  cover: 2,
   /** Drawn on the device instead. Costs nothing to run, so it costs nothing. */
   browserVideo: 0,
   /** Splitting a song into the voice and the backing. */
