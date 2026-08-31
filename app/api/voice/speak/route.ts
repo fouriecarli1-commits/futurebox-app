@@ -12,6 +12,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { guard } from '@/app/lib/server/safety';
 import { configured, speak, stockVoices, type Performance } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { readCost } from '@/app/lib/credits';
@@ -60,10 +61,6 @@ function performance(how?: {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  if (!configured()) {
-    return Response.json({ message: 'Voices are not switched on for this app yet.' }, { status: 503 });
-  }
-
   let body: {
     voiceId?: string;
     text?: string;
@@ -87,6 +84,19 @@ export async function POST(request: Request): Promise<Response> {
   if (!text) return Response.json({ message: 'There is nothing to read.' }, { status: 400 });
 
   const caller = metered() ? await callerFrom(request) : null;
+
+  // A recording in somebody's voice asking a listener for their OTP is the
+  // fraud this technology is actually used for, so this surface is screened
+  // before a character of it is read aloud.
+  const allowed = await guard(request, text, 'speech', caller);
+  if (!allowed.ok) return allowed.response;
+
+  // After the refusal, not before it: what will not be read aloud does not
+  // depend on whether a key happens to be set. See app/api/music/route.ts.
+  if (!configured()) {
+    return Response.json({ message: 'Voices are not switched on for this app yet.' }, { status: 503 });
+  }
+
   const tier = caller?.tier ?? 'free';
   const caps = PODCAST_CAPS[tier];
 

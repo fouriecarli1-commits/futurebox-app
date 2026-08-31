@@ -13,6 +13,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
+import { screen } from '@/app/lib/moderation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -88,6 +89,16 @@ export async function POST(request: Request) {
 
   if (!['continue', 'style', 'polish'].includes(body.mode)) {
     return Response.json({ error: `Unknown mode: ${body.mode}` }, { status: 400 });
+  }
+
+  // The fixed rules only, not the classifier: what this route sends already
+  // goes to a model that refuses for itself, so a second model reading it
+  // first would double the wait and the bill to reach the same answer. What
+  // the rules add is a refusal in this app's own words, arriving before the
+  // request leaves, and identical to the one the studio gives.
+  const refused = screen([body.title, body.style, body.lyrics].filter(Boolean).join('\n'), 'song');
+  if (refused) {
+    return Response.json({ error: refused.message, rule: refused.rule }, { status: 422 });
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {

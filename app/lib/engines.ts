@@ -11,11 +11,14 @@
  * key is set — so screens render the sketch path first and upgrade when the
  * answer lands. No screen claims a capability this file has not confirmed.
  *
- * Video is the other way round: videos are made in your browser from the
- * track's own audio (`app/lib/video.ts`), which is why `available('video')` is
- * false and nothing here calls out for one. A hosted video engine would plug in
- * at `generateVideo` — Runway and Luma publish APIs; the shape to copy is
- * `app/api/music/route.ts`, including how it answers when no key is set.
+ * Video is now two things, and both are real. A browser-drawn video is made
+ * from the track's own audio (`app/lib/video.ts`), costs nothing, works
+ * offline and is what a free account gets. `generateVideo` is the other one:
+ * Kling, through `app/api/video`, which is a job rather than a call — the
+ * server starts it and this asks how it is going until there is a file. It is
+ * switched on by KLINGAI_ACCESS_KEY and KLINGAI_SECRET_KEY, and
+ * `available('video')` is false until `probeVideo()` has confirmed with the
+ * server that they are set. No screen may offer the engine before that.
  *
  * On Suno specifically: it has no public generation API. The wrappers people
  * pass around scrape a private endpoint, so they break without warning and
@@ -117,6 +120,27 @@ export async function probeAudio(): Promise<boolean> {
       });
   }
   return audioProbe;
+}
+
+/** The same question about video, asked the same way and for the same reason. */
+let videoReady: boolean | null = null;
+let videoProbe: Promise<boolean> | null = null;
+
+export async function probeVideo(): Promise<boolean> {
+  if (videoReady !== null) return videoReady;
+  if (!videoProbe) {
+    videoProbe = fetch('/api/video')
+      .then((response) => (response.ok ? response.json() : { available: false }))
+      .then((data: { available?: boolean }) => {
+        videoReady = Boolean(data.available);
+        return videoReady;
+      })
+      .catch(() => {
+        videoReady = false;
+        return false;
+      });
+  }
+  return videoProbe;
 }
 
 /**
@@ -230,7 +254,7 @@ async function collect(response: Response, request: AudioRequest): Promise<Blob>
 }
 
 export const engines: Engines = {
-  available: (kind) => (kind === 'audio' ? audioReady === true : false),
+  available: (kind) => (kind === 'audio' ? audioReady === true : videoReady === true),
 
   async generateAudio(request: AudioRequest): Promise<EngineResult> {
     // The chosen length is what the plan has to add up to, so it is part of
@@ -296,7 +320,69 @@ export const engines: Engines = {
     return { blob: await collect(response, request), model };
   },
 
-  generateVideo: async () => {
-    throw new Error(NO_VIDEO_ENGINE);
+  /**
+   * A video from Kling, which is a wait rather than a call.
+   *
+   * The server starts a job and answers with an id; this asks how it is going
+   * until it is done, then downloads our own copy of the file. Every message
+   * shown along the way is something that was actually observed — there is no
+   * percentage, because the engine does not report one and inventing a bar
+   * that creeps to ninety and waits there would be a lie about what is known.
+   */
+  generateVideo: async (request) => {
+    const token = await accessToken();
+
+    const started = await fetch('/api/video', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        prompt: `${request.title}. ${request.treatment}`.trim(),
+        aspect: request.aspect,
+        seconds: request.seconds > 7 ? 10 : 5,
+      }),
+    });
+
+    const opened = (await started.json().catch(() => ({}))) as { id?: string; message?: string };
+    if (!started.ok || !opened.id) {
+      // A refusal, a plan gate, a used-up allowance: every one of those has a
+      // message written for the person, and it is shown as it was written.
+      throw new Error(opened.message ?? NO_VIDEO_ENGINE);
+    }
+
+    // Ten seconds between asks, for up to eight minutes. Kling's own ceiling
+    // for a clip this length is under five; the rest is room for a queue.
+    const deadline = Date.now() + 8 * 60_000;
+    while (Date.now() < deadline) {
+      await new Promise((wake) => setTimeout(wake, 10_000));
+
+      const asked = await fetch(`/api/video?id=${encodeURIComponent(opened.id)}`, {
+        headers: token ? { authorization: `Bearer ${token}` } : undefined,
+      });
+      const progress = (await asked.json().catch(() => ({}))) as {
+        state?: string;
+        url?: string;
+        message?: string;
+      };
+
+      if (progress.state === 'failed') {
+        throw new Error(progress.message ?? 'The video engine could not make that one.');
+      }
+      if (progress.state === 'done' && progress.url) {
+        const file = await fetch(progress.url);
+        if (!file.ok) throw new Error('The video was made but could not be downloaded.');
+        return { blob: await file.blob(), model: 'Kling AI' };
+      }
+    }
+
+    // The job is not lost — it is in `videos` with the credits still spent on
+    // it, and asking again later will find it. Said plainly rather than
+    // reported as a failure, which would be untrue and would suggest a refund
+    // that is not coming.
+    throw new Error(
+      'The engine is still working on that one after eight minutes. It has not been lost — it will be in your videos when it lands.',
+    );
   },
 };

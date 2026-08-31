@@ -15,6 +15,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
+import { screen } from '@/app/lib/moderation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -109,6 +110,19 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (!body.message?.trim()) {
     return Response.json({ error: 'empty', message: 'Nothing to answer.' }, { status: 400 });
+  }
+
+  // The fixed rules only. The copilot writes lyrics rather than audio, and the
+  // model it talks to refuses for itself — but it also hands back a style
+  // string the studio then generates from, so a name asked for here would
+  // arrive at the music route wearing the copilot's suggestion. Refused at the
+  // door instead, in the same words the studio would have used.
+  const refused = screen(body.message, 'song');
+  if (refused) {
+    return Response.json(
+      { reply: refused.message, action: { kind: 'none', value: '' } },
+      { status: 200 },
+    );
   }
 
   const client = new Anthropic();

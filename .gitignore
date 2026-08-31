@@ -5,5 +5,8 @@ out/
 next-env.d.ts
 *.tsbuildinfo
 
-# Browser probes: written to check a change, not part of the app.
-.probe/
+# Browser probes: the scripts and their fixtures. The pages they mount live
+# beside the code as *.probe.tsx and are only a page when PROBE=1, so they can
+# be re-run — see .probe/README.md, which is kept.
+.probe/*
+!.probe/README.md

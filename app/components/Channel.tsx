@@ -31,6 +31,7 @@ import {
 import { fetchCreator, type Creator } from '../lib/radar';
 import Cover from './Cover';
 import SoundTrainer from './SoundTrainer';
+import DeleteAccount from './DeleteAccount';
 import { useLang } from '../lib/i18n';
 
 function clock(seconds: number): string {
@@ -41,9 +42,12 @@ function clock(seconds: number): string {
 export default function Channel({
   reloadKey,
   onUpgrade,
+  email,
 }: {
   reloadKey: number;
   onUpgrade: () => void;
+  /** Empty when nobody is signed in, which is when there is nothing to delete. */
+  email?: string;
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -370,6 +374,11 @@ export default function Channel({
           {t('chan.next', 'Next')}
         </button>
       )}
+
+      {/* Last, because leaving is not the first thing to offer somebody
+          looking at their own channel — but present, because an app that
+          makes leaving hard is telling you what it thinks of you. */}
+      {email && <DeleteAccount email={email} />}
     </div>
   );
 }

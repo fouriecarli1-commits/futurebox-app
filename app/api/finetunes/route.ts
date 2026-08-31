@@ -26,6 +26,7 @@ import { configured, createFinetune, dropFinetune, finetuneStatus } from '@/app/
 import { SOUND_CAPS } from '@/app/lib/plans';
 import { CREDITS } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
+import { guard } from '@/app/lib/server/safety';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -192,6 +193,12 @@ export async function POST(request: Request): Promise<Response> {
   }
   const genre = String(form.get('genre') ?? '').trim().slice(0, 60);
   if (!genre) return Response.json({ message: 'Say what kind of music this is.' }, { status: 400 });
+
+  // A trained sound named after a living artist is that artist's sound being
+  // offered, whatever the uploaded songs were. Checked before the training is
+  // paid for, because a refund does not get ten minutes of GPU time back.
+  const allowed = await guard(request, `${name}\n${genre}`, 'finetune', caller);
+  if (!allowed.ok) return allowed.response;
 
   // The most expensive thing this app can be asked to do — ten minutes of
   // somebody else's GPUs, and the model then sits on the account until it is
