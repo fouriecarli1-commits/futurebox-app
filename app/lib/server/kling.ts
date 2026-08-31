@@ -46,13 +46,32 @@ const BASE = process.env.KLINGAI_BASE_URL || 'https://api-singapore.klingai.com'
 const PATH = '/v1/videos/text2video';
 
 /**
- * The model, and the honest reason for the default.
+ * The model, and why this default rather than the cheaper one.
  *
- * Turbo is the one whose cost per second makes a monthly plan stretch far
- * enough to be worth offering to members. Set KLING_MODEL to move it — the
- * names are Kling's own, with the dots written as hyphens.
+ * v3 has **native audio**: a line in quotation marks in the prompt comes back
+ * spoken, in the voice the scene implies, in the language it was written in.
+ * That is the difference between a clip you have to score afterwards and one
+ * that is finished — and it is the whole reason the panel teaches quotation
+ * marks. On a model without it, a quoted line is silent and the guidance is a
+ * lie, so the two move together or not at all.
+ *
+ * Set KLING_MODEL to move it. The names are Kling's own with the dots written
+ * as hyphens: `kling-v3`, `kling-v2-5-turbo`, `kling-v2-1-master`, `kling-v1`.
  */
-const MODEL = process.env.KLING_MODEL || 'kling-v2-5-turbo';
+const MODEL = process.env.KLING_MODEL || 'kling-v3';
+
+/**
+ * Whether this model can speak, and therefore whether to ask it to.
+ *
+ * Sending `sound` to a model that has no native audio is at best ignored, so
+ * this is a list rather than an always-on. `KLING_SOUND=off` turns it off
+ * everywhere for anybody who wants silent footage to score themselves.
+ */
+export function speaks(): boolean {
+  if (process.env.KLING_SOUND === 'off') return false;
+  if (process.env.KLING_SOUND === 'on') return true;
+  return /^kling-v3\b/.test(MODEL);
+}
 
 export type Aspect = '16:9' | '9:16' | '1:1';
 
@@ -97,15 +116,34 @@ export function scheme(): 'api-key' | 'signed' | 'none' {
  * Approximate on purpose, and deliberately not optimistic: if Kling's price
  * moves, a ceiling that over-counts stops early and a ceiling that
  * under-counts overspends. Rounded up.
+ *
+ * These two numbers are a reading of Kling's pro-mode pricing, not something
+ * this repository can verify — their price list is theirs to change and does
+ * not come back on the API. Treat them as the shape of the ratio (ten seconds
+ * costs twice five) rather than as the truth about a bill, and set
+ * KLING_MONTHLY_CREDITS from the balance actually shown on the account.
  */
 export function klingCost(seconds: 5 | 10): number {
   return seconds === 10 ? 70 : 35;
 }
 
-/** The month's allowance, in Kling credits. The Ultra plan is 26 000. */
+/**
+ * The month's allowance, in Kling credits.
+ *
+ * The default is deliberately small, and that is the whole design of it. A
+ * ceiling set too high never fires, which means the first anybody knows about
+ * the allowance running out is a member paying credits for a generation that
+ * comes back as an engine error. A ceiling set too low stops early and says
+ * why, which is a worse afternoon and not a worse month.
+ *
+ * So this is not a guess at anybody's package — it is a floor to set
+ * deliberately. Read the balance on Kling's Resource Packages page and put it
+ * in KLING_MONTHLY_CREDITS. Until you do, this app will make about fifteen
+ * ten-second clips a month and then stop, politely.
+ */
 export function monthlyCeiling(): number {
   const set = Number(process.env.KLING_MONTHLY_CREDITS);
-  return Number.isFinite(set) && set > 0 ? set : 26_000;
+  return Number.isFinite(set) && set > 0 ? set : 1_000;
 }
 
 const base64url = (text: string): string => Buffer.from(text, 'utf8').toString('base64url');
@@ -184,10 +222,16 @@ export async function startVideo(request: StartRequest): Promise<Started> {
       prompt: request.prompt.slice(0, 2500),
       // What we never want in a generated video, said once rather than left to
       // each member to remember.
-      negative_prompt: 'text, watermark, logo, subtitles, distorted faces, extra limbs',
+      // Subtitles are excluded on purpose even with sound on: burnt-in text
+      // cannot be translated, cannot be turned off, and is wrong the moment
+      // the clip is cut.
+      negative_prompt: 'text, watermark, logo, subtitles, captions, distorted faces, extra limbs',
       mode: 'pro',
       aspect_ratio: request.aspect,
       duration: String(request.seconds),
+      // Quoted lines in the prompt come back spoken. Only sent where the model
+      // can do it — see `speaks()`.
+      ...(speaks() ? { sound: 'on' } : {}),
     }),
   });
 

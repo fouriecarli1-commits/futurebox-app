@@ -5,8 +5,19 @@ out/
 next-env.d.ts
 *.tsbuildinfo
 
-# Browser probes: the scripts and their fixtures. The pages they mount live
-# beside the code as *.probe.tsx and are only a page when PROBE=1, so they can
-# be re-run — see .probe/README.md, which is kept.
+# Browser probes.
+#
+# The scripts are kept. They were ignored, and that was a mistake with a
+# consequence: every check written in a session lived only on that session's
+# disk and went with it, so the repository claimed a test suite it did not
+# have and nobody after could re-run a single one of them. They are 124KB of
+# plain text with no fixtures and no keys in them — the one string that looks
+# like a key is spelled `sk_test_not_a_real_key`.
+#
+# The pages they mount live beside the code as *.probe.tsx and are only a page
+# when PROBE=1, so a production build cannot see them. See .probe/README.md.
+#
+# Anything that is not a script still goes: recordings, downloads, fixtures.
 .probe/*
 !.probe/README.md
+!.probe/*.mjs
