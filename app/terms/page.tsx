@@ -120,7 +120,7 @@ export default function Terms(): React.ReactElement {
         </Section>
 
         <Section title="Deleting your account">
-          <p>You can delete your account from inside the app. It removes your songs and their audio, any cloned voice — from the voice service as well as from here — any trained sound, your credits, your collaborations and your profile.</p>
+          <p>You can delete your account from inside the app. It removes your songs, videos and episodes and every file behind them, any cloned voice — from the voice service as well as from here — any trained sound, your credits, your collaborations and your profile.</p>
           <p>It cannot be undone. There is no grace period on purpose: keeping recordings of your voice for a month after you asked us to stop would be the opposite of what you asked for. If you are on a plan it is cancelled first, and if that cancellation fails nothing is deleted.</p>
         </Section>
 

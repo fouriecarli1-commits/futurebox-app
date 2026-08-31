@@ -88,6 +88,7 @@ export default function DeleteAccount({ email }: { email: string }): React.React
           <ul className="space-y-1 text-sm text-zinc-300">
             {[
               t('gone.songs', 'Your songs, and the audio itself'),
+              t('gone.videos', 'Your videos and podcast episodes, and their files'),
               t('gone.voices', 'Any cloned voice — removed from the voice service too, not just from here'),
               t('gone.sounds', 'Any trained sound of your own'),
               t('gone.credits', 'Your credits, whether they were given or bought'),

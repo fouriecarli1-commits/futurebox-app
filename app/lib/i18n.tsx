@@ -274,6 +274,16 @@ export const STRINGS: Dict = {
   "video.wordsNote": { en: "Timed from the plan this song was made with, and the colour changes with each section.", af: "Getel uit die plan waarmee die snit gemaak is, en die kleur verander by elke afdeling." },
   "video.from": { en: "Start at", af: "Begin by" },
   "video.go": { en: "Make it", af: "Maak dit" },
+  // The engine path. The credit figure is filled in from app/lib/credits.ts at
+  // the call site, so this line never drifts from the price actually charged.
+  "video.here": { en: "Drawn here — free", af: "Hier geteken — gratis" },
+  "video.byEngine": { en: "The engine", af: "Die enjin" },
+  "video.credits": { en: "credits", af: "krediete" },
+  "video.engineNote": { en: "The engine makes footage from your sentence. It has nothing to do with the song — it is a clip to cut against it. A few minutes, and the credits are given back if it fails.", af: "Die enjin maak beeldmateriaal uit jou sin. Dit het niks met die liedjie te doen nie — dit is \u2019n knipsel om teen die snit te sny. \u2019n Paar minute, en die krediete kom terug as dit misluk." },
+  "video.shot": { en: "What is on screen", af: "Wat op die skerm is" },
+  "video.shotHint": { en: "A lonely tar road at dusk, wide shot, slow push in, dust in the headlights", af: "\u2019n Verlate teerpad teen skemer, wye skoot, stadig in, stof in die ligte" },
+  "video.needShot": { en: "Describe the shot in a sentence first.", af: "Beskryf eers die skoot in \u2019n sin." },
+  "video.engineWaiting": { en: "The engine is working. This usually takes two to four minutes, and it keeps going if you leave this page.", af: "Die enjin werk. Dit neem gewoonlik twee tot vier minute, en dit gaan aan as jy hierdie blad verlaat." },
   "video.making": { en: "Making it \u2014 this plays through in real time", af: "Besig \u2014 dit speel in regte tyd deur" },
   "video.done": { en: "Done. Save it or post it.", af: "Klaar. Hou dit of post dit." },
   "video.save": { en: "Save the video", af: "Hou die video" },
@@ -471,6 +481,7 @@ export const STRINGS: Dict = {
   "gone.title": { en: "Delete your account", af: "Vee jou rekening uit" },
   "gone.note": { en: "Everything goes, and none of it comes back.", af: "Alles gaan weg, en niks daarvan kom terug nie." },
   "gone.start": { en: "Delete my account", af: "Vee my rekening uit" },
+  "gone.videos": { en: "Your videos and podcast episodes, and their files", af: "Jou videos en potgooi-episodes, en hulle l\u00eaers" },
   "gone.songs": { en: "Your songs, and the audio itself", af: "Jou liedjies, en die klank self" },
   "gone.voices": {
     en: "Any cloned voice \u2014 removed from the voice service too, not just from here",

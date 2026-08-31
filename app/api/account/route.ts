@@ -39,7 +39,15 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-const BUCKET = 'tracks';
+/**
+ * Every bucket a member's own files can be in.
+ *
+ * A list rather than one name, because deletion that misses a bucket is the
+ * kind of bug nobody notices — the account is gone, the screens are empty, and
+ * the files are still there. Adding a bucket anywhere in the app means adding
+ * it here.
+ */
+const BUCKETS = ['tracks', 'episodes', 'videos'] as const;
 
 export async function DELETE(request: Request): Promise<Response> {
   if (!metered()) {
@@ -103,12 +111,13 @@ export async function DELETE(request: Request): Promise<Response> {
     if (!(await dropFinetune(one.id))) left.push(`trained sound ${one.id}`);
   }
 
-  // ── 3. The audio ────────────────────────────────────────────────────
-  const { data: files } = await client.storage.from(BUCKET).list(caller.id, { limit: 1000 });
-  const paths = ((files ?? []) as Array<{ name: string }>).map((one) => `${caller.id}/${one.name}`);
-  if (paths.length) {
-    const { error } = await client.storage.from(BUCKET).remove(paths);
-    if (error) left.push(`${paths.length} audio files`);
+  // ── 3. The files, in every bucket that can hold one ─────────────────
+  for (const bucket of BUCKETS) {
+    const { data: files } = await client.storage.from(bucket).list(caller.id, { limit: 1000 });
+    const paths = ((files ?? []) as Array<{ name: string }>).map((one) => `${caller.id}/${one.name}`);
+    if (!paths.length) continue;
+    const { error } = await client.storage.from(bucket).remove(paths);
+    if (error) left.push(`${paths.length} files in ${bucket}`);
   }
 
   // ── 4. The account, and everything cascading off it ─────────────────
