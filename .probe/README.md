@@ -27,6 +27,9 @@ curl -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3111/probe-bal
 
 | File | Checks |
 | --- | --- |
+| `dialogue.mjs` | Cutting a long script into requests that fit their 2,000-character limit, without losing a word — arithmetic, run with `node --experimental-strip-types` |
+| `converse.mjs` | What actually goes on the wire to text-to-dialogue, run against a fake ElevenLabs rather than grepped |
+| `twohosts.mjs` | The script screen: true counts, an uncast speaker named rather than given a voice, the result becoming the episode draft |
 | `booth.mjs` | That the Booth has a rung on the rail, and that both doors into it file a take in the same place |
 | `booth-screen.mjs` | An empty booth explains itself; a full one lists the songs, and one already sung on reopens rather than restarts |
 | `balance.mjs` | The credit chip in all eight of its states — a number only when the system is genuinely working |
