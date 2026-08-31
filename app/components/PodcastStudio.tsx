@@ -18,10 +18,12 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Check, Copy, Globe, Link2, Loader2, Mic, Radio, Rss, Sparkles, Square, Trash2, Upload,
+  Check, Copy, Globe, Languages, Link2, Loader2, Mic, Radio, Rss, Sparkles, Square, Trash2, Upload,
 } from 'lucide-react';
 import VoiceLab, { type VoiceState } from './VoiceLab';
 import TwoHosts from './TwoHosts';
+import DubEpisode from './DubEpisode';
+import { episodeAudioUrl } from '../lib/episodeaudio';
 import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
 
@@ -63,6 +65,8 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
   const [signedIn, setSignedIn] = useState(false);
 
   const [draft, setDraft] = useState<{ audio: Blob; how: Episode['made'] } | null>(null);
+  /** Which episode's dubbing panel is open, if any. */
+  const [dubbing, setDubbing] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
@@ -454,25 +458,60 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
         {episodes.length > 0 && (
           <div className="space-y-1.5 pt-1">
             {episodes.map((episode) => (
-              <div key={episode.id} className="flex items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">{episode.title}</p>
-                  <p className="text-sm text-zinc-500">{MADE_LABEL[episode.made]}</p>
+              <div key={episode.id} className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{episode.title}</p>
+                    <p className="text-sm text-zinc-500">{MADE_LABEL[episode.made]}</p>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Only on a published episode: a dub is made from the
+                        audio at its public address, and a draft has none. */}
+                    <button
+                      type="button"
+                      onClick={() => setDubbing(dubbing === episode.id ? null : episode.id)}
+                      title={t('dub.title', 'Say it in another language')}
+                      aria-label={t('dub.title', 'Say it in another language')}
+                      className={`p-1.5 rounded-lg ${dubbing === episode.id ? 'text-emerald-300' : 'text-zinc-500 hover:text-emerald-300'}`}
+                    >
+                      <Languages className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const token = await accessToken();
+                        await fetch(`/api/episode?id=${encodeURIComponent(episode.id)}`, {
+                          method: 'DELETE',
+                          headers: token ? { Authorization: `Bearer ${token}` } : {},
+                        }).catch(() => {});
+                        void load();
+                      }}
+                      className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const token = await accessToken();
-                    await fetch(`/api/episode?id=${encodeURIComponent(episode.id)}`, {
-                      method: 'DELETE',
-                      headers: token ? { Authorization: `Bearer ${token}` } : {},
-                    }).catch(() => {});
-                    void load();
-                  }}
-                  className="text-zinc-500 hover:text-red-400 flex-shrink-0"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+
+                {dubbing === episode.id && (
+                  <DubEpisode
+                    episodeId={episode.id}
+                    title={episode.title}
+                    seconds={episode.seconds}
+                    audioUrl={episodeAudioUrl(episode.audio_path)}
+                    onDubbed={(audio, language) => {
+                      // Straight into the draft, so the episode that already
+                      // knows how to be published publishes it. The title says
+                      // which language it is in, because two episodes with the
+                      // same name in one feed is a feed nobody can navigate.
+                      setDraft({ audio, how: 'spoken' });
+                      setTitle(`${episode.title} (${language})`);
+                      setNotes(episode.notes);
+                      setDubbing(null);
+                    }}
+                    onClose={() => setDubbing(null)}
+                  />
+                )}
               </div>
             ))}
           </div>

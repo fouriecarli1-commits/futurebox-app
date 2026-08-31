@@ -3,7 +3,8 @@
  *
  * Cloning a voice, reading a script in it, restaging a recording in another
  * voice, taking the room out of one, listing what a person has cloned, holding
- * and holding two people in conversation. The key never leaves the server, which is the reason any of this is
+ * holding two people in conversation, and dubbing a finished episode into
+ * another language. The key never leaves the server, which is the reason any of this is
  * a route handler rather than a fetch from a component.
  *
  * The error handling is the part worth reading. An upstream refusal is the only
@@ -276,6 +277,100 @@ export async function converse(
     ok: true,
     spoken: { pcm: joinPcm(pieces), rate: DIALOGUE_RATE, requests: parts.length, model },
   };
+}
+
+/**
+ * The same episode in another language, in the same voices: their dubbing.
+ *
+ * POST /v1/dubbing, multipart: `file`, `source_lang`, `target_lang`,
+ * `num_speakers`, `watermark`, `drop_background_audio`. It answers with a
+ * `dubbing_id` and an `expected_duration_sec`; GET /v1/dubbing/{id} reports
+ * `status`, and GET /v1/dubbing/{id}/audio/{lang} hands back the audio once
+ * that status is `dubbed`. Field names off the SDK's serialisers.
+ *
+ * This is the one ElevenLabs feature this app most obviously needs. An episode
+ * recorded in Afrikaans reaches an English audience in the host's own voice,
+ * and the other way round, which is not a translation feature — it is the same
+ * show, twice.
+ */
+export interface Dub {
+  readonly id: string;
+  /** Their estimate, in seconds. Worth showing: a long episode is not quick. */
+  readonly expected: number;
+}
+
+export async function dub(
+  audio: Blob,
+  sourceLang: string,
+  targetLang: string,
+  speakers: number,
+): Promise<{ ok: true; dub: Dub } | Upstream> {
+  const form = new FormData();
+  form.append('file', audio, 'episode.mp3');
+  // Their own convention: zero means work it out from the audio.
+  form.append('num_speakers', String(Math.max(0, Math.round(speakers))));
+  form.append('target_lang', targetLang);
+  if (sourceLang) form.append('source_lang', sourceLang);
+  // A watermark belongs on a video somebody might pass off as filmed. This is
+  // the host's own show in their own voice, and they are publishing it.
+  form.append('watermark', 'false');
+
+  const response = await fetch(`${BASE}/dubbing`, {
+    method: 'POST',
+    headers: { 'xi-api-key': key() },
+    body: form,
+  });
+  if (!response.ok) return complain(response);
+  const body = (await response.json()) as { dubbing_id?: string; expected_duration_sec?: number };
+  if (!body?.dubbing_id) {
+    return { ok: false, status: 502, message: 'The dub was accepted without an id to follow it by.' };
+  }
+  return { ok: true, dub: { id: body.dubbing_id, expected: Number(body.expected_duration_sec) || 0 } };
+}
+
+/** Where a dub has got to. `error` is theirs, and is worth passing on whole. */
+export interface DubState {
+  readonly status: string;
+  readonly done: boolean;
+  readonly failed: boolean;
+  readonly error?: string;
+  readonly languages: readonly string[];
+}
+
+export async function dubState(id: string): Promise<{ ok: true; state: DubState } | Upstream> {
+  const response = await fetch(`${BASE}/dubbing/${encodeURIComponent(id)}`, {
+    headers: { 'xi-api-key': key() },
+  });
+  if (!response.ok) return complain(response);
+  const body = (await response.json()) as {
+    status?: string;
+    error?: string;
+    target_languages?: string[];
+  };
+  const status = String(body?.status ?? '');
+  return {
+    ok: true,
+    state: {
+      status,
+      done: status === 'dubbed',
+      failed: status === 'failed',
+      error: body?.error,
+      languages: Array.isArray(body?.target_languages) ? body.target_languages : [],
+    },
+  };
+}
+
+/** The finished dub, in one of the languages it was made in. */
+export async function dubbed(
+  id: string,
+  language: string,
+): Promise<{ ok: true; audio: ArrayBuffer } | Upstream> {
+  const response = await fetch(
+    `${BASE}/dubbing/${encodeURIComponent(id)}/audio/${encodeURIComponent(language)}`,
+    { headers: { 'xi-api-key': key() } },
+  );
+  if (!response.ok) return complain(response);
+  return { ok: true, audio: await response.arrayBuffer() };
 }
 
 /** The voice without the room: their audio isolation, on a recording. */

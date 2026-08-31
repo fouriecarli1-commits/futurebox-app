@@ -14,6 +14,7 @@
  * required and guessing it breaks players that trust it.
  */
 
+import { episodeAudioUrl } from '@/app/lib/episodeaudio';
 import { admin } from '@/app/lib/server/account';
 
 export const runtime = 'nodejs';
@@ -62,8 +63,7 @@ export async function GET(
     .limit(300);
 
   const site = new URL(request.url).origin;
-  const base = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/$/, '');
-  const audioUrl = (path: string) => `${base}/storage/v1/object/public/episodes/${path}`;
+  const audioUrl = episodeAudioUrl;
 
   const items = (episodes ?? [])
     .map((episode) => {
