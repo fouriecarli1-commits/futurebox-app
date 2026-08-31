@@ -163,6 +163,22 @@ export default function FutureBoxHome() {
   const [authPassword, setAuthPassword] = useState('');
   const [userPlan, setUserPlan] = useState<Plan>('free');
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
+  /**
+   * Whether a payment can actually be started.
+   *
+   * The subtitle used to say "no payment provider is connected" whatever was
+   * true, which was right for months and became a lie the day Paystack went
+   * in — on the one screen where a person is deciding whether to trust us with
+   * a card. Asked now, not assumed.
+   */
+  const [canCharge, setCanCharge] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!pricingModalOpen || canCharge !== null) return;
+    fetch('/api/checkout')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setCanCharge(Boolean(d?.available)))
+      .catch(() => setCanCharge(false));
+  }, [pricingModalOpen, canCharge]);
   // Resolved after mount: guessing during render would bake one country's
   // prices into the static HTML that everybody is served.
   const [region, setRegion] = useState<Region>(REGIONS[0]);
@@ -1694,7 +1710,9 @@ export default function FutureBoxHome() {
             <div className="flex items-start justify-between border-b border-zinc-800 pb-4">
               <div>
                 <h3 className="font-extrabold text-lg text-white">{t('pay.title')}</h3>
-                <p className="text-sm text-zinc-400 pt-1">{t('pay.sub')}</p>
+                <p className="text-sm text-zinc-400 pt-1">
+                  {canCharge === false ? t('pay.sub') : t('pay.subLive', 'A month at a time. Cancel from inside the app whenever you like.')}
+                </p>
               </div>
               <button onClick={() => setPricingModalOpen(false)} className="text-zinc-400 hover:text-white flex-shrink-0">
                 <X className="w-5 h-5" />

@@ -438,6 +438,7 @@ export const STRINGS: Dict = {
 
   "credits.credits": { en: "credits", af: "krediete" },
   "pay.freeAlways": { en: "Always free", af: "Altyd gratis" },
+  "pay.subLive": { en: "A month at a time. Cancel from inside the app whenever you like.", af: "Een maand op \u2019n slag. Kanselleer binne-in die app wanneer jy wil." },
   "credits.cannotAsk": { en: "Could not read your credits just now", af: "Kon nie nou jou krediete lees nie" },
   "credits.short": { en: "You are short by", af: "Jy kort" },
   "credits.shortNote": { en: "That needed", af: "Dit het" },
