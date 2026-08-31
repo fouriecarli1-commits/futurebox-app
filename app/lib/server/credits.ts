@@ -121,7 +121,7 @@ export async function settle(caller: Caller): Promise<number | null> {
   // A paid tier gets its whole month at once. Free gets one week's worth now
   // and the rest on Mondays — but it has to get *something* now, or somebody
   // who signs up on a Tuesday sits looking at zero until the weekend.
-  await client.rpc('grant_credits', {
+  const monthly = await client.rpc('grant_credits', {
     p_owner: caller.id,
     p_amount: caller.tier === 'free' ? FREE_WEEKLY : TIER_CREDITS[caller.tier],
     p_reason: 'monthly',
@@ -130,8 +130,13 @@ export async function settle(caller: Caller): Promise<number | null> {
     p_budget: budget,
   });
 
+  // A grant that fails is not a grant of nothing. Ignoring the error left the
+  // balance reading zero with nothing to say why, which is indistinguishable
+  // from having spent it — the same confusion the balance itself had.
+  if (monthly.error) return null;
+
   if (caller.tier === 'free') {
-    await client.rpc('grant_credits', {
+    const weekly = await client.rpc('grant_credits', {
       p_owner: caller.id,
       p_amount: FREE_WEEKLY,
       p_reason: 'weekly',
@@ -139,6 +144,7 @@ export async function settle(caller: Caller): Promise<number | null> {
       p_cap: cap,
       p_budget: budget,
     });
+    if (weekly.error) return null;
   }
 
   return balanceOf(caller.id);
