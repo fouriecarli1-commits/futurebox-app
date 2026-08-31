@@ -16,7 +16,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   GraduationCap, Clock, Lock, Sparkles, RefreshCw, Route, PlayCircle,
-  Music, Video, Code2, Cpu, TrendingUp, Microscope,
+  Music, Video, Code2, Cpu, TrendingUp, Microscope, Gamepad2,
 } from 'lucide-react';
 import {
   MASTERCLASSES, PATHS, BRIEF_SEEDS, TRACK_LABELS, LEVEL_LABELS,
@@ -36,6 +36,7 @@ const TRACK_ICONS: Record<Track, typeof Music> = {
   'which-ai': Cpu,
   business: TrendingUp,
   research: Microscope,
+  'ai-games': Gamepad2,
 };
 
 const PROVENANCE_STYLE: Record<Provenance, string> = {

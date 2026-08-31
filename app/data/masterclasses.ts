@@ -28,7 +28,17 @@ export type Track =
   | 'vibecoding'
   | 'which-ai'
   | 'business'
-  | 'research';
+  | 'research'
+  /**
+   * Games, and why they are their own track rather than a corner of vibe
+   * coding. A game is the one thing on this list where the generated part has
+   * to keep working while somebody is *inside* it — art, dialogue, layout and
+   * behaviour, all of it under a frame budget and all of it shipped to people
+   * who will find the seam. Nothing in the coding track prepares anybody for
+   * that, and the people already doing it are the largest group of makers
+   * using these tools daily.
+   */
+  | 'ai-games';
 
 export type Level = 'start-here' | 'working' | 'deep';
 
@@ -57,6 +67,7 @@ export const TRACK_LABELS: Record<Track, string> = {
   'which-ai': 'Which AI for What',
   business: 'Business & the Future',
   research: 'Breakthrough Research',
+  'ai-games': 'AI Game Creators',
 };
 
 export const LEVEL_LABELS: Record<Level, string> = {
@@ -85,6 +96,68 @@ export const PROVENANCE_NOTES: Record<Provenance, string> = {
  * every addition has to be watched by a person first.
  */
 export const MASTERCLASSES: readonly Masterclass[] = [
+  // ── AI Game Creators ────────────────────────────────────────────────
+  //
+  // All `original` and none of them `published`, because none of them has been
+  // filmed. That is what `status` is for: the track can be planned, shown and
+  // argued about before a camera is switched on, without a single card
+  // claiming something a member could click and not find.
+  //
+  // Deliberately no `curated` entries here yet. A curated card points at
+  // somebody else's real work at a real address, and the honest way to add
+  // those is to pick the sources first rather than to invent plausible ones.
+  {
+    id: 'mc-games-start',
+    title: 'What a generative tool can and cannot do inside a game',
+    instructor: 'Anre Fourie',
+    provenance: 'original',
+    status: 'planned',
+    track: 'ai-games',
+    level: 'start-here',
+    minutes: 35,
+    outcome:
+      'Tell the difference between the parts of a game these tools genuinely make faster and the parts where they cost you more time than they save.',
+    url: '',
+  },
+  {
+    id: 'mc-games-assets',
+    title: 'Assets that survive contact with an art director',
+    instructor: 'Anre Fourie',
+    provenance: 'original',
+    status: 'planned',
+    track: 'ai-games',
+    level: 'working',
+    minutes: 48,
+    outcome:
+      'Take a generated sprite sheet from "looks fine in the preview" to something consistent across forty frames, and know which fixes are worth doing by hand.',
+    url: '',
+  },
+  {
+    id: 'mc-games-npc',
+    title: 'An NPC that talks back, and what it costs per player',
+    instructor: 'Anre Fourie',
+    provenance: 'original',
+    status: 'planned',
+    track: 'ai-games',
+    level: 'working',
+    minutes: 52,
+    outcome:
+      'Wire generated dialogue into a scene, measure the latency a player actually feels, and work out the bill before you ship rather than after.',
+    url: '',
+  },
+  {
+    id: 'mc-games-ship',
+    title: 'Shipping a small game that uses AI, and saying so',
+    instructor: 'Anre Fourie',
+    provenance: 'original',
+    status: 'planned',
+    track: 'ai-games',
+    level: 'deep',
+    minutes: 60,
+    outcome:
+      'Put a finished game in front of people with the generated parts declared on the store page — including what the platforms now require you to declare, and why hiding it is the expensive option.',
+    url: '',
+  },
   {
     id: 'mc-karpathy-llm',
     title: 'Intro to Large Language Models',
@@ -244,6 +317,13 @@ export const PATHS: readonly Path[] = [
     classIds: ['mc-stack-map', 'mc-vibecode-weekend', 'mc-vibecode-review'],
   },
   {
+    id: 'path-games',
+    title: 'Make a small game with these tools, and finish it',
+    blurb:
+      'Four sittings, from what the tools are actually good at to a game on a store page with the generated parts declared. Nothing filmed yet — this is the plan, in public.',
+    classIds: ['mc-games-start', 'mc-games-assets', 'mc-games-npc', 'mc-games-ship'],
+  },
+  {
     id: 'path-understand',
     title: 'Actually understand what you are using',
     blurb: 'No code. Enough to stop being sold to.',
@@ -280,5 +360,9 @@ export const BRIEF_SEEDS: Record<Track, { angle: string[]; format: string[] }> =
   research: {
     angle: ['a result that changed a field', 'a replication that failed', 'what a limitation section actually says', 'the gap between a paper and a product'],
     format: ['read the paper together, slowly', 'interview the author', 'explain the method, not the finding'],
+  },
+  'ai-games': {
+    angle: ['what breaks when a player is inside it', 'the frame budget nobody mentions', 'generated art that stays consistent across a sheet', 'declaring the generated parts on a store page', 'cost per player, not cost per prompt'],
+    format: ['build one small mechanic end to end', 'a teardown of a shipped game that used these tools', 'the same asset through four tools, compared', 'a playtest with the seams pointed at'],
   },
 };
