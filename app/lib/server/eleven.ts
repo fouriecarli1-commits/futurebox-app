@@ -1,10 +1,10 @@
 /**
  * Talking to ElevenLabs, in one place.
  *
- * Four things are called from here — cloning a voice, reading a script in it,
- * taking the room out of a recording, and listing what a person has cloned. The
- * key never leaves the server, which is the reason any of this is a route
- * handler rather than a fetch from a component.
+ * Cloning a voice, reading a script in it, restaging a recording in another
+ * voice, taking the room out of one, listing what a person has cloned, holding
+ * and holding two people in conversation. The key never leaves the server, which is the reason any of this is
+ * a route handler rather than a fetch from a component.
  *
  * The error handling is the part worth reading. An upstream refusal is the only
  * sentence that says what to change — out of credits, key rejected, sample too
@@ -12,6 +12,9 @@
  * throws away the one useful thing in the response. So their words come back
  * first, and the status number rides along on anything unfamiliar.
  */
+
+import { batches, type Turn } from '../dialogue.ts';
+import { joinPcm } from '../pcmwav.ts';
 
 const BASE = 'https://api.elevenlabs.io/v1';
 
@@ -192,6 +195,87 @@ export async function restage(
   );
   if (!response.ok) return complain(response);
   return { ok: true, audio: await response.arrayBuffer() };
+}
+
+/**
+ * Two people talking: their text-to-dialogue.
+ *
+ * POST /v1/text-to-dialogue, JSON, `inputs` as a list of `{ text, voice_id }`
+ * with `model_id`, `language_code`, `settings`, `seed` and
+ * `apply_text_normalization` alongside; `output_format` on the query string.
+ * Read off the SDK's serialisers, not remembered.
+ *
+ * The difference between this and calling text-to-speech twice is that the
+ * speakers hear each other. One request is one conversation, and the model
+ * puts the second person's answer where an answer goes.
+ *
+ * Which is exactly why the joins matter. Their own limit is 2,000 characters
+ * per request, so an episode is several requests, and across a join the model
+ * does not know how the last one ended. `app/lib/dialogue.ts` makes those joins
+ * as rare as the limit allows and puts them between turns.
+ *
+ * PCM rather than MP3, deliberately: several MP3 streams stuck together leave a
+ * seam and a header that lies about the length. Several runs of PCM stuck
+ * together are one longer run. 24kHz because their note says 44.1kHz PCM is a
+ * Pro-tier format, and speech does not need it.
+ */
+export const DIALOGUE_RATE = 24000;
+/** Their newest, with the one before it as a fallback for older plans. */
+const DIALOGUE_MODELS = ['eleven_v3', 'eleven_multilingual_v2'];
+
+export interface Spoken {
+  readonly pcm: Uint8Array;
+  readonly rate: number;
+  /** How many requests it took, so the screen can say what it is waiting on. */
+  readonly requests: number;
+  readonly model: string;
+}
+
+async function sayTurns(
+  turns: readonly Turn[],
+  modelId: string,
+  languageCode?: string,
+): Promise<Response> {
+  return fetch(`${BASE}/text-to-dialogue?output_format=pcm_${DIALOGUE_RATE}`, {
+    method: 'POST',
+    headers: { 'xi-api-key': key(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      inputs: turns.map((turn) => ({ text: turn.text, voice_id: turn.voiceId })),
+      model_id: modelId,
+      ...(languageCode ? { language_code: languageCode } : {}),
+      apply_text_normalization: 'auto',
+    }),
+  });
+}
+
+export async function converse(
+  turns: readonly Turn[],
+  languageCode?: string,
+): Promise<{ ok: true; spoken: Spoken } | Upstream> {
+  const parts = batches(turns);
+  if (parts.length === 0) {
+    return { ok: false, status: 400, message: 'There is nothing for anybody to say.' };
+  }
+
+  const pieces: Uint8Array[] = [];
+  let model = DIALOGUE_MODELS[0];
+  for (let at = 0; at < parts.length; at += 1) {
+    let response = await sayTurns(parts[at], model, languageCode);
+    // Only the first request tries the fallback. Once one has been accepted,
+    // a later refusal is about the words in it, not about the model — and
+    // switching models mid-episode would change the voices halfway through.
+    if (!response.ok && at === 0 && model === DIALOGUE_MODELS[0]) {
+      model = DIALOGUE_MODELS[1];
+      response = await sayTurns(parts[at], model, languageCode);
+    }
+    if (!response.ok) return complain(response);
+    pieces.push(new Uint8Array(await response.arrayBuffer()));
+  }
+
+  return {
+    ok: true,
+    spoken: { pcm: joinPcm(pieces), rate: DIALOGUE_RATE, requests: parts.length, model },
+  };
 }
 
 /** The voice without the room: their audio isolation, on a recording. */

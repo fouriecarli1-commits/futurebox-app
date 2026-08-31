@@ -21,6 +21,7 @@ import {
   Check, Copy, Globe, Link2, Loader2, Mic, Radio, Rss, Sparkles, Square, Trash2, Upload,
 } from 'lucide-react';
 import VoiceLab, { type VoiceState } from './VoiceLab';
+import TwoHosts from './TwoHosts';
 import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
 
@@ -358,6 +359,18 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
       <VoiceLab
         state={voices}
         onChanged={load}
+        onAudio={(audio) => setDraft({ audio, how: 'spoken' })}
+        onUpgrade={onUpgrade}
+      />
+
+      {/* ── Two people talking ──────────────────────────────────────────── */}
+      {/* Filed as 'spoken' rather than a kind of its own: the disclosure a
+          listener needs is that a voice was synthesised, and that is what
+          'spoken' already prints on the episode and in the feed. A conversation
+          is spoken by voices, so the promise the feed makes stays true and no
+          migration is needed to keep it. */}
+      <TwoHosts
+        voices={voices}
         onAudio={(audio) => setDraft({ audio, how: 'spoken' })}
         onUpgrade={onUpgrade}
       />

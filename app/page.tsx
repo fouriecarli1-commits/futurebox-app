@@ -32,6 +32,7 @@ import Copilot, { type CopilotAction } from './components/Copilot';
 import type { Canvas } from './components/MakeMusic';
 import type { Track } from './lib/library';
 import { probeAudio } from './lib/engines';
+import Booth from './components/Booth';
 import Masterclasses from './components/Masterclasses';
 import { Counters, Views, useBoard } from './components/Counters';
 import Placement from './components/Placement';
@@ -278,7 +279,7 @@ export default function FutureBoxHome() {
    * already is, so a second screen for it was the same job behind a second
    * button.
    */
-  const [studioTab, setStudioTab] = useState<'video' | 'canvas' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'podcast'>('make');
+  const [studioTab, setStudioTab] = useState<'video' | 'canvas' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'booth' | 'podcast'>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -1849,6 +1850,7 @@ export default function FutureBoxHome() {
                      song. */
                   { id: 'make', label: t('rail.make'), hint: t('rail.make.hint'), icon: Sparkles },
                   { id: 'studio', label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
+                  { id: 'booth', label: t('rail.booth'), hint: t('rail.booth.hint'), icon: Mic },
                   { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
                   { id: 'video', label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
                   { id: 'canvas', label: t('rail.canvas'), hint: t('rail.canvas.hint'), icon: Clapperboard },
@@ -1922,6 +1924,16 @@ export default function FutureBoxHome() {
                 email={user?.email}
               />
             )}
+            {studioTab === 'booth' && (
+              <Booth
+                onGoToMake={() => setStudioTab('make')}
+                onMade={(track) => {
+                  setMadeTrack(track);
+                  setTrackCount((count) => count + 1);
+                }}
+              />
+            )}
+
             {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
 
             {/* STUDIO: your own song, in its own sections, over its own audio */}
