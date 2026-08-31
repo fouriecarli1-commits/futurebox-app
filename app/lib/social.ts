@@ -5,7 +5,7 @@
  * browser's localStorage and reach no server, because there is no server. That
  * is a real limitation and the UI says so rather than implying an account.
  */
-import { PLATFORMS, FUTUREBOX_TAG, type Platform } from '../data/social';
+import { PLATFORMS, FUTUREBOX_TAG, type Platform } from '../data/social.ts';
 
 export type Handles = Record<string, string>;
 

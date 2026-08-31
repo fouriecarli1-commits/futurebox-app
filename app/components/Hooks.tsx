@@ -19,6 +19,7 @@ import { readAudio } from '../lib/trackaudio';
 import { findHooks, sectionHooks, decodeTrack, formatMoment, type Hook } from '../lib/hooks';
 import { renderVideo, styleFor, videoSupported, extensionFor } from '../lib/video';
 import { useLang } from '../lib/i18n';
+import ShareRow from './ShareRow';
 
 const LENGTHS = [15, 30];
 
@@ -211,6 +212,14 @@ export default function Hooks() {
                 <Download className="w-3.5 h-3.5" />
                 {t('video.save')}
               </button>
+
+              {/* A hook exists to be posted. Offering that here, where the file
+                  is, saves somebody working out the caption twice. */}
+              <ShareRow
+                title={selected.title}
+                what={t('hooks.shareWhat', 'A hook from a song I made on FutureBox.')}
+                hashtags={['newmusic', selected.genre.replace(/[^A-Za-z0-9]/g, '').toLowerCase()].filter(Boolean)}
+              />
             </div>
           )}
         </>

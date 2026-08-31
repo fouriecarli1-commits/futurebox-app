@@ -46,12 +46,17 @@ export default function CollabRoom({ reloadKey }: { reloadKey: number }): React.
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  /** Null until asked; false when the tables are missing rather than empty. */
+  const [ready, setReady] = useState<boolean | null>(null);
+  const [why, setWhy] = useState<string | null>(null);
 
   const bottom = useRef<HTMLDivElement | null>(null);
 
   const refresh = useCallback(() => {
-    loadThreads().then((next) => {
-      setThreads(next);
+    void loadThreads().then((next) => {
+      setThreads(next.threads);
+      setReady(next.ready);
+      setWhy(next.message ?? null);
       setLoaded(true);
     });
   }, []);
@@ -139,8 +144,48 @@ export default function CollabRoom({ reloadKey }: { reloadKey: number }): React.
     );
   }
 
+  // The tables are not there. Said outright, because the alternative — which
+  // is what this drew before — is "no collaborations yet", and nobody can tell
+  // that from a feature that has simply never been switched on.
+  if (ready === false) {
+    return (
+      <div className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-4 space-y-2">
+        <p className="text-sm font-semibold text-amber-300 flex items-center gap-2">
+          <Handshake className="w-4 h-4 flex-shrink-0" />
+          {t('collab.off', 'Collaboration is not switched on yet')}
+        </p>
+        <p className="text-sm text-zinc-400 leading-snug">
+          {why ??
+            t('collab.offNote', 'Its tables are missing. Everything else on this screen still works.')}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {/* ── What this is for ─────────────────────────────────────────────
+          Asked for, and worth the space: a Handshake icon and an empty list
+          do not tell anybody what collaborating here actually means, and
+          somebody who does not know will not press anything. */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-1.5">
+        <p className="text-base font-bold text-white">
+          {t('collab.whatTitle', 'Making something with somebody else')}
+        </p>
+        <p className="text-sm text-zinc-400 leading-relaxed">
+          {t(
+            'collab.what',
+            'Ask another maker, and if they say yes the two of you get a room: a private thread nobody else can read, and a way to hand songs back and forth. Take their verse into your track, put your voice on theirs, cut a video against a song neither of you would have made alone.',
+          )}
+        </p>
+        <p className="text-sm text-zinc-500 leading-relaxed">
+          {t(
+            'collab.whatPrivate',
+            'Nothing is shared until you send it, and neither of you can read a word of the thread until you have both agreed — that is enforced in the database, not by a screen.',
+          )}
+        </p>
+      </div>
+
       {/* ── Waiting on you ───────────────────────────────────────────── */}
       {waiting.length > 0 && (
         <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/[0.06] p-4 space-y-3">

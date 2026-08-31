@@ -84,9 +84,13 @@ const nextConfig = {
           // out still work as referrals.
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'X-Frame-Options', value: 'DENY' },
-          // Nothing here needs a camera, a microphone from another origin, or
-          // a location. The microphone is ours, which is what 'self' says.
-          { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=(self)' },
+          // The camera and the microphone are both ours now — somebody films
+          // themselves singing along with the words on screen, which needs
+          // both and needs them from this origin only. `camera=()` blocked
+          // that outright, and a header refusing a feature the app ships is a
+          // feature nobody can use and nobody can debug. Location is still
+          // nothing to do with anything here.
+          { key: 'Permissions-Policy', value: 'camera=(self), geolocation=(), microphone=(self)' },
         ],
       },
     ];

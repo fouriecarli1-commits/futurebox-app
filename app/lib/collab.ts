@@ -39,15 +39,37 @@ async function head(): Promise<Record<string, string>> {
   };
 }
 
-export async function loadThreads(): Promise<Thread[]> {
+export interface Threads {
+  readonly threads: Thread[];
+  /**
+   * False when the tables are not there.
+   *
+   * Kept apart from an empty list on purpose. Without it, a project where
+   * `supabase/collab.sql` has never been run draws "no collaborations yet" —
+   * which is indistinguishable from having none, and is why this feature
+   * looked merely unused rather than switched off.
+   */
+  readonly ready: boolean;
+  readonly message?: string;
+}
+
+export async function loadThreads(): Promise<Threads> {
   const token = await accessToken();
   const response = await fetch('/api/collab', {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     cache: 'no-store',
   }).catch(() => null);
-  if (!response?.ok) return [];
-  const data = (await response.json().catch(() => null)) as { threads?: Thread[] } | null;
-  return data?.threads ?? [];
+  // A request that never arrived is not a project without collaboration, so
+  // this reads as not-ready rather than as empty.
+  if (!response?.ok) return { threads: [], ready: false };
+  const data = (await response.json().catch(() => null)) as
+    | { threads?: Thread[]; ready?: boolean; message?: string }
+    | null;
+  return {
+    threads: data?.threads ?? [],
+    ready: data?.ready !== false,
+    ...(data?.message ? { message: data.message } : {}),
+  };
 }
 
 /**

@@ -33,6 +33,7 @@ import Cover from './Cover';
 import SoundTrainer from './SoundTrainer';
 import DeleteAccount from './DeleteAccount';
 import { useLang } from '../lib/i18n';
+import ShareRow from './ShareRow';
 
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
@@ -325,6 +326,12 @@ export default function Channel({
                 <p className="text-sm text-zinc-500">
                   {track.genre} · {clock(track.seconds)}
                 </p>
+
+                <ShareRow
+                  title={track.title}
+                  what={t('chan.shareWhat', 'A song I made on FutureBox.')}
+                  hashtags={['newmusic', track.genre.replace(/[^A-Za-z0-9]/g, '').toLowerCase()].filter(Boolean)}
+                />
 
                 {adding === track.id ? (
                   <div className="space-y-1 pt-1">

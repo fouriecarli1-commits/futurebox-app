@@ -20,6 +20,8 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Maximize2 } from 'lucide-react';
+import FollowWords from './FollowWords';
 import { peaksOf, type Peaks } from '../lib/peaks';
 import { lineAt, timelineOf, type Part } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
@@ -92,6 +94,14 @@ export default function NowPlaying({
   }, [duration, track.parts, track.plannedSeconds]);
 
   const current = timed.length ? lineAt(timed, at) : -1;
+  /**
+   * The big view, for singing along and for filming yourself doing it.
+   *
+   * The small panel below is right for a desk — the whole sheet, every line
+   * clickable to seek. It is wrong for a phone propped against something, and
+   * that is the moment people actually asked for.
+   */
+  const [following, setFollowing] = useState(false);
 
   // Keep the line being sung in the middle of the panel. Set directly rather
   // than with scrollIntoView, which scrolls the whole page when the panel is
@@ -162,6 +172,17 @@ export default function NowPlaying({
 
       {timed.length > 0 && (
         <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-semibold text-zinc-400">{t('play.words', 'The words')}</span>
+            <button
+              type="button"
+              onClick={() => setFollowing(true)}
+              className="text-sm text-emerald-300 hover:underline flex items-center gap-1.5"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              {t('play.follow', 'Follow along')}
+            </button>
+          </div>
           <div
             ref={listRef}
             className="max-h-52 overflow-y-auto pr-1 space-y-0.5 scroll-smooth"
@@ -194,6 +215,15 @@ export default function NowPlaying({
           </div>
           <p className="text-sm text-zinc-600 leading-snug">{t('play.followNote')}</p>
         </div>
+      )}
+
+      {following && (
+        <FollowWords
+          lines={timed}
+          audio={audio}
+          title={track.title}
+          onClose={() => setFollowing(false)}
+        />
       )}
     </div>
   );
