@@ -25,6 +25,12 @@ export interface Wallet {
    * working free account, which is a bug you only find by being told.
    */
   readonly failed?: boolean;
+  /**
+   * False when the server answered but could not read a balance — the
+   * migration has not been run. Distinct from `failed`, which is the request
+   * itself not arriving, and from a real balance of zero.
+   */
+  readonly ready?: boolean;
   readonly signedIn: boolean;
   readonly balance: number;
   readonly monthly: number;
@@ -41,7 +47,7 @@ export const NO_WALLET: Wallet = {
   packs: PACKS,
 };
 
-const COULD_NOT_ASK: Wallet = { ...NO_WALLET, metered: true, failed: true };
+const COULD_NOT_ASK: Wallet = { ...NO_WALLET, metered: true, failed: true, ready: false };
 
 export async function loadWallet(): Promise<Wallet> {
   const token = await accessToken();
@@ -57,6 +63,7 @@ export async function loadWallet(): Promise<Wallet> {
     metered: Boolean(data.metered),
     signedIn: Boolean(data.signedIn),
     balance: typeof data.balance === 'number' ? data.balance : 0,
+    ready: data.ready !== false,
     monthly: typeof data.monthly === 'number' ? data.monthly : 0,
     cap: typeof data.cap === 'number' ? data.cap : 0,
     packs: data.packs?.length ? data.packs : PACKS,

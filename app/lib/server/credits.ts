@@ -23,11 +23,20 @@ import {
   budgetFor, capFor, FREE_WEEKLY, monthKey, TIER_CREDITS, weekKey,
 } from '@/app/lib/credits';
 
-/** What is left. Zero when there is no database to ask. */
-export async function balanceOf(owner: string): Promise<number> {
+/**
+ * What is left, or null when the question could not be asked.
+ *
+ * Null and zero are different answers and it matters which is given. Before
+ * `credits.sql` has been run the function does not exist, and returning zero
+ * for that told people they had spent credits they had never been given —
+ * with no hint that anything was wrong. Null lets the screen say "not now"
+ * instead of a number that is a lie.
+ */
+export async function balanceOf(owner: string): Promise<number | null> {
   const client = admin();
-  if (!client) return 0;
-  const { data } = await client.rpc('credit_balance', { p_owner: owner });
+  if (!client) return null;
+  const { data, error } = await client.rpc('credit_balance', { p_owner: owner });
+  if (error) return null;
   return typeof data === 'number' ? data : Number(data ?? 0);
 }
 
@@ -100,9 +109,9 @@ export async function topUp(owner: string, credits: number, reference: string): 
  * month they were already going to get, because the cap is the monthly
  * allowance itself.
  */
-export async function settle(caller: Caller): Promise<number> {
+export async function settle(caller: Caller): Promise<number | null> {
   const client = admin();
-  if (!client) return 0;
+  if (!client) return null;
 
   const cap = capFor(caller.tier);
   // What may be handed over this month across every grant. Without it the
@@ -189,6 +198,19 @@ export async function charge(
   // Whatever is owed lands before the balance is read, so somebody arriving on
   // the first of the month is not told they are short of their own allowance.
   const balance = await settle(caller);
+
+  // The tables are not there. Refusing for want of credits would be wrong and
+  // the top-up panel would be worse — buying credits fixes nothing when there
+  // is nowhere to put them.
+  if (balance === null) {
+    return {
+      ok: false,
+      response: Response.json(
+        { message: 'Credits are not switched on for this app yet.' },
+        { status: 503 },
+      ),
+    };
+  }
 
   if (!(await spend(caller.id, amount, reason, ref))) {
     return {

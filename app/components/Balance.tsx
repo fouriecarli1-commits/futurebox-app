@@ -43,10 +43,12 @@ export default function Balance({
 
   // Could not ask at all: a dash, not nothing. A silent disappearance is how a
   // broken /api/credits came to look exactly like a working free account.
-  if (wallet.failed) {
+  // Either the request never arrived, or it arrived and the credit tables are
+  // not there. Both are "cannot say", and neither is zero.
+  if (wallet.failed || wallet.ready === false) {
     return (
       <span
-        title={t('credits.cannotAsk', 'Could not read your credits just now')}
+        title={t('credits.cannotAsk', 'Credits are not switched on for this app yet')}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 text-sm font-bold text-zinc-600"
       >
         <Zap className="w-3.5 h-3.5" />
