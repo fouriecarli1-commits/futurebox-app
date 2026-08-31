@@ -21,6 +21,9 @@
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 
+/** Said in one place, because it is the same answer to four different reads. */
+const NOT_SET_UP = 'Collaboration is not switched on for this app yet. Run supabase/collab.sql.';
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -34,12 +37,16 @@ async function roomFor(
   caller: string,
 ): Promise<{ id: string; asked_by: string; asked_of: string } | null> {
   if (!id) return null;
-  const { data } = await client
+  const { data, error } = await client
     .from('collabs')
     .select('id, asked_by, asked_of, state')
     .eq('id', id)
     .eq('state', 'accepted')
     .maybeSingle();
+  // Thrown rather than returned as null, so the caller can tell "the tables
+  // are missing" from "that room is not yours" — which look identical from
+  // here and need opposite things done about them.
+  if (error) throw new Error('collab tables missing');
   const row = data as { id: string; asked_by: string; asked_of: string } | null;
   if (!row) return null;
   if (row.asked_by !== caller && row.asked_of !== caller) return null;
@@ -53,15 +60,25 @@ export async function GET(request: Request): Promise<Response> {
   if (!caller || !client) return Response.json({ messages: [] }, { status: 401 });
 
   const id = new URL(request.url).searchParams.get('collab') ?? '';
-  const room = await roomFor(client, id, caller.id);
+  let room: Awaited<ReturnType<typeof roomFor>>;
+  try {
+    room = await roomFor(client, id, caller.id);
+  } catch {
+    return Response.json({ message: NOT_SET_UP }, { status: 503 });
+  }
   if (!room) return Response.json({ message: 'No room there.' }, { status: 403 });
 
-  const { data } = await client
+  const { data, error } = await client
     .from('collab_messages')
     .select('id, owner, body, track_id, created_at')
     .eq('collab', id)
     .order('created_at', { ascending: true })
     .limit(MOST);
+
+  // `collab_messages` can be missing while `collabs` exists — a migration run
+  // halfway. Silently drawing an empty thread would tell two people who had
+  // agreed to work together that neither had said anything.
+  if (error) return Response.json({ message: NOT_SET_UP }, { status: 503 });
 
   return Response.json({
     messages: ((data ?? []) as Array<{
@@ -95,7 +112,12 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'Could not read that.' }, { status: 400 });
   }
 
-  const room = await roomFor(client, String(body.collab ?? ''), caller.id);
+  let room: Awaited<ReturnType<typeof roomFor>>;
+  try {
+    room = await roomFor(client, String(body.collab ?? ''), caller.id);
+  } catch {
+    return Response.json({ message: NOT_SET_UP }, { status: 503 });
+  }
   if (!room) return Response.json({ message: 'No room there.' }, { status: 403 });
 
   const said = String(body.body ?? '').trim().slice(0, LONGEST);

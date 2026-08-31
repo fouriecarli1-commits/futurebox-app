@@ -52,16 +52,32 @@ async function namesFor(
 }
 
 export async function GET(request: Request): Promise<Response> {
-  if (!metered()) return Response.json({ signedIn: false, threads: [] });
+  if (!metered()) return Response.json({ signedIn: false, ready: false, threads: [] });
   const caller = await callerFrom(request);
   const client = admin();
-  if (!caller || !client) return Response.json({ signedIn: false, threads: [] });
+  if (!caller || !client) return Response.json({ signedIn: false, ready: false, threads: [] });
 
-  const { data } = await client
+  const { data, error } = await client
     .from('collabs')
     .select('id, asked_by, asked_of, state, because, created_at, answered_at')
     .or(`asked_by.eq.${caller.id},asked_of.eq.${caller.id}`)
     .order('created_at', { ascending: false });
+
+  // A failed read is not an empty list, and the difference is the whole
+  // reason this feature looked broken for weeks: with `supabase/collab.sql`
+  // never run, `data` comes back null, the room drew "no collaborations yet",
+  // and nobody could tell that from having none. The same mistake the credit
+  // balance made, and it is not being made twice.
+  if (error) {
+    return Response.json({
+      signedIn: true,
+      ready: false,
+      threads: [],
+      message:
+        'Collaboration is not switched on for this app yet — its tables are missing. Run supabase/collab.sql.',
+    });
+  }
+
   const rows = (data ?? []) as Row[];
 
   const others = rows.map((row) => (row.asked_by === caller.id ? row.asked_of : row.asked_by));
@@ -69,6 +85,7 @@ export async function GET(request: Request): Promise<Response> {
 
   return Response.json({
     signedIn: true,
+    ready: true,
     threads: rows.map((row) => {
       const other = row.asked_by === caller.id ? row.asked_of : row.asked_by;
       const who = names.get(other);
@@ -116,7 +133,7 @@ export async function POST(request: Request): Promise<Response> {
 
   // Already a thread, either way round. Handing back the existing one is the
   // useful answer — the person wanted to reach somebody, and they can.
-  const { data: already } = await client
+  const { data: already, error: lookupFailed } = await client
     .from('collabs')
     .select('id, state')
     .or(
@@ -124,6 +141,16 @@ export async function POST(request: Request): Promise<Response> {
         `and(asked_by.eq.${other},asked_of.eq.${caller.id})`,
     )
     .maybeSingle();
+
+  // Without this the missing table read as "no thread yet", the insert below
+  // then failed, and the answer was a vague "that could not be sent" — which
+  // sounds like the other person's problem rather than an unrun migration.
+  if (lookupFailed) {
+    return Response.json(
+      { message: 'Collaboration is not switched on for this app yet. Run supabase/collab.sql.' },
+      { status: 503 },
+    );
+  }
   if (already) {
     const row = already as { id: string; state: string };
     return Response.json({ id: row.id, state: row.state, existing: true });
@@ -166,7 +193,7 @@ export async function PATCH(request: Request): Promise<Response> {
 
   // `asked_of` is the whole check. Without it anybody holding a thread id
   // could accept on somebody else's behalf, and the id travels to both sides.
-  const { data } = await client
+  const { data, error } = await client
     .from('collabs')
     .update({ state: answer, answered_at: new Date().toISOString() })
     .eq('id', id)
@@ -174,6 +201,16 @@ export async function PATCH(request: Request): Promise<Response> {
     .eq('state', 'asked')
     .select('id, state')
     .maybeSingle();
+
+  // A missing table and a request that is not yours both leave `data` null,
+  // and telling somebody a request is not theirs when the feature is simply
+  // switched off sends them looking for a problem they do not have.
+  if (error) {
+    return Response.json(
+      { message: 'Collaboration is not switched on for this app yet. Run supabase/collab.sql.' },
+      { status: 503 },
+    );
+  }
   if (!data) {
     return Response.json({ message: 'That is not yours to answer.' }, { status: 403 });
   }

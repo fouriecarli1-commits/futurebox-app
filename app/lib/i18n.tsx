@@ -234,6 +234,11 @@ export const STRINGS: Dict = {
   // ── The video desk ────────────────────────────────────────────────
   "canvas.title": { en: "Video desk", af: "Videolessenaar" },
   "canvas.what": { en: "Describe a shot and the engine makes it. Pick a kind of video to start from — everything it writes is yours to rewrite.", af: "Beskryf \u2019n skoot en die enjin maak dit. Kies \u2019n soort video om mee te begin \u2014 alles wat dit skryf is joune om oor te skryf." },
+  "collab.off": { en: "Collaboration is not switched on yet", af: "Samewerking is nog nie aangeskakel nie" },
+  "collab.offNote": { en: "Its tables are missing. Everything else on this screen still works.", af: "Sy tabelle ontbreek. Al die res op hierdie skerm werk steeds." },
+  "collab.whatTitle": { en: "Making something with somebody else", af: "Maak iets saam met iemand anders" },
+  "collab.what": { en: "Ask another maker, and if they say yes the two of you get a room: a private thread nobody else can read, and a way to hand songs back and forth. Take their verse into your track, put your voice on theirs, cut a video against a song neither of you would have made alone.", af: "Vra \u2019n ander maker, en as hulle ja s\u00ea kry julle twee \u2019n kamer: \u2019n private draad wat niemand anders kan lees nie, en \u2019n manier om liedjies heen en weer aan te gee. Vat hulle vers in jou snit, sit jou stem op hulle s\u2019n, sny \u2019n video teen \u2019n liedjie wat nie een van julle alleen sou gemaak het nie." },
+  "collab.whatPrivate": { en: "Nothing is shared until you send it, and neither of you can read a word of the thread until you have both agreed — that is enforced in the database, not by a screen.", af: "Niks word gedeel voor jy dit stuur nie, en nie een van julle kan \u2019n woord van die draad lees voor julle albei ingestem het nie \u2014 dit word in die databasis afgedwing, nie deur \u2019n skerm nie." },
   "sing.film": { en: "Film yourself", af: "Neem jouself op" },
   "sing.record": { en: "Record", af: "Neem op" },
   "sing.stop": { en: "Stop", af: "Stop" },
