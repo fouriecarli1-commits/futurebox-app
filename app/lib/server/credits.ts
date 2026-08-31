@@ -18,7 +18,7 @@
  * one that keeps the video engine's ceiling servable.
  */
 
-import { admin, callerFrom, metered, type Caller } from './account';
+import { admin, callerFrom, callerIsOwner, metered, type Caller } from './account';
 import { budgetFor, capFor, monthKey, TIER_CREDITS } from '@/app/lib/credits';
 
 /**
@@ -182,6 +182,28 @@ export async function charge(
       ),
     };
   }
+
+  /**
+   * Whoever runs the place is not metered by their own meter.
+   *
+   * Credits are a way of passing a real cost on to somebody. The operator is
+   * the somebody that cost lands on already: every generation they make is
+   * charged to their own ElevenLabs, Kling and Anthropic accounts before this
+   * function is reached. Taking app credits from them as well is a fiction
+   * whose only real effect is that the person responsible for the app cannot
+   * test it — which is exactly what happened, on the tier the app itself calls
+   * its largest.
+   *
+   * What is deliberately *not* skipped: the provider ceilings in
+   * app/api/video, and the safety gate. Those guard real money and real
+   * exposure, and the operator is no more exempt from those than anyone. This
+   * skips one fiction, not the rules.
+   *
+   * The work is still recorded wherever the route records it, so an operator's
+   * own test generations still feed `video_costs` — which matters, because
+   * theirs are the first rows that table will ever have.
+   */
+  if (callerIsOwner(caller)) return { ok: true, owner: null, refund: async () => {} };
 
   // Whatever is owed lands before the balance is read, so somebody arriving on
   // the first of the month is not told they are short of their own allowance.
