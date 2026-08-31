@@ -14,6 +14,34 @@ npx next start -p 3111 &
 node .probe/balance.mjs
 ```
 
+`credits-ui.mjs` is the one exception: it drives a purchase, and `startCheckout`
+refuses without a signed-in session, so that build needs a Supabase to point at.
+It never reaches one — the check intercepts every request — but the client has
+to exist for a session to be stored against:
+
+```
+PROBE=1 \
+  NEXT_PUBLIC_SUPABASE_URL=https://probe.supabase.co \
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=probe-anon-key \
+  npm run build
+```
+
+## Every check must be runnable from a clean checkout
+
+Seven of these were not. `voicelab`, `sound`, `collab`, `finetune-cost`,
+`credits-ui` and `hero` each drove a `probe-*` page that had never been
+committed — written in a working tree, run once, never filed — so from a fresh
+clone they read a 404 and failed. `musicplan` imported a copy under `.probe/lib`
+that was deleted on purpose, and stopped running entirely.
+
+That is worse than having no check. A suite with permanently red entries is a
+suite people learn to scroll past, and the eighth failure — a real one — arrives
+looking exactly like the seven. `balance.mjs` proved it: it went red when a site
+footer was added to the layout, stayed red, and was still red when the bug it
+was built to catch came back.
+
+So: if a check needs a mount, the mount is committed with it.
+
 Without `PROBE=1` the mount is a 404 — and a probe reading a 404 page reports
 whatever the 404 page happens to say, which is how one of these quietly passed
 for a while. If a check fails in a way that makes no sense, confirm the mount

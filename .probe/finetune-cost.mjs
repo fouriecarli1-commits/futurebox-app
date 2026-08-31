@@ -16,7 +16,7 @@ await page.route('**/api/credits', (r) => r.fulfill({
   body: JSON.stringify({ metered: true, signedIn: true, balance: 140, tier: 'studio', monthly: 350, cap: 1050, packs: [] }),
 }));
 
-await page.goto(`${base}/probe-sound2`, { waitUntil: 'networkidle' });
+await page.goto(`${base}/probe-sound`, { waitUntil: 'networkidle' });
 await page.waitForTimeout(600);
 
 const text = await page.locator('body').innerText();

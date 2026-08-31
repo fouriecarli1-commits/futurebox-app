@@ -48,7 +48,16 @@ export default function Balance({
   if (wallet.failed || wallet.ready === false) {
     return (
       <span
-        title={t('credits.cannotAsk', 'Credits are not switched on for this app yet')}
+        // Both are "cannot say", but they are not the same thing to whoever
+        // reads it. A request that never arrived is worth trying again in a
+        // moment; credit tables that are not there will still not be there in
+        // a moment, and the person who needs to know that is the owner. One
+        // sentence for both told the owner to check their connection.
+        // `failed` is asked first on purpose: a request that never arrived
+        // comes back carrying `ready: false` as well, because both are "cannot
+        // say". Testing readiness first would tell somebody with a flaky
+        // connection that the owner has not set the app up.
+        title={wallet.failed ? t('credits.cannotAsk') : t('credits.notSetUp')}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 text-sm font-bold text-zinc-600"
       >
         <Zap className="w-3.5 h-3.5" />
