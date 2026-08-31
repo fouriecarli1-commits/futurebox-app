@@ -1,0 +1,360 @@
+'use client';
+
+/**
+ * Requests waiting on you, requests waiting on them, and the room afterwards.
+ *
+ * The room is not a chat with a file attachment bolted on. Two people who have
+ * agreed to work together are going to swap songs, so a song is a first-class
+ * thing you can put in it — dropped from your own channel, by name, so the
+ * other person can hear what you mean rather than read a description of it.
+ *
+ * What travels is the song's id, never the file. Whether a collaborator can
+ * actually play it is still governed by whether its owner shared it on the
+ * radar, which is a switch they control and can turn off again. Putting audio
+ * in a chat window would quietly settle a licence question nobody asked.
+ *
+ * Nothing here can be reached before both people agreed. Not because this
+ * screen is careful, but because the row-level policy on the messages table
+ * tests for an accepted thread — a message written before then is invisible
+ * even to the person who wrote it.
+ */
+
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Check, Handshake, Loader2, Music, Send, X } from 'lucide-react';
+import { answer, ask, loadSaid, loadThreads, say, type Said, type Thread } from '../lib/collab';
+import { loadTracks, type Track } from '../lib/library';
+import { useLang } from '../lib/i18n';
+
+/** Long enough that a conversation feels live, gentle enough to leave open. */
+const ASK_AGAIN_MS = 15_000;
+
+function when(at: string): string {
+  const date = new Date(at);
+  return Number.isNaN(date.getTime())
+    ? ''
+    : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+export default function CollabRoom({ reloadKey }: { reloadKey: number }): React.ReactElement {
+  const { t } = useLang();
+
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [open, setOpen] = useState<string | null>(null);
+  const [said, setSaid] = useState<Said[]>([]);
+  const [draft, setDraft] = useState('');
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  const bottom = useRef<HTMLDivElement | null>(null);
+
+  const refresh = useCallback(() => {
+    loadThreads().then((next) => {
+      setThreads(next);
+      setLoaded(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    setTracks(loadTracks());
+    refresh();
+  }, [refresh, reloadKey]);
+
+  // The open room, asked for again while it is open. Held in a ref so the
+  // interval below does not restart every time a message arrives.
+  const openRef = useRef<string | null>(null);
+  openRef.current = open;
+  useEffect(() => {
+    if (!open) return;
+    let live = true;
+    const pull = (): void => {
+      const id = openRef.current;
+      if (!id) return;
+      loadSaid(id).then((next) => {
+        if (live) setSaid(next);
+      });
+    };
+    pull();
+    const timer = window.setInterval(pull, ASK_AGAIN_MS);
+    return () => {
+      live = false;
+      window.clearInterval(timer);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [said.length]);
+
+  const reply = useCallback(
+    async (id: string, yes: boolean) => {
+      setProblem(null);
+      setBusy(id);
+      const failed = await answer(id, yes);
+      setBusy(null);
+      if (failed) {
+        setProblem(failed);
+        return;
+      }
+      refresh();
+      if (yes) setOpen(id);
+    },
+    [refresh],
+  );
+
+  const send = useCallback(
+    async (trackId?: string) => {
+      if (!open) return;
+      const body = draft.trim();
+      if (!body && !trackId) return;
+
+      setProblem(null);
+      setBusy('say');
+      const done = await say(open, body, trackId);
+      setBusy(null);
+      if (!done.ok) {
+        setProblem(done.message);
+        return;
+      }
+      // Shown at once rather than waiting for the next poll: a message that
+      // takes fifteen seconds to appear reads as one that did not send.
+      setSaid((was) => was.concat(done.said));
+      setDraft('');
+    },
+    [draft, open],
+  );
+
+  const waiting = threads.filter((one) => one.state === 'asked' && !one.mine);
+  const sent = threads.filter((one) => one.state === 'asked' && one.mine);
+  const rooms = threads.filter((one) => one.state === 'accepted');
+  const room = rooms.find((one) => one.id === open) ?? null;
+
+  if (!loaded) {
+    return (
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 flex items-center gap-2 text-sm text-zinc-500">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        {t('collab.loading', 'Looking…')}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* ── Waiting on you ───────────────────────────────────────────── */}
+      {waiting.length > 0 && (
+        <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/[0.06] p-4 space-y-3">
+          <p className="text-base font-bold text-white flex items-center gap-2">
+            <Handshake className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            {waiting.length === 1
+              ? t('collab.oneAsked', 'Somebody wants to work with you')
+              : `${waiting.length} ${t('collab.manyAsked', 'people want to work with you')}`}
+          </p>
+          {waiting.map((one) => (
+            <div key={one.id} className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
+              <p className="text-sm font-semibold text-zinc-100">
+                {one.name} <span className="text-zinc-500 font-normal">{one.handle}</span>
+              </p>
+              {one.because && <p className="text-sm text-zinc-400 leading-snug">{one.because}</p>}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => void reply(one.id, true)}
+                  disabled={busy === one.id}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {busy === one.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  {t('collab.accept', 'Accept')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void reply(one.id, false)}
+                  disabled={busy === one.id}
+                  className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-400 text-sm font-semibold disabled:opacity-50"
+                >
+                  {t('collab.decline', 'No thanks')}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── The rooms ────────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
+        <div>
+          <p className="text-base font-bold text-white">{t('collab.rooms', 'Working together')}</p>
+          <p className="text-sm text-zinc-500 leading-snug">
+            {t(
+              'collab.roomsNote',
+              'A room opens when you both agree. Drop a song into it and the other person can hear what you mean — the song travels, not the file.',
+            )}
+          </p>
+        </div>
+
+        {rooms.length === 0 ? (
+          <p className="text-sm text-zinc-500 leading-snug">
+            {t('collab.noRooms', 'None yet. Find somebody whose sound is near yours below, and ask.')}
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {rooms.map((one) => (
+              <button
+                key={one.id}
+                type="button"
+                onClick={() => setOpen(open === one.id ? null : one.id)}
+                className={`px-3 py-1.5 rounded-xl text-sm border transition-all ${
+                  open === one.id
+                    ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                {one.name} <span className="text-zinc-600">{one.handle}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {room && (
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-3">
+            <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
+              {said.length === 0 ? (
+                <p className="text-sm text-zinc-500 leading-snug py-4 text-center">
+                  {t('collab.saySomething', 'Nothing here yet. Say hello, or drop a song in.')}
+                </p>
+              ) : (
+                said.map((one) => (
+                  <div key={one.id} className={`flex ${one.mine ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`max-w-[80%] rounded-2xl px-3 py-2 ${
+                        one.mine ? 'bg-emerald-500/15 border border-emerald-500/40' : 'bg-zinc-950 border border-zinc-800'
+                      }`}
+                    >
+                      {one.trackId && (
+                        <p className="text-sm font-semibold text-emerald-300 flex items-center gap-1.5 pb-0.5">
+                          <Music className="w-3.5 h-3.5 flex-shrink-0" />
+                          {tracks.find((track) => track.id === one.trackId)?.title ??
+                            t('collab.aSong', 'a song')}
+                        </p>
+                      )}
+                      {one.body && <p className="text-sm text-zinc-200 leading-snug">{one.body}</p>}
+                      <p className="text-[11px] text-zinc-600 pt-0.5">{when(one.at)}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+              <div ref={bottom} />
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    void send();
+                  }
+                }}
+                placeholder={t('collab.write', 'Write something…')}
+                className="flex-1 min-w-0 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => void send()}
+                disabled={!draft.trim() || busy === 'say'}
+                className="px-3 py-2 rounded-xl bg-emerald-500 text-onAccent disabled:opacity-50"
+                aria-label={t('collab.send', 'Send')}
+              >
+                {busy === 'say' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* The remix half: a song from your channel, by name. */}
+            {tracks.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs uppercase tracking-wider text-zinc-600">
+                  {t('collab.dropIn', 'Drop a song in')}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {tracks.slice(0, 8).map((track) => (
+                    <button
+                      key={track.id}
+                      type="button"
+                      onClick={() => void send(track.id)}
+                      disabled={busy === 'say'}
+                      className="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-sm text-zinc-400 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Music className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate max-w-[10rem]">{track.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Waiting on them ──────────────────────────────────────────── */}
+      {sent.length > 0 && (
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-2">
+          <p className="text-sm font-bold text-white">{t('collab.sent', 'Asked, waiting')}</p>
+          {sent.map((one) => (
+            <p key={one.id} className="text-sm text-zinc-500">
+              {one.name} <span className="text-zinc-600">{one.handle}</span>
+            </p>
+          ))}
+        </div>
+      )}
+
+      {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
+    </div>
+  );
+}
+
+/** The button the radar puts on a match. Exported so it lives beside the room. */
+export function AskToCollab({
+  handle,
+  because,
+  onAsked,
+}: {
+  handle: string;
+  because: string;
+  onAsked: () => void;
+}): React.ReactElement | null {
+  const { t } = useLang();
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  // Somebody with no handle cannot be reached: there is nothing to address the
+  // request to, and inventing one would send it to nobody.
+  if (!handle) return null;
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <button
+        type="button"
+        disabled={busy || note !== null}
+        onClick={async () => {
+          setBusy(true);
+          const done = await ask(handle, because);
+          setBusy(false);
+          setNote(
+            done.ok
+              ? done.existing
+                ? t('collab.already', 'Already asked')
+                : t('collab.asked', 'Asked')
+              : done.message,
+          );
+          if (done.ok) onAsked();
+        }}
+        className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-700 text-sm font-semibold text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-60"
+      >
+        {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Handshake className="w-3.5 h-3.5" />}
+        {t('collab.askThem', 'Ask to work together')}
+      </button>
+      {note && <span className="text-sm text-zinc-500">{note}</span>}
+    </span>
+  );
+}

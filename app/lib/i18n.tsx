@@ -438,6 +438,33 @@ export const STRINGS: Dict = {
 
   "credits.credits": { en: "credits", af: "krediete" },
   "pay.freeAlways": { en: "Always free", af: "Altyd gratis" },
+
+  "collab.loading": { en: "Looking\u2026", af: "Kyk\u2026" },
+  "collab.oneAsked": { en: "Somebody wants to work with you", af: "Iemand wil met jou saamwerk" },
+  "collab.manyAsked": { en: "people want to work with you", af: "mense wil met jou saamwerk" },
+  "collab.accept": { en: "Accept", af: "Aanvaar" },
+  "collab.decline": { en: "No thanks", af: "Nee dankie" },
+  "collab.rooms": { en: "Working together", af: "Saamwerk" },
+  "collab.roomsNote": {
+    en: "A room opens when you both agree. Drop a song into it and the other person can hear what you mean \u2014 the song travels, not the file.",
+    af: "\u2019n Kamer maak oop wanneer julle albei instem. Sit \u2019n liedjie daarin, dan hoor die ander een wat jy bedoel \u2014 die liedjie reis, nie die l\u00eaer nie.",
+  },
+  "collab.noRooms": {
+    en: "None yet. Find somebody whose sound is near yours below, and ask.",
+    af: "Nog nie een nie. Kry hieronder iemand wie se klank naby joune is, en vra.",
+  },
+  "collab.saySomething": {
+    en: "Nothing here yet. Say hello, or drop a song in.",
+    af: "Nog niks hier nie. S\u00ea hallo, of sit \u2019n liedjie in.",
+  },
+  "collab.aSong": { en: "a song", af: "\u2019n liedjie" },
+  "collab.write": { en: "Write something\u2026", af: "Skryf iets\u2026" },
+  "collab.send": { en: "Send", af: "Stuur" },
+  "collab.dropIn": { en: "Drop a song in", af: "Sit \u2019n liedjie in" },
+  "collab.sent": { en: "Asked, waiting", af: "Gevra, wag" },
+  "collab.askThem": { en: "Ask to work together", af: "Vra om saam te werk" },
+  "collab.asked": { en: "Asked", af: "Gevra" },
+  "collab.already": { en: "Already asked", af: "Reeds gevra" },
   "pay.subLive": { en: "A month at a time. Cancel from inside the app whenever you like.", af: "Een maand op \u2019n slag. Kanselleer binne-in die app wanneer jy wil." },
   "credits.cannotAsk": { en: "Could not read your credits just now", af: "Kon nie nou jou krediete lees nie" },
   "credits.short": { en: "You are short by", af: "Jy kort" },

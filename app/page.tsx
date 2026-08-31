@@ -18,6 +18,7 @@ import {
 import { profileFromTracks } from './lib/matching';
 import CollabRadar from './components/CollabRadar';
 import CollabFinder from './components/CollabFinder';
+import CollabRoom from './components/CollabRoom';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
 import SongSections from './components/SongSections';
@@ -163,6 +164,8 @@ export default function FutureBoxHome() {
   const [authPassword, setAuthPassword] = useState('');
   const [userPlan, setUserPlan] = useState<Plan>('free');
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
+  /** Bumped when a request is sent, so the rooms above pick it up at once. */
+  const [collabSignal, setCollabSignal] = useState(0);
   /**
    * Whether a payment can actually be started.
    *
@@ -1931,10 +1934,14 @@ export default function FutureBoxHome() {
             {/* TAB 5: COLLAB RADAR (PODCASTS, TIKTOK LIVE, FLAVOUR MATCHING, VIRAL POSTS) */}
             {studioTab === 'collab' && (
               <div className="space-y-6">
-                {/* Real people first: songs their makers chose to show, matched
-                    against yours. The pitch tools below work on real podcasts
-                    and stay as they are. */}
-                <CollabFinder reloadKey={trackCount} />
+                {/* Anything waiting on an answer comes first — a request sitting
+                    unanswered under two screens of matching is a request that
+                    goes unanswered. Then the matching, then the pitch tools. */}
+                <CollabRoom reloadKey={collabSignal} />
+                <CollabFinder
+                  reloadKey={trackCount}
+                  onAsked={() => setCollabSignal((n) => n + 1)}
+                />
                 <CollabRadar
                 profile={creatorProfile}
                 userPlan={userPlan}

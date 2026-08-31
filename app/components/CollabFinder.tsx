@@ -24,12 +24,20 @@ import {
   type Creator, type RadarTrack,
 } from '../lib/radar';
 import { useLang } from '../lib/i18n';
+import { AskToCollab } from './CollabRoom';
 
 const LINKS = ['website', 'x', 'instagram', 'youtube', 'tiktok', 'soundcloud'] as const;
 
 const BLANK: Creator = { name: '', handle: '', about: '', links: {} };
 
-export default function CollabFinder({ reloadKey }: { reloadKey: number }): React.ReactElement {
+export default function CollabFinder({
+  reloadKey,
+  onAsked,
+}: {
+  reloadKey: number;
+  /** Bumped so the rooms above this panel pick up a request the moment it is sent. */
+  onAsked?: () => void;
+}): React.ReactElement {
   const { t } = useLang();
 
   const [mine, setMine] = useState<Track[]>([]);
@@ -262,6 +270,11 @@ export default function CollabFinder({ reloadKey }: { reloadKey: number }): Reac
                   </p>
 
                   <div className="flex flex-wrap items-center gap-1.5">
+                    <AskToCollab
+                      handle={entry.match.track.handle}
+                      because={entry.match.reasons.join('; ')}
+                      onAsked={() => onAsked?.()}
+                    />
                     <button
                       type="button"
                       onClick={() => {
