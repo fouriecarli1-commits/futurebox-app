@@ -149,11 +149,16 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     rand: 749,
     songs: 80,
     videos: 26,
-    who: 'Running a catalogue, or a room full of artists.',
+    // "Five seats on one account" was on this card and was never built —
+    // nothing in the codebase adds a second person to an account. It came off
+    // rather than getting a rushed implementation: an overclaim on a paid tier
+    // sits on the page where money changes hands, and the one thing this app
+    // cannot afford to be caught doing is describing something it does not do.
+    who: 'Running a catalogue, and releasing every week.',
     includes: [
       '800 credits a month — 80 full songs, or 26 music videos',
       'Everything in Studio, and ten cloned voices',
-      'Five seats on one account — R150 a seat, less than Maker',
+      'The feed uncapped — every item, no daily ceiling anywhere',
       'A say in which workshops get made',
     ],
   },
