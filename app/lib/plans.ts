@@ -120,6 +120,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     who: 'A song or two a week, kept and posted.',
     includes: [
       '120 credits a month — 12 full songs, or 4 music videos',
+      'The video engine, and no watermark on what it makes',
       'No watermark on anything you make',
       'Your own voice, cloned, for reading and for the show',
       'The copilot, uncapped',
@@ -158,16 +159,23 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
   },
 };
 
-/** The two one-off purchases, for people who will never subscribe. */
-export const ONE_OFF = {
-  /** Open a 15-second preview into the whole song. Watermark stays. */
-  open: { rand: 14, label: 'Hear the whole thing' },
-  /**
-   * Keep it clean and downloadable. Priced so that open + keep equals what
-   * keeping costs on its own — opening first is never punished.
-   */
-  keep: { rand: 49, label: 'Keep it, clean' },
-} as const;
+/**
+ * The two one-off purchases, retired.
+ *
+ * R14 opened a preview into the whole song and R49 kept it clean. They made
+ * sense when a free song was fifteen seconds of a file that already existed.
+ * Credits do the same job now and do it better: five credits turns a half song
+ * into a whole one, and the same five buy anything else instead.
+ *
+ * Keeping both was worse than either. Two prices for one outcome is a person
+ * working out which is the trick, and the R14 promised to "hear the rest" of
+ * something that has to be generated again — the music API takes no seed, so
+ * there is no rest to hear, only a second take.
+ *
+ * Nothing is removed from anybody who already paid. `purchases` is still read
+ * everywhere it was, so a bought track stays bought; it is only the selling
+ * that has stopped.
+ */
 
 /* ────────────────────────────────────────────────────── what it costs us ─ */
 

@@ -18,7 +18,7 @@
  * service in this app.
  */
 
-import { ONE_OFF, TIER_SPECS, type Tier } from '@/app/lib/plans';
+import { TIER_SPECS, type Tier } from '@/app/lib/plans';
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { planCode } from '@/app/lib/server/paystack';
 import { packById } from '@/app/lib/credits';
@@ -31,14 +31,10 @@ const PAYSTACK = 'https://api.paystack.co/transaction/initialize';
 
 /** What can be bought, and what it costs. Decided here, in rand. */
 type Want =
-  | { kind: 'open'; trackId: string }
-  | { kind: 'keep'; trackId: string }
   | { kind: 'plan'; tier: Tier }
   | { kind: 'credits'; pack: string };
 
 async function priceOf(want: Want): Promise<{ cents: number; label: string } | null> {
-  if (want.kind === 'open') return { cents: ONE_OFF.open.rand * 100, label: ONE_OFF.open.label };
-  if (want.kind === 'keep') return { cents: ONE_OFF.keep.rand * 100, label: ONE_OFF.keep.label };
   if (want.kind === 'credits') {
     // The pack's price comes from the same table the panel showed, never from
     // the request. A page that can name its own price eventually will.
@@ -109,7 +105,6 @@ export async function POST(request: Request): Promise<Response> {
         metadata: {
           owner: caller.id,
           kind: want.kind,
-          trackId: want.kind === 'open' || want.kind === 'keep' ? want.trackId : null,
           tier: want.kind === 'plan' ? want.tier : null,
           // The pack's name, not its size: the webhook looks the credits up
           // for itself, so a tampered checkout cannot buy a thousand for R99.

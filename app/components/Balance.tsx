@@ -25,15 +25,37 @@ export default function Balance({
 }): React.ReactElement | null {
   const { t } = useLang();
   const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
+  /** Null until the first answer arrives, so nothing flashes on the way in. */
+  const [asked, setAsked] = useState(false);
 
   const load = useCallback(() => {
-    loadWallet().then(setWallet);
+    loadWallet().then((next) => {
+      setWallet(next);
+      setAsked(true);
+    });
   }, []);
 
   useEffect(load, [load, reloadKey]);
 
-  // Nothing to show when the app has no accounts, or nobody is signed in.
-  if (!wallet.metered || !wallet.signedIn) return null;
+  // Nothing to show before the first answer, or when this app has no accounts
+  // at all — there is nothing being counted then and a zero would be a lie.
+  if (!asked || !wallet.metered) return null;
+
+  // Could not ask at all: a dash, not nothing. A silent disappearance is how a
+  // broken /api/credits came to look exactly like a working free account.
+  if (wallet.failed) {
+    return (
+      <span
+        title={t('credits.cannotAsk', 'Could not read your credits just now')}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 text-sm font-bold text-zinc-600"
+      >
+        <Zap className="w-3.5 h-3.5" />
+        <span>—</span>
+      </span>
+    );
+  }
+
+  if (!wallet.signedIn) return null;
 
   const low = wallet.monthly > 0 && wallet.balance < wallet.monthly * 0.15;
 

@@ -36,7 +36,6 @@ import { AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
 import { STARTERS, VOICES, LENGTH_CHOICES, POLISH } from '../data/sound';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
-import { ONE_OFF } from '../lib/plans';
 import * as cloud from '../lib/cloud';
 import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } from '../lib/purchases';
 import { markBlob } from '../lib/watermark';
@@ -466,13 +465,6 @@ export default function MakeMusic({
     setStatus(answer.message);
   };
 
-  const buy = async (track: Track, kind: 'open' | 'keep') => {
-    setBuying(track.id);
-    const problem = await startCheckout({ kind, trackId: track.id });
-    setBuying(null);
-    if (problem) setStatus(problem);
-  };
-
   const share = async (track: Track) => {
     const line = `${track.title} — ${track.genre}, ${track.bpm} BPM. Made on FutureBox.`;
     const blob = await readAudio(track.id);
@@ -890,28 +882,6 @@ export default function MakeMusic({
                       nothing is offered the smaller step; somebody who opened
                       it is offered the one that makes it theirs; somebody who
                       owns it just gets the file. */}
-                  {levelOf(owned, track.id) === 'none' && (
-                    <button
-                      type="button"
-                      disabled={buying === track.id}
-                      onClick={() => buy(track, 'open')}
-                      className="px-3 py-1.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent flex items-center gap-1.5 disabled:opacity-60"
-                    >
-                      {buying === track.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                      {t('buy.open')} R{ONE_OFF.open.rand}
-                    </button>
-                  )}
-                  {levelOf(owned, track.id) === 'opened' && (
-                    <button
-                      type="button"
-                      disabled={buying === track.id}
-                      onClick={() => buy(track, 'keep')}
-                      className="px-3 py-1.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-400 to-amber-500 text-onAccent flex items-center gap-1.5 disabled:opacity-60"
-                    >
-                      {buying === track.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                      {t('buy.keep')} R{ONE_OFF.keep.rand}
-                    </button>
-                  )}
                   <button
                     type="button"
                     onClick={() => save(track)}

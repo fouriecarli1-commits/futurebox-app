@@ -59,7 +59,9 @@ export type Capability =
   | 'appearance'
   | 'soundboard'
   | 'class.watch'
-  | 'class.paths';
+  | 'class.paths'
+  | 'video.engine'
+  | 'video.clean';
 
 export interface Entitlement {
   readonly label: string;
@@ -149,6 +151,24 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
     caps: { free: 0, maker: 0, studio: null, label: null },
     unit: '',
     freeNote: 'Being amplified by the channel is the thing a plan actually buys. Studio and up.',
+  },
+  'video.engine': {
+    label: 'Videos from the video engine',
+    area: 'Music video',
+    // Not a daily count: a video is a monthly allowance paid in credits, and
+    // this row says only who may reach the engine at all. The numbers people
+    // actually get are on the plan cards, in credits, where the rest of
+    // generation lives.
+    caps: { free: 0, maker: null, studio: null, label: null },
+    unit: '',
+    freeNote: 'Free videos are drawn in your own browser, which costs nothing and works offline. The engine starts on Maker.',
+  },
+  'video.clean': {
+    label: 'Videos without a watermark',
+    area: 'Music video',
+    caps: { free: 0, maker: null, studio: null, label: null },
+    unit: '',
+    freeNote: 'A free video carries the mark, the same as a free song.',
   },
   'class.watch': {
     label: 'Masterclasses a day',

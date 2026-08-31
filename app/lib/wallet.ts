@@ -16,6 +16,15 @@ import { PACKS, type Pack } from './credits';
 export interface Wallet {
   /** False when the app has no accounts configured; nothing is counted then. */
   readonly metered: boolean;
+  /**
+   * True when the server could not be asked at all.
+   *
+   * Worth its own flag, because without one a failed request is indis-
+   * tinguishable from an app with no accounts — and the screen showed both by
+   * hiding the balance entirely. A broken endpoint then looks exactly like a
+   * working free account, which is a bug you only find by being told.
+   */
+  readonly failed?: boolean;
   readonly signedIn: boolean;
   readonly balance: number;
   readonly monthly: number;
@@ -32,16 +41,18 @@ export const NO_WALLET: Wallet = {
   packs: PACKS,
 };
 
+const COULD_NOT_ASK: Wallet = { ...NO_WALLET, metered: true, failed: true };
+
 export async function loadWallet(): Promise<Wallet> {
   const token = await accessToken();
   const response = await fetch('/api/credits', {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     cache: 'no-store',
   }).catch(() => null);
-  if (!response?.ok) return NO_WALLET;
+  if (!response?.ok) return COULD_NOT_ASK;
 
   const data = (await response.json().catch(() => null)) as Partial<Wallet> | null;
-  if (!data) return NO_WALLET;
+  if (!data) return COULD_NOT_ASK;
   return {
     metered: Boolean(data.metered),
     signedIn: Boolean(data.signedIn),

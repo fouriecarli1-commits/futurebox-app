@@ -51,7 +51,7 @@ import { useLang } from './lib/i18n';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
 import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
 import * as cloud from './lib/cloud';
-import { TIER_SPECS, ONE_OFF, SPONSORSHIP, sponsorshipBand, tierPrice, oneOffPrice } from './lib/plans';
+import { TIER_SPECS, TIERS, SPONSORSHIP, sponsorshipBand, tierPrice } from './lib/plans';
 import { startCheckout, loadOwned } from './lib/purchases';
 
 interface Blueprint {
@@ -1701,33 +1701,11 @@ export default function FutureBoxHome() {
               </button>
             </div>
 
-            {/* Buy one song, for anyone who will never subscribe. Two steps,
-                because opening the whole thing is a much smaller decision than
-                keeping it, and the first payment makes the second one easy. */}
-            <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4 space-y-3">
-              <p className="text-sm font-bold text-white">{t('pay.oneOff')}</p>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
-                  <p className="text-2xl font-black text-white">
-                    {oneOffPrice(ONE_OFF.open.rand, region).display}
-                  </p>
-                  <p className="text-sm font-semibold text-zinc-200 pt-0.5">{t('pay.open')}</p>
-                  <p className="text-sm text-zinc-500 pt-1 leading-relaxed">{t('pay.openNote')}</p>
-                </div>
-                <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3">
-                  <p className="text-2xl font-black text-white">
-                    {oneOffPrice(ONE_OFF.keep.rand, region).display}
-                  </p>
-                  <p className="text-sm font-semibold text-emerald-300 pt-0.5">{t('pay.keep')}</p>
-                  <p className="text-sm text-zinc-400 pt-1 leading-relaxed">{t('pay.keepNote')}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* The monthly tiers, rendered from the same table the caps come
-                from, so the sales copy cannot drift from what the code allows. */}
-            <div className="grid md:grid-cols-3 gap-3">
-              {(['maker', 'studio', 'label'] as const).map((id) => {
+            {/* Every tier, free included. Leaving free off this screen made an
+                upgrade look like the only way to use the app, and left the
+                person on it with no idea what they already had. */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {TIERS.map((id) => {
                 const spec = TIER_SPECS[id];
                 const current = userPlan === id;
                 const featured = id === 'studio';
@@ -1748,7 +1726,7 @@ export default function FutureBoxHome() {
                         )}
                       </div>
                       <p className="text-3xl font-black text-white pt-1">{tierPrice(id, region).display}</p>
-                      <p className="text-sm text-zinc-500">{t('pay.perMonth')}</p>
+                      {spec.rand > 0 && <p className="text-sm text-zinc-500">{t('pay.perMonth')}</p>}
                       <p className="text-sm text-zinc-400 pt-2 leading-relaxed">{spec.who}</p>
                     </div>
                     <ul className="space-y-1.5 flex-1">
@@ -1761,8 +1739,11 @@ export default function FutureBoxHome() {
                     </ul>
                     <button
                       type="button"
-                      disabled={current || planBusy !== null}
+                      // Free is not something anybody buys, so its button never
+                      // starts a checkout — it only ever says where you are.
+                      disabled={current || id === 'free' || planBusy !== null}
                       onClick={async () => {
+                        if (id === 'free') return;
                         // The server reads the tier from the memberships table,
                         // so flipping it in the browser would show an upgrade
                         // that nothing behind the page believes in. Either this
@@ -1778,7 +1759,13 @@ export default function FutureBoxHome() {
                           : 'bg-zinc-800 text-white hover:bg-zinc-700'
                       }`}
                     >
-                      {current ? t('pay.current') : planBusy === id ? t('pay.starting') : t('pay.choose')}
+                      {current
+                        ? t('pay.current')
+                        : id === 'free'
+                          ? t('pay.freeAlways', 'Always free')
+                          : planBusy === id
+                            ? t('pay.starting')
+                            : t('pay.choose')}
                     </button>
                   </div>
                 );

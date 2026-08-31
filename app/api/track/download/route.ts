@@ -15,7 +15,6 @@
  */
 
 import { callerFrom, metered, purchaseLevel } from '@/app/lib/server/account';
-import { ONE_OFF } from '@/app/lib/plans';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -51,8 +50,11 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(
       {
         error: 'not_owned',
-        message: `Keep this one for R${ONE_OFF.keep.rand} and it downloads clean, with the rights.`,
-        priceRand: ONE_OFF.keep.rand,
+        // No longer a price: the one-off purchases are retired, so the answer
+        // to "how do I keep this" is a plan. Anyone who bought one before
+        // still passes the check above.
+        message: 'A plan downloads your songs clean, with the rights. Free songs keep their watermark.',
+        needsPlan: true,
       },
       { status: 402 },
     );

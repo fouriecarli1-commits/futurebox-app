@@ -33,7 +33,7 @@ interface PaystackEvent {
     status?: string;
     metadata?: {
       owner?: string;
-      kind?: 'open' | 'keep' | 'plan' | 'credits';
+      kind?: 'plan' | 'credits';
       trackId?: string | null;
       tier?: Tier | null;
       pack?: string | null;
@@ -188,11 +188,6 @@ export async function POST(request: Request): Promise<Response> {
     // retried webhook cannot double it.
     const pack = packById(meta.pack);
     if (pack) await topUp(owner, pack.credits, reference);
-    return new Response('ok', { status: 200 });
-  }
-
-  if ((meta.kind === 'open' || meta.kind === 'keep') && meta.trackId) {
-    await recordPurchase(owner, meta.trackId, meta.kind === 'keep' ? 'owned' : 'opened', cents, reference);
     return new Response('ok', { status: 200 });
   }
 
