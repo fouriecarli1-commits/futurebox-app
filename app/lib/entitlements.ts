@@ -7,12 +7,28 @@
  *
  * The shape of the free tier is deliberate: every part of the platform does
  * something real without paying, and none of it is a demo. You can write a
- * song, score the feed and find a collaborator on a free
- * account. What free does not get is *volume* and *distribution* — the daily
- * counts are small, and publishing outward (posting to your channels, asking
- * for a boost, white-labelled exports) is the paid line. That is the honest
- * place to draw it: the cost of generating is small, the cost of being
- * amplified by the channel is the thing worth paying for.
+ * song, score the feed and find a collaborator on a free account. What free
+ * does not get is *volume* and *distribution* — the daily counts are small,
+ * and publishing outward is the paid line.
+ *
+ * ── Why the three paid tiers now differ ──────────────────────────────────
+ *
+ * They used to be identical here. Every capability read
+ * `{ free: n, maker: null, studio: null, label: null }`, so the only reason to
+ * move from Maker to Studio was credits. A subscription that adds nothing but
+ * a bigger number is a subscription people downgrade the month they generate
+ * less, and it left the reading, the classes and the collab work — none of
+ * which costs a cent to serve — doing no work at all.
+ *
+ * So the ladder climbs here too. The principle is not cost, because these are
+ * free to serve; it is depth. Free samples everything. Maker gets enough of it
+ * to work daily. Studio gets the parts you need when you are releasing on a
+ * schedule — the reasons behind a score, the guided paths, the boost. Label
+ * gets no ceilings at all.
+ *
+ * What stays free at every tier is anything whose absence would make the app
+ * feel mean rather than limited: the booth, the soundboard, every theme, and
+ * the score on every item in the feed.
  *
  * Counters are per-device and per-day, held in localStorage. With no backend
  * they are a courtesy, not enforcement — anyone can clear site data and start
@@ -41,7 +57,9 @@ export type Capability =
   | 'collab.boost'
   | 'publish.release'
   | 'appearance'
-  | 'soundboard';
+  | 'soundboard'
+  | 'class.watch'
+  | 'class.paths';
 
 export interface Entitlement {
   readonly label: string;
@@ -58,14 +76,14 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
   'songwriter.help': {
     label: 'AI writing help',
     area: 'Songwriter',
-    caps: { free: 3, maker: null, studio: null, label: null },
+    caps: { free: 3, maker: 20, studio: null, label: null },
     unit: 'rolls a day',
     freeNote: 'Enough to get unstuck on one song. The offline writing prompts stay unlimited.',
   },
   'publish.release': {
     label: 'Publish a release',
     area: 'Songwriter',
-    caps: { free: 2, maker: null, studio: null, label: null },
+    caps: { free: 2, maker: 10, studio: null, label: null },
     unit: 'a day',
     freeNote: 'Two finished releases a day is more than most people write.',
   },
@@ -79,21 +97,21 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
   'studio.edits': {
     label: 'Queued timeline edits',
     area: 'Studio',
-    caps: { free: 5, maker: null, studio: null, label: null },
+    caps: { free: 5, maker: 30, studio: null, label: null },
     unit: 'a day',
     freeNote: 'Enough to fix a chorus. The timeline itself is free to use.',
   },
   'radar.items': {
     label: 'Items in the feed',
     area: 'Radar',
-    caps: { free: 6, maker: 40, studio: 40, label: 40 },
+    caps: { free: 6, maker: 20, studio: 40, label: null },
     unit: 'per scan',
-    freeNote: 'The six highest-scoring items. They are the same six Pro sees at the top.',
+    freeNote: 'The six highest-scoring items — the same six at the top of everybody else\u2019s feed.',
   },
   'radar.categories': {
     label: 'Categories at once',
     area: 'Radar',
-    caps: { free: 2, maker: null, studio: null, label: null },
+    caps: { free: 2, maker: 4, studio: null, label: null },
     unit: '',
     freeNote: 'Pick the two you care about.',
   },
@@ -107,14 +125,14 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
   'radar.rejected': {
     label: 'The rejected pile and its reasons',
     area: 'Radar',
-    caps: { free: 0, maker: null, studio: null, label: null },
+    caps: { free: 0, maker: 0, studio: null, label: null },
     unit: '',
-    freeNote: 'The count of what was rejected is always shown. The reasons are Pro.',
+    freeNote: 'The count of what was rejected is always shown. The reasons start on Studio.',
   },
   'collab.pitch': {
     label: 'Podcast pitch drafts',
     area: 'Collab Radar',
-    caps: { free: 2, maker: null, studio: null, label: null },
+    caps: { free: 2, maker: 10, studio: null, label: null },
     unit: 'a day',
     freeNote: 'Matching and scoring are free. Drafting the letter is what is capped.',
   },
@@ -128,9 +146,23 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
   'collab.boost': {
     label: 'Ask FutureBox to boost a collab',
     area: 'Collab Radar',
-    caps: { free: 0, maker: null, studio: null, label: null },
+    caps: { free: 0, maker: 0, studio: null, label: null },
     unit: '',
-    freeNote: 'Being amplified by the channel is the thing Pro actually buys.',
+    freeNote: 'Being amplified by the channel is the thing a plan actually buys. Studio and up.',
+  },
+  'class.watch': {
+    label: 'Masterclasses a day',
+    area: 'Masterclasses',
+    caps: { free: 2, maker: null, studio: null, label: null },
+    unit: 'a day',
+    freeNote: 'Two a day, and every class is listed with what it covers before you open it.',
+  },
+  'class.paths': {
+    label: 'The guided paths',
+    area: 'Masterclasses',
+    caps: { free: 0, maker: 0, studio: null, label: null },
+    unit: '',
+    freeNote: 'Single classes are open. A path is four sittings that end in a finished release \u2014 Studio and up.',
   },
   appearance: {
     label: 'Every theme and layout',
@@ -190,6 +222,39 @@ export interface Check {
   readonly reason: string | null;
 }
 
+/** Cheapest to dearest, so "the next one up" is a position in this list. */
+const LADDER: readonly Plan[] = ['free', 'maker', 'studio', 'label'];
+
+const TIER_NAMES: Record<Plan, string> = {
+  free: 'Free',
+  maker: 'Maker',
+  studio: 'Studio',
+  label: 'Label',
+};
+
+/**
+ * The cheapest tier that actually unlocks this, by name.
+ *
+ * The refusals used to say "Pro", which was true when there were two tiers and
+ * is a guess now that there are four. Telling somebody on Maker that a thing
+ * "needs a paid plan" when they are already paying is the kind of small lie
+ * that makes an upgrade feel like a trick.
+ */
+export function unlockedBy(capability: Capability, from: Plan): string | null {
+  const caps = ENTITLEMENTS[capability].caps;
+  const here = caps[from];
+  // Already unlimited: there is nothing above this to sell, and offering one
+  // anyway is how a pricing page ends up recommending an upgrade that changes
+  // nothing.
+  if (here === null) return null;
+
+  for (let i = LADDER.indexOf(from) + 1; i < LADDER.length; i += 1) {
+    const limit = caps[LADDER[i]];
+    if (limit === null || limit > here) return TIER_NAMES[LADDER[i]];
+  }
+  return null;
+}
+
 export function check(capability: Capability, plan: Plan): Check {
   const entitlement = ENTITLEMENTS[capability];
   const limit = entitlement.caps[plan];
@@ -197,12 +262,15 @@ export function check(capability: Capability, plan: Plan): Check {
 
   if (limit === null) return { allowed: true, used: count, limit: null, remaining: null, reason: null };
   if (limit === 0) {
+    const next = unlockedBy(capability, plan);
     return {
       allowed: false,
       used: count,
       limit: 0,
       remaining: 0,
-      reason: `${entitlement.label} needs a paid plan.`,
+      reason: next
+        ? `${entitlement.label} starts on ${next}.`
+        : `${entitlement.label} is not available on your plan.`,
     };
   }
   const remaining = Math.max(0, limit - count);
@@ -211,7 +279,15 @@ export function check(capability: Capability, plan: Plan): Check {
     used: count,
     limit,
     remaining,
-    reason: remaining > 0 ? null : `You have used today's ${limit} ${entitlement.unit}. Pro removes the cap.`,
+    reason:
+      remaining > 0
+        ? null
+        : (() => {
+            const next = unlockedBy(capability, plan);
+            return next
+              ? `You have used today's ${limit} ${entitlement.unit}. ${next} gives you more.`
+              : `You have used today's ${limit} ${entitlement.unit}.`;
+          })(),
   };
 }
 
