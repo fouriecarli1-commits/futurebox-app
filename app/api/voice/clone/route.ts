@@ -21,6 +21,9 @@ import { cloneVoice, configured, forgetVoice } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
+import { guard } from '@/app/lib/server/safety';
+import { addressKey } from '@/app/lib/server/identity';
+import { VOICE_CONSENT } from '@/app/lib/consent';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,6 +32,7 @@ export const maxDuration = 300;
 
 /** Below this there is not enough of a person in the sample to learn from. */
 const MIN_BYTES = 40_000;
+
 
 export async function POST(request: Request): Promise<Response> {
   if (!configured()) {
@@ -87,6 +91,14 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const name = String(form.get('name') ?? '').trim().slice(0, 60) || caller.email.split('@')[0];
+
+  // What a voice is called is not decoration: a clone named after a singer is
+  // a clone offered as that singer, whoever actually recorded it. The consent
+  // above says the voice is the caller's own, and this is the cheapest way to
+  // notice when the name says otherwise.
+  const allowed = await guard(request, name, 'name', caller);
+  if (!allowed.ok) return allowed.response;
+
   // Prefixed with the account, so the owner is visible from the ElevenLabs
   // dashboard too and a support question does not need this database.
   const paid = await charge(request, CREDITS.clone, 'clone');
@@ -98,7 +110,21 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: made.message }, { status: made.status });
   }
 
-  await client.from('voices').insert({ id: made.voiceId, owner: caller.id, name });
+  // The consent, written down. See supabase/moderation.sql for why a checkbox
+  // that leaves no trace is not consent.
+  const address =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    request.headers.get('x-real-ip') ??
+    '';
+
+  await client.from('voices').insert({
+    id: made.voiceId,
+    owner: caller.id,
+    name,
+    consent_at: new Date().toISOString(),
+    consent_ip_hash: addressKey(address) || null,
+    consent_text: VOICE_CONSENT,
+  });
   return Response.json({ id: made.voiceId, name });
 }
 

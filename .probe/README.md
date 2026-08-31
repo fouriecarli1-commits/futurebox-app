@@ -40,3 +40,18 @@ it before running:
 ```
 sed "s|from './plans'|from './plans.ts'|" app/lib/credits.ts > .probe/lib/credits.ts
 ```
+
+## Importing the app's own code
+
+The checks that are pure logic import straight from `app/lib/*.ts` and run
+under Node's type stripping:
+
+```
+node .probe/credits.mjs
+```
+
+There used to be copies of those files under `.probe/lib/`, and the copies are
+gone on purpose. One of them was deleted and three checks stopped running with
+a module-not-found that was easy to read as "the harness is broken" rather than
+"nothing is being tested". A check that reads a copy is a check that passes
+after the original has changed.

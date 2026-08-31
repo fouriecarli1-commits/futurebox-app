@@ -19,6 +19,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Loader2, Mic, Play, Square, Trash2, Upload, Wand2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
+import { VOICE_CONSENT } from '@/app/lib/consent';
 
 export interface Voice {
   readonly id: string;
@@ -457,7 +458,7 @@ export default function VoiceLab({
                 className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
               />
               <span className="text-sm text-zinc-400 leading-snug">
-                {t('voice.consent', 'This is my own voice. I am not cloning anybody else, and I understand a copy of it will be kept until I delete it.')}
+                {t('voice.consent', VOICE_CONSENT)}
               </span>
             </label>
             <button

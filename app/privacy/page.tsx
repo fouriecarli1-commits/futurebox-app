@@ -56,11 +56,12 @@ export default function Privacy(): React.ReactElement {
           <p><strong className="text-white">What you have made and spent.</strong> Songs generated, credits granted and spent, purchases. This is how an allowance is counted; without it the free tier would be a suggestion.</p>
           <p><strong className="text-white">Your public profile, if you make one.</strong> A name, an @handle, a short description and links you choose to add. This is meant to be seen — it is how somebody finds you to work with. Songs appear on the collaboration radar only for songs you switch on, one at a time, and switching one off removes it.</p>
           <p><strong className="text-white">Collaboration.</strong> A request between you and one other person, and the messages afterwards. Nobody else can read them, and neither of you can read them before you have both agreed — that is enforced in the database, not by a screen.</p>
+          <p><strong className="text-white">Prompts that were refused.</strong> When the safety check refuses something you asked for, what is written down is the rule that refused it, where in the app it happened, the time, and the first 200 characters of what you typed. Prompts that are allowed are not written down this way, and none of this is read by anybody unless a refusal has to be looked into. It is kept because a platform that says it enforces its rules and cannot show a single instance of doing so is making a claim rather than a statement.</p>
         </Section>
 
         <Section title="What is never kept">
           <p><strong className="text-white">Your card.</strong> Payments go to Paystack, on their page. No card number, expiry or CVV passes through this app or is stored by it. What comes back is a reference and a customer code.</p>
-          <p><strong className="text-white">Your address, as an address.</strong> The IP a request arrives from is hashed with a secret before anything is written down, and only the hash is stored. It is used for one thing: noticing that a hundred free accounts came from one place. The address itself is not recoverable from what is kept.</p>
+          <p><strong className="text-white">Your address, as an address.</strong> The IP a request arrives from is hashed with a secret before anything is written down, and only the hash is stored. It is used for two things: noticing that a hundred free accounts came from one place, and noticing that a suspended account has come back from the same machine. The address itself is not recoverable from what is kept.</p>
         </Section>
 
         <Section title="Who else sees it">
@@ -84,14 +85,17 @@ export default function Privacy(): React.ReactElement {
         <Section title="Deleting it">
           <p>You can delete any song, any cloned voice and any trained sound from inside the app at any time. Deleting a voice or a sound removes it from ElevenLabs as well as from here — removing only our row would be hiding it, not deleting it.</p>
           <p>
-            To delete your whole account and everything in it, write to{' '}
+            To delete your whole account and everything in it, there is a button at the bottom of your channel. It asks you to type your email address first, and then it is immediate: the songs, the audio, any cloned voice — from ElevenLabs as well as from here — any trained sound, your credits, your collaborations and the account itself. If you are on a plan it is cancelled first, and if that cancellation fails nothing is deleted, because being charged for an account you no longer have is worse than still having it.
+          </p>
+          <p>
+            One thing does not go with it. A record of a refused prompt stays, with the account detached from it — the rule, the time and a hashed address, and no name, no email and no account. A platform that forgets every refusal the moment somebody signs up again has no memory at all. Everything that identifies you is gone.
+          </p>
+          <p>
+            If you would rather it were done for you, write to{' '}
             <a href={`mailto:${CONTACT}?subject=Delete%20my%20account`} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
               {CONTACT}
             </a>{' '}
-            from the address you signed up with. It is done within seven days and you are told when it is finished.
-          </p>
-          <p className="text-zinc-500">
-            An in-app button for this is being built. Until it is here, the address above is the way, and it is checked.
+            from the address you signed up with.
           </p>
         </Section>
 

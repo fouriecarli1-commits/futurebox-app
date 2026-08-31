@@ -69,11 +69,37 @@ export default function Terms(): React.ReactElement {
             <li><strong className="text-white">Clone a voice that is not yours.</strong> A voice identifies a person. Cloning one without them is impersonation whatever it was meant for. You confirm the voice is your own before a clone is made, and that confirmation is kept.</li>
             <li><strong className="text-white">Train a sound on music you do not own.</strong> Same reason, same confirmation.</li>
             <li><strong className="text-white">Upload recordings you have no right to.</strong></li>
-            <li>Impersonate anybody, or present a generated recording as a real person having said or sung something.</li>
-            <li>Use the app to make material that is illegal, or that sexualises children, or that harasses somebody.</li>
+            <li><strong className="text-white">Ask for a named person&apos;s voice or style.</strong> Prompts that name a real artist &mdash; &ldquo;in the voice of&rdquo;, &ldquo;in the style of&rdquo;, &ldquo;sounds like&rdquo; followed by somebody&apos;s name &mdash; are refused. Describe the sound instead: the tempo, the instruments, the era, the delivery. That is also how you get a result you are entitled to release.</li>
+            <li>Impersonate anybody, or present a generated recording as a real person having said or sung something, or make anything built to be taken as a real recording of a real event.</li>
+            <li>Use the app to make material that is illegal, that sexualises children, that incites violence against anybody, that harasses somebody, or that is a script for defrauding somebody &mdash; including anything read in the name of a bank, an insurer or an authority.</li>
             <li>Resell access, share one account among several people, or run the app through your own service without an agreement.</li>
           </ul>
           <p>Break these and the account is suspended or closed. Where the law requires it, the matter is reported.</p>
+        </Section>
+
+        <Section title="How those rules are actually enforced">
+          <p>They are not only a document. Every prompt is checked on the server before it reaches an engine, by a fixed set of rules and then by a model that reads the sentence. A refused prompt costs you nothing: it is refused before any credit is taken and before anything is generated.</p>
+          <ul className="space-y-1.5 pl-5 list-disc marker:text-zinc-600">
+            <li><strong className="text-white">A refusal says what it refused</strong> and, where there is one, what would work instead. It is not a wall.</li>
+            <li><strong className="text-white">Refusals are recorded</strong> &mdash; the rule, where it happened, the time, and the first 200 characters of what was typed. Prompts that are allowed are not recorded this way.</li>
+            <li><strong className="text-white">Six refusals in thirty days stops the account generating.</strong> A prompt that merely strayed near a famous name does not count towards that; the serious categories do. Nothing is deleted, and you can write and say why it is wrong.</li>
+            <li>For video, for cloning a voice, and for training a sound, a request does not go ahead at all while the check cannot be run. Those three are refused rather than waved through.</li>
+          </ul>
+          <p>No screen catches everything. This one will sometimes refuse something ordinary and will sometimes miss something it should have caught. When it refuses something it should not have, write and say so &mdash; that is how the rules get better rather than merely stricter.</p>
+        </Section>
+
+        <Section title="If somebody has used your voice, your face or your name">
+          <p>You do not need an account here, and you do not need a lawyer, to have something taken down.</p>
+          <p>
+            Write to{' '}
+            <a href={`mailto:${CONTACT}`} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">{CONTACT}</a>{' '}
+            with a link to what you have found and enough to show it is you. Anything that is a voice clone, a likeness or a recording of somebody who did not agree to it is taken down while it is looked at, rather than after. If it turns out to have been made from a cloned voice, that voice is deleted from the voice service as well as from here, and the account that made it is dealt with under the rules above.
+          </p>
+          <p>The same address takes a copyright complaint, from a rights holder or from somebody acting for one.</p>
+        </Section>
+
+        <Section title="Who may use this">
+          <p>You need to be 18 or older to hold an account and to pay for a plan. If you are younger than that, a parent or guardian holds the account and is responsible for what is made on it.</p>
         </Section>
 
         <Section title="Credits, plans and what expires">
@@ -114,6 +140,7 @@ export default function Terms(): React.ReactElement {
 
         <Section title="Law, and getting hold of us">
           <p>South African law applies, and the courts of South Africa have jurisdiction.</p>
+          <p>This document is written in English, and the English version is the one that governs. Parts of the app are shown in Afrikaans; where a translation and this document disagree, this document is what was agreed to.</p>
           <p>
             Write to{' '}
             <a href={`mailto:${CONTACT}`} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">

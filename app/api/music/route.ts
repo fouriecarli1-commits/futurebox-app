@@ -26,6 +26,7 @@ import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/ap
 import { buildRequest, type Body } from '@/app/lib/server/musicplan';
 import { songCost } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
+import { guard } from '@/app/lib/server/safety';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,35 @@ const ENDPOINT = 'https://api.elevenlabs.io/v1/music';
 const OUTPUT_FORMAT = 'mp3_44100_128';
 
 export async function POST(request: Request): Promise<Response> {
+  let body: Body;
+  try {
+    body = (await request.json()) as Body;
+  } catch {
+    return Response.json({ error: 'bad_request', message: 'Could not read the request.' }, { status: 400 });
+  }
+
+  const caller = metered() ? await callerFrom(request) : null;
+
+  // What is being asked for, before anything is spent on it.
+  //
+  // Everything the person wrote goes through together — the style, the prompt
+  // and every sung line — because a request whose style is innocent and whose
+  // chorus is not is still that request. Refused here rather than after the
+  // charge, so a refusal costs nobody anything.
+  const asked = [
+    body.style ?? '',
+    body.prompt ?? '',
+    ...(body.sections ?? []).flatMap((section) => section.lines ?? []),
+  ]
+    .filter(Boolean)
+    .join('\n');
+  const allowed = await guard(request, asked, 'song', caller);
+  if (!allowed.ok) return allowed.response;
+
+  // The key check comes *after* the refusal on purpose. What the app will not
+  // make is not a function of what it happens to be configured with, and a
+  // gate that can only be exercised on a fully configured install is a gate
+  // nobody can test.
   const key = process.env.ELEVENLABS_API_KEY;
   if (!key) {
     // The same shape app/api/songwriter uses, so the client handles both alike.
@@ -51,13 +81,6 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  let body: Body;
-  try {
-    body = (await request.json()) as Body;
-  } catch {
-    return Response.json({ error: 'bad_request', message: 'Could not read the request.' }, { status: 400 });
-  }
-
   // What this person may spend, decided here and not by the page that asked.
   // Without accounts configured there is nobody to meter, so the request goes
   // through as it always did — that keeps a local or half-configured install
@@ -65,7 +88,6 @@ export async function POST(request: Request): Promise<Response> {
   let record: (() => Promise<void>) | null = null;
   let length = body.seconds ?? 60;
   if (metered()) {
-    const caller = await callerFrom(request);
 
     // A trained sound is the caller's or it is nobody's. Checked against our
     // own table, because ElevenLabs cannot tell our users apart; and dropped

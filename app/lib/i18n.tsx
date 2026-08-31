@@ -367,7 +367,9 @@ export const STRINGS: Dict = {
   "voice.atLimit": { en: "Your plan keeps", af: "Jou plan hou" },
   "voice.removeFirst": { en: "Remove one to make another.", af: "Verwyder een om nog een te maak." },
   "voice.name": { en: "What to call this voice", af: "Wat om hierdie stem te noem" },
-  "voice.consent": { en: "This is my own voice. I am not cloning anybody else, and I understand a copy of it will be kept until I delete it.", af: "Dit is my eie stem. Ek kloon niemand anders nie, en ek verstaan \u2019n kopie daarvan word gehou tot ek dit uitvee." },
+  // A translation of app/lib/consent.ts, and it has to stay one: the English
+  // sentence is what is written to the consent record.
+  "voice.consent": { en: "This is my own voice. I am the person speaking on the recording, it is not an imitation of anybody else, and I am giving FutureBox permission to make a model of it. A copy is kept until I delete it.", af: "Dit is my eie stem. Ek is die persoon wat op die opname praat, dit is nie \u2019n nabootsing van iemand anders nie, en ek gee FutureBox toestemming om \u2019n model daarvan te maak. \u2019n Kopie word gehou tot ek dit uitvee." },
   "voice.record": { en: "Record", af: "Neem op" },
   "voice.making": { en: "Making the voice\u2026", af: "Maak die stem\u2026" },
   "voice.readIt": { en: "Read a script aloud", af: "Lees \u2019n skrif hardop" },
