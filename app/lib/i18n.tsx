@@ -697,10 +697,25 @@ export const STRINGS: Dict = {
   "sound.youHave": { en: "you have", af: "jy het" },
   "sound.cancel": { en: "Cancel", af: "Kanselleer" },
 
-  "make.ownSound": { en: "Your own sound", af: "Jou eie klank" },
-  "make.ownSoundNote": { en: "Trained in your channel on your own songs. This one is a real setting, not a direction in words \u2014 the engine generates in that sound.", af: "In jou kanaal geleer op jou eie liedjies. Hierdie een is \u2019n werklike instelling, nie \u2019n aanwysing in woorde nie \u2014 die enjin maak musiek in daardie klank." },
-  "make.noOwnSound": { en: "The ordinary engine", af: "Die gewone enjin" },
-  "make.noOwnSoundNote": { en: "Whatever the style words ask for.", af: "Net wat die stylwoorde vra." },
+  "make.useOwnSound": { en: "Make it in a sound of my own", af: "Maak dit in 'n klank van my eie" },
+  "make.ownSoundNote": {
+    en: "A sound trained on your own songs. This is a real setting rather than a direction in words \u2014 the engine generates in that sound, and it changes the next song you make.",
+    af: "'n Klank wat op jou eie snitte afgerig is. Dit is 'n werklike instelling eerder as 'n aanwysing in woorde \u2014 die enjin genereer in daardie klank, en dit verander die volgende snit wat jy maak.",
+  },
+  "make.ownSoundNone": {
+    en: "You have not trained one yet. It is done in your channel, from songs you have already made.",
+    af: "Jy het nog nie een afgerig nie. Dit word in jou kanaal gedoen, uit snitte wat jy reeds gemaak het.",
+  },
+  "make.ownSoundTrain": { en: "Train one in your channel", af: "Rig een af in jou kanaal" },
+  "make.ownSoundTraining": {
+    en: "One is still training. It takes a few minutes, and it appears here on its own when it is done.",
+    af: "Een is nog besig om af te rig. Dit vat 'n paar minute, en dit verskyn vanself hier wanneer dit klaar is.",
+  },
+  "make.ownSoundNoPlan": {
+    en: "Training a sound of your own is not included in your plan. It is ten minutes of somebody else\u2019s GPUs, so it sits on the paid tiers.",
+    af: "Om 'n eie klank af te rig is nie by jou plan ingesluit nie. Dit is tien minute op iemand anders se GPU\u2019s, so dit sit op die betaalde vlakke.",
+  },
+  "make.ownSoundSeePlans": { en: "See the plans", af: "Kyk na die planne" },
   "make.ownSoundSongs": { en: "of your songs", af: "van jou liedjies" },
 
   "credits.credits": { en: "credits", af: "krediete" },

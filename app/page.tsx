@@ -1810,8 +1810,17 @@ export default function FutureBoxHome() {
 
       {/* 🚀 CREATOR STUDIO & AI MUSIC HUB (WITH MASTER GENRE SOUNDBOARD, VOICE STUDIO & DIRECTOR) */}
       {uploadModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 overflow-hidden">
-          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-7xl h-full max-h-[94vh] rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col gap-5 overflow-hidden">
+        /* The studio takes the whole window.
+           It used to be a card floated in the middle of a dimmed page: sixteen
+           pixels of padding, a rounded border, another thirty-two inside it,
+           and a cap of 80rem however wide the screen was. On a laptop that
+           left the working surface about half the width it could have had,
+           with its own scrollbar inside a page that was not scrolling — which
+           is what "cramped" was.
+           Nothing here is a dialogue you answer and dismiss. It is the room
+           you work in, so it gets the room. */
+        <div className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden">
+          <div className="w-full h-full p-3 md:p-5 flex flex-col gap-4 overflow-hidden">
             
             {/* Top Back Bar */}
             <div className="flex-shrink-0 flex items-center justify-between border-b border-zinc-800 pb-4">
@@ -1928,6 +1937,7 @@ export default function FutureBoxHome() {
                   setMadeTrack(track);
                   setTrackCount((count) => count + 1);
                 }}
+                onGoToChannel={() => setStudioTab('channels')}
               />
             )}
 
