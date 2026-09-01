@@ -19,6 +19,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Loader2, Mic, Play, Square, Trash2, Upload, Wand2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
+import { durationOf } from '../lib/trackaudio';
 import { VOICE_CONSENT } from '@/app/lib/consent';
 
 export interface Voice {
@@ -354,6 +355,10 @@ export default function VoiceLab({
       form.append('style', String(style));
       form.append('speakerBoost', String(speakerBoost));
       form.append('removeNoise', String(removeNoise));
+      // Saying it again in another voice is charged by the minute, so the
+      // length goes with it rather than the server billing at its ceiling.
+      const long = await durationOf(toChange);
+      if (long) form.append('seconds', String(Math.round(long)));
 
       const token = await accessToken();
       const response = await fetch('/api/voice/change', {

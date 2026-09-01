@@ -843,6 +843,10 @@ export default function VocalBooth({
     try {
       const form = new FormData();
       form.append('audio', encodeWav(recorded), 'take.wav');
+      // A WAV states its own length, so the server does not need this — it is
+      // sent so the two agree, and so the day this stops being a WAV the
+      // charge does not quietly jump to the ceiling.
+      form.append('seconds', String(Math.round(recorded.duration)));
       const token = await accessToken();
       const response = await fetch('/api/voice/clean', {
         method: 'POST',

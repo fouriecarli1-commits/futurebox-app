@@ -22,7 +22,8 @@
  */
 
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
-import { CREDITS } from '@/app/lib/credits';
+import { CREDITS, perMinute } from '@/app/lib/credits';
+import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
@@ -33,6 +34,15 @@ const ENDPOINT = 'https://api.elevenlabs.io/v1/speech-to-text';
 /** Their newest transcriber, with the older one as a fallback for older plans. */
 const MODELS = ['scribe_v2', 'scribe_v1'];
 const MAX_BYTES = 25 * 1024 * 1024;
+/**
+ * The longest file this route will charge for.
+ *
+ * A ceiling rather than a refusal: a length the browser reports could be
+ * wrong, and this bounds what a wrong one can cost. Files this app makes
+ * itself are WAV and are measured from their own header instead, where
+ * nobody's word is taken for it at all.
+ */
+const MAX_SECONDS = 30 * 60;
 
 interface Word {
   text?: string;
@@ -104,7 +114,10 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   let upstream: Response | null = null;
-  const paid = await charge(request, CREDITS.transcribe, 'transcribe');
+  // By the minute: their speech-to-text is billed by the hour, and a flat
+  // fee turned a long episode into a loss.
+  const billed = await billedSeconds(file, seconds, MAX_SECONDS);
+  const paid = await charge(request, perMinute(billed, CREDITS.transcribe), 'transcribe');
   if (!paid.ok) return paid.response;
 
   let raw = '';

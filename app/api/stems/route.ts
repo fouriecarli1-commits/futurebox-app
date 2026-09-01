@@ -22,7 +22,8 @@
  */
 
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
-import { CREDITS } from '@/app/lib/credits';
+import { CREDITS, perMinute } from '@/app/lib/credits';
+import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 import { pick, unzip } from '@/app/lib/server/zip';
 
@@ -38,6 +39,15 @@ const VARIATION = 'two_stems_v1';
 
 /** Roughly ten minutes of mp3. Past this something is wrong with the request. */
 const MAX_BYTES = 25 * 1024 * 1024;
+/**
+ * The longest file this route will charge for.
+ *
+ * A ceiling rather than a refusal: a length the browser reports could be
+ * wrong, and this bounds what a wrong one can cost. Files this app makes
+ * itself are WAV and are measured from their own header instead, where
+ * nobody's word is taken for it at all.
+ */
+const MAX_SECONDS = 30 * 60;
 
 /**
  * The names to look for inside the archive.
@@ -110,7 +120,10 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
-  const paid = await charge(request, CREDITS.stems, 'stems');
+  // By the minute: splitting a twenty-minute recording is twenty times the
+  // work of splitting a one-minute one, and was the same price.
+  const billed = await billedSeconds(file, seconds, MAX_SECONDS);
+  const paid = await charge(request, perMinute(billed, CREDITS.stems), 'stems');
   if (!paid.ok) return paid.response;
 
   const outgoing = new FormData();

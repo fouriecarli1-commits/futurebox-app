@@ -13,7 +13,8 @@
 import { callerFrom, metered } from '@/app/lib/server/account';
 import { configured, isolate } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
-import { CREDITS } from '@/app/lib/credits';
+import { CREDITS, perMinute } from '@/app/lib/credits';
+import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
@@ -22,6 +23,15 @@ export const maxDuration = 300;
 
 /** About an hour of speech at a sensible bitrate. Beyond this it is a film. */
 const MAX_BYTES = 60_000_000;
+/**
+ * The longest file this route will charge for.
+ *
+ * A ceiling rather than a refusal: a length the browser reports could be
+ * wrong, and this bounds what a wrong one can cost. Files this app makes
+ * itself are WAV and are measured from their own header instead, where
+ * nobody's word is taken for it at all.
+ */
+const MAX_SECONDS = 30 * 60;
 
 export async function POST(request: Request): Promise<Response> {
   if (!configured()) {
@@ -52,7 +62,10 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'That file is too big to clean up here.' }, { status: 413 });
   }
 
-  const paid = await charge(request, CREDITS.clean, 'clean');
+  // By the minute. Their voice isolator is charged by the minute upstream,
+  // and this broke even at about fifty seconds when it was flat.
+  const billed = await billedSeconds(audio, Number(form.get('seconds')), MAX_SECONDS);
+  const paid = await charge(request, perMinute(billed, CREDITS.clean), 'clean');
   if (!paid.ok) return paid.response;
 
   const cleaned = await isolate(audio);
