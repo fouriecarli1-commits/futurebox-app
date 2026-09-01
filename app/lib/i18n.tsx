@@ -551,7 +551,6 @@ export const STRINGS: Dict = {
   "hooks.arrives": { en: "Something arrives here", af: "Hier kom iets aan" },
   "hooks.fullest": { en: "The fullest part of the track", af: "Die volste deel van die snit" },
   "hooks.safe": { en: "Steady and clear \u2014 safe pick", af: "Bestendig en helder \u2014 veilige keuse" },
-  "make.credit": { en: "Which AI made it \u2014 shown with the song", af: "Watter AI dit gemaak het \u2014 wys saam met die snit" },
 
   "counters.title": { en: "What has actually happened here", af: "Wat hier regtig gebeur het" },
   "feed.podSub": { en: "Long conversations about money, AI and what people do with both.", af: "Lang gesprekke oor geld, AI en wat mense met albei aanvang." },

@@ -157,6 +157,33 @@ async function tickOn(page, where) {
   await page.close();
 }
 
+// ── It sits against the button ─────────────────────────────────────────
+// Not filed away with the tempo and the key. It is the last thing decided
+// before the song is made, so it reads as part of pressing Make.
+{
+  const read = async (path) =>
+    (await import('node:fs/promises')).readFile(new URL(path, import.meta.url), 'utf8');
+  const source = (await read('../app/components/MakeMusic.tsx'))
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
+
+  const tick = source.indexOf('useOwnSound');
+  const block = source.lastIndexOf('checked={useOwnSound}');
+  const button = source.indexOf('onClick={() => make()}');
+  say(tick !== -1 && button !== -1, 'the tick or the make button is gone');
+  say(block < button, 'the tick is drawn after the button it belongs to');
+
+  // Nothing between the end of the tick and the button but whitespace. The
+  // measurement has to stop at the opening tag, not at the onClick inside it,
+  // or it reads the button's own markup as something in the way.
+  const tag = source.lastIndexOf('<button', button);
+  const closes = source.lastIndexOf(')}', tag);
+  const between = source.slice(closes + 2, tag);
+  say(
+    between.trim().length === 0,
+    `something has been put between the tick and the button: ${between.trim().slice(0, 80)}`,
+  );
+}
+
 await browser.close();
 
 if (problems.length) {

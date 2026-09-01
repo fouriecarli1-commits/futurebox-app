@@ -24,8 +24,6 @@ export default function OwnSoundCheck() {
       <MakeMusic
         userPlan="studio"
         onUpgrade={() => setUpgrades((n) => n + 1)}
-        selectedTools={[]}
-        toggleTool={() => {}}
         canvas={canvas}
         setCanvas={setCanvas}
         makeSignal={0}

@@ -307,7 +307,7 @@ export interface PostIdea {
 
 const HOOK_SHAPES = [
   (t: TrackFlavour) => `I gave an AI four words. It gave me this ${t.genre.toLowerCase()} track.`,
-  (t: TrackFlavour) => `${t.bpm} BPM, ${t.key}, made by ${t.models.length} different AIs. Which one did the hard part?`,
+  (t: TrackFlavour) => `${t.bpm} BPM, ${t.key}, and nobody in the room could play it. Here it is anyway.`,
   (t: TrackFlavour) => `Nobody played an instrument on "${t.title}". Listen to the ${t.tags[0] ?? 'sound'} anyway.`,
   (t: TrackFlavour) => `This took 11 minutes. Here is every prompt I used.`,
   (t: TrackFlavour) => `Stop scrolling — the drop on "${t.title}" is at 0:14.`,
