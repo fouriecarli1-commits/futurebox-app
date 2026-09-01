@@ -33,6 +33,7 @@ import type { Canvas } from './components/MakeMusic';
 import type { Track } from './lib/library';
 import { probeAudio } from './lib/engines';
 import Booth from './components/Booth';
+import LiveChannel from './components/LiveChannel';
 import Masterclasses from './components/Masterclasses';
 import { Counters, Views, useBoard } from './components/Counters';
 import Placement from './components/Placement';
@@ -279,7 +280,7 @@ export default function FutureBoxHome() {
    * already is, so a second screen for it was the same job behind a second
    * button.
    */
-  const [studioTab, setStudioTab] = useState<'video' | 'canvas' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'booth' | 'podcast'>('make');
+  const [studioTab, setStudioTab] = useState<'video' | 'canvas' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'booth' | 'live' | 'podcast'>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -1867,6 +1868,7 @@ export default function FutureBoxHome() {
                   { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
                   { id: 'channels', label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
                   { id: 'collab', label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
+                  { id: 'live', label: t('rail.live'), hint: t('rail.live.hint'), icon: Radio },
                   { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
                   { id: 'podcast', label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
                 ].map((tab) => {
@@ -1945,6 +1947,8 @@ export default function FutureBoxHome() {
                 }}
               />
             )}
+
+            {studioTab === 'live' && <LiveChannel onGoToMake={() => setStudioTab('make')} />}
 
             {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
 

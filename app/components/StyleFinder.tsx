@@ -75,6 +75,8 @@ export default function StyleFinder({
 
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<string>('All');
+  /** Searching by name, because sixty-four is more than anybody scans. */
+  const [hunt, setHunt] = useState('');
   const [playing, setPlaying] = useState<string | null>(null);
   const [noSound, setNoSound] = useState<string | null>(null);
 
@@ -85,8 +87,22 @@ export default function StyleFinder({
   useEffect(() => () => sketchRef.current?.stop(), []);
 
   const shelf = useMemo(
-    () => (category === 'All' ? GENRE_SAMPLES : GENRE_SAMPLES.filter((one) => one.category === category)),
-    [category],
+    () => {
+      const inFamily =
+        category === 'All' ? GENRE_SAMPLES : GENRE_SAMPLES.filter((one) => one.category === category);
+      const looking = hunt.trim().toLowerCase();
+      if (!looking) return inFamily;
+      // Name, family and the words it would write: somebody hunting "log drum"
+      // is looking for amapiano without knowing what it is called.
+      return inFamily.filter(
+        (one) =>
+          one.name.toLowerCase().includes(looking) ||
+          one.subgenre.toLowerCase().includes(looking) ||
+          one.category.toLowerCase().includes(looking) ||
+          one.promptSnippet.toLowerCase().includes(looking),
+      );
+    },
+    [category, hunt],
   );
 
   const hear = useCallback(
@@ -226,24 +242,41 @@ export default function StyleFinder({
             </p>
             {noSound && <p className="text-sm text-amber-300 leading-snug">{noSound}</p>}
 
-            {/* Ten categories. The list is long on purpose — this is the
-                reference you scan before you write anything. */}
-            <div className="flex flex-wrap gap-1.5">
-              {GENRE_CATEGORIES.map((one) => (
-                <button
-                  key={one}
-                  type="button"
-                  onClick={() => setCategory(one)}
-                  className={`px-2.5 py-1 rounded-lg text-sm border transition-all ${
-                    category === one
-                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
-                      : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300'
-                  }`}
-                >
-                  {one}
-                </button>
-              ))}
+            {/* This was ten categories as pills, which fitted. It is
+                twenty-two now, and twenty-two pills is a wall rather than a
+                choice — so the family is a dropdown and the name is a search.
+                Searching matters more than it looks with sixty-four styles on
+                the shelf: somebody who half-remembers "maskandi" should not
+                have to know it lives under Traditional & World. */}
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={category}
+                onChange={(event) => setCategory(event.target.value as typeof category)}
+                aria-label={t('style.family', 'Family')}
+                className="bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-200 focus:border-emerald-500 focus:outline-none min-w-0"
+              >
+                {GENRE_CATEGORIES.map((one) => (
+                  <option key={one} value={one}>
+                    {one === 'All' ? t('style.allFamilies', 'Every style') : one}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={hunt}
+                onChange={(event) => setHunt(event.target.value)}
+                placeholder={t('style.search', 'Search by name')}
+                className="flex-1 min-w-[8rem] bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+              />
+              <span className="text-sm text-zinc-500 tabular-nums flex-shrink-0">
+                {shelf.length}
+              </span>
             </div>
+
+            {shelf.length === 0 && (
+              <p className="text-sm text-zinc-500 leading-snug">
+                {t('style.noneFound', 'Nothing by that name. The style field takes your own words too — it is free text.')}
+              </p>
+            )}
 
             <div className="max-h-96 overflow-y-auto space-y-2 pr-1">
               {shelf.map((sample) => (

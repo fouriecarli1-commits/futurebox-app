@@ -38,11 +38,32 @@ for (const row of rows) {
 
 // And they have to differ from each other, which was the other half of the old
 // bug: seventeen names, three sounds.
-const loudness = rows.map((one) => Math.round(one.rms * 1000));
+//
+// This compared loudness alone, and loudness alone stopped working when the
+// shelf grew: it is one number in a narrow range, so past a certain count two
+// grooves collide by arithmetic rather than by sounding alike. The fingerprint
+// is what the sketch actually is — the energy in three bands, how often it
+// hits, and how loud it is. Two styles matching on all of that are the same
+// groove wearing two names, which is the thing worth failing over.
+const print = (one) =>
+  `${one.bands.join('/')}·${one.onsets}·${Math.round(one.rms * 400)}·${Math.round(one.peak * 40)}`;
+const prints = rows.map(print);
+const distinct = new Set(prints).size;
 say(
-  new Set(loudness).size >= rows.length * 0.5,
-  `${new Set(loudness).size} distinct textures across ${rows.length} styles`,
+  distinct >= rows.length * 0.75,
+  `only ${distinct} distinct sounds across ${rows.length} styles`,
 );
+
+// Name the twins rather than only counting them, so a failure says what to fix.
+const seen = new Map();
+for (const one of rows) {
+  const key = print(one);
+  if (!seen.has(key)) seen.set(key, []);
+  seen.get(key).push(one.name);
+}
+for (const [, names] of seen) {
+  say(names.length <= 2, `these sound identical: ${names.join(', ')}`);
+}
 
 await browser.close();
 const quietest = rows.reduce((a, b) => (a.rms < b.rms ? a : b));

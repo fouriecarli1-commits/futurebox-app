@@ -166,7 +166,7 @@ export default function Sleeve({
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
           {busy
             ? t('cover.making', 'Drawing the sleeve')
-            : `${t('cover.make', 'Make a cover')} — ${CREDITS.cover} ${t('video.credits', 'credits')}`}
+            : `${t('cover.make')} — ${CREDITS.cover} ${t('video.credits', 'credits')}`}
         </button>
       )}
       {problem && <p className="text-xs text-rose-400 leading-snug">{problem}</p>}
