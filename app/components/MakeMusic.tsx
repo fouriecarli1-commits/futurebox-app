@@ -683,8 +683,69 @@ export default function MakeMusic({
           </div>
         </div>
 
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm text-zinc-400">{t('make.speed')} — {bpm} {t('make.bpm')}</label>
+            <input
+              type="range"
+              min={60}
+              max={180}
+              value={bpm}
+              onChange={(e) => setBpm(Number(e.target.value))}
+              className="w-full mt-2 accent-emerald-500"
+            />
+            <p className="text-sm text-zinc-600">{bpm < 95 ? t('make.slow') : bpm < 125 ? t('make.steady') : t('make.fast')}</p>
+          </div>
+          <div>
+            <label className="text-sm text-zinc-400">{t('make.mood')}</label>
+            <select
+              value={songKey}
+              onChange={(e) => setSongKey(e.target.value)}
+              className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+            >
+              <option value="C Major">{t('make.mood.bright')}</option>
+              <option value="G Major">{t('make.mood.warm')}</option>
+              <option value="A Minor">{t('make.mood.thoughtful')}</option>
+              <option value="D Minor">{t('make.mood.dark')}</option>
+              <option value="F Minor">{t('make.mood.heavy')}</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Lengths in seconds. Bars only mean something once you know the tempo,
+            so "32 bars" answered a question nobody asked. */}
+        <div>
+          <label className="text-sm text-zinc-400">{t('make.length')}</label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
+            {LENGTH_CHOICES.map((choice) => (
+              <button
+                key={choice.seconds}
+                type="button"
+                onClick={() => setSeconds(choice.seconds)}
+                className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                  seconds === choice.seconds
+                    ? 'bg-emerald-500/15 border-emerald-500'
+                    : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
+                }`}
+              >
+                <span className={`block text-sm font-semibold ${seconds === choice.seconds ? 'text-emerald-300' : 'text-zinc-200'}`}>
+                  {choice.label}
+                </span>
+                <span className="block text-sm text-zinc-500 leading-snug">{choice.note}</span>
+                <span className="block text-xs text-zinc-500 pt-0.5">
+                  {songCost(choice.seconds)} {t('video.credits', 'credits')}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* ── A sound of your own ────────────────────────────────────────
-            This used to be hidden entirely unless you already had one, on the
+            Directly above the button, because it is the last thing decided
+            before the song is made rather than a setting filed with the tempo.
+            It reads as part of pressing Make, which is what it is.
+
+            It used to be hidden entirely unless you already had one, on the
             reasoning that an empty picker explaining a feature you do not have
             is a screen telling you off. Half right: what it produced instead
             was a feature nobody could find, which is the same failure the
@@ -781,63 +842,6 @@ export default function MakeMusic({
             )}
           </div>
         )}
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm text-zinc-400">{t('make.speed')} — {bpm} {t('make.bpm')}</label>
-            <input
-              type="range"
-              min={60}
-              max={180}
-              value={bpm}
-              onChange={(e) => setBpm(Number(e.target.value))}
-              className="w-full mt-2 accent-emerald-500"
-            />
-            <p className="text-sm text-zinc-600">{bpm < 95 ? t('make.slow') : bpm < 125 ? t('make.steady') : t('make.fast')}</p>
-          </div>
-          <div>
-            <label className="text-sm text-zinc-400">{t('make.mood')}</label>
-            <select
-              value={songKey}
-              onChange={(e) => setSongKey(e.target.value)}
-              className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
-            >
-              <option value="C Major">{t('make.mood.bright')}</option>
-              <option value="G Major">{t('make.mood.warm')}</option>
-              <option value="A Minor">{t('make.mood.thoughtful')}</option>
-              <option value="D Minor">{t('make.mood.dark')}</option>
-              <option value="F Minor">{t('make.mood.heavy')}</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Lengths in seconds. Bars only mean something once you know the tempo,
-            so "32 bars" answered a question nobody asked. */}
-        <div>
-          <label className="text-sm text-zinc-400">{t('make.length')}</label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
-            {LENGTH_CHOICES.map((choice) => (
-              <button
-                key={choice.seconds}
-                type="button"
-                onClick={() => setSeconds(choice.seconds)}
-                className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
-                  seconds === choice.seconds
-                    ? 'bg-emerald-500/15 border-emerald-500'
-                    : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
-                }`}
-              >
-                <span className={`block text-sm font-semibold ${seconds === choice.seconds ? 'text-emerald-300' : 'text-zinc-200'}`}>
-                  {choice.label}
-                </span>
-                <span className="block text-sm text-zinc-500 leading-snug">{choice.note}</span>
-                <span className="block text-xs text-zinc-500 pt-0.5">
-                  {songCost(choice.seconds)} {t('video.credits', 'credits')}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
 
         <button
           type="button"
