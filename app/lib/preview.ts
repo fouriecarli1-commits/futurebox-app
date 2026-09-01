@@ -98,6 +98,23 @@ const KITS: Record<string, Kit> = {
   'Cinematic & Orchestral': { fourOnFloor: false, hats: 'off', bass: 'none', pad: 'strings', swing: 0, cutoff: 2000 },
   'Lo-Fi & Ambient': { fourOnFloor: false, hats: 'eighths', bass: 'sine', pad: 'warm', swing: 0.2, cutoff: 900 },
   'Afrobeats & Latin': { fourOnFloor: false, hats: 'sixteenths', bass: 'sine', pad: 'warm', swing: 0.08, cutoff: 2200 },
+
+  // Added when the shelf grew. Each of these earns its own row rather than
+  // being folded into a neighbour, because a category without a kit falls back
+  // to one generic groove — and a shelf of forty styles that produce ten
+  // sounds is worse than a shelf of ten, since it looks like more and is not.
+  'Amapiano & SA House': { fourOnFloor: true, hats: 'sixteenths', bass: 'sine', pad: 'warm', swing: 0.16, cutoff: 1500 },
+  'Gqom & Kwaito': { fourOnFloor: false, hats: 'sixteenths', bass: 'sine', pad: 'warm', swing: 0.05, cutoff: 800 },
+  'House & Garage': { fourOnFloor: true, hats: 'sixteenths', bass: 'saw', pad: 'warm', swing: 0.12, cutoff: 2800 },
+  'Drum & Bass': { fourOnFloor: false, hats: 'sixteenths', bass: 'saw', pad: 'bright', swing: 0, cutoff: 3400 },
+  'Reggae & Dub': { fourOnFloor: false, hats: 'eighths', bass: 'sine', pad: 'warm', swing: 0.22, cutoff: 1100 },
+  'Jazz & Blues': { fourOnFloor: false, hats: 'eighths', bass: 'sine', pad: 'strings', swing: 0.3, cutoff: 2100 },
+  'Gospel & Choral': { fourOnFloor: false, hats: 'off', bass: 'sine', pad: 'strings', swing: 0.12, cutoff: 3000 },
+  'Punk & Hardcore': { fourOnFloor: true, hats: 'eighths', bass: 'square', pad: 'none', swing: 0, cutoff: 4200 },
+  'Classical & Piano': { fourOnFloor: false, hats: 'off', bass: 'none', pad: 'strings', swing: 0.06, cutoff: 2500 },
+  'Traditional & World': { fourOnFloor: false, hats: 'eighths', bass: 'sine', pad: 'strings', swing: 0.14, cutoff: 1900 },
+  'Funk & Disco': { fourOnFloor: true, hats: 'sixteenths', bass: 'square', pad: 'bright', swing: 0.1, cutoff: 3600 },
+  'Children & Learning': { fourOnFloor: true, hats: 'eighths', bass: 'sine', pad: 'bright', swing: 0, cutoff: 3800 },
 };
 
 const FALLBACK: Kit = { fourOnFloor: true, hats: 'eighths', bass: 'sine', pad: 'warm', swing: 0, cutoff: 2000 };
@@ -117,12 +134,45 @@ function kick(ctx: BaseAudioContext, out: AudioNode, at: number): void {
   osc.stop(at + 0.3);
 }
 
+/**
+ * Noise that is the same every time.
+ *
+ * This was `Math.random()`, which meant a style sounded slightly different on
+ * every press — inaudible, and wrong twice over. A preview is a reference: you
+ * press play on amapiano to find out what amapiano is, and the answer should
+ * not move. And a sound that changes between renders cannot be measured, so
+ * the check that every style is audible *and distinct from the others* had no
+ * stable thing to compare.
+ *
+ * A tiny xorshift does the job. It is not a good random number generator and
+ * does not need to be: this is a hi-hat.
+ */
+function seeded(seed: number): () => number {
+  let state = seed >>> 0 || 0x9e3779b9;
+  return () => {
+    state ^= state << 13;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    state >>>= 0;
+    return state / 0xffffffff;
+  };
+}
+
 /** Filtered noise. Short and bright is a hat; longer and duller is a snare. */
-function noise(ctx: BaseAudioContext, out: AudioNode, at: number, length: number, hz: number, level: number): void {
+function noise(
+  ctx: BaseAudioContext,
+  out: AudioNode,
+  at: number,
+  length: number,
+  hz: number,
+  level: number,
+  seed: number,
+): void {
   const frames = Math.max(1, Math.floor(ctx.sampleRate * length));
   const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
   const data = buffer.getChannelData(0);
-  for (let i = 0; i < frames; i += 1) data[i] = Math.random() * 2 - 1;
+  const next = seeded(seed);
+  for (let i = 0; i < frames; i += 1) data[i] = next() * 2 - 1;
 
   const source = ctx.createBufferSource();
   source.buffer = buffer;
@@ -208,6 +258,12 @@ export function schedule(
   const { hz, minor } = rootOf(input.key);
   const beat = 60 / tempoOf(input.bpm);
   const chord = minor ? MINOR : MAJOR;
+  // One number that stands for this style, so its noise is its own and is the
+  // same on every press. Not a hash worth defending — just enough spread that
+  // two styles do not share a hi-hat.
+  let grain = 0;
+  const label = `${input.category}|${input.bpm}|${input.key}`;
+  for (let i = 0; i < label.length; i += 1) grain = (grain * 31 + label.charCodeAt(i)) >>> 0;
 
   for (let step = 0; step * (beat / 2) < SECONDS; step += 1) {
     // Swing pushes the off-beats late, which is most of what separates a
@@ -219,9 +275,9 @@ export function schedule(
 
     if (kit.fourOnFloor ? onBeat : step % 8 === 0 || step % 8 === 6) kick(ctx, master, at);
     // Backbeat: the two and the four, which is the other half of a groove.
-    if (step % 8 === 4) noise(ctx, master, at, 0.16, 1200, 0.35);
-    if (kit.hats === 'eighths' && onBeat) noise(ctx, master, at, 0.04, 7000, 0.12);
-    if (kit.hats === 'sixteenths') noise(ctx, master, at, 0.03, 8000, onBeat ? 0.12 : 0.07);
+    if (step % 8 === 4) noise(ctx, master, at, 0.16, 1200, 0.35, grain + step * 7919);
+    if (kit.hats === 'eighths' && onBeat) noise(ctx, master, at, 0.04, 7000, 0.12, grain + step * 104729);
+    if (kit.hats === 'sixteenths') noise(ctx, master, at, 0.03, 8000, onBeat ? 0.12 : 0.07, grain + step * 104729);
 
     if (kit.bass !== 'none' && step % 4 === 0) {
       // Root, then the fifth in the second bar: enough movement to hear a key.

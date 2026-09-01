@@ -54,7 +54,19 @@ export type Surface =
   /** What somebody called a cloned voice or a trained sound. */
   | 'name'
   /** The songs handed to a finetune, and what it is called. */
-  | 'finetune';
+  | 'finetune'
+  /**
+   * Something typed for other people to read: a title posted to the live
+   * channel, or a message in the room.
+   *
+   * Its own surface rather than borrowed from `speech`, which means "text that
+   * will be spoken aloud". The distinction is not pedantry — the moderation
+   * log is the evidence this platform enforces its own rules, and a refusal
+   * filed under the wrong surface is evidence of the wrong thing. The rules
+   * that apply are the ones about content rather than the ones about voices:
+   * nothing here is going to a model, it is going to a person.
+   */
+  | 'room';
 
 export type Rule =
   | 'minors'
