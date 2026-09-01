@@ -58,6 +58,7 @@ curl -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3111/probe-bal
 | `dialogue.mjs` | Cutting a long script into requests that fit their 2,000-character limit, without losing a word — arithmetic, run with `node --experimental-strip-types` |
 | `converse.mjs` | What actually goes on the wire to text-to-dialogue, run against a fake ElevenLabs rather than grepped |
 | `twohosts.mjs` | The script screen: true counts, an uncast speaker named rather than given a voice, the result becoming the episode draft |
+| `perminute.mjs` | That the four jobs billed by the minute upstream are charged by the minute here, and that a WAV is measured from its own header |
 | `nocompetitors.mjs` | That the make screen sells nothing but this app, and the demo tracks credit nobody who did not make them |
 | `ownsound.mjs` | The tick that makes the next song in a sound of your own, in all four of its states — no plan, none trained, one training, one ready |
 | `live.mjs` | The live channel: a missing table is not an empty room, the audio link is signed rather than public, and only your own post can be taken out |

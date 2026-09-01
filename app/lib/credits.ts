@@ -54,13 +54,25 @@ export const CREDITS = {
   cover: 2,
   /** Drawn on the device instead. Costs nothing to run, so it costs nothing. */
   browserVideo: 0,
-  /** Splitting a song into the voice and the backing. */
+  /**
+   * Four jobs below are charged **by the minute**, not per press.
+   *
+   * They were flat — two or four credits however long the file was — and that
+   * is the wrong shape for anything billed upstream by the minute. Against
+   * ElevenLabs' published rates the break-even on taking the room out of a
+   * recording was about fifty seconds: every take longer than that lost money,
+   * and an hour-long podcast cleaned for two credits cost more upstream than
+   * the member's entire monthly plan.
+   *
+   * The numbers are their rates plus the usual margin. See `perMinute` below.
+   */
+  /** Splitting a song into the voice and the backing, per minute. */
   stems: 4,
-  /** Hearing what was actually sung, so the words can follow it. */
+  /** Hearing what was actually sung, per minute. Their speech-to-text. */
   transcribe: 2,
-  /** Taking the room out of a recording. */
-  clean: 2,
-  /** A recording said again in another voice. */
+  /** Taking the room out of a recording, per minute. Their voice isolator. */
+  clean: 4,
+  /** A recording said again in another voice, per minute. */
   voiceChange: 4,
   /** Making a voice from a minute of somebody reading. Estimated. */
   clone: 20,
@@ -130,6 +142,23 @@ export function dubCost(seconds: number): number {
  * confirmed against their own account page, and rounded up so that a short
  * line still costs something.
  */
+/**
+ * What a job billed by the minute costs, given how long the file is.
+ *
+ * Rounded up to the minute and floored at one, because a twenty-second take
+ * still costs something upstream and a charge of zero is a button that gets
+ * pressed forty times while somebody decides.
+ *
+ * The rates it is applied to are set against ElevenLabs' own published prices:
+ * their voice isolator and voice changer are $0.18 a minute on the Creator
+ * tier, speech-to-text $3.60 an hour — which is $0.06 a minute and the reason
+ * transcribing is the cheapest of the four.
+ */
+export function perMinute(seconds: number, rate: number): number {
+  const minutes = Math.max(1, Math.ceil(Math.max(0, seconds) / 60));
+  return minutes * rate;
+}
+
 export function readCost(characters: number): number {
   return Math.max(2, Math.ceil(Math.max(0, characters) / 150));
 }

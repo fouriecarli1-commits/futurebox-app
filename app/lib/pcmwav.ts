@@ -67,3 +67,38 @@ export function joinPcm(parts: readonly Uint8Array[]): Uint8Array {
   }
   return out;
 }
+
+/**
+ * How long a WAV is, read out of its own header.
+ *
+ * Worth having because these files are charged for by the minute, and a length
+ * the browser reports is a number the browser could get wrong — or be modified
+ * to get wrong. A WAV says its own byte rate at offset 28 and the size of its
+ * samples at 40, so where the format is one this app produces itself, the
+ * server does not have to take anybody's word for it.
+ *
+ * Returns null for anything that is not a WAV — webm and mp3 from a recorder,
+ * mostly — where the caller falls back to what it was told and leans on the
+ * size cap instead.
+ */
+export function wavSeconds(head: Uint8Array): number | null {
+  if (head.length < 44) return null;
+  const ascii = (at: number) => String.fromCharCode(head[at], head[at + 1], head[at + 2], head[at + 3]);
+  if (ascii(0) !== 'RIFF' || ascii(8) !== 'WAVE') return null;
+
+  const view = new DataView(head.buffer, head.byteOffset, head.byteLength);
+  const byteRate = view.getUint32(28, true);
+  if (!byteRate) return null;
+
+  // The `data` chunk is usually at 36 but does not have to be: a file with a
+  // LIST or fact chunk in front of it puts the samples further along, and
+  // trusting the offset would read the wrong number as a length.
+  let at = 12;
+  while (at + 8 <= head.length) {
+    const id = ascii(at);
+    const size = view.getUint32(at + 4, true);
+    if (id === 'data') return size / byteRate;
+    at += 8 + size + (size % 2);
+  }
+  return null;
+}

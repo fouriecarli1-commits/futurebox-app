@@ -16,7 +16,8 @@
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { configured, restage, stockVoices, type Performance } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
-import { CREDITS } from '@/app/lib/credits';
+import { CREDITS, perMinute } from '@/app/lib/credits';
+import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 
 export const runtime = 'nodejs';
@@ -27,6 +28,15 @@ export const maxDuration = 300;
 const MODEL = 'eleven_multilingual_sts_v2';
 /** About twenty minutes of speech at a sensible bitrate. */
 const MAX_BYTES = 25 * 1024 * 1024;
+/**
+ * The longest file this route will charge for.
+ *
+ * A ceiling rather than a refusal: a length the browser reports could be
+ * wrong, and this bounds what a wrong one can cost. Files this app makes
+ * itself are WAV and are measured from their own header instead, where
+ * nobody's word is taken for it at all.
+ */
+const MAX_SECONDS = 30 * 60;
 
 function within(value: unknown, low: number, high: number): number | undefined {
   return typeof value === 'number' && Number.isFinite(value)
@@ -111,7 +121,9 @@ export async function POST(request: Request): Promise<Response> {
     speakerBoost: form.get('speakerBoost') === 'true',
   };
 
-  const paid = await charge(request, CREDITS.voiceChange, 'voiceChange');
+  // By the minute, like everything else that sends a whole file upstream.
+  const billed = await billedSeconds(audio, Number(form.get('seconds')), MAX_SECONDS);
+  const paid = await charge(request, perMinute(billed, CREDITS.voiceChange), 'voiceChange');
   if (!paid.ok) return paid.response;
 
   const done = await restage(voiceId, audio, MODEL, how, form.get('removeNoise') === 'true');

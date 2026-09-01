@@ -25,6 +25,7 @@ import TwoHosts from './TwoHosts';
 import DubEpisode from './DubEpisode';
 import { episodeAudioUrl } from '../lib/episodeaudio';
 import { accessToken } from '../lib/cloud';
+import { durationOf } from '../lib/trackaudio';
 import { useLang } from '../lib/i18n';
 
 interface Show {
@@ -167,6 +168,11 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
     const token = await accessToken();
     const form = new FormData();
     form.append('audio', draft.audio, 'take.webm');
+    // Taking the room out is charged by the minute now, so the length has to
+    // go with it. Without it the server bills at its ceiling, which for a
+    // ninety-second episode would be a bill for thirty minutes.
+    const long = await durationOf(draft.audio);
+    if (long) form.append('seconds', String(Math.round(long)));
     const response = await fetch('/api/voice/clean', {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
