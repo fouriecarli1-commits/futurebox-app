@@ -34,6 +34,26 @@ say(
   'Voice still sits inside the song-making run, where it reads as a step in making a song',
 );
 
+// ── The studio takes the whole window ──────────────────────────────────
+//
+// It used to be a card floated in the middle of a dimmed page — padding, a
+// rounded border, more padding, and a cap of 80rem however wide the screen
+// was — with its own scrollbar inside a page that was not scrolling. The
+// working surface got about half the width it could have had.
+{
+  const shell = page.slice(page.indexOf('uploadModalOpen && ('), page.indexOf('feed.backToPlatform'));
+  say(/fixed inset-0/.test(shell), 'the studio no longer covers the window');
+  say(!/max-w-7xl/.test(shell), 'the studio is capped at 80rem again, so a wide screen is wasted');
+  say(!/items-center justify-center/.test(shell), 'the studio is centred as a card rather than filling the window');
+  say(/w-full h-full/.test(shell), 'the studio panel does not take the height and width it is given');
+  say(!/rounded-3xl/.test(shell), 'the studio is drawn as a floating card again');
+  // The surface beside the rail has to be free to grow into that width.
+  say(
+    /flex-1 min-w-0 min-h-0 overflow-y-auto/.test(page),
+    'the working surface is not the part that scrolls, so the whole studio scrolls instead',
+  );
+}
+
 // ── The Voice screen says where it is not ──────────────────────────────
 const screen = await read('../app/components/VoiceScreen.tsx');
 const code = bare(screen);

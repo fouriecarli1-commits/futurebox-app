@@ -42,7 +42,7 @@ import { useLang } from '../lib/i18n';
 import * as cloud from '../lib/cloud';
 import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } from '../lib/purchases';
 import { markBlob } from '../lib/watermark';
-import { loadSounds, NO_SOUNDS, type Sounds } from '../lib/sounds';
+import { loadSounds, training, NO_SOUNDS, type Sounds } from '../lib/sounds';
 
 export interface Canvas {
   title: string;
@@ -61,6 +61,7 @@ export default function MakeMusic({
   setCanvas,
   makeSignal,
   onMade,
+  onGoToChannel,
   engineReady,
 }: {
   userPlan: Plan;
@@ -76,6 +77,8 @@ export default function MakeMusic({
   makeSignal: number;
   /** Fires when a track lands, so the studio can offer a video. */
   onMade: (track: Track) => void;
+  /** A sound of your own is trained there, not here. */
+  onGoToChannel: () => void;
   engineReady: boolean;
 }) {
   const { t } = useLang();
@@ -110,11 +113,54 @@ export default function MakeMusic({
   const [tracks, setTracks] = useState<Track[]>([]);
   const [busy, setBusy] = useState(false);
 
-  // Asked once. A trained sound is made in the channel, not here, so this
-  // screen only ever reads the list.
+  /**
+   * The list of your own trained sounds.
+   *
+   * Asked once, and then again while one is still training. Training takes
+   * five or ten minutes on somebody else's GPUs, and asking once meant a sound
+   * that finished while this screen was open never appeared — you trained it,
+   * came back to make a song, saw nothing, and had no way to tell whether it
+   * had failed or you had imagined the whole feature.
+   */
   useEffect(() => {
-    loadSounds().then(setSounds);
+    let live = true;
+    const ask = () => {
+      loadSounds().then((next) => {
+        if (!live) return;
+        setSounds(next);
+      });
+    };
+    ask();
+    const beat = setInterval(ask, 20_000);
+    return () => {
+      live = false;
+      clearInterval(beat);
+    };
   }, []);
+
+  const readySounds = sounds.mine.filter((one) => one.status === 'completed');
+  const stillTraining = sounds.mine.filter(training);
+  /**
+   * Whether the next song is generated in a sound of your own.
+   *
+   * Its own tick rather than "the ordinary engine" being one card among the
+   * trained ones. The report was right that this is a decision about the next
+   * song, not a preset: it is on or it is off, and the picker underneath only
+   * matters once it is on. Unticking clears the choice, so what is on screen
+   * and what is sent can never disagree.
+   */
+  const useOwnSound = ownSound !== '';
+  const toggleOwnSound = (on: boolean) => {
+    // Ticking with nothing chosen would be a tick that does nothing until you
+    // also pick, which is a trap. It takes the first finished one.
+    setOwnSound(on ? (readySounds[0]?.id ?? '') : '');
+  };
+
+  // A sound that was picked and has since been deleted, or failed, must not
+  // quietly go with the next request.
+  useEffect(() => {
+    if (ownSound && !readySounds.some((one) => one.id === ownSound)) setOwnSound('');
+  }, [ownSound, readySounds]);
   /**
    * Seconds since the button was pressed.
    *
@@ -642,38 +688,41 @@ export default function MakeMusic({
           </div>
         </div>
 
-        {/* A sound of your own, if one has finished training in the channel.
-            Absent entirely when there is none — an empty picker explaining a
-            feature you do not have is a screen telling you off. */}
-        {sounds.mine.some((one) => one.status === 'completed') && (
-          <div>
-            <label className="text-sm text-zinc-400">{t('make.ownSound', 'Your own sound')}</label>
-            <p className="text-sm text-zinc-600 leading-snug pt-0.5">
-              {t(
-                'make.ownSoundNote',
-                'Trained in your channel on your own songs. This one is a real setting, not a direction in words — the engine generates in that sound.',
-              )}
-            </p>
-            <div className="grid sm:grid-cols-3 gap-2 mt-1.5">
-              <button
-                type="button"
-                onClick={() => setOwnSound('')}
-                className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
-                  ownSound === ''
-                    ? 'bg-emerald-500/15 border-emerald-500'
-                    : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
-                }`}
-              >
-                <span className={`block text-sm font-semibold ${ownSound === '' ? 'text-emerald-300' : 'text-zinc-200'}`}>
-                  {t('make.noOwnSound', 'The ordinary engine')}
+        {/* ── A sound of your own ────────────────────────────────────────
+            This used to be hidden entirely unless you already had one, on the
+            reasoning that an empty picker explaining a feature you do not have
+            is a screen telling you off. Half right: what it produced instead
+            was a feature nobody could find, which is the same failure the
+            booth had. So it is always here, and what it says depends on where
+            you actually are — the plan does not include it, none trained yet,
+            one still training, or here they are.
+
+            It is a tick because it is a decision about the next song rather
+            than a preset: on or off, and the choice underneath only matters
+            once it is on. */}
+        {sounds.configured && sounds.signedIn && (
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-3 space-y-2">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useOwnSound}
+                disabled={readySounds.length === 0}
+                onChange={(event) => toggleOwnSound(event.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0 disabled:opacity-40"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-zinc-200">
+                  {t('make.useOwnSound', 'Make it in a sound of my own')}
                 </span>
-                <span className="block text-sm text-zinc-500 leading-snug pt-0.5">
-                  {t('make.noOwnSoundNote', 'Whatever the style words ask for.')}
-                </span>
-              </button>
-              {sounds.mine
-                .filter((one) => one.status === 'completed')
-                .map((one) => (
+                <span className="block text-sm text-zinc-500 leading-snug">{t('make.ownSoundNote')}</span>
+              </span>
+            </label>
+
+            {/* Which one, once it is on. Only drawn when there is a choice to
+                make — one trained sound and a picker of one is furniture. */}
+            {useOwnSound && readySounds.length > 1 && (
+              <div className="grid sm:grid-cols-3 gap-2 pt-0.5">
+                {readySounds.map((one) => (
                   <button
                     key={one.id}
                     type="button"
@@ -692,7 +741,49 @@ export default function MakeMusic({
                     </span>
                   </button>
                 ))}
-            </div>
+              </div>
+            )}
+
+            {useOwnSound && readySounds.length === 1 && (
+              <p className="text-sm text-emerald-300/90 leading-snug pl-6">
+                {readySounds[0].name} — {readySounds[0].genre} · {readySounds[0].tracks}{' '}
+                {t('make.ownSoundSongs', 'of your songs')}
+              </p>
+            )}
+
+            {/* And when the tick cannot be used, why not — with the way out. */}
+            {readySounds.length === 0 && (
+              <div className="pl-6 space-y-1.5">
+                {sounds.keep === 0 ? (
+                  <>
+                    <p className="text-sm text-zinc-500 leading-snug">{t('make.ownSoundNoPlan')}</p>
+                    <button
+                      type="button"
+                      onClick={onUpgrade}
+                      className="text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+                    >
+                      {t('make.ownSoundSeePlans', 'See the plans')}
+                    </button>
+                  </>
+                ) : stillTraining.length > 0 ? (
+                  <p className="text-sm text-amber-300/90 leading-snug flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
+                    {t('make.ownSoundTraining')}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-zinc-500 leading-snug">{t('make.ownSoundNone')}</p>
+                    <button
+                      type="button"
+                      onClick={onGoToChannel}
+                      className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+                    >
+                      {t('make.ownSoundTrain', 'Train one in your channel')}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         )}
 
