@@ -12,7 +12,7 @@ import {
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
   Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard} from 'lucide-react';
 import {
-  AI_MODELS, ROLE_LABELS, ROLE_ACCENTS, TRACK_FLAVOURS, groupByRole, modelByName,
+  TRACK_FLAVOURS,
 } from './data/studio';
 import { profileFromTracks } from './lib/matching';
 import CollabRadar from './components/CollabRadar';
@@ -288,7 +288,6 @@ export default function FutureBoxHome() {
   const [videoAspectRatio, setVideoAspectRatio] = useState<'16:9' | '9:16'>('16:9');
   const [creatorDomain, setCreatorDomain] = useState('anrefourie');
   const [title, setTitle] = useState('');
-  const [selectedTools, setSelectedTools] = useState<string[]>(['Suno v5', 'Runway Gen-3', 'ElevenLabs Voice']);
   const [mediaLink, setMediaLink] = useState('');
 
   // AI Scanner & Stream Regeneration
@@ -523,7 +522,6 @@ export default function FutureBoxHome() {
     'Frontier Business Blueprints & Vibe Coding'
   ];
 
-  const availableTools = AI_MODELS.map((m) => m.name);
 
   // The Collab Radar reads what has actually been released rather than what the
   // creator says they do, so the matches move when the catalogue moves.
@@ -707,13 +705,6 @@ export default function FutureBoxHome() {
     setTimeout(() => setContactSent(false), 5000);
   };
 
-  const toggleTool = (tool: string) => {
-    if (selectedTools.includes(tool)) {
-      setSelectedTools(selectedTools.filter(t => t !== tool));
-    } else {
-      setSelectedTools([...selectedTools, tool]);
-    }
-  };
 
   // One scrollbar, not two: while a modal is open the page behind it must not
   // scroll, or the scrollbar the eye goes to is the page's, sits at the top
@@ -1927,8 +1918,6 @@ export default function FutureBoxHome() {
                 userPlan={userPlan}
                 onUpgrade={() => setPricingModalOpen(true)}
                 incoming={handoff}
-                selectedTools={selectedTools}
-                toggleTool={toggleTool}
                 canvas={canvas}
                 setCanvas={setCanvas}
                 makeSignal={makeSignal}

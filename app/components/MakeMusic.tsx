@@ -34,7 +34,6 @@ import Sleeve from './Sleeve';
 import VocalBooth from './VocalBooth';
 import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
-import { AI_MODELS, ROLE_LABELS, ROLE_ACCENTS } from '../data/studio';
 import { STARTERS, VOICES, LENGTH_CHOICES, POLISH } from '../data/sound';
 import { songCost } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
@@ -55,8 +54,6 @@ export default function MakeMusic({
   userPlan,
   onUpgrade,
   incoming,
-  selectedTools,
-  toggleTool,
   canvas,
   setCanvas,
   makeSignal,
@@ -68,8 +65,6 @@ export default function MakeMusic({
   onUpgrade: () => void;
   /** Carried over from the Songwriter, when you came from there. */
   incoming?: { title: string; lyrics: string; style: string } | null;
-  selectedTools: string[];
-  toggleTool: (tool: string) => void;
   /** Held by the studio, because the copilot writes to it too. */
   canvas: Canvas;
   setCanvas: (next: Canvas) => void;
@@ -842,36 +837,6 @@ export default function MakeMusic({
               </button>
             ))}
           </div>
-        </div>
-
-        <div className="space-y-3 pt-1 border-t border-zinc-800">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <label className="text-sm text-zinc-400">{t('make.credit')}</label>
-            <span className="text-sm text-zinc-600">{selectedTools.length}</span>
-          </div>
-          {(['music', 'video', 'voice', 'image'] as const).map((role) => (
-            <div key={role} className="space-y-1.5">
-              <p className="text-xs uppercase tracking-wider text-zinc-600">{ROLE_LABELS[role]}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {AI_MODELS.filter((m) => m.role === role).map((model) => {
-                  const on = selectedTools.includes(model.name);
-                  return (
-                    <button
-                      type="button"
-                      key={model.name}
-                      onClick={() => toggleTool(model.name)}
-                      title={`${model.name} — ${model.provider}`}
-                      className={`px-2.5 py-1 rounded-lg text-sm transition-all border ${
-                        on ? ROLE_ACCENTS[role] + ' font-semibold' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-zinc-300'
-                      }`}
-                    >
-                      {on ? `✓ ${model.name}` : `+ ${model.name}`}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
         </div>
 
         <button

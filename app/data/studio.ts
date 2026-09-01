@@ -9,69 +9,27 @@
  * `isDemo`, so nobody mistakes a placeholder for a real collaborator.
  */
 
-// -----------------------------------------------------------------------------
-// 1. The AI model stack
-// -----------------------------------------------------------------------------
-
-/**
- * The point of showing the stack is that a FutureBox release is visibly made by
- * several different AIs, each doing the job it is best at. So every model
- * carries the role it plays, and the UI groups by role rather than listing
- * names in a row.
- */
 import { BASE_PRICES } from '../lib/pricing';
 
-export type ModelRole = 'music' | 'video' | 'voice' | 'image';
-
-export interface AiModel {
-  readonly name: string;
-  readonly provider: string;
-  readonly role: ModelRole;
-  readonly url: string;
-}
-
-export const ROLE_LABELS: Record<ModelRole, string> = {
-  music: 'Music & Song',
-  video: 'Video & Cinema',
-  voice: 'Voice & Vocals',
-  image: 'Image & Art Direction',
-};
-
-export const ROLE_ACCENTS: Record<ModelRole, string> = {
-  music: 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10',
-  video: 'text-cyan-300 border-cyan-500/40 bg-cyan-500/10',
-  voice: 'text-violet-300 border-violet-500/40 bg-violet-500/10',
-  image: 'text-amber-300 border-amber-500/40 bg-amber-500/10',
-};
-
-export const AI_MODELS: readonly AiModel[] = [
-  { name: 'Suno v5', provider: 'Suno', role: 'music', url: 'https://suno.com' },
-  { name: 'Udio', provider: 'Udio', role: 'music', url: 'https://udio.com' },
-  { name: 'Stable Audio', provider: 'Stability AI', role: 'music', url: 'https://stableaudio.com' },
-  { name: 'Runway Gen-3', provider: 'Runway', role: 'video', url: 'https://runwayml.com' },
-  { name: 'Sora', provider: 'OpenAI', role: 'video', url: 'https://openai.com/sora' },
-  { name: 'Veo', provider: 'Google DeepMind', role: 'video', url: 'https://deepmind.google/models/veo/' },
-  { name: 'Kling AI', provider: 'Kuaishou', role: 'video', url: 'https://klingai.com' },
-  { name: 'Luma Dream Machine', provider: 'Luma AI', role: 'video', url: 'https://lumalabs.ai/dream-machine' },
-  { name: 'ElevenLabs Voice', provider: 'ElevenLabs', role: 'voice', url: 'https://elevenlabs.io' },
-  { name: 'Midjourney', provider: 'Midjourney', role: 'image', url: 'https://midjourney.com' },
-  { name: 'Flux', provider: 'Black Forest Labs', role: 'image', url: 'https://blackforestlabs.ai' },
-];
-
-export function modelByName(name: string): AiModel | undefined {
-  return AI_MODELS.find((m) => m.name === name);
-}
-
-/** Groups a selection into the roles it covers, in a fixed display order. */
-export function groupByRole(names: readonly string[]): Array<{ role: ModelRole; models: AiModel[] }> {
-  const order: ModelRole[] = ['music', 'video', 'voice', 'image'];
-  return order
-    .map((role) => ({
-      role,
-      models: names.map(modelByName).filter((m): m is AiModel => Boolean(m) && m!.role === role),
-    }))
-    .filter((group) => group.models.length > 0);
-}
+// -----------------------------------------------------------------------------
+// 1. (was: the AI model stack)
+// -----------------------------------------------------------------------------
+//
+// There was a table here of eleven other companies' products — Suno, Udio,
+// Runway, Sora, Veo, Kling, Luma, Midjourney, Flux — each with its name, its
+// owner and a link to its website, drawn as a row of chips on the make screen
+// under "Which AI made it".
+//
+// It is gone, and it should be. It sent people to the competition from inside
+// the one screen where they were about to make something here, and it never
+// even did the job it claimed: what a chip said had no effect on anything. The
+// credits printed on a finished song come from what actually made it — the
+// engine that answered, or `FutureBox sketch` when none did — and that is
+// read from the generation itself a few hundred lines into MakeMusic, not
+// from a row of buttons somebody ticked.
+//
+// So nothing true was lost. The honest provenance stays; the shop window for
+// other people's products does not.
 
 // -----------------------------------------------------------------------------
 // 2. Podcast collaboration targets
@@ -231,7 +189,7 @@ export const TRACK_FLAVOURS: readonly TrackFlavour[] = [
     tags: ['acoustic', 'pop', 'warm', 'hand percussion', 'pedal steel'],
     bpm: 96,
     key: 'C Major',
-    models: ['Suno v5', 'Runway Gen-3'],
+    models: ['FutureBox'],
     onChannel: true,
   },
   {
@@ -243,7 +201,7 @@ export const TRACK_FLAVOURS: readonly TrackFlavour[] = [
     tags: ['anthemic', 'rock', 'folk', 'layered guitars', 'afrikaans'],
     bpm: 120,
     key: 'G Major',
-    models: ['Suno v5', 'Kling AI'],
+    models: ['FutureBox'],
     onChannel: true,
   },
   {
@@ -255,7 +213,7 @@ export const TRACK_FLAVOURS: readonly TrackFlavour[] = [
     tags: ['dance', 'synth', 'retro-futuristic', 'hook'],
     bpm: 128,
     key: 'A Minor',
-    models: ['Suno v5', 'Sora'],
+    models: ['FutureBox'],
     onChannel: true,
   },
   {
@@ -267,7 +225,7 @@ export const TRACK_FLAVOURS: readonly TrackFlavour[] = [
     tags: ['dance', 'synth', 'driving', 'afterlife'],
     bpm: 124,
     key: 'A Minor',
-    models: ['Suno v5', 'Luma Dream Machine'],
+    models: ['FutureBox'],
     onChannel: false,
     isDemo: true,
   },
@@ -280,7 +238,7 @@ export const TRACK_FLAVOURS: readonly TrackFlavour[] = [
     tags: ['acoustic', 'pop', 'warm', 'pedal steel', 'storytelling'],
     bpm: 104,
     key: 'G Major',
-    models: ['Suno v5', 'ElevenLabs Voice'],
+    models: ['FutureBox'],
     onChannel: false,
     isDemo: true,
   },
@@ -293,7 +251,7 @@ export const TRACK_FLAVOURS: readonly TrackFlavour[] = [
     tags: ['dance', 'percussion', 'south africa', 'groove'],
     bpm: 122,
     key: 'F Minor',
-    models: ['Udio', 'Kling AI'],
+    models: ['FutureBox'],
     onChannel: false,
     isDemo: true,
   },
@@ -306,7 +264,7 @@ export const TRACK_FLAVOURS: readonly TrackFlavour[] = [
     tags: ['lofi', 'warm', 'mellow', 'study'],
     bpm: 88,
     key: 'C Major',
-    models: ['Suno v5'],
+    models: ['FutureBox'],
     onChannel: false,
     isDemo: true,
   },
