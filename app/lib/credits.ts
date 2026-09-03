@@ -41,8 +41,33 @@ export const CREDITS = {
    * of it is that hearing the rest costs credits.
    */
   halfSong: 5,
-  /** Ten seconds from the video engine. */
-  video: 30,
+  /**
+   * **Five seconds** from the video engine, at the base grade. A unit, not a
+   * clip — see `videoCost`.
+   *
+   * This was a flat 30 for a clip of any length, which was very nearly
+   * defensible while the server clamped every request to five or ten seconds.
+   * It stopped being defensible the moment the longer lengths the engines
+   * declare were actually let through: the standard engine charges us
+   * `ceil(seconds / 5) * 20` of its own units, so a thirty-second clip costs
+   * six times what a five-second one does, and we were asking the same 30 for
+   * both.
+   *
+   * Fifteen, from the dearest engine that can serve the base grade at each
+   * length:
+   *
+   *   Kling      5s  = 35 units ≈ R3.44      10s = 70 units ≈ R6.89
+   *   Seedance   5s  = 20 units ≈ R2.62      30s = 120 units ≈ R15.72
+   *
+   * At the R0.23–R0.26 a credit the rest of this scale is built on, Kling's ten
+   * seconds is 28 credits and its five is 14. Fifteen a unit keeps a ten-second
+   * clip at the 30 it has always been — so nothing in the common case moves —
+   * and makes a thirty-second one 90, against an upstream cost of about 64.
+   * The margin is deliberate: the queue picks the engine, and pricing on the
+   * dearest one it may pick is the only way the number on the button is safe
+   * whichever answers.
+   */
+  video: 15,
   /**
    * A cover for a song.
    *
@@ -105,10 +130,21 @@ export const CREDITS = {
  */
 export type VideoGrade = 'standard' | 'better' | 'premium';
 
-export function videoCost(grade: VideoGrade): number {
-  if (grade === 'premium') return CREDITS.video * 4;
-  if (grade === 'better') return CREDITS.video * 2;
-  return CREDITS.video;
+/**
+ * What a clip costs: its length and its grade, both.
+ *
+ * Length in five-second units, because that is how the engines bill us, and
+ * grade as a multiplier on top. The desk shows this number and the route
+ * charges this number, from this one function, so they cannot disagree — which
+ * is the only property that matters here. A price that moves when you change
+ * the length and a charge that does not is worse than a flat price.
+ */
+export function videoCost(grade: VideoGrade, seconds: number): number {
+  const units = Math.max(1, Math.ceil(Math.max(0, seconds) / 5));
+  const base = CREDITS.video * units;
+  if (grade === 'premium') return base * 4;
+  if (grade === 'better') return base * 2;
+  return base;
 }
 
 export function songCost(seconds: number): number {
@@ -263,7 +299,8 @@ export function packById(id: string): Pack | null {
 /** What a balance buys, said in things rather than in credits. */
 export function buys(credits: number): string {
   const songs = Math.floor(credits / CREDITS.song);
-  const videos = Math.floor(credits / CREDITS.video);
+  // A video means the commonest one: ten seconds at the base grade.
+  const videos = Math.floor(credits / videoCost('standard', 10));
   if (songs < 1) return `${Math.floor(credits / CREDITS.halfSong)} half songs`;
   if (videos < 1) return `${songs} ${songs === 1 ? 'song' : 'songs'}`;
   return `${songs} songs or ${videos} videos`;

@@ -110,6 +110,55 @@ html {
   font-size: var(--fb-root-size);
 }
 
+/* Scrollbars.
+
+   The rail and the working surface both scroll, so on a desktop there are two
+   grey bars down the middle of a page that has no other grey in it. The
+   browser's default is built for a grey chrome around a white document, and
+   this is neither.
+
+   Both properties are set because they are read by different engines and
+   neither is going away: `scrollbar-color` is the standard one Firefox honours,
+   and the `::-webkit-scrollbar` pseudo-elements are what Chrome and Safari
+   read. Same colours, from the theme, so a light surface and a dark one each
+   get a bar that belongs to them.
+
+   The thumb is the accent at a low alpha rather than at full strength: a
+   scrollbar is a position indicator, not a control anybody is looking for, and
+   an accent-bright bar down the side of every page would compete with the work
+   for exactly no benefit. It comes up to full accent on hover, when somebody
+   has gone looking for it. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--fb-primary-500) / 0.35) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--fb-primary-500) / 0.35);
+  border-radius: 999px;
+  /* Inset with a transparent border, so the bar reads as a slim pill with air
+     around it rather than as a block filling the gutter. */
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(var(--fb-primary-500) / 0.7);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 body {
   background-color: rgb(var(--fb-page));
   color: rgb(var(--fb-ink));

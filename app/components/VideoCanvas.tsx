@@ -36,6 +36,7 @@ import { CREDITS, readCost, videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { signal } from '../lib/signal';
 import Cost from './Cost';
+import Recommend from './Recommend';
 import CheaperPath from './CheaperPath';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
@@ -302,6 +303,24 @@ export default function VideoCanvas({
         </div>
       )}
 
+      {/* Six kinds is the point at which a grid stops being a choice and starts
+          being a decision to postpone. Given whatever is already in the box, so
+          somebody who has written the shot but not picked a kind gets a real
+          answer rather than a default. */}
+      <Recommend
+        what={t('canvas.pickWhat', 'a kind of video to start from')}
+        context={prompt}
+        options={SCENES.map((one) => ({
+          id: one.id,
+          label: t(`canvas.scene.${one.id}`, one.label) as string,
+          note: t(`canvas.sceneNote.${one.id}`, one.note) as string,
+        }))}
+        onPick={(id) => {
+          const chosen = SCENES.find((one) => one.id === id);
+          if (chosen) pick(chosen);
+        }}
+      />
+
       {/* ── The desk ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         {SCENES.map((one) => {
@@ -430,7 +449,7 @@ export default function VideoCanvas({
                     {t(`canvas.gradeNote.${one.id}`, one.note)}
                   </span>
                   <span className="block text-xs pt-0.5">
-                    {videoCost(one.id)} {t('video.credits', 'credits')}
+                    {videoCost(one.id, seconds)} {t('video.credits', 'credits')}
                   </span>
                 </button>
               );
@@ -481,8 +500,8 @@ export default function VideoCanvas({
             decided to record it themselves does not need to be congratulated. */}
         {speak && spoken.length > 0 && (
           <CheaperPath
-            now={videoCost(grade)}
-            instead={videoCost('standard') + readCost(spoken.join(' ').length)}
+            now={videoCost(grade, seconds)}
+            instead={videoCost('standard', seconds) + readCost(spoken.join(' ').length)}
             what={t(
               'canvas.cheaperSpoken',
               'Make the clip silent, and read the line in your own voice next door. Same words, and it is the only way to get Afrikaans.',
@@ -554,7 +573,7 @@ export default function VideoCanvas({
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <VideoIcon className="w-4 h-4" />}
           {busy
             ? t('canvas.making', 'Making it')
-            : `${t('canvas.go', 'Make it')} — ${videoCost(grade)} ${t('video.credits', 'credits')}`}
+            : `${t('canvas.go', 'Make it')} — ${videoCost(grade, seconds)} ${t('video.credits', 'credits')}`}
         </button>
 
         {/* The wait, said before the press rather than only during it. A video

@@ -342,7 +342,11 @@ export async function POST(request: Request): Promise<Response> {
   // One charge, however many engines get tried. A member sees one price, and
   // it is the one the desk put on the button — `videoCost` is the only place
   // that number lives.
-  const price = videoCost(grade);
+  // The length they asked for, which is the length the desk priced. Only
+  // lengths an engine declares are offered, so `nearestLength` below is a
+  // no-op in practice — and if it ever is not, the charge stays the one that
+  // was on the button rather than one nobody was shown.
+  const price = videoCost(grade, wanted);
   const paid = await charge(request, price, 'video');
   if (!paid.ok) return paid.response;
 

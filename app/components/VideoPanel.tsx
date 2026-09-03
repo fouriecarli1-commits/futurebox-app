@@ -26,8 +26,9 @@ import { Video as VideoIcon, X, Loader2, Download, Quote, AlertTriangle } from '
 import { renderVideo, styleFor, videoSupported, extensionFor, type Aspect } from '../lib/video';
 import { engines, probeVideoEngine, type VideoGrades } from '../lib/engines';
 import { spokenLines, looksUnquoted, MUSIC_LOOKS, LENGTHS } from '../lib/videoscenes';
-import { CREDITS } from '../lib/credits';
+import { CREDITS, videoCost } from '../lib/credits';
 import Cost from './Cost';
+import Recommend from './Recommend';
 import { signal } from '../lib/signal';
 import { timelineOf, type Part } from '../lib/timeline';
 import { downloadBlob, safeFilename, type Track } from '../lib/library';
@@ -268,7 +269,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
             >
               {option === 'browser'
                 ? t('video.here', 'Drawn here — free')
-                : `${t('video.byEngine', 'The engine')} — ${CREDITS.video} ${t('video.credits', 'credits')}`}
+                : `${t('video.byEngine', 'The engine')} — ${videoCost('standard', engineSeconds)} ${t('video.credits', 'credits')}`}
             </button>
           ))}
         </div>
@@ -285,7 +286,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
           {/* Video is the slowest thing here and the one people give up on
               first. The figure and the wait stand together, above the button,
               in the same shape as everywhere else that spends. */}
-          <Cost credits={CREDITS.video} waitMinutes={4} />
+          <Cost credits={videoCost('standard', engineSeconds)} waitMinutes={4} />
         </div>
       )}
 
@@ -296,7 +297,18 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
           {mode === 'engine' && (
             <div className="space-y-3">
               <div className="space-y-2">
-                <p className="text-sm text-zinc-400">{t('video.look', 'Where to start')}</p>
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <p className="text-sm text-zinc-400">{t('video.look', 'Where to start')}</p>
+                  {/* The song is what the look is for, so the song is what it
+                      is given: the title, the style and the words, which is
+                      everything this room knows about it. */}
+                  <Recommend
+                    what={t('video.pickWhat', 'a look for this music video')}
+                    context={[track.title, track.style, track.lyrics].filter(Boolean).join('\n')}
+                    options={MUSIC_LOOKS.map((one) => ({ id: one.id, label: one.label, note: one.note }))}
+                    onPick={applyLook}
+                  />
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {MUSIC_LOOKS.map((one) => (
                     <button
