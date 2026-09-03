@@ -42,6 +42,8 @@ import { PLATFORMS } from '../data/social';
 import { loadHandles, type Handles } from '../lib/social';
 import ShareRow from './ShareRow';
 import Steps, { type Step } from './Steps';
+import BrandKit from './BrandKit';
+import { EMPTY as EMPTY_KIT, brandLine, type BrandKit as Kit } from '../lib/brandkit';
 import History from './History';
 import { makeId, rememberMake } from '../lib/makes';
 
@@ -124,6 +126,15 @@ export default function Campaign({
      share row reads, so a platform you have already set up here is already set
      up there — this room does not ask for anything twice. */
   const [handles, setHandles] = useState<Handles>({});
+  /**
+   * Who these adverts are for, kept between visits.
+   *
+   * Sent alongside the brief rather than merged into it: the brief is what is
+   * different about today, and this is what is the same every time. One field
+   * holding both would mean retyping the constant part to change the variable
+   * one, which is the whole thing the kit exists to stop.
+   */
+  const [kit, setKit] = useState<Kit>(EMPTY_KIT);
   const [going, setGoing] = useState<string[]>(['tiktok', 'instagram']);
   useEffect(() => setHandles(loadHandles()), []);
   const chosen = PLATFORMS.filter((one) => going.indexOf(one.id) !== -1);
@@ -170,6 +181,9 @@ export default function Campaign({
           fit: chosen
             .map((one) => `${one.name}: ${one.bestFormat}, hook in ${one.hookWindow}, at most ${one.maxHashtags} hashtags`)
             .join('; '),
+          // Who it is for, when they have said. An empty kit sends nothing
+          // rather than an empty sentence for the writer to work around.
+          ...(brandLine(kit) ? { brand: brandLine(kit) } : {}),
           count: 3,
           // Asking again should not return the same three with the commas moved.
           seen: again ? ads.map((one) => one.angle) : [],
@@ -236,6 +250,11 @@ export default function Campaign({
       </div>
 
       <Steps steps={STEPS} at={ads.length ? 3 : what.trim() ? 1 : 0} />
+
+      {/* Who it is all for. Above the platforms because it is the thing that
+          is true of every advert this desk will ever write for this person,
+          and folded shut once it has been filled in. */}
+      <BrandKit onChange={setKit} />
 
       {/* Where it is going, before it is written rather than after.
           The platforms decide the shape, the length and the hook window, and a

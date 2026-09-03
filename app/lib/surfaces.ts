@@ -75,6 +75,19 @@ export interface Surface {
   };
   /** What a person is doing here, in one line. Written for the copilot to read. */
   readonly purpose: string;
+  /**
+   * What the copilot offers *here*, said to the person before they type.
+   *
+   * `purpose` and `can` above are written for the model and are English only,
+   * because that is the language the prompt is in. This one is read by a human
+   * in their own language, which is why it is separate and why it is short.
+   *
+   * It exists because the panel used to open with one sentence on all thirteen
+   * rooms — "I will set it up on the canvas" — which is wrong in most of them
+   * and actively confusing in the podcast room, where there is no canvas. The
+   * seeds under it were already per-room; only the line above them was not.
+   */
+  readonly helps: { readonly en: string; readonly af: string };
   /** What the copilot can actually change here. Nothing aspirational — only what the studio applies. */
   readonly can: readonly string[];
   /**
@@ -100,6 +113,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     next: { to: "booth", en: "Sing on it yourself", af: "Sing self daarop" },
     purpose:
       "Making a song from nothing: a title, a style, the words, then the track itself.",
+    helps: {
+      en: "I can name it, pick how it should sound, write the words, or just answer a question about any of it.",
+      af: "Ek kan dit ’n naam gee, kies hoe dit moet klink, die woorde skryf, of net ’n vraag daaroor antwoord.",
+    },
     can: [
       "set the title",
       "set the style",
@@ -127,6 +144,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     next: { to: "video", en: "Put a video to it", af: "Sit ’n video daarby" },
     purpose:
       "Editing a song that already exists: its sections, its arrangement, its timing.",
+    helps: {
+      en: "I can rewrite a section, move them around, or set the style before you make it again.",
+      af: "Ek kan ’n gedeelte oorskryf, hulle rondskuif, of die styl stel voordat jy dit weer maak.",
+    },
     can: [
       "rewrite a section",
       "reorder or retitle sections",
@@ -155,6 +176,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     },
     purpose:
       "Singing on your own track: recording takes over the backing, and lifting a vocal back out.",
+    helps: {
+      en: "I can tell you which take to keep, what to fix in it, and what to do next with the one you like.",
+      af: "Ek kan jou sê watter opname om te hou, wat daaraan te regmaak, en wat om volgende te doen met die een waarvan jy hou.",
+    },
     can: [
       "say which take to keep",
       "clean up a take",
@@ -188,6 +213,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       af: "Sny ’n kort knipsel daaruit",
     },
     purpose: "Turning one of your songs into a music video.",
+    helps: {
+      en: "I can describe the video, set how long it runs, and choose the look it goes for.",
+      af: "Ek kan die video beskryf, stel hoe lank dit loop, en die voorkoms kies waarvoor dit gaan.",
+    },
     can: ["describe the video", "pick the length", "set the look"],
     ops: {
       pick_song:
@@ -220,6 +249,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     },
     purpose:
       "The video desk: marketing, podcast and social clips built scene by scene.",
+    helps: {
+      en: "I can write the scene, pick a starting point, and set the length and the shape.",
+      af: "Ek kan die toneel skryf, ’n beginpunt kies, en die lengte en die vorm stel.",
+    },
     can: ["write a scene", "pick a template", "set the length and shape"],
     ops: {
       set_prompt:
@@ -250,6 +283,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     },
     purpose:
       "Short vertical clips — the fifteen seconds that make somebody stop scrolling.",
+    helps: {
+      en: "I can tell you where the good bit starts, write the caption, and set how long the clip runs.",
+      af: "Ek kan jou sê waar die goeie deel begin, die onderskrif skryf, en stel hoe lank die snit loop.",
+    },
     can: ["pick the moment to cut", "write the caption", "set the length"],
     ops: {
       pick_song:
@@ -277,6 +314,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     next: { to: "live", en: "Play it live", af: "Speel dit live" },
     purpose:
       "Your channel: your released music, in the order you want people to hear it.",
+    helps: {
+      en: "I can set the running order, write the description, and name a playlist.",
+      af: "Ek kan die speelorde stel, die beskrywing skryf, en ’n snitlys benoem.",
+    },
     can: ["set the running order", "write the description", "name a playlist"],
     ops: {
       open_playlist: "the value is the name of one of their playlists",
@@ -301,6 +342,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     stage: null,
     purpose:
       "Finding another maker and working with them — the radar, the ask, and the room you share.",
+    helps: {
+      en: "I can draft the message you send, and say who on the radar is actually worth asking.",
+      af: "Ek kan die boodskap opstel wat jy stuur, en sê wie op die radar werklik die moeite werd is om te vra.",
+    },
     can: [
       "draft the message you send",
       "summarise a thread",
@@ -326,6 +371,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     id: "live",
     stage: "release",
     purpose: "The live room: one channel, everybody in it at the same time.",
+    helps: {
+      en: "I can write what you announce, set what plays next, and help you open the room.",
+      af: "Ek kan skryf wat jy aankondig, stel wat volgende speel, en jou help om die kamer oop te maak.",
+    },
     can: [
       "write what you announce",
       "set the running order",
@@ -356,6 +405,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       af: "Lees ’n program daarin",
     },
     purpose: "Your voice: cloning it once, then reading anything in it.",
+    helps: {
+      en: "I can write the script to be read, choose the voice, and set how it is read.",
+      af: "Ek kan die teks skryf wat gelees word, die stem kies, en stel hoe dit gelees word.",
+    },
     can: ["write the script to read", "pick a voice", "set how it is read"],
     ops: {
       set_script:
@@ -381,6 +434,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     stage: "release",
     purpose:
       "A show with its own feed: episodes, hosts, and the dub into other languages.",
+    helps: {
+      en: "I can write or tighten the script, name the episode, and say which language to dub it into.",
+      af: "Ek kan die teks skryf of stywer maak, die episode benoem, en sê in watter taal om dit te dub.",
+    },
     can: [
       "write or tighten the script",
       "set the hosts",
@@ -411,6 +468,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     next: { to: "make", en: "Make a song with it", af: "Maak ’n snit daarmee" },
     purpose:
       "Training a sound of your own from songs you have already made, so the next ones come out sounding like them.",
+    helps: {
+      en: "I can say which of your songs belong together, and what to call the sound they make.",
+      af: "Ek kan sê watter van jou liedjies bymekaar hoort, en wat om die klank te noem wat hulle maak.",
+    },
     can: ["say which songs to train on", "name the sound"],
     seeds: [
       {
@@ -432,6 +493,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     stage: "sell",
     purpose:
       "Adverts: a brief in, and a set of adverts out — the line, the words under it, the button, the line to say aloud, and the shot to film.",
+    helps: {
+      en: "I can fill in any part of the brief, and say which market to write it for.",
+      af: "Ek kan enige deel van die opdrag invul, en sê vir watter mark om dit te skryf.",
+    },
     can: ["fill any part of the brief", "say which market to write for"],
     ops: {
       set_what: "the value is what they are selling, in a sentence",
@@ -483,6 +548,11 @@ export function resolveSurfaceId(value: string): SurfaceId | null {
 /** The starters for a room, in the reader's language. */
 export function seedsFor(id: SurfaceId, lang: "en" | "af"): string[] {
   return SURFACES[id].seeds.map((seed) => seed[lang]);
+}
+
+/** What the copilot offers in this room, in the reader's language. */
+export function helpsWith(id: SurfaceId, lang: "en" | "af"): string {
+  return SURFACES[id].helps[lang];
 }
 
 /** The room list as the copilot route describes it to the model. */

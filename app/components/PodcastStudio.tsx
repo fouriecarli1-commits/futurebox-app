@@ -18,11 +18,13 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Check, Copy, Globe, Languages, Link2, Loader2, Mic, Radio, Rss, Sparkles, Square, Trash2, Upload,
+  Check, Copy, FileText, Globe, Languages, Link2, Loader2, Mic, Radio, Rss, Sparkles, Square,
+  Trash2, Upload,
 } from 'lucide-react';
 import VoiceLab, { type VoiceState } from './VoiceLab';
 import TwoHosts from './TwoHosts';
 import DubEpisode from './DubEpisode';
+import Transcript from './Transcript';
 import Cost from './Cost';
 import { episodeAudioUrl } from '../lib/episodeaudio';
 import { accessToken } from '../lib/cloud';
@@ -67,10 +69,14 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [caps, setCaps] = useState<VoiceState['caps'] | null>(null);
   const [signedIn, setSignedIn] = useState(false);
+  /** Whether there is an account service at all — a different thing from being signed in. */
+  const [configured, setConfigured] = useState(true);
 
   const [draft, setDraft] = useState<{ audio: Blob; how: Episode['made'] } | null>(null);
   /** Which episode's dubbing panel is open, if any. */
   const [dubbing, setDubbing] = useState<string | null>(null);
+  /** Which episode's transcript is open. The other thing you do to a finished one. */
+  const [reading, setReading] = useState<string | null>(null);
   /** How long the draft is, measured when it lands so the price can be shown
    *  before the button is pressed rather than worked out as it is sent. */
   const [draftSeconds, setDraftSeconds] = useState<number | null>(null);
@@ -105,6 +111,7 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
       setEpisodes((showReply.episodes ?? []) as Episode[]);
       setCaps(showReply.caps ?? null);
       setSignedIn(Boolean(showReply.signedIn));
+      setConfigured(showReply.configured !== false);
     }
   }, []);
 
@@ -258,11 +265,30 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
   };
 
   if (!signedIn) {
+    /* Two different reasons, said differently.
+
+       This said "sign in to make a show" whenever there was no caller, which
+       includes an app with no Supabase project behind it — where there is
+       nothing to sign in to and no button to look for. Sending somebody to
+       hunt for a control that does not exist is worse than saying plainly that
+       the feature is waiting on a service. The live room already made this
+       distinction; this room did not. */
     return (
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-6 text-center space-y-2">
         <Radio className="w-6 h-6 text-emerald-400 mx-auto" />
-        <p className="text-base font-bold text-white">{t('pod.signIn', 'Sign in to make a show')}</p>
-        <p className="text-sm text-zinc-500">{t('pod.signInNote', 'A show belongs to an account — that is what the feed is addressed to.')}</p>
+        <p className="text-base font-bold text-white">
+          {configured
+            ? t('pod.signIn', 'Sign in to make a show')
+            : t('pod.noAccounts', 'Shows are not switched on for this app yet')}
+        </p>
+        <p className="text-sm text-zinc-500">
+          {configured
+            ? t('pod.signInNote', 'A show belongs to an account — that is what the feed is addressed to.')
+            : t(
+                'pod.noAccountsNote',
+                'A show belongs to an account, and this app has none set up. Nothing here is broken — it is waiting on a service rather than on you.',
+              )}
+        </p>
       </div>
     );
   }
@@ -526,6 +552,21 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
                       <Languages className="w-3.5 h-3.5" />
                       {t('dub.button', 'Another language')}
                     </button>
+                    {/* The other thing you do to an episode once it exists,
+                        so it sits beside the one that was already here. */}
+                    <button
+                      type="button"
+                      onClick={() => setReading(reading === episode.id ? null : episode.id)}
+                      aria-expanded={reading === episode.id}
+                      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                        reading === episode.id
+                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
+                          : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-600'
+                      }`}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      {t('script.button', 'What was said')}
+                    </button>
                     <button
                       type="button"
                       onClick={async () => {
@@ -542,6 +583,17 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
                     </button>
                   </div>
                 </div>
+
+                {reading === episode.id && show && (
+                  <Transcript
+                    showId={show.id}
+                    episodeId={episode.id}
+                    title={episode.title}
+                    seconds={episode.seconds}
+                    audioUrl={episodeAudioUrl(episode.audio_path)}
+                    onClose={() => setReading(null)}
+                  />
+                )}
 
                 {dubbing === episode.id && (
                   <DubEpisode

@@ -87,6 +87,14 @@ interface Body {
   placement?: string;
   /** What the chosen platforms want, in words: shape, length, hook window. */
   fit?: string;
+  /**
+   * Who the adverts are for, when they have set a brand kit.
+   *
+   * Separate from the brief on purpose. The brief is today's product and
+   * today's offer; this is the business behind every brief, and keeping them
+   * apart is what lets one change without retyping the other.
+   */
+  brand?: string;
   /** How many to write. */
   count?: number;
   /** Angles already seen, so asking again returns something else. */
@@ -118,6 +126,9 @@ const SYSTEM = [
 
 function briefFor(body: Body): string {
   const lines = [
+    // First, because everything after it is about this business rather than
+    // about businesses in general.
+    body.brand ? `About the business: ${String(body.brand).slice(0, 500)}` : '',
     `What they are selling: ${body.what}`,
     body.who ? `Who it is for: ${body.who}` : 'They did not say who it is for. Write for a general audience and keep it specific about the product instead.',
     body.offer ? `The offer: ${body.offer}` : 'There is no offer. Do not invent one.',

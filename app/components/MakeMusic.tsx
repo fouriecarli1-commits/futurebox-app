@@ -685,8 +685,17 @@ export default function MakeMusic({
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm text-zinc-400">{t('make.speed')} — {bpm} {t('make.bpm')}</label>
+            {/* Tied to the slider rather than sitting above it.
+
+                A label with no `htmlFor` is a sentence next to a control, not
+                a name for it: the slider read out as "slider, 112" with
+                nothing saying what 112 counted. It was the only unnamed
+                control left in the studio. */}
+            <label className="text-sm text-zinc-400" htmlFor="make-bpm">
+              {t('make.speed')} — {bpm} {t('make.bpm')}
+            </label>
             <input
+              id="make-bpm"
               type="range"
               min={60}
               max={180}

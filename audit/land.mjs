@@ -1,0 +1,9 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
+p.on('pageerror', (e) => console.log('PAGEERROR:', String(e).slice(0, 200)));
+await p.goto('http://localhost:3000', { waitUntil: 'networkidle' });
+await p.waitForTimeout(2000);
+console.log('BODY:', (await p.locator('body').innerText()).replace(/\n+/g,' | ').slice(0, 500));
+console.log('BUTTONS:', (await p.locator('button').allInnerTexts()).map(s=>s.replace(/\n/g,' ').slice(0,30)).join(' | '));
+await b.close();

@@ -22,6 +22,7 @@ import { CREDITS, readCost } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import Recommend from './Recommend';
+import VoicePicker from './VoicePicker';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { VOICE_CONSENT } from '@/app/lib/consent';
@@ -29,6 +30,10 @@ import { VOICE_CONSENT } from '@/app/lib/consent';
 export interface Voice {
   readonly id: string;
   readonly name: string;
+  /** Their own description, flattened: an accent, an age, what it suits. */
+  readonly about?: string;
+  /** True where a free sample exists. See `app/api/voice/preview`. */
+  readonly hasSample?: boolean;
 }
 
 export interface VoiceState {
@@ -540,24 +545,36 @@ export default function VoiceLab({
           onPick={setVoiceId}
         />
 
-        <div className="grid sm:grid-cols-2 gap-2">
+        {/* A list you can hear, rather than a dropdown of first names.
+
+            The dropdown could not say what a voice sounded like, and a name
+            cannot: the only way to find out what "Antoni" was, was to pay for
+            a reading. The picker plays a free sample and prints what each one
+            is — an accent, an age, what it suits. */}
+        <VoicePicker
+          mine={state.mine}
+          stock={state.stock}
+          value={voiceId}
+          onChange={setVoiceId}
+        />
+
+        {/* Full width and labelled, both because it is now on its own.
+
+            It used to be the right-hand half of a two-column row whose left
+            half was the voice dropdown, and it took its meaning from sitting
+            next to one — an unlabelled box reading "Steady" beside a voice is
+            obviously about the voice. Alone in that grid it would have been
+            half a row of empty space and a control with nothing saying what it
+            picks. */}
+        <div className="space-y-1.5">
+          <label className="text-sm text-zinc-400" htmlFor="voice-model">
+            {t('voice.engine', 'Which reader')}
+          </label>
           <select
-            value={voiceId}
-            onChange={(event) => setVoiceId(event.target.value)}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
-          >
-            <option value="">{t('voice.stock', 'A stock voice')}</option>
-            {state.mine.map((voice) => (
-              <option key={voice.id} value={voice.id}>{voice.name} — {t('voice.mine', 'yours')}</option>
-            ))}
-            {state.stock.map((voice) => (
-              <option key={voice.id} value={voice.id}>{voice.name}</option>
-            ))}
-          </select>
-          <select
+            id="voice-model"
             value={model}
             onChange={(event) => setModel(event.target.value as 'steady' | 'wide')}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
           >
             <option value="steady">{t('voice.steady', 'Steady — best for a long read')}</option>
             <option value="wide">{t('voice.wide', 'Wide — more languages, Afrikaans included')}</option>

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import Cover from './components/Cover';
+import { EVERY as ASKS_EVERY, asksWaiting } from './lib/asks';
 import { 
   Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone, AudioWaveform,
   Search as SearchIcon,
@@ -297,6 +299,25 @@ export default function FutureBoxHome() {
 
   // Modals & Player State
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+
+  /* Asked while the studio is open, and only then: a count nobody can see is
+     a request nobody needed to make. Slow on purpose — see `lib/asks.ts`. */
+  useEffect(() => {
+    if (!uploadModalOpen) return;
+    let live = true;
+    const ask = () => {
+      void asksWaiting().then((n) => {
+        if (live) setAsks(n);
+      });
+    };
+    ask();
+    const timer = window.setInterval(ask, ASKS_EVERY);
+    return () => {
+      live = false;
+      window.clearInterval(timer);
+    };
+  }, [uploadModalOpen]);
+
   const [selectedMedia, setSelectedMedia] = useState<{ 
     title: string; 
     embedUrl?: string; 
@@ -345,6 +366,14 @@ export default function FutureBoxHome() {
      three places at once — which is the compiler doing its job, and a list that
      needs the compiler to keep it honest should not be a list. */
   const [studioTab, setStudioTab] = useState<SurfaceId>('make');
+  /**
+   * People waiting on an answer from you, drawn on the rail.
+   *
+   * A collab ask used to be visible only inside the collab room, so it sat
+   * unanswered until somebody happened to open a page they open rarely — and
+   * an unanswered ask reads to the person who sent it as a no.
+   */
+  const [asks, setAsks] = useState(0);
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -606,7 +635,6 @@ export default function FutureBoxHome() {
         guest: 'Mo Gawdat (Ex-Google X)',
         duration: '1h 58m',
         views: '6.4M',
-        thumbnail: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&q=80',
         embedUrl: 'https://www.youtube.com/embed/bk-nQ7HF6k4',
         externalUrl: 'https://www.youtube.com/watch?v=bk-nQ7HF6k4',
         isPro: false
@@ -618,7 +646,6 @@ export default function FutureBoxHome() {
         guest: 'Sam Altman (OpenAI)',
         duration: '2h 08m',
         views: '4.9M',
-        thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80',
         embedUrl: 'https://www.youtube.com/embed/jvqFAi7vkBc',
         externalUrl: 'https://www.youtube.com/watch?v=jvqFAi7vkBc',
         isPro: false
@@ -630,7 +657,6 @@ export default function FutureBoxHome() {
         guest: 'Dr. Andrew Huberman',
         duration: '2h 15m',
         views: '3.1M',
-        thumbnail: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&q=80',
         embedUrl: 'https://www.youtube.com/embed/QmOF0crdyRU',
         externalUrl: 'https://www.youtube.com/watch?v=QmOF0crdyRU',
         isPro: false
@@ -644,7 +670,6 @@ export default function FutureBoxHome() {
         guest: 'Daniel Kahneman & Frontier Economists',
         duration: '1h 45m',
         views: '4.2M',
-        thumbnail: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=80',
         embedUrl: 'https://www.youtube.com/embed/1bPEq4f454M',
         externalUrl: 'https://www.youtube.com/watch?v=1bPEq4f454M',
         isPro: false
@@ -656,7 +681,6 @@ export default function FutureBoxHome() {
         guest: 'Dario Amodei (CEO, Anthropic)',
         duration: '2h 30m',
         views: '2.1M',
-        thumbnail: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&q=80',
         embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
         externalUrl: 'https://www.youtube.com/watch?v=zjkBMFhNj_g',
         isPro: false
@@ -668,7 +692,6 @@ export default function FutureBoxHome() {
         guest: 'Chamath, Sacks, Friedberg, Jason',
         duration: '1h 35m',
         views: '3.8M',
-        thumbnail: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80',
         embedUrl: 'https://www.youtube.com/embed/sPXZ_y2Yw3I',
         externalUrl: 'https://www.youtube.com/watch?v=sPXZ_y2Yw3I',
         isPro: false
@@ -1237,10 +1260,13 @@ export default function FutureBoxHome() {
                 })}
                 className="relative group rounded-2xl overflow-hidden border border-zinc-700/60 aspect-video shadow-2xl cursor-pointer"
               >
-                <img 
-                  src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&q=80" 
-                  alt="Spotlight" 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                {/* The lecture's own thumbnail. This was a stock photograph
+                    of a stranger over a named, real masterclass. */}
+                <Cover
+                  seed="karpathy-intro-to-llms"
+                  label="Intro to Large Language Models — Andrej Karpathy"
+                  url="https://www.youtube.com/watch?v=zjkBMFhNj_g"
+                  className="w-full h-full group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                   <div className="w-16 h-16 rounded-full bg-emerald-500/90 text-onAccent flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -1287,7 +1313,12 @@ export default function FutureBoxHome() {
                       })}
                       className="aspect-video relative overflow-hidden cursor-pointer"
                     >
-                      <img src={pod.thumbnail} alt={pod.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <Cover
+                        seed={pod.id}
+                        label={pod.title}
+                        url={pod.externalUrl || pod.embedUrl}
+                        className="w-full h-full group-hover:scale-105 transition-transform duration-500"
+                      />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="w-12 h-12 rounded-full bg-emerald-500 text-onAccent flex items-center justify-center shadow-lg">
                           <Play className="w-5 h-5 fill-current translate-x-0.5" />
@@ -1370,7 +1401,6 @@ export default function FutureBoxHome() {
                   instructor: 'Garry Tan (CEO, Y Combinator)',
                   duration: '45m',
                   level: 'Business & Founders',
-                  thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/sPXZ_y2Yw3I',
                   externalUrl: 'https://www.youtube.com/watch?v=sPXZ_y2Yw3I',
                   isPro: false
@@ -1381,7 +1411,6 @@ export default function FutureBoxHome() {
                   instructor: 'Harrison Chase (LangChain)',
                   duration: '1h 22m',
                   level: 'Advanced Architecture',
-                  thumbnail: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/sal78ACtGTc',
                   externalUrl: 'https://www.youtube.com/watch?v=sal78ACtGTc',
                   isPro: true
@@ -1392,7 +1421,6 @@ export default function FutureBoxHome() {
                   instructor: 'Kaelen Voss (AI Filmmaker)',
                   duration: '1h 30m',
                   level: 'PRO Masterclass',
-                  thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
                   externalUrl: 'https://runwayml.com',
                   isPro: true
@@ -1429,7 +1457,12 @@ export default function FutureBoxHome() {
                         }}
                         className="aspect-video relative overflow-hidden cursor-pointer"
                       >
-                        <img src={mc.thumbnail} alt={mc.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <Cover
+                          seed={mc.id}
+                          label={mc.title}
+                          url={mc.embedUrl}
+                          className="w-full h-full group-hover:scale-105 transition-transform duration-500"
+                        />
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           {isLocked ? (
                             <div className="w-12 h-12 rounded-full bg-amber-500 text-onAccent flex items-center justify-center shadow-lg">
@@ -1512,7 +1545,6 @@ export default function FutureBoxHome() {
                   medium: 'Jingle Pop / Acoustic',
                   tools: ['Suno v5.5', 'Runway Gen-3'],
                   prompt: 'jingle style, 96 BPM, major key, claps and hand percussion, brushed snare, pedal steel swells, acoustic guitar strums',
-                  thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/bk-nQ7HF6k4',
                   externalUrl: 'https://suno.com',
                   type: 'youtube' as const
@@ -1525,7 +1557,6 @@ export default function FutureBoxHome() {
                   medium: 'Pop Rock & Anthemic Folk',
                   tools: ['Suno v5.5', 'Kling AI'],
                   prompt: 'pop rock, anthemic pop, close-miked female vocals, layered electric guitars, punchy kick, clapping snare, upright bass',
-                  thumbnail: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/sal78ACtGTc',
                   externalUrl: 'https://runwayml.com',
                   type: 'youtube' as const
@@ -1538,7 +1569,6 @@ export default function FutureBoxHome() {
                   medium: 'Sci-Fi Dance & Visual Hook',
                   tools: ['Suno AI', 'Sora Experimental'],
                   prompt: 'retro-futuristic robotic dancers with radio helmets, yellow coat, high-energy synth hook, 128 bpm',
-                  thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80',
                   embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
                   externalUrl: 'https://klingai.org',
                   type: 'youtube' as const
@@ -1559,7 +1589,12 @@ export default function FutureBoxHome() {
                       })}
                       className="aspect-video relative overflow-hidden cursor-pointer"
                     >
-                      <img src={creation.thumbnail} alt={creation.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <Cover
+                        seed={creation.id}
+                        label={creation.title}
+                        url={creation.embedUrl}
+                        className="w-full h-full group-hover:scale-105 transition-transform duration-500"
+                      />
                       <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                         {creation.tools.map((tool, idx) => (
                           <span key={idx} className="px-2 py-0.5 bg-black/80 backdrop-blur-md text-[10px] font-mono text-cyan-300 rounded-md border border-cyan-500/30">
@@ -1591,7 +1626,11 @@ export default function FutureBoxHome() {
                       href={creation.externalUrl} 
                       target="_blank" 
                       rel="noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center space-x-1 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/30"
+                      /* `min-h-11` is 44px, the smallest thing a thumb hits
+                         reliably. The global coarse-pointer rule in globals.css
+                         cannot reach this one: it adds vertical padding, and a
+                         Tailwind `py-1` on the element itself outranks it. */
+                      className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center justify-center space-x-1 bg-cyan-500/10 px-2.5 py-1 min-h-11 rounded-lg border border-cyan-500/30"
                     >
                       <span>Explore</span>
                       <ExternalLink className="w-3 h-3" />
@@ -1907,13 +1946,18 @@ export default function FutureBoxHome() {
             <div className="flex-shrink-0 flex items-center justify-between border-b border-zinc-800 pb-4">
               <button
                 onClick={() => setUploadModalOpen(false)}
-                className="flex items-center space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl transition-all"
+                aria-label={t('feed.backToPlatform')}
+                className="flex items-center space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 sm:px-4 py-2 rounded-xl transition-all flex-shrink-0"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>{t('feed.backToPlatform')}</span>
+                <ArrowLeft className="w-3.5 h-3.5 flex-shrink-0" />
+                {/* The words go on a phone and the arrow stays. "Back to
+                    FutureBox" wraps to two lines at 390 pixels and takes a
+                    third of the header with it, for a control whose meaning a
+                    left arrow in the top-left corner already carries. */}
+                <span className="hidden sm:inline">{t('feed.backToPlatform')}</span>
               </button>
 
-              <div className="flex items-center gap-2 flex-wrap justify-end">
+              <div className="flex items-center gap-2 justify-end min-w-0">
                 <button
                   type="button"
                   onClick={() => setSearchOpen(true)}
@@ -1927,8 +1971,16 @@ export default function FutureBoxHome() {
                     ⌘K
                   </kbd>
                 </button>
-                <span className="text-sm font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                  {profileAddress(creatorDomain)}
+                {/* The handle on a phone, the whole address on a screen with
+                    room for it. Wrapped over two lines it was the largest
+                    thing in the header and the least useful — an address
+                    nobody taps, above the work. */}
+                <span
+                  title={profileAddress(creatorDomain)}
+                  className="text-sm font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap max-w-full truncate"
+                >
+                  <span className="sm:hidden">@{creatorDomain.replace(/^@/, '')}</span>
+                  <span className="hidden sm:inline">{profileAddress(creatorDomain)}</span>
                 </span>
               </div>
             </div>
@@ -1992,7 +2044,22 @@ export default function FutureBoxHome() {
                       >
                         <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-emerald-400' : ''}`} />
                         <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
-                          <span className="block text-sm font-semibold leading-tight">{meta.label}</span>
+                          <span className="block text-sm font-semibold leading-tight">
+                            {meta.label}
+                            {/* Somebody is waiting on an answer. Only on the room
+                                that can answer, only when the number is real, and
+                                counted down to nothing the moment it is dealt
+                                with — a badge that lingers is a badge people stop
+                                reading. */}
+                            {id === 'collab' && asks > 0 && (
+                              <span
+                                className="ml-1.5 inline-flex items-center justify-center rounded-full bg-emerald-500 text-onAccent text-[11px] font-bold px-1.5 min-w-[18px] h-[18px] align-middle"
+                                aria-label={`${asks} ${t('rail.waiting', 'waiting for an answer')}`}
+                              >
+                                {asks}
+                              </span>
+                            )}
+                          </span>
                           {theme.layout === 'rail' && (
                             <span className="hidden md:block text-xs text-zinc-500 leading-tight truncate">{meta.hint}</span>
                           )}

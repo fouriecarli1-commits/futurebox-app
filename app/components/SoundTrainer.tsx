@@ -154,9 +154,22 @@ export default function SoundTrainer({
     if (!standalone) return null;
     return (
       <p className="text-sm text-zinc-500 py-10 text-center border border-dashed border-zinc-800 rounded-2xl leading-relaxed">
-        {sounds.signedIn
-          ? t('sound.noEngine', 'Training a sound needs the music engine, which is not switched on for this app.')
-          : t('sound.signIn', 'Sign in to train a sound of your own.')}
+        {/* Three states, not two.
+
+            This asked `signedIn` and said "sign in to train a sound" whenever
+            it was false — including when this app has no accounts behind it at
+            all, where signing in is not a thing anybody can do. Telling
+            somebody to do something impossible is worse than telling them
+            nothing: they go looking for the button. The live room already got
+            this right; these two did not. */}
+        {!sounds.configured
+          ? t(
+              'sound.noAccounts',
+              'This app has no accounts set up, and a trained sound belongs to one. Nothing here is broken — the feature is waiting on a service, not on you.',
+            )
+          : sounds.signedIn
+            ? t('sound.noEngine', 'Training a sound needs the music engine, which is not switched on for this app.')
+            : t('sound.signIn', 'Sign in to train a sound of your own.')}
       </p>
     );
   }

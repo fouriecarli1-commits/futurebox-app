@@ -23,7 +23,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, Send, Loader2, Check, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
-import { type SurfaceId, seedsFor } from '../lib/surfaces';
+import { type SurfaceId, seedsFor, helpsWith } from '../lib/surfaces';
 import { useCopilotBusContext } from '../lib/copilotactions';
 
 export type CopilotAction =
@@ -162,7 +162,17 @@ export default function Copilot({
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-3">
         {turns.length === 0 && (
           <div className="space-y-3">
-            <p className="text-sm text-zinc-400 leading-relaxed">{t('copilot.intro')}</p>
+            {/* What this room's copilot can actually do, rather than one
+                sentence for all thirteen.
+
+                It said "I will set it up on the canvas" everywhere — true in
+                the song rooms, meaningless in the podcast room, which has no
+                canvas. The seeds under it were already per-room; only the line
+                above them was not, so the panel opened by describing somewhere
+                else and then offering the right three things. */}
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              {helpsWith(context.surface, lang === 'af' ? 'af' : 'en')}
+            </p>
             <div className="flex flex-col gap-1.5">
               {seedsFor(context.surface, lang === 'af' ? 'af' : 'en').map((example) => (
                 <button

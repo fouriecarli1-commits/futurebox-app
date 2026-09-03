@@ -18,7 +18,23 @@
  *   supabase.co        accounts, the database and the audio bucket
  *   img.youtube.com    thumbnails for real lectures, in Cover
  *   youtube.com        the embedded player for those lectures
- *   images.unsplash.com, assets.mixkit.co   sample imagery and audio
+ *   assets.mixkit.co   the sample audio behind the genre soundboard
+ *   *.public.blob.vercel-storage.com   the welcome video and its cover frame,
+ *                      which are set by environment variable and have to live
+ *                      somewhere. Vercel Blob is where a Vercel deployment
+ *                      naturally puts them, and without this line the video is
+ *                      blocked by our own policy and simply never plays — a
+ *                      console message and a black rectangle, with nothing on
+ *                      screen to say why. If you host them elsewhere, add that
+ *                      origin here as well; `.env.example` says so beside the
+ *                      variables.
+ *
+ * `images.unsplash.com` used to be here. Thirteen stock photographs stood in
+ * for the thumbnails of real, named things — an episode of a real podcast, a
+ * masterclass by a named person — while `Cover` already knew how to fetch each
+ * one's own picture from its YouTube link. The photographs are gone and so is
+ * the permission: a policy that allows what nothing uses is a wider policy
+ * than the app needs, and this file is the place that is supposed to notice.
  *   vibefy-web-lyart.vercel.app  the VibefyCode badge in the footer, which
  *                      is deliberately served live rather than copied here
  *   blob:, data:       generated audio and artwork, made in the page itself
@@ -42,8 +58,8 @@ const CSP = [
   "object-src 'none'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data: https://*.supabase.co https://img.youtube.com https://i.ytimg.com https://images.unsplash.com https://vibefy-web-lyart.vercel.app",
-  "media-src 'self' blob: data: https://*.supabase.co https://assets.mixkit.co",
+  "img-src 'self' blob: data: https://*.supabase.co https://img.youtube.com https://i.ytimg.com https://*.public.blob.vercel-storage.com https://vibefy-web-lyart.vercel.app",
+  "media-src 'self' blob: data: https://*.supabase.co https://assets.mixkit.co https://*.public.blob.vercel-storage.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com",

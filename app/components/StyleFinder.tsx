@@ -218,6 +218,10 @@ export default function StyleFinder({
         <button
           type="button"
           onClick={() => setOpen((was) => !was)}
+          /* This opens and closes a panel and never said so. The arrow turns,
+             which is nothing to somebody who cannot see it. The box around it
+             comes from the card, which is why the button itself has none. */
+          aria-expanded={open}
           className="w-full flex items-center justify-between gap-3 px-3.5 py-3 text-left"
         >
           <span className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
