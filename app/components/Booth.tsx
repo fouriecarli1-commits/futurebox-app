@@ -30,6 +30,7 @@ import { getAudio, loadTracks, saveTracks, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { keepMix, takeId } from '../lib/takekeep';
 import { useLang } from '../lib/i18n';
+import Cost from './Cost';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import * as cloud from '../lib/cloud';
 import VocalBooth from './VocalBooth';
@@ -55,6 +56,13 @@ function WhatItIs(): React.ReactElement {
           </li>
         );
       })}
+      {/* Singing, retaking, punching in and moving the words all run on the
+          device. The paid steps inside — cleaning a take, splitting a song —
+          say their own price at their own button. What this line answers is
+          the question that stops somebody at their fourth take. */}
+      <li className="pt-1">
+        <Cost credits={0} />
+      </li>
     </ul>
   );
 }

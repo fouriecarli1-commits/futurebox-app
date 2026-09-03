@@ -16,6 +16,20 @@
  *   4 credits a minute                  a price that depends on length, not yet known
  *   4 a minute — about 16 for this one  the same, once there is a file to measure
  *   30 credits · takes a few minutes    a price and a warning about the wait
+ *   Costs nothing                       a price of zero, said rather than left out
+ *
+ * ## Why zero is worth saying
+ *
+ * Seven rooms show no counter because nothing in them spends: the Booth, the
+ * lanes, the hook cutter, the channel, the live room, the collab room and the
+ * theme studio. Silence is the right answer in four of them — nobody wonders
+ * what a playlist costs. It is the wrong answer in the three that hand you a
+ * finished thing, because a room that produces something and says nothing about
+ * money is ambiguous in the worst direction: somebody records four takes
+ * wondering whether each one cost them, and stops at four.
+ *
+ * So a price of zero renders as words rather than as "0 credits", which reads
+ * like a bug, and rather than as nothing at all, which reads like a secret.
  *
  * ## The wait matters as much as the price
  *
@@ -63,6 +77,8 @@ export default function Cost({
       typeof seconds === 'number' && seconds > 0
         ? `${each} — ${t('cost.about', 'about')} ${perMinute(seconds, rate)} ${t('cost.forThis', 'for this one')}`
         : each;
+  } else if (credits === 0) {
+    price = t('cost.free', 'Costs nothing');
   } else if (typeof credits === 'number') {
     price = `${credits} ${t('credits.credits', 'credits')}`;
   }

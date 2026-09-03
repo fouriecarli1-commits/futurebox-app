@@ -220,7 +220,7 @@ export default function VideoCanvas({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-          <VideoIcon className="w-6 h-6 text-amber-400" />
+          <VideoIcon className="w-6 h-6 text-emerald-400" />
           {t('canvas.title', 'Video desk')}
         </h2>
         <p className="text-sm text-zinc-400 pt-1.5 max-w-2xl leading-relaxed">
@@ -313,11 +313,11 @@ export default function VideoCanvas({
               onClick={() => pick(one)}
               className={`text-left rounded-2xl border p-3.5 transition-all ${
                 active
-                  ? 'bg-amber-500/10 border-amber-500'
+                  ? 'bg-emerald-500/10 border-emerald-500'
                   : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
               }`}
             >
-              <span className={`block text-sm font-bold ${active ? 'text-amber-300' : 'text-zinc-200'}`}>
+              <span className={`block text-sm font-bold ${active ? 'text-emerald-300' : 'text-zinc-200'}`}>
                 {t(`canvas.scene.${one.id}`, one.label)}
               </span>
               <span className="block text-xs text-zinc-500 leading-snug pt-0.5">
@@ -363,7 +363,7 @@ export default function VideoCanvas({
             'canvas.hint',
             'What is in the shot, what it is doing, what the camera does, what the light does, how it feels.',
           )}
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none leading-relaxed resize-y"
+          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed resize-y"
         />
 
         {/* The one rule that is not obvious, said once and shown always. */}
@@ -421,7 +421,7 @@ export default function VideoCanvas({
                   onClick={() => setGrade(one.id)}
                   className={`text-left px-3 py-2.5 rounded-xl text-sm border transition-all disabled:opacity-40 ${
                     active
-                      ? 'bg-amber-500/15 border-amber-500 text-amber-300'
+                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                   }`}
                 >
@@ -449,7 +449,7 @@ export default function VideoCanvas({
                 setSpeak(event.target.checked);
                 if (event.target.checked && grade === 'standard') setGrade('better');
               }}
-              className="mt-0.5 w-4 h-4 accent-amber-500 flex-shrink-0"
+              className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
             />
             <span className="min-w-0">
               <span className="block text-sm font-semibold text-zinc-200">
@@ -509,7 +509,7 @@ export default function VideoCanvas({
                   title={one.note}
                   className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
                     aspect === one.id
-                      ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
+                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                   }`}
                 >
@@ -529,7 +529,7 @@ export default function VideoCanvas({
                   title={t(`canvas.len.${one.seconds}`, one.note)}
                   className={`px-3 py-2 rounded-xl text-sm border transition-all ${
                     seconds === one.seconds
-                      ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
+                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                   }`}
                 >
@@ -549,7 +549,7 @@ export default function VideoCanvas({
           type="button"
           onClick={make}
           disabled={busy || ready === false}
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-400 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <VideoIcon className="w-4 h-4" />}
           {busy

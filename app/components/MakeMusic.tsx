@@ -1015,7 +1015,7 @@ export default function MakeMusic({
                   <button
                     type="button"
                     onClick={() => setVideoFor(track)}
-                    className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-amber-500 hover:text-amber-300 flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                   >
                     <VideoIcon className="w-3.5 h-3.5" />
                     {t('video.make')}

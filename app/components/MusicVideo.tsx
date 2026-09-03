@@ -72,7 +72,7 @@ export default function MusicVideo() {
                   onClick={() => setSelected(track)}
                   className={`px-3 py-2 rounded-xl text-sm border transition-all flex items-center gap-2 ${
                     selected?.id === track.id
-                      ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
+                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
                   }`}
                 >
