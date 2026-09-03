@@ -68,24 +68,30 @@ export interface Turn {
   readonly text: string;
 }
 
-function turnsFrom(words: readonly Required<Pick<Word, 'text' | 'start' | 'end'>>[] & { speaker?: string }[]): Turn[] {
+/** One word as this route hands it on: always timed, sometimes attributed. */
+interface Timed {
+  readonly text: string;
+  readonly start: number;
+  readonly end: number;
+  readonly speaker?: string;
+}
+
+function turnsFrom(words: readonly Timed[]): Turn[] {
   const turns: Turn[] = [];
   for (const word of words) {
-    const speaker = (word as { speaker?: string }).speaker ?? 'speaker_0';
+    // One speaker is the honest default: a file with a single voice comes back
+    // with no ids at all, and calling that "unknown" would be worse than
+    // calling it the only person in the room.
+    const speaker = word.speaker ?? 'speaker_0';
     const last = turns[turns.length - 1];
     if (last && last.speaker === speaker) {
       turns[turns.length - 1] = {
         ...last,
-        end: word.end as number,
+        end: word.end,
         text: `${last.text} ${word.text}`.trim(),
       };
     } else {
-      turns.push({
-        speaker,
-        start: word.start as number,
-        end: word.end as number,
-        text: (word.text ?? '').trim(),
-      });
+      turns.push({ speaker, start: word.start, end: word.end, text: word.text.trim() });
     }
   }
   return turns;
@@ -254,6 +260,6 @@ export async function POST(request: Request): Promise<Response> {
      views of the same answer and the second costs a loop. */
   return Response.json({
     words,
-    ...(diarize ? { turns: turnsFrom(words as never), text: heard.text ?? '' } : {}),
+    ...(diarize ? { turns: turnsFrom(words), text: heard.text ?? '' } : {}),
   });
 }
