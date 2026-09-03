@@ -129,3 +129,29 @@ export function useCopilotOps(surface: SurfaceId, handlers: OpHandlers): void {
     return bus.register(surface, forwarders);
   }, [bus, surface, names]);
 }
+
+/**
+ * Find the thing they named.
+ *
+ * Several rooms take an operation whose value is the title of one of their
+ * songs — open this one in the timeline, sing over that one, cut a clip from
+ * the other. The model writes what the person called it, which is rarely the
+ * stored title character for character: "the amapiano one", "Rooi Aand",
+ * "rooi aand". Exact match first, then either way round as a substring, and
+ * null rather than a guess when nothing is close.
+ *
+ * Null is a real answer. The caller does nothing with it, which leaves the room
+ * exactly as it was — better than opening the wrong song, which looks like the
+ * app misheard rather than like the copilot did.
+ */
+export function matchByTitle<T extends { title: string }>(items: readonly T[], value: string): T | null {
+  const wanted = value.trim().toLowerCase();
+  if (!wanted) return null;
+  const titles = items.map((item) => ({ item, title: item.title.trim().toLowerCase() }));
+  return (
+    titles.find((one) => one.title === wanted)?.item ??
+    titles.find((one) => one.title.includes(wanted))?.item ??
+    titles.find((one) => wanted.includes(one.title))?.item ??
+    null
+  );
+}

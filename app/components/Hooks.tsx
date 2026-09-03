@@ -19,6 +19,7 @@ import { readAudio } from '../lib/trackaudio';
 import { findHooks, sectionHooks, decodeTrack, formatMoment, type Hook } from '../lib/hooks';
 import { renderVideo, styleFor, videoSupported, extensionFor } from '../lib/video';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
 
 const LENGTHS = [15, 30];
@@ -33,6 +34,22 @@ export default function Hooks() {
   const [cutting, setCutting] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
   const [clip, setClip] = useState<{ url: string; blob: Blob; ext: string } | null>(null);
+
+  /* Pick the song to cut from, and how long the clip runs. Both go through the
+     same `look` the buttons use, so the hooks are re-found rather than left
+     showing the previous song's. */
+  useCopilotOps('hooks_feed', {
+    pick_song: (value) => {
+      const track = matchByTitle(tracks, value);
+      if (track) void look(track, seconds);
+    },
+    set_seconds: (value) => {
+      const wanted = Number.parseInt(value.trim(), 10);
+      if (!LENGTHS.includes(wanted)) return;
+      setSeconds(wanted);
+      if (selected) void look(selected, wanted);
+    },
+  });
 
   useEffect(() => setTracks(loadTracks()), []);
 

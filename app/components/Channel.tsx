@@ -33,6 +33,7 @@ import Cover from './Cover';
 import SoundTrainer from './SoundTrainer';
 import DeleteAccount from './DeleteAccount';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
 
 function clock(seconds: number): string {
@@ -55,6 +56,15 @@ export default function Channel({
   const [tracks, setTracks] = useState<Track[]>([]);
   const [lists, setLists] = useState<Playlist[]>([]);
   const [openList, setOpenList] = useState<string | null>(null);
+
+  /* Open a playlist they named. Matched on its name the same way songs are
+     matched on their titles, and left alone when nothing is close. */
+  useCopilotOps('channels', {
+    open_playlist: (value) => {
+      const found = matchByTitle(lists.map((one) => ({ ...one, title: one.name })), value);
+      if (found) setOpenList(found.id);
+    },
+  });
   const [adding, setAdding] = useState<string | null>(null);
   const [creator, setCreator] = useState<Creator | null>(null);
   const [owned, setOwned] = useState<Owned>(NOTHING);

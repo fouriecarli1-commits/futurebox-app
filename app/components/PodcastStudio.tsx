@@ -29,6 +29,7 @@ import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 
 interface Show {
   id: string;
@@ -75,6 +76,13 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
   const [draftSeconds, setDraftSeconds] = useState<number | null>(null);
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
+
+  /* The episode's title and its notes. Both are text they were going to type
+     and can retype, and neither costs anything or publishes anything. */
+  useCopilotOps('podcast', {
+    set_title: (value) => setTitle(value),
+    set_notes: (value) => setNotes(value),
+  });
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);

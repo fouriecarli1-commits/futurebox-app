@@ -129,6 +129,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "reorder or retitle sections",
       "set the style for a regenerate",
     ],
+    ops: {
+      pick_song:
+        "the value is the title of one of their own songs, as they said it, to put on the timeline. Only songs that already have sections can be opened here",
+    },
     seeds: [
       {
         en: "This second verse is weak — fix it",
@@ -153,6 +157,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "clean up a take",
       "write words to sing to",
     ],
+    ops: {
+      pick_song:
+        "the value is the title of one of their own songs, as they said it, to sing over. This loads the backing, which takes a moment",
+    },
     seeds: [
       {
         en: "Which of my takes is the best one?",
@@ -178,6 +186,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     },
     purpose: "Turning one of your songs into a music video.",
     can: ["describe the video", "pick the length", "set the look"],
+    ops: {
+      pick_song:
+        "the value is the title of one of their own songs, as they said it, to make a video for. It opens the panel; making the video is still their button",
+    },
     seeds: [
       {
         en: "What should this video look like?",
@@ -201,6 +213,13 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     purpose:
       "The video desk: marketing, podcast and social clips built scene by scene.",
     can: ["write a scene", "pick a template", "set the length and shape"],
+    ops: {
+      set_prompt:
+        "the value is the full description of the shot, as you would tell a camera operator",
+      set_aspect: "the value is exactly one of 16:9, 9:16 or 1:1",
+      set_seconds:
+        "the value is a whole number of seconds, and one the desk offers",
+    },
     seeds: [
       {
         en: "Make me a 30 second advert for this",
@@ -224,6 +243,11 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     purpose:
       "Short vertical clips — the fifteen seconds that make somebody stop scrolling.",
     can: ["pick the moment to cut", "write the caption", "set the length"],
+    ops: {
+      pick_song:
+        "the value is the title of one of their own songs, as they said it, to cut a clip from",
+      set_seconds: "the value is 15 or 30, and nothing else",
+    },
     seeds: [
       {
         en: "Which part of this song is the hook?",
@@ -246,6 +270,9 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     purpose:
       "Your channel: your released music, in the order you want people to hear it.",
     can: ["set the running order", "write the description", "name a playlist"],
+    ops: {
+      open_playlist: "the value is the name of one of their playlists",
+    },
     seeds: [
       {
         en: "What order should these go in?",
@@ -271,6 +298,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "summarise a thread",
       "suggest who to ask",
     ],
+    ops: {
+      set_message:
+        "the value is the message to put in the box of the open thread. It is not sent — they send it",
+    },
     seeds: [
       {
         en: "Write the message asking them to collab",
@@ -292,6 +323,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "set the running order",
       "suggest what to play next",
     ],
+    ops: {
+      set_message:
+        "the value is what to say in the room, put in the box. It is not sent — they send it",
+    },
     seeds: [
       {
         en: "What should I say when I open?",
@@ -314,6 +349,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     },
     purpose: "Your voice: cloning it once, then reading anything in it.",
     can: ["write the script to read", "pick a voice", "set how it is read"],
+    ops: {
+      set_script:
+        "the value is the words to be read out, in full, with nothing around them",
+    },
     seeds: [
       {
         en: "Write me a thirty second read",
@@ -339,6 +378,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "set the hosts",
       "pick the language to dub into",
     ],
+    ops: {
+      set_title: "the value is the episode's title",
+      set_notes: "the value is the episode's notes, in full",
+    },
     seeds: [
       {
         en: "Write the opening for this episode",
@@ -405,7 +448,10 @@ export function standaloneSurfaces(): SurfaceId[] {
  * description in the registry is dropped rather than guessed at: the model
  * cannot use an operation it has not been told the meaning of.
  */
-export function describeOps(id: SurfaceId, available: readonly string[]): string[] {
+export function describeOps(
+  id: SurfaceId,
+  available: readonly string[],
+): string[] {
   const known = SURFACES[id].ops ?? {};
   return available.filter((op) => known[op]).map((op) => `${op}: ${known[op]}`);
 }
