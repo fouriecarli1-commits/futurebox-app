@@ -27,6 +27,7 @@ import { renderVideo, styleFor, videoSupported, extensionFor, type Aspect } from
 import { engines, probeVideo } from '../lib/engines';
 import { spokenLines, looksUnquoted } from '../lib/videoscenes';
 import { CREDITS } from '../lib/credits';
+import Cost from './Cost';
 import { signal } from '../lib/signal';
 import { timelineOf, type Part } from '../lib/timeline';
 import { downloadBlob, safeFilename, type Track } from '../lib/library';
@@ -209,12 +210,18 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
       )}
 
       {engineReady && mode === 'engine' && (
-        <p className="text-sm text-zinc-500 leading-snug">
-          {t(
-            'video.engineNote',
-            'The engine makes footage from your sentence. It has nothing to do with the song — it is a clip to cut against it. A few minutes, and the credits are given back if it fails.',
-          )}
-        </p>
+        <div className="space-y-1.5">
+          <p className="text-sm text-zinc-500 leading-snug">
+            {t(
+              'video.engineNote',
+              'The engine makes footage from your sentence. It has nothing to do with the song — it is a clip to cut against it. A few minutes, and the credits are given back if it fails.',
+            )}
+          </p>
+          {/* Video is the slowest thing here and the one people give up on
+              first. The figure and the wait stand together, above the button,
+              in the same shape as everywhere else that spends. */}
+          <Cost credits={CREDITS.video} waitMinutes={4} />
+        </div>
       )}
 
       {!videoSupported() && mode === 'browser' ? (

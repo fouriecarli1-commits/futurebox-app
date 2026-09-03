@@ -17,6 +17,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Loader2, Mic, Play, Square, Trash2, Upload, Wand2 } from 'lucide-react';
+import Cost from './Cost';
+import { CREDITS, readCost } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
@@ -135,6 +137,9 @@ export default function VoiceLab({
   const [removeNoise, setRemoveNoise] = useState(false);
   /** A recording to be said again in the chosen voice. */
   const [toChange, setToChange] = useState<File | null>(null);
+  /** Measured when the clip lands, so the price is on the button before it
+   *  is pressed rather than worked out on the way out. */
+  const [changeSeconds, setChangeSeconds] = useState<number | null>(null);
   const [changed, setChanged] = useState<Blob | null>(null);
   const [takingClip, setTakingClip] = useState(false);
 
@@ -341,6 +346,20 @@ export default function VoiceLab({
     setToChange(new File([clip], 'clip.webm', { type: clip.type || 'audio/webm' }));
   }, []);
 
+  useEffect(() => {
+    if (!toChange) {
+      setChangeSeconds(null);
+      return;
+    }
+    let live = true;
+    durationOf(toChange).then((long) => {
+      if (live) setChangeSeconds(long);
+    });
+    return () => {
+      live = false;
+    };
+  }, [toChange]);
+
   const change = useCallback(async () => {
     if (!toChange) return;
     setProblem(null);
@@ -466,6 +485,9 @@ export default function VoiceLab({
                 {t('voice.consent', VOICE_CONSENT)}
               </span>
             </label>
+            {/* Making the voice is charged the moment the sample goes up, so
+                the figure belongs above the record button, not after it. */}
+            <Cost credits={CREDITS.clone} />
             <button
               type="button"
               onClick={() => void recordSample()}
@@ -593,6 +615,7 @@ export default function VoiceLab({
             {busy === 'speak' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
             {busy === 'speak' ? t('voice.reading', 'Reading…') : t('voice.readAloud', 'Read it aloud')}
           </button>
+          {script.trim() ? <Cost credits={readCost(script.length)} className="self-center" /> : null}
           {spoken && (
             <button
               type="button"
@@ -688,6 +711,7 @@ export default function VoiceLab({
             {busy === 'change' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
             {busy === 'change' ? t('voice.changing', 'Changing\u2026') : t('voice.changeIt', 'Change the voice')}
           </button>
+          <Cost rate={CREDITS.voiceChange} seconds={changeSeconds} className="self-center" />
           {changed && (
             <button
               type="button"

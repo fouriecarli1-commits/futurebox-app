@@ -790,6 +790,18 @@ export const STRINGS: Dict = {
     af: "\u2019n Pakket kos meer per krediet as enige maandplan \u2014 dit is vir die maand toe jy meer as gewoonlik nodig gehad het. Het jy elke maand meer nodig, is \u2019n plan die goedkoper pad.",
   },
 
+  // What a press costs, and how long it takes, said before the press rather
+  // than after it. A per-minute job cannot name its figure until it knows the
+  // length of the file, so it says the rate first and fills the total in as
+  // soon as the audio is measured. The wait note is here because a job that
+  // runs on someone else's GPUs looks broken while it is working, and an
+  // unwarned person presses again — and pays again.
+  "cost.perMinute": { en: "credits a minute", af: "krediete ’n minuut" },
+  "cost.about": { en: "about", af: "sowat" },
+  "cost.forThis": { en: "for this one", af: "vir hierdie een" },
+  "cost.wait": { en: "takes a few minutes", af: "vat ’n paar minute" },
+  "cost.waitLong": { en: "takes several minutes", af: "vat ’n hele paar minute" },
+
   "spend.title": { en: "What the engine has cost you", af: "Wat die enjin jou gekos het" },
   "spend.sub": { en: "The last 30 days, counted from what was actually generated. Only you see this.", af: "Die laaste 30 dae, getel uit wat werklik gemaak is. Net jy sien dit." },
   "spend.previews": { en: "Free previews", af: "Gratis previews" },

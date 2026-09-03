@@ -24,6 +24,7 @@ import { forgetSound, loadSounds, NO_SOUNDS, training, train, type Sounds } from
 import { CREDITS } from '../lib/credits';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { useLang } from '../lib/i18n';
+import Cost from './Cost';
 
 /** How often to ask again while something is still training. */
 const ASK_EVERY_MS = 20_000;
@@ -314,6 +315,11 @@ export default function SoundTrainer({
           </label>
 
           {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
+
+          {/* Training runs on somebody else's GPUs for five or ten minutes.
+              Nothing moves on screen while it does, so an unwarned person
+              presses again — and is charged again. */}
+          <Cost waitMinutes={8} />
 
           <div className="flex gap-2">
             <button

@@ -35,6 +35,7 @@ import { engines, probeVideoEngine, type VideoEngine } from '../lib/engines';
 import { CREDITS, videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { signal } from '../lib/signal';
+import Cost from './Cost';
 import { useLang } from '../lib/i18n';
 
 type Aspect = '9:16' | '16:9' | '1:1';
@@ -496,6 +497,11 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
             ? t('canvas.making', 'Making it')
             : `${t('canvas.go', 'Make it')} — ${videoCost(grade)} ${t('video.credits', 'credits')}`}
         </button>
+
+        {/* The wait, said before the press rather than only during it. A video
+            is the slowest thing here by a distance, and somebody who is not
+            warned presses again — and the second press is not free. */}
+        {!busy && <Cost waitMinutes={3} className="justify-center w-full" />}
 
         {busy && (
           <p className="text-sm text-zinc-400 text-center">
