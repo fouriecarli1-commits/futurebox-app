@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight,
+  Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone,
   Tv, Cpu, ArrowUpRight, Compass, CheckCircle2, X,
   UploadCloud, FileVideo, Music, Headphones, Lightbulb, Code2, 
   Link as LinkIcon, AlertCircle, Layers, DollarSign, Clock, 
@@ -43,6 +43,7 @@ import { TRACK_LABELS } from './data/masterclasses';
 import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
 import PasswordField from './components/PasswordField';
+import Campaign from './components/Campaign';
 import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
 import {
   STAGES,
@@ -294,7 +295,7 @@ export default function FutureBoxHome() {
    * already is, so a second screen for it was the same job behind a second
    * button.
    */
-  const [studioTab, setStudioTab] = useState<'video' | 'canvas' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'booth' | 'live' | 'podcast'>('make');
+  const [studioTab, setStudioTab] = useState<'video' | 'canvas' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'booth' | 'live' | 'podcast' | 'campaign'>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -1884,6 +1885,7 @@ export default function FutureBoxHome() {
                     live: { label: t('rail.live'), hint: t('rail.live.hint'), icon: Radio },
                     voice_studio: { label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
                     podcast: { label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
+                    campaign: { label: t('rail.campaign'), hint: t('rail.campaign.hint'), icon: Megaphone },
                   };
 
                   const row = (id: SurfaceId) => {
@@ -1989,6 +1991,16 @@ export default function FutureBoxHome() {
             {studioTab === 'live' && <LiveChannel onGoToMake={() => setStudioTab('make')} />}
 
             {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
+
+            {studioTab === 'campaign' && (
+              <Campaign
+                onGoTo={setStudioTab}
+                /* Handed over rather than dispatched: the desk being written to
+                   is not mounted yet at the moment the button is pressed. */
+                onUseShot={(shot) => copilotBus.handoff('canvas', 'set_prompt', shot)}
+                onUseScript={(line) => copilotBus.handoff('voice_studio', 'set_script', line)}
+              />
+            )}
 
             {/* STUDIO: your own song, in its own sections, over its own audio */}
             {studioTab === 'studio' && (

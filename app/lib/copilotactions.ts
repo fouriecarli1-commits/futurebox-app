@@ -50,6 +50,19 @@ export interface CopilotBus {
   opsFor: (surface: SurfaceId) => string[];
   /** Run one. Returns false when nothing was registered to take it. */
   dispatch: (surface: SurfaceId, op: string, value: string) => boolean;
+  /**
+   * Put something in a room you are about to walk into.
+   *
+   * `dispatch` only reaches a room that is mounted, which is right for the
+   * copilot — it acts on the screen in front of you. It is wrong for a hand-off:
+   * the advert desk sends a shot to the video desk and moves you there, and at
+   * the moment of sending, the video desk does not exist yet.
+   *
+   * So this delivers if it can and waits if it cannot, firing the moment that
+   * room registers. One per operation, replaced rather than queued: two shots
+   * sent to the same desk before arriving means the second is what was meant.
+   */
+  handoff: (surface: SurfaceId, op: string, value: string) => void;
   /** Used by `useCopilotOps`. Not for callers. */
   register: (surface: SurfaceId, handlers: OpHandlers) => () => void;
 }
@@ -57,6 +70,7 @@ export interface CopilotBus {
 const noop: CopilotBus = {
   opsFor: () => [],
   dispatch: () => false,
+  handoff: () => {},
   register: () => () => {},
 };
 
@@ -77,6 +91,8 @@ export function useCopilotBus(): CopilotBus {
   // opens over a list is asked second — the order you want on the rare occasion
   // both answer to the same name.
   const handlers = useRef<Partial<Record<SurfaceId, OpHandlers[]>>>({});
+  /** Deliveries made before their room existed. Keyed `surface:op`. */
+  const waiting = useRef<Record<string, string>>({});
   const [, setVersion] = useState(0);
 
   return useMemo<CopilotBus>(() => {
@@ -88,17 +104,22 @@ export function useCopilotBus(): CopilotBus {
       return out;
     };
 
+    const run = (surface: SurfaceId, op: string, value: string): boolean => {
+      for (const set of handlers.current[surface] ?? []) {
+        const handler = set[op];
+        if (handler) {
+          handler(value);
+          return true;
+        }
+      }
+      return false;
+    };
+
     return {
       opsFor: namesIn,
-      dispatch: (surface, op, value) => {
-        for (const set of handlers.current[surface] ?? []) {
-          const handler = set[op];
-          if (handler) {
-            handler(value);
-            return true;
-          }
-        }
-        return false;
+      dispatch: run,
+      handoff: (surface, op, value) => {
+        if (!run(surface, op, value)) waiting.current[`${surface}:${op}`] = value;
       },
       register: (surface, ops) => {
         const before = namesIn(surface).join(',');
@@ -108,6 +129,18 @@ export function useCopilotBus(): CopilotBus {
         // Only nudge the panel when the *set* of operations changed. Handlers
         // are rebuilt on every render of the room; the names almost never are.
         if (namesIn(surface).join(',') !== before) setVersion((n) => n + 1);
+
+        // Anything sent here before this room existed, delivered now. After
+        // paint, so the room has finished its own first render before it is
+        // handed something to show.
+        for (const key of Object.keys(waiting.current)) {
+          const [forSurface, op] = key.split(':');
+          if (forSurface !== surface || !ops[op]) continue;
+          const value = waiting.current[key];
+          delete waiting.current[key];
+          window.setTimeout(() => run(surface, op, value), 0);
+        }
+
         return () => {
           const set = handlers.current[surface];
           const at = set ? set.indexOf(ops) : -1;

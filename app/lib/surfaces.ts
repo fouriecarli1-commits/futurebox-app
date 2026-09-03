@@ -28,6 +28,7 @@ export const STAGES = [
   { id: "make", en: "Make it", af: "Maak dit" },
   { id: "show", en: "Show it", af: "Wys dit" },
   { id: "release", en: "Put it out", af: "Sit dit uit" },
+  { id: "sell", en: "Sell it", af: "Verkoop dit" },
 ] as const;
 
 export type StageId = (typeof STAGES)[number]["id"];
@@ -45,6 +46,7 @@ export const SURFACE_IDS = [
   "live",
   "voice_studio",
   "podcast",
+  "campaign",
 ] as const;
 
 export type SurfaceId = (typeof SURFACE_IDS)[number];
@@ -400,6 +402,42 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       {
         en: "Which language should I dub into?",
         af: "In watter taal moet ek dit oorklank?",
+      },
+    ],
+  },
+  campaign: {
+    id: "campaign",
+    stage: "sell",
+    purpose:
+      "Adverts: a brief in, and a set of adverts out — the line, the words under it, the button, the line to say aloud, and the shot to film.",
+    can: [
+      "fill any part of the brief",
+      "say which market to write for",
+    ],
+    ops: {
+      set_what:
+        "the value is what they are selling, in a sentence",
+      set_who:
+        "the value is who the advert is for",
+      set_offer:
+        "the value is the offer, if there is one. Never invent one",
+      set_tone:
+        "the value is how it should sound, in a few words",
+      set_market:
+        "the value is one of: English, Afrikaans, isiZulu, Sesotho, Portuguese, French, Spanish",
+    },
+    seeds: [
+      {
+        en: "Write an advert for my bakery",
+        af: "Skryf ’n advertensie vir my bakkery",
+      },
+      {
+        en: "Who should I be aiming this at?",
+        af: "Op wie moet ek dit mik?",
+      },
+      {
+        en: "Say this in Afrikaans instead",
+        af: "Sê dit eerder in Afrikaans",
       },
     ],
   },

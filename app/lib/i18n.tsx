@@ -201,6 +201,8 @@ export const STRINGS: Dict = {
   "chan.share": { en: "Share", af: "Deel" },
   "rail.podcast": { en: "Podcast", af: "Podcast" },
   "rail.next": { en: "Next", af: "Volgende" },
+  "rail.campaign": { en: "Adverts", af: "Advertensies" },
+  "rail.campaign.hint": { en: "Written, then filmed", af: "Geskryf, dan verfilm" },
   "cheaper.title": { en: "Cheaper the other way", af: "Goedkoper anders om" },
   "cheaper.against": { en: "against", af: "teenoor" },
   "cheaper.saves": { en: "Saves", af: "Spaar" },
