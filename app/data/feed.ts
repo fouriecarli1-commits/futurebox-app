@@ -9,6 +9,7 @@
  * indistinguishable from no gate at all.
  */
 import type { FeedItem } from '../lib/curation';
+import { SITE_URL } from '../lib/brand';
 
 export const CATEGORIES = [
   'Frontier AI',
@@ -287,7 +288,7 @@ export const FEED_ITEMS: readonly FeedItem[] = [
     minutes: 14,
     published: '2026-08-19',
     category: 'Creative AI',
-    url: 'https://futurebox.app',
+    url: SITE_URL,
     durability: 'durable',
   },
   {

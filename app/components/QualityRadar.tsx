@@ -66,11 +66,18 @@ export default function QualityRadar({
   const rejected = scored.filter((s) => s.verdict.band === 'noise').filter(inCategory);
   const locked = passing.filter((s) => s.item.proOnly && userPlan === 'free');
   const available = passing.filter((s) => !(s.item.proOnly && userPlan === 'free'));
-  const start = available.length === 0 ? 0 : (cycle * limits.maxItems) % available.length;
-  const visible =
-    available.length <= limits.maxItems
-      ? available
-      : Array.from({ length: Math.min(limits.maxItems, available.length) }, (_, i) => available[(start + i) % available.length]);
+  /* Rotate, always — not only when there is more than a screenful.
+     The window was skipped entirely when everything already fitted, which on a
+     paid plan is the normal case: forty slots against about twenty items. So
+     the button that says "show me others" provably could not change the list,
+     which is exactly how it felt. Rotating by a smaller step than the page
+     size also means the list *reorders* rather than jumping a whole screen,
+     which is the point — you are looking for something you have not read, and
+     it is easier to spot at the top than three screens down. */
+  const step = Math.max(1, Math.round(limits.maxItems / 3));
+  const start = available.length === 0 ? 0 : (cycle * step) % available.length;
+  const shown = Math.min(limits.maxItems, available.length);
+  const visible = Array.from({ length: shown }, (_, i) => available[(start + i) % available.length]);
 
   const toggleCategory = (c: string) => {
     setCategories((prev) => {
@@ -85,8 +92,12 @@ export default function QualityRadar({
 
   const resync = () => {
     setSyncing(true);
-    // Re-scoring against the current clock is the honest version of a refresh:
-    // it re-ages everything. Real ingestion goes here.
+    /* Two real things happen, and neither is fetching a story that did not
+       exist a second ago: everything is re-scored against the current clock,
+       which re-ages it, and the order rotates so a different set leads.
+       There is no live ingestion behind this yet — the button's words say
+       "show me others" rather than "find new stories" for that reason, and the
+       line under the heading says where these come from. */
     window.setTimeout(() => {
       setNow(Date.now());
       setCycle((c) => c + 1);
@@ -105,7 +116,12 @@ export default function QualityRadar({
           <button
             type="button"
             onClick={() => setShowHow((v) => !v)}
-            className="text-sm text-zinc-500 hover:text-zinc-200"
+            aria-expanded={showHow}
+            className={`px-3 py-1.5 rounded-xl text-sm border transition-colors ${
+              showHow
+                ? 'bg-emerald-500/10 border-emerald-500 text-emerald-300'
+                : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+            }`}
           >
             {t('radar.howWeChoose')}
           </button>
@@ -113,7 +129,7 @@ export default function QualityRadar({
             type="button"
             onClick={resync}
             disabled={syncing}
-            className="px-3 py-1.5 rounded-xl text-sm text-zinc-400 hover:text-white flex items-center gap-1.5 disabled:opacity-50"
+            className="px-3 py-1.5 rounded-xl text-sm bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white flex items-center gap-1.5 disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
             {syncing ? t('radar.looking') : t('radar.findNew')}
@@ -134,6 +150,13 @@ export default function QualityRadar({
         )}
       </p>
 
+      {/* Where they come from, said once. The refresh re-ages and reorders a
+          curated set; it does not go and look. Better said here than implied
+          by a button. */}
+      <p className="text-xs text-zinc-500 leading-relaxed">
+        {t('radar.source', 'A curated set, re-scored and reordered each time you ask. Not a live feed.')}
+      </p>
+
       {showHow && (
         <p className="text-sm text-zinc-400 leading-relaxed bg-zinc-900/60 border border-zinc-800 rounded-xl p-3">
           {t('radar.explain')}
@@ -149,10 +172,11 @@ export default function QualityRadar({
               key={c}
               type="button"
               onClick={() => toggleCategory(c)}
-              className={`px-3 py-1 rounded-full text-sm transition-all ${
+              aria-pressed={active}
+              className={`px-3 py-1.5 rounded-xl text-sm border transition-all ${
                 active
-                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/60'
-                  : 'text-zinc-500 border border-transparent hover:text-zinc-200'
+                  ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500'
+                  : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
               }`}
             >
               {c}
@@ -160,8 +184,12 @@ export default function QualityRadar({
           );
         })}
         {categories.length > 0 && (
-          <button type="button" onClick={() => setCategories([])} className="px-2 text-sm text-zinc-600 hover:text-zinc-300">
-            clear
+          <button
+            type="button"
+            onClick={() => setCategories([])}
+            className="px-3 py-1.5 rounded-xl text-sm bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+          >
+            {t('radar.clear', 'Clear')}
           </button>
         )}
       </div>

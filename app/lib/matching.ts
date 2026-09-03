@@ -16,6 +16,7 @@ import {
   type TrackFlavour,
 } from '../data/studio';
 import type { Platform } from '../data/social';
+import { SITE_HOST } from './brand';
 
 // -----------------------------------------------------------------------------
 // Harmonic and tempo compatibility
@@ -262,7 +263,7 @@ export function buildPitch(profile: CreatorProfile, podcast: PodcastTarget, form
       '',
       'Thanks for reading,',
       `${profile.name}`,
-      `${profile.handle} · futurebox.app`,
+      `${profile.handle} · ${SITE_HOST}`,
     ].join('\n'),
   };
 }
@@ -326,7 +327,7 @@ export function buildPosts(track: TrackFlavour, platform: Platform): PostIdea[] 
       '',
       `"${track.title}" — ${track.genre}, ${track.bpm} BPM, ${track.key}.`,
       `Built with: ${track.models.join(' + ')}.`,
-      i % 2 === 0 ? 'Full track and the exact prompt on futurebox.app.' : 'Prompt in the comments. Steal it.',
+      i % 2 === 0 ? `Full track and the exact prompt on ${SITE_HOST}.` : 'Prompt in the comments. Steal it.',
     ].join('\n'),
     hashtags: tags,
     shotNote: `${platform.bestFormat}. Land the hook inside ${platform.hookWindow} — on ${platform.name} nothing after that is watched by people who left.`,

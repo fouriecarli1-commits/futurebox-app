@@ -34,6 +34,7 @@
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { dropFinetune, forgetVoice } from '@/app/lib/server/eleven';
 import { stopRenewing } from '@/app/lib/server/paystack';
+import { CONTACT_EMAIL } from '@/app/lib/brand';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -127,7 +128,7 @@ export async function DELETE(request: Request): Promise<Response> {
       {
         message:
           'Your data was removed but the account itself could not be deleted. ' +
-          'Write to admin@futurebox.app and it will be finished by hand.',
+          `Write to ${CONTACT_EMAIL} and it will be finished by hand.`,
         left,
       },
       { status: 502 },
