@@ -7,6 +7,13 @@
  * to another screen. That is the difference between a assistant that explains
  * where the button is and one that presses it.
  *
+ * It is also told which room the question came from. Without that it answered
+ * every question as though the person were writing a song, because the song
+ * canvas was the only thing it could see — so somebody in the Booth asking
+ * "which take is best" got advice about lyrics. `app/lib/surfaces.ts` holds
+ * what each room is for; the context below names the one they are in and lists
+ * the rest so it knows where else it could send them.
+ *
  * One rule shapes everything here: it never spends money on its own. An action
  * that costs credits comes back with `confirm` set, and the studio has to ask
  * you first. The model is told this, and the studio enforces it regardless of
@@ -16,6 +23,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
+import { SURFACES, isSurfaceId, surfaceDirectory, type SurfaceId } from '@/app/lib/surfaces';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -40,7 +48,7 @@ const ReplySchema = z.object({
       value: z
         .string()
         .describe(
-          'The title, the style, or the full lyric sheet. For go, one of: make, video, write, hooks, studio, collab. Empty for none and generate.',
+          'The title, the style, or the full lyric sheet. For go, one of: make, studio, booth, video, canvas, hooks_feed, channels, collab, live, voice_studio, podcast. Empty for none and generate.',
         ),
     })
     .describe('One action, or none. Never more than one.'),
@@ -48,6 +56,8 @@ const ReplySchema = z.object({
 
 interface Body {
   message: string;
+  /** Which room the question came from. */
+  surface?: string;
   title?: string;
   style?: string;
   lyrics?: string;
@@ -66,7 +76,8 @@ const SYSTEM = [
   '- set_lyrics takes a complete lyric sheet with [Section] tags on their own lines.',
   '- set_style takes a short comma-separated list of musical directions, in English, because that is what the music model reads. Everything you say to the person stays in their language.',
   '- generate makes the song from what is on the canvas. Only choose it when there is enough to work with.',
-  '- go moves them to another screen. Use it when what they want lives elsewhere.',
+  '- go moves them to another screen. Use it when what they want lives elsewhere. Only the screens listed in the context exist.',
+  '- generate makes a song, and moves them to the song screen to do it. Only choose it when they have actually asked for a song, not as a way of answering a question about the room they are in.',
   '- none is right most of the time. Answer the question and stop.',
   '',
   'How you talk:',
@@ -74,6 +85,7 @@ const SYSTEM = [
   '- Reply in the language they wrote in. If they write Afrikaans, answer in plain spoken Afrikaans, not formal or academic Afrikaans.',
   '- Never describe the app to itself, never narrate what you are about to do, and never mention actions, fields or screens by their internal names.',
   '- Say the useful specific thing. "Ninety is slow for this" beats "consider adjusting the tempo".',
+  '- Answer about the room they are actually in. The song canvas is sent every time, but on most screens it is background rather than the subject.',
   '',
   'Lines you do not cross:',
   '- Never imitate a named living artist, and never suggest prompting for one.',
@@ -82,8 +94,21 @@ const SYSTEM = [
 ].join('\n');
 
 function contextFor(body: Body): string {
+  // An unknown or missing room falls back to the song screen rather than to
+  // nothing: the canvas is always sent, so that is the one answer that is never
+  // wrong, only sometimes irrelevant.
+  const here: SurfaceId = body.surface && isSurfaceId(body.surface) ? body.surface : 'make';
+  const room = SURFACES[here];
+
   const lines = [
-    body.title ? `Title on the canvas: ${body.title}` : 'No title yet.',
+    `They are on the ${here} screen: ${room.purpose}`,
+    `Here you can: ${room.can.join(', ')}.`,
+    '',
+    'The other screens, so you know where else they could go:',
+    surfaceDirectory(),
+    '',
+    'The song canvas travels with them everywhere, and is only the subject on the song screens:',
+    body.title ? `Title: ${body.title}` : 'No title yet.',
     body.style ? `Style: ${body.style}` : 'No style chosen yet.',
     body.lyrics ? `Lyrics so far:\n${body.lyrics}` : 'No lyrics yet.',
     `Songs they have already made: ${body.trackCount ?? 0}`,
@@ -91,7 +116,7 @@ function contextFor(body: Body): string {
       ? 'A real music engine is connected, so generate makes a sung, produced track and costs credits.'
       : 'No music engine is connected, so generate makes a rough instrumental sketch in their browser and costs nothing.',
   ];
-  return `${lines.filter(Boolean).join('\n')}\n\nThey said:\n${body.message}`;
+  return `${lines.join('\n')}\n\nThey said:\n${body.message}`;
 }
 
 export async function POST(request: Request): Promise<Response> {

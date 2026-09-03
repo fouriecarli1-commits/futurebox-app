@@ -42,6 +42,7 @@ import { signal } from './lib/signal';
 import { TRACK_LABELS } from './data/masterclasses';
 import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
+import { resolveSurfaceId } from './lib/surfaces';
 import Spotlight from './components/Spotlight';
 import HereNow from './components/HereNow';
 import LanguagePicker from './components/LanguagePicker';
@@ -1993,6 +1994,7 @@ export default function FutureBoxHome() {
               <aside className="flex-shrink-0 w-full md:w-80 lg:w-96 min-h-0 md:h-auto h-96">
                 <Copilot
                   context={{
+                    surface: studioTab,
                     title: canvas.title,
                     style: canvas.style,
                     lyrics: canvas.lyrics,
@@ -2008,10 +2010,14 @@ export default function FutureBoxHome() {
                       setMakeSignal((n) => n + 1);
                     }
                     if (action.kind === 'go') {
-                      const allowed = ['make', 'video', 'podcast', 'hooks_feed', 'studio', 'collab'];
-                      const tab = action.value === 'hooks' ? 'hooks_feed' : action.value;
-                      // The model names a screen; only a real one is honoured.
-                      if (allowed.indexOf(tab) !== -1) setStudioTab(tab as typeof studioTab);
+                      // Every room in the rail, not the six this used to allow:
+                      // the copilot could not name the Booth, the video desk,
+                      // the channel, the live room or the voice studio, so in
+                      // five of the eleven rooms it could not even say where it
+                      // was. The registry vets the name and resolves what a
+                      // person calls a screen to what the studio calls it.
+                      const tab = resolveSurfaceId(action.value);
+                      if (tab) setStudioTab(tab);
                     }
                   }}
                 />
