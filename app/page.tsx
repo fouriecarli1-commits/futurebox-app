@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { 
-  Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone,
+  Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone, AudioWaveform,
   Tv, Cpu, ArrowUpRight, Compass, CheckCircle2, X,
   UploadCloud, FileVideo, Music, Headphones, Lightbulb, Code2, 
   Link as LinkIcon, AlertCircle, Layers, DollarSign, Clock, 
@@ -44,6 +44,7 @@ import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
 import PasswordField from './components/PasswordField';
 import Campaign from './components/Campaign';
+import SoundTrainer from './components/SoundTrainer';
 import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
 import {
   STAGES,
@@ -321,7 +322,11 @@ export default function FutureBoxHome() {
    * already is, so a second screen for it was the same job behind a second
    * button.
    */
-  const [studioTab, setStudioTab] = useState<'video' | 'canvas' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'booth' | 'live' | 'podcast' | 'campaign'>('make');
+  /* Typed from the registry rather than written out here. The hand-written union
+     drifted every time a room was added, and each time the compiler caught it in
+     three places at once — which is the compiler doing its job, and a list that
+     needs the compiler to keep it honest should not be a list. */
+  const [studioTab, setStudioTab] = useState<SurfaceId>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -1911,6 +1916,7 @@ export default function FutureBoxHome() {
                     live: { label: t('rail.live'), hint: t('rail.live.hint'), icon: Radio },
                     voice_studio: { label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
                     podcast: { label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
+                    sound: { label: t('rail.sound'), hint: t('rail.sound.hint'), icon: AudioWaveform },
                     campaign: { label: t('rail.campaign'), hint: t('rail.campaign.hint'), icon: Megaphone },
                   };
 
@@ -2017,6 +2023,14 @@ export default function FutureBoxHome() {
             {studioTab === 'live' && <LiveChannel onGoToMake={() => setStudioTab('make')} />}
 
             {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
+
+            {studioTab === 'sound' && (
+              <SoundTrainer
+                standalone
+                reloadKey={trackCount}
+                onUpgrade={() => setPricingModalOpen(true)}
+              />
+            )}
 
             {studioTab === 'campaign' && (
               <Campaign

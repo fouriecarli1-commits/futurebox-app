@@ -21,6 +21,7 @@ import Cost from './Cost';
 import { CREDITS, readCost } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
+import Recommend from './Recommend';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { VOICE_CONSENT } from '@/app/lib/consent';
@@ -519,6 +520,25 @@ export default function VoiceLab({
             {t('voice.readNote', 'Write it, pick a voice, and hear it. An episode made this way says so on the episode.')}
           </p>
         </div>
+
+        {/* The choice this button was built for: which voice reads this script.
+            It sits beside the field rather than in the copilot panel, because
+            asking the panel would mean describing to it something already on
+            the screen — and it is given the script, so the sentence it comes
+            back with is about this read rather than about the voice. */}
+        <Recommend
+          what={t('voice.pickWhat', 'a voice to read this script')}
+          context={script}
+          options={[
+            ...state.mine.map((voice) => ({
+              id: voice.id,
+              label: voice.name,
+              note: t('voice.mine', 'yours') as string,
+            })),
+            ...state.stock.map((voice) => ({ id: voice.id, label: voice.name })),
+          ]}
+          onPick={setVoiceId}
+        />
 
         <div className="grid sm:grid-cols-2 gap-2">
           <select

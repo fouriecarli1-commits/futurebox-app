@@ -30,7 +30,6 @@ import {
 } from '../lib/playlists';
 import { fetchCreator, type Creator } from '../lib/radar';
 import Cover from './Cover';
-import SoundTrainer from './SoundTrainer';
 import DeleteAccount from './DeleteAccount';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
@@ -192,8 +191,6 @@ export default function Channel({
           </button>
         </div>
       </div>
-
-      <SoundTrainer reloadKey={reloadKey} onUpgrade={onUpgrade} />
 
       {/* ── Playlists ────────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">

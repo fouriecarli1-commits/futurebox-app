@@ -45,6 +45,7 @@ export const SURFACE_IDS = [
   "collab",
   "live",
   "voice_studio",
+  "sound",
   "podcast",
   "campaign",
 ] as const;
@@ -195,8 +196,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         "the value is one of: performance, story, road, room, abstract. It fills the shot, the shape and the length with that way of working",
       set_shot:
         "the value is the full description of what is on screen: subject, what it is doing, the shot, the light, the mood. Never put anything in quotation marks here - quoted text is spoken aloud, and a voice over a song is two things fighting",
-      set_shape:
-        "the value is 9:16 or 16:9, and nothing else",
+      set_shape: "the value is 9:16 or 16:9, and nothing else",
     },
     seeds: [
       {
@@ -405,24 +405,39 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       },
     ],
   },
+  sound: {
+    id: "sound",
+    stage: "make",
+    next: { to: "make", en: "Make a song with it", af: "Maak ’n snit daarmee" },
+    purpose:
+      "Training a sound of your own from songs you have already made, so the next ones come out sounding like them.",
+    can: ["say which songs to train on", "name the sound"],
+    seeds: [
+      {
+        en: "Which of my songs belong together?",
+        af: "Watter van my snitte hoort bymekaar?",
+      },
+      {
+        en: "What should I call this sound?",
+        af: "Wat moet ek hierdie klank noem?",
+      },
+      {
+        en: "How many songs do I need?",
+        af: "Hoeveel snitte het ek nodig?",
+      },
+    ],
+  },
   campaign: {
     id: "campaign",
     stage: "sell",
     purpose:
       "Adverts: a brief in, and a set of adverts out — the line, the words under it, the button, the line to say aloud, and the shot to film.",
-    can: [
-      "fill any part of the brief",
-      "say which market to write for",
-    ],
+    can: ["fill any part of the brief", "say which market to write for"],
     ops: {
-      set_what:
-        "the value is what they are selling, in a sentence",
-      set_who:
-        "the value is who the advert is for",
-      set_offer:
-        "the value is the offer, if there is one. Never invent one",
-      set_tone:
-        "the value is how it should sound, in a few words",
+      set_what: "the value is what they are selling, in a sentence",
+      set_who: "the value is who the advert is for",
+      set_offer: "the value is the offer, if there is one. Never invent one",
+      set_tone: "the value is how it should sound, in a few words",
       set_market:
         "the value is one of: English, Afrikaans, isiZulu, Sesotho, Portuguese, French, Spanish",
     },

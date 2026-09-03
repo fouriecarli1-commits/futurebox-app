@@ -33,11 +33,15 @@
  * imported ad, and an ad that reads imported has already lost the room.
  */
 
-import React, { useState } from 'react';
-import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
+import { PLATFORMS } from '../data/social';
+import { loadHandles, type Handles } from '../lib/social';
+import ShareRow from './ShareRow';
+import Steps, { type Step } from './Steps';
 
 interface Ad {
   angle: string;
@@ -46,7 +50,42 @@ interface Ad {
   cta: string;
   spoken: string;
   shot: string;
+  caption: string;
+  hashtags: string[];
 }
+
+/* What happens here, in order, before any of it happens.
+
+   The room opened on a form, and a form with no visible end reads as one that
+   will want more from you than you have. These four lines are the whole of it:
+   nothing forces the sequence and you can work in any order — it is a map, not
+   a wizard. */
+const STEPS: readonly Step[] = [
+  {
+    en: 'Say what you sell',
+    af: 'Sê wat jy verkoop',
+    noteEn: 'And who for. One box is enough to start.',
+    noteAf: 'En vir wie. Een blokkie is genoeg om te begin.',
+  },
+  {
+    en: 'It writes the adverts',
+    af: 'Dit skryf die advertensies',
+    noteEn: 'Several, each doing something different. Free.',
+    noteAf: 'Verskeie, elk wat iets anders doen. Gratis.',
+  },
+  {
+    en: 'Film it, and read the line',
+    af: 'Verfilm dit, en lees die lyn',
+    noteEn: 'Handed to the video desk and the voice studio.',
+    noteAf: 'Oorhandig aan die videolessenaar en die stemstudio.',
+  },
+  {
+    en: 'Put it out',
+    af: 'Sit dit uit',
+    noteEn: 'Caption and hashtags ready, one composer per platform.',
+    noteAf: 'Byskrif en hutsmerke gereed, een komponeerder per platform.',
+  },
+];
 
 /** The markets the copy can be written in. Names, not codes: this list is read. */
 const MARKETS = ['English', 'Afrikaans', 'isiZulu', 'Sesotho', 'Portuguese', 'French', 'Spanish'] as const;
@@ -78,6 +117,14 @@ export default function Campaign({
   const [tone, setTone] = useState('');
   const [market, setMarket] = useState<string>('English');
   const [placement, setPlacement] = useState<string>('feed');
+
+  /* Which platforms this is going to. The handles come from the same store the
+     share row reads, so a platform you have already set up here is already set
+     up there — this room does not ask for anything twice. */
+  const [handles, setHandles] = useState<Handles>({});
+  const [going, setGoing] = useState<string[]>(['tiktok', 'instagram']);
+  useEffect(() => setHandles(loadHandles()), []);
+  const chosen = PLATFORMS.filter((one) => going.indexOf(one.id) !== -1);
 
   const [ads, setAds] = useState<Ad[]>([]);
   const [busy, setBusy] = useState(false);
@@ -114,6 +161,12 @@ export default function Campaign({
           tone,
           market,
           placement: PLACEMENTS.find((one) => one.id === placement)?.en,
+          // The platforms' own requirements, from `data/social.ts`. Sent so the
+          // copy is written to the length and the hook window that actually
+          // exist, rather than written and then found not to fit.
+          fit: chosen
+            .map((one) => `${one.name}: ${one.bestFormat}, hook in ${one.hookWindow}, at most ${one.maxHashtags} hashtags`)
+            .join('; '),
           count: 3,
           // Asking again should not return the same three with the commas moved.
           seen: again ? ads.map((one) => one.angle) : [],
@@ -160,6 +213,44 @@ export default function Campaign({
             'Say what you are selling and it writes the adverts — the line, the words under it, the button, and the shot to film. Then it hands each one to the desk that makes it.',
           )}
         </p>
+      </div>
+
+      <Steps steps={STEPS} at={ads.length ? 3 : what.trim() ? 1 : 0} />
+
+      {/* Where it is going, before it is written rather than after.
+          The platforms decide the shape, the length and the hook window, and a
+          shape decided after the copy is a rewrite. */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-zinc-200">{t('ads.whereTitle', 'Where is it going?')}</p>
+          <p className="text-xs text-zinc-500 leading-relaxed">
+            {t('ads.whereNote', 'This decides the shape, the length and how fast the hook has to land — so it is asked before the writing, not after.')}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {PLATFORMS.map((one) => {
+            const on = going.indexOf(one.id) !== -1;
+            const known = Boolean(handles[one.id]);
+            return (
+              <button
+                key={one.id}
+                type="button"
+                onClick={() => setGoing(on ? going.filter((id) => id !== one.id) : [...going, one.id])}
+                aria-pressed={on}
+                title={one.bestFormat}
+                className={`text-left rounded-xl border px-3 py-2 transition-all ${
+                  on ? 'bg-emerald-500/10 border-emerald-500' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                }`}
+              >
+                <span className={`block text-sm font-semibold ${on ? 'text-emerald-300' : 'text-zinc-300'}`}>
+                  {one.name}
+                  {known && <span className="text-xs font-normal text-zinc-500"> · @{handles[one.id]}</span>}
+                </span>
+                <span className="block text-xs text-zinc-500">{one.bestFormat}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* The brief. Only the first box is required: an ad for "my bakery in
@@ -324,6 +415,31 @@ export default function Campaign({
             </div>
           )}
 
+          {/* What each platform wants for this one. Not advice in general - the
+              shape, the hook window and the hashtag ceiling for the platforms
+              actually chosen above, so the clip is cut right the first time. */}
+          {chosen.length > 0 && (
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2">
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">
+                {t('ads.fit', 'Cut it for')}
+              </p>
+              <ul className="space-y-1">
+                {chosen.map((one) => (
+                  <li key={one.id} className="text-sm text-zinc-300 leading-relaxed">
+                    <span className="font-semibold text-zinc-200">{one.name}</span> — {one.bestFormat},{' '}
+                    {t('ads.hookIn', 'hook in')} {one.hookWindow}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* The caption and the real composers. Reused rather than rebuilt:
+              this row already copies the caption, saves the handles and opens
+              each platform's own upload page, and a second copy of it here
+              would drift from the first. */}
+          <ShareRow title={ad.headline} what={ad.caption || ad.body} hashtags={ad.hashtags ?? []} />
+
           {/* Handing off rather than repeating. Both desks price themselves. */}
           <div className="flex flex-wrap gap-2 pt-0.5">
             <button
@@ -354,13 +470,29 @@ export default function Campaign({
         </div>
       ))}
 
-      {/* Said in the room, not discovered later. */}
-      <p className="text-xs text-zinc-500 leading-relaxed border-t border-zinc-800 pt-4">
-        {t(
-          'ads.notPublishing',
-          'This writes and makes the advert. It does not put it on Meta, Google or TikTok yet — download what you make and upload it there yourself. When those connections are built, this is where they will be.',
-        )}
-      </p>
+      {/* Said in the room, not discovered later — and said specifically.
+          "Not connected yet" is a shrug; naming what each platform requires is
+          the difference between a limitation and an excuse. The sentences come
+          from `data/social.ts`, where they are kept next to the URLs they are
+          about. */}
+      <details className="border-t border-zinc-800 pt-4">
+        <summary className="text-xs text-zinc-500 leading-relaxed cursor-pointer flex items-start gap-2">
+          <Link2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+          <span>
+            {t(
+              'ads.notPublishing',
+              'This writes the advert, makes it, and opens each platform ready to post. It does not upload for you — what that would take, per platform.',
+            )}
+          </span>
+        </summary>
+        <ul className="pt-3 space-y-2">
+          {PLATFORMS.map((one) => (
+            <li key={one.id} className="text-xs text-zinc-500 leading-relaxed">
+              <span className="font-semibold text-zinc-400">{one.name}</span> — {one.connectRequires}
+            </li>
+          ))}
+        </ul>
+      </details>
     </div>
   );
 }

@@ -57,6 +57,16 @@ const AdsSchema = z.object({
           .describe(
             'What the camera sees, for the video desk: subject, what it is doing, the shot, the light, the mood. Never use quotation marks here.',
           ),
+        caption: z
+          .string()
+          .describe(
+            'The words that go in the post itself, under the video. Written for a feed, in the market language. Not the headline again.',
+          ),
+        hashtags: z
+          .array(z.string())
+          .describe(
+            'Hashtags without the # — lowercase, no spaces. Few and specific beat many and generic. Never more than five.',
+          ),
       }),
     )
     .describe('Distinct approaches, not rewordings of each other'),
@@ -75,6 +85,8 @@ interface Body {
   market?: string;
   /** Where it runs, so the length and shape are right. */
   placement?: string;
+  /** What the chosen platforms want, in words: shape, length, hook window. */
+  fit?: string;
   /** How many to write. */
   count?: number;
   /** Angles already seen, so asking again returns something else. */
@@ -89,6 +101,8 @@ const SYSTEM = [
   '- The headline stops the scroll. The body earns the next second. The call to action asks for exactly one thing.',
   '- Write the spoken line only where a voice adds something. An ad that works silent is better on a feed where sound is off.',
   '- The shot is for a video engine: subject, what it is doing, the shot, the light, the mood. Never put quotation marks in the shot — quoted text gets spoken aloud, and the spoken line is a separate field.',
+  '- The caption is what goes under the post. It is not the headline again: the headline is on the picture, the caption is what somebody reads after it worked.',
+  '- Hashtags: few, specific, lowercase. Five is the ceiling and three is usually better. A generic one costs attention and returns nothing.',
   '',
   'How you write:',
   '- In the market language, written rather than translated. Afrikaans copy is written by somebody who thinks in Afrikaans; English idiom carried across is the single clearest sign of an imported ad.',
@@ -110,12 +124,13 @@ function briefFor(body: Body): string {
     body.tone ? `How it should sound: ${body.tone}` : 'No tone given. Plain and direct.',
     `Market language: ${body.market || 'English'}`,
     body.placement ? `Where it runs: ${body.placement}` : 'Where it runs is not set. Assume a vertical social feed with sound off.',
+    body.fit ? `What that placement wants: ${body.fit}` : '',
     `Write ${Math.min(Math.max(body.count ?? 3, 1), 6)} of them.`,
   ];
   if (body.seen?.length) {
     lines.push(`Approaches they have already seen, so do not repeat them: ${body.seen.join('; ')}`);
   }
-  return lines.join('\n');
+  return lines.filter(Boolean).join('\n');
 }
 
 export async function POST(request: Request): Promise<Response> {

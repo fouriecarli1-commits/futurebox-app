@@ -34,9 +34,19 @@ const FEWEST = 3;
 export default function SoundTrainer({
   reloadKey,
   onUpgrade,
+  standalone = false,
 }: {
   reloadKey: number;
   onUpgrade: () => void;
+  /**
+   * True when this is the whole room rather than a panel inside another one.
+   *
+   * The difference is what happens when there is nothing to show: a panel that
+   * cannot be used should disappear, and a room that cannot be used must say
+   * why, because somebody walked in on purpose and a blank page is not an
+   * answer to that.
+   */
+  standalone?: boolean;
 }): React.ReactElement | null {
   const { t } = useLang();
 
@@ -140,7 +150,16 @@ export default function SoundTrainer({
   );
 
   // Nothing to say when the app has no music service or nobody is signed in.
-  if (!sounds.configured || !sounds.signedIn) return null;
+  if (!sounds.configured || !sounds.signedIn) {
+    if (!standalone) return null;
+    return (
+      <p className="text-sm text-zinc-500 py-10 text-center border border-dashed border-zinc-800 rounded-2xl leading-relaxed">
+        {sounds.signedIn
+          ? t('sound.noEngine', 'Training a sound needs the music engine, which is not switched on for this app.')
+          : t('sound.signIn', 'Sign in to train a sound of your own.')}
+      </p>
+    );
+  }
 
   const chosen = brought.length > 0 ? brought.length : picked.size;
   const ready = chosen >= FEWEST && name.trim().length >= 5 && genre.trim().length > 0 && confirmed;

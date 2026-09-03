@@ -43,7 +43,19 @@ function WhatItIs(): React.ReactElement {
     { icon: Waves, text: t('booth.room.see', 'The backing above and your take below, on one clock, so you can see where you are.') },
     { icon: Scissors, text: t('booth.room.punch', 'Drag across the line that went wrong and sing only that. The rest of the take is kept.') },
     { icon: Layers, text: t('booth.room.split', 'Split the song, lift the generated voice out, and put yours where it was.') },
-    { icon: Sliders, text: t('booth.room.lanes', 'Lanes, levels, mutes and solos when one voice over one song is not enough.') },
+    /* Named, and told where the button is.
+       The pro lanes cannot open without a song — they need the backing as their
+       first lane — so they live behind a button inside an opened song, which is
+       three levels down and unfindable if you do not already know it is there.
+       Describing the feature without saying where it is was the same as not
+       having it. */
+    {
+      icon: Sliders,
+      text: t(
+        'booth.room.lanes',
+        'Lanes, levels, mutes and solos when one voice over one song is not enough — open a song below and press Pro.',
+      ),
+    },
   ];
   return (
     <ul className="space-y-2">
