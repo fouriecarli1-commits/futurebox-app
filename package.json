@@ -10,7 +10,8 @@
     "check:theme": "tsx scripts/check-theme-css.mts",
     "check:ops": "tsx scripts/check-copilot-ops.mts",
     "check:prices": "tsx scripts/check-prices.mts",
-    "check:afrikaans": "tsx scripts/check-afrikaans.mts"
+    "check:afrikaans": "tsx scripts/check-afrikaans.mts",
+    "check:security": "tsx scripts/check-security.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

@@ -31,6 +31,16 @@ ones.
 That is a better posture than most products have at launch. It was not luck — the comments in those
 files show it was argued about.
 
+**Every row above is now also a test.** `npm run check:security` asserts them, and it runs in CI: no
+table without row-level security, no `dangerouslySetInnerHTML` or `eval` or `new Function`, no secret
+name in the built client bundle, no service-key route that forgets its caller, no interpolated
+PostgREST filter without a shape check, and every security header and load-bearing CSP directive
+still declared.
+
+That exists because of §1 below. A claim written once is a claim nobody re-runs, and one of these was
+wrong for weeks. Each assertion was negative-tested — broken on purpose to confirm it fails — because
+a check that cannot fail is decoration.
+
 ### What does not hold up, in order of how much it matters
 
 1. ~~**Two high-severity advisories in `postcss`**~~ — **fixed, and this entry was wrong.**
@@ -62,11 +72,11 @@ files show it was argued about.
    than it looks — though with no `dangerouslySetInnerHTML` anywhere, there is little to inject
    into.
 
-3. **Two PostgREST filters are built by string interpolation** (`app/api/collab/route.ts`, the `.or()`
-   calls). Today both values are UUIDs read out of our own tables, so nothing injectable reaches
-   them, and the handle from the request goes through a parameterised `.eq()`. It is not a hole; it
-   is a shape that becomes one the day somebody passes a user-supplied value. Worth closing before
-   that day.
+3. ~~**Two PostgREST filters are built by string interpolation**~~ — **closed.** The assessment was
+   right: both values were UUIDs, and nothing injectable reached them. But that was true two lookups
+   away from where it was used, and safety you have to trace through a file is safety that lasts
+   until the next caller does not trace it. Both now go through a `filterSafe` UUID assertion at the
+   point of interpolation, and `check:security` fails if an `.or()` appears without one.
 
 4. **Everything on the device is unencrypted and unbacked-up.** Songs, the new history, social
    handles and the theme live in that browser's storage. Clearing site data loses them, and another
@@ -81,7 +91,8 @@ files show it was argued about.
 - [ ] Rotate every key that has ever been in a `.env` file on a laptop, and set them only in Vercel.
 - [ ] Turn on Supabase's own database backups, and check a restore actually works.
 - [ ] Confirm RLS is enabled on **every** table in the live project, not only the ones in the SQL
-      files here — the dashboard lists them.
+      files here — the dashboard lists them. `check:security` covers the files; only the dashboard
+      can tell you what is actually in the database.
 - [ ] Decide what happens when a video engine bill spikes. The ceilings exist; make sure the alert
       reaches a person.
 - [x] ~~Schedule the `next@16` upgrade.~~ Done — and it was more urgent than this list made it look.

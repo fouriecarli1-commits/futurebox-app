@@ -1,7 +1,8 @@
-# Runs the six checks that would otherwise only ever run on somebody's laptop:
+# Runs the seven checks that would otherwise only ever run on somebody's laptop:
 # the types have to resolve, the CSS defaults have to match the theme they claim
 # to be, the copilot's operations have to be described, the prices have to add
-# up, the Afrikaans has to be there, and the app has to build. All quick, and a PR that fails any of them is
+# up, the Afrikaans has to be there, the app has to build, and the
+# security claims have to still hold. All quick, and a PR that fails any of them is
 # not ready to read, never mind merge.
 name: CI
 
@@ -13,6 +14,17 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # A ceiling, because there was none and it cost twenty minutes.
+    #
+    # `npm ci` wedged on a runner — the same lockfile that had installed in
+    # eighteen seconds on the run before it — and with no timeout the job sat
+    # there holding a runner and reporting neither green nor red. A pull request
+    # that is failing tells you to fix something. One that is neither is the
+    # worst of the three states: nothing to act on and no reason to look again.
+    #
+    # Fifteen minutes against a happy path of about a minute, so this only ever
+    # fires on something genuinely stuck.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -52,5 +64,13 @@ jobs:
       - name: Afrikaans is not missing
         run: npm run check:afrikaans
 
+      # The security claims in docs/GOING_LIVE.md, as assertions. One of them
+      # was badly wrong for weeks — a claim written once is a claim nobody
+      # re-runs. This one needs the build above it to check the client bundle,
+      # so it comes after.
+
       - name: Build
         run: npx next build
+
+      - name: Security claims still hold
+        run: npm run check:security
