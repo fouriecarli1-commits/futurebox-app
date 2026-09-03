@@ -45,6 +45,8 @@ module.exports = {
         // Text on a saturated accent fill. Dark in every theme, because the
         // accent stays bright in every theme.
         onAccent: 'rgb(var(--fb-on-accent) / <alpha-value>)',
+        // The wash behind a modal. Dark in every theme — see --fb-scrim.
+        scrim: 'rgb(var(--fb-scrim) / <alpha-value>)',
       },
       borderRadius: {
         sm: 'var(--fb-radius-sm)',

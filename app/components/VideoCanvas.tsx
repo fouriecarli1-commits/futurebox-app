@@ -32,10 +32,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Video as VideoIcon, Loader2, Download, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap } from 'lucide-react';
 import { SCENES, spokenLines, looksUnquoted, LENGTHS, type Scene } from '../lib/videoscenes';
 import { engines, probeVideoEngine, type VideoEngine } from '../lib/engines';
-import { CREDITS, videoCost, type VideoGrade } from '../lib/credits';
+import { CREDITS, readCost, videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { signal } from '../lib/signal';
+import Cost from './Cost';
+import CheaperPath from './CheaperPath';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps } from '../lib/copilotactions';
+import type { SurfaceId } from '../lib/surfaces';
 
 type Aspect = '9:16' | '16:9' | '1:1';
 
@@ -58,7 +62,14 @@ const SHAPES: { id: Aspect; label: string; note: string }[] = [
   { id: '1:1', label: 'Square', note: 'A feed post' },
 ];
 
-export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
+export default function VideoCanvas({
+  onUpgrade,
+  onGoTo,
+}: {
+  onUpgrade?: () => void;
+  /** Move to another room. Used by the cheaper route out of a spoken line. */
+  onGoTo?: (surface: SurfaceId) => void;
+}) {
   const { t } = useLang();
 
   const [engine, setEngine] = useState<VideoEngine | null>(null);
@@ -69,6 +80,26 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
   const [prompt, setPrompt] = useState('');
   const [aspect, setAspect] = useState<Aspect>('16:9');
   const [seconds, setSeconds] = useState<number>(5);
+
+  /* What the copilot may change here.
+
+     Every value is vetted rather than trusted: the model writes a string, and
+     an aspect that is not one of the three or a length that is not one the
+     engine offers would set the panel to something no button can express and
+     no generate call will accept. A rejected value leaves the control alone,
+     which is the honest outcome — the reply said what it meant to do, and if
+     it could not be done, nothing should look as though it was. */
+  useCopilotOps('canvas', {
+    set_prompt: (value) => setPrompt(value),
+    set_aspect: (value) => {
+      const wanted = value.trim();
+      if (wanted === '16:9' || wanted === '9:16' || wanted === '1:1') setAspect(wanted);
+    },
+    set_seconds: (value) => {
+      const wanted = Number.parseInt(value.trim(), 10);
+      if (LENGTHS.some((one) => one.seconds === wanted)) setSeconds(wanted);
+    },
+  });
   /**
    * What the member is buying — never which engine serves it.
    *
@@ -436,6 +467,35 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
           </label>
         )}
 
+        {/* The same advice as the note above, with the money on it.
+
+            The note has always said that recording the line yourself is
+            cheaper. It did not say by how much, and "cheaper" without a number
+            is a thing people agree with and then do the expensive one anyway.
+            A spoken line moves the clip to Better, which is exactly double;
+            the same words read in the voice studio are charged per hundred and
+            fifty characters, so a fifteen-word line is two credits. Thirty-two
+            against sixty.
+
+            Only while the box is actually ticked. Somebody who has already
+            decided to record it themselves does not need to be congratulated. */}
+        {speak && spoken.length > 0 && (
+          <CheaperPath
+            now={videoCost(grade)}
+            instead={videoCost('standard') + readCost(spoken.join(' ').length)}
+            what={t(
+              'canvas.cheaperSpoken',
+              'Make the clip silent, and read the line in your own voice next door. Same words, and it is the only way to get Afrikaans.',
+            )}
+            action={t('canvas.cheaperGo', 'Keep it silent and read it there')}
+            onTake={() => {
+              setSpeak(false);
+              setGrade('standard');
+              onGoTo?.('voice_studio');
+            }}
+          />
+        )}
+
         {/* ── Shape and length ────────────────────────────────────────── */}
         <div className="grid sm:grid-cols-2 gap-3">
           <div>
@@ -496,6 +556,11 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
             ? t('canvas.making', 'Making it')
             : `${t('canvas.go', 'Make it')} — ${videoCost(grade)} ${t('video.credits', 'credits')}`}
         </button>
+
+        {/* The wait, said before the press rather than only during it. A video
+            is the slowest thing here by a distance, and somebody who is not
+            warned presses again — and the second press is not free. */}
+        {!busy && <Cost waitMinutes={3} className="justify-center w-full" />}
 
         {busy && (
           <p className="text-sm text-zinc-400 text-center">

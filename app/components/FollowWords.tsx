@@ -177,7 +177,7 @@ export default function FollowWords({
   const window_ = [current - 1, current, current + 1];
 
   return (
-    <div className="fixed inset-0 z-[90] bg-black flex flex-col">
+    <div className="fixed inset-0 z-[90] bg-scrim flex flex-col">
       {/* Mirrored for the person looking at it. The file that comes out is
           not, because mirrored footage reads as wrong to everybody else. */}
       <video

@@ -7,6 +7,12 @@
  * canvas beside it: name the song, set the style, write the words, make the
  * track, move you somewhere else.
  *
+ * It knows which room it is standing in. That sounds small and is not: it used
+ * to see only the song canvas, so somebody in the Booth with a take recorded
+ * got answers about writing lyrics. The surface it is given decides what it is
+ * told about, what it offers before you type, and where it is allowed to send
+ * you. See `app/lib/surfaces.ts`.
+ *
  * Two rules it enforces regardless of what the model replies:
  *   1. Nothing that costs money happens without you pressing yes. The approval
  *      card below is the only path to a paid generation.
@@ -17,9 +23,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, Send, Loader2, Check, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { type SurfaceId, seedsFor } from '../lib/surfaces';
+import { useCopilotBusContext } from '../lib/copilotactions';
 
 export type CopilotAction =
   | { kind: 'none'; value: string }
+  /** Change something in the room they are standing in. See `lib/copilotactions.ts`. */
+  | { kind: 'surface_op'; op: string; value: string }
   | { kind: 'set_title'; value: string }
   | { kind: 'set_style'; value: string }
   | { kind: 'set_lyrics'; value: string }
@@ -34,6 +44,10 @@ interface Turn {
 }
 
 export interface CopilotContext {
+  /** Which room they are in. Everything else here is the song canvas, which is
+   *  only some of what they might be looking at — the surface is what tells the
+   *  copilot whether that canvas is the subject or just background. */
+  surface: SurfaceId;
   title: string;
   style: string;
   lyrics: string;
@@ -54,7 +68,8 @@ export default function Copilot({
   context: CopilotContext;
   onAction: (action: CopilotAction) => void | Promise<void>;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const bus = useCopilotBusContext();
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
@@ -79,6 +94,10 @@ export default function Copilot({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: question,
+          // What this room will actually take, as of this turn. Sent rather
+          // than assumed, so the model is never offered an operation the studio
+          // would refuse — an unwired room simply gets no list and advises.
+          ops: bus.opsFor(context.surface),
           ...context,
           history: turns.map((turn) => ({ role: turn.role, text: turn.text })),
         }),
@@ -145,7 +164,7 @@ export default function Copilot({
           <div className="space-y-3">
             <p className="text-sm text-zinc-400 leading-relaxed">{t('copilot.intro')}</p>
             <div className="flex flex-col gap-1.5">
-              {[t('copilot.eg1'), t('copilot.eg2'), t('copilot.eg3')].map((example) => (
+              {seedsFor(context.surface, lang === 'af' ? 'af' : 'en').map((example) => (
                 <button
                   key={example}
                   type="button"

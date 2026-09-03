@@ -24,6 +24,7 @@ import { Check, Handshake, Loader2, Music, Send, X } from 'lucide-react';
 import { answer, ask, loadSaid, loadThreads, say, type Said, type Thread } from '../lib/collab';
 import { loadTracks, type Track } from '../lib/library';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 
 /** Long enough that a conversation feels live, gentle enough to leave open. */
 const ASK_AGAIN_MS = 15_000;
@@ -42,6 +43,12 @@ export default function CollabRoom({ reloadKey }: { reloadKey: number }): React.
   const [open, setOpen] = useState<string | null>(null);
   const [said, setSaid] = useState<Said[]>([]);
   const [draft, setDraft] = useState('');
+
+  /* Draft the message. Not send it — the same rule as the live room: a message
+     to another person goes out under their name, so it waits for them. */
+  useCopilotOps('collab', {
+    set_message: (value) => setDraft(value),
+  });
   const [tracks, setTracks] = useState<Track[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);

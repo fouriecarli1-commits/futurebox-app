@@ -46,10 +46,12 @@ import {
 } from '../lib/transcript';
 import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
+import Cost from './Cost';
 import ProBooth from './ProBooth';
 import { alignTo, fitInto, partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
 import { vocalSpanOf } from '../lib/vocalspan';
 import { phrasesOf } from '../lib/phrases';
+import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
 
@@ -1241,15 +1243,18 @@ export default function VocalBooth({
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={() => void readWords()}
-              disabled={reading || busy || busyOrLive}
-              className="px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
-            >
-              {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ear className="w-4 h-4" />}
-              {reading ? t('booth.reading', 'Listening to the song…') : t('booth.readWords', 'Read the words off the song')}
-            </button>
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => void readWords()}
+                disabled={reading || busy || busyOrLive}
+                className="px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ear className="w-4 h-4" />}
+                {reading ? t('booth.reading', 'Listening to the song…') : t('booth.readWords', 'Read the words off the song')}
+              </button>
+              <Cost rate={CREDITS.transcribe} seconds={duration || track.seconds} className="block" />
+            </div>
           )}
         </div>
 
@@ -1272,6 +1277,7 @@ export default function VocalBooth({
               {splitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
               {splitting ? t('booth.splitting', 'Separating the voice…') : t('booth.split', 'Separate the voice')}
             </button>
+            <Cost rate={CREDITS.stems} seconds={duration || track.seconds} className="pl-1" />
           </div>
         )}
 
@@ -1301,6 +1307,7 @@ export default function VocalBooth({
                 {cleaning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
                 {cleaning ? t('booth.cleaning', 'Cleaning it up…') : t('booth.clean', 'Take the room off it')}
               </button>
+              <Cost rate={CREDITS.clean} seconds={recorded?.duration} className="pl-1" />
               <span className="text-sm text-zinc-600 leading-snug flex-1 min-w-[200px]">
                 {t('booth.cleanNote', 'Takes away the fan, the traffic and the shape of the room. It does not touch pitch or timing.')}
               </span>

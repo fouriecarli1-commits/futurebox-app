@@ -1,5 +1,12 @@
-// The welcome page: the mark, what it offers, and the video that is English
-// only and does not start on its own.
+// The welcome page: the mark, what it offers, and the video that plays in the
+// reader's own language and does not start on its own.
+//
+// This used to assert the video was English only, which was right while there
+// was one recording. There are two now, one per language, and the rule that
+// replaced it is the one that mattered all along: a page never shows a
+// recording in the other language. A language with no recording set shows
+// nothing — better a page with no video than one that tells an Afrikaans
+// speaker, in the first thing they see, that the English is the real product.
 //
 //   PROBE=1 npm run build && npx next start -p 3111 &
 //   node .probe/welcome-video.mjs
@@ -68,14 +75,30 @@ say(wholeFile.length <= 1, `the video was requested ${wholeFile.length} times be
 say(await page.locator('#pricing').count() === 1, 'the plans are not on the welcome page');
 say(await page.getByText(/Free/).count() >= 1, 'the free tier is not shown');
 
-// ── And it is English only ─────────────────────────────────────────────
+// ── Each language plays its own recording, or none ─────────────────────
+const englishSrc = await page.locator('video').first().getAttribute('src').catch(() => null);
+
 await page.evaluate(() => window.localStorage.setItem('futurebox.lang.v1', 'af'));
 await page.reload({ waitUntil: 'networkidle' });
 const afrikaans = await page.getByText(/Die swartkas van die toekoms/i).count();
-if (afrikaans > 0) {
-  say(await page.locator('video').count() === 0, 'the English video is on the Afrikaans page');
-} else {
+
+if (afrikaans === 0) {
   problems.push('could not switch the page to Afrikaans, so the language rule was never tested');
+} else if (await page.locator('video').count() === 0) {
+  // No Afrikaans recording configured in this build. That is a legitimate
+  // state and the right one — silence rather than the English file.
+  say(true, '');
+} else {
+  const afrikaansSrc = await page.locator('video').first().getAttribute('src');
+  say(Boolean(afrikaansSrc), 'the Afrikaans page draws a player with no file behind it');
+  say(
+    !englishSrc || afrikaansSrc !== englishSrc,
+    'the Afrikaans page plays the English recording, which says the English is the real product',
+  );
+  say(
+    !/undefined/.test(afrikaansSrc ?? ''),
+    'the source came through as undefined — a NEXT_PUBLIC_ name that Next could not inline',
+  );
 }
 
 await browser.close();

@@ -40,6 +40,7 @@ import { accessToken } from '../lib/cloud';
 import { loadTracks, type Track } from '../lib/library';
 import { visitorId } from '../lib/signal';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 
 /** Often enough that the room never blinks out, rare enough to be polite. */
 const HELLO_EVERY = 30_000;
@@ -102,6 +103,13 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
   const [room, setRoom] = useState<Room>(EMPTY);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [draft, setDraft] = useState('');
+
+  /* Write what you are about to say. Deliberately only the box: sending puts
+     words in front of everybody in the room under your name, and the copilot
+     does not get to do that on its own. They press send. */
+  useCopilotOps('live', {
+    set_message: (value) => setDraft(value),
+  });
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
   const [playing, setPlaying] = useState<string | null>(null);

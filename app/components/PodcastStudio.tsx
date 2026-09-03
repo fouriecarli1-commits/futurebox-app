@@ -23,10 +23,13 @@ import {
 import VoiceLab, { type VoiceState } from './VoiceLab';
 import TwoHosts from './TwoHosts';
 import DubEpisode from './DubEpisode';
+import Cost from './Cost';
 import { episodeAudioUrl } from '../lib/episodeaudio';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
+import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 
 interface Show {
   id: string;
@@ -68,8 +71,18 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
   const [draft, setDraft] = useState<{ audio: Blob; how: Episode['made'] } | null>(null);
   /** Which episode's dubbing panel is open, if any. */
   const [dubbing, setDubbing] = useState<string | null>(null);
+  /** How long the draft is, measured when it lands so the price can be shown
+   *  before the button is pressed rather than worked out as it is sent. */
+  const [draftSeconds, setDraftSeconds] = useState<number | null>(null);
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
+
+  /* The episode's title and its notes. Both are text they were going to type
+     and can retype, and neither costs anything or publishes anything. */
+  useCopilotOps('podcast', {
+    set_title: (value) => setTitle(value),
+    set_notes: (value) => setNotes(value),
+  });
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -94,6 +107,20 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
       setSignedIn(Boolean(showReply.signedIn));
     }
   }, []);
+
+  useEffect(() => {
+    if (!draft) {
+      setDraftSeconds(null);
+      return;
+    }
+    let live = true;
+    durationOf(draft.audio).then((long) => {
+      if (live) setDraftSeconds(long);
+    });
+    return () => {
+      live = false;
+    };
+  }, [draft]);
 
   useEffect(() => {
     void load();
@@ -428,6 +455,10 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
             </button>
           )}
         </div>
+
+        {draft && draft.how !== 'spoken' && (
+          <Cost rate={CREDITS.clean} seconds={draftSeconds} className="block" />
+        )}
 
         {draft && (
           <div className="space-y-2.5 rounded-xl border border-emerald-500/30 bg-zinc-900/60 p-3">

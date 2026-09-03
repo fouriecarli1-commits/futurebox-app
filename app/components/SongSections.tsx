@@ -50,6 +50,7 @@ import { peaksOf, type Peaks } from '../lib/peaks';
 import { markBlob } from '../lib/watermark';
 import { levelOf, loadOwned, NOTHING, type Owned } from '../lib/purchases';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import type { Track } from '../lib/library';
 
 interface Part {
@@ -95,6 +96,17 @@ export default function SongSections({
   // Only songs that carry a plan can be laid out. A sketch has no sections and
   // an imported file has no lyric structure, so they are not offered.
   const usable = useMemo(() => tracks.filter((track) => (track.parts ?? []).length > 0), [tracks]);
+
+  /* Choose which song is on the timeline. Only the ones the timeline can
+     actually open are offered to the match, so naming a sketch that has no
+     audio behind it leaves the picker where it was rather than selecting a
+     song that then fails to load. */
+  useCopilotOps('studio', {
+    pick_song: (value) => {
+      const found = matchByTitle(usable, value);
+      if (found) setChosen(found.id);
+    },
+  });
 
   const [chosen, setChosen] = useState<string>('');
   const track = usable.find((one) => one.id === chosen) ?? usable[0] ?? null;

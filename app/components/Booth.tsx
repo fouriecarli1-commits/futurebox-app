@@ -30,6 +30,7 @@ import { getAudio, loadTracks, saveTracks, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { keepMix, takeId } from '../lib/takekeep';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import * as cloud from '../lib/cloud';
 import VocalBooth from './VocalBooth';
 
@@ -72,6 +73,15 @@ export default function Booth({
   const [open, setOpen] = useState<{ track: Track; music: Blob; take: Blob | null } | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
   const [status, setStatus] = useState('');
+
+  /* Open the booth on a song they named. Loading the backing is the same path
+     the button takes, so a copilot open and a tapped open cannot diverge. */
+  useCopilotOps('booth', {
+    pick_song: (value) => {
+      const track = matchByTitle(tracks, value);
+      if (track) void openOn(track);
+    },
+  });
 
   useEffect(() => {
     const local = loadTracks();

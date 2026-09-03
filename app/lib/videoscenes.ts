@@ -236,3 +236,122 @@ export function looksUnquoted(prompt: string): boolean {
   const afrikaans = /(^|\s)(sê|sing|sings|skree|skreeu|fluister|vra|vertel|kondig)(\s|$|[,.:;!?])/i;
   return english.test(prompt) || afrikaans.test(prompt);
 }
+
+/* ---------------------------------------------------------------------------
+ * Looks for a music video.
+ *
+ * The video desk has a `music` scene, and it is the right thing there: the desk
+ * makes one clip of any kind, and "a shot to cut against a track" is one kind
+ * among six. The music video room is not that. It is pointed at a song you
+ * already made, it knows its length, and what somebody needs there is not a
+ * shot — it is an approach to the whole thing.
+ *
+ * So these are approaches, not scenes: five ways a music video can go, each
+ * with the shape and the length that way of working usually wants.
+ *
+ * **None of them speaks.** In this engine anything inside quotation marks is
+ * spoken aloud, and a voice over a song is two things fighting. The scaffolds
+ * are written without a quoted line anywhere, and the room says so, so nobody
+ * puts a tagline in and wonders why the mix went wrong.
+ * ------------------------------------------------------------------------ */
+
+export interface MusicLook {
+  readonly id: string;
+  /** Two or three words on the chip. */
+  readonly label: string;
+  /** One line under it. */
+  readonly note: string;
+  /**
+   * What lands in the box, edited rather than sent as-is. Two each, for the
+   * same reason the desk carries several: one is a template, and two is a
+   * suggestion that somebody staring at an empty box can argue with.
+   */
+  readonly scaffolds: readonly string[];
+  /** Only the two the music video renderer knows. There is no square here. */
+  readonly aspect: '9:16' | '16:9';
+  readonly seconds: number;
+}
+
+export const MUSIC_LOOKS: readonly MusicLook[] = [
+  {
+    id: 'performance',
+    label: 'Performance',
+    note: 'Somebody playing it, straight to camera',
+    aspect: '9:16',
+    seconds: 15,
+    scaffolds: [
+      'A singer alone in a bare rehearsal room, mouthing along, eyes closed. ' +
+        'Medium close, static camera, very slight handheld drift. One hard ' +
+        'window light from the left, deep shadow on the other side. Nothing ' +
+        'staged, like a rehearsal somebody filmed.',
+      'A band mid-take in a small room crowded with cable and amps, seen from ' +
+        'behind the drummer. Wide, low, slow push in. Warm practical lamps, ' +
+        'no fill, haze in the air. Loose and unglamorous.',
+    ],
+  },
+  {
+    id: 'story',
+    label: 'Story',
+    note: 'A fragment of something happening',
+    aspect: '16:9',
+    seconds: 15,
+    scaffolds: [
+      'A young woman locks a front door, stands still for a second, and walks ' +
+        'off down the street with a bag. Following shot from behind, steady, ' +
+        'shallow focus. Flat early morning light, nothing dramatic. Ordinary, ' +
+        'and final.',
+      'Two people at opposite ends of a long kitchen table, neither looking up. ' +
+        'Wide static shot, symmetrical. Grey daylight through one window, no ' +
+        'lamps on. Still, and about to break.',
+    ],
+  },
+  {
+    id: 'road',
+    label: 'On the move',
+    note: 'Landscape going past',
+    aspect: '16:9',
+    seconds: 10,
+    scaffolds: [
+      'A dirt road unspooling through dry veld, shot from the back of a moving ' +
+        'bakkie. Wide, low, the horizon jolting with the suspension. Hard ' +
+        'afternoon sun, dust hanging in the light. Endless and a bit reckless.',
+      'A train window at speed, fields and pylons smearing past, a faint ' +
+        'reflection in the glass. Close, static on the glass, the world moving ' +
+        'behind it. Overcast and cool. Suspended, going somewhere.',
+    ],
+  },
+  {
+    id: 'room',
+    label: 'One room',
+    note: 'A single place, held',
+    aspect: '9:16',
+    seconds: 10,
+    scaffolds: [
+      'An unmade bed in a small flat, late afternoon, clothes on the floor and ' +
+        'a curtain moving. Static wide, no camera move at all. Low sun in a ' +
+        'strip across the wall. Warm, private, slightly abandoned.',
+      'A kitchen after a party — glasses everywhere, one tap dripping, the ' +
+        'light still on. Slow pan right across the counter. Cold overhead ' +
+        'fluorescent against the dark window. Quiet and tired.',
+    ],
+  },
+  {
+    id: 'abstract',
+    label: 'No people',
+    note: 'Colour, texture, motion',
+    aspect: '9:16',
+    seconds: 10,
+    scaffolds: [
+      'Ink dropped into water, blooming and folding in slow motion against ' +
+        'black. Macro, static, extremely shallow focus. One hard side light, ' +
+        'everything else dark. Weightless and a little ominous.',
+      'Rain running down a window at night with a street behind it out of ' +
+        'focus, headlights turning into moving discs of colour. Close, static, ' +
+        'the glass sharp and the world soft. Cold blues cut with sodium orange.',
+    ],
+  },
+];
+
+export function musicLookById(id: string): MusicLook | undefined {
+  return MUSIC_LOOKS.find((look) => look.id === id);
+}

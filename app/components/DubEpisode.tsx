@@ -32,6 +32,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Globe, Loader2, Languages, X } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { dubCost } from '../lib/credits';
+import Cost from './Cost';
 import { useLang } from '../lib/i18n';
 
 /** How often to ask. A dub is minutes, so a second would be rude to both ends. */
@@ -239,6 +240,10 @@ export default function DubEpisode({
           </div>
 
           <p className="text-sm text-zinc-500 leading-snug">{t('dub.ifRefused')}</p>
+
+          {/* The wait was only said once the job was running, which is the one
+              moment it does not help: by then the credits are spent. */}
+          <Cost waitMinutes={5} />
 
           <button
             type="button"

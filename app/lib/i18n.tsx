@@ -200,6 +200,27 @@ export const STRINGS: Dict = {
   "chan.next": { en: "Next", af: "Volgende" },
   "chan.share": { en: "Share", af: "Deel" },
   "rail.podcast": { en: "Podcast", af: "Podcast" },
+  "rail.next": { en: "Next", af: "Volgende" },
+  "rail.campaign": { en: "Adverts", af: "Advertensies" },
+  "rail.campaign.hint": { en: "Written, then filmed", af: "Geskryf, dan verfilm" },
+  "cheaper.title": { en: "Cheaper the other way", af: "Goedkoper anders om" },
+  "cheaper.against": { en: "against", af: "teenoor" },
+  "cheaper.saves": { en: "Saves", af: "Spaar" },
+  "canvas.cheaperSpoken": {
+    en: "Make the clip silent, and read the line in your own voice next door. Same words, and it is the only way to get Afrikaans.",
+    af: "Maak die knipsel stil, en lees die lyn langsaan in jou eie stem. Dieselfde woorde, en dit is die enigste manier om Afrikaans te kry.",
+  },
+  "canvas.cheaperGo": {
+    en: "Keep it silent and read it there",
+    af: "Hou dit stil en lees dit daar",
+  },
+  "auth.showPassword": { en: "Show password", af: "Wys wagwoord" },
+  "auth.hidePassword": { en: "Hide password", af: "Versteek wagwoord" },
+  "video.look": { en: "Where to start", af: "Waar om te begin" },
+  "video.lookAgain": {
+    en: "Tap it again for a different idea. Edit anything you like.",
+    af: "Tik dit weer vir 'n ander idee. Verander gerus enigiets.",
+  },
   "rail.podcast.hint": { en: "A show with its own feed", af: "'n Program met sy eie feed" },
   "dub.title": { en: "Say it in another language", af: "S\u00ea dit in 'n ander taal" },
   "dub.note": {
@@ -789,6 +810,18 @@ export const STRINGS: Dict = {
     en: "A pack costs more per credit than any monthly plan \u2014 it is for the month you needed more than usual. If you need more every month, a plan is the cheaper way.",
     af: "\u2019n Pakket kos meer per krediet as enige maandplan \u2014 dit is vir die maand toe jy meer as gewoonlik nodig gehad het. Het jy elke maand meer nodig, is \u2019n plan die goedkoper pad.",
   },
+
+  // What a press costs, and how long it takes, said before the press rather
+  // than after it. A per-minute job cannot name its figure until it knows the
+  // length of the file, so it says the rate first and fills the total in as
+  // soon as the audio is measured. The wait note is here because a job that
+  // runs on someone else's GPUs looks broken while it is working, and an
+  // unwarned person presses again — and pays again.
+  "cost.perMinute": { en: "credits a minute", af: "krediete ’n minuut" },
+  "cost.about": { en: "about", af: "sowat" },
+  "cost.forThis": { en: "for this one", af: "vir hierdie een" },
+  "cost.wait": { en: "takes a few minutes", af: "vat ’n paar minute" },
+  "cost.waitLong": { en: "takes several minutes", af: "vat ’n hele paar minute" },
 
   "spend.title": { en: "What the engine has cost you", af: "Wat die enjin jou gekos het" },
   "spend.sub": { en: "The last 30 days, counted from what was actually generated. Only you see this.", af: "Die laaste 30 dae, getel uit wat werklik gemaak is. Net jy sien dit." },

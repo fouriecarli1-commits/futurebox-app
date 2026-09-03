@@ -24,14 +24,16 @@
 import React, { useEffect, useState } from 'react';
 import { Video as VideoIcon, X, Loader2, Download, Quote, AlertTriangle } from 'lucide-react';
 import { renderVideo, styleFor, videoSupported, extensionFor, type Aspect } from '../lib/video';
-import { engines, probeVideo } from '../lib/engines';
-import { spokenLines, looksUnquoted } from '../lib/videoscenes';
+import { engines, probeVideoEngine, type VideoGrades } from '../lib/engines';
+import { spokenLines, looksUnquoted, MUSIC_LOOKS, LENGTHS } from '../lib/videoscenes';
 import { CREDITS } from '../lib/credits';
+import Cost from './Cost';
 import { signal } from '../lib/signal';
 import { timelineOf, type Part } from '../lib/timeline';
 import { downloadBlob, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps } from '../lib/copilotactions';
 
 export default function VideoPanel({ track, onClose }: { track: Track; onClose: () => void }) {
   const { t } = useLang();
@@ -62,12 +64,76 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
   const [engineReady, setEngineReady] = useState<boolean | null>(null);
   const [mode, setMode] = useState<'browser' | 'engine'>('browser');
   const [treatment, setTreatment] = useState('');
-  const [engineSeconds, setEngineSeconds] = useState<5 | 10>(5);
+
+  /* Somewhere to start.
+     The desk has had scene templates since it was built; this room had a bare
+     box and a placeholder, which is the hardest screen in the app to be new on
+     — you are being asked to art-direct a video for a song you have just
+     written. `MUSIC_LOOKS` is five approaches rather than five shots, because
+     that is the decision this room is actually making, and each carries the
+     shape and length its way of working wants.
+
+     Tapping the same look again walks to its next scaffold rather than
+     re-writing the first. Two per look, so the second tap is a different idea
+     and not a reset. */
+  const [look, setLook] = useState<string | null>(null);
+  const [variant, setVariant] = useState(0);
+
+  const applyLook = (id: string) => {
+    const chosen = MUSIC_LOOKS.find((one) => one.id === id);
+    if (!chosen) return;
+    const next = look === id ? (variant + 1) % chosen.scaffolds.length : 0;
+    setLook(id);
+    setVariant(next);
+    setTreatment(chosen.scaffolds[next]);
+    setAspect(chosen.aspect);
+    setClipSeconds(chosen.seconds);
+  };
+
+  /* What the copilot may do in this panel. It registers alongside the song
+     list's own `pick_song` rather than replacing it — the bus merges them. */
+  useCopilotOps('video', {
+    set_shot: (value) => setTreatment(value),
+    set_look: (value) => {
+      const wanted = value.trim().toLowerCase();
+      const found =
+        MUSIC_LOOKS.find((one) => one.id === wanted) ??
+        MUSIC_LOOKS.find((one) => one.label.toLowerCase() === wanted);
+      if (found) applyLook(found.id);
+    },
+    set_shape: (value) => {
+      const wanted = value.trim();
+      if (wanted === '9:16' || wanted === '16:9') setAspect(wanted);
+    },
+  });
+  const [engineSeconds, setEngineSeconds] = useState(5);
+  /* What the engine says it can make, rather than a pair written here.
+     This room offered five and ten because that is what one engine makes;
+     another declares 5, 10, 15, 20 and 30, and this room could not ask for any
+     of them. The desk has read the engine's own list since it was built — this
+     is the same read, so the two screens cannot disagree about what exists. */
+  const [caps, setCaps] = useState<VideoGrades | null>(null);
+  const engineLengths = React.useMemo(() => {
+    const able = caps?.can?.standard?.seconds;
+    return LENGTHS.filter((one) => (able ?? [5, 10]).indexOf(one.seconds) !== -1);
+  }, [caps]);
+  // A length the engine dropped support for should not stay selected and
+  // silently become something else at the far end.
+  useEffect(() => {
+    if (!engineLengths.length) return;
+    if (engineLengths.some((one) => one.seconds === engineSeconds)) return;
+    const nearest = engineLengths.reduce((best, one) =>
+      Math.abs(one.seconds - engineSeconds) < Math.abs(best.seconds - engineSeconds) ? one : best,
+    );
+    setEngineSeconds(nearest.seconds);
+  }, [engineLengths, engineSeconds]);
 
   useEffect(() => {
     let alive = true;
-    void probeVideo().then((ready) => {
-      if (alive) setEngineReady(ready);
+    void probeVideoEngine().then((state) => {
+      if (!alive) return;
+      setCaps(state);
+      setEngineReady(state.available);
     });
     return () => {
       alive = false;
@@ -209,12 +275,18 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
       )}
 
       {engineReady && mode === 'engine' && (
-        <p className="text-sm text-zinc-500 leading-snug">
-          {t(
-            'video.engineNote',
-            'The engine makes footage from your sentence. It has nothing to do with the song — it is a clip to cut against it. A few minutes, and the credits are given back if it fails.',
-          )}
-        </p>
+        <div className="space-y-1.5">
+          <p className="text-sm text-zinc-500 leading-snug">
+            {t(
+              'video.engineNote',
+              'The engine makes footage from your sentence. It has nothing to do with the song — it is a clip to cut against it. A few minutes, and the credits are given back if it fails.',
+            )}
+          </p>
+          {/* Video is the slowest thing here and the one people give up on
+              first. The figure and the wait stand together, above the button,
+              in the same shape as everywhere else that spends. */}
+          <Cost credits={CREDITS.video} waitMinutes={4} />
+        </div>
       )}
 
       {!videoSupported() && mode === 'browser' ? (
@@ -223,6 +295,33 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
         <>
           {mode === 'engine' && (
             <div className="space-y-3">
+              <div className="space-y-2">
+                <p className="text-sm text-zinc-400">{t('video.look', 'Where to start')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {MUSIC_LOOKS.map((one) => (
+                    <button
+                      key={one.id}
+                      type="button"
+                      onClick={() => applyLook(one.id)}
+                      title={one.note}
+                      className={`text-left rounded-xl border px-3 py-2 transition-all ${
+                        look === one.id
+                          ? 'bg-amber-500/15 border-amber-500 text-amber-300'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700'
+                      }`}
+                    >
+                      <span className="block text-sm font-semibold leading-tight">{one.label}</span>
+                      <span className="block text-xs opacity-80 leading-tight pt-0.5">{one.note}</span>
+                    </button>
+                  ))}
+                </div>
+                {look && (
+                  <p className="text-xs text-zinc-500">
+                    {t('video.lookAgain', 'Tap it again for a different idea. Edit anything you like.')}
+                  </p>
+                )}
+              </div>
+
               <label className="text-sm text-zinc-400" htmlFor="video-treatment">
                 {t('video.shot', 'What is on screen')}
               </label>
@@ -266,18 +365,19 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
               <div>
                 <label className="text-sm text-zinc-400">{t('video.length')}</label>
                 <div className="flex gap-1.5 mt-1.5">
-                  {([5, 10] as const).map((option) => (
+                  {engineLengths.map((option) => (
                     <button
-                      key={option}
+                      key={option.seconds}
                       type="button"
-                      onClick={() => setEngineSeconds(option)}
+                      onClick={() => setEngineSeconds(option.seconds)}
+                      title={option.note}
                       className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
-                        engineSeconds === option
+                        engineSeconds === option.seconds
                           ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
                           : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                       }`}
                     >
-                      {option}s
+                      {option.label}
                     </button>
                   ))}
                 </div>

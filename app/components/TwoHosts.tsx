@@ -33,6 +33,8 @@
 import React, { useMemo, useState } from 'react';
 import { Loader2, MessagesSquare, Play, Users } from 'lucide-react';
 import { batches, readScript, spoken, type Speaker } from '../lib/dialogue';
+import { readCost } from '../lib/credits';
+import Cost from './Cost';
 import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
 import type { VoiceState } from './VoiceLab';
@@ -162,6 +164,10 @@ export default function TwoHosts({
           {t('hosts.chars', 'Characters')}: {characters}
           {allowed > 0 ? ` / ${allowed}` : ''}
         </span>
+        {/* The price, beside the counts it is worked out from. Reading is
+            charged by the character, so it moves as the script is typed —
+            which is the point: nobody should have to press to find out. */}
+        {characters > 0 && <Cost credits={readCost(characters)} />}
         {requests > 1 && (
           <span title={t('hosts.requestsWhy')}>
             {t('hosts.requests', 'Passes')}: {requests}

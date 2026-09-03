@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { 
-  Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, 
+  Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone,
   Tv, Cpu, ArrowUpRight, Compass, CheckCircle2, X,
   UploadCloud, FileVideo, Music, Headphones, Lightbulb, Code2, 
   Link as LinkIcon, AlertCircle, Layers, DollarSign, Clock, 
@@ -42,6 +42,18 @@ import { signal } from './lib/signal';
 import { TRACK_LABELS } from './data/masterclasses';
 import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
+import PasswordField from './components/PasswordField';
+import Campaign from './components/Campaign';
+import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
+import {
+  STAGES,
+  SURFACES,
+  SURFACE_IDS,
+  resolveSurfaceId,
+  standaloneSurfaces,
+  surfacesInStage,
+  type SurfaceId,
+} from './lib/surfaces';
 import Spotlight from './components/Spotlight';
 import HereNow from './components/HereNow';
 import LanguagePicker from './components/LanguagePicker';
@@ -94,7 +106,10 @@ interface GenreSample {
 }
 
 export default function FutureBoxHome() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  // Rooms register what the copilot may do in them; the panel below dispatches
+  // into whichever one is open. See `lib/copilotactions.ts`.
+  const copilotBus = useCopilotBus();
   const [activeTab, setActiveTab] = useState<'all' | 'futurebox' | 'masterclasses' | 'creations' | 'radar'>('all');
   
   // User Authentication & Profile
@@ -280,7 +295,7 @@ export default function FutureBoxHome() {
    * already is, so a second screen for it was the same job behind a second
    * button.
    */
-  const [studioTab, setStudioTab] = useState<'video' | 'canvas' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'booth' | 'live' | 'podcast'>('make');
+  const [studioTab, setStudioTab] = useState<'video' | 'canvas' | 'voice_studio' | 'hooks_feed' | 'channels' | 'collab' | 'studio' | 'make' | 'booth' | 'live' | 'podcast' | 'campaign'>('make');
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -731,7 +746,7 @@ export default function FutureBoxHome() {
 
         {/* The auth and pricing overlays are shared with the signed-in app. */}
         {authModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
             <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
               <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                 <h3 className="text-lg font-extrabold text-white">
@@ -773,11 +788,11 @@ export default function FutureBoxHome() {
                   required
                   className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
                 />
-                <input
-                  type="password"
+                <PasswordField
                   value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
+                  onChange={setAuthPassword}
                   placeholder="Password"
+                  autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
                   required
                   className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
                 />
@@ -1365,7 +1380,7 @@ export default function FutureBoxHome() {
                               <Lock className="w-5 h-5" />
                             </div>
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-cyan-400 text-onAccent flex items-center justify-center shadow-lg">
+                            <div className="w-12 h-12 rounded-full bg-cyan-500 text-onAccent flex items-center justify-center shadow-lg">
                               <Play className="w-5 h-5 fill-current translate-x-0.5" />
                             </div>
                           )}
@@ -1637,7 +1652,7 @@ export default function FutureBoxHome() {
 
       {/* 🔐 AUTH & SIGN IN / SIGN UP MODAL */}
       {authModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div className="flex items-center space-x-2 text-white">
@@ -1664,13 +1679,13 @@ export default function FutureBoxHome() {
 
               <div>
                 <label className="block text-xs font-mono text-zinc-400 mb-1">Password</label>
-                <input
-                  type="password"
+                <PasswordField
                   value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
+                  onChange={setAuthPassword}
                   placeholder="••••••••••••"
-                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  autoComplete="current-password"
                   required
+                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -1701,7 +1716,7 @@ export default function FutureBoxHome() {
 
       {/* Plans and one-off prices. Every figure comes from plans.ts, in rand. */}
       {pricingModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
             <div className="flex items-start justify-between border-b border-zinc-800 pb-4">
               <div>
@@ -1810,6 +1825,7 @@ export default function FutureBoxHome() {
            is what "cramped" was.
            Nothing here is a dialogue you answer and dismiss. It is the room
            you work in, so it gets the room. */
+        <CopilotBusContext.Provider value={copilotBus}>
         <div className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden">
           <div className="w-full h-full p-3 md:p-5 flex flex-col gap-4 overflow-hidden">
             
@@ -1827,9 +1843,6 @@ export default function FutureBoxHome() {
                 <span className="text-sm font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
                   futurebox.app/@{creatorDomain}
                 </span>
-                <button onClick={() => setUploadModalOpen(false)} className="text-zinc-400 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
               </div>
             </div>
 
@@ -1844,55 +1857,81 @@ export default function FutureBoxHome() {
                       : 'md:w-56 md:flex-col md:overflow-y-auto'
                 }`}
               >
-                {[
-                  /* The rail follows the order the work happens in: write and
-                     generate the song, arrange it, sing on it, put a video to
-                     it. Everything after that is what you do with a finished
-                     song.
+                {(() => {
+                  /* The rail was eleven equal-weight rows. Ordered correctly —
+                     write, arrange, sing, film, release — but an order nobody
+                     can see is not an order, it is a list, and a list of eleven
+                     reads as eleven separate products.
 
-                     The last two are the rooms about speaking rather than
-                     about a song, and they sit together on purpose. Voice used
-                     to be stranded in the middle of the song-making run, where
-                     it read as a step in making one — and somebody looking for
-                     podcasting opened it, found a screen that plainly did
-                     something, and had no reason to think they were in the
-                     wrong room. A wrong room that looks empty is a better
-                     signpost than a wrong room that looks busy, so the two now
-                     stand next to each other and each says what the other is
-                     for. */
-                  { id: 'make', label: t('rail.make'), hint: t('rail.make.hint'), icon: Sparkles },
-                  { id: 'studio', label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
-                  { id: 'booth', label: t('rail.booth'), hint: t('rail.booth.hint'), icon: Mic },
-                  { id: 'video', label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
-                  { id: 'canvas', label: t('rail.canvas'), hint: t('rail.canvas.hint'), icon: Clapperboard },
-                  { id: 'hooks_feed', label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
-                  { id: 'channels', label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
-                  { id: 'collab', label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
-                  { id: 'live', label: t('rail.live'), hint: t('rail.live.hint'), icon: Radio },
-                  { id: 'voice_studio', label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
-                  { id: 'podcast', label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
-                ].map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = studioTab === tab.id;
+                     The stages come from `app/lib/surfaces.ts`, the same
+                     registry the copilot reads, so a room cannot be in the rail
+                     under one story and described to the copilot under another.
+                     Collab has no stage on purpose: it is not a step in making
+                     a record, it is who you make it with, and filing it under
+                     one would be saying something untrue about when you do it.
+
+                     Headings are for the side rail only. The top layout wraps
+                     into rows and the focus layout is fourteen pixels of icon —
+                     neither has anywhere to put a word. */
+                  const META: Record<SurfaceId, { label: string; hint: string; icon: typeof Sparkles }> = {
+                    make: { label: t('rail.make'), hint: t('rail.make.hint'), icon: Sparkles },
+                    studio: { label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
+                    booth: { label: t('rail.booth'), hint: t('rail.booth.hint'), icon: Mic },
+                    video: { label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
+                    canvas: { label: t('rail.canvas'), hint: t('rail.canvas.hint'), icon: Clapperboard },
+                    hooks_feed: { label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
+                    channels: { label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
+                    collab: { label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
+                    live: { label: t('rail.live'), hint: t('rail.live.hint'), icon: Radio },
+                    voice_studio: { label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
+                    podcast: { label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
+                    campaign: { label: t('rail.campaign'), hint: t('rail.campaign.hint'), icon: Megaphone },
+                  };
+
+                  const row = (id: SurfaceId) => {
+                    const meta = META[id];
+                    const Icon = meta.icon;
+                    const isActive = studioTab === id;
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => setStudioTab(id)}
+                        title={`${meta.label} — ${meta.hint}`}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={`flex-shrink-0 text-left rounded-xl flex items-center gap-3 transition-all ${
+                          theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
+                        } ${isActive ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+                      >
+                        <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-emerald-400' : ''}`} />
+                        <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
+                          <span className="block text-sm font-semibold leading-tight">{meta.label}</span>
+                          {theme.layout === 'rail' && (
+                            <span className="hidden md:block text-xs text-zinc-500 leading-tight truncate">{meta.hint}</span>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  };
+
+                  if (theme.layout !== 'rail') return SURFACE_IDS.map(row);
+
                   return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setStudioTab(tab.id as any)}
-                      title={`${tab.label} — ${tab.hint}`}
-                      className={`flex-shrink-0 text-left rounded-xl flex items-center gap-3 transition-all ${
-                        theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
-                      } ${isActive ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
-                    >
-                      <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-emerald-400' : ''}`} />
-                      <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
-                        <span className="block text-sm font-semibold leading-tight">{tab.label}</span>
-                        {theme.layout === 'rail' && (
-                          <span className="hidden md:block text-xs text-zinc-500 leading-tight truncate">{tab.hint}</span>
-                        )}
-                      </span>
-                    </button>
+                    <>
+                      {STAGES.map((stage) => (
+                        <React.Fragment key={stage.id}>
+                          <p className="hidden md:block px-3.5 pt-5 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-500 first:pt-0">
+                            {lang === 'af' ? stage.af : stage.en}
+                          </p>
+                          {surfacesInStage(stage.id).map(row)}
+                        </React.Fragment>
+                      ))}
+                      {standaloneSurfaces().length > 0 && (
+                        <div className="hidden md:block h-px bg-zinc-800 mx-3.5 my-4" />
+                      )}
+                      {standaloneSurfaces().map(row)}
+                    </>
                   );
-                })}
+                })()}
               </nav>
 
               <div className="flex-1 min-w-0 min-h-0 overflow-y-auto space-y-6 pr-1">
@@ -1909,7 +1948,9 @@ export default function FutureBoxHome() {
 
             {/* HOOKS: cut the bit worth posting, from your own tracks */}
             {studioTab === 'video' && <MusicVideo />}
-            {studioTab === 'canvas' && <VideoCanvas onUpgrade={() => setPricingModalOpen(true)} />}
+            {studioTab === 'canvas' && (
+              <VideoCanvas onUpgrade={() => setPricingModalOpen(true)} onGoTo={setStudioTab} />
+            )}
             {studioTab === 'hooks_feed' && <Hooks />}
 
             {/* MAKE: the button people came for */}
@@ -1951,6 +1992,16 @@ export default function FutureBoxHome() {
 
             {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
 
+            {studioTab === 'campaign' && (
+              <Campaign
+                onGoTo={setStudioTab}
+                /* Handed over rather than dispatched: the desk being written to
+                   is not mounted yet at the moment the button is pressed. */
+                onUseShot={(shot) => copilotBus.handoff('canvas', 'set_prompt', shot)}
+                onUseScript={(line) => copilotBus.handoff('voice_studio', 'set_script', line)}
+              />
+            )}
+
             {/* STUDIO: your own song, in its own sections, over its own audio */}
             {studioTab === 'studio' && (
               <SongSections
@@ -1985,6 +2036,36 @@ export default function FutureBoxHome() {
 
 
 
+                {/* Where the work goes from here.
+
+                    The studio had exactly one hand-off: a card that appeared
+                    after a song landed and offered a music video. It was the
+                    right idea in one place out of eleven, which meant that in
+                    the other ten a finished piece of work ended in silence and
+                    the person had to go back to the rail and guess.
+
+                    Each room now names its own next step, in the registry, and
+                    the rooms that are genuinely an end in themselves — the live
+                    room, the podcast feed, collab — name nothing and show
+                    nothing. It is a suggestion at the bottom of the page, not a
+                    funnel: it never moves anybody on its own. */}
+                {(() => {
+                  const onward = SURFACES[studioTab].next;
+                  if (!onward) return null;
+                  return (
+                    <div className="pt-2 pb-1 border-t border-zinc-800 flex items-center justify-between gap-4">
+                      <p className="text-xs text-zinc-500">{t('rail.next', 'Next')}</p>
+                      <button
+                        type="button"
+                        onClick={() => setStudioTab(onward.to)}
+                        className="flex items-center gap-2 text-sm font-semibold text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
+                      >
+                        <span>{lang === 'af' ? onward.af : onward.en}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Third pane: the thing you talk to. It writes to the same canvas
@@ -1993,6 +2074,7 @@ export default function FutureBoxHome() {
               <aside className="flex-shrink-0 w-full md:w-80 lg:w-96 min-h-0 md:h-auto h-96">
                 <Copilot
                   context={{
+                    surface: studioTab,
                     title: canvas.title,
                     style: canvas.style,
                     lyrics: canvas.lyrics,
@@ -2000,6 +2082,14 @@ export default function FutureBoxHome() {
                     engineReady,
                   }}
                   onAction={(action: CopilotAction) => {
+                    if (action.kind === 'surface_op') {
+                      // The room takes it, or nothing happens. There is
+                      // deliberately no fallback: silently doing something else
+                      // is worse than doing nothing, because the reply already
+                      // said what it was going to do.
+                      copilotBus.dispatch(studioTab, action.op, action.value);
+                      return;
+                    }
                     if (action.kind === 'set_title') setCanvas({ ...canvas, title: action.value });
                     if (action.kind === 'set_style') setCanvas({ ...canvas, style: action.value });
                     if (action.kind === 'set_lyrics') setCanvas({ ...canvas, lyrics: action.value });
@@ -2008,10 +2098,14 @@ export default function FutureBoxHome() {
                       setMakeSignal((n) => n + 1);
                     }
                     if (action.kind === 'go') {
-                      const allowed = ['make', 'video', 'podcast', 'hooks_feed', 'studio', 'collab'];
-                      const tab = action.value === 'hooks' ? 'hooks_feed' : action.value;
-                      // The model names a screen; only a real one is honoured.
-                      if (allowed.indexOf(tab) !== -1) setStudioTab(tab as typeof studioTab);
+                      // Every room in the rail, not the six this used to allow:
+                      // the copilot could not name the Booth, the video desk,
+                      // the channel, the live room or the voice studio, so in
+                      // five of the eleven rooms it could not even say where it
+                      // was. The registry vets the name and resolves what a
+                      // person calls a screen to what the studio calls it.
+                      const tab = resolveSurfaceId(action.value);
+                      if (tab) setStudioTab(tab);
                     }
                   }}
                 />
@@ -2020,6 +2114,7 @@ export default function FutureBoxHome() {
 
           </div>
         </div>
+        </CopilotBusContext.Provider>
       )}
 
       {/* After a song lands: the one thing most people want next. Asked once,
@@ -2056,7 +2151,7 @@ export default function FutureBoxHome() {
 
       {/* 🎬 UNIVERSAL MEDIA PLAYER MODAL */}
       {selectedMedia && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl my-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
               <div>
@@ -2096,7 +2191,7 @@ export default function FutureBoxHome() {
 
       {/* 🔍 BLUEPRINT MODAL */}
       {selectedBlueprint && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-lg flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-scrim/85 backdrop-blur-lg flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div className="space-y-1">

@@ -3,95 +3,103 @@
 @tailwind utilities;
 
 /**
- * Default theme variables — the FutureBox preset, written out so the first
- * paint is correct before any JavaScript runs. `applyTheme()` overwrites these
- * on the root element once a saved theme loads.
+ * The default theme variables, written out so the first paint is correct before
+ * any JavaScript runs. `applyTheme()` overwrites these on the root element once
+ * a saved theme loads.
+ *
+ * These are the Clean preset, and they have to stay that preset. They used to
+ * be the old near-black default while `DEFAULT_THEME` had moved to light, which
+ * meant every page painted dark and then flipped once hydration ran — and any
+ * page where that effect did not run stayed dark for good. If you change
+ * `PRESETS[0]` in `app/lib/theme.ts`, regenerate this block from
+ * `themeVariables(DEFAULT_THEME)` or the two will disagree again.
  */
 :root {
-  --fb-surface-50: 244 244 245;
-  --fb-surface-100: 231 231 234;
-  --fb-surface-200: 210 210 216;
-  --fb-surface-300: 179 179 188;
-  --fb-surface-400: 143 143 155;
-  --fb-surface-500: 111 111 124;
-  --fb-surface-600: 86 86 97;
-  --fb-surface-700: 67 67 76;
-  --fb-surface-800: 48 48 55;
-  --fb-surface-900: 31 31 36;
-  --fb-surface-950: 17 17 20;
+  --fb-surface-50: 0 0 0;
+  --fb-surface-100: 19 18 17;
+  --fb-surface-200: 36 34 31;
+  --fb-surface-300: 56 53 47;
+  --fb-surface-400: 74 70 63;
+  --fb-surface-500: 88 83 75;
+  --fb-surface-600: 98 93 84;
+  --fb-surface-700: 180 176 167;
+  --fb-surface-800: 217 215 211;
+  --fb-surface-900: 239 238 236;
+  --fb-surface-950: 250 250 249;
 
-  --fb-primary-50: 232 252 243;
-  --fb-primary-100: 209 249 231;
-  --fb-primary-200: 158 240 205;
-  --fb-primary-300: 105 226 175;
-  --fb-primary-400: 62 205 145;
-  --fb-primary-500: 49 175 122;
-  --fb-primary-600: 41 148 103;
-  --fb-primary-700: 33 120 84;
-  --fb-primary-800: 26 96 67;
-  --fb-primary-900: 20 75 52;
-  --fb-primary-950: 14 51 36;
+  --fb-primary-50: 7 31 20;
+  --fb-primary-100: 13 56 36;
+  --fb-primary-200: 18 75 49;
+  --fb-primary-300: 22 92 59;
+  --fb-primary-400: 25 105 68;
+  --fb-primary-500: 53 208 135;
+  --fb-primary-600: 42 178 114;
+  --fb-primary-700: 34 145 93;
+  --fb-primary-800: 27 116 74;
+  --fb-primary-900: 21 91 58;
+  --fb-primary-950: 15 62 40;
 
-  --fb-secondary-50: 230 250 254;
-  --fb-secondary-100: 203 245 253;
-  --fb-secondary-200: 148 233 250;
-  --fb-secondary-300: 87 216 245;
-  --fb-secondary-400: 41 190 224;
-  --fb-secondary-500: 26 160 190;
-  --fb-secondary-600: 22 135 161;
-  --fb-secondary-700: 18 110 131;
-  --fb-secondary-800: 14 88 105;
-  --fb-secondary-900: 11 69 82;
-  --fb-secondary-950: 8 47 56;
+  --fb-secondary-50: 24 27 33;
+  --fb-secondary-100: 43 50 59;
+  --fb-secondary-200: 57 66 79;
+  --fb-secondary-300: 71 82 98;
+  --fb-secondary-400: 81 93 111;
+  --fb-secondary-500: 111 128 151;
+  --fb-secondary-600: 92 107 127;
+  --fb-secondary-700: 75 87 104;
+  --fb-secondary-800: 60 69 83;
+  --fb-secondary-900: 47 55 65;
+  --fb-secondary-950: 32 37 44;
 
-  --fb-highlight-50: 254 248 230;
-  --fb-highlight-100: 253 240 202;
-  --fb-highlight-200: 251 223 143;
-  --fb-highlight-300: 249 203 82;
-  --fb-highlight-400: 245 180 24;
-  --fb-highlight-500: 208 152 10;
-  --fb-highlight-600: 176 129 9;
-  --fb-highlight-700: 143 105 7;
-  --fb-highlight-800: 115 84 6;
-  --fb-highlight-900: 90 66 4;
-  --fb-highlight-950: 61 45 3;
+  --fb-highlight-50: 36 25 1;
+  --fb-highlight-100: 65 46 3;
+  --fb-highlight-200: 86 62 4;
+  --fb-highlight-300: 106 76 4;
+  --fb-highlight-400: 121 86 5;
+  --fb-highlight-500: 245 176 15;
+  --fb-highlight-600: 211 150 9;
+  --fb-highlight-700: 171 122 7;
+  --fb-highlight-800: 137 98 6;
+  --fb-highlight-900: 108 77 4;
+  --fb-highlight-950: 73 52 3;
 
-  --fb-tertiary-50: 243 238 253;
-  --fb-tertiary-100: 233 224 251;
-  --fb-tertiary-200: 211 193 247;
-  --fb-tertiary-300: 185 157 242;
-  --fb-tertiary-400: 157 118 236;
-  --fb-tertiary-500: 131 84 222;
-  --fb-tertiary-600: 110 64 199;
-  --fb-tertiary-700: 89 50 165;
-  --fb-tertiary-800: 71 39 132;
-  --fb-tertiary-900: 56 30 104;
-  --fb-tertiary-950: 38 20 71;
+  --fb-tertiary-50: 24 27 33;
+  --fb-tertiary-100: 43 50 59;
+  --fb-tertiary-200: 57 66 79;
+  --fb-tertiary-300: 71 82 98;
+  --fb-tertiary-400: 81 93 111;
+  --fb-tertiary-500: 111 128 151;
+  --fb-tertiary-600: 92 107 127;
+  --fb-tertiary-700: 75 87 104;
+  --fb-tertiary-800: 60 69 83;
+  --fb-tertiary-900: 47 55 65;
+  --fb-tertiary-950: 32 37 44;
 
-  --fb-danger-50: 254 236 240;
-  --fb-danger-100: 253 217 224;
-  --fb-danger-200: 250 175 191;
-  --fb-danger-300: 246 128 155;
-  --fb-danger-400: 240 79 118;
-  --fb-danger-500: 219 44 87;
-  --fb-danger-600: 186 34 72;
-  --fb-danger-700: 151 27 58;
-  --fb-danger-800: 121 21 47;
-  --fb-danger-900: 95 17 37;
-  --fb-danger-950: 65 11 25;
+  --fb-danger-50: 56 9 16;
+  --fb-danger-100: 99 16 27;
+  --fb-danger-200: 130 21 36;
+  --fb-danger-300: 158 26 43;
+  --fb-danger-400: 180 29 50;
+  --fb-danger-500: 225 69 89;
+  --fb-danger-600: 189 31 52;
+  --fb-danger-700: 154 25 42;
+  --fb-danger-800: 123 20 34;
+  --fb-danger-900: 96 16 26;
+  --fb-danger-950: 66 11 18;
 
-  --fb-page: 7 8 12;
-  --fb-ink: 231 231 234;
-  --fb-void: 9 9 11;
-  --fb-on-accent: 17 17 20;
+  --fb-page: 250 250 249;
+  --fb-ink: 19 18 17;
+  --fb-void: 222 220 216;
+  --fb-on-accent: 22 21 19;
+  --fb-scrim: 17 16 14;
 
-  --fb-radius-sm: 2px;
-  --fb-radius: 4px;
-  --fb-radius-md: 6px;
-  --fb-radius-lg: 8px;
-  --fb-radius-xl: 12px;
-  --fb-radius-2xl: 16px;
-  --fb-radius-3xl: 24px;
+  --fb-radius-sm: 2.00px;
+  --fb-radius: 4.00px;
+  --fb-radius-md: 6.00px;
+  --fb-radius-lg: 8.00px;
+  --fb-radius-xl: 12.00px;
+  --fb-radius-2xl: 16.00px;
+  --fb-radius-3xl: 24.00px;
 
   --fb-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --fb-root-size: 16px;
