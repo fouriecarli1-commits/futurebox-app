@@ -205,6 +205,212 @@ export function sceneById(id: string): Scene | undefined {
   return SCENES.find((one) => one.id === id);
 }
 
+/* ---------------------------------------------------------------------------
+ * Genres, under the music tile.
+ *
+ * ── Why a second row rather than more tiles ──────────────────────────────
+ *
+ * The desk's six kinds answer "what am I making". They do not answer "what
+ * does this kind of song look like", and that is the question somebody making
+ * a music video actually has. Amapiano and a gospel record are both a shot to
+ * cut against a track, and they are not remotely the same shot: one is late,
+ * lit by phone screens, and moves on the off-beat; the other is a room full of
+ * people in daylight. A single "music video" scaffold can only be one of them,
+ * and it was neither.
+ *
+ * So the tile stays and a row opens under it. Choosing a kind stays one
+ * decision, and the genre is a second one that is easy to skip.
+ *
+ * ── Where this list comes from ───────────────────────────────────────────
+ *
+ * From what people here make, not from a chart. Amapiano, gqom and Afrikaans
+ * sokkie are on this list ahead of things with larger global numbers, because
+ * this app is built where those are the music, and a genre row that opens on
+ * nothing a local artist recognises is a row they scroll past once and never
+ * open again.
+ *
+ * ── What is written in them, and what is not ─────────────────────────────
+ *
+ * Every one is written here, in this file, by describing what the genre
+ * actually looks like on screen — the light, the hour, the place, the way the
+ * camera moves. None of it is anybody else's prompt text. A template gallery
+ * belongs to whoever wrote it; a description of what a gospel video looks like
+ * belongs to nobody.
+ *
+ * Each is built the same way as every other scaffold on this desk, and for the
+ * same reason:
+ *
+ *     subject → what it is doing → the shot → the light → the mood
+ *
+ * And none of them quotes a line. A voice over a track is two things fighting,
+ * which is the whole argument in `MUSIC_LOOKS` below and applies just as much
+ * here.
+ * ------------------------------------------------------------------------ */
+
+export interface Genre {
+  readonly id: string;
+  /** One or two words on the chip. */
+  readonly label: string;
+  /** One line under it, saying what that look is. */
+  readonly note: string;
+  /** Two each: one is a template, two is something to argue with. */
+  readonly scaffolds: readonly string[];
+  /** The shape this genre is usually posted in. */
+  readonly aspect: '9:16' | '16:9' | '1:1';
+}
+
+export const GENRES: readonly Genre[] = [
+  {
+    id: 'amapiano',
+    label: 'Amapiano',
+    note: 'Late, close, and moving on the off-beat',
+    aspect: '9:16',
+    scaffolds: [
+      'A crowded rooftop after midnight, one dancer holding the middle while ' +
+        'everyone else moves around them. Low handheld shot looking slightly ' +
+        'up, slow drift left. Phone screens and one hard practical light, deep ' +
+        'shadow everywhere else. Loose and unhurried and completely in control.',
+      'Feet in white trainers on a polished concrete floor, stepping the ' +
+        'pattern, other feet moving into frame around them. Close low shot, ' +
+        'static, shallow focus. Cold blue light from one side, warm spill from ' +
+        'behind. Precise and easy.',
+    ],
+  },
+  {
+    id: 'gqom',
+    label: 'Gqom',
+    note: 'Hard, industrial, shot from below',
+    aspect: '9:16',
+    scaffolds: [
+      'A group moving together in a bare concrete yard between two buildings, ' +
+        'dust coming up off the floor. Low wide shot, camera pushing in fast ' +
+        'then stopping. Hard white light from one high source, everything else ' +
+        'black. Heavy and physical.',
+      'A single figure against a corrugated wall, hitting the beat with the ' +
+        'whole body. Close shot from below, handheld and tight. Hard cold ' +
+        'light from the left, sharp shadow on the wall. Aggressive and exact.',
+    ],
+  },
+  {
+    id: 'sokkie',
+    label: 'Sokkie',
+    note: 'Afrikaans, warm, and made to dance to',
+    aspect: '16:9',
+    scaffolds: [
+      'A couple dancing on a wooden stoep at dusk, string lights above them, ' +
+        'nobody watching. Wide shot, slow push in, the camera at their height. ' +
+        'Warm amber light, the sky still blue behind. Easy and unselfconscious.',
+      'A dance floor in a small country hall, three couples turning, the rest ' +
+        'sitting at long tables. Medium wide, slow pan right. Warm overhead ' +
+        'light, hard highlights on a polished floor. Familiar and happy.',
+    ],
+  },
+  {
+    id: 'gospel',
+    label: 'Gospel',
+    note: 'Daylight, a room full of people',
+    aspect: '16:9',
+    scaffolds: [
+      'A choir mid-phrase in a hall with high windows, hands raised in the ' +
+        'back rows. Wide shot from slightly above, very slow push in. Hard ' +
+        'daylight coming down in shafts through dust. Full and lifted.',
+      'One singer with eyes closed at the front of a room, the congregation ' +
+        'soft behind her. Medium close, static, shallow focus. Window light ' +
+        'from the left, the room warm and bright. Still and certain.',
+    ],
+  },
+  {
+    id: 'hiphop',
+    label: 'Hip-hop',
+    note: 'Street, wide lens, low camera',
+    aspect: '9:16',
+    scaffolds: [
+      'A figure walking straight at the camera down the middle of an empty ' +
+        'street, hood up, others falling in behind. Low wide-lens shot tracking ' +
+        'backwards at a steady pace. Hard afternoon sun, long shadows down the ' +
+        'tar. Unbothered.',
+      'A car door opening at night and someone stepping out onto a wet forecourt. ' +
+        'Low close shot, slow tilt up. Orange sodium light and neon reflected ' +
+        'in the water. Cold and expensive.',
+    ],
+  },
+  {
+    id: 'afrobeats',
+    label: 'Afrobeats',
+    note: 'Colour, daylight, people moving',
+    aspect: '9:16',
+    scaffolds: [
+      'A group dancing in a courtyard in full colour, fabric moving, someone ' +
+        'laughing at the edge of frame. Medium wide, handheld, drifting around ' +
+        'them. Hard midday sun, saturated colour, hard shadow. Joyful and loud.',
+      'A single dancer against a painted wall, hitting the steps, dust in the ' +
+        'light. Medium shot, static, slight slow motion. Late gold sun raking ' +
+        'from the right. Confident and warm.',
+    ],
+  },
+  {
+    id: 'rock',
+    label: 'Rock',
+    note: 'A band in a room, and the room is dark',
+    aspect: '16:9',
+    scaffolds: [
+      'A four-piece mid-song in a low rehearsal room, the drummer just visible ' +
+        'behind. Wide shot, handheld, moving in and out. One hard backlight ' +
+        'through smoke, faces half dark. Loud and close.',
+      'A guitarist stepping into a single beam at the front of a small stage. ' +
+        'Medium low shot, slow push in. Hard white light from behind, the crowd ' +
+        'in silhouette. Raw.',
+    ],
+  },
+  {
+    id: 'house',
+    label: 'House',
+    note: 'Lights, bodies, and a long slow move',
+    aspect: '9:16',
+    scaffolds: [
+      'A packed dance floor from above, hands up, the whole room on the same ' +
+        'beat. High wide shot, very slow rotation. Moving colour from a rig ' +
+        'overhead, everything else black. Endless.',
+      'A face lit only by moving light, eyes closed, the crowd out of focus ' +
+        'behind. Close shot, static, shallow. Colour sweeping across the frame ' +
+        'and away. Lost in it.',
+    ],
+  },
+  {
+    id: 'rnb',
+    label: 'R&B',
+    note: 'One person, one room, soft light',
+    aspect: '9:16',
+    scaffolds: [
+      'Someone sitting on the floor against a bed in a dim room, half turned ' +
+        'from the camera. Medium close, static, shallow focus. One warm lamp ' +
+        'from the side, the rest of the room falling off to black. Intimate and ' +
+        'a little tired.',
+      'A figure at a window with the city out of focus behind, not moving. ' +
+        'Close shot, very slow push in. Cold blue from outside, one warm source ' +
+        'behind the camera. Quiet and unresolved.',
+    ],
+  },
+  {
+    id: 'country',
+    label: 'Country',
+    note: 'Open land and late light',
+    aspect: '16:9',
+    scaffolds: [
+      'A figure leaning on a farm gate looking out over dry fields, back to ' +
+        'camera. Wide static shot, the horizon low. Late gold sun from behind, ' +
+        'dust in the air. Settled and a little sad.',
+      'A bakkie on a dirt road throwing a long dust trail, seen from far off. ' +
+        'Very wide shot, slow pan to follow. Hard low sun raking across the ' +
+        'veld. Wide open.',
+    ],
+  },
+];
+
+export function genreById(id: string): Genre | undefined {
+  return GENRES.find((one) => one.id === id);
+}
+
 /**
  * The lines that will be spoken, pulled out of a prompt.
  *

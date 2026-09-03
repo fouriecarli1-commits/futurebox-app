@@ -30,7 +30,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Video as VideoIcon, Loader2, Download, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap } from 'lucide-react';
-import { SCENES, spokenLines, looksUnquoted, LENGTHS, type Scene } from '../lib/videoscenes';
+import {
+  SCENES, spokenLines, looksUnquoted, LENGTHS, GENRES, type Scene, type Genre,
+} from '../lib/videoscenes';
 import { engines, probeVideoEngine, type VideoEngine } from '../lib/engines';
 import { CREDITS, readCost, videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
@@ -40,6 +42,7 @@ import Recommend from './Recommend';
 import History from './History';
 import { makeId, rememberMake } from '../lib/makes';
 import CheaperPath from './CheaperPath';
+import StartFrame from './StartFrame';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
@@ -113,6 +116,15 @@ export default function VideoCanvas({
    */
   const [grade, setGrade] = useState<VideoGrade>('standard');
   /**
+   * A picture to start the clip from. Held here rather than uploaded: it goes
+   * with the request and is never stored, so leaving the room loses it, which
+   * is the correct behaviour for something nobody was told we kept.
+   */
+  const [frame, setFrame] = useState<string | null>(null);
+  /** Which genre's look is in the box, if one was taken. */
+  const [genre, setGenre] = useState<Genre | null>(null);
+  const [genreVariant, setGenreVariant] = useState(0);
+  /**
    * Whether the engine itself should speak the quoted line.
    *
    * Off by default, and that default is the whole language strategy. The
@@ -177,6 +189,11 @@ export default function VideoCanvas({
     // way to ask for another idea, not just the way to choose a kind.
     const next = scene?.id === chosen.id ? (variant + 1) % chosen.scaffolds.length : 0;
     setScene(chosen);
+    // The genre row describes what is in the box. Filling the box from a tile
+    // means no genre is in it any more, and a chip left lit would be claiming
+    // otherwise.
+    setGenre(null);
+    setGenreVariant(0);
     setVariant(next);
     setPrompt(chosen.scaffolds[next]);
     setAspect(chosen.aspect);
@@ -187,7 +204,26 @@ export default function VideoCanvas({
   const clear = () => {
     setScene(null);
     setVariant(0);
+    setGenre(null);
+    setGenreVariant(0);
     setPrompt('');
+    setError(null);
+  };
+
+  /**
+   * Take a genre's look, or ask it for its other one.
+   *
+   * Same behaviour as the tiles above: pressing the chip you are already on
+   * walks to the next scaffold rather than rewriting the box with the same
+   * words, because the chip is how you ask for another idea as well as how you
+   * choose.
+   */
+  const pickGenre = (chosen: Genre) => {
+    const next = genre?.id === chosen.id ? (genreVariant + 1) % chosen.scaffolds.length : 0;
+    setGenre(chosen);
+    setGenreVariant(next);
+    setPrompt(chosen.scaffolds[next]);
+    setAspect(chosen.aspect);
     setError(null);
   };
 
@@ -207,6 +243,7 @@ export default function VideoCanvas({
         seconds,
         grade,
         speak,
+        ...(frame ? { image: frame } : {}),
       });
       const url = URL.createObjectURL(result.blob);
       setMade((held) => [{ blob: result.blob, url, prompt: said, aspect }, ...held]);
@@ -384,6 +421,64 @@ export default function VideoCanvas({
         })}
       </div>
 
+      {/* ── The genre row ─────────────────────────────────────────────────
+
+          Under the Music tile only, and only once it is chosen. The six tiles
+          answer "what am I making"; this answers "what does this kind of song
+          look like", which is a different question and the one somebody making
+          a music video actually has. Amapiano and a gospel record are both a
+          shot to cut against a track and they are not remotely the same shot,
+          so one scaffold could only ever be one of them.
+
+          A second row rather than sixteen tiles: choosing a kind stays one
+          decision, and this one is easy to skip. It scrolls in its own box so
+          ten chips cannot push the writing box off a phone screen. */}
+      {scene?.id === 'music' && (
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
+          <div className="flex items-baseline justify-between gap-3 flex-wrap">
+            <p className="text-sm font-semibold text-zinc-300">
+              {t('canvas.genre', 'What kind of song is it?')}
+            </p>
+            <p className="text-xs text-zinc-500">
+              {t('canvas.genreSkip', 'Optional — it just fills the box differently.')}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {GENRES.map((one) => {
+              const active = genre?.id === one.id;
+              return (
+                <button
+                  key={one.id}
+                  type="button"
+                  onClick={() => pickGenre(one)}
+                  aria-pressed={active}
+                  className={`text-left rounded-xl border px-3 py-2 transition-colors ${
+                    active
+                      ? 'border-emerald-500 bg-emerald-500/10'
+                      : 'border-zinc-800 bg-zinc-950 hover:border-zinc-600'
+                  }`}
+                >
+                  <span
+                    className={`block text-sm font-semibold ${active ? 'text-emerald-300' : 'text-zinc-200'}`}
+                  >
+                    {t(`canvas.genre.${one.id}`, one.label)}
+                  </span>
+                  <span className="block text-xs text-zinc-500 leading-snug">
+                    {t(`canvas.genreNote.${one.id}`, one.note)}
+                  </span>
+                  {active && one.scaffolds.length > 1 && (
+                    <span className="block text-[11px] text-zinc-600 pt-0.5">
+                      {t('canvas.another', 'Press again for another')} · {genreVariant + 1}/
+                      {one.scaffolds.length}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── The box ───────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4">
         <div className="flex items-center justify-between gap-3">
@@ -407,6 +502,28 @@ export default function VideoCanvas({
             'What is in the shot, what it is doing, what the camera does, what the light does, how it feels.',
           )}
           className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed resize-y"
+        />
+
+        {/* A picture to start from.
+
+            Under the box rather than above it, because the sentence is still
+            the main event: the picture settles what the shot looks like and
+            the sentence says what happens in it. Somebody who attaches one
+            first and then writes is served just as well by this order, and
+            somebody who never attaches one is not made to step past it. */}
+        <StartFrame
+          value={frame}
+          onChange={setFrame}
+          supported={Boolean(able?.startFrame)}
+          unsupportedNote={
+            engine?.startFrame
+              ? t(
+                  'canvas.frameGrade',
+                  'Starting from a picture is on the Premium grade. It is not offered here because the engines behind this grade would ignore the picture and charge you anyway.',
+                )
+              : undefined
+          }
+          disabled={busy}
         />
 
         {/* The one rule that is not obvious, said once and shown always. */}

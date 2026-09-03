@@ -15,6 +15,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { CONTACT_EMAIL } from '../lib/brand';
 
 export const metadata = {
   title: 'Privacy — FutureBox',
@@ -23,7 +24,7 @@ export const metadata = {
 
 /** Kept beside the text so the date and the text cannot drift apart. */
 const UPDATED = '31 August 2026';
-const CONTACT = 'admin@futurebox.app';
+const CONTACT = CONTACT_EMAIL;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

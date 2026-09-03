@@ -19,9 +19,9 @@ import { type Plan } from '../lib/entitlements';
 import React, { useMemo, useState } from 'react';
 import {
   RefreshCw, ChevronDown, ChevronRight, Lock, EyeOff,
+  FileText, Newspaper, PlayCircle, Headphones,
 } from 'lucide-react';
 import { FEED_ITEMS, CATEGORIES } from '../data/feed';
-import Cover from './Cover';
 import {
   assess, BAR, TIER_LIMITS, type FeedItem, type Verdict,
 } from '../lib/curation';
@@ -30,6 +30,34 @@ import { useLang } from '../lib/i18n';
 interface Scored {
   readonly item: FeedItem;
   readonly verdict: Verdict;
+}
+
+/**
+ * A mark for what the thing is: a paper, an article, a talk, a listen.
+ *
+ * Deliberately a symbol and deliberately grey. The rows already carry one
+ * colour — the score — and that colour means something. A second colour that
+ * means nothing competes with it, which is how the artwork this replaced ended
+ * up being the loudest thing on a page about judging quality.
+ */
+function KindMark({ kind }: { kind: FeedItem['kind'] }): React.ReactElement {
+  const { t } = useLang();
+  const marks = {
+    paper: { Icon: FileText, label: t('radar.kind.paper', 'Paper') },
+    article: { Icon: Newspaper, label: t('radar.kind.article', 'Article') },
+    video: { Icon: PlayCircle, label: t('radar.kind.video', 'Watch') },
+    podcast: { Icon: Headphones, label: t('radar.kind.podcast', 'Listen') },
+  } as const;
+  const { Icon, label } = marks[kind];
+  return (
+    <span
+      title={label}
+      className="hidden sm:flex flex-col items-center gap-1 w-14 flex-shrink-0 pt-0.5 text-zinc-500"
+    >
+      <Icon className="w-5 h-5" aria-hidden="true" />
+      <span className="text-[11px] font-semibold leading-none">{label}</span>
+    </span>
+  );
 }
 
 export default function QualityRadar({
@@ -66,11 +94,18 @@ export default function QualityRadar({
   const rejected = scored.filter((s) => s.verdict.band === 'noise').filter(inCategory);
   const locked = passing.filter((s) => s.item.proOnly && userPlan === 'free');
   const available = passing.filter((s) => !(s.item.proOnly && userPlan === 'free'));
-  const start = available.length === 0 ? 0 : (cycle * limits.maxItems) % available.length;
-  const visible =
-    available.length <= limits.maxItems
-      ? available
-      : Array.from({ length: Math.min(limits.maxItems, available.length) }, (_, i) => available[(start + i) % available.length]);
+  /* Rotate, always — not only when there is more than a screenful.
+     The window was skipped entirely when everything already fitted, which on a
+     paid plan is the normal case: forty slots against about twenty items. So
+     the button that says "show me others" provably could not change the list,
+     which is exactly how it felt. Rotating by a smaller step than the page
+     size also means the list *reorders* rather than jumping a whole screen,
+     which is the point — you are looking for something you have not read, and
+     it is easier to spot at the top than three screens down. */
+  const step = Math.max(1, Math.round(limits.maxItems / 3));
+  const start = available.length === 0 ? 0 : (cycle * step) % available.length;
+  const shown = Math.min(limits.maxItems, available.length);
+  const visible = Array.from({ length: shown }, (_, i) => available[(start + i) % available.length]);
 
   const toggleCategory = (c: string) => {
     setCategories((prev) => {
@@ -85,8 +120,12 @@ export default function QualityRadar({
 
   const resync = () => {
     setSyncing(true);
-    // Re-scoring against the current clock is the honest version of a refresh:
-    // it re-ages everything. Real ingestion goes here.
+    /* Two real things happen, and neither is fetching a story that did not
+       exist a second ago: everything is re-scored against the current clock,
+       which re-ages it, and the order rotates so a different set leads.
+       There is no live ingestion behind this yet — the button's words say
+       "show me others" rather than "find new stories" for that reason, and the
+       line under the heading says where these come from. */
     window.setTimeout(() => {
       setNow(Date.now());
       setCycle((c) => c + 1);
@@ -105,7 +144,12 @@ export default function QualityRadar({
           <button
             type="button"
             onClick={() => setShowHow((v) => !v)}
-            className="text-sm text-zinc-500 hover:text-zinc-200"
+            aria-expanded={showHow}
+            className={`px-3 py-1.5 rounded-xl text-sm border transition-colors ${
+              showHow
+                ? 'bg-emerald-500/10 border-emerald-500 text-emerald-300'
+                : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+            }`}
           >
             {t('radar.howWeChoose')}
           </button>
@@ -113,7 +157,7 @@ export default function QualityRadar({
             type="button"
             onClick={resync}
             disabled={syncing}
-            className="px-3 py-1.5 rounded-xl text-sm text-zinc-400 hover:text-white flex items-center gap-1.5 disabled:opacity-50"
+            className="px-3 py-1.5 rounded-xl text-sm bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white flex items-center gap-1.5 disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
             {syncing ? t('radar.looking') : t('radar.findNew')}
@@ -134,6 +178,13 @@ export default function QualityRadar({
         )}
       </p>
 
+      {/* Where they come from, said once. The refresh re-ages and reorders a
+          curated set; it does not go and look. Better said here than implied
+          by a button. */}
+      <p className="text-xs text-zinc-500 leading-relaxed">
+        {t('radar.source', 'A curated set, re-scored and reordered each time you ask. Not a live feed.')}
+      </p>
+
       {showHow && (
         <p className="text-sm text-zinc-400 leading-relaxed bg-zinc-900/60 border border-zinc-800 rounded-xl p-3">
           {t('radar.explain')}
@@ -149,10 +200,11 @@ export default function QualityRadar({
               key={c}
               type="button"
               onClick={() => toggleCategory(c)}
-              className={`px-3 py-1 rounded-full text-sm transition-all ${
+              aria-pressed={active}
+              className={`px-3 py-1.5 rounded-xl text-sm border transition-all ${
                 active
-                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/60'
-                  : 'text-zinc-500 border border-transparent hover:text-zinc-200'
+                  ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500'
+                  : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
               }`}
             >
               {c}
@@ -160,8 +212,12 @@ export default function QualityRadar({
           );
         })}
         {categories.length > 0 && (
-          <button type="button" onClick={() => setCategories([])} className="px-2 text-sm text-zinc-600 hover:text-zinc-300">
-            clear
+          <button
+            type="button"
+            onClick={() => setCategories([])}
+            className="px-3 py-1.5 rounded-xl text-sm bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+          >
+            {t('radar.clear', 'Clear')}
           </button>
         )}
       </div>
@@ -172,23 +228,19 @@ export default function QualityRadar({
           const open = openItem === item.id;
           return (
             <article key={item.id} className="py-4 group">
-              <div className="flex items-start gap-4">
-                {/* Something to look at. A paper has no thumbnail, so it gets
-                    artwork drawn from its own title — the same every time, so
-                    a row you have seen before is recognisable. */}
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hidden sm:block w-32 flex-shrink-0"
-                >
-                  <Cover
-                    seed={item.id + item.title}
-                    label={item.title}
-                    url={item.url}
-                    className="aspect-video rounded-xl border border-zinc-800"
-                  />
-                </a>
+              <div className="flex items-start gap-3">
+                {/* What kind of thing this is, and nothing more.
+
+                    This was a picture: a wide block of generated artwork drawn
+                    from the title. It looked like a photograph of the article
+                    and it was not one — we hold no image for any of these, and
+                    an invented one next to a real paper is the app implying
+                    something untrue, which is the whole thing it refuses to do
+                    everywhere else. So the colour is gone and the space with
+                    it, and what is left is a mark that says paper, article,
+                    talk or listen — clearly a symbol, and the fastest thing to
+                    read in a list you are scanning. */}
+                <KindMark kind={item.kind} />
                 <div className="min-w-0 flex-1">
                   <a
                     href={item.url}

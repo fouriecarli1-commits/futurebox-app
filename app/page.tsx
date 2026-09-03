@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { 
   Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone, AudioWaveform,
+  Search as SearchIcon,
   Tv, Cpu, ArrowUpRight, Compass, CheckCircle2, X,
   UploadCloud, FileVideo, Music, Headphones, Lightbulb, Code2, 
   Link as LinkIcon, AlertCircle, Layers, DollarSign, Clock, 
@@ -46,6 +47,8 @@ import PasswordField from './components/PasswordField';
 import Campaign from './components/Campaign';
 import SoundTrainer from './components/SoundTrainer';
 import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
+import { CONTACT_EMAIL, profileAddress } from './lib/brand';
+import Search from './components/Search';
 import {
   STAGES,
   SURFACES,
@@ -111,6 +114,21 @@ export default function FutureBoxHome() {
   // Rooms register what the copilot may do in them; the panel below dispatches
   // into whichever one is open. See `lib/copilotactions.ts`.
   const copilotBus = useCopilotBus();
+
+  /* Command-K, and Control-K for everybody else. Bound at the window rather
+     than on an element so it works wherever the focus happens to be, and it
+     stays out of the way of a text field's own use of the key. */
+  const [searchOpen, setSearchOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setSearchOpen((was) => !was);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const [activeTab, setActiveTab] = useState<'all' | 'futurebox' | 'masterclasses' | 'creations' | 'radar'>('all');
   
   // User Authentication & Profile
@@ -745,7 +763,7 @@ export default function FutureBoxHome() {
 
   const handleMarketingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const mailtoUrl = `mailto:admin@futurebox.app?subject=Sponsorship & Marketing Inquiry from ${encodeURIComponent(contactName)} (${encodeURIComponent(budget)})&body=${encodeURIComponent(`Name: ${contactName}\nEmail: ${contactEmail}\nBudget: ${budget}\nWhat that includes: ${chosenRung.gets}\nMessage:\n${contactMessage}`)}`;
+    const mailtoUrl = `mailto:${CONTACT_EMAIL}?subject=Sponsorship & Marketing Inquiry from ${encodeURIComponent(contactName)} (${encodeURIComponent(budget)})&body=${encodeURIComponent(`Name: ${contactName}\nEmail: ${contactEmail}\nBudget: ${budget}\nWhat that includes: ${chosenRung.gets}\nMessage:\n${contactMessage}`)}`;
     window.location.href = mailtoUrl;
     setContactSent(true);
     setTimeout(() => setContactSent(false), 5000);
@@ -1490,7 +1508,7 @@ export default function FutureBoxHome() {
                   id: 'ai-1',
                   title: 'Cherry Blossom Mail (Official AI Music Video)',
                   creator: 'Anre Fourie',
-                  domain: 'futurebox.app/@anrefourie',
+                  domain: profileAddress('anrefourie'),
                   medium: 'Jingle Pop / Acoustic',
                   tools: ['Suno v5.5', 'Runway Gen-3'],
                   prompt: 'jingle style, 96 BPM, major key, claps and hand percussion, brushed snare, pedal steel swells, acoustic guitar strums',
@@ -1503,7 +1521,7 @@ export default function FutureBoxHome() {
                   id: 'ai-2',
                   title: 'Paul Gaan Skool Toe (AI Folk Rock Release)',
                   creator: 'Anre Fourie',
-                  domain: 'futurebox.app/@anrefourie',
+                  domain: profileAddress('anrefourie'),
                   medium: 'Pop Rock & Anthemic Folk',
                   tools: ['Suno v5.5', 'Kling AI'],
                   prompt: 'pop rock, anthemic pop, close-miked female vocals, layered electric guitars, punchy kick, clapping snare, upright bass',
@@ -1516,7 +1534,7 @@ export default function FutureBoxHome() {
                   id: 'ai-3',
                   title: 'BRICKZ — FORGET YESTERDAY (Official AI Video)',
                   creator: 'JL Records',
-                  domain: 'futurebox.app/@brickz',
+                  domain: profileAddress('brickz'),
                   medium: 'Sci-Fi Dance & Visual Hook',
                   tools: ['Suno AI', 'Sora Experimental'],
                   prompt: 'retro-futuristic robotic dancers with radio helmets, yellow coat, high-energy synth hook, 128 bpm',
@@ -1864,6 +1882,16 @@ export default function FutureBoxHome() {
            Nothing here is a dialogue you answer and dismiss. It is the room
            you work in, so it gets the room. */
         <CopilotBusContext.Provider value={copilotBus}>
+        <Search
+          open={searchOpen}
+          onClose={() => setSearchOpen(false)}
+          onGo={(surface, openTitle) => {
+            setStudioTab(surface);
+            // The same hand-off the advert desk uses: the room is not mounted
+            // yet, so this waits for it and fires the moment it registers.
+            if (openTitle) copilotBus.handoff(surface, 'pick_song', openTitle);
+          }}
+        />
         <div className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden">
           {/* One column that scrolls, on a phone. Two panes that scroll
               independently, on a desktop.
@@ -1885,9 +1913,22 @@ export default function FutureBoxHome() {
                 <span>{t('feed.backToPlatform')}</span>
               </button>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen(true)}
+                  className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2"
+                >
+                  <SearchIcon className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{t('search.open', 'Search')}</span>
+                  {/* Shown rather than hidden: a shortcut nobody is told about
+                      is a shortcut nobody uses. */}
+                  <kbd className="hidden md:inline text-xs font-mono text-zinc-500 border border-zinc-700 rounded px-1">
+                    ⌘K
+                  </kbd>
+                </button>
                 <span className="text-sm font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                  futurebox.app/@{creatorDomain}
+                  {profileAddress(creatorDomain)}
                 </span>
               </div>
             </div>

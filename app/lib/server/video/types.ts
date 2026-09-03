@@ -45,6 +45,23 @@ export interface StartRequest {
    * the video models are English-first and ElevenLabs is not.
    */
   readonly speak: boolean;
+  /**
+   * A picture for the clip to start from. Optional, and the point of it is
+   * money.
+   *
+   * Text alone is the expensive way to get a specific look: you describe the
+   * thing, the engine draws something adjacent, you describe it again, and
+   * every attempt is charged. A start frame settles the subject, the palette
+   * and the framing in one go, so the prompt only has to say what *moves* —
+   * which is the part a video model is actually good at.
+   *
+   * Base64 without the `data:` preamble, because that is what the engines
+   * take. The mime travels beside it rather than being parsed back out of a
+   * data URL: the route has to know what it is before anything leaves this
+   * machine, and a check that re-reads a string the browser wrote is a check
+   * waiting to be fooled.
+   */
+  readonly image?: { readonly data: string; readonly mime: string };
 }
 
 export type Started =
@@ -64,6 +81,15 @@ export interface Capabilities {
   readonly aspects: readonly Aspect[];
   /** True where a quoted line comes back as audio. */
   readonly speaks: boolean;
+  /**
+   * True where the engine will start from a picture it is given.
+   *
+   * Declared per engine, and false is the honest default: an image field an
+   * endpoint does not read is silently dropped, so the member pays for a clip
+   * that has nothing to do with the picture they attached and nothing anywhere
+   * says why.
+   */
+  readonly startFrame: boolean;
   readonly maxPromptChars: number;
 }
 
@@ -99,5 +125,6 @@ export function suits(provider: Provider, request: StartRequest): boolean {
   if (!provider.configured()) return false;
   if (!provider.can.aspects.includes(request.aspect)) return false;
   if (request.speak && !provider.can.speaks) return false;
+  if (request.image && !provider.can.startFrame) return false;
   return true;
 }
