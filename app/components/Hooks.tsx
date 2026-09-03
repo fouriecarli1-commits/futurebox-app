@@ -20,6 +20,8 @@ import { findHooks, sectionHooks, decodeTrack, formatMoment, type Hook } from '.
 import { renderVideo, styleFor, videoSupported, extensionFor } from '../lib/video';
 import { useLang } from '../lib/i18n';
 import Cost from './Cost';
+import History from './History';
+import { makeId, rememberMake } from '../lib/makes';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
 
@@ -35,6 +37,7 @@ export default function Hooks() {
   const [cutting, setCutting] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
   const [clip, setClip] = useState<{ url: string; blob: Blob; ext: string } | null>(null);
+  const [kept, setKept] = useState(0);
 
   /* Pick the song to cut from, and how long the clip runs. Both go through the
      same `look` the buttons use, so the hooks are re-found rather than left
@@ -98,7 +101,22 @@ export default function Hooks() {
         style: styleFor(selected.title, selected.genre, selected.bpm),
         onProgress: setProgress,
       });
-      setClip({ url: URL.createObjectURL(result.blob), blob: result.blob, ext: extensionFor(result.mimeType) });
+      const ext = extensionFor(result.mimeType);
+      setClip({ url: URL.createObjectURL(result.blob), blob: result.blob, ext });
+      // Cutting is free, so this is not a receipt — it is so that the clip you
+      // cut and did not download is still there tomorrow.
+      void rememberMake(
+        {
+          id: makeId('hooks_feed'),
+          surface: 'hooks_feed',
+          kind: 'clip',
+          title: selected?.title ?? t('hooks.title'),
+          createdAt: new Date().toISOString(),
+          seconds,
+          ext,
+        },
+        result.blob,
+      ).then(() => setKept((n) => n + 1));
     } finally {
       setCutting(null);
     }
@@ -246,6 +264,8 @@ export default function Hooks() {
           )}
         </>
       )}
+      <History surface="hooks_feed" reloadKey={kept} />
+
     </div>
   );
 }

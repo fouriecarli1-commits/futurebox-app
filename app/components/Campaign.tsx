@@ -42,6 +42,8 @@ import { PLATFORMS } from '../data/social';
 import { loadHandles, type Handles } from '../lib/social';
 import ShareRow from './ShareRow';
 import Steps, { type Step } from './Steps';
+import History from './History';
+import { makeId, rememberMake } from '../lib/makes';
 
 interface Ad {
   angle: string;
@@ -130,6 +132,7 @@ export default function Campaign({
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
+  const [kept, setKept] = useState(0);
 
   /* The copilot fills the brief rather than replacing it. Somebody who would
      rather say "an advert for my bakery in Bellville, aimed at people driving
@@ -177,7 +180,24 @@ export default function Campaign({
         setProblem(data.message ?? t('ads.failed', 'The ad writer could not be reached.'));
         return;
       }
-      setAds(again ? [...ads, ...(data.ads ?? [])] : (data.ads ?? []));
+      const written = data.ads ?? [];
+      setAds(again ? [...ads, ...written] : written);
+
+      /* Kept as text, which needs no file. An advert somebody liked and had not
+         yet filmed was gone on a reload, and the writing is the part they will
+         have redone six times before they liked it. */
+      for (const one of written) {
+        void rememberMake({
+          id: makeId('campaign'),
+          surface: 'campaign',
+          kind: 'text',
+          title: one.headline,
+          note: `${one.angle} · ${market}`,
+          createdAt: new Date().toISOString(),
+          text: [one.body, one.cta, '', one.shot].filter(Boolean).join('\n'),
+        });
+      }
+      setKept((n) => n + 1);
     } catch {
       setProblem(t('ads.failed', 'The ad writer could not be reached.'));
     } finally {
@@ -469,6 +489,8 @@ export default function Campaign({
           </div>
         </div>
       ))}
+
+      <History surface="campaign" reloadKey={kept} />
 
       {/* Said in the room, not discovered later — and said specifically.
           "Not connected yet" is a shrug; naming what each platform requires is
