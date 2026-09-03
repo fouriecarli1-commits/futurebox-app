@@ -1,7 +1,7 @@
-# Runs the five checks that would otherwise only ever run on somebody's laptop:
+# Runs the six checks that would otherwise only ever run on somebody's laptop:
 # the types have to resolve, the CSS defaults have to match the theme they claim
 # to be, the copilot's operations have to be described, the prices have to add
-# up, and the app has to build. All quick, and a PR that fails any of them is
+# up, the Afrikaans has to be there, and the app has to build. All quick, and a PR that fails any of them is
 # not ready to read, never mind merge.
 name: CI
 
@@ -45,6 +45,12 @@ jobs:
       # Both were somebody paying for thirty seconds and getting ten.
       - name: Prices add up
         run: npm run check:prices
+
+      # An English fallback for a missing Afrikaans line is silent: the reader
+      # cannot tell it from a deliberate choice, so nobody reports it. Eighty
+      # had accumulated, the whole advert desk among them.
+      - name: Afrikaans is not missing
+        run: npm run check:afrikaans
 
       - name: Build
         run: npx next build
