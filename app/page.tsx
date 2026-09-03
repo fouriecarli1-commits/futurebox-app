@@ -1946,7 +1946,9 @@ export default function FutureBoxHome() {
 
             {/* HOOKS: cut the bit worth posting, from your own tracks */}
             {studioTab === 'video' && <MusicVideo />}
-            {studioTab === 'canvas' && <VideoCanvas onUpgrade={() => setPricingModalOpen(true)} />}
+            {studioTab === 'canvas' && (
+              <VideoCanvas onUpgrade={() => setPricingModalOpen(true)} onGoTo={setStudioTab} />
+            )}
             {studioTab === 'hooks_feed' && <Hooks />}
 
             {/* MAKE: the button people came for */}

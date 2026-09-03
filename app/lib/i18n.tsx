@@ -201,6 +201,17 @@ export const STRINGS: Dict = {
   "chan.share": { en: "Share", af: "Deel" },
   "rail.podcast": { en: "Podcast", af: "Podcast" },
   "rail.next": { en: "Next", af: "Volgende" },
+  "cheaper.title": { en: "Cheaper the other way", af: "Goedkoper anders om" },
+  "cheaper.against": { en: "against", af: "teenoor" },
+  "cheaper.saves": { en: "Saves", af: "Spaar" },
+  "canvas.cheaperSpoken": {
+    en: "Make the clip silent, and read the line in your own voice next door. Same words, and it is the only way to get Afrikaans.",
+    af: "Maak die knipsel stil, en lees die lyn langsaan in jou eie stem. Dieselfde woorde, en dit is die enigste manier om Afrikaans te kry.",
+  },
+  "canvas.cheaperGo": {
+    en: "Keep it silent and read it there",
+    af: "Hou dit stil en lees dit daar",
+  },
   "auth.showPassword": { en: "Show password", af: "Wys wagwoord" },
   "auth.hidePassword": { en: "Hide password", af: "Versteek wagwoord" },
   "video.look": { en: "Where to start", af: "Waar om te begin" },

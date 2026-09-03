@@ -24,8 +24,8 @@
 import React, { useEffect, useState } from 'react';
 import { Video as VideoIcon, X, Loader2, Download, Quote, AlertTriangle } from 'lucide-react';
 import { renderVideo, styleFor, videoSupported, extensionFor, type Aspect } from '../lib/video';
-import { engines, probeVideo } from '../lib/engines';
-import { spokenLines, looksUnquoted, MUSIC_LOOKS } from '../lib/videoscenes';
+import { engines, probeVideoEngine, type VideoGrades } from '../lib/engines';
+import { spokenLines, looksUnquoted, MUSIC_LOOKS, LENGTHS } from '../lib/videoscenes';
 import { CREDITS } from '../lib/credits';
 import Cost from './Cost';
 import { signal } from '../lib/signal';
@@ -106,12 +106,34 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
       if (wanted === '9:16' || wanted === '16:9') setAspect(wanted);
     },
   });
-  const [engineSeconds, setEngineSeconds] = useState<5 | 10>(5);
+  const [engineSeconds, setEngineSeconds] = useState(5);
+  /* What the engine says it can make, rather than a pair written here.
+     This room offered five and ten because that is what one engine makes;
+     another declares 5, 10, 15, 20 and 30, and this room could not ask for any
+     of them. The desk has read the engine's own list since it was built — this
+     is the same read, so the two screens cannot disagree about what exists. */
+  const [caps, setCaps] = useState<VideoGrades | null>(null);
+  const engineLengths = React.useMemo(() => {
+    const able = caps?.can?.standard?.seconds;
+    return LENGTHS.filter((one) => (able ?? [5, 10]).indexOf(one.seconds) !== -1);
+  }, [caps]);
+  // A length the engine dropped support for should not stay selected and
+  // silently become something else at the far end.
+  useEffect(() => {
+    if (!engineLengths.length) return;
+    if (engineLengths.some((one) => one.seconds === engineSeconds)) return;
+    const nearest = engineLengths.reduce((best, one) =>
+      Math.abs(one.seconds - engineSeconds) < Math.abs(best.seconds - engineSeconds) ? one : best,
+    );
+    setEngineSeconds(nearest.seconds);
+  }, [engineLengths, engineSeconds]);
 
   useEffect(() => {
     let alive = true;
-    void probeVideo().then((ready) => {
-      if (alive) setEngineReady(ready);
+    void probeVideoEngine().then((state) => {
+      if (!alive) return;
+      setCaps(state);
+      setEngineReady(state.available);
     });
     return () => {
       alive = false;
@@ -343,18 +365,19 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
               <div>
                 <label className="text-sm text-zinc-400">{t('video.length')}</label>
                 <div className="flex gap-1.5 mt-1.5">
-                  {([5, 10] as const).map((option) => (
+                  {engineLengths.map((option) => (
                     <button
-                      key={option}
+                      key={option.seconds}
                       type="button"
-                      onClick={() => setEngineSeconds(option)}
+                      onClick={() => setEngineSeconds(option.seconds)}
+                      title={option.note}
                       className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
-                        engineSeconds === option
+                        engineSeconds === option.seconds
                           ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
                           : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                       }`}
                     >
-                      {option}s
+                      {option.label}
                     </button>
                   ))}
                 </div>

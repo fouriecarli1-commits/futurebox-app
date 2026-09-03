@@ -282,7 +282,23 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const wanted = body.seconds === 10 ? 10 : 5;
+  /* What was asked for, if any engine can make it.
+     This was `body.seconds === 10 ? 10 : 5` — every length that was not
+     exactly ten became five. The desk has offered what each engine declares
+     since it was built, and one of them declares 5, 10, 15, 20 and 30, so
+     somebody could pick thirty seconds, be charged for it, and be handed five.
+     Everything downstream already coped: `candidates` filters engines by
+     whether they suit the request, `nearestLength` moves the ask to what the
+     chosen engine actually makes, and the stored row records the real length.
+     This line was the only thing throwing it away. */
+  const offered: number[] = [];
+  for (const one of PROVIDERS) {
+    for (const length of one.can.seconds) if (offered.indexOf(length) === -1) offered.push(length);
+  }
+  const asked = Number(body.seconds);
+  // Outside the set is a client that has drifted from the engines, so: the
+  // shortest, which is the cheapest thing to have got wrong.
+  const wanted = offered.indexOf(asked) !== -1 ? asked : 5;
   const aspect: Aspect = body.aspect === '9:16' ? '9:16' : body.aspect === '1:1' ? '1:1' : '16:9';
   const speak = body.speak === true;
   const grade: Grade =
@@ -317,7 +333,9 @@ export async function POST(request: Request): Promise<Response> {
       ? 'That grade of video is not switched on for this app yet.'
       : speak && !inGrade.some((one) => one.can.speaks)
         ? 'Nothing on this grade can speak a line aloud. Take the quotation marks out and record the voice separately — it sounds better and costs a fraction.'
-        : `This grade's allowance for this month is used up. Nothing has been charged, and browser-drawn videos still work.`;
+        : !inGrade.some((one) => one.can.seconds.indexOf(wanted) !== -1)
+          ? `Nothing on this grade makes ${wanted} seconds. Pick one of the lengths the desk offers, or a different quality.`
+          : `This grade's allowance for this month is used up. Nothing has been charged, and browser-drawn videos still work.`;
     return Response.json({ error: 'engine_full', message }, { status: 503 });
   }
 

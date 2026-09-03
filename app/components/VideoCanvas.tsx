@@ -32,12 +32,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Video as VideoIcon, Loader2, Download, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap } from 'lucide-react';
 import { SCENES, spokenLines, looksUnquoted, LENGTHS, type Scene } from '../lib/videoscenes';
 import { engines, probeVideoEngine, type VideoEngine } from '../lib/engines';
-import { CREDITS, videoCost, type VideoGrade } from '../lib/credits';
+import { CREDITS, readCost, videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { signal } from '../lib/signal';
 import Cost from './Cost';
+import CheaperPath from './CheaperPath';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
+import type { SurfaceId } from '../lib/surfaces';
 
 type Aspect = '9:16' | '16:9' | '1:1';
 
@@ -60,7 +62,14 @@ const SHAPES: { id: Aspect; label: string; note: string }[] = [
   { id: '1:1', label: 'Square', note: 'A feed post' },
 ];
 
-export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
+export default function VideoCanvas({
+  onUpgrade,
+  onGoTo,
+}: {
+  onUpgrade?: () => void;
+  /** Move to another room. Used by the cheaper route out of a spoken line. */
+  onGoTo?: (surface: SurfaceId) => void;
+}) {
   const { t } = useLang();
 
   const [engine, setEngine] = useState<VideoEngine | null>(null);
@@ -456,6 +465,35 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
               </span>
             </span>
           </label>
+        )}
+
+        {/* The same advice as the note above, with the money on it.
+
+            The note has always said that recording the line yourself is
+            cheaper. It did not say by how much, and "cheaper" without a number
+            is a thing people agree with and then do the expensive one anyway.
+            A spoken line moves the clip to Better, which is exactly double;
+            the same words read in the voice studio are charged per hundred and
+            fifty characters, so a fifteen-word line is two credits. Thirty-two
+            against sixty.
+
+            Only while the box is actually ticked. Somebody who has already
+            decided to record it themselves does not need to be congratulated. */}
+        {speak && spoken.length > 0 && (
+          <CheaperPath
+            now={videoCost(grade)}
+            instead={videoCost('standard') + readCost(spoken.join(' ').length)}
+            what={t(
+              'canvas.cheaperSpoken',
+              'Make the clip silent, and read the line in your own voice next door. Same words, and it is the only way to get Afrikaans.',
+            )}
+            action={t('canvas.cheaperGo', 'Keep it silent and read it there')}
+            onTake={() => {
+              setSpeak(false);
+              setGrade('standard');
+              onGoTo?.('voice_studio');
+            }}
+          />
         )}
 
         {/* ── Shape and length ────────────────────────────────────────── */}
