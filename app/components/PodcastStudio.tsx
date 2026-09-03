@@ -67,6 +67,8 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [caps, setCaps] = useState<VoiceState['caps'] | null>(null);
   const [signedIn, setSignedIn] = useState(false);
+  /** Whether there is an account service at all — a different thing from being signed in. */
+  const [configured, setConfigured] = useState(true);
 
   const [draft, setDraft] = useState<{ audio: Blob; how: Episode['made'] } | null>(null);
   /** Which episode's dubbing panel is open, if any. */
@@ -105,6 +107,7 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
       setEpisodes((showReply.episodes ?? []) as Episode[]);
       setCaps(showReply.caps ?? null);
       setSignedIn(Boolean(showReply.signedIn));
+      setConfigured(showReply.configured !== false);
     }
   }, []);
 
@@ -258,11 +261,30 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
   };
 
   if (!signedIn) {
+    /* Two different reasons, said differently.
+
+       This said "sign in to make a show" whenever there was no caller, which
+       includes an app with no Supabase project behind it — where there is
+       nothing to sign in to and no button to look for. Sending somebody to
+       hunt for a control that does not exist is worse than saying plainly that
+       the feature is waiting on a service. The live room already made this
+       distinction; this room did not. */
     return (
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-6 text-center space-y-2">
         <Radio className="w-6 h-6 text-emerald-400 mx-auto" />
-        <p className="text-base font-bold text-white">{t('pod.signIn', 'Sign in to make a show')}</p>
-        <p className="text-sm text-zinc-500">{t('pod.signInNote', 'A show belongs to an account — that is what the feed is addressed to.')}</p>
+        <p className="text-base font-bold text-white">
+          {configured
+            ? t('pod.signIn', 'Sign in to make a show')
+            : t('pod.noAccounts', 'Shows are not switched on for this app yet')}
+        </p>
+        <p className="text-sm text-zinc-500">
+          {configured
+            ? t('pod.signInNote', 'A show belongs to an account — that is what the feed is addressed to.')
+            : t(
+                'pod.noAccountsNote',
+                'A show belongs to an account, and this app has none set up. Nothing here is broken — it is waiting on a service rather than on you.',
+              )}
+        </p>
       </div>
     );
   }

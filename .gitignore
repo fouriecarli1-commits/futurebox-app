@@ -21,3 +21,7 @@ next-env.d.ts
 .probe/*
 !.probe/README.md
 !.probe/*.mjs
+
+# The click-through audit harness writes screenshots and logs here.
+audit/*.png
+audit/*.log
