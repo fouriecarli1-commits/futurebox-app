@@ -132,6 +132,30 @@ export function thumbnailOf(dataUrl: string): Promise<string> {
 }
 
 /**
+ * A data URL back into bytes, without asking the network for it.
+ *
+ * The obvious line is `await (await fetch(dataUrl)).blob()`, and it is wrong
+ * here: `fetch` on a `data:` URL is a connect, and this app's
+ * Content-Security-Policy sets `connect-src 'self' https://*.supabase.co`. The
+ * browser refuses it, the promise rejects, and saving a picture fails with
+ * nothing on screen to say why — which is exactly how it was found, by
+ * attaching one in a browser rather than by reading this file.
+ *
+ * Widening the policy to allow `data:` would fix the symptom and make every
+ * other fetch in the app able to read one. Decoding it here costs six lines
+ * and needs no permission at all.
+ */
+function dataUrlToBlob(dataUrl: string): Blob {
+  const comma = dataUrl.indexOf(',');
+  const head = dataUrl.slice(0, comma);
+  const mime = head.slice(head.indexOf(':') + 1, head.indexOf(';')) || 'application/octet-stream';
+  const binary = atob(dataUrl.slice(comma + 1));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+/**
  * Keep a picture, and drop what no longer fits.
  *
  * Eviction takes the oldest unkept one, and its bytes go with its details: an
@@ -139,7 +163,7 @@ export function thumbnailOf(dataUrl: string): Promise<string> {
  * which is the worst kind of leak.
  */
 export async function rememberAsset(asset: Asset, dataUrl: string): Promise<void> {
-  await putAudio(asset.id, await (await fetch(dataUrl)).blob());
+  await putAudio(asset.id, dataUrlToBlob(dataUrl));
 
   const all = loadAssets();
   const next = [asset, ...all.filter((one) => one.id !== asset.id)];
