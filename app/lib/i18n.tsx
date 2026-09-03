@@ -134,8 +134,8 @@ export const STRINGS: Dict = {
     af: "Split die snit, haal die gegenereerde stem uit, en sit joune in sy plek.",
   },
   "booth.room.lanes": {
-    en: "Lanes, levels, mutes and solos when one voice over one song is not enough.",
-    af: "Bane, vlakke, mutes en solo's wanneer een stem oor een snit nie genoeg is nie.",
+    en: "Lanes, levels, mutes and solos when one voice over one song is not enough — open a song below and press Pro.",
+    af: "Bane, vlakke, dempers en solo's wanneer een stem oor een snit nie genoeg is nie — maak 'n snit hieronder oop en druk Pro.",
   },
   "booth.room.none": {
     en: "There is nothing to sing on yet. Make a song first \u2014 a backing track with no vocal on it is the one to ask for if you plan to sing it yourself.",
@@ -201,6 +201,13 @@ export const STRINGS: Dict = {
   "chan.share": { en: "Share", af: "Deel" },
   "rail.podcast": { en: "Podcast", af: "Podcast" },
   "rail.next": { en: "Next", af: "Volgende" },
+  "ads.whereTitle": { en: "Where is it going?", af: "Waarheen gaan dit?" },
+  "ads.whereNote": {
+    en: "This decides the shape, the length and how fast the hook has to land — so it is asked before the writing, not after.",
+    af: "Dit bepaal die vorm, die lengte en hoe vinnig die hook moet land — daarom word dit voor die skryf gevra, nie daarna nie.",
+  },
+  "ads.fit": { en: "Cut it for", af: "Sny dit vir" },
+  "ads.hookIn": { en: "hook in", af: "hook binne" },
   "pick.forMe": { en: "Pick for me", af: "Kies vir my" },
   "pick.failed": { en: "Could not pick one just now.", af: "Kon nou nie een kies nie." },
   "voice.pickWhat": { en: "a voice to read this script", af: "'n stem om hierdie teks te lees" },
