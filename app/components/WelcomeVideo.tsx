@@ -29,7 +29,17 @@
  * should: they are public addresses for public files, and the browser is what
  * needs to know them.
  *
- * Both are written out in full below rather than looked up by a computed key.
+ * **A cover frame, per language, for the same reason.** Without one the player
+ * is a flat rectangle until somebody presses play, and a flat rectangle reads
+ * as a thing that failed to load rather than a thing waiting to be asked.
+ * `preload="metadata"` and the `#t=0.1` seek were an attempt to get a real
+ * frame there without a file, and they only work once the browser has fetched
+ * and decoded enough of the video — on a slow connection, or a browser that
+ * will not decode until play, the rectangle is what you get. A cover image is
+ * the honest fix: it paints immediately, it is a few kilobytes, and it is the
+ * frame we chose rather than whichever one lands a tenth of a second in.
+ *
+ * All of them are written out in full below rather than looked up by a computed key.
  * Next inlines `process.env.NEXT_PUBLIC_*` at build time only where it can see
  * the whole name in the source — `process.env[whatever]` is not replaced and
  * arrives at the browser as undefined, which would be a blank player with no
@@ -47,11 +57,19 @@ const ENGLISH =
   process.env.NEXT_PUBLIC_WELCOME_VIDEO ??
   '/welcome.mp4';
 
+/** The cover frame for each recording. Optional: no cover simply means no poster. */
+const COVER_AFRIKAANS = process.env.NEXT_PUBLIC_WELCOME_VIDEO_COVERA ?? '';
+const COVER_ENGLISH = process.env.NEXT_PUBLIC_WELCOME_VIDEO_COVERE ?? '';
+
 export default function WelcomeVideo() {
   const { t, lang } = useLang();
   const [playing, setPlaying] = useState(false);
 
   const source = lang === 'af' ? AFRIKAANS : ENGLISH;
+  // The cover follows the recording it belongs to. A cover set for the other
+  // language is not a fallback: it would put an Afrikaans title card over an
+  // English recording, which is worse than no card at all.
+  const cover = lang === 'af' ? COVER_AFRIKAANS : COVER_ENGLISH;
   // No recording in this language: nothing, rather than the other one.
   if (!source) return null;
 
@@ -63,9 +81,13 @@ export default function WelcomeVideo() {
         <video
           // eslint-disable-next-line jsx-a11y/media-has-caption
           src={`${source}#t=0.1`}
+          poster={cover || undefined}
           controls={playing}
           playsInline
-          preload="metadata"
+          // With a cover to paint, there is nothing worth fetching before
+          // somebody asks: the poster is already the picture, and metadata is a
+          // download a visitor who scrolls past never needed.
+          preload={cover ? 'none' : 'metadata'}
           className="absolute inset-0 w-full h-full object-cover"
           onPlay={() => setPlaying(true)}
         />

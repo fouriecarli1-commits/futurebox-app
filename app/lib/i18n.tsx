@@ -200,6 +200,7 @@ export const STRINGS: Dict = {
   "chan.next": { en: "Next", af: "Volgende" },
   "chan.share": { en: "Share", af: "Deel" },
   "rail.podcast": { en: "Podcast", af: "Podcast" },
+  "rail.next": { en: "Next", af: "Volgende" },
   "rail.podcast.hint": { en: "A show with its own feed", af: "'n Program met sy eie feed" },
   "dub.title": { en: "Say it in another language", af: "S\u00ea dit in 'n ander taal" },
   "dub.note": {
