@@ -14,7 +14,25 @@ node audit/deep.mjs "Video desk"    # press everything in one room
 node audit/touch.mjs                # tap targets on an iPhone profile
 node audit/price.mjs                # the price on the button vs the request
 node audit/shots.mjs                # a screenshot of every room
+node audit/a11y.mjs                 # controls a screen reader cannot name
+node audit/contrast.mjs             # every text node against what is behind it
+node audit/afrikaans.mjs            # the rooms in Afrikaans
+node audit/errors.mjs               # does a refusal reach the screen
+node audit/home2.mjs                # the tabs outside the studio
 ```
+
+## What these have found
+
+- Thirteen stock photographs standing in for the thumbnails of real, named
+  things.
+- A 404 on every page load: the app had no icon at all.
+- The picture library unable to save, blocked by the app's own CSP.
+- Twelve links too small to press on a phone, all of them `a` rather than
+  `button`.
+- Eighty keys showing English to an Afrikaans reader.
+- One control in the studio a screen reader could not name.
+
+None of them came from reading the code.
 
 `enter.mjs` is shared: it signs in and opens the studio. Without a Supabase
 project configured, signing up with any address puts you straight into the app
