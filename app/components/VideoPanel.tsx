@@ -233,11 +233,11 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
   };
 
   return (
-    <div className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-4 space-y-4">
+    <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-4 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-base font-bold text-white flex items-center gap-2">
-            <VideoIcon className="w-4 h-4 text-amber-400" />
+            <VideoIcon className="w-4 h-4 text-emerald-400" />
             {t('video.title')} — {track.title}
           </p>
           <p className="text-sm text-zinc-400 pt-1 max-w-xl">{t('video.what')}</p>
@@ -262,7 +262,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
               }}
               className={`flex-1 px-3 py-2 rounded-xl text-sm border transition-all ${
                 mode === option
-                  ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
+                  ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                   : 'bg-transparent border-transparent text-zinc-400 hover:text-zinc-200'
               }`}
             >
@@ -306,7 +306,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                       title={one.note}
                       className={`text-left rounded-xl border px-3 py-2 transition-all ${
                         look === one.id
-                          ? 'bg-amber-500/15 border-amber-500 text-amber-300'
+                          ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
                           : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700'
                       }`}
                     >
@@ -334,7 +334,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                   'video.shotHint',
                   'A lonely tar road at dusk, wide shot, slow push in, dust in the headlights',
                 )}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none leading-relaxed resize-y"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed resize-y"
               />
 
               {/* The same rule the video desk teaches, in the same words. Two
@@ -373,7 +373,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                       title={option.note}
                       className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
                         engineSeconds === option.seconds
-                          ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
+                          ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                           : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                       }`}
                     >
@@ -396,7 +396,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                     onClick={() => setAspect(option)}
                     className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
                       aspect === option
-                        ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
+                        ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                         : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                     }`}
                   >
@@ -416,7 +416,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                     onClick={() => setClipSeconds(option)}
                     className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
                       clipSeconds === option
-                        ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
+                        ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                         : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                     }`}
                   >
@@ -436,7 +436,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                 max={Math.max(0, track.seconds - 5)}
                 value={startAt}
                 onChange={(e) => setStartAt(Number(e.target.value))}
-                className="w-full mt-3 accent-amber-500"
+                className="w-full mt-3 accent-emerald-500"
               />
             </div>
           </div>
@@ -450,7 +450,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                 type="checkbox"
                 checked={withWords}
                 onChange={(event) => setWithWords(event.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-amber-500 flex-shrink-0"
+                className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
               />
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-zinc-200">{t('video.words')}</span>
@@ -470,7 +470,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                     onClick={() => setAspect(option)}
                     className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
                       aspect === option
-                        ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-semibold'
+                        ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                         : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                     }`}
                   >
@@ -485,7 +485,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
             type="button"
             onClick={mode === 'engine' ? makeWithEngine : make}
             disabled={busy}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-400 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <VideoIcon className="w-4 h-4" />}
             {busy ? t('video.making') : t('video.go')}
@@ -497,7 +497,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
               rather than a measurement. */}
           {busy && mode === 'browser' && (
             <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-              <div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(progress * 100)}%` }} />
+              <div className="h-full bg-emerald-400 transition-all" style={{ width: `${Math.round(progress * 100)}%` }} />
             </div>
           )}
           {busy && mode === 'engine' && (
@@ -531,7 +531,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                 <button
                   type="button"
                   onClick={mode === 'engine' ? makeWithEngine : make}
-                  className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-amber-500 hover:text-amber-300"
+                  className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300"
                 >
                   {t('video.again')}
                 </button>

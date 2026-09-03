@@ -25,6 +25,7 @@ import { decodeAt, shapeOf } from '../lib/takes';
 import { encodeWav } from '../lib/wav';
 import { knownLatency } from '../lib/mixdown';
 import { useLang } from '../lib/i18n';
+import Cost from './Cost';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
@@ -311,6 +312,11 @@ export default function ProBooth({
             {title} · {lanes.length} {lanes.length === 1 ? t('pro.lane', 'lane') : t('pro.lanes', 'lanes')} ·{' '}
             {clock(total)}
           </p>
+          {/* Every lane, every take and the mix are made on the device. This is
+              the room with the most controls and the fewest of them cost
+              anything, which is exactly the room where somebody assumes they
+              all do. */}
+          <Cost credits={0} className="pt-0.5" />
         </div>
         <button type="button" onClick={onClose} className="text-zinc-500 hover:text-white flex-shrink-0">
           <X className="w-5 h-5" />
@@ -504,7 +510,7 @@ function LaneRow({
             onClick={() => onChange({ soloed: !lane.soloed })}
             className={`px-1.5 py-0.5 rounded text-[11px] font-bold border ${
               lane.soloed
-                ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                ? 'bg-amber-500/20 border-emerald-500 text-emerald-300'
                 : 'bg-zinc-950 border-zinc-700 text-zinc-500'
             }`}
           >

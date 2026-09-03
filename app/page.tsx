@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone,
   Tv, Cpu, ArrowUpRight, Compass, CheckCircle2, X,
@@ -216,15 +216,41 @@ export default function FutureBoxHome() {
   // during render would disagree with the server-rendered HTML.
   const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
   const [themeOpen, setThemeOpen] = useState(false);
+  /* Storage is written when the theme *differs from the one that was loaded*,
+     which is the only honest definition of somebody having changed it.
+
+     This used to save on every run of the effect, mount included, so the
+     current default was written to every visitor's browser whether or not they
+     had ever opened the appearance panel — and from then on it was read back as
+     a preference, which is why moving the default could not reach anybody who
+     had been here before.
+
+     A "first run" flag does not fix it. Effects are invoked twice in
+     development, a ref survives that, and the second pass sails through the
+     guard and saves. Comparing against what was loaded has no such hole: the
+     loaded object is only ever replaced by the appearance panel handing back a
+     new one. */
+  const loadedTheme = useRef<Theme | null>(null);
+  const [themeLoaded, setThemeLoaded] = useState(false);
   useEffect(() => {
     const saved = loadTheme();
+    loadedTheme.current = saved;
     setTheme(saved);
     applyTheme(saved);
+    setThemeLoaded(true);
   }, []);
   useEffect(() => {
+    // Until the load has landed in state, `theme` here is still the default
+    // while `loadedTheme` is already the saved one. They differ, and the
+    // difference means "the load has not propagated yet" rather than "somebody
+    // changed it" — which is precisely how the default came to be written over
+    // a real choice. The flag is state rather than a ref on purpose: a ref
+    // survives the double invocation React does in development, and the second
+    // pass walks straight through it.
+    if (!themeLoaded) return;
     applyTheme(theme);
-    saveTheme(theme);
-  }, [theme]);
+    if (theme !== loadedTheme.current) saveTheme(theme);
+  }, [theme, themeLoaded]);
 
   // With an account behind the app, a refresh should not sign you out and a
   // sign-out in another tab should not leave this one looking signed in.
@@ -2131,7 +2157,7 @@ export default function FutureBoxHome() {
                 setUploadModalOpen(true);
                 setMadeTrack(null);
               }}
-              className="px-3 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-500 to-orange-400 text-onAccent"
+              className="px-3 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent"
             >
               {t('video.suggestGo')}
             </button>

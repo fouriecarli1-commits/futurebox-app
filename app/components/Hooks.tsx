@@ -19,6 +19,7 @@ import { readAudio } from '../lib/trackaudio';
 import { findHooks, sectionHooks, decodeTrack, formatMoment, type Hook } from '../lib/hooks';
 import { renderVideo, styleFor, videoSupported, extensionFor } from '../lib/video';
 import { useLang } from '../lib/i18n';
+import Cost from './Cost';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
 
@@ -123,6 +124,10 @@ export default function Hooks() {
           {t('hooks.title')}
         </h4>
         <p className="text-base text-zinc-400 pt-1 max-w-2xl leading-relaxed">{t('hooks.sub')}</p>
+        {/* Finding and cutting both happen in the browser, so nothing here
+            spends. Said rather than left blank: a room that hands you a
+            finished clip and says nothing about money is read as hiding one. */}
+        <Cost credits={0} className="pt-1.5" />
       </div>
 
       {tracks.length === 0 ? (

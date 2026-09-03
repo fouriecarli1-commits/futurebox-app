@@ -448,12 +448,35 @@ export function applyTheme(theme: Theme): void {
 
 const STORAGE_KEY = 'futurebox.theme.v1';
 
+/**
+ * A stored theme, and whether anybody actually asked for it.
+ *
+ * The marker exists because of a bug that made the default unchangeable. The
+ * studio wrote the theme to storage inside an effect keyed on the theme, which
+ * runs on mount as well as on a change — so the *current default* was saved to
+ * every visitor's browser the first time they loaded the app, whether or not
+ * they had ever opened the appearance panel. From then on `loadTheme` found it
+ * and returned it, and moving the default could never reach anybody who had
+ * been here before. Changing near-black to near-white showed the whole shape of
+ * it: the page painted light from the CSS, hydration read the auto-saved
+ * midnight back, and it snapped to dark.
+ *
+ * So a record without `chosen` is treated as no record. Anybody who genuinely
+ * picked a theme keeps it; the much larger group who never touched it follows
+ * the default again, now and whenever it moves.
+ */
+interface Stored extends Partial<Theme> {
+  readonly chosen?: true;
+}
+
 export function loadTheme(): Theme {
   if (typeof window === 'undefined') return DEFAULT_THEME;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_THEME;
-    const parsed = JSON.parse(raw) as Partial<Theme>;
+    const parsed = JSON.parse(raw) as Stored;
+    // Written by the old effect rather than by a person: not a preference.
+    if (parsed.chosen !== true) return DEFAULT_THEME;
     // Merge over the default so a theme saved by an older build, missing an
     // axis added since, still loads instead of rendering half-styled.
     return { ...DEFAULT_THEME, ...parsed };
@@ -462,10 +485,12 @@ export function loadTheme(): Theme {
   }
 }
 
+/** Only ever called for a theme somebody picked. See `Stored`. */
 export function saveTheme(theme: Theme): void {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(theme));
+    const stored: Stored = { ...theme, chosen: true };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   } catch {
     // A browser with storage blocked still gets a working theme for this visit.
   }
