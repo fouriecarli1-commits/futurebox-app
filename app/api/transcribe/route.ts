@@ -49,16 +49,63 @@ interface Word {
   start?: number;
   end?: number;
   type?: string;
+  /** Present only when diarisation was asked for. Theirs, e.g. `speaker_0`. */
+  speaker_id?: string;
 }
 
-async function ask(key: string, file: Blob, model: string): Promise<Response> {
+/**
+ * A run of words from one person, which is what a transcript actually is.
+ *
+ * Speech-to-text answers with words. A wall of words with a speaker id on each
+ * is not something anybody reads — a transcript is turns, and a turn is
+ * everything one person said before the other one started. Grouped here rather
+ * than in the browser so every reader of this route gets the same shape.
+ */
+export interface Turn {
+  readonly speaker: string;
+  readonly start: number;
+  readonly end: number;
+  readonly text: string;
+}
+
+function turnsFrom(words: readonly Required<Pick<Word, 'text' | 'start' | 'end'>>[] & { speaker?: string }[]): Turn[] {
+  const turns: Turn[] = [];
+  for (const word of words) {
+    const speaker = (word as { speaker?: string }).speaker ?? 'speaker_0';
+    const last = turns[turns.length - 1];
+    if (last && last.speaker === speaker) {
+      turns[turns.length - 1] = {
+        ...last,
+        end: word.end as number,
+        text: `${last.text} ${word.text}`.trim(),
+      };
+    } else {
+      turns.push({
+        speaker,
+        start: word.start as number,
+        end: word.end as number,
+        text: (word.text ?? '').trim(),
+      });
+    }
+  }
+  return turns;
+}
+
+async function ask(key: string, file: Blob, model: string, diarize: boolean): Promise<Response> {
   const body = new FormData();
-  body.append('file', file, 'song.mp3');
+  body.append('file', file, diarize ? 'episode.mp3' : 'song.mp3');
   body.append('model_id', model);
   body.append('timestamps_granularity', 'word');
-  // Neither helps here: there is one singer, and "(music)" is not a lyric.
-  body.append('diarize', 'false');
-  body.append('tag_audio_events', 'false');
+  /* Asked for, rather than always on or always off.
+
+     A song has one singer and "(music)" is not a lyric, so both of these were
+     hard-coded off — right for the booth, which was the only caller. An
+     episode is two people talking, and a transcript of a conversation that
+     does not say who is speaking is a wall of text nobody reads. Same for
+     audio events: a laugh in the middle of an interview is part of what
+     happened, and in a lyric sheet it is noise. */
+  body.append('diarize', diarize ? 'true' : 'false');
+  body.append('tag_audio_events', diarize ? 'true' : 'false');
   return fetch(ENDPOINT, { method: 'POST', headers: { 'xi-api-key': key }, body });
 }
 
@@ -85,6 +132,8 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'too_big', message: 'That song is too long to read.' }, { status: 413 });
   }
   const seconds = Number(incoming.get('seconds')) || 0;
+  /** Two or more people talking, rather than one person singing. */
+  const diarize = incoming.get('speakers') === 'yes';
   const asked = incoming.get('trackId');
   const trackId = typeof asked === 'string' ? asked : undefined;
 
@@ -123,7 +172,7 @@ export async function POST(request: Request): Promise<Response> {
   let raw = '';
   for (const model of MODELS) {
     try {
-      upstream = await ask(key, file, model);
+      upstream = await ask(key, file, model, diarize);
     } catch {
       await paid.refund();
       return Response.json(
@@ -177,10 +226,20 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const words = (heard.words ?? [])
-    // Spacing and audio events are not words somebody sings.
-    .filter((word) => (word.type ?? 'word') === 'word' && (word.text ?? '').trim().length > 0)
+    // Spacing is never a word. An audio event is, but only where somebody
+    // asked for them — see `ask`.
+    .filter((word) => {
+      const kind = word.type ?? 'word';
+      if (!(word.text ?? '').trim()) return false;
+      return kind === 'word' || (diarize && kind === 'audio_event');
+    })
     .filter((word) => typeof word.start === 'number' && typeof word.end === 'number')
-    .map((word) => ({ text: (word.text ?? '').trim(), start: word.start as number, end: word.end as number }));
+    .map((word) => ({
+      text: (word.text ?? '').trim(),
+      start: word.start as number,
+      end: word.end as number,
+      ...(word.speaker_id ? { speaker: word.speaker_id } : {}),
+    }));
 
   if (!words.length) {
     return Response.json(
@@ -190,5 +249,11 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (record) await record().catch(() => undefined);
-  return Response.json({ words });
+  /* Words for the booth, which lines them up against a waveform, and turns for
+     anybody reading. Both, rather than one or the other, because they are two
+     views of the same answer and the second costs a loop. */
+  return Response.json({
+    words,
+    ...(diarize ? { turns: turnsFrom(words as never), text: heard.text ?? '' } : {}),
+  });
 }

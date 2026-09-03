@@ -153,7 +153,11 @@ browser rather than reading the code:
 
 - **No library for audio or video brought in from outside.** The history is per-room, not a place
   you file things into.
-- **No transcripts room and no speaker archive**; transcription exists only inside the Booth.
+- ~~No transcripts room and no speaker archive~~ — **closed**, though not as a room. Transcription
+  with speaker labels now sits on a published episode beside the dub, which is where the other thing
+  you do to a finished episode already lives. A fourteenth rail entry for something nobody sets out
+  to make would have cost more than it was worth: people set out to publish an episode and then want
+  show notes.
 - **Adverts: no performance read-back.** This one is not a matter of building a screen. It needs the
   ad platforms' own reporting APIs, which are OAuth against approved developer apps — the same wall
   that stops us publishing to them, described in `app/data/social.ts`.
