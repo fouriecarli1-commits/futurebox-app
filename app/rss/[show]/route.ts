@@ -45,14 +45,23 @@ function hhmmss(seconds: number): string {
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
 }
 
+/**
+ * `params` is a promise from Next 15 onwards.
+ *
+ * Their change, not ours: a dynamic segment used to arrive resolved and now
+ * arrives as a promise, so that a route can start rendering before the segment
+ * is known. Awaiting it is the whole migration for this app — it is the only
+ * dynamic route here, and the only thing `next@16` broke.
+ */
 export async function GET(
   request: Request,
-  { params }: { params: { show: string } },
+  { params }: { params: Promise<{ show: string }> },
 ): Promise<Response> {
   const client = admin();
   if (!client) return new Response('Not configured', { status: 503 });
 
-  const { data: show } = await client.from('shows').select('*').eq('id', params.show).maybeSingle();
+  const { show: showId } = await params;
+  const { data: show } = await client.from('shows').select('*').eq('id', showId).maybeSingle();
   if (!show) return new Response('No such show', { status: 404 });
 
   const { data: episodes } = await client

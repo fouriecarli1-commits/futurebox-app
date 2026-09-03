@@ -7,7 +7,13 @@ library that could not save a picture.
 
 ## Running them
 
+Playwright is not a declared dependency — it is only used here, and declaring
+it would make every CI run download browsers it never opens. Install it
+alongside:
+
 ```sh
+npm install --no-save playwright
+
 npm run build && npm start          # in one terminal
 node audit/rooms.mjs                # what the studio shows
 node audit/deep.mjs "Video desk"    # press everything in one room
