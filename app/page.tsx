@@ -872,8 +872,15 @@ export default function FutureBoxHome() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-emerald-500 selection:text-onAccent flex flex-col justify-between">
       
       {/* 1. Header with Auth & Creator Channel Info */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-zinc-950/90 border-b border-zinc-800/80 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      {/* Wraps, because it did not.
+          Three clusters in a row that could neither shrink nor wrap pushed the
+          page 133 pixels wider than a 390-pixel phone, and a page wider than
+          the screen means the whole app slides sideways under your thumb — on
+          every screen, not only this one. `gap` rather than `space-x` because
+          space-x puts a margin on every child but the first, which is wrong the
+          moment a row wraps onto two. */}
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-zinc-950/90 border-b border-zinc-800/80 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-wrap gap-y-3 gap-x-3">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
             <Cpu className="w-5 h-5 text-onAccent font-bold" />
           </div>
@@ -922,7 +929,7 @@ export default function FutureBoxHome() {
         </nav>
 
         {/* Top Right Action & Auth Portal */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end min-w-0">
           {user ? (
             <div className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl">
               <button
@@ -1858,7 +1865,15 @@ export default function FutureBoxHome() {
            you work in, so it gets the room. */
         <CopilotBusContext.Provider value={copilotBus}>
         <div className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden">
-          <div className="w-full h-full p-3 md:p-5 flex flex-col gap-4 overflow-hidden">
+          {/* One column that scrolls, on a phone. Two panes that scroll
+              independently, on a desktop.
+
+              The desktop shape was applied at every width, so on a phone the
+              working surface got whatever was left after a fixed 384-pixel
+              copilot — a sliver of the actual work under a panel three times
+              its height. The thing being made should have the room, and the
+              copilot should be under it rather than beside it. */}
+          <div className="w-full h-full p-3 md:p-5 flex flex-col gap-4 overflow-y-auto md:overflow-hidden">
             
             {/* Top Back Bar */}
             <div className="flex-shrink-0 flex items-center justify-between border-b border-zinc-800 pb-4">
@@ -1966,7 +1981,7 @@ export default function FutureBoxHome() {
                 })()}
               </nav>
 
-              <div className="flex-1 min-w-0 min-h-0 overflow-y-auto space-y-6 pr-1">
+              <div className="flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1">
 
 
             {/* TAB 2: CUSTOM VOICE STUDIO (USE YOUR OWN VOICE OR CLONE) */}
@@ -2111,7 +2126,10 @@ export default function FutureBoxHome() {
               {/* Third pane: the thing you talk to. It writes to the same canvas
                   the middle pane edits, so asking for something and typing it
                   yourself land in exactly the same place. */}
-              <aside className="flex-shrink-0 w-full md:w-80 lg:w-96 min-h-0 md:h-auto h-96">
+              {/* On a phone it sizes to its content and sits at the foot of the
+                  page; the fixed height was a desktop measurement applied where
+                  there was no second column to measure against. */}
+              <aside className="flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]">
                 <Copilot
                   context={{
                     surface: studioTab,

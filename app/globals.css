@@ -110,6 +110,34 @@ html {
   font-size: var(--fb-root-size);
 }
 
+/* Thumbs.
+
+   Buttons here run 30 to 34 pixels tall, which clears the WCAG minimum of 24
+   and sits well under what Apple and Google both ask for — 44 and 48. On a
+   mouse that is fine and on a thumb it is a miss and a retry, which on a paid
+   button is a miss and a retry somebody notices.
+
+   Scoped to `pointer: coarse`, so the desktop layout is untouched: this is
+   about the input device, not the screen width, and a touchscreen laptop wants
+   it as much as a phone does.
+
+   `min-height` rather than padding, so a button that is already big enough does
+   not grow, and nothing here changes where anything sits. */
+@media (pointer: coarse) {
+  button,
+  select,
+  [role='button'],
+  [role='tab'] {
+    min-height: 44px;
+  }
+
+  /* An icon-only control needs the width as well, and it is the one shape that
+     does not get it from its text. */
+  button:not(:has(> span)):not(:has(> p)) {
+    min-width: 44px;
+  }
+}
+
 /* Scrollbars.
 
    The rail and the working surface both scroll, so on a desktop there are two
