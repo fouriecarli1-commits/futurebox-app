@@ -46,6 +46,21 @@ const BASE = process.env.KLINGAI_BASE_URL || 'https://api-singapore.klingai.com'
 const PATH = '/v1/videos/text2video';
 
 /**
+ * The same engine, started from a picture instead of from nothing.
+ *
+ * Kling keeps image-to-video on its own endpoint rather than as a field on the
+ * text one, and the task it creates is queried on that endpoint too — asking
+ * text2video about an image2video task gets a not-found rather than progress.
+ * So which endpoint made a task has to survive the round trip through our own
+ * database, and the cheapest place to carry that is the id itself: a task
+ * started from a picture comes back as `i:<id>`, and `checkVideo` takes the
+ * prefix off before asking. No column and no migration, and a row written
+ * before any of this still means exactly what it always meant.
+ */
+const IMAGE_PATH = '/v1/videos/image2video';
+const FROM_IMAGE = 'i:';
+
+/**
  * The model, and why this default rather than the cheaper one.
  *
  * v3 has **native audio**: a line in quotation marks in the prompt comes back
@@ -198,11 +213,17 @@ async function startVideo(request: StartRequest): Promise<Started> {
     return { ok: false, status: 503, message: 'The video engine is not switched on for this app yet.' };
   }
 
-  const body = await call(PATH, {
+  const fromImage = Boolean(request.image);
+
+  const body = await call(fromImage ? IMAGE_PATH : PATH, {
     method: 'POST',
     body: JSON.stringify({
       model_name: MODEL,
       prompt: request.prompt.slice(0, 2500),
+      // The first frame, where one was given. The bytes rather than a URL:
+      // Kling takes either, and a URL would mean publishing somebody's own
+      // picture somewhere public in order to fetch it back again.
+      ...(request.image ? { image: request.image.data } : {}),
       // What we never want in a generated video, said once rather than left to
       // each member to remember.
       // Subtitles are excluded on purpose even with sound on: burnt-in text
@@ -210,7 +231,11 @@ async function startVideo(request: StartRequest): Promise<Started> {
       // the clip is cut.
       negative_prompt: 'text, watermark, logo, subtitles, captions, distorted faces, extra limbs',
       mode: 'pro',
-      aspect_ratio: request.aspect,
+      // The picture decides the shape when there is one. Sending a ratio that
+      // disagrees with the frame it was handed asks the engine to either crop
+      // the member's own image or letterbox it, and neither is what attaching
+      // a picture meant.
+      ...(fromImage ? {} : { aspect_ratio: request.aspect }),
       duration: String(request.seconds >= 10 ? 10 : 5),
       // Quoted lines in the prompt come back spoken. Only sent where the model
       // can do it — see `speaks()`.
@@ -226,13 +251,15 @@ async function startVideo(request: StartRequest): Promise<Started> {
       message: body.message ? `The video engine refused it: ${body.message}` : 'The video engine refused it.',
     };
   }
-  return { ok: true, taskId: body.data.task_id };
+  return { ok: true, taskId: (fromImage ? FROM_IMAGE : '') + body.data.task_id };
 }
 
 async function checkVideo(taskId: string): Promise<Progress> {
   if (!isConfigured()) return { state: 'unknown', message: 'The video engine is not switched on.' };
 
-  const body = await call(`${PATH}/${encodeURIComponent(taskId)}`);
+  const fromImage = taskId.startsWith(FROM_IMAGE);
+  const id = fromImage ? taskId.slice(FROM_IMAGE.length) : taskId;
+  const body = await call(`${fromImage ? IMAGE_PATH : PATH}/${encodeURIComponent(id)}`);
   if (!body) return { state: 'unknown', message: 'The video engine could not be reached.' };
   if (body.code !== 0) {
     return { state: 'unknown', message: body.message ?? 'The video engine answered with an error.' };
@@ -275,6 +302,7 @@ export const kling: Provider = {
     get speaks() {
       return speaks();
     },
+    startFrame: true,
     maxPromptChars: 2500,
   },
   ceiling: monthlyCeiling,

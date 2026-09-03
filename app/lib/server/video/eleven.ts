@@ -207,6 +207,15 @@ export const seedance: Provider = {
     // ElevenLabs speech laid over silent footage, which is also the only way
     // this app speaks Afrikaans.
     speaks: false,
+    // False because it is unverified, not because the endpoint is known to
+    // refuse. `/v1/flows/video` is a broker, and this repository reads its wire
+    // format off the SDK's serializers rather than a docs page; nothing here
+    // has confirmed the name of a start-frame field on it. An image field an
+    // endpoint ignores is the worst failure available — the clip is made, it is
+    // charged, it has nothing to do with the picture, and no error explains it.
+    // So the desk sends people to the grade that is proven, and this line
+    // becomes true the day somebody checks rather than the day somebody hopes.
+    startFrame: false,
     maxPromptChars: 2000,
   },
   ceiling: () => allowance('ELEVEN_VIDEO_CREDITS', 13_000),
@@ -230,6 +239,8 @@ export const veo: Provider = {
     // offering a shape it will refuse is a button that cannot work.
     aspects: ['16:9', '9:16'],
     speaks: true,
+    /** Unverified on this broker; see the note on Seedance above. */
+    startFrame: false,
     maxPromptChars: 2000,
   },
   ceiling: () => allowance('ELEVEN_VIDEO_CREDITS', 13_000),

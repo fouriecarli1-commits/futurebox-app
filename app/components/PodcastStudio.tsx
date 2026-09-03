@@ -503,15 +503,28 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     {/* Only on a published episode: a dub is made from the
-                        audio at its public address, and a draft has none. */}
+                        audio at its public address, and a draft has none.
+
+                        Named rather than drawn. This was a bare glyph between
+                        the play and the bin — sixteen grey pixels, no label,
+                        no border — for the single most valuable thing this
+                        room does: the same show, in the host's own voice, in a
+                        language they do not speak. Nobody found it, and an
+                        icon nobody recognises is not a smaller button, it is
+                        an absent one. It is wide enough to read now, and it
+                        keeps its place in the row rather than moving. */}
                     <button
                       type="button"
                       onClick={() => setDubbing(dubbing === episode.id ? null : episode.id)}
-                      title={t('dub.title', 'Say it in another language')}
-                      aria-label={t('dub.title', 'Say it in another language')}
-                      className={`p-1.5 rounded-lg ${dubbing === episode.id ? 'text-emerald-300' : 'text-zinc-500 hover:text-emerald-300'}`}
+                      aria-expanded={dubbing === episode.id}
+                      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                        dubbing === episode.id
+                          ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
+                          : 'border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-600'
+                      }`}
                     >
-                      <Languages className="w-4 h-4" />
+                      <Languages className="w-3.5 h-3.5" />
+                      {t('dub.button', 'Another language')}
                     </button>
                     <button
                       type="button"

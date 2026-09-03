@@ -71,6 +71,60 @@ interface Body {
    * this app speaks Afrikaans — the video models are English-first.
    */
   speak?: boolean;
+  /**
+   * A first frame for the clip, as a data URL from the browser.
+   *
+   * A data URL rather than a multipart upload because everything else on this
+   * route is JSON, and a second content type means a second way of reading a
+   * body — for a picture of a few hundred kilobytes that never needs
+   * streaming.
+   */
+  image?: string;
+}
+
+/** What a start frame may be, and how big. */
+const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const IMAGE_MAX_BYTES = 4 * 1024 * 1024;
+
+type Attached =
+  | { readonly ok: true; readonly image?: { data: string; mime: string } }
+  | { readonly ok: false; readonly message: string };
+
+/**
+ * Read a start frame out of what the browser sent, or say why not.
+ *
+ * Checked here rather than trusted, for the ordinary reason: this is bytes
+ * that go on to a third party under our key, and the two things worth being
+ * sure of are that it is a picture of a kind the engine takes, and that it is
+ * not large enough to be a way of posting a film through our account.
+ *
+ * The size is measured on the decoded bytes rather than on the string. Base64
+ * runs a third longer than what it encodes, so a limit applied to the text is
+ * a limit on something else.
+ */
+function readImage(raw: string | undefined): Attached {
+  if (typeof raw !== 'string' || raw === '') return { ok: true };
+
+  const match = /^data:([a-z]+\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/i.exec(raw);
+  if (!match) return { ok: false, message: 'That attachment could not be read as a picture.' };
+
+  const mime = match[1].toLowerCase();
+  const data = match[2];
+  if (IMAGE_TYPES.indexOf(mime) === -1) {
+    return { ok: false, message: 'Attach a PNG, a JPEG or a WebP.' };
+  }
+
+  // Four characters carry three bytes, less whatever padding is on the end.
+  const padding = data.endsWith('==') ? 2 : data.endsWith('=') ? 1 : 0;
+  const bytes = Math.floor((data.length * 3) / 4) - padding;
+  if (bytes > IMAGE_MAX_BYTES) {
+    return {
+      ok: false,
+      message: 'That picture is over 4 MB. A smaller one works just as well as a start frame.',
+    };
+  }
+
+  return { ok: true, image: { data, mime } };
 }
 
 export async function GET(request: Request): Promise<Response> {
@@ -119,7 +173,10 @@ export async function GET(request: Request): Promise<Response> {
 
     // What each grade can actually make, so the desk offers lengths and shapes
     // that exist rather than ones it will later refuse.
-    const can: Record<string, { seconds: number[]; aspects: string[]; speaks: boolean }> = {};
+    const can: Record<
+    string,
+    { seconds: number[]; aspects: string[]; speaks: boolean; startFrame: boolean }
+  > = {};
     for (const one of PROVIDERS) {
       if (!one.configured()) continue;
       const found = can[one.grade];
@@ -128,8 +185,14 @@ export async function GET(request: Request): Promise<Response> {
             seconds: Array.from(new Set([...found.seconds, ...one.can.seconds])).sort((a, b) => a - b),
             aspects: Array.from(new Set([...found.aspects, ...one.can.aspects])),
             speaks: found.speaks || one.can.speaks,
+            startFrame: found.startFrame || one.can.startFrame,
           }
-        : { seconds: [...one.can.seconds], aspects: [...one.can.aspects], speaks: one.can.speaks };
+        : {
+            seconds: [...one.can.seconds],
+            aspects: [...one.can.aspects],
+            speaks: one.can.speaks,
+            startFrame: one.can.startFrame,
+          };
     }
 
     return Response.json({
@@ -141,6 +204,9 @@ export async function GET(request: Request): Promise<Response> {
       // quotation marks, so it has to know whether they will do anything —
       // and on the cheap rung, deliberately, they will not.
       sound: PROVIDERS.some((one) => one.configured() && one.can.speaks),
+      // Whether attaching a picture does anything at all on any grade. The
+      // desk hides the attachment rather than offering one that is dropped.
+      startFrame: PROVIDERS.some((one) => one.configured() && one.can.startFrame),
       ...(engines ? { engines } : {}),
     });
   }
@@ -301,6 +367,11 @@ export async function POST(request: Request): Promise<Response> {
   const wanted = offered.indexOf(asked) !== -1 ? asked : 5;
   const aspect: Aspect = body.aspect === '9:16' ? '9:16' : body.aspect === '1:1' ? '1:1' : '16:9';
   const speak = body.speak === true;
+
+  const attached = readImage(body.image);
+  if (!attached.ok) return Response.json({ message: attached.message }, { status: 400 });
+  const image = attached.image;
+
   const grade: Grade =
     body.grade === 'premium' ? 'premium' : body.grade === 'better' ? 'better' : 'standard';
 
@@ -323,7 +394,11 @@ export async function POST(request: Request): Promise<Response> {
     spent.set(one.id, data);
   }
 
-  const queue = candidates(grade, { prompt, aspect, seconds: wanted, speak }, (one) => spent.get(one.id) ?? 0);
+  const queue = candidates(
+    grade,
+    { prompt, aspect, seconds: wanted, speak, image },
+    (one) => spent.get(one.id) ?? 0,
+  );
 
   if (queue.length === 0) {
     // Said precisely, because the three reasons need three different actions:
@@ -331,6 +406,8 @@ export async function POST(request: Request): Promise<Response> {
     const inGrade = PROVIDERS.filter((one) => one.grade === grade && one.configured());
     const message = !inGrade.length
       ? 'That grade of video is not switched on for this app yet.'
+      : image && !inGrade.some((one) => one.can.startFrame)
+        ? 'Nothing on this grade starts from a picture yet. Take the attachment off, or move up a grade — a picture is only ever sent to an engine that reads it.'
       : speak && !inGrade.some((one) => one.can.speaks)
         ? 'Nothing on this grade can speak a line aloud. Take the quotation marks out and record the voice separately — it sounds better and costs a fraction.'
         : !inGrade.some((one) => one.can.seconds.indexOf(wanted) !== -1)
@@ -364,6 +441,7 @@ export async function POST(request: Request): Promise<Response> {
       aspect,
       seconds: length,
       speak,
+      image,
     });
     if (started.ok) {
       engine = one;

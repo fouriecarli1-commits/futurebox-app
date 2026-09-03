@@ -20,18 +20,25 @@
  * uncollectable. The id is kept on the device against the episode, so coming
  * back picks the poll up where it left off.
  *
- * **It does not claim a list of languages.** Which ones ElevenLabs will dub
- * into is not something this app can know without asking them, and a dropdown
- * of thirty names, some of which quietly fail, is worse than a box. So the two
- * this app itself speaks are offered as buttons, any ISO code can be typed,
- * and the screen says what happens if they refuse one — which is that the dub
- * fails and the credits come back, because that path is real and tested.
+ * **It names the languages, and does not pretend to be sure of them.** This
+ * used to be two buttons and a box wanting a three-letter code, on the
+ * argument that a list some of whose entries quietly fail is worse than no
+ * list. The argument was right about the failure and wrong about the box:
+ * nearly nobody knows that Dutch is `nl` or that Chinese is `zh`, so a screen
+ * that only works if you already know the answer looked like a screen that
+ * only did English and Afrikaans.
+ *
+ * So the bar names them — see `app/data/dublanguages.ts`, which says what that
+ * list is and is not — the code box stays for anything missing from it, and
+ * the screen still says what happens when one is refused: the dub fails and
+ * the credits come back, because that path is real and tested.
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Globe, Loader2, Languages, X } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { dubCost } from '../lib/credits';
+import { DUB_LANGUAGES } from '../data/dublanguages';
 import Cost from './Cost';
 import { useLang } from '../lib/i18n';
 
@@ -214,30 +221,57 @@ export default function DubEpisode({
         <>
           <p className="text-sm text-zinc-500 leading-snug">{t('dub.note')}</p>
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            {/* The two this app itself speaks, as buttons. */}
-            {(['en', 'af'] as const).map((code) => (
-              <button
-                key={code}
-                type="button"
-                onClick={() => setTo(code)}
-                className={`px-3 py-1.5 rounded-xl text-sm font-semibold border ${
-                  to === code
-                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
-                    : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-600'
-                }`}
-              >
-                {code === 'en' ? t('dub.english', 'English') : t('dub.afrikaans', 'Afrikaans')}
-              </button>
-            ))}
-            {/* And anything else, by its code, because the list is theirs. */}
+          {/* The bar.
+
+              Scrolls in its own box rather than growing the panel: thirty
+              names stacked would push the price and the button off the screen
+              on a phone, and the button is the thing somebody came here to
+              press. The app's own two sit at the front, so the common case is
+              never a scroll. */}
+          <div
+            role="radiogroup"
+            aria-label={t('dub.into', 'Into which language')}
+            className="max-h-32 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-950/60 p-2"
+          >
+            <div className="flex flex-wrap gap-1.5">
+              {DUB_LANGUAGES.map((one) => {
+                const chosen = to.trim().toLowerCase() === one.code;
+                return (
+                  <button
+                    key={one.code}
+                    type="button"
+                    role="radio"
+                    aria-checked={chosen}
+                    onClick={() => setTo(one.code)}
+                    // The name in its own language underneath, because a
+                    // speaker of it recognises that faster than the English.
+                    className={`px-2.5 py-1.5 rounded-xl text-sm font-semibold border text-left leading-tight ${
+                      chosen
+                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
+                        : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-600'
+                    }`}
+                  >
+                    {t(`dub.lang.${one.code}`, one.name)}
+                    {one.own !== one.name && (
+                      <span className="block text-xs font-normal text-zinc-500">{one.own}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* And anything the list has missed, by its code, because the list
+              is a reading of theirs rather than a copy of it. */}
+          <label className="flex items-center gap-2 text-xs text-zinc-500">
+            {t('dub.other', 'Not listed? Its two-letter code:')}
             <input
               value={to}
               onChange={(event) => setTo(event.target.value.slice(0, 3))}
               aria-label={t('dub.code', 'Language code')}
               className="w-20 bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
             />
-          </div>
+          </label>
 
           <p className="text-sm text-zinc-500 leading-snug">{t('dub.ifRefused')}</p>
 

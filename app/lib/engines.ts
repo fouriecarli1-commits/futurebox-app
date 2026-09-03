@@ -86,6 +86,15 @@ export interface VideoRequest {
   readonly grade?: 'standard' | 'better' | 'premium';
   /** Whether a quoted line should be spoken by the engine itself. */
   readonly speak?: boolean;
+  /**
+   * A picture for the clip to start from, as a data URL.
+   *
+   * The cheapest thing on this whole desk. A look settled in one frame is a
+   * look that does not have to be found by describing it three times at full
+   * price, and it is the only way to put the same face, the same room or the
+   * same product in two clips that are meant to cut together.
+   */
+  readonly image?: string;
 }
 
 export interface EngineResult {
@@ -150,9 +159,20 @@ export interface VideoGrades {
    * guessing — a length or a shape nobody can generate is not a choice, it is
    * a refusal waiting to happen four minutes later.
    */
-  readonly can?: Record<string, { seconds: number[]; aspects: string[]; speaks: boolean }>;
+  readonly can?: Record<
+    string,
+    { seconds: number[]; aspects: string[]; speaks: boolean; startFrame: boolean }
+  >;
   /** True where some available engine can speak a quoted line aloud. */
   readonly sound: boolean;
+  /**
+   * True where some available engine will start from a picture you attach.
+   *
+   * The desk asks before it shows the attachment. A paperclip that quietly
+   * does nothing is worse than no paperclip, because the member believes the
+   * clip they paid for came from their picture.
+   */
+  readonly startFrame: boolean;
   /**
    * Every engine and what it has spent this month. Present only for whoever
    * runs the place — it is the size of a bill, and the member buying a video
@@ -171,7 +191,13 @@ export interface VideoGrades {
 /** Kept as the old name so screens that only wanted a yes or no still read. */
 export type VideoEngine = VideoGrades;
 
-const NO_ENGINE: VideoGrades = { available: false, auth: 'none', grades: [], sound: false };
+const NO_ENGINE: VideoGrades = {
+  available: false,
+  auth: 'none',
+  grades: [],
+  sound: false,
+  startFrame: false,
+};
 
 let videoState: VideoGrades | null = null;
 let videoProbe: Promise<VideoGrades> | null = null;
@@ -198,6 +224,7 @@ export async function probeVideoEngine(): Promise<VideoGrades> {
           auth: String(data.auth ?? 'none'),
           grades: Array.isArray(data.grades) ? data.grades : [],
           sound: Boolean(data.sound),
+          startFrame: Boolean(data.startFrame),
           ...(data.can ? { can: data.can } : {}),
           ...(data.engines ? { engines: data.engines } : {}),
         };
@@ -416,9 +443,24 @@ export const engines: Engines = {
       body: JSON.stringify({
         prompt: `${request.title}. ${request.treatment}`.trim(),
         aspect: request.aspect,
-        seconds: request.seconds > 7 ? 10 : 5,
+        /* The length as it was asked for.
+
+           This was `request.seconds > 7 ? 10 : 5`, which is the same bug the
+           route had and had already been fixed for: every length that was not
+           five became ten. The desk offers 4, 6, 8, 15, 20 and 30 because the
+           engines declare them, and it prices what it offers — so somebody
+           could pick thirty seconds, watch the button say what thirty seconds
+           costs, pay it, and be handed ten. Fixing one end of a wire and not
+           the other left the desk lying in exactly the same way, one layer
+           further in.
+
+           Nothing downstream needed a clamp here: the route checks the ask
+           against every length an engine declares, and `nearestLength` moves
+           it to what the chosen engine actually makes. */
+        seconds: request.seconds,
         grade: request.grade ?? 'standard',
         speak: request.speak === true,
+        ...(request.image ? { image: request.image } : {}),
       }),
     });
 

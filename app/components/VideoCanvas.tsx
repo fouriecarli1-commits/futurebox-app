@@ -40,6 +40,7 @@ import Recommend from './Recommend';
 import History from './History';
 import { makeId, rememberMake } from '../lib/makes';
 import CheaperPath from './CheaperPath';
+import StartFrame from './StartFrame';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
@@ -112,6 +113,12 @@ export default function VideoCanvas({
    * them, by somebody who has decided this particular shot is worth it.
    */
   const [grade, setGrade] = useState<VideoGrade>('standard');
+  /**
+   * A picture to start the clip from. Held here rather than uploaded: it goes
+   * with the request and is never stored, so leaving the room loses it, which
+   * is the correct behaviour for something nobody was told we kept.
+   */
+  const [frame, setFrame] = useState<string | null>(null);
   /**
    * Whether the engine itself should speak the quoted line.
    *
@@ -207,6 +214,7 @@ export default function VideoCanvas({
         seconds,
         grade,
         speak,
+        ...(frame ? { image: frame } : {}),
       });
       const url = URL.createObjectURL(result.blob);
       setMade((held) => [{ blob: result.blob, url, prompt: said, aspect }, ...held]);
@@ -407,6 +415,28 @@ export default function VideoCanvas({
             'What is in the shot, what it is doing, what the camera does, what the light does, how it feels.',
           )}
           className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed resize-y"
+        />
+
+        {/* A picture to start from.
+
+            Under the box rather than above it, because the sentence is still
+            the main event: the picture settles what the shot looks like and
+            the sentence says what happens in it. Somebody who attaches one
+            first and then writes is served just as well by this order, and
+            somebody who never attaches one is not made to step past it. */}
+        <StartFrame
+          value={frame}
+          onChange={setFrame}
+          supported={Boolean(able?.startFrame)}
+          unsupportedNote={
+            engine?.startFrame
+              ? t(
+                  'canvas.frameGrade',
+                  'Starting from a picture is on the Premium grade. It is not offered here because the engines behind this grade would ignore the picture and charge you anyway.',
+                )
+              : undefined
+          }
+          disabled={busy}
         />
 
         {/* The one rule that is not obvious, said once and shown always. */}
