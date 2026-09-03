@@ -33,11 +33,28 @@ files show it was argued about.
 
 ### What does not hold up, in order of how much it matters
 
-1. **Two high-severity advisories in `postcss`**, reached through `next@14.2.35`. Both concern
-   attacker-controlled CSS and source maps at build time. We author all our own CSS and process none
-   from users, so the practical exposure is low — but it is real, and the fix is `next@16`, which is
-   a major upgrade and a piece of scheduled work rather than a patch.
-   *Verified with `npm audit --omit=dev`.*
+1. ~~**Two high-severity advisories in `postcss`**~~ — **fixed, and this entry was wrong.**
+
+   What it said: two advisories in `postcss`, both about attacker-controlled CSS at build time, with
+   low practical exposure because we author all our own CSS.
+
+   What `npm audit --omit=dev` actually listed against `next@14.2.35`, read properly rather than
+   skimmed: **sixteen advisories in Next itself**, and they are not build-time. Among them —
+   cross-site scripting in App Router applications using CSP nonces; cache poisoning in React Server
+   Component responses and in middleware redirects; server-side request forgery via WebSocket
+   upgrades and via Server Actions; HTTP request smuggling in rewrites; unauthenticated disclosure of
+   internal Server Function endpoints; and several denial-of-service paths through the image
+   optimiser and Server Components.
+
+   "Practical exposure is low" was a sentence about the wrong two advisories. For an app about to
+   take money from strangers it was the most serious thing on this page, filed as scheduled work.
+
+   Now on `next@16.3.4`. `npm audit --omit=dev` reports **0 vulnerabilities**.
+
+   The upgrade broke exactly one thing: `params` on a dynamic route is a promise from Next 15
+   onwards, and this app has one dynamic route. Everything else — all thirteen rooms, the prices, the
+   contrast, the tap targets, the security headers — was re-checked with `audit/` afterwards and is
+   unchanged.
 
 2. **`'unsafe-inline'` and `'unsafe-eval'` in the script policy.** Next's hydration bootstrap is an
    inline script, so removing them needs per-request nonces threaded through the app. `next.config`
@@ -67,7 +84,7 @@ files show it was argued about.
       files here — the dashboard lists them.
 - [ ] Decide what happens when a video engine bill spikes. The ceilings exist; make sure the alert
       reaches a person.
-- [ ] Schedule the `next@16` upgrade.
+- [x] ~~Schedule the `next@16` upgrade.~~ Done — and it was more urgent than this list made it look.
 
 ---
 
@@ -161,7 +178,7 @@ browser rather than reading the code:
 - **Adverts: no performance read-back.** This one is not a matter of building a screen. It needs the
   ad platforms' own reporting APIs, which are OAuth against approved developer apps — the same wall
   that stops us publishing to them, described in `app/data/social.ts`.
-- **`next@16`**, for the two `postcss` advisories.
+- ~~`next@16`~~ — **done**. It was not two advisories; see §1.
 
 And two things that are true and not yet said everywhere they apply: that the work lives on this
 device, and that publishing to the ad platforms is not connected.
