@@ -189,6 +189,12 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     ops: {
       pick_song:
         "the value is the title of one of their own songs, as they said it, to make a video for. It opens the panel; making the video is still their button",
+      set_look:
+        "the value is one of: performance, story, road, room, abstract. It fills the shot, the shape and the length with that way of working",
+      set_shot:
+        "the value is the full description of what is on screen: subject, what it is doing, the shot, the light, the mood. Never put anything in quotation marks here - quoted text is spoken aloud, and a voice over a song is two things fighting",
+      set_shape:
+        "the value is 9:16 or 16:9, and nothing else",
     },
     seeds: [
       {

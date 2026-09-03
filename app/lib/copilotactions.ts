@@ -31,6 +31,12 @@
  * **A registration is scoped to the mount.** Rooms unmount when you leave them,
  * so the handler goes with them, and a stale handler cannot be called against a
  * screen that is no longer there.
+ *
+ * **A room can be more than one component.** The music video room is a list of
+ * songs that registers `pick_song`, and a panel that opens on the chosen one
+ * and registers the look and the shot. Registrations for a surface are merged
+ * rather than replaced: the earlier version kept one handler set per surface,
+ * so whichever of the two mounted last silently erased the other's operations.
  */
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
@@ -66,34 +72,53 @@ const Context = createContext<CopilotBus>(noop);
  * handler being replaced.
  */
 export function useCopilotBus(): CopilotBus {
-  const handlers = useRef<Partial<Record<SurfaceId, OpHandlers>>>({});
+  // A surface holds several registrations, not one: see the note above about a
+  // room being more than one component. Kept in mount order, so a panel that
+  // opens over a list is asked second — the order you want on the rare occasion
+  // both answer to the same name.
+  const handlers = useRef<Partial<Record<SurfaceId, OpHandlers[]>>>({});
   const [, setVersion] = useState(0);
 
-  return useMemo<CopilotBus>(
-    () => ({
-      opsFor: (surface) => Object.keys(handlers.current[surface] ?? {}),
+  return useMemo<CopilotBus>(() => {
+    const namesIn = (surface: SurfaceId): string[] => {
+      const out: string[] = [];
+      for (const set of handlers.current[surface] ?? []) {
+        for (const name of Object.keys(set)) if (out.indexOf(name) === -1) out.push(name);
+      }
+      return out;
+    };
+
+    return {
+      opsFor: namesIn,
       dispatch: (surface, op, value) => {
-        const handler = handlers.current[surface]?.[op];
-        if (!handler) return false;
-        handler(value);
-        return true;
+        for (const set of handlers.current[surface] ?? []) {
+          const handler = set[op];
+          if (handler) {
+            handler(value);
+            return true;
+          }
+        }
+        return false;
       },
       register: (surface, ops) => {
-        const before = Object.keys(handlers.current[surface] ?? {}).join(',');
-        handlers.current[surface] = ops;
+        const before = namesIn(surface).join(',');
+        const existing = handlers.current[surface] ?? [];
+        if (existing.indexOf(ops) === -1) existing.push(ops);
+        handlers.current[surface] = existing;
         // Only nudge the panel when the *set* of operations changed. Handlers
         // are rebuilt on every render of the room; the names almost never are.
-        if (Object.keys(ops).join(',') !== before) setVersion((n) => n + 1);
+        if (namesIn(surface).join(',') !== before) setVersion((n) => n + 1);
         return () => {
-          if (handlers.current[surface] === ops) {
-            delete handlers.current[surface];
-            setVersion((n) => n + 1);
-          }
+          const set = handlers.current[surface];
+          const at = set ? set.indexOf(ops) : -1;
+          if (!set || at === -1) return;
+          set.splice(at, 1);
+          if (set.length === 0) delete handlers.current[surface];
+          setVersion((n) => n + 1);
         };
       },
-    }),
-    [],
-  );
+    };
+  }, []);
 }
 
 export const CopilotBusContext = Context;
