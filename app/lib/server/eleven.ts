@@ -399,25 +399,85 @@ export async function forgetVoice(voiceId: string): Promise<boolean> {
 export interface StockVoice {
   readonly id: string;
   readonly name: string;
+  /**
+   * How it is described, in a few words: an accent, an age, what it suits.
+   *
+   * From their `labels`, which is the only thing that makes a list of names
+   * choosable. "Rachel" and "Antoni" tell nobody anything; "American, young,
+   * narration" tells them enough to pick without spending a credit to find
+   * out.
+   */
+  readonly about?: string;
+  /**
+   * True where a free sample of this voice can be heard.
+   *
+   * The URL itself is deliberately not sent to the browser. It is on a storage
+   * host that the app's Content-Security-Policy does not allow media from, and
+   * widening the policy for a preview would be the wrong trade — the sample is
+   * served through `/api/voice/preview` instead, which keeps it same-origin
+   * and keeps the key on this side.
+   */
+  readonly hasSample?: boolean;
+}
+
+/** Their preview URLs, kept on the server. See `hasSample` above. */
+const samples = new Map<string, string>();
+
+/** The sample for a voice, if the list has been fetched since this process started. */
+export function sampleUrlFor(id: string): string | null {
+  return samples.get(id) ?? null;
 }
 
 /**
- * One of ElevenLabs' own voices, for people who have not cloned anything.
+ * ElevenLabs' own voices, for people who have not cloned anything.
  *
  * Asked for rather than hard-coded. A voice id copied out of documentation is
  * a string that works until they retire it, and then the free tier fails with
  * a 404 that says nothing to the person reading it.
+ *
+ * ── Why more than eight, and why the labels ──────────────────────────────
+ *
+ * This used to take the first eight and send two fields: an id and a name.
+ * Eight names with nothing to tell them apart is not a library, it is a
+ * lucky dip — the only way to find out what "Antoni" sounds like was to spend
+ * credits on a reading and listen to the result.
+ *
+ * So: their own description, flattened into a phrase, and a flag saying a free
+ * sample exists. Forty rather than eight, because the list is filterable now
+ * and a longer list stops being a burden the moment it can be searched.
  */
 export async function stockVoices(): Promise<StockVoice[]> {
   const response = await fetch(`${BASE}/voices`, { headers: { 'xi-api-key': key() } });
   if (!response.ok) return [];
   const data = (await response.json()) as {
-    voices?: Array<{ voice_id?: string; name?: string; category?: string }>;
+    voices?: Array<{
+      voice_id?: string;
+      name?: string;
+      category?: string;
+      preview_url?: string;
+      labels?: Record<string, string>;
+    }>;
   };
   return (data.voices ?? [])
     .filter((one) => one.category === 'premade' && one.voice_id && one.name)
-    .map((one) => ({ id: one.voice_id as string, name: one.name as string }))
-    .slice(0, 8);
+    .slice(0, 40)
+    .map((one) => {
+      const id = one.voice_id as string;
+      if (one.preview_url) samples.set(id, one.preview_url);
+      // Their labels are a small unordered object — accent, age, gender, use
+      // case, description. Joined in whatever order they come rather than
+      // reordered, because guessing at an order that reads well is guessing.
+      const about = Object.values(one.labels ?? {})
+        .filter((value) => typeof value === 'string' && value.trim())
+        .join(', ')
+        .slice(0, 80);
+      return {
+        id,
+        name: one.name as string,
+        ...(about ? { about } : {}),
+        ...(one.preview_url ? { hasSample: true } : {}),
+      };
+    });
 }
 
 /**
