@@ -29,6 +29,8 @@ import { spokenLines, looksUnquoted, MUSIC_LOOKS, LENGTHS } from '../lib/videosc
 import { CREDITS, videoCost } from '../lib/credits';
 import Cost from './Cost';
 import Recommend from './Recommend';
+import History from './History';
+import { makeId, rememberMake } from '../lib/makes';
 import { signal } from '../lib/signal';
 import { timelineOf, type Part } from '../lib/timeline';
 import { downloadBlob, safeFilename, type Track } from '../lib/library';
@@ -45,6 +47,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [made, setMade] = useState<{ blob: Blob; ext: string } | null>(null);
+  const [kept, setKept] = useState(0);
   /**
    * Put the words on screen.
    *
@@ -186,6 +189,21 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
         seconds: engineSeconds,
       });
       setMade({ blob: result.blob, ext: 'mp4' });
+      // Kept, so a video paid for is not lost to a reload. See `lib/makes.ts`.
+      void rememberMake(
+        {
+          id: makeId('video'),
+          surface: 'video',
+          kind: 'video',
+          title: track.title,
+          note: treatment,
+          createdAt: new Date().toISOString(),
+          seconds: engineSeconds,
+          ext: 'mp4',
+          credits: videoCost('standard', engineSeconds),
+        },
+        result.blob,
+      ).then(() => setKept((n) => n + 1));
       signal('video', { category: track.genre, ref: track.id });
     } catch (problem) {
       // Whatever came back is written for the person — a refusal, a plan gate,
@@ -552,6 +570,15 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
           )}
         </>
       )}
+      <History
+        surface="video"
+        reloadKey={kept}
+        onUseAgain={(make) => {
+          if (make.note) setTreatment(make.note);
+          if (typeof make.seconds === 'number') setEngineSeconds(make.seconds);
+        }}
+      />
+
     </div>
   );
 }

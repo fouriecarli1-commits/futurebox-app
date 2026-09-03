@@ -37,6 +37,8 @@ import { downloadBlob, safeFilename } from '../lib/library';
 import { signal } from '../lib/signal';
 import Cost from './Cost';
 import Recommend from './Recommend';
+import History from './History';
+import { makeId, rememberMake } from '../lib/makes';
 import CheaperPath from './CheaperPath';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
@@ -123,6 +125,8 @@ export default function VideoCanvas({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [made, setMade] = useState<Made[]>([]);
+  /** Bumped when a clip is kept, so the history below reloads. */
+  const [kept, setKept] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -207,6 +211,26 @@ export default function VideoCanvas({
       const url = URL.createObjectURL(result.blob);
       setMade((held) => [{ blob: result.blob, url, prompt: said, aspect }, ...held]);
       signal('video', { category: scene?.id ?? 'canvas' });
+
+      /* Kept, rather than living only in this tab.
+         A clip somebody paid for and did not immediately download used to be
+         gone on the next reload, which is a bad deal at any price and an
+         insulting one at these. The credits are recorded with it, so the
+         history is also a receipt. */
+      void rememberMake(
+        {
+          id: makeId('canvas'),
+          surface: 'canvas',
+          kind: 'video',
+          title: scene ? t(`canvas.scene.${scene.id}`, scene.label) : t('canvas.clip', 'Clip'),
+          note: said,
+          createdAt: new Date().toISOString(),
+          seconds,
+          ext: 'mp4',
+          credits: videoCost(grade, seconds),
+        },
+        result.blob,
+      ).then(() => setKept((n) => n + 1));
     } catch (problem) {
       const message = problem instanceof Error ? problem.message : t('make.failed');
       setError(message);
@@ -621,6 +645,16 @@ export default function VideoCanvas({
           </div>
         </div>
       )}
+
+      {/* Everything made here before, and a way back to the shot that made it. */}
+      <History
+        surface="canvas"
+        reloadKey={kept}
+        onUseAgain={(make) => {
+          if (make.note) setPrompt(make.note);
+          if (typeof make.seconds === 'number') setSeconds(make.seconds);
+        }}
+      />
     </div>
   );
 }
