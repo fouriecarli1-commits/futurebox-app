@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "check:theme": "tsx scripts/check-theme-css.mts",
-    "check:ops": "tsx scripts/check-copilot-ops.mts"
+    "check:ops": "tsx scripts/check-copilot-ops.mts",
+    "check:prices": "tsx scripts/check-prices.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
