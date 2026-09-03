@@ -1946,13 +1946,18 @@ export default function FutureBoxHome() {
             <div className="flex-shrink-0 flex items-center justify-between border-b border-zinc-800 pb-4">
               <button
                 onClick={() => setUploadModalOpen(false)}
-                className="flex items-center space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl transition-all"
+                aria-label={t('feed.backToPlatform')}
+                className="flex items-center space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 sm:px-4 py-2 rounded-xl transition-all flex-shrink-0"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>{t('feed.backToPlatform')}</span>
+                <ArrowLeft className="w-3.5 h-3.5 flex-shrink-0" />
+                {/* The words go on a phone and the arrow stays. "Back to
+                    FutureBox" wraps to two lines at 390 pixels and takes a
+                    third of the header with it, for a control whose meaning a
+                    left arrow in the top-left corner already carries. */}
+                <span className="hidden sm:inline">{t('feed.backToPlatform')}</span>
               </button>
 
-              <div className="flex items-center gap-2 flex-wrap justify-end">
+              <div className="flex items-center gap-2 justify-end min-w-0">
                 <button
                   type="button"
                   onClick={() => setSearchOpen(true)}
@@ -1966,8 +1971,16 @@ export default function FutureBoxHome() {
                     ⌘K
                   </kbd>
                 </button>
-                <span className="text-sm font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                  {profileAddress(creatorDomain)}
+                {/* The handle on a phone, the whole address on a screen with
+                    room for it. Wrapped over two lines it was the largest
+                    thing in the header and the least useful — an address
+                    nobody taps, above the work. */}
+                <span
+                  title={profileAddress(creatorDomain)}
+                  className="text-sm font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap max-w-full truncate"
+                >
+                  <span className="sm:hidden">@{creatorDomain.replace(/^@/, '')}</span>
+                  <span className="hidden sm:inline">{profileAddress(creatorDomain)}</span>
                 </span>
               </div>
             </div>
