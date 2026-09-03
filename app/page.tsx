@@ -42,6 +42,7 @@ import { signal } from './lib/signal';
 import { TRACK_LABELS } from './data/masterclasses';
 import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
+import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
 import {
   STAGES,
   SURFACES,
@@ -104,6 +105,9 @@ interface GenreSample {
 
 export default function FutureBoxHome() {
   const { t, lang } = useLang();
+  // Rooms register what the copilot may do in them; the panel below dispatches
+  // into whichever one is open. See `lib/copilotactions.ts`.
+  const copilotBus = useCopilotBus();
   const [activeTab, setActiveTab] = useState<'all' | 'futurebox' | 'masterclasses' | 'creations' | 'radar'>('all');
   
   // User Authentication & Profile
@@ -1374,7 +1378,7 @@ export default function FutureBoxHome() {
                               <Lock className="w-5 h-5" />
                             </div>
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-cyan-400 text-onAccent flex items-center justify-center shadow-lg">
+                            <div className="w-12 h-12 rounded-full bg-cyan-500 text-onAccent flex items-center justify-center shadow-lg">
                               <Play className="w-5 h-5 fill-current translate-x-0.5" />
                             </div>
                           )}
@@ -1819,6 +1823,7 @@ export default function FutureBoxHome() {
            is what "cramped" was.
            Nothing here is a dialogue you answer and dismiss. It is the room
            you work in, so it gets the room. */
+        <CopilotBusContext.Provider value={copilotBus}>
         <div className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden">
           <div className="w-full h-full p-3 md:p-5 flex flex-col gap-4 overflow-hidden">
             
@@ -2062,6 +2067,14 @@ export default function FutureBoxHome() {
                     engineReady,
                   }}
                   onAction={(action: CopilotAction) => {
+                    if (action.kind === 'surface_op') {
+                      // The room takes it, or nothing happens. There is
+                      // deliberately no fallback: silently doing something else
+                      // is worse than doing nothing, because the reply already
+                      // said what it was going to do.
+                      copilotBus.dispatch(studioTab, action.op, action.value);
+                      return;
+                    }
                     if (action.kind === 'set_title') setCanvas({ ...canvas, title: action.value });
                     if (action.kind === 'set_style') setCanvas({ ...canvas, style: action.value });
                     if (action.kind === 'set_lyrics') setCanvas({ ...canvas, lyrics: action.value });
@@ -2086,6 +2099,7 @@ export default function FutureBoxHome() {
 
           </div>
         </div>
+        </CopilotBusContext.Provider>
       )}
 
       {/* After a song lands: the one thing most people want next. Asked once,

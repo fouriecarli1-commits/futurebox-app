@@ -37,6 +37,7 @@ import { downloadBlob, safeFilename } from '../lib/library';
 import { signal } from '../lib/signal';
 import Cost from './Cost';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps } from '../lib/copilotactions';
 
 type Aspect = '9:16' | '16:9' | '1:1';
 
@@ -70,6 +71,26 @@ export default function VideoCanvas({ onUpgrade }: { onUpgrade?: () => void }) {
   const [prompt, setPrompt] = useState('');
   const [aspect, setAspect] = useState<Aspect>('16:9');
   const [seconds, setSeconds] = useState<number>(5);
+
+  /* What the copilot may change here.
+
+     Every value is vetted rather than trusted: the model writes a string, and
+     an aspect that is not one of the three or a length that is not one the
+     engine offers would set the panel to something no button can express and
+     no generate call will accept. A rejected value leaves the control alone,
+     which is the honest outcome — the reply said what it meant to do, and if
+     it could not be done, nothing should look as though it was. */
+  useCopilotOps('canvas', {
+    set_prompt: (value) => setPrompt(value),
+    set_aspect: (value) => {
+      const wanted = value.trim();
+      if (wanted === '16:9' || wanted === '9:16' || wanted === '1:1') setAspect(wanted);
+    },
+    set_seconds: (value) => {
+      const wanted = Number.parseInt(value.trim(), 10);
+      if (LENGTHS.some((one) => one.seconds === wanted)) setSeconds(wanted);
+    },
+  });
   /**
    * What the member is buying — never which engine serves it.
    *

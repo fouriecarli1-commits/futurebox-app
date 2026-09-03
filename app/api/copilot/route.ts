@@ -23,7 +23,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
-import { SURFACES, isSurfaceId, surfaceDirectory, type SurfaceId } from '@/app/lib/surfaces';
+import { SURFACES, describeOps, isSurfaceId, surfaceDirectory, type SurfaceId } from '@/app/lib/surfaces';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -43,8 +43,15 @@ const ReplySchema = z.object({
   action: z
     .object({
       kind: z
-        .enum(['none', 'set_title', 'set_style', 'set_lyrics', 'generate', 'go'])
-        .describe('What the studio should do. Use none when talking is enough.'),
+        .enum(['none', 'set_title', 'set_style', 'set_lyrics', 'generate', 'go', 'surface_op'])
+        .describe(
+          'What the studio should do. Use none when talking is enough. Use surface_op to change something in the room they are in, and only for an operation the context lists.',
+        ),
+      op: z
+        .string()
+        .describe(
+          'For surface_op only, the operation name exactly as the context lists it. Empty string for every other kind.',
+        ),
       value: z
         .string()
         .describe(
@@ -58,6 +65,8 @@ interface Body {
   message: string;
   /** Which room the question came from. */
   surface?: string;
+  /** What that room will actually accept right now, reported live by the panel. */
+  ops?: string[];
   title?: string;
   style?: string;
   lyrics?: string;
@@ -78,6 +87,7 @@ const SYSTEM = [
   '- generate makes the song from what is on the canvas. Only choose it when there is enough to work with.',
   '- go moves them to another screen. Use it when what they want lives elsewhere. Only the screens listed in the context exist.',
   '- generate makes a song, and moves them to the song screen to do it. Only choose it when they have actually asked for a song, not as a way of answering a question about the room they are in.',
+  '- surface_op changes something in the room they are standing in. Only the operations listed in the context exist; there is never a general-purpose one. If what they want is not in that list, say what you would do and let them do it.',
   '- none is right most of the time. Answer the question and stop.',
   '',
   'How you talk:',
@@ -99,11 +109,15 @@ function contextFor(body: Body): string {
   // wrong, only sometimes irrelevant.
   const here: SurfaceId = body.surface && isSurfaceId(body.surface) ? body.surface : 'make';
   const room = SURFACES[here];
+  const ops = describeOps(here, body.ops ?? []);
 
   const lines = [
     `They are on the ${here} screen: ${room.purpose}`,
     `Here you can: ${room.can.join(', ')}.`,
     '',
+    ...(ops.length > 0
+      ? ['Operations this room will take right now, as surface_op:', ...ops.map((line) => `- ${line}`), '']
+      : ['This room takes no operations right now, so advise rather than act.', '']),
     'The other screens, so you know where else they could go:',
     surfaceDirectory(),
     '',

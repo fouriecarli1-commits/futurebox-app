@@ -75,6 +75,14 @@ export interface Surface {
   /** What the copilot can actually change here. Nothing aspirational — only what the studio applies. */
   readonly can: readonly string[];
   /**
+   * The operations this room accepts, and what the value means for each. These
+   * are descriptions only: whether an operation is actually offered on a given
+   * turn depends on the room having registered a handler for it, which the
+   * panel reports live. A name here with nothing wired to it is never offered,
+   * so the copilot cannot promise a move the studio will not make.
+   */
+  readonly ops?: Readonly<Record<string, string>>;
+  /**
    * Three starters, shown before anything has been typed. They are the answer
    * to a blank panel, so they are specific: "make the chorus hit harder" is
    * worth a tap, "help me with my song" is not.
@@ -388,4 +396,16 @@ export function surfacesInStage(stage: StageId): SurfaceId[] {
 /** The rooms that belong to no stage, in rail order. */
 export function standaloneSurfaces(): SurfaceId[] {
   return SURFACE_IDS.filter((id) => SURFACES[id].stage === null);
+}
+
+/**
+ * The operations a room will accept right now, described for the model.
+ *
+ * `available` is what the panel reports as actually registered. A name with no
+ * description in the registry is dropped rather than guessed at: the model
+ * cannot use an operation it has not been told the meaning of.
+ */
+export function describeOps(id: SurfaceId, available: readonly string[]): string[] {
+  const known = SURFACES[id].ops ?? {};
+  return available.filter((op) => known[op]).map((op) => `${op}: ${known[op]}`);
 }

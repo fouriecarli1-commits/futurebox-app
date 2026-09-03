@@ -194,21 +194,144 @@ const STOPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 /** Dark surfaces: 50 is lightest text, 950 is the deepest background. */
 const DARK_L = [96, 91, 83, 71, 58, 46, 36, 28, 20, 13, 7];
 /**
- * Light surfaces: the same ramp inverted, so existing markup flips correctly.
+ * Light surfaces.
  *
- * It is not a straight mirror of DARK_L, and it cannot be. Perceived contrast
- * is not symmetric: a mid grey that reads clearly against near-black is far too
- * faint against near-white. Mirroring DARK_L put `text-zinc-400` — which most
- * of the app uses for its secondary line — at 3.5:1 on the page, under the 4.5:1
- * that body text needs. The mid stops are pulled darker so that everything the
- * app treats as text (50 through 500) clears AA against the page, and only the
- * stops the app treats as borders and fills (600 and up) sit lighter.
+ * Not a mirror of DARK_L, because perceived contrast is not symmetric: a mid
+ * grey that reads clearly against near-black is far too faint against
+ * near-white. Mirroring it put `text-zinc-400` — which most of the app uses for
+ * its second line — at 3.5:1, under the 4.5:1 body text needs.
+ *
+ * Only the last four numbers here are used. Counted across the app, stops 50
+ * through 600 are text (`text-zinc-500` alone appears 210 times, `text-zinc-600`
+ * 90 more), and 700 upwards are borders and surfaces: `border-zinc-800` 384
+ * times, `bg-zinc-900` and `bg-zinc-950` for every panel and page. So the text
+ * stops are solved for a contrast ratio against the page instead of being
+ * assigned a lightness, and only the border and surface stops keep a fixed one.
+ *
+ * The targets step down rather than all sitting at the minimum, so that the
+ * hierarchy the app is drawing with them — body, secondary, hint — survives.
  */
+const LIGHT_TEXT_TARGETS = [15, 13, 11, 8.5, 6.5, 5.3, 4.5];
 const LIGHT_L = [12, 17, 24, 32, 40, 45, 54, 68, 84, 93, 98];
 /** Accents keep a conventional ramp in both modes. */
 const ACCENT_L = [95, 89, 80, 70, 60, 51, 43, 35, 28, 22, 15];
 
-function hslToRgbChannels(h: number, s: number, l: number): string {
+/**
+ * Accent stops, and what the app uses each of them for.
+ *
+ * Counted across the app rather than assumed: 300 and 400 carry almost all the
+ * accent *text* (336 uses between them), 500 carries almost all the accent
+ * *fill* and every tinted wash (207 uses), and everything else is a handful.
+ *
+ * That split is why the accent ramp cannot simply be reused on a light surface.
+ * On near-black, a bright `text-amber-400` is the readable choice. On
+ * near-white it is amber on cream at roughly 2:1 — the "Standard / 30 credits"
+ * label on the video desk was legible only if you already knew what it said.
+ * Meanwhile 500 has to stay bright, because `text-onAccent` sits on it and is
+ * dark in every theme.
+ *
+ * So on a light surface the text stops are solved for a contrast ratio against
+ * the page rather than assigned a lightness, and the fill stops are left alone.
+ * Solved per hue, because lightness is not perceptual: amber at 45% lightness
+ * is far brighter than indigo at 45%, and a single number cannot serve both.
+ */
+const ACCENT_TEXT_TARGETS = [12, 9, 7, 5.5, 4.6];
+
+/** sRGB relative luminance, for the contrast solve. */
+function relativeLuminance(rgb: readonly number[]): number {
+  const channels = rgb.map((v) => {
+    const c = v / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+function luminance(h: number, s: number, l: number): number {
+  return relativeLuminance(hslToRgb(h, s, l));
+}
+
+function contrast(a: number, b: number): number {
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+/**
+ * The lightest this hue can be and still clear `target` against a light ground.
+ *
+ * Lightest rather than darkest: the accent should stay recognisably itself, and
+ * every step darker than it needs to be is a step towards black.
+ */
+function lightnessForContrast(h: number, s: number, groundLuminance: number, target: number): number {
+  let lo = 0;
+  let hi = 100;
+  for (let i = 0; i < 24; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (contrast(luminance(h, s, mid), groundLuminance) >= target) lo = mid;
+    else hi = mid;
+  }
+  return lo;
+}
+
+/**
+ * The darkest this hue can be and still clear `target` against dark text on it.
+ *
+ * The mirror of the above, for the one place the relationship runs the other
+ * way: the 500 stop is a filled button, and `text-onAccent` sits on it and is
+ * dark in every theme. So the fill has to be light *enough*, and darkest-that-
+ * works keeps the button as saturated as the requirement allows.
+ */
+function lightnessForContrastOnDark(h: number, s: number, inkLuminance: number, target: number): number {
+  let lo = 0;
+  let hi = 100;
+  for (let i = 0; i < 24; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (contrast(luminance(h, s, mid), inkLuminance) >= target) hi = mid;
+    else lo = mid;
+  }
+  return hi;
+}
+
+/**
+ * The accent ramp for one hue: untouched on dark, contrast-solved on light.
+ *
+ * Solved against the darkest thing accent text commonly sits on, not against
+ * the bare page. It very rarely sits on the page: it sits in its own wash — the
+ * `bg-amber-500/15` badge, the `bg-emerald-500/10` pill, eighty of those — or
+ * on a neutral `bg-zinc-800` chip, which is darker still. Solving against the
+ * page and landing on either costs about a point of contrast, which is exactly
+ * the difference between passing and failing. Solving against the worst case
+ * gives the rarer bare-page case more headroom than it strictly needs, and
+ * headroom costs nothing.
+ *
+ * The solver returns the *lightest* lightness that clears the target, so the
+ * accent stays as much itself as the requirement allows.
+ */
+function accentRamp(
+  h: number,
+  s: number,
+  light: boolean,
+  page: readonly number[],
+  chip: readonly number[],
+  inkLuminance: number,
+): number[] {
+  /* The 500 stop is the filled button, and it is the same in both themes,
+     because `text-onAccent` is dark in both. A low-luminance hue at the ramp's
+     fixed 51% — slate, indigo, rose — puts dark text on a mid grey at about
+     4:1, which is under the floor and was under it before any of this. Lifted
+     only as far as it has to be, and only when it has to be. */
+  const fillLightness = Math.max(ACCENT_L[5], lightnessForContrastOnDark(h, s, inkLuminance, 4.5));
+  const base = ACCENT_L.map((l, i) => (i === 5 ? fillLightness : l));
+  if (!light) return base;
+
+  // The wash: the 500 stop at the heaviest alpha the app uses, over the page.
+  const fill = hslToRgb(h, s, fillLightness);
+  const tint = [0, 1, 2].map((i) => fill[i] * 0.15 + page[i] * 0.85);
+  const against = Math.min(relativeLuminance(tint), relativeLuminance(chip));
+  return base.map((l, i) =>
+    i < ACCENT_TEXT_TARGETS.length ? lightnessForContrast(h, s, against, ACCENT_TEXT_TARGETS[i]) : l,
+  );
+}
+
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   const sat = s / 100;
   const lig = l / 100;
   const c = (1 - Math.abs(2 * lig - 1)) * sat;
@@ -220,7 +343,11 @@ function hslToRgbChannels(h: number, s: number, l: number): string {
     h < 180 ? [0, c, x] :
     h < 240 ? [0, x, c] :
     h < 300 ? [x, 0, c] : [c, 0, x];
-  return [r, g, b].map((v) => Math.round((v + m) * 255)).join(' ');
+  return [r, g, b].map((v) => Math.round((v + m) * 255)) as [number, number, number];
+}
+
+function hslToRgbChannels(h: number, s: number, l: number): string {
+  return hslToRgb(h, s, l).join(' ');
 }
 
 function scale(prefix: string, hue: number, sat: number, ramp: readonly number[]): Record<string, string> {
@@ -250,23 +377,51 @@ export function themeVariables(theme: Theme): Record<string, string> {
   const h = accent(theme.highlight);
   const t = accent(theme.tertiary);
 
+  const light = surface.mode === 'light';
+  const pageRgb = hslToRgb(surface.hue, surface.sat, surfaceRamp[10]);
+  const pageLuminance = relativeLuminance(pageRgb);
+  /* The text stops of a light surface are solved the same way the accents are,
+     and against the same worst case: not the page, but the darkest ground the
+     app puts text on. Panels are `bg-zinc-900` and selected rows and chips are
+     `bg-zinc-800`, so text solved against the page alone lands a few tenths
+     short the moment it sits inside a card — which is most of the time.
+
+     The 800 stop keeps its fixed lightness, so there is nothing circular here:
+     the reference is a constant of the ramp, and only the stops above it move. */
+  const groundLuminance = light
+    ? relativeLuminance(hslToRgb(surface.hue, surface.sat, surfaceRamp[8]))
+    : pageLuminance;
+  const surfaceScale = light
+    ? surfaceRamp.map((l, i) =>
+        i < LIGHT_TEXT_TARGETS.length
+          ? lightnessForContrast(surface.hue, surface.sat, groundLuminance, LIGHT_TEXT_TARGETS[i])
+          : l,
+      )
+    : surfaceRamp;
+  // The neutral chip accent text sits on: `bg-zinc-800`, the 800 stop.
+  const chipRgb = hslToRgb(surface.hue, surface.sat, surfaceRamp[8]);
+  // Text on a saturated accent fill stays dark whatever the surface does,
+  // because the accent itself stays bright. The fills are solved against it.
+  const onAccent = hslToRgb(surface.hue, Math.min(surface.sat, 20), 8);
+  const inkLuminance = relativeLuminance(onAccent);
+  const ramp = (hue: number, sat: number) =>
+    accentRamp(hue, sat, light, pageRgb, chipRgb, inkLuminance);
+
   const vars: Record<string, string> = {
-    ...scale('surface', surface.hue, surface.sat, surfaceRamp),
-    ...scale('primary', p.hue, p.sat, ACCENT_L),
-    ...scale('secondary', s2.hue, s2.sat, ACCENT_L),
-    ...scale('highlight', h.hue, h.sat, ACCENT_L),
-    ...scale('tertiary', t.hue, t.sat, ACCENT_L),
-    ...scale('danger', 352, 72, ACCENT_L),
+    ...scale('surface', surface.hue, surface.sat, surfaceScale),
+    ...scale('primary', p.hue, p.sat, ramp(p.hue, p.sat)),
+    ...scale('secondary', s2.hue, s2.sat, ramp(s2.hue, s2.sat)),
+    ...scale('highlight', h.hue, h.sat, ramp(h.hue, h.sat)),
+    ...scale('tertiary', t.hue, t.sat, ramp(t.hue, t.sat)),
+    ...scale('danger', 352, 72, ramp(352, 72)),
     '--fb-font-sans': font.stack,
     '--fb-root-size': `${density.size}px`,
     '--fb-page': hslToRgbChannels(surface.hue, surface.sat, surfaceRamp[10]),
-    '--fb-ink': hslToRgbChannels(surface.hue, Math.min(surface.sat, 8), surfaceRamp[1]),
+    '--fb-ink': hslToRgbChannels(surface.hue, Math.min(surface.sat, 8), surfaceScale[1]),
     // `bg-black/40` means "an inset, darker than the page" — which on a light
     // surface has to be a pale grey, not actual black.
     '--fb-void': hslToRgbChannels(surface.hue, surface.sat, surface.mode === 'light' ? 86 : 4),
-    // Text on a saturated accent fill stays dark whatever the surface does,
-    // because the accent itself stays bright.
-    '--fb-on-accent': hslToRgbChannels(surface.hue, Math.min(surface.sat, 20), 8),
+    '--fb-on-accent': onAccent.join(' '),
     // The wash behind a modal. It is the one thing that must NOT follow the
     // surface: on a light theme an inverted scrim is a pale sheet over a pale
     // page, and the dialog stops reading as a dialog. It stays dark, and the

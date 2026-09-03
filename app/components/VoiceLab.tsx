@@ -20,6 +20,7 @@ import { Check, Loader2, Mic, Play, Square, Trash2, Upload, Wand2 } from 'lucide
 import Cost from './Cost';
 import { CREDITS, readCost } from '../lib/credits';
 import { useLang } from '../lib/i18n';
+import { useCopilotOps } from '../lib/copilotactions';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { VOICE_CONSENT } from '@/app/lib/consent';
@@ -117,6 +118,13 @@ export default function VoiceLab({
   const [problem, setProblem] = useState<string | null>(null);
 
   const [script, setScript] = useState('');
+
+  /* The copilot writes the read. Nothing here costs anything until the person
+     presses the button that does, so it needs no approval — it fills a box they
+     were going to fill themselves. */
+  useCopilotOps('voice_studio', {
+    set_script: (value) => setScript(value),
+  });
   const [voiceId, setVoiceId] = useState('');
   const [model, setModel] = useState<'steady' | 'wide'>('steady');
   const [spoken, setSpoken] = useState<Blob | null>(null);

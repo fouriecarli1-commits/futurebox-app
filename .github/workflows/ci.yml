@@ -1,6 +1,7 @@
-# Runs the two checks that would otherwise only ever run on somebody's laptop:
-# the types have to resolve, and the app has to build. Both are quick, and a PR
-# that fails either one is not ready to read, never mind merge.
+# Runs the three checks that would otherwise only ever run on somebody's laptop:
+# the types have to resolve, the CSS defaults have to match the theme they claim
+# to be, and the app has to build. All quick, and a PR that fails any of them is
+# not ready to read, never mind merge.
 name: CI
 
 on:
@@ -25,6 +26,12 @@ jobs:
 
       - name: Typecheck
         run: npx tsc --noEmit
+
+      # The literal :root block in globals.css exists so the first paint is
+      # right before any JavaScript runs. When it drifts from the theme engine
+      # every page paints in stale colours and then flips.
+      - name: Theme defaults match the theme engine
+        run: npm run check:theme
 
       - name: Build
         run: npx next build

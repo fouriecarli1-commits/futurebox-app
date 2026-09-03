@@ -24,9 +24,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, Send, Loader2, Check, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { type SurfaceId, seedsFor } from '../lib/surfaces';
+import { useCopilotBusContext } from '../lib/copilotactions';
 
 export type CopilotAction =
   | { kind: 'none'; value: string }
+  /** Change something in the room they are standing in. See `lib/copilotactions.ts`. */
+  | { kind: 'surface_op'; op: string; value: string }
   | { kind: 'set_title'; value: string }
   | { kind: 'set_style'; value: string }
   | { kind: 'set_lyrics'; value: string }
@@ -66,6 +69,7 @@ export default function Copilot({
   onAction: (action: CopilotAction) => void | Promise<void>;
 }) {
   const { t, lang } = useLang();
+  const bus = useCopilotBusContext();
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
@@ -90,6 +94,10 @@ export default function Copilot({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: question,
+          // What this room will actually take, as of this turn. Sent rather
+          // than assumed, so the model is never offered an operation the studio
+          // would refuse — an unwired room simply gets no list and advises.
+          ops: bus.opsFor(context.surface),
           ...context,
           history: turns.map((turn) => ({ role: turn.role, text: turn.text })),
         }),
