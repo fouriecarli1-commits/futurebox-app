@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Cover from './components/Cover';
+import { EVERY as ASKS_EVERY, asksWaiting } from './lib/asks';
 import { 
   Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone, AudioWaveform,
   Search as SearchIcon,
@@ -298,6 +299,25 @@ export default function FutureBoxHome() {
 
   // Modals & Player State
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+
+  /* Asked while the studio is open, and only then: a count nobody can see is
+     a request nobody needed to make. Slow on purpose — see `lib/asks.ts`. */
+  useEffect(() => {
+    if (!uploadModalOpen) return;
+    let live = true;
+    const ask = () => {
+      void asksWaiting().then((n) => {
+        if (live) setAsks(n);
+      });
+    };
+    ask();
+    const timer = window.setInterval(ask, ASKS_EVERY);
+    return () => {
+      live = false;
+      window.clearInterval(timer);
+    };
+  }, [uploadModalOpen]);
+
   const [selectedMedia, setSelectedMedia] = useState<{ 
     title: string; 
     embedUrl?: string; 
@@ -346,6 +366,14 @@ export default function FutureBoxHome() {
      three places at once — which is the compiler doing its job, and a list that
      needs the compiler to keep it honest should not be a list. */
   const [studioTab, setStudioTab] = useState<SurfaceId>('make');
+  /**
+   * People waiting on an answer from you, drawn on the rail.
+   *
+   * A collab ask used to be visible only inside the collab room, so it sat
+   * unanswered until somebody happened to open a page they open rarely — and
+   * an unanswered ask reads to the person who sent it as a no.
+   */
+  const [asks, setAsks] = useState(0);
   const [selectedGenreCategory, setSelectedGenreCategory] = useState<string>('All');
   const [playingGenreSample, setPlayingGenreSample] = useState<string | null>(null);
 
@@ -2003,7 +2031,22 @@ export default function FutureBoxHome() {
                       >
                         <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-emerald-400' : ''}`} />
                         <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
-                          <span className="block text-sm font-semibold leading-tight">{meta.label}</span>
+                          <span className="block text-sm font-semibold leading-tight">
+                            {meta.label}
+                            {/* Somebody is waiting on an answer. Only on the room
+                                that can answer, only when the number is real, and
+                                counted down to nothing the moment it is dealt
+                                with — a badge that lingers is a badge people stop
+                                reading. */}
+                            {id === 'collab' && asks > 0 && (
+                              <span
+                                className="ml-1.5 inline-flex items-center justify-center rounded-full bg-emerald-500 text-onAccent text-[11px] font-bold px-1.5 min-w-[18px] h-[18px] align-middle"
+                                aria-label={`${asks} ${t('rail.waiting', 'waiting for an answer')}`}
+                              >
+                                {asks}
+                              </span>
+                            )}
+                          </span>
                           {theme.layout === 'rail' && (
                             <span className="hidden md:block text-xs text-zinc-500 leading-tight truncate">{meta.hint}</span>
                           )}

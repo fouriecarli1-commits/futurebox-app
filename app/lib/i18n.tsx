@@ -440,7 +440,7 @@ export const STRINGS: Dict = {
   "mc.planned": { en: "planned", af: "beplan" },
   "rail.video": { en: "Music video", af: "Musiekvideo" },
   "rail.canvas": { en: "Video desk", af: "Videolessenaar" },
-  "rail.canvas.hint": { en: "Marketing, podcast and social clips", af: "Bemarking-, potgooi- en sosiale knipsels" },
+  "rail.canvas.hint": { en: "Adverts, podcasts, social", af: "Advertensies, potgooie, sosiaal" },
 
   // ── The video desk ────────────────────────────────────────────────
   "canvas.title": { en: "Video desk", af: "Videolessenaar" },
@@ -534,7 +534,7 @@ export const STRINGS: Dict = {
   "canvas.note.product": { en: "One object, lit properly", af: "Een voorwerp, behoorlik verlig" },
   "canvas.scene.atmosphere": { en: "Atmosphere", af: "Atmosfeer" },
   "canvas.note.atmosphere": { en: "A place, no people, endlessly cuttable", af: "\u2019n Plek, geen mense, eindeloos snybaar" },
-  "rail.video.hint": { en: "Turn one of your songs into something to watch", af: "Maak van jou snit iets om na te kyk" },
+  "rail.video.hint": { en: "One of your songs, as a video", af: "Een van jou liedjies, as video" },
   "video.sub": { en: "Pick one of your songs. The video is made right here, on this page \u2014 then you decide whether to save it or share it.", af: "Kies een van jou snitte. Die video word hier op die blad gemaak \u2014 dan besluit jy of jy dit hou of stuur." },
   "video.pick": { en: "Which song?", af: "Watter snit?" },
   "video.none": { en: "Make a song first \u2014 then it can become a video.", af: "Maak eers 'n snit \u2014 dan kan dit 'n video word." },
