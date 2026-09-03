@@ -13,6 +13,11 @@ import type { MetadataRoute } from 'next';
  * point is that it works on a phone — a nameless grey box on the home screen of
  * anybody who installs it.
  *
+ * The icon is the mark the app already draws — `Landing.tsx` puts a chip glyph
+ * on an emerald-to-cyan tile at the top of the page and again in the hero. An
+ * app icon that is a different drawing is a second brand: the thing in the
+ * browser tab would not be the thing on the landing page.
+ *
  * `background_color` is the app's own default ground rather than white, so the
  * splash while it starts is the app rather than a flash of paper. The theme is
  * chooseable inside the app; this is only what the operating system paints
