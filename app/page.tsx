@@ -42,6 +42,7 @@ import { signal } from './lib/signal';
 import { TRACK_LABELS } from './data/masterclasses';
 import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
+import PasswordField from './components/PasswordField';
 import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
 import {
   STAGES,
@@ -786,11 +787,11 @@ export default function FutureBoxHome() {
                   required
                   className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
                 />
-                <input
-                  type="password"
+                <PasswordField
                   value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
+                  onChange={setAuthPassword}
                   placeholder="Password"
+                  autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
                   required
                   className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
                 />
@@ -1677,13 +1678,13 @@ export default function FutureBoxHome() {
 
               <div>
                 <label className="block text-xs font-mono text-zinc-400 mb-1">Password</label>
-                <input
-                  type="password"
+                <PasswordField
                   value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
+                  onChange={setAuthPassword}
                   placeholder="••••••••••••"
-                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  autoComplete="current-password"
                   required
+                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
 

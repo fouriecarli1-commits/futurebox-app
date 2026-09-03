@@ -201,6 +201,13 @@ export const STRINGS: Dict = {
   "chan.share": { en: "Share", af: "Deel" },
   "rail.podcast": { en: "Podcast", af: "Podcast" },
   "rail.next": { en: "Next", af: "Volgende" },
+  "auth.showPassword": { en: "Show password", af: "Wys wagwoord" },
+  "auth.hidePassword": { en: "Hide password", af: "Versteek wagwoord" },
+  "video.look": { en: "Where to start", af: "Waar om te begin" },
+  "video.lookAgain": {
+    en: "Tap it again for a different idea. Edit anything you like.",
+    af: "Tik dit weer vir 'n ander idee. Verander gerus enigiets.",
+  },
   "rail.podcast.hint": { en: "A show with its own feed", af: "'n Program met sy eie feed" },
   "dub.title": { en: "Say it in another language", af: "S\u00ea dit in 'n ander taal" },
   "dub.note": {
