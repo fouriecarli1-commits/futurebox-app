@@ -8,9 +8,12 @@ we found. Read this one.
 The question is *"can a person achieve here everything they could achieve there, in fewer
 steps, and where they cannot, did we decide that or did we forget?"*
 
-**Status.** First full pass. Every claim below was checked against the code, and anything
-not checked says so. A gap with no reason written next to it is a gap we forgot, not a
-gap we chose.
+**Status.** Second pass, after a click-through of all thirteen rooms in a real browser
+rather than a read of the code. Every claim below was checked, and anything not checked
+says so. A gap with no reason written next to it is a gap we forgot, not a gap we chose.
+
+Sections marked **closed** were open in the first pass and are not any more; what remains
+open inside them is written under each. The audit harness is in `audit/`.
 
 ---
 
@@ -18,38 +21,42 @@ gap we chose.
 
 These cost more than any single missing feature, because each one is missing eleven times.
 
-### 1. Nothing has a history or a favourites list
+### 1. Nothing has a history or a favourites list — **closed**
 
-The reference gives every tool `Explore / History / Favourites`. We have **none of it,
-anywhere** — checked across `app/components/*.tsx`; the only match for "history" is the
-copilot's own conversation.
+Was: a generation you liked and did not immediately download was gone, and somebody who
+made four videos and preferred the second had no way back to it.
 
-What that costs: a generation you liked and did not immediately save is gone. Somebody
-who makes four videos and prefers the second has no way back to it. It also removes the
-cheapest form of reassurance a paid action can have — seeing that the last three worked.
+Now `app/lib/makes.ts` and `History.tsx`, in the foot of every room that produces
+something: the newest two dozen per room, details in localStorage and files in IndexedDB
+beside the songs. The star means "never evicted" rather than "I liked this", which is
+what makes the cap safe to have.
 
-Not a decision. A gap.
+Still on this device only, and every room says so.
 
-### 2. There is no asset library
+### 2. There is no asset library — **closed for pictures**
 
-The reference has an `Assets` room: folders, upload, list and grid, filter by owner, and
-system folders the tools write into. We have `app/lib/library.ts`, which stores **tracks**
-— metadata in localStorage, audio in IndexedDB — and nothing else.
+Was the single largest structural gap, because other things were blocked behind it.
 
-So an image you want to use as a start frame, a logo for an advert, a photo for a cover:
-there is nowhere to put it and nothing that remembers it. Every room that takes a file
-takes it again each time.
+Now `app/lib/assets.ts` and `Pictures.tsx`: pictures kept on the device, details in
+localStorage and bytes in IndexedDB in the same store as the songs and the makes. Capped
+at twenty with the same star-means-keep bargain as the history. It carries a thumbnail so
+a strip of twenty costs one read rather than twenty full files.
 
-This is the single largest structural gap, because several other things below are blocked
-behind it.
+It is deliberately a strip where pictures are used rather than a room of its own — a
+library big enough to need its own room is a library nobody visits. It is what the video
+desk's start frame picks from and where the brand kit's logo lives, which is what
+unblocked both.
 
-### 3. There is no search
+**Still open:** audio and video files. Nothing yet keeps a piece of music somebody brought
+in from outside, and the makes list is per-room history rather than a library you file
+into.
 
-The reference has one search box that reaches everything, with `⌘K` on it. We have no
-search of any kind — not global, not within a room.
+### 3. There is no search — **closed**
 
-At eleven rooms and a handful of songs this is survivable. It stops being survivable at
-fifty songs, and everything we add makes it worse rather than better.
+`Search.tsx`, on ⌘K and Ctrl-K, over the rooms, the songs and everything the rooms have
+made. All three already live on the device, so it asks no server and works with the
+network off. It navigates rather than showing results in place: picking a song opens it
+in the room that can do something with it.
 
 ---
 

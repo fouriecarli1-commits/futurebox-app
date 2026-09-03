@@ -131,14 +131,33 @@ Roughly in this order, because each one depends on the one above it.
 
 ## 4. What is not finished in the product
 
-From `docs/FUNCTION_INVENTORY.md`, still open:
+From `docs/FUNCTION_INVENTORY.md`, after a second pass that clicked through all thirteen rooms in a
+browser rather than reading the code:
 
-- **No asset library.** Blocks reference images, brand kits and start frames.
-- **No search**, of any kind.
-- **No voice library** — your own clones and a stock list, against a competitor's thousands.
+**Closed since the first pass**
+
+- **A picture library** — `lib/assets.ts`, kept on the device, capped, with a star that means keep.
+  It is what the video desk's start frame picks from and where the brand kit's logo lives.
+- **Search** — ⌘K over the rooms, the songs and everything the rooms have made.
+- **A history and favourites** in every room that makes something.
+- **A voice library you can hear** — each stock voice now carries what it is (an accent, an age, what
+  it suits) and a free sample played through our own route, so choosing a voice no longer means
+  paying for a reading to find out what you bought.
+- **Adverts: the format matrix and the brand kit.** The platform chips carry each one's shape, hook
+  window and hashtag limit, and those go to the writer; the brand kit holds the name, the voice, the
+  logo and the colour so Thursday's adverts sound like Monday's.
+- **Collab now says somebody is waiting** — a count on the rail, so an ask is not invisible until
+  the room is opened.
+
+**Still open, and why**
+
+- **No library for audio or video brought in from outside.** The history is per-room, not a place
+  you file things into.
 - **No transcripts room and no speaker archive**; transcription exists only inside the Booth.
-- **Adverts**: no format matrix, no performance read-back, no brand kit.
-- **Collab has no live notification** — a request is seen when the page is opened.
+- **Adverts: no performance read-back.** This one is not a matter of building a screen. It needs the
+  ad platforms' own reporting APIs, which are OAuth against approved developer apps — the same wall
+  that stops us publishing to them, described in `app/data/social.ts`.
+- **`next@16`**, for the two `postcss` advisories.
 
-And two things that are true but not yet said in the interface everywhere they apply: that the work
-lives on this device, and that publishing to the ad platforms is not connected.
+And two things that are true and not yet said everywhere they apply: that the work lives on this
+device, and that publishing to the ad platforms is not connected.
