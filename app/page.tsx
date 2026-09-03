@@ -1598,7 +1598,11 @@ export default function FutureBoxHome() {
                       href={creation.externalUrl} 
                       target="_blank" 
                       rel="noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center space-x-1 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/30"
+                      /* `min-h-11` is 44px, the smallest thing a thumb hits
+                         reliably. The global coarse-pointer rule in globals.css
+                         cannot reach this one: it adds vertical padding, and a
+                         Tailwind `py-1` on the element itself outranks it. */
+                      className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center justify-center space-x-1 bg-cyan-500/10 px-2.5 py-1 min-h-11 rounded-lg border border-cyan-500/30"
                     >
                       <span>Explore</span>
                       <ExternalLink className="w-3 h-3" />

@@ -136,6 +136,39 @@ html {
   button:not(:has(> span)):not(:has(> p)) {
     min-width: 44px;
   }
+
+  /* Links, which this rule used to leave out entirely.
+
+     Measured on an iPhone profile, every control under the thumb-sized minimum
+     was an `a` and not a `button`: "Explore" on a card at 78×27, "YouTube"
+     under an episode at 59×16, the footer's Privacy and Terms at twenty pixels
+     tall. Twelve of them. A rule that covers buttons and not links covers about
+     half of what a thumb has to hit.
+
+     Padding rather than `min-height`, because a link is inline and a minimum
+     height does nothing to an inline box. The negative margin gives back
+     exactly what the padding took, so the hit area grows by fourteen pixels
+     top and bottom and nothing on the page moves.
+
+     Links inside a sentence are excluded. Growing those would put a
+     forty-four pixel target inside a line of body text, which overlaps its
+     neighbours and makes the paragraph above or below harder to hit rather
+     than easier. Standalone links are the ones a thumb goes looking for.
+
+     `display` is deliberately not set. The first version forced
+     `inline-block`, which would have broken the several links that are flex
+     rows — a word and a small icon beside it, which is most of the ones that
+     were too small. It is also unnecessary: vertical padding on an inline box
+     does not move the line it sits in, but it does extend the box the browser
+     hit-tests against, which is the whole point.
+
+     A link wrapping a picture is left alone. Those are already thumb-sized,
+     and padding around an image is a gap somebody can press that does
+     nothing. */
+  a:not(p a):not(li a):not(:has(img)) {
+    padding-block: 14px;
+    margin-block: -14px;
+  }
 }
 
 /* Scrollbars.
