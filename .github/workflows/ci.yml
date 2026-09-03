@@ -14,6 +14,17 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # A ceiling, because there was none and it cost twenty minutes.
+    #
+    # `npm ci` wedged on a runner — the same lockfile that had installed in
+    # eighteen seconds on the run before it — and with no timeout the job sat
+    # there holding a runner and reporting neither green nor red. A pull request
+    # that is failing tells you to fix something. One that is neither is the
+    # worst of the three states: nothing to act on and no reason to look again.
+    #
+    # Fifteen minutes against a happy path of about a minute, so this only ever
+    # fires on something genuinely stuck.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
