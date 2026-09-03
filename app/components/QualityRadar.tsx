@@ -19,9 +19,9 @@ import { type Plan } from '../lib/entitlements';
 import React, { useMemo, useState } from 'react';
 import {
   RefreshCw, ChevronDown, ChevronRight, Lock, EyeOff,
+  FileText, Newspaper, PlayCircle, Headphones,
 } from 'lucide-react';
 import { FEED_ITEMS, CATEGORIES } from '../data/feed';
-import Cover from './Cover';
 import {
   assess, BAR, TIER_LIMITS, type FeedItem, type Verdict,
 } from '../lib/curation';
@@ -30,6 +30,34 @@ import { useLang } from '../lib/i18n';
 interface Scored {
   readonly item: FeedItem;
   readonly verdict: Verdict;
+}
+
+/**
+ * A mark for what the thing is: a paper, an article, a talk, a listen.
+ *
+ * Deliberately a symbol and deliberately grey. The rows already carry one
+ * colour — the score — and that colour means something. A second colour that
+ * means nothing competes with it, which is how the artwork this replaced ended
+ * up being the loudest thing on a page about judging quality.
+ */
+function KindMark({ kind }: { kind: FeedItem['kind'] }): React.ReactElement {
+  const { t } = useLang();
+  const marks = {
+    paper: { Icon: FileText, label: t('radar.kind.paper', 'Paper') },
+    article: { Icon: Newspaper, label: t('radar.kind.article', 'Article') },
+    video: { Icon: PlayCircle, label: t('radar.kind.video', 'Watch') },
+    podcast: { Icon: Headphones, label: t('radar.kind.podcast', 'Listen') },
+  } as const;
+  const { Icon, label } = marks[kind];
+  return (
+    <span
+      title={label}
+      className="hidden sm:flex flex-col items-center gap-1 w-14 flex-shrink-0 pt-0.5 text-zinc-500"
+    >
+      <Icon className="w-5 h-5" aria-hidden="true" />
+      <span className="text-[11px] font-semibold leading-none">{label}</span>
+    </span>
+  );
 }
 
 export default function QualityRadar({
@@ -200,23 +228,19 @@ export default function QualityRadar({
           const open = openItem === item.id;
           return (
             <article key={item.id} className="py-4 group">
-              <div className="flex items-start gap-4">
-                {/* Something to look at. A paper has no thumbnail, so it gets
-                    artwork drawn from its own title — the same every time, so
-                    a row you have seen before is recognisable. */}
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hidden sm:block w-32 flex-shrink-0"
-                >
-                  <Cover
-                    seed={item.id + item.title}
-                    label={item.title}
-                    url={item.url}
-                    className="aspect-video rounded-xl border border-zinc-800"
-                  />
-                </a>
+              <div className="flex items-start gap-3">
+                {/* What kind of thing this is, and nothing more.
+
+                    This was a picture: a wide block of generated artwork drawn
+                    from the title. It looked like a photograph of the article
+                    and it was not one — we hold no image for any of these, and
+                    an invented one next to a real paper is the app implying
+                    something untrue, which is the whole thing it refuses to do
+                    everywhere else. So the colour is gone and the space with
+                    it, and what is left is a mark that says paper, article,
+                    talk or listen — clearly a symbol, and the fastest thing to
+                    read in a list you are scanning. */}
+                <KindMark kind={item.kind} />
                 <div className="min-w-0 flex-1">
                   <a
                     href={item.url}
