@@ -731,7 +731,7 @@ export default function FutureBoxHome() {
 
         {/* The auth and pricing overlays are shared with the signed-in app. */}
         {authModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 z-50 bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
             <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
               <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                 <h3 className="text-lg font-extrabold text-white">
@@ -1637,7 +1637,7 @@ export default function FutureBoxHome() {
 
       {/* 🔐 AUTH & SIGN IN / SIGN UP MODAL */}
       {authModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div className="flex items-center space-x-2 text-white">
@@ -1701,7 +1701,7 @@ export default function FutureBoxHome() {
 
       {/* Plans and one-off prices. Every figure comes from plans.ts, in rand. */}
       {pricingModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
             <div className="flex items-start justify-between border-b border-zinc-800 pb-4">
               <div>
@@ -2056,7 +2056,7 @@ export default function FutureBoxHome() {
 
       {/* 🎬 UNIVERSAL MEDIA PLAYER MODAL */}
       {selectedMedia && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl my-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
               <div>
@@ -2096,7 +2096,7 @@ export default function FutureBoxHome() {
 
       {/* 🔍 BLUEPRINT MODAL */}
       {selectedBlueprint && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-lg flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-scrim/85 backdrop-blur-lg flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div className="space-y-1">

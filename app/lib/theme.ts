@@ -163,7 +163,17 @@ export interface Preset extends Theme {
 }
 
 export const PRESETS: readonly Preset[] = [
-  { id: 'futurebox', name: 'FutureBox', blurb: 'The house style.', surface: 'midnight', primary: 'emerald', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full' },
+  /* The default, and the reason it is light.
+     A creative tool spends most of its screen on the person's own work — their
+     words, their artwork, their waveform. A near-black room makes every one of
+     those things glow, which is flattering for one card and exhausting for a
+     page of them, and it forces every panel to earn separation with a border,
+     a gradient or a shadow. Cumulatively that is what "busy" is made of.
+     Near-white separates panels with nothing but space, so the loudest thing on
+     screen is whatever the person just made. One accent, and amber kept back
+     for the few places where money is involved. */
+  { id: 'clean', name: 'Clean', blurb: 'Near-white, one accent, nothing shouting. The default.', surface: 'paper', primary: 'emerald', secondary: 'slate', highlight: 'amber', tertiary: 'slate', radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full' },
+  { id: 'futurebox', name: 'Midnight', blurb: 'The old house style. Near-black.', surface: 'midnight', primary: 'emerald', secondary: 'cyan', highlight: 'amber', tertiary: 'violet', radius: 'round', density: 'comfortable', font: 'system', layout: 'rail', motion: 'full' },
   { id: 'studio', name: 'Studio Dark', blurb: 'Neutral grey, one accent. Nothing shouts.', surface: 'carbon', primary: 'slate', secondary: 'sky', highlight: 'amber', tertiary: 'slate', radius: 'soft', density: 'compact', font: 'grotesk', layout: 'rail', motion: 'full' },
   { id: 'neon', name: 'Neon Club', blurb: 'Loud. For a dance channel.', surface: 'plum', primary: 'fuchsia', secondary: 'cyan', highlight: 'lime', tertiary: 'violet', radius: 'pill', density: 'comfortable', font: 'geometric', layout: 'top', motion: 'full' },
   { id: 'terminal', name: 'Terminal', blurb: 'Sharp corners, mono type, green on black.', surface: 'carbon', primary: 'lime', secondary: 'teal', highlight: 'amber', tertiary: 'lime', radius: 'sharp', density: 'compact', font: 'mono', layout: 'focus', motion: 'reduced' },
@@ -183,8 +193,18 @@ const STOPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 
 /** Dark surfaces: 50 is lightest text, 950 is the deepest background. */
 const DARK_L = [96, 91, 83, 71, 58, 46, 36, 28, 20, 13, 7];
-/** Light surfaces: the same ramp inverted, so existing markup flips correctly. */
-const LIGHT_L = [14, 20, 30, 42, 52, 58, 66, 76, 88, 95, 99];
+/**
+ * Light surfaces: the same ramp inverted, so existing markup flips correctly.
+ *
+ * It is not a straight mirror of DARK_L, and it cannot be. Perceived contrast
+ * is not symmetric: a mid grey that reads clearly against near-black is far too
+ * faint against near-white. Mirroring DARK_L put `text-zinc-400` — which most
+ * of the app uses for its secondary line — at 3.5:1 on the page, under the 4.5:1
+ * that body text needs. The mid stops are pulled darker so that everything the
+ * app treats as text (50 through 500) clears AA against the page, and only the
+ * stops the app treats as borders and fills (600 and up) sit lighter.
+ */
+const LIGHT_L = [12, 17, 24, 32, 40, 45, 54, 68, 84, 93, 98];
 /** Accents keep a conventional ramp in both modes. */
 const ACCENT_L = [95, 89, 80, 70, 60, 51, 43, 35, 28, 22, 15];
 
@@ -247,6 +267,11 @@ export function themeVariables(theme: Theme): Record<string, string> {
     // Text on a saturated accent fill stays dark whatever the surface does,
     // because the accent itself stays bright.
     '--fb-on-accent': hslToRgbChannels(surface.hue, Math.min(surface.sat, 20), 8),
+    // The wash behind a modal. It is the one thing that must NOT follow the
+    // surface: on a light theme an inverted scrim is a pale sheet over a pale
+    // page, and the dialog stops reading as a dialog. It stays dark, and the
+    // dark theme is unaffected because it was dark there already.
+    '--fb-scrim': hslToRgbChannels(surface.hue, Math.min(surface.sat, 20), 6),
     '--fb-motion': theme.motion === 'reduced' ? '0.001ms' : '200ms',
   };
   for (const [key, base] of Object.entries(RADIUS_BASE)) {

@@ -1,35 +1,26 @@
-# ElevenLabs UI teardown — element-by-element reference
+# Observed elsewhere — evidence, not a design
 
-**Purpose.** A reference capture of a mature generative-media product, screen by screen, so that
-when we build the equivalent Vibefy surfaces we can be *simpler* without being *poorer*. Nothing in
-here is a mandate to copy the visual design. Every row is a capability question: *do we have an
-answer for this, and is our answer easier to use?*
+**This file is not a specification and nothing in it is a decision.**
 
-**How to read it.** Each screen lists: (1) the chrome, (2) every control and its options, (3) the
-AI-assist behaviour on that screen. The last section, [Copilot parity](#copilot-parity), is the rule
-we hold ourselves to: whatever the reference does with AI on a given function, our copilot does at
-least as much, in fewer steps.
+It is a raw record of what a competing product (ElevenLabs) puts on screen, kept for one reason
+only: so that when we design our own surfaces we can check we have not *forgotten* a capability.
+It is a memory aid against omission.
 
-**Status:** living document. Screens are appended as they are captured.
+**How to use it.** Read `docs/FUNCTION_INVENTORY.md` instead. That is the specification, written in
+our own language, organised around what a person is trying to do rather than around someone else's
+screens. This file is what that inventory was checked against.
 
-| # | Screen | Captured |
-|---|--------|----------|
-| 1 | Home | ✅ |
-| 2 | Voices → Explore | ✅ |
-| 3 | Studio | ✅ |
-| 4 | Flows | ✅ |
-| 5 | Templates | ✅ |
-| 6 | Assets | ✅ |
-| 7 | Text to Speech | ✅ |
-| 8 | Sound Effects → Explore | ✅ |
-| 9 | Image & Video → Explore | ✅ |
-| 10 | Voice Isolator | ✅ |
-| 11 | Voice Changer | ✅ |
-| 12 | Music → Marketplace | ✅ |
-| 13 | Speech to Text → Transcriptions | ✅ |
-| 14 | Dubbing | ✅ |
-| 15 | Ads Engine | ✅ |
-| — | Audiobooks, Upscale, remaining *More tools*, settings, billing | pending |
+**How not to use it.** Do not lift a layout from here. Do not lift a control name from here. Do not
+lift copy from here. Their buttons are named for their product; ours are named for ours — *Make a
+song*, *The Booth*, *Video desk*, *Your voice*. Where this file says a competitor has a button
+called X, the only question it should ever raise is *"can our user achieve the thing X achieves,
+and can they achieve it in fewer steps?"* If the answer is yes, the observation has done its job and
+the button name is irrelevant.
+
+Their layout is also not a target. We have said from the start that ours will be laid out
+differently and more practically. A capability appearing here on one screen may, in our product,
+live somewhere else entirely, be merged into a neighbouring step, be handled by the copilot without
+a control at all, or be deliberately dropped with the reason written down.
 
 ---
 
