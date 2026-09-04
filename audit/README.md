@@ -121,3 +121,19 @@ way it would with `ELEVEN_AURORA_READY=1` set, because a run that only proved
 the refusal would be a run about the flag. What is checked is what actually
 reaches the route: a picture, an audio file, the script, the measured length,
 and a confirmation that was ticked rather than assumed.
+
+`lanes.mjs` stubs the separation — it is a paid call — and nothing else. What
+comes back is two genuine WAVs of different length and different loudness, so
+a lane drawn from the wrong buffer shows up as two identical canvases rather
+than passing quietly.
+
+The faders are not proven by pressing play: a headless browser makes no sound,
+and hearing is not something a run can assert. They are proven by rendering.
+"Keep this balance" reads the same gain nodes the faders move, so two renders
+that differ are two gains that differ — and muting the loud lane must drop the
+loudest sample in the file, which is the difference between a fader wired to a
+gain node and one that only moves a number on screen.
+
+It also seeds the song's audio into `futurebox`/`audio` in IndexedDB. Without
+it the split button is correctly disabled, and the run stops at a screen
+behaving properly.

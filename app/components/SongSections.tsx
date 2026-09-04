@@ -43,7 +43,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronUp, Copy, Loader2, Music4, Pause, Play, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Loader2, Music4, Pause, Play, Plus, SlidersHorizontal, Sparkles, Trash2 } from 'lucide-react';
 import { loadTracks } from '../lib/library';
 import { splitSections } from '../lib/engines';
 import { readAudio } from '../lib/trackaudio';
@@ -53,6 +53,7 @@ import { levelOf, loadOwned, NOTHING, type Owned } from '../lib/purchases';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import type { Track } from '../lib/library';
+import Lanes from './Lanes';
 
 interface Part {
   name: string;
@@ -171,6 +172,17 @@ export default function SongSections({
 
   const [parts, setParts] = useState<Part[]>([]);
   const [peaks, setPeaks] = useState<Peaks | null>(null);
+  /* The song as it is allowed to be heard, held for the lanes.
+
+     Deliberately the marked copy on a free song rather than the clean one.
+     Splitting a song into two tracks and rendering a balance out of it is
+     another way to a file, and this one does not pass through
+     `downloadLink` — which is where every other download is checked against
+     what was paid for. Marking before separating means the mark is in both
+     stems and in anything mixed from them, so the lanes cannot become the
+     back door to a clean master. */
+  const [playable, setPlayable] = useState<Blob | null>(null);
+  const [lanesOpen, setLanesOpen] = useState(false);
   const [at, setAt] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -201,6 +213,8 @@ export default function SongSections({
     if (!track) return;
     setParts(sectionsOf(track));
     setPeaks(null);
+    setPlayable(null);
+    setLanesOpen(false);
     setAt(0);
     setPlaying(false);
     audioRef.current?.pause();
@@ -212,12 +226,13 @@ export default function SongSections({
         setLoading(false);
         return;
       }
-      const playable = levelOf(owned, track.id) === 'owned' ? blob : await markBlob(blob);
+      const heard = levelOf(owned, track.id) === 'owned' ? blob : await markBlob(blob);
       if (!live) return;
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-      urlRef.current = URL.createObjectURL(playable);
+      urlRef.current = URL.createObjectURL(heard);
       if (audioRef.current) audioRef.current.src = urlRef.current;
-      setPeaks(await peaksOf(playable));
+      setPlayable(heard);
+      setPeaks(await peaksOf(heard));
       setLoading(false);
     });
     return () => {
@@ -425,6 +440,37 @@ export default function SongSections({
           </p>
         )}
       </div>
+
+      {/* ── The song in tracks ──────────────────────────────────────────
+          Under the transport and above the sections, which is the order the
+          work goes in: hear it, take it apart, then change what is said. Shut
+          by default — it is a second player and a paid separation, and neither
+          should start because somebody opened a room. */}
+      {track && (
+        lanesOpen ? (
+          <Lanes
+            trackId={track.id}
+            title={track.title}
+            audio={playable}
+            seconds={peaks?.duration || track.seconds || 0}
+            onOpen={() => {
+              // One transport at a time. Two players on one song is how a
+              // screen ends up playing it twice, slightly apart.
+              audioRef.current?.pause();
+              setPlaying(false);
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setLanesOpen(true)}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:border-zinc-600"
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            {t('sec.lanes', 'Lay it out in tracks')}
+          </button>
+        )
+      )}
 
       {/* The sections themselves: what is sung, and when. */}
       <div className="space-y-2">

@@ -1436,6 +1436,23 @@ export const STRINGS: Dict = {
   "pres.readFailed": { en: "That could not be read just now.", af: "Dit kon nie nou gelees word nie." },
   "pres.failed": { en: "That could not be made just now.", af: "Dit kon nie nou gemaak word nie." },
   "pres.slow": { en: "It is taking longer than usual. It is still being made \u2014 look in your videos shortly.", af: "Dit vat langer as gewoonlik. Dit word steeds gemaak \u2014 kyk netnou by jou videos." },
+
+  /* The song laid out in two tracks: the voice, and everything else. */
+  "sec.lanes": { en: "Lay it out in tracks", af: "L\u00ea dit in klankbane uit" },
+  "lanes.title": { en: "The song in tracks", af: "Die snit in klankbane" },
+  "lanes.what": { en: "The voice on one track and everything else on the other, with a level each. Enough to bring a buried vocal up, push a loud one down, or drop it out and keep the backing. Not a mixer \u2014 two stems is what two faders are honest about.", af: "Die stem op een baan en al die res op die ander, elk met sy eie vlak. Genoeg om 'n begrawe sang op te bring, 'n harde een af te druk, of dit heeltemal uit te haal en die begeleiding te hou. Nie 'n menger nie \u2014 twee stemme is waaroor twee skuiwers eerlik kan wees." },
+  "lanes.first": { en: "Separating happens once and is then kept on this device beside the song, so opening these lanes again costs nothing. The booth uses the same two files.", af: "Die skeiding gebeur een keer en word dan op hierdie toestel langs die snit gehou, so om hierdie bane weer oop te maak kos niks. Die opnamekamer gebruik dieselfde twee l\u00eaers." },
+  "lanes.split": { en: "Split it into tracks", af: "Deel dit op in klankbane" },
+  "lanes.voice": { en: "The voice", af: "Die stem" },
+  "lanes.backing": { en: "Everything else", af: "Al die res" },
+  "lanes.together": { en: "Both tracks play together, from one playhead.", af: "Albei bane speel saam, van een speelkop af." },
+  "lanes.keep": { en: "Keep this balance as a file", af: "Hou hierdie balans as 'n l\u00eaer" },
+  "lanes.keepNote": { en: "Downloaded, not saved over the song. The original is what your playlists and every other screen point at.", af: "Afgelaai, nie oor die snit gestoor nie. Die oorspronklike is waarna jou speellyste en elke ander skerm wys." },
+  "lanes.keepFailed": { en: "That balance could not be rendered.", af: "Daardie balans kon nie uitgevoer word nie." },
+  "lanes.noAudio": { en: "This browser cannot lay a song out in tracks.", af: "Hierdie blaaier kan nie 'n snit in klankbane uitl\u00ea nie." },
+  "lanes.unreadable": { en: "The two tracks could not be read back.", af: "Die twee bane kon nie teruggelees word nie." },
+  "common.play": { en: "Play", af: "Speel" },
+  "common.pause": { en: "Pause", af: "Wag" },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';
