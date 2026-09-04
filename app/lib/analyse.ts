@@ -14,7 +14,15 @@
 import { accessToken } from './cloud';
 
 export type Reading =
-  | { readonly ok: true; readonly result: Record<string, string>; readonly data: Record<string, unknown> }
+  | {
+      readonly ok: true;
+      readonly result: Record<string, string>;
+      readonly data: Record<string, unknown>;
+      /** Outputs that are audio. Fetched one at a time, not in the answer. */
+      readonly parts: readonly string[];
+      /** The job's own id, which is the handle those parts are fetched by. */
+      readonly id: string;
+    }
   | { readonly ok: false; readonly message: string };
 
 /** Two seconds between asks. A reading takes tens of seconds, not hundreds. */
@@ -59,15 +67,62 @@ export async function read(
       message?: string;
       result?: Record<string, string>;
       data?: Record<string, unknown>;
+      parts?: string[];
     };
     if (said.state === 'failed') {
       return { ok: false, message: said.message ?? 'That recording could not be read.' };
     }
     if (said.state === 'done') {
-      return { ok: true, result: said.result ?? {}, data: said.data ?? {} };
+      return {
+        ok: true,
+        id: opened.id,
+        result: said.result ?? {},
+        data: said.data ?? {},
+        parts: said.parts ?? [],
+      };
     }
   }
   return { ok: false, message: 'That is taking much longer than usual. Try a shorter piece.' };
+}
+
+/**
+ * One audio output, through this app's own origin.
+ *
+ * Never the supplier's URL directly: the browser is not allowed to fetch it
+ * and widening the Content-Security-Policy for a file that can be streamed
+ * here instead is a policy that stops being one.
+ */
+export async function partOf(id: string, name: string): Promise<Blob | null> {
+  try {
+    const token = await accessToken();
+    const response = await fetch(
+      `/api/analyse/part?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`,
+      { headers: token ? { Authorization: `Bearer ${token}` } : undefined },
+    );
+    if (!response.ok) return null;
+    return await response.blob();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Tell the service the parts have been collected.
+ *
+ * A job with audio outputs is kept until this is called — it is the handle each
+ * part is fetched by — so not calling it leaves somebody's song sitting on a
+ * third party's storage for no reason.
+ */
+export async function done(id: string): Promise<void> {
+  try {
+    const token = await accessToken();
+    await fetch(`/api/analyse?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+  } catch {
+    // Their job expires on its own. Worth trying, not worth failing over.
+  }
 }
 
 /* ── Making sense of whatever came back ───────────────────────────────────

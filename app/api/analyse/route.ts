@@ -210,8 +210,41 @@ export async function GET(request: Request): Promise<Response> {
     }),
   );
 
-  /* Read, then tidied up. Every finished job sits on their account until it is
-     deleted and this app makes one per analysis. */
-  void forget(id);
-  return Response.json({ state: 'done', result, data });
+  /* ── What is audio, and therefore not for this response ────────────────
+
+     A stem is a file, not an answer. Handing back fifty megabytes of them in
+     one JSON body would be a response nobody can hold in memory and a request
+     that times out on a phone, so the audio outputs are named here and fetched
+     one at a time through `/api/analyse/part`.
+
+     Which is why the job is not deleted when there are any: it is the handle
+     those parts are fetched by. The browser says when it is done. */
+  const parts = Object.entries(result)
+    .filter(([name, value]) => typeof value === 'string' && /^https:\/\//.test(value) && !(name in data))
+    .map(([name]) => name);
+
+  if (parts.length === 0) {
+    /* Nothing left to fetch, so tidied up now. Every finished job sits on their
+       account until it is deleted and this app makes one per analysis. */
+    void forget(id);
+  }
+
+  return Response.json({ state: 'done', result, data, parts, keep: parts.length > 0 });
+}
+
+/**
+ * The browser saying it has everything it needs.
+ *
+ * A job with audio outputs is kept until this is called, because it is the
+ * handle each part is fetched by. Answering "gone" for a job that was never
+ * there is the honest answer to "make sure this is not there".
+ */
+export async function DELETE(request: Request): Promise<Response> {
+  if (!configured()) return Response.json({ gone: true });
+  const id = new URL(request.url).searchParams.get('id') ?? '';
+  if (!id || id.length > 200) {
+    return Response.json({ error: 'bad_request', message: 'Which job?' }, { status: 400 });
+  }
+  await forget(id);
+  return Response.json({ gone: true });
 }

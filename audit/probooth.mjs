@@ -49,17 +49,32 @@ try {
 
   /* Music.ai, stood up here. The real thing is a paid job against somebody's
      account and takes tens of seconds; what is being tested is the half that
-     lives in this app — that a reading reaches the screen, and that saying
-     yes to it actually moves the session's tempo. The answer deliberately
-     uses different words from the ones the reader looks for first, because
-     workflow outputs are named by whoever built them. */
-  await p.route('**/api/analyse*', (route) => {
-    const method = route.request().method();
+     lives in this app — that a reading reaches the screen, that saying yes to
+     it moves the session's tempo, and that named parts arrive as lanes.
+
+     One handler, keyed off the job id. Three overlapping patterns is how a
+     stub answers the wrong question: Playwright hands a request to the last
+     matching route that was registered, not to the most specific one. */
+  await p.route('**/api/analyse?**', async (route) => {
+    const request = route.request();
     const json = (body) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
-    if (method === 'POST') return json({ id: 'job-1' });
+    if (request.method() === 'DELETE') return json({ gone: true });
+    const id = new URL(request.url()).searchParams.get('id');
+    if (id === 'job-stems') {
+      return json({
+        state: 'done',
+        result: { drums: 'https://x/1.wav', bass: 'https://x/2.wav' },
+        data: {},
+        parts: ['drums', 'bass'],
+        keep: true,
+      });
+    }
+    /* Deliberately different words from the ones the reader looks for first,
+       because workflow outputs are named by whoever built them. */
     return json({
       state: 'done',
       result: {},
+      parts: [],
       data: {
         analysis: { tempo: 96, rootKey: 'F# minor' },
         segments: [
@@ -70,6 +85,34 @@ try {
       },
     });
   });
+
+  await p.route('**/api/analyse', async (route) => {
+    const body = route.request().postData() ?? '';
+    const stems = /name="which"[\s\S]{0,40}stems/.test(body);
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: stems ? 'job-stems' : 'job-1' }),
+    });
+  });
+
+  /* Registered last so it wins for the part URLs. A real wav, so the room
+     decodes it rather than being handed something it quietly drops. */
+  await p.route('**/api/analyse/part*', (route) => {
+    const rate = 8000;
+    const frames = rate / 2;
+    const bytes = Buffer.alloc(44 + frames * 2);
+    bytes.write('RIFF', 0); bytes.writeUInt32LE(36 + frames * 2, 4); bytes.write('WAVE', 8);
+    bytes.write('fmt ', 12); bytes.writeUInt32LE(16, 16); bytes.writeUInt16LE(1, 20);
+    bytes.writeUInt16LE(1, 22); bytes.writeUInt32LE(rate, 24); bytes.writeUInt32LE(rate * 2, 28);
+    bytes.writeUInt16LE(2, 32); bytes.writeUInt16LE(16, 34);
+    bytes.write('data', 36); bytes.writeUInt32LE(frames * 2, 40);
+    for (let i = 0; i < frames; i += 1) {
+      bytes.writeInt16LE(Math.round(Math.sin((2 * Math.PI * 220 * i) / rate) * 12000), 44 + i * 2);
+    }
+    return route.fulfill({ status: 200, contentType: 'audio/wav', body: bytes });
+  });
+
   await p.goto(`http://localhost:${PORT}/proboothprobe`, { waitUntil: 'networkidle' });
   await p.waitForTimeout(1500);
 
@@ -163,6 +206,28 @@ try {
   check('the session was not moved without being asked', before === '120', before);
   check('and saying yes sets the tempo to what was read', after === '96', `${before} → ${after}`);
   check('the transport follows it', /001 01/.test(await words()));
+
+  /* ── Splitting into named parts ──────────────────────────────────────
+     The half of the integration that produces audio rather than an answer.
+     Each part must arrive as a lane of its own, at the source's own start,
+     with the source muted rather than thrown away. */
+  {
+    const before = await p.locator('canvas').count();
+    await p.locator(`button[aria-label="${af ? 'Verdeel in benoemde dele' : 'Split into named parts'}"]`).first().click();
+    await p.waitForTimeout(6000);
+    const after = await p.locator('canvas').count();
+    check('splitting into named parts adds a lane per part', after >= before + 2,
+      `${before} → ${after}`);
+    /* Read off the name fields, not off the page text. A lane's name is an
+       input's value and `innerText` does not include it — the first version
+       of this check looked at the page and reported a working split as
+       nameless. */
+    const names = await p.locator(`input[aria-label="${af ? 'Baan se naam' : 'Lane name'}"]`)
+      .evaluateAll((nodes) => nodes.map((node) => node.value));
+    check('and each lane carries the part’s own name',
+      names.some((one) => /drums/.test(one)) && names.some((one) => /bass/.test(one)),
+      names.join(' | '));
+  }
 
   /* ── Tone ────────────────────────────────────────────────────────────
      And the sentence that keeps it honest: a guitarist reading "amp

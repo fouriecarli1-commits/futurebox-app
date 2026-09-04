@@ -19,13 +19,13 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Gauge, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { Check, Circle, Gauge, Layers, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, dbOf, mixSession, monoOf, readInto, readSession, span, wireLane,
   type Lane, type Master, type Reading,
 } from '../lib/session';
 import { failed, separate } from '../lib/stems';
-import { keyIn, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
+import { done as forgetJob, keyIn, partOf, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
 import { CLEAN, isClean, type Tone } from '../lib/tone';
 import { accessToken } from '../lib/cloud';
 import VoicePicker from './VoicePicker';
@@ -587,6 +587,75 @@ export default function ProBooth({
     [context, t],
   );
 
+  /**
+   * A lane split into named parts rather than two.
+   *
+   * The two-stem split above is ElevenLabs and answers one question: is this
+   * the voice, or is it everything else. This is the other kind — drums, bass,
+   * guitars, keys, whatever the workflow was built to return — and each part
+   * arrives as a lane at the source's own start so they sit on top of it.
+   *
+   * The source is muted rather than removed, for the same reason as the other
+   * split: it is paid for, and a person may want the original back.
+   */
+  const intoParts = useCallback(
+    async (lane: Lane) => {
+      setProblem(null);
+      setLooking(lane.id);
+      try {
+        const ctx = context();
+        if (!ctx) return;
+        const got = await readSong(encodeWav(monoOf(lane.audio, ctx)), lane.audio.duration, 'stems');
+        if (!got.ok) {
+          setProblem(got.message);
+          return;
+        }
+        if (got.parts.length === 0) {
+          setProblem(t('pro.noParts', 'That workflow returned no audio to split into.'));
+          return;
+        }
+
+        /* Fetched one at a time rather than all at once: six stems of a long
+           song is a lot of megabytes, and a phone asked for all of them
+           together drops some of them. */
+        const made: Lane[] = [];
+        for (const name of got.parts) {
+          const blob = await partOf(got.id, name);
+          if (!blob) continue;
+          const audio = await readInto(blob, rate);
+          if (!audio) continue;
+          made.push({
+            id: `${lane.id}-${name}-${made.length}`,
+            name: `${lane.name} · ${name}`,
+            audio,
+            at: lane.at,
+            gain: lane.gain,
+            muted: false,
+            soloed: false,
+            pan: lane.pan,
+          });
+        }
+        /* Their storage, freed as soon as the parts are here. */
+        void forgetJob(got.id);
+
+        if (made.length === 0) {
+          setProblem(t('pro.partsUnreadable', 'The parts came back in a form the browser could not read.'));
+          return;
+        }
+        setStale(true);
+        setLanes((was) => [
+          ...was.map((one) => (one.id === lane.id ? { ...one, muted: true } : one)),
+          ...made,
+        ]);
+      } catch {
+        setProblem(t('pro.partsFailed', 'That lane could not be split into parts.'));
+      } finally {
+        setLooking(null);
+      }
+    },
+    [context, rate, t],
+  );
+
   const keep = useCallback(async () => {
     setBusy(true);
     setProblem(null);
@@ -791,6 +860,7 @@ export default function ProBooth({
             onSplit={() => void split(lane)}
             onVoice={() => setChanging(lane)}
             onRead={() => void look(lane)}
+            onParts={() => void intoParts(lane)}
             reading={looking === lane.id}
             found={known[lane.id]}
             onUseTempo={(bpm, root) =>
@@ -1063,6 +1133,7 @@ function LaneRow({
   onSplit,
   onVoice,
   onRead,
+  onParts,
   reading,
   found,
   onUseTempo,
@@ -1077,6 +1148,7 @@ function LaneRow({
   onSplit: () => void;
   onVoice: () => void;
   onRead: () => void;
+  onParts: () => void;
   reading: boolean;
   found?: { tempo: number | null; key: string | null; spans: Span[] };
   onUseTempo: (bpm: number, key: string | null) => void;
@@ -1229,6 +1301,16 @@ function LaneRow({
           className="text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
           <Scissors className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={onParts}
+          disabled={busy || reading}
+          title={`${t('pro.parts', 'Split into named parts')} — ${perMinute(lane.audio.duration, CREDITS.parts)} ${t('video.credits', 'credits')}`}
+          aria-label={t('pro.parts', 'Split into named parts')}
+          className="text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+        >
+          <Layers className="w-4 h-4" />
         </button>
         <button
           type="button"
