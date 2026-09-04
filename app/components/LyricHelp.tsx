@@ -86,6 +86,10 @@ export default function LyricHelp({
           type="button"
           onClick={() => void ask('polish')}
           disabled={mode !== null || !lyrics.trim()}
+          /* Greyed out with no reason given reads as broken. It cannot look at
+             what is not working in words nobody has written yet, and saying so
+             costs one attribute. */
+          title={!lyrics.trim() ? t('write.fixNeeds', 'Write some words first — there is nothing to look at yet.') : undefined}
           className="px-3 py-1.5 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5 disabled:opacity-60"
         >
           {mode === 'polish' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}

@@ -42,21 +42,41 @@ export async function enter({ width = 1280, height = 900 } = {}) {
   await page.locator('button[type="submit"]').first().click();
   await page.waitForTimeout(1800);
 
-  /* The welcome page. Signing in lands on it now, and it covers the header —
-     so every probe that went straight for the studio button started timing out
-     against a door rather than against a fault. Dismissed the way a person
-     dismisses it, in either language. */
-  const notNow = page.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
-  if (await notNow.count()) {
-    await notNow.click().catch(() => undefined);
-    await page.waitForTimeout(800);
-  }
-
+  await dismissDoor(page);
   return { browser, page, problems };
+}
+
+/**
+ * The welcome page, out of the way.
+ *
+ * Signing in lands on it and it covers the header, so every probe that went
+ * straight for the studio button started timing out against a door rather than
+ * against a fault — and a probe that cannot get in reports nothing at all,
+ * which is worse than one that fails.
+ *
+ * Waited for rather than checked once: it draws after two fetches settle, so
+ * asking whether it is there the instant the form is submitted gets "no" and
+ * then it appears half a second later, under the next click.
+ */
+export async function dismissDoor(page) {
+  /* Found by its own button rather than by a class. A Tailwind arbitrary value
+     has to be escaped twice to survive both this file and the selector parser,
+     and getting that wrong fails silently as "no door" — which is exactly the
+     answer that put the door back under the next click. */
+  const notNow = page.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
+  try {
+    await notNow.waitFor({ state: 'visible', timeout: 8000 });
+  } catch {
+    return; // Not every route through the app opens it.
+  }
+  await notNow.click({ timeout: 5000 }).catch(() => undefined);
+  await notNow.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => undefined);
+  await page.waitForTimeout(400);
 }
 
 /** The studio overlay, which is the room you work in. */
 export async function studio(page) {
+  await dismissDoor(page);
   /* The header button was called "Creator Studio" and is now called "Studio".
      Both are matched, because a probe that silently stops finding its way in
      reports every room as clean — which is what this one did until somebody

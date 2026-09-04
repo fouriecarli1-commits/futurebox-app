@@ -9,7 +9,7 @@
  * So: the room is reopened before every press. Slower, and the only way a
  * "nothing changed on screen" result means anything.
  */
-import { enter, studio } from './enter.mjs';
+import { dismissDoor, enter, studio } from './enter.mjs';
 
 const ROOMS_ALL = ['Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard', 'Music video',
   'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar'];
@@ -23,6 +23,12 @@ let room = await studio(page);
 async function openRoom() {
   await page.keyboard.press('Escape').catch(() => {});
   await page.waitForTimeout(200);
+  /* Pressing everything in a room includes pressing "Sign out", and signing
+     back in from the front page opens the welcome screen over the header — so
+     the door has to be cleared on every pass, not only on the way in. Without
+     this the run dies part-way through against a door and reports the room as
+     untestable. */
+  await dismissDoor(page);
   if (!(await page.locator('div.fixed.inset-0.z-50').count())) room = await studio(page);
   else room = page.locator('div.fixed.inset-0.z-50').first();
   await room.locator('button').filter({ hasText: new RegExp(`^${name}`, 'i') }).first()

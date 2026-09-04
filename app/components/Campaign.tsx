@@ -420,6 +420,10 @@ export default function Campaign({
             type="button"
             onClick={() => void write(false)}
             disabled={!what.trim() || busy}
+            /* A greyed-out main button with no reason given reads as broken,
+               and this is the main button of the room. It cannot write an
+               advert for a product nobody has named. */
+            title={!what.trim() ? t('ads.needWhat', 'Say what you are advertising first.') : undefined}
             className="px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent font-bold text-sm disabled:opacity-40 flex items-center gap-2"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
