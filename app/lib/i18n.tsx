@@ -436,6 +436,7 @@ export const STRINGS: Dict = {
   "plan.day.friday": { en: "Friday", af: "Vrydag" },
   "plan.day.saturday": { en: "Saturday", af: "Saterdag" },
   "plan.day.sunday": { en: "Sunday", af: "Sondag" },
+  "make.cover": { en: "Cover art", af: "Voorblad" },
   "queue.title": { en: "When it goes out", af: "Wanneer dit uitgaan" },
   "queue.what": { en: "Plan a post and this reminds you at the moment you chose, with the words in front of you. It does not post for you — see below for what that would take.", af: "Beplan ’n plasing en dit herinner jou op die oomblik wat jy gekies het, met die woorde voor jou. Dit plaas nie vir jou nie — sien hieronder wat dit sou verg." },
   "queue.platform": { en: "Where it goes", af: "Waar dit gaan" },

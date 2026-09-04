@@ -17,7 +17,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Music, Play, Pause, Download, Share2, Repeat, Trash2, Sparkles, Wand2, Loader2,
   Video as VideoIcon, X, Mic,
-  Sliders,
+  Sliders, Image as ImageIcon,
 } from 'lucide-react';
 import { renderSketch, encodeWav, familyFor, sketchDurationSeconds } from '../lib/audio';
 import {
@@ -192,6 +192,13 @@ export default function MakeMusic({
    */
   const [playingBlob, setPlayingBlob] = useState<Blob | null>(null);
   const [shared, setShared] = useState<string | null>(null);
+  /* Which card is showing its sleeve.
+
+     The cover used to appear only while a song was playing, which meant the
+     one way to find it was to press play and look — so most people never did,
+     and a song nobody made a cover for is a row in a list rather than a
+     record. The button below opens it without playing anything. */
+  const [sleeveFor, setSleeveFor] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
 
@@ -946,7 +953,7 @@ export default function MakeMusic({
                 {/* The sleeve and the waveform side by side while it plays,
                     because a record is a picture and a shape together, and
                     neither is much use in half a column on its own. */}
-                {playing === track.id && (
+                {(playing === track.id || sleeveFor === track.id) && (
                   <div className="grid sm:grid-cols-[220px_1fr] gap-4 items-start">
                     <Sleeve
                       trackId={track.id}
@@ -954,7 +961,9 @@ export default function MakeMusic({
                       genre={track.genre}
                       style={track.style ?? ''}
                     />
-                    <NowPlaying track={track} audio={audioRef.current} blob={playingBlob} />
+                    {playing === track.id && (
+                      <NowPlaying track={track} audio={audioRef.current} blob={playingBlob} />
+                    )}
                   </div>
                 )}
 
@@ -1014,6 +1023,22 @@ export default function MakeMusic({
                   >
                     <Mic className="w-3.5 h-3.5" />
                     {t('make.singOver')}
+                  </button>
+                  {/* The cover, without having to press play to find it.
+                      Hidden until asked for rather than mounted on every card:
+                      each sleeve asks the server whether one exists already,
+                      and twenty songs on a screen should not be twenty
+                      questions nobody asked for. */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSleeveFor((open) => (open === track.id ? null : track.id))
+                    }
+                    aria-expanded={playing === track.id || sleeveFor === track.id}
+                    className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    {t('make.cover', 'Cover art')}
                   </button>
                   <button
                     type="button"
