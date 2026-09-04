@@ -44,6 +44,7 @@ import { makeId, rememberMake } from '../lib/makes';
 import CheaperPath from './CheaperPath';
 import StartFrame from './StartFrame';
 import Presenter from './Presenter';
+import SafeZones from './SafeZones';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
@@ -873,13 +874,30 @@ export default function VideoCanvas({
           <div className="grid sm:grid-cols-2 gap-3">
             {made.map((one) => (
               <div key={one.url} className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2.5">
-                <video
-                  src={one.url}
-                  controls
-                  className={`rounded-xl border border-zinc-800 bg-black w-full ${
-                    one.aspect === '9:16' ? 'max-h-80 object-contain' : ''
-                  }`}
-                />
+                {/* On the clip that came back, not on the prompt.
+
+                    You cannot frame a shot you did not film: while writing the
+                    prompt the subject's position is a decision nobody has made
+                    yet. Here it is a real question with a real answer, asked
+                    at the one moment it can still be acted on — before
+                    posting, while another take costs one generation rather
+                    than a repost. Offered only on the tall clips, because the
+                    platforms this is about only run tall ones. */}
+                {one.aspect === '9:16' ? (
+                  <SafeZones>
+                    <video
+                      src={one.url}
+                      controls
+                      className="rounded-xl border border-zinc-800 bg-black w-full max-h-80 object-contain"
+                    />
+                  </SafeZones>
+                ) : (
+                  <video
+                    src={one.url}
+                    controls
+                    className="rounded-xl border border-zinc-800 bg-black w-full"
+                  />
+                )}
                 <p className="text-xs text-zinc-500 leading-snug line-clamp-2">{one.prompt}</p>
                 <button
                   type="button"

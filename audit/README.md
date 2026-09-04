@@ -155,3 +155,19 @@ Its audio check decodes the output rather than asking the video element.
 `mozHasAudio`, `webkitAudioDecodedByteCount` and `audioTracks` are each
 non-standard and none answers in Chromium, so the first version reported a
 silent film for a file that had sound on it.
+
+## One that builds the app itself
+
+`safezones.mjs` needs a page that mounts one component on a box of known size,
+and this app should not ship a route that exists for a test. So the run owns
+the whole loop: it copies `app/safezoneprobe/page.probe.tsx` to `page.tsx`,
+runs `next build`, starts a server, measures, and removes the page again —
+whether it passed, failed or threw.
+
+`.probe.tsx` files elsewhere in `app/` follow the same convention and are the
+reason it exists; nothing ran them until this.
+
+It asserts geometry rather than the presence of elements: where each shaded
+strip falls against the frame's own box, in pixels. A bar in the wrong place
+is worse than no bar — it says a subject is safe while a caption is about to
+land on it, and that is found out after posting.

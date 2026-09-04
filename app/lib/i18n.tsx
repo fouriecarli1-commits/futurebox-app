@@ -1453,6 +1453,16 @@ export const STRINGS: Dict = {
   "lanes.unreadable": { en: "The two tracks could not be read back.", af: "Die twee bane kon nie teruggelees word nie." },
   "common.play": { en: "Play", af: "Speel" },
   "common.pause": { en: "Pause", af: "Wag" },
+
+  /* Where each platform prints its own interface over your video. */
+  "safe.title": { en: "What the app covers", af: "Wat die app toemaak" },
+  "safe.off": { en: "Off", af: "Af" },
+  "safe.kept": { en: "of the frame is left", af: "van die raam bly oor" },
+  "safe.guide": { en: "A guide, not a specification. These apps move their own furniture \u2014 do not put anything you need inside the shading.", af: "'n Riglyn, nie 'n spesifikasie nie. Hierdie apps skuif hulle eie meubels rond \u2014 moenie iets wat jy nodig het binne die skadu sit nie." },
+  "safe.tiktok": { en: "TikTok", af: "TikTok" },
+  "safe.reels": { en: "Instagram Reels", af: "Instagram Reels" },
+  "safe.shorts": { en: "YouTube Shorts", af: "YouTube Shorts" },
+  "safe.all": { en: "All three", af: "Al drie" },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';
