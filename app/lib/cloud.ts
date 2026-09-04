@@ -242,11 +242,60 @@ export function justArrived(): boolean {
   return true;
 }
 
-export async function signInWithGoogle(): Promise<{ ok: true } | { ok: false; message: string }> {
+/**
+ * The sign-ins this app knows how to draw, in the order they are offered.
+ *
+ * Ordered by who actually has one, not by preference: Google first because
+ * most people are already signed into it on the device in their hand, Apple
+ * second because on an iPhone it is the one that needs no typing, then
+ * Facebook.
+ *
+ * A provider being listed here means this app can draw its button. Whether it
+ * *works* is a separate question with a separate answer — see `providersOn`.
+ */
+export const PROVIDERS = ['google', 'apple', 'facebook'] as const;
+
+export type Provider = (typeof PROVIDERS)[number];
+
+/**
+ * Which of them the Supabase project actually has switched on.
+ *
+ * Asked rather than assumed, and this is the whole reason the buttons are not
+ * simply hard-coded. Every provider needs its own developer account, its own
+ * client id and secret, and its own redirect list on the other company's
+ * console — none of which this app can do for itself. A button for a provider
+ * nobody has configured does not fail politely; it sends somebody out to a
+ * consent screen that refuses them and drops them back with an error they
+ * cannot act on.
+ *
+ * `/auth/v1/settings` is a public, unauthenticated endpoint on every Supabase
+ * project that lists exactly this. Ask it once, draw what it says.
+ *
+ * A project that cannot be reached answers `[]` rather than a guess: no
+ * buttons is a worse screen than three, and a broken one is worse than both.
+ */
+export async function providersOn(): Promise<Provider[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return [];
+  try {
+    const response = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: key } });
+    if (!response.ok) return [];
+    const said = (await response.json()) as { external?: Record<string, unknown> };
+    const on = said.external ?? {};
+    return PROVIDERS.filter((one) => on[one] === true);
+  } catch {
+    return [];
+  }
+}
+
+export async function signInWith(
+  provider: Provider,
+): Promise<{ ok: true } | { ok: false; message: string }> {
   const supabase = getClient();
   if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
   const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
+    provider,
     options: {
       /* Back to wherever they started, not to a hard-coded address: this app
          runs on a preview domain and a real one, and a fixed redirect sends
@@ -266,6 +315,11 @@ export async function signInWithGoogle(): Promise<{ ok: true } | { ok: false; me
   });
   if (error) return { ok: false, message: error.message };
   return { ok: true };
+}
+
+/** The one that was here before the others, kept so nothing else has to move. */
+export async function signInWithGoogle(): Promise<{ ok: true } | { ok: false; message: string }> {
+  return signInWith('google');
 }
 
 export async function signOut(): Promise<void> {

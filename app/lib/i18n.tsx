@@ -559,6 +559,7 @@ export const STRINGS: Dict = {
   "account.terms": { en: "terms", af: "voorwaardes" },
   "account.and": { en: "and the", af: "en die" },
   "account.privacy": { en: "privacy notice", af: "privaatheidskennisgewing" },
+  "auth.continueWith": { en: "Continue with", af: "Gaan voort met" },
   "auth.signOut": { en: "Sign out", af: "Teken uit" },
   "auth.yourChannel": { en: "Your channel", af: "Jou kanaal" },
   "auth.working": { en: "One second\u2026", af: "Een sekonde\u2026" },
