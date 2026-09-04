@@ -45,6 +45,7 @@ import { habitOf, suggest, partOfDay, type Habit } from '../lib/habits';
 import { loadTracks } from '../lib/library';
 import { loadMakes } from '../lib/makes';
 import { fetchCreator } from '../lib/radar';
+import { loadTaste } from '../lib/taste';
 import { publicUrl } from '../lib/avatar';
 import type { SurfaceId } from '../lib/surfaces';
 import Cover from './Cover';
@@ -126,12 +127,20 @@ export default function Greeting({
        greeting never renders as "Hello!" and then jumps to "Hello, Carli!" —
        a name that arrives late reads worse than one that arrives whole. */
     void (async () => {
-      const creator = await fetchCreator().catch(() => null);
+      /* Both at once. The account's counts are what make this follow somebody
+         to a second device; the device's own history is what answers for
+         anybody signed out, or for an app with no accounts behind it. */
+      const [creator, taste] = await Promise.all([
+        fetchCreator().catch(() => null),
+        loadTaste(),
+      ]);
       if (!live) return;
       /* Their channel name first, because it is the one they chose. The
          account's name behind it, because a greeting with no name is worse
          than one using the name they signed up with. */
-      setHabit(habitOf(loadTracks(), loadMakes(), creator?.name || fromAccount || ''));
+      setHabit(
+        habitOf(loadTracks(), loadMakes(), creator?.name || fromAccount || '', taste.lines),
+      );
       setHandle(creator?.handle ?? '');
       setPhoto(creator?.avatar_path ? publicUrl(creator.avatar_path) : null);
     })();
@@ -287,10 +296,15 @@ export default function Greeting({
       {/* ── How it knew ──────────────────────────────────────────────────── */}
       {habit?.returning && (
         <p className="text-xs text-zinc-600 leading-relaxed">
-          {t(
-            'hello.basis',
-            'What is suggested here is read off the songs in your own library and what you have made before, both of which are already on this device. Nothing extra is recorded and nothing about it is sent anywhere.',
-          )}
+          {habit.source === 'account'
+            ? t(
+                'hello.basisAccount',
+                'This is read off what you have made here — how often, and what kind, kept against your account so it follows you to another device. Not a record of when you work: a count per kind, and nothing else. You can clear it on your account screen.',
+              )
+            : t(
+                'hello.basis',
+                'What is suggested here is read off the songs in your own library and what you have made before, both of which are already on this device. Nothing extra is recorded and nothing about it is sent anywhere.',
+              )}
         </p>
       )}
     </div>

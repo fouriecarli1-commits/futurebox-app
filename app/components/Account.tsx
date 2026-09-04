@@ -29,11 +29,12 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic } from 'lucide-react';
+import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { TIER_SPECS, tierPrice, type Tier } from '../lib/plans';
 import type { Region } from '../lib/pricing';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
+import { loadTaste, forgetTaste, NO_TASTE, type Taste } from '../lib/taste';
 import Subscription from './Subscription';
 
 export default function Account({
@@ -61,6 +62,8 @@ export default function Account({
   const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
   /** Null until the first answer, so a real balance never flashes as zero. */
   const [asked, setAsked] = useState(false);
+  const [taste, setTaste] = useState<Taste>(NO_TASTE);
+  const [forgetting, setForgetting] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -69,6 +72,9 @@ export default function Account({
       if (!live) return;
       setWallet(got);
       setAsked(true);
+    });
+    void loadTaste().then((got) => {
+      if (live) setTaste(got);
     });
     return () => {
       live = false;
@@ -209,6 +215,67 @@ export default function Account({
             )}
           </p>
         </section>
+
+        {/* ── What the app has noticed, and a way to make it stop ────────── */}
+        {taste.ready && (
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
+            <p className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
+              <Brain className="w-4 h-4 text-emerald-400" />
+              {t('account.taste', 'What the app has noticed')}
+            </p>
+            {/* Shown in full, because a screen that says "we remember some
+                things about you" without saying which is worse than one that
+                says nothing. It is a short list on purpose — there is nothing
+                here but counts. */}
+            {taste.lines.length === 0 ? (
+              <p className="text-sm text-zinc-500 leading-snug">
+                {t('account.tasteNone', 'Nothing yet. Make a few things and it will start suggesting the kind you actually make.')}
+              </p>
+            ) : (
+              <ul className="text-sm text-zinc-400 space-y-1">
+                {taste.lines.slice(0, 8).map((one) => (
+                  <li key={`${one.kind}:${one.label}`} className="flex items-baseline justify-between gap-3">
+                    <span className="min-w-0 truncate">
+                      {one.label}
+                      <span className="text-zinc-600">
+                        {' '}
+                        · {one.kind === 'genre'
+                          ? t('account.tasteGenre', 'what you make')
+                          : t('account.tasteRoom', 'where you work')}
+                      </span>
+                    </span>
+                    <span className="tabular-nums text-zinc-500 flex-shrink-0">
+                      {one.times}×
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              {t(
+                'account.tasteNote',
+                'A count of each kind and when it last happened — not a record of when you work. It is what lets the welcome screen and the copilot suggest the kind of thing you actually make, on any device you sign in on.',
+              )}
+            </p>
+            {taste.lines.length > 0 && (
+              <button
+                type="button"
+                disabled={forgetting}
+                onClick={() => {
+                  setForgetting(true);
+                  void forgetTaste().then((done) => {
+                    setForgetting(false);
+                    if (done) setTaste({ lines: [], ready: true });
+                  });
+                }}
+                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:border-zinc-600 hover:text-white inline-flex items-center gap-2 disabled:opacity-60"
+              >
+                {forgetting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {t('account.tasteForget', 'Clear this and start again')}
+              </button>
+            )}
+          </section>
+        )}
 
         {/* ── The subscription itself, and the way out of it ─────────────── */}
         <Subscription />

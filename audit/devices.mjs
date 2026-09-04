@@ -18,13 +18,34 @@
 import { chromium, devices } from 'playwright';
 
 const PORT = process.argv[2] || '3000';
+/**
+ * Phones and tablets, Apple and Android, and tablets both ways up.
+ *
+ * A tablet is not a big phone and it is not a small laptop: at 810 wide the
+ * layout takes its desktop shape, so the two-column studio appears on a screen
+ * a third narrower than the one it was designed against — and it is the one
+ * size where turning the device changes which layout runs. Landscape is a
+ * separate run rather than an afterthought for that reason.
+ */
 const WANTED = [
   ['iPhone 13', devices['iPhone 13']],
   ['iPhone SE', devices['iPhone SE']],
   ['Pixel 5', devices['Pixel 5']],
   ['Galaxy S9+', devices['Galaxy S9+']],
   ['iPad (gen 7)', devices['iPad (gen 7)']],
-];
+  ['iPad landscape', devices['iPad (gen 7) landscape']],
+  ['iPad Mini', devices['iPad Mini']],
+  ['iPad Mini land.', devices['iPad Mini landscape']],
+  ['iPad Pro 11', devices['iPad Pro 11']],
+  ['iPad Pro land.', devices['iPad Pro 11 landscape']],
+  ['Galaxy Tab S4', devices['Galaxy Tab S4']],
+  ['Tab S4 land.', devices['Galaxy Tab S4 landscape']],
+].filter(([name, device]) => {
+  // Playwright renames device profiles between versions; a missing one is
+  // worth saying out loud rather than silently testing eleven of twelve.
+  if (!device) console.log(`${name.padEnd(15)} — no such device profile in this Playwright`);
+  return Boolean(device);
+});
 
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const problems = [];
@@ -67,6 +88,27 @@ for (const [name, device] of WANTED) {
     `sign-in:${opens ? 'opens' : 'DOES NOT OPEN'}  small:${small.length}` +
     `${small.length ? ' → ' + small.slice(0, 3).join(', ') : ''}`,
   );
+  /* Naming the element, because "the page is 61 pixels too wide" is a fact
+     nobody can act on. A strip that scrolls inside its own box is meant to be
+     wider than the screen and is not the culprit. */
+  const culprits = wide
+    ? await p.evaluate(() => {
+        const out = [];
+        for (const el of Array.from(document.querySelectorAll('body *'))) {
+          const box = el.getBoundingClientRect();
+          if (box.width === 0 || box.right <= window.innerWidth + 1) continue;
+          const style = getComputedStyle(el);
+          if (style.overflowX === 'auto' || style.overflowX === 'scroll') continue;
+          if (Array.from(el.children).some((kid) => kid.getBoundingClientRect().right > window.innerWidth + 1)) continue;
+          out.push(
+            `${el.tagName.toLowerCase()}.${String(el.className).split(' ').slice(0, 3).join('.')}` +
+            ` (${Math.round(box.width)}px, ends at ${Math.round(box.right)})`,
+          );
+        }
+        return out.slice(0, 4);
+      })
+    : [];
+  if (culprits.length) console.log(`${' '.repeat(15)}↳ ${culprits.join('\n' + ' '.repeat(17))}`);
   if (wide) problems.push(`${name}: page is ${page} on a ${width} screen`);
   if (!opens) problems.push(`${name}: the sign-in does not open`);
   if (small.length) problems.push(`${name}: ${small.length} control(s) under 44px — ${small.slice(0, 3).join(', ')}`);

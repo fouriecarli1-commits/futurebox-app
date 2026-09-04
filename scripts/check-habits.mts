@@ -19,6 +19,7 @@ import {
   type MakeLike,
   type SongLike,
 } from '../app/lib/habits.ts';
+import type { TasteLine } from '../app/lib/taste.ts';
 
 let bad = 0;
 const check = (label: string, ok: boolean, detail = ''): void => {
@@ -169,6 +170,70 @@ function makes(...surfaces: string[]): MakeLike[] {
   check('blank rooms are not a room', habit.room === null, String(habit.room));
   check('and undated rows do not break the sort', habit.lastAt === null, String(habit.lastAt));
 }
+
+// ── The account, which outranks the device ───────────────────────────────
+const kept = (kind: 'genre' | 'room', label: string, times: number): TasteLine =>
+  ({ kind, label, times, last_at: '2026-06-01T00:00:00.000Z' });
+
+{
+  /* The case the whole table exists for: a browser that has never seen them.
+     No songs, no history, and the account still knows what they make. */
+  const habit = habitOf([], [], '', [kept('genre', 'amapiano', 9), kept('genre', 'gospel', 2)]);
+  check('a fresh browser still knows them, from the account',
+    habit.genre === 'amapiano', String(habit.genre));
+  check('and they are not treated as a first-time visitor', habit.returning);
+  check('and the screen is told where it came from', habit.source === 'account', habit.source);
+  check('which is what gets offered', suggest(habit).kind === 'genre', suggest(habit).kind);
+}
+
+{
+  // Where they disagree, the account wins: it describes the person, the
+  // device describes one browser.
+  const habit = habitOf(songs('trance', 'trance', 'trance'), [], '', [kept('genre', 'kwaito', 20)]);
+  check('the account outranks the device where they disagree',
+    habit.genre === 'kwaito', String(habit.genre));
+}
+
+{
+  // And the same thresholds apply to it. A count of one arriving from a
+  // server is no more a habit than a single song in a library.
+  const habit = habitOf([], [], '', [kept('genre', 'amapiano', 1)]);
+  check('one on the account is still not a habit', habit.genre === null, String(habit.genre));
+  check('but it is still proof they have been here', habit.returning);
+  check('and the source is the device — the account answered nothing',
+    habit.source === 'none', habit.source);
+}
+
+{
+  const habit = habitOf([], [], '', [kept('genre', 'amapiano', 3), kept('genre', 'gospel', 3)]);
+  check('a tie on the account is two things they do, not a preference',
+    habit.genre === null, String(habit.genre));
+}
+
+{
+  // Drowned out on the account, exactly as on the device.
+  const many = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map((one) => kept('genre', one, 2));
+  const habit = habitOf([], [], '', [kept('genre', 'amapiano', 2), ...many]);
+  check('two out of eighteen on the account is a coincidence too',
+    habit.genre === null, String(habit.genre));
+}
+
+{
+  // A room from the account, with no genre anywhere.
+  const habit = habitOf([], [], '', [kept('room', 'canvas', 12), kept('room', 'make', 2)]);
+  check('a room the account remembers is offered', suggest(habit).kind === 'room', suggest(habit).kind);
+  check('and it is that room', suggest(habit).room === 'canvas', suggest(habit).room);
+}
+
+{
+  // Nothing anywhere: the device answers, and says so.
+  const habit = habitOf(songs('dubstep', 'dubstep'), [], '', []);
+  check('with an empty account the device still answers', habit.genre === 'dubstep', String(habit.genre));
+  check('and the screen is told it was the device', habit.source === 'device', habit.source);
+}
+
+check('and with nothing at all, nothing is claimed',
+  habitOf([], [], '', []).source === 'none', habitOf([], [], '').source);
 
 // ── The name ─────────────────────────────────────────────────────────────
 check('a first name is used alone', firstName('Carli Fourie') === 'Carli', firstName('Carli Fourie'));

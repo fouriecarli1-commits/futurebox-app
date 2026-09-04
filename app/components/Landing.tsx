@@ -66,12 +66,19 @@ export default function Landing({
           somebody who lands here and leaves in four seconds should still be
           able to say afterwards what it was called. The small mark stays in
           the header for every page below this one. */}
-      <section className="max-w-4xl mx-auto px-6 pt-16 pb-16 md:pt-20 md:pb-24">
-        <div className="flex items-center gap-4 md:gap-5">
-          <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center flex-shrink-0 shadow-[0_0_60px_rgba(16,185,129,0.25)]">
-            <Cpu className="w-9 h-9 md:w-14 md:h-14 text-onAccent" />
+      {/* Sized to the narrowest phone anybody still uses.
+
+          At `text-5xl` beside a 64-pixel mark, "FUTUREBOX" is one unbreakable
+          word 381 pixels wide — so on a 320-pixel screen (an iPhone SE, a
+          Galaxy S9+) the browser zoomed the whole page out to fit it, and
+          every screen in the app came out slightly small for the sake of the
+          first word on the first one. It cannot wrap, so it has to fit. */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-16 pb-16 md:pt-20 md:pb-24">
+        <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center flex-shrink-0 shadow-[0_0_60px_rgba(16,185,129,0.25)]">
+            <Cpu className="w-7 h-7 sm:w-9 sm:h-9 md:w-14 md:h-14 text-onAccent" />
           </div>
-          <p className="text-5xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">
+          <p className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter text-white leading-none">
             FUTURE<span className="text-emerald-400">BOX</span>
           </p>
         </div>

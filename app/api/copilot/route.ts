@@ -76,6 +76,17 @@ interface Body {
   history?: { role: 'user' | 'assistant'; text: string }[];
   /** True when a real music engine is connected, so it knows what it can offer. */
   engineReady?: boolean;
+  /**
+   * What this account keeps making, and where.
+   *
+   * Read off `taste` and sent as two words rather than as a history: the
+   * copilot is being told what somebody does, not shown a log of when they do
+   * it. Absent for anybody signed out, or where there is not enough to say —
+   * `lib/habits.ts` refuses to call one song a preference and the copilot must
+   * not be handed a claim the greeting would not make.
+   */
+  genre?: string;
+  room?: string;
 }
 
 const SYSTEM = [
@@ -127,6 +138,23 @@ function contextFor(body: Body): string {
     body.style ? `Style: ${body.style}` : 'No style chosen yet.',
     body.lyrics ? `Lyrics so far:\n${body.lyrics}` : 'No lyrics yet.',
     `Songs they have already made: ${body.trackCount ?? 0}`,
+    /* What they keep coming back to, where the account has enough to say it.
+
+       Worth one line and no more. It is there so a suggestion can be theirs —
+       "another one at that tempo" rather than "what style would you like?" —
+       and it is explicitly not a licence to keep bringing it up. Somebody who
+       makes gospel and asks for a drill track wants a drill track, and an
+       assistant that answers with gospel has made their own memory more
+       important than what was just said to it. */
+    ...(body.genre || body.room
+      ? [
+          '',
+          'What they keep coming back to, from their own account:',
+          body.genre ? `- Most of what they make is ${body.genre}.` : '',
+          body.room ? `- The room they work in most is ${body.room}.` : '',
+          'Use it to make a suggestion theirs rather than generic. Do not steer them back to it: somebody who usually makes gospel and asks for a drill track wants a drill track.',
+        ].filter(Boolean)
+      : []),
     body.engineReady
       ? 'A real music engine is connected, so generate makes a sung, produced track and costs credits.'
       : 'No music engine is connected, so generate makes a rough instrumental sketch in their browser and costs nothing.',

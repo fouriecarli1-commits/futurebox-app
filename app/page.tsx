@@ -50,6 +50,10 @@ import Campaign from './components/Campaign';
 import Greeting from './components/Greeting';
 import Account from './components/Account';
 import SignInWith from './components/SignInWith';
+import { noteTaste, loadTaste } from './lib/taste';
+import { habitOf } from './lib/habits';
+import { loadTracks } from './lib/library';
+import { loadMakes } from './lib/makes';
 import SoundTrainer from './components/SoundTrainer';
 import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
 import { profileAddress } from './lib/brand';
@@ -437,6 +441,30 @@ export default function FutureBoxHome() {
   const [accountOpen, setAccountOpen] = useState(false);
 
   /**
+   * What they keep coming back to, for the copilot to answer in their terms.
+   *
+   * The same `habitOf` the welcome screen uses, so the copilot cannot be handed
+   * a claim the greeting would refuse to make — one song is not a preference in
+   * either place, and it would be worse to have two thresholds than to have
+   * none.
+   */
+  const [taste, setTaste] = useState<{ genre?: string; room?: string }>({});
+  useEffect(() => {
+    let live = true;
+    void loadTaste().then((got) => {
+      if (!live) return;
+      const habit = habitOf(loadTracks(), loadMakes(), '', got.lines);
+      setTaste({
+        ...(habit.genre ? { genre: habit.genre } : {}),
+        ...(habit.room ? { room: habit.room } : {}),
+      });
+    });
+    return () => {
+      live = false;
+    };
+  }, [user, trackCount]);
+
+  /**
    * Go to a room. The only way to set one.
    *
    * Choosing a room is leaving the door, wherever the choice was made — and
@@ -453,6 +481,11 @@ export default function FutureBoxHome() {
   const goToRoom = useCallback((id: SurfaceId) => {
     setStudioTab(id);
     setAtDoor(false);
+    /* And remember it. Every way into a room already runs through here, which
+       is what makes this the one place worth recording from — a room recorded
+       in three of sixteen places is a count that describes the three. Fire and
+       forget: nothing waits for it and nothing fails because of it. */
+    noteTaste('room', id);
   }, []);
   /**
    * Whether the door has already been shown for this arrival.
@@ -2518,6 +2551,7 @@ export default function FutureBoxHome() {
                 <Copilot
                   context={{
                     surface: studioTab,
+                    ...taste,
                     title: canvas.title,
                     style: canvas.style,
                     lyrics: canvas.lyrics,

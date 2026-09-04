@@ -30,6 +30,7 @@
  */
 
 import type { SurfaceId } from './surfaces';
+import type { TasteKind, TasteLine } from './taste';
 
 /** One song, as much of it as this file cares about. */
 export interface SongLike {
@@ -45,6 +46,14 @@ export interface MakeLike {
 }
 
 export interface Habit {
+  /**
+   * Where the suggestion came from, so the screen can say so honestly.
+   *
+   * The line under the greeting used to say "read off the songs in your own
+   * library, already on this device" unconditionally, which stopped being true
+   * the moment the account started answering. One of them is now always right.
+   */
+  readonly source: 'account' | 'device' | 'none';
   /** Their own name, as they typed it on their channel. Empty when unset. */
   readonly name: string;
   /** The room they work in most, once that is more than a coincidence. */
@@ -114,12 +123,44 @@ function genreOf(song: SongLike): string {
   return (song.style ?? '').trim().split(/[,\s]+/)[0] ?? '';
 }
 
+/**
+ * The account's own counts, where there are enough of them to mean something.
+ *
+ * ── Why the account outranks the device ──────────────────────────────────
+ *
+ * The device knows what happened in this browser. The account knows what this
+ * person does — on the phone, on the laptop, and after they cleared site data.
+ * Where both have an answer they usually agree, and where they disagree the
+ * account is the one describing the person rather than the browser.
+ *
+ * The same thresholds apply to it as to everything else here. A count of one
+ * on the account is no more a habit than a single song in a library, and it is
+ * more tempting to trust because it arrived from a server.
+ */
+function fromAccount(lines: readonly TasteLine[], kind: TasteKind): string | null {
+  const mine = lines
+    .filter((one) => one.kind === kind && one.label.trim() && one.times > 0)
+    .sort((a, b) => b.times - a.times);
+  if (!mine.length) return null;
+
+  const total = mine.reduce((sum, one) => sum + one.times, 0);
+  const top = mine[0];
+  if (top.times < LEAST_TIMES || top.times / total < LEAST_SHARE) return null;
+  // A tie is two things they do, not a preference between them.
+  if (mine[1] && mine[1].times === top.times) return null;
+  return top.label;
+}
+
 export function habitOf(
   songs: readonly SongLike[],
   makes: readonly MakeLike[],
   /* Their name comes from their channel, which is a server round trip, so it
      is passed in rather than fetched here — this file stays arithmetic. */
   name = '',
+  /* And so do the account's counts, for the same reason. Empty is the honest
+     answer for somebody signed out or an app with no accounts behind it, and
+     the device's own history answers instead. */
+  account: readonly TasteLine[] = [],
 ): Habit {
   const recentSongs = newestFirst(songs).slice(0, RECENT_SONGS);
   const recentMakes = newestFirst(makes).slice(0, RECENT_MAKES);
@@ -130,14 +171,28 @@ export function habitOf(
       .sort()
       .pop() ?? null;
 
+  /* The account first, the device behind it. Not merged: adding a browser's
+     counts to an account's would double what happened on this device and
+     count nothing extra, which is the worst of both. */
+  const genre = fromAccount(account, 'genre') ?? commonest(recentSongs.map(genreOf));
+  const room =
+    (fromAccount(account, 'room') as SurfaceId | null) ??
+    (commonest(recentMakes.map((one) => one.surface ?? '')) as SurfaceId | null);
+
+  const answered = fromAccount(account, 'genre') ?? fromAccount(account, 'room');
   return {
+    source: answered ? 'account' : genre || room ? 'device' : 'none',
     name: firstName(name),
-    room: (commonest(recentMakes.map((one) => one.surface ?? '')) as SurfaceId | null) ?? null,
-    genre: commonest(recentSongs.map(genreOf)),
+    room: room ?? null,
+    genre,
     songs: songs.length,
     makes: makes.length,
     lastAt,
-    returning: songs.length + makes.length > 0,
+    /* Anything the account remembers is proof they have been here, even on a
+       browser that has never seen them. That is the whole point of putting it
+       on the account: a phone that has just been signed into is not a first
+       visit. */
+    returning: songs.length + makes.length > 0 || account.length > 0,
   };
 }
 

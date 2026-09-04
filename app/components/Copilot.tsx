@@ -53,6 +53,9 @@ export interface CopilotContext {
   lyrics: string;
   trackCount: number;
   engineReady: boolean;
+  /** What this account keeps making, where there is enough of it to say. */
+  genre?: string;
+  room?: string;
 }
 
 /** What each action costs the person, in words rather than in credits. */

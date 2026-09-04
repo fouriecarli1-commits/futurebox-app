@@ -120,6 +120,42 @@ node audit/podlanguage.mjs 3016 en
 node audit/podlanguage.mjs 3016 af
 ```
 
+`taste.mjs` needs it too, and is the only run whose subject is a table rather
+than a screen. What it checks is that using the app in the ordinary way fills
+it — no button built for the purpose — and that the welcome screen prefers the
+account's counts over the browser's, which is the whole reason the table
+exists: the browser is the one thing that does not follow somebody to their
+phone. So the seeded library says trance and the seeded account says amapiano,
+and the screen has to say amapiano.
+
+```
+node audit/taste.mjs 3016 en
+node audit/taste.mjs 3016 af
+```
+
+It also checks the sentence under the greeting. It used to say "already on
+this device, nothing is sent anywhere", which stopped being true the moment the
+account started answering — and a privacy line that is quietly no longer true
+is worse than not having one.
+
+`devices.mjs` is the sweep across real device profiles: five phones and four
+tablets, Apple and Android, tablets in both orientations. Each gets its own
+viewport, pixel ratio and — the one that matters most — a coarse pointer,
+because `globals.css` gives every control its 44-pixel minimum only under
+`@media (pointer: coarse)`; measuring that in a desktop browser narrowed to a
+phone's width measures a rule that is not being applied.
+
+```
+node audit/devices.mjs 3000
+```
+
+It found that "FUTUREBOX" in the hero, at `text-5xl` beside a 64-pixel mark,
+is one unbreakable word 381 pixels wide — so on a 320-pixel screen the browser
+zoomed the whole page out to fit it and every screen in the app came out
+slightly small for the sake of the first word on the first one. That is why it
+names the offending element rather than only the width: "the page is 61 pixels
+too wide" is a fact nobody can act on.
+
 `account.mjs` needs the stub build too. None of what it checks is new
 machinery — the plan, the balance and the cancel button all existed — so what
 it checks is findability: press your own name in the corner and everything

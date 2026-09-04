@@ -41,6 +41,7 @@ import { useLang } from '../lib/i18n';
 import * as cloud from '../lib/cloud';
 import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } from '../lib/purchases';
 import { loadSounds, training, NO_SOUNDS, type Sounds } from '../lib/sounds';
+import { noteTaste } from '../lib/taste';
 
 export interface Canvas {
   title: string;
@@ -379,6 +380,13 @@ export default function MakeMusic({
         const next = [track, ...tracks];
         setTracks(next);
         saveTracks(next);
+        /* Remembered against the account, not just this browser.
+
+           The genre is the one thing about a song that says something about
+           the person who made it rather than about the song, which is why it
+           is this and not the title or the words. A count, and nothing about
+           when — see `supabase/taste.sql`. */
+        noteTaste('genre', track.genre);
         record('publish.release');
         setStatus(remixOf ? t('make.doneTake') : t('make.done'));
 
