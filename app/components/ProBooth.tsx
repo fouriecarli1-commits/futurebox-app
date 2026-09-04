@@ -19,16 +19,26 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Loader2, Plus, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { Check, Circle, Loader2, Music2, Plus, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import { audible, mixSession, readInto, span, type Lane } from '../lib/session';
 import { decodeAt, shapeOf } from '../lib/takes';
 import { encodeWav } from '../lib/wav';
 import { knownLatency } from '../lib/mixdown';
+import {
+  COUNT_INS, DEFAULT_METER, DIVISIONS, FASTEST, SLOWEST, barSeconds, countInSeconds,
+  displayOf, sane, snapped, type CountIn, type DivisionId, type Meter, type Snap,
+} from '../lib/tempo';
+import { Metronome } from '../lib/metronome';
 import { useLang } from '../lib/i18n';
 import Cost from './Cost';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
+
+/** What a root key may be. Carried, never computed with — see the note by the
+ *  meter state below. */
+const KEYS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'] as const;
+const SNAPS: readonly Snap[] = ['off', 'bar', 'beat', 'smart'];
 
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
@@ -56,6 +66,22 @@ export default function ProBooth({
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
 
+  /* ── The clock everything else is measured against ──────────────────────
+
+     Tempo, time signature and key. The key is carried and shown but nothing
+     here computes with it: no transposition, no chord detection, no key-aware
+     anything. A control that implied otherwise would be a lie on the screen.
+     It is here because a musician setting up a session writes it down, and
+     because a lane brought in from elsewhere is easier to place when the
+     session says what it is in. */
+  const [meter, setMeter] = useState<Meter>(DEFAULT_METER);
+  const [clicking, setClicking] = useState(false);
+  const [division, setDivision] = useState<DivisionId>('1/1');
+  const [clickDb, setClickDb] = useState(-6);
+  const [countBars, setCountBars] = useState<CountIn>(0);
+  const [snap, setSnap] = useState<Snap>('smart');
+  const metronomeRef = useRef<Metronome | null>(null);
+
   const ctxRef = useRef<AudioContext | null>(null);
   const playingRef = useRef<AudioBufferSourceNode[]>([]);
   const startedRef = useRef({ at: 0, from: 0 });
@@ -63,6 +89,8 @@ export default function ProBooth({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const recordFromRef = useRef(0);
+  /** How much count-in went onto the front of the take being recorded. */
+  const leadRef = useRef(0);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const rate = backing?.sampleRate ?? 48_000;
@@ -99,6 +127,17 @@ export default function ProBooth({
     return ctxRef.current;
   }, []);
 
+  const clicker = useCallback((): Metronome | null => {
+    const ctx = context();
+    if (!ctx) return null;
+    if (!metronomeRef.current) metronomeRef.current = new Metronome(ctx);
+    return metronomeRef.current;
+  }, [context]);
+
+  useEffect(() => {
+    metronomeRef.current?.setVolume(clickDb);
+  }, [clickDb]);
+
   const hush = useCallback(() => {
     playingRef.current.forEach((source) => {
       try {
@@ -108,15 +147,17 @@ export default function ProBooth({
       }
     });
     playingRef.current = [];
+    metronomeRef.current?.stop();
   }, []);
 
   const play = useCallback(
-    (from: number) => {
+    /** `lead` is a count-in: everything starts that many seconds later. */
+    (from: number, lead = 0) => {
       const ctx = context();
       if (!ctx) return;
       hush();
       void ctx.resume();
-      const begins = ctx.currentTime + 0.06;
+      const begins = ctx.currentTime + 0.06 + lead;
       audible(lanes).forEach((lane) => {
         const source = ctx.createBufferSource();
         source.buffer = lane.audio;
@@ -134,9 +175,23 @@ export default function ProBooth({
         playingRef.current.push(source);
       });
       startedRef.current = { at: begins, from };
+
+      /* The click runs on the same clock as the lanes rather than on one of
+         its own: it is handed the audio-clock time that session second zero
+         corresponds to, so a take recorded against it lands where the grid
+         says it should. Two clocks would be two answers. */
+      if (clicking) {
+        const beat = clicker();
+        if (beat) {
+          beat.setVolume(clickDb);
+          if (lead > 0) beat.countIn(sane(meter), Math.round(lead / barSeconds(meter)), begins);
+          beat.start(sane(meter), division, begins - from, from);
+        }
+      }
+
       setPlaying(true);
     },
-    [context, hush, lanes],
+    [clickDb, clicker, clicking, context, division, hush, lanes, meter],
   );
 
   const stopPlaying = useCallback(() => {
@@ -167,6 +222,7 @@ export default function ProBooth({
   useEffect(
     () => () => {
       hush();
+      metronomeRef.current?.close();
       streamRef.current?.getTracks().forEach((one) => one.stop());
       void ctxRef.current?.close();
     },
@@ -195,11 +251,20 @@ export default function ProBooth({
     };
     recorderRef.current = recorder;
     recordFromRef.current = at;
+    /* The count-in is not trimmed off the front of the take. The recorder
+       starts now and the music starts `lead` seconds later, so the first
+       `lead` seconds of the file are the bars being counted — which means the
+       take belongs at `at - lead` on the session clock and needs no cutting.
+       Trimming would mean guessing where the cut goes; arithmetic does not
+       guess. A negative start is trimmed by the mixer, and what it trims is
+       silence. */
+    const lead = countInSeconds(countBars, sane(meter));
+    leadRef.current = lead;
     // A chunk a second, so a recording that ends badly is still a recording.
     recorder.start(1000);
-    play(at);
+    play(at, lead);
     setRecording(true);
-  }, [at, play, t]);
+  }, [at, countBars, meter, play, t]);
 
   const stopRecording = useCallback(async () => {
     const recorder = recorderRef.current;
@@ -234,8 +299,12 @@ export default function ProBooth({
           id: `lane-${Date.now()}`,
           name: `${t('pro.take', 'Take')} ${was.filter((lane) => !lane.backing).length + 1}`,
           audio: piece,
-          // Where it was sung, less the round trip the browser measured.
-          at: Math.max(0, recordFromRef.current - knownLatency()),
+          /* Where it was sung, less the round trip the browser measured, less
+             the count-in that is sitting on the front of the file. Not
+             clamped to zero: a take counted in from the top of the session
+             genuinely begins before it, and clamping would push the whole
+             performance late by the length of the count. */
+          at: recordFromRef.current - leadRef.current - knownLatency(),
           gain: 1,
           muted: false,
           soloed: false,
@@ -282,7 +351,17 @@ export default function ProBooth({
   );
 
   const change = (id: string, how: Partial<Lane>): void =>
-    setLanes((was) => was.map((lane) => (lane.id === id ? { ...lane, ...how } : lane)));
+    setLanes((was) =>
+      was.map((lane) => {
+        if (lane.id !== id) return lane;
+        const next = { ...lane, ...how };
+        /* The grid applies where a start time is being set, and nowhere else.
+           Snapping a gain or a name would be absurd, and snapping on every
+           change would move a lane somebody had placed by ear the moment they
+           renamed it. */
+        return how.at === undefined ? next : { ...next, at: snapped(next.at, sane(meter), snap) };
+      }),
+    );
 
   const keep = useCallback(async () => {
     setBusy(true);
@@ -321,6 +400,154 @@ export default function ProBooth({
         <button type="button" onClick={onClose} className="text-zinc-500 hover:text-white flex-shrink-0">
           <X className="w-5 h-5" />
         </button>
+      </div>
+
+      {/* ── The clock: tempo, time signature, key, click and grid ───────
+          One strip rather than a panel behind a menu. Everything on it changes
+          what the next take will sound like or land on, and a control that
+          changes a recording is a control that has to be visible while the
+          recording is being set up. */}
+      <div className="flex-shrink-0 px-4 py-2 border-b border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="text-lg font-black text-white tabular-nums tracking-tight">
+          {displayOf(at, sane(meter))}
+        </span>
+
+        <label className="flex items-center gap-1.5 text-sm text-zinc-400">
+          <span className="sr-only">{t('pro.bpm', 'Tempo')}</span>
+          <input
+            type="number"
+            min={SLOWEST}
+            max={FASTEST}
+            value={meter.bpm}
+            onChange={(event) => setMeter((was) => sane({ ...was, bpm: Number(event.target.value) }))}
+            className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100 tabular-nums"
+            aria-label={t('pro.bpm', 'Tempo')}
+          />
+          <span className="text-xs text-zinc-500">{t('pro.bpmUnit', 'bpm')}</span>
+        </label>
+
+        <span className="flex items-center gap-1 text-sm text-zinc-400">
+          <select
+            value={meter.beats}
+            onChange={(event) => setMeter((was) => sane({ ...was, beats: Number(event.target.value) }))}
+            className="bg-zinc-950 border border-zinc-700 rounded-lg px-1.5 py-1 text-sm text-zinc-100"
+            aria-label={t('pro.beats', 'Beats in a bar')}
+          >
+            {[2, 3, 4, 5, 6, 7, 9, 12].map((one) => (
+              <option key={one} value={one}>{one}</option>
+            ))}
+          </select>
+          <span className="text-zinc-600">/</span>
+          <select
+            value={meter.unit}
+            onChange={(event) => setMeter((was) => sane({ ...was, unit: Number(event.target.value) }))}
+            className="bg-zinc-950 border border-zinc-700 rounded-lg px-1.5 py-1 text-sm text-zinc-100"
+            aria-label={t('pro.unit', 'What counts as a beat')}
+          >
+            {[2, 4, 8, 16].map((one) => (
+              <option key={one} value={one}>{one}</option>
+            ))}
+          </select>
+        </span>
+
+        <select
+          value={meter.key}
+          onChange={(event) => setMeter((was) => sane({ ...was, key: event.target.value }))}
+          className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100"
+          aria-label={t('pro.key', 'Key')}
+        >
+          {KEYS.map((one) => (
+            <option key={one} value={one}>{one}</option>
+          ))}
+        </select>
+
+        {/* ── The click ─────────────────────────────────────────────── */}
+        <button
+          type="button"
+          onClick={() => setClicking((was) => !was)}
+          aria-pressed={clicking}
+          className={`min-h-[36px] px-2.5 py-1 rounded-lg border text-sm font-semibold flex items-center gap-1.5 ${
+            clicking
+              ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
+              : 'bg-zinc-950 border-zinc-700 text-zinc-500'
+          }`}
+        >
+          <Music2 className="w-4 h-4" />
+          {t('pro.click', 'Click')}
+        </button>
+
+        {clicking && (
+          <>
+            <select
+              value={division}
+              onChange={(event) => setDivision(event.target.value as DivisionId)}
+              className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100"
+              aria-label={t('pro.division', 'How often it clicks')}
+            >
+              {DIVISIONS.map((one) => (
+                <option key={one.id} value={one.id}>{one.id}</option>
+              ))}
+            </select>
+            <label className="flex items-center gap-1.5">
+              <span className="sr-only">{t('pro.clickLevel', 'Click level')}</span>
+              <input
+                type="range"
+                min={-40}
+                max={0}
+                value={clickDb}
+                onChange={(event) => setClickDb(Number(event.target.value))}
+                className="w-20 accent-emerald-500"
+                aria-label={t('pro.clickLevel', 'Click level')}
+              />
+              <span className="text-xs text-zinc-500 tabular-nums w-12 text-right">
+                {clickDb <= -40 ? t('pro.off', 'off') : `${clickDb} dB`}
+              </span>
+            </label>
+          </>
+        )}
+
+        {/* ── Counting in ───────────────────────────────────────────── */}
+        <label className="flex items-center gap-1.5 text-sm text-zinc-400">
+          <span className="text-xs text-zinc-500">{t('pro.countIn', 'Count in')}</span>
+          <select
+            value={countBars}
+            onChange={(event) => setCountBars(Number(event.target.value) as CountIn)}
+            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100"
+            aria-label={t('pro.countIn', 'Count in')}
+          >
+            {COUNT_INS.map((one) => (
+              <option key={one} value={one}>
+                {one === 0
+                  ? t('pro.off', 'off')
+                  : `${one} ${one === 1 ? t('pro.bar', 'bar') : t('pro.bars', 'bars')}`}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {/* ── The grid ──────────────────────────────────────────────── */}
+        <label className="flex items-center gap-1.5 text-sm text-zinc-400">
+          <span className="text-xs text-zinc-500">{t('pro.snap', 'Snap')}</span>
+          <select
+            value={snap}
+            onChange={(event) => setSnap(event.target.value as Snap)}
+            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100"
+            aria-label={t('pro.snap', 'Snap')}
+          >
+            {SNAPS.map((one) => (
+              <option key={one} value={one}>{t(`pro.snap.${one}`, one)}</option>
+            ))}
+          </select>
+        </label>
+
+        {countBars > 0 && !clicking && (
+          /* A count-in with the click switched off is four bars of silence and
+             then a recording that has already started — which reads as the
+             button not working. Said here rather than discovered. */
+          <span className="text-xs text-amber-400 leading-snug">
+            {t('pro.silentCount', 'The count-in has nothing to count with — switch the click on.')}
+          </span>
+        )}
       </div>
 
       {/* ── The lanes ────────────────────────────────────────────────────── */}
