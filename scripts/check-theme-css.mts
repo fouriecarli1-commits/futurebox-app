@@ -16,7 +16,8 @@
  *
  *   npm run check:theme
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import { DEFAULT_THEME, PRESETS, SURFACES, themeVariables, type Theme } from '../app/lib/theme';
 
 const want = themeVariables(DEFAULT_THEME);
@@ -110,6 +111,44 @@ for (const preset of PRESETS) {
   for (const family of FAMILIES) {
     const got = ratio(onAccent, channels(vars[`--fb-${family}-500`]));
     if (got < AA_BODY) failures.push(`  ${preset.id}: onAccent is ${got.toFixed(2)}:1 on ${family}-500`);
+  }
+}
+
+/* ── `bg-white` is never a fill ────────────────────────────────────────────
+
+   `tailwind.config.js` remaps `white` to `--fb-ink`, so that `text-white`
+   follows the theme — near-white on a dark surface, near-black on a light one.
+   That is right for text and it is a trap for a fill.
+
+   `bg-white` on a light preset paints **near-black**. Four play buttons were
+   written as `bg-white text-onAccent`, which reads as "a white disc with a
+   dark glyph on it" and on a light theme rendered a black disc with a black
+   glyph inside it: a solid dot with no icon. Somebody found it by looking at
+   the screen, which is the only way it was ever going to be found.
+
+   So: no `bg-white` anywhere. A fill that has to stay bright in every theme is
+   an accent fill — `bg-emerald-500 text-onAccent`, which the check above
+   already proves clears AA in every preset. The one real exception is Google's
+   own sign-in button, which is brand chrome rather than themed UI and is
+   written as a literal `bg-[#ffffff]`. */
+const walk = (dir: string, out: string[] = []): string[] => {
+  for (const name of readdirSync(dir)) {
+    if (name === 'node_modules' || name === '.next') continue;
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) walk(path, out);
+    else if (/\.tsx$/.test(path)) out.push(path);
+  }
+  return out;
+};
+for (const file of walk('app')) {
+  const src = readFileSync(file, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
+  for (const found of src.matchAll(/\bbg-white(\/\d+)?\b/g)) {
+    failures.push(
+      `  ${file}: ${found[0]} paints near-black on a light theme. ` +
+        'Use bg-emerald-500 with text-onAccent for a bright fill.',
+    );
   }
 }
 

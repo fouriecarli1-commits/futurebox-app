@@ -911,7 +911,8 @@ export default function FutureBoxHome() {
               <button
                 type="button"
                 onClick={() => void handleGoogle()}
-                className="w-full py-3 rounded-xl bg-white text-zinc-900 font-bold text-sm flex items-center justify-center gap-2.5 hover:opacity-90"
+                /* Literal white — Google's own button. See the note in Landing.tsx. */
+                className="w-full py-3 rounded-xl bg-[#ffffff] text-[#1f1f1f] font-bold text-sm flex items-center justify-center gap-2.5 hover:opacity-90"
               >
                 <svg viewBox="0 0 48 48" className="w-4 h-4" aria-hidden="true">
                   <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.6 9.5 24 9.5z" />

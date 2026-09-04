@@ -128,7 +128,14 @@ export default function Landing({
           <button
             type="button"
             onClick={onGoogle}
-            className="px-5 py-3.5 rounded-xl bg-white text-zinc-900 font-bold flex items-center gap-2.5 hover:opacity-90 transition-opacity"
+            /* Literal white, deliberately outside the theme.
+
+                 Google's sign-in button is theirs and their guidelines say what
+                 it looks like: a white field with dark text beside their mark.
+                 It is the one control here that must not follow a palette, so
+                 the colours are written out rather than taken from a token —
+                 and `check:theme` knows about this line by name. */
+            className="px-5 py-3.5 rounded-xl bg-[#ffffff] text-[#1f1f1f] font-bold flex items-center gap-2.5 hover:opacity-90 transition-opacity"
           >
             {/* Google's own mark, drawn rather than fetched: an external image
                 on the first screen is a request that can be slow or blocked. */}

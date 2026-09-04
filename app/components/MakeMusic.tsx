@@ -918,7 +918,7 @@ export default function MakeMusic({
                     type="button"
                     onClick={() => toggle(track)}
                     aria-label={playing === track.id ? 'Pause' : 'Play'}
-                    className="w-12 h-12 rounded-full bg-white text-onAccent flex items-center justify-center flex-shrink-0 hover:bg-zinc-200"
+                    className="w-12 h-12 rounded-full bg-emerald-500 text-onAccent flex items-center justify-center flex-shrink-0 hover:bg-emerald-400"
                   >
                     {playing === track.id ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
                   </button>

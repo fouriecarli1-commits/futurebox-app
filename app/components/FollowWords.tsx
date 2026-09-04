@@ -245,7 +245,7 @@ export default function FollowWords({
                 className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 ${
                   recording
                     ? 'bg-rose-500 text-white'
-                    : 'bg-white text-zinc-900 hover:bg-zinc-200'
+                    : 'bg-emerald-500 text-onAccent hover:bg-emerald-400'
                 }`}
               >
                 {recording ? <Square className="w-4 h-4" /> : <Circle className="w-4 h-4" fill="currentColor" />}
