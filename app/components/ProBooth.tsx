@@ -19,12 +19,13 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Gauge, Loader2, Mic2, Music2, Plus, Scissors, Sliders, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { Check, Circle, Gauge, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, dbOf, mixSession, monoOf, readInto, readSession, span, wireLane,
   type Lane, type Master, type Reading,
 } from '../lib/session';
 import { failed, separate } from '../lib/stems';
+import { keyIn, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
 import { CLEAN, isClean, type Tone } from '../lib/tone';
 import { accessToken } from '../lib/cloud';
 import VoicePicker from './VoicePicker';
@@ -98,6 +99,16 @@ export default function ProBooth({
   const [voices, setVoices] = useState<VoiceState | null>(null);
   const [voiceId, setVoiceId] = useState('');
   const [changing, setChanging] = useState<Lane | null>(null);
+
+  /* ── What a lane actually is ────────────────────────────────────────────
+     Chords, key, tempo and sections, read by a service rather than guessed
+     here. The answer is kept per lane: reading is paid for and a second press
+     on the same lane should show what the first one bought. */
+  const [known, setKnown] = useState<Record<string, { tempo: number | null; key: string | null; spans: Span[] }>>({});
+  /* Which lane is being read right now. Named apart from the master's
+     `reading` deliberately: two different things called the same word in one
+     file is how the wrong one gets set. */
+  const [looking, setLooking] = useState<string | null>(null);
 
   /* ── The master ─────────────────────────────────────────────────────────
      `trim` is the one number both the live path and the render apply, worked
@@ -543,6 +554,39 @@ export default function ProBooth({
     [context, rate, t, voiceId],
   );
 
+  /**
+   * Ask what a lane is, and offer to set the session to match.
+   *
+   * The tempo is not applied on its own. A reading is a machine's opinion and
+   * a session's tempo is the thing every take is recorded against — silently
+   * moving it because a service said 128 would move the grid under work
+   * somebody has already done. It is offered; the person decides.
+   */
+  const look = useCallback(
+    async (lane: Lane) => {
+      setProblem(null);
+      setLooking(lane.id);
+      try {
+        const ctx = context();
+        if (!ctx) return;
+        const got = await readSong(encodeWav(monoOf(lane.audio, ctx)), lane.audio.duration);
+        if (!got.ok) {
+          setProblem(got.message);
+          return;
+        }
+        setKnown((was) => ({
+          ...was,
+          [lane.id]: { tempo: tempoIn(got.data), key: keyIn(got.data), spans: spansIn(got.data) },
+        }));
+      } catch {
+        setProblem(t('pro.readFailed', 'That lane could not be read.'));
+      } finally {
+        setLooking(null);
+      }
+    },
+    [context, t],
+  );
+
   const keep = useCallback(async () => {
     setBusy(true);
     setProblem(null);
@@ -567,7 +611,7 @@ export default function ProBooth({
 
   return (
     <div className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col">
-      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
+      <div className="flex items-center justify-between gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
         <div className="min-w-0">
           <p className="text-base font-bold text-white truncate">{t('pro.title', 'The booth — pro')}</p>
           <p className="text-sm text-zinc-500 truncate">
@@ -590,7 +634,7 @@ export default function ProBooth({
           what the next take will sound like or land on, and a control that
           changes a recording is a control that has to be visible while the
           recording is being set up. */}
-      <div className="flex-shrink-0 px-4 py-2 border-b border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="flex-shrink-0 bg-zinc-950 px-4 py-2 border-b border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="text-lg font-black text-white tabular-nums tracking-tight">
           {displayOf(at, sane(meter))}
         </span>
@@ -671,7 +715,7 @@ export default function ProBooth({
                 <option key={one.id} value={one.id}>{one.id}</option>
               ))}
             </select>
-            <label className="flex items-center gap-1.5">
+            <label className="flex items-center gap-1.5 w-full sm:w-auto">
               <span className="sr-only">{t('pro.clickLevel', 'Click level')}</span>
               <input
                 type="range"
@@ -746,6 +790,12 @@ export default function ProBooth({
             onRemove={() => setLanes((was) => was.filter((one) => one.id !== lane.id))}
             onSplit={() => void split(lane)}
             onVoice={() => setChanging(lane)}
+            onRead={() => void look(lane)}
+            reading={looking === lane.id}
+            found={known[lane.id]}
+            onUseTempo={(bpm, root) =>
+              setMeter((was) => sane({ ...was, bpm, key: root ?? was.key }))
+            }
             busy={busy}
           />
         ))}
@@ -822,13 +872,13 @@ export default function ProBooth({
           mix and applied identically to what you hear and to what comes out.
           Drawing a compressor that only ran in one of those two places would
           make the file differ from the approval, invisibly. */}
-      <div className="flex-shrink-0 px-4 py-2 border-t border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="flex-shrink-0 bg-zinc-950 px-4 py-2 border-t border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="text-xs uppercase tracking-wider text-zinc-600 font-bold flex items-center gap-1.5">
           <Gauge className="w-3.5 h-3.5" />
           {t('pro.master', 'Master')}
         </span>
 
-        <label className="flex items-center gap-1.5">
+        <label className="flex items-center gap-1.5 w-full sm:w-auto">
           <span className="text-xs text-zinc-500">{t('pro.masterLevel', 'Level')}</span>
           <input
             type="range"
@@ -912,7 +962,12 @@ export default function ProBooth({
       </div>
 
       {/* ── The transport ───────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 px-5 pt-2 pb-3 border-t border-zinc-800 flex flex-wrap items-center gap-2">
+      {/* Both bottom strips carry their own background. They are pinned while
+          the lane list scrolls underneath, and a transparent bar over moving
+          content is a bar you can read the lanes through — which on a phone,
+          where the list is long and the strip is close, looks like the
+          controls have collided. */}
+      <div className="flex-shrink-0 bg-zinc-950 px-5 pt-2 pb-3 border-t border-zinc-800 flex flex-wrap items-center gap-2">
         {recording ? (
           <button
             type="button"
@@ -1007,6 +1062,10 @@ function LaneRow({
   onRemove,
   onSplit,
   onVoice,
+  onRead,
+  reading,
+  found,
+  onUseTempo,
   busy,
 }: {
   lane: Lane;
@@ -1017,6 +1076,10 @@ function LaneRow({
   onRemove: () => void;
   onSplit: () => void;
   onVoice: () => void;
+  onRead: () => void;
+  reading: boolean;
+  found?: { tempo: number | null; key: string | null; spans: Span[] };
+  onUseTempo: (bpm: number, key: string | null) => void;
   busy: boolean;
 }): React.ReactElement {
   const { t } = useLang();
@@ -1073,7 +1136,7 @@ function LaneRow({
           className="w-full bg-transparent text-sm font-semibold text-zinc-200 outline-none focus:text-white"
           aria-label={t('pro.laneName', 'Lane name')}
         />
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 min-w-0">
           <button
             type="button"
             onClick={() => onChange({ muted: !lane.muted })}
@@ -1169,6 +1232,16 @@ function LaneRow({
         </button>
         <button
           type="button"
+          onClick={onRead}
+          disabled={busy || reading}
+          title={`${t('pro.read', 'Read the chords, key and tempo')} — ${perMinute(lane.audio.duration, CREDITS.read)} ${t('video.credits', 'credits')}`}
+          aria-label={t('pro.read', 'Read the chords, key and tempo')}
+          className="text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+        >
+          {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+        </button>
+        <button
+          type="button"
           onClick={onVoice}
           disabled={busy}
           title={t('pro.sing', 'Sing this in another voice')}
@@ -1185,6 +1258,64 @@ function LaneRow({
       </div>
     </div>
 
+    {/* ── What the reading said ─────────────────────────────────────────
+        Offered, not applied. A reading is a machine's opinion and the
+        session's tempo is what every take is recorded against — moving it on
+        its own would move the grid under work somebody has already done. */}
+    {found && (
+      <div className="border-t border-zinc-800 px-3 py-2.5 space-y-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {found.tempo !== null && (
+            <span className="text-sm text-zinc-300 tabular-nums">
+              {found.tempo} <span className="text-zinc-500">{t('pro.bpmUnit', 'bpm')}</span>
+            </span>
+          )}
+          {found.key && (
+            <span className="text-sm text-zinc-300">
+              {t('pro.key', 'Key')} <span className="text-emerald-400">{found.key}</span>
+            </span>
+          )}
+          {found.tempo !== null && (
+            <button
+              type="button"
+              onClick={() => onUseTempo(found.tempo as number, found.key)}
+              className="px-2.5 py-1 rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-xs font-bold text-emerald-300"
+            >
+              {t('pro.useTempo', 'Set the session to this')}
+            </button>
+          )}
+          {found.tempo === null && found.key === null && found.spans.length === 0 && (
+            /* The workflow ran and this app recognised nothing in what came
+               back. Said plainly: the answer is not wrong, it is in a shape
+               nobody here knows, and that is a workflow to change rather than
+               a bug to report. */
+            <span className="text-xs text-amber-400 leading-snug">
+              {t('pro.readUnknown', 'It read the song, but nothing in the answer was a tempo, a key or a list of chords. That is a workflow that returns something else.')}
+            </span>
+          )}
+        </div>
+
+        {found.spans.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {found.spans.slice(0, 48).map((span, at) => (
+              <span
+                key={`${span.at}-${at}`}
+                title={`${span.at.toFixed(1)}s`}
+                className="px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 text-[11px] text-zinc-400 tabular-nums"
+              >
+                {span.label}
+              </span>
+            ))}
+            {found.spans.length > 48 && (
+              <span className="text-[11px] text-zinc-600 self-center">
+                +{found.spans.length - 48}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    )}
+
     {/* ── Tone ──────────────────────────────────────────────────────────
         A tone stack, not a model of a named amplifier. Nothing here was
         measured against a Fender or a Marshall and no cabinet recording is
@@ -1195,8 +1326,13 @@ function LaneRow({
         right to be annoyed. */}
     {open && (
       <div className="border-t border-zinc-800 px-3 py-2.5 space-y-2">
+        {/* Each control takes a whole line on a phone. Wrapping alone is not
+            enough: a label and a slider that together are wider than half the
+            screen still get put on one line by `flex-wrap`, and then they sit
+            on top of each other. Found in Afrikaans and not in English, which
+            is exactly why the probe runs in both. */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <label className="flex items-center gap-1.5">
+          <label className="flex items-center gap-1.5 w-full sm:w-auto">
             <span className="text-xs text-zinc-500 w-10">{t('pro.drive', 'Drive')}</span>
             <input
               type="range"
@@ -1208,7 +1344,7 @@ function LaneRow({
               aria-label={t('pro.drive', 'Drive')}
             />
           </label>
-          <label className="flex items-center gap-1.5">
+          <label className="flex items-center gap-1.5 w-full sm:w-auto">
             <span className="text-xs text-zinc-500 w-10">{t('pro.colour', 'Colour')}</span>
             <input
               type="range"
@@ -1220,7 +1356,7 @@ function LaneRow({
               aria-label={t('pro.colour', 'Colour')}
             />
           </label>
-          <label className="flex items-center gap-1.5">
+          <label className="flex items-center gap-1.5 w-full sm:w-auto">
             <span className="text-xs text-zinc-500 w-10">{t('pro.blend', 'Blend')}</span>
             <input
               type="range"

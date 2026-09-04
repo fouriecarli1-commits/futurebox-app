@@ -21,6 +21,7 @@
     "check:tempo": "tsx scripts/check-tempo.mts",
     "check:mix": "tsx scripts/check-mix.mts",
     "check:tone": "tsx scripts/check-tone.mts",
+    "check:analyse": "tsx scripts/check-analyse.mts",
     "check:marketplan": "tsx scripts/check-marketplan.mts",
     "check:adweek": "tsx scripts/check-adweek.mts",
     "check:habits": "tsx scripts/check-habits.mts",

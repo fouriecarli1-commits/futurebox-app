@@ -105,6 +105,18 @@ export const CREDITS = {
   finetune: 300,
   /** A minute of an episode dubbed into another language. Estimated. */
   dub: 15,
+  /**
+   * Reading a song: chords, key, tempo and where the sections are. Per minute.
+   *
+   * Music.ai bill per minute of audio per workflow run, and their published
+   * rate is not something this file can know for an account it cannot see —
+   * so this is set from their entry pricing plus the usual margin, and it is
+   * the first number to check against a real invoice. Deliberately not lower
+   * than `stems`: it is a heavier job than splitting a voice off.
+   */
+  read: 6,
+  /** Splitting a song into named parts rather than two. Per minute. */
+  parts: 8,
 } as const;
 
 /**

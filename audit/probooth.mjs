@@ -46,6 +46,30 @@ try {
   const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
   p.on('pageerror', (e) => problems.push(String(e).slice(0, 160)));
   await p.addInitScript((l) => { try { window.localStorage.setItem('futurebox.lang.v1', l); } catch {} }, af ? 'af' : 'en');
+
+  /* Music.ai, stood up here. The real thing is a paid job against somebody's
+     account and takes tens of seconds; what is being tested is the half that
+     lives in this app — that a reading reaches the screen, and that saying
+     yes to it actually moves the session's tempo. The answer deliberately
+     uses different words from the ones the reader looks for first, because
+     workflow outputs are named by whoever built them. */
+  await p.route('**/api/analyse*', (route) => {
+    const method = route.request().method();
+    const json = (body) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+    if (method === 'POST') return json({ id: 'job-1' });
+    return json({
+      state: 'done',
+      result: {},
+      data: {
+        analysis: { tempo: 96, rootKey: 'F# minor' },
+        segments: [
+          { time: 0, label: 'intro' },
+          { time: 8, label: 'verse' },
+          { time: 24, label: 'chorus' },
+        ],
+      },
+    });
+  });
   await p.goto(`http://localhost:${PORT}/proboothprobe`, { waitUntil: 'networkidle' });
   await p.waitForTimeout(1500);
 
@@ -118,6 +142,28 @@ try {
     af ? /meet dit weer/.test(await words()) : /measure it again/.test(await words()),
     'a stale number is left on screen as though it were current');
 
+  /* ── Reading a lane ──────────────────────────────────────────────────
+     The payoff of the whole integration: a service says what the song is,
+     and the session can be set to match in one press. */
+  await p.locator(`button[aria-label="${af ? 'Lees die akkoorde, toonsoort en tempo' : 'Read the chords, key and tempo'}"]`).first().click();
+  await p.waitForTimeout(3500);
+  const readOut = await words();
+  check('a reading comes back and lands on the lane', /96/.test(readOut) && /F# minor/.test(readOut),
+    readOut.slice(0, 200).replace(/\n/g, ' / '));
+  check('and the sections come with it', /chorus/.test(readOut),
+    'the chord and section list did not render');
+
+  /* The tempo is offered, not applied. Moving it on its own would move the
+     grid under work somebody has already done, so the button has to exist and
+     it has to work. */
+  const before = await p.locator('input[type="number"]').first().inputValue();
+  await p.locator(`button:has-text("${af ? 'Stel die sessie hierop' : 'Set the session to this'}")`).first().click();
+  await p.waitForTimeout(500);
+  const after = await p.locator('input[type="number"]').first().inputValue();
+  check('the session was not moved without being asked', before === '120', before);
+  check('and saying yes sets the tempo to what was read', after === '96', `${before} → ${after}`);
+  check('the transport follows it', /001 01/.test(await words()));
+
   /* ── Tone ────────────────────────────────────────────────────────────
      And the sentence that keeps it honest: a guitarist reading "amp
      modeller" and hearing a tone stack would be right to be annoyed. */
@@ -145,11 +191,26 @@ try {
   for (const width of [1280, 390]) {
     await p.setViewportSize({ width, height: 900 });
     await p.waitForTimeout(500);
+    /* Only controls somebody can actually reach.
+       `getBoundingClientRect` reports where an element would be even when it
+       is clipped out of a scrolling list or covered by a pinned bar — so a
+       naive comparison flags a slider scrolled out of view as sitting on top
+       of the master's, which is both true and completely fine. Asking what is
+       painted at the centre of each control is the question that was meant:
+       if the top element there is the control itself, a person can hit it. */
     const boxes = await p.locator('input[type="range"], input[type="number"]').evaluateAll((nodes) =>
-      nodes.map((node) => {
-        const box = node.getBoundingClientRect();
-        return { x: box.x, y: box.y, w: box.width, h: box.height };
-      }),
+      nodes
+        .map((node) => {
+          const box = node.getBoundingClientRect();
+          if (box.width < 2 || box.height < 2) return null;
+          const x = box.x + box.width / 2;
+          const y = box.y + box.height / 2;
+          if (x < 0 || y < 0 || x > window.innerWidth || y > window.innerHeight) return null;
+          const top = document.elementFromPoint(x, y);
+          if (top !== node && !node.contains(top)) return null;
+          return { x: box.x, y: box.y, w: box.width, h: box.height };
+        })
+        .filter(Boolean),
     );
     let overlap = null;
     for (let i = 0; i < boxes.length && !overlap; i += 1) {
@@ -172,6 +233,35 @@ try {
       document.documentElement.scrollWidth - document.documentElement.clientWidth);
     check(`at ${width}px the room does not run off the side`, wide <= 1, `${wide}px over`);
   }
+  /* ── The pinned strips are not see-through ───────────────────────────
+
+     The clock at the top and the master and transport at the bottom stay put
+     while the lane list scrolls between them. A pinned bar with no background
+     of its own is a bar you can read the lanes through, and on a phone —
+     where the list is long and the bars are close — that looks exactly like
+     the controls have collided.
+
+     Asserted as a painted colour rather than as geometry, because geometry
+     cannot tell the difference: content scrolled behind an opaque bar overlaps
+     it in every measurement and is completely correct. Measuring that instead
+     is a check that fails on working software, which is how a check gets
+     switched off. */
+  const seeThrough = await p.evaluate(() => {
+    /* The room's own strips, not every `flex-shrink-0` in it — the lane rows
+       are full of them and none of those is pinned over anything. */
+    const room = document.querySelector('div.fixed.inset-0');
+    const bars = room ? Array.from(room.children).filter((one) => one.classList.contains('flex-shrink-0')) : [];
+    return bars
+      .filter((bar) => bar.getBoundingClientRect().height > 20)
+      .filter((bar) => {
+        const paint = getComputedStyle(bar).backgroundColor;
+        return paint === 'transparent' || paint === 'rgba(0, 0, 0, 0)';
+      })
+      .map((bar) => (bar.textContent || '').trim().slice(0, 30));
+  });
+  check('every pinned bar has a background of its own', seeThrough.length === 0,
+    `see-through: ${seeThrough.join(' | ')}`);
+
   /* ── And that it wraps rather than squeezes ──────────────────────────
      The phone is the point. A row that stays one line on a 390 px screen has
      not fitted, it has crushed every control in it to something nobody can

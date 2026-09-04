@@ -395,3 +395,20 @@ how a check gets switched off.
 The assertion that matters most on a phone is not "nothing overlaps" but "the
 row is taller than it is on a desktop": a row that stays one line at 390 px has
 not fitted, it has crushed every control in it to something nobody can hit.
+
+## Two measurement mistakes worth remembering
+
+`probooth.mjs` compares control boxes to find overlaps, and got it wrong twice
+in ways that both looked like app defects.
+
+`getBoundingClientRect` reports where an element *would* be even when it is
+clipped out of a scrolling list or hidden behind a pinned bar. A slider scrolled
+out of view therefore "overlaps" the master's, which is true and completely
+fine. What was meant is "can a person hit this", and the way to ask that is
+`document.elementFromPoint` at the control's centre: if the top element there is
+the control, it is reachable. Only reachable controls are compared now.
+
+And the real defect underneath — pinned bars with no background of their own,
+so the lane list showed through them — cannot be found by geometry at all,
+because content behind an opaque bar overlaps it in every measurement and is
+correct. It is asserted as a painted colour instead.
