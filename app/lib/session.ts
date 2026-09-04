@@ -268,6 +268,39 @@ export async function readSession(
   return { peak, rms, trim: trimFor(peak, rms, master) };
 }
 
+/**
+ * One lane on its own, as a buffer, with nothing else in the session in it.
+ *
+ * What separation and voice conversion are handed. A lane sitting at 40
+ * seconds is sent as itself, from its own first sample — not as forty seconds
+ * of silence with a take on the end, which is what taking it out of the mix
+ * would give and which would be paid for by the minute.
+ */
+export function laneAlone(lane: Lane): AudioBuffer {
+  return lane.audio;
+}
+
+/**
+ * A lane folded down to one channel.
+ *
+ * Separation and voice conversion are billed by the minute and capped by file
+ * size, and a stereo 48 kHz WAV of a four-minute take is over the cap on its
+ * own. Mono halves it, and neither of those services returns anything that
+ * depended on the stereo image: the vocal comes back as a vocal. Losing the
+ * width of a take that is about to be replaced costs nothing; being refused
+ * for size after the credits are spent costs a person their afternoon.
+ */
+export function monoOf(buffer: AudioBuffer, ctx: BaseAudioContext): AudioBuffer {
+  if (buffer.numberOfChannels === 1) return buffer;
+  const out = ctx.createBuffer(1, buffer.length, buffer.sampleRate);
+  const into = out.getChannelData(0);
+  for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
+    const from = buffer.getChannelData(channel);
+    for (let i = 0; i < from.length; i += 1) into[i] += from[i] / buffer.numberOfChannels;
+  }
+  return out;
+}
+
 /** A buffer from a file somebody dropped in, at the session's own rate. */
 export async function readInto(file: Blob, rate: number): Promise<AudioBuffer | null> {
   const Ctx =

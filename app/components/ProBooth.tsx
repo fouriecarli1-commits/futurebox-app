@@ -19,11 +19,16 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Gauge, Loader2, Music2, Plus, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { Check, Circle, Gauge, Loader2, Mic2, Music2, Plus, Scissors, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import {
-  FLAT_MASTER, audible, dbOf, mixSession, readInto, readSession, span, wireLane,
+  FLAT_MASTER, audible, dbOf, mixSession, monoOf, readInto, readSession, span, wireLane,
   type Lane, type Master, type Reading,
 } from '../lib/session';
+import { failed, separate } from '../lib/stems';
+import { accessToken } from '../lib/cloud';
+import VoicePicker from './VoicePicker';
+import type { VoiceState } from './VoiceLab';
+import { CREDITS, perMinute } from '../lib/credits';
 import { decodeAt, shapeOf } from '../lib/takes';
 import { encodeWav } from '../lib/wav';
 import { knownLatency } from '../lib/mixdown';
@@ -84,6 +89,14 @@ export default function ProBooth({
   const [countBars, setCountBars] = useState<CountIn>(0);
   const [snap, setSnap] = useState<Snap>('smart');
   const metronomeRef = useRef<Metronome | null>(null);
+
+  /* ── Singing a lane in somebody else's voice ────────────────────────────
+     The list is fetched once and only when the panel is opened: forty voices
+     with their descriptions is a request nobody in this room has asked for
+     until they open it. */
+  const [voices, setVoices] = useState<VoiceState | null>(null);
+  const [voiceId, setVoiceId] = useState('');
+  const [changing, setChanging] = useState<Lane | null>(null);
 
   /* ── The master ─────────────────────────────────────────────────────────
      `trim` is the one number both the live path and the render apply, worked
@@ -394,6 +407,141 @@ export default function ProBooth({
     }
   }, [lanes, master, rate]);
 
+  /**
+   * A lane split into the voice and everything else, as two new lanes.
+   *
+   * Both arrive at the lane's own start, so they sit exactly on top of what
+   * they came from, and the original is muted rather than removed — a split
+   * that threw the source away would be a paid operation somebody cannot undo.
+   */
+  const split = useCallback(
+    async (lane: Lane) => {
+      setProblem(null);
+      setBusy(true);
+      try {
+        const ctx = context();
+        if (!ctx) return;
+        /* Mono and on its own. Sent as itself from its own first sample, not
+           as its position in the session — a lane sitting at forty seconds
+           would otherwise be forty seconds of silence billed by the minute. */
+        const sent = encodeWav(monoOf(lane.audio, ctx));
+        const got = await separate(`lane:${lane.id}`, sent, lane.audio.duration);
+        if (failed(got)) {
+          setProblem(got.message);
+          return;
+        }
+        const [voice, music] = await Promise.all([
+          readInto(got.vocals, rate),
+          readInto(got.music, rate),
+        ]);
+        if (!voice || !music) {
+          setProblem(t('pro.splitUnreadable', 'The separated parts came back in a form the browser could not read.'));
+          return;
+        }
+        setStale(true);
+        setLanes((was) => [
+          ...was.map((one) => (one.id === lane.id ? { ...one, muted: true } : one)),
+          {
+            id: `${lane.id}-voice`,
+            name: `${lane.name} · ${t('pro.voicePart', 'voice')}`,
+            audio: voice,
+            at: lane.at,
+            gain: lane.gain,
+            muted: false,
+            soloed: false,
+            pan: lane.pan,
+          },
+          {
+            id: `${lane.id}-music`,
+            name: `${lane.name} · ${t('pro.musicPart', 'everything else')}`,
+            audio: music,
+            at: lane.at,
+            gain: lane.gain,
+            muted: false,
+            soloed: false,
+            pan: lane.pan,
+          },
+        ]);
+      } catch {
+        setProblem(t('pro.splitFailed', 'That lane could not be separated.'));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [context, rate, t],
+  );
+
+  useEffect(() => {
+    if (!changing || voices) return;
+    void accessToken().then((token) =>
+      fetch('/api/voice', { headers: token ? { Authorization: `Bearer ${token}` } : undefined })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((said) => setVoices(said as VoiceState))
+        .catch(() => undefined),
+    );
+  }, [changing, voices]);
+
+  /**
+   * The same performance, sung by somebody else, as a lane of its own.
+   *
+   * A new lane rather than a replacement, and the original muted rather than
+   * removed. Conversion is paid for and it is a matter of taste whether it is
+   * better — overwriting the take would make a judgement call irreversible on
+   * somebody's behalf, and the take might be the only copy of a performance
+   * they cannot repeat.
+   */
+  const changeVoice = useCallback(
+    async (lane: Lane) => {
+      setProblem(null);
+      setBusy(true);
+      try {
+        const ctx = context();
+        if (!ctx) return;
+        const form = new FormData();
+        form.append('audio', encodeWav(monoOf(lane.audio, ctx)), 'lane.wav');
+        if (voiceId) form.append('voiceId', voiceId);
+        form.append('seconds', String(Math.round(lane.audio.duration)));
+
+        const token = await accessToken();
+        const response = await fetch('/api/voice/change', {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: form,
+        });
+        if (!response.ok) {
+          const said = (await response.json().catch(() => ({}))) as { message?: string };
+          setProblem(said.message ?? t('pro.voiceFailed', 'That lane could not be sung in another voice.'));
+          return;
+        }
+        const sung = await readInto(await response.blob(), rate);
+        if (!sung) {
+          setProblem(t('pro.voiceUnreadable', 'What came back could not be read as audio.'));
+          return;
+        }
+        setStale(true);
+        setChanging(null);
+        setLanes((was) => [
+          ...was.map((one) => (one.id === lane.id ? { ...one, muted: true } : one)),
+          {
+            id: `${lane.id}-voice-${Date.now()}`,
+            name: `${lane.name} · ${t('pro.sungBy', 'another voice')}`,
+            audio: sung,
+            at: lane.at,
+            gain: lane.gain,
+            muted: false,
+            soloed: false,
+            pan: lane.pan,
+          },
+        ]);
+      } catch {
+        setProblem(t('pro.voiceFailed', 'That lane could not be sung in another voice.'));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [context, rate, t, voiceId],
+  );
+
   const keep = useCallback(async () => {
     setBusy(true);
     setProblem(null);
@@ -595,6 +743,9 @@ export default function ProBooth({
             at={at}
             onChange={(how) => change(lane.id, how)}
             onRemove={() => setLanes((was) => was.filter((one) => one.id !== lane.id))}
+            onSplit={() => void split(lane)}
+            onVoice={() => setChanging(lane)}
+            busy={busy}
           />
         ))}
 
@@ -606,6 +757,63 @@ export default function ProBooth({
       </div>
 
       {problem && <p className="text-sm text-amber-400 leading-snug px-5 pb-2">{problem}</p>}
+
+      {/* ── Picking a voice for a lane ──────────────────────────────────
+          Over the room rather than beside it: choosing among forty voices is
+          the only thing being done while it is open, and it is a paid one. */}
+      {changing && (
+        <div className="fixed inset-0 z-[80] bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-6">
+          <div className="w-full sm:max-w-lg max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-zinc-800 bg-zinc-950 p-4 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-base font-bold text-white">
+                  {t('pro.sing', 'Sing this in another voice')}
+                </p>
+                <p className="text-sm text-zinc-500 leading-snug truncate">{changing.name}</p>
+              </div>
+              <button type="button" onClick={() => setChanging(null)} className="text-zinc-500 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* What it does and does not do, before the money is spent. It
+                keeps the performance — the timing, the phrasing, the breaths —
+                and changes whose voice is carrying it. Somebody expecting it
+                to fix their singing needs to know that before they buy it. */}
+            <p className="text-sm text-zinc-500 leading-relaxed">
+              {t(
+                'pro.singWhat',
+                'It keeps the performance — the timing, the phrasing, the breaths — and changes whose voice is carrying it. It does not fix the singing, and it will keep a wrong note as faithfully as a right one.',
+              )}
+            </p>
+            <Cost credits={perMinute(changing.audio.duration, CREDITS.voiceChange)} />
+
+            {voices ? (
+              <VoicePicker
+                mine={voices.mine ?? []}
+                stock={voices.stock ?? []}
+                value={voiceId}
+                onChange={setVoiceId}
+              />
+            ) : (
+              <p className="text-sm text-zinc-500 flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {t('pro.voicesLoading', 'Fetching the voices…')}
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={() => void changeVoice(changing)}
+              disabled={busy || !voiceId}
+              className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent font-bold inline-flex items-center justify-center gap-2 disabled:opacity-40"
+            >
+              {busy && <Loader2 className="w-4 h-4 animate-spin" />}
+              {t('pro.singGo', 'Sing it')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Mix and master ──────────────────────────────────────────────
           Three controls and a reading. Not a chain of processors: what is here
@@ -796,6 +1004,9 @@ function LaneRow({
   at,
   onChange,
   onRemove,
+  onSplit,
+  onVoice,
+  busy,
 }: {
   lane: Lane;
   lanes: readonly Lane[];
@@ -803,6 +1014,9 @@ function LaneRow({
   at: number;
   onChange: (how: Partial<Lane>) => void;
   onRemove: () => void;
+  onSplit: () => void;
+  onVoice: () => void;
+  busy: boolean;
 }): React.ReactElement {
   const { t } = useLang();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -914,6 +1128,28 @@ function LaneRow({
           aria-label={t('pro.startsAt', 'Starts at')}
         />
         <span className="text-[11px] text-zinc-600">s</span>
+        {/* Splitting costs money and everything else in this room does not, so
+            the price is on the control rather than in a dialog after it. */}
+        <button
+          type="button"
+          onClick={onSplit}
+          disabled={busy}
+          title={`${t('pro.split', 'Split the voice off')} — ${perMinute(lane.audio.duration, CREDITS.stems)} ${t('video.credits', 'credits')}`}
+          aria-label={t('pro.split', 'Split the voice off')}
+          className="text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+        >
+          <Scissors className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={onVoice}
+          disabled={busy}
+          title={t('pro.sing', 'Sing this in another voice')}
+          aria-label={t('pro.sing', 'Sing this in another voice')}
+          className="text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+        >
+          <Mic2 className="w-4 h-4" />
+        </button>
         {!lane.backing && (
           <button type="button" onClick={onRemove} className="text-zinc-600 hover:text-red-400 ml-auto">
             <Trash2 className="w-4 h-4" />
