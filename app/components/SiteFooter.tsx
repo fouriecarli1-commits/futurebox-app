@@ -48,6 +48,13 @@ export function SiteFooter() {
             <a href="/terms" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline underline-offset-4 hover:text-zinc-200">
               Terms
             </a>
+            {/* Who is selling this, which section 43 of ECTA requires to be
+                reachable before somebody buys. From the footer of every page,
+                because "before they transact" means they must be able to find
+                it without already being in a checkout. */}
+            <a href="/legal" className="inline-flex min-h-[44px] items-center justify-center whitespace-nowrap underline underline-offset-4 hover:text-zinc-200">
+              Who we are
+            </a>
           </nav>
         </div>
 

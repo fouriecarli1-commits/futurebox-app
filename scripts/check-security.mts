@@ -173,6 +173,12 @@ const MAILBOX = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i;
 /** Where an address is the point, not a leak. */
 const MAY_HOLD_IT = new Set([
   'app/lib/server/email.ts',
+  /* The supplier's own particulars, which section 43 of ECTA requires to be
+     published before a South African buys anything. Server-side, and read from
+     the environment rather than written down here — so the address reaches the
+     page without reaching the client bundle, which is what this rule was
+     actually protecting against. See `app/legal/page.tsx`. */
+  'app/lib/server/entity.ts',
 ]);
 for (const file of [...walk('app/api'), ...walk('app/components'), ...walk('app/lib')]) {
   if (MAY_HOLD_IT.has(file)) continue;
@@ -196,6 +202,55 @@ for (const file of [...walk('app/api'), ...walk('app/components'), ...walk('app/
   }
 }
 if (failures === before7) pass('no mailbox or mailto: link reaches the browser');
+
+/* ── 8. And the one page the law requires still says who is selling ────────
+
+   Rule 7 above says no address reaches the browser, and for a year that was
+   read as "no address anywhere". It is not the same claim, and the difference
+   matters: section 43 of the Electronic Communications and Transactions Act
+   requires a supplier selling to South Africans to make its name, legal
+   status, registration number, physical address and telephone number
+   available to a consumer *before* they transact.
+
+   So this rule is not a relaxation of rule 7. It is the other half of it. Rule
+   7 keeps an address out of every screen somebody works in; this one refuses
+   to let the single page that must carry it quietly disappear — which is
+   exactly what would happen the next time somebody tidies up, because from
+   inside the codebase it looks like the one file breaking a rule.
+
+   What is checked is the page, the link to it from the footer, and that the
+   particulars come from the environment rather than being typed in. */
+const before8 = failures;
+const LEGAL_PAGE = 'app/legal/page.tsx';
+if (!existsSync(LEGAL_PAGE)) {
+  fail('the supplier disclosure page exists', `${LEGAL_PAGE} is missing`);
+} else {
+  const page = readFileSync(LEGAL_PAGE, 'utf8');
+  for (const wanted of ['Registered name', 'Registration number', 'Registered address', 'Telephone']) {
+    if (!page.includes(wanted)) {
+      fail('the disclosure page carries what ECTA asks for', `no "${wanted}" on ${LEGAL_PAGE}`);
+    }
+  }
+  if (!page.includes("from '../lib/server/entity'")) {
+    fail('the particulars are read on the server', `${LEGAL_PAGE} does not read lib/server/entity`);
+  }
+}
+const footer = existsSync('app/components/SiteFooter.tsx')
+  ? readFileSync('app/components/SiteFooter.tsx', 'utf8')
+  : '';
+if (!footer.includes('href="/legal"')) {
+  fail('the disclosure page is reachable from every page', 'SiteFooter does not link /legal');
+}
+/* Typed in rather than configured is the failure that matters here: a
+   registration number hard-coded into a page is one somebody has invented, or
+   one that will be wrong the day the company changes anything. */
+const entitySrc = existsSync('app/lib/server/entity.ts')
+  ? readFileSync('app/lib/server/entity.ts', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+  : '';
+if (/\b\d{4}\/\d{6}\/\d{2}\b/.test(entitySrc)) {
+  fail('no registration number is hard-coded', 'app/lib/server/entity.ts contains one');
+}
+if (failures === before8) pass('the supplier disclosure page exists, is linked, and is configured not typed');
 
 console.log(
   failures === 0

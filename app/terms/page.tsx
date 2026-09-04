@@ -59,7 +59,16 @@ export default function Terms(): React.ReactElement {
 
         <Section title="What this is">
           <p>FutureBox is a studio: you write songs with AI, sing on them yourself, clone your voice to read a podcast, and put a video to them. An account is free to open and you can use a real part of it without paying.</p>
-          <p>You need to be 13 or older. If you are under 18, an adult responsible for you should read this first.</p>
+          {/* One age, not two.
+
+              This said 13 while "Who may use this" further down said 18 with a
+              parent holding the account. A legal document that contradicts
+              itself about who may use the service is read against whoever
+              wrote it, and 18 is the position POPIA points at: it treats
+              anybody under 18 as a child, and processing a child's personal
+              information generally needs a parent's consent rather than the
+              child's own. */}
+          <p>You need to be 18 or older to hold an account. If you are younger than that, a parent or guardian holds the account, agrees to this, and is responsible for what is made on it.</p>
         </Section>
 
         <Section title="What you make is yours">

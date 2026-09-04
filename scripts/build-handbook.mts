@@ -76,7 +76,17 @@ function plain(html: string): string {
  * front of the assistant — so it throws instead.
  */
 function expressions(source: string, updated: string): string {
-  return source.replace(/\{([^{}]*)\}/g, (whole, inner: string) => {
+  /* A JSX comment first, and before anything else looks at the braces.
+
+     `{/* … *\/}` is a note to whoever reads the file, not policy, and the
+     handbook is what the help copilot answers from — so it has to come out
+     rather than be resolved. It also cannot be left to the expression reader
+     below, which sees the inside of the braces and throws on anything it does
+     not recognise: writing one sentence of explanation next to a clause was
+     enough to break the build. */
+  const withoutNotes = source.replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, '');
+
+  return withoutNotes.replace(/\{([^{}]*)\}/g, (whole, inner: string) => {
     const code = inner.trim();
     if (/^['"`]\s*['"`]$/.test(code)) return ' ';
     // Contact is a route now, not an address — the pages print no mailbox at

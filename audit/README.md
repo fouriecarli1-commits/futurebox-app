@@ -120,6 +120,38 @@ node audit/podlanguage.mjs 3016 en
 node audit/podlanguage.mjs 3016 af
 ```
 
+`legalpage.mjs` runs against a plain build, twice: once with nothing
+configured and once with the particulars set in the environment.
+
+It is the only page in the app that prints an address, and it exists because
+section 43 of ECTA requires a supplier selling to South Africans to publish its
+name, registration number, physical address and telephone number before
+somebody transacts — which a contact form cannot do. Everywhere else the
+no-address rule stands, and `check:security` now has an eighth assertion that
+this page exists, is linked from the footer, and reads its values from the
+environment rather than having them typed in.
+
+```
+node audit/legalpage.mjs 3000
+FUTUREBOX_LEGAL_NAME="..." FUTUREBOX_LEGAL_REGISTRATION="..." \
+FUTUREBOX_LEGAL_ADDRESS="..." FUTUREBOX_LEGAL_PHONE="..." \
+  npx next start -p 3111
+node audit/legalpage.mjs 3111 configured
+```
+
+The unset run is the one that matters most today: with no company registered
+there is nothing true to publish, and the page has to say so rather than show a
+blank list or a plausible placeholder. The run checks it invents no
+registration number.
+
+The configured run found a real fault. Next pre-renders a server component with
+no dynamic data at build time, so the particulars were read while the build ran
+— with the variables unset — and frozen into the HTML; setting them afterwards
+did nothing, silently, on the one page where being out of date is a legal
+problem rather than a stale screen. It also checks that none of the particulars
+reach the client bundle, which is what lets this page exist without undoing the
+rule it appears to break.
+
 `taste.mjs` needs it too, and is the only run whose subject is a table rather
 than a screen. What it checks is that using the app in the ordinary way fills
 it — no button built for the purpose — and that the welcome screen prefers the

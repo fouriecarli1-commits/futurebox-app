@@ -105,11 +105,33 @@ export default function Privacy(): React.ReactElement {
         </Section>
 
         <Section title="What you can ask for">
-          <p>A copy of what is held about you, a correction to anything wrong in it, or its deletion. Write to the address above. Under South Africa&apos;s POPIA you may also complain to the Information Regulator if you are not satisfied with the answer.</p>
+          <p>
+            A copy of what is held about you, a correction to anything wrong in it, or its deletion.
+            Ask on the{' '}
+            <Link href={CONTACT_PAGE} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
+              help page
+            </Link>{' '}
+            from the address you signed up with, so it can be matched to your account. Under South
+            Africa&apos;s POPIA you may also complain to the Information Regulator if you are not
+            satisfied with the answer. Who FutureBox is, in the words the law asks for, is on{' '}
+            <Link href="/legal" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
+              the supplier page
+            </Link>
+            .
+          </p>
         </Section>
 
         <Section title="Children">
-          <p>FutureBox is not built for children and accounts are not knowingly created for anybody under 13. If you believe one has been, write to the address above and it will be removed.</p>
+          <p>
+            An account is held by somebody 18 or older. FutureBox is not built for children, and an
+            account is not knowingly created for anybody under 18 — where a younger person uses it,
+            a parent or guardian holds the account and agrees to this on their behalf. If you
+            believe an account has been created for a child without that, say so on the{' '}
+            <Link href={CONTACT_PAGE} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
+              help page
+            </Link>{' '}
+            and it will be removed.
+          </p>
         </Section>
 
         <Section title="Changes">
