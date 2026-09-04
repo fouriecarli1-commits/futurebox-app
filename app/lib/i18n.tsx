@@ -1415,6 +1415,8 @@ export const STRINGS: Dict = {
   "cast.notImage": { en: "That is not a picture.", af: "Dit is nie 'n foto nie." },
   "cast.failed": { en: "That did not save. Try again in a moment.", af: "Dit het nie gestoor nie. Probeer oor 'n oomblik weer." },
   "frame.orDevice": { en: "Or a picture from this device \u2014 kept here only, not on your account.", af: "Of 'n foto van hierdie toestel \u2014 net hier gehou, nie teen jou rekening nie." },
+  "chan.edit": { en: "Open it in the studio", af: "Maak dit in die studio oop" },
+  "sec.estimated": { en: "These sections are worked out from the words \u2014 this song did not carry a plan, so the times are close rather than exact. Everything you change here still travels through in full.", af: "Hierdie afdelings is uit die woorde uitgewerk \u2014 hierdie snit het nie 'n plan saamgedra nie, so die tye is naby eerder as presies. Alles wat jy hier verander gaan steeds volledig deur." },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';

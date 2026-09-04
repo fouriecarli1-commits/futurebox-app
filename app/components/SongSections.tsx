@@ -45,6 +45,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Copy, Loader2, Music4, Pause, Play, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { loadTracks } from '../lib/library';
+import { splitSections } from '../lib/engines';
 import { readAudio } from '../lib/trackaudio';
 import { peaksOf, type Peaks } from '../lib/peaks';
 import { markBlob } from '../lib/watermark';
@@ -74,14 +75,58 @@ const SHADES = [
   'bg-rose-500/25 border-rose-500/60',
 ];
 
+/**
+ * The sections of a song, however it came by them.
+ *
+ * A song made here carries the plan it was built from — the app told the music
+ * service the verse was 72 seconds and the chorus 36 — and those are the real
+ * boundaries, to the second.
+ *
+ * A song that has words but no plan is the interesting case, and it used to be
+ * turned away. That is every song made before plans were carried, every one
+ * from a path that does not build one, and every one somebody wrote the words
+ * for by hand. The room answered all of them with "No song to lay out yet",
+ * which reads as a room that does nothing rather than as a song that is
+ * missing something.
+ *
+ * The words alone are enough to lay out. `splitSections` reads the [Section]
+ * tags and weights each part by how many lines it carries — the same function
+ * the make screen uses to build a plan in the first place, so what is shown
+ * here is what would be sent. The lengths are then estimates rather than
+ * measurements, which is a real difference and is said on screen rather than
+ * quietly presented as the same thing.
+ */
+function sectionsOf(track: Track): Part[] {
+  const carried = (track.parts ?? []) as Part[];
+  if (carried.length) return carried.map((part) => ({ ...part, lines: [...part.lines] }));
+  return splitSections(track.lyrics ?? '', track.seconds).map((part) => ({
+    ...part,
+    lines: [...part.lines],
+  }));
+}
+
+/** True where the boundaries were worked out from the words, not carried. */
+function estimated(track: Track): boolean {
+  return !((track.parts ?? []).length > 0);
+}
+
 export default function SongSections({
   reloadKey,
   onRemake,
+  open,
 }: {
   /** Bumped when a song is made, so the list here picks it up. */
   reloadKey: number;
   /** Hands an edited plan back to the Make screen and starts a new take. */
   onRemake: (next: { title: string; lyrics: string; style: string }) => void;
+  /**
+   * A song to open on arrival, sent by whoever opened this room.
+   *
+   * The channel has an edit button per song now, and it would be a strange
+   * button that dropped you at the top of somebody's list. Read once per
+   * value, so choosing a different song here is not undone on the next render.
+   */
+  open?: string | null;
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -93,9 +138,13 @@ export default function SongSections({
     setTracks(loadTracks());
   }, [reloadKey]);
 
-  // Only songs that carry a plan can be laid out. A sketch has no sections and
-  // an imported file has no lyric structure, so they are not offered.
-  const usable = useMemo(() => tracks.filter((track) => (track.parts ?? []).length > 0), [tracks]);
+  /* Anything with words. A sketch with no lyrics at all still cannot be laid
+     out — there is nothing to lay out — but that is now the only exclusion,
+     rather than "was made by the one path that records a plan". */
+  const usable = useMemo(
+    () => tracks.filter((track) => sectionsOf(track).length > 0),
+    [tracks],
+  );
 
   /* Choose which song is on the timeline. Only the ones the timeline can
      actually open are offered to the match, so naming a sketch that has no
@@ -110,6 +159,15 @@ export default function SongSections({
 
   const [chosen, setChosen] = useState<string>('');
   const track = usable.find((one) => one.id === chosen) ?? usable[0] ?? null;
+
+  // Opened from somewhere else, and only for as long as that request is new.
+  const opened = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open || opened.current === open) return;
+    if (!usable.some((one) => one.id === open)) return;
+    opened.current = open;
+    setChosen(open);
+  }, [open, usable]);
 
   const [parts, setParts] = useState<Part[]>([]);
   const [peaks, setPeaks] = useState<Peaks | null>(null);
@@ -141,7 +199,7 @@ export default function SongSections({
   // another song's sound.
   useEffect(() => {
     if (!track) return;
-    setParts(((track.parts ?? []) as Part[]).map((part) => ({ ...part, lines: [...part.lines] })));
+    setParts(sectionsOf(track));
     setPeaks(null);
     setAt(0);
     setPlaying(false);
@@ -354,6 +412,18 @@ export default function SongSections({
           <span>{clock(at)}</span>
           <span>{clock(duration)}</span>
         </div>
+
+        {/* Where the boundaries came from. A measured plan and a guess off the
+            words look identical on a waveform, and only one of them is worth
+            trusting to the second. */}
+        {track && estimated(track) && (
+          <p className="text-xs text-zinc-500 leading-relaxed">
+            {t(
+              'sec.estimated',
+              'These sections are worked out from the words — this song did not carry a plan, so the times are close rather than exact. Everything you change here still travels through in full.',
+            )}
+          </p>
+        )}
       </div>
 
       {/* The sections themselves: what is sung, and when. */}

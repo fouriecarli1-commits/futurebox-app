@@ -19,7 +19,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Check, Copy, ListMusic, Loader2, Pause, Play, Plus, Share2, SkipForward, Trash2, X,
+  Check, Copy, ListMusic, Loader2, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, X,
 } from 'lucide-react';
 import { loadTracks, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
@@ -48,11 +48,22 @@ export default function Channel({
   reloadKey,
   onUpgrade,
   email,
+  onEdit,
 }: {
   reloadKey: number;
   onUpgrade: () => void;
   /** Empty when nobody is signed in, which is when there is nothing to delete. */
   email?: string;
+  /**
+   * Open this song on the timeline next door.
+   *
+   * This page offered exactly one thing to do with a finished song — put a
+   * video to it — and nothing at all to do to the song itself. Changing a
+   * verse meant leaving, finding the studio, and finding the song again in a
+   * list, which is three steps away from where somebody is already looking at
+   * the thing they want to change.
+   */
+  onEdit?: (trackId: string) => void;
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -413,14 +424,26 @@ export default function Channel({
                     </button>
                   </div>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => setAdding(track.id)}
-                    className="text-sm text-zinc-400 hover:text-emerald-300 flex items-center gap-1.5"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    {t('chan.addTo', 'Add to a playlist')}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setAdding(track.id)}
+                      className="text-sm text-zinc-400 hover:text-emerald-300 flex items-center gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      {t('chan.addTo', 'Add to a playlist')}
+                    </button>
+                    {onEdit && (
+                      <button
+                        type="button"
+                        onClick={() => onEdit(track.id)}
+                        className="text-sm text-zinc-400 hover:text-emerald-300 flex items-center gap-1.5"
+                      >
+                        <SlidersHorizontal className="w-3.5 h-3.5" />
+                        {t('chan.edit', 'Open it in the studio')}
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </article>

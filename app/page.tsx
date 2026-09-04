@@ -442,6 +442,10 @@ export default function FutureBoxHome() {
   const budget = budgetOptions.indexOf(contactBudget) !== -1 ? contactBudget : budgetOptions[0];
   const chosenRung = SPONSORSHIP[Math.max(0, budgetOptions.indexOf(budget))];
   const [contactMessage, setContactMessage] = useState('');
+  /** A song the channel asked the timeline to open. Cleared by nothing: it is
+      read once per value by `SongSections`, so re-entering the room leaves
+      whatever is chosen there alone. */
+  const [editSong, setEditSong] = useState<string | null>(null);
   const [contactSent, setContactSent] = useState(false);
   const [contactBusy, setContactBusy] = useState(false);
   const [contactProblem, setContactProblem] = useState<string | null>(null);
@@ -2204,6 +2208,16 @@ export default function FutureBoxHome() {
                 reloadKey={trackCount}
                 onUpgrade={() => setPricingModalOpen(true)}
                 email={user?.email}
+                /* The way from a song to the timeline.
+
+                   The channel offered exactly one thing to do with a finished
+                   song — put a video to it — and no way to change the song
+                   itself, which is the room next door and was reachable only
+                   by going there and finding it in a list. */
+                onEdit={(id) => {
+                  setEditSong(id);
+                  setStudioTab('studio');
+                }}
               />
             )}
             {studioTab === 'booth' && (
@@ -2242,6 +2256,7 @@ export default function FutureBoxHome() {
             {studioTab === 'studio' && (
               <SongSections
                 reloadKey={trackCount}
+                open={editSong}
                 onRemake={(next) => {
                   setHandoff(next);
                   setCanvas(next);
