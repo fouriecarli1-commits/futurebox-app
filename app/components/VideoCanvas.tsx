@@ -758,21 +758,6 @@ export default function VideoCanvas({
           />
         )}
 
-        {/* ── A film out of many shots ────────────────────────────────
-            Under the single-shot composer, because it is the same desk asking
-            a bigger question: everything above makes one clip, and no engine
-            makes more than half a minute. It borrows this desk's grade, shape
-            and start frame rather than growing a second set — one decision,
-            made once, above, and the cast picture is the whole reason twelve
-            shots can have one person in them. */}
-        <Storyboard
-          aspect={aspect}
-          grade={grade}
-          lengths={lengths}
-          frame={frame}
-          onUpgrade={onUpgrade}
-        />
-
         {/* ── A presenter, when one is switched on ────────────────────
             Below the shot composer rather than beside it, because it is a
             different job with different inputs: everything above makes a clip
@@ -888,6 +873,32 @@ export default function VideoCanvas({
 
         {error && <p className="text-sm text-rose-400 leading-relaxed">{error}</p>}
       </div>
+
+      {/* ── A film out of many shots ──────────────────────────────────────
+
+          Outside the composer above, and that placement is the whole point.
+          It sat inside it, between the shape row and "Make it", and read as
+          part of the same form: somebody added two shots at sixty credits
+          each, watched the storyboard say 120, and asked why the big green
+          button at the bottom still said sixty. It said sixty because it makes
+          one clip out of the sentence above it and always has — but nothing on
+          screen said the two were different forms.
+
+          They are two ways to use the same desk: one shot from one sentence,
+          or a film from many. So the second starts after the first one ends,
+          with its own card and its own button, and neither reads as the
+          other's total.
+
+          It still borrows this desk's grade, shape and start frame — one
+          decision, made once, above, and the cast picture is the whole reason
+          twelve shots can have one person in them. */}
+      <Storyboard
+        aspect={aspect}
+        grade={grade}
+        lengths={lengths}
+        frame={frame}
+        onUpgrade={onUpgrade}
+      />
 
       {/* ── What has been made, newest first ──────────────────────────── */}
       {made.length > 0 && (

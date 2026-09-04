@@ -95,19 +95,24 @@ export default function Storyboard({
    * and four seconds nobody could reach. Read off the file, once, per clip.
    */
   const [clipLengths, setClipLengths] = useState<Record<string, number>>({});
-  const loaded = useRef(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setBoard(loadStoryboard());
     setTracks(loadTracks());
-    loaded.current = true;
+    setReady(true);
   }, []);
 
-  // Saved on every change, not on a button. Somebody arranging shots is not
-  // thinking about saving, and there is nothing here worth losing to a reload.
+  /* Saved on every change, not on a button. Somebody arranging shots is not
+     thinking about saving, and there is nothing here worth losing to a reload.
+
+     Guarded by a state flag rather than a ref — see the note in `AdRuns`. A
+     ref flipped inside the load effect is already true when the save effect
+     runs in the same commit, and the save then writes the empty initial state
+     over what was just read. */
   useEffect(() => {
-    if (loaded.current) saveStoryboard(board);
-  }, [board]);
+    if (ready) saveStoryboard(board);
+  }, [ready, board]);
 
   useEffect(() => () => { if (film) URL.revokeObjectURL(film.url); }, [film]);
 

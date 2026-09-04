@@ -35,7 +35,7 @@
  * rather than a line to fake here.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { CalendarClock, Check, Copy, ExternalLink, Plus, Trash2 } from 'lucide-react';
 import { PLATFORMS } from '../data/social';
 import {
@@ -61,15 +61,32 @@ export default function AdRuns({
   const { t } = useLang();
   const [runs, setRuns] = useState<Run[]>([]);
   const [copied, setCopied] = useState<string | null>(null);
-  const loaded = useRef(false);
+  /* Loaded, then saved — and never the other way round.
+
+     This was a `useRef` set to true inside the load effect, which reads as
+     "do not save until we have loaded" and is not what it does. Effects run
+     in order after a commit: the load effect *schedules* a state update and
+     flips the ref, and the save effect then runs in the same commit with the
+     state still empty and the ref already true. It writes an empty list over
+     what was just read.
+
+     It heals a render later, so nothing on this screen ever looked wrong.
+     What it broke was anything reading the same key in between — which is
+     exactly what the report panel does, and how it came to show no matches
+     for a run that was sitting in storage the whole time.
+
+     A state flag rather than a ref: `setReady` and the load land in one
+     batch, so by the time the save effect sees `ready` it also sees the
+     loaded value. */
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setRuns(loadRuns());
-    loaded.current = true;
+    setReady(true);
   }, []);
   useEffect(() => {
-    if (loaded.current) saveRuns(runs);
-  }, [runs]);
+    if (ready) saveRuns(runs);
+  }, [ready, runs]);
 
   const add = useCallback(() => {
     setRuns((was) => [

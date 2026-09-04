@@ -175,8 +175,28 @@ calendar that quietly fails to notify is worse than a list somebody knows to che
 real reminder wants a member's address and a scheduled job — `/api/watch`'s shape, and a
 separate piece of work rather than a line to fake.
 
-Still open: Stage 2, which is the read-back, and which is now at least possible because
-the links going out can be told apart.
+### Stage 2 is built, from the other direction
+
+The read-back assumed an API. Those are read-only scopes, which is the easier ask — and it
+is still App Review, a verified business, and a company that exists to be verified. None of
+that is true today and the report is worth having today.
+
+Every one of these platforms exports a CSV from its own reporting screen. Somebody who can
+open their Ads Manager already has the numbers; what they cannot do is put them next to the
+advert that produced them and see which angle worked. **That part needs nobody's
+permission**, and the API version — when the company exists — is another importer writing
+the same rows into the same store behind the same screen.
+
+The headers are matched, not declared, and that is the load-bearing decision. Meta calls it
+"Amount spent", Google calls it "Cost", and on both the column set is *chosen by the person
+exporting*. A table of per-platform schemas would be wrong for half of them on the first try.
+
+`check:adreport` is thirty-two assertions on the reading, because the numbers are the
+product: a report out by a hundred because a comma was read as a decimal point, or showing
+a campaign that spent four rand because "Cost per result" was mistaken for "Cost", is worse
+than no report — it gets repeated to an accountant.
+
+Still open: Stage 3, publishing, which needs the company.
 
 ---
 

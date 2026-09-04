@@ -91,6 +91,11 @@ jobs:
       - name: Every advert link is traceable
         run: npm run check:adrun
 
+      # The report is what a client re-buys, so a number out by a factor of a
+      # hundred is worse than no number — it gets repeated to an accountant.
+      - name: Every export reads back at the amount it says
+        run: npm run check:adreport
+
       # The security claims in docs/GOING_LIVE.md, as assertions. One of them
       # was badly wrong for weeks — a claim written once is a claim nobody
       # re-runs. This one needs the build above it to check the client bundle,

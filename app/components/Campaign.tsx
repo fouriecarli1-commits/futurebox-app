@@ -43,6 +43,7 @@ import { PLATFORMS } from '../data/social';
 import { loadHandles, type Handles } from '../lib/social';
 import ShareRow from './ShareRow';
 import AdRuns from './AdRuns';
+import AdReport from './AdReport';
 import Steps, { type Step } from './Steps';
 import BrandKit from './BrandKit';
 import { EMPTY as EMPTY_KIT, brandLine, type BrandKit as Kit } from '../lib/brandkit';
@@ -518,6 +519,15 @@ export default function Campaign({
           Meta and Google and cannot be built yet; the first needs nobody's
           permission and is this. */}
       <AdRuns headline={ads[0]?.headline} />
+
+      {/* ── And what it did ─────────────────────────────────────────────
+          The other half of an advertising service, and the half a client
+          re-buys: "we wrote you some ads" is a one-off, "here is what your
+          R2 000 did and which angle worked" is a monthly invoice. It takes the
+          platform's own export rather than an API, because the API needs their
+          app review and a verified company and the numbers are worth having
+          before either exists. */}
+      <AdReport />
 
       <History surface="campaign" reloadKey={kept} />
 
