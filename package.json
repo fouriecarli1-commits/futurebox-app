@@ -16,6 +16,7 @@
     "check:handbook": "tsx scripts/check-handbook.mts",
     "check:brake": "tsx scripts/check-brake.mts",
     "check:ownedpath": "tsx scripts/check-ownedpath.mts",
+    "check:adrun": "tsx scripts/check-adrun.mts",
     "handbook": "tsx scripts/build-handbook.mts"
   },
   "dependencies": {

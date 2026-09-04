@@ -86,6 +86,11 @@ jobs:
       - name: A row can only claim its own file
         run: npm run check:ownedpath
 
+      # Everything past stage one in docs/ADS_AS_A_SERVICE.md is attribution,
+      # and none of it can recover a click that went out on an untagged link.
+      - name: Every advert link is traceable
+        run: npm run check:adrun
+
       # The security claims in docs/GOING_LIVE.md, as assertions. One of them
       # was badly wrong for weeks — a claim written once is a claim nobody
       # re-runs. This one needs the build above it to check the client bundle,

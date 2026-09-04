@@ -154,6 +154,30 @@ Everything above is gated on approvals and a registered company. This is not:
 That is a real advertising service, delivered by hand where it has to be, and it is worth
 charging for on day one.
 
+### Three of the four are built
+
+They turned out to be one object seen from three sides — this advert, going to these
+places, on this day, with a link per place — so they are one panel at the foot of the
+advert desk and one file, `app/lib/adrun.ts`. The fourth, the brand kit on the creative,
+was already there.
+
+**The tagging is the load-bearing half**, and it is worth being blunt about why: nothing
+in Stage 2 can attribute a click that already happened on a bare link. Four platforms
+sharing one URL is one row in the analytics reading "direct", and no later engineering
+recovers it. `check:adrun` is twenty-three assertions on it, every one a case somebody
+actually hits — a link typed without a scheme, a link that already carries parameters, a
+link tagged for one platform then tagged again for another (two `utm_source` values is a
+row analytics drops), a hash that has to survive at the end, and somebody else's
+`utm_term` that has to not.
+
+**The schedule is a list, not a reminder**, and the panel says so. Nothing is sent. A
+calendar that quietly fails to notify is worse than a list somebody knows to check, and a
+real reminder wants a member's address and a scheduled job — `/api/watch`'s shape, and a
+separate piece of work rather than a line to fake.
+
+Still open: Stage 2, which is the read-back, and which is now at least possible because
+the links going out can be told apart.
+
 ---
 
 ## What this would mean for the room

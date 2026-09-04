@@ -42,6 +42,7 @@ import type { SurfaceId } from '../lib/surfaces';
 import { PLATFORMS } from '../data/social';
 import { loadHandles, type Handles } from '../lib/social';
 import ShareRow from './ShareRow';
+import AdRuns from './AdRuns';
 import Steps, { type Step } from './Steps';
 import BrandKit from './BrandKit';
 import { EMPTY as EMPTY_KIT, brandLine, type BrandKit as Kit } from '../lib/brandkit';
@@ -509,6 +510,14 @@ export default function Campaign({
           </div>
         </div>
       ))}
+
+      {/* ── When it goes out, and where ─────────────────────────────────
+          After the creative, because that is where the room used to stop. An
+          advertising service is the creative plus two more things: when it
+          goes out, and what it did. The second needs numbers read back from
+          Meta and Google and cannot be built yet; the first needs nobody's
+          permission and is this. */}
+      <AdRuns headline={ads[0]?.headline} />
 
       <History surface="campaign" reloadKey={kept} />
 

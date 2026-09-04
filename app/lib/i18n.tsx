@@ -1495,6 +1495,25 @@ export const STRINGS: Dict = {
   "board.lost": { en: "A shot\u2019s clip is no longer on this device. Make that one again before cutting.", af: "'n Skoot se snit is nie meer op hierdie toestel nie. Maak daardie een weer voor jy sny." },
   "board.unsupported": { en: "This browser cannot cut a film together. Chrome or Safari can.", af: "Hierdie blaaier kan nie 'n film aanmekaar sny nie. Chrome of Safari kan." },
   "board.cutFailed": { en: "The film could not be cut. Nothing was charged for this step.", af: "Die film kon nie gesny word nie. Niks is vir hierdie stap gehef nie." },
+
+  /* The advert run: a day, the platforms, and a traceable link each. */
+  "run.title": { en: "When it goes out, and where", af: "Wanneer dit uitgaan, en waarheen" },
+  "run.what": { en: "A day, a list of platforms, and a link per platform that says which one the click came from. Tick each off as you post it.", af: "'n Dag, 'n lys platforms, en 'n skakel per platform wat s\u00ea van watter een die klik gekom het. Merk elkeen af soos jy dit plaas." },
+  "run.whyTags": { en: "Four platforms sharing one plain link is one line in your analytics that says \u201cdirect\u201d. A tagged link makes them four rows \u2014 free, today, with nobody\u2019s permission, and nothing you build later can recover a click that already happened untagged.", af: "Vier platforms wat een gewone skakel deel, is een re\u00ebl in jou syfers wat \u201cdirek\u201d s\u00ea. 'n Gemerkte skakel maak hulle vier re\u00ebls \u2014 verniet, vandag, met niemand se toestemming nie, en niks wat jy later bou kan 'n klik terugkry wat reeds ongemerk gebeur het nie." },
+  "run.add": { en: "Plan a run", af: "Beplan 'n lopie" },
+  "run.campaign": { en: "What this push is called", af: "Wat hierdie stoot genoem word" },
+  "run.campaignHint": { en: "Winter sale", af: "Wintersuitverkoping" },
+  "run.when": { en: "The day it goes out", af: "Die dag wat dit uitgaan" },
+  "run.link": { en: "Where the click goes", af: "Waarheen die klik gaan" },
+  "run.remove": { en: "Take this run out", af: "Haal hierdie lopie uit" },
+  "run.copy": { en: "Copy the tagged link for", af: "Kopieer die gemerkte skakel vir" },
+  "run.open": { en: "Open", af: "Maak oop" },
+  "run.overdue": { en: "This day has passed and it is not all out yet.", af: "Hierdie dag is verby en dit is nog nie alles uit nie." },
+  "run.today": { en: "Today.", af: "Vandag." },
+  "run.soon": { en: "Coming up.", af: "Kom binnekort." },
+  "run.done": { en: "All out.", af: "Alles uit." },
+  "run.noDay": { en: "No day set.", af: "Geen dag gestel nie." },
+  "run.noReminder": { en: "Nothing is sent from here \u2014 this is a list you check, not a reminder. It is kept on this device.", af: "Niks word van hier gestuur nie \u2014 dis 'n lys wat jy nagaan, nie 'n herinnering nie. Dit word op hierdie toestel gehou." },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';
