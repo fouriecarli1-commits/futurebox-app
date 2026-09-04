@@ -33,7 +33,7 @@
  * imported ad, and an ad that reads imported has already lost the room.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
@@ -45,6 +45,10 @@ import ShareRow from './ShareRow';
 import AdRuns from './AdRuns';
 import AdReport from './AdReport';
 import Queue from './Queue';
+import MarketPlan from './MarketPlan';
+import AddOn from './AddOn';
+import { MARKETING } from '../lib/addons';
+import { NOTHING_UNLOCKED, owns, unlocked, type Unlocked } from '../lib/unlocked';
 import Steps, { type Step } from './Steps';
 import BrandKit from './BrandKit';
 import { EMPTY as EMPTY_KIT, brandLine, type BrandKit as Kit } from '../lib/brandkit';
@@ -130,6 +134,20 @@ export default function Campaign({
      share row reads, so a platform you have already set up here is already set
      up there — this room does not ask for anything twice. */
   const [handles, setHandles] = useState<Handles>({});
+
+  /* What is paid for on this account.
+
+     Asked once when the room opens, and again after a checkout comes back.
+     The server decides this — `/api/plan` and `/api/schedule` each ask for
+     themselves — so this only chooses which screen to draw. A page that
+     decides its own permissions decides them in the buyer's favour. */
+  const [paid, setPaid] = useState<Unlocked>(NOTHING_UNLOCKED);
+  const askAgain = useCallback(() => {
+    void unlocked().then(setPaid);
+  }, []);
+  useEffect(() => {
+    askAgain();
+  }, [askAgain]);
   /**
    * Who these adverts are for, kept between visits.
    *
@@ -530,13 +548,30 @@ export default function Campaign({
           before either exists. */}
       <AdReport />
 
-      {/* ── And when ────────────────────────────────────────────────────
-          The third thing an advertising service is. The plan says Tuesday at
-          six; this is what makes Tuesday at six happen rather than being read
-          once and forgotten. It reminds rather than posts, and says so on its
-          own face — see `components/Queue.tsx`. The caption from the first
-          advert is carried in so the common case is two taps. */}
-      <Queue caption={ads[0]?.caption || ads[0]?.body || ''} />
+      {/* ── The paid half ───────────────────────────────────────────────
+
+          Everything above this line is open on every plan, including the free
+          one: the brief, the advert writer, the runs, the report. Below it is
+          the marketing add-on — the market read, the week, and the queue that
+          makes the week happen.
+
+          Selling by taking away something somebody was already using is how an
+          app loses the customer it already has, so the line is drawn here and
+          the sales screen says where it is. */}
+      {owns(paid, MARKETING) ? (
+        <>
+          <MarketPlan brief={{ what, who, offer, tone, market }} />
+
+          {/* The plan says Tuesday at six; this is what makes Tuesday at six
+              happen rather than being read once and forgotten. It reminds
+              rather than posts, and says so on its own face — see
+              `components/Queue.tsx`. The caption from the first advert is
+              carried in so the common case is two taps. */}
+          <Queue caption={ads[0]?.caption || ads[0]?.body || ''} />
+        </>
+      ) : (
+        <AddOn what={paid} onBought={askAgain} />
+      )}
 
       <History surface="campaign" reloadKey={kept} />
 

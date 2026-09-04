@@ -18,7 +18,9 @@ import crypto from 'node:crypto';
 import { admin, recordPurchase } from '@/app/lib/server/account';
 import { createClient } from '@supabase/supabase-js';
 import type { Tier } from '@/app/lib/plans';
-import { arrangementOf, payerOf } from '@/app/lib/server/paystack';
+import { addonOfPlan, arrangementOf, payerOf } from '@/app/lib/server/paystack';
+import { addonById } from '@/app/lib/addons';
+import { addonPayer, grantAddon, rememberAddonPayer } from '@/app/lib/server/addons';
 import { packById } from '@/app/lib/credits';
 import { topUp } from '@/app/lib/server/credits';
 import { accountFor, send } from '@/app/lib/server/email';
@@ -82,12 +84,31 @@ interface PaystackEvent {
     status?: string;
     metadata?: {
       owner?: string;
-      kind?: 'plan' | 'credits';
+      kind?: 'plan' | 'credits' | 'addon';
       trackId?: string | null;
       tier?: Tier | null;
       pack?: string | null;
+      addon?: string | null;
     };
+    /* Present when the charge belongs to a subscription, and absent — or an
+       empty array, which is Paystack's way of saying "none" — when it does
+       not. It is the only thing on a renewal that says *what* renewed. */
+    plan?: { plan_code?: string } | unknown;
   };
+}
+
+/**
+ * The plan code on a charge, where there is one.
+ *
+ * Paystack sends `plan` as an object for a subscription charge and as an empty
+ * array for everything else, so this cannot assume a shape. Reading it wrongly
+ * would not throw — it would quietly return nothing, and every add-on renewal
+ * would be treated as a membership renewal.
+ */
+function planOfCharge(plan: unknown): string {
+  if (!plan || typeof plan !== 'object' || Array.isArray(plan)) return '';
+  const code = (plan as { plan_code?: unknown }).plan_code;
+  return typeof code === 'string' ? code : '';
 }
 
 /**
@@ -212,6 +233,25 @@ export async function POST(request: Request): Promise<Response> {
     const payer = await payerOf(reference);
     if (!payer) return new Response('no owner', { status: 200 });
 
+    /* Which arrangement renewed, before assuming it was a membership.
+
+       This is the load-bearing line. A renewal carries none of our metadata,
+       and the version of this branch that existed before add-ons read that as
+       "a plan renewed" — so an R199 marketing month would have renewed
+       somebody's Studio membership instead, quietly, every month. */
+    const renewedAddon = addonOfPlan(planOfCharge(event.data.plan));
+    if (renewedAddon) {
+      const spec = addonById(renewedAddon);
+      const holder =
+        (await addonPayer(payer.customerCode)) ??
+        (await ownerOfCustomer(payer.customerCode))?.owner ??
+        null;
+      if (!holder || !spec) return new Response('no owner', { status: 200 });
+      await grantAddon(holder, renewedAddon, spec.days, reference);
+      await receipt(holder, `${renewedAddon} add-on, one month`, cents, reference, true);
+      return new Response('renewed', { status: 200 });
+    }
+
     const known = await ownerOfCustomer(payer.customerCode);
     if (!known) return new Response('no owner', { status: 200 });
 
@@ -232,6 +272,23 @@ export async function POST(request: Request): Promise<Response> {
     // up is a single month's charge and has no arrangement to remember.
     const payer = reference ? await payerOf(reference) : null;
     if (payer) await rememberArrangement(owner, meta.tier, payer.customerCode);
+    return new Response('ok', { status: 200 });
+  }
+
+  if (meta.kind === 'addon' && meta.addon) {
+    /* How long a month is, read here from our own table. The charge only says
+       which add-on was paid for; it does not get to say how long it lasts.
+       `grant_addon` refuses a reference it has already counted, so a retried
+       webhook cannot hand out two months for one payment. */
+    const spec = addonById(meta.addon);
+    if (spec) {
+      await grantAddon(owner, spec.id, spec.days, reference);
+      await receipt(owner, `${spec.id} add-on`, cents, reference, false);
+      /* And write down whose customer code this is, so the renewal a month
+         from now — which will carry none of this — has somewhere to go. */
+      const payer = reference ? await payerOf(reference) : null;
+      if (payer) await rememberAddonPayer(payer.customerCode, owner);
+    }
     return new Response('ok', { status: 200 });
   }
 

@@ -338,3 +338,22 @@ It also asserts the sentence — that the room says it does not post for you, in
 the language it is being read in, on its face rather than folded into the
 explanation. That is a failure of words, so no type check or unit test can
 find it.
+
+## The one that buys something
+
+`addon.mjs` flips `/api/addons` from "not bought" to "bought" part-way through
+a run, because the interesting assertion is not what either state looks like —
+it is that paying moves you from one to the other, and that nothing on the free
+side of the line moved.
+
+It asserts the price on the screen is the one the server sent (the stub
+deliberately answers 249, not 199, so a number typed into the markup shows up
+as a mismatch), that the sales screen says what stays free, that it does not
+promise posting this app cannot do, and that the brief above it is still
+editable while the desk below is locked.
+
+What it cannot check is the lock itself — the stub build has no Supabase, so
+`/api/plan` never reaches `hasAddon`. `check:addons` does that half against the
+source: that both gated routes ask on the server with the caller's own id, that
+reading and cancelling the queue are deliberately *not* gated, and that the
+webhook reads a renewal's plan code before assuming a membership renewed.

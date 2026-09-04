@@ -66,6 +66,13 @@ const SAID: Record<string, { en: string; af: string }> = {
     en: 'This app has no accounts set up yet.',
     af: 'Hierdie app het nog geen rekeninge opgestel nie.',
   },
+  /* A paywall, not a fault. The distinction matters on the screen: "that
+     broke" sends somebody to the help desk, "you have not bought this" sends
+     them to the thing that sells it. */
+  locked: {
+    en: 'That is part of the marketing add-on, which is not on this account yet.',
+    af: 'Dit is deel van die bemarkingsbyvoeging, wat nog nie op hierdie rekening is nie.',
+  },
   no_provider: {
     en: 'Nothing is connected that can make that.',
     af: 'Niks wat dit kan maak is gekoppel nie.',

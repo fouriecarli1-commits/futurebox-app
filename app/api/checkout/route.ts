@@ -20,8 +20,9 @@
 
 import { TIER_SPECS, type Tier } from '@/app/lib/plans';
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
-import { planCode } from '@/app/lib/server/paystack';
+import { addonPlanCode, planCode } from '@/app/lib/server/paystack';
 import { packById } from '@/app/lib/credits';
+import { addonById } from '@/app/lib/addons';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,7 +33,8 @@ const PAYSTACK = 'https://api.paystack.co/transaction/initialize';
 /** What can be bought, and what it costs. Decided here, in rand. */
 type Want =
   | { kind: 'plan'; tier: Tier }
-  | { kind: 'credits'; pack: string };
+  | { kind: 'credits'; pack: string }
+  | { kind: 'addon'; addon: string };
 
 async function priceOf(want: Want): Promise<{ cents: number; label: string } | null> {
   if (want.kind === 'credits') {
@@ -41,6 +43,13 @@ async function priceOf(want: Want): Promise<{ cents: number; label: string } | n
     const pack = packById(want.pack);
     if (!pack) return null;
     return { cents: pack.rand * 100, label: `${pack.credits} credits` };
+  }
+  if (want.kind === 'addon') {
+    /* Same rule as a credit pack: the request names which add-on, never what
+       it costs. `addons.ts` is the only place that number exists. */
+    const addon = addonById(want.addon);
+    if (!addon) return null;
+    return { cents: addon.rand * 100, label: `${addon.id} add-on, a month` };
   }
   const spec = TIER_SPECS[want.tier];
   if (!spec || spec.rand === 0) return null;
@@ -100,6 +109,12 @@ export async function POST(request: Request): Promise<Response> {
         ...(want.kind === 'plan' && planCode(want.tier)
           ? { plan: planCode(want.tier) }
           : {}),
+        // And the same for an add-on, which is a monthly arrangement too.
+        // Without a plan code it is a single month that runs out rather than
+        // renews — the add-on's own `days`, honoured by `grant_addon`.
+        ...(want.kind === 'addon' && addonPlanCode(want.addon)
+          ? { plan: addonPlanCode(want.addon) }
+          : {}),
         // Read back verbatim by the webhook. This is what ties a payment to a
         // person and a track; without it a successful charge has nowhere to go.
         metadata: {
@@ -109,6 +124,9 @@ export async function POST(request: Request): Promise<Response> {
           // The pack's name, not its size: the webhook looks the credits up
           // for itself, so a tampered checkout cannot buy a thousand for R99.
           pack: want.kind === 'credits' ? want.pack : null,
+          // Which add-on, not how long it lasts: the webhook reads the length
+          // out of our own table, so a tampered checkout cannot buy a year.
+          addon: want.kind === 'addon' ? want.addon : null,
           label: price.label,
         },
       }),

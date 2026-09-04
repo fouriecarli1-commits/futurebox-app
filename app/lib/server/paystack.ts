@@ -56,6 +56,33 @@ export function planCode(tier: Tier): string {
   return codes[tier] ?? '';
 }
 
+/**
+ * The Paystack plan behind an add-on, on the same terms as a tier's.
+ *
+ * Without a code the add-on still sells — as a single month's charge that
+ * simply runs out, which `grant_addon` handles the same way. A missing
+ * environment variable should cost a renewal, not the sale.
+ */
+export function addonPlanCode(addon: string): string {
+  const codes: Record<string, string> = {
+    marketing: process.env.PAYSTACK_PLAN_MARKETING ?? '',
+  };
+  return codes[addon] ?? '';
+}
+
+/**
+ * Which add-on a plan code belongs to.
+ *
+ * This is what stops an add-on renewal being recorded as a membership. A
+ * renewal carries no metadata of ours, and the old code read "no metadata" as
+ * "a plan renewed" — so without this, somebody's R199 marketing month would
+ * have quietly renewed their Studio membership instead.
+ */
+export function addonOfPlan(code: string): string | null {
+  if (!code) return null;
+  return addonPlanCode('marketing') === code ? 'marketing' : null;
+}
+
 /** Which tier a plan code belongs to, for reading a renewal backwards. */
 export function tierOfPlan(code: string): Tier | null {
   if (!code) return null;

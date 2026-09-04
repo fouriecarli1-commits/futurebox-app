@@ -10,6 +10,8 @@
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { tooMany } from '@/app/lib/server/brake';
 import { configured as canEmail } from '@/app/lib/server/email';
+import { hasAddon } from '@/app/lib/server/addons';
+import { MARKETING } from '@/app/lib/addons';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -71,6 +73,21 @@ export async function POST(request: Request): Promise<Response> {
   const client = admin();
   if (!client) {
     return Response.json({ error: 'not_configured', message: 'Scheduling is not set up.' }, { status: 503 });
+  }
+  /* Putting something in is behind the add-on; reading and cancelling are not.
+
+     Somebody whose month has run out must still be able to see what they
+     planned and take it out again. Locking the door from the inside — so that
+     a lapsed member cannot cancel the reminders they scheduled — would be a
+     way of using their own queue against them. */
+  if (!(await hasAddon(caller.id, MARKETING))) {
+    return Response.json(
+      {
+        error: 'locked',
+        message: 'The posting queue is part of the marketing add-on. It is not on this account yet.',
+      },
+      { status: 402 },
+    );
   }
 
   let body: Body;

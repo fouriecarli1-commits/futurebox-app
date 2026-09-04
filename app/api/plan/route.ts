@@ -38,6 +38,8 @@ import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { callerFrom, metered } from '@/app/lib/server/account';
 import { tooMany } from '@/app/lib/server/brake';
+import { hasAddon } from '@/app/lib/server/addons';
+import { MARKETING } from '@/app/lib/addons';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -240,6 +242,21 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json(
         { error: 'signed_out', message: 'Sign in first — a plan belongs to an account.' },
         { status: 401 },
+      );
+    }
+    /* The lock, on the route rather than on the screen.
+
+       The room hides what is not owned, and hiding is not a lock — this
+       endpoint is one `fetch` away from anybody who opens the console, and it
+       is the expensive one. So the question is asked here, with the caller's
+       own id, before a single token is spent. */
+    if (!(await hasAddon(caller.id, MARKETING))) {
+      return Response.json(
+        {
+          error: 'locked',
+          message: 'The marketing desk is an add-on. It is not on this account yet.',
+        },
+        { status: 402 },
       );
     }
   }

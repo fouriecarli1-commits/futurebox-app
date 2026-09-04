@@ -69,7 +69,8 @@ export async function startCheckout(
   want:
     | { kind: 'open' | 'keep'; trackId: string }
     | { kind: 'plan'; tier: string }
-    | { kind: 'credits'; pack: string },
+    | { kind: 'credits'; pack: string }
+    | { kind: 'addon'; addon: string },
 ): Promise<string | null> {
   const token = await accessToken();
   if (!token) return 'Sign in before paying.';
