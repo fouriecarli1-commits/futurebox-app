@@ -29,9 +29,7 @@
  *
  * The pages are deliberately plain: `<Section title="…">` around `<p>` and
  * `<li>`, with `<strong>` for emphasis. Tags are dropped, entities decoded,
- * list items prefixed so the shape survives, and `{CONTACT}` left as a
- * `{{contact}}` token because the real address depends on the environment.
- * Anything richer than that would need a real parser, and the check below
+ * and list items prefixed so the shape survives. Anything richer than that would need a real parser, and the check below
  * fails loudly if a page ever grows something this cannot read.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -81,7 +79,9 @@ function expressions(source: string, updated: string): string {
   return source.replace(/\{([^{}]*)\}/g, (whole, inner: string) => {
     const code = inner.trim();
     if (/^['"`]\s*['"`]$/.test(code)) return ' ';
-    if (code === 'CONTACT' || code === 'CONTACT_EMAIL') return '{{contact}}';
+    // Contact is a route now, not an address — the pages print no mailbox at
+    // all, so there is nothing left to substitute at read time.
+    if (code === 'CONTACT_PAGE') return 'the help page';
     if (code === 'UPDATED') return updated;
     if (code === 'children' || code === 'title') return whole;
     throw new Error(

@@ -35,7 +35,7 @@
  * caps it, and the cap is tight because a form that sends mail is the more
  * abusable of the two.
  */
-import { ENQUIRIES, configured, tellOwner } from '@/app/lib/server/email';
+import { configured, tellOwner } from '@/app/lib/server/email';
 import { tooMany } from '@/app/lib/server/brake';
 
 export const runtime = 'nodejs';
@@ -76,7 +76,7 @@ export async function POST(request: Request): Promise<Response> {
       {
         sent: false,
         error: 'rate_limited',
-        message: `That has been sent a few times already. Write to ${ENQUIRIES} directly.`,
+        message: 'That has been sent a few times already. Give it a little while.',
       },
       { status: 429 },
     );
@@ -116,8 +116,8 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({
       sent: false,
       error: 'not_configured',
-      message: `Mail is not switched on for this app yet. Write to ${ENQUIRIES} and it will be read.`,
-      enquiries: ENQUIRIES,
+      message:
+        'Messages cannot be sent from here yet. Nothing was lost — try again a little later.',
     });
   }
 
@@ -140,7 +140,7 @@ export async function POST(request: Request): Promise<Response> {
       {
         sent: false,
         error: 'send_failed',
-        message: `That could not be sent. Write to ${ENQUIRIES} directly.`,
+        message: 'That could not be sent. Try again in a moment.',
       },
       { status: 502 },
     );

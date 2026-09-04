@@ -63,3 +63,22 @@ the engines answer 503, which is the correct refusal and as far as this gets.
 Where a screen only appears once a service is connected, the probe is faked
 with the same JSON the route really returns — see `frame.mjs`, `voices.mjs`
 and `price.mjs` — so the component under test is still the real one.
+
+## Two that need a bundle first
+
+`photo.mjs` tests `app/lib/avatar.ts` on a real file, in a real browser,
+through a real `<input>` — so it needs that module as something a page can
+load:
+
+```
+npx esbuild app/lib/avatar.ts --bundle --format=iife --global-name=AV \
+  --outfile=/tmp/avatar.bundle.js
+node audit/photo.mjs 3000 en /tmp/avatar.bundle.js
+```
+
+Injecting the shipped module rather than reimplementing the squaring in the
+page is the whole point: a test that redraws the canvas itself proves the test
+can draw a canvas.
+
+`help.mjs` and `subscription.mjs` need nothing extra — they stub the routes
+with the JSON those routes really return and drive the real components.

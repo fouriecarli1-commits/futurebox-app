@@ -6,26 +6,16 @@
  * an email while signed out, gets the page and the address without running
  * anything. The two halves that need to talk to a route are the client part.
  *
- * The enquiries address is read here rather than in the browser. It is server
- * configuration — `MAIL_REPLY_TO`, defaulting to the studio's own mailbox —
- * and baking it into the client bundle through a NEXT_PUBLIC_ variable would
- * mean changing it required a rebuild.
+ * No address appears on it. There is one mailbox behind this app and it
+ * belongs to one person; printed on a public page it would be scraped within
+ * days, and a support inbox full of spam misses the message that mattered.
+ * The form carries the whole job instead — the message lands in that inbox
+ * with the sender's own address as reply-to.
  */
 
 import React from 'react';
 import Link from 'next/link';
 import HelpDesk from '../components/HelpDesk';
-import { ENQUIRIES } from '../lib/server/email';
-
-/* Rendered per request, not baked at build.
-
-   The whole point of reading `MAIL_REPLY_TO` on the server is that the address
-   can change without a rebuild — which is not hypothetical: it is a gmail
-   mailbox today and becomes a real support address on the studio's own domain
-   the moment that domain is settled. A prerendered page would have frozen the
-   old one into the HTML, and the page that tells people how to reach you is
-   the worst one to have out of date. A support page costs nothing to render. */
-export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Help — FutureBox',
@@ -51,7 +41,7 @@ export default function Help(): React.ReactElement {
           </p>
         </header>
 
-        <HelpDesk enquiries={ENQUIRIES} />
+        <HelpDesk />
 
         {/* Standing on their own rather than inside a sentence, so they are
             sized as things a thumb hits: 44px is the floor everywhere else in

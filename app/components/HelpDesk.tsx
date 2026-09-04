@@ -20,8 +20,20 @@
  * ── Signed out is the normal case ────────────────────────────────────────
  *
  * Neither half needs an account. The person who cannot sign in is the person
- * with a question. That is also why the address is printed in plain text at
- * the bottom: a form is the easy path, not the only one.
+ * with a question.
+ *
+ * ── No address on the page ───────────────────────────────────────────────
+ *
+ * There is one mailbox behind this app and it belongs to one person. An
+ * address printed on a public page is an address that is scraped within days,
+ * and a support inbox buried in spam is a support inbox that misses the real
+ * message. So the form is the way in, and it is a complete one: the message
+ * lands in that inbox with the sender's own address as reply-to, so answering
+ * is pressing reply.
+ *
+ * Nothing here — and nothing any route it calls says back — names a mailbox.
+ * `check:security` asserts that, because the natural way to write an error
+ * message is "or write to us at…".
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -33,7 +45,7 @@ interface Turn {
   readonly text: string;
 }
 
-export default function HelpDesk({ enquiries }: { enquiries: string }): React.ReactElement {
+export default function HelpDesk(): React.ReactElement {
   const { t, lang } = useLang();
 
   const [available, setAvailable] = useState<boolean | null>(null);
@@ -121,11 +133,11 @@ export default function HelpDesk({ enquiries }: { enquiries: string }): React.Re
         setNote('');
       } else {
         setSendTrouble(
-          said.message || t('help.sendFailed', 'That could not be sent. The address below works.'),
+          said.message || t('help.sendFailed', 'That could not be sent. Try again in a moment.'),
         );
       }
     } catch {
-      setSendTrouble(t('help.sendFailed', 'That could not be sent. The address below works.'));
+      setSendTrouble(t('help.sendFailed', 'That could not be sent. Try again in a moment.'));
     } finally {
       setSending(false);
     }
@@ -235,7 +247,7 @@ export default function HelpDesk({ enquiries }: { enquiries: string }): React.Re
             <p className="text-sm text-zinc-400 leading-relaxed">
               {t(
                 'help.writeNote',
-                'Billing, an account you cannot get into, something that went wrong, or anything the assistant did not settle. It goes straight to the person who runs FutureBox.',
+                'Billing, an account you cannot get into, something that went wrong, or anything the assistant did not settle. It goes straight to the person who runs FutureBox, and they reply to you.',
               )}
             </p>
           </div>
@@ -246,7 +258,7 @@ export default function HelpDesk({ enquiries }: { enquiries: string }): React.Re
             <Check className="w-4 h-4 flex-shrink-0 mt-0.5" />
             {t(
               'help.sent',
-              'Sent. You will get a reply at the address you gave. If it is urgent, the address below reaches the same inbox.',
+              'Sent. You will get a reply at the address you gave.',
             )}
           </p>
         ) : (
@@ -308,14 +320,10 @@ export default function HelpDesk({ enquiries }: { enquiries: string }): React.Re
         )}
 
         <p className="text-sm text-zinc-500 leading-relaxed">
-          {t('help.direct', 'Or write directly to')}{' '}
-          <a
-            href={`mailto:${enquiries}`}
-            className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300"
-          >
-            {enquiries}
-          </a>
-          .
+          {t(
+            'help.private',
+            'Nothing here is published. The message goes to one person, and your address is used to reply to you and nothing else.',
+          )}
         </p>
       </section>
     </div>

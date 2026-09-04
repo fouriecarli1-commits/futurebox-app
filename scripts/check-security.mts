@@ -150,6 +150,53 @@ for (const directive of ["default-src 'self'", "object-src 'none'", "frame-ances
 }
 if (failures === before6) pass('every security header and the three load-bearing CSP directives are declared');
 
+/* ── 7. No mailbox reaches the browser ─────────────────────────────────────
+
+   There is one inbox behind this whole app and it belongs to one person.
+   Printed on a public page it is scraped within days, and a support mailbox
+   drowning in spam misses the message that mattered — which is why contact is
+   `/help`, a form that reaches the same inbox with the sender's own address as
+   reply-to and no address rendered anywhere.
+
+   That is exactly the kind of decision that quietly un-makes itself. The
+   natural way to write an error message is "…or write to us at X", and the
+   natural way to write a support page is to put the address at the bottom
+   "just in case". Both were there and both came out; this stops them coming
+   back.
+
+   Scanned: everything the browser can reach — components, pages, and the
+   strings any route hands back. The server may of course hold the address, so
+   `lib/server/email.ts` (which sends to it) and the letters (which go *to*
+   somebody, not out on a page) are where it is allowed to live. */
+const before7 = failures;
+const MAILBOX = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i;
+/** Where an address is the point, not a leak. */
+const MAY_HOLD_IT = new Set([
+  'app/lib/server/email.ts',
+]);
+for (const file of [...walk('app/api'), ...walk('app/components'), ...walk('app/lib')]) {
+  if (MAY_HOLD_IT.has(file)) continue;
+  const raw = readFileSync(file, 'utf8');
+  // Comments explain this rule and would otherwise trip it, the same way they
+  // did in check:afrikaans.
+  const src = raw
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
+  // Example addresses in placeholders are not a leak — they are nobody's.
+  const withoutExamples = src
+    .split('voorbeeld.co.za').join('')
+    .split('example.com').join('')
+    .split('example.test').join('');
+  const found = MAILBOX.exec(withoutExamples);
+  if (found) {
+    fail('no mailbox reaches the browser', `${file} contains ${found[0]}`);
+  }
+  if (/mailto:/.test(src)) {
+    fail('no mailto: link is rendered', `${file} builds a mailto: link`);
+  }
+}
+if (failures === before7) pass('no mailbox or mailto: link reaches the browser');
+
 console.log(
   failures === 0
     ? '\ncheck:security — every claim in docs/GOING_LIVE.md §1 still holds.'

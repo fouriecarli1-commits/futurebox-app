@@ -10,7 +10,7 @@ import {
   UploadCloud, FileVideo, Music, Headphones, Lightbulb, Code2, 
   Link as LinkIcon, AlertCircle, Layers, DollarSign, Clock, 
   BookOpen, Bookmark, GraduationCap, Mic, Disc3, ExternalLink, Globe,
-  Crown, Lock, Zap, RefreshCw, Send, Mail, Check, Star,
+  Crown, Lock, Zap, RefreshCw, Send, Mail, Check, Star, Loader2,
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
   Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard} from 'lucide-react';
@@ -49,7 +49,7 @@ import PasswordField from './components/PasswordField';
 import Campaign from './components/Campaign';
 import SoundTrainer from './components/SoundTrainer';
 import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
-import { CONTACT_EMAIL, profileAddress } from './lib/brand';
+import { profileAddress } from './lib/brand';
 import Search from './components/Search';
 import {
   STAGES,
@@ -443,6 +443,8 @@ export default function FutureBoxHome() {
   const chosenRung = SPONSORSHIP[Math.max(0, budgetOptions.indexOf(budget))];
   const [contactMessage, setContactMessage] = useState('');
   const [contactSent, setContactSent] = useState(false);
+  const [contactBusy, setContactBusy] = useState(false);
+  const [contactProblem, setContactProblem] = useState<string | null>(null);
 
   // 🎧 COMPREHENSIVE MASTER GENRE & SOUNDBOARD DATA (All Genres & Subgenres)
   const masterGenreSamples: GenreSample[] = [
@@ -820,12 +822,47 @@ export default function FutureBoxHome() {
     setAuthModalOpen(true);
   };
 
-  const handleMarketingSubmit = (e: React.FormEvent) => {
+  /* The sponsorship brief, sent rather than handed to a mail client.
+     
+     This opened a `mailto:` and then said "sent" — which was not true and
+     could not be. On a phone that link often opens nothing; on a work machine
+     it opens Outlook signed in as somebody else; and either way the message
+     was still sitting unsent in a draft while the screen said it had gone. It
+     also printed the studio's address into every visitor's URL bar.
+
+     It posts to the same route the help page uses now, so a brief actually
+     arrives, with reply-to set to whoever wrote it. */
+  const handleMarketingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const mailtoUrl = `mailto:${CONTACT_EMAIL}?subject=Sponsorship & Marketing Inquiry from ${encodeURIComponent(contactName)} (${encodeURIComponent(budget)})&body=${encodeURIComponent(`Name: ${contactName}\nEmail: ${contactEmail}\nBudget: ${budget}\nWhat that includes: ${chosenRung.gets}\nMessage:\n${contactMessage}`)}`;
-    window.location.href = mailtoUrl;
-    setContactSent(true);
-    setTimeout(() => setContactSent(false), 5000);
+    if (contactBusy) return;
+    setContactBusy(true);
+    setContactProblem(null);
+    try {
+      const response = await fetch('/api/enquiry', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          email: contactEmail,
+          name: contactName,
+          where: 'sponsorship',
+          message: `Budget: ${budget}\nWhat that includes: ${chosenRung.gets}\n\n${contactMessage}`,
+        }),
+      });
+      const said = (await response.json().catch(() => ({}))) as {
+        sent?: boolean;
+        message?: string;
+      };
+      if (said.sent) {
+        setContactSent(true);
+        setContactMessage('');
+      } else {
+        setContactProblem(said.message || t('spon.failed', 'That could not be sent. Try again in a moment.'));
+      }
+    } catch {
+      setContactProblem(t('spon.failed', 'That could not be sent. Try again in a moment.'));
+    } finally {
+      setContactBusy(false);
+    }
   };
 
 
@@ -2561,15 +2598,20 @@ export default function FutureBoxHome() {
               {contactSent && (
                 <div className="p-3 bg-emerald-950/60 border border-emerald-500 text-emerald-300 text-xs rounded-xl flex items-center space-x-2">
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Your email client is opening now to dispatch this sponsorship brief directly!</span>
+                  <span>{t('spon.sent', 'Sent. You will get a reply at the address you gave.')}</span>
                 </div>
+              )}
+
+              {contactProblem && (
+                <p className="text-xs text-amber-400 leading-snug">{contactProblem}</p>
               )}
 
               <button
                 type="submit"
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center space-x-2"
+                disabled={contactBusy}
+                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center space-x-2 disabled:opacity-50"
               >
-                <Send className="w-3.5 h-3.5" />
+                {contactBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                 <span>{t('spon.send')}</span>
               </button>
             </form>

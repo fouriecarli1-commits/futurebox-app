@@ -1367,9 +1367,23 @@ export const STRINGS: Dict = {
   "help.send": { en: "Send it", af: "Stuur dit" },
   "help.sent": { en: "Sent. You will get a reply at the address you gave. If it is urgent, the address below reaches the same inbox.", af: "Gestuur. Jy sal \u2019n antwoord kry by die adres wat jy gegee het. As dit dringend is, bereik die adres hieronder dieselfde inboks." },
   "help.sendFailed": { en: "That could not be sent. The address below works.", af: "Dit kon nie gestuur word nie. Die adres hieronder werk." },
-  "help.direct": { en: "Or write directly to", af: "Of skryf direk aan" },
   "chan.helpBefore": { en: "A question about any of this?", af: "'n Vraag oor enige hiervan?" },
   "chan.helpLink": { en: "Ask, or write to a person", af: "Vra, of skryf aan 'n mens" },
+  "help.private": { en: "Nothing here is published. The message goes to one person, and your address is used to reply to you and nothing else.", af: "Niks hier word gepubliseer nie. Die boodskap gaan na een mens toe, en jou adres word net gebruik om jou te antwoord, niks anders nie." },
+  "spon.sent": { en: "Sent. You will get a reply at the address you gave.", af: "Gestuur. Jy sal 'n antwoord kry by die adres wat jy gegee het." },
+  "spon.failed": { en: "That could not be sent. Try again in a moment.", af: "Dit kon nie gestuur word nie. Probeer oor 'n oomblik weer." },
+
+  /* The picture on a channel. */
+  "photo.alt": { en: "Your profile picture", af: "Jou profielfoto" },
+  "photo.add": { en: "Add a picture", af: "Sit 'n foto op" },
+  "photo.change": { en: "Change picture", af: "Verander die foto" },
+  "photo.remove": { en: "Take it down", af: "Haal dit af" },
+  "photo.note": { en: "Anybody looking at your channel can see it, signed in or not. It is squared and shrunk here in your browser before it goes, which also strips where the photo was taken.", af: "Enigiemand wat na jou kanaal kyk kan dit sien, ingeteken of nie. Dit word hier in jou blaaier vierkantig gesny en kleiner gemaak voor dit gaan, wat ook uithaal waar die foto geneem is." },
+  "photo.tooBig": { en: "That picture is very large. Try one under 12MB.", af: "Daardie foto is baie groot. Probeer een onder 12MB." },
+  "photo.notImage": { en: "That is not a picture.", af: "Dit is nie 'n foto nie." },
+  "photo.unreadable": { en: "That picture could not be read. A JPEG or a PNG will work.", af: "Daardie foto kon nie gelees word nie. 'n JPEG of 'n PNG sal werk." },
+  "photo.signedOut": { en: "Sign in first, so it is saved to your account.", af: "Teken eers in, sodat dit by jou rekening gestoor word." },
+  "photo.failed": { en: "That did not upload. Try again in a moment.", af: "Dit het nie opgelaai nie. Probeer oor 'n oomblik weer." },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';

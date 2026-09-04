@@ -118,6 +118,17 @@ export interface Creator {
   handle: string;
   about: string;
   links: Record<string, string>;
+  /**
+   * Where the profile picture sits in the `avatars` bucket, or empty.
+   *
+   * The stored path rather than a URL: the bucket is public, so the URL is a
+   * pure function of the path (`avatar.publicUrl`), and keeping the path means
+   * the row survives the project moving to a different Supabase URL.
+   *
+   * Snake case because it is the column name and this object is upserted as a
+   * row — every other field here is the same.
+   */
+  avatar_path?: string | null;
 }
 
 export async function fetchCreator(): Promise<Creator | null> {

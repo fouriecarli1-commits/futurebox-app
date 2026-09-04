@@ -34,7 +34,7 @@ await p.route('**/api/help', async (route) => {
 await p.goto(`http://localhost:${PORT}/help`, { waitUntil: 'networkidle' });
 const text = await p.locator('body').innerText();
 
-check('the enquiries address is printed', /futureboxapp@gmail\.com/.test(text));
+check('no mailbox is printed anywhere on it', !/@[a-z0-9.-]+\.[a-z]{2,}/i.test(text) && !/mailto:/.test(await p.content()), (text.match(/\S*@\S*/) || [])[0] || 'mailto:');
 check('the assistant half is there', af ? /Vra oor enigiets/.test(text) : /Ask about anything/.test(text), text.slice(0, 200));
 check('the person half is there', af ? /skryf aan .n mens/i.test(text) : /write to a person/i.test(text));
 check('the policy pages are linked', (await p.locator('a[href="/terms"]').count()) > 0 && (await p.locator('a[href="/privacy"]').count()) > 0);

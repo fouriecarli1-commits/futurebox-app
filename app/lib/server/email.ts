@@ -54,6 +54,19 @@ const FROM = () => process.env.MAIL_FROM ?? '';
 /** Whose inbox gets told when something needs a person. */
 export const OWNER = () => process.env.OWNER_EMAIL || ENQUIRIES;
 
+/**
+ * Where the app lives, for the one link every letter carries.
+ *
+ * `NEXT_PUBLIC_SITE_HOST` is the same value the rest of the app builds its
+ * public URLs from. The fallback is a relative-looking string rather than a
+ * guess at a domain: a letter that names the wrong host is worse than one
+ * that names none, and this is only reached when nothing is configured.
+ */
+const SITE = () =>
+  process.env.NEXT_PUBLIC_SITE_HOST
+    ? `https://${process.env.NEXT_PUBLIC_SITE_HOST}`
+    : 'the app';
+
 export function configured(): boolean {
   return Boolean(KEY() && FROM());
 }
@@ -100,11 +113,17 @@ export interface Letter {
  * not worth the deliverability.
  */
 function wrap(body: string): string {
+  /* No address in the footer.
+
+     Every letter goes out with `reply_to` set, so pressing reply reaches the
+     right inbox without the address being written anywhere it could be
+     scraped, forwarded or screenshotted. The help page is named instead,
+     because somebody who deleted the letter still needs a way back. */
   return `${body.trim()}
 
 —
 FutureBox
-Questions, or want a human: ${ENQUIRIES}
+Reply to this message, or ask at ${SITE()}/help
 `;
 }
 

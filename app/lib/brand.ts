@@ -25,7 +25,16 @@
 export const SITE_HOST = process.env.NEXT_PUBLIC_SITE_HOST || 'futurebox-app.vercel.app';
 
 /** Where somebody writes when something needs a person. */
-export const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || `admin@${SITE_HOST}`;
+/* There is deliberately no exported contact address.
+ 
+   There was one, and it was rendered on /terms, /privacy and into a `mailto:`
+   on the sponsorship form — three public places, on a NEXT_PUBLIC_ variable,
+   which means it also sat in the client bundle for anybody who opened dev
+   tools. One mailbox behind the whole app is one mailbox to lose to scrapers.
+ 
+   Contact is `/help` now: a form that reaches the same inbox with the sender's
+   own address as reply-to. `check:security` fails the build if an address
+   finds its way back into anything the browser can see. */
 
 /** The full origin, for links rather than for printing. */
 export const SITE_URL = `https://${SITE_HOST}`;

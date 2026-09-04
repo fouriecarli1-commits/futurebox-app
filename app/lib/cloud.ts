@@ -44,6 +44,21 @@ function getClient(): SupabaseClient | null {
   return client;
 }
 
+/**
+ * The storage half of the same client, for callers outside this file.
+ *
+ * `getClient` stays private because everything else here is a considered
+ * operation — push a track, pull the audio, delete an account — and handing
+ * the raw client out invites a query written somewhere the policies were not
+ * thought about. Storage is the exception: a bucket's policies are the whole
+ * of its access control, so `app/lib/avatar.ts` uploading with the person's
+ * own session is exactly as safe as this file doing it, and one shared client
+ * means one session rather than two that can disagree about who is signed in.
+ */
+export function getStorageClient(): SupabaseClient['storage'] | null {
+  return getClient()?.storage ?? null;
+}
+
 export interface Account {
   readonly id: string;
   readonly email: string;

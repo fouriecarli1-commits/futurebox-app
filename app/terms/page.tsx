@@ -18,7 +18,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { CONTACT_EMAIL } from '../lib/brand';
+
 
 export const metadata = {
   title: 'Terms — FutureBox',
@@ -26,7 +26,15 @@ export const metadata = {
 };
 
 const UPDATED = '31 August 2026';
-const CONTACT = CONTACT_EMAIL;
+
+/* Contact is a page, not an address.
+
+   An address printed on a public page is an address that is scraped, and the
+   one mailbox behind this app is the one that must not drown. /help puts the
+   same message in the same inbox — with a reply-to that works — without the
+   address ever being rendered anywhere a crawler can read it. That is also
+   why there is no `mailto:` left in this file. */
+const CONTACT_PAGE = '/help';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -92,11 +100,11 @@ export default function Terms(): React.ReactElement {
         <Section title="If somebody has used your voice, your face or your name">
           <p>You do not need an account here, and you do not need a lawyer, to have something taken down.</p>
           <p>
-            Write to{' '}
-            <a href={`mailto:${CONTACT}`} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">{CONTACT}</a>{' '}
+            Tell us on the{' '}
+            <Link href={CONTACT_PAGE} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">help page</Link>,{' '}
             with a link to what you have found and enough to show it is you. Anything that is a voice clone, a likeness or a recording of somebody who did not agree to it is taken down while it is looked at, rather than after. If it turns out to have been made from a cloned voice, that voice is deleted from the voice service as well as from here, and the account that made it is dealt with under the rules above.
           </p>
-          <p>The same address takes a copyright complaint, from a rights holder or from somebody acting for one.</p>
+          <p>The same page takes a copyright complaint, from a rights holder or from somebody acting for one.</p>
         </Section>
 
         <Section title="Who may use this">
@@ -143,11 +151,10 @@ export default function Terms(): React.ReactElement {
           <p>South African law applies, and the courts of South Africa have jurisdiction.</p>
           <p>This document is written in English, and the English version is the one that governs. Parts of the app are shown in Afrikaans; where a translation and this document disagree, this document is what was agreed to.</p>
           <p>
-            Write to{' '}
-            <a href={`mailto:${CONTACT}`} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
-              {CONTACT}
-            </a>{' '}
-            about anything in this document. See also the{' '}
+            Ask about anything in this document on the{' '}
+            <Link href={CONTACT_PAGE} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
+              help page
+            </Link>. See also the{' '}
             <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
               privacy policy
             </Link>

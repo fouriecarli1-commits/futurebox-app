@@ -15,7 +15,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { CONTACT_EMAIL } from '../lib/brand';
 
 export const metadata = {
   title: 'Privacy — FutureBox',
@@ -24,7 +23,9 @@ export const metadata = {
 
 /** Kept beside the text so the date and the text cannot drift apart. */
 const UPDATED = '31 August 2026';
-const CONTACT = CONTACT_EMAIL;
+
+/* Same as the terms: contact is a page, not an address. See the note there. */
+const CONTACT_PAGE = '/help';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -92,11 +93,11 @@ export default function Privacy(): React.ReactElement {
             One thing does not go with it. A record of a refused prompt stays, with the account detached from it — the rule, the time and a hashed address, and no name, no email and no account. A platform that forgets every refusal the moment somebody signs up again has no memory at all. Everything that identifies you is gone.
           </p>
           <p>
-            If you would rather it were done for you, write to{' '}
-            <a href={`mailto:${CONTACT}?subject=Delete%20my%20account`} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
-              {CONTACT}
-            </a>{' '}
-            from the address you signed up with.
+            If you would rather it were done for you, ask on the{' '}
+            <Link href={CONTACT_PAGE} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
+              help page
+            </Link>{' '}
+            from the address you signed up with, so it can be matched to your account.
           </p>
         </Section>
 

@@ -28,6 +28,23 @@ function cleanLinks(input: unknown): Record<string, string> {
   return out;
 }
 
+/**
+ * A path in the avatars bucket, or null.
+ *
+ * Checked against the caller's own id rather than merely sanitised. The
+ * storage policies already stop somebody writing into another person's folder,
+ * but nothing stops them *pointing their row* at a path they do not own — and
+ * a profile that displays a file somebody else uploaded is somebody else's
+ * face on a stranger's channel. The row is the claim, so the row is where the
+ * claim is checked.
+ */
+function cleanAvatar(value: unknown, owner: string): string | null {
+  if (typeof value !== 'string' || !value) return null;
+  if (value.length > 200) return null;
+  // <owner>/<digits>.webp, and nothing else — no traversal, no other folder.
+  return new RegExp(`^${owner}/\\d+\\.webp$`).test(value) ? value : null;
+}
+
 /** Lower case, letters, digits, dots and underscores. It is shown as @handle. */
 function cleanHandle(value: string, fallback: string): string {
   const made = value.toLowerCase().replace(/[^a-z0-9._]/g, '').slice(0, 24);
@@ -61,12 +78,33 @@ export async function POST(request: Request): Promise<Response> {
   const client = admin();
   if (!client) return Response.json({ message: 'Storage is not configured.' }, { status: 503 });
 
+  /* A save that does not mention the picture must not remove it.
+
+     `upsert` writes the whole row, so an absent field becomes null. Two
+     different screens save this row — the collab profile form, which knows
+     nothing about a photo, and the channel, which is where the photo is set —
+     and without this the first would silently delete what the second did. The
+     key being absent and the key being explicitly null are different things
+     and are treated differently. */
+  let avatar: string | null = null;
+  if ('avatar_path' in body) {
+    avatar = cleanAvatar(body.avatar_path, caller.id);
+  } else {
+    const { data: existing } = await client
+      .from('creators')
+      .select('avatar_path')
+      .eq('owner', caller.id)
+      .maybeSingle();
+    avatar = (existing?.avatar_path as string | null) ?? null;
+  }
+
   const row = {
     owner: caller.id,
     name: String(body.name ?? '').trim().slice(0, 80),
     handle: cleanHandle(String(body.handle ?? ''), caller.id.slice(0, 8)),
     about: String(body.about ?? '').trim().slice(0, 500),
     links: cleanLinks(body.links),
+    avatar_path: avatar,
     updated_at: new Date().toISOString(),
   };
 

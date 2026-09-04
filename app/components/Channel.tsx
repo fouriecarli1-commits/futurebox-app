@@ -32,6 +32,9 @@ import { fetchCreator, type Creator } from '../lib/radar';
 import Cover from './Cover';
 import DeleteAccount from './DeleteAccount';
 import Subscription from './Subscription';
+import ProfilePhoto from './ProfilePhoto';
+import { publicUrl as avatarUrl } from '../lib/avatar';
+import { saveCreator } from '../lib/radar';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
@@ -157,14 +160,46 @@ export default function Channel({
     : [];
 
   const handle = creator?.handle ? `@${creator.handle}` : '';
+  const photo = creator?.avatar_path ? avatarUrl(creator.avatar_path) : '';
+
+  /* Save the picture against the profile, and hold what was saved.
+
+     The row is written here rather than in `ProfilePhoto` so that a photo and
+     a name are one kind of thing to this screen: `saveCreator` is the only
+     writer, and the component that picked the file does not need to know the
+     row exists. The local state is updated first because the round trip is
+     over a mobile connection and the picture is already on screen. */
+  const keepPhoto = useCallback(
+    async (next: string | null) => {
+      const was = creator ?? { name: '', handle: '', about: '', links: {} };
+      const updated = { ...was, avatar_path: next };
+      setCreator(updated);
+      const failed = await saveCreator(updated);
+      // Put it back the way it was rather than leaving the screen claiming
+      // something the row does not say.
+      if (failed) setCreator(creator);
+    },
+    [creator],
+  );
 
   return (
     <div className="space-y-5">
       {/* ── Who this is ──────────────────────────────────────────────────── */}
       <div className="rounded-3xl border border-zinc-800 bg-gradient-to-br from-emerald-500/10 via-zinc-900/70 to-zinc-950 p-5 md:p-7">
         <div className="flex items-center gap-4 flex-wrap">
+          {/* Their own face if they put one there, and the generated cover
+              if not — never a grey silhouette, which reads as broken. */}
           <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 border border-zinc-800">
-            <Cover seed={handle || 'futurebox'} label={creator?.name ?? 'Channel'} className="w-full h-full" />
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={photo}
+                alt={creator?.name ? `${creator.name}` : t('photo.alt', 'Your profile picture')}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Cover seed={handle || 'futurebox'} label={creator?.name ?? 'Channel'} className="w-full h-full" />
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-2xl font-black text-white leading-tight truncate">
@@ -192,6 +227,20 @@ export default function Channel({
           </button>
         </div>
       </div>
+
+      {/* ── The picture ──────────────────────────────────────────────────
+          Only with an account behind it: a photo kept on one device is not a
+          profile picture, it is a file, and offering it would be a promise
+          this app could not keep. */}
+      {email && (
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
+          <ProfilePhoto
+            name={creator?.name || handle || t('chan.yours', 'Your channel')}
+            path={creator?.avatar_path ?? null}
+            onChanged={keepPhoto}
+          />
+        </div>
+      )}
 
       {/* ── Playlists ────────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">

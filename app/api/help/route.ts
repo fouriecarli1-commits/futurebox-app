@@ -51,7 +51,6 @@ import { PACKS } from '@/app/lib/credits';
 import { TIERS, TIER_SPECS } from '@/app/lib/plans';
 import { surfaceDirectory } from '@/app/lib/surfaces';
 import { HANDBOOK } from '@/app/lib/server/handbook.generated';
-import { ENQUIRIES } from '@/app/lib/server/email';
 import { tooMany } from '@/app/lib/server/brake';
 
 export const runtime = 'nodejs';
@@ -97,7 +96,9 @@ songs, podcasts and videos with AI. You are its help desk.
 Answer only from the material below. It is the app's own terms, privacy policy,
 room list, prices and credit costs, generated from the code that enforces them,
 so it is correct by construction. If the answer is not in it, say so plainly and
-give the address ${ENQUIRIES}. Never guess at a policy, a price, a refund or
+say so and point them at the form lower down that same page, which reaches a
+person. Never give out an email address — there is not one to give, and the
+form is the way. Never guess at a policy, a price, a refund or
 what happens to somebody's data. A confident wrong answer about money or
 ownership is the one thing you must not produce.
 
@@ -132,14 +133,14 @@ ${costs()}
 - The terms are at /terms and the privacy policy is at /privacy.
 
 ── The terms and the privacy policy, in full ─────────────
-${HANDBOOK.split('{{contact}}').join(ENQUIRIES)}`;
+${HANDBOOK}`;
 
 export async function POST(request: Request): Promise<Response> {
   if (tooMany('help', request, LIMITS)) {
     return Response.json(
       {
         error: 'rate_limited',
-        message: `That is a lot of questions at once. Try again shortly, or write to ${ENQUIRIES}.`,
+        message: 'That is a lot of questions at once. Try again shortly, or use the form below.',
       },
       { status: 429 },
     );
@@ -149,7 +150,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json(
       {
         error: 'no_key',
-        message: `The help assistant is switched off for this app. Write to ${ENQUIRIES}.`,
+        message: 'The help assistant is switched off for this app. The form below still reaches a person.',
       },
       { status: 503 },
     );
@@ -185,7 +186,7 @@ export async function POST(request: Request): Promise<Response> {
 
     if (response.stop_reason === 'refusal') {
       return Response.json({
-        reply: `I cannot answer that one. Write to ${ENQUIRIES} and a person will.`,
+        reply: 'I cannot answer that one. Use the form below and a person will.',
       });
     }
 
@@ -197,7 +198,7 @@ export async function POST(request: Request): Promise<Response> {
 
     if (!reply) {
       return Response.json(
-        { error: 'empty_reply', message: `Nothing came back. Write to ${ENQUIRIES}.` },
+        { error: 'empty_reply', message: 'Nothing came back. The form below still works.' },
         { status: 502 },
       );
     }
@@ -212,12 +213,12 @@ export async function POST(request: Request): Promise<Response> {
     }
     if (error instanceof Anthropic.APIError) {
       return Response.json(
-        { error: 'api_error', message: `The help assistant could not be reached. Write to ${ENQUIRIES}.` },
+        { error: 'api_error', message: 'The help assistant could not be reached. The form below still works.' },
         { status: 502 },
       );
     }
     return Response.json(
-      { error: 'unknown', message: `The help assistant could not be reached. Write to ${ENQUIRIES}.` },
+      { error: 'unknown', message: 'The help assistant could not be reached. The form below still works.' },
       { status: 502 },
     );
   }
@@ -225,8 +226,5 @@ export async function POST(request: Request): Promise<Response> {
 
 /** So the panel can say whether the assistant is on before somebody types. */
 export async function GET(): Promise<Response> {
-  return Response.json({
-    available: Boolean(process.env.ANTHROPIC_API_KEY),
-    enquiries: ENQUIRIES,
-  });
+  return Response.json({ available: Boolean(process.env.ANTHROPIC_API_KEY) });
 }

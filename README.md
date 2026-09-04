@@ -77,6 +77,8 @@ to run again, so if you are not sure whether one has been run, run it.
 | [`supabase/usage.sql`](supabase/usage.sql) | Memberships, purchases, and the counting the free tier rests on. |
 | [`supabase/subscriptions.sql`](supabase/subscriptions.sql) | The Paystack handles behind a membership, so a renewal can be recognised and a cancellation can be sent. |
 | [`supabase/finetunes.sql`](supabase/finetunes.sql) | A sound of your own, trained on your own songs. |
+| [`supabase/mail.sql`](supabase/mail.sql) | The log behind the welcome, the receipts and the cancellation, and the unique key that stops a letter going twice. |
+| [`supabase/avatars.sql`](supabase/avatars.sql) | A picture on a channel: the column and the public bucket it lives in. Needs `radar.sql` first, which makes the table it adds to. |
 
 The others — `podcast.sql`, `arena.sql`, `radar.sql`, `events.sql`,
 `abuse.sql`, `collab.sql`, `presence.sql` — turn on the features they are named
