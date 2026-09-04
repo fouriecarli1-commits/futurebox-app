@@ -1419,6 +1419,46 @@ export const STRINGS: Dict = {
 
 const STORAGE_KEY = 'futurebox.lang.v1';
 
+/**
+ * The choice, kept where a server months from now can read it.
+ *
+ * ── Why this is here at all ──────────────────────────────────────────────
+ *
+ * A receipt for a renewal is sent with nobody present: no browser, no request
+ * from the member, months after they last opened the app. The webhook knows
+ * one thing about them — the uuid Paystack carries — so a language chosen in
+ * this file and stored in this browser was unreachable, and every renewal
+ * receipt went out in English regardless of who it was for.
+ *
+ * It goes on the auth user's metadata rather than a table: there is no
+ * per-account settings table in this app, and `lib/server/email.ts` was
+ * already fetching that user to find the address, so the language comes back
+ * in the same call rather than a second round trip inside a payment webhook.
+ *
+ * ── Why the import is dynamic ────────────────────────────────────────────
+ *
+ * `cloud.ts` pulls in the Supabase client. A language switcher is on the
+ * landing page, so a static import would put that whole library in front of
+ * anybody who has never signed in. Loaded when somebody actually switches,
+ * which is once.
+ *
+ * ── Why nothing waits for it ─────────────────────────────────────────────
+ *
+ * Nothing on screen depends on it and the page has already changed language.
+ * A failure — offline, signed out, Supabase not configured — costs a receipt
+ * its language and must never cost somebody the language change they asked
+ * for.
+ */
+async function keepOnAccount(next: Lang): Promise<void> {
+  try {
+    const cloud = await import('./cloud');
+    if (!cloud.configured()) return;
+    await cloud.rememberLanguage(next);
+  } catch {
+    // The browser's own copy is still correct, which is what this page reads.
+  }
+}
+
 interface LangContext {
   lang: Lang;
   setLang: (next: Lang) => void;
@@ -1449,6 +1489,35 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Storage blocked. English it is.
     }
+
+    /* And then the account, if it has an answer this device does not.
+
+       Somebody who chose Afrikaans on their phone and then opens a laptop has
+       already told us once, and being asked again is the app forgetting. Only
+       when nothing is stored here — a choice made in this browser is a choice
+       about this browser and is never overruled — and only if they have not
+       chosen in the moment it took to ask. */
+    let stillUnasked = true;
+    void (async () => {
+      try {
+        if (window.localStorage.getItem(STORAGE_KEY)) return;
+        const cloud = await import('./cloud');
+        if (!cloud.configured()) return;
+        // Asked of the server, not of the session in this browser — see
+        // `accountLanguage`. The cached copy is the one thing that cannot
+        // answer this, because a new device's session predates the choice.
+        const said = await cloud.accountLanguage();
+        if (!stillUnasked || !said) return;
+        if (window.localStorage.getItem(STORAGE_KEY)) return;
+        setLangState(said);
+        document.documentElement.lang = said;
+      } catch {
+        // Whatever this device worked out on its own stands.
+      }
+    })();
+    return () => {
+      stillUnasked = false;
+    };
   }, []);
 
   const setLang = useCallback((next: Lang) => {
@@ -1459,6 +1528,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // As above.
     }
+    void keepOnAccount(next);
   }, []);
 
   const t = useCallback(

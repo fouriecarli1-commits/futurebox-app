@@ -13,7 +13,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
-import { send } from '@/app/lib/server/email';
+import { accountFor, send } from '@/app/lib/server/email';
 import { cancelledLetter } from '@/app/lib/server/letters';
 import { stopRenewing } from '@/app/lib/server/paystack';
 import { TIER_SPECS, type Tier } from '@/app/lib/plans';
@@ -92,13 +92,21 @@ export async function DELETE(request: Request): Promise<Response> {
      cannot send it twice. The person's own language is known here — unlike a
      renewal, they are standing in front of the app — so it is asked for and
      used. */
+  /* The language they are reading in, and the one on the account behind it.
+
+     Both, in that order. Somebody standing in front of the app has just told
+     us with the page they are looking at, which beats a preference set months
+     ago; but a request without the parameter — an older tab, a client that
+     drops query strings — should not silently become English when the account
+     says otherwise. */
   const asked = new URL(request.url).searchParams.get('lang');
+  const lang =
+    asked === 'af' || asked === 'en'
+      ? asked
+      : ((await accountFor(caller.id))?.lang ?? 'en');
   await send({
     to: caller.email,
-    ...cancelledLetter(
-      row.next_payment_at ? new Date(row.next_payment_at) : null,
-      asked === 'af' ? 'af' : 'en',
-    ),
+    ...cancelledLetter(row.next_payment_at ? new Date(row.next_payment_at) : null, lang),
     kind: 'cancelled',
     once: `cancelled:${row.subscription_code}`,
   });

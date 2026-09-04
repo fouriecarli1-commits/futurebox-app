@@ -45,6 +45,67 @@ function getClient(): SupabaseClient | null {
 }
 
 /**
+ * The language on the account, asked of the server rather than the session.
+ *
+ * ── Why not `currentAccount()` ───────────────────────────────────────────
+ *
+ * That reads `getSession()`, which is the token in this browser's storage and
+ * carries the copy of `user_metadata` that was current when the session was
+ * issued. On the device that made the change that is fine — the library
+ * refreshes it in place. On a different device it is exactly wrong: the
+ * session may predate the choice, so the one case this exists for is the one
+ * case the cached copy cannot answer.
+ *
+ * `getUser()` asks the server. That is a network call, which is why it is a
+ * separate function rather than a field on `currentAccount` — this is called
+ * once, on a browser with nothing stored, and never on a hot path.
+ *
+ * Null means "no answer", not "English": a person who has never chosen and a
+ * person whose account could not be reached are different, and only one of
+ * them should stop this browser following its own guess.
+ */
+export async function accountLanguage(): Promise<'en' | 'af' | null> {
+  const supabase = getClient();
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) return null;
+    const said = (data.user?.user_metadata as { lang?: unknown } | undefined)?.lang;
+    return said === 'af' || said === 'en' ? said : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Remember which language somebody reads, against their account.
+ *
+ * ── Why the account and not just this browser ────────────────────────────
+ *
+ * `lib/i18n.tsx` keeps the choice in localStorage, which is right for the page
+ * in front of them and useless to a server. A renewal receipt is sent months
+ * later with no browser present at all — the payment webhook has a uuid and
+ * nothing else — so every one of them went out in English whoever it was for.
+ *
+ * `user_metadata` is where a uuid can reach. It is not a table because there
+ * is no per-account settings table here and one string does not earn a
+ * migration, a policy and a second thing to keep in step; and because
+ * `lib/server/email.ts` already fetches this user to find the address, so the
+ * language rides along in a call the receipt path was making anyway.
+ *
+ * Quietly false when nobody is signed in. Somebody reading the landing page in
+ * Afrikaans has no account to write to and has not done anything wrong.
+ */
+export async function rememberLanguage(lang: 'en' | 'af'): Promise<boolean> {
+  const supabase = getClient();
+  if (!supabase) return false;
+  const account = await currentAccount();
+  if (!account) return false;
+  const { error } = await supabase.auth.updateUser({ data: { lang } });
+  return !error;
+}
+
+/**
  * The storage half of the same client, for callers outside this file.
  *
  * `getClient` stays private because everything else here is a considered
@@ -64,12 +125,32 @@ export interface Account {
   readonly email: string;
   readonly name: string;
   readonly handle: string;
+  /**
+   * Which language they read, when they have ever said.
+   *
+   * Undefined means nothing was ever chosen, which is different from English:
+   * one is a person who has not been asked and the other is a person who
+   * answered. `i18n.tsx` follows this only on a device with nothing stored, so
+   * that difference decides whether a laptop opens in Afrikaans.
+   */
+  readonly lang?: 'en' | 'af';
 }
 
-function toAccount(user: { id: string; email?: string | null }): Account {
+function toAccount(user: {
+  id: string;
+  email?: string | null;
+  user_metadata?: { lang?: unknown } | null;
+}): Account {
   const email = user.email ?? '';
   const name = email.split('@')[0] || 'creator';
-  return { id: user.id, email, name, handle: `@${name}` };
+  const said = user.user_metadata?.lang;
+  return {
+    id: user.id,
+    email,
+    name,
+    handle: `@${name}`,
+    ...(said === 'af' || said === 'en' ? { lang: said } : {}),
+  };
 }
 
 /** The signed-in account, or null. Null also when Supabase is not configured. */

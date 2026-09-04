@@ -31,7 +31,7 @@
  */
 
 import { callerFrom, metered } from '@/app/lib/server/account';
-import { send } from '@/app/lib/server/email';
+import { accountFor, send } from '@/app/lib/server/email';
 import { welcomeLetter } from '@/app/lib/server/letters';
 
 export const runtime = 'nodejs';
@@ -42,8 +42,17 @@ export async function POST(request: Request): Promise<Response> {
   const caller = await callerFrom(request);
   if (!caller) return Response.json({ sent: false });
 
+  /* What they are reading now, then what the account remembers.
+
+     A welcome is sent on the first signed-in load, so the parameter is nearly
+     always there and is the better answer — it is the language of the page
+     they are on. The account is the fallback for the case where it is not. */
   const asked = new URL(request.url).searchParams.get('lang');
-  const letter = welcomeLetter(asked === 'af' ? 'af' : 'en');
+  const lang =
+    asked === 'af' || asked === 'en'
+      ? asked
+      : ((await accountFor(caller.id))?.lang ?? 'en');
+  const letter = welcomeLetter(lang);
 
   const said = await send({
     to: caller.email,

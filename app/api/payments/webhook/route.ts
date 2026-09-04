@@ -21,7 +21,7 @@ import type { Tier } from '@/app/lib/plans';
 import { arrangementOf, payerOf } from '@/app/lib/server/paystack';
 import { packById } from '@/app/lib/credits';
 import { topUp } from '@/app/lib/server/credits';
-import { emailOf, send } from '@/app/lib/server/email';
+import { accountFor, send } from '@/app/lib/server/email';
 import { receiptLetter } from '@/app/lib/server/letters';
 
 export const runtime = 'nodejs';
@@ -52,21 +52,21 @@ async function receipt(
   reference: string,
   renewal: boolean,
 ): Promise<void> {
-  const to = await emailOf(owner);
-  if (!to) return;
-  /* English, and this is a real limitation rather than an oversight.
+  /* The address and the language, in one lookup.
 
-     A person chooses a language in the browser; the server never hears about
-     it, and a renewal months later has no browser present at all. Guessing
-     from an address or a name would be worse than a language somebody can
-     read. Worth fixing by storing the choice against the account — noted in
-     docs/GOING_LIVE.md rather than pretended away here. */
+     A renewal arrives months later with nobody present — no browser, no
+     request from the member — so the language cannot come from where it comes
+     from everywhere else in this app. It is kept on the auth user and read
+     back here; see `accountFor`. English when nothing was ever chosen, which
+     is what the rest of the app defaults to as well. */
+  const who = await accountFor(owner);
+  if (!who) return;
   const letter = receiptLetter(
     { what, cents, reference, when: new Date(), renewal },
-    'en',
+    who.lang,
   );
   await send({
-    to,
+    to: who.email,
     subject: letter.subject,
     text: letter.text,
     kind: 'receipt',

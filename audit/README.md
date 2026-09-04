@@ -106,3 +106,10 @@ The run answers `/auth/v1/**`, `/rest/v1/**` and `/storage/v1/object/**`
 itself, so the library, the component and `lib/imagefile.ts` are all real —
 only the service behind them is not. It is what lets the run check the half
 that matters: that a member added on one load is still there after a reload.
+
+`language.mjs` uses the same stub, and needs it for a different reason: it
+opens two fresh browser contexts against one stubbed auth service, because
+the thing under test is a choice made on one device showing up on another.
+The second context's session is seeded with *empty* metadata on purpose —
+that is what a session issued before the choice looks like, and it is why the
+language has to be asked of the server rather than read out of the token.

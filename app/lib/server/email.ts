@@ -219,22 +219,49 @@ export async function tellOwner(
 }
 
 /**
- * The email address on an account, looked up by its id.
+ * Where to write, and which language to write in.
  *
  * The payment webhook knows an owner's uuid and nothing else — Paystack tells
- * us who paid in *their* terms, and the metadata carries our uuid. The address
- * lives in Supabase's auth schema, which only the service key can read.
+ * us who paid in *their* terms, and the metadata carries our uuid. Both the
+ * address and the preference live in Supabase's auth schema, which only the
+ * service key can read.
  *
  * Null rather than a throw when it cannot be found: a receipt with nowhere to
  * go is a thing to record, not a reason to fail a payment.
+ *
+ * ── Why the language lives on the auth user ──────────────────────────────
+ *
+ * A receipt for a renewal is sent months later with nobody present: no
+ * browser, no request from the member, nothing to read a preference off. The
+ * webhook knows one thing about them — the uuid Paystack carries in its
+ * metadata — so the language has to be somewhere that uuid can reach.
+ *
+ * It could have been a table. It is `user_metadata` on the auth user instead,
+ * for two reasons that both matter more than tidiness. There is no per-account
+ * settings table in this app and adding one for a single string means a
+ * migration, a policy, and a second thing to get wrong. And this lookup was
+ * already happening: the address comes from `getUserById`, so the language
+ * comes back in the same call rather than a second round trip on a path that
+ * runs inside a payment webhook.
+ *
+ * `i18n.tsx` writes it whenever somebody chooses, and only when they are
+ * signed in — the browser's own copy stays the source of truth for the page
+ * they are looking at.
+ *
+ * Falls back to English rather than guessing. An address or a name says
+ * nothing reliable about what somebody reads, and a receipt in the wrong
+ * language is worse than one in the language the whole app defaults to.
  */
-export async function emailOf(owner: string): Promise<string | null> {
+export async function accountFor(
+  owner: string,
+): Promise<{ email: string; lang: 'en' | 'af' } | null> {
   const client = admin();
   if (!client) return null;
   try {
     const { data, error } = await client.auth.admin.getUserById(owner);
-    if (error) return null;
-    return data.user?.email ?? null;
+    if (error || !data.user?.email) return null;
+    const said = (data.user.user_metadata as { lang?: unknown } | null)?.lang;
+    return { email: data.user.email, lang: said === 'af' ? 'af' : 'en' };
   } catch {
     return null;
   }
