@@ -21,9 +21,58 @@ import type { Tier } from '@/app/lib/plans';
 import { arrangementOf, payerOf } from '@/app/lib/server/paystack';
 import { packById } from '@/app/lib/credits';
 import { topUp } from '@/app/lib/server/credits';
+import { emailOf, send } from '@/app/lib/server/email';
+import { receiptLetter } from '@/app/lib/server/letters';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+/**
+ * Send the receipt, and never let it affect the answer to Paystack.
+ *
+ * Awaited rather than fired and forgotten: a serverless function that returns
+ * before its promises settle gets frozen mid-send, and the letter is lost with
+ * the claim already written — the one state where somebody is owed a receipt
+ * and `mail_log` says it went. Waiting costs a few hundred milliseconds on a
+ * webhook that is not user-facing.
+ *
+ * Every failure inside `send` is recorded rather than raised, so nothing here
+ * needs a try. It returns void because there is no answer worth acting on: a
+ * payment that succeeded is a payment that succeeded whether or not the
+ * receipt got out.
+ *
+ * The dedupe key is Paystack's reference, which is unique per charge and is
+ * the same across every retry of the same event. That is what makes a retried
+ * webhook safe to answer twice.
+ */
+async function receipt(
+  owner: string,
+  what: string,
+  cents: number,
+  reference: string,
+  renewal: boolean,
+): Promise<void> {
+  const to = await emailOf(owner);
+  if (!to) return;
+  /* English, and this is a real limitation rather than an oversight.
+
+     A person chooses a language in the browser; the server never hears about
+     it, and a renewal months later has no browser present at all. Guessing
+     from an address or a name would be worse than a language somebody can
+     read. Worth fixing by storing the choice against the account — noted in
+     docs/GOING_LIVE.md rather than pretended away here. */
+  const letter = receiptLetter(
+    { what, cents, reference, when: new Date(), renewal },
+    'en',
+  );
+  await send({
+    to,
+    subject: letter.subject,
+    text: letter.text,
+    kind: 'receipt',
+    once: `receipt:${reference}`,
+  });
+}
 
 interface PaystackEvent {
   event?: string;
@@ -167,13 +216,18 @@ export async function POST(request: Request): Promise<Response> {
     if (!known) return new Response('no owner', { status: 200 });
 
     const arrangement = await arrangementOf(payer.customerCode);
-    await setMembership(known.owner, arrangement?.tier ?? known.tier, reference);
-    await rememberArrangement(known.owner, arrangement?.tier ?? known.tier, payer.customerCode);
+    const renewedTier = arrangement?.tier ?? known.tier;
+    await setMembership(known.owner, renewedTier, reference);
+    await rememberArrangement(known.owner, renewedTier, payer.customerCode);
+    // The monthly one. Nobody is present for this — Paystack raised it — so
+    // the receipt is the only thing that tells them it happened.
+    await receipt(known.owner, `${renewedTier} plan, one month`, cents, reference, true);
     return new Response('renewed', { status: 200 });
   }
 
   if (meta.kind === 'plan' && meta.tier) {
     await setMembership(owner, meta.tier, reference);
+    await receipt(owner, `${meta.tier} plan`, cents, reference, false);
     // Only where it really is a subscription: a tier with no Paystack plan set
     // up is a single month's charge and has no arrangement to remember.
     const payer = reference ? await payerOf(reference) : null;
@@ -187,7 +241,10 @@ export async function POST(request: Request): Promise<Response> {
     // it was. `add_credits` refuses a reference it has already seen, so a
     // retried webhook cannot double it.
     const pack = packById(meta.pack);
-    if (pack) await topUp(owner, pack.credits, reference);
+    if (pack) {
+      await topUp(owner, pack.credits, reference);
+      await receipt(owner, `${pack.credits} credits`, cents, reference, false);
+    }
     return new Response('ok', { status: 200 });
   }
 

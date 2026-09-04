@@ -1333,6 +1333,20 @@ export const STRINGS: Dict = {
   "take.credit": { en: "The voice on this is yours \u2014 recorded, not generated. It is credited that way.", af: "Die stem hierop is joune \u2014 opgeneem, nie gegenereer nie. Dit staan so op die snit." },
 
   "play.followNote": { en: "Sections are timed from the plan the song was made with. Inside a section the lines are spread evenly, so one can sit a second or two out. Click a line to jump there.", af: "Afdelings word getel uit die plan waarmee die snit gemaak is. Binne 'n afdeling is die re\u00eels eweredig versprei, so een kan 'n sekonde of twee uit wees. Klik 'n re\u00eel om soontoe te spring." },
+
+  /* The cancel panel. `Subscription.tsx` is the one room somebody reaches
+     while deciding to leave, so an English fallback there reads as a shrug. */
+  "sub.title": { en: "What you are paying", af: "Wat jy betaal" },
+  "sub.nextOn": { en: "next payment", af: "volgende betaling" },
+  "sub.endsOn": { en: "ends on", af: "eindig op" },
+  "sub.noMore": { en: "nothing further is charged", af: "niks verder word gehef nie" },
+  "sub.ending": { en: "ending, nothing further is charged", af: "eindig, niks verder word gehef nie" },
+  "sub.stop": { en: "Stop the monthly payment", af: "Stop die maandelikse betaling" },
+  "sub.sure": { en: "This stops the next payment. The month you have already paid for is not cut short and is not refunded \u2014 you keep everything you are on until it ends.", af: "Dit stop die volgende betaling. Die maand waarvoor jy reeds betaal het word nie afgesny nie en word ook nie terugbetaal nie \u2014 jy hou alles waarop jy is tot dit klaar is." },
+  "sub.confirm": { en: "Yes, stop it", af: "Ja, stop dit" },
+  "sub.keep": { en: "Keep it", af: "Hou dit" },
+  "sub.stopped": { en: "Stopped. Nothing further will be charged, and a confirmation is on its way to your inbox.", af: "Gestop. Niks verder word gehef nie, en \u2019n bevestiging is op pad na jou inboks." },
+  "sub.failed": { en: "That could not be stopped just now.", af: "Dit kon nie nou gestop word nie." },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';

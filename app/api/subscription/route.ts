@@ -13,6 +13,8 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { send } from '@/app/lib/server/email';
+import { cancelledLetter } from '@/app/lib/server/letters';
 import { stopRenewing } from '@/app/lib/server/paystack';
 import { TIER_SPECS, type Tier } from '@/app/lib/plans';
 
@@ -79,6 +81,27 @@ export async function DELETE(request: Request): Promise<Response> {
     .from('subscriptions')
     .update({ status: 'non-renewing', updated_at: new Date().toISOString() })
     .eq('owner', caller.id);
+
+  /* The last letter they get from us.
+
+     Sent after Paystack agreed and after the row is updated, so it can never
+     tell somebody their payments stopped when they have not. Awaited for the
+     same reason the receipt is: returning first freezes the send.
+
+     Keyed on the subscription code so a double-click on the cancel button
+     cannot send it twice. The person's own language is known here — unlike a
+     renewal, they are standing in front of the app — so it is asked for and
+     used. */
+  const asked = new URL(request.url).searchParams.get('lang');
+  await send({
+    to: caller.email,
+    ...cancelledLetter(
+      row.next_payment_at ? new Date(row.next_payment_at) : null,
+      asked === 'af' ? 'af' : 'en',
+    ),
+    kind: 'cancelled',
+    once: `cancelled:${row.subscription_code}`,
+  });
 
   return Response.json({ stopped: true });
 }

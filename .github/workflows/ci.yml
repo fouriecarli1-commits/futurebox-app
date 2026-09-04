@@ -64,6 +64,12 @@ jobs:
       - name: Afrikaans is not missing
         run: npm run check:afrikaans
 
+      # The letters go out unread by anybody here — a receipt with the wrong
+      # amount or a cancellation in the wrong language is only ever seen by
+      # the member it was wrong for. So the wording is asserted, not reviewed.
+      - name: The letters say what they must
+        run: npm run check:letters
+
       # The security claims in docs/GOING_LIVE.md, as assertions. One of them
       # was badly wrong for weeks — a claim written once is a claim nobody
       # re-runs. This one needs the build above it to check the client bundle,

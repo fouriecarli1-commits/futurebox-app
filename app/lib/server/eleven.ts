@@ -568,3 +568,64 @@ export async function dropFinetune(id: string): Promise<boolean> {
   });
   return response.ok;
 }
+
+/* ─────────────────────────────────────────────── how much is left ────────
+ *
+ * The number that decides whether this app works tomorrow.
+ *
+ * Every voice, every dub, every transcript and every note of music comes out of
+ * one ElevenLabs plan, paid monthly, with a hard character ceiling. Run into it
+ * and every one of those rooms starts refusing at once — not degrading, not
+ * queueing, refusing — and the first anybody knows is a member being told their
+ * reading failed.
+ *
+ * Starting on a small plan is the right call when you do not yet know whether
+ * you have customers. It also means the ceiling is close, so knowing where it
+ * is stops being a nice-to-have.
+ *
+ * The shape is theirs: `GET /v1/user/subscription` answers with
+ * `character_count` and `character_limit`, and the reset date as a unix second.
+ * Read defensively — a field that is missing is reported as unknown rather
+ * than as zero, because "zero used" and "could not tell" lead to opposite
+ * decisions.
+ */
+
+export interface Allowance {
+  readonly used: number;
+  readonly limit: number;
+  /** 0 to 1. */
+  readonly spent: number;
+  readonly resetsAt: Date | null;
+  readonly tier: string;
+}
+
+export async function allowanceLeft(): Promise<Allowance | null> {
+  if (!configured()) return null;
+  try {
+    const response = await fetch(`${BASE}/user/subscription`, {
+      headers: { 'xi-api-key': key() },
+    });
+    if (!response.ok) return null;
+    const said = (await response.json()) as {
+      character_count?: number;
+      character_limit?: number;
+      next_character_count_reset_unix?: number;
+      tier?: string;
+    };
+    const used = said.character_count;
+    const limit = said.character_limit;
+    if (typeof used !== 'number' || typeof limit !== 'number' || limit <= 0) return null;
+    return {
+      used,
+      limit,
+      spent: used / limit,
+      resetsAt:
+        typeof said.next_character_count_reset_unix === 'number'
+          ? new Date(said.next_character_count_reset_unix * 1000)
+          : null,
+      tier: said.tier ?? 'unknown',
+    };
+  } catch {
+    return null;
+  }
+}

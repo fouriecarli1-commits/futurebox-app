@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Cover from './components/Cover';
 import { EVERY as ASKS_EVERY, asksWaiting } from './lib/asks';
 import { 
@@ -72,6 +72,7 @@ import { useLang } from './lib/i18n';
 import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './lib/theme';
 import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
 import * as cloud from './lib/cloud';
+import { accessToken } from './lib/cloud';
 import { TIER_SPECS, TIERS, SPONSORSHIP, sponsorshipBand, tierPrice } from './lib/plans';
 import { startCheckout, loadOwned } from './lib/purchases';
 
@@ -273,16 +274,51 @@ export default function FutureBoxHome() {
     if (theme !== loadedTheme.current) saveTheme(theme);
   }, [theme, themeLoaded]);
 
+  /* The welcome letter, asked for once the account is genuinely signed in.
+
+     Not on sign-up: with email confirmation on, `signUp` returns no session
+     and the person comes back through a link later, so a letter sent at the
+     form arrives before the account works. Asking here covers both paths.
+
+     Fired and not awaited, and its answer is ignored. Sending a welcome must
+     never be between somebody and the app they just signed into, and the route
+     claims the send in the database so asking twice sends once. */
+  const welcomed = useRef(false);
+  /* The language read at send time, not at mount.
+
+     `lang` starts as English and becomes Afrikaans only once the provider has
+     read the stored choice, which happens in an effect after the first render.
+     A closure that captured it would have captured 'en'. The letter is sent
+     once and never again, so getting this wrong means an Afrikaans member is
+     welcomed in English permanently — the exact thing this app is not for. */
+  const langNow = useRef(lang);
+  langNow.current = lang;
+  const sayHello = useCallback(() => {
+    if (welcomed.current) return;
+    welcomed.current = true;
+    void accessToken().then((token) => {
+      if (!token) return;
+      void fetch(`/api/welcome?lang=${langNow.current}`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}` },
+      }).catch(() => undefined);
+    });
+  }, []);
+
   // With an account behind the app, a refresh should not sign you out and a
   // sign-out in another tab should not leave this one looking signed in.
   useEffect(() => {
     if (!cloud.configured()) return;
     let live = true;
     cloud.currentAccount().then((account) => {
-      if (live && account) setUser({ ...account, followers: 1 });
+      if (live && account) {
+        setUser({ ...account, followers: 1 });
+        sayHello();
+      }
     });
     const stop = cloud.onAccountChange((account) => {
       setUser(account ? { ...account, followers: 1 } : null);
+      if (account) sayHello();
     });
     return () => {
       live = false;

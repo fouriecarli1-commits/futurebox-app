@@ -31,6 +31,7 @@ import {
 import { fetchCreator, type Creator } from '../lib/radar';
 import Cover from './Cover';
 import DeleteAccount from './DeleteAccount';
+import Subscription from './Subscription';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
@@ -392,6 +393,10 @@ export default function Channel({
       {/* Last, because leaving is not the first thing to offer somebody
           looking at their own channel — but present, because an app that
           makes leaving hard is telling you what it thinks of you. */}
+      {/* Stopping the payment sits above deleting the account, because they
+          are different decisions and the milder one should be reachable
+          without reading past the other. */}
+      <Subscription />
       {email && <DeleteAccount email={email} />}
     </div>
   );
