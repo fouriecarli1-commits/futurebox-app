@@ -38,6 +38,7 @@
 import React from 'react';
 import { ImagePlus } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import Cast from './Cast';
 import Pictures from './Pictures';
 
 export default function StartFrame({
@@ -124,7 +125,20 @@ export default function StartFrame({
         </p>
       </div>
 
-      <Pictures value={value} onChange={onChange} from="canvas" disabled={disabled} />
+      {/* The cast first, the scratch pad under it.
+
+          They answer different questions and the order says which is which:
+          the named, kept, on-every-device shelf comes before the pile of
+          recent uploads. Somebody who has a presenter reaches for them;
+          somebody trying a photo out reaches past. */}
+      <Cast value={value} onChange={onChange} disabled={disabled} />
+
+      <div className="border-t border-zinc-800 pt-2 space-y-1.5">
+        <p className="text-xs text-zinc-500">
+          {t('frame.orDevice', 'Or a picture from this device — kept here only, not on your account.')}
+        </p>
+        <Pictures value={value} onChange={onChange} from="canvas" disabled={disabled} />
+      </div>
     </div>
   );
 }

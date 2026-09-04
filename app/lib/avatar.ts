@@ -9,19 +9,11 @@
  * every single view. Squaring and shrinking it here costs one canvas draw and
  * turns all three problems into one 40kB file.
  *
- * It also strips the metadata, which is the part worth saying out loud. A
- * phone photo carries EXIF, and EXIF routinely carries GPS coordinates —
- * where the picture was taken, to within a few metres. Uploading the original
- * to a **public** bucket would publish somebody's home address alongside their
- * face, and nobody choosing a profile picture is thinking about that. Drawing
- * to a canvas and re-encoding keeps the pixels and discards everything else.
- *
- * ── Squared by cropping, not squashing ───────────────────────────────────
- *
- * The centre square is taken and the rest dropped. Scaling a portrait into a
- * square instead would make every face too wide, which is worse than losing
- * some background — and a crop is what the round frame on the channel shows
- * anyway.
+ * It also strips the metadata, which is the part worth saying out loud — see
+ * `lib/imagefile.ts`, which does the reading, the shaping and the re-encoding
+ * for this and for the cast. A phone photo carries EXIF, EXIF routinely
+ * carries GPS coordinates, and this bucket is public: uploading the original
+ * would publish somebody's home address alongside their face.
  *
  * ── The stamp on the name ────────────────────────────────────────────────
  *
@@ -35,24 +27,15 @@
  */
 
 import { accessToken, configured, currentAccount, getStorageClient } from './cloud';
+import { ACCEPTS as IMAGE_ACCEPTS, square } from './imagefile';
 
 const BUCKET = 'avatars';
 
 /** Big enough for a retina header, small enough to be nothing. */
 const SIDE = 512;
 
-/** What a phone camera hands over, and what browsers can all decode. */
-export const ACCEPTS = 'image/jpeg,image/png,image/webp,image/heic,image/heif';
-
-/**
- * Refused before anything is read.
- *
- * Twelve megabytes is a generous phone photo. The point is not to save the
- * bucket — the file that lands is 40kB whatever came in — it is that decoding
- * a 100-megapixel image in a phone browser is how a tab runs out of memory and
- * dies, taking the unsaved page with it.
- */
-const MAX_BYTES = 12 * 1024 * 1024;
+/** Re-exported so a component takes one import to offer the right file types. */
+export const ACCEPTS = IMAGE_ACCEPTS;
 
 export type Chosen =
   | { readonly ok: true; readonly blob: Blob; readonly preview: string }
@@ -60,43 +43,8 @@ export type Chosen =
 
 /** Read the file the person picked, square it, shrink it, re-encode it. */
 export async function squared(file: File): Promise<Chosen> {
-  if (!file.type.startsWith('image/')) return { ok: false, why: 'not_an_image' };
-  if (file.size > MAX_BYTES) return { ok: false, why: 'too_big' };
-
-  let bitmap: ImageBitmap;
-  try {
-    // `createImageBitmap` decodes off the main thread and honours the EXIF
-    // orientation flag, so a photo taken sideways is not stored sideways.
-    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-  } catch {
-    // HEIC on a browser that cannot decode it lands here, which is the common
-    // case on an iPhone talking to a non-Safari browser.
-    return { ok: false, why: 'unreadable' };
-  }
-
-  const side = Math.min(bitmap.width, bitmap.height);
-  const left = Math.round((bitmap.width - side) / 2);
-  const top = Math.round((bitmap.height - side) / 2);
-
-  const canvas = document.createElement('canvas');
-  canvas.width = SIDE;
-  canvas.height = SIDE;
-  const context = canvas.getContext('2d');
-  if (!context) {
-    bitmap.close();
-    return { ok: false, why: 'unreadable' };
-  }
-  context.drawImage(bitmap, left, top, side, side, 0, 0, SIDE, SIDE);
-  bitmap.close();
-
-  const blob = await new Promise<Blob | null>((resolve) =>
-    // WebP at 0.85 is visually clean at this size and about a third of the
-    // JPEG. Every browser that can run this app can display it.
-    canvas.toBlob(resolve, 'image/webp', 0.85),
-  );
-  if (!blob) return { ok: false, why: 'unreadable' };
-
-  return { ok: true, blob, preview: canvas.toDataURL('image/webp', 0.85) };
+  const made = await square(file, SIDE);
+  return made.ok ? { ok: true, blob: made.blob, preview: made.preview } : made;
 }
 
 export type Saved =

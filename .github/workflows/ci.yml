@@ -81,6 +81,11 @@ jobs:
       - name: The rate brake holds
         run: npm run check:brake
 
+      # Bucket policies guard the file; this guards the claim. Nothing else
+      # stops a row pointing at a picture from another account.
+      - name: A row can only claim its own file
+        run: npm run check:ownedpath
+
       # The security claims in docs/GOING_LIVE.md, as assertions. One of them
       # was badly wrong for weeks — a claim written once is a claim nobody
       # re-runs. This one needs the build above it to check the client bundle,

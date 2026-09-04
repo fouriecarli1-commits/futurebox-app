@@ -1398,6 +1398,23 @@ export const STRINGS: Dict = {
   "frame.switch": { en: "Move to the grade that reads it", af: "Skuif na die graad wat dit lees" },
   "pick.hintA": { en: "Reads what you have written and chooses", af: "Lees wat jy geskryf het en kies" },
   "pick.hintB": { en: "then says why. It costs nothing and you can change it after.", af: "en s\u00ea dan hoekom. Dit kos niks en jy kan dit daarna verander." },
+
+  /* The cast: named reference pictures, kept on the account. */
+  "cast.title": { en: "Your cast", af: "Jou rolverdeling" },
+  "cast.why": { en: "Describe a person and the engine draws a different one every time \u2014 three clips meant to cut together become three strangers. Hand it the same picture instead. Kept on your account, so the same presenter is here on your phone too.", af: "Beskryf 'n persoon en die enjin teken elke keer 'n ander een \u2014 drie snitte wat moet saamsny word drie vreemdelinge. Gee dit eerder dieselfde foto. Dit word teen jou rekening gehou, so dieselfde aanbieder is ook hier op jou foon." },
+  "cast.add": { en: "Add somebody to the cast", af: "Sit iemand by die rolverdeling" },
+  "cast.account": { en: "on your account, on every device", af: "teen jou rekening, op elke toestel" },
+  "cast.unnamed": { en: "Unnamed", af: "Naamloos" },
+  "cast.name": { en: "Their name", af: "Hulle naam" },
+  "cast.out": { en: "Out", af: "Uit" },
+  "cast.remove": { en: "Take out of the cast", af: "Haal uit die rolverdeling" },
+  "cast.full": { en: "A cast holds", af: "'n Rolverdeling hou" },
+  "cast.fullTake": { en: "Take somebody out first.", af: "Haal eers iemand uit." },
+  "cast.signedOut": { en: "Sign in first, so the cast is on your account rather than this device.", af: "Teken eers in, sodat die rolverdeling teen jou rekening is en nie op hierdie toestel nie." },
+  "cast.tooBig": { en: "That picture is very large. Try one under 12MB.", af: "Daardie foto is baie groot. Probeer een onder 12MB." },
+  "cast.notImage": { en: "That is not a picture.", af: "Dit is nie 'n foto nie." },
+  "cast.failed": { en: "That did not save. Try again in a moment.", af: "Dit het nie gestoor nie. Probeer oor 'n oomblik weer." },
+  "frame.orDevice": { en: "Or a picture from this device \u2014 kept here only, not on your account.", af: "Of 'n foto van hierdie toestel \u2014 net hier gehou, nie teen jou rekening nie." },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';

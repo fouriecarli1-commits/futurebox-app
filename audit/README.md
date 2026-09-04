@@ -82,3 +82,27 @@ can draw a canvas.
 
 `help.mjs` and `subscription.mjs` need nothing extra — they stub the routes
 with the JSON those routes really return and drive the real components.
+
+## One that needs a stubbed account
+
+`cast.mjs` tests an account feature, so a run with Supabase switched off would
+test the refusal and nothing else. The first version of it did exactly that:
+five green checks about a strip that was never going to work, because
+`configured()` was false and every call returned "not signed in" before
+touching anything.
+
+So the app is built against a stub project and the session is seeded in the
+browser in the shape supabase-js reads back:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://stub.supabase.co \
+NEXT_PUBLIC_SUPABASE_ANON_KEY=stub-anon-key npx next build
+NEXT_PUBLIC_SUPABASE_URL=https://stub.supabase.co \
+NEXT_PUBLIC_SUPABASE_ANON_KEY=stub-anon-key npx next start -p 3016
+node audit/cast.mjs 3016 en
+```
+
+The run answers `/auth/v1/**`, `/rest/v1/**` and `/storage/v1/object/**`
+itself, so the library, the component and `lib/imagefile.ts` are all real —
+only the service behind them is not. It is what lets the run check the half
+that matters: that a member added on one load is still there after a reload.

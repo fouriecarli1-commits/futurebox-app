@@ -7,6 +7,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { ownedPath } from '@/app/lib/server/ownedpath';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -39,10 +40,7 @@ function cleanLinks(input: unknown): Record<string, string> {
  * claim is checked.
  */
 function cleanAvatar(value: unknown, owner: string): string | null {
-  if (typeof value !== 'string' || !value) return null;
-  if (value.length > 200) return null;
-  // <owner>/<digits>.webp, and nothing else — no traversal, no other folder.
-  return new RegExp(`^${owner}/\\d+\\.webp$`).test(value) ? value : null;
+  return ownedPath(value, owner, 'webp');
 }
 
 /** Lower case, letters, digits, dots and underscores. It is shown as @handle. */

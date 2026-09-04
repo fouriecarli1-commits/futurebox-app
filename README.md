@@ -79,6 +79,7 @@ to run again, so if you are not sure whether one has been run, run it.
 | [`supabase/finetunes.sql`](supabase/finetunes.sql) | A sound of your own, trained on your own songs. |
 | [`supabase/mail.sql`](supabase/mail.sql) | The log behind the welcome, the receipts and the cancellation, and the unique key that stops a letter going twice. |
 | [`supabase/avatars.sql`](supabase/avatars.sql) | A picture on a channel: the column and the public bucket it lives in. Needs `radar.sql` first, which makes the table it adds to. |
+| [`supabase/cast.sql`](supabase/cast.sql) | The cast — named reference pictures, so the same face is in every clip. A **private** bucket, unlike avatars: these are inputs, never published. |
 
 The others — `podcast.sql`, `arena.sql`, `radar.sql`, `events.sql`,
 `abuse.sql`, `collab.sql`, `presence.sql` — turn on the features they are named
