@@ -41,12 +41,27 @@ export async function enter({ width = 1280, height = 900 } = {}) {
   if (await pw.count()) await pw.fill('audit-password-1234');
   await page.locator('button[type="submit"]').first().click();
   await page.waitForTimeout(1800);
+
+  /* The welcome page. Signing in lands on it now, and it covers the header —
+     so every probe that went straight for the studio button started timing out
+     against a door rather than against a fault. Dismissed the way a person
+     dismisses it, in either language. */
+  const notNow = page.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
+  if (await notNow.count()) {
+    await notNow.click().catch(() => undefined);
+    await page.waitForTimeout(800);
+  }
+
   return { browser, page, problems };
 }
 
 /** The studio overlay, which is the room you work in. */
 export async function studio(page) {
-  await page.locator('header button').filter({ hasText: /Creator Studio/i }).first().click();
+  /* The header button was called "Creator Studio" and is now called "Studio".
+     Both are matched, because a probe that silently stops finding its way in
+     reports every room as clean — which is what this one did until somebody
+     noticed it had been passing without visiting anything. */
+  await page.locator('header button').filter({ hasText: /Studio/i }).first().click();
   await page.waitForTimeout(1500);
   return page.locator('div.fixed.inset-0.z-50').first();
 }
