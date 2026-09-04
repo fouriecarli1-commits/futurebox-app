@@ -680,6 +680,12 @@ export default function VideoCanvas({
                   key={one.id}
                   type="button"
                   disabled={!there}
+                  /* Greyed out because this engine does not offer it, which is
+                     a fact about the engine and not about the person pressing.
+                     The engine panel above already says when nothing is
+                     connected at all; this says why one of three is off when
+                     the other two are not. */
+                  title={!there ? t('canvas.gradeGone', 'The engine you have picked does not offer this one.') : undefined}
                   onClick={() => setGrade(one.id)}
                   className={`text-left px-3 py-2.5 rounded-xl text-sm border transition-all disabled:opacity-40 ${
                     active

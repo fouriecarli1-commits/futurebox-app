@@ -15,6 +15,15 @@ const pw = p.locator('input[type="password"]').first();
 if (await pw.count()) await pw.fill('audit-password-1234');
 await p.locator('button[type="submit"]').first().click();
 await p.waitForTimeout(2200);
+/* The welcome page lands on top of the header after a sign-in. Cleared the way
+   a person clears it, or this run dies against a door. */
+{
+  const notNow = p.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
+  if (await notNow.count()) {
+    await notNow.click().catch(() => undefined);
+    await p.waitForTimeout(800);
+  }
+}
 await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
 await p.waitForTimeout(1500);
 const room = p.locator('div.fixed.inset-0.z-50').first();

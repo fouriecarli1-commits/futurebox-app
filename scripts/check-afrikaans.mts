@@ -38,6 +38,18 @@ const known = new Set([...dict.matchAll(/^\s*"([^"]+)":\s*\{/gm)].map((m) => m[1
  * missing, which is the sort of false alarm that gets a check switched off.
  */
 const starts = [...dict.matchAll(/^\s*"([^"]+)":\s*\{/gm)];
+
+/* The same key written twice.
+   TypeScript catches it in a literal, but only once the file is compiled —
+   and a duplicate is a line somebody carefully translated that silently loses
+   to another one further down. Named here so the message says which key. */
+const seen = new Map<string, number>();
+const twice: string[] = [];
+for (const match of starts) {
+  const key = match[1];
+  seen.set(key, (seen.get(key) ?? 0) + 1);
+  if (seen.get(key) === 2) twice.push(key);
+}
 const halfDone = starts
   .filter((match, i) => {
     const from = match.index ?? 0;
@@ -89,7 +101,7 @@ for (const file of walk('app')) {
   }
 }
 
-if (missing.size === 0 && halfDone.length === 0 && straight.length === 0) {
+if (missing.size === 0 && halfDone.length === 0 && straight.length === 0 && twice.length === 0) {
   console.log(
     `check:afrikaans — ${known.size} keys, every one the code asks for has both languages,` +
       '\n  and every Afrikaans ’n is the same character as every other one.',
@@ -101,6 +113,11 @@ if (missing.size) {
   console.error(`\n${missing.size} key(s) used in code with no entry in ${DICT}:\n`);
   for (const [key, file] of missing) console.error(`  ${key}\n    ${file}`);
 }
+if (twice.length) {
+  console.error(`\n${twice.length} key(s) written twice — the second wins and the first is dead:\n`);
+  twice.forEach((key) => console.error(`  ${key}`));
+}
+
 if (halfDone.length) {
   console.error(`\n${halfDone.length} entr(ies) with English and no Afrikaans:\n`);
   for (const key of halfDone) console.error(`  ${key}`);

@@ -11,6 +11,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLang } from '../lib/i18n';
 import {
   Mic, Radio, Music, Send, Copy, Check, ExternalLink, Users, Sparkles,
   AlertCircle, Video, Flame, ListChecks, Handshake, Search, Plus,
@@ -77,6 +78,10 @@ export default function CollabRadar({
   userPlan: Plan;
   onUpgrade: () => void;
 }) {
+  /* The room had no dictionary at all, which is why every word in it was
+     English on an Afrikaans screen — and why `check:afrikaans` could not see
+     it: that gate reads what `t()` is asked for, and nothing here asked. */
+  const { t } = useLang();
   const canPost = check('collab.post', userPlan).allowed;
   const canBoost = check('collab.boost', userPlan).allowed;
   const [tab, setTab] = useState<RadarTab>('podcasts');
@@ -163,16 +168,21 @@ export default function CollabRadar({
         <div>
           <h4 className="text-sm font-extrabold text-white flex items-center space-x-2">
             <Handshake className="w-4 h-4 text-cyan-400" />
-            <span>Collab Radar</span>
+            <span>{t('radar.heading', "Collab Radar")}</span>
           </h4>
           <p className="text-sm text-zinc-400 max-w-2xl leading-relaxed pt-1">
-            Matches are computed from your released tracks — {profile.genres.join(', ') || 'no releases yet'} — and
-            scored on tempo, key and shared topics. Nothing here contacts anyone: every pitch is a draft you read,
-            edit and send yourself.
+            {t('radar.how', 'Matches are worked out from what you have released — {genres} — and scored on tempo, key and shared subjects. Nothing here contacts anybody: every pitch is a draft you read, edit and send yourself.')
+              .replace('{genres}', profile.genres.join(', ') || t('radar.noReleases', 'nothing released yet'))}
           </p>
         </div>
         <div className="text-[13px] font-mono text-zinc-500 bg-zinc-900/80 border border-zinc-800 rounded-lg px-2.5 py-1.5">
-          {profile.handle} · {profile.followers.toLocaleString()} followers
+          {/* One follower is not "1 followers". The count decides the word,
+              which is the sort of thing that reads as a machine wrote the
+              page — and in Afrikaans the two words differ as well. */}
+          {profile.handle} · {profile.followers.toLocaleString()}{' '}
+          {profile.followers === 1
+            ? t('radar.follower', 'follower')
+            : t('radar.followers', 'followers')}
         </div>
       </div>
 
@@ -254,7 +264,7 @@ export default function CollabRadar({
                     className="px-2.5 py-1 rounded-lg text-sm font-bold bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/25 transition-all flex items-center space-x-1.5"
                   >
                     <Send className="w-3 h-3" />
-                    <span>Draft email</span>
+                    <span>{t('radar.draftEmail', "Draft email")}</span>
                   </button>
                   <button
                     type="button"
@@ -271,7 +281,7 @@ export default function CollabRadar({
                       className="px-2.5 py-1 rounded-lg text-sm text-zinc-400 hover:text-cyan-300 flex items-center space-x-1"
                     >
                       <ExternalLink className="w-3 h-3" />
-                      <span>Find their contact page</span>
+                      <span>{t('radar.findContact', "Find their contact page")}</span>
                     </a>
                   )}
                 </div>
@@ -281,7 +291,7 @@ export default function CollabRadar({
             <div className="p-3.5 rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/40 space-y-2">
               <p className="text-sm font-bold text-zinc-300 flex items-center space-x-1.5">
                 <Search className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Add a show you found yourself</span>
+                <span>{t('radar.addShow', "Add a show you found yourself")}</span>
               </p>
               <p className="text-[13px] text-zinc-500 leading-relaxed">
                 The best targets are shows your size that nobody has pitched yet. FutureBox does not scrape podcast
@@ -291,7 +301,7 @@ export default function CollabRadar({
                 <input
                   value={ownTargetName}
                   onChange={(e) => setOwnTargetName(e.target.value)}
-                  placeholder="Podcast name"
+                  placeholder={t("radar.showName", "Podcast name")}
                   className="flex-1 bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
                 />
                 <button
@@ -336,7 +346,7 @@ export default function CollabRadar({
             ) : (
               <div className="p-8 rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/40 text-center">
                 <Mic className="w-7 h-7 text-zinc-700 mx-auto" />
-                <p className="text-xs text-zinc-500 pt-2">Pick a show to draft a pitch.</p>
+                <p className="text-xs text-zinc-500 pt-2">{t('radar.pickShow', "Pick a show to draft a pitch.")}</p>
               </div>
             )}
           </div>
@@ -396,30 +406,30 @@ export default function CollabRadar({
           <div className="p-4 rounded-2xl bg-black/40 border border-zinc-800 space-y-3">
             <p className="text-xs font-bold text-white flex items-center space-x-2">
               <ListChecks className="w-4 h-4 text-cyan-400" />
-              <span>Live collab brief</span>
+              <span>{t('radar.liveBrief', "Live collab brief")}</span>
             </p>
             <div className="grid grid-cols-1 gap-2">
               <input
                 value={coHost}
                 onChange={(e) => setCoHost(e.target.value)}
-                placeholder="Co-host handle (e.g. @someone)"
+                placeholder={t("radar.coHost", "Co-host handle (e.g. @someone)")}
                 className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
               />
               <input
                 value={liveTopic}
                 onChange={(e) => setLiveTopic(e.target.value)}
-                placeholder="Topic (e.g. Build a track from a comment prompt)"
+                placeholder={t("radar.topic", "Topic (e.g. Build a track from a comment prompt)")}
                 className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
               />
               <input
                 value={liveSlot}
                 onChange={(e) => setLiveSlot(e.target.value)}
-                placeholder="Slot (e.g. Thu 19:00 SAST / 17:00 UTC)"
+                placeholder={t("radar.slot", "Slot (e.g. Thu 19:00 SAST / 17:00 UTC)")}
                 className="bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
               />
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-[13px] text-zinc-500">Send this to your co-host before the room opens.</p>
+              <p className="text-[13px] text-zinc-500">{t('radar.sendBrief', "Send this to your co-host before the room opens.")}</p>
               <CopyButton text={buildLiveBrief(profile, coHost, liveTopic, liveSlot)} label="Copy brief" />
             </div>
             <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-[13px] text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">
@@ -435,7 +445,7 @@ export default function CollabRadar({
       {tab === 'flavour' && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-zinc-400">Match against:</span>
+            <span className="text-sm text-zinc-400">{t('radar.matchAgainst', "Match against:")}</span>
             {TRACK_FLAVOURS.filter((t) => t.onChannel).map((t) => (
               <button
                 key={t.id}
@@ -561,7 +571,7 @@ export default function CollabRadar({
                         setHandles(next);
                         saveHandles(next);
                       }}
-                      placeholder="handle or paste your profile URL"
+                      placeholder={t("radar.handleHint", "handle or paste your profile URL")}
                       className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
                     />
                     {url && (
@@ -579,12 +589,12 @@ export default function CollabRadar({
                 );
               })}
             </div>
-            <p className="text-sm text-zinc-500">Saved on this device.</p>
+            <p className="text-sm text-zinc-500">{t('radar.onDevice', "Saved on this device.")}</p>
           </div>
 
           {/* FutureBox's own channels */}
           <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4 space-y-2">
-            <p className="text-sm font-bold text-white">FutureBox channels</p>
+            <p className="text-sm font-bold text-white">{t('radar.channels', "FutureBox channels")}</p>
             <div className="grid sm:grid-cols-2 gap-2">
               {FUTUREBOX_CHANNELS.map((ch) => {
                 const pf = platformById(ch.platformId);
@@ -616,7 +626,7 @@ export default function CollabRadar({
           {/* Compose */}
           <div className="grid sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <label className="text-sm text-zinc-400">Track</label>
+              <label className="text-sm text-zinc-400">{t('radar.track', "Track")}</label>
               <select
                 value={postTrackId}
                 onChange={(e) => setPostTrackId(e.target.value)}
@@ -628,7 +638,7 @@ export default function CollabRadar({
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-zinc-400">Post to</label>
+              <label className="text-sm text-zinc-400">{t('radar.postTo', "Post to")}</label>
               <select
                 value={platformId}
                 onChange={(e) => setPlatformId(e.target.value)}
@@ -640,11 +650,11 @@ export default function CollabRadar({
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm text-zinc-400">Collaborator (optional)</label>
+              <label className="text-sm text-zinc-400">{t('radar.collaborator', "Collaborator (optional)")}</label>
               <input
                 value={collaborator}
                 onChange={(e) => setCollaborator(e.target.value)}
-                placeholder="@their-handle"
+                placeholder={t("radar.theirHandle", "@their-handle")}
                 className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
               />
             </div>
@@ -729,17 +739,22 @@ export default function CollabRadar({
 
           {boostFor !== null && (
             <div className="rounded-2xl border border-cyan-500/40 bg-cyan-950/20 p-4 space-y-2.5">
-              <p className="text-sm font-bold text-cyan-300">Boost request</p>
+              <p className="text-sm font-bold text-cyan-300">{t('radar.boostRequest', "Boost request")}</p>
               <input
                 value={boostUrl}
                 onChange={(e) => setBoostUrl(e.target.value)}
-                placeholder="Paste the link to your post once it is live"
+                placeholder={t("radar.boostUrl", "Paste the link to your post once it is live")}
                 className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
               />
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   disabled={!boostUrl.trim()}
+                  /* Off until there is a link, because a boost request with
+                     nothing to boost is not a request. Said rather than left
+                     grey — the third greyed-out control found by pressing
+                     everything, and all three read as broken. */
+                  title={!boostUrl.trim() ? t('radar.needsLink', 'Paste the link to your post first.') : undefined}
                   onClick={() => {
                     const next = [
                       ...boosts,
@@ -758,14 +773,14 @@ export default function CollabRadar({
                   }}
                   className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-cyan-500/20 border border-cyan-500 text-cyan-200 disabled:opacity-40"
                 >
-                  Queue it
+                  {t('radar.queueIt', "Queue it")}
                 </button>
                 <button type="button" onClick={() => setBoostFor(null)} className="text-sm text-zinc-400 hover:text-white">
-                  Cancel
+                  {t('radar.cancel', "Cancel")}
                 </button>
               </div>
               <p className="text-[13px] text-zinc-400 leading-relaxed">
-                We look at boost requests by hand, so this is a request rather than an automatic repost.
+                {t('radar.byHand', "We look at boost requests by hand, so this is a request rather than an automatic repost.")}
               </p>
             </div>
           )}
