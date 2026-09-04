@@ -44,6 +44,7 @@ import { loadHandles, type Handles } from '../lib/social';
 import ShareRow from './ShareRow';
 import AdRuns from './AdRuns';
 import AdReport from './AdReport';
+import Queue from './Queue';
 import Steps, { type Step } from './Steps';
 import BrandKit from './BrandKit';
 import { EMPTY as EMPTY_KIT, brandLine, type BrandKit as Kit } from '../lib/brandkit';
@@ -528,6 +529,14 @@ export default function Campaign({
           app review and a verified company and the numbers are worth having
           before either exists. */}
       <AdReport />
+
+      {/* ── And when ────────────────────────────────────────────────────
+          The third thing an advertising service is. The plan says Tuesday at
+          six; this is what makes Tuesday at six happen rather than being read
+          once and forgotten. It reminds rather than posts, and says so on its
+          own face — see `components/Queue.tsx`. The caption from the first
+          advert is carried in so the common case is two taps. */}
+      <Queue caption={ads[0]?.caption || ads[0]?.body || ''} />
 
       <History surface="campaign" reloadKey={kept} />
 

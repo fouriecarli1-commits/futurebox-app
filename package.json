@@ -16,6 +16,7 @@
     "check:handbook": "tsx scripts/check-handbook.mts",
     "check:brake": "tsx scripts/check-brake.mts",
     "check:ownedpath": "tsx scripts/check-ownedpath.mts",
+    "check:queue": "tsx scripts/check-queue.mts",
     "check:marketplan": "tsx scripts/check-marketplan.mts",
     "check:adweek": "tsx scripts/check-adweek.mts",
     "check:habits": "tsx scripts/check-habits.mts",

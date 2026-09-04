@@ -318,3 +318,23 @@ It asserts geometry rather than the presence of elements: where each shaded
 strip falls against the frame's own box, in pixels. A bar in the wrong place
 is worse than no bar — it says a subject is safe while a caption is about to
 land on it, and that is found out after posting.
+
+## The one that runs in another timezone
+
+`queue.mjs` opens the browser in Johannesburg on purpose. This container runs
+on UTC, where the conversion between a time somebody types and the instant
+stored is the identity — so every timezone check would pass against a version
+that ignored the zone entirely, which is the bug worth finding.
+
+It types six in the evening, asserts that 16:00 UTC goes over the wire, and
+then asserts that six in the evening is what comes back onto the screen. The
+second half is the one `check:queue` cannot reach: a queue that stores the
+instant correctly and displays it in UTC is wrong in the way nobody reports,
+because "the reminder came at the wrong time" reads as a scheduling problem.
+Adding `timeZone: 'UTC'` to the one `toLocaleString` in `Queue.tsx` was run
+through it deliberately; it fails on that line and prints `16:00`.
+
+It also asserts the sentence — that the room says it does not post for you, in
+the language it is being read in, on its face rather than folded into the
+explanation. That is a failure of words, so no type check or unit test can
+find it.

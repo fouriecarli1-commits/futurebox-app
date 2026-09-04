@@ -108,12 +108,36 @@ const ANONYMOUS: Record<string, string> = {
   'app/api/here/route.ts': 'a presence counter — a random visitor id and a timestamp, no personal data',
   'app/api/events/route.ts': 'visit counters, keyed on the same random visitor id',
   'app/api/stats/route.ts': 'reads those counters back as totals',
+  /* The queue's worker, which is the one route here that is *meant* to act
+     across every account — it is a scheduler, and a scheduler scoped to one
+     caller would be a scheduler that only ever runs for whoever poked it.
+
+     What stands in for the caller check is a secret compared in constant time,
+     and a route that refuses without one rather than defaulting to open. It is
+     the same arrangement as `/api/watch`, which is not on this list only
+     because it never touches the database. */
+  'app/api/post/route.ts':
+    'the posting queue worker — acts for every account by design, guarded by POST_SECRET instead',
 };
 for (const file of walk('app/api')) {
   if (!file.endsWith('route.ts')) continue;
   const src = readFileSync(file, 'utf8');
   if (!/\badmin\(\)/.test(src)) continue;
-  if (ANONYMOUS[file]) continue;
+  if (ANONYMOUS[file]) {
+    /* Listed here is not a way out of the rule, it is a different rule. A
+       route that acts for everybody must either hold nothing personal — the
+       three counters above — or be behind a secret. Without this, adding a
+       line to the list above is how the next unscoped route gets waved
+       through. */
+    const counter = /here|events|stats/.test(file);
+    if (!counter && !/SECRET/.test(src)) {
+      fail(
+        'an anonymous service-key route is behind a secret',
+        `${file} is listed as anonymous but checks no secret`,
+      );
+    }
+    continue;
+  }
   if (!/caller\.id/.test(src)) {
     fail('service-key route scoped to its caller', `${file} calls admin() and never mentions caller.id`);
   }
