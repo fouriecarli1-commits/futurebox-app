@@ -402,6 +402,7 @@ export const STRINGS: Dict = {
   "queue.add": { en: "Put it in the queue", af: "Sit dit in die ry" },
   "queue.badTime": { en: "Choose a date and a time.", af: "Kies ’n datum en ’n tyd." },
   "queue.off": { en: "The queue is not switched on for this app yet. Nothing here is broken — it is waiting on a service rather than on you.", af: "Die ry is nog nie vir hierdie app aangeskakel nie. Niks hier is stukkend nie — dit wag op ’n diens eerder as op jou." },
+  "queue.noEmail": { en: "Reminders cannot be sent yet — no mail service is set up for this app. Anything queued here will be kept, but nothing will reach you until that is done.", af: "Herinneringe kan nog nie gestuur word nie — geen posdiens is vir hierdie app opgestel nie. Wat jy hier in die ry sit word bewaar, maar niks bereik jou totdat dit gedoen is nie." },
   "queue.waiting": { en: "Waiting", af: "Wag" },
   "queue.none": { en: "Nothing queued yet.", af: "Nog niks in die ry nie." },
   "queue.cancel": { en: "Take it out of the queue", af: "Haal dit uit die ry" },

@@ -35,9 +35,18 @@ export interface Queue {
    * been run. Same distinction the wallet was fixed for.
    */
   readonly ready: boolean;
+  /**
+   * Whether the thing that does the reminding can actually send.
+   *
+   * The only handler is `remind` and reminding is email, so with no mail
+   * provider configured a queued row is failed on its first attempt for a
+   * reason that has nothing to do with the post. The screen says that up
+   * front rather than letting somebody find out on Tuesday at six.
+   */
+  readonly sends: boolean;
 }
 
-export const NO_QUEUE: Queue = { posts: [], ready: false };
+export const NO_QUEUE: Queue = { posts: [], ready: false, sends: false };
 
 /**
  * A date and a time as somebody typed them, as the instant they meant.
@@ -67,8 +76,8 @@ export async function loadQueue(): Promise<Queue> {
     if (!token) return NO_QUEUE;
     const response = await fetch('/api/schedule', { headers: { Authorization: `Bearer ${token}` } });
     if (!response.ok) return NO_QUEUE;
-    const said = (await response.json()) as { posts?: Scheduled[]; ready?: boolean };
-    return { posts: said.posts ?? [], ready: said.ready === true };
+    const said = (await response.json()) as { posts?: Scheduled[]; ready?: boolean; sends?: boolean };
+    return { posts: said.posts ?? [], ready: said.ready === true, sends: said.sends === true };
   } catch {
     return NO_QUEUE;
   }

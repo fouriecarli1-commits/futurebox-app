@@ -120,6 +120,20 @@ export default function Queue({
         </div>
       </div>
 
+      {/* ── When the reminding cannot happen ───────────────────────────
+          The only handler is `remind` and reminding is email. With no mail
+          provider configured every row queued here is failed on its first
+          attempt, so this has to be said before somebody plans a week around
+          it — not discovered afterwards in the note on a failed row. */}
+      {asked && queue.ready && !queue.sends && (
+        <p className="text-sm text-amber-400 leading-snug rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+          {t(
+            'queue.noEmail',
+            'Reminders cannot be sent yet — no mail service is set up for this app. Anything queued here will be kept, but nothing will reach you until that is done.',
+          )}
+        </p>
+      )}
+
       {/* ── Adding one ─────────────────────────────────────────────────── */}
       <div className="space-y-2.5">
         <div className="grid sm:grid-cols-3 gap-2">

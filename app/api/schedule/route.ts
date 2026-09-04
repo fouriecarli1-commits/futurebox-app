@@ -9,6 +9,7 @@
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { tooMany } from '@/app/lib/server/brake';
+import { configured as canEmail } from '@/app/lib/server/email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -145,11 +146,18 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 export async function GET(request: Request): Promise<Response> {
-  if (!metered()) return Response.json({ posts: [], ready: false });
+  /* `sends` rather than a second guess on the screen.
+     The only handler is `remind`, and reminding is email. Where no mail
+     provider is configured every row queued here will be failed on its first
+     attempt for a reason that has nothing to do with the post — so the screen
+     has to be able to say so before somebody plans a week around it, and this
+     is the only place that knows. */
+  const sends = canEmail();
+  if (!metered()) return Response.json({ posts: [], ready: false, sends });
   const caller = await callerFrom(request);
-  if (!caller) return Response.json({ posts: [], ready: false });
+  if (!caller) return Response.json({ posts: [], ready: false, sends });
   const client = admin();
-  if (!client) return Response.json({ posts: [], ready: false });
+  if (!client) return Response.json({ posts: [], ready: false, sends });
 
   const { data, error } = await client
     .from('scheduled_posts')
@@ -163,8 +171,8 @@ export async function GET(request: Request): Promise<Response> {
      They are different answers and the screen says different things about
      them — an account with nothing queued, against a migration that has not
      been run. */
-  if (error) return Response.json({ posts: [], ready: false });
-  return Response.json({ posts: data ?? [], ready: true });
+  if (error) return Response.json({ posts: [], ready: false, sends });
+  return Response.json({ posts: data ?? [], ready: true, sends });
 }
 
 export async function DELETE(request: Request): Promise<Response> {

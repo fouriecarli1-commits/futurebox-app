@@ -71,6 +71,11 @@ await p.route('**/api/taste*', (r) => r.fulfill({ status: 200, contentType: 'app
    takes it out of what is returned. */
 let rows = [];
 let n = 0;
+/* Whether the app can send mail at all. Flipped part-way through the run: the
+   queue's only handler is email, and a screen that takes a plan for Tuesday
+   while nothing can be sent is the failure this whole feature is shaped
+   around avoiding. */
+let sends = true;
 const sent = [];
 await p.route('**/api/schedule*', async (route) => {
   const request = route.request();
@@ -94,7 +99,7 @@ await p.route('**/api/schedule*', async (route) => {
     rows = rows.filter((one) => one.id !== id);
     return json({ cancelled: rows.length < before });
   }
-  return json({ posts: rows, ready: true });
+  return json({ posts: rows, ready: true, sends });
 });
 
 await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
@@ -164,6 +169,22 @@ check('cancelling takes it off the screen', !/New single out now/.test(gone),
   gone.slice(0, 160).replace(/\n/g, ' / '));
 check('and the screen goes back to saying nothing is queued',
   af ? /Nog niks in die ry nie/.test(gone) : /Nothing queued yet/.test(gone));
+
+/* ── When nothing can actually be sent ───────────────────────────────────
+   `canEmail: false` on a live deployment is not hypothetical — it is the state
+   this app was in the day the queue landed. Every row queued then is failed on
+   its first attempt for a reason that has nothing to do with the post, so the
+   screen has to say it before somebody plans a week around it. */
+sends = false;
+await room.locator('#queue-time').fill('19:00');
+await room.locator('button').filter({ hasText: af ? /^Sit dit in die ry$/ : /^Put it in the queue$/ }).first().click();
+await p.waitForTimeout(1500);
+const warned = await room.innerText();
+check('with no mail service the screen says so, before anything is planned',
+  af ? /Herinneringe kan nog nie gestuur word nie/.test(warned) : /Reminders cannot be sent yet/.test(warned),
+  'somebody could plan a week into a queue that cannot reach them');
+check('and it does not pretend the row was lost',
+  af ? /word bewaar/.test(warned) : /will be kept/.test(warned));
 
 /* ── Why, for somebody who asks ───────────────────────────────────────────
    Folded away, but there — and naming what it would take rather than saying
