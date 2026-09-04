@@ -19,12 +19,13 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Gauge, Loader2, Mic2, Music2, Plus, Scissors, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { Check, Circle, Gauge, Loader2, Mic2, Music2, Plus, Scissors, Sliders, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, dbOf, mixSession, monoOf, readInto, readSession, span, wireLane,
   type Lane, type Master, type Reading,
 } from '../lib/session';
 import { failed, separate } from '../lib/stems';
+import { CLEAN, isClean, type Tone } from '../lib/tone';
 import { accessToken } from '../lib/cloud';
 import VoicePicker from './VoicePicker';
 import type { VoiceState } from './VoiceLab';
@@ -1021,6 +1022,8 @@ function LaneRow({
   const { t } = useLang();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const quiet = audible(lanes).indexOf(lane) < 0;
+  const [open, setOpen] = useState(false);
+  const tone: Tone = lane.tone ?? CLEAN;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -1057,7 +1060,8 @@ function LaneRow({
   }, [at, lane, quiet, total]);
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-2 flex items-center gap-3">
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
+    <div className="p-2 flex items-center gap-3">
       <div className="w-40 flex-shrink-0 space-y-1">
         <input
           value={lane.name}
@@ -1102,6 +1106,21 @@ function LaneRow({
       </div>
 
       <canvas ref={canvasRef} className="flex-1 rounded-lg bg-zinc-950/70" style={{ height: LANE_H }} />
+
+      <button
+        type="button"
+        onClick={() => setOpen((was) => !was)}
+        aria-expanded={open}
+        title={t('pro.tone', 'Tone')}
+        aria-label={t('pro.tone', 'Tone')}
+        className={`flex-shrink-0 p-1.5 rounded-lg border ${
+          isClean(lane.tone)
+            ? 'border-zinc-800 text-zinc-600 hover:text-zinc-300'
+            : 'border-emerald-500/50 text-emerald-400'
+        }`}
+      >
+        <Sliders className="w-4 h-4" />
+      </button>
 
       <div className="w-24 flex-shrink-0 flex items-center gap-1.5">
         <span className="text-[11px] text-zinc-600">L</span>
@@ -1156,6 +1175,83 @@ function LaneRow({
           </button>
         )}
       </div>
+    </div>
+
+    {/* ── Tone ──────────────────────────────────────────────────────────
+        A tone stack, not a model of a named amplifier. Nothing here was
+        measured against a Fender or a Marshall and no cabinet recording is
+        loaded — those are somebody else's licensed product. What it does is
+        real and it is most of what a guitar recorded on a phone needs, which
+        is something to stop it sounding like a phone. The screen says so,
+        because a guitarist reading "amp modeller" and hearing this would be
+        right to be annoyed. */}
+    {open && (
+      <div className="border-t border-zinc-800 px-3 py-2.5 space-y-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <label className="flex items-center gap-1.5">
+            <span className="text-xs text-zinc-500 w-10">{t('pro.drive', 'Drive')}</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round(tone.drive * 100)}
+              onChange={(event) => onChange({ tone: { ...tone, drive: Number(event.target.value) / 100 } })}
+              className="w-28 accent-emerald-500"
+              aria-label={t('pro.drive', 'Drive')}
+            />
+          </label>
+          <label className="flex items-center gap-1.5">
+            <span className="text-xs text-zinc-500 w-10">{t('pro.colour', 'Colour')}</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round(tone.colour * 100)}
+              onChange={(event) => onChange({ tone: { ...tone, colour: Number(event.target.value) / 100 } })}
+              className="w-28 accent-emerald-500"
+              aria-label={t('pro.colour', 'Colour')}
+            />
+          </label>
+          <label className="flex items-center gap-1.5">
+            <span className="text-xs text-zinc-500 w-10">{t('pro.blend', 'Blend')}</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round(tone.mix * 100)}
+              onChange={(event) => onChange({ tone: { ...tone, mix: Number(event.target.value) / 100 } })}
+              className="w-28 accent-emerald-500"
+              aria-label={t('pro.blend', 'Blend')}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => onChange({ tone: { ...tone, cabinet: !tone.cabinet } })}
+            aria-pressed={tone.cabinet}
+            className={`px-2.5 py-1 rounded-lg border text-xs font-bold ${
+              tone.cabinet
+                ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
+                : 'bg-zinc-950 border-zinc-700 text-zinc-500'
+            }`}
+          >
+            {t('pro.cabinet', 'Speaker')}
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange({ tone: CLEAN })}
+            className="px-2.5 py-1 rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-500 hover:text-white"
+          >
+            {t('pro.clean', 'Straight')}
+          </button>
+        </div>
+        <p className="text-[11px] text-zinc-600 leading-snug">
+          {t(
+            'pro.toneWhat',
+            'A tone stack built here, not a model of a named amplifier: a soft clip, a tilt, and the band a guitar speaker passes. Turning the drive up changes the shape and not the level, so it cannot be pushed just because louder sounded better.',
+          )}
+        </p>
+      </div>
+    )}
     </div>
   );
 }

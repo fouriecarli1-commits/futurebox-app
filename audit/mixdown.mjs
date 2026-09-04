@@ -113,6 +113,45 @@ try {
   check('a quiet mix asked to match loudness reaches the target',
     near(said.matchedRms, 0.1995, 0.01), String(said.matchedRms));
 
+  /* ── Tone ─────────────────────────────────────────────────────────────
+     A lane nobody touched must come out untouched — a tone chain that is
+     built and then does something at its default settings would colour every
+     lane in the app silently. */
+  check('a clean tone leaves the audio bit for bit alone', said.cleanIsUntouched === 1);
+
+  /* Drive compresses. The curve is normalised so that turning it up changes
+     the shape and not the level — which is the point: louder is reliably
+     mistaken for better, and a drive control that is also a volume control
+     gets pushed for the wrong reason. So the average must rise while the
+     peak stays put. */
+  check('drive raises the average level', said.drivenRms > said.plainRms * 1.15,
+    `${said.plainRms} → ${said.drivenRms}`);
+  /* The peak-to-average ratio falling is what compression *is*, and it is the
+     honest way to state this. The first version asserted that the peak does
+     not move at all, which is false for anything below full scale — a soft
+     clip pushes a half-scale signal up towards the ceiling, and that is the
+     effect, not a side effect. */
+  check('and squashes the peak-to-average ratio, which is what compression is',
+    said.drivenPeak / said.drivenRms < (said.plainPeak / said.plainRms) * 0.85,
+    `${said.plainPeak / said.plainRms} → ${said.drivenPeak / said.drivenRms}`);
+  /* What "normalised" actually promises: a lane already at full scale does not
+     come out any louder for being driven. That is what stops the drive
+     doubling as a volume knob and being pushed because louder sounded better. */
+  check('a full-scale lane is no louder for being driven',
+    said.loudDrivenPeak <= said.loudPlainPeak * 1.01,
+    `${said.loudPlainPeak} → ${said.loudDrivenPeak}`);
+
+  /* And the speaker band removes what is above it, rather than being three
+     filters that were wired up and never connected. */
+  /* Averages, not peaks: a filter fed a sine that starts abruptly overshoots
+     on the first cycles, and the peak over the buffer is that transient rather
+     than what the filter passes. Read as a peak this said the four-pole
+     cabinet was 7 dB down at 9 kHz when it is twenty — a measurement error
+     that looked exactly like a filter that was not connected. */
+  const cabinetDb = 20 * Math.log10(said.boxedRms / said.brightRms);
+  check('the speaker band takes 9 kHz right out, as a four-pole roll-off should',
+    cabinetDb < -15, `${cabinetDb.toFixed(1)} dB at 9 kHz`);
+
   /* ── The same twice ───────────────────────────────────────────────────
      Rendering is offline, so it must be deterministic. If it is not, the
      file somebody approves is not the file they get, and nothing else here

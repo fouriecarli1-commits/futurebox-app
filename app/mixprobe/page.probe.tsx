@@ -19,6 +19,7 @@ import React, { useState } from 'react';
 import {
   FLAT_MASTER, mixSession, peakOf, readSession, rmsOf, type Lane, type Master,
 } from '../lib/session';
+import { CLEAN } from '../lib/tone';
 
 const RATE = 48_000;
 
@@ -90,6 +91,61 @@ export default function MixProbe(): React.ReactElement {
     if (softRead) {
       const rendered = await mixSession(soft, RATE, loud, softRead.trim);
       if (rendered) out.matchedRms = rmsOf(rendered);
+    }
+
+    /* ── Tone ─────────────────────────────────────────────────────────
+       Three questions. Does a clean tone genuinely do nothing — because a
+       lane nobody touched must come out untouched. Does drive compress
+       without simply turning the volume up, which is the whole reason the
+       curve is normalised. And does the speaker band actually remove what is
+       above it, rather than being three filters that were wired but never
+       connected. */
+    const plain = await mixSession([laneOf('p', tone(440, 1, 0.5))], RATE);
+    const clean = await mixSession([laneOf('p', tone(440, 1, 0.5), { tone: CLEAN })], RATE);
+    out.cleanIsUntouched = plain && clean && same(plain, clean) ? 1 : 0;
+
+    const driven = await mixSession(
+      [laneOf('d', tone(440, 1, 0.5), { tone: { ...CLEAN, drive: 0.9 } })],
+      RATE,
+    );
+    if (plain && driven) {
+      out.plainRms = rmsOf(plain);
+      out.drivenRms = rmsOf(driven);
+      out.plainPeak = peakOf(plain);
+      out.drivenPeak = peakOf(driven);
+    }
+
+    /* Full scale in, full scale out. This is what "normalised" actually
+       promises — not that the peak never moves (a soft clip pushes a
+       half-scale signal up towards the ceiling, which is the compression
+       everybody wants from it) but that it never pushes past where an
+       undriven full-scale lane already sits. */
+    const loudPlain = await mixSession([laneOf('lp', tone(440, 1, 1))], RATE);
+    const loudDriven = await mixSession(
+      [laneOf('ld', tone(440, 1, 1), { tone: { ...CLEAN, drive: 0.9 } })],
+      RATE,
+    );
+    if (loudPlain && loudDriven) {
+      out.loudPlainPeak = peakOf(loudPlain);
+      out.loudDrivenPeak = peakOf(loudDriven);
+    }
+
+    const bright = await mixSession([laneOf('b', tone(9000, 1, 0.5))], RATE);
+    const boxed = await mixSession(
+      [laneOf('b', tone(9000, 1, 0.5), { tone: { ...CLEAN, cabinet: true } })],
+      RATE,
+    );
+    if (bright && boxed) {
+      /* Measured as an average, not as a peak. A filter handed a sine that
+         starts abruptly overshoots on the first few cycles — the step
+         response — and the peak over the whole buffer is that transient
+         rather than what the filter passes. Reading the peak said the
+         four-pole cabinet was only 7 dB down at 9 kHz when it is twenty; the
+         measurement was wrong, not the filter. */
+      out.brightRms = rmsOf(bright);
+      out.boxedRms = rmsOf(boxed);
+      out.brightPeak = peakOf(bright);
+      out.boxedPeak = peakOf(boxed);
     }
 
     // ── The same session twice is the same file ───────────────────────
