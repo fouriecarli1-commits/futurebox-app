@@ -137,3 +137,21 @@ gain node and one that only moves a number on screen.
 It also seeds the song's audio into `futurebox`/`audio` in IndexedDB. Without
 it the split button is correctly disabled, and the run stops at a screen
 behaving properly.
+
+`stitch.mjs` needs the module bundled, like `photo.mjs`:
+
+```
+npx esbuild app/lib/stitch.ts --bundle --format=iife --global-name=ST \
+  --outfile=/tmp/stitch.bundle.js
+node audit/stitch.mjs /tmp/stitch.bundle.js
+```
+
+It makes its own clips in the page — canvas, recorded — so what is stitched is
+genuine video with genuine durations rather than fixtures, and it reports how
+long the cut took against how long the film is. That ratio is the feature's
+real cost and belongs in the output where somebody reads it.
+
+Its audio check decodes the output rather than asking the video element.
+`mozHasAudio`, `webkitAudioDecodedByteCount` and `audioTracks` are each
+non-standard and none answers in Chromium, so the first version reported a
+silent film for a file that had sound on it.
