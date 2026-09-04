@@ -1,0 +1,156 @@
+'use client';
+
+/**
+ * A film as a list of shots.
+ *
+ * ── What this is for ─────────────────────────────────────────────────────
+ *
+ * The engines cap a single generation between four and thirty seconds and a
+ * music video is three minutes, so a long one is a dozen short ones cut
+ * together. `lib/stitch.ts` does the cutting. This is the list being cut: what
+ * each shot is, how long it runs, which clip came back for it, and what order
+ * they go in.
+ *
+ * It is the difference between twelve files and one film. Twelve generations
+ * were always possible; keeping them in an order, against a song, with a
+ * running total, was not.
+ *
+ * ── Why it survives a reload ─────────────────────────────────────────────
+ *
+ * Because somebody will spend an hour on it and money on every shot in it. A
+ * storyboard that lived in React state would be gone on a refresh, taking a
+ * dozen paid-for clips with it as far as the film is concerned — they would
+ * still be in the history, unlabelled and out of order, which is not the same
+ * thing at all.
+ *
+ * The shots are in `localStorage`; the clips stay where every other generation
+ * on this desk already goes, in `lib/makes.ts`, and a shot holds the make's
+ * id. That means one store for clips rather than two, and it means a shot
+ * pointing at a clip that has been evicted can say so instead of showing a
+ * broken frame — which is why every clip a storyboard uses is marked as a
+ * favourite, the flag `makes.ts` already honours when it evicts.
+ */
+
+import { makeBlob } from './makes';
+
+export interface Shot {
+  readonly id: string;
+  /** What is in it. The same sentence the desk would take. */
+  readonly prompt: string;
+  /** How long it should run. One of the lengths the chosen grade makes. */
+  readonly seconds: number;
+  /** The `makes.ts` id of the clip that came back, once one has. */
+  readonly makeId?: string;
+}
+
+export interface Storyboard {
+  readonly shots: readonly Shot[];
+  /** The track laid under the whole film, by its library id. */
+  readonly songId?: string;
+}
+
+const KEY = 'futurebox.storyboard.v1';
+
+export const EMPTY: Storyboard = { shots: [] };
+
+/**
+ * A ceiling, because a browser cuts this in real time.
+ *
+ * Thirty shots at ten seconds is five minutes of export with the tab open,
+ * which is already a lot to ask. It is not a technical limit — the stitcher
+ * would take a hundred — it is a limit on how long somebody can reasonably be
+ * asked to sit and watch a progress line.
+ */
+export const MOST_SHOTS = 30;
+
+export function loadStoryboard(): Storyboard {
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    if (!raw) return EMPTY;
+    const said = JSON.parse(raw) as Storyboard;
+    if (!Array.isArray(said?.shots)) return EMPTY;
+    return {
+      shots: said.shots
+        .filter((one) => one && typeof one.id === 'string')
+        .slice(0, MOST_SHOTS)
+        .map((one) => ({
+          id: one.id,
+          prompt: typeof one.prompt === 'string' ? one.prompt : '',
+          seconds: Number.isFinite(one.seconds) ? one.seconds : 5,
+          ...(typeof one.makeId === 'string' ? { makeId: one.makeId } : {}),
+        })),
+      ...(typeof said.songId === 'string' ? { songId: said.songId } : {}),
+    };
+  } catch {
+    return EMPTY;
+  }
+}
+
+export function saveStoryboard(board: Storyboard): void {
+  try {
+    window.localStorage.setItem(KEY, JSON.stringify(board));
+  } catch {
+    // Storage full or blocked. The board still works for this session, and
+    // saying so on screen would be noise about something nobody can fix here.
+  }
+}
+
+export function shotId(): string {
+  return `shot-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+/** How long the film runs, which is every shot added up. */
+export function runtime(board: Storyboard): number {
+  return board.shots.reduce((total, one) => total + one.seconds, 0);
+}
+
+/** How many shots still have no clip behind them. */
+export function missing(board: Storyboard): number {
+  return board.shots.filter((one) => !one.makeId).length;
+}
+
+export function withShot(board: Storyboard, shot: Shot): Storyboard {
+  return { ...board, shots: [...board.shots, shot].slice(0, MOST_SHOTS) };
+}
+
+export function withoutShot(board: Storyboard, id: string): Storyboard {
+  return { ...board, shots: board.shots.filter((one) => one.id !== id) };
+}
+
+export function changed(board: Storyboard, id: string, fields: Partial<Shot>): Storyboard {
+  return {
+    ...board,
+    shots: board.shots.map((one) => (one.id === id ? { ...one, ...fields } : one)),
+  };
+}
+
+/**
+ * A shot moved one place.
+ *
+ * Buttons rather than dragging, and that is a decision. Dragging a list is
+ * the nicer thing on a laptop and is the harder thing on a phone, where this
+ * app is mostly used — and a reorder that only works with a mouse is a reorder
+ * half the people here cannot do. Two arrows work everywhere, including for
+ * somebody using a keyboard.
+ */
+export function moved(board: Storyboard, id: string, by: -1 | 1): Storyboard {
+  const at = board.shots.findIndex((one) => one.id === id);
+  const to = at + by;
+  if (at < 0 || to < 0 || to >= board.shots.length) return board;
+  const shots = [...board.shots];
+  [shots[at], shots[to]] = [shots[to], shots[at]];
+  return { ...board, shots };
+}
+
+/**
+ * Every clip, in order, ready for the stitcher.
+ *
+ * Null where a shot has no clip or its clip has been evicted — the caller
+ * decides what that means, because "not made yet" and "made and then lost" are
+ * different things to say to somebody who paid for the second one.
+ */
+export async function clipsFor(board: Storyboard): Promise<(Blob | null)[]> {
+  return Promise.all(
+    board.shots.map((one) => (one.makeId ? makeBlob(one.makeId) : Promise.resolve(null))),
+  );
+}

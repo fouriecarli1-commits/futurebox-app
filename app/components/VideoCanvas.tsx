@@ -33,7 +33,7 @@ import { Video as VideoIcon, Loader2, Download, Quote, AlertTriangle, Volume2, V
 import {
   SCENES, spokenLines, looksUnquoted, LENGTHS, GENRES, type Scene, type Genre,
 } from '../lib/videoscenes';
-import { engines, probeVideoEngine, type VideoEngine } from '../lib/engines';
+import { engines, probeVideoEngine, type EngineAspect, type VideoEngine } from '../lib/engines';
 import { CREDITS, readCost, videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { signal } from '../lib/signal';
@@ -45,11 +45,12 @@ import CheaperPath from './CheaperPath';
 import StartFrame from './StartFrame';
 import Presenter from './Presenter';
 import SafeZones from './SafeZones';
+import Storyboard from './Storyboard';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 
-type Aspect = '9:16' | '16:9' | '1:1';
+type Aspect = EngineAspect;
 
 interface Made {
   readonly blob: Blob;
@@ -255,7 +256,13 @@ export default function VideoCanvas({
   }, [lengths, seconds]);
 
   useEffect(() => {
-    if (!shapes.includes(aspect)) setAspect(shapes[0] as Aspect);
+    if (!shapes.includes(aspect)) {
+      // `shapes` comes off the server's capability answer, so it is strings.
+      // Narrowed rather than asserted: a shape the app does not know about is
+      // one it should not select.
+      const first = shapes.find((one): one is Aspect => one === '16:9' || one === '9:16' || one === '1:1');
+      if (first) setAspect(first);
+    }
   }, [shapes, aspect]);
 
   const spoken = useMemo(() => spokenLines(prompt), [prompt]);
@@ -750,6 +757,21 @@ export default function VideoCanvas({
             }}
           />
         )}
+
+        {/* ── A film out of many shots ────────────────────────────────
+            Under the single-shot composer, because it is the same desk asking
+            a bigger question: everything above makes one clip, and no engine
+            makes more than half a minute. It borrows this desk's grade, shape
+            and start frame rather than growing a second set — one decision,
+            made once, above, and the cast picture is the whole reason twelve
+            shots can have one person in them. */}
+        <Storyboard
+          aspect={aspect}
+          grade={grade}
+          lengths={lengths}
+          frame={frame}
+          onUpgrade={onUpgrade}
+        />
 
         {/* ── A presenter, when one is switched on ────────────────────
             Below the shot composer rather than beside it, because it is a

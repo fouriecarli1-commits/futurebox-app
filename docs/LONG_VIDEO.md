@@ -69,25 +69,34 @@ for work the laptop is already holding the files for. It also needs a machine
 this app does not run: a Vercel function has neither the time nor the memory
 for a three-minute encode.
 
-## What is built, and what is not
+## Built
 
-**Built and proven:** the cut. Scenes in order, letterboxed into one frame, a
-song under them, one file out, progress reported per scene.
+The storyboard is in the video desk, under the single-shot composer, because
+it is the same desk asking a bigger question. Write the shots, make them one
+at a time, choose a song, cut them into one file.
 
-**Not built:** the room somebody does this in. That is the next slice, and it
-is the bigger half:
+`audit/storyboard.mjs` drives the whole path in both languages and stubs only
+the engine — at the wire, and returning a genuinely recorded clip, so
+`generateVideo` does its real work of posting, polling and downloading and the
+stitcher gets real video:
 
-1. **A storyboard.** Scenes in order, each with its own prompt, each showing
-   its length and the running total against the song's length. This is the
-   piece that makes twelve generations feel like one film rather than twelve
-   files.
-2. **Generating into a slot.** The desk already generates a clip; here it
-   generates *the next scene*, and drops it where it belongs. The cast is what
-   keeps the same face across all twelve.
-3. **Trimming.** A clip that is 10s where 6s was wanted. Cheap to add once the
-   storyboard exists — the stitcher plays a clip, so it can play part of one.
-4. **The export.** Already done, needs a button and a progress line that says
-   the honest thing: *this takes as long as the film is*.
+```
+the storyboard survives a reload: true
+each was asked for at the length on its row: true
+the film is as long as its clips (6.0s wanted, 6.01s got): true
+```
+
+Trimming is still not built, and is still cheap to add: the stitcher plays a
+clip, so it can play part of one.
+
+## What was built before this, and what is still not
+
+**Built and proven:** the cut, and the storyboard on top of it. Scenes in
+order, letterboxed into one frame, a song under them, one file out, progress
+reported per scene, and a board that survives a reload because somebody will
+spend an hour and a dozen paid generations on one.
+
+**Still not built:** trimming. A clip that is 10s where 6s was wanted.
 
 ## Three things worth stealing, from Kapwing
 

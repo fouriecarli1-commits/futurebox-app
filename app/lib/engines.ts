@@ -73,10 +73,22 @@ export interface AudioRequest {
   readonly onStage?: (stage: Stage) => void;
 }
 
+/**
+ * The shapes an engine will make, which is not the same set the browser's own
+ * renderer makes.
+ *
+ * `lib/video.ts` has an `Aspect` of two values, because the sketch it draws
+ * only ever does wide and tall. The engines do three, and `VideoCanvas`
+ * declared its own three-value copy locally to say so — two types of the same
+ * name meaning different things, with `shapes[0] as Aspect` papering over the
+ * gap. Named once, here, where the request that carries it is defined.
+ */
+export type EngineAspect = '16:9' | '9:16' | '1:1';
+
 export interface VideoRequest {
   readonly title: string;
   readonly treatment: string;
-  readonly aspect: '16:9' | '9:16' | '1:1';
+  readonly aspect: EngineAspect;
   readonly seconds: number;
   /**
    * What was paid for, not which engine. The server picks the engine, because
