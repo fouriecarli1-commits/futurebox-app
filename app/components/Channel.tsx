@@ -397,6 +397,25 @@ export default function Channel({
           are different decisions and the milder one should be reachable
           without reading past the other. */}
       <Subscription />
+
+      {/* Before the way out, the way to ask.
+
+          Somebody on this page is looking at what they pay and whether to
+          keep it, which is exactly the moment a question turns into a
+          cancellation if there is nowhere to put it. The footer carries the
+          same link, but the studio covers the footer — so it is here too, in
+          the one room where the decision is being made. */}
+      <p className="text-sm text-zinc-500 leading-relaxed">
+        {t('chan.helpBefore', 'A question about any of this?')}{' '}
+        <a
+          href="/help"
+          className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300"
+        >
+          {t('chan.helpLink', 'Ask, or write to a person')}
+        </a>
+        .
+      </p>
+
       {email && <DeleteAccount email={email} />}
     </div>
   );

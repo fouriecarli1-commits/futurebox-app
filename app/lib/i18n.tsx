@@ -1347,6 +1347,29 @@ export const STRINGS: Dict = {
   "sub.keep": { en: "Keep it", af: "Hou dit" },
   "sub.stopped": { en: "Stopped. Nothing further will be charged, and a confirmation is on its way to your inbox.", af: "Gestop. Niks verder word gehef nie, en \u2019n bevestiging is op pad na jou inboks." },
   "sub.failed": { en: "That could not be stopped just now.", af: "Dit kon nie nou gestop word nie." },
+
+  /* The help desk. Somebody arrives here already stuck; an English fallback
+     is the second thing to go wrong in the same minute. */
+  "help.askTitle": { en: "Ask about anything here", af: "Vra oor enigiets hier" },
+  "help.askNote": { en: "It answers out of this app\u2019s own terms, privacy policy, prices and rooms \u2014 not a summary of them. It cannot see your account, so it cannot check a balance or cancel anything.", af: "Dit antwoord uit hierdie app se eie voorwaardes, privaatheidsbeleid, pryse en kamers \u2014 nie uit \u2019n opsomming daarvan nie. Dit kan nie jou rekening sien nie, so dit kan nie \u2019n saldo nagaan of iets kanselleer nie." },
+  "help.off": { en: "The assistant is switched off for this app right now. The form below reaches a person.", af: "Die assistent is nou af vir hierdie app. Die vorm hieronder bereik \u2019n mens." },
+  "help.thinking": { en: "Reading the terms\u2026", af: "Lees die voorwaardes\u2026" },
+  "help.questionLabel": { en: "Your question", af: "Jou vraag" },
+  "help.placeholder": { en: "What does a music video cost? How do I cancel?", af: "Wat kos \u2019n musiekvideo? Hoe kanselleer ek?" },
+  "help.ask": { en: "Ask", af: "Vra" },
+  "help.failed": { en: "That could not be answered just now. The form below still works.", af: "Dit kon nie nou beantwoord word nie. Die vorm hieronder werk steeds." },
+  "help.writeTitle": { en: "Or write to a person", af: "Of skryf aan \u2019n mens" },
+  "help.writeNote": { en: "Billing, an account you cannot get into, something that went wrong, or anything the assistant did not settle. It goes straight to the person who runs FutureBox.", af: "Rekeninge, \u2019n rekening waarby jy nie kan inkom nie, iets wat verkeerd geloop het, of enigiets wat die assistent nie uitgesorteer het nie. Dit gaan reguit na die mens wat FutureBox bestuur." },
+  "help.email": { en: "Your email", af: "Jou e-pos" },
+  "help.name": { en: "Your name", af: "Jou naam" },
+  "help.optional": { en: "(optional)", af: "(opsioneel)" },
+  "help.message": { en: "What is the matter?", af: "Wat is die saak?" },
+  "help.send": { en: "Send it", af: "Stuur dit" },
+  "help.sent": { en: "Sent. You will get a reply at the address you gave. If it is urgent, the address below reaches the same inbox.", af: "Gestuur. Jy sal \u2019n antwoord kry by die adres wat jy gegee het. As dit dringend is, bereik die adres hieronder dieselfde inboks." },
+  "help.sendFailed": { en: "That could not be sent. The address below works.", af: "Dit kon nie gestuur word nie. Die adres hieronder werk." },
+  "help.direct": { en: "Or write directly to", af: "Of skryf direk aan" },
+  "chan.helpBefore": { en: "A question about any of this?", af: "'n Vraag oor enige hiervan?" },
+  "chan.helpLink": { en: "Ask, or write to a person", af: "Vra, of skryf aan 'n mens" },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';

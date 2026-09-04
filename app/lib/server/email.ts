@@ -77,6 +77,16 @@ export interface Letter {
    */
   readonly once?: string;
   readonly kind: string;
+  /**
+   * Where a reply should go, when it is not the enquiries mailbox.
+   *
+   * Every letter to a member replies to enquiries, which is right: they wrote
+   * to us. An enquiry *forwarded* to whoever runs the place is the other
+   * direction — it should reply to the person who asked, so answering it is
+   * hitting reply rather than copying an address out of the body and hoping it
+   * was typed correctly.
+   */
+  readonly replyTo?: string;
 }
 
 /**
@@ -126,7 +136,7 @@ export async function send(letter: Letter): Promise<Sent> {
       body: JSON.stringify({
         from: FROM(),
         to: [letter.to],
-        reply_to: ENQUIRIES,
+        reply_to: letter.replyTo || ENQUIRIES,
         subject: letter.subject,
         text: wrap(letter.text),
       }),
@@ -177,7 +187,7 @@ async function note(
 export async function tellOwner(
   subject: string,
   text: string,
-  options: { once?: string; kind?: string } = {},
+  options: { once?: string; kind?: string; replyTo?: string } = {},
 ): Promise<Sent> {
   return send({
     to: OWNER(),
@@ -185,6 +195,7 @@ export async function tellOwner(
     text,
     kind: options.kind ?? 'operator',
     ...(options.once ? { once: options.once } : {}),
+    ...(options.replyTo ? { replyTo: options.replyTo } : {}),
   });
 }
 

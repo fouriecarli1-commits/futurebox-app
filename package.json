@@ -12,7 +12,10 @@
     "check:prices": "tsx scripts/check-prices.mts",
     "check:afrikaans": "tsx scripts/check-afrikaans.mts",
     "check:security": "tsx scripts/check-security.mts",
-    "check:letters": "tsx scripts/check-letters.mts"
+    "check:letters": "tsx scripts/check-letters.mts",
+    "check:handbook": "tsx scripts/check-handbook.mts",
+    "check:brake": "tsx scripts/check-brake.mts",
+    "handbook": "tsx scripts/build-handbook.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

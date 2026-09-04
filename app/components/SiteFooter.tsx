@@ -12,6 +12,10 @@
  * is carried in the image's alt text, where a screen reader will read it and
  * where it travels with the mark if the image is ever quoted elsewhere.
  *
+ * Help sits alongside them for the same reason: the way to ask a question has
+ * to be reachable from every page including the ones somebody lands on while
+ * signed out, which is most of the ones they land on with a question.
+ *
  * The two policy links live here rather than in each page's own footer, which
  * is what makes them reachable from the policy pages themselves and from
  * anywhere somebody lands without signing in. An outside assessment found no
@@ -29,6 +33,9 @@ export function SiteFooter() {
         <div className="flex flex-col items-center gap-2 sm:items-start">
           <p>© {year} FutureBox. All rights reserved.</p>
           <nav className="flex gap-5">
+            <a href="/help" className="underline underline-offset-4 hover:text-zinc-200">
+              Help
+            </a>
             <a href="/privacy" className="underline underline-offset-4 hover:text-zinc-200">
               Privacy
             </a>

@@ -70,6 +70,17 @@ jobs:
       - name: The letters say what they must
         run: npm run check:letters
 
+      # The help assistant answers policy questions out of a file generated
+      # from /terms and /privacy. If the pages move and the file does not, it
+      # answers confidently out of last month's policy.
+      - name: The handbook matches the policy pages
+        run: npm run check:handbook
+
+      # Two unauthenticated routes call a reasoning model. The only thing
+      # between them and an unbounded bill looks identical working or broken.
+      - name: The rate brake holds
+        run: npm run check:brake
+
       # The security claims in docs/GOING_LIVE.md, as assertions. One of them
       # was badly wrong for weeks — a claim written once is a claim nobody
       # re-runs. This one needs the build above it to check the client bundle,

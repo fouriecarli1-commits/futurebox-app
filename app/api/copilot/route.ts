@@ -24,6 +24,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { SURFACES, describeOps, isSurfaceId, surfaceDirectory, type SurfaceId } from '@/app/lib/surfaces';
+import { tooMany } from '@/app/lib/server/brake';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -133,7 +134,25 @@ function contextFor(body: Body): string {
   return `${lines.join('\n')}\n\nThey said:\n${body.message}`;
 }
 
+/**
+ * A ceiling per caller.
+ *
+ * This route asks a reasoning model on every turn and never asks who is
+ * calling, which for a long time meant one loop could spend a month's model
+ * budget in an afternoon with nothing to stop it. Twenty a minute is far more
+ * than a person types and far less than a script sends. See
+ * `lib/server/brake.ts` for why this is a brake and not a gate.
+ */
+const LIMITS = { perMinute: 20, perHour: 200 };
+
 export async function POST(request: Request): Promise<Response> {
+  if (tooMany('copilot', request, LIMITS)) {
+    return Response.json(
+      { error: 'rate_limited', message: 'Too many at once. Try again in a moment.' },
+      { status: 429 },
+    );
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return Response.json(
       { error: 'no_key', message: 'The copilot is switched off for this app.' },
