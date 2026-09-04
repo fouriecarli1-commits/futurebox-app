@@ -407,7 +407,7 @@ export const STRINGS: Dict = {
   "radar.kind.podcast": { en: "Listen", af: "Luister" },
   "frame.title": { en: "Start from a picture", af: "Begin by ’n prent" },
   "frame.hint": { en: "The shape of the clip comes from the picture now. Write what moves rather than what it looks like.", af: "Die vorm van die snit kom nou van die prent af. Skryf wat beweeg eerder as hoe dit lyk." },
-  "frame.why": { en: "Optional, and it costs nothing extra. A picture settles the look in one go, so the sentence only has to say what moves.", af: "Opsioneel, en dit kos niks ekstra nie. ’n Prent besleg die voorkoms in een slag, sodat die sin net hoef te sê wat beweeg." },
+  "frame.why": { en: "Optional, and it costs nothing extra. A picture settles the look in one go \u2014 the same face, the same room, the same product in every clip \u2014 so the sentence only has to say what moves.", af: "Opsioneel, en dit kos niks ekstra nie. \u2019n Prent besleg die voorkoms in een slag \u2014 dieselfde gesig, dieselfde kamer, dieselfde produk in elke snit \u2014 sodat die sin net hoef te s\u00ea wat beweeg." },
   "style.noAudio": { en: "This browser cannot play a sketch. The words below still work.", af: "Hierdie blaaier kan nie ’n skets speel nie. Die woorde hieronder werk steeds." },
   "style.sketchNote": { en: "Play draws a sketch in your browser — the tempo, the key and the shape of the groove. It is a direction, not a recording of the genre.", af: "Speel teken ’n skets in jou blaaier — die tempo, die toonaard en die vorm van die groef. Dit is ’n rigting, nie ’n opname van die genre nie." },
   "canvas.genre": { en: "What kind of song is it?", af: "Wat vir ’n soort liedjie is dit?" },
@@ -1384,6 +1384,20 @@ export const STRINGS: Dict = {
   "photo.unreadable": { en: "That picture could not be read. A JPEG or a PNG will work.", af: "Daardie foto kon nie gelees word nie. 'n JPEG of 'n PNG sal werk." },
   "photo.signedOut": { en: "Sign in first, so it is saved to your account.", af: "Teken eers in, sodat dit by jou rekening gestoor word." },
   "photo.failed": { en: "That did not upload. Try again in a moment.", af: "Dit het nie opgelaai nie. Probeer oor 'n oomblik weer." },
+
+  /* The video desk's shapes, lengths and the picture attachment. */
+  "canvas.shapeNote.9:16": { en: "TikTok, Reels, Shorts", af: "TikTok, Reels, Shorts" },
+  "canvas.shapeNote.16:9": { en: "YouTube, a website", af: "YouTube, 'n webwerf" },
+  "canvas.shapeNote.1:1": { en: "A feed post", af: "'n Pos in 'n stroom" },
+  "canvas.longestHere": { en: "The longest on this grade is", af: "Die langste op hierdie graad is" },
+  "canvas.goesTo": { en: "goes to", af: "gaan tot" },
+  "canvas.longestAny": { en: "The longest anything here makes in one go is", af: "Die langste wat enigiets hier in een slag maak is" },
+  "canvas.noLengths": { en: "This grade is not answering with any lengths right now. Try another one.", af: "Hierdie graad gee nou geen lengtes terug nie. Probeer 'n ander een." },
+  "canvas.frameOn": { en: "The engines behind this grade would ignore the picture and charge you anyway, so it is not offered here. It works on", af: "Die enjins agter hierdie graad sou die foto ignoreer en jou in elk geval hef, so dit word nie hier aangebied nie. Dit werk op" },
+  "canvas.frameSwitch": { en: "Switch to", af: "Skuif na" },
+  "frame.switch": { en: "Move to the grade that reads it", af: "Skuif na die graad wat dit lees" },
+  "pick.hintA": { en: "Reads what you have written and chooses", af: "Lees wat jy geskryf het en kies" },
+  "pick.hintB": { en: "then says why. It costs nothing and you can change it after.", af: "en s\u00ea dan hoekom. Dit kos niks en jy kan dit daarna verander." },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';

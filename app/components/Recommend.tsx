@@ -13,6 +13,20 @@
  * excellent at "what should I do next" and wrong for "which of these six",
  * because using it means describing to it something already on the screen.
  *
+ * ── What it says before it is pressed ────────────────────────────────────
+ *
+ * What it is about to choose, and that it will say why.
+ *
+ * "Pick for me" on its own is two words above a grid of six cards, and there
+ * is nothing in it that says which of the things on screen it means, whether
+ * it costs anything, or whether pressing it is reversible. Somebody who does
+ * not already know is being asked to press a button to find out what it does,
+ * which is the one thing an interface should never ask.
+ *
+ * It costs nothing and changes one field. Both are worth a short sentence,
+ * because "the app will do something for me" is exactly where people expect
+ * to be charged.
+ *
  * ── What it shows afterwards ─────────────────────────────────────────────
  *
  * The reason, and it stays. A recommendation without a reason is a lottery
@@ -41,6 +55,7 @@ export default function Recommend({
   context,
   options,
   onPick,
+  hint,
   className = '',
 }: {
   /** What is being chosen, in words: "a voice to read this". */
@@ -50,6 +65,13 @@ export default function Recommend({
   options: RecommendOption[];
   /** Called with the chosen id. The field is set by the caller, not by this. */
   onPick: (id: string) => void;
+  /**
+   * Overrides the sentence under the button.
+   *
+   * The default is built from `what` and is right nearly everywhere. A field
+   * where the consequence is not obvious from its name can say its own.
+   */
+  hint?: string;
   className?: string;
 }): React.ReactElement | null {
   const { t, lang } = useLang();
@@ -107,6 +129,20 @@ export default function Recommend({
         {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
         {t('pick.forMe', 'Pick for me')}
       </button>
+      {/* Before: what it will do. After: what it did and why.
+
+          The two never show at once — once there is a reason on screen the
+          explanation has been demonstrated, and leaving both would be the app
+          talking about itself twice. */}
+      {!why && !problem && (
+        <span className="text-xs text-zinc-500 leading-relaxed max-w-md">
+          {hint ??
+            `${t('pick.hintA', 'Reads what you have written and chooses')} ${what}, ${t(
+              'pick.hintB',
+              'then says why. It costs nothing and you can change it after.',
+            )}`}
+        </span>
+      )}
       {why && <span className="text-xs text-zinc-400 leading-relaxed max-w-md">{why}</span>}
       {problem && <span className="text-xs text-rose-300 leading-relaxed max-w-md">{problem}</span>}
     </span>

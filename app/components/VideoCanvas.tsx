@@ -62,10 +62,25 @@ const GRADES: { id: VideoGrade; label: string; note: string }[] = [
   { id: 'premium', label: 'Premium', note: 'The best picture there is.' },
 ];
 
-const SHAPES: { id: Aspect; label: string; note: string }[] = [
-  { id: '9:16', label: 'Tall', note: 'TikTok, Reels, Shorts' },
-  { id: '16:9', label: 'Wide', note: 'YouTube, a website' },
-  { id: '1:1', label: 'Square', note: 'A feed post' },
+/**
+ * The shapes, with the size each one actually comes out at.
+ *
+ * "Tall" and "Wide" were the whole label, and the platform note was in a
+ * `title` attribute — which is a tooltip, which does not exist on a phone,
+ * which is where somebody making a reel is standing. So a person choosing
+ * between them had two words and no numbers, and no way to know whether what
+ * came back would fit the place they meant to put it.
+ *
+ * The pixel sizes are what the engines return at these ratios: 1080 on the
+ * short edge, which is what every one of these platforms wants and is the
+ * resolution the providers document. They are written here rather than
+ * computed so that a change in what an engine returns is a change to a line
+ * somebody has to read, not a silent drift in a formula.
+ */
+const SHAPES: { id: Aspect; label: string; size: string; note: string }[] = [
+  { id: '9:16', label: 'Tall', size: '1080 × 1920', note: 'TikTok, Reels, Shorts' },
+  { id: '16:9', label: 'Wide', size: '1920 × 1080', note: 'YouTube, a website' },
+  { id: '1:1', label: 'Square', size: '1080 × 1080', note: 'A feed post' },
 ];
 
 export default function VideoCanvas({
@@ -159,11 +174,72 @@ export default function VideoCanvas({
    * in flight, so the row is never empty and never wrong for long.
    */
   const able = engine?.can?.[grade];
-  const lengths = useMemo(
-    () => LENGTHS.filter((one) => (able?.seconds ?? [5, 10]).includes(one.seconds)),
-    [able],
-  );
-  const shapes = able?.aspects ?? ['16:9', '9:16'];
+
+  /* Land on a grade that exists.
+
+     This started on Standard and stayed there whether or not Standard was
+     connected — and on this deployment it is not, because the cheap engine is
+     held behind a flag until its wire format has been checked. Every
+     capability below is read off `can[grade]`, so an absent grade meant every
+     read missed and fell back to a guess: two lengths, two shapes, and no
+     picture attachment, none of which had anything to do with the engines
+     actually running. The desk was describing an engine that was not there.
+
+     Cheapest first, because that is still the right default when it is
+     available — only now it is a default among the ones that exist. */
+  useEffect(() => {
+    const there = engine?.grades;
+    if (!there?.length || there.includes(grade)) return;
+    const cheapestThere = (['standard', 'better', 'premium'] as VideoGrade[]).find((one) =>
+      there.includes(one),
+    );
+    if (cheapestThere) setGrade(cheapestThere);
+  }, [engine, grade]);
+
+  /* Before the probe answers, the pair every engine has. After it answers,
+     what this grade actually said — and nothing invented if it said nothing. */
+  const answered = engine !== null;
+  const lengths = useMemo(() => {
+    const said = able?.seconds ?? (answered ? [] : [5, 10]);
+    return LENGTHS.filter((one) => said.includes(one.seconds));
+  }, [able, answered]);
+  const shapes = able?.aspects ?? (answered ? [] : ['16:9', '9:16']);
+
+  /* What the longest clip on any connected grade is, and where it lives.
+
+     A row that stops at ten seconds with nothing said about it reads as the
+     app's limit. It is the engine's, it differs per grade, and moving one rung
+     is often the whole answer — so the row says so when another connected
+     grade goes further, and says nothing when this one is already the longest.
+     It can only speak about grades that are connected: an engine the server
+     has not switched on is not something this screen knows exists. */
+  /* The cheapest connected grade that actually reads a start frame.
+
+     Named rather than assumed. The note here said "Premium" in fixed words,
+     which was true of the engines connected the day it was written and is a
+     sentence that goes quietly wrong the moment a different engine is switched
+     on. It is also what makes the button under it able to go somewhere. */
+  const frameGrade = useMemo(() => {
+    const can = engine?.can;
+    if (!can) return null;
+    return (
+      (['standard', 'better', 'premium'] as VideoGrade[]).find(
+        (one) => one !== grade && can[one]?.startFrame,
+      ) ?? null
+    );
+  }, [engine, grade]);
+
+  const longestHere = lengths.length ? lengths[lengths.length - 1].seconds : 0;
+  const longerOn = useMemo(() => {
+    const can = engine?.can;
+    if (!can) return null;
+    let best: { grade: VideoGrade; seconds: number } | null = null;
+    for (const one of ['standard', 'better', 'premium'] as VideoGrade[]) {
+      const most = can[one]?.seconds?.reduce((a, b) => Math.max(a, b), 0) ?? 0;
+      if (most > longestHere && (!best || most > best.seconds)) best = { grade: one, seconds: most };
+    }
+    return best;
+  }, [engine, longestHere]);
 
   // A grade that cannot make the chosen length gets the nearest it can, rather
   // than a button that looks selected and generates something else.
@@ -516,11 +592,28 @@ export default function VideoCanvas({
           onChange={setFrame}
           supported={Boolean(able?.startFrame)}
           unsupportedNote={
-            engine?.startFrame
-              ? t(
-                  'canvas.frameGrade',
-                  'Starting from a picture is on the Premium grade. It is not offered here because the engines behind this grade would ignore the picture and charge you anyway.',
-                )
+            frameGrade
+              ? `${t(
+                  'canvas.frameOn',
+                  'The engines behind this grade would ignore the picture and charge you anyway, so it is not offered here. It works on',
+                )} ${t(
+                  `canvas.grade.${frameGrade}`,
+                  GRADES.find((one) => one.id === frameGrade)?.label ?? frameGrade,
+                )}.`
+              : engine?.startFrame
+                ? t(
+                    'canvas.frameGrade',
+                    'Starting from a picture is on a dearer grade. It is not offered here because the engines behind this grade would ignore the picture and charge you anyway.',
+                  )
+                : undefined
+          }
+          onSwitch={frameGrade ? () => setGrade(frameGrade) : undefined}
+          switchLabel={
+            frameGrade
+              ? `${t('canvas.frameSwitch', 'Switch to')} ${t(
+                  `canvas.grade.${frameGrade}`,
+                  GRADES.find((one) => one.id === frameGrade)?.label ?? frameGrade,
+                )}`
               : undefined
           }
           disabled={busy}
@@ -673,10 +766,19 @@ export default function VideoCanvas({
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
                   }`}
                 >
-                  {t(`canvas.shape.${one.id}`, one.label)}
+                  <span className="block font-semibold">{t(`canvas.shape.${one.id}`, one.label)}</span>
+                  <span className="block text-xs opacity-80 tabular-nums">{one.size}</span>
                 </button>
               ))}
             </div>
+            {/* Where the chosen one goes. It was a tooltip, which a phone has
+                no way to show — and a phone is where a reel is made. */}
+            <p className="text-xs text-zinc-500 leading-snug pt-1.5">
+              {t(
+                `canvas.shapeNote.${aspect}`,
+                SHAPES.find((one) => one.id === aspect)?.note ?? '',
+              )}
+            </p>
           </div>
           <div>
             <span className="text-sm text-zinc-400">{t('canvas.length', 'Length')}</span>
@@ -702,6 +804,26 @@ export default function VideoCanvas({
             <p className="text-xs text-zinc-500 leading-snug pt-1.5">
               {t(`canvas.len.${seconds}`, lengths.find((one) => one.seconds === seconds)?.note ?? '')}
             </p>
+            {/* Why the row stops where it stops. Without this, ten seconds
+                reads as this app's ceiling rather than this engine's. */}
+            {longestHere > 0 && (
+              <p className="text-xs text-zinc-500 leading-snug pt-1">
+                {longerOn
+                  ? `${t('canvas.longestHere', 'The longest on this grade is')} ${longestHere}s. ${t(
+                      `canvas.grade.${longerOn.grade}`,
+                      GRADES.find((one) => one.id === longerOn.grade)?.label ?? longerOn.grade,
+                    )} ${t('canvas.goesTo', 'goes to')} ${longerOn.seconds}s.`
+                  : `${t('canvas.longestAny', 'The longest anything here makes in one go is')} ${longestHere}s.`}
+              </p>
+            )}
+            {answered && lengths.length === 0 && (
+              <p className="text-xs text-amber-400 leading-snug pt-1">
+                {t(
+                  'canvas.noLengths',
+                  'This grade is not answering with any lengths right now. Try another one.',
+                )}
+              </p>
+            )}
           </div>
         </div>
 

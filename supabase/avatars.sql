@@ -26,6 +26,22 @@
 -- the same name rather than accumulating, and removing one deletes the object
 -- as well as clearing the column — see `app/lib/avatar.ts`, which does both.
 
+-- ─────────────────────────────────────────────────────────── what comes first ──
+--
+-- This adds a column to a table another file makes. Run out of order, Postgres
+-- says `relation "public.creators" does not exist`, which is accurate and
+-- tells you nothing about which file to run. So it is said in words instead.
+--
+-- Order: schema.sql → radar.sql → this one.
+do $$
+begin
+  if to_regclass('public.creators') is null then
+    raise exception
+      'public.creators does not exist. Run supabase/radar.sql first (and supabase/schema.sql before that, if you have not).';
+  end if;
+end
+$$;
+
 alter table public.creators
   add column if not exists avatar_path text;
 
@@ -38,24 +54,37 @@ on conflict (id) do update set public = true;
 -- Anyone may look; only the owner may put, replace or remove. The first path
 -- segment is the owner's id, which is what ties a file to a person — the same
 -- shape the episodes bucket uses.
-drop policy if exists "read avatars" on storage.objects;
-create policy "read avatars" on storage.objects
-  for select using (bucket_id = 'avatars');
+--
+-- Wrapped, because on some projects the SQL editor does not own
+-- `storage.objects` and every one of these comes back as `42501: must be owner
+-- of table objects`. That is a real thing to hit and it is not a mistake in
+-- this file, so it says what to do instead of failing the whole script and
+-- leaving the column half-added.
+do $$
+begin
+  execute 'drop policy if exists "read avatars" on storage.objects';
+  execute $p$create policy "read avatars" on storage.objects
+    for select using (bucket_id = 'avatars')$p$;
 
-drop policy if exists "write own avatar" on storage.objects;
-create policy "write own avatar" on storage.objects
-  for insert with check (
-    bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
-  );
+  execute 'drop policy if exists "write own avatar" on storage.objects';
+  execute $p$create policy "write own avatar" on storage.objects
+    for insert with check (
+      bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+    )$p$;
 
-drop policy if exists "replace own avatar" on storage.objects;
-create policy "replace own avatar" on storage.objects
-  for update using (
-    bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
-  );
+  execute 'drop policy if exists "replace own avatar" on storage.objects';
+  execute $p$create policy "replace own avatar" on storage.objects
+    for update using (
+      bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+    )$p$;
 
-drop policy if exists "delete own avatar" on storage.objects;
-create policy "delete own avatar" on storage.objects
-  for delete using (
-    bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
-  );
+  execute 'drop policy if exists "delete own avatar" on storage.objects';
+  execute $p$create policy "delete own avatar" on storage.objects
+    for delete using (
+      bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+    )$p$;
+exception
+  when insufficient_privilege then
+    raise warning 'The avatars bucket was made, but its policies were refused: %. Add them by hand under Storage → avatars → Policies: read for everyone; insert, update and delete where (storage.foldername(name))[1] = auth.uid()::text.', sqlerrm;
+end
+$$;

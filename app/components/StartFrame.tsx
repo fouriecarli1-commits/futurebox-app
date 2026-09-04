@@ -36,6 +36,7 @@
  */
 
 import React from 'react';
+import { ImagePlus } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import Pictures from './Pictures';
 
@@ -46,28 +47,71 @@ export default function StartFrame({
   supported,
   /** What to say instead, when it is not supported on this grade. */
   unsupportedNote,
+  /**
+   * Move to the grade that does read a picture.
+   *
+   * Without it the note was a dead end: it named a grade and left somebody to
+   * find the rung selector further down the page and work out which one was
+   * meant. A sentence saying where a thing is, next to a button that goes
+   * there, is one step instead of three.
+   */
+  onSwitch,
+  switchLabel,
   disabled = false,
 }: {
   value: string | null;
   onChange: (dataUrl: string | null) => void;
   supported: boolean;
   unsupportedNote?: string;
+  onSwitch?: () => void;
+  switchLabel?: string;
   disabled?: boolean;
 }): React.ReactElement | null {
   const { t } = useLang();
 
+  /* Why it is worth attaching one, said in both states.
+
+     It used to appear only once the attachment was on screen, which is the one
+     case where somebody can already see what it does. On the grade that cannot
+     take a picture there was a single grey line about the grade and nothing
+     about why they would want one — so the feature read as a restriction
+     rather than as something worth moving a rung for. */
+  const why = t(
+    'frame.why',
+    'Optional, and it costs nothing extra. A picture settles the look in one go — the same face, the same room, the same product in every clip — so the sentence only has to say what moves.',
+  );
+
   if (!supported) {
     // Said rather than hidden. Somebody who has used this on the dearer grade
     // and cannot find it here needs to know it moved, not wonder where it went.
-    return unsupportedNote ? (
-      <p className="text-xs text-zinc-500 leading-relaxed">{unsupportedNote}</p>
-    ) : null;
+    if (!unsupportedNote) return null;
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
+        <p className="text-sm font-semibold text-zinc-300 flex items-center gap-1.5">
+          <ImagePlus className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          {t('frame.title', 'Start from a picture')}
+        </p>
+        <p className="text-xs text-zinc-500 leading-relaxed">{why}</p>
+        <p className="text-xs text-amber-400/90 leading-relaxed">{unsupportedNote}</p>
+        {onSwitch && (
+          <button
+            type="button"
+            onClick={onSwitch}
+            disabled={disabled}
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:border-zinc-600 disabled:opacity-50"
+          >
+            {switchLabel ?? t('frame.switch', 'Move to the grade that reads it')}
+          </button>
+        )}
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
       <div>
-        <p className="text-sm font-semibold text-zinc-300">
+        <p className="text-sm font-semibold text-zinc-300 flex items-center gap-1.5">
+          <ImagePlus className="w-4 h-4 text-emerald-400 flex-shrink-0" />
           {t('frame.title', 'Start from a picture')}
         </p>
         <p className="text-xs text-zinc-500 leading-relaxed pt-0.5">
@@ -76,10 +120,7 @@ export default function StartFrame({
                 'frame.hint',
                 'The shape of the clip comes from the picture now. Write what moves rather than what it looks like.',
               )
-            : t(
-                'frame.why',
-                'Optional, and it costs nothing extra. A picture settles the look in one go, so the sentence only has to say what moves.',
-              )}
+            : why}
         </p>
       </div>
 
