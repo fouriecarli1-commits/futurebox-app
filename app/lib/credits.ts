@@ -147,6 +147,25 @@ export function videoCost(grade: VideoGrade, seconds: number): number {
   return base;
 }
 
+/**
+ * A presenter reading a script, by the length of the reading.
+ *
+ * Priced as the 'better' grade of video, in the same five-second units, and
+ * that is a placeholder held on purpose rather than a measurement. Nothing in
+ * ElevenLabs' SDK says what `creatify-aurora` costs, and this project prices
+ * from its own invoices rather than from a pricing page — which is how
+ * `CREDITS.video` came to be fifteen a unit instead of a flat thirty.
+ *
+ * Held at the middle rung because that is the safe direction to be wrong in
+ * while it is unknown: undercharging for something that turns out dear is a
+ * bill with nothing behind it, and this app is being started on the smallest
+ * plans its owner can manage. `provider_units` on the row records what each
+ * generation really took, which is the number that eventually replaces this.
+ */
+export function presenterCost(seconds: number): number {
+  return videoCost('better', seconds);
+}
+
 export function songCost(seconds: number): number {
   return Math.max(CREDITS.halfSong, Math.ceil(Math.max(0, seconds) / 60) * CREDITS.halfSong);
 }

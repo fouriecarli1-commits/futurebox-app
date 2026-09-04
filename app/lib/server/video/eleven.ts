@@ -189,6 +189,123 @@ async function check(taskId: string): Promise<Progress> {
 
 
 
+/* ─────────────────────────────────────────── a presenter, not a shot ────
+ *
+ * Everything above makes a clip out of a sentence. This makes one out of a
+ * photograph and a voice: `creatify-aurora` is a lipsync model, and its body
+ * is an image and an audio file with no prompt anywhere in it.
+ *
+ * ── Why it is here and not a `Provider` ──────────────────────────────────
+ *
+ * A `Provider` takes a prompt, an aspect ratio and a number of seconds.
+ * Aurora takes none of the three — its length is the length of the audio, and
+ * its framing is the framing of the picture. Wrapping it in that interface
+ * would mean a grade whose length row and shape row mean nothing, which is a
+ * worse lie than a second function.
+ *
+ * ── Why this app is most of the way there already ────────────────────────
+ *
+ * The picture is a cast member and the audio is the voice studio. Neither was
+ * built for this and both are exactly what it takes.
+ *
+ * It is also how the presenter speaks Afrikaans. The model is never asked to
+ * know any: it is handed audio, and whatever language that audio is in is the
+ * language that comes out. That is the same argument already made for laying
+ * an ElevenLabs voice over silent footage — with the mouth moving.
+ *
+ * ── Behind a flag, like Seedance ─────────────────────────────────────────
+ *
+ * The wire format below is read off @elevenlabs/elevenlabs-js's serializers,
+ * which is where this file's other shapes came from. What no serializer can
+ * say is whether a given account's plan will accept the model id — Seedance
+ * sits behind `ELEVEN_SEEDANCE_READY` for exactly that reason, and this is not
+ * different. One clip answers it.
+ */
+
+const AURORA = process.env.ELEVEN_AURORA_MODEL || 'creatify-aurora';
+
+/** 720p is the ceiling the model declares; the other option is 480p. */
+export type PresenterQuality = '480p' | '720p';
+
+export interface PresenterRequest {
+  /** The character to animate: base64 bytes and the mime type they are. */
+  readonly image: { readonly data: string; readonly mime: string };
+  /** The speech that drives the lips. mp3 or wav. */
+  readonly audio: { readonly data: string; readonly mime: string };
+  readonly quality: PresenterQuality;
+}
+
+export function presenterReady(): boolean {
+  return Boolean(key()) && process.env.ELEVEN_AURORA_READY === '1';
+}
+
+/**
+ * What the broker will take, spelled out because a wrong mime is a refusal
+ * with a message nobody can act on.
+ *
+ * Narrower than the model's list on the audio side: it declares mp3 and wav,
+ * and those are the two this app produces.
+ */
+export const PRESENTER_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+export const PRESENTER_AUDIO_MIMES = ['audio/mpeg', 'audio/wav'];
+
+/** Inline base64 is capped at 25MB decoded, and both halves share the ceiling. */
+export const PRESENTER_MAX_BYTES = 25 * 1024 * 1024;
+
+export async function startPresenter(request: PresenterRequest): Promise<Started> {
+  if (!presenterReady()) {
+    return {
+      ok: false,
+      status: 503,
+      message: 'The presenter is not switched on for this app yet.',
+    };
+  }
+
+  const body = await call('', {
+    method: 'POST',
+    body: JSON.stringify({
+      model_id: AURORA,
+      /* Inline rather than uploaded, and that is a decision with a cost.
+
+         The SDK is explicit that an inline asset is ephemeral: "stored as an
+         ephemeral asset with no guaranteed retention… To keep an input and
+         reuse it across generations, upload it via the assets API
+         (POST /v1/assets) and pass an asset reference instead."
+
+         A cast member IS reused across generations, so the assets API is the
+         right home for one and is the obvious next step. Inline first because
+         it needs nothing kept in step: no second id to store against a cast
+         row, nothing to clean up when somebody takes a member out, and no way
+         for a row here to point at an asset that has been deleted there. */
+      image: {
+        type: 'inline_base64',
+        content_base64: request.image.data,
+        mime_type: request.image.mime,
+      },
+      audio: {
+        type: 'inline_base64',
+        content_base64: request.audio.data,
+        mime_type: request.audio.mime,
+      },
+      resolution: request.quality,
+    }),
+  });
+
+  if (!body) return { ok: false, status: 502, message: 'The presenter could not be reached.' };
+  if (!body.id) {
+    const said = reason(body);
+    return {
+      ok: false,
+      status: 502,
+      message: said ? `The presenter refused it: ${said}` : 'The presenter refused it.',
+    };
+  }
+  return { ok: true, taskId: body.id };
+}
+
+/** The same broker, so the same envelope and the same reading of it. */
+export const checkPresenter = check;
+
 export const seedance: Provider = {
   id: 'seedance',
   name: 'Seedance (ElevenLabs)',

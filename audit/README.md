@@ -113,3 +113,11 @@ the thing under test is a choice made on one device showing up on another.
 The second context's session is seeded with *empty* metadata on purpose —
 that is what a session issued before the choice looks like, and it is why the
 language has to be asked of the server rather than read out of the token.
+
+`presenter.mjs` stubs the two services and nothing else. The voice route hands
+back a real WAV, so the length on the button is measured off a file the way it
+is in life rather than asserted by the test; the presenter route answers the
+way it would with `ELEVEN_AURORA_READY=1` set, because a run that only proved
+the refusal would be a run about the flag. What is checked is what actually
+reaches the route: a picture, an audio file, the script, the measured length,
+and a confirmation that was ticked rather than assumed.

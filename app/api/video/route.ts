@@ -37,6 +37,7 @@ import { CREDITS, videoCost } from '@/app/lib/credits';
 import { TIER_SPECS } from '@/app/lib/plans';
 import {
   candidates,
+  checkPresenter,
   configured,
   gradesAvailable,
   nearestLength,
@@ -236,15 +237,25 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ state: 'failed', message: 'The engine never accepted that one.' });
   }
 
-  // The engine that started it is the only one that knows about it. A row
-  // written before there was more than one engine has no provider, and those
-  // were all Kling.
-  const engine = providerById(row.provider ?? 'kling');
-  if (!engine) {
+  /* Who to ask, which is not always a `Provider`.
+
+     Everything below this line — running, failed, refunded, downloaded, kept,
+     linked — is the same whatever made the clip, so the presenter shares all
+     of it and only differs in who is asked how it is going. It is not a
+     `Provider` (it takes a picture and a voice, not a prompt and a length),
+     so it is resolved as a checker rather than looked up in the registry.
+
+     A row written before there was more than one engine has no provider, and
+     those were all Kling. */
+  const ask =
+    row.provider === 'aurora'
+      ? checkPresenter
+      : (providerById(row.provider ?? 'kling')?.check ?? null);
+  if (!ask) {
     return Response.json({ state: 'failed', message: 'The engine that made this is no longer connected.' });
   }
 
-  const progress = await engine.check(row.task_id);
+  const progress = await ask(row.task_id);
 
   if (progress.state === 'running' || progress.state === 'unknown') {
     // Unknown is reported as still running on purpose: the engine being

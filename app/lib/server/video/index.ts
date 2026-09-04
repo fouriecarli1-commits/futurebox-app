@@ -25,6 +25,22 @@ import { suits, type Grade, type Provider, type StartRequest } from './types.ts'
 
 export * from './types.ts';
 export { scheme } from './kling.ts';
+/* The presenter, which shares this broker and nothing else.
+
+   Re-exported here so the desk and the routes reach every video capability
+   through one door, even though `creatify-aurora` is not a `Provider` — it
+   takes a picture and a voice rather than a prompt and a length, and pretending
+   otherwise would mean a grade whose length and shape rows mean nothing. */
+export {
+  checkPresenter,
+  presenterReady,
+  startPresenter,
+  PRESENTER_AUDIO_MIMES,
+  PRESENTER_IMAGE_MIMES,
+  PRESENTER_MAX_BYTES,
+  type PresenterQuality,
+  type PresenterRequest,
+} from './eleven.ts';
 
 /**
  * Every engine, cheapest first inside each grade.

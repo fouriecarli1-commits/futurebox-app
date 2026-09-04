@@ -43,6 +43,7 @@ import History from './History';
 import { makeId, rememberMake } from '../lib/makes';
 import CheaperPath from './CheaperPath';
 import StartFrame from './StartFrame';
+import Presenter from './Presenter';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
@@ -748,6 +749,15 @@ export default function VideoCanvas({
             }}
           />
         )}
+
+        {/* ── A presenter, when one is switched on ────────────────────
+            Below the shot composer rather than beside it, because it is a
+            different job with different inputs: everything above makes a clip
+            out of a sentence, and this one makes a clip out of a face and a
+            voice. It draws nothing at all when the model is not connected —
+            an empty section explaining a feature nobody can use is worse than
+            no section. */}
+        <Presenter onUpgrade={onUpgrade} />
 
         {/* ── Shape and length ────────────────────────────────────────── */}
         <div className="grid sm:grid-cols-2 gap-3">

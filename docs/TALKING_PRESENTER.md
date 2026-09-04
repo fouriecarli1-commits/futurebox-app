@@ -117,6 +117,21 @@ treatment: a flag, off until one clip has come back.
 it is presumably the length of the audio, with some ceiling nobody has stated.
 Also worth one clip to find out.
 
+## Built
+
+It is in the video desk, below the shot composer, and draws nothing at all
+unless `ELEVEN_AURORA_READY=1` — an empty section explaining a feature nobody
+can use is worse than no section.
+
+Choose somebody from the cast, write what they say, hear it read first — the
+reading costs a fraction of the video, and hearing the words in that voice
+before the picture is made is the difference between one clip and three — then
+tick the confirmation and make it.
+
+Three of the unknowns above are still unknown and are answered by one clip.
+`presenterCost` holds the middle rung as a deliberate placeholder, and the row
+records `provider_units` for what it really took.
+
 ## Sources
 
 - `@elevenlabs/elevenlabs-js` — `VideoGenerationRequest`, `CreatifyAuroraRequest`,

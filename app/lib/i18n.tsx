@@ -1417,6 +1417,25 @@ export const STRINGS: Dict = {
   "frame.orDevice": { en: "Or a picture from this device \u2014 kept here only, not on your account.", af: "Of 'n foto van hierdie toestel \u2014 net hier gehou, nie teen jou rekening nie." },
   "chan.edit": { en: "Open it in the studio", af: "Maak dit in die studio oop" },
   "sec.estimated": { en: "These sections are worked out from the words \u2014 this song did not carry a plan, so the times are close rather than exact. Everything you change here still travels through in full.", af: "Hierdie afdelings is uit die woorde uitgewerk \u2014 hierdie snit het nie 'n plan saamgedra nie, so die tye is naby eerder as presies. Alles wat jy hier verander gaan steeds volledig deur." },
+
+  /* The presenter: a cast member, a voice, and the mouth moving. */
+  "pres.title": { en: "A presenter who says your script", af: "'n Aanbieder wat jou skrif s\u00ea" },
+  "pres.what": { en: "Somebody from your cast, reading words in a voice you choose, with their mouth moving to it. It speaks whatever language you write in \u2014 Afrikaans included \u2014 because it is handed the reading rather than the words.", af: "Iemand uit jou rolverdeling wat woorde lees in 'n stem wat jy kies, met hulle mond wat daarby beweeg. Dit praat watter taal jy ook al skryf \u2014 Afrikaans inkluis \u2014 want dit kry die voorlesing, nie die woorde nie." },
+  "pres.noCast": { en: "Put somebody in your cast first \u2014 the picture above is who the presenter will be.", af: "Sit eers iemand in jou rolverdeling \u2014 die foto hierbo is wie die aanbieder gaan wees." },
+  "pres.who": { en: "Who says it", af: "Wie s\u00ea dit" },
+  "pres.script": { en: "What they say", af: "Wat hulle s\u00ea" },
+  "pres.scriptHint": { en: "Hallo, ek is Sarel, en vandag wys ek jou iets nuuts.", af: "Hallo, ek is Sarel, en vandag wys ek jou iets nuuts." },
+  "pres.voice": { en: "The voice", af: "Die stem" },
+  "pres.read": { en: "Hear it first", af: "Luister eers daarna" },
+  "pres.readAgain": { en: "Read it again", af: "Lees dit weer" },
+  "pres.whyRead": { en: "Reading it costs a fraction of the video. Hearing the words in that voice before the picture is made is the difference between one clip and three.", af: "Om dit te lees kos 'n breukdeel van die video. Om die woorde in daardie stem te hoor voordat die prent gemaak word, is die verskil tussen een snit en drie." },
+  "pres.consent": { en: "The person in this picture is me, or they have agreed to be shown saying this.", af: "Die persoon op hierdie foto is ek, of hulle het ingestem om so gewys te word." },
+  "pres.go": { en: "Make the video", af: "Maak die video" },
+  "pres.making": { en: "Making it", af: "Maak dit" },
+  "pres.done": { en: "Done. It is saved with your videos.", af: "Klaar. Dit is by jou videos gestoor." },
+  "pres.readFailed": { en: "That could not be read just now.", af: "Dit kon nie nou gelees word nie." },
+  "pres.failed": { en: "That could not be made just now.", af: "Dit kon nie nou gemaak word nie." },
+  "pres.slow": { en: "It is taking longer than usual. It is still being made \u2014 look in your videos shortly.", af: "Dit vat langer as gewoonlik. Dit word steeds gemaak \u2014 kyk netnou by jou videos." },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';
