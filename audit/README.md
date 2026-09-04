@@ -376,3 +376,22 @@ a centred mono lane comes out at 1/√2 in each channel, not at full level in
 both, because `StereoPannerNode` is equal-power. That is correct and it is what
 every desk does, but it means every mix in this app is 3 dB quieter than a
 linear panner would give — so the law itself is asserted rather than assumed.
+
+## The one that presses the Pro Booth
+
+`probooth.mjs` mounts the room on a probe page with a backing track of a known
+length, because reaching it through the app means signing in, opening the
+studio, opening the booth, and having a song with real audio in the browser's
+own storage — four things that fail for reasons that have nothing to do with
+the room.
+
+It presses what is there and compares boxes rather than looking at them. That
+is what caught the lane row: five controls after the waveform fitted on a
+desktop and ran off the side of a phone, and no assertion about text would ever
+have seen it. It also caught its own threshold — two controls sitting flush
+come back overlapping by a tenth of a pixel, and reporting that as a defect is
+how a check gets switched off.
+
+The assertion that matters most on a phone is not "nothing overlaps" but "the
+row is taller than it is on a desktop": a row that stays one line at 390 px has
+not fitted, it has crushed every control in it to something nobody can hit.

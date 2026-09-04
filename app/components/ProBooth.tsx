@@ -1061,8 +1061,12 @@ function LaneRow({
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
-    <div className="p-2 flex items-center gap-3">
-      <div className="w-40 flex-shrink-0 space-y-1">
+    {/* Wraps rather than squeezing. Five controls after the waveform fitted on
+        a desktop and ran off the side of a phone, and the pan slider was
+        overlapping the start-time field at 1280px — which is not a narrow
+        screen. The waveform keeps a floor so it stays a waveform. */}
+    <div className="p-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="w-full sm:w-40 flex-shrink-0 space-y-1">
         <input
           value={lane.name}
           onChange={(event) => onChange({ name: event.target.value.slice(0, 40) })}
@@ -1105,7 +1109,11 @@ function LaneRow({
         </div>
       </div>
 
-      <canvas ref={canvasRef} className="flex-1 rounded-lg bg-zinc-950/70" style={{ height: LANE_H }} />
+      <canvas
+        ref={canvasRef}
+        className="flex-1 min-w-[180px] rounded-lg bg-zinc-950/70"
+        style={{ height: LANE_H }}
+      />
 
       <button
         type="button"
@@ -1122,7 +1130,7 @@ function LaneRow({
         <Sliders className="w-4 h-4" />
       </button>
 
-      <div className="w-24 flex-shrink-0 flex items-center gap-1.5">
+      <div className="w-32 flex-shrink-0 flex items-center gap-1.5">
         <span className="text-[11px] text-zinc-600">L</span>
         <input
           type="range"
@@ -1136,7 +1144,7 @@ function LaneRow({
         <span className="text-[11px] text-zinc-600">R</span>
       </div>
 
-      <div className="w-28 flex-shrink-0 flex items-center gap-1">
+      <div className="w-32 flex-shrink-0 flex items-center gap-1">
         <input
           type="number"
           step={0.05}
