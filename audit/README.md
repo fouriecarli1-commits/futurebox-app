@@ -107,6 +107,25 @@ itself, so the library, the component and `lib/imagefile.ts` are all real —
 only the service behind them is not. It is what lets the run check the half
 that matters: that a member added on one load is still there after a reload.
 
+`podlanguage.mjs` uses it too, and for the same reason a third time — the
+Podcast room asks the server who is signed in before it draws anything, so a
+run without `/api/show` answered tests the signed-out screen. It checks the
+show's language is chosen from `data/dublanguages.ts` rather than typed: the
+value goes straight into the RSS feed as `<language>`, where "English" or
+"afrikaans" is a tag that does not mean what it says and the show is already
+published by the time anybody finds out.
+
+```
+node audit/podlanguage.mjs 3016 en
+node audit/podlanguage.mjs 3016 af
+```
+
+`blurshot.mjs` is not a check — it writes `audit/blur.png`, the same wide clip
+cut into the same tall film twice, once with black bars and once with the
+blurred sides. Both frames are lifted out of real exported films rather than
+drawn by the script, so the picture is of the shipped code. It takes the same
+bundle `stitch.mjs` does.
+
 `language.mjs` uses the same stub, and needs it for a different reason: it
 opens two fresh browser contexts against one stubbed auth service, because
 the thing under test is a choice made on one device showing up on another.
@@ -150,6 +169,18 @@ It makes its own clips in the page — canvas, recorded — so what is stitched 
 genuine video with genuine durations rather than fixtures, and it reports how
 long the cut took against how long the film is. That ratio is the feature's
 real cost and belongs in the output where somebody reads it.
+
+It also measures the background behind a shot that does not fill the frame.
+A wide clip cut into a tall film leaves a band above and below it; black is the
+default and a blurred, enlarged copy of the shot is the option. The run cuts
+the same striped clip both ways into the same tall frame and samples the band:
+black must still be black, blurred must not be, and its colour must come from
+the clip — a blue shot gives a blue band, which a grey fill would not.
+
+The one that separates a blur from an enlarged sharp copy is the stripe. The
+clip carries a hard white band across its top eighth, which stays white in the
+picture and has to be smeared away in the background behind it. Measured, it
+peaks at 765 in the picture and 338 behind it.
 
 Its audio check decodes the output rather than asking the video element.
 `mozHasAudio`, `webkitAudioDecodedByteCount` and `audioTracks` are each

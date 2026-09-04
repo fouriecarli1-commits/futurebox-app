@@ -63,6 +63,14 @@ export interface Storyboard {
   readonly shots: readonly Shot[];
   /** The track laid under the whole film, by its library id. */
   readonly songId?: string;
+  /**
+   * What fills the space around a shot that is not the film's shape.
+   *
+   * Kept on the board rather than in the component's own state so it survives
+   * a reload with the shots and the song, which is the whole reason the board
+   * is written down at all.
+   */
+  readonly background?: 'black' | 'blur';
 }
 
 const KEY = 'futurebox.storyboard.v1';
@@ -98,6 +106,16 @@ export function loadStoryboard(): Storyboard {
           ...(Number.isFinite(one.to) ? { to: one.to } : {}),
         })),
       ...(typeof said.songId === 'string' ? { songId: said.songId } : {}),
+      /* Named rather than spread, like everything above it. What comes out of
+         storage is whatever was last written there — an older version of this
+         app, or a hand-edited value — so each field is read back by name and
+         anything unrecognised is dropped. That is why a new field has to be
+         added here as well as to the type: without this line the choice was
+         written every time and read back never, which is a preference that
+         quietly resets on every visit. */
+      ...(said.background === 'blur' || said.background === 'black'
+        ? { background: said.background }
+        : {}),
     };
   } catch {
     return EMPTY;

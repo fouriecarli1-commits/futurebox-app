@@ -86,6 +86,18 @@ export interface Cut {
   /** The film's shape. Clips are fitted into it, never stretched. */
   readonly width: number;
   readonly height: number;
+  /**
+   * What goes in the space a clip does not fill.
+   *
+   * `'black'` is the plain letterbox. `'blur'` fills it with an enlarged,
+   * blurred copy of the same frame, so a wide shot dropped into a tall film
+   * reads as one picture rather than a small picture with two dead bands
+   * around it. Neither one crops: the clip itself is drawn identically in both
+   * cases, and this is only about what sits behind it.
+   *
+   * Defaults to `'black'`, which is what every existing cut was made with.
+   */
+  readonly background?: 'black' | 'blur';
   /** Called as each scene starts, so a screen can say where it is. */
   readonly onScene?: (index: number, total: number) => void;
 }
@@ -140,6 +152,89 @@ function fitted(
 }
 
 /**
+ * The frame filled edge to edge, overflowing on the long side.
+ *
+ * The opposite of `fitted`: nothing is left over, and what does not fit is
+ * pushed off the sides. Only ever used for the background, where losing the
+ * edges of a copy of the picture costs nothing — the picture itself is still
+ * drawn whole, on top.
+ */
+function covering(
+  video: HTMLVideoElement,
+  width: number,
+  height: number,
+): { x: number; y: number; w: number; h: number } {
+  const source = video.videoWidth / Math.max(1, video.videoHeight);
+  const frame = width / height;
+  if (source > frame) {
+    const w = Math.round(height * source);
+    return { x: Math.round((width - w) / 2), y: 0, w, h: height };
+  }
+  const h = Math.round(width / source);
+  return { x: 0, y: Math.round((height - h) / 2), w: width, h };
+}
+
+/**
+ * Whether this browser will honour `context.filter`.
+ *
+ * Every browser this app supports does, but a blurred background is a
+ * preference rather than a requirement, and a browser that quietly ignores the
+ * filter would draw a sharp, enormously enlarged copy of the clip behind the
+ * clip — much worse than the black bars it replaced. So it is asked rather
+ * than assumed, and a no falls back to black.
+ */
+function blurs(context: CanvasRenderingContext2D): boolean {
+  try {
+    context.filter = 'blur(2px)';
+    const took = context.filter.includes('blur');
+    context.filter = 'none';
+    return took;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The blurred background, painted the cheap way.
+ *
+ * A `blur(60px)` over a 1280 × 720 canvas, thirty times a second, for three
+ * minutes, is real work — and this already runs in real time, so a draw loop
+ * that cannot keep up drops frames straight into the file.
+ *
+ * It does not have to cost that. The frame is first drawn onto a scratch
+ * canvas about a sixteenth of the size, where a two-pixel blur is the same
+ * picture as a thirty-two-pixel blur at full size and costs a sixteenth as
+ * much; enlarging that back over the frame does the rest, because a bilinear
+ * upscale is itself a blur. What comes out is indistinguishable at a glance
+ * from the expensive version.
+ *
+ * It is then darkened a little. Undarkened, a bright background competes with
+ * the shot in front of it, which is the opposite of the point.
+ */
+const SCRATCH_LONG = 96;
+
+function backdrop(
+  context: CanvasRenderingContext2D,
+  scratch: HTMLCanvasElement,
+  video: HTMLVideoElement,
+  width: number,
+  height: number,
+): void {
+  const paint = scratch.getContext('2d');
+  if (!paint) return;
+  const small = covering(video, scratch.width, scratch.height);
+  paint.filter = `blur(${Math.max(2, Math.round(SCRATCH_LONG / 24))}px)`;
+  paint.drawImage(video, small.x, small.y, small.w, small.h);
+  paint.filter = 'none';
+
+  const big = covering(video, width, height);
+  context.imageSmoothingEnabled = true;
+  context.drawImage(scratch, 0, 0, scratch.width, scratch.height, big.x, big.y, big.w, big.h);
+  context.fillStyle = 'rgba(0, 0, 0, 0.28)';
+  context.fillRect(0, 0, width, height);
+}
+
+/**
  * The window a scene actually plays, given what its clip turned out to be.
  *
  * Clamped in one place so the drawing loop below and anything that wants to
@@ -189,6 +284,16 @@ export async function stitch(cut: Cut): Promise<Made> {
   canvas.height = cut.height;
   const context = canvas.getContext('2d');
   if (!context) return { ok: false, why: 'unsupported' };
+
+  /* The scratch the blurred background is built on, at the film's own shape
+     so the cover maths below is the same maths at both sizes. Made once for
+     the whole export rather than per scene, and left unused when the
+     background is black. */
+  const wantsBlur = cut.background === 'blur' && blurs(context);
+  const scratch = document.createElement('canvas');
+  const scale = SCRATCH_LONG / Math.max(cut.width, cut.height);
+  scratch.width = Math.max(2, Math.round(cut.width * scale));
+  scratch.height = Math.max(2, Math.round(cut.height * scale));
 
   const stream = canvas.captureStream(30);
 
@@ -278,6 +383,11 @@ export async function stitch(cut: Cut): Promise<Made> {
 
       await video.play().catch(() => undefined);
       const box = fitted(video, cut.width, cut.height);
+      /* A clip already the shape of the film has no bars to fill, and painting
+         a background behind an opaque frame would be work for nothing. The
+         slack is for rounding, not for a shape that is nearly right: an eight
+         pixel band still wants filling. */
+      const fills = (box.w * box.h) / (cut.width * cut.height);
 
       await new Promise<void>((done) => {
         let stop = false;
@@ -293,10 +403,14 @@ export async function stitch(cut: Cut): Promise<Made> {
             end();
             return;
           }
-          // Repainted every frame rather than once: a clip narrower than the
-          // frame would otherwise leave the previous scene showing in the bars.
+          /* Repainted every frame rather than once: a clip narrower than the
+             frame would otherwise leave the previous scene showing in the
+             bars. The blurred background is repainted for the same reason and
+             one more — it is a copy of *this* frame, so it moves with the
+             shot instead of being a still behind a moving picture. */
           context.fillStyle = '#000';
           context.fillRect(0, 0, cut.width, cut.height);
+          if (wantsBlur && fills < 0.995) backdrop(context, scratch, video, cut.width, cut.height);
           context.drawImage(video, box.x, box.y, box.w, box.h);
           requestAnimationFrame(draw);
         };

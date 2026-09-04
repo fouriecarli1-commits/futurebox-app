@@ -19,9 +19,19 @@ import SafeZones from '../components/SafeZones';
 export default function SafeZoneProbe(): React.ReactElement {
   return (
     <main className="min-h-screen bg-zinc-950 p-8">
-      <div style={{ width: 270 }}>
+      <div data-probe="tall" style={{ width: 270 }}>
         <SafeZones>
           <div data-frame="1" style={{ width: 270, height: 480, background: '#2a9d8f' }} />
+        </SafeZones>
+      </div>
+
+      {/* The same component on a wide clip, which is the case that used not to
+          be drawn at all. 480 × 270 is 16:9, so a tall post keeps a centre
+          column 270 × 270 × (9/16) wide — the run measures that column and the
+          safe box inside it. */}
+      <div data-probe="wide" style={{ width: 480, marginTop: 48 }}>
+        <SafeZones aspect="16:9">
+          <div data-wide="1" style={{ width: 480, height: 270, background: '#e76f51' }} />
         </SafeZones>
       </div>
     </main>

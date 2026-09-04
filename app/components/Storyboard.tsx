@@ -239,6 +239,7 @@ export default function Storyboard({
         scenes,
         audio,
         ...wide,
+        background: board.background ?? 'black',
         onScene: (at, of) => setCutting({ at: at + 1, of }),
       });
       if (!made.ok) {
@@ -433,6 +434,56 @@ export default function Storyboard({
               ))}
             </select>
           </div>
+
+          {/* ── What goes around a shot that is the wrong shape ──────────
+
+              A board is almost never all one shape. The film is cut to the
+              desk's shape, so a wide shot in a tall film is drawn small with
+              two black bands above and below it, and the honest bars read as
+              a mistake even though nothing is wrong: the clip is whole and
+              uncropped, which is exactly what was wanted.
+
+              Filling those bands with an enlarged, blurred copy of the same
+              frame is what everybody else does with this problem, and it
+              works because the eye reads one picture instead of a small
+              picture inside a black box. Nothing is cropped either way —
+              this changes the background and only the background — so it is
+              a preference and it is offered as one, with black kept as the
+              default because that is what every film cut before today came
+              out as. */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-zinc-400">
+              {t('board.around', 'Around a shot that does not fill the frame')}
+            </span>
+            {(['black', 'blur'] as const).map((one) => (
+              <button
+                key={one}
+                type="button"
+                onClick={() => setBoard((was) => ({ ...was, background: one }))}
+                aria-pressed={(board.background ?? 'black') === one}
+                className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
+                  (board.background ?? 'black') === one
+                    ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                    : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600'
+                }`}
+              >
+                {one === 'black'
+                  ? t('board.bars', 'Black bars')
+                  : t('board.blur', 'Blur the sides')}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-zinc-500 leading-relaxed">
+            {board.background === 'blur'
+              ? t(
+                  'board.blurNote',
+                  'The space around a shot is filled with a blurred, enlarged copy of that shot. Nothing is cropped — the clip itself is drawn whole, on top.',
+                )
+              : t(
+                  'board.barsNote',
+                  'A shot that is not the film’s shape gets black bars. Nothing is cropped, and a shot already the right shape has no bars either way.',
+                )}
+          </p>
 
           <p className="text-sm text-zinc-400 tabular-nums">
             {board.shots.length} {t('board.shots', 'shots')} · {clock(total)}

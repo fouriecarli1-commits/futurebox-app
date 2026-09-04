@@ -159,6 +159,29 @@ check('the running total is shown', /0:15/.test(written), (written.match(/\d+:\d
 check('and what is left to make costs something',
   af ? /Wat oorbly om te maak kos/.test(written) : /What is left to make costs/.test(written));
 
+/* ── What goes around a shot that is the wrong shape ────────────────────
+
+   A board is rarely all one shape, so a wide shot in a tall film gets bands.
+   Black is the default and a blurred, enlarged copy of the shot is the
+   option; `audit/stitch.mjs` measures what the blur actually paints, and
+   what is checked here is the other half — that the choice is a real one on
+   screen and that it is kept with the shots rather than reset by the reload
+   below. A preference that has to be set again every visit is not one. */
+const around = (which) =>
+  room.locator('button[aria-pressed]').filter({
+    hasText: which === 'blur'
+      ? (af ? /^Vervaag die kante$/ : /^Blur the sides$/)
+      : (af ? /^Swart balke$/ : /^Black bars$/),
+  }).first();
+check('both backgrounds are offered', (await around('blur').count()) > 0 && (await around('black').count()) > 0);
+check('black bars are the default', (await around('black').getAttribute('aria-pressed')) === 'true');
+await around('blur').click();
+await p.waitForTimeout(400);
+check('choosing blur takes the choice', (await around('blur').getAttribute('aria-pressed')) === 'true');
+check('and the screen says what it will do',
+  af ? /vervaagde, vergrote kopie/.test(await room.innerText())
+     : /blurred, enlarged copy/.test(await room.innerText()));
+
 await room.locator(`button[aria-label="${af ? 'Skuif hierdie skoot later' : 'Move this shot later'}"]`).first().click();
 await p.waitForTimeout(500);
 check('a shot can be moved later', (await boxes().nth(0).inputValue()) === lines[1], (await boxes().nth(0).inputValue()).slice(0, 28));
@@ -171,6 +194,9 @@ room = await intoTheDesk();
 check('the storyboard survives a reload',
   (await boxes().count()) === 3 && (await boxes().nth(0).inputValue()) === lines[1],
   `${await boxes().count()} shots`);
+check('and so does the background choice',
+  (await around('blur').getAttribute('aria-pressed')) === 'true',
+  `blur ${await around('blur').getAttribute('aria-pressed')}`);
 
 // Make each shot. The engine's poll waits ten seconds before its first ask.
 for (let n = 0; n < 3; n += 1) {

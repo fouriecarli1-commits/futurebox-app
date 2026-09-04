@@ -914,23 +914,22 @@ export default function VideoCanvas({
                     yet. Here it is a real question with a real answer, asked
                     at the one moment it can still be acted on — before
                     posting, while another take costs one generation rather
-                    than a repost. Offered only on the tall clips, because the
-                    platforms this is about only run tall ones. */}
-                {one.aspect === '9:16' ? (
-                  <SafeZones>
-                    <video
-                      src={one.url}
-                      controls
-                      className="rounded-xl border border-zinc-800 bg-black w-full max-h-80 object-contain"
-                    />
-                  </SafeZones>
-                ) : (
+                    than a repost.
+
+                    It used to be offered only on the tall clips, on the
+                    reasoning that these are tall platforms. That made the
+                    whole thing invisible to anybody working wide — who never
+                    learned it existed, and who has the larger version of the
+                    problem: a wide clip posted to a tall feed loses its sides
+                    to the crop before a caption covers anything. So every
+                    clip gets it, drawn where it applies for that shape. */}
+                <SafeZones aspect={one.aspect}>
                   <video
                     src={one.url}
                     controls
-                    className="rounded-xl border border-zinc-800 bg-black w-full"
+                    className="rounded-xl border border-zinc-800 bg-black w-full max-h-80 object-contain"
                   />
-                )}
+                </SafeZones>
                 <p className="text-xs text-zinc-500 leading-snug line-clamp-2">{one.prompt}</p>
                 <button
                   type="button"

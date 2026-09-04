@@ -29,21 +29,76 @@
 
 import React, { useState } from 'react';
 import { Smartphone } from 'lucide-react';
-import { ZONES, boxOf, keptPercent, type Zone } from '../lib/safezones';
+import { ZONES, boxIn, columnOf, cropsFor, keptPercent, type Zone } from '../lib/safezones';
 import { useLang } from '../lib/i18n';
+
+/** The four strips between an outer rectangle and an inner one, in fractions. */
+function Strips({
+  outer,
+  inner,
+  shade,
+}: {
+  readonly outer: Rect;
+  readonly inner: Rect;
+  readonly shade: string;
+}): React.ReactElement {
+  const pc = (value: number) => `${(value * 100).toFixed(2)}%`;
+  const bottom = outer.top + outer.height - (inner.top + inner.height);
+  const right = outer.left + outer.width - (inner.left + inner.width);
+  return (
+    <>
+      <div
+        className={`absolute ${shade}`}
+        style={{ top: pc(outer.top), left: pc(outer.left), width: pc(outer.width), height: pc(inner.top - outer.top) }}
+      />
+      <div
+        className={`absolute ${shade}`}
+        style={{ top: pc(inner.top + inner.height), left: pc(outer.left), width: pc(outer.width), height: pc(bottom) }}
+      />
+      <div
+        className={`absolute ${shade}`}
+        style={{ top: pc(inner.top), left: pc(outer.left), width: pc(inner.left - outer.left), height: pc(inner.height) }}
+      />
+      <div
+        className={`absolute ${shade}`}
+        style={{ top: pc(inner.top), left: pc(inner.left + inner.width), width: pc(right), height: pc(inner.height) }}
+      />
+    </>
+  );
+}
+
+interface Rect {
+  readonly top: number;
+  readonly left: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+const WHOLE: Rect = { top: 0, left: 0, width: 1, height: 1 };
 
 export default function SafeZones({
   /** Anything with a frame: a video element, an image, a canvas. */
   children,
+  /**
+   * The clip's own shape, as the desk names it.
+   *
+   * Defaults to the tall one, which is what this only ever used to be shown
+   * on. Anything else draws the crop as well as the furniture — see
+   * `columnOf` for why that is the more useful drawing, not a lesser one.
+   */
+  aspect = '9:16',
   className = '',
 }: {
   readonly children: React.ReactNode;
+  readonly aspect?: string;
   readonly className?: string;
 }): React.ReactElement {
   const { t, lang } = useLang();
   const [shown, setShown] = useState<Zone | null>(null);
 
-  const box = shown ? boxOf(shown) : null;
+  const column = columnOf(aspect);
+  const crops = cropsFor(aspect);
+  const box = shown ? boxIn(shown, aspect) : null;
   const pc = (value: number) => `${(value * 100).toFixed(2)}%`;
 
   return (
@@ -55,19 +110,28 @@ export default function SafeZones({
           /* Over the frame, and deliberately not in the way of a press: the
              clip underneath still has its own controls. */
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-            <div className="absolute left-0 right-0 top-0 bg-black/55" style={{ height: pc(box.top) }} />
-            <div
-              className="absolute left-0 right-0 bottom-0 bg-black/55"
-              style={{ height: pc(1 - box.top - box.height) }}
-            />
-            <div
-              className="absolute left-0 bg-black/55"
-              style={{ top: pc(box.top), height: pc(box.height), width: pc(box.left) }}
-            />
-            <div
-              className="absolute right-0 bg-black/55"
-              style={{ top: pc(box.top), height: pc(box.height), width: pc(1 - box.left - box.width) }}
-            />
+            {/* Two shades, because two different things happen to a frame.
+
+                What falls outside the tall column is cropped away — it is not
+                in the post at all — and is shaded harder. What falls inside
+                the column but outside the safe box is still there and is
+                covered by the app's own furniture, which is recoverable by
+                reframing rather than fatal. On a 9:16 clip the column is the
+                whole frame and the first layer draws nothing, so the tall
+                case looks exactly as it always has. */}
+            {crops && <Strips outer={WHOLE} inner={column} shade="bg-black/75" />}
+            <Strips outer={column} inner={box} shade="bg-black/55" />
+            {crops && (
+              <div
+                className="absolute border border-emerald-400/40"
+                style={{
+                  top: pc(column.top),
+                  left: pc(column.left),
+                  width: pc(column.width),
+                  height: pc(column.height),
+                }}
+              />
+            )}
             <div
               className="absolute border-2 border-dashed border-emerald-400/80"
               style={{
@@ -120,10 +184,24 @@ export default function SafeZones({
           <p className="text-xs text-zinc-400 leading-relaxed">
             {shown.note[lang]}{' '}
             <span className="text-zinc-300 font-semibold">
-              {keptPercent(shown)}% {t('safe.kept', 'of the frame is left')}
+              {keptPercent(shown, aspect)}% {t('safe.kept', 'of the frame is left')}
             </span>
             .
           </p>
+          {/* Only where it applies, and it is the bigger number of the two.
+
+              A wide clip posted to a tall feed loses its sides before any
+              caption is drawn, and that is a much larger loss than the
+              furniture — worth saying in words rather than leaving to be read
+              off two shades of grey. */}
+          {crops && (
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              {t(
+                'safe.cropped',
+                'This clip is not the shape these apps play. Posted there it is shown in the marked column and the sides are cropped off — before anything is printed on top.',
+              )}
+            </p>
+          )}
           {/* Said every time it is on, because the alternative is somebody
               treating a read-off-a-blog number as a specification. */}
           <p className="text-xs text-zinc-600 leading-relaxed">

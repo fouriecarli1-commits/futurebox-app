@@ -128,7 +128,75 @@ export function boxOf(zone: Zone): { top: number; left: number; width: number; h
  * Worth saying out loud on the screen: on Shorts it is a little over half, and
  * somebody who has not seen that number does not believe the bars.
  */
-export function keptPercent(zone: Zone): number {
-  const box = boxOf(zone);
+export function keptPercent(zone: Zone, aspect = '9:16'): number {
+  const box = boxIn(zone, aspect);
   return Math.round(box.width * box.height * 100);
+}
+
+/**
+ * The tall post's own shape, as a ratio.
+ *
+ * Everything below is quoted against a 1080 × 1920 frame because that is what
+ * these apps play full screen. A wide clip posted to one of them is not shown
+ * wide — it is shown in a tall window, and the sides go.
+ */
+export const TALL = REFERENCE.width / REFERENCE.height;
+
+function ratioOf(aspect: string): number | null {
+  const [w, h] = aspect.split(':').map((one) => Number(one));
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return null;
+  return w / h;
+}
+
+/**
+ * Where the tall post sits inside a clip that is not tall.
+ *
+ * ── Why this is the honest overlay for a wide clip ───────────────────────
+ *
+ * The safe-zone bars were drawn only on 9:16 clips, on the reasoning that
+ * these are 9:16 platforms. The effect was that somebody making wide clips
+ * never saw the feature at all and did not know it existed — and they are the
+ * ones with the larger problem, because posting a wide clip to Reels loses far
+ * more of it to the crop than any caption ever covers.
+ *
+ * So a wide clip gets the same overlay, drawn where it actually applies: the
+ * centre column a tall post would keep, with the platform's furniture marked
+ * inside that column. Everything outside the column is not covered, it is
+ * cropped off, which is a different and worse thing and is shaded differently
+ * to say so.
+ *
+ * A 9:16 clip returns the whole frame, so the tall case is the general case
+ * with nothing special about it.
+ */
+export function columnOf(
+  aspect: string,
+): { top: number; left: number; width: number; height: number } {
+  const ratio = ratioOf(aspect) ?? TALL;
+  if (ratio > TALL) {
+    const width = TALL / ratio;
+    return { top: 0, left: (1 - width) / 2, width, height: 1 };
+  }
+  const height = ratio / TALL;
+  return { top: (1 - height) / 2, left: 0, width: 1, height };
+}
+
+/** Is any of this frame lost to the crop before the furniture is even drawn? */
+export function cropsFor(aspect: string): boolean {
+  const column = columnOf(aspect);
+  return column.width * column.height < 0.995;
+}
+
+/** The safe box placed inside a frame of any shape, in that frame's fractions. */
+export function boxIn(
+  zone: Zone,
+  aspect: string,
+): { top: number; left: number; width: number; height: number } {
+  const box = boxOf(zone);
+  const column = columnOf(aspect);
+  return {
+    top: column.top + box.top * column.height,
+    left: column.left + box.left * column.width,
+    width: box.width * column.width,
+    height: box.height * column.height,
+  };
 }

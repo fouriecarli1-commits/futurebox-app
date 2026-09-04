@@ -38,8 +38,13 @@ await p.goto('about:blank');
 await p.addScriptTag({ content: readFileSync(BUNDLE, 'utf8') });
 
 const out = await p.evaluate(async () => {
-  /** A clip of a given length and shape, recorded off a canvas. */
-  async function clip(seconds, colour, width, height) {
+  /** A clip of a given length and shape, recorded off a canvas.
+
+     `stripe` paints a hard white band across the top eighth. It is there for
+     the blur check: a band with a sharp edge is the one thing a blur cannot
+     reproduce, so measuring how bright it still is in the background is how a
+     blurred copy is told apart from an enlarged sharp one. */
+  async function clip(seconds, colour, width, height, stripe = false) {
     const canvas = document.createElement('canvas');
     canvas.width = width; canvas.height = height;
     const c = canvas.getContext('2d');
@@ -55,6 +60,7 @@ const out = await p.evaluate(async () => {
       const draw = () => {
         const t = (performance.now() - began) / 1000;
         c.fillStyle = colour; c.fillRect(0, 0, width, height);
+        if (stripe) { c.fillStyle = '#fff'; c.fillRect(0, height * 0.08, width, height * 0.06); }
         c.fillStyle = '#fff'; c.fillRect((t / seconds) * (width - 40), height / 2 - 20, 40, 40);
         if (t >= seconds) { finish(); return; }
         requestAnimationFrame(draw);
@@ -166,6 +172,75 @@ const out = await p.evaluate(async () => {
   const edge = at(4);
   const middle = at(160);
 
+  /* ── The background behind a shot that does not fill the frame ────────
+
+     A wide clip cut into a tall film leaves a band above and below it. Black
+     is the honest default; a blurred, enlarged copy of the same frame is the
+     option, and it is measured here rather than asserted.
+
+     Two cuts of the same striped clip into the same tall frame, one each way,
+     and three questions asked of the top band:
+
+       · black really is black, so the default did not change;
+       · blurred is not black, and its colour comes from the clip — a blue
+         clip must give a blue-dominant band, which a grey fill would not;
+       · the hard white stripe near the top of the clip survives in the sharp
+         picture and is *smeared away* in the background. That last one is the
+         difference between a blur and an enlarged sharp copy, and nothing
+         else distinguishes them. */
+  const striped = await clip(2, '#1b4965', 320, 180, true);
+  const TALL_W = 180, TALL_H = 320;
+
+  async function bandOf(background) {
+    const film = await window.ST.stitch({
+      scenes: [{ clip: striped }],
+      width: TALL_W,
+      height: TALL_H,
+      background,
+    });
+    if (!film.ok) return null;
+    const v = document.createElement('video');
+    v.src = URL.createObjectURL(film.blob);
+    v.muted = true;
+    await new Promise((r) => { v.onloadedmetadata = r; v.onerror = r; });
+    v.currentTime = 1.0;
+    await new Promise((r) => { v.onseeked = r; setTimeout(r, 1500); });
+    const shot = document.createElement('canvas');
+    shot.width = TALL_W; shot.height = TALL_H;
+    const g = shot.getContext('2d');
+    g.drawImage(v, 0, 0, TALL_W, TALL_H);
+    const px = (x, y) => Array.from(g.getImageData(x, y, 1, 1).data).slice(0, 3);
+    const sum = (x, y) => px(x, y).reduce((a, one) => a + one, 0);
+
+    /* The clip is 16:9 in a 9:16 frame, so it is drawn about 180 × 101 in the
+       middle and the bands are the rest. Sampled a little inside each so a
+       rounding pixel at the seam cannot decide the answer. */
+    const bandRow = 60;
+    const clipRow = Math.round(TALL_H / 2);
+    // Where the white stripe lands: in the enlarged background near the top,
+    // and in the sharp picture an eighth of the way down its own 101 rows.
+    let bandPeak = 0;
+    for (let y = 12; y < 70; y += 1) bandPeak = Math.max(bandPeak, sum(90, y));
+    let sharpPeak = 0;
+    const top = Math.round((TALL_H - 101) / 2);
+    for (let y = top; y < top + 30; y += 1) sharpPeak = Math.max(sharpPeak, sum(90, y));
+    return { band: px(90, bandRow), bandSum: sum(90, bandRow), bandPeak, sharpPeak, middle: sum(90, clipRow) };
+  }
+
+  const black = await bandOf('black');
+  const blurred = await bandOf('blur');
+
+  /* The mechanism the blurred background rests on, asked of the browser
+     rather than assumed: a canvas that ignores `filter` would draw an
+     enormous sharp copy, which is worse than the bars it replaced — the code
+     falls back to black when this is false, and this says which branch the
+     numbers above came from. */
+  const honoursFilter = (() => {
+    const c = document.createElement('canvas').getContext('2d');
+    c.filter = 'blur(2px)';
+    return c.filter.includes('blur');
+  })();
+
   /* And what the clamp does with nonsense a slider can produce. */
   const clamps = [
     { what: 'no trim at all', got: window.ST.windowOf({ clip: wide }, 10) },
@@ -189,6 +264,9 @@ const out = await p.evaluate(async () => {
     loudest,
     edge,
     middle,
+    black,
+    blurred,
+    honoursFilter,
     unsupported: !window.ST.canStitch(),
   };
 });
@@ -230,6 +308,31 @@ if (!out.ok) {
       `${one.got.from}–${one.got.to}`);
   }
   check('no trim means the whole clip', out.clamps[0].got.from === 0 && out.clamps[0].got.to === 10);
+
+  // ── The background behind a shot that does not fill the frame ──────────
+  check('this browser honours canvas filter, which is what blur is built on', out.honoursFilter);
+  check('black bars are still black — the default did not move',
+    Boolean(out.black) && out.black.bandSum < 60, `band ${out.black?.bandSum}`);
+  check('blurring fills the band with picture instead of black',
+    Boolean(out.blurred) && out.blurred.bandSum > 60, `band ${out.blurred?.bandSum}`);
+  check('the band is a copy of this clip — a blue shot gives a blue band',
+    Boolean(out.blurred) && out.blurred.band[2] > out.blurred.band[0] + 10,
+    out.blurred ? `rgb(${out.blurred.band.join(',')})` : 'none');
+  check('the band is darkened, so the shot in front of it still leads',
+    Boolean(out.blurred) && out.blurred.bandSum < out.blurred.middle,
+    `band ${out.blurred?.bandSum} against picture ${out.blurred?.middle}`);
+  /* The one that separates a blur from an enlarged sharp copy: the clip has a
+     hard white stripe near its top, which stays white in the picture and must
+     be smeared down to something much dimmer in the background behind it. */
+  check('the hard stripe survives in the picture itself',
+    Boolean(out.blurred) && out.blurred.sharpPeak > 600, `peak ${out.blurred?.sharpPeak}`);
+  console.log(
+    `  — the band: black ${out.black?.bandSum}, blurred ${out.blurred?.bandSum} rgb(${out.blurred?.band.join(',')}); ` +
+    `the stripe peaks at ${out.blurred?.sharpPeak} in the picture and ${out.blurred?.bandPeak} behind it`,
+  );
+  check('and is smeared away in the background — it is blurred, not enlarged',
+    Boolean(out.blurred) && out.blurred.bandPeak < out.blurred.sharpPeak * 0.8,
+    `band peak ${out.blurred?.bandPeak} against ${out.blurred?.sharpPeak} in the picture`);
   check('a start past the end falls back to the whole clip rather than nothing',
     out.clamps[2].got.from === 0 && out.clamps[2].got.to === 10,
     `${out.clamps[2].got.from}–${out.clamps[2].got.to}`);

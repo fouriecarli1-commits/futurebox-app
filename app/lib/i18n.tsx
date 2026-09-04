@@ -759,7 +759,6 @@ export const STRINGS: Dict = {
   "pod.title": { en: "What the show is called", af: "Wat die program heet" },
   "pod.about": { en: "What it is about", af: "Waaroor dit gaan" },
   "pod.author": { en: "Who presents it", af: "Wie dit aanbied" },
-  "pod.language": { en: "What language it is in", af: "In watter taal dit is" },
   "pod.image": { en: "Cover picture URL", af: "Omslagprent se URL" },
   "pod.save": { en: "Save the channel", af: "Stoor die kanaal" },
   "pod.feed": { en: "Your feed", af: "Jou feed" },
@@ -1458,6 +1457,7 @@ export const STRINGS: Dict = {
   /* Where each platform prints its own interface over your video. */
   "safe.title": { en: "What the app covers", af: "Wat die app toemaak" },
   "safe.off": { en: "Off", af: "Af" },
+  "safe.cropped": { en: "This clip is not the shape these apps play. Posted there it is shown in the marked column and the sides are cropped off \u2014 before anything is printed on top.", af: "Hierdie snit is nie die vorm wat hierdie programme speel nie. Daar geplaas, word dit in die gemerkte kolom gewys en die kante word afgesny \u2014 nog voordat enigiets bo-op gedruk word." },
   "safe.kept": { en: "of the frame is left", af: "van die raam bly oor" },
   "safe.guide": { en: "A guide, not a specification. These apps move their own furniture \u2014 do not put anything you need inside the shading.", af: "'n Riglyn, nie 'n spesifikasie nie. Hierdie apps skuif hulle eie meubels rond \u2014 moenie iets wat jy nodig het binne die skadu sit nie." },
   "safe.tiktok": { en: "TikTok", af: "TikTok" },
@@ -1487,6 +1487,11 @@ export const STRINGS: Dict = {
   "board.stillToMake": { en: "still to make", af: "nog om te maak" },
   "board.left": { en: "What is left to make costs", af: "Wat oorbly om te maak kos" },
   "board.realTime": { en: "Cutting happens on this device and runs in real time: a film takes as long to cut as it is long. Keep this tab open while it does.", af: "Die sny gebeur op hierdie toestel en loop intyds: 'n film vat so lank om te sny soos wat dit lank is. Hou hierdie blad oop terwyl dit gebeur." },
+  "board.around": { en: "Around a shot that does not fill the frame", af: "Rondom \u2019n opname wat nie die raam vul nie" },
+  "board.bars": { en: "Black bars", af: "Swart balke" },
+  "board.blur": { en: "Blur the sides", af: "Vervaag die kante" },
+  "board.blurNote": { en: "The space around a shot is filled with a blurred, enlarged copy of that shot. Nothing is cropped \u2014 the clip itself is drawn whole, on top.", af: "Die ruimte rondom \u2019n opname word gevul met \u2019n vervaagde, vergrote kopie van daardie opname. Niks word afgesny nie \u2014 die snit self word heel bo-op geteken." },
+  "board.barsNote": { en: "A shot that is not the film\u2019s shape gets black bars. Nothing is cropped, and a shot already the right shape has no bars either way.", af: "\u2019n Opname wat nie die film se vorm het nie, kry swart balke. Niks word afgesny nie, en \u2019n opname wat reeds die regte vorm het, kry so of so geen balke nie." },
   "board.cut": { en: "Cut it into one film", af: "Sny dit in een film" },
   "board.cutting": { en: "Cutting", af: "Sny" },
   "board.save": { en: "Save the film", af: "Stoor die film" },
@@ -1554,6 +1559,7 @@ export const STRINGS: Dict = {
   "report.ignored": { en: "Columns it did not need:", af: "Kolomme wat dit nie nodig gehad het nie:" },
   "report.imported": { en: "Imported", af: "Ingevoer" },
   "report.onDevice": { en: "Kept on this device.", af: "Op hierdie toestel gehou." },
+  "pod.language": { en: "What language it is in", af: "In watter taal dit is" },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';

@@ -97,6 +97,65 @@ the handles span the clip, not the request: true
 the film is as long as its trimmed clips (5.0s wanted, 5.00s got): true
 ```
 
+## The background behind a shot that is the wrong shape
+
+A board is rarely all one shape. The film is cut to the desk's shape, so a
+wide shot in a tall film is drawn small with two black bands above and below
+it — and the honest bars read as a mistake even though nothing is wrong: the
+clip is whole and uncropped, which is exactly what was asked for.
+
+Filling those bands with an enlarged, blurred copy of the same frame is what
+everybody else does with this problem, and it works because the eye reads one
+picture rather than a small picture inside a black box. Nothing is cropped
+either way, so it is a preference and it is offered as one, with black kept as
+the default because that is what every film cut before it came out as. The
+choice lives on the board next to the song, so it survives a reload with the
+shots.
+
+**Made cheap on purpose.** A `blur(60px)` over a full frame, thirty times a
+second, for three minutes, is real work, and this export already runs in real
+time — a draw loop that cannot keep up drops frames straight into the file.
+So the frame is first drawn onto a scratch canvas about a sixteenth of the
+size, where a two-pixel blur is the same picture as a thirty-two-pixel blur at
+full size and costs a sixteenth as much; enlarging that back over the frame
+does the rest, because a bilinear upscale is itself a blur.
+
+**Measured, not asserted.** `audit/stitch.mjs` cuts the same striped clip both
+ways into the same tall frame and samples the band:
+
+```
+the band: black 0, blurred rgb(41,70,87);
+the stripe peaks at 765 in the picture and 338 behind it
+```
+
+The stripe is the one that matters. A hard white band across the top of the
+clip stays white in the picture and has to be smeared away in the background
+behind it — nothing else separates a blur from an enlarged sharp copy, which
+is the failure a browser that ignores `context.filter` would produce. That is
+asked of the browser rather than assumed, and a no falls back to black.
+
+`audit/blurshot.mjs` writes `audit/blur.png`: the same clip both ways, both
+frames lifted out of real exported films rather than drawn by the script.
+
+## Safe zones on every clip, not only the tall ones
+
+The overlay was mounted only on 9:16 clips, on the reasoning that these are
+9:16 platforms. The effect was that anybody working wide never saw it and did
+not learn it existed — while having the larger version of the same problem: a
+wide clip posted to a tall feed loses its sides to the crop before a caption
+covers anything.
+
+So every clip gets it, drawn where it applies for that shape. On a wide clip
+the overlay marks the 9:16 column a tall post would keep and puts the
+platform's furniture inside *that* column rather than inside the whole frame —
+drawn against the frame it would mark a caption bar across a part of the
+picture that is not in the post at all. What is cropped and what is covered
+are shaded differently, because one is gone and the other is recoverable by
+reframing.
+
+The number does the rest of the arguing. A tall clip keeps 59% of itself on
+Shorts; a wide one keeps 19%.
+
 ## What was built before this, and what is still not
 
 **Built and proven:** the cut, and the storyboard on top of it. Scenes in
@@ -104,9 +163,8 @@ order, letterboxed into one frame, a song under them, one file out, progress
 reported per scene, and a board that survives a reload because somebody will
 spend an hour and a dozen paid generations on one.
 
-**Still not built:** nothing on the original list. What is left is the second
-half of the ads plan — reading numbers back — and WebCodecs, when the checks
-can see it.
+**Still not built:** versions. What is left is that, and WebCodecs when the
+checks can see it.
 
 ## Three things worth stealing, from Kapwing
 
