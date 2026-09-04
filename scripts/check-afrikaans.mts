@@ -47,6 +47,29 @@ const halfDone = starts
   })
   .map((match) => match[1]);
 
+/**
+ * Afrikaans written with two different apostrophes.
+ *
+ * The dictionary held both: "Maak 'n snit" in the rail beside "Nog ’n liedjie"
+ * on the next screen. They are different characters and they look different on
+ * the page, so the app was quietly telling anybody reading it in Afrikaans that
+ * two people wrote it and neither read the other. A browser probe found it by
+ * failing to match a string — which is the wrong way to find out.
+ *
+ * Only the two shapes that cannot be a quotation mark are checked: the article
+ * ’n, and the plural or genitive on a word (video’s, solo’s). Anything else is
+ * left alone, because a straight apostrophe inside quoted speech is not this
+ * check's business.
+ */
+const straight: string[] = [];
+for (const [i, match] of starts.entries()) {
+  const from = match.index ?? 0;
+  const to = i + 1 < starts.length ? (starts[i + 1].index ?? dict.length) : dict.length;
+  const body = dict.slice(from, to);
+  const af = /\baf:\s*"((?:[^"\\]|\\.)*)"/.exec(body)?.[1] ?? '';
+  if (/(^|[\s(—-])'n\b/.test(af) || /[A-Za-zÀ-ſ]'[a-z]\b/.test(af)) straight.push(match[1]);
+}
+
 const missing = new Map<string, string>();
 for (const file of walk('app')) {
   if (file.endsWith('i18n.tsx')) continue;
@@ -66,9 +89,10 @@ for (const file of walk('app')) {
   }
 }
 
-if (missing.size === 0 && halfDone.length === 0) {
+if (missing.size === 0 && halfDone.length === 0 && straight.length === 0) {
   console.log(
-    `check:afrikaans — ${known.size} keys, every one the code asks for has both languages.`,
+    `check:afrikaans — ${known.size} keys, every one the code asks for has both languages,` +
+      '\n  and every Afrikaans ’n is the same character as every other one.',
   );
   process.exit(0);
 }
@@ -80,6 +104,13 @@ if (missing.size) {
 if (halfDone.length) {
   console.error(`\n${halfDone.length} entr(ies) with English and no Afrikaans:\n`);
   for (const key of halfDone) console.error(`  ${key}`);
+}
+if (straight.length) {
+  console.error(
+    `\n${straight.length} Afrikaans line(s) using a straight apostrophe where the rest` +
+      '\nof the dictionary uses ’ — they look different on the page:\n',
+  );
+  for (const key of straight) console.error(`  ${key}`);
 }
 console.error(
   '\nAdd them to the dictionary. An English fallback is silent: the reader cannot' +

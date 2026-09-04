@@ -52,13 +52,16 @@ for (const name of ROOMS) {
       /* The rail is a navigation list, not a row of controls. Boxing all
          thirteen entries would make the sidebar a wall of boxes and tell a
          reader nothing — the active one already carries a fill, which is the
-         only distinction that means anything there. Identified by its own
-         entries' labels rather than by a selector, since it has none. */
-      const label0 = (el.textContent || '').trim();
-      // `textContent` runs the name and its hint together with no separator —
-      // "StudioTimeline and edits" — so this matches the start rather than the
-      // whole string.
-      if (ROOMS.some((one) => label0.startsWith(one))) continue;
+         only distinction that means anything there.
+
+         Matched on the `nav` it lives in, which is what it is. This used to
+         match the entries' English labels against `ROOMS`, which had two
+         faults: an Afrikaans run would have reported all thirteen as unboxed,
+         and adding a fourteenth entry that is not a room — the way home —
+         made the check report it as a fault thirteen times over. A rail entry
+         is a rail entry because of where it sits, not because of what it is
+         called. */
+      if (el.closest('nav')) continue;
       const label = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40);
       out.push(`${label || '(icon only)'} — ${Math.round(box.width)}×${Math.round(box.height)}`);
     }

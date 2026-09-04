@@ -5,7 +5,7 @@ import Cover from './components/Cover';
 import { EVERY as ASKS_EVERY, asksWaiting } from './lib/asks';
 import { 
   Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone, AudioWaveform,
-  Search as SearchIcon,
+  Search as SearchIcon, Home,
   Tv, Cpu, ArrowUpRight, Compass, CheckCircle2, X,
   UploadCloud, FileVideo, Music, Headphones, Lightbulb, Code2, 
   Link as LinkIcon, AlertCircle, Layers, DollarSign, Clock, 
@@ -47,6 +47,7 @@ import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
 import PasswordField from './components/PasswordField';
 import Campaign from './components/Campaign';
+import Greeting from './components/Greeting';
 import SoundTrainer from './components/SoundTrainer';
 import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
 import { profileAddress } from './lib/brand';
@@ -310,15 +311,28 @@ export default function FutureBoxHome() {
   useEffect(() => {
     if (!cloud.configured()) return;
     let live = true;
+    /* Opened at most once for the life of this page. `onAccountChange` also
+       fires when the token is refreshed, and a greeting that reappears over
+       somebody's work every hour is not a greeting, it is an interruption. */
+    let greeted = false;
+    const openTheDoor = () => {
+      if (greeted) return;
+      greeted = true;
+      setAtDoor(true);
+    };
     cloud.currentAccount().then((account) => {
       if (live && account) {
         setUser({ ...account, followers: 1 });
         sayHello();
+        openTheDoor();
       }
     });
     const stop = cloud.onAccountChange((account) => {
       setUser(account ? { ...account, followers: 1 } : null);
-      if (account) sayHello();
+      if (account) {
+        sayHello();
+        openTheDoor();
+      }
     });
     return () => {
       live = false;
@@ -402,6 +416,18 @@ export default function FutureBoxHome() {
      three places at once — which is the compiler doing its job, and a list that
      needs the compiler to keep it honest should not be a list. */
   const [studioTab, setStudioTab] = useState<SurfaceId>('make');
+  /* The door, shown once per page load rather than on every tab switch.
+
+     The studio used to open straight onto Make a song with thirteen rooms
+     down the side, which is fine for somebody who was here yesterday and a
+     wall of choices addressed to nobody for somebody who has just signed up.
+     `Greeting` is one screen with their name on it and one thing worth doing
+     next; see the note at the top of that file.
+
+     It starts closed and opens when an account is known, so a visitor with no
+     account — and an app with no Supabase project behind it — lands where it
+     always did instead of on a greeting with nobody to greet. */
+  const [atDoor, setAtDoor] = useState(false);
   /**
    * People waiting on an answer from you, drawn on the rail.
    *
@@ -2106,6 +2132,31 @@ export default function FutureBoxHome() {
                     campaign: { label: t('rail.campaign'), hint: t('rail.campaign.hint'), icon: Megaphone },
                   };
 
+                  /* The way back to the door.
+
+                     Without it the greeting is a thing that happens to you
+                     once and can never be found again — which matters most for
+                     the person it was built for, who is the one likely to want
+                     a second look at where everything is. */
+                  const home = (
+                    <button
+                      key="home"
+                      onClick={() => setAtDoor(true)}
+                      title={t('hello.home', 'Home')}
+                      aria-current={atDoor ? 'page' : undefined}
+                      className={`flex-shrink-0 text-left rounded-xl flex items-center gap-3 transition-all ${
+                        theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
+                      } ${atDoor ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+                    >
+                      <Home className={`w-[18px] h-[18px] flex-shrink-0 ${atDoor ? 'text-emerald-400' : ''}`} />
+                      <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
+                        <span className="block text-sm font-semibold leading-tight">
+                          {t('hello.home', 'Home')}
+                        </span>
+                      </span>
+                    </button>
+                  );
+
                   const row = (id: SurfaceId) => {
                     const meta = META[id];
                     const Icon = meta.icon;
@@ -2146,10 +2197,12 @@ export default function FutureBoxHome() {
                     );
                   };
 
-                  if (theme.layout !== 'rail') return SURFACE_IDS.map(row);
+                  if (theme.layout !== 'rail') return [home, ...SURFACE_IDS.map(row)];
 
                   return (
                     <>
+                      {home}
+                      <div className="hidden md:block h-px bg-zinc-800 mx-3.5 my-3" />
                       {STAGES.map((stage) => (
                         <React.Fragment key={stage.id}>
                           <p className="hidden md:block px-3.5 pt-5 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-500 first:pt-0">
@@ -2167,7 +2220,23 @@ export default function FutureBoxHome() {
                 })()}
               </nav>
 
-              <div className="flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1">
+              {/* The door, or the work. Not both: a greeting beside a room is
+                  two answers to "where am I", and the copilot has nothing to
+                  say about a screen with no canvas on it. */}
+              {atDoor && (
+                <div className="flex-1 min-w-0 md:min-h-0 md:overflow-y-auto md:pr-1">
+                  <Greeting
+                    onGo={(id) => {
+                      setStudioTab(id);
+                      setAtDoor(false);
+                    }}
+                  />
+                </div>
+              )}
+
+              <div
+                className={`flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1 ${atDoor ? 'hidden' : ''}`}
+              >
 
 
             {/* TAB 2: CUSTOM VOICE STUDIO (USE YOUR OWN VOICE OR CLONE) */}
@@ -2326,7 +2395,11 @@ export default function FutureBoxHome() {
               {/* On a phone it sizes to its content and sits at the foot of the
                   page; the fixed height was a desktop measurement applied where
                   there was no second column to measure against. */}
-              <aside className="flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]">
+              <aside
+                className={`flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem] ${
+                  atDoor ? 'hidden' : ''
+                }`}
+              >
                 <Copilot
                   context={{
                     surface: studioTab,

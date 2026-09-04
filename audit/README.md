@@ -120,6 +120,29 @@ node audit/podlanguage.mjs 3016 en
 node audit/podlanguage.mjs 3016 af
 ```
 
+`greeting.mjs` needs the stub build as well, and for the sharpest reason of
+the four: the door is a screen made entirely of things that belong to one
+person — their name, their picture, and a suggestion read off their own
+library. Without an account it has nothing to say and a run would test the
+empty case. It seeds five songs and two makes into the same stores the app
+reads, so the derivation under test is the real one over real storage; only
+the account and the picture are stubbed.
+
+```
+node audit/greeting.mjs 3016 en
+node audit/greeting.mjs 3016 af
+```
+
+`check:habits` proves the arithmetic behind the suggestion — mostly by proving
+it *refuses* to find a habit that is not there. This proves the arithmetic is
+wired to the screen, which is a different claim and the one that has
+historically been the wrong one.
+
+It also found two things a build could not: an Afrikaans button that read
+"Maak Maak ’n snit oop", and the dictionary holding two different apostrophes
+— "Maak 'n snit" in the rail beside "Nog ’n liedjie" on the next screen.
+`check:afrikaans` now refuses the second one.
+
 `blurshot.mjs` is not a check — it writes `audit/blur.png`, the same wide clip
 cut into the same tall film twice, once with black bars and once with the
 blurred sides. Both frames are lifted out of real exported films rather than
