@@ -357,3 +357,22 @@ What it cannot check is the lock itself — the stub build has no Supabase, so
 source: that both gated routes ask on the server with the caller's own id, that
 reading and cancelling the queue are deliberately *not* gated, and that the
 webhook reads a renewal's plan code before assuming a membership renewed.
+
+## The one that measures audio
+
+`mixdown.mjs` renders real tones through the real `mixSession` and reads the
+samples back. `check:mix` pins what `trimFor` answers given a peak and an
+average; it cannot answer whether the file that comes out has those properties,
+and a pan wired to the wrong node, a trim applied to one channel, or a render
+that differs from the last one all change the file somebody posts without
+changing a number in a unit test.
+
+It owns its loop the way `safezones.mjs` does — copies `app/mixprobe/
+page.probe.tsx` in, builds, measures, removes it — so the app never ships a
+route that exists for a test.
+
+Two of its assertions were written wrong first and are worth keeping in mind:
+a centred mono lane comes out at 1/√2 in each channel, not at full level in
+both, because `StereoPannerNode` is equal-power. That is correct and it is what
+every desk does, but it means every mix in this app is 3 dB quieter than a
+linear panner would give — so the law itself is asserted rather than assumed.

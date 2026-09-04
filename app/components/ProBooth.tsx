@@ -19,8 +19,11 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Loader2, Music2, Plus, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
-import { audible, mixSession, readInto, span, type Lane } from '../lib/session';
+import { Check, Circle, Gauge, Loader2, Music2, Plus, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import {
+  FLAT_MASTER, audible, dbOf, mixSession, readInto, readSession, span, wireLane,
+  type Lane, type Master, type Reading,
+} from '../lib/session';
 import { decodeAt, shapeOf } from '../lib/takes';
 import { encodeWav } from '../lib/wav';
 import { knownLatency } from '../lib/mixdown';
@@ -81,6 +84,16 @@ export default function ProBooth({
   const [countBars, setCountBars] = useState<CountIn>(0);
   const [snap, setSnap] = useState<Snap>('smart');
   const metronomeRef = useRef<Metronome | null>(null);
+
+  /* ── The master ─────────────────────────────────────────────────────────
+     `trim` is the one number both the live path and the render apply, worked
+     out from a measurement of the mix. `stale` is what keeps it honest: the
+     moment a lane changes, the reading on screen is about a mix that no longer
+     exists, and a number that is quietly out of date is worse than no number. */
+  const [master, setMaster] = useState<Master>(FLAT_MASTER);
+  const [reading, setReading] = useState<Reading | null>(null);
+  const [stale, setStale] = useState(false);
+  const trim = reading && !stale ? reading.trim : 1;
 
   const ctxRef = useRef<AudioContext | null>(null);
   const playingRef = useRef<AudioBufferSourceNode[]>([]);
@@ -158,12 +171,17 @@ export default function ProBooth({
       hush();
       void ctx.resume();
       const begins = ctx.currentTime + 0.06 + lead;
+
+      /* The same bus the render builds, and the same one number on the end of
+         it. The click is deliberately not on this bus: a metronome that got
+         quieter when the master came down would be a metronome you stop being
+         able to hear exactly when you need it. */
+      const bus = ctx.createGain();
+      bus.gain.value = master.gain * trim;
+      bus.connect(ctx.destination);
+
       audible(lanes).forEach((lane) => {
-        const source = ctx.createBufferSource();
-        source.buffer = lane.audio;
-        const level = ctx.createGain();
-        level.gain.value = lane.gain;
-        source.connect(level).connect(ctx.destination);
+        const source = wireLane(ctx, lane, bus);
         // A lane that starts before the moment being played from is joined
         // part-way through rather than from its beginning.
         const into = from - lane.at;
@@ -191,7 +209,7 @@ export default function ProBooth({
 
       setPlaying(true);
     },
-    [clickDb, clicker, clicking, context, division, hush, lanes, meter],
+    [clickDb, clicker, clicking, context, division, hush, lanes, master.gain, meter, trim],
   );
 
   const stopPlaying = useCallback(() => {
@@ -350,7 +368,8 @@ export default function ProBooth({
     [at, rate, t],
   );
 
-  const change = (id: string, how: Partial<Lane>): void =>
+  const change = (id: string, how: Partial<Lane>): void => (
+    setStale(true),
     setLanes((was) =>
       was.map((lane) => {
         if (lane.id !== id) return lane;
@@ -361,13 +380,28 @@ export default function ProBooth({
            renamed it. */
         return how.at === undefined ? next : { ...next, at: snapped(next.at, sane(meter), snap) };
       }),
-    );
+    )
+  );
+
+  const measure = useCallback(async () => {
+    setBusy(true);
+    try {
+      const got = await readSession(lanes, rate, master);
+      setReading(got);
+      setStale(false);
+    } finally {
+      setBusy(false);
+    }
+  }, [lanes, master, rate]);
 
   const keep = useCallback(async () => {
     setBusy(true);
     setProblem(null);
     try {
-      const mixed = await mixSession(lanes, rate);
+      /* The same master, and the same trim the mixer was listening through.
+         A render that worked out its own number would be a file that is not
+         the mix somebody approved. */
+      const mixed = await mixSession(lanes, rate, master, trim);
       if (!mixed) {
         setProblem(t('pro.mixFailed', 'The mix could not be made.'));
         return;
@@ -378,7 +412,7 @@ export default function ProBooth({
     } finally {
       setBusy(false);
     }
-  }, [lanes, onKeep, rate, t]);
+  }, [lanes, master, onKeep, rate, t, trim]);
 
   const heard = useMemo(() => audible(lanes), [lanes]);
 
@@ -573,6 +607,101 @@ export default function ProBooth({
 
       {problem && <p className="text-sm text-amber-400 leading-snug px-5 pb-2">{problem}</p>}
 
+      {/* ── Mix and master ──────────────────────────────────────────────
+          Three controls and a reading. Not a chain of processors: what is here
+          is one multiplication, worked out from a measurement of the actual
+          mix and applied identically to what you hear and to what comes out.
+          Drawing a compressor that only ran in one of those two places would
+          make the file differ from the approval, invisibly. */}
+      <div className="flex-shrink-0 px-4 py-2 border-t border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="text-xs uppercase tracking-wider text-zinc-600 font-bold flex items-center gap-1.5">
+          <Gauge className="w-3.5 h-3.5" />
+          {t('pro.master', 'Master')}
+        </span>
+
+        <label className="flex items-center gap-1.5">
+          <span className="text-xs text-zinc-500">{t('pro.masterLevel', 'Level')}</span>
+          <input
+            type="range"
+            min={0}
+            max={200}
+            value={Math.round(master.gain * 100)}
+            onChange={(event) => {
+              setMaster((was) => ({ ...was, gain: Number(event.target.value) / 100 }));
+              setStale(true);
+            }}
+            className="w-24 accent-emerald-500"
+            aria-label={t('pro.masterLevel', 'Level')}
+          />
+          <span className="text-xs text-zinc-500 tabular-nums w-10 text-right">
+            {Math.round(master.gain * 100)}
+          </span>
+        </label>
+
+        <label className="flex items-center gap-1.5">
+          <span className="text-xs text-zinc-500">{t('pro.ceiling', 'Ceiling')}</span>
+          <select
+            value={master.ceilingDb}
+            onChange={(event) => {
+              setMaster((was) => ({ ...was, ceilingDb: Number(event.target.value) }));
+              setStale(true);
+            }}
+            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100 tabular-nums"
+            aria-label={t('pro.ceiling', 'Ceiling')}
+          >
+            {[-0.1, -0.3, -1, -2, -3].map((one) => (
+              <option key={one} value={one}>{one} dB</option>
+            ))}
+          </select>
+        </label>
+
+        <button
+          type="button"
+          onClick={() => {
+            setMaster((was) => ({ ...was, matchLoudness: !was.matchLoudness }));
+            setStale(true);
+          }}
+          aria-pressed={master.matchLoudness}
+          className={`min-h-[36px] px-2.5 py-1 rounded-lg border text-sm font-semibold ${
+            master.matchLoudness
+              ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
+              : 'bg-zinc-950 border-zinc-700 text-zinc-500'
+          }`}
+        >
+          {t('pro.matchLoudness', 'Match the loudness')}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void measure()}
+          disabled={busy || recording || !heard.length}
+          className="min-h-[36px] px-2.5 py-1 rounded-lg border border-zinc-700 bg-zinc-950 text-sm font-semibold text-zinc-300 hover:text-white disabled:opacity-40"
+        >
+          {t('pro.measure', 'Measure the mix')}
+        </button>
+
+        {reading && (
+          <span className={`text-xs tabular-nums ${stale ? 'text-zinc-600' : 'text-zinc-400'}`}>
+            {t('pro.peak', 'Peak')} {dbOf(reading.peak).toFixed(1)} dB ·{' '}
+            {t('pro.average', 'Average')} {dbOf(reading.rms).toFixed(1)} dB ·{' '}
+            {t('pro.trim', 'Master')} {dbOf(reading.trim) >= 0 ? '+' : ''}
+            {dbOf(reading.trim).toFixed(1)} dB
+          </span>
+        )}
+
+        {/* A reading about a mix that no longer exists is worse than none. */}
+        {reading && stale && (
+          <span className="text-xs text-amber-400">
+            {t('pro.stale', 'Something changed — measure it again.')}
+          </span>
+        )}
+        {!reading && (
+          <span className="text-xs text-zinc-600 leading-snug">
+            {t('pro.unmeasured', 'Until it is measured, the master does nothing at all — what you hear is the lanes as they are.')}
+          </span>
+        )}
+      </div>
+
       {/* ── The transport ───────────────────────────────────────────────── */}
       <div className="flex-shrink-0 px-5 pt-2 pb-3 border-t border-zinc-800 flex flex-wrap items-center gap-2">
         {recording ? (
@@ -759,6 +888,20 @@ function LaneRow({
       </div>
 
       <canvas ref={canvasRef} className="flex-1 rounded-lg bg-zinc-950/70" style={{ height: LANE_H }} />
+
+      <div className="w-24 flex-shrink-0 flex items-center gap-1.5">
+        <span className="text-[11px] text-zinc-600">L</span>
+        <input
+          type="range"
+          min={-100}
+          max={100}
+          value={Math.round((lane.pan ?? 0) * 100)}
+          onChange={(event) => onChange({ pan: Number(event.target.value) / 100 })}
+          className="flex-1 accent-emerald-500"
+          aria-label={t('pro.pan', 'Where it sits, left to right')}
+        />
+        <span className="text-[11px] text-zinc-600">R</span>
+      </div>
 
       <div className="w-28 flex-shrink-0 flex items-center gap-1">
         <input
