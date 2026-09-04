@@ -100,8 +100,19 @@ const QUICK: readonly SurfaceId[] = ['make', 'studio', 'booth', 'canvas', 'chann
 
 export default function Greeting({
   onGo,
+  onClose,
+  name: fromAccount,
 }: {
   readonly onGo: (id: SurfaceId) => void;
+  readonly onClose?: () => void;
+  /**
+   * The name the account already knows, used when the channel has none.
+   *
+   * The greeting read only the channel's `name`, which is blank until somebody
+   * fills their channel in — so the first thing a new account saw was "Hello!"
+   * addressed to nobody, which is the one thing this screen exists not to do.
+   */
+  readonly name?: string;
 }): React.ReactElement {
   const { t } = useLang();
   const [habit, setHabit] = useState<Habit | null>(null);
@@ -117,14 +128,17 @@ export default function Greeting({
     void (async () => {
       const creator = await fetchCreator().catch(() => null);
       if (!live) return;
-      setHabit(habitOf(loadTracks(), loadMakes(), creator?.name ?? ''));
+      /* Their channel name first, because it is the one they chose. The
+         account's name behind it, because a greeting with no name is worse
+         than one using the name they signed up with. */
+      setHabit(habitOf(loadTracks(), loadMakes(), creator?.name || fromAccount || ''));
       setHandle(creator?.handle ?? '');
       setPhoto(creator?.avatar_path ? publicUrl(creator.avatar_path) : null);
     })();
     return () => {
       live = false;
     };
-  }, []);
+  }, [fromAccount]);
 
   const said = habit ? suggest(habit) : null;
   const roomName = (id: SurfaceId) => t(RAIL_KEY[id]);
@@ -253,9 +267,22 @@ export default function Greeting({
           ))}
         </div>
         <p className="text-xs text-zinc-600 leading-relaxed">
-          {t('hello.rail', 'Every other room is in the list on the left.')}
+          {t('hello.rail', 'Every other room is inside the studio, in the list down the side.')}
         </p>
       </div>
+
+      {/* A way past it that is not a room, for somebody who came to read the
+          feed rather than to make something. */}
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          className="min-h-[44px] w-full sm:w-auto rounded-xl border border-zinc-800 bg-zinc-950/60 px-4 py-2.5 text-sm font-semibold text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+        >
+          {t('hello.skip', 'Not now — take me to the feed')}
+        </button>
+      )}
+
 
       {/* ── How it knew ──────────────────────────────────────────────────── */}
       {habit?.returning && (

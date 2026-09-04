@@ -50,6 +50,8 @@ async function withProviders(external) {
     !said.some((one) => /GitHub/.test(one)), said.join(' | '));
   check('Google comes first — most people are already signed into it',
     /Google/.test(said[0] ?? ''), said[0] ?? 'none');
+  check('and the "or" is there when there is something to be or-ed against',
+    /^\s*or\s*$/im.test(await p.locator('form').first().locator('..').innerText()));
   await p.screenshot({ path: `audit/signinwith-${af ? 'af' : 'en'}.png` });
   await p.close();
 }
@@ -68,9 +70,15 @@ async function withProviders(external) {
   const said = names.filter((one) => /Google|Apple|Facebook/.test(one));
   check('none switched on draws no buttons at all', said.length === 0, said.join(' | '));
   // And the form is still there: with no provider, typing an address is the
-  // only way in and it must not be behind an empty divider.
+  // only way in.
   check('the email form is still the way in',
     (await modal.locator('input[type="email"]').count()) === 1);
+  /* And it is not sitting under a dangling "or" with an empty gap above it.
+     That is what the first version did — the divider stayed behind when the
+     buttons did not, which is exactly what a phone screenshot showed. */
+  check('with no providers there is no "or" left hanging above the form',
+    !/^\s*or\s*$/im.test(await modal.innerText()),
+    (await modal.innerText()).split('\n').slice(0, 6).join(' / '));
   await p.close();
 }
 

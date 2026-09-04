@@ -435,6 +435,25 @@ export default function FutureBoxHome() {
   const [atDoor, setAtDoor] = useState(false);
   /* The account screen, behind the press people were already making. */
   const [accountOpen, setAccountOpen] = useState(false);
+
+  /**
+   * Go to a room. The only way to set one.
+   *
+   * Choosing a room is leaving the door, wherever the choice was made — and
+   * "wherever" is the point. There are sixteen places in this file that pick a
+   * room, and the first version of the door taught three of them to close it:
+   * the greeting's own buttons. Everything else — the rail, the landing's
+   * "Start a podcast", a hand-off from one room to the next — set the room
+   * behind the greeting and left the greeting on screen, so the press looked
+   * like it had done nothing.
+   *
+   * `setStudioTab` is not called anywhere else. That is what stops the next
+   * room-picker from arriving with the same fault.
+   */
+  const goToRoom = useCallback((id: SurfaceId) => {
+    setStudioTab(id);
+    setAtDoor(false);
+  }, []);
   /**
    * Whether the door has already been shown for this arrival.
    *
@@ -447,58 +466,46 @@ export default function FutureBoxHome() {
    * about one of them — see the note on `arrived`.
    */
   /**
-   * Two latches, because arming the door and opening the studio are two
-   * different rights and one flag could not hold both.
+   * Shown once per arrival, and an arrival is a sign-in.
    *
-   * The first version used one. The auth library's event fires before the
-   * "is anybody signed in?" promise resolves, so a page load armed the door,
-   * set the flag, and then the real arrival landing a moment later was turned
-   * away by its own latch — the door was ready and nobody was taken to it.
+   * One latch is enough now that the welcome is its own page rather than a
+   * panel inside the studio. It was two, and before that one that could not
+   * tell a page load from a sign-in — both of which were the wrong shape for
+   * the same reason: the door was being *armed* in the hope somebody would
+   * later open the studio and find it. A page is either arrived at or it is
+   * not.
    */
-  const armed = useRef(false);
-  const opened = useRef(false);
+  const greeted = useRef(false);
 
   /**
-   * Somebody has just signed in. Take them to the door.
+   * Somebody has just signed in. Put the welcome in front of them.
    *
-   * It opens the studio as well as arming the door, and that is the whole fix
-   * for "I sign in and there is no welcome page". The greeting lives inside
-   * the studio, and signing in leaves you on the feed — so it was being set up
-   * correctly and shown to nobody until they happened to press Studio, which
-   * is not a welcome, it is a surprise several minutes later.
-   *
-   * Called only from the two places that genuinely mean "this person has just
-   * signed in": the form, and the marked return from Google. Deliberately
-   * *not* from the auth library's change event, which also fires on an hourly
-   * token refresh and cannot say which is which — greeting somebody over
-   * their own work every hour is an interruption, not a welcome.
+   * Called only from the two places that genuinely mean it: the sign-in form,
+   * and the marked return from Google. Deliberately *not* from the auth
+   * library's change event, which fires on an hourly token refresh and on a
+   * sign-in in another tab as readily as on one here and cannot say which —
+   * a full page over somebody's work every hour is not a welcome.
    */
   const arrived = useCallback(() => {
+    if (greeted.current) return;
+    greeted.current = true;
     setAtDoor(true);
-    armed.current = true;
-    if (opened.current) return;
-    opened.current = true;
-    setUploadModalOpen(true);
   }, []);
 
   /**
-   * A session that was already there. Arm the door; do not open anything.
+   * A session that was already there when the page loaded. Nothing happens.
    *
-   * Coming back to a tab is not signing in, and throwing somebody into the
-   * studio because their session survived a refresh takes the feed away from
-   * whoever came to read it. The door is waiting the moment they open the
-   * studio themselves.
+   * Coming back to a tab is not signing in. This was the one case that kept
+   * getting the welcome wrong in both directions: first it was invisible
+   * because it lived inside a studio nobody had opened, then it took over the
+   * whole screen on every refresh. Neither is what somebody returning to read
+   * the feed wants, and the answer is that they see the feed.
    */
-  const restored = useCallback(() => {
-    if (armed.current) return;
-    armed.current = true;
-    setAtDoor(true);
-  }, []);
+  const restored = useCallback(() => undefined, []);
 
-  /** And has just left: close it behind them, and re-arm for next time. */
+  /** And has just left: take it down, and re-arm it for next time. */
   const departed = useCallback(() => {
-    armed.current = false;
-    opened.current = false;
+    greeted.current = false;
     setAtDoor(false);
     setUploadModalOpen(false);
   }, []);
@@ -1016,13 +1023,6 @@ export default function FutureBoxHome() {
                   hard-coded, so a button never sends somebody out to a consent
                   screen that refuses them — see `components/SignInWith.tsx`. */}
               <SignInWith onProblem={setAuthError} />
-              <div className="flex items-center gap-3">
-                <span className="h-px flex-1 bg-zinc-800" />
-                <span className="text-xs text-zinc-600 uppercase tracking-wider">
-                  {t('auth.or', 'or')}
-                </span>
-                <span className="h-px flex-1 bg-zinc-800" />
-              </div>
               <form onSubmit={handleAuthSubmit} className="space-y-3">
                 <input
                   type="email"
@@ -1327,7 +1327,7 @@ export default function FutureBoxHome() {
           <Spotlight
             onGo={(tab) => {
               setUploadModalOpen(true);
-              setStudioTab(tab);
+              goToRoom(tab);
             }}
             onAppearance={() => setThemeOpen(true)}
           />
@@ -2089,6 +2089,39 @@ export default function FutureBoxHome() {
       <OutOfCredits short={short} packs={packs} onClose={() => setShort(null)} />
 
       {/* 🚀 CREATOR STUDIO & AI MUSIC HUB (WITH MASTER GENRE SOUNDBOARD, VOICE STUDIO & DIRECTOR) */}
+      {/* ── The welcome, as its own page ──────────────────────────────────
+
+          It was inside the studio, sharing the shell with the rail and the
+          copilot — which made it read as a room rather than as an arrival, and
+          put a navigation list beside a screen whose entire job is to say
+          where to go. It is its own page now, over everything, and a room
+          chosen on it opens the studio at that room.
+
+          Above the studio's own layer, because it is the thing you arrive at
+          and the studio is what you arrive into. */}
+      {atDoor && (
+        <div className="fixed inset-0 z-[55] bg-zinc-950 overflow-y-auto">
+          {/* Top-aligned with room around it, not vertically centred.
+
+              Centring inside a scrolling box is the classic way to make the
+              top of a tall page unreachable: `items-center` overflows in both
+              directions and only the bottom half can be scrolled to. On a
+              short phone, with the picture and six room buttons, this page is
+              taller than the screen — so the greeting itself would have been
+              the part nobody could reach. */}
+          <div className="min-h-full p-4 sm:p-8 pt-8 sm:pt-16 pb-16 flex justify-center">
+            <Greeting
+              name={user?.name}
+              onGo={(id) => {
+                setUploadModalOpen(true);
+                goToRoom(id);
+              }}
+              onClose={() => setAtDoor(false)}
+            />
+          </div>
+        </div>
+      )}
+
       <Account
         open={accountOpen}
         onClose={() => setAccountOpen(false)}
@@ -2101,7 +2134,7 @@ export default function FutureBoxHome() {
         onGoToChannel={() => {
           setUploadModalOpen(true);
           setAtDoor(false);
-          setStudioTab('channels');
+          goToRoom('channels');
         }}
       />
 
@@ -2120,7 +2153,7 @@ export default function FutureBoxHome() {
           open={searchOpen}
           onClose={() => setSearchOpen(false)}
           onGo={(surface, openTitle) => {
-            setStudioTab(surface);
+            goToRoom(surface);
             // The same hand-off the advert desk uses: the room is not mounted
             // yet, so this waits for it and fires the moment it registers.
             if (openTitle) copilotBus.handoff(surface, 'pick_song', openTitle);
@@ -2256,7 +2289,7 @@ export default function FutureBoxHome() {
                       <button
                         key={id}
                         onClick={() => {
-                          setStudioTab(id);
+                          goToRoom(id);
                           /* And leave the door.
 
                              Without this, pressing a room in the rail while
@@ -2322,38 +2355,22 @@ export default function FutureBoxHome() {
                 })()}
               </nav>
 
-              {/* The door, or the work. Not both: a greeting beside a room is
-                  two answers to "where am I", and the copilot has nothing to
-                  say about a screen with no canvas on it. */}
-              {atDoor && (
-                <div className="flex-1 min-w-0 md:min-h-0 md:overflow-y-auto md:pr-1">
-                  <Greeting
-                    onGo={(id) => {
-                      setStudioTab(id);
-                      setAtDoor(false);
-                    }}
-                  />
-                </div>
-              )}
-
-              <div
-                className={`flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1 ${atDoor ? 'hidden' : ''}`}
-              >
+              <div className="flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1">
 
 
             {/* TAB 2: CUSTOM VOICE STUDIO (USE YOUR OWN VOICE OR CLONE) */}
             {studioTab === 'voice_studio' && (
               <VoiceScreen
                 onUpgrade={() => setPricingModalOpen(true)}
-                onGoToBooth={() => setStudioTab('booth')}
-                onGoToPodcast={() => setStudioTab('podcast')}
+                onGoToBooth={() => goToRoom('booth')}
+                onGoToPodcast={() => goToRoom('podcast')}
               />
             )}
 
             {/* HOOKS: cut the bit worth posting, from your own tracks */}
             {studioTab === 'video' && <MusicVideo />}
             {studioTab === 'canvas' && (
-              <VideoCanvas onUpgrade={() => setPricingModalOpen(true)} onGoTo={setStudioTab} />
+              <VideoCanvas onUpgrade={() => setPricingModalOpen(true)} onGoTo={goToRoom} />
             )}
             {studioTab === 'hooks_feed' && <Hooks />}
 
@@ -2371,7 +2388,7 @@ export default function FutureBoxHome() {
                   setMadeTrack(track);
                   setTrackCount((count) => count + 1);
                 }}
-                onGoToChannel={() => setStudioTab('channels')}
+                onGoToChannel={() => goToRoom('channels')}
               />
             )}
 
@@ -2388,13 +2405,13 @@ export default function FutureBoxHome() {
                    by going there and finding it in a list. */
                 onEdit={(id) => {
                   setEditSong(id);
-                  setStudioTab('studio');
+                  goToRoom('studio');
                 }}
               />
             )}
             {studioTab === 'booth' && (
               <Booth
-                onGoToMake={() => setStudioTab('make')}
+                onGoToMake={() => goToRoom('make')}
                 onMade={(track) => {
                   setMadeTrack(track);
                   setTrackCount((count) => count + 1);
@@ -2402,7 +2419,7 @@ export default function FutureBoxHome() {
               />
             )}
 
-            {studioTab === 'live' && <LiveChannel onGoToMake={() => setStudioTab('make')} />}
+            {studioTab === 'live' && <LiveChannel onGoToMake={() => goToRoom('make')} />}
 
             {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
 
@@ -2416,7 +2433,7 @@ export default function FutureBoxHome() {
 
             {studioTab === 'campaign' && (
               <Campaign
-                onGoTo={setStudioTab}
+                onGoTo={goToRoom}
                 /* Handed over rather than dispatched: the desk being written to
                    is not mounted yet at the moment the button is pressed. */
                 onUseShot={(shot) => copilotBus.handoff('canvas', 'set_prompt', shot)}
@@ -2432,7 +2449,7 @@ export default function FutureBoxHome() {
                 onRemake={(next) => {
                   setHandoff(next);
                   setCanvas(next);
-                  setStudioTab('make');
+                  goToRoom('make');
                   setMakeSignal((n) => n + 1);
                 }}
               />
@@ -2480,7 +2497,7 @@ export default function FutureBoxHome() {
                       <p className="text-xs text-zinc-500">{t('rail.next', 'Next')}</p>
                       <button
                         type="button"
-                        onClick={() => setStudioTab(onward.to)}
+                        onClick={() => goToRoom(onward.to)}
                         className="flex items-center gap-2 text-sm font-semibold text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
                       >
                         <span>{lang === 'af' ? onward.af : onward.en}</span>
@@ -2497,11 +2514,7 @@ export default function FutureBoxHome() {
               {/* On a phone it sizes to its content and sits at the foot of the
                   page; the fixed height was a desktop measurement applied where
                   there was no second column to measure against. */}
-              <aside
-                className={`flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem] ${
-                  atDoor ? 'hidden' : ''
-                }`}
-              >
+              <aside className="flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]">
                 <Copilot
                   context={{
                     surface: studioTab,
@@ -2524,7 +2537,7 @@ export default function FutureBoxHome() {
                     if (action.kind === 'set_style') setCanvas({ ...canvas, style: action.value });
                     if (action.kind === 'set_lyrics') setCanvas({ ...canvas, lyrics: action.value });
                     if (action.kind === 'generate') {
-                      setStudioTab('make');
+                      goToRoom('make');
                       setMakeSignal((n) => n + 1);
                     }
                     if (action.kind === 'go') {
@@ -2535,7 +2548,7 @@ export default function FutureBoxHome() {
                       // was. The registry vets the name and resolves what a
                       // person calls a screen to what the studio calls it.
                       const tab = resolveSurfaceId(action.value);
-                      if (tab) setStudioTab(tab);
+                      if (tab) goToRoom(tab);
                     }
                   }}
                 />
@@ -2557,7 +2570,7 @@ export default function FutureBoxHome() {
             <button
               type="button"
               onClick={() => {
-                setStudioTab('video');
+                goToRoom('video');
                 setUploadModalOpen(true);
                 setMadeTrack(null);
               }}

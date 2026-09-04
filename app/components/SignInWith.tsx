@@ -89,8 +89,13 @@ export default function SignInWith({
     };
   }, []);
 
-  // Nothing until the answer lands, and nothing at all where none is on: an
-  // empty divider above a form is worse than no divider.
+  /* Nothing until the answer lands, and nothing at all where none is on.
+
+     The "or" between these and the email form belongs here rather than in the
+     screen above, and this is why: with no provider switched on it stayed
+     behind, leaving a dangling OR with an empty gap above it where the buttons
+     would have been. A divider is a statement that there are two things, and
+     it has to be drawn by whichever of them can disappear. */
   if (!on?.length) return null;
 
   return (
@@ -116,6 +121,13 @@ export default function SignInWith({
           {t('auth.continueWith', 'Continue with')} {NAME[provider]}
         </button>
       ))}
+      <div className="flex items-center gap-3 pt-1">
+        <span className="h-px flex-1 bg-zinc-800" />
+        <span className="text-xs text-zinc-600 uppercase tracking-wider">
+          {t('auth.or', 'or')}
+        </span>
+        <span className="h-px flex-1 bg-zinc-800" />
+      </div>
     </div>
   );
 }
