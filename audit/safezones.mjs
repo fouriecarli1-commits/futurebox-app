@@ -22,6 +22,7 @@
 import { cpSync, rmSync, existsSync } from 'node:fs';
 import { execSync, spawn } from 'node:child_process';
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3025';
 const af = process.argv[3] === 'af';
@@ -212,7 +213,7 @@ try {
   check('and says plainly that the sides are cropped off',
     af ? /kante word afgesny/.test(wideWords) : /sides are cropped off/.test(wideWords));
 
-  await p.screenshot({ path: `audit/safezones-${af ? 'af' : 'en'}.png`, fullPage: true });
+  await p.screenshot({ path: shot(`safezones-${af ? 'af' : 'en'}.png`), fullPage: true });
   await b.close();
 } finally {
   if (server?.pid) {

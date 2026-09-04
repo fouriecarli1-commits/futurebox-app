@@ -8,6 +8,7 @@
  * that a file with no money in it is refused rather than half-shown.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3031';
 const af = process.argv[3] === 'af';
@@ -107,7 +108,7 @@ await p.waitForTimeout(700);
 check('a file with no spend column is refused, and says why',
   af ? /Geen bestedingskolom/.test(await room.innerText()) : /No spend column/.test(await room.innerText()));
 
-await p.screenshot({ path: `audit/adreport-${af ? 'af' : 'en'}.png`, fullPage: true });
+await p.screenshot({ path: shot(`adreport-${af ? 'af' : 'en'}.png`), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

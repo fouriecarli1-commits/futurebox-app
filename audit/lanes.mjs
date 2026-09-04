@@ -14,6 +14,7 @@
  * up as a difference rather than as two identical pictures.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3023';
 const af = process.argv[3] === 'af';
@@ -210,7 +211,7 @@ check('muting the loud track really takes it out of the file',
 check('it says the original is left alone',
   af ? /nie oor die snit gestoor nie/.test(await room.innerText()) : /not saved over the song/.test(await room.innerText()));
 
-await p.screenshot({ path: `audit/lanes-${af ? 'af' : 'en'}.png`, fullPage: true });
+await p.screenshot({ path: shot(`lanes-${af ? 'af' : 'en'}.png`), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

@@ -1,5 +1,6 @@
 /** Does the rail actually show a waiting ask? Faked threads, real component. */
 import { enter, studio } from './enter.mjs';
+import { shot } from './where.mjs';
 const { browser, page, problems } = await enter();
 await page.route('**/api/collab*', async (route) => {
   if (route.request().method() !== 'GET') return route.continue();
@@ -24,6 +25,6 @@ const rail = room.locator('button').filter({ hasText: /^Collab Radar/ }).first()
 const text = (await rail.innerText()).replace(/\n/g, ' ');
 console.log('rail entry reads:', JSON.stringify(text));
 console.log('counts only asks pointed at you (expects 2):', /\b2\b/.test(text));
-await page.screenshot({ path: 'audit/badge.png' });
+await page.screenshot({ path: shot('badge.png') });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await browser.close();

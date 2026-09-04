@@ -1,5 +1,6 @@
 /** The cancel panel, with a live subscription pretended in. */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
@@ -69,7 +70,7 @@ if (hasStop) {
   text = await room.innerText();
   check('confirms it stopped', af ? /Gestop/.test(text) : /Stopped/.test(text));
 }
-await p.screenshot({ path: `audit/subscription-${af ? 'af' : 'en'}.png` });
+await p.screenshot({ path: shot(`subscription-${af ? 'af' : 'en'}.png`) });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

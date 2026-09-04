@@ -27,6 +27,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const BUNDLE = process.argv[4] || '/tmp/avatar.bundle.js';
 const PORT = process.argv[2] || '3011';
@@ -177,7 +178,7 @@ const small = await p.evaluate(() => {
 });
 check('the picture controls are thumb-sized', small.length === 0, small.join(' | '));
 
-await p.screenshot({ path: `audit/photo-${af ? 'af' : 'en'}.png` });
+await p.screenshot({ path: shot(`photo-${af ? 'af' : 'en'}.png`) });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

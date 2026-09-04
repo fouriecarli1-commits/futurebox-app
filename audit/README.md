@@ -120,6 +120,14 @@ node audit/podlanguage.mjs 3016 en
 node audit/podlanguage.mjs 3016 af
 ```
 
+`where.mjs` is not a run. Every probe writes its screenshots through
+`shot()`, which resolves against the audit directory rather than against
+whatever directory the process started in. That was `audit/whatever.png` for a
+long time, which is fine when a run is launched from the project root and
+silently wrong when it is not: two screenshots ended up inside an unrelated
+repository checked out beside this one, and were noticed only because a git
+hook complained about untracked files.
+
 `legalpage.mjs` runs against a plain build, twice: once with nothing
 configured and once with the particulars set in the environment.
 

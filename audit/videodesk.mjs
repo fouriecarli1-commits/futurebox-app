@@ -14,6 +14,7 @@
  * under test is the desk rather than a mock of it.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3012';
 const af = process.argv[3] === 'af';
@@ -110,7 +111,7 @@ if (await toPremium.count()) {
 const wide = await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 check('nothing overflows sideways', wide);
 
-await p.screenshot({ path: `audit/videodesk-${af ? 'af' : 'en'}.png`, fullPage: true });
+await p.screenshot({ path: shot(`videodesk-${af ? 'af' : 'en'}.png`), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

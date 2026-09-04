@@ -1,4 +1,5 @@
 import { chromium, devices } from 'playwright';
+import { shot } from './where.mjs';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const p = await b.newPage({ ...devices['iPhone 13'] });
 await p.goto('http://localhost:3000', { waitUntil: 'networkidle' });
@@ -17,7 +18,7 @@ const room = p.locator('div.fixed.inset-0.z-50').first();
 for (const name of ['Adverts', 'Video desk']) {
   await room.locator('button').filter({ hasText: new RegExp(`^${name}`, 'i') }).first().click().catch(() => {});
   await p.waitForTimeout(1200);
-  await p.screenshot({ path: `audit/phone-${name.replace(/\W+/g,'-').toLowerCase()}.png` });
+  await p.screenshot({ path: shot(`phone-${name.replace(/\W+/g,'-').toLowerCase()}.png`) });
   console.log('shot', name, 'page width', await p.evaluate(() => document.documentElement.scrollWidth));
 }
 await b.close();

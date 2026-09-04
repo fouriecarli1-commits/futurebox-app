@@ -1,4 +1,5 @@
 import { enter, studio } from './enter.mjs';
+import { shot } from './where.mjs';
 const { browser, page, problems } = await enter();
 
 await page.route('**/api/voice', async (route) => {
@@ -44,6 +45,6 @@ if (await box.count()) {
 await room.locator('button').filter({ hasText: /^Antoni/ }).first().click();
 await page.waitForTimeout(400);
 console.log('choosing marks it:', (await room.innerText()).includes('Antoni'));
-await page.screenshot({ path: 'audit/voicepicker.png' });
+await page.screenshot({ path: shot('voicepicker.png') });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await browser.close();

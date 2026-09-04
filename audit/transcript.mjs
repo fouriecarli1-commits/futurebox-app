@@ -1,5 +1,6 @@
 /** The transcript panel, with a show and one published episode pretended in. */
 import { enter, studio } from './enter.mjs';
+import { shot } from './where.mjs';
 const { browser, page, problems } = await enter();
 
 await page.route('**/api/show*', async (route) => {
@@ -58,7 +59,7 @@ if (await btn.count()) {
     await page.waitForTimeout(500);
     console.log('renaming takes effect:', (await room.innerText()).includes('Anre —'));
   }
-  await page.screenshot({ path: 'audit/transcript.png' });
+  await page.screenshot({ path: shot('transcript.png') });
 }
 console.log('problems:', problems.join(' ;; ') || 'none');
 await browser.close();

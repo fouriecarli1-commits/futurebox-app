@@ -12,6 +12,7 @@
  * refused.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3020';
 const af = process.argv[3] === 'af';
@@ -130,7 +131,7 @@ const chosenTitle = await room.locator('select').first().inputValue().catch(() =
 check('and on that song, not the top of the list',
   ['song-with-plan', 'song-no-plan'].includes(chosenTitle), chosenTitle);
 
-await p.screenshot({ path: `audit/studioroute-${af ? 'af' : 'en'}.png`, fullPage: true });
+await p.screenshot({ path: shot(`studioroute-${af ? 'af' : 'en'}.png`), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

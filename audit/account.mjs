@@ -17,6 +17,7 @@
  * Needs the stub build — see `audit/README.md`.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3044';
 const af = process.argv[3] === 'af';
@@ -105,7 +106,7 @@ check('a balance that could not be fetched says so rather than showing zero',
   af ? /kon nou nie gehaal word nie/.test(words) : /could not be fetched/.test(words),
   /\b0\b/.test(words) ? 'it showed a zero' : words.split('\n').slice(0, 8).join(' / '));
 
-await p.screenshot({ path: `audit/account-${af ? 'af' : 'en'}.png`, fullPage: false });
+await p.screenshot({ path: shot(`account-${af ? 'af' : 'en'}.png`), fullPage: false });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

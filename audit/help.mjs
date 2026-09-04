@@ -1,5 +1,6 @@
 /** The help page: both halves, both languages, and the form that reaches a person. */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const problems = [];
 const check = (label, ok, detail = '') => {
@@ -146,7 +147,7 @@ const unnamed = await p.evaluate(() => {
 });
 check('every control is named', unnamed.length === 0, unnamed.join(' | '));
 
-await p.screenshot({ path: `audit/help-${af ? 'af' : 'en'}.png`, fullPage: true });
+await p.screenshot({ path: shot(`help-${af ? 'af' : 'en'}.png`), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

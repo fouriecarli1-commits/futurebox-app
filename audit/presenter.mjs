@@ -16,6 +16,7 @@
  * about the flag.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3021';
 const af = process.argv[3] === 'af';
@@ -158,7 +159,7 @@ check('the script went with it, for the screen', /Sarel/.test(sent?.script ?? ''
 check('the length sent is the length of the reading', sent?.seconds === 2, String(sent?.seconds));
 check('the confirmation was sent, not assumed', sent?.consent === true, String(sent?.consent));
 
-await p.screenshot({ path: `audit/presenter-${af ? 'af' : 'en'}.png`, fullPage: true });
+await p.screenshot({ path: shot(`presenter-${af ? 'af' : 'en'}.png`), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

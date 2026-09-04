@@ -12,6 +12,7 @@
  * Needs the stub build — see `audit/README.md`.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3044';
 const af = process.argv[3] === 'af';
@@ -52,7 +53,7 @@ async function withProviders(external) {
     /Google/.test(said[0] ?? ''), said[0] ?? 'none');
   check('and the "or" is there when there is something to be or-ed against',
     /^\s*or\s*$/im.test(await p.locator('form').first().locator('..').innerText()));
-  await p.screenshot({ path: `audit/signinwith-${af ? 'af' : 'en'}.png` });
+  await p.screenshot({ path: shot(`signinwith-${af ? 'af' : 'en'}.png`) });
   await p.close();
 }
 

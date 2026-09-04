@@ -7,6 +7,7 @@
  * and the advert route writes several.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const b = await chromium.launch({
   executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
@@ -90,7 +91,7 @@ const ENGLISH = [
 const leaks = ENGLISH.filter((s) => text.includes(s));
 console.log(`\nEnglish left on screen: ${leaks.length ? leaks.join(' | ') : 'none'}`);
 
-await p.screenshot({ path: 'audit/ads-af.png' });
+await p.screenshot({ path: shot('ads-af.png') });
 console.log('\nmissing Afrikaans strings:', missing);
 console.log('problems:', problems.join(' ;; ') || 'none');
 

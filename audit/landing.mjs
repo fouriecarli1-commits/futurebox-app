@@ -1,4 +1,5 @@
 import { chromium, devices } from 'playwright';
+import { shot } from './where.mjs';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 for (const [name, opts] of [['phone', devices['iPhone 13']], ['desktop', { viewport: { width: 1280, height: 900 } }]]) {
   const p = await b.newPage({ ...opts });
@@ -16,7 +17,7 @@ for (const [name, opts] of [['phone', devices['iPhone 13']], ['desktop', { viewp
     return n;
   });
   console.log(`${name.padEnd(8)} width ${width} · small targets ${small} · errors ${bad.length ? bad.join(' | ') : 'none'}`);
-  await p.screenshot({ path: `audit/landing-${name}.png`, fullPage: false });
+  await p.screenshot({ path: shot(`landing-${name}.png`), fullPage: false });
   await p.close();
 }
 await b.close();

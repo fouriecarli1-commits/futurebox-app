@@ -7,6 +7,7 @@
  * anything means much.
  */
 import { enter, studio } from './enter.mjs';
+import { shot } from './where.mjs';
 
 const ROOMS = [
   'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard',
@@ -40,7 +41,7 @@ for (const name of ROOMS) {
     inputs,
     fresh,
   });
-  await page.screenshot({ path: `audit/room-${name.replace(/\W+/g, '-').toLowerCase()}.png` });
+  await page.screenshot({ path: shot(`room-${name.replace(/\W+/g, '-').toLowerCase()}.png`) });
 }
 
 console.log('room'.padEnd(16), 'chars'.padStart(7), 'btns'.padStart(5), 'inputs'.padStart(7), '  issues');

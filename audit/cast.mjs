@@ -9,6 +9,7 @@
  * device-local shelf could never do.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3015';
 const af = process.argv[3] === 'af';
@@ -219,7 +220,7 @@ const small = await p.evaluate(() => {
 });
 check('the add button is thumb-sized', small.length === 0, small.join(' | '));
 
-await p.screenshot({ path: `audit/cast-${af ? 'af' : 'en'}.png`, fullPage: true });
+await p.screenshot({ path: shot(`cast-${af ? 'af' : 'en'}.png`), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

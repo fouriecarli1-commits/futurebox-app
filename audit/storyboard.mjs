@@ -27,6 +27,7 @@
  * behaving correctly and the test working around it, not the other way round.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3027';
 const af = process.argv[3] === 'af';
@@ -279,7 +280,7 @@ check(
 check('and it can be saved',
   (await room.locator('button').filter({ hasText: af ? /^Stoor die film/ : /^Save the film/ }).count()) > 0);
 
-await p.screenshot({ path: `audit/storyboard-${af ? 'af' : 'en'}.png`, fullPage: true });
+await p.screenshot({ path: shot(`storyboard-${af ? 'af' : 'en'}.png`), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

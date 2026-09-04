@@ -8,6 +8,7 @@
  * component.
  */
 import { enter, studio } from './enter.mjs';
+import { shot } from './where.mjs';
 const { browser, page, problems } = await enter();
 
 await page.route('**/api/video', async (route) => {
@@ -60,6 +61,6 @@ if (await file.count()) {
   const kept = await page.evaluate(() => window.localStorage.getItem('futurebox.assets.v1'));
   console.log('kept in the library:', kept ? kept.slice(0, 120) : 'nothing');
 }
-await page.screenshot({ path: 'audit/startframe.png' });
+await page.screenshot({ path: shot('startframe.png') });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await browser.close();

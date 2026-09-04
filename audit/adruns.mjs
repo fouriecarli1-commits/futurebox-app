@@ -8,6 +8,7 @@
  * looks fine until somebody uses it.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3028';
 const af = process.argv[3] === 'af';
@@ -106,7 +107,7 @@ const back = await room.locator('input[id^="run-name-"]').first().inputValue();
 const stillTicked = await room.locator('li button[aria-pressed="true"]').count();
 check('the run survives a reload', back === 'Winter Sale' && stillTicked === 1, `${back}, ${stillTicked} ticked`);
 
-await p.screenshot({ path: `audit/adruns-${af ? 'af' : 'en'}.png`, fullPage: true });
+await p.screenshot({ path: shot(`adruns-${af ? 'af' : 'en'}.png`), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

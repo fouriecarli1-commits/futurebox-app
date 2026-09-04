@@ -19,6 +19,7 @@
  * Needs the stub build — see `audit/README.md`.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3044';
 const af = process.argv[3] === 'af';
@@ -140,7 +141,7 @@ check('clearing it empties the list', !/amapiano/.test(shown), shown.slice(0, 12
 check('and says so rather than going blank',
   af ? /Nog niks nie/.test(shown) : /Nothing yet/.test(shown));
 
-await p.screenshot({ path: `audit/taste-${af ? 'af' : 'en'}.png`, fullPage: false });
+await p.screenshot({ path: shot(`taste-${af ? 'af' : 'en'}.png`), fullPage: false });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

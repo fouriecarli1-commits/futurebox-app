@@ -22,6 +22,7 @@
  * without undoing the rule it appears to break.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3000';
 /** Passed when the run is against a build with the particulars configured. */
@@ -82,7 +83,7 @@ if (configured) {
   check('it invents no registration number', !/\d{4}\/\d{6}\/\d{2}/.test(words), 'one appeared');
 }
 
-await p.screenshot({ path: `audit/legal-${configured ? 'configured' : 'unset'}.png`, fullPage: true });
+await p.screenshot({ path: shot(`legal-${configured ? 'configured' : 'unset'}.png`), fullPage: true });
 
 // Reachable without knowing the URL — "before they transact" means findable.
 await p.goto(`http://localhost:${PORT}/terms`, { waitUntil: 'networkidle' });

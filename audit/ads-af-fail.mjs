@@ -1,5 +1,6 @@
 /** What an Afrikaans reader is told when the ad writer refuses. */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 await p.goto('http://localhost:3000', { waitUntil: 'networkidle' });
@@ -36,5 +37,5 @@ console.log('new on screen after pressing:');
 for (const l of fresh.slice(0, 6)) console.log('   ', JSON.stringify(l.trim()));
 const english = fresh.some((l) => /switched off|could not|Ad writing|is not|was rejected/i.test(l));
 console.log('any English in it?', english);
-await p.screenshot({ path: 'audit/ads-af-fail.png' });
+await p.screenshot({ path: shot('ads-af-fail.png') });
 await b.close();

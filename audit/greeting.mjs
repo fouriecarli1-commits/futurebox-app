@@ -21,6 +21,7 @@
  * stubbed. Needs the stub build — see `audit/README.md`.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3044';
 const af = process.argv[3] === 'af';
@@ -146,7 +147,7 @@ check('their own picture is shown, not a generated cover',
   `${await door.locator('img[alt="Carli"]').count()} matching, served ${servedPhoto}`);
 
 await p.screenshot({
-  path: `audit/welcome-${af ? 'af' : 'en'}${GENRE === 'dubstep' ? '' : `-${GENRE}`}.png`,
+  path: shot(`welcome-${af ? 'af' : 'en'}${GENRE === 'dubstep' ? '' : `-${GENRE}`}.png`),
   fullPage: false,
 });
 
@@ -303,7 +304,7 @@ check('but an ordinary return to a signed-in tab does not take over the screen',
   !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()));
 
 await p.screenshot({
-  path: `audit/greeting-${af ? 'af' : 'en'}${GENRE === 'dubstep' ? '' : `-${GENRE}`}.png`,
+  path: shot(`greeting-${af ? 'af' : 'en'}${GENRE === 'dubstep' ? '' : `-${GENRE}`}.png`),
   fullPage: false,
 });
 console.log('problems:', problems.join(' ;; ') || 'none');

@@ -1,5 +1,6 @@
 /** Switch to Afrikaans and check the rooms that were English-only. */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
 await p.goto('http://localhost:3000', { waitUntil: 'networkidle' });
@@ -27,5 +28,5 @@ console.log('advert desk in Afrikaans:', /Wat adverteer jy|Vir wie hierdie adver
 console.log('brand kit in Afrikaans:', /Vir wie hierdie advertensies is/.test(text));
 console.log('picture strip in Afrikaans:', /Voeg ’n prent by|Voeg nog ’n prent by/.test(text));
 console.log('\nsample:', text.split('\n').filter(Boolean).slice(6, 18).join(' | ').slice(0, 500));
-await p.screenshot({ path: 'audit/afrikaans.png' });
+await p.screenshot({ path: shot('afrikaans.png') });
 await b.close();

@@ -24,6 +24,7 @@
  * Needs the stub build — see `audit/README.md`.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 const PORT = process.argv[2] || '3044';
 const af = process.argv[3] === 'af';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
@@ -80,7 +81,7 @@ if (await box.count()) {
   const label = await room.locator('label[for="show-language"]').innerText();
   check('it has a label for a screen reader', label.length > 3, label);
 }
-await p.screenshot({ path: `audit/podlanguage-${af ? 'af' : 'en'}.png`, fullPage: false });
+await p.screenshot({ path: shot(`podlanguage-${af ? 'af' : 'en'}.png`), fullPage: false });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

@@ -13,6 +13,7 @@
  * app is measured.
  */
 import { chromium } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3024';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
@@ -93,7 +94,7 @@ check('and none of them is a black disc',
   measured.every((one) => !/rgb\(1?\d?\d, 1?\d?\d, 1?\d?\d\)/.test(one.fill) || one.ratio >= 4.5),
   measured.map((o) => o.fill).join(' | '));
 
-await p.screenshot({ path: 'audit/playbutton-light.png', fullPage: true });
+await p.screenshot({ path: shot('playbutton-light.png'), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

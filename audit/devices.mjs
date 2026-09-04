@@ -16,6 +16,7 @@
  * open.
  */
 import { chromium, devices } from 'playwright';
+import { shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3000';
 /**
@@ -113,7 +114,7 @@ for (const [name, device] of WANTED) {
   if (!opens) problems.push(`${name}: the sign-in does not open`);
   if (small.length) problems.push(`${name}: ${small.length} control(s) under 44px — ${small.slice(0, 3).join(', ')}`);
   if (errors.length) problems.push(`${name}: ${errors.join('; ')}`);
-  await p.screenshot({ path: `audit/device-${name.replace(/[^a-z0-9]/gi, '')}.png` });
+  await p.screenshot({ path: shot(`device-${name.replace(/[^a-z0-9]/gi, '')}.png`) });
   await p.close();
 }
 

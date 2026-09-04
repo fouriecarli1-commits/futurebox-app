@@ -1,10 +1,11 @@
 import { enter, studio } from './enter.mjs';
+import { shot } from './where.mjs';
 const { browser, page, problems } = await enter();
 const room = await studio(page);
 const text = (await room.innerText()).replace(/\n+/g, ' | ');
 console.log('=== STUDIO ===');
 console.log(text.slice(0, 2500));
-await page.screenshot({ path: 'audit/studio.png' });
+await page.screenshot({ path: shot('studio.png') });
 console.log('\n=== PROBLEMS ===');
 console.log(problems.join('\n') || 'none');
 await browser.close();
