@@ -312,22 +312,28 @@ export default function FutureBoxHome() {
   useEffect(() => {
     if (!cloud.configured()) return;
     let live = true;
+    /* Read once, before anything else can consume it: a sign-in that went out
+       to Google and came back is a page load, and a page load looks exactly
+       like coming back to a tab. */
+    const cameBack = cloud.justArrived();
     cloud.currentAccount().then((account) => {
       if (!live) return;
       if (account) {
         setUser({ ...account, followers: 1 });
         sayHello();
-        restored();
+        if (cameBack) arrived();
+        else restored();
       }
-      settled.current = true;
     });
     const stop = cloud.onAccountChange((account) => {
       setUser(account ? { ...account, followers: 1 } : null);
       if (account) {
         sayHello();
-        // Before the first answer this is the page loading, not a sign-in.
-        if (settled.current) arrived();
-        else restored();
+        /* Armed, never opened. This event fires on a token refresh and on a
+           sign-in in another tab as readily as on one here, and it does not
+           say which — so it is treated as the weakest of the three claims.
+           The two that mean something call `arrived` themselves. */
+        restored();
         return;
       }
       departed();
@@ -439,60 +445,59 @@ export default function FutureBoxHome() {
    * three different ways somebody arrives and the first version only knew
    * about one of them — see the note on `arrived`.
    */
-  const greeted = useRef(false);
   /**
-   * Whether the first "is anybody signed in?" has come back yet.
+   * Two latches, because arming the door and opening the studio are two
+   * different rights and one flag could not hold both.
    *
-   * The auth library fires its change event on page load as well as on a real
-   * sign-in, and it does not say which is which. Without this, every refresh
-   * of a signed-in tab was treated as an arrival and threw the reader into the
-   * studio — taking the feed away from somebody who came to read it.
-   *
-   * After the first answer has landed, an account appearing is somebody
-   * signing in, which is exactly what it looks like.
+   * The first version used one. The auth library's event fires before the
+   * "is anybody signed in?" promise resolves, so a page load armed the door,
+   * set the flag, and then the real arrival landing a moment later was turned
+   * away by its own latch — the door was ready and nobody was taken to it.
    */
-  const settled = useRef(false);
+  const armed = useRef(false);
+  const opened = useRef(false);
 
   /**
    * Somebody has just signed in. Take them to the door.
    *
-   * Called from every path that can produce a signed-in person, which is the
-   * whole point of it existing: the first version only hooked the auth
-   * library's own event, and the sign-in *form* sets the account directly from
-   * its own result. With a Supabase project behind the app the event usually
-   * follows anyway, and without one it never fires at all — so signing in
-   * showed the door sometimes, depending on something nobody using it can see.
+   * It opens the studio as well as arming the door, and that is the whole fix
+   * for "I sign in and there is no welcome page". The greeting lives inside
+   * the studio, and signing in leaves you on the feed — so it was being set up
+   * correctly and shown to nobody until they happened to press Studio, which
+   * is not a welcome, it is a surprise several minutes later.
    *
-   * It opens the studio as well as arming the door, and that is the whole
-   * fix for "I sign in and there is no welcome page". The greeting lives
-   * inside the studio, and signing in leaves you on the feed — so it was
-   * being set up correctly and shown to nobody until they happened to press
-   * Studio, which is not a welcome, it is a surprise several minutes later.
+   * Called only from the two places that genuinely mean "this person has just
+   * signed in": the form, and the marked return from Google. Deliberately
+   * *not* from the auth library's change event, which also fires on an hourly
+   * token refresh and cannot say which is which — greeting somebody over
+   * their own work every hour is an interruption, not a welcome.
    */
   const arrived = useCallback(() => {
-    if (greeted.current) return;
-    greeted.current = true;
     setAtDoor(true);
+    armed.current = true;
+    if (opened.current) return;
+    opened.current = true;
     setUploadModalOpen(true);
   }, []);
 
   /**
-   * A session that was already there when the page loaded.
+   * A session that was already there. Arm the door; do not open anything.
    *
-   * Armed but not opened. Coming back to a tab is not signing in, and throwing
-   * somebody into the studio because their session survived a refresh would
-   * take the feed away from anybody who came to read it. The door is waiting
-   * the moment they open the studio themselves.
+   * Coming back to a tab is not signing in, and throwing somebody into the
+   * studio because their session survived a refresh takes the feed away from
+   * whoever came to read it. The door is waiting the moment they open the
+   * studio themselves.
    */
   const restored = useCallback(() => {
-    if (greeted.current) return;
-    greeted.current = true;
+    if (armed.current) return;
+    armed.current = true;
     setAtDoor(true);
   }, []);
 
-  /** And has just left: close it behind them, and re-arm it for next time. */
+  /** And has just left: close it behind them, and re-arm for next time. */
   const departed = useCallback(() => {
-    greeted.current = false;
+    armed.current = false;
+    opened.current = false;
     setAtDoor(false);
     setUploadModalOpen(false);
   }, []);

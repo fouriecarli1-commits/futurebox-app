@@ -217,16 +217,51 @@ export async function signIn(email: string, password: string): Promise<AuthResul
  * Supabase answers with a message saying exactly that, which is passed
  * straight through rather than replaced with a guess.
  */
+/**
+ * The query mark that says this page load is the end of a sign-in.
+ *
+ * A word rather than a token: it is not a secret and it grants nothing. All it
+ * does is tell the app that the person in front of it has just arrived rather
+ * than come back, which changes only what screen they land on.
+ */
+export const ARRIVED = 'welcome';
+
+/**
+ * Was this page load the return leg of a sign-in?
+ *
+ * Answers once and clears the mark out of the address bar, so a refresh or a
+ * shared link does not re-trigger a welcome for somebody who has been here for
+ * an hour.
+ */
+export function justArrived(): boolean {
+  if (typeof window === 'undefined') return false;
+  const url = new URL(window.location.href);
+  if (url.searchParams.get(ARRIVED) !== '1') return false;
+  url.searchParams.delete(ARRIVED);
+  window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+  return true;
+}
+
 export async function signInWithGoogle(): Promise<{ ok: true } | { ok: false; message: string }> {
   const supabase = getClient();
   if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      // Back to wherever they started, not to a hard-coded address: this app
-      // runs on a preview domain and a real one, and a fixed redirect sends
-      // half the people to the wrong site after a successful sign-in.
-      redirectTo: typeof window === 'undefined' ? undefined : window.location.origin,
+      /* Back to wherever they started, not to a hard-coded address: this app
+         runs on a preview domain and a real one, and a fixed redirect sends
+         half the people to the wrong site after a successful sign-in.
+
+         Marked, because the return is a page load and a page load is
+         indistinguishable from coming back to a tab. Without the mark, signing
+         in with Google put somebody back on the feed with a session and no
+         greeting — which is what a returning visitor should get and is exactly
+         wrong for somebody who has just signed in. The marker is read once and
+         wiped out of the address bar; see `ARRIVED` below. */
+      redirectTo:
+        typeof window === 'undefined'
+          ? undefined
+          : `${window.location.origin}${window.location.pathname}?${ARRIVED}=1`,
     },
   });
   if (error) return { ok: false, message: error.message };

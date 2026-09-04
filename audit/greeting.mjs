@@ -223,6 +223,31 @@ check('signing in arrives at the door without pressing anything else',
   af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words),
   words.split('\n').slice(0, 10).join(' / '));
 
+/* ── The way back from Google ────────────────────────────────────────────
+
+   Signing in with Google leaves the page and comes back, so the return is a
+   page load — indistinguishable from opening a tab you were already signed
+   into, which is the one case that must *not* take over the screen. It was
+   putting people back on the feed with a session and no greeting.
+
+   `cloud.signInWithGoogle` marks its own return address, and this is that
+   return: a fresh load carrying the mark, with nothing pressed afterwards. */
+await p.goto(`http://localhost:${PORT}/?welcome=1`, { waitUntil: 'networkidle' });
+await p.waitForTimeout(3000);
+words = await p.locator('body').innerText();
+check('coming back from Google arrives at the door too',
+  af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words),
+  words.split('\n').slice(0, 8).join(' / '));
+check('and the mark is wiped out of the address bar',
+  !p.url().includes('welcome='), p.url());
+
+/* And an ordinary load, with the same session and no mark, does not. Somebody
+   coming back to a tab came for the feed. */
+await p.goto(`http://localhost:${PORT}/`, { waitUntil: 'networkidle' });
+await p.waitForTimeout(2500);
+check('but an ordinary return to a signed-in tab does not take over the screen',
+  !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()));
+
 await p.screenshot({
   path: `audit/greeting-${af ? 'af' : 'en'}${GENRE === 'dubstep' ? '' : `-${GENRE}`}.png`,
   fullPage: false,

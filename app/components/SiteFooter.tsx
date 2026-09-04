@@ -12,6 +12,12 @@
  * is carried in the image's alt text, where a screen reader will read it and
  * where it travels with the mark if the image is ever quoted elsewhere.
  *
+ * The three of them are given a 44-pixel box rather than being left at the
+ * width of their own word. "Help" measured 29 pixels across on an iPhone,
+ * which is under the minimum a thumb can reliably hit — and these are
+ * standalone navigation, not links inside a sentence, so the rule that
+ * exempts prose does not cover them.
+ *
  * Help sits alongside them for the same reason: the way to ask a question has
  * to be reachable from every page including the ones somebody lands on while
  * signed out, which is most of the ones they land on with a question.
@@ -33,13 +39,13 @@ export function SiteFooter() {
         <div className="flex flex-col items-center gap-2 sm:items-start">
           <p>© {year} FutureBox. All rights reserved.</p>
           <nav className="flex gap-5">
-            <a href="/help" className="underline underline-offset-4 hover:text-zinc-200">
+            <a href="/help" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline underline-offset-4 hover:text-zinc-200">
               Help
             </a>
-            <a href="/privacy" className="underline underline-offset-4 hover:text-zinc-200">
+            <a href="/privacy" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline underline-offset-4 hover:text-zinc-200">
               Privacy
             </a>
-            <a href="/terms" className="underline underline-offset-4 hover:text-zinc-200">
+            <a href="/terms" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline underline-offset-4 hover:text-zinc-200">
               Terms
             </a>
           </nav>
