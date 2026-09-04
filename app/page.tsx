@@ -74,7 +74,7 @@ import { applyTheme, loadTheme, saveTheme, DEFAULT_THEME, type Theme } from './l
 import { byArea, describe, DEFAULT_PAID, type Plan } from './lib/entitlements';
 import * as cloud from './lib/cloud';
 import { accessToken } from './lib/cloud';
-import { TIER_SPECS, TIERS, SPONSORSHIP, sponsorshipBand, tierPrice } from './lib/plans';
+import { TIER_SPECS, TIERS, SPONSORSHIP, sponsorshipPrice, tierPrice } from './lib/plans';
 import { startCheckout, loadOwned } from './lib/purchases';
 
 interface Blueprint {
@@ -311,28 +311,21 @@ export default function FutureBoxHome() {
   useEffect(() => {
     if (!cloud.configured()) return;
     let live = true;
-    /* Opened at most once for the life of this page. `onAccountChange` also
-       fires when the token is refreshed, and a greeting that reappears over
-       somebody's work every hour is not a greeting, it is an interruption. */
-    let greeted = false;
-    const openTheDoor = () => {
-      if (greeted) return;
-      greeted = true;
-      setAtDoor(true);
-    };
     cloud.currentAccount().then((account) => {
       if (live && account) {
         setUser({ ...account, followers: 1 });
         sayHello();
-        openTheDoor();
+        arrived();
       }
     });
     const stop = cloud.onAccountChange((account) => {
       setUser(account ? { ...account, followers: 1 } : null);
       if (account) {
         sayHello();
-        openTheDoor();
+        arrived();
+        return;
       }
+      departed();
     });
     return () => {
       live = false;
@@ -429,6 +422,40 @@ export default function FutureBoxHome() {
      always did instead of on a greeting with nobody to greet. */
   const [atDoor, setAtDoor] = useState(false);
   /**
+   * Whether the door has already been shown for this arrival.
+   *
+   * A latch rather than a plain flag, because `onAccountChange` fires on a
+   * token refresh as well as on a sign-in and a greeting that reappears over
+   * somebody's work every hour is an interruption.
+   *
+   * It lives out here, next to `arrived` and `departed`, because there are
+   * three different ways somebody arrives and the first version only knew
+   * about one of them — see the note on `arrived`.
+   */
+  const greeted = useRef(false);
+
+  /**
+   * Somebody has just signed in. Show them the door.
+   *
+   * Called from every path that can produce a signed-in person, which is the
+   * whole point of it existing: the first version only hooked the auth
+   * library's own event, and the sign-in *form* sets the account directly from
+   * its own result. With a Supabase project behind the app the event usually
+   * follows anyway, and without one it never fires at all — so signing in
+   * showed the door sometimes, depending on something nobody using it can see.
+   */
+  const arrived = useCallback(() => {
+    if (greeted.current) return;
+    greeted.current = true;
+    setAtDoor(true);
+  }, []);
+
+  /** And has just left: close it behind them, and re-arm it for next time. */
+  const departed = useCallback(() => {
+    greeted.current = false;
+    setAtDoor(false);
+  }, []);
+  /**
    * People waiting on an answer from you, drawn on the rail.
    *
    * A collab ask used to be visible only inside the collab room, so it sat
@@ -463,7 +490,7 @@ export default function FutureBoxHome() {
    * not the one on screen — is what would have been emailed.
    */
   const budgetOptions = SPONSORSHIP.map(
-    (rung) => `${rung.name} — ${sponsorshipBand(rung, region)} / month`,
+    (rung) => `${rung.name} — ${sponsorshipPrice(rung, region, lang)}`,
   );
   const budget = budgetOptions.indexOf(contactBudget) !== -1 ? contactBudget : budgetOptions[0];
   const chosenRung = SPONSORSHIP[Math.max(0, budgetOptions.indexOf(budget))];
@@ -792,6 +819,7 @@ export default function FutureBoxHome() {
       const name = authEmail.split('@')[0];
       setUser({ email: authEmail, name, handle: `@${name}`, followers: 1 });
       setAuthModalOpen(false);
+      arrived();
       return;
     }
 
@@ -814,6 +842,7 @@ export default function FutureBoxHome() {
     }
     setUser({ ...result.account, followers: 1 });
     setAuthModalOpen(false);
+    arrived();
   };
 
   /**
@@ -842,6 +871,7 @@ export default function FutureBoxHome() {
   const handleSignOut = async () => {
     await cloud.signOut();
     setUser(null);
+    departed();
   };
 
   // Reopening the modal should not show the last attempt's error.
@@ -2164,7 +2194,18 @@ export default function FutureBoxHome() {
                     return (
                       <button
                         key={id}
-                        onClick={() => setStudioTab(id)}
+                        onClick={() => {
+                          setStudioTab(id);
+                          /* And leave the door.
+
+                             Without this, pressing a room in the rail while
+                             the door was open set the room behind it and
+                             changed nothing on screen — the greeting stayed
+                             up and the press did nothing anybody could see.
+                             The door's own buttons did it; the thirteen more
+                             obvious ones beside them did not. */
+                          setAtDoor(false);
+                        }}
                         title={`${meta.label} — ${meta.hint}`}
                         aria-current={isActive ? 'page' : undefined}
                         className={`flex-shrink-0 text-left rounded-xl flex items-center gap-3 transition-all ${
@@ -2615,7 +2656,7 @@ export default function FutureBoxHome() {
                 {SPONSORSHIP.map((rung) => (
                   <li key={rung.id}>
                     <span className="font-bold text-white">{rung.name}</span>
-                    <span className="text-emerald-400"> · {sponsorshipBand(rung, region)}</span>
+                    <span className="text-emerald-400"> · {sponsorshipPrice(rung, region, lang)}</span>
                     <span className="block text-zinc-400 leading-snug">{rung.gets}</span>
                   </li>
                 ))}
@@ -2666,8 +2707,8 @@ export default function FutureBoxHome() {
                   {/* Priced in rand, because the audience is. The floor is
                       deliberately high: it is the filter. */}
                   {SPONSORSHIP.map((rung) => (
-                    <option key={rung.id} value={`${rung.name} — ${sponsorshipBand(rung, region)} / month`}>
-                      {rung.name} — {sponsorshipBand(rung, region)} / month
+                    <option key={rung.id} value={`${rung.name} — ${sponsorshipPrice(rung, region, lang)}`}>
+                      {rung.name} — {sponsorshipPrice(rung, region, lang)}
                     </option>
                   ))}
                 </select>

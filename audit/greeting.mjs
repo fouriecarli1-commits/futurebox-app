@@ -46,25 +46,32 @@ await p.addInitScript((who) => {
   } catch {}
 }, WHO);
 
-/* Four dubstep songs and one gospel one: enough for a habit, with something
-   else in it so the answer is a majority rather than the only value present. */
-await p.addInitScript(() => {
-  const made = (id, genre, day) => ({
-    id, title: `Song ${id}`, genre, bpm: 140, key: 'F min', lyrics: '', style: `${genre}, night`,
+/* Four of one genre and one of another: enough for a habit, with something
+   else in it so the answer is a majority rather than the only value present.
+
+   The genre is an argument to this run, and there is a second run below with a
+   different one. That is not thoroughness for its own sake — the sentence on
+   the door has to be *this account's*, and a screenshot showing "dubstep" is
+   equally consistent with a screen that says dubstep to everybody. Two
+   accounts, two sentences, same code. */
+const GENRE = process.argv[4] || 'dubstep';
+await p.addInitScript((genre) => {
+  const made = (id, kind, day) => ({
+    id, title: `Song ${id}`, genre: kind, bpm: 140, key: 'F min', lyrics: '', style: `${kind}, night`,
     models: [], source: 'engine', seconds: 120,
     createdAt: new Date(2026, 5, day).toISOString(), seed: 1,
   });
   try {
     window.localStorage.setItem('futurebox.tracks.v1', JSON.stringify([
-      made('a', 'dubstep', 1), made('b', 'dubstep', 2), made('c', 'dubstep', 3),
-      made('d', 'dubstep', 4), made('e', 'gospel', 5),
+      made('a', genre, 1), made('b', genre, 2), made('c', genre, 3),
+      made('d', genre, 4), made('e', 'gospel', 5),
     ]));
     window.localStorage.setItem('futurebox.makes.v1', JSON.stringify([
       { id: 'm1', surface: 'make', kind: 'audio', title: 'One', createdAt: new Date(2026, 5, 4).toISOString() },
       { id: 'm2', surface: 'make', kind: 'audio', title: 'Two', createdAt: new Date(2026, 5, 5).toISOString() },
     ]));
   } catch {}
-});
+}, GENRE);
 
 await p.route('**/auth/v1/**', (r) => r.fulfill({ status: 200, contentType: 'application/json',
   body: JSON.stringify({ id: WHO.id, email: WHO.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} }) }));
@@ -110,9 +117,15 @@ check('their own picture is shown, not a generated cover',
   `${await room.locator('img[alt="Carli"]').count()} matching, served ${servedPhoto}`);
 
 // ── The suggestion is the one their library earns ────────────────────────
-check('it offers the genre they actually keep making',
-  af ? /Nog ’n dubstep-liedjie vandag\?/.test(words) : /Another dubstep song today\?/.test(words),
-  words.match(/.*dubstep.*/i)?.[0] ?? 'no dubstep line');
+const asked = af
+  ? new RegExp(`Nog ’n ${GENRE}-liedjie vandag\\?`)
+  : new RegExp(`Another ${GENRE} song today\\?`);
+check(`it offers the genre this account actually keeps making (${GENRE})`,
+  asked.test(words), words.match(/.*(song today|liedjie vandag).*/i)?.[0] ?? 'no question found');
+/* And says nothing about any other. A screen that named the genre correctly
+   while also mentioning a different one would still be wrong. */
+check('and names no other genre',
+  !new RegExp(GENRE === 'dubstep' ? 'amapiano' : 'dubstep', 'i').test(words));
 check('and says where that came from',
   af ? /reeds op hierdie toestel/.test(words) : /already on this device/.test(words));
 check('and that nothing extra is recorded',
@@ -145,7 +158,72 @@ words = await room.innerText();
 check('and it goes back',
   af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words));
 
-await p.screenshot({ path: `audit/greeting-${af ? 'af' : 'en'}.png`, fullPage: false });
+/* ── Out and in again ────────────────────────────────────────────────────
+
+   Into a room first, and this line is the whole check.
+
+   Without it the previous step has already left the door open, so the
+   assertion below passes whatever the sign-in does — which is exactly what the
+   first version of this did: it went green against the bug it was written to
+   catch. The door has to be shut before anything can be proved about opening
+   it.
+
+   The way anybody checks that a greeting works: sign out, sign back in. The
+   first version latched on the first sign-in and never let go for the life of
+   the page, so this exact sequence skipped the door — and it is the sequence
+   the owner tried within an hour of it being built.
+
+   Driven through the real buttons — the sign-out in the header and the
+   sign-in form — rather than through a faked auth event. The first version
+   dispatched a `StorageEvent` and asserted on what happened next, which tested
+   the probe: the app's auth library does not listen to that in the same tab,
+   so nothing happened and the check reported on a screen nobody had changed.
+
+   Doing it properly is what found the actual fault. The form sets the account
+   from its own result and does not wait for the library's event, so the door
+   was opened by a code path that only sometimes runs. */
+// Out of the studio first: the overlay covers the header the sign-out lives
+// in, which is also the route somebody takes to sign out in real life.
+await p.locator('button').filter({ hasText: af ? /^Terug na FutureBox$/ : /^Back to FutureBox$/ }).first().click();
+await p.waitForTimeout(900);
+await p.locator('button').filter({ hasText: af ? /^Teken uit$/ : /^Sign out$/ }).first().click();
+await p.waitForTimeout(1500);
+check('signing out closes the door behind them',
+  !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()));
+
+/* Signing out drops the whole app back to the landing page, so the way back
+   in is the landing's own button rather than a header that is no longer
+   there. Both the sign-in and the sign-up endpoints answer with a session,
+   because the form's two modes take two different routes to the same place
+   and the door has to open on either. */
+const SESSION = {
+  access_token: 'stub-access-token', refresh_token: 'stub-refresh-token', token_type: 'bearer',
+  expires_in: 86400, expires_at: Math.floor(Date.now() / 1000) + 86400,
+  user: { id: WHO.id, email: WHO.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} },
+};
+for (const path of ['**/auth/v1/token*', '**/auth/v1/signup*']) {
+  await p.route(path, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SESSION) }));
+}
+
+await p.locator('button').filter({ hasText: af ? /^Begin gratis$/ : /^Start free$/ }).first().click();
+await p.waitForTimeout(900);
+await p.locator('input[type="email"]').first().fill(WHO.email);
+await p.locator('input[type="password"]').first().fill('hierdie-is-nie-eg-nie');
+await p.locator('form button[type="submit"]').first().click();
+await p.waitForTimeout(3000);
+
+// Back into the studio, the way anybody would.
+await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
+await p.waitForTimeout(2500);
+words = await room.innerText();
+check('signing back in shows the door again',
+  af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words),
+  words.split('\n').slice(0, 10).join(' / '));
+
+await p.screenshot({
+  path: `audit/greeting-${af ? 'af' : 'en'}${GENRE === 'dubstep' ? '' : `-${GENRE}`}.png`,
+  fullPage: false,
+});
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 process.exit(problems.length ? 1 : 0);

@@ -324,8 +324,24 @@ export interface Sponsorship {
   /** What they are actually buying. */
   readonly name: string;
   readonly from: number;
-  /** Null on the top rung: above this it is a conversation, not a price. */
+  /**
+   * The top of the band, or null for a single price.
+   *
+   * The rungs started as bands because nothing had been sold yet and a band is
+   * what you quote before you know. They are single prices now, which is a
+   * better thing to put in front of somebody: a band invites a negotiation
+   * before there is anything to negotiate about, and the low end of it is the
+   * only number anybody remembers.
+   */
   readonly to: number | null;
+  /**
+   * What the price is *for*, which is not the same on every rung.
+   *
+   * A masterclass is bought once, a season is bought once, and only the
+   * headline partnership recurs. The page printed "/ month" against all three,
+   * which quietly quadrupled the first two.
+   */
+  readonly per: 'class' | 'season' | 'month';
   readonly gets: string;
 }
 
@@ -333,31 +349,49 @@ export const SPONSORSHIP: readonly Sponsorship[] = [
   {
     id: 'class',
     name: 'One masterclass',
-    from: 12_000,
-    to: 30_000,
+    from: 5_000,
+    to: null,
+    per: 'class',
     gets: 'Your name on one class, set in the same type as everything else on it.',
   },
   {
     id: 'season',
     name: 'A season',
-    from: 30_000,
-    to: 75_000,
+    from: 9_000,
+    to: null,
+    per: 'season',
     gets: 'A run of classes or episodes, named once at the top of each.',
   },
   {
     id: 'headline',
     name: 'Headline partner',
-    from: 180_000,
+    from: 25_000,
     to: null,
+    per: 'month',
     gets: 'One a month, named on the Spotlight page. Nowhere else, and nothing that blinks.',
   },
 ];
 
-/** A rung as a person in this region reads it: "R12 000 – R30 000 a month". */
+/** A rung as a person in this region reads it: "R5 000 a class". */
 export function sponsorshipBand(rung: Sponsorship, region: Region): string {
   const from = localised(rung.from, region).display;
-  if (rung.to === null) return `${from}+`;
-  return `${from} – ${localised(rung.to, region).display}`;
+  return rung.to === null ? from : `${from} – ${localised(rung.to, region).display}`;
+}
+
+/**
+ * The price with what it buys, which is the only form worth showing.
+ *
+ * Kept next to the rungs rather than in the page, because the page had "/
+ * month" hard-coded after every one of them and there is no way to read that
+ * off the data — it was simply wrong for two of the three, and wrong in the
+ * direction that costs a sale.
+ */
+export function sponsorshipPrice(rung: Sponsorship, region: Region, lang: 'en' | 'af' = 'en'): string {
+  const per = {
+    en: { class: 'a class', season: 'a season', month: 'a month' },
+    af: { class: 'per klas', season: 'per seisoen', month: 'per maand' },
+  }[lang][rung.per];
+  return `${sponsorshipBand(rung, region)} ${per}`;
 }
 
 /**

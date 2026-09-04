@@ -66,7 +66,23 @@ export type Surface =
    * that apply are the ones about content rather than the ones about voices:
    * nothing here is going to a model, it is going to a person.
    */
-  | 'room';
+  | 'room'
+  /**
+   * A description of something being sold, handed in to be planned or written
+   * about: the advert desk's brief, and the market plan's.
+   *
+   * Its own surface rather than borrowed from `video`, for the reason spelled
+   * out under `room`. The advert desk screens as `video` because what it makes
+   * ends up in front of a video engine; the planner makes a document and
+   * nothing else, and a refusal filed under `video` for a route that films
+   * nothing is evidence of the wrong thing.
+   *
+   * It carries the same rules as `video` wherever the risk is in the brief
+   * rather than in what is done with it — a real person put in an advert, a
+   * public office claimed, a news event staged — because those are wrong in a
+   * plan for the same reasons they are wrong in a shot.
+   */
+  | 'brief';
 
 export type Rule =
   | 'minors'
@@ -306,7 +322,7 @@ export function screen(text: string, surface: Surface): Refusal | null {
     );
   }
 
-  if ((surface === 'video' || surface === 'speech') && hit(OFFICE) && NAME_ANYWHERE.test(value)) {
+  if ((surface === 'video' || surface === 'brief' || surface === 'speech') && hit(OFFICE) && NAME_ANYWHERE.test(value)) {
     return refuse(
       'likeness',
       'This names a person in public office. Putting words in the mouth of a real official is the one use of this technology that reliably ends in court, so it is refused.',
@@ -314,7 +330,7 @@ export function screen(text: string, surface: Surface): Refusal | null {
   }
 
   // 3. Something made to be mistaken for a record of an event.
-  if ((surface === 'video' || surface === 'speech') && hit(NEWS)) {
+  if ((surface === 'video' || surface === 'brief' || surface === 'speech') && hit(NEWS)) {
     return refuse(
       'fabricated-news',
       'This asks for something that would be taken as real footage or a real report. Anything made here can be fiction, comedy or drama, but not a fake record of something that happened.',
@@ -324,7 +340,7 @@ export function screen(text: string, surface: Surface): Refusal | null {
   // 4. Sexual content. This is a music, podcast and video app, and there is no
   //    version of it where making explicit material is worth the moderation
   //    burden that comes with it.
-  if (hit(SEXUAL) && (surface === 'video' || surface === 'name')) {
+  if (hit(SEXUAL) && (surface === 'video' || surface === 'brief' || surface === 'name')) {
     return refuse(
       'explicit',
       'Sexually explicit material is outside what this app makes.',
