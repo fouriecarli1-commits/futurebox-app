@@ -36,6 +36,7 @@
 import React, { useEffect, useState } from 'react';
 import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { refusalText } from '../lib/apierror';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import { PLATFORMS } from '../data/social';
@@ -191,7 +192,7 @@ export default function Campaign({
       });
       const data = (await response.json().catch(() => ({}))) as { ads?: Ad[]; message?: string };
       if (!response.ok || data.message) {
-        setProblem(data.message ?? t('ads.failed', 'The ad writer could not be reached.'));
+        setProblem(refusalText(data, lang, t('ads.failed', 'The ad writer could not be reached.')));
         return;
       }
       const written = data.ads ?? [];

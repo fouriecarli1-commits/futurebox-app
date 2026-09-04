@@ -50,7 +50,16 @@ const halfDone = starts
 const missing = new Map<string, string>();
 for (const file of walk('app')) {
   if (file.endsWith('i18n.tsx')) continue;
-  const src = readFileSync(file, 'utf8');
+  const raw = readFileSync(file, 'utf8');
+  /* Comments stripped first.
+
+     A file that *explains* this pattern contains it: `apierror.ts` describes
+     the `data.message ?? t('some.fallback', …)` shape it exists to replace,
+     and the check reported `some.fallback` as an untranslated key. A check
+     that fails on prose about itself is a check somebody switches off, and
+     `check-security.mts` already strips comments before scanning for the same
+     reason. */
+  const src = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
   // Both quotings, because a key built in a template literal is still a key.
   for (const m of [...src.matchAll(/\bt\(\s*'([^']+)'/g), ...src.matchAll(/\bt\(\s*`([^`$]+)`/g)]) {
     if (!known.has(m[1]) && !missing.has(m[1])) missing.set(m[1], file);

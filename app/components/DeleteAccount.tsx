@@ -19,9 +19,10 @@ import React, { useState } from 'react';
 import { AlertTriangle, Loader2, Trash2 } from 'lucide-react';
 import { accessToken, signOut } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
+import { refusalText } from '../lib/apierror';
 
 export default function DeleteAccount({ email }: { email: string }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState('');
   const [busy, setBusy] = useState(false);
@@ -50,7 +51,7 @@ export default function DeleteAccount({ email }: { email: string }): React.React
     const data = (await response.json().catch(() => ({}))) as { message?: string; left?: string[] };
     if (!response.ok) {
       setBusy(false);
-      setProblem(data.message ?? t('gone.failed', 'That did not work, and nothing was deleted.'));
+      setProblem(refusalText(data, lang, t('gone.failed', 'That did not work, and nothing was deleted.')));
       return;
     }
 

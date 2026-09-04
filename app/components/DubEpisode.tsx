@@ -41,6 +41,7 @@ import { dubCost } from '../lib/credits';
 import { DUB_LANGUAGES } from '../data/dublanguages';
 import Cost from './Cost';
 import { useLang } from '../lib/i18n';
+import { refusalText } from '../lib/apierror';
 
 /** How often to ask. A dub is minutes, so a second would be rude to both ends. */
 const EVERY = 6000;
@@ -72,7 +73,7 @@ export default function DubEpisode({
   onDubbed: (audio: Blob, language: string) => void;
   onClose: () => void;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [to, setTo] = useState('en');
   const [busy, setBusy] = useState(false);
   const [job, setJob] = useState<string | null>(null);
@@ -101,7 +102,7 @@ export default function DubEpisode({
     });
     if (!response.ok) {
       const said = (await response.json().catch(() => null)) as { message?: string } | null;
-      setProblem(said?.message ?? t('dub.noCollect', 'The dub finished but could not be fetched.'));
+      setProblem(refusalText(said, lang, t('dub.noCollect', 'The dub finished but could not be fetched.')));
       return;
     }
     try {
@@ -126,7 +127,7 @@ export default function DubEpisode({
         if (!live) return;
         if (!response.ok) {
           const said = (await response.json().catch(() => null)) as { message?: string } | null;
-          setProblem(said?.message ?? t('dub.lost', 'That dub could not be found any more.'));
+          setProblem(refusalText(said, lang, t('dub.lost', 'That dub could not be found any more.')));
           return;
         }
         const next = (await response.json()) as Progress;
@@ -186,7 +187,7 @@ export default function DubEpisode({
         | { id?: string; expected?: number; message?: string }
         | null;
       if (!response.ok || !said?.id) {
-        setProblem(said?.message ?? t('dub.failed', 'The dub could not be started.'));
+        setProblem(refusalText(said, lang, t('dub.failed', 'The dub could not be started.')));
         return;
       }
       setExpected(Number(said.expected) || 0);

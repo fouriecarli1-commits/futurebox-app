@@ -40,6 +40,7 @@ import { accessToken } from '../lib/cloud';
 import { loadTracks, type Track } from '../lib/library';
 import { visitorId } from '../lib/signal';
 import { useLang } from '../lib/i18n';
+import { refusalText } from '../lib/apierror';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 
 /** Often enough that the room never blinks out, rare enough to be polite. */
@@ -99,7 +100,7 @@ function until(when: string, t: (key: string, fallback?: string) => string): str
 }
 
 export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [room, setRoom] = useState<Room>(EMPTY);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [draft, setDraft] = useState('');
@@ -182,7 +183,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
       });
       if (!response.ok) {
         const said = (await response.json().catch(() => null)) as { message?: string } | null;
-        setProblem(said?.message ?? t('live.failed', 'That did not go through.'));
+        setProblem(refusalText(said, lang, t('live.failed', 'That did not go through.')));
         return false;
       }
       await ask();
