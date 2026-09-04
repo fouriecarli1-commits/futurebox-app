@@ -120,6 +120,23 @@ node audit/podlanguage.mjs 3016 en
 node audit/podlanguage.mjs 3016 af
 ```
 
+`account.mjs` needs the stub build too. None of what it checks is new
+machinery — the plan, the balance and the cancel button all existed — so what
+it checks is findability: press your own name in the corner and everything
+about the account is in front of you. That press used to set the studio's room
+to Make a song, which does nothing unless the studio is already open, so on
+every other screen it was a dead control.
+
+```
+node audit/account.mjs 3016 en
+node audit/account.mjs 3016 af
+```
+
+It also asks for the balance in two of its three states. `wallet.ts` keeps
+"could not ask", "not configured" and "zero" apart on purpose — a request that
+never arrived used to look exactly like a working free account — and a screen
+that collapses them back into one number undoes that.
+
 `greeting.mjs` needs the stub build as well, and for the sharpest reason of
 the four: the door is a screen made entirely of things that belong to one
 person — their name, their picture, and a suggestion read off their own

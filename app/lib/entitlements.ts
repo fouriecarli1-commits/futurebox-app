@@ -60,8 +60,7 @@ export type Capability =
   | 'soundboard'
   | 'class.watch'
   | 'class.paths'
-  | 'video.engine'
-  | 'video.clean';
+  | 'video.engine';
 
 export interface Entitlement {
   readonly label: string;
@@ -161,14 +160,7 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
     // generation lives.
     caps: { free: 0, maker: null, studio: null, label: null },
     unit: '',
-    freeNote: 'Free videos are drawn in your own browser, which costs nothing and works offline. The engine starts on Maker.',
-  },
-  'video.clean': {
-    label: 'Videos without a watermark',
-    area: 'Music video',
-    caps: { free: 0, maker: null, studio: null, label: null },
-    unit: '',
-    freeNote: 'A free video carries the mark, the same as a free song.',
+    freeNote: 'Free videos are drawn in your own browser, which costs nothing and works offline. The engine starts on Maker — a generated clip costs real money to make, so none of them is given away.',
   },
   'class.watch': {
     label: 'Masterclasses a day',

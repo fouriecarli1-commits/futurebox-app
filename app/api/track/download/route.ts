@@ -1,9 +1,13 @@
 /**
  * Handing over a song file.
  *
- * This is the boundary the product actually rests on. A watermark can be
- * stripped and a preview can be recorded off the speakers, but a file this
- * route refuses to sign is a file nobody gets.
+ * This is the boundary the product actually rests on: a file this route
+ * refuses to sign is a file nobody gets.
+ *
+ * It is a boundary around the *stored* master rather than around the song. A
+ * song made with free credits is a finished song and the browser already has
+ * it — nothing here degrades it or holds it back. What a plan buys is the
+ * copy kept on the server, with the rights, downloadable from any device.
  *
  * The rule is short: you may download a track when you own it, or when your
  * plan includes full songs. Everything else gets 402 with the price, which is
@@ -53,7 +57,7 @@ export async function POST(request: Request): Promise<Response> {
         // No longer a price: the one-off purchases are retired, so the answer
         // to "how do I keep this" is a plan. Anyone who bought one before
         // still passes the check above.
-        message: 'A plan downloads your songs clean, with the rights. Free songs keep their watermark.',
+        message: 'Downloading the stored master is on a plan. What you made on this device is already yours and already on it.',
         needsPlan: true,
       },
       { status: 402 },

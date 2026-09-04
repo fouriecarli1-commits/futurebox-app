@@ -82,7 +82,7 @@ function plans(): string {
 function costs(): string {
   return [
     `- A full song (two minutes, clean): ${CREDITS.song} credits.`,
-    `- A half song (one minute, watermarked): ${CREDITS.halfSong} credits.`,
+    `- A half song (one minute): ${CREDITS.halfSong} credits. Nothing made here is watermarked — a song made with free credits is a finished song.`,
     `- Generated video: ${CREDITS.video} credits per five seconds at the base grade, so a ten-second clip is ${CREDITS.video * 2}.`,
     `- Credit packs, bought once and never expiring: ${PACKS.map((pack) => `${pack.credits} for R${pack.rand}`).join(', ')}.`,
     '- Browser sketches, the recording booth, listening and the radar cost nothing.',

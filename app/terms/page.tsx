@@ -2,9 +2,9 @@
  * The terms, written against what the app actually does.
  *
  * Same rule as the privacy policy: every claim here is checkable in the code.
- * The credit expiry is `budgetFor` in `app/lib/credits.ts`, the watermark on a
- * free song is `markBlob`, the refund on a failed generation is `charge` in
- * `app/lib/server/credits.ts`. A term describing behaviour the app does not
+ * The credit expiry is `budgetFor` in `app/lib/credits.ts`, the refund on a
+ * failed generation is `charge` in `app/lib/server/credits.ts`, and what a
+ * plan actually gates is `TIER_SPECS` in `app/lib/plans.ts`. A term describing behaviour the app does not
  * have is a promise you lose an argument over.
  *
  * One thing this is not: legal advice, or a document a lawyer has read. It is
@@ -64,9 +64,9 @@ export default function Terms(): React.ReactElement {
 
         <Section title="What you make is yours">
           <p>The songs, recordings, videos and shows you make here belong to you. FutureBox does not take ownership of them and does not license them to anybody else.</p>
-          <p>Two limits worth knowing, because they are real and not fine print:</p>
+          <p>A song made with your free credits is a finished song. It is not marked, not degraded and not on loan; it is yours the same way a song made on a plan is. What a plan adds is more of them, the video engine, voice cloning and the rest — not the removal of something done to the free one.</p>
+          <p>One limit worth knowing, because it is real and not fine print:</p>
           <ul className="space-y-1.5 pl-5 list-disc marker:text-emerald-500">
-            <li><strong className="text-white">A free song carries a watermark</strong> — an audible mark in the file. It is yours to keep and share; it is not a clean master. A plan removes it.</li>
             <li><strong className="text-white">Generated music is not guaranteed to be unique.</strong> An AI model can produce something close to what it produced for somebody else. FutureBox cannot promise originality and does not warrant that anything generated here is free of somebody else&apos;s rights.</li>
           </ul>
           <p>Before releasing anything commercially, satisfy yourself that you are entitled to. That is your call to make and it is not one this app can make for you.</p>

@@ -1,0 +1,272 @@
+'use client';
+
+/**
+ * Everything about the account, in the place people look for it.
+ *
+ * ── Why this had to exist ────────────────────────────────────────────────
+ *
+ * All of it was already built and none of it was findable. The plan, what it
+ * costs and the cancel button were inside the Channel room, three presses in,
+ * under the playlists — because that is where the panel happened to be added.
+ * Nobody looking for "what am I paying and how do I stop" goes to a room
+ * called Channel; they press their own name in the corner.
+ *
+ * That press did nothing. It set the studio's room to Make a song, which
+ * changes nothing at all unless the studio is already open, so pressing your
+ * own name was a dead control on every screen.
+ *
+ * So this is not new machinery. It is `Subscription`, the wallet and the plan
+ * table brought together behind the press people were already making.
+ *
+ * ── What is deliberately not here ────────────────────────────────────────
+ *
+ * The question box and the answering copilot. Both are on Help, which is one
+ * press away and is where somebody looks for them; a second copy here would be
+ * a second thing to keep true. Deleting the account stays on the channel, for
+ * a harder reason: a destructive, irreversible control in two places is one
+ * place too many, and the one it is in already explains what goes with it.
+ * Both are linked rather than copied.
+ */
+
+import React, { useEffect, useState } from 'react';
+import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic } from 'lucide-react';
+import { useLang } from '../lib/i18n';
+import { TIER_SPECS, tierPrice, type Tier } from '../lib/plans';
+import type { Region } from '../lib/pricing';
+import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
+import Subscription from './Subscription';
+
+export default function Account({
+  open,
+  onClose,
+  email,
+  name,
+  handle,
+  plan,
+  region,
+  onSeePlans,
+  onGoToChannel,
+}: {
+  readonly open: boolean;
+  readonly onClose: () => void;
+  readonly email?: string;
+  readonly name?: string;
+  readonly handle?: string;
+  readonly plan: Tier;
+  readonly region: Region;
+  readonly onSeePlans: () => void;
+  readonly onGoToChannel: () => void;
+}): React.ReactElement | null {
+  const { t, lang } = useLang();
+  const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
+  /** Null until the first answer, so a real balance never flashes as zero. */
+  const [asked, setAsked] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    let live = true;
+    void loadWallet().then((got) => {
+      if (!live) return;
+      setWallet(got);
+      setAsked(true);
+    });
+    return () => {
+      live = false;
+    };
+  }, [open]);
+
+  // Escape closes it, like every other overlay in this app.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  const spec = TIER_SPECS[plan];
+  const price = tierPrice(plan, region);
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('account.title', 'Your account')}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="w-full max-w-2xl my-auto rounded-3xl border border-zinc-800 bg-zinc-950 p-5 sm:p-7 space-y-5">
+        {/* ── Who ────────────────────────────────────────────────────────── */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-400 to-cyan-500 text-onAccent font-black flex items-center justify-center text-lg flex-shrink-0">
+              {(name ?? email ?? '?').charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg font-black text-white leading-tight truncate">
+                {name || t('account.title', 'Your account')}
+              </p>
+              {/* The address they signed up with, which is the thing somebody
+                  opening this screen most often wants to check. */}
+              <p className="text-sm text-zinc-400 truncate flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                {email || '—'}
+              </p>
+              {handle && <p className="text-sm text-emerald-400 truncate">{handle}</p>}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t('account.close', 'Close')}
+            className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white flex items-center justify-center flex-shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* ── The plan ───────────────────────────────────────────────────── */}
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
+          <div className="flex items-baseline justify-between gap-3 flex-wrap">
+            <p className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              {t('account.plan', 'Your plan')}
+            </p>
+            <p className="text-sm text-zinc-400 tabular-nums">
+              <span className="text-white font-bold">{spec.name}</span>
+              {plan !== 'free' && ` · ${price.display} ${t('account.aMonth', 'a month')}`}
+            </p>
+          </div>
+          <p className="text-sm text-zinc-500 leading-snug">{spec.who}</p>
+          <ul className="text-sm text-zinc-400 space-y-1">
+            {spec.includes.slice(0, 4).map((one) => (
+              <li key={one} className="flex items-start gap-2">
+                <span className="text-emerald-400 mt-0.5">·</span>
+                <span>{one}</span>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onSeePlans();
+            }}
+            className="min-h-[44px] w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold inline-flex items-center justify-center gap-2"
+          >
+            {plan === 'free'
+              ? t('account.seePlans', 'See the plans')
+              : t('account.changePlan', 'Change your plan')}
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </section>
+
+        {/* ── What is left in the wallet ─────────────────────────────────── */}
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
+          <p className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-emerald-400" />
+            {t('account.credits', 'Credits')}
+          </p>
+          {/* Held blank rather than shown as zero until the answer arrives: a
+              real balance flashing as nothing is how somebody decides the app
+              has lost their money. */}
+          {/* And the three ways there is no number are three different
+              sentences. `wallet.ts` keeps them apart on purpose — a request
+              that never arrived used to look exactly like a working free
+              account — so this screen keeps them apart too. */}
+          {!asked ? (
+            <p className="text-2xl font-black text-white tabular-nums">&nbsp;</p>
+          ) : wallet.failed ? (
+            <p className="text-sm text-amber-400 leading-snug">
+              {t(
+                'account.creditsUnreachable',
+                'Your balance could not be fetched just now. Nothing has been spent — try again in a moment.',
+              )}
+            </p>
+          ) : !wallet.metered ? (
+            <p className="text-sm text-zinc-500 leading-snug">
+              {t('account.creditsOff', 'This app has no accounts set up, so nothing is counted.')}
+            </p>
+          ) : (
+            <>
+              <p className="text-2xl font-black text-white tabular-nums">{wallet.balance}</p>
+              {wallet.monthly > 0 && (
+                <p className="text-sm text-zinc-500 tabular-nums">
+                  {wallet.monthly} {t('account.creditsMonthly', 'a month on this plan')}
+                </p>
+              )}
+            </>
+          )}
+          <p className="text-sm text-zinc-500 leading-snug">
+            {t(
+              'account.creditsNote',
+              'What a generation costs is said on the button before you press it. Credits from your plan land each month; anything you buy on top does not expire.',
+            )}
+          </p>
+        </section>
+
+        {/* ── The subscription itself, and the way out of it ─────────────── */}
+        <Subscription />
+
+        {/* ── Where the other two things live ────────────────────────────── */}
+        <section className="border-t border-zinc-800 pt-4 space-y-2">
+          <a
+            href="/help"
+            className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 hover:border-emerald-500/60 hover:text-white text-zinc-300"
+          >
+            <LifeBuoy className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span className="min-w-0">
+              <span className="block text-sm font-bold leading-tight">
+                {t('account.help', 'A question, or a problem')}
+              </span>
+              <span className="block text-xs text-zinc-500 leading-snug">
+                {t(
+                  'account.helpNote',
+                  'Ask about the app, your plan or a charge and get an answer here — or write to a person.',
+                )}
+              </span>
+            </span>
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onGoToChannel();
+            }}
+            className="w-full min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 flex items-center gap-3 text-left hover:border-emerald-500/60 hover:text-white text-zinc-300"
+          >
+            <ListMusic className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span className="min-w-0">
+              <span className="block text-sm font-bold leading-tight">
+                {t('account.channel', 'Your channel and your picture')}
+              </span>
+              <span className="block text-xs text-zinc-500 leading-snug">
+                {t(
+                  'account.channelNote',
+                  'Your name, your handle, your profile picture — and deleting the account, which lives with the things it deletes.',
+                )}
+              </span>
+            </span>
+          </button>
+        </section>
+
+        <p className="text-xs text-zinc-600 leading-relaxed">
+          {t('account.legal', 'The')}{' '}
+          <a href="/terms" className="underline hover:text-zinc-400">
+            {t('account.terms', 'terms')}
+          </a>{' '}
+          {t('account.and', 'and the')}{' '}
+          <a href="/privacy" className="underline hover:text-zinc-400">
+            {t('account.privacy', 'privacy notice')}
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  );
+}

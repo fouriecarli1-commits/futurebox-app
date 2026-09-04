@@ -48,7 +48,6 @@ import { loadTracks } from '../lib/library';
 import { splitSections } from '../lib/engines';
 import { readAudio } from '../lib/trackaudio';
 import { peaksOf, type Peaks } from '../lib/peaks';
-import { markBlob } from '../lib/watermark';
 import { levelOf, loadOwned, NOTHING, type Owned } from '../lib/purchases';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
@@ -226,7 +225,8 @@ export default function SongSections({
         setLoading(false);
         return;
       }
-      const heard = levelOf(owned, track.id) === 'owned' ? blob : await markBlob(blob);
+      // As it was made — see the note in `MakeMusic`. Nothing is marked.
+      const heard = blob;
       if (!live) return;
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       urlRef.current = URL.createObjectURL(heard);

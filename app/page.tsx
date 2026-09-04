@@ -48,6 +48,7 @@ import Landing from './components/Landing';
 import PasswordField from './components/PasswordField';
 import Campaign from './components/Campaign';
 import Greeting from './components/Greeting';
+import Account from './components/Account';
 import SoundTrainer from './components/SoundTrainer';
 import { CopilotBusContext, useCopilotBus } from './lib/copilotactions';
 import { profileAddress } from './lib/brand';
@@ -312,17 +313,21 @@ export default function FutureBoxHome() {
     if (!cloud.configured()) return;
     let live = true;
     cloud.currentAccount().then((account) => {
-      if (live && account) {
+      if (!live) return;
+      if (account) {
         setUser({ ...account, followers: 1 });
         sayHello();
-        arrived();
+        restored();
       }
+      settled.current = true;
     });
     const stop = cloud.onAccountChange((account) => {
       setUser(account ? { ...account, followers: 1 } : null);
       if (account) {
         sayHello();
-        arrived();
+        // Before the first answer this is the page loading, not a sign-in.
+        if (settled.current) arrived();
+        else restored();
         return;
       }
       departed();
@@ -421,6 +426,8 @@ export default function FutureBoxHome() {
      account — and an app with no Supabase project behind it — lands where it
      always did instead of on a greeting with nobody to greet. */
   const [atDoor, setAtDoor] = useState(false);
+  /* The account screen, behind the press people were already making. */
+  const [accountOpen, setAccountOpen] = useState(false);
   /**
    * Whether the door has already been shown for this arrival.
    *
@@ -433,9 +440,21 @@ export default function FutureBoxHome() {
    * about one of them — see the note on `arrived`.
    */
   const greeted = useRef(false);
+  /**
+   * Whether the first "is anybody signed in?" has come back yet.
+   *
+   * The auth library fires its change event on page load as well as on a real
+   * sign-in, and it does not say which is which. Without this, every refresh
+   * of a signed-in tab was treated as an arrival and threw the reader into the
+   * studio — taking the feed away from somebody who came to read it.
+   *
+   * After the first answer has landed, an account appearing is somebody
+   * signing in, which is exactly what it looks like.
+   */
+  const settled = useRef(false);
 
   /**
-   * Somebody has just signed in. Show them the door.
+   * Somebody has just signed in. Take them to the door.
    *
    * Called from every path that can produce a signed-in person, which is the
    * whole point of it existing: the first version only hooked the auth
@@ -443,8 +462,29 @@ export default function FutureBoxHome() {
    * its own result. With a Supabase project behind the app the event usually
    * follows anyway, and without one it never fires at all — so signing in
    * showed the door sometimes, depending on something nobody using it can see.
+   *
+   * It opens the studio as well as arming the door, and that is the whole
+   * fix for "I sign in and there is no welcome page". The greeting lives
+   * inside the studio, and signing in leaves you on the feed — so it was
+   * being set up correctly and shown to nobody until they happened to press
+   * Studio, which is not a welcome, it is a surprise several minutes later.
    */
   const arrived = useCallback(() => {
+    if (greeted.current) return;
+    greeted.current = true;
+    setAtDoor(true);
+    setUploadModalOpen(true);
+  }, []);
+
+  /**
+   * A session that was already there when the page loaded.
+   *
+   * Armed but not opened. Coming back to a tab is not signing in, and throwing
+   * somebody into the studio because their session survived a refresh would
+   * take the feed away from anybody who came to read it. The door is waiting
+   * the moment they open the studio themselves.
+   */
+  const restored = useCallback(() => {
     if (greeted.current) return;
     greeted.current = true;
     setAtDoor(true);
@@ -454,6 +494,7 @@ export default function FutureBoxHome() {
   const departed = useCallback(() => {
     greeted.current = false;
     setAtDoor(false);
+    setUploadModalOpen(false);
   }, []);
   /**
    * People waiting on an answer from you, drawn on the rail.
@@ -1107,9 +1148,16 @@ export default function FutureBoxHome() {
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end min-w-0">
           {user ? (
             <div className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl">
+              {/* Pressing your own name opens your account.
+
+                  It used to set the studio's room to Make a song, which does
+                  nothing at all unless the studio is already open — so on
+                  every other screen this was a dead control, and the plan,
+                  the balance and the cancel button were three presses away
+                  inside a room called Channel. */}
               <button
-                onClick={() => setStudioTab('make')}
-                title={t('auth.yourChannel')}
+                onClick={() => setAccountOpen(true)}
+                title={t('account.title', 'Your account')}
                 className="flex items-center space-x-2 text-xs font-semibold"
               >
                 <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-500 text-onAccent font-extrabold flex items-center justify-center text-[10px]">
@@ -2044,6 +2092,22 @@ export default function FutureBoxHome() {
       <OutOfCredits short={short} packs={packs} onClose={() => setShort(null)} />
 
       {/* 🚀 CREATOR STUDIO & AI MUSIC HUB (WITH MASTER GENRE SOUNDBOARD, VOICE STUDIO & DIRECTOR) */}
+      <Account
+        open={accountOpen}
+        onClose={() => setAccountOpen(false)}
+        email={user?.email}
+        name={user?.name}
+        handle={user?.handle}
+        plan={userPlan}
+        region={region}
+        onSeePlans={() => setPricingModalOpen(true)}
+        onGoToChannel={() => {
+          setUploadModalOpen(true);
+          setAtDoor(false);
+          setStudioTab('channels');
+        }}
+      />
+
       {uploadModalOpen && (
         /* The studio takes the whole window.
            It used to be a card floated in the middle of a dimmed page: sixteen

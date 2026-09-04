@@ -40,7 +40,6 @@ import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
 import * as cloud from '../lib/cloud';
 import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } from '../lib/purchases';
-import { markBlob } from '../lib/watermark';
 import { loadSounds, training, NO_SOUNDS, type Sounds } from '../lib/sounds';
 
 export interface Canvas {
@@ -186,9 +185,9 @@ export default function MakeMusic({
   /**
    * Exactly what is coming out of the speakers.
    *
-   * Not the stored file: an unbought track plays watermarked, and a waveform
-   * drawn from the clean copy would be a picture of a different piece of audio
-   * than the one you are listening to.
+   * Kept as its own state rather than read back off the library, because the
+   * waveform is drawn from these bytes and a picture of a different piece of
+   * audio than the one playing is worse than no picture.
    */
   const [playingBlob, setPlayingBlob] = useState<Blob | null>(null);
   const [shared, setShared] = useState<string | null>(null);
@@ -426,9 +425,13 @@ export default function MakeMusic({
       setStatus(t('make.missing'));
       return;
     }
-    // A track nobody has bought plays with the mark on it. The clean file is
-    // what the download gate hands over, and only once it is paid for.
-    const playable = levelOf(owned, track.id) === 'owned' ? blob : await markBlob(blob);
+    /* Played as it was made.
+
+       This used to lay an audible mark over anything unbought. A song made
+       with free credits is a finished song — the plan sells more of them and
+       the stored master, not the removal of damage done to this one — so
+       there is nothing to mark and nothing to strip. */
+    const playable = blob;
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     urlRef.current = URL.createObjectURL(playable);
     element.src = urlRef.current;

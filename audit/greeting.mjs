@@ -205,18 +205,21 @@ for (const path of ['**/auth/v1/token*', '**/auth/v1/signup*']) {
   await p.route(path, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SESSION) }));
 }
 
-await p.locator('button').filter({ hasText: af ? /^Begin gratis$/ : /^Start free$/ }).first().click();
+await p.locator('button').filter({ hasText: af ? /^Begin verniet$/ : /^Start free$/ }).first().click();
 await p.waitForTimeout(900);
 await p.locator('input[type="email"]').first().fill(WHO.email);
 await p.locator('input[type="password"]').first().fill('hierdie-is-nie-eg-nie');
 await p.locator('form button[type="submit"]').first().click();
-await p.waitForTimeout(3000);
+await p.waitForTimeout(3500);
 
-// Back into the studio, the way anybody would.
-await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
-await p.waitForTimeout(2500);
-words = await room.innerText();
-check('signing back in shows the door again',
+/* And nothing is pressed after this. That is the assertion.
+
+   The greeting lives inside the studio, and signing in leaves somebody on the
+   feed — so it was being armed correctly and shown to nobody until they
+   happened to open the studio themselves, which is not a welcome, it is a
+   surprise several minutes later. A sign-in has to arrive at it. */
+words = await p.locator('body').innerText();
+check('signing in arrives at the door without pressing anything else',
   af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words),
   words.split('\n').slice(0, 10).join(' / '));
 

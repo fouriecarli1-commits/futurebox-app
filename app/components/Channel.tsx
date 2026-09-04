@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { loadTracks, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
-import { markBlob } from '../lib/watermark';
 import { levelOf, loadOwned, NOTHING, type Owned } from '../lib/purchases';
 import {
   loadPlaylists, moved, newPlaylist, savePlaylists, withTrack, withoutTrack, type Playlist,
@@ -117,7 +116,8 @@ export default function Channel({
       // An unbought track plays with its mark, exactly as it does everywhere
       // else. A channel that quietly hands over the clean file would be a hole
       // in the gate rather than a nicer page.
-      const playable = levelOf(owned, track.id) === 'owned' ? blob : await markBlob(blob);
+      // As it was made — see the note in `MakeMusic`. Nothing is marked.
+      const playable = blob;
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       urlRef.current = URL.createObjectURL(playable);
       element.src = urlRef.current;
