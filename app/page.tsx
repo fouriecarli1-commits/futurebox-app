@@ -1211,7 +1211,7 @@ export default function FutureBoxHome() {
               className="flex items-center space-x-1.5 px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold rounded-xl border border-zinc-700 transition-all"
             >
               <LogIn className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Sign In</span>
+              <span>{t('home.signIn', 'Sign in')}</span>
             </button>
           )}
 
@@ -1226,7 +1226,7 @@ export default function FutureBoxHome() {
           ) : (
             <span className="text-xs font-mono text-emerald-400 hidden sm:flex items-center space-x-1 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
               <Check className="w-3.5 h-3.5" />
-              <span>PRO Active</span>
+              <span>{t('home.proActive', 'PRO active')}</span>
             </span>
           )}
 
@@ -1279,7 +1279,7 @@ export default function FutureBoxHome() {
 
               {podcasterDropdownOpen && (
                 <div className="absolute left-0 mt-2 w-72 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl z-50 p-2 space-y-1">
-                  <p className="text-[10px] font-mono uppercase text-zinc-500 px-3 py-1">Curated High-Growth Podcasters</p>
+                  <p className="text-[10px] font-mono uppercase text-zinc-500 px-3 py-1">{t('home.curated', 'Podcasters worth following')}</p>
                   {approvedPodcasters.map((pod, i) => (
                     <button
                       key={i}
@@ -1310,7 +1310,7 @@ export default function FutureBoxHome() {
 
               {categoryDropdownOpen && (
                 <div className="absolute left-0 mt-2 w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl z-50 p-2 space-y-1">
-                  <p className="text-[10px] font-mono uppercase text-zinc-500 px-3 py-1">Cross-Platform Compilations</p>
+                  <p className="text-[10px] font-mono uppercase text-zinc-500 px-3 py-1">{t('home.compilations', 'Across every platform')}</p>
                   {categoriesList.map((cat, i) => (
                     <button
                       key={i}
@@ -1373,7 +1373,7 @@ export default function FutureBoxHome() {
               <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
             </div>
             <div>
-              <p className="font-bold text-white">Today&apos;s picks</p>
+              <p className="font-bold text-white">{t('home.todaysPicks', 'Today’s picks')}</p>
               <p className="text-zinc-400 text-[13px]">{scanMessage}</p>
             </div>
           </div>
@@ -1548,7 +1548,7 @@ export default function FutureBoxHome() {
                         <Views board={board} kind="podcast" reference={pod.id} />
                       </p>
                       <h4 className="font-bold text-sm text-white group-hover:text-emerald-400 transition-colors leading-snug">{pod.title}</h4>
-                      <p className="text-xs text-zinc-400">Guest: <span className="text-zinc-200 font-semibold">{pod.guest}</span></p>
+                      <p className="text-xs text-zinc-400">{t('home.guest', 'Guest')}: <span className="text-zinc-200 font-semibold">{pod.guest}</span></p>
                     </div>
                   </div>
 
@@ -1565,7 +1565,7 @@ export default function FutureBoxHome() {
                       className="text-emerald-400 font-semibold flex items-center space-x-1 hover:underline"
                     >
                       <Play className="w-3 h-3 fill-current" />
-                      <span>Play Episode</span>
+                      <span>{t('home.playEpisode', 'Play the episode')}</span>
                     </button>
 
                     <a 
@@ -1692,7 +1692,7 @@ export default function FutureBoxHome() {
                       </div>
 
                       <div className="p-5 space-y-3">
-                        <p className="text-[11px] font-mono text-zinc-400">Instructor: <span className="text-white font-semibold">{mc.instructor}</span></p>
+                        <p className="text-[11px] font-mono text-zinc-400">{t('home.instructor', 'Instructor')}: <span className="text-white font-semibold">{mc.instructor}</span></p>
                         <h4 className="font-bold text-sm text-white group-hover:text-cyan-400 transition-colors leading-snug">{mc.title}</h4>
                       </div>
                     </div>
@@ -1826,7 +1826,7 @@ export default function FutureBoxHome() {
                       </div>
                       <h4 className="font-bold text-white group-hover:text-cyan-400 transition-colors leading-snug">{creation.title}</h4>
                       <p className="text-xs text-zinc-400 font-mono bg-black/30 p-2.5 rounded-lg border border-zinc-800">
-                        <span className="text-cyan-400 font-semibold">Prompt: </span>
+                        <span className="text-cyan-400 font-semibold">{t('home.prompt', 'Prompt')}: </span>
                         &ldquo;{creation.prompt}&rdquo;
                       </p>
                     </div>
@@ -1844,7 +1844,7 @@ export default function FutureBoxHome() {
                          Tailwind `py-1` on the element itself outranks it. */
                       className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center justify-center space-x-1 bg-cyan-500/10 px-2.5 py-1 min-h-11 rounded-lg border border-cyan-500/30"
                     >
-                      <span>Explore</span>
+                      <span>{t('home.explore', 'Have a look')}</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
@@ -1985,7 +1985,7 @@ export default function FutureBoxHome() {
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-zinc-400 mb-1">Password</label>
+                <label className="block text-xs font-mono text-zinc-400 mb-1">{t('home.password', 'Password')}</label>
                 <PasswordField
                   value={authPassword}
                   onChange={setAuthPassword}
@@ -2702,7 +2702,7 @@ export default function FutureBoxHome() {
               <div className="bg-black/40 border border-zinc-800 p-3.5 rounded-2xl flex items-center space-x-3">
                 <Clock className="w-5 h-5 text-cyan-400 flex-shrink-0" />
                 <div>
-                  <p className="text-[10px] uppercase font-mono text-zinc-500">Build Time</p>
+                  <p className="text-[10px] uppercase font-mono text-zinc-500">{t('home.buildTime', 'Build time')}</p>
                   <p className="text-xs font-bold text-white">{selectedBlueprint.buildTime}</p>
                 </div>
               </div>
@@ -2782,7 +2782,7 @@ export default function FutureBoxHome() {
           <div className="bg-zinc-900/80 border border-zinc-800 p-6 md:p-8 rounded-3xl space-y-4 shadow-2xl">
             <div className="flex items-center space-x-2 text-white">
               <Mail className="w-5 h-5 text-emerald-400" />
-              <h4 className="font-extrabold text-base">Advertise on FutureBox (Contact Sponsorship Team)</h4>
+              <h4 className="font-extrabold text-base">{t('home.advertiseWithUs', 'Advertise on FutureBox')}</h4>
             </div>
             <p className="text-xs text-zinc-400">{t('spon.intro')}</p>
 

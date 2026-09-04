@@ -16,10 +16,17 @@
 import React from 'react';
 import { GraduationCap, Headphones, Star, Trophy } from 'lucide-react';
 import type { Sponsorship } from '../lib/plans';
+import { useLang } from '../lib/i18n';
 
 /** A line set the way a sponsor credit is really set: quiet, same type, no box. */
 function Credit({ who }: { who: string }): React.ReactElement {
-  return <span className="text-[11px] text-zinc-400">Presented by <span className="text-zinc-200 font-semibold">{who}</span></span>;
+  const { t } = useLang();
+  return (
+    <span className="text-[11px] text-zinc-400">
+      {t('spon.presentedBy', 'Presented by')}{' '}
+      <span className="text-zinc-200 font-semibold">{who}</span>
+    </span>
+  );
 }
 
 export default function Placement({
@@ -30,6 +37,7 @@ export default function Placement({
   /** What they typed in the name field, or a stand-in until they do. */
   who: string;
 }): React.ReactElement {
+  const { t } = useLang();
   const name = who.trim() || 'Your company';
 
   return (
@@ -67,10 +75,12 @@ export default function Placement({
         <div className="rounded-xl border border-emerald-500/25 bg-gradient-to-r from-emerald-500/10 to-transparent p-3 space-y-1">
           <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-emerald-400">
             <Star className="w-3 h-3 fill-current" />
-            This month on FutureBox
+            {t('spon.thisMonth', 'This month on FutureBox')}
           </span>
-          <p className="text-sm font-bold text-white leading-snug">with {name}</p>
-          <p className="text-[11px] text-zinc-500">One partner a month. Named here, and nowhere else.</p>
+          <p className="text-sm font-bold text-white leading-snug">
+            {t('spon.with', 'with')} {name}
+          </p>
+          <p className="text-[11px] text-zinc-500">{t('spon.onePartner', 'One partner a month. Named here, and nowhere else.')}</p>
         </div>
       )}
 

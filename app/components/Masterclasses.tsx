@@ -50,6 +50,7 @@ function Card({
 }: {
   item: Masterclass; userPlan: Plan; onUpgrade: () => void; board: Board | null;
 }) {
+  const { t } = useLang();
   const locked = item.proOnly && userPlan === 'free';
   const unavailable = !item.url;
   const Icon = TRACK_ICONS[item.track];
@@ -78,11 +79,11 @@ function Card({
         <p className="text-sm text-zinc-500 pt-1">
           {item.instructor} · {item.minutes} min · {LEVEL_LABELS[item.level]}
           {item.status && item.status !== 'published' && (
-            <span className="text-amber-400"> · {item.status === 'in-production' ? 'coming soon' : 'planned'}</span>
+            <span className="text-amber-400"> · {item.status === 'in-production' ? t('mc.soon', 'coming soon') : t('mc.planned', 'planned')}</span>
           )}
         </p>
         <p className="text-base text-zinc-400 leading-relaxed pt-2">
-          <span className="text-zinc-500">You will be able to: </span>
+          <span className="text-zinc-500">{t('mc.youCan', 'What you will be able to do:')} </span>
           {item.outcome}
         </p>
       </div>
@@ -270,9 +271,9 @@ export default function Masterclasses({
             </div>
 
             <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
-              <p className="text-sm text-zinc-500">Angle</p>
+              <p className="text-sm text-zinc-500">{t('mc.angle', 'Angle')}</p>
               <p className="text-base text-white">{brief.angle}</p>
-              <p className="text-sm text-zinc-500 pt-1.5">Format</p>
+              <p className="text-sm text-zinc-500 pt-1.5">{t('mc.format', 'Format')}</p>
               <p className="text-base text-white">{brief.format}</p>
             </div>
 
