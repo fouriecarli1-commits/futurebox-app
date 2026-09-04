@@ -30,6 +30,7 @@ import { episodeAudioUrl } from '../lib/episodeaudio';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { CREDITS } from '../lib/credits';
+import { DUB_LANGUAGES } from '../data/dublanguages';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 
@@ -335,12 +336,39 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
             placeholder={t('pod.author', 'Who presents it')}
             className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
           />
-          <input
+          {/* The show's language, chosen rather than typed.
+
+              It was a text box with `en / af` as its placeholder, which is two
+              examples and no question — and because the field defaults to `en`
+              the placeholder never showed at all, so what was on screen was a
+              box containing "en" and nothing saying why.
+
+              It also had to be typed correctly. This value goes straight into
+              the feed as `<language>`, where a podcast app reads it, and
+              "English" or "afrikaans" is a tag that does not mean what it
+              says. `data/dublanguages.ts` exists because of exactly this —
+              "almost nobody knows that Dutch is nl and Danish is da" — so the
+              same list answers the same question here, and the whole class of
+              typo goes away.
+
+              Each is shown in its own language beside its English name,
+              because somebody choosing Afrikaans for their show is more likely
+              to recognise "Afrikaans" than to hunt for it under A. */}
+          <label className="sr-only" htmlFor="show-language">
+            {t('pod.language', 'What language it is in')}
+          </label>
+          <select
+            id="show-language"
             value={show?.language ?? 'en'}
             onChange={(event) => setShow({ ...(show ?? blankShow()), language: event.target.value })}
-            placeholder="en / af"
-            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
-          />
+            className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
+          >
+            {DUB_LANGUAGES.map((one) => (
+              <option key={one.code} value={one.code}>
+                {one.name === one.own ? one.name : `${one.name} — ${one.own}`}
+              </option>
+            ))}
+          </select>
           <input
             value={show?.image_url ?? ''}
             onChange={(event) => setShow({ ...(show ?? blankShow()), image_url: event.target.value })}
