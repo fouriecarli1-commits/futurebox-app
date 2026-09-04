@@ -86,8 +86,16 @@ each was asked for at the length on its row: true
 the film is as long as its clips (6.0s wanted, 6.01s got): true
 ```
 
-Trimming is still not built, and is still cheap to add: the stitcher plays a
-clip, so it can play part of one.
+Trimming is built too, and it was as cheap as predicted: the stitcher plays a
+clip, so it plays part of one. A shot gets two handles once it has a clip,
+spanning the clip's **real** length rather than the length that was asked for
+— the engine rounds a request to something it makes, and handles built on the
+request would leave seconds nobody could reach.
+
+```
+the handles span the clip, not the request: true
+the film is as long as its trimmed clips (5.0s wanted, 5.00s got): true
+```
 
 ## What was built before this, and what is still not
 
@@ -96,7 +104,9 @@ order, letterboxed into one frame, a song under them, one file out, progress
 reported per scene, and a board that survives a reload because somebody will
 spend an hour and a dozen paid generations on one.
 
-**Still not built:** trimming. A clip that is 10s where 6s was wanted.
+**Still not built:** nothing on the original list. What is left is the second
+half of the ads plan — reading numbers back — and WebCodecs, when the checks
+can see it.
 
 ## Three things worth stealing, from Kapwing
 

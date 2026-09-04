@@ -93,6 +93,23 @@ const out = await p.evaluate(async () => {
     await window.ST.lengthOf(third),
   ];
 
+  /* The trim, measured rather than described.
+
+     The same three clips are cut twice: once whole, once with the first one
+     asked for between one second and two. If trimming did nothing the two
+     films would be the same length, and this is the assertion that catches a
+     seek that silently failed — which is what a trim looks like when the
+     browser plays from zero while it catches up. */
+  const trimmed = await window.ST.stitch({
+    scenes: [
+      { clip: wide, from: 1, to: 2 },
+      { clip: tall },
+      { clip: third },
+    ],
+    width: 320,
+    height: 180,
+  });
+
   const seen = [];
   const began = performance.now();
   const made = await window.ST.stitch({
@@ -149,8 +166,18 @@ const out = await p.evaluate(async () => {
   const edge = at(4);
   const middle = at(160);
 
+  /* And what the clamp does with nonsense a slider can produce. */
+  const clamps = [
+    { what: 'no trim at all', got: window.ST.windowOf({ clip: wide }, 10) },
+    { what: 'an end past the clip', got: window.ST.windowOf({ clip: wide, from: 1, to: 99 }, 10) },
+    { what: 'a start past the end', got: window.ST.windowOf({ clip: wide, from: 8, to: 2 }, 10) },
+    { what: 'a negative start', got: window.ST.windowOf({ clip: wide, from: -5, to: 4 }, 10) },
+  ];
+
   return {
     ok: true,
+    trimmed: trimmed.ok ? trimmed.seconds : null,
+    clamps,
     scenes: lengths,
     wanted: lengths.reduce((a, one) => a + one, 0),
     got: made.seconds,
@@ -188,6 +215,24 @@ if (!out.ok) {
      takes three minutes, and anybody planning this feature should know it. */
   console.log(`  — ${out.wanted.toFixed(1)}s of film took ${out.took.toFixed(1)}s to cut: ${(out.took / out.wanted).toFixed(2)}× real time`);
   check('it runs at about real time, as designed', out.took / out.wanted < 2.0, `${(out.took / out.wanted).toFixed(2)}×`);
+
+  /* Trimming a second off the first scene must take about a second off the
+     film. Anything else means the seek did not land. */
+  const wantedTrimmed = out.wanted - (out.scenes[0] - 1);
+  check(
+    `trimming a scene shortens the film (${wantedTrimmed.toFixed(2)}s wanted, ${out.trimmed?.toFixed(2)}s got)`,
+    typeof out.trimmed === 'number' && Math.abs(out.trimmed - wantedTrimmed) < 0.6,
+    `${out.trimmed} against ${out.wanted} untrimmed`,
+  );
+  for (const one of out.clamps) {
+    const sane = one.got.from >= 0 && one.got.to <= 10 && one.got.to > one.got.from;
+    check(`${one.what} still gives a window that can be played`, sane,
+      `${one.got.from}–${one.got.to}`);
+  }
+  check('no trim means the whole clip', out.clamps[0].got.from === 0 && out.clamps[0].got.to === 10);
+  check('a start past the end falls back to the whole clip rather than nothing',
+    out.clamps[2].got.from === 0 && out.clamps[2].got.to === 10,
+    `${out.clamps[2].got.from}–${out.clamps[2].got.to}`);
 }
 
 console.log('problems:', problems.join(' ;; ') || 'none');

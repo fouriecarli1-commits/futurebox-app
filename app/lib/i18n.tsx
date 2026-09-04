@@ -1514,6 +1514,15 @@ export const STRINGS: Dict = {
   "run.done": { en: "All out.", af: "Alles uit." },
   "run.noDay": { en: "No day set.", af: "Geen dag gestel nie." },
   "run.noReminder": { en: "Nothing is sent from here \u2014 this is a list you check, not a reminder. It is kept on this device.", af: "Niks word van hier gestuur nie \u2014 dis 'n lys wat jy nagaan, nie 'n herinnering nie. Dit word op hierdie toestel gehou." },
+
+  /* Trimming a shot: the cheapest edit on the video desk. */
+  "trim.title": { en: "Trim it", af: "Snoei dit" },
+  "trim.of": { en: "of", af: "van" },
+  "trim.preview": { en: "Play just this bit", af: "Speel net hierdie stuk" },
+  "trim.playing": { en: "Playing", af: "Speel" },
+  "trim.whole": { en: "Use all of it", af: "Gebruik dit alles" },
+  "trim.from": { en: "Starts at", af: "Begin by" },
+  "trim.to": { en: "Ends at", af: "Eindig by" },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';

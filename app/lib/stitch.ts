@@ -61,6 +61,22 @@ export interface Scene {
   readonly clip: Blob;
   /** Named only so a progress line can say which one is being laid down. */
   readonly name?: string;
+  /**
+   * Where to start and stop inside the clip, in seconds.
+   *
+   * A generation comes back at the length the engine makes, which is rarely
+   * the length the cut wants: the first half-second is the model finding the
+   * shot, and the last second is often it drifting off. Both are paid for
+   * either way, so trimming is the cheapest edit available — no second
+   * generation, no upload, just less of the same file.
+   *
+   * Left out means the whole clip. Out of order or out of range is clamped
+   * rather than refused: a slider that can be dragged past the end is a
+   * slider somebody will drag past the end, and losing a scene over it would
+   * be a poor trade for a validation message.
+   */
+  readonly from?: number;
+  readonly to?: number;
 }
 
 export interface Cut {
@@ -121,6 +137,22 @@ function fitted(
   }
   const w = Math.round(height * source);
   return { x: Math.round((width - w) / 2), y: 0, w, h: height };
+}
+
+/**
+ * The window a scene actually plays, given what its clip turned out to be.
+ *
+ * Clamped in one place so the drawing loop below and anything that wants to
+ * add the lengths up cannot disagree about what a trim means. A window that
+ * collapses to nothing is widened to the whole clip: a scene somebody put in
+ * the film should appear in the film, and an empty trim is far more likely to
+ * be a slider mishandled than an intention.
+ */
+export function windowOf(scene: Scene, duration: number): { from: number; to: number } {
+  if (!Number.isFinite(duration) || duration <= 0) return { from: 0, to: 0 };
+  const from = Math.min(Math.max(0, scene.from ?? 0), duration);
+  const to = Math.min(Math.max(0, scene.to ?? duration), duration);
+  return to - from < 0.05 ? { from: 0, to: duration } : { from, to };
 }
 
 /** A blob's length, which a recorded webm will not admit to without a seek. */
@@ -219,6 +251,31 @@ export async function stitch(cut: Cut): Promise<Made> {
       // One clip that will not open is a gap, not a ruined export.
       if (!ready) continue;
 
+      /* Trimmed by seeking, not by cutting the file.
+
+         The clip is played from `from` and abandoned at `to`, which is the
+         whole of it: the recorder is capturing the canvas, so whatever is not
+         painted is not in the film. The seek is awaited because playing from
+         zero while the browser catches up would put the discarded head of the
+         clip into the cut — a bug that would look like the trim being ignored
+         and would only show on a slow device. */
+      const window = windowOf(cut.scenes[index], video.duration);
+      if (window.from > 0) {
+        video.currentTime = window.from;
+        await new Promise<void>((done) => {
+          let settled = false;
+          const go = () => {
+            if (settled) return;
+            settled = true;
+            done();
+          };
+          video.onseeked = go;
+          // A seek that never reports is a scene that plays whole, not a cut
+          // that hangs.
+          setTimeout(go, 2000);
+        });
+      }
+
       await video.play().catch(() => undefined);
       const box = fitted(video, cut.width, cut.height);
 
@@ -232,7 +289,7 @@ export async function stitch(cut: Cut): Promise<Made> {
         video.onended = end;
         const draw = () => {
           if (stop) return;
-          if (video.ended) {
+          if (video.ended || video.currentTime >= window.to) {
             end();
             return;
           }

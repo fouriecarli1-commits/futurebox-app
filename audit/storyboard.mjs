@@ -188,6 +188,41 @@ check('every shot reads as made',
   (made.match(af ? /Gemaak/g : /\bMade\b/g) || []).length >= 3,
   (made.match(af ? /Gemaak/g : /\bMade\b/g) || []).length + ' marked');
 
+/* ── The trim ────────────────────────────────────────────────────────────
+
+   The handles span the clip's real length, not the length that was asked for.
+   These clips came back at two seconds against a five-second request — which
+   is the engine rounding, and exactly the case that would leave three seconds
+   nobody could reach if the slider were built on `seconds`. */
+const trims = room.locator('input[id^="from-"]');
+check('a trim appears once a shot has a clip', (await trims.count()) === 3, String(await trims.count()));
+const span = await trims.first().evaluate((el) => Number(el.max));
+check('the handles span the clip, not the request',
+  Math.abs(span - CLIP_SECONDS) < 0.6, `max ${span} against a ${CLIP_SECONDS}s clip and a 5s request`);
+
+// Take the first second off the first shot.
+await trims.first().fill('1');
+await p.waitForTimeout(600);
+const trimmedWords = await room.innerText();
+check('the row says how long it now plays', /1\.\ds\b/.test(trimmedWords),
+  (trimmedWords.match(/[\d.]+s/g) || []).slice(0, 6).join(','));
+/* Three two-second clips with a second off the first is five seconds.
+
+   The first version of this expected the requested lengths and got 0:11 —
+   three five-second asks holding three two-second clips, one of them trimmed.
+   The board was adding up what somebody typed rather than what would play,
+   which is the sort of number that looks right on every row and is wrong at
+   the bottom. */
+check('and the running total is what will actually play, not what was asked for',
+  /0:05/.test(trimmedWords), (trimmedWords.match(/\d+:\d\d/g) || []).join(','));
+
+const handles = await p.evaluate(() => {
+  const from = document.querySelector('input[id^="from-"]');
+  const to = document.querySelector('input[id^="to-"]');
+  return { from: Number(from.value), to: Number(to.value) };
+});
+check('the handles cannot cross', handles.to > handles.from, `${handles.from}–${handles.to}`);
+
 // The cut.
 const cut = room.locator('button').filter({ hasText: af ? /^Sny dit in een film/ : /^Cut it into one film/ }).first();
 check('the cut button appears once every shot is made', (await cut.count()) > 0);
@@ -206,10 +241,14 @@ const length = await p.evaluate(async () => {
   }
   return v.duration;
 });
+/* One second was trimmed off the first shot, so the film is a second shorter
+   than the three clips together. That difference is the whole assertion: a
+   trim the cut ignored would come back at the untrimmed length. */
+const wanted = CLIP_SECONDS * 3 - 1;
 check(
-  `the film is as long as its clips (${(CLIP_SECONDS * 3).toFixed(1)}s wanted, ${length.toFixed(2)}s got)`,
-  Math.abs(length - CLIP_SECONDS * 3) < 1.2,
-  String(length),
+  `the film is as long as its trimmed clips (${wanted.toFixed(1)}s wanted, ${length.toFixed(2)}s got)`,
+  Math.abs(length - wanted) < 1.0,
+  `${length} — untrimmed would be ${(CLIP_SECONDS * 3).toFixed(1)}`,
 );
 check('and it can be saved',
   (await room.locator('button').filter({ hasText: af ? /^Stoor die film/ : /^Save the film/ }).count()) > 0);

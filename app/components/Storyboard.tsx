@@ -43,17 +43,18 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowDown, ArrowUp, Clapperboard, Check, Download, Film, Loader2, Plus, Sparkles, Trash2,
+  ArrowDown, ArrowUp, Clapperboard, Check, Download, Film, Loader2, Play, Plus, Scissors, Sparkles, Trash2,
 } from 'lucide-react';
 import { engines, type EngineAspect } from '../lib/engines';
 import { videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
 import { makeId, rememberMake } from '../lib/makes';
 import { readAudio } from '../lib/trackaudio';
-import { canStitch, stitch } from '../lib/stitch';
+import { canStitch, lengthOf, stitch } from '../lib/stitch';
+import { makeBlob } from '../lib/makes';
 import {
-  EMPTY, MOST_SHOTS, changed, clipsFor, loadStoryboard, missing, moved, runtime,
-  saveStoryboard, shotId, withShot, withoutShot, type Storyboard as Board,
+  EMPTY, MOST_SHOTS, changed, clipsFor, loadStoryboard, missing, moved, playsFor,
+  runtime, saveStoryboard, shotId, withShot, withoutShot, type Shot, type Storyboard as Board,
 } from '../lib/storyboard';
 import { useLang } from '../lib/i18n';
 
@@ -85,6 +86,15 @@ export default function Storyboard({
   const [problem, setProblem] = useState<string | null>(null);
   const [cutting, setCutting] = useState<{ at: number; of: number } | null>(null);
   const [film, setFilm] = useState<{ blob: Blob; url: string; seconds: number; ext: string } | null>(null);
+  /**
+   * What each clip actually turned out to be, so the trim handles span the
+   * real thing rather than what was asked for.
+   *
+   * The engine rounds a request to a length it makes, and a clip that came
+   * back at ten when six was asked for would give a slider that stops at six
+   * and four seconds nobody could reach. Read off the file, once, per clip.
+   */
+  const [clipLengths, setClipLengths] = useState<Record<string, number>>({});
   const loaded = useRef(false);
 
   useEffect(() => {
@@ -101,8 +111,26 @@ export default function Storyboard({
 
   useEffect(() => () => { if (film) URL.revokeObjectURL(film.url); }, [film]);
 
+  // Measured when a clip appears, and only once each.
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      for (const shot of board.shots) {
+        if (!shot.makeId || clipLengths[shot.makeId] !== undefined) continue;
+        const blob = await makeBlob(shot.makeId);
+        if (!alive) return;
+        const seconds = blob ? await lengthOf(blob) : 0;
+        if (!alive) return;
+        setClipLengths((was) => ({ ...was, [shot.makeId as string]: seconds }));
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [board.shots, clipLengths]);
+
   const shortest = lengths[0]?.seconds ?? 5;
-  const total = runtime(board);
+  const total = runtime(board, clipLengths);
   const short = missing(board);
   const song = tracks.find((one) => one.id === board.songId) ?? null;
 
@@ -177,9 +205,19 @@ export default function Storyboard({
         setProblem(t('board.lost', 'A shot’s clip is no longer on this device. Make that one again before cutting.'));
         return;
       }
+      /* Each scene carries its own window, so the cut plays the trimmed part
+         and nothing else. `stitch` clamps whatever arrives, which is what
+         keeps a slider dragged somewhere odd from losing a scene. */
       const scenes = clips
-        .map((clip, index) => ({ clip, name: `${index + 1}` }))
-        .filter((one): one is { clip: Blob; name: string } => Boolean(one.clip));
+        .map((clip, index) => ({
+          clip,
+          name: `${index + 1}`,
+          ...(board.shots[index].from !== undefined ? { from: board.shots[index].from } : {}),
+          ...(board.shots[index].to !== undefined ? { to: board.shots[index].to } : {}),
+        }))
+        .filter((one): one is { clip: Blob; name: string; from?: number; to?: number } =>
+          Boolean(one.clip),
+        );
       if (!scenes.length) {
         setProblem(t('board.nothing', 'Nothing to cut yet — make at least one shot.'));
         return;
@@ -258,7 +296,15 @@ export default function Storyboard({
                     {t('board.notYet', 'Not made yet')}
                   </span>
                 )}
-                <span className="text-xs text-zinc-500 tabular-nums">{shot.seconds}s</span>
+                <span className="text-xs text-zinc-500 tabular-nums">
+                  {(() => {
+                    const plays = playsFor(shot, shot.makeId ? clipLengths[shot.makeId] : undefined);
+                    // A whole second reads as "5s"; anything the clip or the
+                    // trim decided reads with its decimal, because that is
+                    // where the difference from the request lives.
+                    return plays === shot.seconds ? `${shot.seconds}s` : `${plays.toFixed(1)}s`;
+                  })()}
+                </span>
                 <span className="flex-1" />
                 <button
                   type="button"
@@ -331,6 +377,22 @@ export default function Storyboard({
                   {videoCost(grade, shot.seconds)}
                 </button>
               </div>
+
+              {/* ── The trim ──────────────────────────────────────────────
+                  Only once there is a clip, because before that there is
+                  nothing to trim against and a slider over a number the engine
+                  has not answered yet would be a control for a guess.
+
+                  The cheapest edit on this desk: the first half-second is the
+                  model finding the shot and the last is often it drifting off,
+                  and both are paid for whatever happens. */}
+              {shot.makeId && (clipLengths[shot.makeId] ?? 0) > 0 && (
+                <Trim
+                  shot={shot}
+                  length={clipLengths[shot.makeId]}
+                  onChange={(fields) => setBoard((was) => changed(was, shot.id, fields))}
+                />
+              )}
             </div>
           );
         })}
@@ -424,5 +486,156 @@ export default function Storyboard({
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
     </section>
+  );
+}
+
+/**
+ * Where a shot starts and stops inside its clip.
+ *
+ * ── Two numbers, not a filmstrip ─────────────────────────────────────────
+ *
+ * A proper trimmer draws the clip's frames along a bar and lets somebody drag
+ * a handle onto the exact one. That is genuinely better and it is a great deal
+ * of code — frame extraction, a scrub preview, a bar that redraws — for an
+ * edit whose whole job here is taking a second off each end.
+ *
+ * Two sliders and a preview do that job. The preview is the part that makes
+ * them usable: it plays exactly the window that will end up in the film, so
+ * the handles are checked by watching rather than by arithmetic.
+ *
+ * ── Why the handles span the clip and not the request ────────────────────
+ *
+ * The engine rounds a request to a length it makes. A clip asked for at six
+ * seconds and returned at ten, trimmed against six, would leave four seconds
+ * nobody could reach and a film shorter than the one on screen. The length is
+ * read off the file.
+ */
+function Trim({
+  shot,
+  length,
+  onChange,
+}: {
+  readonly shot: Shot;
+  readonly length: number;
+  readonly onChange: (fields: Partial<Shot>) => void;
+}): React.ReactElement {
+  const { t } = useLang();
+  const [playing, setPlaying] = useState(false);
+  const video = useRef<HTMLVideoElement | null>(null);
+  const url = useRef<string | null>(null);
+  const [ready, setReady] = useState(false);
+
+  const from = Math.min(shot.from ?? 0, length);
+  const to = Math.min(shot.to ?? length, length);
+  const trimmed = to > from ? to - from : length;
+
+  useEffect(() => {
+    let alive = true;
+    if (!shot.makeId) return undefined;
+    void makeBlob(shot.makeId).then((blob) => {
+      if (!alive || !blob) return;
+      url.current = URL.createObjectURL(blob);
+      if (video.current) video.current.src = url.current;
+      setReady(true);
+    });
+    return () => {
+      alive = false;
+      if (url.current) URL.revokeObjectURL(url.current);
+      url.current = null;
+    };
+  }, [shot.makeId]);
+
+  /** Play exactly the window that will be in the film, and stop where it does. */
+  const preview = useCallback(() => {
+    const element = video.current;
+    if (!element) return;
+    element.currentTime = from;
+    void element.play();
+    setPlaying(true);
+    const watch = () => {
+      if (!video.current) return;
+      if (video.current.currentTime >= to) {
+        video.current.pause();
+        setPlaying(false);
+        return;
+      }
+      requestAnimationFrame(watch);
+    };
+    requestAnimationFrame(watch);
+  }, [from, to]);
+
+  const step = Math.max(0.1, Math.round((length / 100) * 10) / 10);
+
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-2.5 space-y-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs font-semibold text-zinc-400 inline-flex items-center gap-1.5">
+          <Scissors className="w-3.5 h-3.5 text-emerald-400" />
+          {t('trim.title', 'Trim it')}
+        </span>
+        <span className="text-xs text-zinc-500 tabular-nums">
+          {trimmed.toFixed(1)}s {t('trim.of', 'of')} {length.toFixed(1)}s
+        </span>
+        <span className="flex-1" />
+        <button
+          type="button"
+          onClick={preview}
+          disabled={!ready}
+          className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white disabled:opacity-50"
+        >
+          <Play className="w-3.5 h-3.5" />
+          {playing ? t('trim.playing', 'Playing') : t('trim.preview', 'Play just this bit')}
+        </button>
+        {(shot.from !== undefined || shot.to !== undefined) && (
+          <button
+            type="button"
+            onClick={() => onChange({ from: undefined, to: undefined })}
+            className="min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-semibold text-zinc-500 hover:text-white"
+          >
+            {t('trim.whole', 'Use all of it')}
+          </button>
+        )}
+      </div>
+
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      <video ref={video} muted playsInline className="w-full max-h-40 rounded border border-zinc-800 bg-black" />
+
+      <div className="space-y-1.5">
+        <label className="block text-xs text-zinc-500" htmlFor={`from-${shot.id}`}>
+          {t('trim.from', 'Starts at')} {from.toFixed(1)}s
+        </label>
+        <input
+          id={`from-${shot.id}`}
+          type="range"
+          min={0}
+          max={length}
+          step={step}
+          value={from}
+          onChange={(event) => {
+            const next = Number(event.target.value);
+            // The handles cannot cross. Pushing the start past the end drags
+            // the end with it rather than producing a window of nothing.
+            onChange({ from: next, to: Math.max(next + step, to) });
+          }}
+          className="w-full accent-emerald-500"
+        />
+        <label className="block text-xs text-zinc-500" htmlFor={`to-${shot.id}`}>
+          {t('trim.to', 'Ends at')} {to.toFixed(1)}s
+        </label>
+        <input
+          id={`to-${shot.id}`}
+          type="range"
+          min={0}
+          max={length}
+          step={step}
+          value={to}
+          onChange={(event) => {
+            const next = Number(event.target.value);
+            onChange({ to: next, from: Math.min(next - step, from) });
+          }}
+          className="w-full accent-emerald-500"
+        />
+      </div>
+    </div>
   );
 }

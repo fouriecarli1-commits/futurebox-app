@@ -41,6 +41,22 @@ export interface Shot {
   readonly seconds: number;
   /** The `makes.ts` id of the clip that came back, once one has. */
   readonly makeId?: string;
+  /**
+   * Where this shot starts and stops inside its clip, in seconds.
+   *
+   * A generation comes back at the length the engine makes, and the useful
+   * part of it is rarely the whole thing — the first half-second is the model
+   * finding the shot and the last is often it drifting off. Both are paid for
+   * whatever happens, so trimming is the cheapest edit on this desk: no second
+   * generation, no upload, just less of a file that already exists.
+   *
+   * Only meaningful once there is a clip, which is why it is set from the
+   * clip's real duration rather than from `seconds` — the engine rounds a
+   * request to a length it makes, and trimming against a number it ignored
+   * would put the handles in the wrong place.
+   */
+  readonly from?: number;
+  readonly to?: number;
 }
 
 export interface Storyboard {
@@ -78,6 +94,8 @@ export function loadStoryboard(): Storyboard {
           prompt: typeof one.prompt === 'string' ? one.prompt : '',
           seconds: Number.isFinite(one.seconds) ? one.seconds : 5,
           ...(typeof one.makeId === 'string' ? { makeId: one.makeId } : {}),
+          ...(Number.isFinite(one.from) ? { from: one.from } : {}),
+          ...(Number.isFinite(one.to) ? { to: one.to } : {}),
         })),
       ...(typeof said.songId === 'string' ? { songId: said.songId } : {}),
     };
@@ -99,9 +117,41 @@ export function shotId(): string {
   return `shot-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-/** How long the film runs, which is every shot added up. */
-export function runtime(board: Storyboard): number {
-  return board.shots.reduce((total, one) => total + one.seconds, 0);
+/**
+ * How long one shot plays, in the order the answers get more truthful.
+ *
+ * A trim, if there is one. Then the clip's own length, if the clip exists and
+ * has been measured. Only then the length that was asked for, which before a
+ * clip exists is the only estimate available and after one exists is the least
+ * reliable number on the row: the engine rounds a request to a length it
+ * makes, so a six-second ask can come back at ten or at five.
+ *
+ * That middle case is the one worth naming. The running total first added the
+ * *requested* lengths for anything untrimmed, so a board of three five-second
+ * asks holding three two-second clips promised fifteen seconds of film and cut
+ * six. It looked right because every number on the row was a number somebody
+ * had typed.
+ */
+export function playsFor(shot: Shot, clipLength?: number): number {
+  if (typeof shot.from === 'number' && typeof shot.to === 'number' && shot.to > shot.from) {
+    return shot.to - shot.from;
+  }
+  if (typeof clipLength === 'number' && clipLength > 0) return clipLength;
+  return shot.seconds;
+}
+
+/**
+ * How long the film runs, which is every shot added up as it will play.
+ *
+ * `lengths` is what each clip turned out to be, keyed by its make id — the
+ * caller has measured them and this cannot. Without it the total falls back to
+ * what was asked for, which is right for a board nothing has been made on yet.
+ */
+export function runtime(board: Storyboard, lengths?: Record<string, number>): number {
+  return board.shots.reduce(
+    (total, one) => total + playsFor(one, one.makeId ? lengths?.[one.makeId] : undefined),
+    0,
+  );
 }
 
 /** How many shots still have no clip behind them. */
