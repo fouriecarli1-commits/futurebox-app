@@ -51,7 +51,8 @@
     "check:invite": "node audit/invite.mjs",
     "check:afrikaansscreen": "node audit/afrikaans.mjs",
     "check:makesong": "tsx scripts/check-makesong.mts",
-    "check:makeroom": "node audit/makesong.mjs"
+    "check:makeroom": "node audit/makesong.mjs",
+    "check:listen": "tsx scripts/check-listen.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

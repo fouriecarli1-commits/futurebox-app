@@ -118,6 +118,12 @@ try {
     `${await lengths.count()} choices`);
   check('with what each one costs on it', /\d+ credits/.test(await says()));
 
+  /* ── Pointing at a song instead of describing one ──────────────────── */
+  check('the room offers to learn a style from a song you already like',
+    (await says()).includes('Learn the style from a song'));
+  check('and says the file does not leave the device',
+    (await says()).includes('stays on this device'));
+
   /* ── Nobody singing, said out loud ─────────────────────────────────── */
   check('an empty words box says the song will come back unsung',
     (await says()).includes('nobody singing'));

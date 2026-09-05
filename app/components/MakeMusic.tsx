@@ -45,6 +45,7 @@ import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } 
 import { loadSounds, training, NO_SOUNDS, type Sounds } from '../lib/sounds';
 import { noteTaste } from '../lib/taste';
 import { looksAfrikaans, singDirection, type SingIn } from '../lib/lyriclang';
+import StyleFromSong from './StyleFromSong';
 
 export interface Canvas {
   title: string;
@@ -799,6 +800,28 @@ export default function MakeMusic({
             className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 leading-relaxed resize-y"
           />
           <p className="text-sm text-zinc-500 pt-1">{t('make.soundNote')}</p>
+
+          {/* Point at a song instead of describing one.
+
+              Describing a sound in words is the hardest thing this room asks
+              for, and getting it wrong costs a generation — which is what
+              "ek mors letterlik my geld" was about. Everybody has a song they
+              can point at, so the app measures that one and writes the
+              tempo, the key and the tone into the box. It adds; it never
+              replaces what is already there. */}
+          <div className="mt-3">
+            <StyleFromSong
+              onWords={(words) => {
+                const current = canvas.style.trim();
+                const fresh = words.filter((word) => !current.toLowerCase().includes(word.toLowerCase()));
+                if (!fresh.length) return;
+                setCanvas({
+                  ...canvas,
+                  style: current ? `${current}, ${fresh.join(', ')}` : fresh.join(', '),
+                });
+              }}
+            />
+          </div>
 
           <div className="mt-3">
             <StyleFinder
