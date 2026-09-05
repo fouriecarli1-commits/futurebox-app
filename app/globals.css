@@ -110,6 +110,28 @@ html {
   font-size: var(--fb-root-size);
 }
 
+/* Nothing slides sideways.
+
+   Every screen here is built to fit, and a handful do not: a card whose
+   contents run 51 pixels past its own box, a row that will not wrap. The page
+   itself measures 390 on a 390-pixel phone, so the fault never showed up in a
+   width check — what it does instead is let the whole page be dragged left and
+   right by a thumb that meant to scroll down. On a phone that reads as the app
+   being loose.
+
+   So it is locked at the root. A strip that is *meant* to scroll sideways sets
+   `overflow-x: auto` on itself and is unaffected; this only stops the page
+   behind it moving.
+
+   `overflow-x: clip` rather than `hidden`, because `hidden` on the root makes
+   every `position: sticky` inside it stop sticking — which would quietly break
+   the pinned strips in the Pro Booth. `clip` cuts without creating a scroll
+   container. */
+html,
+body {
+  overflow-x: clip;
+}
+
 /* Thumbs.
 
    Buttons here run 30 to 34 pixels tall, which clears the WCAG minimum of 24

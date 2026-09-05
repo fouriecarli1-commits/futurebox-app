@@ -39,10 +39,13 @@ export default function VoiceScreen({
   onUpgrade,
   onGoToBooth,
   onGoToPodcast,
+  underScript = null,
 }: {
   onUpgrade: () => void;
   onGoToBooth: () => void;
   onGoToPodcast: () => void;
+  /** Handed down to sit under "Read a script aloud" — see VoiceLab. */
+  underScript?: React.ReactNode;
 }): React.ReactElement {
   const { t } = useLang();
   const [state, setState] = useState<VoiceState>({ configured: false, mine: [], stock: [] });
@@ -77,6 +80,7 @@ export default function VoiceScreen({
       </div>
 
       <VoiceLab
+        underScript={underScript}
         state={state}
         onChanged={load}
         // There is no episode to attach a reading to here, so the reading is

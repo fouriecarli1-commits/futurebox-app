@@ -108,12 +108,22 @@ export default function VoiceLab({
   onChanged,
   onAudio,
   onUpgrade,
+  underScript = null,
 }: {
   state: VoiceState;
   onChanged: () => void;
   /** A finished reading, handed up so it can become an episode. */
   onAudio: (audio: Blob, how: 'spoken') => void;
   onUpgrade: () => void;
+  /**
+   * Drawn directly under "Read a script aloud".
+   *
+   * The copilot, in every other room, is a column beside the work or a panel
+   * under it. Here it was asked for in the middle — beside the one control it
+   * is most use to, which is the script you are about to have read. A room
+   * cannot reach into the page's layout, so the page hands it down.
+   */
+  underScript?: React.ReactNode;
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -522,6 +532,8 @@ export default function VoiceLab({
           <p className="text-base font-bold text-white">{t('voice.readIt', 'Read a script aloud')}</p>
           <Note>{t('voice.readNote', 'Write it, pick a voice, and hear it. An episode made this way says so on the episode.')}</Note>
         </div>
+
+        {underScript}
 
         {/* The choice this button was built for: which voice reads this script.
             It sits beside the field rather than in the copilot panel, because

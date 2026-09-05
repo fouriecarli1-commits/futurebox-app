@@ -1026,6 +1026,59 @@ export default function FutureBoxHome() {
     setResendIn(60);
   };
 
+  /* The copilot, as a value.
+
+     It lived inside the aside, which meant it could only ever be a column
+     beside the work or a panel under it. The voice room asked for it in the
+     middle — directly under "Read a script aloud", beside the one control it
+     is most use to — and a room cannot reach into the page's own layout. So
+     the page holds it and hands it wherever it belongs.
+
+     Where it goes, room by room, as asked for: the top in Make a song, inside
+     the voice room under the script, the foot of the page everywhere else. */
+  const copilotPane = (
+  <Copilot
+    context={{
+      surface: studioTab,
+      ...taste,
+      title: canvas.title,
+      style: canvas.style,
+      lyrics: canvas.lyrics,
+      trackCount,
+      engineReady,
+    }}
+    onAction={(action: CopilotAction) => {
+      if (action.kind === 'surface_op') {
+        // The room takes it, or nothing happens. There is
+        // deliberately no fallback: silently doing something else
+        // is worse than doing nothing, because the reply already
+        // said what it was going to do.
+        copilotBus.dispatch(studioTab, action.op, action.value);
+        return;
+      }
+      if (action.kind === 'set_title') setCanvas({ ...canvas, title: action.value });
+      if (action.kind === 'set_style') setCanvas({ ...canvas, style: action.value });
+      if (action.kind === 'set_lyrics') setCanvas({ ...canvas, lyrics: action.value });
+      if (action.kind === 'generate') {
+        goToRoom('make');
+        setMakeSignal((n) => n + 1);
+      }
+      if (action.kind === 'go') {
+        // Every room in the rail, not the six this used to allow:
+        // the copilot could not name the Booth, the video desk,
+        // the channel, the live room or the voice studio, so in
+        // five of the eleven rooms it could not even say where it
+        // was. The registry vets the name and resolves what a
+        // person calls a screen to what the studio calls it.
+        const tab = resolveSurfaceId(action.value);
+        if (tab) goToRoom(tab);
+      }
+    }}
+  />
+  );
+
+  const copilotInside = studioTab === 'voice_studio';
+
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
@@ -2809,6 +2862,7 @@ export default function FutureBoxHome() {
             {/* TAB 2: CUSTOM VOICE STUDIO (USE YOUR OWN VOICE OR CLONE) */}
             {studioTab === 'voice_studio' && (
               <VoiceScreen
+                underScript={copilotPane}
                 onUpgrade={() => setPricingModalOpen(true)}
                 onGoToBooth={() => goToRoom('booth')}
                 onGoToPodcast={() => goToRoom('podcast')}
@@ -2962,46 +3016,11 @@ export default function FutureBoxHome() {
               {/* On a phone it sizes to its content and sits at the foot of the
                   page; the fixed height was a desktop measurement applied where
                   there was no second column to measure against. */}
-              <aside className={`${copilotFirst ? 'order-2 md:order-none' : ''} flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}>
-                <Copilot
-                  context={{
-                    surface: studioTab,
-                    ...taste,
-                    title: canvas.title,
-                    style: canvas.style,
-                    lyrics: canvas.lyrics,
-                    trackCount,
-                    engineReady,
-                  }}
-                  onAction={(action: CopilotAction) => {
-                    if (action.kind === 'surface_op') {
-                      // The room takes it, or nothing happens. There is
-                      // deliberately no fallback: silently doing something else
-                      // is worse than doing nothing, because the reply already
-                      // said what it was going to do.
-                      copilotBus.dispatch(studioTab, action.op, action.value);
-                      return;
-                    }
-                    if (action.kind === 'set_title') setCanvas({ ...canvas, title: action.value });
-                    if (action.kind === 'set_style') setCanvas({ ...canvas, style: action.value });
-                    if (action.kind === 'set_lyrics') setCanvas({ ...canvas, lyrics: action.value });
-                    if (action.kind === 'generate') {
-                      goToRoom('make');
-                      setMakeSignal((n) => n + 1);
-                    }
-                    if (action.kind === 'go') {
-                      // Every room in the rail, not the six this used to allow:
-                      // the copilot could not name the Booth, the video desk,
-                      // the channel, the live room or the voice studio, so in
-                      // five of the eleven rooms it could not even say where it
-                      // was. The registry vets the name and resolves what a
-                      // person calls a screen to what the studio calls it.
-                      const tab = resolveSurfaceId(action.value);
-                      if (tab) goToRoom(tab);
-                    }
-                  }}
-                />
-              </aside>
+              {!copilotInside && (
+                <aside className={`${copilotFirst ? 'order-2 md:order-none' : ''} flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}>
+                  {copilotPane}
+                </aside>
+              )}
             </div>
 
           </div>

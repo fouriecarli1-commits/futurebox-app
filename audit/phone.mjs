@@ -80,9 +80,15 @@ for (const name of rooms) {
       if (b.height < 32 || b.width < 32) small += 1;
     }
 
-    const aside = document.querySelector('aside');
-    const panes = aside ? Array.from(aside.parentElement.children) : [];
-    const menu = panes.find((el) => el.querySelector('button[aria-haspopup="menu"]'));
+    /* The panes, found from the room menu rather than from the aside.
+
+       The voice room draws the copilot inside itself, under "Read a script
+       aloud", so it has no aside at all — and anchoring on one reported that
+       room as completely empty. The menu is in every room. */
+    const menu = document.querySelector('button[aria-haspopup="menu"]')?.closest('div');
+    const shell = menu?.parentElement;
+    const panes = shell ? Array.from(shell.children) : [];
+    const aside = panes.find((el) => el.tagName === 'ASIDE') ?? null;
     const work = panes.find((el) => el !== aside && el !== menu && el.tagName !== 'NAV');
 
     return {
