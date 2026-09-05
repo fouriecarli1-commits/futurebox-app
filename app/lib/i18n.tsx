@@ -1330,8 +1330,8 @@ export const STRINGS: Dict = {
   },
   "hero.podcast": { en: "Start a podcast", af: "Begin \u2019n podsending" },
 
-  "welcome.line1": { en: "Put your voice in.", af: "Jou stem gaan in." },
-  "welcome.line2": { en: "Take a record out.", af: "\u2019n\u00a0Liedjie kom uit." },
+  "welcome.line1": { en: "Put your voice in.", af: "Jou\u00a0stem. Jou\u00a0liedjies." },
+  "welcome.line2": { en: "Take a record out.", af: "Jou\u00a0kreatiwiteit." },
   "welcome.black": { en: "The black box of the future.", af: "Die hele ateljee in een boks." },
   "welcome.play": { en: "Play the introduction", af: "Speel die inleiding" },
   "welcome.videoNote": { en: "Ten seconds on what this is. Sound on.", af: "Tien sekondes oor wat dit is. Klank aan." },
