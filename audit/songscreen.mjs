@@ -145,6 +145,38 @@ try {
 
   const second = await bigLine();
   check('and that song shows its words too', second.length > 0, JSON.stringify(second));
+  /* ── The Lyrics button, which is a different screen ─────────────────
+ 
+     The full-screen player above and this are two views of one thing and they
+     drifted apart: this one was handed the even spread while the player had
+     been taught to listen. It is the screen somebody props a phone against
+     and sings to, so it is the one where drift is least forgivable.
+ 
+     Closed first, because it is above everything — deliberately, since a
+     navigation bar across a teleprompter is a navigation bar in the shot. */
+  await p.locator('div.fixed.inset-0.z-\\[80\\] button[aria-label]').last().click();
+  await p.waitForTimeout(800);
+
+  await p.locator('button').filter({ hasText: /^Lyrics$/ }).first().click();
+  await p.waitForTimeout(2500);
+  const sheet = p.locator('div.fixed.inset-0.z-\\[100\\]');
+  check('the Lyrics button opens the words over the song', (await sheet.count()) === 1);
+  check('and it is above the tab bar, not under it',
+    (await sheet.first().boundingBox())?.y === 0,
+    JSON.stringify(await sheet.first().boundingBox()));
+
+  const big = async () =>
+    ((await sheet.locator('p.text-3xl, p.sm\\:text-5xl').first().innerText().catch(() => '')) ?? '').trim();
+  const wasLine = await big();
+  check('a line is showing', wasLine.length > 0, JSON.stringify(wasLine));
+  let movedOn = wasLine;
+  for (let waited = 0; waited < 12 && movedOn === wasLine; waited += 1) {
+    await p.waitForTimeout(1000);
+    movedOn = await big();
+  }
+  check('and it follows the song here too — the screen you sing to',
+    movedOn !== wasLine && movedOn.length > 0, `"${wasLine}" → "${movedOn}"`);
+  await p.screenshot({ path: shot('songscreen-lyrics.png') });
 } finally {
   if (browser) await browser.close();
   if (server) { try { process.kill(-server.pid); } catch { /* already gone */ } }

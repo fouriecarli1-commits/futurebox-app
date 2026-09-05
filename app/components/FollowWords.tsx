@@ -29,6 +29,15 @@
  * The preview is mirrored because that is what a person expects to see; the
  * file is not, because mirrored footage reads as wrong to everybody else.
  *
+ * ── Why it is a portal ───────────────────────────────────────────────────
+ *
+ * `position: fixed` is only relative to the window when no ancestor has a
+ * transform, a filter, `backdrop-filter` or `contain` — any of those becomes
+ * the containing block instead, and a full-screen view quietly stops being
+ * full screen. Measured here at twenty pixels down and twenty short, with the
+ * room behind showing along the top edge. On the one screen somebody props a
+ * phone against and films themselves in front of, that strip is in the shot.
+ *
  * ── What it is honest about ──────────────────────────────────────────────
  *
  * The section timings are real — the app wrote the composition plan and knows
@@ -40,6 +49,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Camera, CameraOff, Circle, Download, Loader2, Square, X } from 'lucide-react';
 import { lineAt, type TimedLine } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
@@ -171,12 +181,18 @@ export default function FollowWords({
     setRecording(false);
   };
 
+  /* Nothing to portal into until the browser has one. */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const current = lines.length ? lineAt(lines, at) : -1;
   // Three at a time: the one being sung, the one before for context, and the
   // one coming so there is time to draw breath.
   const window_ = [current - 1, current, current + 1];
 
-  return (
+  if (!mounted) return <></>;
+
+  return createPortal(
     /* Above the tab bar, not under it.
  
        The bar is `z-95` and this was `z-90`, so a light strip sat across the
@@ -310,6 +326,7 @@ export default function FollowWords({
           )}
         </p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
