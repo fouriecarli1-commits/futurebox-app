@@ -1155,6 +1155,36 @@ export default function FutureBoxHome() {
     );
   }
 
+  /* Today's picks, and the button that reshuffles them.
+
+     Held as a value rather than written once at the top of the page. It used
+     to sit above every heading on the page, so the control that replaces the
+     cards was a whole board of counters and a section title away from the
+     cards it replaces: pressing it changed things nobody could see. It now
+     stands inside each section, directly on top of the grid it is about. */
+  const picksBar = (
+    <section className="bg-gradient-to-r from-zinc-900 via-zinc-900/80 to-zinc-950 border border-zinc-800 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
+      <div className="flex items-center gap-3 text-xs min-w-0">
+        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+          <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
+        </div>
+        <div className="min-w-0">
+          <p className="font-bold text-white">{t('home.todaysPicks', 'Today’s picks')}</p>
+          <p className="text-zinc-400 text-[13px]">{scanMessage}</p>
+        </div>
+      </div>
+
+      <button
+        onClick={handleAiScanRefresh}
+        disabled={isScanning}
+        className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[40px] bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-onAccent text-xs font-extrabold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50 flex-shrink-0"
+      >
+        <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
+        <span>{isScanning ? t('home.looking', 'Looking…') : t('home.otherPicks', 'Show me different ones')}</span>
+      </button>
+    </section>
+  );
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-emerald-500 selection:text-onAccent flex flex-col justify-between">
       
@@ -1420,27 +1450,28 @@ export default function FutureBoxHome() {
           />
         )}
 
-        {/* 🟢 REGENERATION & AI TRENDS RADAR BANNER */}
-        <section className="bg-gradient-to-r from-zinc-900 via-zinc-900/80 to-zinc-950 border border-zinc-800 p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
-          <div className="flex items-center space-x-3 text-xs">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-              <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
-            </div>
-            <div>
-              <p className="font-bold text-white">{t('home.todaysPicks', 'Today’s picks')}</p>
-              <p className="text-zinc-400 text-[13px]">{scanMessage}</p>
-            </div>
-          </div>
+        {/* What has actually happened here, then what we are showing you today.
 
-          <button
-            onClick={handleAiScanRefresh}
-            disabled={isScanning}
-            className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-onAccent text-xs font-extrabold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-            <span>{isScanning ? 'Looking…' : 'Show me different ones'}</span>
-          </button>
-        </section>
+            They were the other way round, and the picks bar carried the button
+            that reshuffles the picks — so the control sat at the top of the
+            page with a whole board of counters between it and the cards it
+            changes. Pressing it scrolled nothing into view and the cards it
+            had just replaced were below the fold.
+
+            The record of the place is a header, not an interruption: it goes
+            above. The picks bar drops to sit directly on top of the cards it
+            is about, which is where its button belongs.
+
+            One board rather than four inside four sections, scoped by the tab
+            that is open. */}
+        {activeTab !== 'all' && (
+          <Counters
+            board={board}
+            scope={activeTab}
+            labels={activeTab === 'masterclasses' ? TRACK_LABELS : undefined}
+          />
+        )}
+
 
         {/*
           Spotlight carries no counters and no bill.
@@ -1547,7 +1578,6 @@ export default function FutureBoxHome() {
         {/* 🎙️ 2. FUTUREBOX PODCASTS */}
         {(activeTab === 'all' || activeTab === 'futurebox') && (
           <section className="space-y-6">
-            {activeTab === 'futurebox' && <Counters board={board} scope="futurebox" />}
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
@@ -1560,6 +1590,8 @@ export default function FutureBoxHome() {
                 {activePodcasts.length} Curated Episodes Available
               </span>
             </div>
+
+            {picksBar}
 
             <div className="grid md:grid-cols-3 gap-6">
               {activePodcasts.map((pod) => (
@@ -1641,9 +1673,8 @@ export default function FutureBoxHome() {
         {/* 🎓 3. MASTERCLASSES (PRO Gated) */}
         {(activeTab === 'all' || activeTab === 'masterclasses') && (
           <section className="space-y-6">
-            {activeTab === 'masterclasses' && (
-              <Counters board={board} scope="masterclasses" labels={TRACK_LABELS} />
-            )}
+            {picksBar}
+
             <Masterclasses userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} board={board} />
 
             <div className="flex items-center justify-between pt-2">
@@ -1787,7 +1818,6 @@ export default function FutureBoxHome() {
         {/* 🎨 4. CREATIVE AI MUSIC & VIDEOS ("HOOKS" SHOWCASE) */}
         {(activeTab === 'all' || activeTab === 'creations') && (
           <section className="space-y-6">
-            {activeTab === 'creations' && <Counters board={board} scope="creations" />}
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
@@ -1800,6 +1830,8 @@ export default function FutureBoxHome() {
                 Creator Channels
               </span>
             </div>
+
+            {picksBar}
 
             <div className="grid md:grid-cols-3 gap-6">
               {[
@@ -1911,7 +1943,6 @@ export default function FutureBoxHome() {
         {/* ⚡ 5. INTELLIGENCE RADAR */}
         {(activeTab === 'all' || activeTab === 'radar') && (
           <section className="space-y-6">
-            {activeTab === 'radar' && <Counters board={board} scope="radar" />}
             <QualityRadar userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
 
             <div className="pt-2">
@@ -1921,6 +1952,8 @@ export default function FutureBoxHome() {
               </h3>
               <p className="text-xs text-zinc-400">{t('feed.radarSub')}</p>
             </div>
+
+            {picksBar}
 
             <div className="grid md:grid-cols-3 gap-6">
               {[
