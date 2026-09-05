@@ -46,6 +46,7 @@ import {
 } from '../lib/transcript';
 import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
+import Hint from './Hint';
 import Cost from './Cost';
 import ProBooth from './ProBooth';
 import { alignTo, fitInto, partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
@@ -948,7 +949,7 @@ export default function VocalBooth({
           <p className="text-base font-bold text-white truncate">{t('booth.title', 'The booth')}</p>
           <p className="text-sm text-zinc-500 truncate">{track.title}</p>
         </div>
-        <button type="button" onClick={onClose} className="text-zinc-500 hover:text-white flex-shrink-0">
+        <button type="button" onClick={onClose} className="p-2 -m-2 sm:p-0 sm:m-0 text-zinc-500 hover:text-white flex-shrink-0">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -997,6 +998,30 @@ export default function VocalBooth({
             {current >= 0 && next && (
               <p className="text-lg text-zinc-500 max-w-3xl truncate">{next.text}</p>
             )}
+            {/* The AI singer is on this backing, and nothing said so.
+
+                Singing along with it is the whole point of a guide vocal —
+                it is how you learn where the lines fall — and it has worked
+                from the first day, because an unsplit song plays exactly as
+                it was generated. But the only control for it, the "AI voice
+                in your ear" fader, appears after the song is split. So the
+                one state where the AI voice is definitely playing was the
+                one state that never mentioned it, and people concluded the
+                feature was gone.
+
+                It says so now, once, under the words. */}
+            {!stems && phase !== 'counting' && (
+              <p className="text-sm text-emerald-400/80 flex items-center gap-1 max-w-md leading-snug">
+                {t('booth.withAi', 'The AI singer is on this backing — sing along with it.')}
+                <Hint>
+                  {t(
+                    'booth.withAiWhy',
+                    'An unsplit song plays as it was made, voice and all, which is what makes it a guide. On headphones your take comes back with only your voice on it. Out loud, the microphone hears the AI singer too — split the song below to take that voice out of the backing.',
+                  )}
+                </Hint>
+              </p>
+            )}
+
             {/* The run-up. A bar that empties is easier to sing to than a number. */}
             {untilNext < 4 && (
               <div className="w-64 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
@@ -1042,7 +1067,7 @@ export default function VocalBooth({
         />
         {/* The note being sung, beside the stave it is being sung on, with what
             the stave can honestly show next to it. */}
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
           {note ? (
             <>
               <span className="text-2xl font-black text-white tabular-nums flex-shrink-0">
@@ -1070,7 +1095,17 @@ export default function VocalBooth({
               {busyOrLive ? t('booth.listening', 'Listening…') : t('booth.noteHint', 'Your note shows here as you sing.')}
             </span>
           )}
-          <p className="text-sm text-zinc-600 leading-snug flex-1 min-w-0">
+          <span className="sm:hidden">
+            <Hint>
+              {`${t('booth.holdStave', 'Hold the words on the stave to stop them, or drag them to where you actually sing them. It works while you record and it does not touch the take.')} `}
+              {guide.length
+                ? t('booth.barGuide', 'The notes are read off the singing. Your voice draws on the stave as you sing.')
+                : guideRead
+                  ? t('booth.barNoGuide', 'No notes yet: the tune cannot be read out of a finished mix without getting it wrong. Separate the voice below and the notes appear.')
+                  : t('booth.barReading', 'Reading the backing…')}
+            </Hint>
+          </span>
+          <p className="hidden sm:block text-sm text-zinc-600 leading-snug flex-1 min-w-0">
             {phrases.length
               ? `${t('booth.wordsMeasured', 'The words are lined up with where the voice actually sings.')} `
               : span && introAt === null
@@ -1086,8 +1121,16 @@ export default function VocalBooth({
         </div>
       </div>
 
-      {/* ── The waveform ──────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 px-5 pb-4 space-y-2">
+      {/* ── The waveform ──────────────────────────────────────────────────
+
+          Hidden on a phone. It is a desk instrument: you read it to find the
+          bar that went wrong and to point at where the singing comes in, and
+          both of those want a mouse and a wide screen. On a 390-pixel screen
+          it took a tenth of the height from the one thing somebody standing
+          at a microphone is actually looking at, which is the words. Nothing
+          is lost — every take is still there, and the same song opened on a
+          laptop shows it. */}
+      <div className="hidden sm:block flex-shrink-0 px-5 pb-4 space-y-2">
         <canvas
           ref={canvasRef}
           className={`w-full rounded-xl bg-zinc-900/60 ${pointing ? 'cursor-copy ring-2 ring-amber-400' : 'cursor-crosshair'}`}

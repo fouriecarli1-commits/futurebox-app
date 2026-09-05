@@ -974,6 +974,8 @@ export const STRINGS: Dict = {
   "home.looking": { en: "Looking\u2026", af: "Soek tans\u2026" },
   "home.otherPicks": { en: "Show me different ones", af: "Wys my ander" },
   "pro.amp": { en: "Amp", af: "Versterker" },
+  "booth.withAi": { en: "The AI singer is on this backing \u2014 sing along with it.", af: "Die AI-sanger is op hierdie begeleiding \u2014 sing saam met hom." },
+  "booth.withAiWhy": { en: "An unsplit song plays as it was made, voice and all, which is what makes it a guide. On headphones your take comes back with only your voice on it. Out loud, the microphone hears the AI singer too \u2014 split the song below to take that voice out of the backing.", af: "\u2019n Ongesplitste liedjie speel soos dit gemaak is, stem en al, en dit is juis wat dit \u2019n gids maak. Met oorfone kom jou opname terug met net jou stem op. Hardop hoor die mikrofoon die AI-sanger ook \u2014 split die liedjie hieronder om daardie stem uit die begeleiding te haal." },
   "pro.ampBring": { en: "Bring in an amp", af: "Bring \u2019n versterker in" },
   "pro.amping": { en: "Running it through\u2026", af: "Stuur dit deur\u2026" },
   "pro.ampOff": { en: "Take it off", af: "Haal dit af" },

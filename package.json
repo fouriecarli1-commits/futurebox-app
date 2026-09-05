@@ -32,7 +32,8 @@
     "handbook": "tsx scripts/build-handbook.mts",
     "check:nam": "tsx scripts/check-nam.mts",
     "nam:copy": "node scripts/nam-copy.mjs",
-    "prebuild": "node scripts/nam-copy.mjs"
+    "prebuild": "node scripts/nam-copy.mjs",
+    "check:singview": "node audit/singview.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
