@@ -1,0 +1,79 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>FutureBox — e-poshandtekening</title>
+<!--
+  The signature, and why it is built the way it is.
+
+  Three rules decide every choice below, and all three come from what email
+  clients actually do rather than from what looks best in a browser.
+
+  1. TABLES, NOT FLEXBOX. Outlook on Windows renders through Word, which has
+     no flexbox, no grid and no modern CSS. A table with fixed cells is the
+     only layout that lands the same way in Gmail, Apple Mail, Outlook and a
+     phone.
+
+  2. INLINE STYLES ONLY. Gmail strips <style> blocks in some views. Every
+     rule below sits on the element it applies to.
+
+  3. THE NAME IS TEXT, NOT A PICTURE. Most clients block remote images until
+     the reader allows them. A signature that is one image is a signature that
+     is usually blank — so only the mark is an image, and everything a person
+     needs to read stays live text.
+
+  Colours are the app's own: emerald #10b981 on near-black #18181b. Nothing is
+  pure #000, which some dark-mode clients invert into something unreadable.
+-->
+<body style="margin:0;padding:32px;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+
+<p style="max-width:640px;color:#52525b;font-size:14px;line-height:1.6">
+  Hieronder is die handtekening soos dit gaan lyk. Maak hierdie lêer in 'n
+  blaaier oop, merk die blok, en kopieer dit — of neem die HTML tussen die
+  twee merkers in die bronkode.
+</p>
+
+<div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:12px;padding:24px;max-width:640px">
+
+<!-- ── KOPIEER VANAF HIER ────────────────────────────────────────────── -->
+<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+  <tr>
+    <td style="padding:0 14px 0 0;vertical-align:top">
+      <img src="https://futurebox.studio/brand/futurebox-mark.png"
+           alt="FutureBox"
+           width="44" height="44"
+           style="display:block;width:44px;height:44px;border:0;border-radius:12px">
+    </td>
+    <td style="padding:0;vertical-align:top;border-left:2px solid #10b981">
+      <div style="padding-left:14px">
+
+        <div style="font-size:17px;font-weight:800;letter-spacing:-0.3px;color:#18181b;line-height:1.2">
+          FUTURE<span style="color:#10b981">BOX</span>
+        </div>
+
+        <div style="font-size:14px;font-weight:600;color:#3f3f46;line-height:1.5;padding-top:3px">
+          Anré Fourie
+        </div>
+
+        <div style="font-size:13px;color:#71717a;line-height:1.5">
+          Die hele ateljee in een boks
+        </div>
+
+        <div style="font-size:13px;line-height:1.7;padding-top:7px">
+          <a href="https://futurebox.studio" style="color:#10b981;text-decoration:none;font-weight:600">futurebox.studio</a>
+          <span style="color:#d4d4d8">&nbsp;·&nbsp;</span>
+          <a href="mailto:hallo@futurebox.studio" style="color:#52525b;text-decoration:none">hallo@futurebox.studio</a>
+        </div>
+
+      </div>
+    </td>
+  </tr>
+</table>
+<!-- ── TOT HIER ──────────────────────────────────────────────────────── -->
+
+</div>
+
+<p style="max-width:640px;color:#52525b;font-size:14px;line-height:1.6;padding-top:24px">
+  <strong>Wat om te verander:</strong> die naam <code>Anré Fourie</code>, en die
+  reël daaronder as jy iets anders wil sê. Los die adresse soos hulle is.
+</p>
+
+</body>
