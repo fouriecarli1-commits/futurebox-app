@@ -212,7 +212,10 @@ Two things from there we should take:
 - **The step counter.** "Step 2 of 3" with one action beats a settings page.
   We have a list of things Carli still has to switch on; this is its shape.
 - **Changing your name is on this screen**, not buried. It is the recording
-  name that goes out with every post, which has been asked for twice.
+  name that goes out with every post — on a song, on a video, in the slider
+  and on the Collab Radar. Asked for three times, and it does not exist:
+  today the name is a fragment of the sign-up email and nothing can change it.
+  See `docs/OPEN-QUESTIONS.md` §F2.
 
 ## 6. The share sheet
 

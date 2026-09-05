@@ -35,7 +35,15 @@ export function SiteFooter() {
 
   return (
     <footer className="mt-24 border-t border-zinc-800/80">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 py-10 text-sm text-zinc-400 sm:flex-row sm:justify-between">
+      {/* The bottom padding is the tab bar's, not this footer's taste.
+
+          This is the last element on the document on every route, so it is the
+          only place that can keep the app's fixed bottom bar from covering
+          something. Padding the page component instead leaves a gap in the
+          middle of the page and strands these links all the same — the page
+          is not what ends the document. Twenty is more than the bar's
+          sixty-four pixels, with room for a phone's home indicator. */}
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 py-10 pb-20 text-sm text-zinc-400 sm:flex-row sm:justify-between">
         <div className="flex flex-col items-center gap-2 sm:items-start">
           <p>© {year} FutureBox. All rights reserved.</p>
           <nav className="flex gap-5">

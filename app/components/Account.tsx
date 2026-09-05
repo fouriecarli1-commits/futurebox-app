@@ -99,7 +99,9 @@ export default function Account({
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      /* The bottom padding clears the tab bar, which sits over this panel so
+         somebody can leave it by pressing a tab rather than hunting for an X. */
+      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 pb-24 sm:p-6 sm:pb-24 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={t('account.title', 'Your account')}

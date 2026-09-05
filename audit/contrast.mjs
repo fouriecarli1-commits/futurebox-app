@@ -6,7 +6,7 @@
  * solved against — a zinc-500 note on a zinc-900 card in a light theme, say.
  * This reads the computed colours off the rendered page instead.
  */
-import { enter, studio } from './enter.mjs';
+import { enter, studio, toRoom } from './enter.mjs';
 
 const ROOMS = ['Make a song', 'Video desk', 'Adverts', 'Your voice', 'Collab Radar', 'Podcast'];
 const { browser, page } = await enter();
@@ -14,12 +14,22 @@ const room = await studio(page);
 let worst = { ratio: 99, what: '' };
 let failures = 0;
 let checked = 0;
+const unreachable = [];
 
 for (const name of ROOMS) {
+  /* Through the studio's front door, which is what the studio opens on.
+
+     This used to click the rail directly and swallow the failure with
+     `catch { continue; }` — so once the door started covering the rail, every
+     room was skipped and the run reported "0 text nodes checked, 0 below AA"
+     as a pass. A probe that silently stops visiting anything is worse than one
+     that fails, so an unreachable room is now recorded and fails the run. */
   try {
-    await room.locator('button').filter({ hasText: new RegExp(`^${name}`, 'i') }).first().click({ timeout: 8000 });
-    await page.waitForTimeout(1000);
-  } catch { continue; }
+    await toRoom(page, name);
+  } catch (why) {
+    unreachable.push(`${name}: ${String(why).slice(0, 80)}`);
+    continue;
+  }
 
   const result = await page.evaluate(() => {
     const lum = (c) => {
@@ -77,3 +87,10 @@ for (const name of ROOMS) {
 }
 console.log(`\n${checked} text nodes checked, ${failures} below AA. Lowest: ${worst.ratio}:1 — ${worst.what}`);
 await browser.close();
+
+/* Nothing checked is not a clean run. */
+if (unreachable.length) {
+  console.error(`\ncould not reach ${unreachable.length} room(s):\n  ${unreachable.join('\n  ')}`);
+}
+if (!checked) console.error('\nno text was read at all — this run proves nothing.');
+if (failures || unreachable.length || !checked) process.exit(1);

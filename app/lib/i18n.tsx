@@ -786,6 +786,12 @@ export const STRINGS: Dict = {
   "mc.aiMade": { en: "AI-made", af: "AI-gemaak" },
   "mc.comingSoon": { en: "coming soon", af: "kom binnekort" },
   "rail.video": { en: "Music video", af: "Musiekvideo" },
+  "tab.nav": { en: "The five parts of the app", af: "Die vyf dele van die app" },
+  "tab.listen": { en: "Listen", af: "Luister" },
+  "tab.find": { en: "Find", af: "Soek" },
+  "tab.make": { en: "Make", af: "Maak" },
+  "tab.library": { en: "Library", af: "Biblioteek" },
+  "tab.you": { en: "You", af: "Jy" },
   "rail.canvas": { en: "Video desk", af: "Videolessenaar" },
   "rail.canvas.hint": { en: "Adverts, podcasts, social", af: "Advertensies, potgooie, sosiaal" },
 

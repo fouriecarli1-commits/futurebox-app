@@ -49,6 +49,7 @@ import PasswordField from './components/PasswordField';
 import Campaign from './components/Campaign';
 import Greeting from './components/Greeting';
 import Account from './components/Account';
+import TabBar, { BAR_HEIGHT, type TabId } from './components/TabBar';
 import SignInWith from './components/SignInWith';
 import { noteTaste, loadTaste } from './lib/taste';
 import { habitOf } from './lib/habits';
@@ -1210,6 +1211,68 @@ export default function FutureBoxHome() {
     };
   }, [anyModalOpen]);
 
+  /* ── The five tabs ──────────────────────────────────────────────────────
+
+     Which one is lit is *derived* rather than stored. The app already knows
+     whether the studio is open, whether the account panel is, and which room
+     is showing; a second record of the same fact is how a bar ends up lighting
+     "Make" while somebody is reading their channel.
+
+     Library is the channel room rather than a screen of its own, because the
+     channel already is the library — your songs, your playlists, your videos.
+     It gets its own tab because that is where a phone user looks for it, not
+     because it is a new place. */
+  const bottomTab: TabId = accountOpen
+    ? 'you'
+    : searchOpen
+      ? 'find'
+      : uploadModalOpen
+        ? studioTab === 'channels'
+          ? 'library'
+          : 'make'
+        : atDoor
+          ? 'make'
+          : 'listen';
+
+  /**
+   * Going to a tab, and going to a tab you are already on.
+   *
+   * The second is the one that matters: pressing the tab under your thumb when
+   * you are already there means "take me back to the start of this", which on
+   * **Make** is the door with every room on it. That is the way back somebody
+   * standing in a room actually reaches for, and it means the way out of a
+   * room is in the same place as the way in.
+   */
+  const goTab = useCallback(
+    (tab: TabId, again: boolean) => {
+      setSearchOpen(false);
+      setAccountOpen(false);
+      if (tab === 'listen') {
+        setUploadModalOpen(false);
+        setAtDoor(false);
+        return;
+      }
+      if (tab === 'find') {
+        setSearchOpen(true);
+        return;
+      }
+      if (tab === 'make') {
+        setUploadModalOpen(true);
+        // Already in the studio: the press is a request for the front door.
+        setAtDoor(again || !uploadModalOpen ? true : atDoor);
+        return;
+      }
+      if (tab === 'library') {
+        setUploadModalOpen(true);
+        setAtDoor(false);
+        goToRoom('channels');
+        return;
+      }
+      setAccountOpen(true);
+    },
+    [atDoor, uploadModalOpen, goToRoom],
+  );
+
   if (!user) {
     return (
       <>
@@ -1398,6 +1461,11 @@ export default function FutureBoxHome() {
   );
 
   return (
+    /* No bottom padding here for the tab bar, though it looks like the place
+       for it. This page is not the last thing on the document — the site
+       footer in `layout.tsx` is, and it renders after this — so padding here
+       leaves a gap in the middle and still strands the footer's links under
+       the bar. The reserve is on `SiteFooter`, which is always last. */
     <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-emerald-500 selection:text-onAccent flex flex-col justify-between">
       
       {/* 1. Header with Auth & Creator Channel Info */}
@@ -2491,7 +2559,10 @@ export default function FutureBoxHome() {
               short phone, with the picture and six room buttons, this page is
               taller than the screen — so the greeting itself would have been
               the part nobody could reach. */}
-          <div className="min-h-full p-4 sm:p-8 pt-8 sm:pt-16 pb-16 flex justify-center">
+          <div
+            className="min-h-full p-4 sm:p-8 pt-8 sm:pt-16 flex justify-center"
+            style={{ paddingBottom: BAR_HEIGHT + 24 }}
+          >
             <Greeting
               name={user?.name}
               onGo={(id) => {
@@ -2550,7 +2621,10 @@ export default function FutureBoxHome() {
               copilot — a sliver of the actual work under a panel three times
               its height. The thing being made should have the room, and the
               copilot should be under it rather than beside it. */}
-          <div className="w-full h-full p-3 md:p-5 flex flex-col gap-4 overflow-y-auto md:overflow-hidden">
+          <div
+            className="w-full h-full p-3 md:p-5 flex flex-col gap-4 overflow-y-auto md:overflow-hidden"
+            style={{ paddingBottom: BAR_HEIGHT + 12 }}
+          >
             
             {/* Top Back Bar */}
             <div className="flex-shrink-0 flex items-center justify-between border-b border-zinc-800 pb-4">
@@ -3233,6 +3307,18 @@ export default function FutureBoxHome() {
               every page's own footer. */}
         </div>
       </footer>
+
+      {/* ── The five tabs ──────────────────────────────────────────────
+
+          Above the studio and the front door, because it is furniture rather
+          than content: it must be pressable from inside a room, which is the
+          whole reason it exists. Under a modal, though — a bar floating over
+          a half-finished sign-up that lets somebody navigate away mid-form is
+          worse than no bar. `anyModalOpen` already knows, minus the studio,
+          which is not a modal however it is drawn. */}
+      {!(authModalOpen || pricingModalOpen || themeOpen || selectedMedia !== null || selectedBlueprint !== null) && (
+        <TabBar active={bottomTab} onGo={goTab} />
+      )}
 
     </div>
   );

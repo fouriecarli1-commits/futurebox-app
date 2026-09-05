@@ -193,6 +193,42 @@ Not questions — the list of things waiting on an account, a key or a click.
 
 ---
 
+## F2. The artist name — asked for three times, and currently impossible
+
+**Asked:** three separate times, most recently 2026-09-05, with the point that
+the name must travel *with the post*: on a song, on a video, in the feed, and
+on the Collab Radar.
+
+**What is verified, by reading the code.** It is not hidden — it does not
+exist. `toAccount` in `app/lib/cloud.ts` builds the display name like this:
+
+```ts
+const name = email.split('@')[0] || 'creator';
+handle: `@${name}`,
+```
+
+So somebody signing up as `anrefourie@gmail.com` is called `anrefourie`
+everywhere, permanently, and there is no screen anywhere that can change it.
+Every post, every credit line and every radar card carries a fragment of an
+email address as an artist name.
+
+**The shape of the fix.** The account already stores one chosen thing in
+Supabase `user_metadata` — `lang` — and reads it back in `toAccount`. An
+artist name goes in beside it, and then every place that prints an author
+reads that instead of the email fragment:
+
+- the live channel post, when a song goes out;
+- the feed and, once it exists, the vertical slider;
+- the Collab Radar card;
+- the credit line printed on a release.
+
+**Why it is its own job and not a line in the packaging work.** Changing where
+the name is *edited* is a screen. Changing what every post *carries* is a
+sweep, and a post already sent out under the old name should not silently
+change author afterwards — which is a decision to make rather than assume.
+
+---
+
 ## F. Asked for, agreed, not yet built
 
 - A cover-art button on a song.
@@ -200,7 +236,7 @@ Not questions — the list of things waiting on an account, a key or a click.
 - The packaging rebuild — see `docs/PACKAGING.md`.
 - The Listen feed as a vertical slider.
 - A song from a photo.
-- Changing your recording name where it is actually findable.
+- The artist name — see F2. It cannot be changed at all today.
 
 ---
 

@@ -150,7 +150,7 @@ export default function Search({
 
   return (
     <div
-      className="fixed inset-0 z-[90] bg-scrim/80 backdrop-blur-sm flex items-start justify-center p-4 pt-[12vh]"
+      className="fixed inset-0 z-[90] bg-scrim/80 backdrop-blur-sm flex items-start justify-center p-4 pt-[12vh] pb-24"
       onClick={onClose}
       role="presentation"
     >
