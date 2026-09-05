@@ -1041,7 +1041,21 @@ export default function VocalBooth({
           and crowding them off the top of the screen defeats them. What the
           bar can honestly show is written underneath it rather than left to
           be guessed from an empty bar. */}
-      <div className="flex-shrink-0 px-5 pb-2 space-y-1.5">
+      {/* ── The stave ─────────────────────────────────────────────────────
+
+          Off the phone, with the waveform.
+
+          Hiding the waveform was half a job. The stave stayed, and the words
+          are drawn *on* it — so a phone still showed the line being sung
+          across a music bar, which is exactly the thing that was meant to
+          go. What a singer holding a phone needs is the words, large, moving
+          with the song, and nothing else on the screen competing with them.
+
+          It is not a small loss: the stave answers "am I on the note", and
+          it is where the words are dragged back into time. Both are real and
+          both want a wide screen and a mouse. The same song opened on a
+          laptop still has them. */}
+      <div className="hidden sm:block flex-shrink-0 px-5 pb-2 space-y-1.5">
         <NoteBar
           onHold={() => {
             holdRef.current = { at, shift: wordsShift };
@@ -1130,7 +1144,20 @@ export default function VocalBooth({
           at a microphone is actually looking at, which is the words. Nothing
           is lost — every take is still there, and the same song opened on a
           laptop shows it. */}
-      <div className="hidden sm:block flex-shrink-0 px-5 pb-4 space-y-2">
+      <div className="flex-shrink-0 px-5 pb-4 space-y-2">
+        {/* ── The desk instruments ────────────────────────────────────
+            The waveform and the two rows that read off it: the clock, and the
+            part being re-sung. All three want a mouse and a wide screen, and
+            all three are hidden on a phone.
+
+            Wrapped tightly, and this is why. The first version of this put
+            `hidden sm:block` on the section itself — which reaches down past
+            the waveform to the words read off the recording, the microphone
+            level, the guide vocal and the voice controls. Four working
+            features vanished from every phone because they happened to sit
+            under a canvas in the same box. Nothing said so; the room simply
+            had less in it. */}
+        <div className="hidden sm:block space-y-2">
         <canvas
           ref={canvasRef}
           className={`w-full rounded-xl bg-zinc-900/60 ${pointing ? 'cursor-copy ring-2 ring-amber-400' : 'cursor-crosshair'}`}
@@ -1242,6 +1269,8 @@ export default function VocalBooth({
             className={`h-full rounded-full ${hot ? 'bg-red-500' : 'bg-emerald-500'}`}
             style={{ width: `${Math.round(level * 100)}%` }}
           />
+        </div>
+
         </div>
 
         {/* ── The words the record actually sings ─────────────────────────
@@ -1619,7 +1648,14 @@ export default function VocalBooth({
 
         <p className="text-sm text-zinc-600 leading-snug flex items-start gap-1.5">
           <Mic className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-          {t('booth.headphones', 'Headphones, or the microphone picks up the backing as well. The note shown is what you are singing — the words and the backing say what it should be.')}
+          {/* Half of this line is about the note stave, which a phone no
+              longer has. Saying "the note shown is what you are singing" on a
+              screen with no note on it is the sort of small lie that makes
+              somebody hunt for a control that is not there. */}
+          <span className="sm:hidden">{t('booth.headphonesShort', 'Headphones, or the microphone picks up the backing as well.')}</span>
+          <span className="hidden sm:inline">
+            {t('booth.headphones', 'Headphones, or the microphone picks up the backing as well. The note shown is what you are singing — the words and the backing say what it should be.')}
+          </span>
         </p>
       </div>
     </div>

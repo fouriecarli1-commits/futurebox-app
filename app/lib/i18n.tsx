@@ -1578,6 +1578,7 @@ export const STRINGS: Dict = {
   "booth.record": { en: "Record from the top", af: "Neem op van voor af" },
   "booth.listen": { en: "Listen back", af: "Luister terug" },
   "booth.headphones": { en: "Headphones, or the microphone picks up the backing as well. The note shown is what you are singing \u2014 the words and the backing say what it should be.", af: "Oorfone, anders vang die mikrofoon die begeleiding ook op. Die noot wat wys is wat jy sing \u2014 die woorde en die begeleiding s\u00ea wat dit moet wees." },
+  "booth.headphonesShort": { en: "Headphones, or the microphone picks up the backing as well.", af: "Oorfone, anders vang die mikrofoon die begeleiding ook op." },
   "take.title": { en: "Sing it yourself", af: "Sing dit self" },
   "take.note": { en: "The backing plays, you sing over it, and the two are mixed. Headphones, or the microphone will pick the music up as well.", af: "Die begeleiding speel, jy sing daaroor, en die twee word gemeng. Gebruik oorfone, anders vang die mikrofoon die musiek ook op." },
   "take.start": { en: "Record a take", af: "Neem \u2019n opname" },

@@ -60,6 +60,10 @@ try {
          stave too, because both are. The waveform is the one you can point at
          — it is the only element in the room carrying a crosshair cursor. */
       const canvas = document.querySelector('canvas.cursor-crosshair, canvas.cursor-copy');
+      /* The note stave. The words are drawn on it, so leaving it on a phone
+         leaves the words on a music bar — which is the whole thing that was
+         meant to go. It is every canvas that is not the waveform. */
+      const stave = Array.from(document.querySelectorAll('canvas')).find((el) => el !== canvas) ?? null;
       const shown = (el) => !!el && el.getBoundingClientRect().height > 2;
       const body = document.body.innerText;
       const big = Array.from(document.querySelectorAll('p'))
@@ -73,8 +77,14 @@ try {
       }
       return {
         waveform: shown(canvas),
+        stave: shown(stave),
         wide: document.documentElement.scrollWidth,
         guideLine: /sing along with it|sing saam met hom/i.test(body),
+      /* The four things that went missing when the waveform's whole section
+         was hidden rather than the waveform. Named by their own words, so a
+         layout change that swallows them again fails here. */
+      readsTheWords: /reads the words off the recording|lees die woorde/i.test(body),
+      micLevel: !!document.querySelector('div.h-1\\.5.rounded-full'),
         biggest: big,
         small,
       };
@@ -86,7 +96,13 @@ try {
       name === 'phone' ? 'the waveform is out of the way' : 'the waveform is there on a desk',
       name === 'phone' ? !read.waveform : read.waveform,
     );
+    check(
+      name === 'phone' ? 'and so is the music bar the words sat on' : 'and the stave is there on a desk',
+      name === 'phone' ? !read.stave : read.stave,
+    );
     check('the AI singer is named on an unsplit song', read.guideLine);
+    check('reading the words off the recording is still offered', read.readsTheWords);
+    check('and the microphone level is still there', read.micLevel);
     check(
       'a line of the song is the biggest thing on screen',
       !!read.biggest && read.biggest.size >= 20,
