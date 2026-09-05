@@ -151,13 +151,20 @@ try {
   check('the parts are named, so the words land in the right place',
     sung.every((one) => one.name === 'Verse' || one.name === 'Chorus'),
     sections.map((one) => one.name).join(' · '));
-  /* A song, not one long stretched verse. The length is made up by singing
-     the words again with an intro in front, which is what a record is; the
-     old plan handed the model one part and the whole length and asked it to
-     fill the gap. */
-  check('and the song has a shape — an intro, and the words sung more than once',
-    sections[0]?.name === 'Intro' && sung.length > 2,
+  /* A song, not one long stretched verse and not a row of fragments.
+ 
+     The old plan handed the model one part and the whole length and asked it
+     to fill the gap. The first fix went the other way and cut a minute into
+     six eight-second pieces, which sounds cut into pieces — each chunk is
+     conditioned on its own. So what is asserted is the property, not a part
+     count: it opens with something played rather than sung, and no sung part
+     is short enough to be a fragment. */
+  check('and the song has a shape — it opens on something played',
+    sections[0]?.name === 'Intro',
     sections.map((one) => `${one.name} ${one.seconds}s`).join(' · '));
+  check('with no sung part chopped into a fragment',
+    sung.every((one) => one.seconds >= 12),
+    sung.map((one) => `${one.name} ${one.seconds}s`).join(' · '));
   const runs = sections.reduce((sum, one) => sum + (one.seconds ?? 0), 0);
   check('and the plan adds up to the length that was chosen',
     Math.abs(runs - (sent?.seconds ?? 0)) <= 3, `${runs}s against ${sent?.seconds}s`);
@@ -171,6 +178,15 @@ try {
      language should not have to find a control first. */
   check('the engine is told to sing it in Afrikaans',
     (sent?.style ?? '').includes('sung in Afrikaans'), sent?.style ?? '');
+  /* And the person's own style is not outvoted by ours.
+ 
+     Everything in this list competes: the model weights early entries most, so
+     a genre written in two words against nine of our own is a genre that does
+     not arrive. The default request — a voice nobody chose and a language read
+     off the words — is the worst case, and it is the one measured here. */
+  const ours = (sent?.style ?? '').split(',').filter(Boolean).length;
+  check('and our own words do not outnumber the room',
+    ours <= 6, `${ours} style words with nothing typed in the box`);
 } finally {
   if (browser) await browser.close();
   if (server) { try { process.kill(-server.pid); } catch { /* already gone */ } }

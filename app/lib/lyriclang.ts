@@ -89,7 +89,10 @@ export type SingIn = 'af' | 'en' | 'auto';
  * that says nothing is exactly what that is.
  */
 export function singDirection(choice: SingIn): string[] {
-  if (choice === 'af') return ['sung in Afrikaans', 'Afrikaans lyrics', 'South African vocal'];
+  /* Two words, not three. "South African vocal" was in here and is an accent
+     claim rather than a language one — it asks for a thing nobody asked for,
+     in a list where every entry competes with the genre. */
+  if (choice === 'af') return ['sung in Afrikaans', 'Afrikaans lyrics'];
   if (choice === 'en') return ['sung in English', 'English lyrics'];
   return [];
 }

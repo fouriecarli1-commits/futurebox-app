@@ -140,6 +140,21 @@ export interface VoiceChoice {
  * and female; only the labels were coy about it. Somebody who wants a woman's
  * voice on their song should be able to see that they can have one.
  */
+/*
+ * Three words each, not six.
+ *
+ * Every one of these was five or six — "warm female vocal, close-mic, breathy,
+ * natural vibrato, unprocessed, one honest take" — and they go into the same
+ * style list as whatever the person wrote. Somebody who typed "Afrikaanse
+ * boeremusiek, konsertina" sent two words of their own and six about a voice
+ * they did not think about, and the model weights early entries most. The
+ * genre was being outvoted by the microphone.
+ *
+ * What is left says who is singing. "Unprocessed", "minimal tuning" and "one
+ * honest take" described the mix rather than the person and were the first to
+ * go — that is what the padding did too, and it was removed for the same
+ * reason.
+ */
 export const VOICES: readonly VoiceChoice[] = [
   {
     id: 'none',
@@ -151,31 +166,31 @@ export const VOICES: readonly VoiceChoice[] = [
     id: 'female-warm',
     name: 'Woman, warm',
     sounds: 'A woman singing close to the mic, breath audible, not belting.',
-    words: 'warm female vocal, close-mic, breathy, natural vibrato, unprocessed, one honest take',
+    words: 'warm female vocal, close-mic, breathy',
   },
   {
     id: 'female-power',
     name: 'Woman, powerful',
     sounds: 'Full chest voice, room around it, carries a big chorus.',
-    words: 'powerful female vocal, full chest voice, live room ambience, soaring chorus, real dynamics',
+    words: 'powerful female vocal, full chest voice, soaring chorus',
   },
   {
     id: 'male-low',
     name: 'Man, low and rough',
     sounds: 'Gravel in it, pushed rather than smooth, sits under the music.',
-    words: 'low male vocal, slight rasp, pushed delivery, warm chest tone, lived-in, minimal tuning',
+    words: 'low male vocal, slight rasp, pushed delivery',
   },
   {
     id: 'male-soft',
     name: 'Man, gentle',
     sounds: 'Almost spoken, very close, more confession than performance.',
-    words: 'soft male vocal, near-whisper, very close mic, intimate, barely accompanied, human breath',
+    words: 'soft male vocal, near-whisper, intimate',
   },
   {
     id: 'choir',
     name: 'A group',
     sounds: 'Several voices together, harmony rather than a lead.',
-    words: 'layered group vocal, natural harmony, choir stacking, slight timing spread, live feel',
+    words: 'layered group vocal, natural harmony, choir stacking',
   },
 ];
 

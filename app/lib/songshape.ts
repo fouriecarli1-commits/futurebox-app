@@ -55,6 +55,14 @@ const PER_LINE = 4;
 /** What a sung part may be, whatever the arithmetic says. */
 const SUNG_MIN = 8;
 const SUNG_MAX = 45;
+/**
+ * And what it should be, given the choice.
+ *
+ * Twelve seconds is about three sung lines. Below that a song is a sequence of
+ * fragments rather than a performance — each chunk is conditioned on its own,
+ * so short ones cost coherence at the joins.
+ */
+const GOOD_MIN = 12;
 /** And what the API itself accepts, which is the outer bound on all of it. */
 const PART_MIN = 4;
 const PART_MAX = 120;
@@ -122,11 +130,44 @@ export function shapeSong(
      musician would call it a song. Wordless parts are the seasoning — capped
      below at under a third of the running time — and the repeats are the
      song. */
-  const passes: number[] = [];
-  let filled = 0;
   const reserve = Math.min(Math.round(wanted * 0.3), INTRO_MAX + OUTRO_MAX + BREAK_MAX);
   const forWords = Math.max(need, wanted - reserve);
-  for (let pass = 0; pass < MOST_PASSES && filled < forWords * 0.92; pass += 1) {
+
+  /* How many times through, chosen by what it does to the parts.
+ 
+     Filling the length with as many passes as fit is the obvious rule and it
+     is wrong: a minute of a two-line verse and a one-line chorus came out as
+     six parts of eight seconds, and a song cut into eight-second pieces sounds
+     cut into pieces. Each chunk is conditioned separately, so short ones cost
+     coherence.
+ 
+     So every count from one pass to four is tried and the one whose parts land
+     in a singable band is taken — twelve seconds is about three lines, and
+     forty-five is the longest anything here should hold a single section. The
+     count nearest to natural length wins where none of them fits. */
+  const bandFits = (times: number): boolean => {
+    const each = forWords / (times * need);
+    return natural.every((one) => one * each >= GOOD_MIN && one * each <= SUNG_MAX);
+  };
+  let times = 1;
+  let closest = Infinity;
+  for (let tries = 1; tries <= MOST_PASSES; tries += 1) {
+    if (bandFits(tries)) {
+      times = tries;
+      closest = 0;
+      continue;
+    }
+    if (closest === 0) continue;
+    const off = Math.abs(1 - forWords / (tries * need));
+    if (off < closest) {
+      closest = off;
+      times = tries;
+    }
+  }
+
+  const passes: number[] = [];
+  let filled = 0;
+  for (let pass = 0; pass < times; pass += 1) {
     for (let i = 0; i < sung.length; i += 1) {
       passes.push(i);
       filled += natural[i];

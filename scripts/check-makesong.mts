@@ -123,6 +123,12 @@ check('four lines and three minutes is not one part of two minutes',
    would have called it a song. */
 check('the length is made up by singing the words again',
   sungParts.length >= 3, `${sungParts.length} sung parts`);
+/* And not by cutting it into fragments. Six parts of eight seconds fills a
+   minute and sounds like six things — each chunk is conditioned on its own,
+   so the joins are where a take falls apart. */
+check('with no sung part short enough to be a fragment',
+  sungParts.every((one) => one.seconds >= 12),
+  sungParts.map((one) => `${one.seconds}s`).join(', '));
 check('and the wordless parts stay under a third of it',
   long.filter((one) => one.lines.length === 0).reduce((sum, one) => sum + one.seconds, 0) <= 60,
   long.filter((one) => one.lines.length === 0).map((one) => `${one.name} ${one.seconds}s`).join(' · '));
