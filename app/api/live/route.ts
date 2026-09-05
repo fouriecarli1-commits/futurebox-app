@@ -46,6 +46,11 @@ const SAYS = 60;
 
 const NOT_SET_UP = {
   ready: false,
+  /* A code beside the sentence, so the room can say this in the reader's own
+     language — see `lib/apierror.ts`. Without one the component prints the
+     server's English straight out, which is how an otherwise Afrikaans room
+     answers in English at the only moment somebody is reading it closely. */
+  error: 'live_not_set_up',
   message: 'The live channel is not set up on this app yet. The owner needs to run supabase/live.sql.',
   posts: [],
   says: [],
@@ -72,7 +77,7 @@ const trackPath = (owner: string, trackId: string) => `${owner}/${trackId}.wav`;
 export async function GET(request: Request): Promise<Response> {
   const client = admin();
   if (!client) {
-    return Response.json({ ...NOT_SET_UP, message: 'This app has no accounts, so there is no room.' }, { status: 503 });
+    return Response.json({ ...NOT_SET_UP, error: 'no_accounts', message: 'This app has no accounts, so there is no room.' }, { status: 503 });
   }
 
   const caller = await callerFrom(request);
@@ -203,7 +208,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const client = admin();
-  if (!client) return Response.json({ message: 'This app has no accounts, so there is no room.' }, { status: 503 });
+  if (!client) return Response.json({ error: 'no_accounts', message: 'This app has no accounts, so there is no room.' }, { status: 503 });
 
   const caller = await callerFrom(request);
 

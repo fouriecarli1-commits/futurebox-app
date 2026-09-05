@@ -38,19 +38,20 @@ export default function Placement({
   who: string;
 }): React.ReactElement {
   const { t } = useLang();
-  const name = who.trim() || 'Your company';
+  const name = who.trim() || t('place.yourCompany', 'Your company');
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-black/40 p-3.5 space-y-2.5">
       <p className="text-[10px] uppercase tracking-widest text-zinc-500">
-        What {rung.name.toLowerCase()} looks like — a mock-up, not a live page
+        {t('place.mock', 'What {what} looks like — a mock-up, not a live page')
+          .replace('{what}', t(`spon.${rung.id}.name`, rung.name).toLowerCase())}
       </p>
 
       {rung.id === 'class' && (
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-3 space-y-1.5">
           <GraduationCap className="w-4 h-4 text-emerald-400" />
           <p className="text-xs font-bold text-white leading-snug">
-            Building a release-ready track with AI
+            {t('place.classTitle', 'Building a release-ready track with AI')}
           </p>
           <p className="text-[11px] text-zinc-500">45 min · Masterclass</p>
           <Credit who={name} />
@@ -84,7 +85,7 @@ export default function Placement({
         </div>
       )}
 
-      <p className="text-[11px] text-zinc-500 leading-snug">{rung.gets}</p>
+      <p className="text-[11px] text-zinc-500 leading-snug">{t(`spon.${rung.id}.gets`, rung.gets)}</p>
     </div>
   );
 }

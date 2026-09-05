@@ -191,9 +191,38 @@ const REACH_WEIGHT: Record<PodcastTarget['reach'], number> = {
   aspirational: 0.4,
 };
 
+/**
+ * The verdicts, in both languages.
+ *
+ * This file is a pure library with no React in it, so it cannot reach the
+ * dictionary's hook — and the three sentences below were English on an
+ * otherwise Afrikaans screen, which is how a whole room stops reading as
+ * Afrikaans. The language comes in as an argument instead: the caller has it,
+ * and a pure function that is handed what it needs stays testable.
+ */
+const VERDICT = {
+  aspirational: {
+    en: (followers: string) =>
+      `Strong topic fit, but ${followers} followers is not yet the pitch. Bank a few releases first.`,
+    af: (followers: string) =>
+      `Sterk pas op die onderwerp, maar ${followers} volgelinge is nog nie die vra werd nie. Kry eers ’n paar vrystellings agter die rug.`,
+  },
+  real: {
+    en: (many: number) =>
+      `${many} shared topics and a comparable audience — this is a real pitch, send it.`,
+    af: (many: number) =>
+      `${many} gedeelde onderwerpe en ’n gehoor van dieselfde grootte — dit is ’n regte vra, stuur dit.`,
+  },
+  thin: {
+    en: 'Thin overlap. Only worth it if you can offer something specific they cannot get elsewhere.',
+    af: 'Min oorvleueling. Net die moeite werd as jy iets spesifieks kan bied wat hulle nêrens anders kry nie.',
+  },
+} as const;
+
 export function matchPodcasts(
   profile: CreatorProfile,
   targets: readonly PodcastTarget[] = PODCAST_TARGETS,
+  lang: 'en' | 'af' = 'en',
 ): PodcastMatch[] {
   return targets
     .map((podcast) => {
@@ -203,10 +232,10 @@ export function matchPodcasts(
       const score = Math.min(1, topicScore * 2.2) * REACH_WEIGHT[podcast.reach];
       const verdict =
         podcast.reach === 'aspirational'
-          ? `Strong topic fit, but ${profile.followers.toLocaleString()} followers is not yet the pitch. Bank a few releases first.`
+          ? VERDICT.aspirational[lang](profile.followers.toLocaleString())
           : shared.length >= 2
-            ? `${shared.length} shared topics and a comparable audience — this is a real pitch, send it.`
-            : 'Thin overlap. Only worth it if you can offer something specific they cannot get elsewhere.';
+            ? VERDICT.real[lang](shared.length)
+            : VERDICT.thin[lang];
       return { podcast, score, shared, verdict };
     })
     .sort((a, b) => b.score - a.score);

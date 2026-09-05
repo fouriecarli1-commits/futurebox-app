@@ -26,11 +26,30 @@
  * is what makes them reachable from the policy pages themselves and from
  * anywhere somebody lands without signing in. An outside assessment found no
  * way to reach a policy from the front door; this is that way, and there is
- * one of it. Plain <a> and plain English: this is a server component, so it
- * cannot read the language context, and a link a reader cannot find because
- * the translation failed is worse than an English word they can.
+ * one of it.
+ *
+ * ── Why it is a client component ─────────────────────────────────────────
+ *
+ * It used to be a server component, and the note here said so: it could not
+ * read the language, and an English word a reader can find beat a translation
+ * that failed. The reasoning was sound and the outcome was not — this is the
+ * last element on every page, including the Afrikaans landing page, and it
+ * was six English words under an otherwise Afrikaans site. That is not a
+ * failed translation; it is a missing one, and a reader has no way to tell
+ * them apart.
+ *
+ * The worry it was guarding against is answered by `t()` itself: every call
+ * carries the English as its fallback, so a missing key shows the word that
+ * was there before rather than nothing. There is no server-only data here, so
+ * the only cost of the change is that the language arrives after mount, the
+ * same as everywhere else in the app.
  */
+'use client';
+
+import { useLang } from '../lib/i18n';
+
 export function SiteFooter() {
+  const { t } = useLang();
   const year = new Date().getFullYear();
 
   return (
@@ -45,23 +64,23 @@ export function SiteFooter() {
           sixty-four pixels, with room for a phone's home indicator. */}
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 py-10 pb-20 text-sm text-zinc-400 sm:flex-row sm:justify-between">
         <div className="flex flex-col items-center gap-2 sm:items-start">
-          <p>© {year} FutureBox. All rights reserved.</p>
+          <p>© {year} FutureBox. {t('foot.rights', 'All rights reserved.')}</p>
           <nav className="flex gap-5">
             <a href="/help" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline underline-offset-4 hover:text-zinc-200">
-              Help
+              {t('foot.help', 'Help')}
             </a>
             <a href="/privacy" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline underline-offset-4 hover:text-zinc-200">
-              Privacy
+              {t('foot.privacy', 'Privacy')}
             </a>
             <a href="/terms" className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline underline-offset-4 hover:text-zinc-200">
-              Terms
+              {t('foot.terms', 'Terms')}
             </a>
             {/* Who is selling this, which section 43 of ECTA requires to be
                 reachable before somebody buys. From the footer of every page,
                 because "before they transact" means they must be able to find
                 it without already being in a checkout. */}
             <a href="/legal" className="inline-flex min-h-[44px] items-center justify-center whitespace-nowrap underline underline-offset-4 hover:text-zinc-200">
-              Who we are
+              {t('foot.who', 'Who we are')}
             </a>
           </nav>
         </div>

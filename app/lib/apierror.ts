@@ -66,6 +66,10 @@ const SAID: Record<string, { en: string; af: string }> = {
     en: 'This app has no accounts set up yet.',
     af: 'Hierdie app het nog geen rekeninge opgestel nie.',
   },
+  live_not_set_up: {
+    en: 'The live room is not switched on for this app yet.',
+    af: 'Die lewendige kamer is nog nie vir hierdie app aangeskakel nie.',
+  },
   /* A paywall, not a fault. The distinction matters on the screen: "that
      broke" sends somebody to the help desk, "you have not bought this" sends
      them to the thing that sells it. */

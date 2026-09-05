@@ -218,13 +218,20 @@ export default function Landing({
                     </span>
                   )}
                 </p>
-                <p className="text-sm text-zinc-500 leading-snug pt-2">{spec.who}</p>
+                {/* The plan tables live in `lib/plans.ts`, which is read by
+                    the server too and so has no language. The English there is
+                    the fallback; the dictionary carries the Afrikaans. This is
+                    the sales page — the one screen where being in the wrong
+                    language costs money rather than goodwill. */}
+                <p className="text-sm text-zinc-500 leading-snug pt-2">
+                  {t(`plan.${spec.id}.who`, spec.who)}
+                </p>
 
                 <ul className="space-y-1.5 pt-4 flex-1">
-                  {spec.includes.map((line) => (
+                  {spec.includes.map((line, i) => (
                     <li key={line} className="flex items-start gap-2 text-sm text-zinc-300 leading-snug">
                       <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                      {line}
+                      {t(`plan.${spec.id}.inc.${i}`, line)}
                     </li>
                   ))}
                 </ul>

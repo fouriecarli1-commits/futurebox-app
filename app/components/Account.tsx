@@ -167,12 +167,14 @@ export default function Account({
               {plan !== 'free' && ` · ${price.display} ${t('account.aMonth', 'a month')}`}
             </p>
           </div>
-          <p className="text-sm text-zinc-500 leading-snug">{spec.who}</p>
+          {/* Same dictionary keys as the sales page, so the plan somebody
+              bought is described to them in the same words they bought it in. */}
+          <p className="text-sm text-zinc-500 leading-snug">{t(`plan.${spec.id}.who`, spec.who)}</p>
           <ul className="text-sm text-zinc-400 space-y-1">
-            {spec.includes.slice(0, 4).map((one) => (
+            {spec.includes.slice(0, 4).map((one, i) => (
               <li key={one} className="flex items-start gap-2">
                 <span className="text-emerald-400 mt-0.5">·</span>
-                <span>{one}</span>
+                <span>{t(`plan.${spec.id}.inc.${i}`, one)}</span>
               </li>
             ))}
           </ul>

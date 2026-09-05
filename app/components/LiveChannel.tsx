@@ -75,6 +75,9 @@ interface Said {
 interface Room {
   ready: boolean;
   signedIn?: boolean;
+  /* The code beside the sentence, which is what makes the sentence
+     translatable — see `lib/apierror.ts`. */
+  error?: string;
   message?: string;
   here: number;
   posts: Post[];
@@ -219,7 +222,13 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
           <Radio className="w-5 h-5 text-amber-400" />
           {t('live.notReady', 'The live channel is not switched on yet')}
         </p>
-        <p className="text-sm text-zinc-400 leading-snug">{room.message}</p>
+        {/* Through the same translator every other refusal goes through.
+            It was printing the server's own English, in a room that is
+            otherwise entirely Afrikaans, on the one screen somebody reads
+            carefully because nothing is working. */}
+        <p className="text-sm text-zinc-400 leading-snug">
+          {refusalText(room, lang, t('live.notReadyWhy', 'It has not been set up on this app yet.'))}
+        </p>
       </div>
     );
   }

@@ -297,7 +297,7 @@ export default function Campaign({
                 type="button"
                 onClick={() => setGoing(on ? going.filter((id) => id !== one.id) : [...going, one.id])}
                 aria-pressed={on}
-                title={one.bestFormat}
+                title={t(`social.format.${one.id}`, one.bestFormat)}
                 className={`text-left rounded-xl border px-3 py-2 transition-all ${
                   on ? 'bg-emerald-500/10 border-emerald-500' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
                 }`}
@@ -306,7 +306,7 @@ export default function Campaign({
                   {one.name}
                   {known && <span className="text-xs font-normal text-zinc-500"> · @{handles[one.id]}</span>}
                 </span>
-                <span className="block text-xs text-zinc-500">{one.bestFormat}</span>
+                <span className="block text-xs text-zinc-500">{t(`social.format.${one.id}`, one.bestFormat)}</span>
               </button>
             );
           })}
@@ -488,7 +488,8 @@ export default function Campaign({
               <ul className="space-y-1">
                 {chosen.map((one) => (
                   <li key={one.id} className="text-sm text-zinc-300 leading-relaxed">
-                    <span className="font-semibold text-zinc-200">{one.name}</span> — {one.bestFormat},{' '}
+                    <span className="font-semibold text-zinc-200">{one.name}</span> —{' '}
+                    {t(`social.format.${one.id}`, one.bestFormat)},{' '}
                     {t('ads.hookIn', 'hook in')} {one.hookWindow}
                   </li>
                 ))}

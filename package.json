@@ -48,7 +48,8 @@
     "check:songscreen": "node audit/songscreen.mjs",
     "check:hookfile": "node audit/hookfile.mjs",
     "check:collabbooth": "node audit/collabbooth.mjs",
-    "check:invite": "node audit/invite.mjs"
+    "check:invite": "node audit/invite.mjs",
+    "check:afrikaansscreen": "node audit/afrikaans.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

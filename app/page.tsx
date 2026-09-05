@@ -680,7 +680,12 @@ export default function FutureBoxHome() {
   // AI Scanner & Stream Regeneration
   const [isScanning, setIsScanning] = useState(false);
   const [streamCycle, setStreamCycle] = useState(0);
-  const [scanMessage, setScanMessage] = useState('Podcasts and classes we think are worth your time.');
+  /* Which of the three things the picks line is saying, not the sentence
+     itself. A sentence stored in state is a sentence that was chosen in
+     whatever language the app happened to be in when it was stored, and it
+     never changes again — so switching to Afrikaans left this line in English
+     for the rest of the session. */
+  const [scanSaying, setScanSaying] = useState<'picks' | 'looking' | 'another'>('picks');
 
   // Marketing Contact Form
   const [contactName, setContactName] = useState('');
@@ -1053,12 +1058,12 @@ export default function FutureBoxHome() {
 
   const handleAiScanRefresh = () => {
     setIsScanning(true);
-    setScanMessage('Finding different ones…');
+    setScanSaying('looking');
     setTimeout(() => {
       setIsScanning(false);
       setStreamCycle(prev => prev + 1);
       setShownFrom(prev => prev + 1);
-      setScanMessage('Here is another set.');
+      setScanSaying('another');
     }, 2000);
   };
 
@@ -1619,7 +1624,13 @@ export default function FutureBoxHome() {
         </div>
         <div className="min-w-0">
           <p className="font-bold text-white">{t('home.todaysPicks', 'Today’s picks')}</p>
-          <p className="text-zinc-400 text-[13px]">{scanMessage}</p>
+          <p className="text-zinc-400 text-[13px]">
+            {scanSaying === 'looking'
+              ? t('feed.scanLooking', 'Finding different ones…')
+              : scanSaying === 'another'
+                ? t('feed.scanAnother', 'Here is another set.')
+                : t('feed.picks', 'Podcasts and classes we think are worth your time.')}
+          </p>
         </div>
       </div>
 
@@ -1830,7 +1841,11 @@ export default function FutureBoxHome() {
                 className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 px-3.5 py-1.5 rounded-xl text-zinc-200 transition-colors"
               >
                 <Headphones className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{selectedPodcasterFilter ? `Podcaster: ${selectedPodcasterFilter}` : 'Approved Podcasters Compilations'}</span>
+                <span>
+                  {selectedPodcasterFilter
+                    ? `${t('feed.podcaster', 'Podcaster')}: ${selectedPodcasterFilter}`
+                    : t('feed.approved', 'Approved Podcasters Compilations')}
+                </span>
                 <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
               </button>
 
@@ -1861,7 +1876,7 @@ export default function FutureBoxHome() {
                 className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 px-3.5 py-1.5 rounded-xl text-zinc-200 transition-colors"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400" />
-                <span>{selectedCategoryFilter || 'Explore All Categories'}</span>
+                <span>{selectedCategoryFilter || t('feed.allCats', 'Explore All Categories')}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
               </button>
 
@@ -2055,12 +2070,15 @@ export default function FutureBoxHome() {
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
                   <Headphones className="w-5 h-5 text-emerald-400" />
-                  <span>FutureBox Podcasts {selectedPodcasterFilter && `(${selectedPodcasterFilter})`}</span>
+                  <span>
+                    {t('tab.pods', 'FutureBox Podcasts')}{' '}
+                    {selectedPodcasterFilter && `(${selectedPodcasterFilter})`}
+                  </span>
                 </h3>
                 <p className="text-xs text-zinc-400">{t('feed.podSub')}</p>
               </div>
               <span className="text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                {activePodcasts.length} Curated Episodes Available
+                {activePodcasts.length} {t('feed.curated', 'Curated Episodes Available')}
               </span>
             </div>
 
@@ -2307,7 +2325,7 @@ export default function FutureBoxHome() {
                 <p className="text-xs text-zinc-400">{t('feed.creationsSub')}</p>
               </div>
               <span className="text-xs text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-                Creator Channels
+                {t('feed.creatorChannels', 'Creator Channels')}
               </span>
             </div>
 
@@ -2418,7 +2436,7 @@ export default function FutureBoxHome() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
               {[
                 {
-                  tag: 'Top Vibe Coded App',
+                  tag: t('feed.tag.vibe', 'Top Vibe Coded App'),
                   title: 'Autonomous Coding & Micro-SaaS with Cursor AI',
                   desc: 'How non-coders and engineers build and deploy full applications in under 48 hours.',
                   mrrUsd: [10_000, 50_000] as const,
@@ -2434,7 +2452,7 @@ export default function FutureBoxHome() {
                   externalUrl: 'https://www.cursor.com'
                 },
                 {
-                  tag: 'Business Opportunity',
+                  tag: t('feed.tag.business', 'Business Opportunity'),
                   title: 'Building 24/7 AI Voice Operators with LiveKit & Twilio',
                   desc: 'A step-by-step breakdown on selling AI phone receptionists to high-ticket local businesses.',
                   mrrUsd: [5_000, 25_000] as const,
@@ -2450,7 +2468,7 @@ export default function FutureBoxHome() {
                   externalUrl: 'https://livekit.io'
                 },
                 {
-                  tag: 'Top AI News',
+                  tag: t('feed.tag.news', 'Top AI News'),
                   title: 'Vercel v0: Generative Frontend Code Synthesis',
                   desc: 'Describe an interface idea and v0 instantly generates production-grade React and Tailwind components.',
 
@@ -2744,6 +2762,33 @@ export default function FutureBoxHome() {
         }}
       />
 
+      {/* Search, outside the studio.
+
+          It used to be mounted inside `{uploadModalOpen && …}`, which meant it
+          existed only while the studio was already open. The Find tab set
+          `searchOpen` from anywhere — and from the feed, the channel or the
+          account panel there was nothing on the page to open, so the tab lit
+          up and nothing happened. A button that works on some screens and
+          silently does nothing on others is worse than one that is missing.
+
+          It takes no copilot bus of its own; the hand-off below reaches the
+          bus directly, and the room it opens is inside the provider. */}
+      <Search
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onGo={(surface, openTitle) => {
+          /* The room lives in the studio, so a result has to open the studio
+             as well as pick the room — from the feed there is no studio to
+             put the room in. */
+          setSearchOpen(false);
+          setUploadModalOpen(true);
+          goToRoom(surface);
+          // The same hand-off the advert desk uses: the room is not mounted
+          // yet, so this waits for it and fires the moment it registers.
+          if (openTitle) copilotBus.handoff(surface, 'pick_song', openTitle);
+        }}
+      />
+
       {uploadModalOpen && (
         /* The studio takes the whole window.
            It used to be a card floated in the middle of a dimmed page: sixteen
@@ -2755,16 +2800,6 @@ export default function FutureBoxHome() {
            Nothing here is a dialogue you answer and dismiss. It is the room
            you work in, so it gets the room. */
         <CopilotBusContext.Provider value={copilotBus}>
-        <Search
-          open={searchOpen}
-          onClose={() => setSearchOpen(false)}
-          onGo={(surface, openTitle) => {
-            goToRoom(surface);
-            // The same hand-off the advert desk uses: the room is not mounted
-            // yet, so this waits for it and fires the moment it registers.
-            if (openTitle) copilotBus.handoff(surface, 'pick_song', openTitle);
-          }}
-        />
         <div className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden">
           {/* One column that scrolls, on a phone. Two panes that scroll
               independently, on a desktop.
@@ -3357,8 +3392,10 @@ export default function FutureBoxHome() {
             </div>
             
             <p className="text-xs text-zinc-400 leading-relaxed">
-              The premier digital learning platform and Creative AI ecosystem designed for the future of work, intelligence, and artistic creation. 
-              Reach thousands of visionary entrepreneurs, AI researchers, and builders worldwide.
+              {t(
+                'foot.blurb',
+                'The premier digital learning platform and Creative AI ecosystem designed for the future of work, intelligence, and artistic creation. Reach thousands of visionary entrepreneurs, AI researchers, and builders worldwide.',
+              )}
             </p>
 
             <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800 space-y-2">
@@ -3369,18 +3406,19 @@ export default function FutureBoxHome() {
               <ul className="text-xs text-zinc-300 space-y-1.5">
                 {SPONSORSHIP.map((rung) => (
                   <li key={rung.id}>
-                    <span className="font-bold text-white">{rung.name}</span>
+                    <span className="font-bold text-white">{t(`spon.${rung.id}.name`, rung.name)}</span>
                     <span className="text-emerald-400"> · {sponsorshipPrice(rung, region, lang)}</span>
-                    <span className="block text-zinc-400 leading-snug">{rung.gets}</span>
+                    <span className="block text-zinc-400 leading-snug">{t(`spon.${rung.id}.gets`, rung.gets)}</span>
                   </li>
                 ))}
               </ul>
               {/* Said plainly, because it is the reason to sponsor this rather
                   than buy impressions somewhere with more of them. */}
               <p className="text-xs text-zinc-500 leading-relaxed pt-1">
-                No banners, no pop-ups, nothing down the sides — there is nothing of that
-                kind to buy here. What a sponsor gets is their name on something worth
-                putting it on, and the counters on this page as the report.
+                {t(
+                  'spon.noBanners',
+                  'No banners, no pop-ups, nothing down the sides — there is nothing of that kind to buy here. What a sponsor gets is their name on something worth putting it on, and the counters on this page as the report.',
+                )}
               </p>
             </div>
           </div>
@@ -3422,7 +3460,11 @@ export default function FutureBoxHome() {
                       deliberately high: it is the filter. */}
                   {SPONSORSHIP.map((rung) => (
                     <option key={rung.id} value={`${rung.name} — ${sponsorshipPrice(rung, region, lang)}`}>
-                      {rung.name} — {sponsorshipPrice(rung, region, lang)}
+                      {/* The value stays the English name: it is what gets
+                          emailed, and a rung named differently in the letter
+                          from the way it is named in the rate card is how a
+                          quote gets argued about later. */}
+                      {t(`spon.${rung.id}.name`, rung.name)} — {sponsorshipPrice(rung, region, lang)}
                     </option>
                   ))}
                 </select>
@@ -3464,7 +3506,7 @@ export default function FutureBoxHome() {
         </div>
 
         <div className="max-w-7xl mx-auto pt-8 mt-8 border-t border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
-          <p>© 2026 FutureBox Platform. All rights reserved.</p>
+          <p>© 2026 FutureBox Platform. {t('foot.rights', 'All rights reserved.')}</p>
           {/* These were three plain spans — words that looked like policies
               and led nowhere. Privacy and Terms are real documents now and are
               linked from the site footer just below, once, rather than from

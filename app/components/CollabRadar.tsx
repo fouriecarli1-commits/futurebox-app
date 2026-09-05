@@ -69,6 +69,17 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
+/**
+ * Which of the three demo rows this is, for its dictionary key.
+ *
+ * Read off the id — `pod-demo-2` — rather than a position in a list, because a
+ * position changes the moment the matcher sorts them, and a key that changes
+ * with the sort order puts the wrong Afrikaans on the wrong row.
+ */
+function demoNumber(id: string): string {
+  return id.replace(/^pod-demo-/, '');
+}
+
 export default function CollabRadar({
   profile,
   userPlan,
@@ -81,7 +92,7 @@ export default function CollabRadar({
   /* The room had no dictionary at all, which is why every word in it was
      English on an Afrikaans screen — and why `check:afrikaans` could not see
      it: that gate reads what `t()` is asked for, and nothing here asked. */
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const canPost = check('collab.post', userPlan).allowed;
   const canBoost = check('collab.boost', userPlan).allowed;
   const [tab, setTab] = useState<RadarTab>('podcasts');
@@ -123,7 +134,15 @@ export default function CollabRadar({
   }, []);
 
   const allTargets = useMemo(() => [...PODCAST_TARGETS, ...ownTargets], [ownTargets]);
-  const podcastMatches = useMemo(() => matchPodcasts(profile, allTargets), [profile, allTargets]);
+  /* The verdict sentences are written in `lib/matching.ts`, which has no
+     hook to reach the dictionary with, so the language goes in as an
+     argument. Without it three English sentences sat on an otherwise
+     Afrikaans screen — the ones a person actually reads to decide whether to
+     write to a show. */
+  const podcastMatches = useMemo(
+    () => matchPodcasts(profile, allTargets, lang),
+    [profile, allTargets, lang],
+  );
   const trackMatches = useMemo(() => matchTracks(source), [source]);
   const postTrack = TRACK_FLAVOURS.find((t) => t.id === postTrackId) as TrackFlavour;
   const platform = platformById(platformId);
@@ -143,23 +162,23 @@ export default function CollabRadar({
       {
         id: `own-${prev.length}-${name.toLowerCase().replace(/\s+/g, '-')}`,
         name,
-        host: 'Add the host name',
+        host: t('radar.demo.host', 'Add the host name'),
         topics: ['ai music', 'ai', 'creators'],
-        format: 'Add the format',
-        audience: 'Unknown',
+        format: t('radar.demo.format', 'Add the format'),
+        audience: t('radar.unknown', 'Unknown'),
         reach: 'reachable',
         url: '',
-        angle: 'Add the angle you would pitch.',
+        angle: t('radar.demo.angle', 'Add the angle you would pitch.'),
       },
     ]);
     setOwnTargetName('');
   };
 
   const tabs: Array<{ id: RadarTab; label: string; icon: typeof Mic }> = [
-    { id: 'podcasts', label: 'Podcast Match', icon: Mic },
-    { id: 'live', label: 'TikTok Live Room', icon: Radio },
-    { id: 'flavour', label: 'Music Flavour Match', icon: Music },
-    { id: 'posts', label: 'Viral Post Lab', icon: Flame },
+    { id: 'podcasts', label: t('radar.tab.podcasts', 'Podcast Match'), icon: Mic },
+    { id: 'live', label: t('radar.tab.live', 'TikTok Live Room'), icon: Radio },
+    { id: 'flavour', label: t('radar.tab.flavour', 'Music Flavour Match'), icon: Music },
+    { id: 'posts', label: t('radar.tab.posts', 'Viral Post Lab'), icon: Flame },
   ];
 
   return (
@@ -229,9 +248,22 @@ export default function CollabRadar({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-white truncate">{podcast.name}</p>
+                    {/* A real show keeps its own name in both languages —
+                        translating "Huberman Lab" would invent a thing that
+                        does not exist. The three demo rows are ours, are
+                        marked as such in the data, and are the ones a person
+                        is meant to replace, so those do get translated. */}
+                    <p className="text-xs font-bold text-white truncate">
+                      {podcast.isDemo ? t(`radar.demo.${demoNumber(podcast.id)}.name`, podcast.name) : podcast.name}
+                    </p>
                     <p className="text-[13px] text-zinc-500">
-                      {podcast.host} · {podcast.format} · {podcast.audience}
+                      {podcast.isDemo ? t('radar.demo.host', podcast.host) : podcast.host}
+                      {' · '}
+                      {podcast.isDemo
+                        ? t(`radar.demo.${demoNumber(podcast.id)}.format`, podcast.format)
+                        : podcast.format}
+                      {' · '}
+                      {podcast.audience}
                     </p>
                   </div>
                   <ScoreBar score={score} />
@@ -247,7 +279,7 @@ export default function CollabRadar({
                         : 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10'
                     }`}
                   >
-                    {REACH_LABELS[podcast.reach]}
+                    {t(`radar.reach.${podcast.reach}`, REACH_LABELS[podcast.reach])}
                   </span>
                   {shared.slice(0, 4).map((s) => (
                     <span key={s} className="px-2 py-0.5 rounded-md text-xs text-zinc-400 border border-zinc-800 bg-zinc-950">
@@ -256,7 +288,7 @@ export default function CollabRadar({
                   ))}
                   {podcast.isDemo && (
                     <span className="px-2 py-0.5 rounded-md text-xs text-zinc-500 border border-zinc-800 bg-zinc-950">
-                      placeholder — replace with a real show
+                      {t('radar.placeholder', 'placeholder — replace with a real show')}
                     </span>
                   )}
                 </div>
@@ -298,8 +330,10 @@ export default function CollabRadar({
                 <span>{t('radar.addShow', "Add a show you found yourself")}</span>
               </p>
               <p className="text-[13px] text-zinc-500 leading-relaxed">
-                The best targets are shows your size that nobody has pitched yet. FutureBox does not scrape podcast
-                directories — add the ones you find and they join the ranking.
+                {t(
+                  'radar.addShowWhy',
+                  'The best targets are shows your size that nobody has pitched yet. FutureBox does not scrape podcast directories — add the ones you find and they join the ranking.',
+                )}
               </p>
               <div className="flex gap-2">
                 <input

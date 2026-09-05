@@ -1904,6 +1904,88 @@ export const STRINGS: Dict = {
   "report.imported": { en: "Imported", af: "Ingevoer" },
   "report.onDevice": { en: "Kept on this device.", af: "Op hierdie toestel gehou." },
   "pod.language": { en: "What language it is in", af: "In watter taal dit is" },
+  "plan.free.who": { en: "Hear what it can do before anything costs anything.", af: "Hoor wat dit kan doen voor enigiets iets kos." },
+  "plan.maker.who": { en: "A song or two a week, kept and posted.", af: "’n Liedjie of twee ’n week, gehou en geplaas." },
+  "plan.studio.who": { en: "Releasing regularly, and pitching for collabs.", af: "Gereeld vrystel, en vra vir collabs." },
+  "plan.label.who": { en: "Running a catalogue, and releasing every week.", af: "’n Katalogus loop, en elke week vrystel." },
+  "plan.free.inc.0": { en: "10 credits a month — two half songs, one minute each, yours to keep", af: "10 krediete ’n maand — twee halwe liedjies, elk ’n minuut, joune om te hou" },
+  "plan.free.inc.1": { en: "Unlimited browser sketches — real audio and video, made on your device", af: "Onbeperkte sketse in die blaaier — regte klank en video, op jou toestel gemaak" },
+  "plan.free.inc.2": { en: "The recording booth, with no limit at all", af: "Die opnamekamer, sonder enige perk" },
+  "plan.free.inc.3": { en: "Hooks, the timeline, the soundboard and the radar", af: "Hooks, die tydlyn, die klankbord en die radar" },
+  "plan.free.inc.4": { en: "The video engine is on a plan — a generated clip costs real money to make", af: "Die video-enjin is op ’n plan — ’n gemaakte knipsel kos regte geld" },
+  "plan.maker.inc.0": { en: "120 credits a month — 12 full songs, or 4 music videos", af: "120 krediete ’n maand — 12 volle liedjies, of 4 musiekvideo’s" },
+  "plan.maker.inc.1": { en: "The video engine, which the free tier does not have at all", af: "Die video-enjin, wat die gratis vlak glad nie het nie" },
+  "plan.maker.inc.2": { en: "Your own voice, cloned, for reading and for the show", af: "Jou eie stem, gekloon, om voor te lees en vir die program" },
+  "plan.maker.inc.3": { en: "The copilot, uncapped", af: "Die copilot, sonder perk" },
+  "plan.maker.inc.4": { en: "Post to your own channels", af: "Plaas op jou eie kanale" },
+  "plan.maker.inc.5": { en: "Every workshop", af: "Elke werkswinkel" },
+  "plan.studio.inc.0": { en: "350 credits a month — 35 full songs, or 11 music videos", af: "350 krediete ’n maand — 35 volle liedjies, of 11 musiekvideo’s" },
+  "plan.studio.inc.1": { en: "Train a sound of your own on your own songs", af: "Leer ’n eie klank af op jou eie liedjies" },
+  "plan.studio.inc.2": { en: "Everything in Maker, and three cloned voices", af: "Alles in Maker, en drie gekloonde stemme" },
+  "plan.studio.inc.3": { en: "Ask FutureBox to boost a collab", af: "Vra FutureBox om ’n collab te help stoot" },
+  "plan.studio.inc.4": { en: "The full radar — every item, every reason", af: "Die volle radar — elke item, elke rede" },
+  "plan.label.inc.0": { en: "800 credits a month — 80 full songs, or 26 music videos", af: "800 krediete ’n maand — 80 volle liedjies, of 26 musiekvideo’s" },
+  "plan.label.inc.1": { en: "Everything in Studio, and ten cloned voices", af: "Alles in Studio, en tien gekloonde stemme" },
+  "plan.label.inc.2": { en: "The feed uncapped — every item, no daily ceiling anywhere", af: "Die stroom sonder perk — elke item, nêrens ’n daaglikse plafon nie" },
+  "plan.label.inc.3": { en: "A say in which workshops get made", af: "’n Sê oor watter werkswinkels gemaak word" },
+  "feed.scanLooking": { en: "Finding different ones…", af: "Op soek na ander…" },
+  "feed.scanAnother": { en: "Here is another set.", af: "Hier is nog ’n klomp." },
+  "feed.approved": { en: "Approved Podcasters Compilations", af: "Goedgekeurde podsenders" },
+  "feed.podcaster": { en: "Podcaster", af: "Podsender" },
+  "feed.allCats": { en: "Explore All Categories", af: "Blaai deur alle kategorieë" },
+  "feed.curated": { en: "Curated Episodes Available", af: "gekose episodes beskikbaar" },
+  "feed.picks": { en: "Podcasts and classes we think are worth your time.", af: "Podcasts en klasse wat ons dink jou tyd werd is." },
+  "live.notReadyWhy": { en: "It has not been set up on this app yet.", af: "Dit is nog nie op hierdie app opgestel nie." },
+  "class.proOnly": { en: "Pro only", af: "Net Pro" },
+  "class.count": { en: "{n} classes across {m} tracks. Every one says who made it before you click.", af: "{n} klasse oor {m} bane. Elkeen sê wie dit gemaak het voor jy klik." },
+  "place.classTitle": { en: "Building a release-ready track with AI", af: "’n Liedjie met AI bou wat gereed is om vry te stel" },
+  "feed.creatorChannels": { en: "Creator Channels", af: "Makerkanale" },
+  "feed.tag.vibe": { en: "Top Vibe Coded App", af: "Beste vibe-coded app" },
+  "feed.tag.business": { en: "Business Opportunity", af: "Besigheidsgeleentheid" },
+  "feed.tag.news": { en: "Top AI News", af: "Vernaamste AI-nuus" },
+  "foot.blurb": { en: "The premier digital learning platform and Creative AI ecosystem designed for the future of work, intelligence, and artistic creation. Reach thousands of visionary entrepreneurs, AI researchers, and builders worldwide.", af: "Die vernaamste digitale leerplatform en kreatiewe AI-ekostelsel, gebou vir die toekoms van werk, intelligensie en kuns. Bereik duisende entrepreneurs, AI-navorsers en bouers wêreldwyd." },
+  "foot.rights": { en: "All rights reserved.", af: "Alle regte voorbehou." },
+  "foot.help": { en: "Help", af: "Hulp" },
+  "foot.privacy": { en: "Privacy", af: "Privaatheid" },
+  "foot.terms": { en: "Terms", af: "Voorwaardes" },
+  "foot.who": { en: "Who we are", af: "Wie ons is" },
+  "radar.reach.peer": { en: "Peer — swap audiences", af: "Gelyke — ruil gehore" },
+  "radar.reach.reachable": { en: "Reachable — worth a real pitch", af: "Bereikbaar — ’n regte vra werd" },
+  "radar.reach.aspirational": { en: "Aspirational — needs a track record first", af: "Hoë mikpunt — kry eers ’n rekord" },
+  "radar.placeholder": { en: "placeholder — replace with a real show", af: "plekhouer — vervang met ’n regte program" },
+  "radar.addShowWhy": { en: "The best targets are shows your size that nobody has pitched yet. FutureBox does not scrape podcast directories — add the ones you find and they join the ranking.", af: "Die beste teikens is programme van jou grootte wat nog niemand gevra het nie. FutureBox krap nie deur podcast-lyste nie — sit die wat jy kry self in, en hulle val in die rangorde in." },
+  "spon.class.name": { en: "One masterclass", af: "Een meesterklas" },
+  "spon.class.gets": { en: "Your name on one class, set in the same type as everything else on it.", af: "Jou naam op een klas, in dieselfde letters as alles anders daarop." },
+  "spon.season.name": { en: "A season", af: "’n Seisoen" },
+  "spon.season.gets": { en: "A run of classes or episodes, named once at the top of each.", af: "’n Reeks klasse of episodes, een keer bo-aan elkeen genoem." },
+  "spon.headline.name": { en: "Headline partner", af: "Hoofvennoot" },
+  "spon.headline.gets": { en: "One a month, named on the Spotlight page. Nowhere else, and nothing that blinks.", af: "Een per maand, genoem op die Spotlight-blad. Nêrens anders nie, en niks wat flikker nie." },
+  "spon.noBanners": { en: "No banners, no pop-ups, nothing down the sides — there is nothing of that kind to buy here. What a sponsor gets is their name on something worth putting it on, and the counters on this page as the report.", af: "Geen baniere, geen pop-ups, niks langs die kante nie — daar is niks van daardie soort hier te koop nie. Wat ’n borg kry, is hulle naam op iets wat dit werd is, en die tellers op hierdie blad as die verslag." },
+  "place.mock": { en: "What {what} looks like — a mock-up, not a live page", af: "Hoe {what} lyk — ’n voorbeeld, nie ’n regte blad nie" },
+  "place.yourCompany": { en: "Your company", af: "Jou maatskappy" },
+  "radar.unknown": { en: "Unknown", af: "Onbekend" },
+  "radar.tab.podcasts": { en: "Podcast Match", af: "Podcast-pas" },
+  "radar.tab.live": { en: "TikTok Live Room", af: "TikTok Live-kamer" },
+  "radar.tab.flavour": { en: "Music Flavour Match", af: "Klank-pas" },
+  "radar.tab.posts": { en: "Viral Post Lab", af: "Plasingslab" },
+  "radar.demo.host": { en: "Add the host name", af: "Sit die gasheer se naam in" },
+  "radar.demo.format": { en: "Add the format", af: "Sit die formaat in" },
+  "radar.demo.angle": { en: "Add the angle you would pitch.", af: "Sit die hoek in waarmee jy sou vra." },
+  "radar.demo.1.name": { en: "[Your target] AI music creator show", af: "[Jou teiken] AI-musiekmaker-program" },
+  "radar.demo.1.format": { en: "Weekly, 45 min, video + audio", af: "Weekliks, 45 min, video + klank" },
+  "radar.demo.1.angle": { en: "Demo a full track built live, start to finish, with the stack on screen.", af: "Wys ’n volle liedjie wat lewendig gebou word, van begin tot end, met die AI op die skerm." },
+  "radar.demo.2.name": { en: "[Your target] vibe-coding / indie build show", af: "[Jou teiken] vibe-coding / indie bou-program" },
+  "radar.demo.2.format": { en: "Fortnightly, 60 min", af: "Elke tweede week, 60 min" },
+  "radar.demo.2.angle": { en: "Build a FutureBox feature live and ship it during the episode.", af: "Bou ’n FutureBox-funksie lewendig en stuur dit uit tydens die episode." },
+  "radar.demo.3.name": { en: "[Your target] South African tech / creator podcast", af: "[Jou teiken] Suid-Afrikaanse tegnologie- / makerpodcast" },
+  "radar.demo.3.format": { en: "Weekly, 40 min", af: "Weekliks, 40 min" },
+  "radar.demo.3.angle": { en: "Local angle: building an AI media channel from South Africa, in two languages.", af: "Plaaslike hoek: ’n AI-mediakanaal uit Suid-Afrika bou, in twee tale." },
+  "social.format.tiktok": { en: "9:16 vertical, 15–34s", af: "9:16 regop, 15–34s" },
+  "social.format.youtube": { en: "9:16 Shorts up to 60s, or 16:9 long form", af: "9:16 Shorts tot 60s, of 16:9 lang vorm" },
+  "social.format.instagram": { en: "9:16 Reels, 15–30s", af: "9:16 Reels, 15–30s" },
+  "social.format.x": { en: "Native video, under 2:20", af: "Video wat daar self speel, onder 2:20" },
+  "social.format.suno": { en: "The track itself", af: "Die liedjie self" },
+  "social.format.spotify": { en: "Released track", af: "Vrygestelde liedjie" },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';
@@ -2015,6 +2097,75 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     })();
     return () => {
       stillUnasked = false;
+    };
+  }, []);
+
+  /* ── Signing in, on a device that has not been told ────────────────────
+
+     The effect above asks the account only at mount, and at mount nobody has
+     signed in yet — so the answer is always "no session", and nothing ever
+     asked again. What that cost: somebody who chooses Afrikaans on their
+     phone and then signs in on a laptop gets English, with no path anywhere
+     in the app that ever corrects it. It reads as the language reverting at
+     the moment of signing in, because that is exactly when it happens.
+
+     There is a second half. Choosing a language while signed out cannot be
+     written to an account that does not exist yet, so `keepOnAccount` fails
+     quietly — which is right, nobody did anything wrong — and the choice was
+     never recorded at all. Signing in is the first moment it can be, so this
+     is where it is done.
+
+     The rule between the two, unchanged: a choice made in this browser is a
+     choice about this browser and is never overruled. Storage wins when it
+     has an answer, and the account is brought into step with it. The account
+     answers only when this browser has nothing to say. */
+  useEffect(() => {
+    let live = true;
+    let stop = () => undefined as void;
+    void (async () => {
+      try {
+        const cloud = await import('./cloud');
+        if (!live || !cloud.configured()) return;
+        stop = cloud.onAccountChange((account) => {
+          if (!account) return;
+          void (async () => {
+            let mine: Lang | null = null;
+            try {
+              const saved = window.localStorage.getItem(STORAGE_KEY);
+              if (saved === 'en' || saved === 'af') mine = saved;
+            } catch {
+              // Storage blocked; the account is the only answer there is.
+            }
+            if (mine) {
+              /* Written up every sign-in rather than only when it differs.
+                 Reading the account first to compare costs a round trip to
+                 save a write that is idempotent, and the read is the half
+                 that can fail. */
+              await keepOnAccount(mine);
+              return;
+            }
+            const said = await cloud.accountLanguage();
+            if (!live || !said) return;
+            setLangState(said);
+            try {
+              /* Stored, not only applied. Without this the next page load on
+                 this device starts in English again and the account is asked
+                 all over again — and on a slow connection that is a visible
+                 flip from English to Afrikaans on every load. */
+              window.localStorage.setItem(STORAGE_KEY, said);
+            } catch {
+              // Then it is applied for this page and asked again next time.
+            }
+            document.documentElement.lang = said;
+          })();
+        });
+      } catch {
+        // No accounts configured. Whatever this device worked out stands.
+      }
+    })();
+    return () => {
+      live = false;
+      stop();
     };
   }, []);
 

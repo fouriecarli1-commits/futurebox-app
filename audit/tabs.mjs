@@ -132,7 +132,16 @@ try {
   check('and the bar is over it, not under it', await bar.isVisible());
 
   await press(af ? 'Soek' : 'Find');
-  check('Find opens the search', (await p.locator('input[type="search"], input[placeholder]').count()) > 0);
+  /* The search itself, not "some box with a placeholder is on the page".
+ 
+     The loose version passed for two weeks while the Find tab did nothing at
+     all: the search was mounted inside the studio, so from the feed there was
+     nothing on the page to open — and any screen with any placeholder in it
+     satisfied the assertion. Carli found it by pressing the button. */
+  const searchBox = p.locator('div[role="dialog"][aria-label]').filter({ has: p.locator('input') });
+  check('Find opens the search', (await searchBox.count()) === 1, `${await searchBox.count()} found`);
+  check('and it opens from the feed, not only from inside the studio',
+    (await p.locator('div.fixed.inset-0.z-\\[50\\]').count()) === 0);
   check('and the bar is still reachable', await bar.isVisible());
 
   await press(af ? 'Luister' : 'Listen');

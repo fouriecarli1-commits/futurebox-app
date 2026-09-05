@@ -95,11 +95,11 @@ function Card({
           className="w-full py-2.5 rounded-xl text-sm font-semibold bg-amber-500/15 border border-amber-500/50 text-amber-300 hover:bg-amber-500/25 flex items-center justify-center gap-1.5"
         >
           <Lock className="w-3.5 h-3.5" />
-          Pro only
+          {t('class.proOnly', 'Pro only')}
         </button>
       ) : unavailable ? (
         <span className="w-full py-2.5 rounded-xl text-sm text-center text-zinc-600 border border-zinc-800">
-          Not out yet
+          {t('common.notOut', 'Not out yet')}
         </span>
       ) : (
         <a
@@ -203,7 +203,9 @@ export default function Masterclasses({
             the home page `shown` is four, and "4 classes across 7 tracks"
             would be a false claim about the catalogue rather than a caption
             about the grid. */}
-        {all.length} classes across {Object.keys(TRACK_LABELS).length} tracks. Every one says who made it before you click.
+        {t('class.count', '{n} classes across {m} tracks. Every one says who made it before you click.')
+          .replace('{n}', String(all.length))
+          .replace('{m}', String(Object.keys(TRACK_LABELS).length))}
       </p>
 
       {showProvenance && (
