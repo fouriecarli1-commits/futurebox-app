@@ -298,10 +298,19 @@ or keep both is a decision nobody has made.
 
 ## F. Asked for, agreed, not yet built
 
-- A cover-art button on a song.
-- The packaging rebuild — see `docs/PACKAGING.md`.
-- The Spotlight feed as a vertical slider.
-- A song from a photo.
+- The packaging rebuild — the card shape, a chevron and a wand on each. See
+  `docs/PACKAGING.md` §2.
+- The right-hand rail on the live slider: Remix and **+ Hook**, which the
+  packaging notes call the whole loop. Held back deliberately — remixing
+  somebody else's post is a rights question before it is a button, and that
+  decision has not been made.
+- **A song from a photo, the version that reads the picture.** What shipped
+  measures colour, light and busyness on the device, for free, and says it
+  does not know what is in the picture. The plan's version sends the picture
+  to `claude-opus-5` — which is already the model behind the copilot — and
+  gets back a title, a style and lyrics about what is actually there. It
+  costs a credit and needs the moderation gate on the image. It is the single
+  best idea in the screenshots and it is still open.
 
 ---
 
@@ -330,3 +339,9 @@ or keep both is a decision nobody has made.
 | A song has a shape; the style is no longer padded | 2026-09-05 | `ab1a8b1` |
 | A style learned by listening to a song you like | 2026-09-05 | `580f9f8` |
 | Signed in stays signed in; the safety review | 2026-09-05 | `ebb4be4` |
+| The switch-on list, so it can be worked from | 2026-09-05 | `2d9bf46` |
+| The style is no longer outvoted by our own words | 2026-09-05 | `a0131df` |
+| Live plays as a full-screen slider | 2026-09-05 | `d9f57f3` |
+| A cover on a song in the channel | 2026-09-05 | `d0bd0db` |
+| Fifty songs to start from | 2026-09-05 | `df7484c` |
+| A song from a photograph, measured on the device | 2026-09-05 | `5bb766c` |
