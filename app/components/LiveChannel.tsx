@@ -34,13 +34,14 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Eye, Loader2, Music, Radio, Send, Sparkles, Trash2, Upload, Users,
+  Eye, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users,
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { loadTracks, type Track } from '../lib/library';
 import { visitorId } from '../lib/signal';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
+import RoomScreen from './RoomScreen';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
 
@@ -118,6 +119,15 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
   const [playing, setPlaying] = useState<string | null>(null);
+  /**
+   * Which post the full-screen room opened on, or nothing.
+   *
+   * The list stays: it is how somebody scans what is there, deletes their own
+   * and reads a note. What it is not is how anybody listens to a roomful of
+   * other people's work — that is one at a time, full screen, thumb up for the
+   * next one, and it is why Live is on a tab at all.
+   */
+  const [openAt, setOpenAt] = useState<string | null>(null);
   const [showElsewhere, setShowElsewhere] = useState(false);
   const [where, setWhere] = useState({ platform: 'tiktok', title: '', link: '', startsAt: '' });
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -372,13 +382,51 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
       )}
 
       {/* ── The room ──────────────────────────────────────────────────── */}
+      {/* Play the room, rather than play one thing out of it. */}
+      {room.posts.some((one) => one.audio) && (
+        <button
+          type="button"
+          onClick={() => {
+            const first = room.posts.find((one) => one.audio);
+            if (first) setOpenAt(first.id);
+          }}
+          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold"
+        >
+          <Play className="h-4 w-4" />
+          {t('live.playRoom', 'Play the room')}
+        </button>
+      )}
+
+      {openAt && (
+        <RoomScreen
+          posts={room.posts.map((one) => ({
+            id: one.id,
+            title: one.title,
+            by: one.by,
+            note: one.note,
+            seconds: one.seconds,
+            audio: one.audio,
+          }))}
+          startAt={openAt}
+          onClose={() => setOpenAt(null)}
+        />
+      )}
+
       <div className="space-y-2">
         {room.posts.length === 0 && (
           <Note>{t('live.quiet', 'Nothing in the room yet. Put a song in and it is the first thing anybody hears.')}</Note>
         )}
         {room.posts.map((post) => (
           <div key={post.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex items-start gap-3">
-            <div className="min-w-0 flex-1">
+            {/* Tapping the row opens the room on that one, the same way
+                tapping a song in the channel opens it full screen. The
+                buttons on the right keep doing their own jobs. */}
+            <button
+              type="button"
+              onClick={() => post.audio && setOpenAt(post.id)}
+              disabled={!post.audio}
+              className="min-w-0 flex-1 text-left disabled:cursor-default"
+            >
               <p className="text-sm font-semibold text-white truncate">{post.title}</p>
               <p className="text-xs text-zinc-500">
                 {post.by}
@@ -389,7 +437,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                     : ''}
               </p>
               {post.note && <p className="text-sm text-zinc-400 leading-snug pt-1">{post.note}</p>}
-            </div>
+            </button>
 
             <div className="flex items-center gap-1 flex-shrink-0">
               {post.kind === 'elsewhere' && post.link && (

@@ -225,8 +225,13 @@ export default function FollowWords({
       />
       {filming && <div className="absolute inset-0 bg-black/45" />}
 
-      <div className="relative flex items-start justify-between gap-4 p-5">
-        <p className="text-sm text-zinc-500 truncate">{title}</p>
+      {/* The close first, on the left.
+
+          It was on the right, where the corner search now sits fixed above
+          every screen — so the way out of the teleprompter was under a button
+          that opens a search. Order swapped rather than the title moved,
+          because the title should still have the width. */}
+      <div className="relative flex items-start gap-4 p-5">
         <button
           type="button"
           onClick={onClose}
@@ -235,6 +240,7 @@ export default function FollowWords({
         >
           <X className="w-6 h-6" />
         </button>
+        <p className="min-w-0 flex-1 truncate text-sm text-zinc-500">{title}</p>
       </div>
 
       <div className="relative flex-1 flex flex-col items-center justify-center gap-6 px-6 text-center">

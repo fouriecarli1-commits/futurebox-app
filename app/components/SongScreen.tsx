@@ -371,7 +371,10 @@ export default function SongScreen({
         type="button"
         onClick={onClose}
         aria-label={t('song.close', 'Close')}
-        className={`absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full ${SHADE} ${INK} backdrop-blur`}
+        /* Left, because the corner search sits fixed at the top right of
+           every screen and above this one — a close control under it is a
+           close control nobody can press. */
+        className={`absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full ${SHADE} ${INK} backdrop-blur`}
       >
         <X className="h-5 w-5" />
       </button>
