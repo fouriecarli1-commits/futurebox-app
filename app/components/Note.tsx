@@ -30,7 +30,19 @@ export default function Note({
 }): React.ReactElement {
   return (
     <>
-      <span className="sm:hidden inline-flex align-middle">
+      {/* One line and a mark, not a mark on its own.
+ 
+          The first version drew only the mark on a phone. Where the sentence
+          was the whole of its block — "Build a long one" on the video desk,
+          and a dozen like it — that left a heading, an empty box, and a
+          floating question mark that reads as a broken button. A section with
+          nothing in it is worse than a section with too much.
+ 
+          So the phone keeps the first line of it, clipped, with the mark beside
+          it. One line instead of five, the mark always attached to something,
+          and the whole sentence one tap away. */}
+      <span className="sm:hidden flex items-center gap-1 min-w-0">
+        <span className="text-xs text-zinc-600 leading-snug truncate min-w-0 flex-1">{children}</span>
         <Hint>{children}</Hint>
       </span>
       <p className={`hidden sm:block ${className}`}>{children}</p>

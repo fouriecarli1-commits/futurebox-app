@@ -681,7 +681,18 @@ export default function ProBooth({
   const heard = useMemo(() => audible(lanes), [lanes]);
 
   return (
-    <div className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col">
+    /* One page on a phone, four pinned strips on a desk.
+
+       The room is a desk: a header and a clock nailed to the top, the master
+       and the transport nailed to the foot, and the lanes scrolling in what is
+       left between them. On a 1280-pixel screen that is right — the transport
+       is what you reach for most and it should never move.
+
+       On a 390-pixel one the four strips are most of the height, the lanes get
+       a sliver, and everything appears to sit behind everything else. So below
+       sm the whole room is one column that scrolls, every section laid out in
+       full, nothing pinned. */
+    <div className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col overflow-y-auto sm:overflow-hidden">
       <div className="flex items-center justify-between gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
         <div className="min-w-0">
           <p className="text-base font-bold text-white truncate">{t('pro.title', 'The booth — pro')}</p>
@@ -849,7 +860,7 @@ export default function ProBooth({
       </div>
 
       {/* ── The lanes ────────────────────────────────────────────────────── */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-2">
+      <div className="sm:flex-1 sm:min-h-0 sm:overflow-y-auto px-4 py-3 space-y-2">
         {lanes.map((lane) => (
           <LaneRow
             key={lane.id}

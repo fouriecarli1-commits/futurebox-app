@@ -309,6 +309,32 @@ try {
        Only checked on the phone. A mouse is precise and a desk that copies the
        phone's padding is a desk with half the density it should have. */
     if (width === 390) {
+      /* One page, not four strips around a sliver.
+
+         The room is built as a desk: header and clock nailed to the top,
+         master and transport to the foot, lanes scrolling between them. On a
+         390-pixel screen those four strips are most of the height, which
+         leaves the lanes a few lines and makes the whole room look like it is
+         sitting behind itself. Below sm it is one column that scrolls. */
+      const shape = await p.evaluate(() => {
+        const room = document.querySelector('div.fixed.inset-0.z-\\[70\\]');
+        if (!room) return null;
+        const inner = Array.from(room.querySelectorAll('div')).filter((el) => {
+          const s = getComputedStyle(el);
+          return (s.overflowY === 'auto' || s.overflowY === 'scroll') && el.scrollHeight > el.clientHeight + 4;
+        });
+        return {
+          roomScrolls: room.scrollHeight > room.clientHeight + 4,
+          innerScrollers: inner.length,
+          height: room.scrollHeight,
+        };
+      });
+      check('at 390px the room is one page that scrolls', !!shape?.roomScrolls, `${shape?.height}px tall`);
+      check('and nothing inside it scrolls on its own', shape?.innerScrollers === 0,
+        `${shape?.innerScrollers} inner scroller(s)`);
+    }
+
+    if (width === 390) {
       const small = await p.evaluate(() => {
         const out = [];
         for (const el of Array.from(document.querySelectorAll('button, [role="button"], a, input, select'))) {

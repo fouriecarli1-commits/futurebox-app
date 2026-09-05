@@ -95,6 +95,14 @@ for (const name of rooms) {
       pageWidth: document.documentElement.scrollWidth,
       wide: wide.slice(0, 3),
       small,
+      /* Height, not characters.
+
+         Characters was the metric while long notes were being cut. It stopped
+         meaning anything the moment those notes became one clipped line: the
+         text is still in the DOM, so innerText reports all 4,332 of them while
+         the screen shows one line each. What the complaint was actually about
+         is how far the room goes on, so that is what is measured. */
+      tall: Math.round(work?.scrollHeight ?? 0),
       words: (work?.innerText ?? '').replace(/\s+/g, ' ').trim().length,
       fields: work ? work.querySelectorAll('input, textarea, select, button').length : 0,
     };
@@ -108,7 +116,7 @@ for (const name of rooms) {
   if (flags.length) bad += 1;
 
   console.log(
-    `${(flags.length ? '⚠' : '✓')} ${name.padEnd(14)} ${String(read.words).padStart(5)} karakters · ` +
+    `${(flags.length ? '⚠' : '✓')} ${name.padEnd(14)} ${String(read.tall).padStart(6)} px hoog · ` +
       `${String(read.fields).padStart(3)} kontroles${flags.length ? '  — ' + flags.join(' · ') : ''}`,
   );
   await page.screenshot({ path: shot(`phoneroom-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`), fullPage: false });
