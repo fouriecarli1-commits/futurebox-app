@@ -82,6 +82,31 @@ for (const [i, match] of starts.entries()) {
   if (/(^|[\s(—-])'n\b/.test(af) || /[A-Za-zÀ-ſ]'[a-z]\b/.test(af)) straight.push(match[1]);
 }
 
+/**
+ * Words that read as Dutch rather than Afrikaans.
+ *
+ * "Snit" is in the dictionary and it is what the music press prints, but read
+ * aloud in the app it lands as Dutch rather than as how anybody speaks — the
+ * opposite of the register this file aims for. It was in 107 places, one of
+ * them the rail label that is the first Afrikaans a person sees.
+ *
+ * Bounded on the word, so "oorsnit" — a video cutaway, and the right word —
+ * is left alone. Checked across every file with an af: line, not only the
+ * dictionary: the copilot prompts in `lib/surfaces.ts` held eight of them.
+ */
+const BANNED: { word: RegExp; instead: string }[] = [
+  { word: /\bsnit(te)?\b/i, instead: 'liedjie / liedjies' },
+];
+const dutch: string[] = [];
+for (const file of [DICT, ...walk("app").filter((f) => f !== DICT)]) {
+  const text = readFileSync(file, "utf8");
+  for (const m of text.matchAll(/\baf:\s*"((?:[^"\\]|\\.)*)"/g)) {
+    for (const { word, instead } of BANNED) {
+      if (word.test(m[1])) dutch.push(`${file}: "${m[1].slice(0, 70)}" — se ${instead}`);
+    }
+  }
+}
+
 const missing = new Map<string, string>();
 for (const file of walk('app')) {
   if (file.endsWith('i18n.tsx')) continue;
@@ -101,7 +126,7 @@ for (const file of walk('app')) {
   }
 }
 
-if (missing.size === 0 && halfDone.length === 0 && straight.length === 0 && twice.length === 0) {
+if (missing.size === 0 && halfDone.length === 0 && straight.length === 0 && twice.length === 0 && dutch.length === 0) {
   console.log(
     `check:afrikaans — ${known.size} keys, every one the code asks for has both languages,` +
       '\n  and every Afrikaans ’n is the same character as every other one.',
@@ -121,6 +146,10 @@ if (twice.length) {
 if (halfDone.length) {
   console.error(`\n${halfDone.length} entr(ies) with English and no Afrikaans:\n`);
   for (const key of halfDone) console.error(`  ${key}`);
+}
+if (dutch.length) {
+  console.error(`\n${dutch.length} Afrikaans line(s) using a word that reads as Dutch:\n`);
+  for (const line of dutch) console.error(`  ${line}`);
 }
 if (straight.length) {
   console.error(

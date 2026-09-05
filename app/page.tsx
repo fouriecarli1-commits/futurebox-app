@@ -425,6 +425,19 @@ export default function FutureBoxHome() {
      three places at once — which is the compiler doing its job, and a list that
      needs the compiler to keep it honest should not be a list. */
   const [studioTab, setStudioTab] = useState<SurfaceId>('make');
+
+  /* Where the copilot sits when the three panes stack.
+
+     On a desktop it is the third column and this never comes up. On a
+     phone the panes stack and the last one is the one nobody scrolls to:
+     measured in the song room at 390 px, the copilot started 3,040 px
+     down, past every field in the room.
+
+     Only the song room lifts it. That is the room where you talk first
+     and type second — everywhere else the working surface is the point
+     and a chat panel above it is 352 px between you and the thing you
+     came for. */
+  const copilotFirst = studioTab === 'make';
   /* The door, shown once per page load rather than on every tab switch.
 
      The studio used to open straight onto Make a song with thirteen rooms
@@ -2249,7 +2262,7 @@ export default function FutureBoxHome() {
             {/* Studio shell: rail on the left, one working surface on the right. */}
             <div className={`flex-1 min-h-0 ${theme.layout === 'top' ? 'flex flex-col gap-6' : 'flex flex-col md:flex-row gap-6'}`}>
               <nav
-                className={`order-1 md:order-none flex-shrink-0 flex gap-1 overflow-x-auto md:overflow-visible ${
+                className={`${copilotFirst ? 'order-1 md:order-none' : ''} flex-shrink-0 flex gap-1 overflow-x-auto md:overflow-visible ${
                   theme.layout === 'top'
                     ? 'flex-row flex-wrap'
                     : theme.layout === 'focus'
@@ -2388,7 +2401,7 @@ export default function FutureBoxHome() {
                 })()}
               </nav>
 
-              <div className="order-3 md:order-none flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1">
+              <div className={`${copilotFirst ? 'order-3 md:order-none' : ''} flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1`}>
 
 
             {/* TAB 2: CUSTOM VOICE STUDIO (USE YOUR OWN VOICE OR CLONE) */}
@@ -2547,7 +2560,7 @@ export default function FutureBoxHome() {
               {/* On a phone it sizes to its content and sits at the foot of the
                   page; the fixed height was a desktop measurement applied where
                   there was no second column to measure against. */}
-              <aside className="order-2 md:order-none flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]">
+              <aside className={`${copilotFirst ? 'order-2 md:order-none' : ''} flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}>
                 <Copilot
                   context={{
                     surface: studioTab,

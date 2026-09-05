@@ -254,8 +254,8 @@ export default function Greeting({
               {/* The room's own name, not "Open <name>".
 
                   Every room here is already named with a verb — "Make a song",
-                  "Maak ’n snit" — so a verb in front of it read "Open Make a
-                  song" in English and "Maak Maak ’n snit oop" in Afrikaans.
+                  "Maak ’n liedjie" — so a verb in front of it read "Open Make a
+                  song" in English and "Maak Maak ’n liedjie oop" in Afrikaans.
                   The name and an arrow say the same thing and cannot collide
                   with a name whatever it turns out to be. */}
               {roomName(said.room)}

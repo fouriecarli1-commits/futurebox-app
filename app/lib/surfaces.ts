@@ -234,7 +234,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       },
       {
         en: "Describe a video for my last song",
-        af: "Beskryf ’n video vir my laaste snit",
+        af: "Beskryf ’n video vir my laaste liedjie",
       },
       { en: "How long should it be?", af: "Hoe lank moet dit wees?" },
     ],
@@ -285,7 +285,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "Short vertical clips — the fifteen seconds that make somebody stop scrolling.",
     helps: {
       en: "I can tell you where the good bit starts, write the caption, and set how long the clip runs.",
-      af: "Ek kan jou sê waar die goeie deel begin, die onderskrif skryf, en stel hoe lank die snit loop.",
+      af: "Ek kan jou sê waar die goeie deel begin, die onderskrif skryf, en stel hoe lank die liedjie loop.",
     },
     can: ["pick the moment to cut", "write the caption", "set the length"],
     ops: {
@@ -296,7 +296,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     seeds: [
       {
         en: "Which part of this song is the hook?",
-        af: "Watter deel van hierdie snit is die hook?",
+        af: "Watter deel van hierdie liedjie is die hook?",
       },
       {
         en: "Write a caption for this clip",
@@ -316,7 +316,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "Your channel: your released music, in the order you want people to hear it.",
     helps: {
       en: "I can set the running order, write the description, and name a playlist.",
-      af: "Ek kan die speelorde stel, die beskrywing skryf, en ’n snitlys benoem.",
+      af: "Ek kan die speelorde stel, die beskrywing skryf, en ’n speellys benoem.",
     },
     can: ["set the running order", "write the description", "name a playlist"],
     ops: {
@@ -333,7 +333,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       },
       {
         en: "Which track should open it?",
-        af: "Watter snit moet dit oopmaak?",
+        af: "Watter liedjie moet dit oopmaak?",
       },
     ],
   },
@@ -465,7 +465,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
   sound: {
     id: "sound",
     stage: "make",
-    next: { to: "make", en: "Make a song with it", af: "Maak ’n snit daarmee" },
+    next: { to: "make", en: "Make a song with it", af: "Maak ’n liedjie daarmee" },
     purpose:
       "Training a sound of your own from songs you have already made, so the next ones come out sounding like them.",
     helps: {
@@ -476,7 +476,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     seeds: [
       {
         en: "Which of my songs belong together?",
-        af: "Watter van my snitte hoort bymekaar?",
+        af: "Watter van my liedjies hoort bymekaar?",
       },
       {
         en: "What should I call this sound?",
@@ -484,7 +484,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       },
       {
         en: "How many songs do I need?",
-        af: "Hoeveel snitte het ek nodig?",
+        af: "Hoeveel liedjies het ek nodig?",
       },
     ],
   },
