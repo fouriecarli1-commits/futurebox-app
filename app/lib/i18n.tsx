@@ -970,6 +970,7 @@ export const STRINGS: Dict = {
   "feed.howTo": { en: "How it is built", af: "Hoe dit gebou word" },
   "feed.visitSite": { en: "Their site", af: "Hul webwerf" },
   "feed.close": { en: "Close", af: "Maak toe" },
+  "chan.lyrics": { en: "Lyrics", af: "Lirieke" },
   "feed.by": { en: "By", af: "Deur" },
   "feed.resetFilters": { en: "Clear the filters", af: "Vee die filters skoon" },
   "feed.freeClass": { en: "FREE FEATURED MASTERCLASS", af: "GRATIS UITGESOEKTE MASTERCLASS" },

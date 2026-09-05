@@ -19,7 +19,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Check, Copy, ListMusic, Loader2, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, X,
+  Check, Copy, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, X,
 } from 'lucide-react';
 import { loadTracks, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
@@ -38,6 +38,8 @@ import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
 import Hint from './Hint';
+import FollowWords from './FollowWords';
+import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
 
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
@@ -195,6 +197,19 @@ export default function Channel({
     seeded.current = true;
     setDraftName(creator.name ?? '');
   }, [creator]);
+
+  /* The words, full screen, following the song.
+
+     A song with a composition plan knows when each section starts, so its
+     lines can be laid on the clock. A song without one — anything brought in
+     from a file — has nothing to follow, and the button is not offered rather
+     than opening a screen that sits still while the music plays. */
+  const [lyricsFor, setLyricsFor] = useState<Track | null>(null);
+  const timedFor = useCallback((track: Track): readonly TimedLine[] => {
+    const parts = (track.parts ?? []) as readonly Part[];
+    if (!parts.length || !track.seconds) return [];
+    return timelineOf(parts, track.seconds);
+  }, []);
 
   const keepName = useCallback(async () => {
     const was = creator ?? { name: '', handle: '', about: '', links: {} };
@@ -472,6 +487,22 @@ export default function Channel({
                   {track.genre} · {clock(track.seconds)}
                 </p>
 
+                {timedFor(track).length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      /* Start it if it is not already going. Opening the words
+                         over a silent song is a screen that never moves. */
+                      if (playing !== track.id) void play(track.id);
+                      setLyricsFor(track);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[40px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
+                  >
+                    <MessageSquareQuote className="w-4 h-4 flex-shrink-0" />
+                    {t('chan.lyrics', 'Lyrics')}
+                  </button>
+                )}
+
                 <ShareRow
                   title={track.title}
                   what={t('chan.shareWhat', 'A song I made on FutureBox.')}
@@ -566,6 +597,16 @@ export default function Channel({
       </p>
 
       {email && <DeleteAccount email={email} />}
+
+      {/* The words, over everything, following the song that is playing. */}
+      {lyricsFor && (
+        <FollowWords
+          lines={timedFor(lyricsFor)}
+          audio={audioRef.current}
+          title={lyricsFor.title}
+          onClose={() => setLyricsFor(null)}
+        />
+      )}
     </div>
   );
 }
