@@ -34,7 +34,8 @@
     "nam:copy": "node scripts/nam-copy.mjs",
     "prebuild": "node scripts/nam-copy.mjs",
     "check:singview": "node audit/singview.mjs",
-    "check:signup": "node audit/signupcode.mjs"
+    "check:signup": "node audit/signupcode.mjs",
+    "check:firstscreen": "node audit/firstscreen.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

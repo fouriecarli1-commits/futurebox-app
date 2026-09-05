@@ -1416,7 +1416,18 @@ export default function FutureBoxHome() {
           every screen, not only this one. `gap` rather than `space-x` because
           space-x puts a margin on every child but the first, which is wrong the
           moment a row wraps onto two. */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-zinc-950/90 border-b border-zinc-800/80 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-wrap gap-y-3 gap-x-3">
+      {/* The header, and how much of a phone it is allowed to have.
+
+          It was `sticky` at every width, three rows deep — the mark and the
+          strapline, five tab pills wrapping onto two lines, and the account
+          row — which measured 224 px on an 844-pixel screen. Twenty-seven per
+          cent of the phone, pinned, with the feed sliding under it. On a
+          laptop the same three rows are one line and pinning them is right.
+
+          Below sm it scrolls with the page. Losing a pinned header on a phone
+          costs a scroll back up to reach the studio; keeping it costs a
+          quarter of every screen, on every screen. */}
+      <header className="static sm:sticky top-0 z-40 backdrop-blur-xl bg-zinc-950/90 border-b border-zinc-800/80 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-wrap gap-y-3 gap-x-3">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
             <Cpu className="w-5 h-5 text-onAccent font-bold" />
@@ -1432,7 +1443,7 @@ export default function FutureBoxHome() {
               )}
             </h1>
             <div className="flex items-center gap-3 flex-wrap">
-              <p className="text-[10px] uppercase tracking-widest text-zinc-400">{t('feed.tagline')}</p>
+              <p className="hidden sm:block text-[10px] uppercase tracking-widest text-zinc-400">{t('feed.tagline')}</p>
               <HereNow />
             </div>
           </div>
