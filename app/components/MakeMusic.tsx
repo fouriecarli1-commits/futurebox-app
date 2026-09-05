@@ -840,10 +840,17 @@ export default function MakeMusic({
                     : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
                 }`}
               >
+                {/* The lengths live in `data/sound.ts`, which has no language
+                    of its own; the English there is the fallback and the
+                    dictionary carries the Afrikaans. Found by the two-language
+                    walk the moment these came out from behind the switch —
+                    sixteen English lines landed on an Afrikaans screen. */}
                 <span className={`block text-sm font-semibold ${seconds === choice.seconds ? 'text-emerald-300' : 'text-zinc-200'}`}>
-                  {choice.label}
+                  {t(`len.${choice.seconds}`, choice.label)}
                 </span>
-                <span className="block text-sm text-zinc-500 leading-snug">{choice.note}</span>
+                <span className="block text-sm text-zinc-500 leading-snug">
+                  {t(`len.${choice.seconds}.n`, choice.note)}
+                </span>
                 <span className="block text-xs text-zinc-500 pt-0.5">
                   {songCost(choice.seconds)} {t('video.credits', 'credits')}
                 </span>

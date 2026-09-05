@@ -52,10 +52,10 @@
  */
 
 import React from 'react';
-import { Compass, Library, Search, Sparkles, UserRound } from 'lucide-react';
+import { Compass, Library, Radio, Sparkles, UserRound } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 
-export type TabId = 'listen' | 'find' | 'make' | 'library' | 'you';
+export type TabId = 'spotlight' | 'live' | 'make' | 'library' | 'you';
 
 /** How tall the bar is, so a scrolling page can leave room for it. */
 export const BAR_HEIGHT = 64;
@@ -66,8 +66,19 @@ const TABS: readonly {
   readonly key: string;
   readonly fallback: string;
 }[] = [
-  { id: 'listen', icon: Compass, key: 'tab.listen', fallback: 'Listen' },
-  { id: 'find', icon: Search, key: 'tab.find', fallback: 'Find' },
+  /* Spotlight, not "Listen". It was renamed on the way into this bar and the
+     name went with it; Spotlight is what the page has been called everywhere
+     else — the filter inside it, the sponsorship rung, the robots file — and
+     it says what the page is for. "Listen" said what you do with a song. */
+  { id: 'spotlight', icon: Compass, key: 'tab.spotlight', fallback: 'Spotlight' },
+  /* Live where Find was.
+
+     Find was a search, and a search is something you reach for a few times a
+     week; the live room is where everybody else's videos are, which is the
+     thing a person opens an app to scroll. A tab is worth what it is pressed,
+     so the search moved to a small button in the corner and this took the
+     place it left. */
+  { id: 'live', icon: Radio, key: 'tab.live', fallback: 'Live' },
   { id: 'make', icon: Sparkles, key: 'tab.make', fallback: 'Make' },
   { id: 'library', icon: Library, key: 'tab.library', fallback: 'Library' },
   { id: 'you', icon: UserRound, key: 'tab.you', fallback: 'You' },

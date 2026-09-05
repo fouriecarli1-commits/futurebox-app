@@ -164,7 +164,7 @@ try {
   await p.screenshot({ path: shot('artistname.png'), fullPage: false });
 
   /* ── And the rest of the app follows, without a reload ──────────────── */
-  await bar.locator('button').filter({ hasText: 'Listen' }).first().click();
+  await bar.locator('button').filter({ hasText: 'Spotlight' }).first().click();
   await p.waitForTimeout(1200);
   const after = await headerSays();
   check('the corner of every screen changes to it', after.includes(NAME), after.slice(0, 80));

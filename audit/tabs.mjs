@@ -70,8 +70,13 @@ try {
   if (await pw.count()) await pw.fill('tabs-password-1234');
   await p.locator('button[type="submit"]').first().click();
   await p.waitForTimeout(2500);
-  const notNow = p.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
-  if (await notNow.count()) await notNow.click().catch(() => undefined);
+  /* Deliberately not pressing "Not now".
+
+     That press is somebody choosing the feed, and this assertion is about
+     where the app puts them when they choose nothing. The probe used to press
+     it here because landing was the feed and the door was in the way; landing
+     is the door now, so pressing it would be the probe walking past the thing
+     it is checking. */
   await p.waitForTimeout(700);
 
   /** The bar, and which tab it says you are on. */
@@ -89,12 +94,15 @@ try {
   const names = (await bar.locator('button').allInnerTexts()).map((one) => one.trim());
   check('with five tabs and no more', names.length === 5, names.join(' · '));
   for (const want of af
-    ? ['Luister', 'Soek', 'Maak', 'Biblioteek', 'Jy']
-    : ['Listen', 'Find', 'Make', 'Library', 'You']) {
+    ? ['Kollig', 'Live', 'Maak', 'Biblioteek', 'Jy']
+    : ['Spotlight', 'Live', 'Make', 'Library', 'You']) {
     check(`${want} is one of them`, names.includes(want));
   }
-  check('and the feed is where you land', (await tabOn()) === (af ? 'Luister' : 'Listen'), await tabOn());
-  await p.screenshot({ path: shot(`tabs-listen${af ? '-af' : ''}.png`) });
+  /* The door is where you land now — Make, with every room on it. Somebody
+     signed in opens this app to make something, and the feed is one press
+     away in the first tab. */
+  check('the door is where you land', (await tabOn()) === (af ? 'Maak' : 'Make'), await tabOn());
+  await p.screenshot({ path: shot(`tabs-landing${af ? '-af' : ''}.png`) });
 
   /* ── Make, and the door ─────────────────────────────────────────────── */
   await press(af ? 'Maak' : 'Make');
@@ -131,35 +139,56 @@ try {
   check('You opens the account panel', (await tabOn()) === (af ? 'Jy' : 'You'), await tabOn());
   check('and the bar is over it, not under it', await bar.isVisible());
 
-  await press(af ? 'Soek' : 'Find');
-  /* The search itself, not "some box with a placeholder is on the page".
+  await press('Live');
+  check('Live opens the room everybody else is in', (await tabOn()) === 'Live', await tabOn());
+  check('with the bar on it', await bar.isVisible());
+
+  await press(af ? 'Kollig' : 'Spotlight');
+  check('Spotlight closes everything and goes back to the feed',
+    (await tabOn()) === (af ? 'Kollig' : 'Spotlight') && (await doorButtons.count()) === 0);
+
+  /* ── The search, which is no longer a tab ────────────────────────────
  
-     The loose version passed for two weeks while the Find tab did nothing at
-     all: the search was mounted inside the studio, so from the feed there was
-     nothing on the page to open — and any screen with any placeholder in it
-     satisfied the assertion. Carli found it by pressing the button. */
+     It had one of the five and is now a small button in the corner, because a
+     tab is worth what it is pressed. Checked here rather than dropped: it is
+     the same feature, and it was broken once already by being mounted where
+     it could not be reached.
+ 
+     The search itself, not "some box with a placeholder is on the page". The
+     loose version passed for two weeks while the tab did nothing at all. */
+  const corner = p.locator('button[aria-label]').filter({ hasNot: p.locator('svg + *') }).last();
+  const searchButton = p.locator('button.fixed.z-\\[96\\]');
+  check('the search is in the corner, on the feed', (await searchButton.count()) === 1);
+  const cornerBox = await searchButton.first().boundingBox();
+  check('top right, and small', Boolean(cornerBox) && cornerBox.x > 300 && cornerBox.y < 80
+    && cornerBox.width <= 48 && cornerBox.height <= 48, JSON.stringify(cornerBox));
+  check('and still big enough to press', Boolean(cornerBox) && cornerBox.width >= 40 && cornerBox.height >= 40,
+    `${Math.round(cornerBox?.width ?? 0)}px`);
+  await searchButton.first().click();
+  await p.waitForTimeout(900);
   const searchBox = p.locator('div[role="dialog"][aria-label]').filter({ has: p.locator('input') });
-  check('Find opens the search', (await searchBox.count()) === 1, `${await searchBox.count()} found`);
+  check('pressing it opens the search', (await searchBox.count()) === 1, `${await searchBox.count()} found`);
   check('and it opens from the feed, not only from inside the studio',
     (await p.locator('div.fixed.inset-0.z-\\[50\\]').count()) === 0);
-  check('and the bar is still reachable', await bar.isVisible());
-
-  await press(af ? 'Luister' : 'Listen');
-  check('Listen closes everything and goes back to the feed',
-    (await tabOn()) === (af ? 'Luister' : 'Listen') && (await doorButtons.count()) === 0);
+  await p.keyboard.press('Escape');
+  await p.waitForTimeout(700);
+  if ((await searchBox.count()) > 0) {
+    await p.locator('div[role="dialog"] button[aria-label]').first().click().catch(() => undefined);
+    await p.waitForTimeout(700);
+  }
 
   /* ── Every way of getting from any tab to any other ─────────────────
  
      Twenty-five presses, not five. The bar was shipped passing a walk that
-     went Listen → Make → room → Make → Library → You → Find → Listen, in that
+     went Spotlight → Make → room → Make → Library → You → Live → Spotlight, in
      order, and it was broken in four of the twenty-five: once anybody pressed
      Library, `studioTab` kept "channels" for the rest of the session, so the
      bar said Library at the front door on every screen and **Make never lit
      at all**. Carli found it by using the app. A walk proves a walk; a matrix
      proves the bar. */
   const TABS = af
-    ? ['Luister', 'Soek', 'Maak', 'Biblioteek', 'Jy']
-    : ['Listen', 'Find', 'Make', 'Library', 'You'];
+    ? ['Kollig', 'Live', 'Maak', 'Biblioteek', 'Jy']
+    : ['Spotlight', 'Live', 'Make', 'Library', 'You'];
   const missed = [];
   for (const from of TABS) {
     for (const to of TABS) {
@@ -246,7 +275,7 @@ try {
   check('nothing on the front door is stranded under the bar', doorStranded === null,
     doorStranded ? `"${doorStranded.what}" ends at ${doorStranded.bottom}, in ${doorStranded.where}, page at ${doorStranded.scrolled}` : 'nothing');
 
-  await press(af ? 'Luister' : 'Listen');
+  await press(af ? 'Kollig' : 'Spotlight');
   await toTheBottom();
   const feedStranded = await lowestPressable();
   check('and nothing at the foot of the feed is either', feedStranded === null,

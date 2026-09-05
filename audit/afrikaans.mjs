@@ -201,8 +201,8 @@ try {
 
     const bar = p.locator('nav[aria-label]').first();
     const TABS = lang === 'af'
-      ? { make: 'Maak', library: 'Biblioteek', you: 'Jy', find: 'Soek', listen: 'Luister' }
-      : { make: 'Make', library: 'Library', you: 'You', find: 'Find', listen: 'Listen' };
+      ? { make: 'Maak', library: 'Biblioteek', you: 'Jy', live: 'Live', spotlight: 'Kollig' }
+      : { make: 'Make', library: 'Library', you: 'You', live: 'Live', spotlight: 'Spotlight' };
     const press = async (name) => {
       await bar.locator('button').filter({ hasText: name }).first().click();
       await p.waitForTimeout(1200);
@@ -225,7 +225,7 @@ try {
 
     for (const [tab, where] of [
       [TABS.library, 'the channel'], [TABS.you, 'the account'],
-      [TABS.find, 'the search'], [TABS.listen, 'the feed'],
+      [TABS.live, 'the live room'], [TABS.spotlight, 'the feed'],
     ]) {
       await press(tab);
       await read(where);

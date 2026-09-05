@@ -50,6 +50,7 @@ import Campaign from './components/Campaign';
 import Greeting from './components/Greeting';
 import Account from './components/Account';
 import TabBar, { BAR_HEIGHT, type TabId } from './components/TabBar';
+import SearchCorner from './components/SearchCorner';
 import { fetchCreator, type Creator } from './lib/radar';
 import { useBackStack } from './lib/backstack';
 import { readInvite, redeemInvite, type Redeemed } from './lib/collab';
@@ -644,15 +645,25 @@ export default function FutureBoxHome() {
   }, []);
 
   /**
-   * A session that was already there when the page loaded. Nothing happens.
+   * A session that was already there when the page loaded: open the door.
    *
-   * Coming back to a tab is not signing in. This was the one case that kept
-   * getting the welcome wrong in both directions: first it was invisible
-   * because it lived inside a studio nobody had opened, then it took over the
-   * whole screen on every refresh. Neither is what somebody returning to read
-   * the feed wants, and the answer is that they see the feed.
+   * This used to do nothing, and the note here argued for it — coming back to
+   * a tab is not signing in, and the welcome had already been wrong in both
+   * directions once. What that reasoning missed is what somebody signed in is
+   * here for. Carli: "na in log moet make die eerste blad wees wat die klient
+   * sien." Somebody with an account opens this app to make something, and the
+   * feed is what they were shown.
+   *
+   * So a session, however it got here, lands on the door — which is Make, with
+   * every room on it. The greeting on it already knows the difference between
+   * a first arrival and a return and says a different thing to each, so this
+   * is not a welcome shown twice; it is the same page, reached the way it is
+   * reached from the Make tab.
+   *
+   * Anybody who wants the feed is one press away from it, and that press is
+   * the first tab in the bar.
    */
-  const restored = useCallback(() => undefined, []);
+  const restored = useCallback(() => setAtDoor(true), []);
 
   /** And has just left: take it down, and re-arm it for next time. */
   const departed = useCallback(() => {
@@ -1335,20 +1346,23 @@ export default function FutureBoxHome() {
      because it is a new place. */
   const bottomTab: TabId = accountOpen
     ? 'you'
-    : searchOpen
-      ? 'find'
-      : atDoor
-        ? /* The door is not a room. It used to be read through `studioTab`,
-             which keeps whatever room was open last — so once anybody had
-             pressed Library the bar said Library at the front door, on every
-             screen, for the rest of the session, and Make never lit at all.
-             Standing at the door is Make, whatever room it was opened from. */
-          'make'
-        : uploadModalOpen
-          ? studioTab === 'channels'
-            ? 'library'
+    : atDoor
+      ? /* The door is not a room. It used to be read through `studioTab`,
+           which keeps whatever room was open last — so once anybody had
+           pressed Library the bar said Library at the front door, on every
+           screen, for the rest of the session, and Make never lit at all.
+           Standing at the door is Make, whatever room it was opened from. */
+        'make'
+      : uploadModalOpen
+        ? studioTab === 'channels'
+          ? 'library'
+          : studioTab === 'live'
+            ? 'live'
             : 'make'
-          : 'listen';
+        : 'spotlight';
+  /* The search is no longer a tab, so it no longer lights one. It is a small
+     button in the corner and it opens over whatever you were on — which is
+     why the bar goes on saying where you are while it is open. */
 
   /* ── The phone's Back button ─────────────────────────────────────────
 
@@ -1388,13 +1402,19 @@ export default function FutureBoxHome() {
     (tab: TabId) => {
       setSearchOpen(false);
       setAccountOpen(false);
-      if (tab === 'listen') {
+      if (tab === 'spotlight') {
         setUploadModalOpen(false);
         setAtDoor(false);
         return;
       }
-      if (tab === 'find') {
-        setSearchOpen(true);
+      if (tab === 'live') {
+        /* The live room is inside the studio, like every other room, so this
+           opens the studio at it. It is a tab rather than a chip on the door
+           because it is where everybody else's work is — the thing a person
+           opens the app to scroll rather than a room they set out to work in. */
+        setUploadModalOpen(true);
+        setAtDoor(false);
+        goToRoom('live');
         return;
       }
       if (tab === 'make') {
@@ -3522,6 +3542,14 @@ export default function FutureBoxHome() {
           a half-finished sign-up that lets somebody navigate away mid-form is
           worse than no bar. `anyModalOpen` already knows, minus the studio,
           which is not a modal however it is drawn. */}
+      {/* The search, in the corner, on the same terms as the bar: on every
+          screen or on none, and out of the way of a real modal. Hidden while
+          the search itself is open, where it would sit on top of the panel it
+          just opened. */}
+      {!(authModalOpen || pricingModalOpen || themeOpen || searchOpen || selectedMedia !== null || selectedBlueprint !== null) && (
+        <SearchCorner onOpen={() => setSearchOpen(true)} />
+      )}
+
       {!(authModalOpen || pricingModalOpen || themeOpen || selectedMedia !== null || selectedBlueprint !== null) && (
         <TabBar active={bottomTab} onGo={goTab} />
       )}
