@@ -39,7 +39,8 @@
     "check:studiohome": "node audit/studiohome.mjs",
     "check:bringsong": "node audit/bringsong.mjs",
     "check:videolang": "node audit/videolang.mjs",
-    "check:tabs": "node audit/tabs.mjs"
+    "check:tabs": "node audit/tabs.mjs",
+    "check:artistname": "node audit/artistname.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

@@ -38,6 +38,7 @@ import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
 import Hint from './Hint';
+import RecordingName from './RecordingName';
 import FollowWords from './FollowWords';
 import Note from './Note';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
@@ -184,21 +185,6 @@ export default function Channel({
      writer, and the component that picked the file does not need to know the
      row exists. The local state is updated first because the round trip is
      over a mobile connection and the picture is already on screen. */
-  /* The recording name, held while it is being typed.
-
-     Seeded from the row rather than kept in sync with it: an input whose value
-     is overwritten every time the profile reloads takes the cursor with it,
-     and somebody typing a name on a phone loses the last two letters. */
-  const [draftName, setDraftName] = useState('');
-  const [namedAt, setNamedAt] = useState(0);
-  const [naming, setNaming] = useState(false);
-  const seeded = useRef(false);
-  useEffect(() => {
-    if (seeded.current || !creator) return;
-    seeded.current = true;
-    setDraftName(creator.name ?? '');
-  }, [creator]);
-
   /* The words, full screen, following the song.
 
      A song with a composition plan knows when each section starts, so its
@@ -211,19 +197,6 @@ export default function Channel({
     if (!parts.length || !track.seconds) return [];
     return timelineOf(parts, track.seconds);
   }, []);
-
-  const keepName = useCallback(async () => {
-    const was = creator ?? { name: '', handle: '', about: '', links: {} };
-    const wanted = draftName.trim().slice(0, 60);
-    if (wanted === (was.name ?? '')) return;
-    setNaming(true);
-    const updated = { ...was, name: wanted };
-    const failed = await saveCreator(updated);
-    setNaming(false);
-    if (failed) return;
-    setCreator(updated);
-    setNamedAt(Date.now());
-  }, [creator, draftName]);
 
   const keepPhoto = useCallback(
     async (next: string | null) => {
@@ -288,49 +261,12 @@ export default function Channel({
 
           The header showed a name and there was nowhere to set one, so it
           read "Your channel" for everybody and the live room introduced each
-          song by its owner's @handle. An address is not a name. */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-2.5">
-        <label htmlFor="recording-name" className="flex items-center gap-1 text-sm font-semibold text-zinc-300">
-          {t('chan.recName', 'Your recording name')}
-          <Hint>
-            {t(
-              'chan.recNameWhy',
-              'The name your work goes out under. It is shown beside every song you post in the live room, in place of your handle.',
-            )}
-          </Hint>
-        </label>
-        <div className="flex gap-2">
-          <input
-            id="recording-name"
-            value={draftName}
-            maxLength={60}
-            onChange={(event) => setDraftName(event.target.value)}
-            onBlur={() => void keepName()}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                void keepName();
-              }
-            }}
-            placeholder={t('chan.recNamePlaceholder', 'What you release under')}
-            className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-white text-sm placeholder-zinc-600 focus:border-emerald-500 focus:outline-none"
-          />
-          <button
-            type="button"
-            onClick={() => void keepName()}
-            disabled={naming || draftName.trim() === (creator?.name ?? '')}
-            className="px-3.5 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40"
-          >
-            {naming ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-            {t('chan.recNameSave', 'Save')}
-          </button>
-        </div>
-        {namedAt > 0 && (
-          <p className="text-xs text-emerald-400">
-            {t('chan.recNameKept', 'Saved. New posts go out under this name.')}
-          </p>
-        )}
-      </div>
+          song by its owner's @handle. An address is not a name.
+
+          The field itself lives in `RecordingName` now, because the account
+          panel behind **You** needs the identical thing and two copies of one
+          form is two places for it to drift. */}
+      <RecordingName creator={creator} onSaved={setCreator} />
 
       {/* ── The picture ──────────────────────────────────────────────────
           Only with an account behind it: a photo kept on one device is not a

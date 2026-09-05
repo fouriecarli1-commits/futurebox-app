@@ -30,6 +30,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2 } from 'lucide-react';
+import RecordingName from './RecordingName';
+import type { Creator } from '../lib/radar';
 import { useLang } from '../lib/i18n';
 import { TIER_SPECS, tierPrice, type Tier } from '../lib/plans';
 import type { Region } from '../lib/pricing';
@@ -48,6 +50,7 @@ export default function Account({
   region,
   onSeePlans,
   onGoToChannel,
+  onNamed,
 }: {
   readonly open: boolean;
   readonly onClose: () => void;
@@ -58,6 +61,8 @@ export default function Account({
   readonly region: Region;
   readonly onSeePlans: () => void;
   readonly onGoToChannel: () => void;
+  /** The saved row, so the app above can redraw the name it is showing. */
+  readonly onNamed?: (creator: Creator) => void;
 }): React.ReactElement | null {
   const { t, lang } = useLang();
   const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
@@ -138,6 +143,15 @@ export default function Account({
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* ── The name your work goes out under ──────────────────────────
+
+            On this screen because this is where somebody looks for their own
+            name, and it is the same component the channel carries. The name in
+            the corner of the app used to be a fragment of a sign-up email with
+            nowhere to change it; the one on their releases was somewhere else
+            entirely. Both are this. */}
+        <RecordingName onSaved={(row) => onNamed?.(row)} compact />
 
         {/* ── The plan ───────────────────────────────────────────────────── */}
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">

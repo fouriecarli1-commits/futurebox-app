@@ -50,6 +50,7 @@ import Campaign from './components/Campaign';
 import Greeting from './components/Greeting';
 import Account from './components/Account';
 import TabBar, { BAR_HEIGHT, type TabId } from './components/TabBar';
+import { fetchCreator, type Creator } from './lib/radar';
 import SignInWith from './components/SignInWith';
 import { noteTaste, loadTaste } from './lib/taste';
 import { habitOf } from './lib/habits';
@@ -475,6 +476,23 @@ export default function FutureBoxHome() {
   const [accountOpen, setAccountOpen] = useState(false);
 
   /**
+   * The name and handle somebody chose, as opposed to the one they were given.
+   *
+   * There are two names in this app. `toAccount` builds one out of the sign-up
+   * email — `email.split('@')[0]` — because at sign-up that is the only thing
+   * there is, and the header, the greeting and the account panel have shown it
+   * ever since. The other is the recording name on the `creators` row, which
+   * is what the live room and the collab radar have been putting beside a song
+   * all along.
+   *
+   * So the app has been calling one person two different things depending on
+   * which screen they were looking at: `anrefourie` in the corner, and their
+   * real name on their own release. This is where the chosen one is read, once,
+   * and everything in the chrome below uses it.
+   */
+  const [creator, setCreator] = useState<Creator | null>(null);
+
+  /**
    * What they keep coming back to, for the copilot to answer in their terms.
    *
    * The same `habitOf` the welcome screen uses, so the copilot cannot be handed
@@ -832,11 +850,33 @@ export default function FutureBoxHome() {
   ];
 
 
+  /* Read once per sign-in. Nothing waits for it: the chrome draws with the
+     account name and swaps to the chosen one when the row lands, which is a
+     name changing under somebody's eyes for a moment and is still better than
+     an empty corner while a fetch runs. */
+  useEffect(() => {
+    if (!user) {
+      setCreator(null);
+      return;
+    }
+    let live = true;
+    void fetchCreator().then((found) => {
+      if (live) setCreator(found);
+    });
+    return () => {
+      live = false;
+    };
+  }, [user?.email]);
+
+  /** What this person is called, and where people write to them. */
+  const artistName = creator?.name?.trim() || user?.name || '';
+  const artistHandle = creator?.handle?.trim() ? `@${creator.handle.trim()}` : (user?.handle ?? '');
+
   // The Collab Radar reads what has actually been released rather than what the
   // creator says they do, so the matches move when the catalogue moves.
   const creatorProfile = profileFromTracks(
-    user?.name ?? 'FutureBox creator',
-    user?.handle ?? '@futurebox',
+    artistName || 'FutureBox creator',
+    artistHandle || '@futurebox',
     user?.followers ?? 0,
     TRACK_FLAVOURS,
   );
@@ -1566,11 +1606,11 @@ export default function FutureBoxHome() {
                 className="flex items-center space-x-2 text-xs font-semibold"
               >
                 <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-500 text-onAccent font-extrabold flex items-center justify-center text-[10px]">
-                  {user.name.charAt(0)}
+                  {(artistName || user.name).charAt(0)}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-white text-[11px] leading-tight font-bold">{user.name}</p>
-                  <p className="text-[10px] text-emerald-400">{user.handle}</p>
+                  <p className="text-white text-[11px] leading-tight font-bold">{artistName || user.name}</p>
+                  <p className="text-[10px] text-emerald-400">{artistHandle || user.handle}</p>
                 </div>
               </button>
               <button
@@ -2564,7 +2604,7 @@ export default function FutureBoxHome() {
             style={{ paddingBottom: BAR_HEIGHT + 24 }}
           >
             <Greeting
-              name={user?.name}
+              name={artistName || user?.name}
               onGo={(id) => {
                 setUploadModalOpen(true);
                 goToRoom(id);
@@ -2579,8 +2619,9 @@ export default function FutureBoxHome() {
         open={accountOpen}
         onClose={() => setAccountOpen(false)}
         email={user?.email}
-        name={user?.name}
-        handle={user?.handle}
+        name={artistName || user?.name}
+        handle={artistHandle || user?.handle}
+        onNamed={setCreator}
         plan={userPlan}
         region={region}
         onSeePlans={() => setPricingModalOpen(true)}
