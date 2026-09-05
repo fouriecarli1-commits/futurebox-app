@@ -344,3 +344,4 @@ or keep both is a decision nobody has made.
 | A song from a photograph, measured on the device | 2026-09-05 | `5bb766c` |
 | One panel for both ways of pointing at a sound | 2026-09-05 | `a7d2209` |
 | The picture read by the model, not only measured | 2026-09-05 | `a109a66` |
+| The unheard dot, and a way to narrow the channel | 2026-09-05 | `aaf3ed2` |
