@@ -57,6 +57,16 @@ export interface Shot {
    */
   readonly from?: number;
   readonly to?: number;
+  /**
+   * The words printed over this shot, when the board is captioning.
+   *
+   * Filled from the shot's own quoted line the first time captions are turned
+   * on, because the desk already treats quoted text as the line being said —
+   * so in the common case there is nothing to type. Kept separately from the
+   * prompt because they are different things: the prompt is what the camera
+   * sees, and this is what the viewer reads.
+   */
+  readonly caption?: string;
 }
 
 export interface Storyboard {
@@ -71,6 +81,16 @@ export interface Storyboard {
    * is written down at all.
    */
   readonly background?: 'black' | 'blur';
+  /**
+   * Whether the words go on the film.
+   *
+   * Off by default, and worth the switch rather than always-on: a film cut for
+   * a place that carries its own subtitle track wants clean pictures, and
+   * burned-in words cannot be taken off afterwards. On is the right choice for
+   * everywhere these actually get posted, where most people watch with the
+   * sound off — which is why the room says so beside the switch.
+   */
+  readonly captions?: boolean;
 }
 
 const KEY = 'futurebox.storyboard.v1';

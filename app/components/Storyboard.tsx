@@ -43,7 +43,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowDown, ArrowUp, Clapperboard, Check, Download, Film, Loader2, Music, Play, Plus, Scissors, Sparkles, Trash2,
+  ArrowDown, ArrowUp, Clapperboard, Check, Download, Film, Loader2, Music, Play, Plus, Scissors, Sparkles, Trash2, Type,
 } from 'lucide-react';
 import { engines, type EngineAspect } from '../lib/engines';
 import { videoCost, type VideoGrade } from '../lib/credits';
@@ -52,6 +52,7 @@ import { makeId, rememberMake } from '../lib/makes';
 import { readAudio } from '../lib/trackaudio';
 import { addUpload, loadUploads, removeUpload } from '../lib/uploads';
 import { canStitch, lengthOf, stitch } from '../lib/stitch';
+import { spokenLines } from '../lib/videoscenes';
 import { makeBlob } from '../lib/makes';
 import {
   EMPTY, MOST_SHOTS, changed, clipsFor, loadStoryboard, missing, moved, playsFor,
@@ -59,6 +60,20 @@ import {
 } from '../lib/storyboard';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
+
+/**
+ * The words that go over a shot.
+ *
+ * A caption written by hand wins; otherwise the shot's own quoted line, which
+ * this desk already treats as the thing being said. That default is why
+ * turning captions on is usually one switch and no typing: somebody writing
+ * "a woman at a window says \u201cI am not going back\u201d" has already
+ * written the subtitle.
+ */
+function captionOf(shot: Shot): string {
+  if (shot.caption !== undefined) return shot.caption.trim();
+  return spokenLines(shot.prompt)[0] ?? '';
+}
 
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.round(seconds));
@@ -261,9 +276,17 @@ export default function Storyboard({
           name: `${index + 1}`,
           ...(board.shots[index].from !== undefined ? { from: board.shots[index].from } : {}),
           ...(board.shots[index].to !== undefined ? { to: board.shots[index].to } : {}),
+          /* Only when the board is captioning. A caption left on a shot from a
+             run with the switch on must not reappear in a run with it off. */
+          ...(board.captions && captionOf(board.shots[index])
+            ? { caption: captionOf(board.shots[index]) }
+            : {}),
         }))
-        .filter((one): one is { clip: Blob; name: string; from?: number; to?: number } =>
-          Boolean(one.clip),
+        .filter(
+          (
+            one,
+          ): one is { clip: Blob; name: string; from?: number; to?: number; caption?: string } =>
+            Boolean(one.clip),
         );
       if (!scenes.length) {
         setProblem(t('board.nothing', 'Nothing to cut yet — make at least one shot.'));
@@ -391,6 +414,27 @@ export default function Storyboard({
                 placeholder={t('board.hint', 'What is in the shot, what it does, what the camera does.')}
                 className="w-full resize-y rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed"
               />
+
+              {/* The words on screen, and only when the film is captioned.
+                  One line, pre-filled from the quoted line, so the usual case
+                  is a switch and nothing typed. */}
+              {board.captions && (
+                <div className="flex items-center gap-2">
+                  <Type className="w-4 h-4 text-zinc-600 shrink-0" />
+                  <label className="sr-only" htmlFor={`caption-${shot.id}`}>
+                    {t('board.caption', 'Words on screen')}
+                  </label>
+                  <input
+                    id={`caption-${shot.id}`}
+                    value={captionOf(shot)}
+                    onChange={(event) =>
+                      setBoard((was) => changed(was, shot.id, { caption: event.target.value }))
+                    }
+                    placeholder={t('board.captionHint', 'Nothing on screen for this shot')}
+                    className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+              )}
 
               <div className="flex items-center gap-1.5 flex-wrap">
                 {lengths.map((one) => (
@@ -530,6 +574,40 @@ export default function Storyboard({
             {t(
               'board.songWhy',
               'A song from your channel, or an audio file off this device — up to 60 MB, kept here and not posted anywhere. It plays under the whole film and is cut to its length.',
+            )}
+          </Note>
+
+          {/* ── Words on the film ────────────────────────────────────────
+
+              Burned into the picture, because a subtitle file beside it is
+              ignored by every place these get posted — and most people watch
+              them with the sound off, which is the whole reason to caption.
+
+              Off by default all the same: burned-in words cannot be taken off
+              afterwards, and a cut going somewhere that carries its own
+              subtitle track wants clean pictures. */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-zinc-400">{t('board.captions', 'Words on the film')}</span>
+            {[true, false].map((on) => (
+              <button
+                key={String(on)}
+                type="button"
+                onClick={() => setBoard((was) => ({ ...was, captions: on }))}
+                aria-pressed={(board.captions ?? false) === on}
+                className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
+                  (board.captions ?? false) === on
+                    ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                    : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600'
+                }`}
+              >
+                {on ? t('board.captionsOn', 'Printed on') : t('board.captionsOff', 'None')}
+              </button>
+            ))}
+          </div>
+          <Note className="text-xs text-zinc-500">
+            {t(
+              'board.captionsWhy',
+              'The words are printed into the picture, so they show wherever the film is posted — most people watch these with the sound off. They cannot be taken off afterwards, so cut it again without them for anywhere that carries its own subtitles.',
             )}
           </Note>
 

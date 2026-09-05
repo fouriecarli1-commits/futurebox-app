@@ -230,6 +230,53 @@ const out = await p.evaluate(async () => {
   const black = await bandOf('black');
   const blurred = await bandOf('blur');
 
+  /* ── Words burned into the picture ──────────────────────────────────
+
+     The only assertion worth making about a subtitle is that it is in the
+     file, and the only way to know is to look at the pixels of the finished
+     film. The clip is a flat dark blue with a white square crossing its
+     middle, so the bottom eighth of the frame has nothing white in it — and
+     a caption's whole job is to put white there.
+
+     Measured twice with everything else identical, so a bright pixel that
+     came from the clip rather than from the caption fails both runs and
+     proves nothing either way. */
+  async function wordsOf(caption) {
+    const plain = await clip(2, '#12263a', 320, 180);
+    const film = await window.ST.stitch({
+      scenes: caption ? [{ clip: plain, caption }] : [{ clip: plain }],
+      width: 320,
+      height: 180,
+    });
+    if (!film.ok) return null;
+    const v = document.createElement('video');
+    v.src = URL.createObjectURL(film.blob);
+    v.muted = true;
+    await new Promise((r) => { v.onloadedmetadata = r; v.onerror = r; });
+    v.currentTime = 1.0;
+    await new Promise((r) => { v.onseeked = r; setTimeout(r, 1500); });
+    const shot = document.createElement('canvas');
+    shot.width = 320; shot.height = 180;
+    const g = shot.getContext('2d');
+    g.drawImage(v, 0, 0, 320, 180);
+    /* The caption band: below the middle, above the bottom eighth the code
+       deliberately keeps clear for the app's own furniture. */
+    const from = Math.round(180 * 0.66);
+    const to = Math.round(180 * 0.90);
+    const data = g.getImageData(0, from, 320, to - from).data;
+    let bright = 0;
+    let peak = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const sum = data[i] + data[i + 1] + data[i + 2];
+      if (sum > peak) peak = sum;
+      if (data[i] > 190 && data[i + 1] > 190 && data[i + 2] > 190) bright += 1;
+    }
+    return { bright, peak };
+  }
+
+  const silentBand = await wordsOf(null);
+  const wordBand = await wordsOf('Ek is nie terug nie');
+
   /* The mechanism the blurred background rests on, asked of the browser
      rather than assumed: a canvas that ignores `filter` would draw an
      enormous sharp copy, which is worse than the bars it replaced — the code
@@ -267,6 +314,8 @@ const out = await p.evaluate(async () => {
     black,
     blurred,
     honoursFilter,
+    silentBand,
+    wordBand,
     unsupported: !window.ST.canStitch(),
   };
 });
@@ -333,6 +382,18 @@ if (!out.ok) {
   check('and is smeared away in the background — it is blurred, not enlarged',
     Boolean(out.blurred) && out.blurred.bandPeak < out.blurred.sharpPeak * 0.8,
     `band peak ${out.blurred?.bandPeak} against ${out.blurred?.sharpPeak} in the picture`);
+  // ── Words burned into the picture ──────────────────────────────────────
+  check('a film with no caption has nothing white where a caption would be',
+    Boolean(out.silentBand) && out.silentBand.bright < 20,
+    `${out.silentBand?.bright} bright pixels, peak ${out.silentBand?.peak}`);
+  check('and a captioned film has the words there, in the file itself',
+    Boolean(out.wordBand) && out.wordBand.bright > 300,
+    `${out.wordBand?.bright} bright pixels, peak ${out.wordBand?.peak}`);
+  check('which is the caption and not the clip — the same clip, twice',
+    Boolean(out.wordBand) && Boolean(out.silentBand) &&
+      out.wordBand.bright > out.silentBand.bright * 10,
+    `${out.wordBand?.bright} against ${out.silentBand?.bright}`);
+
   check('a start past the end falls back to the whole clip rather than nothing',
     out.clamps[2].got.from === 0 && out.clamps[2].got.to === 10,
     `${out.clamps[2].got.from}–${out.clamps[2].got.to}`);

@@ -77,6 +77,21 @@ export interface Scene {
    */
   readonly from?: number;
   readonly to?: number;
+  /**
+   * Words printed over this scene, for the whole time it is on screen.
+   *
+   * Burned into the picture rather than carried as a subtitle track, and that
+   * is a decision rather than a shortcut: a `.vtt` beside the file is ignored
+   * by every place these get posted. Instagram, TikTok and a WhatsApp forward
+   * all play the picture and nothing else, so words that are not in the
+   * picture are words nobody sees — and the whole reason to caption is that
+   * most of these are watched with the sound off.
+   *
+   * The cost is that they cannot be turned off afterwards. That is why it is
+   * a choice made on the board, per shot, and why the film can be cut again
+   * without them for anywhere that does carry a subtitle track.
+   */
+  readonly caption?: string;
 }
 
 export interface Cut {
@@ -243,6 +258,111 @@ function backdrop(
  * the film should appear in the film, and an empty trim is far more likely to
  * be a slider mishandled than an intention.
  */
+/**
+ * Words over the picture, sized to the film rather than to a guess.
+ *
+ * Everything here is a fraction of the frame's height, so the same caption is
+ * the same size on a 1080-tall vertical film as on a 720-tall wide one. The
+ * band behind it is the part that makes this legible: white text over
+ * arbitrary footage is white text over a white wall about a tenth of the time,
+ * and an outline thick enough to survive that is thick enough to read badly.
+ *
+ * Three lines at most. A fourth means somebody wrote a paragraph, and cutting
+ * it off is a clearer signal than shrinking the type until it is unreadable.
+ */
+const CAPTION_LINES = 3;
+
+function wrapped(
+  context: CanvasRenderingContext2D,
+  text: string,
+  width: number,
+): { lines: string[]; over: boolean } {
+  const lines: string[] = [];
+  let line = '';
+  const words = text.split(/\s+/).filter(Boolean);
+  for (let i = 0; i < words.length; i += 1) {
+    const next = line ? `${line} ${words[i]}` : words[i];
+    if (context.measureText(next).width <= width || !line) {
+      line = next;
+      continue;
+    }
+    lines.push(line);
+    line = words[i];
+    if (lines.length === CAPTION_LINES) return { lines, over: true };
+  }
+  if (line) lines.push(line);
+  return { lines, over: false };
+}
+
+export function drawCaption(
+  context: CanvasRenderingContext2D,
+  text: string,
+  width: number,
+  height: number,
+): void {
+  const words = text.trim();
+  if (!words) return;
+
+  const face = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  const room = width * 0.86;
+
+  /* Made smaller before it is cut short.
+
+     Three lines is the ceiling, and a line that spills past it used to be
+     dropped — so a caption ending "…nie terug nie" came out ending "…nie
+     terug", which is a different sentence. Two smaller sizes are tried first,
+     and only a caption that will not fit even at the smallest is trimmed,
+     with a mark to say so. */
+  let size = 0;
+  let lines: string[] = [];
+  for (const share of [0.048, 0.041, 0.035]) {
+    size = Math.max(14, Math.round(height * share));
+    context.font = `700 ${size}px ${face}`;
+    const fit = wrapped(context, words, room);
+    lines = fit.lines;
+    if (!fit.over) break;
+    if (share === 0.035) {
+      const last = lines[lines.length - 1] ?? '';
+      lines[lines.length - 1] = `${last.replace(/[\s,.;:]+$/, '')}\u2026`;
+    }
+  }
+  if (!lines.length) return;
+
+  context.save();
+  context.font = `700 ${size}px ${face}`;
+  context.textAlign = 'center';
+  context.textBaseline = 'alphabetic';
+
+  const step = Math.round(size * 1.28);
+  const pad = Math.round(size * 0.42);
+  /* Clear of the bottom eighth, which is where every app that plays these
+     puts its own furniture — the caption, the handle, the progress bar. A
+     subtitle under that is a subtitle behind a username. */
+  const bottom = height - Math.round(height * 0.12);
+  const firstBaseline = bottom - step * (lines.length - 1);
+  /* Measured rather than assumed: a box built on the font size is lopsided,
+     because the size includes room for descenders the first line does not
+     use, and the caption then sits visibly low inside its own band. */
+  const metrics = context.measureText(lines[0]);
+  const ascent = metrics.actualBoundingBoxAscent || size * 0.72;
+  const descent = metrics.actualBoundingBoxDescent || size * 0.24;
+  const boxTop = firstBaseline - ascent - pad;
+  const boxHeight = bottom + descent + pad - boxTop;
+  const widest = Math.max(...lines.map((one) => context.measureText(one).width));
+  const boxWidth = Math.min(width * 0.94, widest + pad * 2.4);
+
+  context.fillStyle = 'rgba(0, 0, 0, 0.62)';
+  context.beginPath();
+  context.roundRect((width - boxWidth) / 2, boxTop, boxWidth, boxHeight, Math.round(size * 0.34));
+  context.fill();
+
+  context.fillStyle = '#ffffff';
+  lines.forEach((one, index) => {
+    context.fillText(one, width / 2, firstBaseline + step * index);
+  });
+  context.restore();
+}
+
 export function windowOf(scene: Scene, duration: number): { from: number; to: number } {
   if (!Number.isFinite(duration) || duration <= 0) return { from: 0, to: 0 };
   const from = Math.min(Math.max(0, scene.from ?? 0), duration);
@@ -388,6 +508,7 @@ export async function stitch(cut: Cut): Promise<Made> {
          slack is for rounding, not for a shape that is nearly right: an eight
          pixel band still wants filling. */
       const fills = (box.w * box.h) / (cut.width * cut.height);
+      const caption = cut.scenes[index].caption?.trim() ?? '';
 
       await new Promise<void>((done) => {
         let stop = false;
@@ -412,6 +533,10 @@ export async function stitch(cut: Cut): Promise<Made> {
           context.fillRect(0, 0, cut.width, cut.height);
           if (wantsBlur && fills < 0.995) backdrop(context, scratch, video, cut.width, cut.height);
           context.drawImage(video, box.x, box.y, box.w, box.h);
+          /* Over the picture and over the bars alike, so a caption on a wide
+             shot in a tall film sits in the black band rather than across a
+             face. Painted every frame because the frame under it is. */
+          if (caption) drawCaption(context, caption, cut.width, cut.height);
           requestAnimationFrame(draw);
         };
         draw();
