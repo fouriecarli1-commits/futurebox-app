@@ -47,6 +47,7 @@ import { presenterCost } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import type { VoiceState } from './VoiceLab';
 import Cost from './Cost';
+import Note from './Note';
 
 /** How long the reading is, read off the file rather than guessed from words. */
 async function lengthOf(blob: Blob): Promise<number> {
@@ -272,12 +273,10 @@ export default function Presenter({
           <h3 className="text-base font-black text-white tracking-tight">
             {t('pres.title', 'A presenter who says your script')}
           </h3>
-          <p className="text-sm text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'pres.what',
               'Somebody from your cast, reading words in a voice you choose, with their mouth moving to it. It speaks whatever language you write in — Afrikaans included — because it is handed the reading rather than the words.',
-            )}
-          </p>
+            )}</Note>
         </div>
       </div>
 
@@ -374,12 +373,10 @@ export default function Presenter({
 
           {/* Cheap first, dear second — and the cheap one is a real answer to
               "is this the right voice", which is most of what goes wrong. */}
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'pres.whyRead',
               'Reading it costs a fraction of the video. Hearing the words in that voice before the picture is made is the difference between one clip and three.',
-            )}
-          </p>
+            )}</Note>
 
           {reading && (
             <>

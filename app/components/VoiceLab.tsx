@@ -23,6 +23,7 @@ import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import Recommend from './Recommend';
 import VoicePicker from './VoicePicker';
+import Note from './Note';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { VOICE_CONSENT } from '@/app/lib/consent';
@@ -427,9 +428,7 @@ export default function VoiceLab({
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
         <div>
           <p className="text-base font-bold text-white">{t('voice.yours', 'Your own voice')}</p>
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t('voice.yoursNote', 'Record about a minute and this can read scripts in your voice. It reads — it does not sing.')}
-          </p>
+          <Note>{t('voice.yoursNote', 'Record about a minute and this can read scripts in your voice. It reads — it does not sing.')}</Note>
         </div>
 
         {state.mine.length > 0 && (
@@ -521,9 +520,7 @@ export default function VoiceLab({
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
         <div>
           <p className="text-base font-bold text-white">{t('voice.readIt', 'Read a script aloud')}</p>
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t('voice.readNote', 'Write it, pick a voice, and hear it. An episode made this way says so on the episode.')}
-          </p>
+          <Note>{t('voice.readNote', 'Write it, pick a voice, and hear it. An episode made this way says so on the episode.')}</Note>
         </div>
 
         {/* The choice this button was built for: which voice reads this script.
@@ -680,12 +677,10 @@ export default function VoiceLab({
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
         <div>
           <p className="text-base font-bold text-white">{t('voice.changer', 'Say it again in another voice')}</p>
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t(
+          <Note>{t(
               'voice.changerNote',
               'Bring in a recording, or make one here, and it comes back in the voice picked above \u2014 your timing and your delivery, their tone.',
-            )}
-          </p>
+            )}</Note>
         </div>
 
         <div className="flex flex-wrap gap-2">

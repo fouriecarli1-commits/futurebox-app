@@ -39,6 +39,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { LifeBuoy, Loader2, Send, Check, Mail, AlertTriangle } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 interface Turn {
   readonly role: 'user' | 'assistant';
@@ -319,12 +320,10 @@ export default function HelpDesk(): React.ReactElement {
           </div>
         )}
 
-        <p className="text-sm text-zinc-500 leading-relaxed">
-          {t(
+        <Note className="text-sm text-zinc-500 leading-relaxed">{t(
             'help.private',
             'Nothing here is published. The message goes to one person, and your address is used to reply to you and nothing else.',
-          )}
-        </p>
+          )}</Note>
       </section>
     </div>
   );

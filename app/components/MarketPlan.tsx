@@ -31,6 +31,7 @@ import {
 } from '../lib/marketplan';
 import { loadReport } from '../lib/adreport';
 import { byWeekday, standoutDays } from '../lib/adweek';
+import Note from './Note';
 
 const KEY = 'futurebox.marketplan.v1';
 
@@ -174,12 +175,10 @@ export default function MarketPlan({ brief }: { readonly brief: Brief }): React.
           <h3 className="text-base font-black text-white tracking-tight">
             {t('plan.title', 'The market, and the week')}
           </h3>
-          <p className="text-sm text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'plan.what',
               'What you are actually selling, who buys it, what they are deciding between — and a week of posting with days, times and platforms.',
-            )}
-          </p>
+            )}</Note>
         </div>
       </div>
 

@@ -22,6 +22,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Maximize2 } from 'lucide-react';
 import FollowWords from './FollowWords';
+import Note from './Note';
 import { peaksOf, type Peaks } from '../lib/peaks';
 import { lineAt, timelineOf, type Part } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
@@ -213,7 +214,7 @@ export default function NowPlaying({
               </div>
             ))}
           </div>
-          <p className="text-sm text-zinc-600 leading-snug">{t('play.followNote')}</p>
+          <Note className="text-sm text-zinc-600 leading-snug">{t('play.followNote')}</Note>
         </div>
       )}
 

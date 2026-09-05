@@ -27,6 +27,7 @@ import { startCheckout } from '../lib/purchases';
 import { buys, type Pack } from '../lib/credits';
 import type { Short } from '../lib/wallet';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 export default function OutOfCredits({
   short,
@@ -134,12 +135,10 @@ export default function OutOfCredits({
 
         {/* Said plainly, because it is true and because a pack that quietly
             undercut the plans would make the plans pointless. */}
-        <p className="text-xs text-zinc-500 leading-snug">
-          {t(
+        <Note className="text-xs text-zinc-500 leading-snug">{t(
             'credits.subNote',
             'A pack costs more per credit than any monthly plan — it is for the month you needed more than usual. If you need more every month, a plan is the cheaper way.',
-          )}
-        </p>
+          )}</Note>
       </div>
     </div>
   );

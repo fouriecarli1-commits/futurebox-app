@@ -38,6 +38,7 @@ import Cost from './Cost';
 import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
 import type { VoiceState } from './VoiceLab';
+import Note from './Note';
 
 const EXAMPLE = `Anre: So what actually changed this year?
 Carli: Everything, and none of it at once.
@@ -115,9 +116,7 @@ export default function TwoHosts({
           <MessagesSquare className="w-4 h-4 text-emerald-400" />
           {t('hosts.title', 'Two people talking')}
         </p>
-        <p className="text-sm text-zinc-500 leading-snug">
-          {t('hosts.sub', 'Write it as a script and both voices are made in one pass, so they answer each other instead of reading in turn.')}
-        </p>
+        <Note>{t('hosts.sub', 'Write it as a script and both voices are made in one pass, so they answer each other instead of reading in turn.')}</Note>
       </div>
 
       {/* ── Who is speaking ─────────────────────────────────────────────── */}

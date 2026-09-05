@@ -53,6 +53,7 @@ import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import type { Track } from '../lib/library';
 import Lanes from './Lanes';
+import Note from './Note';
 
 interface Part {
   name: string;
@@ -378,9 +379,7 @@ export default function SongSections({
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-6 text-center space-y-2">
         <Music4 className="w-6 h-6 text-emerald-400 mx-auto" />
         <p className="text-base font-bold text-white">{t('sec.none', 'No song to lay out yet')}</p>
-        <p className="text-sm text-zinc-500 leading-snug">
-          {t('sec.noneNote', 'Make a song with words in it and it appears here, in its own sections.')}
-        </p>
+        <Note>{t('sec.noneNote', 'Make a song with words in it and it appears here, in its own sections.')}</Note>
       </div>
     );
   }
@@ -432,12 +431,10 @@ export default function SongSections({
             words look identical on a waveform, and only one of them is worth
             trusting to the second. */}
         {track && estimated(track) && (
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'sec.estimated',
               'These sections are worked out from the words — this song did not carry a plan, so the times are close rather than exact. Everything you change here still travels through in full.',
-            )}
-          </p>
+            )}</Note>
         )}
       </div>
 
@@ -573,7 +570,7 @@ export default function SongSections({
         {/* Said here rather than as a slider that does nothing: lengths are not
             carried in the lyric sheet, so a draggable number would be thrown
             away on the way out. */}
-        <p className="text-sm text-zinc-500 leading-snug">{t('sec.lengthNote')}</p>
+        <Note>{t('sec.lengthNote')}</Note>
         <p className="text-sm text-zinc-400 leading-snug">{t('sec.remakeNote')}</p>
         <button
           type="button"

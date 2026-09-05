@@ -57,6 +57,7 @@ import {
   runtime, saveStoryboard, shotId, withShot, withoutShot, type Shot, type Storyboard as Board,
 } from '../lib/storyboard';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.round(seconds));
@@ -264,23 +265,19 @@ export default function Storyboard({
           <h3 className="text-base font-black text-white tracking-tight">
             {t('board.title', 'Build a long one')}
           </h3>
-          <p className="text-sm text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'board.what',
               'No engine makes more than half a minute in one go, so a long video is short ones cut together. Write the shots, make them one at a time, and cut them into one file with a song under it.',
-            )}
-          </p>
+            )}</Note>
         </div>
       </div>
 
       {/* Written before anything is generated, on purpose — see the note at
           the top of this file. */}
-      <p className="text-xs text-zinc-500 leading-relaxed">
-        {t(
+      <Note className="text-xs text-zinc-500 leading-relaxed">{t(
           'board.writeFirst',
           'Write them all first. A list of sentences is free to reorder and free to throw away, and seeing them together is when you notice two shots are the same idea.',
-        )}
-      </p>
+        )}</Note>
 
       <div className="space-y-2">
         {board.shots.map((shot, index) => {
@@ -498,12 +495,10 @@ export default function Storyboard({
           )}
 
           {/* Said before the press, because it is the surprising part. */}
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'board.realTime',
               'Cutting happens on this device and runs in real time: a film takes as long to cut as it is long. Keep this tab open while it does.',
-            )}
-          </p>
+            )}</Note>
 
           <button
             type="button"

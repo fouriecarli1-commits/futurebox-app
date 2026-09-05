@@ -31,6 +31,7 @@ import { Check, Copy, ExternalLink, Share2 } from 'lucide-react';
 import { PLATFORMS, FUTUREBOX_TAG } from '../data/social';
 import { buildCaption, loadHandles, shareUrlFor, type Handles } from '../lib/social';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 export default function ShareRow({
   title,
@@ -76,12 +77,10 @@ export default function ShareRow({
 
       {open && (
         <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2.5">
-          <p className="text-xs text-zinc-500 leading-snug">
-            {t(
+          <Note className="text-xs text-zinc-500 leading-snug">{t(
               'share.how',
               'Copy the caption, save the file, then open the composer and drop it in. Nothing here uploads for you — posting on your behalf needs each platform to approve an app, which is a queue rather than a button.',
-            )}
-          </p>
+            )}</Note>
 
           <pre className="text-xs text-zinc-300 whitespace-pre-wrap bg-zinc-900 rounded-lg p-2.5 leading-relaxed">
             {caption}

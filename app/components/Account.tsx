@@ -36,6 +36,7 @@ import type { Region } from '../lib/pricing';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { loadTaste, forgetTaste, NO_TASTE, type Taste } from '../lib/taste';
 import Subscription from './Subscription';
+import Note from './Note';
 
 export default function Account({
   open,
@@ -195,9 +196,7 @@ export default function Account({
               )}
             </p>
           ) : !wallet.metered ? (
-            <p className="text-sm text-zinc-500 leading-snug">
-              {t('account.creditsOff', 'This app has no accounts set up, so nothing is counted.')}
-            </p>
+            <Note>{t('account.creditsOff', 'This app has no accounts set up, so nothing is counted.')}</Note>
           ) : (
             <>
               <p className="text-2xl font-black text-white tabular-nums">{wallet.balance}</p>
@@ -208,12 +207,10 @@ export default function Account({
               )}
             </>
           )}
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t(
+          <Note>{t(
               'account.creditsNote',
               'What a generation costs is said on the button before you press it. Credits from your plan land each month; anything you buy on top does not expire.',
-            )}
-          </p>
+            )}</Note>
         </section>
 
         {/* ── What the app has noticed, and a way to make it stop ────────── */}
@@ -228,9 +225,7 @@ export default function Account({
                 says nothing. It is a short list on purpose — there is nothing
                 here but counts. */}
             {taste.lines.length === 0 ? (
-              <p className="text-sm text-zinc-500 leading-snug">
-                {t('account.tasteNone', 'Nothing yet. Make a few things and it will start suggesting the kind you actually make.')}
-              </p>
+              <Note>{t('account.tasteNone', 'Nothing yet. Make a few things and it will start suggesting the kind you actually make.')}</Note>
             ) : (
               <ul className="text-sm text-zinc-400 space-y-1">
                 {taste.lines.slice(0, 8).map((one) => (
@@ -251,12 +246,10 @@ export default function Account({
                 ))}
               </ul>
             )}
-            <p className="text-xs text-zinc-500 leading-relaxed">
-              {t(
+            <Note className="text-xs text-zinc-500 leading-relaxed">{t(
                 'account.tasteNote',
                 'A count of each kind and when it last happened — not a record of when you work. It is what lets the welcome screen and the copilot suggest the kind of thing you actually make, on any device you sign in on.',
-              )}
-            </p>
+              )}</Note>
             {taste.lines.length > 0 && (
               <button
                 type="button"

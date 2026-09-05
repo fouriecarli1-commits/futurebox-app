@@ -26,6 +26,7 @@ import TwoHosts from './TwoHosts';
 import DubEpisode from './DubEpisode';
 import Transcript from './Transcript';
 import Cost from './Cost';
+import Note from './Note';
 import { episodeAudioUrl } from '../lib/episodeaudio';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
@@ -301,9 +302,7 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-base font-bold text-white">{t('pod.channel', 'Your channel')}</p>
-            <p className="text-sm text-zinc-500 leading-snug">
-              {t('pod.channelNote', 'The name, the picture and the description a podcast app will show.')}
-            </p>
+            <Note>{t('pod.channelNote', 'The name, the picture and the description a podcast app will show.')}</Note>
           </div>
           {!caps?.publish && (
             <button
@@ -411,9 +410,7 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
               <Rss className="w-3.5 h-3.5 text-amber-400" />
               {t('pod.feed', 'Your feed')}
             </p>
-            <p className="text-sm text-zinc-500 leading-snug">
-              {t('pod.feedNote', 'Give this address to Apple Podcasts, Spotify or any other app. They read it themselves, from then on.')}
-            </p>
+            <Note>{t('pod.feedNote', 'Give this address to Apple Podcasts, Spotify or any other app. They read it themselves, from then on.')}</Note>
             <div className="flex items-center gap-2">
               <code className="flex-1 min-w-0 truncate text-sm text-emerald-300 bg-black/50 rounded-lg px-2.5 py-1.5">{feedUrl}</code>
               <button
@@ -470,9 +467,7 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
         <div>
           <p className="text-base font-bold text-white">{t('pod.episode', 'An episode')}</p>
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t('pod.episodeNote', 'Record it here, or use something a voice read. Publishing puts the audio at a public address that podcast apps keep fetching.')}
-          </p>
+          <Note>{t('pod.episodeNote', 'Record it here, or use something a voice read. Publishing puts the audio at a public address that podcast apps keep fetching.')}</Note>
         </div>
 
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}

@@ -43,6 +43,7 @@ import {
   type Run, type Standing,
 } from '../lib/adrun';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 const TONE: Record<Standing, string> = {
   overdue: 'border-rose-500/50 bg-rose-500/5',
@@ -140,21 +141,17 @@ export default function AdRuns({
           <h3 className="text-base font-black text-white tracking-tight">
             {t('run.title', 'When it goes out, and where')}
           </h3>
-          <p className="text-sm text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'run.what',
               'A day, a list of platforms, and a link per platform that says which one the click came from. Tick each off as you post it.',
-            )}
-          </p>
+            )}</Note>
         </div>
       </div>
 
-      <p className="text-xs text-zinc-500 leading-relaxed">
-        {t(
+      <Note className="text-xs text-zinc-500 leading-relaxed">{t(
           'run.whyTags',
           'Four platforms sharing one plain link is one line in your analytics that says “direct”. A tagged link makes them four rows — free, today, with nobody’s permission, and nothing you build later can recover a click that already happened untagged.',
-        )}
-      </p>
+        )}</Note>
 
       {runs.map((run) => {
         const standing = standingOf(run);

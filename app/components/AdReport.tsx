@@ -45,6 +45,7 @@ import {
   loadReport, rates, read, saveReport, totals, type Report, type Result,
 } from '../lib/adreport';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 /**
  * Cents as money, through the same renderer the price cards use.
@@ -145,21 +146,17 @@ export default function AdReport(): React.ReactElement {
           <h3 className="text-base font-black text-white tracking-tight">
             {t('report.title', 'What the money did')}
           </h3>
-          <p className="text-sm text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'report.what',
               'Export the report from your Ads Manager and drop the file here. It reads the columns whatever they are called, works out cost per click and cost per result, and puts each campaign next to the run that sent it out.',
-            )}
-          </p>
+            )}</Note>
         </div>
       </div>
 
-      <p className="text-xs text-zinc-500 leading-relaxed">
-        {t(
+      <Note className="text-xs text-zinc-500 leading-relaxed">{t(
           'report.whyFile',
           'A file rather than a connection, because reading numbers straight out of Meta or Google needs their app review and a verified company. You can already export them today, and the numbers are worth having today.',
-        )}
-      </p>
+        )}</Note>
 
       <div className="flex flex-wrap items-center gap-2">
         <input

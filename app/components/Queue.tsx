@@ -35,6 +35,7 @@ import { PLATFORMS } from '../data/social';
 import {
   cancel, instantOf, loadQueue, schedule, today, NO_QUEUE, type Queue as Waiting,
 } from '../lib/queue';
+import Note from './Note';
 
 /** The platform's own name. The row held the id, and `tiktok` next to a date
  *  reads like a field out of a database rather than a plan. */
@@ -111,12 +112,10 @@ export default function Queue({
           <h3 className="text-base font-black text-white tracking-tight">
             {t('queue.title', 'When it goes out')}
           </h3>
-          <p className="text-sm text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'queue.what',
               'Plan a post and this reminds you at the moment you chose, with the words in front of you. It does not post for you — see below for what that would take.',
-            )}
-          </p>
+            )}</Note>
         </div>
       </div>
 

@@ -26,6 +26,7 @@ import {
   assess, BAR, TIER_LIMITS, type FeedItem, type Verdict,
 } from '../lib/curation';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 interface Scored {
   readonly item: FeedItem;
@@ -181,9 +182,7 @@ export default function QualityRadar({
       {/* Where they come from, said once. The refresh re-ages and reorders a
           curated set; it does not go and look. Better said here than implied
           by a button. */}
-      <p className="text-xs text-zinc-500 leading-relaxed">
-        {t('radar.source', 'A curated set, re-scored and reordered each time you ask. Not a live feed.')}
-      </p>
+      <Note className="text-xs text-zinc-500 leading-relaxed">{t('radar.source', 'A curated set, re-scored and reordered each time you ask. Not a live feed.')}</Note>
 
       {showHow && (
         <p className="text-sm text-zinc-400 leading-relaxed bg-zinc-900/60 border border-zinc-800 rounded-xl p-3">

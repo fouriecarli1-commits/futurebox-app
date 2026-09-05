@@ -40,6 +40,7 @@ import { accessToken } from '../lib/cloud';
 import { dubCost } from '../lib/credits';
 import { DUB_LANGUAGES } from '../data/dublanguages';
 import Cost from './Cost';
+import Note from './Note';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 
@@ -220,7 +221,7 @@ export default function DubEpisode({
 
       {!running && (
         <>
-          <p className="text-sm text-zinc-500 leading-snug">{t('dub.note')}</p>
+          <Note>{t('dub.note')}</Note>
 
           {/* The bar.
 
@@ -274,7 +275,7 @@ export default function DubEpisode({
             />
           </label>
 
-          <p className="text-sm text-zinc-500 leading-snug">{t('dub.ifRefused')}</p>
+          <Note>{t('dub.ifRefused')}</Note>
 
           {/* The wait was only said once the job was running, which is the one
               moment it does not help: by then the credits are spent. */}

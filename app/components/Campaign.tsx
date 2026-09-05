@@ -53,6 +53,7 @@ import Steps, { type Step } from './Steps';
 import BrandKit from './BrandKit';
 import { EMPTY as EMPTY_KIT, brandLine, type BrandKit as Kit } from '../lib/brandkit';
 import History from './History';
+import Note from './Note';
 import { makeId, rememberMake } from '../lib/makes';
 
 interface Ad {
@@ -284,9 +285,7 @@ export default function Campaign({
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-zinc-200">{t('ads.whereTitle', 'Where is it going?')}</p>
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            {t('ads.whereNote', 'This decides the shape, the length and how fast the hook has to land — so it is asked before the writing, not after.')}
-          </p>
+          <Note className="text-xs text-zinc-500 leading-relaxed">{t('ads.whereNote', 'This decides the shape, the length and how fast the hook has to land — so it is asked before the writing, not after.')}</Note>
         </div>
         <div className="flex flex-wrap gap-2">
           {PLATFORMS.map((one) => {
@@ -408,12 +407,10 @@ export default function Campaign({
           </div>
         </div>
 
-        <p className="text-xs text-zinc-500 leading-relaxed">
-          {t(
+        <Note className="text-xs text-zinc-500 leading-relaxed">{t(
             'ads.marketNote',
             'The copy is written in that language, not translated into it. Carried-over English idiom is the clearest sign of an imported advert.',
-          )}
-        </p>
+          )}</Note>
 
         <div className="flex items-center gap-3 flex-wrap">
           <button

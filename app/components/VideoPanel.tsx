@@ -30,6 +30,7 @@ import { CREDITS, videoCost } from '../lib/credits';
 import Cost from './Cost';
 import Recommend from './Recommend';
 import History from './History';
+import Note from './Note';
 import { makeId, rememberMake } from '../lib/makes';
 import { signal } from '../lib/signal';
 import { timelineOf, type Part } from '../lib/timeline';
@@ -295,12 +296,10 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
 
       {engineReady && mode === 'engine' && (
         <div className="space-y-1.5">
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t(
+          <Note>{t(
               'video.engineNote',
               'The engine makes footage from your sentence. It has nothing to do with the song — it is a clip to cut against it. A few minutes, and the credits are given back if it fails.',
-            )}
-          </p>
+            )}</Note>
           {/* Video is the slowest thing here and the one people give up on
               first. The figure and the wait stand together, above the button,
               in the same shape as everywhere else that spends. */}

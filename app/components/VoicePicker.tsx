@@ -33,6 +33,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { Play, Pause, Check, Search as SearchIcon, Loader2 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 export interface PickableVoice {
   readonly id: string;
@@ -170,12 +171,10 @@ export default function VoicePicker({
         })}
       </ul>
 
-      <p className="text-xs text-zinc-500 leading-relaxed">
-        {t(
+      <Note className="text-xs text-zinc-500 leading-relaxed">{t(
           'voices.note',
           'The play button is a free sample — it costs nothing and generates nothing. Only a reading you ask for is charged.',
-        )}
-      </p>
+        )}</Note>
     </div>
   );
 }

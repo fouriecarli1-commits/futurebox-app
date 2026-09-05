@@ -42,6 +42,7 @@ import {
 import { Metronome } from '../lib/metronome';
 import { useLang } from '../lib/i18n';
 import Cost from './Cost';
+import Note from './Note';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
@@ -902,12 +903,10 @@ export default function ProBooth({
                 keeps the performance — the timing, the phrasing, the breaths —
                 and changes whose voice is carrying it. Somebody expecting it
                 to fix their singing needs to know that before they buy it. */}
-            <p className="text-sm text-zinc-500 leading-relaxed">
-              {t(
+            <Note className="text-sm text-zinc-500 leading-relaxed">{t(
                 'pro.singWhat',
                 'It keeps the performance — the timing, the phrasing, the breaths — and changes whose voice is carrying it. It does not fix the singing, and it will keep a wrong note as faithfully as a right one.',
-              )}
-            </p>
+              )}</Note>
             <Cost credits={perMinute(changing.audio.duration, CREDITS.voiceChange)} />
 
             {voices ? (
@@ -1501,12 +1500,10 @@ function LaneRow({
             {t('pro.clean', 'Straight')}
           </button>
         </div>
-        <p className="text-[11px] text-zinc-600 leading-snug">
-          {t(
+        <Note className="text-[11px] text-zinc-600 leading-snug">{t(
             'pro.toneWhat',
             'A tone stack built here, not a model of a named amplifier: a soft clip, a tilt, and the band a guitar speaker passes. Turning the drive up changes the shape and not the level, so it cannot be pushed just because louder sounded better.',
-          )}
-        </p>
+          )}</Note>
 
         {/* ── A real amplifier, captured ────────────────────────────────
             The stack above is honest about being a stack. This is the other
@@ -1558,12 +1555,10 @@ function LaneRow({
           {ampFailed ? (
             <p className="text-[11px] text-amber-400 leading-snug">{ampFailed}</p>
           ) : (
-            <p className="text-[11px] text-zinc-600 leading-snug">
-              {t(
+            <Note className="text-[11px] text-zinc-600 leading-snug">{t(
                 'pro.ampWhat',
                 'A .nam capture of a real amplifier — the file any Neural Amp Modeler plugin loads. It runs on this device and is baked into the lane, so the mixdown hears exactly what you do. Your recording is kept underneath.',
-              )}
-            </p>
+              )}</Note>
           )}
         </div>
       </div>

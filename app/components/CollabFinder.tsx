@@ -25,6 +25,7 @@ import {
 } from '../lib/radar';
 import { useLang } from '../lib/i18n';
 import { AskToCollab } from './CollabRoom';
+import Note from './Note';
 
 const LINKS = ['website', 'x', 'instagram', 'youtube', 'tiktok', 'soundcloud'] as const;
 
@@ -131,9 +132,7 @@ export default function CollabFinder({
             <Users className="w-4 h-4 text-emerald-400" />
             {t('radar.you', 'How people find you')}
           </p>
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t('radar.youNote', 'A name and somewhere to be reached. Without these a match has nobody to write to.')}
-          </p>
+          <Note>{t('radar.youNote', 'A name and somewhere to be reached. Without these a match has nobody to write to.')}</Note>
         </div>
         <div className="grid sm:grid-cols-2 gap-2">
           <input
@@ -178,9 +177,7 @@ export default function CollabFinder({
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
         <div>
           <p className="text-base font-bold text-white">{t('radar.showing', 'Songs on the radar')}</p>
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t('radar.showingNote', 'Off by default, one at a time, and you can turn it back off. Only the tempo, key and style words are shared — never the audio.')}
-          </p>
+          <Note>{t('radar.showingNote', 'Off by default, one at a time, and you can turn it back off. Only the tempo, key and style words are shared — never the audio.')}</Note>
         </div>
         {mine.length === 0 ? (
           <p className="text-sm text-zinc-500">{t('radar.noSongs', 'Make a song first.')}</p>

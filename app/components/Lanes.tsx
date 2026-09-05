@@ -48,6 +48,7 @@ import { failed, loadStems, separate, type Stems } from '../lib/stems';
 import { encodeWav } from '../lib/wav';
 import { useLang } from '../lib/i18n';
 import Cost from './Cost';
+import Note from './Note';
 
 interface Lane {
   readonly id: 'vocals' | 'music';
@@ -296,23 +297,19 @@ export default function Lanes({
         <Music4 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
         <div className="min-w-0">
           <p className="text-sm font-semibold text-zinc-200">{t('lanes.title', 'The song in tracks')}</p>
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'lanes.what',
               'The voice on one track and everything else on the other, with a level each. Enough to bring a buried vocal up, push a loud one down, or drop it out and keep the backing. Not a mixer — two stems is what two faders are honest about.',
-            )}
-          </p>
+            )}</Note>
         </div>
       </div>
 
       {!stems && busy !== 'looking' && (
         <div className="space-y-2">
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'lanes.first',
               'Separating happens once and is then kept on this device beside the song, so opening these lanes again costs nothing. The booth uses the same two files.',
-            )}
-          </p>
+            )}</Note>
           <Cost credits={price} />
           <button
             type="button"
@@ -405,12 +402,10 @@ export default function Lanes({
             )}
             {t('lanes.keep', 'Keep this balance as a file')}
           </button>
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'lanes.keepNote',
               'Downloaded, not saved over the song. The original is what your playlists and every other screen point at.',
-            )}
-          </p>
+            )}</Note>
         </div>
       )}
 

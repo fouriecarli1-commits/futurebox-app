@@ -29,6 +29,7 @@ import { useLang } from '../lib/i18n';
 import { MARKETING, MARKETING_INCLUDES } from '../lib/addons';
 import { startCheckout } from '../lib/purchases';
 import { priceOf, type Unlocked } from '../lib/unlocked';
+import Note from './Note';
 
 export default function AddOn({
   what,
@@ -110,12 +111,10 @@ export default function AddOn({
         </button>
       </div>
 
-      <p className="text-xs text-zinc-500 leading-relaxed">
-        {t(
+      <Note className="text-xs text-zinc-500 leading-relaxed">{t(
           'addon.cancel',
           'Stops whenever you say so, from your account screen. What you have already planned stays where it is and you can still take it out of the queue after it lapses.',
-        )}
-      </p>
+        )}</Note>
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
 

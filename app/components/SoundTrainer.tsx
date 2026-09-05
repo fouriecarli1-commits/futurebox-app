@@ -25,6 +25,7 @@ import { CREDITS } from '../lib/credits';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { useLang } from '../lib/i18n';
 import Cost from './Cost';
+import Note from './Note';
 
 /** How often to ask again while something is still training. */
 const ASK_EVERY_MS = 20_000;
@@ -185,12 +186,10 @@ export default function SoundTrainer({
             <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             {t('sound.title', 'A sound of your own')}
           </p>
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t(
+          <Note>{t(
               'sound.note',
               'Train on a handful of your own songs and new ones come out sounding like them. It takes five or ten minutes, and you can close this while it runs.',
-            )}
-          </p>
+            )}</Note>
           {/* The most expensive thing this app does, said before anybody
               starts rather than at the moment they are refused. */}
           <p className="text-sm font-semibold text-amber-300 leading-snug pt-1.5">
@@ -270,9 +269,7 @@ export default function SoundTrainer({
                 {t('sound.pick', 'Pick the songs it should learn from')}
               </p>
               {tracks.length === 0 ? (
-                <p className="text-sm text-zinc-500 leading-snug">
-                  {t('sound.noTracks', 'There is nothing in your channel yet. Make a few songs first, or bring your own in below.')}
-                </p>
+                <Note>{t('sound.noTracks', 'There is nothing in your channel yet. Make a few songs first, or bring your own in below.')}</Note>
               ) : (
                 <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
                   {tracks.map((track) => (

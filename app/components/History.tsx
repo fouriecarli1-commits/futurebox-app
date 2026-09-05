@@ -34,6 +34,7 @@ import { downloadBlob, safeFilename } from '../lib/library';
 import { favouriteMake, forgetMake, loadMakes, makeBlob, type Make } from '../lib/makes';
 import type { SurfaceId } from '../lib/surfaces';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 export default function History({
   surface,
@@ -114,12 +115,10 @@ export default function History({
 
       {open && (
         <>
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'history.note',
               'Kept on this device, and the newest two dozen per room. A star means keep it — starred ones are never the ones dropped to make space.',
-            )}
-          </p>
+            )}</Note>
 
           <ul className="space-y-2">
             {shown.map((make) => (

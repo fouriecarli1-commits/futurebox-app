@@ -32,6 +32,7 @@ import { ChevronDown, Loader2, Pause, Play, Sparkles, Wand2 } from 'lucide-react
 import { GENRE_CATEGORIES, GENRE_SAMPLES, type GenreSample } from '../data/genres';
 import { useLang } from '../lib/i18n';
 import { sketch, supported, SKETCH_SECONDS, type Sketch } from '../lib/preview';
+import Note from './Note';
 
 interface Idea {
   readonly label: string;
@@ -170,7 +171,7 @@ export default function StyleFinder({
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5 space-y-2.5">
         <div>
           <p className="text-sm font-semibold text-zinc-200">{t('style.ask')}</p>
-          <p className="text-sm text-zinc-500 leading-snug">{t('style.askHint')}</p>
+          <Note>{t('style.askHint')}</Note>
         </div>
         <div className="flex gap-2">
           <input
@@ -235,15 +236,13 @@ export default function StyleFinder({
 
         {open && (
           <div className="px-3.5 pb-3.5 space-y-2.5">
-            <p className="text-sm text-zinc-500 leading-snug">{t('style.examples')}</p>
+            <Note>{t('style.examples')}</Note>
             {/* Four oscillators, and the screen says so. Claiming a recording
                 of the genre would be the easy copy and a false one. */}
-            <p className="text-sm text-zinc-600 leading-snug">
-              {t(
+            <Note className="text-sm text-zinc-600 leading-snug">{t(
                 'style.sketchNote',
                 'Play draws a sketch in your browser — the tempo, the key and the shape of the groove. It is a direction, not a recording of the genre.',
-              )}
-            </p>
+              )}</Note>
             {noSound && <p className="text-sm text-amber-300 leading-snug">{noSound}</p>}
 
             {/* This was ten categories as pills, which fitted. It is
@@ -277,9 +276,7 @@ export default function StyleFinder({
             </div>
 
             {shelf.length === 0 && (
-              <p className="text-sm text-zinc-500 leading-snug">
-                {t('style.noneFound', 'Nothing by that name. The style field takes your own words too — it is free text.')}
-              </p>
+              <Note>{t('style.noneFound', 'Nothing by that name. The style field takes your own words too — it is free text.')}</Note>
             )}
 
             <div className="max-h-96 overflow-y-auto space-y-2 pr-1">

@@ -19,6 +19,7 @@ import { Palette, ChevronDown, ChevronRight, Check } from 'lucide-react';
 import { EMPTY, hasBrandKit, loadBrandKit, saveBrandKit, type BrandKit as Kit } from '../lib/brandkit';
 import { loadAssets, type Asset } from '../lib/assets';
 import Pictures from './Pictures';
+import Note from './Note';
 import { useLang } from '../lib/i18n';
 
 export default function BrandKit({
@@ -100,12 +101,10 @@ export default function BrandKit({
 
       {open && (
         <div className="px-4 pb-4 space-y-3 border-t border-zinc-800 pt-3">
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'kit.why',
               'The brief is what is different about today. This is what is the same every time — so the adverts you write on Thursday sound like the ones from Monday. Kept on this device.',
-            )}
-          </p>
+            )}</Note>
 
           <div className="space-y-1.5">
             <label className="text-sm text-zinc-400" htmlFor="kit-name">
@@ -135,12 +134,10 @@ export default function BrandKit({
               )}
               className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none leading-relaxed resize-y"
             />
-            <p className="text-xs text-zinc-500 leading-relaxed">
-              {t(
+            <Note className="text-xs text-zinc-500 leading-relaxed">{t(
                 'kit.voiceNote',
                 'Say it the way you would say it out loud. One honest line beats three adjectives — it is the difference between “artisanal” and “we open at six”.',
-              )}
-            </p>
+              )}</Note>
           </div>
 
           <div className="space-y-1.5">

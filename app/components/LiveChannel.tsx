@@ -42,6 +42,7 @@ import { visitorId } from '../lib/signal';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
+import Note from './Note';
 
 /** Often enough that the room never blinks out, rare enough to be polite. */
 const HELLO_EVERY = 30_000;
@@ -250,7 +251,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
       {room.signedIn && (
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-3">
           <p className="text-base font-bold text-white">{t('live.putIn', 'Put something in the room')}</p>
-          <p className="text-sm text-zinc-500 leading-snug">{t('live.public')}</p>
+          <Note>{t('live.public')}</Note>
 
           {tracks.length === 0 ? (
             <button
@@ -301,7 +302,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
 
           {showElsewhere && (
             <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
-              <p className="text-sm text-zinc-500 leading-snug">{t('live.elsewhereNote')}</p>
+              <Note>{t('live.elsewhereNote')}</Note>
               <div className="flex flex-wrap gap-1.5">
                 {(['tiktok', 'youtube', 'instagram'] as const).map((one) => (
                   <button
@@ -364,9 +365,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
       {/* ── The room ──────────────────────────────────────────────────── */}
       <div className="space-y-2">
         {room.posts.length === 0 && (
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t('live.quiet', 'Nothing in the room yet. Put a song in and it is the first thing anybody hears.')}
-          </p>
+          <Note>{t('live.quiet', 'Nothing in the room yet. Put a song in and it is the first thing anybody hears.')}</Note>
         )}
         {room.posts.map((post) => (
           <div key={post.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex items-start gap-3">

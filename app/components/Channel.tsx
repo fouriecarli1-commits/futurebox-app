@@ -39,6 +39,7 @@ import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
 import Hint from './Hint';
 import FollowWords from './FollowWords';
+import Note from './Note';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
 
 function clock(seconds: number): string {
@@ -367,9 +368,7 @@ export default function Channel({
         </div>
 
         {lists.length === 0 ? (
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t('chan.noLists', 'None yet. A playlist plays straight through, which is what makes it worth building.')}
-          </p>
+          <Note>{t('chan.noLists', 'None yet. A playlist plays straight through, which is what makes it worth building.')}</Note>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {lists.map((one) => (

@@ -36,6 +36,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Camera, Loader2, Trash2 } from 'lucide-react';
 import { ACCEPTS, publicUrl, remove as removeFile, squared, upload } from '../lib/avatar';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 export default function ProfilePhoto({
   name,
@@ -178,12 +179,10 @@ export default function ProfilePhoto({
           )}
         </div>
 
-        <p className="text-sm text-zinc-500 leading-relaxed">
-          {t(
+        <Note className="text-sm text-zinc-500 leading-relaxed">{t(
             'photo.note',
             'Anybody looking at your channel can see it, signed in or not. It is squared and shrunk here in your browser before it goes, which also strips where the photo was taken.',
-          )}
-        </p>
+          )}</Note>
 
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
       </div>

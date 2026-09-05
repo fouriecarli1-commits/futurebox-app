@@ -38,6 +38,7 @@ import { FileText, Loader2, Copy, Check, Users } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { CREDITS, perMinute } from '../lib/credits';
 import Cost from './Cost';
+import Note from './Note';
 import { useLang } from '../lib/i18n';
 
 interface Turn {
@@ -168,12 +169,10 @@ export default function Transcript({
 
       {!turns && (
         <>
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t(
+          <Note>{t(
               'script.what',
               'Reads the episode back with a timestamp on every line and a note of who is speaking. Show notes, a searchable page, and something to quote — without listening to it again with a pen.',
-            )}
-          </p>
+            )}</Note>
           <Cost waitMinutes={2} />
           <button
             type="button"

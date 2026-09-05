@@ -25,6 +25,7 @@ import { answer, ask, loadSaid, loadThreads, say, type Said, type Thread } from 
 import { loadTracks, type Track } from '../lib/library';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
+import Note from './Note';
 
 /** Long enough that a conversation feels live, gentle enough to leave open. */
 const ASK_AGAIN_MS = 15_000;
@@ -185,12 +186,10 @@ export default function CollabRoom({ reloadKey }: { reloadKey: number }): React.
             'Ask another maker, and if they say yes the two of you get a room: a private thread nobody else can read, and a way to hand songs back and forth. Take their verse into your track, put your voice on theirs, cut a video against a song neither of you would have made alone.',
           )}
         </p>
-        <p className="text-sm text-zinc-500 leading-relaxed">
-          {t(
+        <Note className="text-sm text-zinc-500 leading-relaxed">{t(
             'collab.whatPrivate',
             'Nothing is shared until you send it, and neither of you can read a word of the thread until you have both agreed — that is enforced in the database, not by a screen.',
-          )}
-        </p>
+          )}</Note>
       </div>
 
       {/* ── Waiting on you ───────────────────────────────────────────── */}
@@ -236,18 +235,14 @@ export default function CollabRoom({ reloadKey }: { reloadKey: number }): React.
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
         <div>
           <p className="text-base font-bold text-white">{t('collab.rooms', 'Working together')}</p>
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t(
+          <Note>{t(
               'collab.roomsNote',
               'A room opens when you both agree. Drop a song into it and the other person can hear what you mean — the song travels, not the file.',
-            )}
-          </p>
+            )}</Note>
         </div>
 
         {rooms.length === 0 ? (
-          <p className="text-sm text-zinc-500 leading-snug">
-            {t('collab.noRooms', 'None yet. Find somebody whose sound is near yours below, and ask.')}
-          </p>
+          <Note>{t('collab.noRooms', 'None yet. Find somebody whose sound is near yours below, and ask.')}</Note>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {rooms.map((one) => (

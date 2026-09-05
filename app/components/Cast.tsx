@@ -39,6 +39,7 @@ import {
   ACCEPTS, CAST_LIMIT, addToCast, editCast, loadCast, pictureOf, removeFromCast, type Member,
 } from '../lib/cast';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 export default function Cast({
   /** The data URL in use right now, so the strip can show which member it is. */
@@ -167,12 +168,10 @@ export default function Cast({
         <Users className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
         <div className="min-w-0">
           <p className="text-sm font-semibold text-zinc-300">{t('cast.title', 'Your cast')}</p>
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            {t(
+          <Note className="text-xs text-zinc-500 leading-relaxed">{t(
               'cast.why',
               'Describe a person and the engine draws a different one every time — three clips meant to cut together become three strangers. Hand it the same picture instead. Kept on your account, so the same presenter is here on your phone too.',
-            )}
-          </p>
+            )}</Note>
         </div>
       </div>
 

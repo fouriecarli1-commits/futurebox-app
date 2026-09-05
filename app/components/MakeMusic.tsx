@@ -34,6 +34,7 @@ import Sleeve from './Sleeve';
 import VocalBooth from './VocalBooth';
 import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
+import Note from './Note';
 import { STARTERS, VOICES, LENGTH_CHOICES, POLISH } from '../data/sound';
 import { songCost } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
@@ -839,7 +840,7 @@ export default function MakeMusic({
               <div className="pl-6 space-y-1.5">
                 {sounds.keep === 0 ? (
                   <>
-                    <p className="text-sm text-zinc-500 leading-snug">{t('make.ownSoundNoPlan')}</p>
+                    <Note>{t('make.ownSoundNoPlan')}</Note>
                     <button
                       type="button"
                       onClick={onUpgrade}
@@ -855,7 +856,7 @@ export default function MakeMusic({
                   </p>
                 ) : (
                   <>
-                    <p className="text-sm text-zinc-500 leading-snug">{t('make.ownSoundNone')}</p>
+                    <Note>{t('make.ownSoundNone')}</Note>
                     <button
                       type="button"
                       onClick={onGoToChannel}
