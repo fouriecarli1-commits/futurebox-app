@@ -28,6 +28,21 @@
 /** Where the app is served from. No scheme — it is printed as often as it is linked. */
 export const SITE_HOST = process.env.NEXT_PUBLIC_SITE_HOST || 'futurebox-app.vercel.app';
 
+/**
+ * The colour of the browser's own bar above the app, and of the frame around
+ * an installed one.
+ *
+ * It was declared twice and differently: `#fafaf9` in the viewport and
+ * `#10b981` in the manifest. The manifest wins wherever it is read — an
+ * installed app, an in-app browser — so the app opened on a phone with a slab
+ * of saturated green across the top, taking height from a screen that has
+ * none to give, while a laptop showed the near-white it was designed for.
+ *
+ * The ground, not the accent. Starting the app should not be a green bar
+ * followed by a white page.
+ */
+export const BAR_COLOUR = '#fafaf9';
+
 /** Where somebody writes when something needs a person. */
 /* There is deliberately no exported contact address.
  
