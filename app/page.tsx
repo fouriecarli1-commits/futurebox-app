@@ -1869,7 +1869,7 @@ export default function FutureBoxHome() {
                     </div>
                   </div>
 
-                  <div className="p-5 pt-0 border-t border-zinc-800/60 flex items-center justify-between text-xs text-zinc-400">
+                  <div className="p-5 pt-0 border-t border-zinc-800/60 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-400">
                     <button
                       onClick={() => setSelectedMedia({
                         title: pod.title,
@@ -2020,7 +2020,7 @@ export default function FutureBoxHome() {
                       </div>
                     </div>
 
-                    <div className="p-5 pt-0 flex items-center justify-between text-xs text-zinc-400 border-t border-zinc-800/60">
+                    <div className="p-5 pt-0 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-400 border-t border-zinc-800/60">
                       {isLocked ? (
                         <button
                           onClick={() => setPricingModalOpen(true)}
@@ -2156,7 +2156,7 @@ export default function FutureBoxHome() {
                     </div>
                   </div>
 
-                  <div className="p-5 pt-0 flex items-center justify-between text-[11px] text-zinc-400 border-t border-zinc-800/60">
+                  <div className="p-5 pt-0 flex flex-wrap items-center justify-between gap-2 text-[11px] text-zinc-400 border-t border-zinc-800/60">
                     <span>{t('feed.by')} {creation.creator}</span>
                     <a 
                       href={creation.externalUrl} 
@@ -2278,7 +2278,7 @@ export default function FutureBoxHome() {
                     </span>
                     <span className="block text-xs text-zinc-400 leading-relaxed">{item.desc}</span>
                   </button>
-                  <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between gap-2">
+                  <div className="pt-3 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-2">
                     {/* Said for what it is: the tool's own site, not a piece
                         of writing about it. */}
                     <a 

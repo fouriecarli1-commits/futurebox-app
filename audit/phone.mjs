@@ -70,6 +70,25 @@ for (const name of rooms) {
       wide.push(`${el.tagName.toLowerCase()}.${String(el.className).slice(0, 28)}→${Math.round(box.right)}px`);
     }
 
+    /* Out of its own box.
+
+       The viewport check above cannot see this: a button that hangs off the
+       right edge of a 165-pixel card and over its neighbour is still well
+       inside a 390-pixel screen. It went unnoticed until somebody looked at a
+       radar card and saw "Open the blueprint" printed across the card beside
+       it. Measured per card, against the card. */
+    const spilled = [];
+    for (const card of Array.from(surface.querySelectorAll('.grid > div, .grid > article'))) {
+      const box = card.getBoundingClientRect();
+      if (box.width < 40) continue;
+      for (const el of Array.from(card.querySelectorAll('button, a, input, select'))) {
+        const r = el.getBoundingClientRect();
+        if (r.width > 1 && r.right > box.right + 2) {
+          spilled.push(`${Math.round(r.right - box.right)}px past "${(el.innerText ?? '').replace(/\s+/g, ' ').trim().slice(0, 22)}"`);
+        }
+      }
+    }
+
     /* Too small for a thumb. The room menu's own backdrop is a full-screen
        button and is not a target anybody aims at. */
     let small = 0;
@@ -95,6 +114,7 @@ for (const name of rooms) {
       pageWidth: document.documentElement.scrollWidth,
       wide: wide.slice(0, 3),
       small,
+      spilled: spilled.slice(0, 3),
       /* Height, not characters.
 
          Characters was the metric while long notes were being cut. It stopped
@@ -112,6 +132,7 @@ for (const name of rooms) {
   if (read.pageWidth > 390) flags.push(`blad ${read.pageWidth}px breed`);
   if (read.wide.length) flags.push(`oorloop: ${read.wide.join(' | ')}`);
   if (read.small) flags.push(`${read.small} klein teiken(s)`);
+  if (read.spilled.length) flags.push(`uit sy kaart: ${read.spilled.join(' · ')}`);
   if (read.words < 40) flags.push(`leeg (${read.words} karakters)`);
   if (flags.length) bad += 1;
 
