@@ -124,6 +124,17 @@ interface GenreSample {
   description: string;
 }
 
+/**
+ * Where a device-only account is kept.
+ *
+ * Only used where this deployment has no Supabase project behind it: then
+ * there is no session to hold and signing in means "this browser knows who you
+ * are". Without writing it down that lasted until the next reload, which is
+ * the app asking somebody to sign in over and over on a deployment that is
+ * merely missing two environment variables.
+ */
+const LOCAL_ACCOUNT = 'futurebox.account.v1';
+
 export default function FutureBoxHome() {
   const { t, lang } = useLang();
   // Rooms register what the copilot may do in them; the panel below dispatches
@@ -665,6 +676,30 @@ export default function FutureBoxHome() {
    */
   const restored = useCallback(() => setAtDoor(true), []);
 
+  /* The device-only account, read back before anything else.
+
+     Only where there is no Supabase project: with one, the session belongs to
+     the auth library and this would be a second, staler answer to the same
+     question. */
+  useEffect(() => {
+    if (cloud.configured()) return;
+    try {
+      const kept = window.localStorage.getItem(LOCAL_ACCOUNT);
+      if (!kept) return;
+      const said = JSON.parse(kept) as { email?: string; name?: string; handle?: string };
+      if (!said?.email) return;
+      setUser({
+        email: said.email,
+        name: said.name ?? said.email.split('@')[0],
+        handle: said.handle ?? `@${said.email.split('@')[0]}`,
+        followers: 1,
+      });
+      restored();
+    } catch {
+      // Nothing readable there. Signed out, which is the safe answer.
+    }
+  }, [restored]);
+
   /** And has just left: take it down, and re-arm it for next time. */
   const departed = useCallback(() => {
     greeted.current = false;
@@ -1202,7 +1237,20 @@ export default function FutureBoxHome() {
     // so the account stays on this device — which the modal says out loud.
     if (!cloud.configured()) {
       const name = authEmail.split('@')[0];
-      setUser({ email: authEmail, name, handle: `@${name}`, followers: 1 });
+      const local = { email: authEmail, name, handle: `@${name}`, followers: 1 };
+      setUser(local);
+      /* Written down, or it is not an account.
+
+         This used to live in a state variable and nowhere else, so a device
+         with no Supabase project behind it signed somebody out on every
+         reload — "die app moenie heeltyd oor en oor in log nie" is exactly
+         that, on a deployment missing its two keys. With Supabase configured
+         the library keeps the session itself and this branch never runs. */
+      try {
+        window.localStorage.setItem(LOCAL_ACCOUNT, JSON.stringify(local));
+      } catch {
+        // Storage off. It is a session in memory again, as it was.
+      }
       setAuthModalOpen(false);
       arrived();
       return;
@@ -1262,6 +1310,11 @@ export default function FutureBoxHome() {
 
   const handleSignOut = async () => {
     await cloud.signOut();
+    try {
+      window.localStorage.removeItem(LOCAL_ACCOUNT);
+    } catch {
+      // Storage off, and there was nothing kept in it to remove.
+    }
     setUser(null);
     departed();
   };
@@ -1727,18 +1780,25 @@ export default function FutureBoxHome() {
             rows at 390 px, which is two rows of buttons you can see rather
             than one row you cannot. */}
         <nav className="flex flex-wrap items-center gap-1 bg-zinc-900/90 p-1.5 rounded-2xl lg:rounded-full border border-zinc-800">
-          {[
+          {/* `as const` on the ids rather than `as any` on the setter.
+
+              It was the one `as any` left in the app, and it was load-bearing
+              in the worst way: a typo in one of these five ids would have
+              type-checked and then quietly matched nothing, leaving a pill
+              that lights up and shows an empty page. Named as the union the
+              state actually holds, a typo is a build error. */}
+          {([
             { id: 'all', label: t('tab.all', 'Spotlight'), short: t('tab.all.s', 'Spotlight'), icon: Compass },
             { id: 'futurebox', label: t('tab.pods', 'FutureBox Podcasts'), short: t('tab.pods.s', 'Podcasts'), icon: Headphones },
             { id: 'masterclasses', label: t('tab.classes', 'Masterclasses'), short: t('tab.classes.s', 'Classes'), icon: GraduationCap },
             { id: 'creations', label: t('tab.creations', 'Creative AI Music & Video'), short: t('tab.creations.s', 'Music & video'), icon: Sparkles },
             { id: 'radar', label: t('tab.radar', 'AI Trends Radar'), short: t('tab.radar.s', 'Radar'), icon: TrendingUp },
-          ].map((tab) => {
+          ] as const).map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id)}
                 aria-current={activeTab === tab.id ? 'page' : undefined}
                 className={`flex items-center gap-1.5 px-3 lg:px-4 py-2 min-h-[36px] rounded-full text-xs font-semibold transition-all ${
                   activeTab === tab.id 
@@ -2775,6 +2835,7 @@ export default function FutureBoxHome() {
         plan={userPlan}
         region={region}
         onSeePlans={() => setPricingModalOpen(true)}
+        onSignOut={handleSignOut}
         onGoToChannel={() => {
           setUploadModalOpen(true);
           setAtDoor(false);

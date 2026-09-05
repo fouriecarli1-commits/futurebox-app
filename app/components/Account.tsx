@@ -53,9 +53,12 @@ export default function Account({
   onSeePlans,
   onGoToChannel,
   onNamed,
+  onSignOut,
 }: {
   readonly open: boolean;
   readonly onClose: () => void;
+  /** Leaving, from the screen a person comes to for account things. */
+  readonly onSignOut: () => void;
   readonly email?: string;
   readonly name?: string;
   readonly handle?: string;
@@ -353,6 +356,30 @@ export default function Account({
             arrive last. The confirmation — typing your own address — stays
             where it is, and is now the second thing standing between somebody
             and losing everything rather than the only one. */}
+        {/* Signing out, above deleting.
+
+            It lived only in the page header, which the front door covers — so
+            once landing on Make became the rule, the way out of an account was
+            behind the first screen somebody sees. This is where account things
+            live now; the header keeps its copy for anybody already looking at
+            the feed.
+
+            Above the delete, and drawn quietly, because they are the two
+            buttons on this screen nobody wants to press by accident and the
+            gentler one should not be the harder to find. */}
+        <section className="pt-1">
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onSignOut();
+            }}
+            className="min-h-[44px] w-full rounded-xl border border-zinc-700 px-4 text-sm font-semibold text-zinc-300 hover:border-zinc-500 hover:text-white"
+          >
+            {t('auth.signOut', 'Sign out')}
+          </button>
+        </section>
+
         {email && (
           <section className="pt-1">
             <DeleteAccount email={email} />
