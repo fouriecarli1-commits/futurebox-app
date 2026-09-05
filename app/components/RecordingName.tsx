@@ -90,6 +90,8 @@ export default function RecordingName({
    * early rather than allowed a moment too long.
    */
   const [mayUseReserved, setMayUseReserved] = useState(false);
+  /** Whether this deployment has an owner at all — see the note on `taken`. */
+  const [ownerSet, setOwnerSet] = useState(true);
   const seeded = useRef(false);
 
   useEffect(() => {
@@ -104,6 +106,7 @@ export default function RecordingName({
       if (!live) return;
       setRow(found.creator);
       setMayUseReserved(found.mayUseReserved);
+      setOwnerSet(found.ownerSet);
     });
     return () => {
       live = false;
@@ -231,9 +234,23 @@ export default function RecordingName({
         </button>
       </div>
 
+      {/* Two different problems, and they must not read the same.
+
+          "You are not the owner" is the rule working. "This app has no owner
+          set" is a missing owner address, and it refuses the actual owner —
+          which is exactly what happened: the setting was never documented, so
+          the person who is meant to be exempt was blocked from her own app's
+          name with no way to tell why. The setting is not named here: its name
+          in the bundle is what `check:security` forbids, and the going-live
+          notes are where it belongs. */}
       {taken && (
         <p className="text-xs text-amber-400 leading-snug">
-          {t('chan.recNameTaken', RESERVED_REASON)}
+          {ownerSet
+            ? t('chan.recNameTaken', RESERVED_REASON)
+            : t(
+                'chan.noOwner',
+                'This app has no owner set, so nobody may use its name — not even you. The owner address has not been put on this deployment yet; it is one setting, and the going-live notes name it.',
+              )}
         </p>
       )}
       {kept > 0 && !problem && (

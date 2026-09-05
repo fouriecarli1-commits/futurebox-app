@@ -211,6 +211,34 @@ then cut with that sound on them. Bringing a song in works there too.
 
 ---
 
+## E2. `OWNER_EMAIL` — the variable nothing documented, and what it costs
+
+**Found 2026-09-05**, by Carli: "ek het gevra dat niemand die futurebox naam
+kan gebruik nie, maar jy het my ook op dit geblok."
+
+She is right, and the cause is not the rule. `server/owners.ts` reads
+`OWNER_EMAIL`, a comma-separated list of the addresses that run the place. It
+appears in **no document in this repository** — not GOING_LIVE, not here —
+so it has almost certainly never been set on the deployment. With it unset,
+`ownerEmails()` is empty, `isOwnerEmail()` is false for everybody, and the
+app has no owner at all.
+
+**What that costs, beyond the name.** The same check decides metering:
+`callerFrom` does `isOwner(email) ? 'label' : await tierOf(...)`, so the
+person who pays the engine bills is being charged credits on her own app like
+any free user. That is worth checking on the live deployment before anything
+else in this file.
+
+**Fixed, as far as code can fix it.** The name field now tells the two
+refusals apart — "you are not the owner", which is the rule working, and
+"this app has no owner set", which is a missing variable and which was
+refusing the owner with no way to tell why. The route sends one bit,
+`ownerSet`; the owner list itself still never reaches a browser.
+
+**Set it to:** the address you sign in with, on Vercel, then redeploy.
+
+---
+
 ## E. Still Carli's to switch on
 
 Not questions — the list of things waiting on an account, a key or a click.
@@ -225,6 +253,8 @@ Not questions — the list of things waiting on an account, a key or a click.
 - `supabase/addons.sql` and `supabase/posting.sql`.
 - `supabase/dubs.sql` — without it, dubbing answers "not set up".
 - `supabase/invites.sql` — without it, the invite link answers "not set up".
+- **`OWNER_EMAIL`** — see E2. Unset today, which blocks you from your own
+  app's name and bills you for your own engines.
 - Music.ai key and workflow slugs (section D).
 - CIPC: the registration number, then the legal page and the entity name.
 - The trademark search, classes 9 and 42.

@@ -55,7 +55,8 @@ import { createPortal } from 'react-dom';
 import { Loader2, Pause, Play, Quote, X } from 'lucide-react';
 import Cover from './Cover';
 import { readAudio } from '../lib/trackaudio';
-import { lineAt, partsOf, timelineOf, type Part, type TimedLine } from '../lib/timeline';
+import { lineAt, type TimedLine } from '../lib/timeline';
+import { evenly, timeFor, type Timing } from '../lib/lyrictime';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
 
@@ -78,20 +79,15 @@ const GLASS = 'bg-[rgba(255,255,255,0.16)]';
 const SHADE = 'bg-[rgba(0,0,0,0.5)]';
 
 /**
- * The words of a song, on the clock.
+ * Whether a song has any words to show at all.
  *
- * `real` is whether the timing came from the plan this app wrote or from
- * spreading the sheet evenly over the length. Both are useful; only one of
- * them is accurate, and the caller has to be able to tell them apart.
+ * Only that. Where the words *fall* is `lib/lyrictime.ts`, which has to hear
+ * the song to answer and so cannot be a synchronous call from a list of
+ * cards. This used to return a timing as well, and the timing it returned was
+ * the even spread — which is why the words ran too fast on half the songs.
  */
 export function wordsFor(track: Track): { lines: readonly TimedLine[]; real: boolean } {
-  const seconds = track.seconds || 0;
-  const planned = (track.parts ?? []) as readonly Part[];
-  if (planned.length && seconds) return { lines: timelineOf(planned, seconds), real: true };
-  if (track.lyrics.trim() && seconds) {
-    return { lines: timelineOf(partsOf(track.lyrics), seconds), real: false };
-  }
-  return { lines: [], real: false };
+  return { lines: evenly(track), real: (track.parts ?? []).length > 0 };
 }
 
 export default function SongScreen({
@@ -120,7 +116,22 @@ export default function SongScreen({
   useEffect(() => setMounted(true), []);
 
   const track = tracks[at];
-  const words = useMemo(() => (track ? wordsFor(track) : { lines: [], real: false }), [track]);
+  /**
+   * Where the words fall, measured in the song rather than guessed.
+   *
+   * Asked for whenever the song changes, and it answers from what it
+   * remembers when it has heard this one before. The even spread is what is
+   * on screen while it listens, so the words are never absent — only briefly
+   * approximate, and the line under them says which it is.
+   */
+  const [timed, setTimed] = useState<{ lines: readonly TimedLine[]; how: Timing }>({
+    lines: [],
+    how: 'none',
+  });
+  const words = useMemo(
+    () => (timed.lines.length ? timed : { lines: track ? evenly(track) : [], how: 'spread' as Timing }),
+    [timed, track],
+  );
   const onLine = lineAt(words.lines, second);
 
   /* The element, made once and cleaned up on the way out. */
@@ -168,6 +179,20 @@ export default function SongScreen({
       setPlaying(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!track) return undefined;
+    let live = true;
+    setTimed({ lines: [], how: 'none' });
+    void readAudio(track.id)
+      .then((blob) => timeFor(track, blob))
+      .then((found) => {
+        if (live) setTimed(found);
+      });
+    return () => {
+      live = false;
+    };
+  }, [track?.id]);
 
   useEffect(() => {
     if (track) void start(track);
@@ -225,7 +250,7 @@ export default function SongScreen({
       >
         {tracks.map((one, index) => {
           const here = index === at;
-          const its = here ? words : { lines: [], real: false };
+          const its = here ? words : { lines: [] as readonly TimedLine[], how: 'none' as Timing };
           return (
             <section
               key={one.id}
@@ -291,12 +316,22 @@ export default function SongScreen({
                 <p className={`pt-0.5 text-sm ${INK_SOFT}`}>
                   {[one.genre, one.bpm ? `${one.bpm} BPM` : '', one.key].filter(Boolean).join(' · ')}
                 </p>
-                {here && its.lines.length > 0 && !its.real && (
+                {/* How the words were timed, in the reader's own words.
+
+                    Not decoration. "The words move" and "the words move
+                    correctly" look identical for the first line and diverge by
+                    the third, and somebody filming themselves to this needs to
+                    know which one they are looking at. */}
+                {here && its.lines.length > 0 && its.how !== 'heard' && (
                   <p className={`pt-1.5 text-xs leading-snug ${INK_SOFT}`}>
-                    {t(
-                      'song.evenly',
-                      'This one came in as a file, so its words are spread evenly over its length rather than laid on the music.',
-                    )}
+                    {its.how === 'phrases'
+                      ? t('song.byEar', 'The words are laid on the singing this app measured in the song.')
+                      : its.how === 'sung'
+                        ? t('song.bySpan', 'The words are laid across the part of the file that is sung.')
+                        : t(
+                            'song.evenly',
+                            'The words are spread evenly over the length — this one has not been listened to yet, so they can drift.',
+                          )}
                   </p>
                 )}
               </div>

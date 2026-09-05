@@ -177,14 +177,33 @@ export default function FollowWords({
   const window_ = [current - 1, current, current + 1];
 
   return (
-    <div className="fixed inset-0 z-[90] bg-scrim flex flex-col">
+    /* Above the tab bar, not under it.
+ 
+       The bar is `z-95` and this was `z-90`, so a light strip sat across the
+       bottom of a dark full-screen view, over the record button — "die lyrics
+       button se bar allign nie mooi nie, daar is 'n wit stuk wat uit steek".
+       Everywhere else the bar over an overlay is right, because you should be
+       able to leave by pressing a tab. Not here: this is a teleprompter you
+       film yourself against, and a navigation bar in the shot is in the shot.
+       The X is the way out. */
+    <div className="fixed inset-0 z-[100] bg-scrim flex flex-col">
       {/* Mirrored for the person looking at it. The file that comes out is
           not, because mirrored footage reads as wrong to everybody else. */}
       <video
         ref={video}
         muted
         playsInline
-        className={`absolute inset-0 w-full h-full object-cover scale-x-[-1] ${
+        /* `contain`, not `cover`.
+ 
+           `cover` crops the camera's frame to fill the screen, and a phone
+           screen is far taller than any camera's picture — so the middle was
+           blown up and what somebody saw was their own face enormous: "die
+           video opname vergroot die gesig vreeslik baie". Worse than ugly, it
+           was a lie: the recorder captures the camera's whole frame, so the
+           preview was showing a shot the file would not contain. Letterboxed
+           and honest beats filled and wrong on the one screen whose whole job
+           is to show you what is being filmed. */
+        className={`absolute inset-0 w-full h-full object-contain scale-x-[-1] ${
           filming ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       />

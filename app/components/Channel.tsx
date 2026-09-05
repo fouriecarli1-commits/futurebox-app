@@ -40,6 +40,7 @@ import Hint from './Hint';
 import RecordingName from './RecordingName';
 import FollowWords from './FollowWords';
 import SongScreen, { wordsFor } from './SongScreen';
+import { timeFor } from '../lib/lyrictime';
 import Note from './Note';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
 
@@ -191,7 +192,15 @@ export default function Channel({
      lines can be laid on the clock. A song without one — anything brought in
      from a file — has nothing to follow, and the button is not offered rather
      than opening a screen that sits still while the music plays. */
-  const [lyricsFor, setLyricsFor] = useState<Track | null>(null);
+  /**
+   * The song whose words are on screen, with the timing that was measured for
+   * it rather than guessed.
+   *
+   * It used to be the track alone, and the lines came from the even spread —
+   * which is why the words ran too fast on some songs and fine on others.
+   * `timeFor` listens to the file once and remembers what it found.
+   */
+  const [lyricsFor, setLyricsFor] = useState<{ track: Track; lines: readonly TimedLine[] } | null>(null);
   /** Which song is open full screen, by id, or null for the grid. */
   const [fullFor, setFullFor] = useState<string | null>(null);
   /* The words of a song, on the clock.
@@ -439,7 +448,18 @@ export default function Channel({
                       /* Start it if it is not already going. Opening the words
                          over a silent song is a screen that never moves. */
                       if (playing !== track.id) void play(track.id);
-                      setLyricsFor(track);
+                      /* Opened with the even spread and corrected the moment
+                         the song has been heard: waiting for a decode before
+                         anything appears is a button that does nothing for a
+                         second, which reads as broken. */
+                      setLyricsFor({ track, lines: timedFor(track) });
+                      void readAudio(track.id)
+                        .then((blob) => timeFor(track, blob))
+                        .then((found) => {
+                          setLyricsFor((was) =>
+                            was && was.track.id === track.id ? { track, lines: found.lines } : was,
+                          );
+                        });
                     }}
                     className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[40px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
                   >
@@ -555,9 +575,9 @@ export default function Channel({
 
       {lyricsFor && (
         <FollowWords
-          lines={timedFor(lyricsFor)}
+          lines={lyricsFor.lines}
           audio={audioRef.current}
-          title={lyricsFor.title}
+          title={lyricsFor.track.title}
           onClose={() => setLyricsFor(null)}
         />
       )}

@@ -8,7 +8,7 @@
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { ownedPath } from '@/app/lib/server/ownedpath';
-import { isOwnerEmail } from '@/app/lib/server/owners';
+import { isOwnerEmail, ownerEmails } from '@/app/lib/server/owners';
 import { RESERVED_REASON, isReserved } from '@/app/lib/reserved';
 
 export const runtime = 'nodejs';
@@ -70,6 +70,16 @@ export async function GET(request: Request): Promise<Response> {
     signedIn: true,
     creator: data ?? null,
     mayUseReserved: isOwnerEmail(caller.email),
+    /* Whether this deployment has an owner at all.
+ 
+       Not who — the list never reaches a browser. Only whether it is empty,
+       because the two ways of being refused the app's own name are completely
+       different problems: "you are not the owner", which is the rule working,
+       and "this app has no owner set", which is a missing environment
+       variable and which refused the actual owner. Without this the field
+       says the same thing to both, and the person who can fix it is the one
+       being told nothing. */
+    ownerSet: ownerEmails().length > 0,
   });
 }
 

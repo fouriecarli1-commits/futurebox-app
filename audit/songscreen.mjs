@@ -118,10 +118,29 @@ try {
   check('scrolling lands on the next song — its words, not just its title',
     onSecond === 1, `${onSecond} big line(s) on panel two`);
 
-  /* ── And it is honest about the words it guessed ────────────────────── */
-  check('a song with no plan says its words are only spread evenly',
-    /spread evenly over its length/.test(said),
-    (said.match(/.{0,40}spread evenly.{0,30}/) ?? ['(not said)'])[0]);
+  /* ── And it is honest about how it timed them ───────────────────────
+ 
+     Not which sentence — that changes as the app gets better at timing, and a
+     probe pinned to one of them fails when it improves. What must always hold
+     is that it says *something*: "the words move" and "the words move
+     correctly" look identical for the first line and diverge by the third,
+     and somebody filming themselves to this needs to know which they have. */
+  const HOW = [
+    /laid on the singing this app measured/,
+    /laid across the part of the file that is sung/,
+    /spread evenly over the length/,
+  ];
+  check('the screen says how it timed the words',
+    HOW.some((one) => one.test(said)),
+    (said.match(/The words (are|were)[^.]{0,70}\./) ?? ['(not said)'])[0]);
+
+  /* Heard once, remembered after. Decoding a three-minute song every time
+     somebody opens the words is a second of a screen sitting still at exactly
+     the moment they are looking at it. */
+  const remembered = await p.evaluate(() =>
+    Object.keys(JSON.parse(window.localStorage.getItem('futurebox.lyrictime.v1') || '{}')).length);
+  check('and what it heard is remembered, not worked out again', remembered > 0,
+    `${remembered} song(s) timed`);
   await p.screenshot({ path: shot('songscreen-broughtin.png') });
 
   const second = await bigLine();

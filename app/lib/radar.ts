@@ -143,20 +143,28 @@ export interface Creator {
 export async function fetchCreatorState(): Promise<{
   creator: Creator | null;
   mayUseReserved: boolean;
+  ownerSet: boolean;
 }> {
   try {
     const token = await accessToken();
     const response = await fetch('/api/creator', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    if (!response.ok) return { creator: null, mayUseReserved: false };
+    if (!response.ok) return { creator: null, mayUseReserved: false, ownerSet: true };
     const data = (await response.json()) as {
       creator?: Creator | null;
       mayUseReserved?: boolean;
+      ownerSet?: boolean;
     };
-    return { creator: data.creator ?? null, mayUseReserved: data.mayUseReserved === true };
+    return {
+      creator: data.creator ?? null,
+      mayUseReserved: data.mayUseReserved === true,
+      /* True unless the route says otherwise, so a request that could not be
+         read does not accuse a working deployment of having no owner. */
+      ownerSet: data.ownerSet !== false,
+    };
   } catch {
-    return { creator: null, mayUseReserved: false };
+    return { creator: null, mayUseReserved: false, ownerSet: true };
   }
 }
 
