@@ -2260,6 +2260,20 @@ export default function FutureBoxHome() {
               </button>
 
               <div className="flex items-center gap-2 justify-end min-w-0">
+                {/* What is left, where the spending happens.
+
+                    It was in the landing header only — which is the one screen
+                    where nothing costs anything. Inside the studio, where every
+                    generation draws on it, there was no number at all, so the
+                    first time anybody learned their balance was when a
+                    generation refused. */}
+                <Balance
+                  reloadKey={spent}
+                  onTopUp={(wallet) => {
+                    setPacks(wallet.packs);
+                    setShort({ need: 0, balance: wallet.balance, message: '' });
+                  }}
+                />
                 <button
                   type="button"
                   onClick={() => setSearchOpen(true)}
@@ -2391,7 +2405,7 @@ export default function FutureBoxHome() {
                         };
                         return (
                           <>
-                            {item('home', Home, t('hello.home', 'Home'), t('rail.home.hint', 'Where everything is'), atDoor, () =>
+                            {item('home', Cpu, t('hello.home', 'Home'), t('rail.home.hint', 'Where everything is'), atDoor, () =>
                               setAtDoor(true),
                             )}
                             {STAGES.map((stage) => (
@@ -2455,7 +2469,7 @@ export default function FutureBoxHome() {
                         theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
                       } ${atDoor ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
                     >
-                      <Home className={`w-[18px] h-[18px] flex-shrink-0 ${atDoor ? 'text-emerald-400' : ''}`} />
+                      <Cpu className={`w-[18px] h-[18px] flex-shrink-0 ${atDoor ? 'text-emerald-400' : ''}`} />
                       <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
                         <span className="block text-sm font-semibold leading-tight">
                           {t('hello.home', 'Home')}

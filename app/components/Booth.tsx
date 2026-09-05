@@ -34,15 +34,43 @@ import Cost from './Cost';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import * as cloud from '../lib/cloud';
 import VocalBooth from './VocalBooth';
+import Hint from './Hint';
 
-/** What the booth is for, said before anybody has to press anything. */
+/**
+ * What the booth is for, said before anybody has to press anything.
+ *
+ * Five sentences on a laptop is a short paragraph. The same five on a 390-pixel
+ * phone was two thirds of the first screen, and a wall of prose above the
+ * buttons gets scrolled past rather than read — so the words were costing
+ * exactly what they were meant to buy.
+ *
+ * A phone now gets the five names and a mark beside each. The sentence is one
+ * tap away and the songs are on screen without scrolling. A desktop, which has
+ * the room, still gets the sentences outright.
+ */
 function WhatItIs(): React.ReactElement {
   const { t } = useLang();
   const points = [
-    { icon: Mic, text: t('booth.room.sing', 'Sing on your own song, with the words in time and a count-in before you come in.') },
-    { icon: Waves, text: t('booth.room.see', 'The backing above and your take below, on one clock, so you can see where you are.') },
-    { icon: Scissors, text: t('booth.room.punch', 'Drag across the line that went wrong and sing only that. The rest of the take is kept.') },
-    { icon: Layers, text: t('booth.room.split', 'Split the song, lift the generated voice out, and put yours where it was.') },
+    {
+      icon: Mic,
+      name: t('booth.room.sing.t', 'Sing on your own song'),
+      text: t('booth.room.sing', 'Sing on your own song, with the words in time and a count-in before you come in.'),
+    },
+    {
+      icon: Waves,
+      name: t('booth.room.see.t', 'Both takes, one clock'),
+      text: t('booth.room.see', 'The backing above and your take below, on one clock, so you can see where you are.'),
+    },
+    {
+      icon: Scissors,
+      name: t('booth.room.punch.t', 'Redo one line'),
+      text: t('booth.room.punch', 'Drag across the line that went wrong and sing only that. The rest of the take is kept.'),
+    },
+    {
+      icon: Layers,
+      name: t('booth.room.split.t', 'Lift the AI voice out'),
+      text: t('booth.room.split', 'Split the song, lift the generated voice out, and put yours where it was.'),
+    },
     /* Named, and told where the button is.
        The pro lanes cannot open without a song — they need the backing as their
        first lane — so they live behind a button inside an opened song, which is
@@ -51,6 +79,7 @@ function WhatItIs(): React.ReactElement {
        having it. */
     {
       icon: Sliders,
+      name: t('booth.room.lanes.t', 'Lanes and levels'),
       text: t(
         'booth.room.lanes',
         'Lanes, levels, mutes and solos when one voice over one song is not enough — open a song below and press Pro.',
@@ -58,13 +87,19 @@ function WhatItIs(): React.ReactElement {
     },
   ];
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-2 sm:space-y-2">
       {points.map((point) => {
         const Icon = point.icon;
         return (
-          <li key={point.text} className="flex items-start gap-2.5 text-sm text-zinc-400">
-            <Icon className="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-400" />
-            <span>{point.text}</span>
+          <li key={point.name} className="flex items-start gap-2.5 text-sm text-zinc-400">
+            <Icon className="w-4 h-4 mt-1.5 sm:mt-0.5 flex-shrink-0 text-emerald-400" />
+            <span className="min-w-0 flex-1 pt-1 sm:pt-0">
+              <span className="sm:hidden font-semibold text-zinc-300">{point.name}</span>
+              <span className="hidden sm:inline">{point.text}</span>
+            </span>
+            <span className="sm:hidden flex-shrink-0">
+              <Hint>{point.text}</Hint>
+            </span>
           </li>
         );
       })}
@@ -78,6 +113,7 @@ function WhatItIs(): React.ReactElement {
     </ul>
   );
 }
+
 
 export default function Booth({
   onGoToMake,
