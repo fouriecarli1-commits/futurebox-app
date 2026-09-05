@@ -159,6 +159,17 @@ try {
 
   await p.locator('button').filter({ hasText: /^Lyrics$/ }).first().click();
   await p.waitForTimeout(2500);
+  /* The cover, on a song in the channel.
+
+     It existed only in Make a song's own list, so the room where somebody
+     actually looks at their songs had the drawn placeholder and no way to ask
+     for a real one. Not mounted per card on purpose — each sleeve asks the
+     server whether a cover exists, and a screen of songs should not be a
+     screen of questions nobody asked. */
+  const coverButton = p.locator('button').filter({ hasText: /^Cover art$/ });
+  check('every song in the channel can be given a cover',
+    (await coverButton.count()) > 0, `${await coverButton.count()} songs offer it`);
+
   const sheet = p.locator('div.fixed.inset-0.z-\\[100\\]');
   check('the Lyrics button opens the words over the song', (await sheet.count()) === 1);
   check('and it is above the tab bar, not under it',

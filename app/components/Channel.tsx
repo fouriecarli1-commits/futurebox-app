@@ -19,7 +19,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Check, Copy, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, X,
+  Check, Copy, Image as ImageIcon, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, X,
 } from 'lucide-react';
 import { loadTracks, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
@@ -40,6 +40,7 @@ import Hint from './Hint';
 import RecordingName from './RecordingName';
 import FollowWords from './FollowWords';
 import SongScreen, { wordsFor } from './SongScreen';
+import Sleeve from './Sleeve';
 import { timeFor } from '../lib/lyrictime';
 import Note from './Note';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
@@ -85,6 +86,8 @@ export default function Channel({
     },
   });
   const [adding, setAdding] = useState<string | null>(null);
+  /** Which song has been asked for a real cover, if any. */
+  const [sleeveFor, setSleeveFor] = useState<string | null>(null);
   const [creator, setCreator] = useState<Creator | null>(null);
   const [owned, setOwned] = useState<Owned>(NOTHING);
 
@@ -408,7 +411,23 @@ export default function Channel({
           {tracks.map((track) => (
             <article key={track.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden">
               <div className="relative">
-                <Cover seed={track.id} label={track.title} className="aspect-video" />
+                {/* The real cover if somebody asked for one, and the drawn
+                    placeholder until they do.
+
+                    Not mounted on every card: each sleeve asks the server
+                    whether a cover exists already, and twenty songs on a
+                    screen should not be twenty questions nobody asked. The
+                    button below is the asking. */}
+                {sleeveFor === track.id ? (
+                  <Sleeve
+                    trackId={track.id}
+                    title={track.title}
+                    genre={track.genre}
+                    style={track.style ?? ''}
+                  />
+                ) : (
+                  <Cover seed={track.id} label={track.title} className="aspect-video" />
+                )}
                 {/* Tapping the picture opens the song full screen, the way a
                     phone expects. The play button beside it still just plays
                     it in place, for anybody on a desk who wants the grid. */}
@@ -505,6 +524,15 @@ export default function Channel({
                     >
                       <Plus className="w-3.5 h-3.5" />
                       {t('chan.addTo', 'Add to a playlist')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSleeveFor((open) => (open === track.id ? null : track.id))}
+                      aria-expanded={sleeveFor === track.id}
+                      className="text-sm text-zinc-400 hover:text-emerald-300 flex items-center gap-1.5"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      {t('make.cover', 'Cover art')}
                     </button>
                     {onEdit && (
                       <button
