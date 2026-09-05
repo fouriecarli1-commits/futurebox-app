@@ -963,6 +963,69 @@ export default function FutureBoxHome() {
     }, 2000);
   };
 
+  /**
+   * Waiting on the six digits.
+   *
+   * Set to the address the code was sent to, and null the rest of the time.
+   * The address rather than a boolean, because the code is checked against it
+   * and the field it was typed into is gone by then — the form has been
+   * replaced by the code screen.
+   */
+  const [verifying, setVerifying] = useState<string | null>(null);
+  const [code, setCode] = useState('');
+  /**
+   * Seconds before "send it again" works.
+   *
+   * Supabase rate-limits its own sending, and a button that looks pressable
+   * and answers with "too many requests" teaches people the app is broken.
+   * Counting down says the same thing without the error.
+   */
+  const [resendIn, setResendIn] = useState(0);
+  useEffect(() => {
+    if (resendIn <= 0) return undefined;
+    const tick = setTimeout(() => setResendIn((left) => left - 1), 1000);
+    return () => clearTimeout(tick);
+  }, [resendIn]);
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifying) return;
+    setAuthError(null);
+    setAuthBusy(true);
+    const result = await cloud.verifyCode(verifying, code);
+    setAuthBusy(false);
+    if (!result.ok) {
+      setAuthError(result.message);
+      return;
+    }
+    if (!result.account) {
+      // Verified, but no session came back. Rare, and "it worked, now sign in"
+      // is a truthful thing to say where a silent modal is not.
+      setVerifying(null);
+      setCode('');
+      setAuthNotice(t('auth.verifiedNowSignIn', 'That worked. Sign in with your password.'));
+      openAuth('signin');
+      return;
+    }
+    setUser({ ...result.account, followers: 1 });
+    setVerifying(null);
+    setCode('');
+    setAuthModalOpen(false);
+    arrived();
+  };
+
+  const handleResend = async () => {
+    if (!verifying || resendIn > 0) return;
+    setAuthError(null);
+    const sent = await cloud.resendCode(verifying);
+    if (!sent.ok) {
+      setAuthError(sent.message);
+      return;
+    }
+    setAuthNotice(t('auth.codeResent', 'Sent again. It can take a minute.'));
+    setResendIn(60);
+  };
+
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
@@ -989,9 +1052,16 @@ export default function FutureBoxHome() {
       return;
     }
     if (!result.account) {
-      // Sign-up with email confirmation switched on: there is no session yet.
+      /* Sign-up with email confirmation on: there is no session yet, and the
+         letter carries a code. Telling somebody to "check your email" and
+         leaving them on a form they cannot submit again is where this used to
+         end — Supabase refuses a second sign-up with the same address, so
+         there was no way forward from that screen at all. */
       setAuthError(null);
-      setAuthNotice(t('auth.checkEmail'));
+      setAuthNotice(null);
+      setVerifying(authEmail);
+      setCode('');
+      setResendIn(60);
       return;
     }
     setUser({ ...result.account, followers: 1 });
@@ -1122,6 +1192,81 @@ export default function FutureBoxHome() {
                   has switched on. Drawn from `/auth/v1/settings` rather than
                   hard-coded, so a button never sends somebody out to a consent
                   screen that refuses them — see `components/SignInWith.tsx`. */}
+              {/* What went wrong, and what went right, above the branch.
+
+                  These sat inside the sign-in half, so the code screen — the
+                  one place a person is most likely to get something wrong —
+                  refused a wrong code in complete silence. Found by a probe
+                  asking whether anything at all was said, rather than whether
+                  the right words were: the message a project sends back is
+                  its own, it changes between versions, and it is translated. */}
+              {authError && (
+                <p className="text-sm text-rose-400 text-center leading-relaxed">{authError}</p>
+              )}
+              {authNotice && (
+                <p className="text-sm text-emerald-400 text-center leading-relaxed">{authNotice}</p>
+              )}
+              {verifying ? (
+                /* ── The six digits ────────────────────────────────────────
+                   A new account is not signed in until the address is proved,
+                   and the proof is typed here rather than clicked in a letter.
+
+                   A link opens in whichever browser the mail app prefers,
+                   which on a phone is routinely not the one the person signed
+                   up in — so they come back to a session that is not theirs
+                   and a screen still asking them to confirm. Six digits typed
+                   into the window that is already open cannot land anywhere
+                   else.
+
+                   Signing in afterwards never sees this screen again: the
+                   address is proved once and the password carries it from
+                   then on. */
+                <form onSubmit={handleVerify} className="space-y-3">
+                  <p className="text-sm text-zinc-400 leading-relaxed text-center">
+                    {t('auth.codeSent', 'We sent a six-digit code to')}{' '}
+                    <span className="text-white font-semibold break-all">{verifying}</span>
+                  </p>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="000000"
+                    maxLength={7}
+                    required
+                    aria-label={t('auth.codeLabel', 'The code from the email')}
+                    className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-center text-2xl font-bold tracking-[0.4em] text-white placeholder-zinc-700 focus:outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={authBusy || code.replace(/[^0-9]/g, '').length < 6}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm disabled:opacity-60"
+                  >
+                    {authBusy ? t('auth.working') : t('auth.verify', 'Confirm and go in')}
+                  </button>
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => void handleResend()}
+                      disabled={resendIn > 0}
+                      className="text-sm text-emerald-400 hover:underline disabled:text-zinc-600 disabled:no-underline min-h-[32px]"
+                    >
+                      {resendIn > 0
+                        ? `${t('auth.resendIn', 'Send it again in')} ${resendIn}s`
+                        : t('auth.resend', 'Send it again')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setVerifying(null); setCode(''); setAuthError(null); }}
+                      className="text-sm text-zinc-500 hover:text-zinc-300 min-h-[32px]"
+                    >
+                      {t('common.cancel', 'Cancel')}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
               <SignInWith onProblem={setAuthError} />
               <form onSubmit={handleAuthSubmit} className="space-y-3">
                 <input
@@ -1152,12 +1297,6 @@ export default function FutureBoxHome() {
                       : t('common.createAccount')}
                 </button>
               </form>
-              {authError && (
-                <p className="text-sm text-rose-400 text-center leading-relaxed">{authError}</p>
-              )}
-              {authNotice && (
-                <p className="text-sm text-emerald-400 text-center leading-relaxed">{authNotice}</p>
-              )}
               <p className="text-sm text-zinc-500 text-center">
                 {authMode === 'signin' ? t('common.noAccount') : t('common.haveAccount')}{' '}
                 <button
@@ -1167,6 +1306,8 @@ export default function FutureBoxHome() {
                   {authMode === 'signin' ? t('landing.startFree') : t('common.signIn')}
                 </button>
               </p>
+                </>
+              )}
               {!cloud.configured() && (
                 <p className="text-sm text-zinc-600 text-center leading-relaxed">
                   {t('common.localOnly')}

@@ -33,7 +33,8 @@
     "check:nam": "tsx scripts/check-nam.mts",
     "nam:copy": "node scripts/nam-copy.mjs",
     "prebuild": "node scripts/nam-copy.mjs",
-    "check:singview": "node audit/singview.mjs"
+    "check:singview": "node audit/singview.mjs",
+    "check:signup": "node audit/signupcode.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

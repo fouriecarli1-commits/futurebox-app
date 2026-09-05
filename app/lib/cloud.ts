@@ -196,6 +196,52 @@ export async function signUp(email: string, password: string): Promise<AuthResul
   return { ok: true, account: data.session?.user ? toAccount(data.session.user) : null };
 }
 
+/**
+ * The six digits from the letter, checked.
+ *
+ * Supabase sends whatever its confirmation template holds: a link if the
+ * template carries `{{ .ConfirmationURL }}`, a code if it carries
+ * `{{ .Token }}`. Both are the same one-time token underneath, so a project
+ * set up for codes is a template change and this call — not a second auth
+ * system.
+ *
+ * A code is the right shape for a phone. A link opens in whichever browser the
+ * mail app prefers, which is routinely not the one the person signed up in, so
+ * they come back to a session that is not theirs and a screen still asking them
+ * to confirm. Six digits typed into the window that is already open cannot
+ * land anywhere else.
+ *
+ * `type: 'email'` rather than `'signup'`: it covers a first confirmation and
+ * a later re-send alike, where 'signup' rejects the second.
+ */
+export async function verifyCode(email: string, code: string): Promise<AuthResult> {
+  const supabase = getClient();
+  if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    // Spaces and dashes are what people type when they copy six digits out of
+    // a letter, and refusing them teaches nothing.
+    token: code.replace(/[^0-9]/g, ''),
+    type: 'email',
+  });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, account: data.session?.user ? toAccount(data.session.user) : null };
+}
+
+/**
+ * Send it again.
+ *
+ * The first letter goes astray often enough that without this the only way
+ * forward is to sign up again with the same address, which Supabase refuses —
+ * so the person is stuck with no way out of the screen.
+ */
+export async function resendCode(email: string): Promise<{ ok: boolean; message: string }> {
+  const supabase = getClient();
+  if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
+  const { error } = await supabase.auth.resend({ type: 'signup', email });
+  return error ? { ok: false, message: error.message } : { ok: true, message: '' };
+}
+
 export async function signIn(email: string, password: string): Promise<AuthResult> {
   const supabase = getClient();
   if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
