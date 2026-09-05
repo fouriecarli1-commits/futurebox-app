@@ -174,6 +174,39 @@ back as HTTP 200 with `FAILED` as often as it comes back as an HTTP error.
 
 ---
 
+## G. Hooks and YouTube
+
+**Asked:** 2026-09-05 — "ek wonder of hooks nie ook youtube kan connect en
+stukkies daar uit haal nie, mits dit permitted is."
+
+**The answer is no, and the "mits dit permitted is" is the whole answer.**
+
+YouTube's Terms say a user may not access content "through any technology or
+means other than the video playback pages of the Service itself, the
+embeddable player, or other explicitly authorized means YouTube may
+designate", and separately may not reproduce, download or alter any part of
+the Content except as the Service permits. The **YouTube Data API** is the
+authorised programmatic route and it serves *metadata* — titles, durations,
+captions where the owner published them — never the media stream. There is no
+API that hands over the frames, and the third-party rippers that do are the
+thing the Terms name.
+
+**What is possible, and is a different feature:**
+
+- **Play** an embedded segment from a start to an end time, through the IFrame
+  player. Nothing is extracted; the clip is YouTube playing on our page. Fine
+  for a reference, useless for making a hook that gets posted.
+- **Clip your own upload** — if somebody has the source file, the hooks room
+  already cuts it. The gap is that they must have the file, not the URL.
+- **Read the captions** of a video whose owner published them, through the
+  Data API, which is the one piece of a video that is legitimately fetchable.
+
+So: a "paste a YouTube link and cut a hook out of it" button cannot be built
+honestly. "Bring your own file in" can, and now exists in the video rooms —
+the hooks room should get the same.
+
+---
+
 ## E. Still Carli's to switch on
 
 Not questions — the list of things waiting on an account, a key or a click.
