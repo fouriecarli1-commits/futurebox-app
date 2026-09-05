@@ -148,6 +148,12 @@ try {
     sent?.instrumental === false, JSON.stringify(sent?.instrumental));
   check('the chosen length goes with it', typeof sent?.seconds === 'number' && sent.seconds > 0,
     String(sent?.seconds));
+  /* And the language, which nothing ever said before. The words above are
+     Afrikaans, so the room should have worked that out without being told —
+     that is the case that matters, because somebody writing in their own
+     language should not have to find a control first. */
+  check('the engine is told to sing it in Afrikaans',
+    (sent?.style ?? '').includes('sung in Afrikaans'), sent?.style ?? '');
 } finally {
   if (browser) await browser.close();
   if (server) { try { process.kill(-server.pid); } catch { /* already gone */ } }

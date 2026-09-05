@@ -44,6 +44,7 @@ import * as cloud from '../lib/cloud';
 import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } from '../lib/purchases';
 import { loadSounds, training, NO_SOUNDS, type Sounds } from '../lib/sounds';
 import { noteTaste } from '../lib/taste';
+import { looksAfrikaans, singDirection, type SingIn } from '../lib/lyriclang';
 
 export interface Canvas {
   title: string;
@@ -142,9 +143,25 @@ export default function MakeMusic({
    * nobody singing them yet.
    */
   const [singItYourself, setSingItYourself] = useState(false);
+  /**
+   * Which language it should be sung in.
+   *
+   * Nothing was ever telling the engine, so Afrikaans words came back sung as
+   * though they were English often enough to be the first thing Carli noticed
+   * about a song in her own language. `auto` is the old behaviour and stays on
+   * the menu, because a lyric that mixes the two is a real thing and asking
+   * for one of them would be wrong.
+   */
+  const [singIn, setSingIn] = useState<SingIn>('auto');
+  /* Followed until somebody chooses for themselves, and then left alone. The
+     guess is a default, not a correction, and a control that keeps overruling
+     what you set is worse than no control. */
+  const [singInChosen, setSingInChosen] = useState(false);
   /** Which track a vocal is being recorded over, if any. */
   const [takeFor, setTakeFor] = useState<{ track: Track; music: Blob; take?: Blob | null } | null>(null);
 
+  /* The guess follows the words while nobody has said otherwise. */
+  const singWanted: SingIn = singInChosen ? singIn : looksAfrikaans(lyrics) ? 'af' : 'auto';
   const [tracks, setTracks] = useState<Track[]>([]);
 
   /**
@@ -285,6 +302,13 @@ export default function MakeMusic({
     const written = canvas.style.trim();
     const parts = written ? written.split(',').map((p) => p.trim()).filter(Boolean) : [];
     if (voice.words) voice.words.split(',').forEach((w) => parts.push(w.trim()));
+    /* Before the padding, so a style with seven words of its own does not
+       crowd out the one direction that decides what language it comes back
+       in. There is no language parameter in the Music API; this is the same
+       kind of ask as everything else in this list. */
+    singDirection(singWanted).forEach((word) => {
+      if (parts.indexOf(word) === -1) parts.push(word);
+    });
     POLISH.forEach((extra) => {
       if (parts.length < 8 && parts.indexOf(extra) === -1) parts.push(extra);
     });
@@ -694,6 +718,42 @@ export default function MakeMusic({
           <p className="text-sm text-zinc-500 pt-1">
             {engineReady ? t('make.wordsReal') : t('make.wordsSketch')}
           </p>
+
+          {/* What language to sing it in.
+
+              Beside the words rather than behind the switch, because it is a
+              fact about the words and not a setting about the production. It
+              follows what is typed until somebody chooses for themselves.
+
+              "Asked for" is the honest verb: there is no language parameter in
+              the Music API, so this goes into the style directions and the
+              model reads it like the rest. */}
+          {!wordless && !singItYourself && voice.id !== 'none' && (
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <span className="text-sm text-zinc-400">{t('make.singIn', 'Sung in')}</span>
+              {(['af', 'en', 'auto'] as const).map((one) => (
+                <button
+                  key={one}
+                  type="button"
+                  onClick={() => {
+                    setSingIn(one);
+                    setSingInChosen(true);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl border text-sm font-semibold transition-colors ${
+                    singWanted === one
+                      ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
+                      : 'bg-zinc-950/60 border-zinc-800 text-zinc-300 hover:border-zinc-600'
+                  }`}
+                >
+                  {one === 'af'
+                    ? t('make.singAf', 'Afrikaans')
+                    : one === 'en'
+                      ? t('make.singEn', 'English')
+                      : t('make.singAuto', 'Let it decide')}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Help with the words, beside the words. This used to be its own
               screen, which meant the lyrics you were helped with lived

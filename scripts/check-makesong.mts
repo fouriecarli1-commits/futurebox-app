@@ -14,6 +14,7 @@
  * fails. A check that cannot fail is decoration.
  */
 import { buildRequest, forPreview, type Body } from '../app/lib/server/musicplan';
+import { looksAfrikaans, singDirection } from '../app/lib/lyriclang';
 
 let failures = 0;
 const check = (label: string, ok: boolean, detail = '') => {
@@ -76,6 +77,31 @@ check('asking for a backing track keeps the shape and drops the singing',
   backingText.includes('[Verse]') && !backingText.includes('Karoo'));
 check('and says so to the engine rather than hoping',
   (backing.composition_plan?.chunks ?? [])[0]?.negative_styles.includes('vocals') === true);
+
+
+/* ── 5. The language the words are in, told to the engine ─────────────── */
+const AF = ['[Verse]', 'Ek ry alleen deur die Karoo', 'Die pad is lank en stil'].join('\n');
+const EN = ['[Verse]', 'I drive alone through the desert', 'The road is long and still'].join('\n');
+check('Afrikaans words are recognised as Afrikaans', looksAfrikaans(AF));
+check('and English words are not', !looksAfrikaans(EN));
+check('one Afrikaans word in an English lyric is not enough',
+  !looksAfrikaans(['I said nie to that', 'and walked away'].join('\n')));
+check('nor is an empty box', !looksAfrikaans('') && !looksAfrikaans('[Chorus]'));
+/* Four ordinary English lyrics, because the cost of a false positive is an
+   English song asked for in Afrikaans — the exact fault this was built to
+   avoid, arriving from the other direction. */
+for (const english of [
+  'Standing on the road at night\nI still hear you calling out my name',
+  'Give me one more day of this\nI can hold on for a while',
+  'The world keeps turning, love keeps burning\nAnd my heart is on the line',
+  'We ride at dawn through the desert air\nNothing left behind us there',
+]) {
+  check(`English stays English — "${english.split('\n')[0].slice(0, 34)}…"`, !looksAfrikaans(english));
+}
+check('asking for Afrikaans adds a direction the model can read',
+  singDirection('af').includes('sung in Afrikaans'));
+check('and "let it decide" adds nothing, which is what it means',
+  singDirection('auto').length === 0);
 
 if (failures) {
   console.error(`\ncheck:makesong — ${failures} failure(s).\n`);
