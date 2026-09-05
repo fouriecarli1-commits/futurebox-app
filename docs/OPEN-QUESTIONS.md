@@ -202,8 +202,12 @@ thing the Terms name.
   Data API, which is the one piece of a video that is legitimately fetchable.
 
 So: a "paste a YouTube link and cut a hook out of it" button cannot be built
-honestly. "Bring your own file in" can, and now exists in the video rooms —
-the hooks room should get the same.
+honestly, and the hooks room now says that on screen rather than leaving
+somebody to wonder why it is missing.
+
+**Settled, 2026-09-05**, commit `602c32b`: the lawful half is built. Bring a
+video you own into the hooks room and the moments are found in its own sound,
+then cut with that sound on them. Bringing a song in works there too.
 
 ---
 
@@ -278,3 +282,7 @@ or keep both is a decision nobody has made.
 | Five tabs at the bottom, on every screen | 2026-09-05 | `eb3466b` |
 | One artist name, and nobody may be the official channel | 2026-09-05 | `39f7feb`, `6eff4b5` |
 | Back goes back; deleting the account left the working room | 2026-09-05 | `af225d7` |
+| Simple / Everything, so nothing has to be deleted | 2026-09-05 | `c1513c9` |
+| The play button nobody could see; rooms measured for width | 2026-09-05 | `58c1172` |
+| A song full screen, words moving with it | 2026-09-05 | `22afff6` |
+| A hook cut from a file you own, with its sound | 2026-09-05 | `602c32b` |
