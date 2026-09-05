@@ -29,10 +29,14 @@
     "check:habits": "tsx scripts/check-habits.mts",
     "check:adrun": "tsx scripts/check-adrun.mts",
     "check:adreport": "tsx scripts/check-adreport.mts",
-    "handbook": "tsx scripts/build-handbook.mts"
+    "handbook": "tsx scripts/build-handbook.mts",
+    "check:nam": "tsx scripts/check-nam.mts",
+    "nam:copy": "node scripts/nam-copy.mjs",
+    "prebuild": "node scripts/nam-copy.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
+    "@opendaw/nam-wasm": "^1.2.0",
     "@supabase/supabase-js": "^2.45.4",
     "lucide-react": "^0.441.0",
     "next": "^16.3.4",

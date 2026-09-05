@@ -25,3 +25,6 @@ next-env.d.ts
 # The click-through audit harness writes screenshots and logs here.
 audit/*.png
 audit/*.log
+
+# Copied out of @opendaw/nam-wasm by scripts/nam-copy.mjs at build time.
+public/nam/
