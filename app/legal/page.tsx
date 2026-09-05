@@ -105,7 +105,12 @@ export default function Legal(): React.ReactElement {
             <dl className="border-t border-zinc-800">
               <Row label="Registered name">{who.name}</Row>
               <Row label="Legal status">{who.status}</Row>
-              <Row label="Registration number">{who.registration}</Row>
+              {/* Only where there is one. A sole proprietor has no registration
+                  number, and an empty row under that label reads as something
+                  withheld rather than something that does not exist. */}
+              {who.registration && (
+                <Row label="Registration number">{who.registration}</Row>
+              )}
               <Row label="Registered address">
                 {who.address.map((line) => (
                   <span key={line} className="block">

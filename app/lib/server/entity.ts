@@ -42,8 +42,16 @@ export interface Entity {
   readonly name: string;
   /** "Private company registered in South Africa", or whatever it becomes. */
   readonly status: string;
-  /** The CIPC registration number, e.g. 2026/123456/07. */
-  readonly registration: string;
+  /**
+   * The CIPC registration number, e.g. 2026/123456/07.
+   *
+   * Optional, because a sole proprietor has none. ECTA asks for one "where
+   * applicable" — for a natural person trading under a name, the identifying
+   * particulars are the person's own full name and physical address, and a
+   * blank row labelled "Registration number" would suggest something is
+   * missing rather than that it does not exist.
+   */
+  readonly registration?: string;
   /** The registered office, as one line per line. */
   readonly address: readonly string[];
   /** A number a person can actually ring. */
@@ -65,21 +73,39 @@ function lines(value: string | undefined): string[] {
 /**
  * The particulars, or null where they have not been set.
  *
- * All of the required ones or none: a page carrying a name and no registration
- * number satisfies nobody and looks like an oversight rather than a decision.
+ * ── Who is selling, in the two shapes it comes in ────────────────────────
+ *
+ * A company has a registration number. A sole proprietor does not — there is
+ * nothing to register, and the seller is a person trading under a name. Both
+ * can sell online and both owe the same disclosure; only one of them has a
+ * number to give.
+ *
+ * So the number is optional and the *status* is not. A page that said
+ * "Private company registered in the Republic of South Africa" above a name
+ * with no number would be a false statement about a legal person, which is
+ * exactly what this file exists to avoid — and it would have been the default
+ * for anybody who filled in the other four and left the number out.
+ *
+ * Name, status, address and a telephone number, or nothing at all.
  */
 export function entity(): Entity | null {
   const name = (process.env.FUTUREBOX_LEGAL_NAME ?? '').trim();
   const registration = (process.env.FUTUREBOX_LEGAL_REGISTRATION ?? '').trim();
+  const status = (process.env.FUTUREBOX_LEGAL_STATUS ?? '').trim();
   const phone = (process.env.FUTUREBOX_LEGAL_PHONE ?? '').trim();
   const address = lines(process.env.FUTUREBOX_LEGAL_ADDRESS);
-  if (!name || !registration || !phone || !address.length) return null;
+  if (!name || !phone || !address.length) return null;
+
+  /* The default only applies where there is a registration number to justify
+     it. Without one, the status has to be said out loud — a sole proprietor
+     described as a private company is a lie on the one page whose whole job
+     is to be true. */
+  if (!status && !registration) return null;
 
   return {
     name,
-    status: (process.env.FUTUREBOX_LEGAL_STATUS ?? '').trim() ||
-      'Private company registered in the Republic of South Africa',
-    registration,
+    status: status || 'Private company registered in the Republic of South Africa',
+    ...(registration ? { registration } : {}),
     address,
     phone,
     ...(process.env.FUTUREBOX_LEGAL_VAT?.trim()
