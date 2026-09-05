@@ -3002,7 +3002,17 @@ export default function FutureBoxHome() {
                 {/* Anything waiting on an answer comes first — a request sitting
                     unanswered under two screens of matching is a request that
                     goes unanswered. Then the matching, then the pitch tools. */}
-                <CollabRoom reloadKey={collabSignal} />
+                <CollabRoom
+                  reloadKey={collabSignal}
+                  /* Into the booth, on the song they sent. The same hand-off
+                     the search and the advert desk use: the room is not
+                     mounted yet, so this waits for it and fires the moment it
+                     registers. */
+                  onOpenInBooth={(title) => {
+                    goToRoom('booth');
+                    copilotBus.handoff('booth', 'pick_song', title);
+                  }}
+                />
                 <CollabFinder
                   reloadKey={trackCount}
                   onAsked={() => setCollabSignal((n) => n + 1)}

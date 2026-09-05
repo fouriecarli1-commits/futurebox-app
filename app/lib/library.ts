@@ -56,6 +56,15 @@ export interface Track {
    * the tuning, the levels or the AI voice, long after it was posted.
    */
   readonly mixOf?: { readonly source: string };
+  /**
+   * Who handed this song over, when somebody did.
+   *
+   * Set on a song a collaborator put in a room with you and you opened in your
+   * booth. It is here so every screen that shows the song can say whose it is:
+   * a file that arrives on your device without a name on it becomes yours by
+   * accident, and this one is not.
+   */
+  readonly givenBy?: string;
 }
 
 const META_KEY = 'futurebox.tracks.v1';

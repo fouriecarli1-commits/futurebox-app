@@ -46,7 +46,8 @@
     "check:simple": "node audit/simplemode.mjs",
     "check:wide": "node audit/wide.mjs",
     "check:songscreen": "node audit/songscreen.mjs",
-    "check:hookfile": "node audit/hookfile.mjs"
+    "check:hookfile": "node audit/hookfile.mjs",
+    "check:collabbooth": "node audit/collabbooth.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

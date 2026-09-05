@@ -91,6 +91,29 @@ export async function addUpload(file: File): Promise<Track> {
   return track;
 }
 
+/**
+ * A song somebody handed you, kept the way a brought-in file is.
+ *
+ * Not in the channel, for the same reason a file is not: the channel is what
+ * you made, it syncs to your account, and it is what gets posted. Somebody
+ * else's song is none of those. It is on your device because they put it in a
+ * room with you, and `from` records whose it is so the app can say so wherever
+ * it shows up rather than letting it quietly become yours.
+ */
+export async function keepGiven(
+  track: Omit<Track, 'source'>,
+  audio: Blob,
+  from: string,
+): Promise<Track> {
+  const kept: Track = { ...track, source: 'upload', title: track.title, givenBy: from };
+  await putAudio(kept.id, audio);
+  const already = loadUploads().filter((one) => one.id !== kept.id);
+  const list = [kept, ...already];
+  for (const old of list.slice(MOST)) await deleteAudio(old.id).catch(() => undefined);
+  saveUploads(list.slice(0, MOST));
+  return kept;
+}
+
 /** Take one back out, audio and all. */
 export async function removeUpload(id: string): Promise<void> {
   saveUploads(loadUploads().filter((one) => one.id !== id));

@@ -27,6 +27,7 @@
 import React, { useEffect, useState } from 'react';
 import { Layers, Loader2, Mic, Music, Scissors, Sliders, Sparkles, Waves } from 'lucide-react';
 import { getAudio, loadTracks, saveTracks, type Track } from '../lib/library';
+import { loadUploads } from '../lib/uploads';
 import { readAudio } from '../lib/trackaudio';
 import { keepMix, takeId } from '../lib/takekeep';
 import { useLang } from '../lib/i18n';
@@ -141,14 +142,19 @@ export default function Booth({
 
   useEffect(() => {
     const local = loadTracks();
-    setTracks(local);
+    /* Songs brought in from a file, and songs a collaborator handed over,
+       stand beside the channel here. They are not in it — the channel is what
+       you made — but the booth is exactly where somebody wants them: this is
+       the room you sing on top of something in. */
+    const given = loadUploads();
+    setTracks([...local, ...given]);
     if (!cloud.configured()) return;
     let live = true;
     // Same as the make screen: what is on the device shows first, and a song
     // made on another one arrives when the network says so.
     cloud.syncChannel(local, getAudio).then((merged) => {
       if (!live) return;
-      setTracks(merged);
+      setTracks([...merged, ...loadUploads()]);
       saveTracks(merged);
     });
     return () => {
@@ -267,10 +273,18 @@ export default function Booth({
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-white truncate">{track.title}</p>
                 <p className="text-xs text-zinc-500 truncate">
-                  {track.genre} · {track.bpm} BPM · {track.key}
+                  {[track.genre, track.bpm ? `${track.bpm} BPM` : '', track.key].filter(Boolean).join(' · ')}
                   {track.mixOf ? ` · ${t('booth.room.sungOn', 'you sang on this')}` : ''}
                   {track.stems ? ` · ${t('booth.room.isSplit', 'split')}` : ''}
                 </p>
+                {/* Whose it is, on a song somebody handed over. A file that
+                    arrives on your device with no name on it becomes yours by
+                    accident, and this one is not. */}
+                {track.givenBy && (
+                  <p className="text-xs text-emerald-400 truncate">
+                    {t('booth.given', 'Sent to you by')} {track.givenBy}
+                  </p>
+                )}
               </div>
               <button
                 type="button"

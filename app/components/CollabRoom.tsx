@@ -20,9 +20,11 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, Handshake, Loader2, Music, Send, X } from 'lucide-react';
+import { Check, Handshake, Loader2, Mic, Music, Send, X } from 'lucide-react';
 import { answer, ask, loadSaid, loadThreads, say, type Said, type Thread } from '../lib/collab';
 import { loadTracks, type Track } from '../lib/library';
+import { keepGiven } from '../lib/uploads';
+import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
@@ -37,7 +39,14 @@ function when(at: string): string {
     : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function CollabRoom({ reloadKey }: { reloadKey: number }): React.ReactElement {
+export default function CollabRoom({
+  reloadKey,
+  onOpenInBooth,
+}: {
+  reloadKey: number;
+  /** Take them to the booth with this song open, once it is on the device. */
+  onOpenInBooth?: (title: string) => void;
+}): React.ReactElement {
   const { t } = useLang();
 
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -138,6 +147,61 @@ export default function CollabRoom({ reloadKey }: { reloadKey: number }): React.
     [draft, open],
   );
 
+  /**
+   * Their song, in your booth.
+   *
+   * Not two people in one timeline — that is a different app. This is the
+   * thing collaborators actually do: you hear what they sent, you sing over
+   * it, you send a version back.
+   *
+   * The file only travels because they put that song in this room. The route
+   * checks exactly that — see `api/collab/track` — and the song is kept beside
+   * your channel rather than in it, with their name on it, so a song that
+   * arrived on your device does not quietly become yours.
+   */
+  const [taking, setTaking] = useState<string | null>(null);
+  const [gone, setGone] = useState('');
+
+  const intoMyBooth = useCallback(
+    async (trackId: string, from: string) => {
+      setTaking(trackId);
+      setGone('');
+      try {
+        const token = await accessToken();
+        const response = await fetch('/api/collab/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ trackId }),
+        });
+        const said = (await response.json().catch(() => null)) as
+          | { url?: string; track?: Record<string, unknown>; message?: string }
+          | null;
+        if (!response.ok || !said?.url || !said.track) {
+          setGone(said?.message ?? t('collab.noFile', 'That song could not be opened.'));
+          return;
+        }
+        const audio = await fetch(said.url);
+        if (!audio.ok) {
+          setGone(t('collab.noFile', 'That song could not be opened.'));
+          return;
+        }
+        const kept = await keepGiven(said.track as never, await audio.blob(), from);
+        onOpenInBooth?.(kept.title);
+      } catch {
+        setGone(t('collab.noFile', 'That song could not be opened.'));
+      } finally {
+        setTaking(null);
+      }
+    },
+    [onOpenInBooth, t],
+  );
+
+  /* Every hook above the early returns below. This block sat under them, so
+     the first render — before the threads had loaded — ran three fewer hooks
+     than the second, and React tore the room down with "Rendered more hooks
+     than during the previous render". It looked like a crash on opening
+     Collab Radar and it was a line of code in the wrong place. */
+
   const waiting = threads.filter((one) => one.state === 'asked' && !one.mine);
   const sent = threads.filter((one) => one.state === 'asked' && one.mine);
   const rooms = threads.filter((one) => one.state === 'accepted');
@@ -169,6 +233,7 @@ export default function CollabRoom({ reloadKey }: { reloadKey: number }): React.
       </div>
     );
   }
+
 
   return (
     <div className="space-y-4">
@@ -207,7 +272,9 @@ export default function CollabRoom({ reloadKey }: { reloadKey: number }): React.
                 {one.name} <span className="text-zinc-500 font-normal">{one.handle}</span>
               </p>
               {one.because && <p className="text-sm text-zinc-400 leading-snug">{one.because}</p>}
-              <div className="flex gap-2">
+              {gone && <p className="text-sm text-amber-400 leading-snug">{gone}</p>}
+
+            <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => void reply(one.id, true)}
@@ -285,6 +352,25 @@ export default function CollabRoom({ reloadKey }: { reloadKey: number }): React.
                         </p>
                       )}
                       {one.body && <p className="text-sm text-zinc-200 leading-snug">{one.body}</p>}
+
+                      {/* Only on a song they sent. Yours is already in your
+                          booth, and offering to fetch it would be this room
+                          pretending to do something. */}
+                      {one.trackId && !one.mine && (
+                        <button
+                          type="button"
+                          onClick={() => void intoMyBooth(one.trackId as string, room?.name ?? t('collab.them', 'them'))}
+                          disabled={taking !== null}
+                          className="mt-1.5 w-full min-h-[40px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          {taking === one.trackId ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Mic className="w-3.5 h-3.5" />
+                          )}
+                          {t('collab.sing', 'Sing on it in my booth')}
+                        </button>
+                      )}
                       <p className="text-[11px] text-zinc-600 pt-0.5">{when(one.at)}</p>
                     </div>
                   </div>
