@@ -43,13 +43,14 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowDown, ArrowUp, Clapperboard, Check, Download, Film, Loader2, Play, Plus, Scissors, Sparkles, Trash2,
+  ArrowDown, ArrowUp, Clapperboard, Check, Download, Film, Loader2, Music, Play, Plus, Scissors, Sparkles, Trash2,
 } from 'lucide-react';
 import { engines, type EngineAspect } from '../lib/engines';
 import { videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
 import { makeId, rememberMake } from '../lib/makes';
 import { readAudio } from '../lib/trackaudio';
+import { addUpload, loadUploads, removeUpload } from '../lib/uploads';
 import { canStitch, lengthOf, stitch } from '../lib/stitch';
 import { makeBlob } from '../lib/makes';
 import {
@@ -83,6 +84,10 @@ export default function Storyboard({
 
   const [board, setBoard] = useState<Board>(EMPTY);
   const [tracks, setTracks] = useState<Track[]>([]);
+  /** Songs brought in from a file, kept beside the channel rather than in it. */
+  const [brought, setBrought] = useState<Track[]>([]);
+  const [taking, setTaking] = useState(false);
+  const songRef = useRef<HTMLInputElement | null>(null);
   const [making, setMaking] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [cutting, setCutting] = useState<{ at: number; of: number } | null>(null);
@@ -101,6 +106,7 @@ export default function Storyboard({
   useEffect(() => {
     setBoard(loadStoryboard());
     setTracks(loadTracks());
+    setBrought(loadUploads());
     setReady(true);
   }, []);
 
@@ -138,7 +144,42 @@ export default function Storyboard({
   const shortest = lengths[0]?.seconds ?? 5;
   const total = runtime(board, clipLengths);
   const short = missing(board);
-  const song = tracks.find((one) => one.id === board.songId) ?? null;
+  const song =
+    tracks.find((one) => one.id === board.songId) ??
+    brought.find((one) => one.id === board.songId) ??
+    null;
+
+  /* Bringing a file in.
+
+     Decoded before it is kept, so a file this browser cannot play is refused
+     here with a sentence rather than three screens later with silence under
+     the film. It is chosen as soon as it lands, because nobody picks a file
+     and then means to use a different one. */
+  const bringSong = useCallback(async (file: File | null) => {
+    if (!file) return;
+    setTaking(true);
+    setProblem(null);
+    try {
+      const added = await addUpload(file);
+      setBrought(loadUploads());
+      setBoard((was) => ({ ...was, songId: added.id }));
+    } catch (error) {
+      const why = error instanceof Error ? error.message : '';
+      setProblem(
+        why === 'too-big'
+          ? t('board.songTooBig', 'That file is over 60 MB. Trim it or export it smaller.')
+          : t('board.songUnreadable', 'This browser could not read that audio. MP3, WAV or M4A work.'),
+      );
+    } finally {
+      setTaking(false);
+    }
+  }, [t]);
+
+  const dropSong = useCallback(async (id: string) => {
+    await removeUpload(id);
+    setBrought(loadUploads());
+    setBoard((was) => (was.songId === id ? { ...was, songId: undefined } : was));
+  }, []);
 
   const price = useMemo(
     () => board.shots.reduce((sum, one) => (one.makeId ? sum : sum + videoCost(grade, one.seconds)), 0),
@@ -413,6 +454,18 @@ export default function Storyboard({
 
       {board.shots.length > 0 && (
         <div className="space-y-3 border-t border-zinc-800 pt-3">
+          {/* ── The song under it ────────────────────────────────────────
+
+              Two sources, one list. The channel is what this app made; the
+              second group is files brought in from the device, which is the
+              case this desk had no answer for — somebody with a recording
+              already, wanting a picture for it, was told to make a song
+              first.
+
+              A brought-in song is kept beside the channel rather than in it,
+              so nothing here posts a file this app did not write. It does
+              persist: the board remembers which song is under it, and a song
+              that vanished on reload would be worse than not offering it. */}
           <div className="flex items-center gap-2 flex-wrap">
             <label htmlFor="board-song" className="text-sm text-zinc-400">
               {t('board.song', 'The song under it')}
@@ -426,11 +479,59 @@ export default function Storyboard({
               className="min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-emerald-500 focus:outline-none"
             >
               <option value="">{t('board.noSong', 'No song — silent')}</option>
-              {tracks.map((one) => (
-                <option key={one.id} value={one.id}>{one.title}</option>
-              ))}
+              {tracks.length > 0 && (
+                <optgroup label={t('board.fromChannel', 'From your channel')}>
+                  {tracks.map((one) => (
+                    <option key={one.id} value={one.id}>{one.title}</option>
+                  ))}
+                </optgroup>
+              )}
+              {brought.length > 0 && (
+                <optgroup label={t('board.broughtIn', 'Brought in')}>
+                  {brought.map((one) => (
+                    <option key={one.id} value={one.id}>{one.title}</option>
+                  ))}
+                </optgroup>
+              )}
             </select>
+
+            <button
+              type="button"
+              onClick={() => songRef.current?.click()}
+              disabled={taking}
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:border-zinc-600 disabled:opacity-50"
+            >
+              {taking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Music className="w-4 h-4" />}
+              {t('board.bringSong', 'Bring a song in')}
+            </button>
+            <input
+              ref={songRef}
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={(event) => {
+                void bringSong(event.target.files?.[0] ?? null);
+                event.target.value = '';
+              }}
+            />
+
+            {song && song.source === 'upload' && (
+              <button
+                type="button"
+                onClick={() => void dropSong(song.id)}
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-400 hover:text-zinc-200 hover:border-zinc-600"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t('board.dropSong', 'Take it back out')}
+              </button>
+            )}
           </div>
+          <Note className="text-xs text-zinc-500">
+            {t(
+              'board.songWhy',
+              'A song from your channel, or an audio file off this device — up to 60 MB, kept here and not posted anywhere. It plays under the whole film and is cut to its length.',
+            )}
+          </Note>
 
           {/* ── What goes around a shot that is the wrong shape ──────────
 

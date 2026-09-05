@@ -470,7 +470,10 @@ export async function pushTrack(track: Track, audio: Blob): Promise<PushResult> 
     lyrics: track.lyrics,
     style: track.style,
     models: track.models.slice(),
-    source: track.source,
+    /* The column only knows two. A brought-in file never reaches here — it
+       is not in the channel — but the type allows a third, so it is mapped
+       rather than left for the database to reject. */
+    source: track.source === 'engine' ? 'engine' : 'sketch',
     seconds: track.seconds,
     created_at: track.createdAt,
     remix_of: track.remixOf ?? null,

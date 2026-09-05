@@ -16,8 +16,12 @@ export interface Track {
   readonly lyrics: string;
   readonly style: string;
   readonly models: readonly string[];
-  /** 'sketch' was made here in the browser; 'engine' came from a music engine. */
-  readonly source: 'sketch' | 'engine';
+  /**
+   * 'sketch' was made here in the browser; 'engine' came from a music engine;
+   * 'upload' is a file somebody brought in, which lives beside the channel
+   * rather than in it. See `uploads.ts`.
+   */
+  readonly source: 'sketch' | 'engine' | 'upload';
   readonly seconds: number;
   readonly createdAt: string;
   /** Set when this came from remixing another track. */

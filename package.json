@@ -36,7 +36,8 @@
     "check:singview": "node audit/singview.mjs",
     "check:signup": "node audit/signupcode.mjs",
     "check:firstscreen": "node audit/firstscreen.mjs",
-    "check:studiohome": "node audit/studiohome.mjs"
+    "check:studiohome": "node audit/studiohome.mjs",
+    "check:bringsong": "node audit/bringsong.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
