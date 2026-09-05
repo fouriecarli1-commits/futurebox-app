@@ -64,7 +64,7 @@ function ScoreBar({ score }: { score: number }) {
       <div className="h-1.5 flex-1 rounded-full bg-zinc-800 overflow-hidden">
         <div className={`h-full ${tone} rounded-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-[13px] font-mono text-zinc-400 w-8 text-right">{pct}%</span>
+      <span className="text-[13px] text-zinc-400 w-8 text-right">{pct}%</span>
     </div>
   );
 }
@@ -175,7 +175,7 @@ export default function CollabRadar({
               .replace('{genres}', profile.genres.join(', ') || t('radar.noReleases', 'nothing released yet'))}
           </p>
         </div>
-        <div className="text-[13px] font-mono text-zinc-500 bg-zinc-900/80 border border-zinc-800 rounded-lg px-2.5 py-1.5">
+        <div className="text-[13px] text-zinc-500 bg-zinc-900/80 border border-zinc-800 rounded-lg px-2.5 py-1.5">
           {/* One follower is not "1 followers". The count decides the word,
               which is the sort of thing that reads as a machine wrote the
               page — and in Afrikaans the two words differ as well. */}
@@ -326,14 +326,14 @@ export default function CollabRadar({
                   <CopyButton text={pitchBody} label="Copy draft" />
                 </div>
                 {pitchFormat === 'email' && (
-                  <div className="text-[13px] font-mono text-zinc-400 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2">
+                  <div className="text-[13px] text-zinc-400 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2">
                     Subject: {buildPitch(profile, selectedPodcast, 'email').subject}
                   </div>
                 )}
                 <textarea
                   value={pitchBody}
                   onChange={(e) => setPitchBody(e.target.value)}
-                  className="w-full h-72 bg-black/60 border border-zinc-800 rounded-xl p-3.5 text-sm text-zinc-200 font-mono leading-relaxed focus:outline-none focus:border-emerald-500"
+                  className="w-full h-72 bg-black/60 border border-zinc-800 rounded-xl p-3.5 text-sm text-zinc-200 leading-relaxed focus:outline-none focus:border-emerald-500"
                 />
                 <div className="flex items-start space-x-2 text-[13px] text-amber-300/90 bg-amber-950/20 border border-amber-500/30 rounded-xl p-2.5">
                   <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
@@ -432,7 +432,7 @@ export default function CollabRadar({
               <p className="text-[13px] text-zinc-500">{t('radar.sendBrief', "Send this to your co-host before the room opens.")}</p>
               <CopyButton text={buildLiveBrief(profile, coHost, liveTopic, liveSlot)} label="Copy brief" />
             </div>
-            <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-[13px] text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">
+            <pre className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-[13px] text-zinc-300 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">
               {buildLiveBrief(profile, coHost, liveTopic, liveSlot)}
             </pre>
           </div>

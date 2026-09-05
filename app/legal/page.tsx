@@ -192,7 +192,7 @@ export default function Legal(): React.ReactElement {
           </p>
           <p>
             Where a generation fails, the credits for it are returned automatically — that is in the
-            code, in <span className="font-mono text-sm text-zinc-400">charge</span>, not a
+            code, in <span className="text-sm text-zinc-400">charge</span>, not a
             discretion somebody exercises.
           </p>
           <p>

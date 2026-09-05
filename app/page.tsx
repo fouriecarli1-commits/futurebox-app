@@ -1188,28 +1188,41 @@ export default function FutureBoxHome() {
           </div>
         </div>
 
-        {/* Tab Filters */}
-        <nav className="hidden lg:flex items-center space-x-1 bg-zinc-900/90 p-1.5 rounded-full border border-zinc-800">
+        {/* What the feed is showing.
+
+            This was `hidden lg:flex`, so below 1024 pixels it was not merely
+            cramped — it was gone. Four of the five sections of the home page,
+            the podcasts, the masterclasses, the creations and the trends
+            radar, could not be reached at all on a phone. Nothing was broken
+            in them; there was simply no way in.
+
+            It wraps now instead of hiding, with a short name on a phone and
+            the full one where there is room. Five short pills fall into two
+            rows at 390 px, which is two rows of buttons you can see rather
+            than one row you cannot. */}
+        <nav className="flex flex-wrap items-center gap-1 bg-zinc-900/90 p-1.5 rounded-2xl lg:rounded-full border border-zinc-800">
           {[
-            { id: 'all', label: 'Spotlight', icon: Compass },
-            { id: 'futurebox', label: 'FutureBox Podcasts', icon: Headphones },
-            { id: 'masterclasses', label: 'Masterclasses', icon: GraduationCap },
-            { id: 'creations', label: 'Creative AI Music & Video', icon: Sparkles },
-            { id: 'radar', label: 'AI Trends Radar', icon: TrendingUp },
+            { id: 'all', label: t('tab.all', 'Spotlight'), short: t('tab.all.s', 'Spotlight'), icon: Compass },
+            { id: 'futurebox', label: t('tab.pods', 'FutureBox Podcasts'), short: t('tab.pods.s', 'Podcasts'), icon: Headphones },
+            { id: 'masterclasses', label: t('tab.classes', 'Masterclasses'), short: t('tab.classes.s', 'Classes'), icon: GraduationCap },
+            { id: 'creations', label: t('tab.creations', 'Creative AI Music & Video'), short: t('tab.creations.s', 'Music & video'), icon: Sparkles },
+            { id: 'radar', label: t('tab.radar', 'AI Trends Radar'), short: t('tab.radar.s', 'Radar'), icon: TrendingUp },
           ].map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center space-x-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                aria-current={activeTab === tab.id ? 'page' : undefined}
+                className={`flex items-center gap-1.5 px-3 lg:px-4 py-2 min-h-[36px] rounded-full text-xs font-semibold transition-all ${
                   activeTab === tab.id 
                     ? 'bg-emerald-500 text-onAccent shadow-[0_0_15px_rgba(16,185,129,0.4)]' 
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
+                <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="lg:hidden">{tab.short}</span>
+                <span className="hidden lg:inline">{tab.label}</span>
               </button>
             );
           })}
@@ -1265,7 +1278,7 @@ export default function FutureBoxHome() {
               <span>{t('common.upgrade')} ({entryPrice.display})</span>
             </button>
           ) : (
-            <span className="text-xs font-mono text-emerald-400 hidden sm:flex items-center space-x-1 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
+            <span className="text-xs text-emerald-400 hidden sm:flex items-center space-x-1 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
               <Check className="w-3.5 h-3.5" />
               <span>{t('home.proActive', 'PRO active')}</span>
             </span>
@@ -1320,7 +1333,7 @@ export default function FutureBoxHome() {
 
               {podcasterDropdownOpen && (
                 <div className="absolute left-0 mt-2 w-72 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl z-50 p-2 space-y-1">
-                  <p className="text-[10px] font-mono uppercase text-zinc-500 px-3 py-1">{t('home.curated', 'Podcasters worth following')}</p>
+                  <p className="text-[10px] uppercase text-zinc-500 px-3 py-1">{t('home.curated', 'Podcasters worth following')}</p>
                   {approvedPodcasters.map((pod, i) => (
                     <button
                       key={i}
@@ -1351,7 +1364,7 @@ export default function FutureBoxHome() {
 
               {categoryDropdownOpen && (
                 <div className="absolute left-0 mt-2 w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl z-50 p-2 space-y-1">
-                  <p className="text-[10px] font-mono uppercase text-zinc-500 px-3 py-1">{t('home.compilations', 'Across every platform')}</p>
+                  <p className="text-[10px] uppercase text-zinc-500 px-3 py-1">{t('home.compilations', 'Across every platform')}</p>
                   {categoriesList.map((cat, i) => (
                     <button
                       key={i}
@@ -1447,11 +1460,11 @@ export default function FutureBoxHome() {
             <div className="grid md:grid-cols-2 gap-8 items-center relative z-10">
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-semibold rounded-full flex items-center space-x-1.5">
+                  <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold rounded-full flex items-center space-x-1.5">
                     <Radio className="w-3 h-3 animate-pulse text-emerald-400" />
                     <span>{t('feed.freeClass')}</span>
                   </span>
-                  <span className="text-xs text-zinc-400 font-mono">1h 00m • Andrej Karpathy</span>
+                  <span className="text-xs text-zinc-400">1h 00m • Andrej Karpathy</span>
                 </div>
                 <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
                   Intro to Large Language Models: How Neural Networks Think
@@ -1461,7 +1474,7 @@ export default function FutureBoxHome() {
                 </p>
 
                 <div className="bg-black/40 backdrop-blur-md rounded-2xl p-4 border border-zinc-800/80 space-y-2">
-                  <span className="text-[11px] font-mono uppercase text-emerald-400 tracking-wider">{t('feed.takeaways')}</span>
+                  <span className="text-[11px] uppercase text-emerald-400 tracking-wider">{t('feed.takeaways')}</span>
                   <ul className="space-y-1.5">
                     <li className="text-xs text-zinc-300 flex items-center space-x-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
@@ -1543,7 +1556,7 @@ export default function FutureBoxHome() {
                 </h3>
                 <p className="text-xs text-zinc-400">{t('feed.podSub')}</p>
               </div>
-              <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+              <span className="text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
                 {activePodcasts.length} Curated Episodes Available
               </span>
             </div>
@@ -1577,14 +1590,14 @@ export default function FutureBoxHome() {
                           <Play className="w-5 h-5 fill-current translate-x-0.5" />
                         </div>
                       </div>
-                      <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-mono text-emerald-400 border border-emerald-500/30 flex items-center space-x-1">
+                      <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] text-emerald-400 border border-emerald-500/30 flex items-center space-x-1">
                         <Mic className="w-3 h-3" />
                         <span>{pod.duration}</span>
                       </div>
                     </div>
 
                     <div className="p-5 space-y-3">
-                      <p className="text-[11px] font-mono font-bold text-emerald-400 flex items-center justify-between gap-2">
+                      <p className="text-[11px] font-bold text-emerald-400 flex items-center justify-between gap-2">
                         <span>{pod.host}</span>
                         <Views board={board} kind="podcast" reference={pod.id} />
                       </p>
@@ -1641,7 +1654,7 @@ export default function FutureBoxHome() {
                 </h3>
                 <p className="text-xs text-zinc-400">{t('feed.featuredSub')}</p>
               </div>
-              <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
+              <span className="text-xs text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
                 Verified Masterclasses
               </span>
             </div>
@@ -1727,13 +1740,13 @@ export default function FutureBoxHome() {
                             </div>
                           )}
                         </div>
-                        <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] font-mono text-cyan-300 border border-cyan-500/30">
+                        <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] text-cyan-300 border border-cyan-500/30">
                           {mc.level} • {mc.duration}
                         </div>
                       </div>
 
                       <div className="p-5 space-y-3">
-                        <p className="text-[11px] font-mono text-zinc-400">{t('home.instructor', 'Instructor')}: <span className="text-white font-semibold">{mc.instructor}</span></p>
+                        <p className="text-[11px] text-zinc-400">{t('home.instructor', 'Instructor')}: <span className="text-white font-semibold">{mc.instructor}</span></p>
                         <h4 className="font-bold text-sm text-white group-hover:text-cyan-400 transition-colors leading-snug">{mc.title}</h4>
                       </div>
                     </div>
@@ -1783,7 +1796,7 @@ export default function FutureBoxHome() {
                 </h3>
                 <p className="text-xs text-zinc-400">{t('feed.creationsSub')}</p>
               </div>
-              <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
+              <span className="text-xs text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
                 Creator Channels
               </span>
             </div>
@@ -1850,7 +1863,7 @@ export default function FutureBoxHome() {
                       />
                       <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                         {creation.tools.map((tool, idx) => (
-                          <span key={idx} className="px-2 py-0.5 bg-black/80 backdrop-blur-md text-[10px] font-mono text-cyan-300 rounded-md border border-cyan-500/30">
+                          <span key={idx} className="px-2 py-0.5 bg-black/80 backdrop-blur-md text-[10px] text-cyan-300 rounded-md border border-cyan-500/30">
                             {tool}
                           </span>
                         ))}
@@ -1862,11 +1875,11 @@ export default function FutureBoxHome() {
 
                     <div className="p-5 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono uppercase text-cyan-400 font-bold">{creation.medium}</span>
-                        <span className="text-[10px] font-mono text-zinc-400 bg-black/50 px-2 py-0.5 rounded border border-zinc-800">{creation.domain}</span>
+                        <span className="text-[10px] uppercase text-cyan-400 font-bold">{creation.medium}</span>
+                        <span className="text-[10px] text-zinc-400 bg-black/50 px-2 py-0.5 rounded border border-zinc-800">{creation.domain}</span>
                       </div>
                       <h4 className="font-bold text-white group-hover:text-cyan-400 transition-colors leading-snug">{creation.title}</h4>
-                      <p className="text-xs text-zinc-400 font-mono bg-black/30 p-2.5 rounded-lg border border-zinc-800">
+                      <p className="text-xs text-zinc-400 bg-black/30 p-2.5 rounded-lg border border-zinc-800">
                         <span className="text-cyan-400 font-semibold">{t('home.prompt', 'Prompt')}: </span>
                         &ldquo;{creation.prompt}&rdquo;
                       </p>
@@ -1964,22 +1977,44 @@ export default function FutureBoxHome() {
                   key={idx} 
                   className="bg-zinc-900/40 rounded-2xl border border-zinc-800 p-5 space-y-4 hover:border-emerald-500/40 transition-all flex flex-col justify-between"
                 >
-                  <div className="space-y-3">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-zinc-800 text-emerald-400 border border-zinc-700">
+                  {/* The heading opens the thing the heading names.
+
+                      It used to be an <h4>, so pressing it did nothing at all,
+                      and the only link on the card went to the tool vendor's
+                      front page — cursor.com, v0.dev. Somebody reading
+                      "Autonomous Coding & Micro-SaaS with Cursor AI" and
+                      pressing it landed on a product homepage that says none
+                      of that, which reads as a broken link even though every
+                      href was correct. The card was promising an article it
+                      never had.
+
+                      What it does have is the briefing underneath: the stack,
+                      the opportunity, the steps. So the heading opens that. */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBlueprint(item)}
+                    className="space-y-3 text-left w-full group"
+                  >
+                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded bg-zinc-800 text-emerald-400 border border-zinc-700">
                       {item.tag}
                     </span>
-                    <h4 className="font-bold text-sm text-white leading-snug">{item.title}</h4>
-                    <p className="text-xs text-zinc-400 leading-relaxed">{item.desc}</p>
-                  </div>
-                  <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between">
+                    <span className="block font-bold text-sm text-white leading-snug group-hover:text-emerald-300 transition-colors">
+                      {item.title}
+                    </span>
+                    <span className="block text-xs text-zinc-400 leading-relaxed">{item.desc}</span>
+                  </button>
+                  <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between gap-2">
+                    {/* Said for what it is: the tool's own site, not a piece
+                        of writing about it. */}
                     <a 
                       href={item.externalUrl} 
                       target="_blank" 
                       rel="noreferrer"
-                      className="text-xs text-zinc-400 hover:text-white flex items-center space-x-1"
+                      title={t('feed.theirSite', 'Their own site — not an article')}
+                      className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 min-h-[32px] flex-shrink-0"
                     >
-                      <Globe className="w-3 h-3" />
-                      <span>{item.toolName}</span>
+                      <Globe className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{item.toolName}</span>
                     </a>
 
                     <button 
@@ -2014,7 +2049,7 @@ export default function FutureBoxHome() {
 
             <form onSubmit={handleAuthSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono text-zinc-400 mb-1">{t('feed.emailAddress')}</label>
+                <label className="block text-xs text-zinc-400 mb-1">{t('feed.emailAddress')}</label>
                 <input
                   type="email"
                   value={authEmail}
@@ -2026,7 +2061,7 @@ export default function FutureBoxHome() {
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-zinc-400 mb-1">{t('home.password', 'Password')}</label>
+                <label className="block text-xs text-zinc-400 mb-1">{t('home.password', 'Password')}</label>
                 <PasswordField
                   value={authPassword}
                   onChange={setAuthPassword}
@@ -2293,7 +2328,7 @@ export default function FutureBoxHome() {
                     nobody taps, above the work. */}
                 <span
                   title={profileAddress(creatorDomain)}
-                  className="text-sm font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap max-w-full truncate"
+                  className="text-sm text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap max-w-full truncate"
                 >
                   <span className="sm:hidden">@{creatorDomain.replace(/^@/, '')}</span>
                   <span className="hidden sm:inline">{profileAddress(creatorDomain)}</span>
@@ -2836,7 +2871,7 @@ export default function FutureBoxHome() {
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl my-auto">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
               <div className="space-y-1">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                   {selectedBlueprint.tag}
                 </span>
                 <h3 className="font-extrabold text-lg text-white leading-snug pt-1">{selectedBlueprint.title}</h3>
@@ -2853,7 +2888,7 @@ export default function FutureBoxHome() {
                   <div className="min-w-0">
                     {/* Said as what it is. A bare figure under "Revenue
                         Potential" reads as a forecast this app is making. */}
-                    <p className="text-[10px] uppercase font-mono text-zinc-500">
+                    <p className="text-[10px] uppercase text-zinc-500">
                       Reported by operators · not verified here
                     </p>
                     <p className="text-xs font-bold text-white">
@@ -2866,7 +2901,7 @@ export default function FutureBoxHome() {
               <div className="bg-black/40 border border-zinc-800 p-3.5 rounded-2xl flex items-center space-x-3">
                 <Clock className="w-5 h-5 text-cyan-400 flex-shrink-0" />
                 <div>
-                  <p className="text-[10px] uppercase font-mono text-zinc-500">{t('home.buildTime', 'Build time')}</p>
+                  <p className="text-[10px] uppercase text-zinc-500">{t('home.buildTime', 'Build time')}</p>
                   <p className="text-xs font-bold text-white">{selectedBlueprint.buildTime}</p>
                 </div>
               </div>
@@ -2880,22 +2915,46 @@ export default function FutureBoxHome() {
               <p className="text-xs text-zinc-300 leading-relaxed">{selectedBlueprint.opportunity}</p>
             </div>
 
-            <div className="flex items-center space-x-3 pt-2 border-t border-zinc-800">
+            {/* The steps.
+
+                They were in the data from the first day and rendered nowhere:
+                the card said "Open the blueprint" and what opened was a
+                paragraph and a link to the vendor. Three numbered steps is
+                the one part of this that is actually a blueprint. */}
+            {selectedBlueprint.steps && selectedBlueprint.steps.length > 0 && (
+              <div className="space-y-2.5 bg-black/40 p-4 rounded-2xl border border-zinc-800">
+                <p className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                  {t('feed.howTo', 'How it is built')}
+                </p>
+                <ol className="space-y-2">
+                  {selectedBlueprint.steps.map((step, at) => (
+                    <li key={step} className="flex gap-2.5 text-xs text-zinc-300 leading-relaxed">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold flex items-center justify-center">
+                        {at + 1}
+                      </span>
+                      <span className="min-w-0">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 pt-2 border-t border-zinc-800">
               <a 
                 href={selectedBlueprint.externalUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center space-x-2"
+                className="flex-1 py-3 px-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2"
               >
-                <Globe className="w-4 h-4" />
-                <span>Visit Official Website ({selectedBlueprint.toolName})</span>
-                <ExternalLink className="w-3.5 h-3.5 ml-1" />
+                <Globe className="w-4 h-4 flex-shrink-0" />
+                <span className="min-w-0 truncate">{t('feed.visitSite', 'Their site')} ({selectedBlueprint.toolName})</span>
+                <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
               </a>
               <button 
                 onClick={() => setSelectedBlueprint(null)}
-                className="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl transition-all"
+                className="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl transition-all flex-shrink-0"
               >
-                Close
+                {t('feed.close', 'Close')}
               </button>
             </div>
           </div>
@@ -2920,7 +2979,7 @@ export default function FutureBoxHome() {
             </p>
 
             <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800 space-y-2">
-              <span className="text-[11px] font-mono uppercase text-emerald-400 font-bold flex items-center space-x-1.5">
+              <span className="text-[11px] uppercase text-emerald-400 font-bold flex items-center space-x-1.5">
                 <Star className="w-3.5 h-3.5 fill-current" />
                 <span>{t('spon.benefits')}</span>
               </span>

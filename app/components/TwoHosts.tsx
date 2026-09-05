@@ -154,7 +154,7 @@ export default function TwoHosts({
         onChange={(event) => setScript(event.target.value)}
         rows={8}
         placeholder={EXAMPLE}
-        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none resize-y font-mono leading-relaxed"
+        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none resize-y leading-relaxed"
       />
 
       {/* ── What will actually happen, before it happens ────────────────── */}

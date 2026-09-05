@@ -217,7 +217,7 @@ export default function Transcript({
           <ul className="max-h-72 overflow-y-auto space-y-2 pr-1">
             {turns.map((turn, index) => (
               <li key={index} className="text-sm leading-relaxed">
-                <span className="text-xs font-mono text-zinc-600 mr-2">{clock(turn.start)}</span>
+                <span className="text-xs text-zinc-600 mr-2">{clock(turn.start)}</span>
                 <span className="font-semibold text-emerald-300">{named(turn.speaker)}</span>
                 <span className="text-zinc-300"> — {turn.text}</span>
               </li>
