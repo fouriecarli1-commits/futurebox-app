@@ -8,6 +8,7 @@
  */
 
 import type { MetadataRoute } from 'next';
+import { SITE_URL } from './lib/brand';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -17,5 +18,9 @@ export default function robots(): MetadataRoute.Robots {
       // /api is the important one. The rest are Next's own plumbing.
       disallow: ['/api/', '/_next/static/chunks/'],
     },
+    /* Pointed at the sitemap, and built from the same host as everything else
+       — a robots file that names one address while the pages live at another
+       is a map to a place nobody is. */
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

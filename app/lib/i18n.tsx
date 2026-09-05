@@ -1832,6 +1832,15 @@ const Context = createContext<LangContext>({
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>('en');
 
+  /* The document's own language, kept in step with the app's.
+     `<html lang="en">` is written by the server, which cannot know — and an
+     Afrikaans page that says it is English is read aloud by a screen reader
+     in an English voice, word by word, and is filed by search engines as
+     English. Neither is visible on the screen, which is why it stayed wrong. */
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   // Read after mount: the server has no way to know, and guessing during render
   // would mismatch the HTML it sent.
   useEffect(() => {
