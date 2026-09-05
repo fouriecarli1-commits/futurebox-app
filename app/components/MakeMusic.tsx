@@ -84,6 +84,13 @@ export default function MakeMusic({
   const { t } = useLang();
   const title = canvas.title;
   const lyrics = canvas.lyrics;
+  /* Whether anybody is going to sing on this.
+ 
+     `splitSections` is what the engine call uses, so asking it here is asking
+     the same question the request will ask rather than a second guess at it —
+     a box holding only blank lines or only [Chorus] markers has no words in
+     it, and looks full. */
+  const wordless = splitSections(lyrics).length === 0;
   const setTitle = (value: string) => setCanvas({ ...canvas, title: value });
   const setLyrics = (value: string) => setCanvas({ ...canvas, lyrics: value });
   /**
@@ -751,6 +758,40 @@ export default function MakeMusic({
             Music API. These words lean on breath, room and imperfection, because
             the usual complaint about generated singing is that it is too clean,
             and asking for the flaw works better than asking for "realistic". */}
+        {/* How long, in Simple as well as in Everything.
+
+            It was behind the switch, and it is the one control there that
+            changes what the song costs — so Simple hid the price while
+            charging it. Carli looked for it and it was not there. Bars only
+            mean something once you know the tempo, so "32 bars" answered a
+            question nobody asked; these are seconds, with what each one
+            costs printed on it. */}
+        <div>
+          <label className="text-sm text-zinc-400">{t('make.length')}</label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
+            {LENGTH_CHOICES.map((choice) => (
+              <button
+                key={choice.seconds}
+                type="button"
+                onClick={() => setSeconds(choice.seconds)}
+                className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                  seconds === choice.seconds
+                    ? 'bg-emerald-500/15 border-emerald-500'
+                    : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
+                }`}
+              >
+                <span className={`block text-sm font-semibold ${seconds === choice.seconds ? 'text-emerald-300' : 'text-zinc-200'}`}>
+                  {choice.label}
+                </span>
+                <span className="block text-sm text-zinc-500 leading-snug">{choice.note}</span>
+                <span className="block text-xs text-zinc-500 pt-0.5">
+                  {songCost(choice.seconds)} {t('video.credits', 'credits')}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* ── Everything else, behind one switch ─────────────────────────
 
             Not deleted, and that is the whole point of the switch. Simple
@@ -842,33 +883,6 @@ export default function MakeMusic({
             </div>
           </div>
 
-          {/* Lengths in seconds. Bars only mean something once you know the tempo,
-              so "32 bars" answered a question nobody asked. */}
-          <div>
-            <label className="text-sm text-zinc-400">{t('make.length')}</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
-              {LENGTH_CHOICES.map((choice) => (
-                <button
-                  key={choice.seconds}
-                  type="button"
-                  onClick={() => setSeconds(choice.seconds)}
-                  className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
-                    seconds === choice.seconds
-                      ? 'bg-emerald-500/15 border-emerald-500'
-                      : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
-                  }`}
-                >
-                  <span className={`block text-sm font-semibold ${seconds === choice.seconds ? 'text-emerald-300' : 'text-zinc-200'}`}>
-                    {choice.label}
-                  </span>
-                  <span className="block text-sm text-zinc-500 leading-snug">{choice.note}</span>
-                  <span className="block text-xs text-zinc-500 pt-0.5">
-                    {songCost(choice.seconds)} {t('video.credits', 'credits')}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* ── A sound of your own ────────────────────────────────────────
               Directly above the button, because it is the last thing decided
@@ -975,6 +989,21 @@ export default function MakeMusic({
           </>
         )}
 
+
+        {/* What is about to be made, when it is not what the button says.
+
+            With no words in the box the engine is asked for a plain prompt and
+            what comes back has nobody singing on it. That was true before and
+            nothing said so — you pressed Make a song, waited a minute, spent
+            the allowance, and got music. It is a fair thing to want; it is not
+            a fair thing to be handed without being told. */}
+        {wordless && (
+          <p className="text-sm text-amber-300/90 leading-snug rounded-xl border border-amber-500/30 bg-amber-500/[0.06] px-3.5 py-2.5">
+            {singItYourself || voice.id === 'none'
+              ? t('make.noWordsOnPurpose', 'No words and no voice — this comes back as a backing track to sing over.')
+              : t('make.noWords', 'The words box is empty, so this comes back as music with nobody singing. Put the words in first if you want it sung.')}
+          </p>
+        )}
 
         <button
           type="button"

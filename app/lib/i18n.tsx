@@ -1963,6 +1963,8 @@ export const STRINGS: Dict = {
   "spon.noBanners": { en: "No banners, no pop-ups, nothing down the sides — there is nothing of that kind to buy here. What a sponsor gets is their name on something worth putting it on, and the counters on this page as the report.", af: "Geen baniere, geen pop-ups, niks langs die kante nie — daar is niks van daardie soort hier te koop nie. Wat ’n borg kry, is hulle naam op iets wat dit werd is, en die tellers op hierdie blad as die verslag." },
   "place.mock": { en: "What {what} looks like — a mock-up, not a live page", af: "Hoe {what} lyk — ’n voorbeeld, nie ’n regte blad nie" },
   "place.yourCompany": { en: "Your company", af: "Jou maatskappy" },
+  "make.noWords": { en: "The words box is empty, so this comes back as music with nobody singing. Put the words in first if you want it sung.", af: "Die woordeblok is leeg, so dit kom terug as musiek met niemand wat sing nie. Sit eers die woorde in as jy wil hê dit moet gesing word." },
+  "make.noWordsOnPurpose": { en: "No words and no voice — this comes back as a backing track to sing over.", af: "Geen woorde en geen stem nie — dit kom terug as ’n backing track om op te sing." },
   "radar.unknown": { en: "Unknown", af: "Onbekend" },
   "radar.tab.podcasts": { en: "Podcast Match", af: "Podcast-pas" },
   "radar.tab.live": { en: "TikTok Live Room", af: "TikTok Live-kamer" },

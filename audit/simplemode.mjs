@@ -100,15 +100,19 @@ try {
   const simpleWords = await says();
   await p.screenshot({ path: shot('simple-mode.png') });
 
-  /* The three things a song needs. Named by their own labels rather than
-     counted, so a field renamed out of existence fails rather than passes. */
-  for (const want of ['What is it called?', 'The words', 'What should it sound like?']) {
+  /* The things a song needs. Named by their own labels rather than counted, so
+     a field renamed out of existence fails rather than passes.
+ 
+     "How long?" joined them after Carli went looking for it and it was not
+     there. It is the one control behind the switch that changes what the song
+     costs, so Simple was hiding the price while charging it. */
+  for (const want of ['What is it called?', 'The words', 'What should it sound like?', 'How long?']) {
     check(`Simple still asks: ${want.toLowerCase()}`, simpleWords.includes(want), '');
   }
   check('and it still has the button that makes it', simpleWords.includes('Make my song'));
 
   /* What it puts away. */
-  const HIDDEN = ['I will sing it myself', 'The voice', 'Speed', 'Mood', 'How long?'];
+  const HIDDEN = ['I will sing it myself', 'The voice', 'Speed', 'Mood'];
   const stillThere = HIDDEN.filter((one) => simpleWords.includes(one));
   check('and it puts the rest away', stillThere.length === 0, stillThere.join(', ') || 'all of it');
 

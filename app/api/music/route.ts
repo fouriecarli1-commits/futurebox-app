@@ -23,7 +23,7 @@
  */
 
 import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
-import { buildRequest, type Body } from '@/app/lib/server/musicplan';
+import { buildRequest, forPreview, type Body } from '@/app/lib/server/musicplan';
 import { songCost } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
@@ -122,11 +122,27 @@ export async function POST(request: Request): Promise<Response> {
         { status: caller ? 402 : 401 },
       );
     }
-    // A free account gets a short preview whatever the request asked for. This
-    // is the line the whole cost model rests on, so it is enforced by
-    // overwriting the request rather than by trusting it.
+    /* A free account gets the preview length whatever the request asked for,
+       and the length is the only thing the cost model rests on — so that is
+       the one field overwritten here rather than trusted.
+ 
+       It used to drop `sections` as well, and that was a serious fault rather
+       than a policy. Without sections `buildRequest` takes the plain-prompt
+       path, so the words somebody wrote were thrown away on the server and
+       what came back was music with nobody singing them. Nothing on the way
+       said so: the room showed the lyrics it had sent, the release carried
+       them, and the audio did not. Carli hit it on an Afrikaans song — "net
+       klank het uitgekom" — and it was every free song, in every language,
+       since the day the line was written.
+ 
+       Nothing about it was needed for the cost. `songCost` is a function of
+       length alone; a sung minute and an instrumental minute cost the same
+       upstream and are charged the same here.
+ 
+       `finetuneId` still goes, and that one is a real entitlement: a sound
+       trained on your own songs is part of what a plan buys. */
     if (allowance.kind === 'preview') {
-      body = { ...body, seconds: allowance.seconds, sections: undefined, finetuneId: undefined };
+      body = forPreview(body, allowance.seconds);
     }
     const seconds = allowance.kind === 'preview' ? allowance.seconds : (body.seconds ?? 60);
     if (caller) record = () => recordGeneration(caller, allowance.kind, seconds, undefined, request);

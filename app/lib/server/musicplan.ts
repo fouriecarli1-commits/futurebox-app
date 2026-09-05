@@ -52,6 +52,25 @@ export interface Body {
   finetuneId?: string;
 }
 
+/**
+ * What a free preview may ask for.
+ *
+ * Out here rather than inline in the route because this is the line the whole
+ * cost model rests on, and a rule written inside a route handler is a rule
+ * nobody can test. It got one word wrong for months: it dropped `sections`
+ * along with the trained sound, and without sections `buildRequest` takes the
+ * plain-prompt path — so every free song came back with nobody singing the
+ * words the person had written, in any language, with nothing anywhere saying
+ * so.
+ *
+ * What a preview actually limits is the length, because length is the only
+ * thing the cost is a function of, and the trained sound, because that is a
+ * thing a plan buys. The words are neither.
+ */
+export function forPreview(body: Body, seconds: number): Body {
+  return { ...body, seconds, finetuneId: undefined };
+}
+
 const clamp = (value: number, low: number, high: number): number =>
   Math.min(high, Math.max(low, Math.round(value)));
 

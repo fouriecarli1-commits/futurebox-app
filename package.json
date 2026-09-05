@@ -49,7 +49,9 @@
     "check:hookfile": "node audit/hookfile.mjs",
     "check:collabbooth": "node audit/collabbooth.mjs",
     "check:invite": "node audit/invite.mjs",
-    "check:afrikaansscreen": "node audit/afrikaans.mjs"
+    "check:afrikaansscreen": "node audit/afrikaans.mjs",
+    "check:makesong": "tsx scripts/check-makesong.mts",
+    "check:makeroom": "node audit/makesong.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
