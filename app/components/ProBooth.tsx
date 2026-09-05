@@ -694,7 +694,7 @@ export default function ProBooth({
               all do. */}
           <Cost credits={0} className="pt-0.5" />
         </div>
-        <button type="button" onClick={onClose} className="text-zinc-500 hover:text-white flex-shrink-0">
+        <button type="button" onClick={onClose} className="p-2 -m-2 sm:p-0 sm:m-0 text-zinc-500 hover:text-white flex-shrink-0">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -717,7 +717,7 @@ export default function ProBooth({
             max={FASTEST}
             value={meter.bpm}
             onChange={(event) => setMeter((was) => sane({ ...was, bpm: Number(event.target.value) }))}
-            className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100 tabular-nums"
+            className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100 tabular-nums"
             aria-label={t('pro.bpm', 'Tempo')}
           />
           <span className="text-xs text-zinc-500">{t('pro.bpmUnit', 'bpm')}</span>
@@ -727,7 +727,7 @@ export default function ProBooth({
           <select
             value={meter.beats}
             onChange={(event) => setMeter((was) => sane({ ...was, beats: Number(event.target.value) }))}
-            className="bg-zinc-950 border border-zinc-700 rounded-lg px-1.5 py-1 text-sm text-zinc-100"
+            className="bg-zinc-950 border border-zinc-700 rounded-lg px-1.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
             aria-label={t('pro.beats', 'Beats in a bar')}
           >
             {[2, 3, 4, 5, 6, 7, 9, 12].map((one) => (
@@ -738,7 +738,7 @@ export default function ProBooth({
           <select
             value={meter.unit}
             onChange={(event) => setMeter((was) => sane({ ...was, unit: Number(event.target.value) }))}
-            className="bg-zinc-950 border border-zinc-700 rounded-lg px-1.5 py-1 text-sm text-zinc-100"
+            className="bg-zinc-950 border border-zinc-700 rounded-lg px-1.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
             aria-label={t('pro.unit', 'What counts as a beat')}
           >
             {[2, 4, 8, 16].map((one) => (
@@ -750,7 +750,7 @@ export default function ProBooth({
         <select
           value={meter.key}
           onChange={(event) => setMeter((was) => sane({ ...was, key: event.target.value }))}
-          className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100"
+          className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
           aria-label={t('pro.key', 'Key')}
         >
           {KEYS.map((one) => (
@@ -778,7 +778,7 @@ export default function ProBooth({
             <select
               value={division}
               onChange={(event) => setDivision(event.target.value as DivisionId)}
-              className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100"
+              className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
               aria-label={t('pro.division', 'How often it clicks')}
             >
               {DIVISIONS.map((one) => (
@@ -793,7 +793,7 @@ export default function ProBooth({
                 max={0}
                 value={clickDb}
                 onChange={(event) => setClickDb(Number(event.target.value))}
-                className="w-20 accent-emerald-500"
+                className="w-20 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
                 aria-label={t('pro.clickLevel', 'Click level')}
               />
               <span className="text-xs text-zinc-500 tabular-nums w-12 text-right">
@@ -809,7 +809,7 @@ export default function ProBooth({
           <select
             value={countBars}
             onChange={(event) => setCountBars(Number(event.target.value) as CountIn)}
-            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100"
+            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
             aria-label={t('pro.countIn', 'Count in')}
           >
             {COUNT_INS.map((one) => (
@@ -828,7 +828,7 @@ export default function ProBooth({
           <select
             value={snap}
             onChange={(event) => setSnap(event.target.value as Snap)}
-            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100"
+            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
             aria-label={t('pro.snap', 'Snap')}
           >
             {SNAPS.map((one) => (
@@ -893,7 +893,7 @@ export default function ProBooth({
                 </p>
                 <p className="text-sm text-zinc-500 leading-snug truncate">{changing.name}</p>
               </div>
-              <button type="button" onClick={() => setChanging(null)} className="text-zinc-500 hover:text-white">
+              <button type="button" onClick={() => setChanging(null)} className="p-2 -m-2 sm:p-0 sm:m-0 text-zinc-500 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -960,7 +960,7 @@ export default function ProBooth({
               setMaster((was) => ({ ...was, gain: Number(event.target.value) / 100 }));
               setStale(true);
             }}
-            className="w-24 accent-emerald-500"
+            className="w-24 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
             aria-label={t('pro.masterLevel', 'Level')}
           />
           <span className="text-xs text-zinc-500 tabular-nums w-10 text-right">
@@ -976,7 +976,7 @@ export default function ProBooth({
               setMaster((was) => ({ ...was, ceilingDb: Number(event.target.value) }));
               setStale(true);
             }}
-            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-100 tabular-nums"
+            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100 tabular-nums"
             aria-label={t('pro.ceiling', 'Ceiling')}
           >
             {[-0.1, -0.3, -1, -2, -3].map((one) => (
@@ -1236,14 +1236,14 @@ function LaneRow({
         <input
           value={lane.name}
           onChange={(event) => onChange({ name: event.target.value.slice(0, 40) })}
-          className="w-full bg-transparent text-sm font-semibold text-zinc-200 outline-none focus:text-white"
+          className="w-full bg-transparent py-1.5 sm:py-0 text-sm font-semibold text-zinc-200 outline-none focus:text-white"
           aria-label={t('pro.laneName', 'Lane name')}
         />
         <div className="flex items-center gap-1 min-w-0">
           <button
             type="button"
             onClick={() => onChange({ muted: !lane.muted })}
-            className={`px-1.5 py-0.5 rounded text-[11px] font-bold border ${
+            className={`px-2 py-1.5 sm:py-0.5 min-w-[34px] sm:min-w-0 min-h-[34px] sm:min-h-0 rounded text-[11px] font-bold border ${
               lane.muted ? 'bg-red-500/20 border-red-500 text-red-300' : 'bg-zinc-950 border-zinc-700 text-zinc-500'
             }`}
           >
@@ -1252,7 +1252,7 @@ function LaneRow({
           <button
             type="button"
             onClick={() => onChange({ soloed: !lane.soloed })}
-            className={`px-1.5 py-0.5 rounded text-[11px] font-bold border ${
+            className={`px-2 py-1.5 sm:py-0.5 min-w-[34px] sm:min-w-0 min-h-[34px] sm:min-h-0 rounded text-[11px] font-bold border ${
               lane.soloed
                 ? 'bg-amber-500/20 border-emerald-500 text-emerald-300'
                 : 'bg-zinc-950 border-zinc-700 text-zinc-500'
@@ -1266,7 +1266,7 @@ function LaneRow({
             max={150}
             value={Math.round(lane.gain * 100)}
             onChange={(event) => onChange({ gain: Number(event.target.value) / 100 })}
-            className="flex-1 accent-emerald-500"
+            className="flex-1 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
             aria-label={t('pro.level', 'Level')}
           />
           <span className="text-[11px] text-zinc-500 tabular-nums w-8 text-right">
@@ -1287,7 +1287,7 @@ function LaneRow({
         aria-expanded={open}
         title={t('pro.tone', 'Tone')}
         aria-label={t('pro.tone', 'Tone')}
-        className={`flex-shrink-0 p-1.5 rounded-lg border ${
+        className={`flex-shrink-0 p-2.5 sm:p-1.5 rounded-lg border ${
           isClean(lane.tone)
             ? 'border-zinc-800 text-zinc-600 hover:text-zinc-300'
             : 'border-emerald-500/50 text-emerald-400'
@@ -1304,7 +1304,7 @@ function LaneRow({
           max={100}
           value={Math.round((lane.pan ?? 0) * 100)}
           onChange={(event) => onChange({ pan: Number(event.target.value) / 100 })}
-          className="flex-1 accent-emerald-500"
+          className="flex-1 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
           aria-label={t('pro.pan', 'Where it sits, left to right')}
         />
         <span className="text-[11px] text-zinc-600">R</span>
@@ -1317,7 +1317,7 @@ function LaneRow({
           value={Number(lane.at.toFixed(2))}
           onChange={(event) => onChange({ at: Number(event.target.value) })}
           disabled={lane.backing}
-          className="w-16 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-1 text-sm text-zinc-300 tabular-nums disabled:opacity-40"
+          className="w-16 bg-zinc-950 border border-zinc-700 rounded px-1.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-300 tabular-nums disabled:opacity-40"
           aria-label={t('pro.startsAt', 'Starts at')}
         />
         <span className="text-[11px] text-zinc-600">s</span>
@@ -1329,7 +1329,7 @@ function LaneRow({
           disabled={busy}
           title={`${t('pro.split', 'Split the voice off')} — ${perMinute(lane.audio.duration, CREDITS.stems)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.split', 'Split the voice off')}
-          className="text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 -m-1 sm:m-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
           <Scissors className="w-4 h-4" />
         </button>
@@ -1339,7 +1339,7 @@ function LaneRow({
           disabled={busy || reading}
           title={`${t('pro.parts', 'Split into named parts')} — ${perMinute(lane.audio.duration, CREDITS.parts)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.parts', 'Split into named parts')}
-          className="text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 -m-1 sm:m-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
           <Layers className="w-4 h-4" />
         </button>
@@ -1349,7 +1349,7 @@ function LaneRow({
           disabled={busy || reading}
           title={`${t('pro.read', 'Read the chords, key and tempo')} — ${perMinute(lane.audio.duration, CREDITS.read)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.read', 'Read the chords, key and tempo')}
-          className="text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 -m-1 sm:m-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
           {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
         </button>
@@ -1359,12 +1359,12 @@ function LaneRow({
           disabled={busy}
           title={t('pro.sing', 'Sing this in another voice')}
           aria-label={t('pro.sing', 'Sing this in another voice')}
-          className="text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 -m-1 sm:m-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
           <Mic2 className="w-4 h-4" />
         </button>
         {!lane.backing && (
-          <button type="button" onClick={onRemove} className="text-zinc-600 hover:text-red-400 ml-auto">
+          <button type="button" onClick={onRemove} className="p-2 sm:p-0 -m-1 sm:m-0 text-zinc-600 hover:text-red-400 ml-auto">
             <Trash2 className="w-4 h-4" />
           </button>
         )}
@@ -1392,7 +1392,7 @@ function LaneRow({
             <button
               type="button"
               onClick={() => onUseTempo(found.tempo as number, found.key)}
-              className="px-2.5 py-1 rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-xs font-bold text-emerald-300"
+              className="px-2.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 rounded-lg border border-emerald-500/50 bg-emerald-500/10 text-xs font-bold text-emerald-300"
             >
               {t('pro.useTempo', 'Set the session to this')}
             </button>
@@ -1453,7 +1453,7 @@ function LaneRow({
               max={100}
               value={Math.round(tone.drive * 100)}
               onChange={(event) => onChange({ tone: { ...tone, drive: Number(event.target.value) / 100 } })}
-              className="w-28 accent-emerald-500"
+              className="w-28 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
               aria-label={t('pro.drive', 'Drive')}
             />
           </label>
@@ -1465,7 +1465,7 @@ function LaneRow({
               max={100}
               value={Math.round(tone.colour * 100)}
               onChange={(event) => onChange({ tone: { ...tone, colour: Number(event.target.value) / 100 } })}
-              className="w-28 accent-emerald-500"
+              className="w-28 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
               aria-label={t('pro.colour', 'Colour')}
             />
           </label>
@@ -1477,7 +1477,7 @@ function LaneRow({
               max={100}
               value={Math.round(tone.mix * 100)}
               onChange={(event) => onChange({ tone: { ...tone, mix: Number(event.target.value) / 100 } })}
-              className="w-28 accent-emerald-500"
+              className="w-28 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
               aria-label={t('pro.blend', 'Blend')}
             />
           </label>
@@ -1485,7 +1485,7 @@ function LaneRow({
             type="button"
             onClick={() => onChange({ tone: { ...tone, cabinet: !tone.cabinet } })}
             aria-pressed={tone.cabinet}
-            className={`px-2.5 py-1 rounded-lg border text-xs font-bold ${
+            className={`px-2.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 rounded-lg border text-xs font-bold ${
               tone.cabinet
                 ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
                 : 'bg-zinc-950 border-zinc-700 text-zinc-500'
@@ -1496,7 +1496,7 @@ function LaneRow({
           <button
             type="button"
             onClick={() => onChange({ tone: CLEAN })}
-            className="px-2.5 py-1 rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-500 hover:text-white"
+            className="px-2.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-500 hover:text-white"
           >
             {t('pro.clean', 'Straight')}
           </button>
@@ -1523,7 +1523,7 @@ function LaneRow({
             <span className="text-xs text-zinc-500">{t('pro.amp', 'Amp')}</span>
             {lane.amped ? (
               <>
-                <span className="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 text-xs font-bold min-w-0 truncate max-w-[12rem]">
+                <span className="px-2.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 text-xs font-bold min-w-0 truncate max-w-[12rem]">
                   {lane.amped.name}
                 </span>
                 <button

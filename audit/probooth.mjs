@@ -297,6 +297,33 @@ try {
     const wide = await p.evaluate(() =>
       document.documentElement.scrollWidth - document.documentElement.clientWidth);
     check(`at ${width}px the room does not run off the side`, wide <= 1, `${wide}px over`);
+
+    /* Big enough to hit with a thumb.
+
+       This room was built at desk size and it showed: at 390 px twenty of its
+       twenty-nine controls were under 32 pixels — selects at 28, mute and solo
+       at 23, four lane actions at 16 square, and sliders 16 pixels tall, which
+       under a mouse is a target and under a thumb is a coin flip. A control
+       nobody can hit is a control that is not there.
+
+       Only checked on the phone. A mouse is precise and a desk that copies the
+       phone's padding is a desk with half the density it should have. */
+    if (width === 390) {
+      const small = await p.evaluate(() => {
+        const out = [];
+        for (const el of Array.from(document.querySelectorAll('button, [role="button"], a, input, select'))) {
+          const r = el.getBoundingClientRect();
+          if (r.width < 2 || r.height < 2) continue;
+          // A full-width backdrop is not a target anybody aims at.
+          if (r.width >= window.innerWidth) continue;
+          if (r.height < 32 || r.width < 32) {
+            out.push(`${Math.round(r.width)}×${Math.round(r.height)} "${(el.innerText || el.getAttribute('aria-label') || el.getAttribute('title') || el.type || '').replace(/\s+/g, ' ').trim().slice(0, 24)}" .${String(el.className).slice(0, 46)}`);
+          }
+        }
+        return out;
+      });
+      check('at 390px every control is big enough for a thumb', small.length === 0, small.slice(0, 6).join(', '));
+    }
   }
   /* ── The pinned strips are not see-through ───────────────────────────
 
