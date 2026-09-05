@@ -20,7 +20,11 @@ const measure = (page) =>
     if (!aside) return { error: 'geen aside' };
     const panes = Array.from(aside.parentElement.children);
     const nav = panes.find((el) => el.tagName === 'NAV');
-    const work = panes.find((el) => el !== aside && el.tagName !== 'NAV');
+    /* The phone's room menu is a fourth pane and it stacks first, so a plain
+       "the div that is not the rail" picked it up as the working surface and
+       reported the copilot below it. Excluded by the button it holds. */
+    const menu = panes.find((el) => el.querySelector('button[aria-haspopup="menu"]'));
+    const work = panes.find((el) => el !== aside && el !== menu && el.tagName !== 'NAV');
 
     let sc = aside.parentElement;
     while (sc && sc !== document.body && sc.scrollHeight <= sc.clientHeight + 4) sc = sc.parentElement;
@@ -28,7 +32,7 @@ const measure = (page) =>
 
     const zero = (sc ?? document.body).getBoundingClientRect().top;
     const top = (el) => (el ? Math.round(el.getBoundingClientRect().top - zero) : null);
-    return { nav: top(nav), work: top(work), copilot: top(aside), viewport: window.innerHeight };
+    return { nav: top(nav), menu: top(menu), work: top(work), copilot: top(aside), viewport: window.innerHeight };
   });
 
 const { browser, page, problems } = await enter({ width: 390, height: 844 });
@@ -37,16 +41,26 @@ await page.waitForTimeout(1200);
 
 let bad = 0;
 for (const [room, wantFirst] of [['Make a song', true], ['Studio', false], ['The booth', false]]) {
-  const tab = page.locator('nav button').filter({ hasText: room }).first();
-  if (await tab.count()) {
-    await tab.click();
-    await page.waitForTimeout(900);
+  /* Through the phone's room menu, not the rail: the rail is hidden below md
+     now, so clicking it timed out and took every measurement with it. Matched
+     on the entry's first line, because the hint under it also holds room
+     names. */
+  const opener = page.locator('button[aria-haspopup="menu"]').first();
+  if ((await opener.getAttribute('aria-expanded')) !== 'true') {
+    await opener.click();
+    await page.waitForTimeout(400);
   }
+  const rows = page.locator('[role="menu"] [role="menuitem"]');
+  const labels = (await rows.allInnerTexts()).map((s) => s.split('\n')[0].trim());
+  const at = labels.findIndex((l) => l.toLowerCase().startsWith(room.toLowerCase()));
+  if (at < 0) { console.log(`${room}: nie in die kieslys nie`); bad += 1; continue; }
+  await rows.nth(at).click();
+  await page.waitForTimeout(900);
   const m = await measure(page);
   if (m.error) { console.log(`${room}: ${m.error}`); bad += 1; continue; }
   const first = m.copilot < m.work;
   console.log(
-    `${room.padEnd(12)} rail ${String(m.nav).padStart(4)} · werkvlak ${String(m.work).padStart(5)} · copilot ${String(m.copilot).padStart(5)}  →  ${first ? 'copilot bo' : 'werkvlak bo'}`,
+    `${room.padEnd(12)} kieslys ${String(m.menu).padStart(4)} · werkvlak ${String(m.work).padStart(5)} · copilot ${String(m.copilot).padStart(5)}  →  ${first ? 'copilot bo' : 'werkvlak bo'}`,
   );
   if (first !== wantFirst) { console.log(`  ✗ verwag ${wantFirst ? 'copilot bo' : 'werkvlak bo'}`); bad += 1; }
   if (room === 'Make a song') await page.screenshot({ path: shot('copilot-phone.png'), fullPage: false });

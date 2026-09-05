@@ -438,6 +438,34 @@ export default function FutureBoxHome() {
      and a chat panel above it is 352 px between you and the thing you
      came for. */
   const copilotFirst = studioTab === 'make';
+
+  /* Every room, and how to draw it. Read by the rail on a desktop and by the
+     phone's room menu, so a room cannot be named one thing in one and another
+     in the other. */
+  const ROOM_META: Record<SurfaceId, { label: string; hint: string; icon: typeof Sparkles }> = {
+    make: { label: t('rail.make'), hint: t('rail.make.hint'), icon: Sparkles },
+    studio: { label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
+    booth: { label: t('rail.booth'), hint: t('rail.booth.hint'), icon: Mic },
+    video: { label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
+    canvas: { label: t('rail.canvas'), hint: t('rail.canvas.hint'), icon: Clapperboard },
+    hooks_feed: { label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
+    channels: { label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
+    collab: { label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
+    live: { label: t('rail.live'), hint: t('rail.live.hint'), icon: Radio },
+    voice_studio: { label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
+    podcast: { label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
+    sound: { label: t('rail.sound'), hint: t('rail.sound.hint'), icon: AudioWaveform },
+    campaign: { label: t('rail.campaign'), hint: t('rail.campaign.hint'), icon: Megaphone },
+  };
+
+  /* The phone's way between rooms.
+
+     The rail is a sideways-scrolling row. Measured on a 390 px screen it was
+     1,726 px wide: three rooms on screen and eleven off the right edge —
+     the podcast, the live room and collab among them — with nothing to say
+     they were there. They were reported as missing, which is a fair name for
+     a room nobody can see. */
+  const [roomsOpen, setRoomsOpen] = useState(false);
   /* The door, shown once per page load rather than on every tab switch.
 
      The studio used to open straight onto Make a song with thirteen rooms
@@ -2261,8 +2289,131 @@ export default function FutureBoxHome() {
 
             {/* Studio shell: rail on the left, one working surface on the right. */}
             <div className={`flex-1 min-h-0 ${theme.layout === 'top' ? 'flex flex-col gap-6' : 'flex flex-col md:flex-row gap-6'}`}>
+              {/* Every room, on a phone.
+
+                  A menu rather than a scroller: the room you are in, and one
+                  press to any other, under the same stage headings the rail
+                  uses beside it on a desktop. Hidden from md up, where the
+                  rail already shows all fourteen without scrolling. */}
+              <div className="md:hidden relative flex-shrink-0">
+                {(() => {
+                  const here = ROOM_META[studioTab];
+                  const HereIcon = atDoor ? Home : here.icon;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setRoomsOpen((open) => !open)}
+                      aria-expanded={roomsOpen}
+                      aria-haspopup="menu"
+                      className="w-full flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-3 text-left"
+                    >
+                      <HereIcon className="w-[18px] h-[18px] text-emerald-400 flex-shrink-0" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold text-white leading-tight truncate">
+                          {atDoor ? t('hello.home', 'Home') : here.label}
+                        </span>
+                        <span className="block text-xs text-zinc-500 leading-tight truncate">
+                          {t('rail.all', 'All rooms')}
+                        </span>
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-zinc-400 flex-shrink-0 transition-transform ${roomsOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                  );
+                })()}
+
+                {roomsOpen && (
+                  <>
+                    {/* A tap anywhere else closes it. Without this the only way
+                        out of an opened menu is to pick a room, which makes
+                        opening it by accident a trap. */}
+                    <button
+                      type="button"
+                      aria-label={t('rail.close', 'Close the menu')}
+                      onClick={() => setRoomsOpen(false)}
+                      className="fixed inset-0 z-30 cursor-default"
+                    />
+                    <div
+                      role="menu"
+                      className="absolute z-40 left-0 right-0 mt-1.5 max-h-[70vh] overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl p-2 space-y-0.5"
+                    >
+                      {(() => {
+                        const go = (run: () => void) => () => {
+                          run();
+                          setRoomsOpen(false);
+                        };
+                        const item = (
+                          key: string,
+                          Icon: typeof Sparkles,
+                          label: React.ReactNode,
+                          hint: string,
+                          active: boolean,
+                          onPick: () => void,
+                        ) => (
+                          <button
+                            key={key}
+                            type="button"
+                            role="menuitem"
+                            onClick={go(onPick)}
+                            aria-current={active ? 'page' : undefined}
+                            className={`w-full text-left rounded-xl flex items-center gap-3 px-3 py-2.5 ${
+                              active ? 'bg-zinc-800 text-white' : 'text-zinc-300'
+                            }`}
+                          >
+                            <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${active ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                            <span className="min-w-0">
+                              <span className="block text-sm font-semibold leading-tight">{label}</span>
+                              <span className="block text-xs text-zinc-500 leading-tight truncate">{hint}</span>
+                            </span>
+                          </button>
+                        );
+                        const room = (id: SurfaceId) => {
+                          const meta = ROOM_META[id];
+                          const label =
+                            id === 'collab' && asks > 0 ? (
+                              <>
+                                {meta.label}
+                                <span
+                                  className="ml-1.5 inline-flex items-center justify-center rounded-full bg-emerald-500 text-onAccent text-[11px] font-bold px-1.5 min-w-[18px] h-[18px] align-middle"
+                                  aria-label={`${asks} ${t('rail.waiting', 'waiting for an answer')}`}
+                                >
+                                  {asks}
+                                </span>
+                              </>
+                            ) : (
+                              meta.label
+                            );
+                          return item(id, meta.icon, label, meta.hint, !atDoor && studioTab === id, () => {
+                            goToRoom(id);
+                            setAtDoor(false);
+                          });
+                        };
+                        return (
+                          <>
+                            {item('home', Home, t('hello.home', 'Home'), t('rail.home.hint', 'Where everything is'), atDoor, () =>
+                              setAtDoor(true),
+                            )}
+                            {STAGES.map((stage) => (
+                              <React.Fragment key={stage.id}>
+                                <p className="px-3 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                                  {lang === 'af' ? stage.af : stage.en}
+                                </p>
+                                {surfacesInStage(stage.id).map(room)}
+                              </React.Fragment>
+                            ))}
+                            {standaloneSurfaces().length > 0 && <div className="h-px bg-zinc-800 mx-3 my-2" />}
+                            {standaloneSurfaces().map(room)}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </>
+                )}
+              </div>
+
               <nav
-                className={`${copilotFirst ? 'order-1 md:order-none' : ''} flex-shrink-0 flex gap-1 overflow-x-auto md:overflow-visible ${
+                className={`${copilotFirst ? 'order-1 md:order-none' : ''} flex-shrink-0 hidden md:flex gap-1 overflow-x-auto md:overflow-visible ${
                   theme.layout === 'top'
                     ? 'flex-row flex-wrap'
                     : theme.layout === 'focus'
@@ -2286,21 +2437,7 @@ export default function FutureBoxHome() {
                      Headings are for the side rail only. The top layout wraps
                      into rows and the focus layout is fourteen pixels of icon —
                      neither has anywhere to put a word. */
-                  const META: Record<SurfaceId, { label: string; hint: string; icon: typeof Sparkles }> = {
-                    make: { label: t('rail.make'), hint: t('rail.make.hint'), icon: Sparkles },
-                    studio: { label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
-                    booth: { label: t('rail.booth'), hint: t('rail.booth.hint'), icon: Mic },
-                    video: { label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
-                    canvas: { label: t('rail.canvas'), hint: t('rail.canvas.hint'), icon: Clapperboard },
-                    hooks_feed: { label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
-                    channels: { label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
-                    collab: { label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
-                    live: { label: t('rail.live'), hint: t('rail.live.hint'), icon: Radio },
-                    voice_studio: { label: t('rail.voice'), hint: t('rail.voice.hint'), icon: Mic2 },
-                    podcast: { label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
-                    sound: { label: t('rail.sound'), hint: t('rail.sound.hint'), icon: AudioWaveform },
-                    campaign: { label: t('rail.campaign'), hint: t('rail.campaign.hint'), icon: Megaphone },
-                  };
+                  const META = ROOM_META;
 
                   /* The way back to the door.
 
