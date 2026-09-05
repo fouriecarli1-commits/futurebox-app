@@ -152,3 +152,71 @@ export async function say(
     },
   };
 }
+
+
+/* ── Inviting somebody who is not here yet ──────────────────────────────────
+
+   The room only exists once two accounts have accepted each other, so an
+   email to a stranger had nowhere to send them. A link is one step instead of
+   four: it lands on the app, survives signing up, and turns into a request
+   from the person who sent it. See `supabase/invites.sql`. */
+
+export interface Invite {
+  readonly url: string;
+  readonly expiresAt: string;
+  readonly days: number;
+}
+
+export async function makeInvite(note: string): Promise<Invite | { readonly message: string }> {
+  const response = await fetch('/api/collab/invite', {
+    method: 'POST',
+    headers: await head(),
+    body: JSON.stringify({ note }),
+  }).catch(() => null);
+  const said = (await response?.json().catch(() => null)) as
+    | (Invite & { message?: string })
+    | null;
+  if (!response?.ok || !said?.url) {
+    return { message: said?.message ?? 'That link could not be made.' };
+  }
+  return { url: said.url, expiresAt: said.expiresAt, days: said.days };
+}
+
+/**
+ * Whether a link is still good, and who sent it.
+ *
+ * Deliberately thin: the route answers with those two things and nothing else
+ * — not the note, not how many uses are left, not when it expires. A link is
+ * handed to strangers by definition, so what it tells a stranger is the whole
+ * question.
+ */
+export async function readInvite(token: string): Promise<{ good: boolean; from: string }> {
+  const response = await fetch(`/api/collab/invite?invite=${encodeURIComponent(token)}`, {
+    cache: 'no-store',
+  }).catch(() => null);
+  if (!response?.ok) return { good: false, from: '' };
+  const said = (await response.json().catch(() => null)) as { good?: boolean; from?: string } | null;
+  return { good: said?.good === true, from: said?.from ?? '' };
+}
+
+/** What redeeming did. A value rather than a sentence — the server does not
+    know which language somebody reads. */
+export type Redeemed = 'asked' | 'already' | 'yourself' | 'expired' | 'used_up' | 'unknown' | 'off';
+
+export async function redeemInvite(token: string): Promise<{ code: Redeemed; from: string }> {
+  const response = await fetch('/api/collab/invite/accept', {
+    method: 'POST',
+    headers: await head(),
+    body: JSON.stringify({ invite: token }),
+  }).catch(() => null);
+  if (!response) return { code: 'off', from: '' };
+  const said = (await response.json().catch(() => null)) as
+    | { code?: string; from?: string }
+    | null;
+  const code = said?.code;
+  const known: Redeemed[] = ['asked', 'already', 'yourself', 'expired', 'used_up', 'unknown'];
+  return {
+    code: known.includes(code as Redeemed) ? (code as Redeemed) : 'off',
+    from: said?.from ?? '',
+  };
+}

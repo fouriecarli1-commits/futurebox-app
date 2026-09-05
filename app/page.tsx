@@ -52,6 +52,7 @@ import Account from './components/Account';
 import TabBar, { BAR_HEIGHT, type TabId } from './components/TabBar';
 import { fetchCreator, type Creator } from './lib/radar';
 import { useBackStack } from './lib/backstack';
+import { readInvite, redeemInvite, type Redeemed } from './lib/collab';
 import SignInWith from './components/SignInWith';
 import { noteTaste, loadTaste } from './lib/taste';
 import { habitOf } from './lib/habits';
@@ -494,6 +495,20 @@ export default function FutureBoxHome() {
   const [creator, setCreator] = useState<Creator | null>(null);
 
   /**
+   * An invite link somebody was sent.
+   *
+   * Taken off the address the moment the page loads and written down, because
+   * signing up navigates — through a form, an email, a verification code —
+   * and a token that only lived in the URL would be gone by the time there is
+   * an account to attach it to. It is redeemed once there is one, and the
+   * note is what tells somebody it worked; without that a link would look
+   * like it did nothing.
+   */
+  const [invite, setInvite] = useState<string | null>(null);
+  const [inviteFrom, setInviteFrom] = useState<string | null>(null);
+  const [inviteSaid, setInviteSaid] = useState<Redeemed | null>(null);
+
+  /**
    * What they keep coming back to, for the copilot to answer in their terms.
    *
    * The same `habitOf` the welcome screen uses, so the copilot cannot be handed
@@ -531,6 +546,56 @@ export default function FutureBoxHome() {
    * `setStudioTab` is not called anywhere else. That is what stops the next
    * room-picker from arriving with the same fault.
    */
+  /* Off the address bar and into storage, then out of the address bar: a
+     token sitting in a URL gets copied into a chat window with the rest of
+     the link, and this one is a bearer. */
+  useEffect(() => {
+    try {
+      const here = new URL(window.location.href);
+      const said = here.searchParams.get('invite') ?? '';
+      const kept = window.localStorage.getItem('futurebox.invite.v1') ?? '';
+      const token = /^[0-9a-f]{64}$/i.test(said) ? said : kept;
+      if (!token) return;
+      window.localStorage.setItem('futurebox.invite.v1', token);
+      setInvite(token);
+      if (said) {
+        here.searchParams.delete('invite');
+        window.history.replaceState({}, '', here.toString());
+      }
+      void readInvite(token).then((found) => {
+        if (found.good) setInviteFrom(found.from);
+      });
+    } catch {
+      // Storage off, or a URL this browser will not parse. A link that cannot
+      // be remembered is a link that does nothing, which is the safe failure.
+    }
+  }, []);
+
+  /* Redeemed once there is an account to attach it to. */
+  useEffect(() => {
+    if (!invite || !user) return;
+    let live = true;
+    void redeemInvite(invite).then((said) => {
+      if (!live) return;
+      setInviteSaid(said.code);
+      if (said.from) setInviteFrom(said.from);
+      /* Kept only while it might still be needed. A used token in storage is
+         a token that gets redeemed again on the next visit and says "you
+         already have a room" forever. */
+      if (said.code !== 'off') {
+        try {
+          window.localStorage.removeItem('futurebox.invite.v1');
+        } catch {
+          // Nothing to clean up.
+        }
+        setInvite(null);
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [invite, user?.email]);
+
   const goToRoom = useCallback((id: SurfaceId) => {
     setStudioTab(id);
     setAtDoor(false);
@@ -1351,9 +1416,40 @@ export default function FutureBoxHome() {
     [goToRoom],
   );
 
+  /**
+   * What an invite is doing, in one line.
+   *
+   * Shown before signing in as well as after, because the moment somebody
+   * lands on a link is the moment they need to know why: a stranger who opens
+   * this app cold and sees a normal home page has no reason to sign up.
+   */
+  const inviteLine = ((): string | null => {
+    if (inviteSaid === 'asked') {
+      return `${inviteFrom ?? t('invite.someone', 'Somebody')} ${t('invite.asked', 'has asked to work with you — it is waiting in Collab Radar.')}`;
+    }
+    if (inviteSaid === 'already') {
+      return `${t('invite.alreadyLine', 'You already have a room with')} ${inviteFrom ?? t('invite.someone', 'Somebody')}.`;
+    }
+    if (inviteSaid === 'yourself') return t('invite.mine', 'That is your own link.');
+    if (inviteSaid === 'expired') return t('invite.expired', 'That link has expired.');
+    if (inviteSaid === 'used_up') return t('invite.usedUp', 'That link has been used as often as it can be.');
+    if (inviteSaid === 'unknown') return t('invite.unknown', 'That link is not one this app knows.');
+    if (invite && inviteFrom && !user) {
+      return `${inviteFrom} ${t('invite.waiting', 'invited you. Make an account and it lands in your Collab Radar.')}`;
+    }
+    return null;
+  })();
+
+  const inviteBanner = inviteLine ? (
+    <div className="border-b border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-center text-sm text-emerald-200">
+      {inviteLine}
+    </div>
+  ) : null;
+
   if (!user) {
     return (
       <>
+        {inviteBanner}
         <Landing
           onStart={() => openAuth('signup')}
           onGoogle={() => void handleGoogle()}
@@ -1719,6 +1815,8 @@ export default function FutureBoxHome() {
           </button>
         </div>
       </header>
+
+      {inviteBanner}
 
       {/* 🔍 SMART FILTERING SUB-BAR */}
       <div className="relative z-30 bg-zinc-950/80 border-b border-zinc-800/80 px-6 py-2.5 backdrop-blur-md">
@@ -3004,6 +3102,7 @@ export default function FutureBoxHome() {
                     goes unanswered. Then the matching, then the pitch tools. */}
                 <CollabRoom
                   reloadKey={collabSignal}
+                  me={artistName}
                   /* Into the booth, on the song they sent. The same hand-off
                      the search and the advert desk use: the room is not
                      mounted yet, so this waits for it and fires the moment it

@@ -224,6 +224,7 @@ Not questions — the list of things waiting on an account, a key or a click.
 - `PAYSTACK_SECRET_KEY`.
 - `supabase/addons.sql` and `supabase/posting.sql`.
 - `supabase/dubs.sql` — without it, dubbing answers "not set up".
+- `supabase/invites.sql` — without it, the invite link answers "not set up".
 - Music.ai key and workflow slugs (section D).
 - CIPC: the registration number, then the legal page and the entity name.
 - The trademark search, classes 9 and 42.

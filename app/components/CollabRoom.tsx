@@ -28,6 +28,7 @@ import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
+import InviteLink from './InviteLink';
 
 /** Long enough that a conversation feels live, gentle enough to leave open. */
 const ASK_AGAIN_MS = 15_000;
@@ -42,8 +43,11 @@ function when(at: string): string {
 export default function CollabRoom({
   reloadKey,
   onOpenInBooth,
+  me,
 }: {
   reloadKey: number;
+  /** Your own recording name, to sign an invite with. */
+  me?: string;
   /** Take them to the booth with this song open, once it is on the device. */
   onOpenInBooth?: (title: string) => void;
 }): React.ReactElement {
@@ -442,6 +446,13 @@ export default function CollabRoom({
       )}
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
+
+      {/* ── Somebody who is not here yet ──────────────────────────────────
+
+          Last, because it is the least common of the things this screen does
+          and the first two — answering a request, and the room itself — are
+          what somebody opens it for. */}
+      <InviteLink from={me} />
     </div>
   );
 }
