@@ -41,6 +41,7 @@ import RecordingName from './RecordingName';
 import FollowWords from './FollowWords';
 import SongScreen, { wordsFor } from './SongScreen';
 import Sleeve from './Sleeve';
+import { heardHere, markHeard } from '../lib/heard';
 import { timeFor } from '../lib/lyrictime';
 import Note from './Note';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
@@ -88,6 +89,33 @@ export default function Channel({
   const [adding, setAdding] = useState<string | null>(null);
   /** Which song has been asked for a real cover, if any. */
   const [sleeveFor, setSleeveFor] = useState<string | null>(null);
+  /**
+   * What has been listened to on this device, and how the grid is narrowed.
+   *
+   * Thirty songs all look the same, and the one you have not heard is the one
+   * you are looking for. Read after mount rather than during render: storage
+   * during render disagrees with the HTML the server sent.
+   */
+  const [heard, setHeard] = useState<string[]>([]);
+  const [looking, setLooking] = useState('');
+  const [unheardOnly, setUnheardOnly] = useState(false);
+  useEffect(() => setHeard(heardHere()), []);
+  const hasHeard = (id: string) => heard.indexOf(id) !== -1;
+  const nowHeard = (id: string) => setHeard(markHeard(id));
+
+  /* What the grid actually draws. Both narrowings at once, because a person
+     who has typed three letters and then pressed "not heard yet" means both
+     of those things. */
+  const shown = tracks.filter((one) => {
+    if (unheardOnly && hasHeard(one.id)) return false;
+    const needle = looking.trim().toLowerCase();
+    if (!needle) return true;
+    return (
+      one.title.toLowerCase().includes(needle) ||
+      one.genre.toLowerCase().includes(needle) ||
+      (one.lyrics ?? '').toLowerCase().includes(needle)
+    );
+  });
   const [creator, setCreator] = useState<Creator | null>(null);
   const [owned, setOwned] = useState<Owned>(NOTHING);
 
@@ -132,6 +160,11 @@ export default function Channel({
       element.src = urlRef.current;
       await element.play();
       setPlaying(id);
+      /* Heard means started, not finished. Somebody who plays four seconds of
+         a song has heard enough to know they have met it, and a mark that only
+         lands on the last second would still be showing "unheard" on
+         everything they skipped through. */
+      setHeard(markHeard(id));
       queueRef.current = rest;
       setQueue(rest);
     },
@@ -402,13 +435,51 @@ export default function Channel({
       </div>
 
       {/* ── The music ────────────────────────────────────────────────────── */}
+
+      {/* Narrowing it, once there is enough of it to need narrowing.
+
+          Under five songs a filter is furniture: you can see all of them. It
+          appears at six, which is roughly where a grid stops being a list you
+          read and starts being one you scan. */}
+      {tracks.length >= 6 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="search"
+            value={looking}
+            onChange={(event) => setLooking(event.target.value)}
+            placeholder={t('chan.find', 'Find a song')}
+            className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-zinc-800 bg-black/60 px-3.5 text-base text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => setUnheardOnly((was) => !was)}
+            aria-pressed={unheardOnly}
+            className={`min-h-[44px] rounded-xl border px-3.5 text-sm font-semibold ${
+              unheardOnly
+                ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-600'
+            }`}
+          >
+            {t('chan.unheardOnly', 'Not heard yet')}
+          </button>
+        </div>
+      )}
+
+      {tracks.length > 0 && shown.length === 0 && (
+        <p className="rounded-2xl border border-dashed border-zinc-800 py-8 text-center text-base text-zinc-500">
+          {unheardOnly
+            ? t('chan.allHeard', 'You have heard all of them.')
+            : t('chan.noneFound', 'Nothing here matches that.')}
+        </p>
+      )}
+
       {tracks.length === 0 ? (
         <p className="text-base text-zinc-500 py-10 text-center border border-dashed border-zinc-800 rounded-2xl">
           {t('chan.noSongs', 'Nothing here yet. Make a song and it lands in your channel.')}
         </p>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {tracks.map((track) => (
+          {shown.map((track) => (
             <article key={track.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden">
               <div className="relative">
                 {/* The real cover if somebody asked for one, and the drawn
@@ -433,7 +504,10 @@ export default function Channel({
                     it in place, for anybody on a desk who wants the grid. */}
                 <button
                   type="button"
-                  onClick={() => setFullFor(track.id)}
+                  onClick={() => {
+                    nowHeard(track.id);
+                    setFullFor(track.id);
+                  }}
                   aria-label={`${t('song.open', 'Open')} ${track.title}`}
                   className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:hover:opacity-100"
                 >
@@ -447,6 +521,18 @@ export default function Channel({
                     )}
                   </span>
                 </button>
+                {/* Not heard yet, on this device.
+
+                    A dot rather than a word: it has to be legible at a glance
+                    across a grid, and it is the only thing on the card that is
+                    about you rather than about the song. */}
+                {!hasHeard(track.id) && (
+                  <span
+                    aria-label={t('chan.unheard', 'Not heard yet')}
+                    title={t('chan.unheard', 'Not heard yet')}
+                    className="absolute right-2 top-2 h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-zinc-950"
+                  />
+                )}
                 {playing === track.id && (
                   <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-emerald-500 text-onAccent text-[10px] font-bold">
                     {queue.length > 0 ? `${t('chan.playingNow', 'Playing')} · ${queue.length} ${t('chan.toGo', 'to go')}` : t('chan.playingNow', 'Playing')}

@@ -304,13 +304,10 @@ or keep both is a decision nobody has made.
   packaging notes call the whole loop. Held back deliberately — remixing
   somebody else's post is a rights question before it is a button, and that
   decision has not been made.
-- **A song from a photo, the version that reads the picture.** What shipped
-  measures colour, light and busyness on the device, for free, and says it
-  does not know what is in the picture. The plan's version sends the picture
-  to `claude-opus-5` — which is already the model behind the copilot — and
-  gets back a title, a style and lyrics about what is actually there. It
-  costs a credit and needs the moderation gate on the image. It is the single
-  best idea in the screenshots and it is still open.
+- **The prompt cards from `docs/PACKAGING.md` §4.** The photograph can be
+  read now, and the twelve written angles — "the view from right here", "your
+  plate, as a song", "the receipt song" — are not on the screen yet. The
+  route already takes an `idea` and screens it; nothing sends one.
 
 ---
 
@@ -345,3 +342,5 @@ or keep both is a decision nobody has made.
 | A cover on a song in the channel | 2026-09-05 | `d0bd0db` |
 | Fifty songs to start from | 2026-09-05 | `df7484c` |
 | A song from a photograph, measured on the device | 2026-09-05 | `5bb766c` |
+| One panel for both ways of pointing at a sound | 2026-09-05 | `a7d2209` |
+| The picture read by the model, not only measured | 2026-09-05 | `a109a66` |

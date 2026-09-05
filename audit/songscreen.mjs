@@ -157,8 +157,6 @@ try {
   await p.locator('div.fixed.inset-0.z-\\[80\\] button[aria-label]').last().click();
   await p.waitForTimeout(800);
 
-  await p.locator('button').filter({ hasText: /^Lyrics$/ }).first().click();
-  await p.waitForTimeout(2500);
   /* The cover, on a song in the channel.
 
      It existed only in Make a song's own list, so the room where somebody
@@ -170,6 +168,38 @@ try {
   check('every song in the channel can be given a cover',
     (await coverButton.count()) > 0, `${await coverButton.count()} songs offer it`);
 
+  /* ── Which one have I not heard? ─────────────────────────────────────
+ 
+     A channel of songs all look the same, and the one you have not heard is
+     the one you are looking for. The dot is per device and is set by playing
+     or by opening a song full screen — which this probe has just done twice,
+     so exactly the songs it opened should have lost theirs. */
+  const dots = p.locator('span[aria-label="Not heard yet"]');
+  const songCards = p.locator('article');
+  const before = await dots.count();
+  const many = await songCards.count();
+  /* Not "at least zero", which was the first version of this and could not
+     fail. The songs this probe has opened are heard; the rest are not. */
+  check('the songs nobody has played carry a mark, and the played one does not',
+    before === many - 1 && before > 0, `${before} unheard of ${many}`);
+
+  /* And playing the last one clears the last mark. */
+  await songCards.nth(many - 1).locator('button[aria-label]').first().click();
+  await p.waitForTimeout(1200);
+  const player = p.locator('div.fixed.inset-0.z-\\[80\\]');
+  if ((await player.count()) > 0) {
+    /* By its label, not by position. The first `aria-label` inside the player
+       is the panel-wide play control, so "the first labelled button" pressed
+       pause and left the player open — and everything after it timed out
+       against a screen that was still there. */
+    await player.locator('button[aria-label="Close"]').first().click();
+    await p.waitForTimeout(800);
+  }
+  check('and hearing one takes its mark away', (await dots.count()) === before - 1,
+    `${await dots.count()} left`);
+
+  await p.locator('button').filter({ hasText: /^Lyrics$/ }).first().click();
+  await p.waitForTimeout(2500);
   const sheet = p.locator('div.fixed.inset-0.z-\\[100\\]');
   check('the Lyrics button opens the words over the song', (await sheet.count()) === 1);
   check('and it is above the tab bar, not under it',
