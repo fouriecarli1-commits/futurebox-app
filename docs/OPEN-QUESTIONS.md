@@ -193,39 +193,33 @@ Not questions — the list of things waiting on an account, a key or a click.
 
 ---
 
-## F2. The artist name — asked for three times, and currently impossible
+## F2. The artist name — settled, and what I got wrong about it
 
-**Asked:** three separate times, most recently 2026-09-05, with the point that
-the name must travel *with the post*: on a song, on a video, in the feed, and
-on the Collab Radar.
+**Settled, 2026-09-05**, commits `39f7feb`, `6eff4b5`, `af225d7`.
 
-**What is verified, by reading the code.** It is not hidden — it does not
-exist. `toAccount` in `app/lib/cloud.ts` builds the display name like this:
+**The correction first.** I wrote here that the name "does not exist" and
+that "no screen anywhere can change it". That was wrong. The recording name
+has been on the `creators` row all along, editable in the channel, and the
+live room and the collab radar have both been reading it.
 
-```ts
-const name = email.split('@')[0] || 'creator';
-handle: `@${name}`,
-```
+What was true is worse in a quieter way: the app had **two** names for one
+person and showed one at a time. `toAccount` builds a name out of the
+sign-up email, because at sign-up that is all there is, and the header, the
+greeting and the account panel showed that. The recording name went out on
+the releases. So somebody called Anré was `anrefourie` in the corner of every
+screen and "Anré Fourie" on their own song, with nothing to say which was
+which.
 
-So somebody signing up as `anrefourie@gmail.com` is called `anrefourie`
-everywhere, permanently, and there is no screen anywhere that can change it.
-Every post, every credit line and every radar card carries a fragment of an
-email address as an artist name.
+Now the chosen name is read once and used by all of the chrome, the handle
+can be changed too (it could not), the field is one component mounted in both
+places somebody looks, and the app's own name is refused to everybody but the
+owner — in the field as it is typed, and again by the route, which is the half
+that holds.
 
-**The shape of the fix.** The account already stores one chosen thing in
-Supabase `user_metadata` — `lang` — and reads it back in `toAccount`. An
-artist name goes in beside it, and then every place that prints an author
-reads that instead of the email fragment:
-
-- the live channel post, when a song goes out;
-- the feed and, once it exists, the vertical slider;
-- the Collab Radar card;
-- the credit line printed on a release.
-
-**Why it is its own job and not a line in the packaging work.** Changing where
-the name is *edited* is a screen. Changing what every post *carries* is a
-sweep, and a post already sent out under the old name should not silently
-change author afterwards — which is a decision to make rather than assume.
+**Still open.** Work already posted keeps the name it went out under. The copy
+says so; nothing enforces it, because posts carry the row rather than a copy of
+the name at the time. Whether a rename should rewrite old credits, leave them,
+or keep both is a decision nobody has made.
 
 ---
 
@@ -236,7 +230,6 @@ change author afterwards — which is a decision to make rather than assume.
 - The packaging rebuild — see `docs/PACKAGING.md`.
 - The Listen feed as a vertical slider.
 - A song from a photo.
-- The artist name — see F2. It cannot be changed at all today.
 
 ---
 
@@ -249,3 +242,6 @@ change author afterwards — which is a decision to make rather than assume.
 | Bring a song in from a file | 2026-09-05 | `099f958` |
 | Subtitles burned into the film | 2026-09-05 | `7b9fe33` |
 | Dubbing widened past podcasts; the language button | 2026-09-05 | `bb6b2df` |
+| Five tabs at the bottom, on every screen | 2026-09-05 | `eb3466b` |
+| One artist name, and nobody may be the official channel | 2026-09-05 | `39f7feb`, `6eff4b5` |
+| Back goes back; deleting the account left the working room | 2026-09-05 | `af225d7` |
