@@ -101,6 +101,20 @@ try {
      under the ceiling, and the promise is exact rather than approximate,
      which is the whole reason the master is a multiplication instead of a
      limiter. */
+  /* A lane with an amp on it plays the amped audio, not the recording.
+
+     Baking rather than wiring is the right call — inference is not an audio
+     node — but it splits one lane into two buffers, and a render that reads
+     the wrong one is a fault nobody hears until the file is out. The
+     recording peaks at 0.8 and the capture at 0.2; after the equal-power pan
+     each lands at 1/√2 of that. */
+  check('an amped lane renders the amp, not the recording',
+    near(said.ampedPeak, 0.2 / Math.SQRT2, 0.02),
+    `amped ${said.ampedPeak?.toFixed(4)}, bare ${said.barePeak?.toFixed(4)}`);
+  check('and taking the amp off gives the recording back',
+    near(said.barePeak, 0.8 / Math.SQRT2, 0.02),
+    `bare ${said.barePeak?.toFixed(4)}`);
+
   check('three loud lanes really do sum past full scale', said.rawPeak > 1,
     String(said.rawPeak));
   const ceiling = 10 ** (-1 / 20);

@@ -100,6 +100,25 @@ export default function MixProbe(): React.ReactElement {
        curve is normalised. And does the speaker band actually remove what is
        above it, rather than being three filters that were wired but never
        connected. */
+    /* ── An amped lane plays the amped audio ──────────────────────────
+       A neural amp is baked into the lane rather than wired into the graph,
+       because inference is a function over samples and not an audio node. The
+       thing that can silently go wrong is the render reading `audio` and the
+       screen reading `amped` — which nobody would hear until the file came
+       out wrong. So: a lane whose recording is a loud tone and whose amped
+       audio is a quiet one, rendered. The peak says which one was used. */
+    const raw = tone(440, 1, 0.8);
+    const cooked = tone(440, 1, 0.2);
+    const ampedMix = await mixSession(
+      [laneOf('amp', raw, { amped: { name: 'A capture', audio: cooked } })],
+      RATE,
+    );
+    const bareMix = await mixSession([laneOf('amp', raw)], RATE);
+    if (ampedMix && bareMix) {
+      out.ampedPeak = peakOf(ampedMix);
+      out.barePeak = peakOf(bareMix);
+    }
+
     const plain = await mixSession([laneOf('p', tone(440, 1, 0.5))], RATE);
     const clean = await mixSession([laneOf('p', tone(440, 1, 0.5), { tone: CLEAN })], RATE);
     out.cleanIsUntouched = plain && clean && same(plain, clean) ? 1 : 0;

@@ -27,6 +27,7 @@ import {
 import { failed, separate } from '../lib/stems';
 import { done as forgetJob, keyIn, partOf, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
 import { CLEAN, isClean, type Tone } from '../lib/tone';
+import { ampName, through } from '../lib/nam';
 import { accessToken } from '../lib/cloud';
 import VoicePicker from './VoicePicker';
 import type { VoiceState } from './VoiceLab';
@@ -1160,6 +1161,36 @@ function LaneRow({
   const [open, setOpen] = useState(false);
   const tone: Tone = lane.tone ?? CLEAN;
 
+  /* Bringing an amp in.
+
+     A capture is a file the person already has — the format every Neural Amp
+     Modeler plugin loads — so this is a file picker and not a shop. Running a
+     take through one is seconds of arithmetic on a phone, not a moment, so
+     there is a spinner and the row says what it is doing.
+
+     The failure is named rather than swallowed. A .nam that will not load is
+     either not a capture or a newer architecture than the engine here reads,
+     and both are answers somebody can act on. Silence is not. */
+  const [amping, setAmping] = useState(false);
+  const [ampFailed, setAmpFailed] = useState('');
+
+  const bringAmp = async (file: File) => {
+    setAmping(true);
+    setAmpFailed('');
+    try {
+      const json = await file.text();
+      /* Any context will do: `through` only wants it to make the buffer, and
+         a one-frame offline context costs nothing and closes itself. */
+      const room = new OfflineAudioContext(1, 1, lane.audio.sampleRate);
+      const audio = await through(room, lane.audio, json);
+      onChange({ amped: { name: ampName(json), audio } });
+    } catch {
+      setAmpFailed(t('pro.ampFailed', 'That file did not load as an amp.'));
+    } finally {
+      setAmping(false);
+    }
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1476,6 +1507,65 @@ function LaneRow({
             'A tone stack built here, not a model of a named amplifier: a soft clip, a tilt, and the band a guitar speaker passes. Turning the drive up changes the shape and not the level, so it cannot be pushed just because louder sounded better.',
           )}
         </p>
+
+        {/* ── A real amplifier, captured ────────────────────────────────
+            The stack above is honest about being a stack. This is the other
+            thing: somebody else's amplifier, measured, in the file format
+            every Neural Amp Modeler plugin reads. It runs here in the
+            browser — the engine is MIT and the capture is the person's own
+            file, so nothing is being redistributed that is not theirs.
+
+            It bakes into the lane rather than sitting in the graph, because
+            inference is a function over samples and not an audio node. The
+            recording underneath is kept, so taking the amp off is instant. */}
+        <div className="pt-1.5 border-t border-zinc-800 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-zinc-500">{t('pro.amp', 'Amp')}</span>
+            {lane.amped ? (
+              <>
+                <span className="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 text-xs font-bold min-w-0 truncate max-w-[12rem]">
+                  {lane.amped.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onChange({ amped: undefined })}
+                  className="px-2.5 py-1.5 min-h-[32px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold text-zinc-400 hover:text-white"
+                >
+                  {t('pro.ampOff', 'Take it off')}
+                </button>
+              </>
+            ) : (
+              <label className={`px-2.5 py-1.5 min-h-[32px] rounded-lg border border-zinc-700 bg-zinc-950 text-xs font-bold flex items-center gap-1.5 ${
+                amping ? 'text-zinc-600' : 'text-zinc-300 hover:text-white cursor-pointer'
+              }`}>
+                {amping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                {amping ? t('pro.amping', 'Running it through…') : t('pro.ampBring', 'Bring in an amp')}
+                <input
+                  type="file"
+                  accept=".nam,application/json"
+                  disabled={amping}
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    // Cleared so choosing the same file twice fires again.
+                    event.target.value = '';
+                    if (file) void bringAmp(file);
+                  }}
+                />
+              </label>
+            )}
+          </div>
+          {ampFailed ? (
+            <p className="text-[11px] text-amber-400 leading-snug">{ampFailed}</p>
+          ) : (
+            <p className="text-[11px] text-zinc-600 leading-snug">
+              {t(
+                'pro.ampWhat',
+                'A .nam capture of a real amplifier — the file any Neural Amp Modeler plugin loads. It runs on this device and is baked into the lane, so the mixdown hears exactly what you do. Your recording is kept underneath.',
+              )}
+            </p>
+          )}
+        </div>
       </div>
     )}
     </div>

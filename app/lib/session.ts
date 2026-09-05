@@ -35,6 +35,17 @@ export interface Lane {
   readonly pan?: number;
   /** Drive, colour and a speaker. Absent means untouched. */
   readonly tone?: Tone;
+  /**
+   * A neural amp capture, already run through.
+   *
+   * The rendered buffer rather than the model, because inference is not an
+   * AudioNode: it is a function over samples, and there is nothing to put in
+   * an audio graph. Baking it means the live path and the mixdown play the
+   * same samples, which is the rule this file exists for. `audio` keeps the
+   * recording untouched, so taking the amp off is free and does not need the
+   * take read from disk again.
+   */
+  readonly amped?: { readonly name: string; readonly audio: AudioBuffer };
 }
 
 /**
@@ -171,7 +182,9 @@ export function wireLane(
   to: AudioNode,
 ): AudioBufferSourceNode {
   const source = ctx.createBufferSource();
-  source.buffer = lane.audio;
+  /* The amp first, because it is the amplifier: what the tone stack shapes is
+     what came out of the speaker, not what went into it. */
+  source.buffer = lane.amped?.audio ?? lane.audio;
 
   /* Tone first, then level, then pan. The order is the order a desk has and it
      is not arbitrary: shaping after the fader would mean the fader changed how
