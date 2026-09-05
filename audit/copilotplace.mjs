@@ -11,7 +11,7 @@
  * fixed overlay, so window.scrollY belongs to the landing page behind it and
  * adding it gives negative tops and a 23,000-pixel page.
  */
-import { enter, studio } from './enter.mjs';
+import { enter, studio, toRoom } from './enter.mjs';
 import { shot } from './where.mjs';
 
 const measure = (page) =>
@@ -23,7 +23,7 @@ const measure = (page) =>
     /* The phone's room menu is a fourth pane and it stacks first, so a plain
        "the div that is not the rail" picked it up as the working surface and
        reported the copilot below it. Excluded by the button it holds. */
-    const menu = panes.find((el) => el.querySelector('button[aria-haspopup="menu"]'));
+    const menu = panes.find((el) => /All rooms|Alle kamers/.test(el.innerText ?? ''));
     const work = panes.find((el) => el !== aside && el !== menu && el.tagName !== 'NAV');
 
     let sc = aside.parentElement;
@@ -45,17 +45,14 @@ for (const [room, wantFirst] of [['Make a song', true], ['Studio', false], ['The
      now, so clicking it timed out and took every measurement with it. Matched
      on the entry's first line, because the hint under it also holds room
      names. */
-  const opener = page.locator('button[aria-haspopup="menu"]').first();
-  if ((await opener.getAttribute('aria-expanded')) !== 'true') {
-    await opener.click();
-    await page.waitForTimeout(400);
+  /* In the way a person gets there: the door, not a dropdown. */
+  try {
+    await toRoom(page, room);
+  } catch {
+    console.log(`${room}: geen pad in nie`);
+    bad += 1;
+    continue;
   }
-  const rows = page.locator('[role="menu"] [role="menuitem"]');
-  const labels = (await rows.allInnerTexts()).map((s) => s.split('\n')[0].trim());
-  const at = labels.findIndex((l) => l.toLowerCase().startsWith(room.toLowerCase()));
-  if (at < 0) { console.log(`${room}: nie in die kieslys nie`); bad += 1; continue; }
-  await rows.nth(at).click();
-  await page.waitForTimeout(900);
   const m = await measure(page);
   if (m.error) { console.log(`${room}: ${m.error}`); bad += 1; continue; }
   const first = m.copilot < m.work;

@@ -16,37 +16,34 @@
  * hidden below md now, so the six-room version of this probe that clicked it
  * had stopped opening anything at all.
  */
-import { enter, studio } from './enter.mjs';
+import { enter, studio, toRoom } from './enter.mjs';
 import { shot } from './where.mjs';
 
 const { browser, page, problems } = await enter({ width: 390, height: 844 });
 await studio(page);
 await page.waitForTimeout(1200);
 
-const opener = page.locator('button[aria-haspopup="menu"]').first();
-await opener.click();
-await page.waitForTimeout(500);
-const rooms = (await page.locator('[role="menu"] [role="menuitem"]').allInnerTexts())
+/* The rooms, read off the studio's front door rather than a menu. The studio
+   opens on the door, so there is nothing to press to get there. */
+const rooms = (await page.locator('div.fixed.inset-0.z-\\[55\\] button').allInnerTexts())
   .map((s) => s.split('\n')[0].trim())
-  .filter((n) => n && n.toLowerCase() !== 'home');
-await page.keyboard.press('Escape').catch(() => undefined);
-await page.locator('button[aria-label]').first().click({ timeout: 2000 }).catch(() => undefined);
+  .filter((n) => n && !/^(home|tuis|not now|nie nou)/i.test(n))
+  /* The door also carries a suggestion — one room, again, as the thing worth
+     doing next — so the same name appears twice. */
+  .filter((n, i, all) => all.indexOf(n) === i);
 
 console.log(`venster 390 × 844 · ${rooms.length} kamers\n`);
 
 let bad = 0;
 for (const name of rooms) {
-  const open = page.locator('button[aria-haspopup="menu"]').first();
-  if ((await open.getAttribute('aria-expanded')) !== 'true') {
-    await open.click();
-    await page.waitForTimeout(400);
+  try {
+    await toRoom(page, name);
+  } catch {
+    console.log(`${name.padEnd(14)} geen pad in nie`);
+    bad += 1;
+    continue;
   }
-  const rows = page.locator('[role="menu"] [role="menuitem"]');
-  const labels = (await rows.allInnerTexts()).map((s) => s.split('\n')[0].trim());
-  const at = labels.indexOf(name);
-  if (at < 0) { console.log(`${name.padEnd(14)} nie in die kieslys nie`); bad += 1; continue; }
-  await rows.nth(at).click();
-  await page.waitForTimeout(1300);
+  await page.waitForTimeout(700);
 
   const read = await page.evaluate(() => {
     const surface = document.querySelector('div.fixed.inset-0.z-50') ?? document.body;
@@ -104,7 +101,10 @@ for (const name of rooms) {
        The voice room draws the copilot inside itself, under "Read a script
        aloud", so it has no aside at all — and anchoring on one reported that
        room as completely empty. The menu is in every room. */
-    const menu = document.querySelector('button[aria-haspopup="menu"]')?.closest('div');
+    /* The panes, found from the way back rather than from the aside: the voice
+       room draws the copilot inside itself and has no aside at all. */
+    const menu = Array.from(document.querySelectorAll('button'))
+      .find((b) => /All rooms|Alle kamers/.test(b.innerText ?? ''));
     const shell = menu?.parentElement;
     const panes = shell ? Array.from(shell.children) : [];
     const aside = panes.find((el) => el.tagName === 'ASIDE') ?? null;

@@ -47,7 +47,7 @@ import { loadMakes } from '../lib/makes';
 import { fetchCreator } from '../lib/radar';
 import { loadTaste } from '../lib/taste';
 import { publicUrl } from '../lib/avatar';
-import type { SurfaceId } from '../lib/surfaces';
+import { STAGES, standaloneSurfaces, surfacesInStage, type SurfaceId } from '../lib/surfaces';
 import Cover from './Cover';
 
 /** `{name}` and friends, filled in. `t()` returns whole sentences per language. */
@@ -97,7 +97,17 @@ const RAIL_KEY: Record<SurfaceId, string> = {
  * per stage of the work — write it, shape it, sing it, film it, release it,
  * sell it — so the row is also a sentence about what this place is for.
  */
-const QUICK: readonly SurfaceId[] = ['make', 'studio', 'booth', 'canvas', 'channels', 'campaign'];
+/* Every room, not six of them.
+
+   This screen offered a handful and then said "every other room is inside the
+   studio, in the list down the side" — which is true on a desk and false on a
+   phone, where there is no side and no list. So somebody arriving here could
+   reach six of thirteen and had to be told where the rest were rather than
+   shown.
+
+   Grouped under the same stage headings the rail uses, in the same order, from
+   the same registry: a room cannot be called one thing here and another six
+   pixels to the left. */
 
 export default function Greeting({
   onGo,
@@ -115,7 +125,7 @@ export default function Greeting({
    */
   readonly name?: string;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [habit, setHabit] = useState<Habit | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [handle, setHandle] = useState('');
@@ -270,14 +280,25 @@ export default function Greeting({
         <p className="text-sm font-semibold text-zinc-300">
           {t('hello.rooms', 'Or go straight to')}
         </p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-          {QUICK.map((id) => (
-            <QuickButton key={id} id={id} />
-          ))}
-        </div>
-        <p className="text-xs text-zinc-600 leading-relaxed">
-          {t('hello.rail', 'Every other room is inside the studio, in the list down the side.')}
-        </p>
+        {STAGES.map((stage) => (
+          <div key={stage.id} className="space-y-2">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+              {lang === 'af' ? stage.af : stage.en}
+            </p>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {surfacesInStage(stage.id).map((id) => (
+                <QuickButton key={id} id={id} />
+              ))}
+            </div>
+          </div>
+        ))}
+        {standaloneSurfaces().length > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1">
+            {standaloneSurfaces().map((id) => (
+              <QuickButton key={id} id={id} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* A way past it that is not a room, for somebody who came to read the

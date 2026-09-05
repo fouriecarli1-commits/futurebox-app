@@ -85,3 +85,62 @@ export async function studio(page) {
   await page.waitForTimeout(1500);
   return page.locator('div.fixed.inset-0.z-50').first();
 }
+
+/**
+ * Into a room, the way a person gets there.
+ *
+ * Rooms used to be reached from a dropdown on a phone and a rail on a desk,
+ * and every probe drove the dropdown. There is no dropdown now: a phone has
+ * one green button back to the studio's front door, and the door carries a
+ * button for every room under the same stage headings the rail uses.
+ *
+ * So this presses the door and then the room, which is what somebody does.
+ * On a desk the rail is right there and the door is not in the way, so the
+ * rail is used when it is visible.
+ */
+export async function toRoom(page, name) {
+  /** A room's own button on the door, matched on its first line.
+   *
+   *  The hint under each one holds room names too — "Podcast" appears in the
+   *  video desk's — so matching the whole button opened the wrong room. */
+  const onDoor = async () => {
+    const buttons = page.locator('div.fixed.inset-0.z-\\[55\\] button');
+    const many = await buttons.count();
+    for (let i = 0; i < many; i += 1) {
+      const first = ((await buttons.nth(i).innerText().catch(() => '')) ?? '').split('\n')[0].trim();
+      if (first.toLowerCase().startsWith(name.toLowerCase())) return buttons.nth(i);
+    }
+    return null;
+  };
+
+  /* The door may already be open — the studio opens on it — in which case
+     reaching for the way back clicks through an overlay and times out. */
+  let button = await onDoor();
+  if (!button) {
+    /* The rail inside the studio, not the feed's tab strip behind it.
+
+       `nav button` found the landing page's tabs — which Playwright calls
+       visible, because visibility does not account for being covered by a
+       full-screen overlay — and then spent thirty seconds retrying a click
+       that the studio kept intercepting. */
+    const rail = page.locator('div.fixed.inset-0.z-50 nav button').filter({ hasText: name }).first();
+    if ((await rail.count()) && (await rail.isVisible().catch(() => false))) {
+      await rail.click();
+      await page.waitForTimeout(900);
+      return;
+    }
+    const back = page.locator('button').filter({ hasText: /All rooms|Alle kamers/ }).first();
+    if (await back.count()) {
+      await back.click();
+      /* The door fades in. Reading it the instant the press lands finds an
+         empty overlay and reports a room as unreachable. */
+      await page.locator('div.fixed.inset-0.z-\\[55\\] button').first()
+        .waitFor({ state: 'visible', timeout: 8000 }).catch(() => undefined);
+      await page.waitForTimeout(500);
+    }
+    button = await onDoor();
+  }
+  if (!button) throw new Error(`no way into ${name}`);
+  await button.click();
+  await page.waitForTimeout(1100);
+}
