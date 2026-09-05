@@ -241,7 +241,12 @@ refusing the owner with no way to tell why. The route sends one bit,
 
 ## E. Still Carli's to switch on
 
-Not questions — the list of things waiting on an account, a key or a click.
+**The working list is `docs/SWITCH-ON.md`** — in dependency order, each entry
+saying where it goes, what is broken until it does, and how to tell it worked.
+Almost every one of these fails silently, and a one-line list does not carry
+enough to act on at seven in the morning.
+
+What follows is the index of it.
 
 - `NEXT_PUBLIC_SITE_HOST = futurebox.studio`, then redeploy. *(Test:
   `/sitemap.xml` should carry that host.)*
@@ -294,9 +299,8 @@ or keep both is a decision nobody has made.
 ## F. Asked for, agreed, not yet built
 
 - A cover-art button on a song.
-- Proof that the channel's Lyrics button follows the song on a phone.
 - The packaging rebuild — see `docs/PACKAGING.md`.
-- The Listen feed as a vertical slider.
+- The Spotlight feed as a vertical slider.
 - A song from a photo.
 
 ---
@@ -317,3 +321,12 @@ or keep both is a decision nobody has made.
 | The play button nobody could see; rooms measured for width | 2026-09-05 | `58c1172` |
 | A song full screen, words moving with it | 2026-09-05 | `22afff6` |
 | A hook cut from a file you own, with its sound | 2026-09-05 | `602c32b` |
+| The words are timed by listening to the song | 2026-09-05 | `5064550` |
+| The Lyrics sheet is a portal, and follows the song | 2026-09-05 | `cfa3efd` |
+| The Find tab did nothing; the app was not Afrikaans | 2026-09-05 | `0f65b72` |
+| The free tier was throwing the lyrics away | 2026-09-05 | `2a2fdb2` |
+| The engine is told which language to sing in | 2026-09-05 | `e82320a` |
+| Spotlight back, Live on a tab, search in the corner | 2026-09-05 | `09bd29d` |
+| A song has a shape; the style is no longer padded | 2026-09-05 | `ab1a8b1` |
+| A style learned by listening to a song you like | 2026-09-05 | `580f9f8` |
+| Signed in stays signed in; the safety review | 2026-09-05 | `ebb4be4` |
