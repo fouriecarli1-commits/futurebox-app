@@ -28,6 +28,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { filterSafe } from '@/app/lib/server/filtersafe';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -54,6 +55,13 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'Could not read the request.' }, { status: 400 });
   }
   if (!trackId) return Response.json({ message: 'Which song?' }, { status: 400 });
+
+  /* Refused rather than sent. An id that is not a UUID is not a caller this
+     app made, and building a filter out of it is the one thing worth not
+     doing — see `server/filtersafe.ts`. */
+  if (!filterSafe(caller.id)) {
+    return Response.json({ message: 'That song is not in a room you are in.' }, { status: 404 });
+  }
 
   /* Every accepted thread this person is in. Read first, because the message
      lookup below is only meaningful inside one of them. */

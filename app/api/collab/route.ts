@@ -19,6 +19,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { filterSafe } from '@/app/lib/server/filtersafe';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,31 +52,6 @@ async function namesFor(
   );
 }
 
-/**
- * A value safe to write into a PostgREST filter string.
- *
- * ── Why this exists when nothing is currently wrong ──────────────────────
- *
- * The two `.or()` calls below are built by interpolation, because PostgREST's
- * `or` takes one string and there is no parameterised form of it. Today both
- * values are UUIDs: one is `caller.id` from a verified token, the other is an
- * `owner` column read back through a parameterised `.eq()`. Nothing injectable
- * reaches either.
- *
- * That is true, and it is true two lookups away from where it is used. Safety
- * that depends on tracing a value back through the file is safety that lasts
- * until somebody adds a third caller and does not trace it. So the shape is
- * asserted here, next to the interpolation, where it is checkable at a glance.
- *
- * A UUID cannot contain a comma, a dot, a bracket or a quote, so a value that
- * passes this cannot end one clause and start another — which is the only
- * thing an attacker would want from this string.
- */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function filterSafe(id: string): boolean {
-  return UUID.test(id);
-}
 
 export async function GET(request: Request): Promise<Response> {
   if (!metered()) return Response.json({ signedIn: false, ready: false, threads: [] });
