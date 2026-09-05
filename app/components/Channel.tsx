@@ -39,6 +39,7 @@ import ShareRow from './ShareRow';
 import Hint from './Hint';
 import RecordingName from './RecordingName';
 import FollowWords from './FollowWords';
+import SongScreen, { wordsFor } from './SongScreen';
 import Note from './Note';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
 
@@ -191,11 +192,17 @@ export default function Channel({
      from a file — has nothing to follow, and the button is not offered rather
      than opening a screen that sits still while the music plays. */
   const [lyricsFor, setLyricsFor] = useState<Track | null>(null);
-  const timedFor = useCallback((track: Track): readonly TimedLine[] => {
-    const parts = (track.parts ?? []) as readonly Part[];
-    if (!parts.length || !track.seconds) return [];
-    return timelineOf(parts, track.seconds);
-  }, []);
+  /** Which song is open full screen, by id, or null for the grid. */
+  const [fullFor, setFullFor] = useState<string | null>(null);
+  /* The words of a song, on the clock.
+
+     This used to answer "nothing" for any song without a stored plan, so a
+     song brought in from a file — or written before the plan was kept — had
+     no Lyrics button at all, and Carli's "elke liedjie moet ook daai button
+     hê" was true of about half of them. `wordsFor` falls back to spreading
+     the sheet evenly over the length, and the screen showing it says which
+     of the two it is doing. */
+  const timedFor = useCallback((track: Track): readonly TimedLine[] => wordsFor(track).lines, []);
 
   const keepPhoto = useCallback(
     async (next: string | null) => {
@@ -393,9 +400,13 @@ export default function Channel({
             <article key={track.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden">
               <div className="relative">
                 <Cover seed={track.id} label={track.title} className="aspect-video" />
+                {/* Tapping the picture opens the song full screen, the way a
+                    phone expects. The play button beside it still just plays
+                    it in place, for anybody on a desk who wants the grid. */}
                 <button
                   type="button"
-                  onClick={() => (playing === track.id ? stop() : void play(track.id))}
+                  onClick={() => setFullFor(track.id)}
+                  aria-label={`${t('song.open', 'Open')} ${track.title}`}
                   className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:hover:opacity-100"
                 >
                   <span className="w-12 h-12 rounded-full bg-emerald-500 text-onAccent flex items-center justify-center">
@@ -537,6 +548,11 @@ export default function Channel({
           deal with their account rather than to make something. */}
 
       {/* The words, over everything, following the song that is playing. */}
+      {/* One song, the whole screen, and the next one a swipe away. */}
+      {fullFor && (
+        <SongScreen tracks={tracks} startAt={fullFor} onClose={() => setFullFor(null)} />
+      )}
+
       {lyricsFor && (
         <FollowWords
           lines={timedFor(lyricsFor)}
