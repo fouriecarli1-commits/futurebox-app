@@ -17,6 +17,7 @@ import { buildRequest, forPreview, type Body } from '../app/lib/server/musicplan
 import { looksAfrikaans, singDirection } from '../app/lib/lyriclang';
 import { shapeSong, planLength } from '../app/lib/songshape';
 import { timelineOf } from '../app/lib/timeline';
+import { SONG_STARTS, MOODS } from '../app/data/songstarts';
 
 let failures = 0;
 const check = (label: string, ok: boolean, detail = '') => {
@@ -171,6 +172,28 @@ check('a two-word style is sent as two words, not padded to seven',
   first?.positive_styles.length === 2, (first?.positive_styles ?? []).join(', '));
 check('and what it is asked to avoid is asked on every part, not only the first',
   (mine.composition_plan?.chunks ?? []).every((one) => one.negative_styles.length > 0));
+
+
+/* ── 8. The fifty starting points ─────────────────────────────────────── */
+check('there are fifty of them, not "about fifty"', SONG_STARTS.length === 50,
+  String(SONG_STARTS.length));
+check('every one has a unique id',
+  new Set(SONG_STARTS.map((one) => one.id)).size === SONG_STARTS.length);
+check('every one is written in both languages',
+  SONG_STARTS.every((one) => one.en.title && one.en.first && one.af.title && one.af.first));
+/* The style is English in both, on purpose: it is read by the model rather
+   than by the person, and the model was trained on English descriptions of
+   music. Asserted so a well-meaning translation pass does not quietly undo
+   it. */
+check('and carries one English style, which is what the engine reads',
+  SONG_STARTS.every((one) => one.style.length > 10 && /^[\x20-\x7E]+$/.test(one.style)));
+check('each start gives the engine something to work with, not one word',
+  SONG_STARTS.every((one) => one.style.split(',').length >= 3));
+check('every mood on the filter has songs behind it',
+  MOODS.every((mood) => SONG_STARTS.some((one) => one.mood === mood.id)),
+  MOODS.filter((mood) => !SONG_STARTS.some((one) => one.mood === mood.id)).map((one) => one.id).join(', ') || 'all eight');
+check('and the two lines are two lines, so they land under [Verse] as written',
+  SONG_STARTS.every((one) => one.en.first.includes('\n') && one.af.first.includes('\n')));
 
 if (failures) {
   console.error(`\ncheck:makesong — ${failures} failure(s).\n`);

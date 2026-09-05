@@ -187,6 +187,30 @@ try {
   const ours = (sent?.style ?? '').split(',').filter(Boolean).length;
   check('and our own words do not outnumber the room',
     ours <= 6, `${ours} style words with nothing typed in the box`);
+  /* ── Something to start from ────────────────────────────────────────
+ 
+     Last, and deliberately: picking one fills the title, the words and the
+     style, so doing it earlier would have made every assertion above about a
+     room somebody had already been given. It was written first and did
+     exactly that — three checks passed for the wrong reason, and one failed
+     because the style it was counting was no longer ours. */
+  const startsButton = room.locator('button').filter({ hasText: /^Give me a song to start from$/ });
+  check('the room offers a song to start from', (await startsButton.count()) === 1);
+  await startsButton.first().click();
+  await p.waitForTimeout(600);
+  check('and says they are not AI', (await says()).includes('not by a model'));
+  const pick = room.locator('button').filter({ hasText: /BPM$/ });
+  check('with real starting points on it', (await pick.count()) >= 4, `${await pick.count()} shown`);
+  await pick.first().click();
+  await p.waitForTimeout(600);
+  const title = await room.locator('input').first().inputValue();
+  const words = await room.locator('textarea').first().inputValue();
+  check('pressing one fills the room in', title.length > 0 && words.includes('[Verse]'),
+    `"${title}" / ${JSON.stringify(words.slice(0, 40))}`);
+  const styleBox = await room.locator('textarea').nth(1).inputValue();
+  check('including a style the engine can work with',
+    styleBox.split(',').length >= 3, styleBox.slice(0, 60));
+
 } finally {
   if (browser) await browser.close();
   if (server) { try { process.kill(-server.pid); } catch { /* already gone */ } }

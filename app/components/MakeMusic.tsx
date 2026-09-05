@@ -46,6 +46,7 @@ import { loadSounds, training, NO_SOUNDS, type Sounds } from '../lib/sounds';
 import { noteTaste } from '../lib/taste';
 import { looksAfrikaans, singDirection, type SingIn } from '../lib/lyriclang';
 import StyleFromSong from './StyleFromSong';
+import SongStarts from './SongStarts';
 
 export interface Canvas {
   title: string;
@@ -694,6 +695,20 @@ export default function MakeMusic({
 
       {/* Set it up */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-4">
+        {/* Something to start from, above the empty box rather than beside it.
+
+            The blank box is the hardest part of this room and a bad start is
+            what a bad song is made of — four vague words produce a take that
+            wanders, and the person concludes the engine is no good. Fifty
+            written starting points, none of which costs anything. */}
+        <SongStarts
+          onPick={({ title: name, words, style, bpm: beat }) => {
+            setTitle(name);
+            setBpm(beat);
+            setCanvas({ ...canvas, lyrics: words, style });
+          }}
+        />
+
         <div>
           <label className="text-sm text-zinc-400">{t('make.name')}</label>
           <input
