@@ -37,9 +37,10 @@
  * it, and somebody typing a name on a phone loses the last two letters.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
-import { fetchCreator, saveCreator, type Creator } from '../lib/radar';
+import { fetchCreatorState, saveCreator, type Creator } from '../lib/radar';
+import { RESERVED_REASON, isReserved } from '../lib/reserved';
 import { useLang } from '../lib/i18n';
 import Hint from './Hint';
 import Note from './Note';
@@ -64,12 +65,31 @@ export default function RecordingName({
   readonly compact?: boolean;
 }): React.ReactElement {
   const { t } = useLang();
+  /* Ids from React, not written down here.
+
+     This component is mounted twice at once — the channel has it and so does
+     the account panel over the top of it — and two inputs sharing one id is
+     not a tidiness problem: a `<label for>` points at whichever the browser
+     finds first, so half the labels on screen address a field the reader
+     cannot see. Found by a probe that could no longer say which box it meant. */
+  const uid = useId();
+  const nameId = `recording-name-${uid}`;
+  const handleId = `recording-handle-${uid}`;
   const [row, setRow] = useState<Creator | null>(creator ?? null);
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
   const [busy, setBusy] = useState(false);
   const [kept, setKept] = useState(0);
   const [problem, setProblem] = useState('');
+  /**
+   * Whether this account may use the app's own name.
+   *
+   * False for everybody but the people who run the place, and the server says
+   * which — the owner list never reaches a browser. Until the answer lands it
+   * is false, which is the safe way round: a stranger is refused a moment
+   * early rather than allowed a moment too long.
+   */
+  const [mayUseReserved, setMayUseReserved] = useState(false);
   const seeded = useRef(false);
 
   useEffect(() => {
@@ -80,8 +100,10 @@ export default function RecordingName({
   useEffect(() => {
     if (creator !== undefined) return;
     let live = true;
-    void fetchCreator().then((found) => {
-      if (live) setRow(found);
+    void fetchCreatorState().then((found) => {
+      if (!live) return;
+      setRow(found.creator);
+      setMayUseReserved(found.mayUseReserved);
     });
     return () => {
       live = false;
@@ -101,9 +123,17 @@ export default function RecordingName({
      nobody saves "Anré Fourie!" and gets back "anrfourie" with no explanation. */
   const wantedHandle = handle.toLowerCase().replace(/[^a-z0-9._]/g, '').slice(0, 24);
   const changed = wantedName !== (was.name ?? '') || wantedHandle !== (was.handle ?? '');
+  /* Refused here as somebody types it, and refused again by the route when
+     they press Save. The second is the rule; this one is only so nobody types
+     a whole name and finds out afterwards. */
+  const taken = !mayUseReserved && (isReserved(wantedName) || isReserved(wantedHandle));
 
   const keep = useCallback(async () => {
     if (!changed || busy) return;
+    if (taken) {
+      setProblem(t('chan.recNameTaken', RESERVED_REASON));
+      return;
+    }
     setBusy(true);
     setProblem('');
     const updated: Creator = { ...was, name: wantedName, handle: wantedHandle };
@@ -116,7 +146,7 @@ export default function RecordingName({
     setRow(updated);
     setKept(Date.now());
     onSaved?.(updated);
-  }, [busy, changed, onSaved, was, wantedHandle, wantedName]);
+  }, [busy, changed, onSaved, t, taken, was, wantedHandle, wantedName]);
 
   return (
     /* Saved when focus leaves the *block*, not when it leaves a field.
@@ -131,7 +161,7 @@ export default function RecordingName({
       }}
       className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-2.5"
     >
-      <label htmlFor="recording-name" className="flex items-center gap-1 text-sm font-semibold text-zinc-300">
+      <label htmlFor={nameId} className="flex items-center gap-1 text-sm font-semibold text-zinc-300">
         {t('chan.recName', 'Your recording name')}
         <Hint>
           {t(
@@ -142,7 +172,7 @@ export default function RecordingName({
       </label>
       <div className="flex gap-2">
         <input
-          id="recording-name"
+          id={nameId}
           value={name}
           maxLength={60}
           onChange={(event) => setName(event.target.value)}
@@ -157,7 +187,7 @@ export default function RecordingName({
         />
       </div>
 
-      <label htmlFor="recording-handle" className="flex items-center gap-1 text-sm font-semibold text-zinc-300">
+      <label htmlFor={handleId} className="flex items-center gap-1 text-sm font-semibold text-zinc-300">
         {t('chan.recHandle', 'Your handle')}
         <Hint>
           {t(
@@ -171,7 +201,7 @@ export default function RecordingName({
           @
         </span>
         <input
-          id="recording-handle"
+          id={handleId}
           value={handle}
           maxLength={24}
           onChange={(event) => setHandle(event.target.value)}
@@ -193,7 +223,7 @@ export default function RecordingName({
              triggered the save looks like it did nothing. `keep` is a no-op
              when there is nothing to keep, which is the right place for that
              decision. */
-          disabled={busy}
+          disabled={busy || taken}
           className="px-3.5 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40"
         >
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
@@ -201,6 +231,11 @@ export default function RecordingName({
         </button>
       </div>
 
+      {taken && (
+        <p className="text-xs text-amber-400 leading-snug">
+          {t('chan.recNameTaken', RESERVED_REASON)}
+        </p>
+      )}
       {kept > 0 && !problem && (
         <p className="text-xs text-emerald-400">
           {t('chan.recNameKept', 'Saved. New posts go out under this name.')}

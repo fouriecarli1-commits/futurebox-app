@@ -8,6 +8,8 @@
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { ownedPath } from '@/app/lib/server/ownedpath';
+import { isOwnerEmail } from '@/app/lib/server/owners';
+import { RESERVED_REASON, isReserved } from '@/app/lib/reserved';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -58,7 +60,17 @@ export async function GET(request: Request): Promise<Response> {
   if (!client) return Response.json({ configured: false });
 
   const { data } = await client.from('creators').select('*').eq('owner', caller.id).maybeSingle();
-  return Response.json({ configured: true, signedIn: true, creator: data ?? null });
+  /* One bit, and only to the person it is about: whether this caller is
+     allowed the app's own name. The owner list itself never reaches a browser
+     — that rule is in `server/owners.ts` — so what is sent is the answer, not
+     the list. It lets the field refuse a reserved name while somebody is
+     typing it without also refusing the one account that may use it. */
+  return Response.json({
+    configured: true,
+    signedIn: true,
+    creator: data ?? null,
+    mayUseReserved: isOwnerEmail(caller.email),
+  });
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -96,10 +108,29 @@ export async function POST(request: Request): Promise<Response> {
     avatar = (existing?.avatar_path as string | null) ?? null;
   }
 
+  const wantedName = String(body.name ?? '').trim().slice(0, 80);
+  const wantedHandle = cleanHandle(String(body.handle ?? ''), caller.id.slice(0, 8));
+
+  /* Nobody speaks as the house but the house.
+ 
+     This name goes out on every release, sits beside every post in the live
+     room, and is what a stranger on the collab radar reads. An account calling
+     itself "FutureBox Official" is not a naming clash — it is somebody
+     standing at the front of this app's own room speaking as the app, and
+     whatever they then ask for arrives with the house's authority behind it.
+ 
+     Checked here rather than only in the field, because a check in the browser
+     is a courtesy and this is a rule: the field can be skipped by anybody who
+     can post to a URL. See `app/lib/reserved.ts` for what counts and why the
+     folding is the actual work. */
+  if (!isOwnerEmail(caller.email) && (isReserved(wantedName) || isReserved(wantedHandle))) {
+    return Response.json({ message: RESERVED_REASON, code: 'reserved' }, { status: 403 });
+  }
+
   const row = {
     owner: caller.id,
-    name: String(body.name ?? '').trim().slice(0, 80),
-    handle: cleanHandle(String(body.handle ?? ''), caller.id.slice(0, 8)),
+    name: wantedName,
+    handle: wantedHandle,
     about: String(body.about ?? '').trim().slice(0, 500),
     links: cleanLinks(body.links),
     avatar_path: avatar,

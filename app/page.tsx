@@ -1266,25 +1266,28 @@ export default function FutureBoxHome() {
     ? 'you'
     : searchOpen
       ? 'find'
-      : uploadModalOpen
-        ? studioTab === 'channels'
-          ? 'library'
-          : 'make'
-        : atDoor
-          ? 'make'
+      : atDoor
+        ? /* The door is not a room. It used to be read through `studioTab`,
+             which keeps whatever room was open last — so once anybody had
+             pressed Library the bar said Library at the front door, on every
+             screen, for the rest of the session, and Make never lit at all.
+             Standing at the door is Make, whatever room it was opened from. */
+          'make'
+        : uploadModalOpen
+          ? studioTab === 'channels'
+            ? 'library'
+            : 'make'
           : 'listen';
 
   /**
-   * Going to a tab, and going to a tab you are already on.
+   * Going to a tab.
    *
-   * The second is the one that matters: pressing the tab under your thumb when
-   * you are already there means "take me back to the start of this", which on
-   * **Make** is the door with every room on it. That is the way back somebody
-   * standing in a room actually reaches for, and it means the way out of a
-   * room is in the same place as the way in.
+   * Every tab goes to the same place every time, and Make's place is the front
+   * door with every room on it — so the way out of a room is the same press as
+   * the way in, and pressing a tab twice does what pressing it once did.
    */
   const goTab = useCallback(
-    (tab: TabId, again: boolean) => {
+    (tab: TabId) => {
       setSearchOpen(false);
       setAccountOpen(false);
       if (tab === 'listen') {
@@ -1297,9 +1300,16 @@ export default function FutureBoxHome() {
         return;
       }
       if (tab === 'make') {
+        /* Always the front door, and that is the whole rule.
+
+           It used to keep the room you were in unless you pressed Make while
+           Make was already lit — which meant pressing Make from the channel,
+           from the search, or from the account panel did nothing you could
+           see. A tab that sometimes moves you and sometimes does not is worse
+           than one that always goes to the same place, and the place every
+           room is one press from is the door. */
         setUploadModalOpen(true);
-        // Already in the studio: the press is a request for the front door.
-        setAtDoor(again || !uploadModalOpen ? true : atDoor);
+        setAtDoor(true);
         return;
       }
       if (tab === 'library') {
@@ -1310,7 +1320,7 @@ export default function FutureBoxHome() {
       }
       setAccountOpen(true);
     },
-    [atDoor, uploadModalOpen, goToRoom],
+    [goToRoom],
   );
 
   if (!user) {

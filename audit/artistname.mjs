@@ -84,7 +84,10 @@ try {
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ configured: true, signedIn: true, creator: stored }),
+      /* Not an owner. The one bit the route sends about the caller, and the
+         reason the field can refuse the app's own name while somebody types it
+         without also refusing the account that may use it. */
+      body: JSON.stringify({ configured: true, signedIn: true, creator: stored, mayUseReserved: false }),
     });
   });
 
@@ -117,10 +120,19 @@ try {
   await bar.locator('button').filter({ hasText: 'You' }).first().click();
   await p.waitForTimeout(1200);
 
-  const nameBox = p.locator('#recording-name');
-  const handleBox = p.locator('#recording-handle');
+  /* Scoped to the panel. The channel mounts the same component, so once both
+     are on screen "the name box" is two boxes — which is exactly how the
+     duplicate-id bug surfaced. */
+  const panelBox = p.locator('div[role="dialog"]');
+  const nameBox = panelBox.locator('input[id^="recording-name"]');
+  const handleBox = panelBox.locator('input[id^="recording-handle"]');
   check('the account panel carries the name field', (await nameBox.count()) === 1);
   check('and the handle beside it', (await handleBox.count()) === 1);
+  /* Two of these are mounted at once — the channel behind, the panel in front
+     — and they must not share an id, or a label points at a field the reader
+     cannot see. */
+  const ids = await p.locator('input[id^="recording-"]').evaluateAll((all) => all.map((el) => el.id));
+  check('every field on the page has its own id', new Set(ids).size === ids.length, ids.join(', '));
 
   await nameBox.fill(NAME);
   await handleBox.fill(HANDLE);
@@ -162,11 +174,50 @@ try {
   /* ── It is the same field in the channel ────────────────────────────── */
   await bar.locator('button').filter({ hasText: 'Library' }).first().click();
   await p.waitForTimeout(1800);
-  const inChannel = p.locator('#recording-name');
+  const inChannel = p.locator('input[id^="recording-name"]');
   await inChannel.first().waitFor({ state: 'visible', timeout: 8000 }).catch(() => undefined);
   check('the channel carries the same field', (await inChannel.count()) === 1);
   check('already filled in with what was saved', (await inChannel.first().inputValue()) === NAME,
     await inChannel.first().inputValue().catch(() => '(none)'));
+
+  /* ── Nobody may be the official channel ─────────────────────────────
+ 
+     The name goes out on every release and sits beside every post in the live
+     room, so an account called "FutureBox Official" is somebody speaking as
+     the app. Refused while it is being typed — and the route refuses it again,
+     which is the part that actually holds, because a field can be skipped by
+     anybody who can post to a URL. */
+  await bar.locator('button').filter({ hasText: 'You' }).first().click();
+  await p.waitForTimeout(1200);
+  const before = saved.length;
+  await nameBox.fill('FutureBox_Official');
+  await p.waitForTimeout(500);
+  /* Matched on the end of the sentence rather than the start of it: the panel
+     carries other prose, and a loose pattern is how a check starts passing on
+     the wrong words. */
+  const panelNow = ((await p.locator('div[role="dialog"]').first().innerText()) ?? '').replace(/\s+/g, ' ');
+  check('the app\u2019s own name is refused as it is typed',
+    /mistake your posts for the official channel/i.test(panelNow),
+    (panelNow.match(/.{0,80}official channel/i) ?? ['(not said)'])[0]);
+  check('and Save will not take it',
+    await p.locator('div[role="dialog"] button').filter({ hasText: /^Save$/ }).first().isDisabled());
+
+  /* The dodges people actually try, not the one spelling. */
+  for (const attempt of ['Future-Box Official', 'FutureB0x', 'f.u.t.u.r.e.b.o.x', 'official']) {
+    await nameBox.fill(attempt);
+    await p.waitForTimeout(300);
+    check(`"${attempt}" is refused too`,
+      await p.locator('div[role="dialog"] button').filter({ hasText: /^Save$/ }).first().isDisabled());
+  }
+  check('and nothing was sent while it was refused', saved.length === before,
+    `${saved.length - before} sent`);
+
+  /* A name of their own is fine again — the block is about the app's name,
+     not about having changed your mind. */
+  await nameBox.fill('Anré Fourie');
+  await p.waitForTimeout(400);
+  check('a name of your own still saves',
+    !(await p.locator('div[role="dialog"] button').filter({ hasText: /^Save$/ }).first().isDisabled()));
 
   /* Not asserted here: that it survives a reload. Without Supabase configured
      this app signs somebody in for the tab only, so a reload lands on the

@@ -83,6 +83,7 @@ export const STRINGS: Dict = {
   "chan.recHandleWhy": { en: "The address somebody writes to on the collab radar. Letters, numbers, dots and underscores, and it has to be one nobody else has taken.", af: "Die adres waarheen iemand op die collab radar skryf. Letters, syfers, punte en onderstrepe, en dit moet een wees wat niemand anders geneem het nie." },
   "chan.recHandlePlaceholder": { en: "what people write to", af: "waarheen mense skryf" },
   "chan.recNameNote": { en: "Work you have already posted keeps the name it went out under. This changes what the next one carries.", af: "Werk wat jy reeds geplaas het, hou die naam waaronder dit uitgegaan het. Dit verander wat die volgende een dra." },
+  "chan.recNameTaken": { en: "That name is the app\u2019s own. Pick one that is yours, so nobody can mistake your posts for the official channel.", af: "Daardie naam is die app se eie. Kies een wat joune is, sodat niemand jou plasings vir die amptelike kanaal kan aansien nie." },
   "chan.recNameKept": { en: "Saved. New posts go out under this name.", af: "Gestoor. Nuwe plasings gaan onder hierdie naam uit." },
   "booth.room.sing.t": { en: "Sing on your own song", af: "Sing op jou eie liedjie" },
   "booth.room.see.t": { en: "Both takes, one clock", af: "Albei opnames, een klok" },

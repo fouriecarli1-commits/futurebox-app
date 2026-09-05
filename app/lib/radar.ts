@@ -131,18 +131,37 @@ export interface Creator {
   avatar_path?: string | null;
 }
 
-export async function fetchCreator(): Promise<Creator | null> {
+/**
+ * The profile row, and the one rule about it the browser needs to know.
+ *
+ * `mayUseReserved` is whether this caller is allowed the app's own name. It is
+ * one bit, about the person asking, so the name field can refuse "FutureBox
+ * Official" while it is being typed without also refusing the one account that
+ * may use it. The owner list itself never leaves the server — see
+ * `server/owners.ts` — so this is the answer, not the list.
+ */
+export async function fetchCreatorState(): Promise<{
+  creator: Creator | null;
+  mayUseReserved: boolean;
+}> {
   try {
     const token = await accessToken();
     const response = await fetch('/api/creator', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    if (!response.ok) return null;
-    const data = (await response.json()) as { creator?: Creator | null };
-    return data.creator ?? null;
+    if (!response.ok) return { creator: null, mayUseReserved: false };
+    const data = (await response.json()) as {
+      creator?: Creator | null;
+      mayUseReserved?: boolean;
+    };
+    return { creator: data.creator ?? null, mayUseReserved: data.mayUseReserved === true };
   } catch {
-    return null;
+    return { creator: null, mayUseReserved: false };
   }
+}
+
+export async function fetchCreator(): Promise<Creator | null> {
+  return (await fetchCreatorState()).creator;
 }
 
 export async function saveCreator(creator: Creator): Promise<string | null> {

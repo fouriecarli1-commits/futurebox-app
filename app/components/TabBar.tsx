@@ -78,8 +78,15 @@ export default function TabBar({
   onGo,
 }: {
   readonly active: TabId;
-  /** Pressing the tab you are already on is a request to go to its start. */
-  readonly onGo: (tab: TabId, again: boolean) => void;
+  /**
+   * Where to go.
+   *
+   * No "you pressed the one you are on" flag. Each tab goes to the same place
+   * every time — Make is always the front door — so there is nothing for the
+   * page to decide differently on a second press, and a parameter nobody
+   * reads is a lie about the interface.
+   */
+  readonly onGo: (tab: TabId) => void;
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -99,7 +106,7 @@ export default function TabBar({
               key={tab.id}
               type="button"
               aria-current={on ? 'page' : undefined}
-              onClick={() => onGo(tab.id, on)}
+              onClick={() => onGo(tab.id)}
               className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 transition-colors ${
                 on ? 'text-emerald-300' : 'text-zinc-500 hover:text-zinc-300'
               }`}

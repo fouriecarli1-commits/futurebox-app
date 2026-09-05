@@ -139,6 +139,33 @@ try {
   check('Listen closes everything and goes back to the feed',
     (await tabOn()) === (af ? 'Luister' : 'Listen') && (await doorButtons.count()) === 0);
 
+  /* ── Every way of getting from any tab to any other ─────────────────
+ 
+     Twenty-five presses, not five. The bar was shipped passing a walk that
+     went Listen → Make → room → Make → Library → You → Find → Listen, in that
+     order, and it was broken in four of the twenty-five: once anybody pressed
+     Library, `studioTab` kept "channels" for the rest of the session, so the
+     bar said Library at the front door on every screen and **Make never lit
+     at all**. Carli found it by using the app. A walk proves a walk; a matrix
+     proves the bar. */
+  const TABS = af
+    ? ['Luister', 'Soek', 'Maak', 'Biblioteek', 'Jy']
+    : ['Listen', 'Find', 'Make', 'Library', 'You'];
+  const missed = [];
+  for (const from of TABS) {
+    for (const to of TABS) {
+      await press(TABS[0]);
+      await press(from);
+      await press(to);
+      const got = await tabOn();
+      if (got !== to) missed.push(`${from} → ${to} lit ${got}`);
+    }
+  }
+  check(`all ${TABS.length * TABS.length} ways between tabs land where they say`,
+    missed.length === 0, missed.join('; ') || 'every one');
+
+  await press(TABS[0]);
+
   /* ── Nothing stranded under it ──────────────────────────────────────── */
   const barTop = (await bar.boundingBox())?.y ?? 0;
   check('the bar sits at the bottom of the phone', barTop > 700, `top at ${Math.round(barTop)}`);
