@@ -100,8 +100,17 @@ export async function GET(request: Request): Promise<Response> {
   );
   const names = new Map<string, string>();
   if (owners.length) {
-    const { data: who } = await client.from('creators').select('owner, handle').in('owner', owners);
-    for (const one of who ?? []) names.set(one.owner as string, (one.handle as string) ?? '');
+    const { data: who } = await client.from('creators').select('owner, handle, name').in('owner', owners);
+    for (const one of who ?? []) {
+      /* The recording name if there is one, the handle otherwise.
+
+         A handle is an address and a name is what goes on a release. Beside a
+         song title in a room full of listeners, the address is the wrong one
+         of the two — nobody introduces a track as "@anrefourie". */
+      const named = ((one.name as string) ?? '').trim();
+      const handle = ((one.handle as string) ?? '').trim();
+      names.set(one.owner as string, named || handle);
+    }
   }
 
   // An episode post carries the episode's id, like every other `source_id` in
