@@ -44,7 +44,13 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
-/** An episode longer than this is not a podcast episode, it is an audiobook. */
+/**
+ * The biggest file this will take.
+ *
+ * Written for an episode — beyond this it is an audiobook, not a podcast — and
+ * it holds for a film too: a minute of what this app's own stitcher makes is a
+ * few megabytes, so a hundred is far more than a video desk can produce.
+ */
 const MAX_BYTES = 100 * 1024 * 1024;
 /** iso639-1 or iso639-3, so two or three letters and nothing else. */
 const LANG = /^[a-z]{2,3}$/;
@@ -69,10 +75,10 @@ export async function POST(request: Request): Promise<Response> {
 
   const file = form.get('file');
   if (!(file instanceof Blob) || file.size === 0) {
-    return Response.json({ message: 'No episode was sent.' }, { status: 400 });
+    return Response.json({ message: 'Nothing was sent to dub.' }, { status: 400 });
   }
   if (file.size > MAX_BYTES) {
-    return Response.json({ message: 'That episode is too long to dub in one go.' }, { status: 413 });
+    return Response.json({ message: 'That file is too long to dub in one go.' }, { status: 413 });
   }
 
   const target = String(form.get('to') ?? '').toLowerCase();
@@ -230,7 +236,8 @@ export async function GET(request: Request): Promise<Response> {
   const audio = await dubbed(id, want);
   if (!audio.ok) return Response.json({ message: audio.message }, { status: audio.status });
 
+  // Their type, not ours: a dubbed film is a film. See `dubbed` in eleven.ts.
   return new Response(audio.audio, {
-    headers: { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'no-store' },
+    headers: { 'Content-Type': audio.type, 'Cache-Control': 'no-store' },
   });
 }

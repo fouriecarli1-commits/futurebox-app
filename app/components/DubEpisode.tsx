@@ -36,26 +36,13 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Globe, Loader2, Languages, X } from 'lucide-react';
-import { accessToken } from '../lib/cloud';
 import { dubCost } from '../lib/credits';
+import { EVERY, askDub, collectDub, forget, recall, remember, startDub, type Progress } from '../lib/dubjob';
 import { DUB_LANGUAGES } from '../data/dublanguages';
 import Cost from './Cost';
 import Note from './Note';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
-
-/** How often to ask. A dub is minutes, so a second would be rude to both ends. */
-const EVERY = 6000;
-/** Where an in-flight job is remembered, so a reload does not strand it. */
-const remembered = (episodeId: string) => `futurebox.dub.${episodeId}`;
-
-interface Progress {
-  status: string;
-  done: boolean;
-  failed: boolean;
-  error: string | null;
-  language: string | null;
-}
 
 export default function DubEpisode({
   episodeId,
@@ -87,32 +74,19 @@ export default function DubEpisode({
 
   /** Pick the job back up after a reload. The job never stopped. */
   useEffect(() => {
-    try {
-      const found = window.localStorage.getItem(remembered(episodeId));
-      if (found) setJob(found);
-    } catch {
-      // A browser with storage switched off. The dub still runs; this screen
-      // just cannot rejoin it, which is worth nothing said rather than a crash.
-    }
+    const found = recall(episodeId);
+    if (found) setJob(found);
   }, [episodeId]);
 
   const collect = useCallback(async (id: string, language: string) => {
-    const token = await accessToken();
-    const response = await fetch(`/api/dub?id=${encodeURIComponent(id)}&collect=1`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    if (!response.ok) {
-      const said = (await response.json().catch(() => null)) as { message?: string } | null;
-      setProblem(refusalText(said, lang, t('dub.noCollect', 'The dub finished but could not be fetched.')));
+    const got = await collectDub(id);
+    if (!got.ok) {
+      setProblem(refusalText(got.said, lang, t('dub.noCollect', 'The dub finished but could not be fetched.')));
       return;
     }
-    try {
-      window.localStorage.removeItem(remembered(episodeId));
-    } catch {
-      // Nothing to clean up if it was never written.
-    }
-    onDubbed(await response.blob(), language);
-  }, [episodeId, onDubbed, t]);
+    forget(episodeId);
+    onDubbed(got.file, language);
+  }, [episodeId, onDubbed, lang, t]);
 
   /** Ask where it has got to, and keep asking until it is somewhere final. */
   useEffect(() => {
@@ -121,27 +95,19 @@ export default function DubEpisode({
 
     const ask = async () => {
       try {
-        const token = await accessToken();
-        const response = await fetch(`/api/dub?id=${encodeURIComponent(job)}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const asked = await askDub(job);
         if (!live) return;
-        if (!response.ok) {
-          const said = (await response.json().catch(() => null)) as { message?: string } | null;
-          setProblem(refusalText(said, lang, t('dub.lost', 'That dub could not be found any more.')));
+        if (!asked.ok) {
+          setProblem(refusalText(asked.said, lang, t('dub.lost', 'That dub could not be found any more.')));
           return;
         }
-        const next = (await response.json()) as Progress;
+        const next = asked.progress;
         setProgress(next);
         if (next.failed) {
           // The route gives the credits back when a poll first sees this, so
           // it is safe to say so — and saying so is the difference between a
           // failure somebody accepts and one they write in about.
-          try {
-            window.localStorage.removeItem(remembered(episodeId));
-          } catch {
-            // Nothing to clean up.
-          }
+          forget(episodeId);
           return;
         }
         if (next.done) {
@@ -170,34 +136,14 @@ export default function DubEpisode({
         setProblem(t('dub.noAudio', 'The episode’s audio could not be read back.'));
         return;
       }
-      const body = new FormData();
-      body.append('file', await source.blob(), 'episode.mp3');
-      body.append('to', to.trim().toLowerCase());
-      body.append('seconds', String(seconds));
-      body.append('title', title);
-      // Zero is their own convention for "work out how many people are talking".
-      body.append('speakers', '0');
-
-      const token = await accessToken();
-      const response = await fetch('/api/dub', {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body,
-      });
-      const said = (await response.json().catch(() => null)) as
-        | { id?: string; expected?: number; message?: string }
-        | null;
-      if (!response.ok || !said?.id) {
-        setProblem(refusalText(said, lang, t('dub.failed', 'The dub could not be started.')));
+      const began = await startDub(await source.blob(), 'episode.mp3', to, seconds, title);
+      if (!began.ok) {
+        setProblem(refusalText(began.said, lang, t('dub.failed', 'The dub could not be started.')));
         return;
       }
-      setExpected(Number(said.expected) || 0);
-      try {
-        window.localStorage.setItem(remembered(episodeId), said.id);
-      } catch {
-        // Storage off: the poll below still works for as long as this stays open.
-      }
-      setJob(said.id);
+      setExpected(began.expected);
+      remember(episodeId, began.id);
+      setJob(began.id);
     } catch {
       setProblem(t('dub.offline', 'Could not reach the app’s server. The dub is still running.'));
     } finally {

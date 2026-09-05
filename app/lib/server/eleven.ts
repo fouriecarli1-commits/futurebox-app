@@ -361,16 +361,31 @@ export async function dubState(id: string): Promise<{ ok: true; state: DubState 
 }
 
 /** The finished dub, in one of the languages it was made in. */
+/**
+ * The finished dub.
+ *
+ * The endpoint is called `audio` and does not only return audio: a dub of a
+ * video comes back as a video, because what was sent was a video. So the
+ * upstream's own content type is carried out with the bytes rather than
+ * decided here — this used to be labelled `audio/mpeg` unconditionally, which
+ * would have handed somebody an mp4 named as an mp3 the first time a film went
+ * through it.
+ */
 export async function dubbed(
   id: string,
   language: string,
-): Promise<{ ok: true; audio: ArrayBuffer } | Upstream> {
+): Promise<{ ok: true; audio: ArrayBuffer; type: string } | Upstream> {
   const response = await fetch(
     `${BASE}/dubbing/${encodeURIComponent(id)}/audio/${encodeURIComponent(language)}`,
     { headers: { 'xi-api-key': key() } },
   );
   if (!response.ok) return complain(response);
-  return { ok: true, audio: await response.arrayBuffer() };
+  const said = (response.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
+  /* Only a type this app would have sent in the first place. Anything else —
+     an error page that arrived with HTTP 200, say — is treated as the audio it
+     was asked for rather than passed on for a browser to decide about. */
+  const type = /^(audio|video)\/[a-z0-9.+-]+$/.test(said) ? said : 'audio/mpeg';
+  return { ok: true, audio: await response.arrayBuffer(), type };
 }
 
 /** The voice without the room: their audio isolation, on a recording. */

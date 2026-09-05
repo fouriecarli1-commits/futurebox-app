@@ -29,7 +29,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Video as VideoIcon, Loader2, Download, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap } from 'lucide-react';
+import { Video as VideoIcon, Loader2, Download, Languages, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap } from 'lucide-react';
 import {
   SCENES, spokenLines, looksUnquoted, LENGTHS, GENRES, type Scene, type Genre,
 } from '../lib/videoscenes';
@@ -46,6 +46,8 @@ import StartFrame from './StartFrame';
 import Presenter from './Presenter';
 import SafeZones from './SafeZones';
 import Storyboard from './Storyboard';
+import DubFilm from './DubFilm';
+import Note from './Note';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
@@ -57,6 +59,16 @@ interface Made {
   readonly url: string;
   readonly prompt: string;
   readonly aspect: Aspect;
+  /**
+   * Whether the engine was asked to speak the quoted line on this one.
+   *
+   * Recorded because it decides whether the language panel is offered: a dub
+   * re-performs speech, and a clip with none has nothing to dub — offering it
+   * anyway would take the credits and hand back the same silent film.
+   */
+  readonly spoken: boolean;
+  /** What was asked for, which is what the dub is priced on. */
+  readonly seconds: number;
 }
 
 const GRADES: { id: VideoGrade; label: string; note: string }[] = [
@@ -157,6 +169,8 @@ export default function VideoCanvas({
   const [made, setMade] = useState<Made[]>([]);
   /** Bumped when a clip is kept, so the history below reloads. */
   const [kept, setKept] = useState(0);
+  /** Which made clip has its language panel open, by its own url. */
+  const [openLanguage, setOpenLanguage] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -266,6 +280,20 @@ export default function VideoCanvas({
   }, [shapes, aspect]);
 
   const spoken = useMemo(() => spokenLines(prompt), [prompt]);
+
+  /**
+   * Whether the engine will actually be asked to speak.
+   *
+   * Not the same as `speak`, and the difference was a real fault. The switch
+   * only draws while the prompt has a quoted line in it, so taking the quotes
+   * out left it checked, invisible and still true — and the next shot went up
+   * on the dearer speaking grade with nothing to say. Found by a probe writing
+   * a second shot without quotation marks after a first one with them.
+   *
+   * Derived rather than corrected in an effect, so there is no moment where
+   * what is charged and what is sent disagree.
+   */
+  const willSpeak = speak && spoken.length > 0;
   const unquoted = useMemo(() => looksUnquoted(prompt), [prompt]);
 
   const pick = (chosen: Scene) => {
@@ -327,11 +355,11 @@ export default function VideoCanvas({
         aspect,
         seconds,
         grade,
-        speak,
+        speak: willSpeak,
         ...(frame ? { image: frame } : {}),
       });
       const url = URL.createObjectURL(result.blob);
-      setMade((held) => [{ blob: result.blob, url, prompt: said, aspect }, ...held]);
+      setMade((held) => [{ blob: result.blob, url, prompt: said, aspect, spoken: willSpeak, seconds }, ...held]);
       signal('video', { category: scene?.id ?? 'canvas' });
 
       /* Kept, rather than living only in this tab.
@@ -945,6 +973,46 @@ export default function VideoCanvas({
                   <Download className="w-3.5 h-3.5" />
                   {t('video.save')}
                 </button>
+
+                {/* ── The language button ──────────────────────────────
+
+                    Only on a clip that speaks. Nothing else on this desk
+                    takes a language — the engines are English-first and do
+                    not accept a language code, and the words on screen are
+                    typed in whatever language they were typed in — so a dub
+                    is the one place the choice is real. On a silent clip the
+                    room says so rather than offering a paid button that
+                    would hand back the same film.
+
+                    See `DubFilm`, which is where the money and the wait
+                    are explained. */}
+                {one.spoken ? (
+                  openLanguage === one.url ? (
+                    <DubFilm
+                      film={one.blob}
+                      filmId={`canvas:${one.url}`}
+                      title={one.prompt.slice(0, 60)}
+                      seconds={one.seconds}
+                      onClose={() => setOpenLanguage(null)}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setOpenLanguage(one.url)}
+                      className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                    >
+                      <Languages className="w-3.5 h-3.5" />
+                      {t('dubfilm.button', 'Another language')}
+                    </button>
+                  )
+                ) : (
+                  <Note className="text-xs text-zinc-500">
+                    {t(
+                      'dubfilm.silent',
+                      'Nothing is spoken on this one, so there is nothing to put in another language. Put a line in quotation marks and turn the voice on, or lay a reading over it.',
+                    )}
+                  </Note>
+                )}
               </div>
             ))}
           </div>
