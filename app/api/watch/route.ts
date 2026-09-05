@@ -37,7 +37,7 @@
 
 import crypto from 'node:crypto';
 import { allowanceLeft } from '@/app/lib/server/eleven';
-import { tellOwner, configured as canEmail } from '@/app/lib/server/email';
+import { tellOwner, configured as canEmail, unsent } from '@/app/lib/server/email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -115,6 +115,13 @@ usage crosses a higher mark.`,
     told = said.ok ? `${crossed.at}` : null;
   }
 
+  /* Letters that were claimed and never arrived. Reported here because this is
+     the address whoever runs the place already opens, and because the one
+     thing that cannot carry this news is an email. Somebody paying and getting
+     no receipt is the failure that costs a customer, and until now nothing
+     anywhere said it had happened. */
+  const missing = await unsent();
+
   return Response.json({
     checked: 'eleven',
     reachable: true,
@@ -124,5 +131,6 @@ usage crosses a higher mark.`,
     tier: allowance.tier,
     told,
     canEmail: canEmail(),
+    lettersNotDelivered: missing ?? undefined,
   });
 }

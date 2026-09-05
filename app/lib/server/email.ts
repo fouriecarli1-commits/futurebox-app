@@ -42,6 +42,7 @@
  * state and it is reported rather than hidden.
  */
 
+import crypto from 'node:crypto';
 import { admin } from './account';
 
 /** Where enquiries go when nothing else is set. */
@@ -53,6 +54,108 @@ const FROM = () => process.env.MAIL_FROM ?? '';
 
 /** Whose inbox gets told when something needs a person. */
 export const OWNER = () => process.env.OWNER_EMAIL || ENQUIRIES;
+
+/**
+ * The provider's own base, worked out from the send endpoint.
+ *
+ * `MAIL_API_URL` is overridable so a different provider with the same shape is
+ * an environment variable rather than a rewrite — so the base is derived from
+ * it rather than written down twice and left to drift.
+ */
+export function apiBase(): string {
+  return API.replace(/\/emails\/?$/, '');
+}
+
+/**
+ * Mailboxes that cannot be sent *from*, whatever a provider accepts.
+ *
+ * Not a preference. Google publishes a DMARC policy that tells every receiving
+ * server to reject mail claiming to be from gmail.com that did not come from
+ * Google, and the big free providers all do the same. Setting one of these as
+ * `MAIL_FROM` does not fail at send time — the provider takes it, the letter
+ * leaves, and it is refused or filed as spam at the far end, where nobody
+ * running the app can see it happen.
+ *
+ * So it is named, and the setup route says so before a single receipt is lost.
+ */
+export const FREE_MAILBOXES = [
+  'gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.co.uk', 'outlook.com',
+  'hotmail.com', 'hotmail.co.uk', 'live.com', 'msn.com', 'icloud.com', 'me.com',
+  'mac.com', 'aol.com', 'protonmail.com', 'proton.me', 'zoho.com', 'mail.com',
+  'yandex.com', 'gmx.com', 'web.de', 'webmail.co.za', 'vodamail.co.za',
+] as const;
+
+export function freeMailbox(domain: string): boolean {
+  return FREE_MAILBOXES.includes(domain.toLowerCase() as (typeof FREE_MAILBOXES)[number]);
+}
+
+/** The domain the from address belongs to, which is the one that must verify. */
+export function fromDomain(): string {
+  const at = FROM().lastIndexOf('@');
+  if (at < 0) return '';
+  return FROM()
+    .slice(at + 1)
+    .replace(/>$/, '')
+    .trim()
+    .toLowerCase();
+}
+
+export type DomainStatus =
+  | 'pending'
+  | 'verified'
+  | 'failed'
+  | 'not_started'
+  | 'partially_verified'
+  | 'partially_failed';
+
+export interface DnsRecord {
+  readonly record?: string;
+  readonly name: string;
+  readonly value: string;
+  readonly type: string;
+  readonly ttl?: string;
+  readonly status?: string;
+  readonly priority?: number;
+}
+
+export interface MailDomain {
+  readonly id: string;
+  readonly name: string;
+  readonly status: DomainStatus;
+  readonly records?: readonly DnsRecord[];
+}
+
+/**
+ * Ask the provider what it thinks of a domain.
+ *
+ * Read off `resend` v6.26.0 rather than from memory, like every other supplier
+ * in this app: `GET /domains` lists them with a status, and `GET /domains/{id}`
+ * adds the DNS records with a status on each one. Those records are the whole
+ * point — a person setting this up needs the rows to paste, not a sentence
+ * telling them to go and find them.
+ */
+async function ask<T>(path: string): Promise<T | null> {
+  if (!KEY()) return null;
+  try {
+    const response = await fetch(`${apiBase()}${path}`, {
+      headers: { authorization: `Bearer ${KEY()}` },
+      cache: 'no-store',
+    });
+    if (!response.ok) return null;
+    return (await response.json().catch(() => null)) as T | null;
+  } catch {
+    return null;
+  }
+}
+
+export async function domains(): Promise<MailDomain[]> {
+  const said = await ask<{ data?: MailDomain[] }>('/domains');
+  return said?.data ?? [];
+}
+
+export async function domainDetail(id: string): Promise<MailDomain | null> {
+  return ask<MailDomain>(`/domains/${encodeURIComponent(id)}`);
+}
 
 /**
  * Where the app lives, for the one link every letter carries.
@@ -181,15 +284,76 @@ async function note(
   ok: boolean,
   detail: string | null,
 ): Promise<void> {
-  if (!client || !letter.once) return;
+  if (!client) return;
+  const when = new Date().toISOString();
+
+  /* A letter with a claim already has a row; this fills in how it went.
+
+     One without a claim had none at all, which meant every letter that is not
+     deduped — an enquiry forwarded, a warning to the owner, a test — left no
+     trace whether it went or not. `mail.sql` says this table is the answer
+     when somebody says they never got a letter, and it was only the answer for
+     about half of them. A generated key keeps the unique constraint honest
+     without pretending the letter was deduped. */
+  if (!letter.once) {
+    await client
+      .from('mail_log')
+      .insert({
+        dedupe_key: `${letter.kind}:${crypto.randomUUID()}`,
+        kind: letter.kind,
+        to_email: letter.to,
+        ok,
+        detail,
+        sent_at: when,
+      })
+      .then(
+        () => undefined,
+        () => undefined,
+      );
+    return;
+  }
+
   await client
     .from('mail_log')
-    .update({ ok, detail, sent_at: new Date().toISOString() })
+    .update({ ok, detail, sent_at: when })
     .eq('dedupe_key', letter.once)
     .then(
       () => undefined,
       () => undefined,
     );
+}
+
+/**
+ * Letters that were claimed and never arrived.
+ *
+ * `ok` false is a refusal from the provider; `ok` still null is worse — the
+ * row was claimed and the process died before it finished, so the dedupe key
+ * is spent and the letter will never be sent again. Both are somebody who did
+ * not get their receipt, and neither is visible anywhere until this is asked.
+ */
+export async function unsent(days = 7): Promise<{ failed: number; stuck: number } | null> {
+  const client = admin();
+  if (!client) return null;
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+  const [bad, hanging] = await Promise.all([
+    client
+      .from('mail_log')
+      .select('id', { count: 'exact', head: true })
+      .gte('claimed_at', since)
+      .eq('ok', false),
+    client
+      .from('mail_log')
+      .select('id', { count: 'exact', head: true })
+      .gte('claimed_at', since)
+      /* Older than a few minutes, so a letter being sent right now is not
+         counted as one that never arrived. */
+      .lt('claimed_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+      .is('ok', null),
+  ]);
+
+  if (bad.error || hanging.error) return null;
+  return { failed: bad.count ?? 0, stuck: hanging.count ?? 0 };
 }
 
 /**
