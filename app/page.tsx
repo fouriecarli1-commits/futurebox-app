@@ -927,12 +927,38 @@ export default function FutureBoxHome() {
     return pod.host.toLowerCase().includes(selectedPodcasterFilter.toLowerCase());
   });
 
+  /**
+   * How many cards a section shows at once.
+   *
+   * The home page was every card of every kind, stacked: 23,552 pixels on a
+   * 390-pixel phone, which is twenty-eight screens of scrolling before the
+   * footer. Nobody reads twenty-eight screens; they close it. Four of each is
+   * enough to say what the section is, and the button below moves the window
+   * along.
+   */
+  const SHOW = 4;
+
+  /**
+   * The next four, not four at random.
+   *
+   * A random draw repeats — press it twice and two of the same four come
+   * back, which reads as a broken button. A window that slides along the list
+   * shows something new every press and eventually shows everything.
+   */
+  const [shownFrom, setShownFrom] = useState(0);
+  const some = useCallback(<T,>(all: readonly T[], many: number = SHOW): T[] => {
+    if (all.length <= many) return [...all];
+    const start = (shownFrom * many) % all.length;
+    return Array.from({ length: many }, (_, i) => all[(start + i) % all.length]);
+  }, [shownFrom]);
+
   const handleAiScanRefresh = () => {
     setIsScanning(true);
     setScanMessage('Finding different ones…');
     setTimeout(() => {
       setIsScanning(false);
       setStreamCycle(prev => prev + 1);
+      setShownFrom(prev => prev + 1);
       setScanMessage('Here is another set.');
     }, 2000);
   };
@@ -1593,8 +1619,8 @@ export default function FutureBoxHome() {
 
             {picksBar}
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {activePodcasts.map((pod) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+              {some(activePodcasts).map((pod) => (
                 <div 
                   key={pod.id}
                   className="group bg-zinc-900/60 rounded-2xl border border-zinc-800/80 overflow-hidden hover:border-emerald-500/50 transition-all flex flex-col justify-between"
@@ -1675,7 +1701,14 @@ export default function FutureBoxHome() {
           <section className="space-y-6">
             {picksBar}
 
-            <Masterclasses userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} board={board} />
+            <Masterclasses
+              userPlan={userPlan}
+              onUpgrade={() => setPricingModalOpen(true)}
+              board={board}
+              show={SHOW}
+              from={shownFrom}
+              compact={activeTab === 'all'}
+            />
 
             <div className="flex items-center justify-between pt-2">
               <div>
@@ -1690,7 +1723,7 @@ export default function FutureBoxHome() {
               </span>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
               {[
                 {
                   id: 'mc-1',
@@ -1833,7 +1866,7 @@ export default function FutureBoxHome() {
 
             {picksBar}
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
               {[
                 {
                   id: 'ai-1',
@@ -1943,7 +1976,11 @@ export default function FutureBoxHome() {
         {/* ⚡ 5. INTELLIGENCE RADAR */}
         {(activeTab === 'all' || activeTab === 'radar') && (
           <section className="space-y-6">
-            <QualityRadar userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
+            {/* The quality board is the radar page. On the landing tab it
+                was 5,394 pixels of one section out of six. */}
+            {activeTab === 'radar' && (
+              <QualityRadar userPlan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
+            )}
 
             <div className="pt-2">
               <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
@@ -1955,7 +1992,7 @@ export default function FutureBoxHome() {
 
             {picksBar}
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
               {[
                 {
                   tag: 'Top Vibe Coded App',
@@ -2378,32 +2415,37 @@ export default function FutureBoxHome() {
                   uses beside it on a desktop. Hidden from md up, where the
                   rail already shows all fourteen without scrolling. */}
               <div className="md:hidden relative flex-shrink-0">
-                {(() => {
-                  const here = ROOM_META[studioTab];
-                  const HereIcon = atDoor ? Home : here.icon;
-                  return (
-                    <button
-                      type="button"
-                      onClick={() => setRoomsOpen((open) => !open)}
-                      aria-expanded={roomsOpen}
-                      aria-haspopup="menu"
-                      className="w-full flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-3 text-left"
-                    >
-                      <HereIcon className="w-[18px] h-[18px] text-emerald-400 flex-shrink-0" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold text-white leading-tight truncate">
-                          {atDoor ? t('hello.home', 'Home') : here.label}
-                        </span>
-                        <span className="block text-xs text-zinc-500 leading-tight truncate">
-                          {t('rail.all', 'All rooms')}
-                        </span>
-                      </span>
-                      <ChevronDown
-                        className={`w-4 h-4 text-zinc-400 flex-shrink-0 transition-transform ${roomsOpen ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-                  );
-                })()}
+                {/* The mark, not the room.
+
+                    It wore whichever room was open, so the way between rooms
+                    was labelled "Make a song" — which reads as the name of the
+                    screen you are looking at, not as the way off it. Nobody
+                    presses the title of the page they are already on. It is
+                    the FutureBox mark now, the same one the rail uses for the
+                    way back, and it is green, because this is the one control
+                    on a phone that everything else is reached through. */}
+                <button
+                  type="button"
+                  onClick={() => setRoomsOpen((open) => !open)}
+                  aria-expanded={roomsOpen}
+                  aria-haspopup="menu"
+                  className="w-full flex items-center gap-3 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-3 text-left"
+                >
+                  <Cpu className="w-[18px] h-[18px] text-emerald-400 flex-shrink-0" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-bold text-emerald-300 leading-tight truncate">
+                      {t('rail.all', 'All rooms')}
+                    </span>
+                    {/* Where you are, underneath. Said quietly: it is a
+                        reminder, not the name of the button. */}
+                    <span className="block text-xs text-emerald-400/70 leading-tight truncate">
+                      {atDoor ? t('hello.home', 'Home') : ROOM_META[studioTab].label}
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-emerald-400 flex-shrink-0 transition-transform ${roomsOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
 
                 {roomsOpen && (
                   <>

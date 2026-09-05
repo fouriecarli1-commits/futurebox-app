@@ -53,7 +53,10 @@ for (const want of ['Podcast', 'Collab', 'Live']) {
   if (at < 0) { console.log(`✗ ${want} is nie in die kieslys nie`); bad += 1; continue; }
   await rows.nth(at).click();
   await page.waitForTimeout(900);
-  const now = (await open.innerText()).split('\n')[0].trim();
+  /* The second line. The button names itself "All rooms" — it is the way
+     between rooms, not the name of the room you are in — and says where you
+     are underneath. Reading line one reported every landing as a failure. */
+  const now = ((await open.innerText()).split('\n')[1] ?? '').trim();
   const landed = now.toLowerCase().includes(want.toLowerCase());
   console.log(`${landed ? '✓' : '✗'} ${want.padEnd(8)} → knoppie wys nou "${now}"`);
   if (!landed) bad += 1;

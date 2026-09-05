@@ -125,11 +125,30 @@ export default function Masterclasses({
   userPlan,
   onUpgrade,
   board = null,
+  show,
+  from = 0,
+  compact = false,
 }: {
   userPlan: Plan;
   onUpgrade: () => void;
   /** The counters, so each class can say how many people opened it. */
   board?: Board | null;
+  /**
+   * How many classes to draw at once. Absent means all of them, which is
+   * right for a page about the classes and wrong for the home page: fifteen
+   * cards there was fifteen screens of scrolling under everything else.
+   */
+  show?: number;
+  /** Which window of `show` to draw, moved along by the reshuffle button. */
+  from?: number;
+  /**
+   * Draw the cards and nothing else.
+   *
+   * The section chips, the paths and the planner are what somebody comes to
+   * this page for and are dead weight on the home page, where this is one
+   * block among six.
+   */
+  compact?: boolean;
 }) {
   const [track, setTrack] = useState<Track | null>(null);
   const { t } = useLang();
@@ -138,10 +157,23 @@ export default function Masterclasses({
   const [seed, setSeed] = useState(0);
   const [showPlanner, setShowPlanner] = useState(false);
 
-  const shown = useMemo(
+  const all = useMemo(
     () => MASTERCLASSES.filter((m) => (track === null ? true : m.track === track)),
     [track],
   );
+
+  /* The window the home page asked for.
+
+     A sliding window rather than the first few: "show me different ones" has
+     to actually show different ones, and the top four never change. Absent
+     `show` means all of them, which is right on the classes page itself and
+     wrong on the home page, where fifteen cards was fifteen screens of
+     scrolling under everything else. */
+  const shown = useMemo(() => {
+    if (!show || all.length <= show) return all;
+    const start = (from * show) % all.length;
+    return Array.from({ length: show }, (_, i) => all[(start + i) % all.length]);
+  }, [all, show, from]);
 
   const brief = useMemo(() => {
     const pool = BRIEF_SEEDS[planTrack];
@@ -167,7 +199,11 @@ export default function Masterclasses({
       </div>
 
       <p className="text-base text-zinc-400">
-        {shown.length} classes across {Object.keys(TRACK_LABELS).length} tracks. Every one says who made it before you click.
+        {/* How many there are, not how many are drawn. With a window on
+            the home page `shown` is four, and "4 classes across 7 tracks"
+            would be a false claim about the catalogue rather than a caption
+            about the grid. */}
+        {all.length} classes across {Object.keys(TRACK_LABELS).length} tracks. Every one says who made it before you click.
       </p>
 
       {showProvenance && (
@@ -180,6 +216,12 @@ export default function Masterclasses({
         </div>
       )}
 
+      {/* Choosing a section, and the paths and the planner below, are what
+          this page is for. On the home page they are somebody else's
+          furniture: measured at 390 px this section was 3,696 pixels, most
+          of it chips and a planner under four cards nobody had scrolled to
+          yet. `compact` draws the cards and stops. */}
+      {!compact && (<>
       {/* Sections, as things you can see and choose */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
         <button
@@ -219,12 +261,14 @@ export default function Masterclasses({
         })}
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+      </>)}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {shown.map((m) => (
           <Card key={m.id} item={m} userPlan={userPlan} onUpgrade={onUpgrade} board={board} />
         ))}
       </div>
 
+      {!compact && (<>
       {/* Paths — a shelf is not a course */}
       <div className="space-y-3 pt-2">
         <h4 className="text-lg font-bold text-white flex items-center gap-2">
@@ -299,6 +343,7 @@ export default function Masterclasses({
           </>
         )}
       </div>
+      </>)}
     </div>
   );
 }
