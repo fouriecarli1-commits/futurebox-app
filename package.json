@@ -41,7 +41,8 @@
     "check:videolang": "node audit/videolang.mjs",
     "check:tabs": "node audit/tabs.mjs",
     "check:artistname": "node audit/artistname.mjs",
-    "check:reserved": "tsx scripts/check-reserved.mts"
+    "check:reserved": "tsx scripts/check-reserved.mts",
+    "check:back": "node audit/backbutton.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

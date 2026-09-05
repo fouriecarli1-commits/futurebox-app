@@ -29,7 +29,6 @@ import {
 } from '../lib/playlists';
 import { fetchCreator, type Creator } from '../lib/radar';
 import Cover from './Cover';
-import DeleteAccount from './DeleteAccount';
 import Subscription from './Subscription';
 import ProfilePhoto from './ProfilePhoto';
 import { publicUrl as avatarUrl } from '../lib/avatar';
@@ -531,7 +530,11 @@ export default function Channel({
         .
       </p>
 
-      {email && <DeleteAccount email={email} />}
+      {/* Deleting the account is not here any more. It sat between a help
+          link and the copilot, in the room somebody works in, where it was one
+          mis-tap from destroying everything they had made. It is on the
+          account screen behind **You**, at the bottom, where a person goes to
+          deal with their account rather than to make something. */}
 
       {/* The words, over everything, following the song that is playing. */}
       {lyricsFor && (

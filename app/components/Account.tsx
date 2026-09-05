@@ -31,6 +31,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2 } from 'lucide-react';
 import RecordingName from './RecordingName';
+import DeleteAccount from './DeleteAccount';
 import type { Creator } from '../lib/radar';
 import { useLang } from '../lib/i18n';
 import { TIER_SPECS, tierPrice, type Tier } from '../lib/plans';
@@ -324,12 +325,33 @@ export default function Account({
               <span className="block text-xs text-zinc-500 leading-snug">
                 {t(
                   'account.channelNote',
-                  'Your name, your handle, your profile picture — and deleting the account, which lives with the things it deletes.',
+                  'Your songs, your playlists, your profile picture.',
                 )}
               </span>
             </span>
           </button>
         </section>
+
+        {/* ── Deleting the account ─────────────────────────────────────
+
+            Here, and last, and nowhere else.
+
+            It used to sit in the channel, between a help link and the copilot
+            — a red button in the middle of the room somebody works in, which
+            is the one place it must never be. Carli: "mense gaan dit per
+            ongeluk druk en alles gaan delete." A destruction somebody can
+            reach by mistake is not a feature, it is a trap.
+
+            This screen is where a person comes to deal with their account
+            rather than to make something, and the bottom of it is where they
+            arrive last. The confirmation — typing your own address — stays
+            where it is, and is now the second thing standing between somebody
+            and losing everything rather than the only one. */}
+        {email && (
+          <section className="pt-1">
+            <DeleteAccount email={email} />
+          </section>
+        )}
 
         <p className="text-xs text-zinc-600 leading-relaxed">
           {t('account.legal', 'The')}{' '}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Cover from './components/Cover';
 import { EVERY as ASKS_EVERY, asksWaiting } from './lib/asks';
 import { 
@@ -51,6 +51,7 @@ import Greeting from './components/Greeting';
 import Account from './components/Account';
 import TabBar, { BAR_HEIGHT, type TabId } from './components/TabBar';
 import { fetchCreator, type Creator } from './lib/radar';
+import { useBackStack } from './lib/backstack';
 import SignInWith from './components/SignInWith';
 import { noteTaste, loadTaste } from './lib/taste';
 import { habitOf } from './lib/habits';
@@ -1278,6 +1279,33 @@ export default function FutureBoxHome() {
             ? 'library'
             : 'make'
           : 'listen';
+
+  /* ── The phone's Back button ─────────────────────────────────────────
+
+     Outermost first. The list is the app's own idea of "how deep am I", and
+     `useBackStack` turns it into history entries so the hardware button walks
+     back out of the app one layer at a time instead of leaving the site — and
+     leaving the site is what it did, from anywhere, which meant the studio
+     had a button under everybody's thumb that threw away where they were.
+
+     A room is a layer above the door rather than beside it, so Back from a
+     room lands on the door with every room on it — the same place the Make
+     tab goes, which is the point: one way out, whichever way you reach for. */
+  useBackStack(
+    useMemo(() => {
+      const layers: (() => void)[] = [];
+      if (uploadModalOpen) {
+        layers.push(() => {
+          setUploadModalOpen(false);
+          setAtDoor(false);
+        });
+        if (!atDoor) layers.push(() => setAtDoor(true));
+      }
+      if (searchOpen) layers.push(() => setSearchOpen(false));
+      if (accountOpen) layers.push(() => setAccountOpen(false));
+      return layers;
+    }, [uploadModalOpen, atDoor, searchOpen, accountOpen]),
+  );
 
   /**
    * Going to a tab.

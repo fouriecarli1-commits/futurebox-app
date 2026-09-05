@@ -762,7 +762,7 @@ export const STRINGS: Dict = {
   "account.help": { en: "A question, or a problem", af: "\u2019n Vraag, of \u2019n probleem" },
   "account.helpNote": { en: "Ask about the app, your plan or a charge and get an answer here \u2014 or write to a person.", af: "Vra oor die app, jou plan of \u2019n heffing en kry hier \u2019n antwoord \u2014 of skryf aan \u2019n mens." },
   "account.channel": { en: "Your channel and your picture", af: "Jou kanaal en jou foto" },
-  "account.channelNote": { en: "Your name, your handle, your profile picture \u2014 and deleting the account, which lives with the things it deletes.", af: "Jou naam, jou handvatsel, jou profielfoto \u2014 en om die rekening te skrap, wat woon by die goed wat dit skrap." },
+  "account.channelNote": { en: "Your songs, your playlists, your profile picture.", af: "Jou liedjies, jou speellyste, jou profielfoto." },
   "account.legal": { en: "The", af: "Die" },
   "account.terms": { en: "terms", af: "voorwaardes" },
   "account.and": { en: "and the", af: "en die" },
