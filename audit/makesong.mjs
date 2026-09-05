@@ -118,12 +118,6 @@ try {
     `${await lengths.count()} choices`);
   check('with what each one costs on it', /\d+ credits/.test(await says()));
 
-  /* ── Pointing at a song instead of describing one ──────────────────── */
-  check('the room offers to learn a style from a song you already like',
-    (await says()).includes('Learn the style from a song'));
-  check('and says the file does not leave the device',
-    (await says()).includes('stays on this device'));
-
   /* ── Nobody singing, said out loud ─────────────────────────────────── */
   check('an empty words box says the song will come back unsung',
     (await says()).includes('nobody singing'));
@@ -198,10 +192,10 @@ try {
      room somebody had already been given. It was written first and did
      exactly that — three checks passed for the wrong reason, and one failed
      because the style it was counting was no longer ours. */
-  check('and offers to make one from a photograph',
-    (await says()).includes('Make a song from a photo'));
-  check('saying it reads the light rather than the subject',
-    (await says()).includes('not what is in it'));
+  check('and offers to take the style off a song or a photo',
+    (await says()).includes('From a song') && (await says()).includes('From a photo'));
+  check('saying it reads the light rather than the subject, and that nothing is uploaded',
+    (await says()).includes('not what is in it') && (await says()).includes('leaves this device'));
 
   const startsButton = room.locator('button').filter({ hasText: /^Give me a song to start from$/ });
   check('the room offers a song to start from', (await startsButton.count()) === 1);

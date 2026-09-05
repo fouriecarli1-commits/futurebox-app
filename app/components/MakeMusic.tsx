@@ -45,10 +45,9 @@ import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } 
 import { loadSounds, training, NO_SOUNDS, type Sounds } from '../lib/sounds';
 import { noteTaste } from '../lib/taste';
 import { looksAfrikaans, singDirection, type SingIn } from '../lib/lyriclang';
-import StyleFromSong from './StyleFromSong';
+import StyleFrom from './StyleFrom';
 import SongStarts from './SongStarts';
 import type { Mood } from '../data/songstarts';
-import StyleFromPhoto from './StyleFromPhoto';
 
 export interface Canvas {
   title: string;
@@ -723,23 +722,6 @@ export default function MakeMusic({
           }}
         />
 
-        {/* Or point at a photograph instead of describing one.
-
-            It reads colour, light and busyness — not what is in the picture,
-            which it says out loud. What it can do is put the style words in
-            the box and open the fifty at the shelf the picture belongs on. */}
-        <StyleFromPhoto
-          onSeen={({ words, mood }) => {
-            const current = canvas.style.trim();
-            const fresh = words.filter((word) => !current.toLowerCase().includes(word.toLowerCase()));
-            setCanvas({
-              ...canvas,
-              style: fresh.length ? (current ? `${current}, ${fresh.join(', ')}` : fresh.join(', ')) : current,
-            });
-            setFromPhoto(mood as typeof fromPhoto);
-          }}
-        />
-
         <div>
           <label className="text-sm text-zinc-400">{t('make.name')}</label>
           <input
@@ -847,16 +829,20 @@ export default function MakeMusic({
           />
           <p className="text-sm text-zinc-500 pt-1">{t('make.soundNote')}</p>
 
-          {/* Point at a song instead of describing one.
+          {/* Point at something instead of describing it.
 
               Describing a sound in words is the hardest thing this room asks
               for, and getting it wrong costs a generation — which is what
-              "ek mors letterlik my geld" was about. Everybody has a song they
-              can point at, so the app measures that one and writes the
-              tempo, the key and the tone into the box. It adds; it never
-              replaces what is already there. */}
+              "ek mors letterlik my geld" was about. Everybody has a song or a
+              photograph they can point at, so the app measures one and writes
+              what it found into the box. It adds; it never replaces what is
+              already there.
+
+              One panel rather than two: they were two stacked panels with two
+              explanations and Simple grew by three hundred pixels, which is
+              the fault the switch exists to prevent. */}
           <div className="mt-3">
-            <StyleFromSong
+            <StyleFrom
               onWords={(words) => {
                 const current = canvas.style.trim();
                 const fresh = words.filter((word) => !current.toLowerCase().includes(word.toLowerCase()));
@@ -866,6 +852,7 @@ export default function MakeMusic({
                   style: current ? `${current}, ${fresh.join(', ')}` : fresh.join(', '),
                 });
               }}
+              onMood={(mood) => setFromPhoto(mood as typeof fromPhoto)}
             />
           </div>
 
