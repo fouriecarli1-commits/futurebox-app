@@ -7,13 +7,17 @@
  * studio was showing people `futurebox.app/@theirhandle` as **their own
  * address**, which is a promise the product cannot keep.
  *
- * Eight of the ten obvious FutureBox domains are taken; see `docs/GOING_LIVE.md`
- * for the list and for what still has to be checked, which is the trademark
- * rather than the DNS.
+ * The name is settled: `futurebox.studio`, with `futureboxstudio.co.za` beside
+ * it. Every short form of the plain name was taken and serving — five of them
+ * by other people using the FutureBox name itself — which is why it carries a
+ * word of its own. See `docs/GOING_LIVE.md` §2, and for what is still open,
+ * which is the trademark rather than the DNS.
  *
- * So the default here is the address we genuinely have today, and the real one
- * is a variable rather than an edit in twelve files. When the domain is settled,
- * set it once.
+ * The default below stays the Vercel address on purpose. It is what a preview
+ * deployment and a local run genuinely are, and a default that claimed the
+ * real domain would have every branch and every developer's laptop printing an
+ * address they are not served from. The real one is set once, in the
+ * environment, on the deployment that actually answers to it.
  *
  * `NEXT_PUBLIC_` because the browser prints these, and written out in full
  * rather than looked up by a computed key: Next only substitutes what it can

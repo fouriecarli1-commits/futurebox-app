@@ -99,41 +99,50 @@ a check that cannot fail is decoration.
 
 ---
 
-## 2. The name
+## 2. The name — settled
 
-**This is the finding to act on first.**
+**Registered:** `futurebox.studio` and `futureboxstudio.co.za`.
 
-DNS was resolved for ten candidates. Eight are taken:
+`futurebox.studio` is the primary. It is a generic top-level domain, so it carries no country
+signal in search; `futureboxstudio.co.za` sits alongside it for the South African market and
+redirects. Set `NEXT_PUBLIC_SITE_HOST=futurebox.studio` in Vercel once the domain is added there.
+Nothing else in the app needs editing — `check:brand` fails the build if an address is typed
+anywhere but `lib/brand.ts`, and the metadata, sitemap, robots and Open Graph tags all derive from
+that one variable. It was built against a different host and read back to be sure.
+
+### Why not the plain name
+
+Every short form was taken and serving:
 
 | Domain | Status |
 |---|---|
-| `futurebox.app` | **taken** — resolves to 165.22.123.139 |
 | `futurebox.com` | taken |
+| `futurebox.app` | taken |
 | `futurebox.co.za` | taken |
-| `futurebox.io` | taken |
-| `futurebox.ai` | taken |
-| `futurebox.co` | taken |
-| `futurebox.net` | taken |
-| `futurebox.org` | taken |
-| `futurebox.studio` | no A record — possibly free |
-| `getfuturebox.com` | no A record — possibly free |
+| `futureboxstudio.com` | taken |
+| `thefuturebox.com` | taken |
+| `futurebox.io` · `.ai` · `.co` · `.net` · `.org` | taken |
 
-**The app currently shows people `futurebox.app/@theirhandle` as their own address**, on the studio
-header and in share copy. We do not own that domain and somebody else is serving from it. That is a
-promise the product cannot keep and the one thing here that should not ship as it stands.
+Five of those are the FutureBox name itself in active use by other people. That is why the name
+carries a word of its own now — "studio" distinguishes, where "the" and "app" do not: in trademark
+terms those are non-distinctive elements and the distinctive part would still have been somebody
+else's.
 
-Two caveats on the method. No A record is not proof a domain is free — it can be registered and
-unused — and DNS says nothing at all about **trademarks**, which is the part that actually decides
-whether you can trade under a name. Registry and trademark lookups are blocked from this
-environment, so those have to be done from your side:
+### Still open, and it is not the domain
 
-- **Domains**: any registrar's search, or `whois`.
-- **South Africa**: CIPC for company names, and the trademark register for classes 9 and 42
-  (software and software services).
-- **Elsewhere**: the EUIPO and USPTO search tools are free and take minutes.
+**The trademark.** A registered domain and a registered company name are neither of them a
+trademark, and this is the part that decides whether you can trade under a name at all.
 
-"FutureBox" is two common English words, which cuts both ways: hard for anyone to own outright, and
-hard for you to own either.
+- **South Africa:** CIPC's trademark register, classes 9 and 42 (software, and software services).
+- **Elsewhere:** the EUIPO and USPTO search tools are free and take minutes.
+
+Trademarks are territorial, which cuts in your favour here: somebody running `futurebox.com` in
+another country does not by itself stop you trading as FutureBox Studio in South Africa. What would
+stop you is a FUTUREBOX mark registered *in South Africa* in those classes, or somebody with a real
+reputation under the name here. Neither is answered by DNS, and neither has been checked.
+
+Registry and trademark lookups are blocked from the build environment — RDAP, whois and every DNS
+API are refused by the egress proxy — so this has to be done from your side.
 
 ---
 
