@@ -135,7 +135,11 @@ try {
   await p.screenshot({ path: shot('makesong-simple.png') });
 
   /* ── What actually leaves the app ──────────────────────────────────── */
-  await room.locator('input').first().fill('Karoo');
+  /* `:visible`, because the two "learn it from a file" buttons each carry a
+     hidden file input and both sit above the title field. Reaching for the
+     first input in the room found one of those and waited a minute for
+     something invisible to become fillable. */
+  await room.locator('input:visible').first().fill('Karoo');
   await room.locator('button').filter({ hasText: /^Make my song$/ }).first().click();
   for (let waited = 0; waited < 40 && !sent; waited += 1) await p.waitForTimeout(500);
 
@@ -194,6 +198,11 @@ try {
      room somebody had already been given. It was written first and did
      exactly that — three checks passed for the wrong reason, and one failed
      because the style it was counting was no longer ours. */
+  check('and offers to make one from a photograph',
+    (await says()).includes('Make a song from a photo'));
+  check('saying it reads the light rather than the subject',
+    (await says()).includes('not what is in it'));
+
   const startsButton = room.locator('button').filter({ hasText: /^Give me a song to start from$/ });
   check('the room offers a song to start from', (await startsButton.count()) === 1);
   await startsButton.first().click();
@@ -201,12 +210,17 @@ try {
   check('and says they are not AI', (await says()).includes('not by a model'));
   const pick = room.locator('button').filter({ hasText: /BPM$/ });
   check('with real starting points on it', (await pick.count()) >= 4, `${await pick.count()} shown`);
+  /* The one it actually pressed, so the assertion can compare rather than
+     shrug. "The title is not empty" passed while pressing a starting point
+     filled in everything except the name of the song. */
+  const pressed = ((await pick.first().innerText()) ?? '').split('\n')[0].trim();
   await pick.first().click();
   await p.waitForTimeout(600);
-  const title = await room.locator('input').first().inputValue();
+  const title = await room.locator('input:visible').first().inputValue();
   const words = await room.locator('textarea').first().inputValue();
-  check('pressing one fills the room in', title.length > 0 && words.includes('[Verse]'),
-    `"${title}" / ${JSON.stringify(words.slice(0, 40))}`);
+  check('pressing one fills the room in — its title, not just its words',
+    title === pressed && words.includes('[Verse]'),
+    `pressed "${pressed}", box says "${title}"`);
   const styleBox = await room.locator('textarea').nth(1).inputValue();
   check('including a style the engine can work with',
     styleBox.split(',').length >= 3, styleBox.slice(0, 60));

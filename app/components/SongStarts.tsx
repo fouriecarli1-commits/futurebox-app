@@ -36,13 +36,32 @@ const SHOWN = 6;
 
 export default function SongStarts({
   onPick,
+  openAt,
 }: {
   /** Everything a start carries, for the room to fill in. */
   readonly onPick: (start: { title: string; words: string; style: string; bpm: number }) => void;
+  /**
+   * A mood to open on, when something else worked one out.
+   *
+   * A photograph is the case: it can say "warm, bright, empty" and which of
+   * the eight that lands in, but it cannot pick the song. So it opens this at
+   * the right shelf and a person takes it from there.
+   */
+  readonly openAt?: Mood | null;
 }): React.ReactElement {
   const { t, lang } = useLang();
   const [open, setOpen] = useState(false);
   const [mood, setMood] = useState<Mood | 'all'>('all');
+
+  /* Opened by something else, once per answer. Held against the value rather
+     than fired in an effect with no guard, or a person who closed it would
+     have it opened under them again on every render. */
+  const [openedFor, setOpenedFor] = useState<Mood | null>(null);
+  if (openAt && openAt !== openedFor) {
+    setOpenedFor(openAt);
+    setMood(openAt);
+    setOpen(true);
+  }
   /* A number rather than a shuffled copy: the list is fixed, so a seed is
      enough to move through it and nothing has to be held in state that could
      disagree with the data. */

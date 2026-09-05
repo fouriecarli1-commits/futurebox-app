@@ -47,6 +47,8 @@ import { noteTaste } from '../lib/taste';
 import { looksAfrikaans, singDirection, type SingIn } from '../lib/lyriclang';
 import StyleFromSong from './StyleFromSong';
 import SongStarts from './SongStarts';
+import type { Mood } from '../data/songstarts';
+import StyleFromPhoto from './StyleFromPhoto';
 
 export interface Canvas {
   title: string;
@@ -159,6 +161,8 @@ export default function MakeMusic({
      guess is a default, not a correction, and a control that keeps overruling
      what you set is worse than no control. */
   const [singInChosen, setSingInChosen] = useState(false);
+  /** Which shelf of the fifty a photograph pointed at, if one did. */
+  const [fromPhoto, setFromPhoto] = useState<Mood | null>(null);
   /** Which track a vocal is being recorded over, if any. */
   const [takeFor, setTakeFor] = useState<{ track: Track; music: Blob; take?: Blob | null } | null>(null);
 
@@ -702,10 +706,37 @@ export default function MakeMusic({
             wanders, and the person concludes the engine is no good. Fifty
             written starting points, none of which costs anything. */}
         <SongStarts
+          openAt={fromPhoto}
           onPick={({ title: name, words, style, bpm: beat }) => {
-            setTitle(name);
             setBpm(beat);
-            setCanvas({ ...canvas, lyrics: words, style });
+            /* One write, not two.
+
+               It was `setTitle(name)` and then `setCanvas({...canvas, ...})`,
+               and both build their object from the same `canvas` that was
+               captured when this render started — so the second one put the
+               old title back and pressing a starting point filled in
+               everything except the name of the song. The probe caught it
+               only because its assertion was tightened to compare the title
+               against the one it pressed rather than to check it was not
+               empty. */
+            setCanvas({ ...canvas, title: name, lyrics: words, style });
+          }}
+        />
+
+        {/* Or point at a photograph instead of describing one.
+
+            It reads colour, light and busyness — not what is in the picture,
+            which it says out loud. What it can do is put the style words in
+            the box and open the fifty at the shelf the picture belongs on. */}
+        <StyleFromPhoto
+          onSeen={({ words, mood }) => {
+            const current = canvas.style.trim();
+            const fresh = words.filter((word) => !current.toLowerCase().includes(word.toLowerCase()));
+            setCanvas({
+              ...canvas,
+              style: fresh.length ? (current ? `${current}, ${fresh.join(', ')}` : fresh.join(', ')) : current,
+            });
+            setFromPhoto(mood as typeof fromPhoto);
           }}
         />
 
