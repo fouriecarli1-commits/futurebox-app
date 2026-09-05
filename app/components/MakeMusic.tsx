@@ -13,7 +13,7 @@
  * "generation" — make a song, listen, save it, try again.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Music, Play, Pause, Download, Share2, Repeat, Trash2, Sparkles, Wand2, Loader2,
   Video as VideoIcon, X, Mic,
@@ -35,6 +35,7 @@ import VocalBooth from './VocalBooth';
 import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
 import Note from './Note';
+import Hint from './Hint';
 import { STARTERS, VOICES, LENGTH_CHOICES, POLISH } from '../data/sound';
 import { songCost } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
@@ -50,6 +51,9 @@ export interface Canvas {
   /** Free text, so the copilot can set a sound no preset covers. */
   style: string;
 }
+
+/** Where the chosen mode is remembered. */
+const MODE_KEY = 'futurebox.make.mode.v1';
 
 export default function MakeMusic({
   userPlan,
@@ -82,6 +86,34 @@ export default function MakeMusic({
   const lyrics = canvas.lyrics;
   const setTitle = (value: string) => setCanvas({ ...canvas, title: value });
   const setLyrics = (value: string) => setCanvas({ ...canvas, lyrics: value });
+  /**
+   * Simple, or everything.
+   *
+   * The lever that lets this app carry a room's worth of controls and still
+   * open as one box and one button. It is not a smaller feature set — every
+   * knob is one press away, in the same place, always — and it is not
+   * hiding: whatever is set behind the switch is printed under it.
+   *
+   * Simple by default, and remembered, because somebody who has gone looking
+   * for the controls once should not have to go looking again.
+   */
+  const [advanced, setAdvanced] = useState(false);
+  useEffect(() => {
+    try {
+      setAdvanced(window.localStorage.getItem(MODE_KEY) === 'advanced');
+    } catch {
+      // Storage off. Simple is the right answer when nothing is known.
+    }
+  }, []);
+  const chooseMode = useCallback((next: boolean) => {
+    setAdvanced(next);
+    try {
+      window.localStorage.setItem(MODE_KEY, next ? 'advanced' : 'simple');
+    } catch {
+      // It still applies for this visit.
+    }
+  }, []);
+
   const [bpm, setBpm] = useState(112);
   const [songKey, setSongKey] = useState('A Minor');
   const [seconds, setSeconds] = useState(60);
@@ -107,6 +139,25 @@ export default function MakeMusic({
   const [takeFor, setTakeFor] = useState<{ track: Track; music: Blob; take?: Blob | null } | null>(null);
 
   const [tracks, setTracks] = useState<Track[]>([]);
+
+  /**
+   * What is set behind the switch, when it is not what it started as.
+   *
+   * Printed under the switch in Simple, and only when there is something to
+   * print. A control out of sight that still changes what gets made is the
+   * one way this switch could be worse than no switch — so Simple hides the
+   * knobs and names the settings.
+   */
+  const changedFromDefault = useMemo(() => {
+    const said: string[] = [];
+    if (voice.id !== VOICES[1].id) said.push(voice.name);
+    if (bpm !== 112) said.push(`${bpm} ${t('make.bpm')}`);
+    if (songKey !== 'A Minor') said.push(songKey);
+    if (seconds !== 60) said.push(`${seconds}s`);
+    if (singItYourself) said.push(t('make.singSelf'));
+    if (ownSound) said.push(t('make.useOwnSound', 'Make it in a sound of my own'));
+    return said;
+  }, [voice, bpm, songKey, seconds, singItYourself, ownSound, t]);
   const [busy, setBusy] = useState(false);
 
   /**
@@ -566,6 +617,46 @@ export default function MakeMusic({
         </p>
       </div>
 
+      {/* ── Simple, or everything ────────────────────────────────────────
+
+          Two buttons rather than a dropdown: it is a choice between two
+          things, both of them worth naming, and a menu you open to read is
+          the shape this app has been taking out everywhere else.
+
+          Under it, whenever anything behind the switch is not its default,
+          one line saying what. That line is the difference between a simple
+          screen and a screen that is quietly lying about what it will make. */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm text-zinc-400">{t('make.mode', 'How much of it')}</span>
+        {[false, true].map((one) => (
+          <button
+            key={String(one)}
+            type="button"
+            onClick={() => chooseMode(one)}
+            aria-pressed={advanced === one}
+            className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold ${
+              advanced === one
+                ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600'
+            }`}
+          >
+            {one ? t('make.modeAll', 'Everything') : t('make.modeSimple', 'Simple')}
+          </button>
+        ))}
+        <Hint>
+          {t(
+            'make.modeWhy',
+            'Simple asks for the three things a song needs: a name, the words, and what it should sound like. Everything opens the voice, the speed, the mood, the length and your own trained sound. Nothing is switched off by Simple — whatever you set stays set.',
+          )}
+        </Hint>
+      </div>
+
+      {!advanced && changedFromDefault.length > 0 && (
+        <p className="text-xs text-zinc-500 leading-snug">
+          {t('make.inForce', 'Still set from Everything:')} {changedFromDefault.join(' · ')}
+        </p>
+      )}
+
       {/* Set it up */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-4">
         <div>
@@ -660,216 +751,230 @@ export default function MakeMusic({
             Music API. These words lean on breath, room and imperfection, because
             the usual complaint about generated singing is that it is too clean,
             and asking for the flaw works better than asking for "realistic". */}
-        {/* Sing it yourself. ElevenLabs cannot be handed your voice — their
-            cloning is for speech and the Music API takes no voice at all — so
-            the honest route is a backing track and a real recording. */}
-        <label className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={singItYourself}
-            onChange={(event) => setSingItYourself(event.target.checked)}
-            className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
-          />
-          <span className="min-w-0">
-            <span className="block text-sm font-semibold text-zinc-200">{t('make.singSelf')}</span>
-            <span className="block text-sm text-zinc-500 leading-snug">{t('make.singSelfNote')}</span>
-          </span>
-        </label>
+        {/* ── Everything else, behind one switch ─────────────────────────
 
-        <div className={singItYourself ? 'opacity-40 pointer-events-none' : undefined}>
-          <label className="text-sm text-zinc-400">{t('make.voice')}</label>
-          <p className="text-sm text-zinc-600 leading-snug pt-0.5">
-            {t('make.voiceNote', 'A direction, not a switch: the engine has no voice setting, so this goes to it in words. It usually follows, and now and then it does not.')}
-          </p>
-          <div className="grid sm:grid-cols-3 gap-2 mt-1.5">
-            {VOICES.map((choice) => (
-              <button
-                key={choice.id}
-                type="button"
-                onClick={() => setVoice(choice)}
-                className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
-                  voice.id === choice.id
-                    ? 'bg-emerald-500/15 border-emerald-500'
-                    : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
-                }`}
-              >
-                <span className={`block text-sm font-semibold ${voice.id === choice.id ? 'text-emerald-300' : 'text-zinc-200'}`}>
-                  {choice.name}
-                </span>
-                <span className="block text-sm text-zinc-500 leading-snug pt-0.5">{choice.sounds}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            {/* Tied to the slider rather than sitting above it.
-
-                A label with no `htmlFor` is a sentence next to a control, not
-                a name for it: the slider read out as "slider, 112" with
-                nothing saying what 112 counted. It was the only unnamed
-                control left in the studio. */}
-            <label className="text-sm text-zinc-400" htmlFor="make-bpm">
-              {t('make.speed')} — {bpm} {t('make.bpm')}
-            </label>
+            Not deleted, and that is the whole point of the switch. Simple
+            hides these controls; it does not turn them off. Whatever was
+            set here still goes to the engine, and the line under the switch
+            says so whenever any of it is not the default — a setting that
+            applies silently because its control is out of sight is worse
+            than a crowded screen, and this app has already hidden four
+            working features once by taking things away. */}
+        {advanced && (
+          <>
+          {/* Sing it yourself. ElevenLabs cannot be handed your voice — their
+              cloning is for speech and the Music API takes no voice at all — so
+              the honest route is a backing track and a real recording. */}
+          <label className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5 cursor-pointer">
             <input
-              id="make-bpm"
-              type="range"
-              min={60}
-              max={180}
-              value={bpm}
-              onChange={(e) => setBpm(Number(e.target.value))}
-              className="w-full mt-2 accent-emerald-500"
+              type="checkbox"
+              checked={singItYourself}
+              onChange={(event) => setSingItYourself(event.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
             />
-            <p className="text-sm text-zinc-600">{bpm < 95 ? t('make.slow') : bpm < 125 ? t('make.steady') : t('make.fast')}</p>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-zinc-200">{t('make.singSelf')}</span>
+              <span className="block text-sm text-zinc-500 leading-snug">{t('make.singSelfNote')}</span>
+            </span>
+          </label>
+
+          <div className={singItYourself ? 'opacity-40 pointer-events-none' : undefined}>
+            <label className="text-sm text-zinc-400">{t('make.voice')}</label>
+            <p className="text-sm text-zinc-600 leading-snug pt-0.5">
+              {t('make.voiceNote', 'A direction, not a switch: the engine has no voice setting, so this goes to it in words. It usually follows, and now and then it does not.')}
+            </p>
+            <div className="grid sm:grid-cols-3 gap-2 mt-1.5">
+              {VOICES.map((choice) => (
+                <button
+                  key={choice.id}
+                  type="button"
+                  onClick={() => setVoice(choice)}
+                  className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                    voice.id === choice.id
+                      ? 'bg-emerald-500/15 border-emerald-500'
+                      : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
+                  }`}
+                >
+                  <span className={`block text-sm font-semibold ${voice.id === choice.id ? 'text-emerald-300' : 'text-zinc-200'}`}>
+                    {choice.name}
+                  </span>
+                  <span className="block text-sm text-zinc-500 leading-snug pt-0.5">{choice.sounds}</span>
+                </button>
+              ))}
+            </div>
           </div>
-          <div>
-            <label className="text-sm text-zinc-400">{t('make.mood')}</label>
-            <select
-              value={songKey}
-              onChange={(e) => setSongKey(e.target.value)}
-              className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
-            >
-              <option value="C Major">{t('make.mood.bright')}</option>
-              <option value="G Major">{t('make.mood.warm')}</option>
-              <option value="A Minor">{t('make.mood.thoughtful')}</option>
-              <option value="D Minor">{t('make.mood.dark')}</option>
-              <option value="F Minor">{t('make.mood.heavy')}</option>
-            </select>
-          </div>
-        </div>
 
-        {/* Lengths in seconds. Bars only mean something once you know the tempo,
-            so "32 bars" answered a question nobody asked. */}
-        <div>
-          <label className="text-sm text-zinc-400">{t('make.length')}</label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
-            {LENGTH_CHOICES.map((choice) => (
-              <button
-                key={choice.seconds}
-                type="button"
-                onClick={() => setSeconds(choice.seconds)}
-                className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
-                  seconds === choice.seconds
-                    ? 'bg-emerald-500/15 border-emerald-500'
-                    : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
-                }`}
-              >
-                <span className={`block text-sm font-semibold ${seconds === choice.seconds ? 'text-emerald-300' : 'text-zinc-200'}`}>
-                  {choice.label}
-                </span>
-                <span className="block text-sm text-zinc-500 leading-snug">{choice.note}</span>
-                <span className="block text-xs text-zinc-500 pt-0.5">
-                  {songCost(choice.seconds)} {t('video.credits', 'credits')}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              {/* Tied to the slider rather than sitting above it.
 
-        {/* ── A sound of your own ────────────────────────────────────────
-            Directly above the button, because it is the last thing decided
-            before the song is made rather than a setting filed with the tempo.
-            It reads as part of pressing Make, which is what it is.
-
-            It used to be hidden entirely unless you already had one, on the
-            reasoning that an empty picker explaining a feature you do not have
-            is a screen telling you off. Half right: what it produced instead
-            was a feature nobody could find, which is the same failure the
-            booth had. So it is always here, and what it says depends on where
-            you actually are — the plan does not include it, none trained yet,
-            one still training, or here they are.
-
-            It is a tick because it is a decision about the next song rather
-            than a preset: on or off, and the choice underneath only matters
-            once it is on. */}
-        {sounds.configured && sounds.signedIn && (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-3 space-y-2">
-            <label className="flex items-start gap-2.5 cursor-pointer">
+                  A label with no `htmlFor` is a sentence next to a control, not
+                  a name for it: the slider read out as "slider, 112" with
+                  nothing saying what 112 counted. It was the only unnamed
+                  control left in the studio. */}
+              <label className="text-sm text-zinc-400" htmlFor="make-bpm">
+                {t('make.speed')} — {bpm} {t('make.bpm')}
+              </label>
               <input
-                type="checkbox"
-                checked={useOwnSound}
-                disabled={readySounds.length === 0}
-                onChange={(event) => toggleOwnSound(event.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0 disabled:opacity-40"
+                id="make-bpm"
+                type="range"
+                min={60}
+                max={180}
+                value={bpm}
+                onChange={(e) => setBpm(Number(e.target.value))}
+                className="w-full mt-2 accent-emerald-500"
               />
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold text-zinc-200">
-                  {t('make.useOwnSound', 'Make it in a sound of my own')}
-                </span>
-                <span className="block text-sm text-zinc-500 leading-snug">{t('make.ownSoundNote')}</span>
-              </span>
-            </label>
-
-            {/* Which one, once it is on. Only drawn when there is a choice to
-                make — one trained sound and a picker of one is furniture. */}
-            {useOwnSound && readySounds.length > 1 && (
-              <div className="grid sm:grid-cols-3 gap-2 pt-0.5">
-                {readySounds.map((one) => (
-                  <button
-                    key={one.id}
-                    type="button"
-                    onClick={() => setOwnSound(one.id)}
-                    className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
-                      ownSound === one.id
-                        ? 'bg-emerald-500/15 border-emerald-500'
-                        : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
-                    }`}
-                  >
-                    <span className={`block text-sm font-semibold ${ownSound === one.id ? 'text-emerald-300' : 'text-zinc-200'}`}>
-                      {one.name}
-                    </span>
-                    <span className="block text-sm text-zinc-500 leading-snug pt-0.5">
-                      {one.genre} · {one.tracks} {t('make.ownSoundSongs', 'of your songs')}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {useOwnSound && readySounds.length === 1 && (
-              <p className="text-sm text-emerald-300/90 leading-snug pl-6">
-                {readySounds[0].name} — {readySounds[0].genre} · {readySounds[0].tracks}{' '}
-                {t('make.ownSoundSongs', 'of your songs')}
-              </p>
-            )}
-
-            {/* And when the tick cannot be used, why not — with the way out. */}
-            {readySounds.length === 0 && (
-              <div className="pl-6 space-y-1.5">
-                {sounds.keep === 0 ? (
-                  <>
-                    <Note>{t('make.ownSoundNoPlan')}</Note>
-                    <button
-                      type="button"
-                      onClick={onUpgrade}
-                      className="text-sm font-semibold text-emerald-400 hover:text-emerald-300"
-                    >
-                      {t('make.ownSoundSeePlans', 'See the plans')}
-                    </button>
-                  </>
-                ) : stillTraining.length > 0 ? (
-                  <p className="text-sm text-amber-300/90 leading-snug flex items-center gap-1.5">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
-                    {t('make.ownSoundTraining')}
-                  </p>
-                ) : (
-                  <>
-                    <Note>{t('make.ownSoundNone')}</Note>
-                    <button
-                      type="button"
-                      onClick={onGoToChannel}
-                      className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
-                    >
-                      {t('make.ownSoundTrain', 'Train one in your channel')}
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
+              <p className="text-sm text-zinc-600">{bpm < 95 ? t('make.slow') : bpm < 125 ? t('make.steady') : t('make.fast')}</p>
+            </div>
+            <div>
+              <label className="text-sm text-zinc-400">{t('make.mood')}</label>
+              <select
+                value={songKey}
+                onChange={(e) => setSongKey(e.target.value)}
+                className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+              >
+                <option value="C Major">{t('make.mood.bright')}</option>
+                <option value="G Major">{t('make.mood.warm')}</option>
+                <option value="A Minor">{t('make.mood.thoughtful')}</option>
+                <option value="D Minor">{t('make.mood.dark')}</option>
+                <option value="F Minor">{t('make.mood.heavy')}</option>
+              </select>
+            </div>
           </div>
+
+          {/* Lengths in seconds. Bars only mean something once you know the tempo,
+              so "32 bars" answered a question nobody asked. */}
+          <div>
+            <label className="text-sm text-zinc-400">{t('make.length')}</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
+              {LENGTH_CHOICES.map((choice) => (
+                <button
+                  key={choice.seconds}
+                  type="button"
+                  onClick={() => setSeconds(choice.seconds)}
+                  className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                    seconds === choice.seconds
+                      ? 'bg-emerald-500/15 border-emerald-500'
+                      : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
+                  }`}
+                >
+                  <span className={`block text-sm font-semibold ${seconds === choice.seconds ? 'text-emerald-300' : 'text-zinc-200'}`}>
+                    {choice.label}
+                  </span>
+                  <span className="block text-sm text-zinc-500 leading-snug">{choice.note}</span>
+                  <span className="block text-xs text-zinc-500 pt-0.5">
+                    {songCost(choice.seconds)} {t('video.credits', 'credits')}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── A sound of your own ────────────────────────────────────────
+              Directly above the button, because it is the last thing decided
+              before the song is made rather than a setting filed with the tempo.
+              It reads as part of pressing Make, which is what it is.
+
+              It used to be hidden entirely unless you already had one, on the
+              reasoning that an empty picker explaining a feature you do not have
+              is a screen telling you off. Half right: what it produced instead
+              was a feature nobody could find, which is the same failure the
+              booth had. So it is always here, and what it says depends on where
+              you actually are — the plan does not include it, none trained yet,
+              one still training, or here they are.
+
+              It is a tick because it is a decision about the next song rather
+              than a preset: on or off, and the choice underneath only matters
+              once it is on. */}
+          {sounds.configured && sounds.signedIn && (
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-3 space-y-2">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useOwnSound}
+                  disabled={readySounds.length === 0}
+                  onChange={(event) => toggleOwnSound(event.target.checked)}
+                  className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0 disabled:opacity-40"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-zinc-200">
+                    {t('make.useOwnSound', 'Make it in a sound of my own')}
+                  </span>
+                  <span className="block text-sm text-zinc-500 leading-snug">{t('make.ownSoundNote')}</span>
+                </span>
+              </label>
+
+              {/* Which one, once it is on. Only drawn when there is a choice to
+                  make — one trained sound and a picker of one is furniture. */}
+              {useOwnSound && readySounds.length > 1 && (
+                <div className="grid sm:grid-cols-3 gap-2 pt-0.5">
+                  {readySounds.map((one) => (
+                    <button
+                      key={one.id}
+                      type="button"
+                      onClick={() => setOwnSound(one.id)}
+                      className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                        ownSound === one.id
+                          ? 'bg-emerald-500/15 border-emerald-500'
+                          : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
+                      }`}
+                    >
+                      <span className={`block text-sm font-semibold ${ownSound === one.id ? 'text-emerald-300' : 'text-zinc-200'}`}>
+                        {one.name}
+                      </span>
+                      <span className="block text-sm text-zinc-500 leading-snug pt-0.5">
+                        {one.genre} · {one.tracks} {t('make.ownSoundSongs', 'of your songs')}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {useOwnSound && readySounds.length === 1 && (
+                <p className="text-sm text-emerald-300/90 leading-snug pl-6">
+                  {readySounds[0].name} — {readySounds[0].genre} · {readySounds[0].tracks}{' '}
+                  {t('make.ownSoundSongs', 'of your songs')}
+                </p>
+              )}
+
+              {/* And when the tick cannot be used, why not — with the way out. */}
+              {readySounds.length === 0 && (
+                <div className="pl-6 space-y-1.5">
+                  {sounds.keep === 0 ? (
+                    <>
+                      <Note>{t('make.ownSoundNoPlan')}</Note>
+                      <button
+                        type="button"
+                        onClick={onUpgrade}
+                        className="text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+                      >
+                        {t('make.ownSoundSeePlans', 'See the plans')}
+                      </button>
+                    </>
+                  ) : stillTraining.length > 0 ? (
+                    <p className="text-sm text-amber-300/90 leading-snug flex items-center gap-1.5">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
+                      {t('make.ownSoundTraining')}
+                    </p>
+                  ) : (
+                    <>
+                      <Note>{t('make.ownSoundNone')}</Note>
+                      <button
+                        type="button"
+                        onClick={onGoToChannel}
+                        className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+                      >
+                        {t('make.ownSoundTrain', 'Train one in your channel')}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          </>
         )}
+
 
         <button
           type="button"
