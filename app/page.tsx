@@ -2249,7 +2249,7 @@ export default function FutureBoxHome() {
               <button
                 onClick={() => setUploadModalOpen(false)}
                 aria-label={t('feed.backToPlatform')}
-                className="flex items-center space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 sm:px-4 py-2 rounded-xl transition-all flex-shrink-0"
+                className="flex items-center justify-center sm:justify-start space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 sm:px-4 py-2 min-h-[44px] min-w-[44px] sm:min-w-0 rounded-xl transition-all flex-shrink-0"
               >
                 <ArrowLeft className="w-3.5 h-3.5 flex-shrink-0" />
                 {/* The words go on a phone and the arrow stays. "Back to

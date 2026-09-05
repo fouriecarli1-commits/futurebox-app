@@ -500,6 +500,7 @@ export const STRINGS: Dict = {
   "radar.followers": { en: "followers", af: "volgelinge" },
   "radar.heading": { en: "Collab Radar", af: "Collab Radar" },
   "radar.draftEmail": { en: "Draft email", af: "Stel ’n e-pos op" },
+  "radar.draftDm": { en: "Draft DM", af: "Stel ’n DM op" },
   "radar.findContact": { en: "Find their contact page", af: "Vind hulle kontakblad" },
   "radar.addShow": { en: "Add a show you found yourself", af: "Voeg ’n program by wat jy self gekry het" },
   "radar.showName": { en: "Podcast name", af: "Naam van die podsending" },

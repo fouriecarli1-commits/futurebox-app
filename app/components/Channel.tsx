@@ -481,7 +481,7 @@ export default function Channel({
         {t('chan.helpBefore', 'A question about any of this?')}{' '}
         <a
           href="/help"
-          className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300"
+          className="text-emerald-400 underline underline-offset-4 hover:text-emerald-300 inline-flex items-center min-h-[32px]"
         >
           {t('chan.helpLink', 'Ask, or write to a person')}
         </a>
