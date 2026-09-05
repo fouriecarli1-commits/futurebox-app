@@ -27,6 +27,7 @@
  */
 
 import { accessToken } from './cloud';
+import { shapeSong } from './songshape';
 
 /**
  * Where a generation has got to.
@@ -258,22 +259,25 @@ export async function probeVideo(): Promise<boolean> {
 }
 
 /**
- * The bounds a single part of the plan has to stay inside. They are the music
- * API's own, repeated here so the split never proposes a length the server has
- * to quietly clamp away.
- */
-const MIN_SECTION_SECONDS = 4;
-const MAX_SECTION_SECONDS = 120;
-
-/**
- * Splits a lyric sheet on its [Section] tags and gives each part a length.
+ * Splits a lyric sheet on its [Section] tags and gives the song a shape.
  *
  * The lengths have to add up to the length the person chose. When there are
  * lyrics, the composition plan is the whole request — the `seconds` field is
  * not part of that shape and the model never sees it — so parts summing to a
  * hundred seconds make a hundred-second song however clearly the button said
- * three minutes. Each part is therefore weighted by how many lines it carries
- * and then scaled to the chosen total, rather than sized on its own.
+ * three minutes.
+ *
+ * How that total is spread used to be a weighting: each part got a share of
+ * the length in proportion to how many lines it carried. Four lines and three
+ * minutes came out as one part of a hundred and twenty seconds holding four
+ * lines, and what comes back from asking a model to stretch one verse over two
+ * minutes is a wandering, repeating take — the "baie baie sleg" Carli paid for
+ * more than once.
+ *
+ * The words now get the time the words need and the surplus goes to parts with
+ * nobody singing on them, which is what a song is actually made of. That lives
+ * in `lib/songshape.ts`, on its own, because it is arithmetic worth testing
+ * without a browser.
  */
 export function splitSections(
   lyrics: string,
@@ -296,43 +300,11 @@ export function splitSections(
   if (current && (current as { lines: string[] }).lines.length) out.push(current);
   if (!out.length) return [];
 
-  // More words wants more room, and that is only a starting proportion: what
-  // decides the actual seconds is the total below.
-  const weights = out.map((section) => Math.max(1, section.lines.length));
-  const natural = weights.reduce((sum, weight) => sum + weight * 4, 0);
-  const lengths = fit(weights, totalSeconds && totalSeconds > 0 ? totalSeconds : natural);
-  return out.map((section, index) => ({ ...section, seconds: lengths[index] }));
-}
-
-/**
- * Weights turned into seconds that add up to the total, with every part inside
- * what the API accepts.
- *
- * Rounding and those bounds both leave a little over or under, so the remainder
- * is spent on the longest parts, where a second either way is least audible.
- * A total that cannot be reached — one section and three minutes, when a
- * section may not exceed two — comes back as close as the bounds allow rather
- * than as a request the server would reject.
- */
-function fit(weights: number[], total: number): number[] {
-  const sum = weights.reduce((running, weight) => running + weight, 0);
-  const lengths = weights.map((weight) =>
-    Math.min(MAX_SECTION_SECONDS, Math.max(MIN_SECTION_SECONDS, Math.round((weight * total) / sum))),
-  );
-
-  let drift = total - lengths.reduce((running, length) => running + length, 0);
-  for (let guard = 0; drift !== 0 && guard < 1_000; guard += 1) {
-    const step = drift > 0 ? 1 : -1;
-    let pick = -1;
-    lengths.forEach((length, index) => {
-      const room = step > 0 ? length < MAX_SECTION_SECONDS : length > MIN_SECTION_SECONDS;
-      if (room && (pick === -1 || length > lengths[pick])) pick = index;
-    });
-    if (pick === -1) break;
-    lengths[pick] += step;
-    drift -= step;
-  }
-  return lengths;
+  return shapeSong(out, totalSeconds ?? 0).map((part) => ({
+    name: part.name,
+    lines: part.lines.slice(),
+    seconds: part.seconds,
+  }));
 }
 
 /**

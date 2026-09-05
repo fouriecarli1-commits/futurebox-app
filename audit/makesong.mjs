@@ -135,15 +135,26 @@ try {
 
   check('pressing Make sends a request to the music route', Boolean(sent));
   const sections = sent?.sections ?? [];
+  const sung = sections.filter((one) => (one.lines ?? []).length > 0);
   check('carrying the words as sections, not as a bare prompt',
-    sections.length === 2, `${sections.length} sections`);
+    sung.length >= 2, `${sections.length} parts, ${sung.length} of them sung`);
   const lines = sections.flatMap((one) => one.lines ?? []);
   for (const line of ['Ek ry alleen deur die Karoo', 'En ek sing vir jou']) {
     check(`"${line}" is in what leaves the app`, lines.includes(line));
   }
   check('the parts are named, so the words land in the right place',
-    sections.map((one) => one.name).join(',') === 'Verse,Chorus',
-    sections.map((one) => one.name).join(','));
+    sung.every((one) => one.name === 'Verse' || one.name === 'Chorus'),
+    sections.map((one) => one.name).join(' · '));
+  /* A song, not one long stretched verse. The length is made up by singing
+     the words again with an intro in front, which is what a record is; the
+     old plan handed the model one part and the whole length and asked it to
+     fill the gap. */
+  check('and the song has a shape — an intro, and the words sung more than once',
+    sections[0]?.name === 'Intro' && sung.length > 2,
+    sections.map((one) => `${one.name} ${one.seconds}s`).join(' · '));
+  const runs = sections.reduce((sum, one) => sum + (one.seconds ?? 0), 0);
+  check('and the plan adds up to the length that was chosen',
+    Math.abs(runs - (sent?.seconds ?? 0)) <= 3, `${runs}s against ${sent?.seconds}s`);
   check('and it is not asked for as an instrumental',
     sent?.instrumental === false, JSON.stringify(sent?.instrumental));
   check('the chosen length goes with it', typeof sent?.seconds === 'number' && sent.seconds > 0,

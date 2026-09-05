@@ -59,16 +59,30 @@ export function partsOf(lyrics: string): Part[] {
  * as "do not offer this" rather than drawing an empty panel.
  */
 export function timelineOf(parts: readonly Part[], duration: number): TimedLine[] {
-  const usable = parts.filter((part) => part.lines.length > 0);
-  if (!usable.length || !(duration > 0)) return [];
+  if (!parts.some((part) => part.lines.length > 0) || !(duration > 0)) return [];
 
-  const planned = usable.reduce((total, part) => total + Math.max(1, part.seconds), 0);
+  /* Every part counts towards the clock, including the ones nobody sings on.
+ 
+     They used to be filtered out before the scaling, so an intro, a break and
+     an outro simply did not exist: the words were stretched over the whole
+     file and the first line started at zero, on top of eight seconds of
+     instrumental. That is half of "die woorde hardloop te vinnig" — they were
+     not too fast, they were shifted early and then stretched to make up the
+     difference.
+ 
+     Counting them is what turns a plan into a clock: an intro is a gap the
+     words do not start in. */
+  const planned = parts.reduce((total, part) => total + Math.max(1, part.seconds), 0);
   const scale = duration / planned;
 
   const timed: TimedLine[] = [];
   let at = 0;
-  usable.forEach((part) => {
+  parts.forEach((part) => {
     const span = Math.max(1, part.seconds) * scale;
+    if (part.lines.length === 0) {
+      at += span;
+      return;
+    }
     const each = span / part.lines.length;
     part.lines.forEach((text, index) => {
       timed.push({

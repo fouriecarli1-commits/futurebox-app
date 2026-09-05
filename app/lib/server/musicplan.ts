@@ -102,11 +102,18 @@ function toStyles(style: string): string[] {
  */
 export function buildRequest(body: Body): Record<string, unknown> {
   const styles = toStyles(body.style ?? '');
-  const sections = (body.sections ?? [])
-    .map((section) => ({ ...section, lines: toLines(section.lines ?? []) }))
-    .filter((section) => section.lines.length > 0);
+  /* Parts with no words in them are kept.
 
-  if (sections.length > 0) {
+     They used to be filtered out, which was right when nothing ever sent one.
+     The plan now carries an intro, a break and an outro — that is what a song
+     is made of, and it is where the length goes that the words do not need.
+     Dropping them here would put the surplus back on the singing, which is
+     the fault this was built to end. */
+  const sections = (body.sections ?? [])
+    .map((section) => ({ ...section, lines: toLines(section.lines ?? []) }));
+  const anyWords = sections.some((section) => section.lines.length > 0);
+
+  if (anyWords) {
     // A backing track to sing over is still a structured song: same sections,
     // same lengths, no voice. Dropping to the plain-prompt path would have lost
     // the section timing, and that timing is what lets the words follow the
@@ -124,14 +131,22 @@ export function buildRequest(body: Body): Record<string, unknown> {
         chunks: sections.map((section, index) => ({
           // The section name in square brackets is how v2 is told what this
           // part of the song is; the lines follow it, one per line — unless
-          // nobody is singing them, in which case the name is the whole text.
-          text: wordless ? `[${section.name}]` : `[${section.name}]\n${section.lines.join('\n')}`,
+          // there are none, which is an intro, a break or an outro and is the
+          // name on its own.
+          text: wordless || section.lines.length === 0
+            ? `[${section.name}]`
+            : `[${section.name}]\n${section.lines.join('\n')}`,
           duration_ms: clamp((section.seconds || 20) * 1000, SECTION_MIN_MS, SECTION_MAX_MS),
           // The first chunk's styles set the whole song, so it carries the full
           // list and later chunks carry a shorter one. That is the SDK's own
           // advice, and it is why these are not simply the same array copied.
-          positive_styles: index === 0 ? withDefaults(leading) : leading.slice(0, 6),
-          negative_styles: index === 0 ? against : [],
+          positive_styles: index === 0 ? enough(leading) : leading.slice(0, 6),
+          /* On every chunk, not only the first.
+
+             "No muddy mix, no distortion, no off-key vocal" is a thing to
+             avoid for the length of the song, and a guard that lapses after
+             the first twenty seconds is a guard on the intro. */
+          negative_styles: against,
         })),
       },
     };
@@ -148,25 +163,20 @@ export function buildRequest(body: Body): Record<string, unknown> {
 }
 
 /**
- * The first chunk wants six or seven styles before the direction is settled,
- * so a request carrying two gets padded rather than under-specified.
+ * Enough direction to work with, and not a word more.
+ *
+ * This used to pad every request up to seven styles with generic production
+ * adjectives — "great production quality", "balanced mix", "warm analogue
+ * character" and four more. A person who wrote "Afrikaanse boeremusiek,
+ * konsertina" had two words of their own and five of ours going to the model,
+ * and the client added four more on top of that before the request even left
+ * the browser. What decides how a song sounds was outnumbered three to one by
+ * words that describe nothing.
+ *
+ * Padding only where there is genuinely nothing to go on, and then two words
+ * rather than seven. A style list is a direction, not a form to fill in.
  */
-function withDefaults(styles: string[]): string[] {
-  const base = styles.length ? styles.slice() : ['modern production', 'clear vocal'];
-  // Enough of these to reach seven from a two-word style. Deliberately generic:
-  // they describe how it should be made, not what it should sound like, so they
-  // never argue with whatever the person actually asked for.
-  const padding = [
-    'great production quality',
-    'balanced mix',
-    'clear vocal',
-    'warm analogue character',
-    'tight low end',
-    'natural stereo width',
-    'dynamic performance',
-  ];
-  padding.forEach((extra) => {
-    if (base.length < 7 && base.indexOf(extra) === -1) base.push(extra);
-  });
-  return base;
+function enough(styles: string[]): string[] {
+  if (styles.length >= 2) return styles;
+  return styles.concat(['modern production', 'clear vocal'].slice(0, 2 - styles.length));
 }

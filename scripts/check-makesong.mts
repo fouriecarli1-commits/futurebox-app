@@ -15,6 +15,8 @@
  */
 import { buildRequest, forPreview, type Body } from '../app/lib/server/musicplan';
 import { looksAfrikaans, singDirection } from '../app/lib/lyriclang';
+import { shapeSong, planLength } from '../app/lib/songshape';
+import { timelineOf } from '../app/lib/timeline';
 
 let failures = 0;
 const check = (label: string, ok: boolean, detail = '') => {
@@ -102,6 +104,67 @@ check('asking for Afrikaans adds a direction the model can read',
   singDirection('af').includes('sung in Afrikaans'));
 check('and "let it decide" adds nothing, which is what it means',
   singDirection('auto').length === 0);
+
+
+/* ── 6. The shape of the song, which is what was making them bad ──────── */
+const FOUR_LINES = [{ name: 'Verse', lines: ['one', 'two', 'three', 'four'] }];
+
+/* The exact case Carli paid for: four lines, three minutes. The old rule made
+   one part of a hundred and twenty seconds holding four lines, and asked the
+   model to stretch one verse over two minutes. */
+const long = shapeSong(FOUR_LINES, 180);
+const sungParts = long.filter((one) => one.lines.length > 0);
+check('four lines and three minutes is not one part of two minutes',
+  sungParts.every((one) => one.seconds <= 45),
+  long.map((one) => `${one.name} ${one.seconds}s`).join(' · '));
+/* The length is made up by singing the words again, which is what a song
+   does. The first version of this spent it on solos instead and put the only
+   verse at two minutes eight — it passed every assertion and no musician
+   would have called it a song. */
+check('the length is made up by singing the words again',
+  sungParts.length >= 3, `${sungParts.length} sung parts`);
+check('and the wordless parts stay under a third of it',
+  long.filter((one) => one.lines.length === 0).reduce((sum, one) => sum + one.seconds, 0) <= 60,
+  long.filter((one) => one.lines.length === 0).map((one) => `${one.name} ${one.seconds}s`).join(' · '));
+check('the plan still adds up to what was asked for',
+  Math.abs(planLength(long) - 180) <= 2, `${planLength(long)}s`);
+check('it starts with an intro and ends with an outro',
+  long[0].name === 'Intro' && long[long.length - 1].name === 'Outro',
+  long.map((one) => one.name).join(' · '));
+
+/* Words that need more room than the length allows: scaled down, never
+   gabbled below what can be sung. */
+const many = shapeSong(
+  [
+    { name: 'Verse', lines: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] },
+    { name: 'Chorus', lines: ['i', 'j', 'k', 'l'] },
+  ],
+  40,
+);
+check('too many words for the length is scaled, not truncated',
+  many.length === 2 && many.every((one) => one.lines.length > 0));
+check('and no part is squeezed under six seconds',
+  many.every((one) => one.seconds >= 6), many.map((one) => one.seconds).join(', '));
+
+/* And the timeline reads the same plan. */
+const clock = timelineOf(long, 180);
+check('the first line does not start on top of the intro',
+  clock[0].start >= long[0].seconds - 1,
+  `first line at ${clock[0].start.toFixed(1)}s, intro is ${long[0].seconds}s`);
+check('and the last line ends before the outro does',
+  clock[clock.length - 1].end <= 180 - long[long.length - 1].seconds + 1,
+  `last line ends at ${clock[clock.length - 1].end.toFixed(1)}s`);
+
+/* ── 7. The style list is the person's, not ours ──────────────────────── */
+const mine = buildRequest({
+  style: 'Afrikaanse boeremusiek, konsertina',
+  sections: [{ name: 'Verse', lines: ['Ek ry alleen'], seconds: 20 }],
+}) as { composition_plan?: { chunks: { positive_styles: string[]; negative_styles: string[] }[] } };
+const first = mine.composition_plan?.chunks[0];
+check('a two-word style is sent as two words, not padded to seven',
+  first?.positive_styles.length === 2, (first?.positive_styles ?? []).join(', '));
+check('and what it is asked to avoid is asked on every part, not only the first',
+  (mine.composition_plan?.chunks ?? []).every((one) => one.negative_styles.length > 0));
 
 if (failures) {
   console.error(`\ncheck:makesong — ${failures} failure(s).\n`);

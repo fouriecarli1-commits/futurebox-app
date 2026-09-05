@@ -36,7 +36,7 @@ import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
 import Note from './Note';
 import Hint from './Hint';
-import { STARTERS, VOICES, LENGTH_CHOICES, POLISH } from '../data/sound';
+import { STARTERS, VOICES, LENGTH_CHOICES } from '../data/sound';
 import { songCost } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
@@ -294,9 +294,10 @@ export default function MakeMusic({
    * What the engine is actually told.
    *
    * The written field leads, because it is the specific thing this person
-   * asked for. The voice direction follows, then generic production words to
-   * reach the six or seven styles the model works best with. Order matters:
-   * the model weights early styles more heavily.
+   * asked for. The voice direction follows, and then the language. Order
+   * matters: the model weights early styles more heavily, which is exactly
+   * why the generic production words that used to be appended here were doing
+   * harm — they were four more things competing with the two that mattered.
    */
   const styleText = (() => {
     const written = canvas.style.trim();
@@ -309,9 +310,11 @@ export default function MakeMusic({
     singDirection(singWanted).forEach((word) => {
       if (parts.indexOf(word) === -1) parts.push(word);
     });
-    POLISH.forEach((extra) => {
-      if (parts.length < 8 && parts.indexOf(extra) === -1) parts.push(extra);
-    });
+    /* The four generic production words that used to go on every request are
+       gone. They said nothing about how a song should sound — "balanced mix",
+       "dynamic performance" — and together with the server's own padding they
+       outnumbered the person's actual style three to one. What decides the
+       sound is what they wrote, the voice, and the language. */
     return parts.join(', ');
   })();
 
