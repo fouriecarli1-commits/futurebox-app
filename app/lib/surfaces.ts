@@ -339,7 +339,13 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
   },
   collab: {
     id: "collab",
-    stage: null,
+    /* Under "Put it out", not adrift after the advert desk.
+ 
+       It had no stage, so it fell to the end of the front door, below
+       Adverts — which reads as an afterthought and is the wrong place for
+       it. Finding somebody to work with is part of putting a record out:
+       you have made the thing, and now it goes to people. */
+    stage: "release",
     purpose:
       "Finding another maker and working with them — the radar, the ask, and the room you share.",
     helps: {

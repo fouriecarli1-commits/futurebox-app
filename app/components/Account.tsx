@@ -32,6 +32,7 @@ import React, { useEffect, useState } from 'react';
 import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2 } from 'lucide-react';
 import RecordingName from './RecordingName';
 import DeleteAccount from './DeleteAccount';
+import EngineSpend from './EngineSpend';
 import type { Creator } from '../lib/radar';
 import { useLang } from '../lib/i18n';
 import { TIER_SPECS, tierPrice, type Tier } from '../lib/plans';
@@ -331,6 +332,9 @@ export default function Account({
             </span>
           </button>
         </section>
+
+        {/* Only the operator sees anything here — see `EngineSpend`. */}
+        <EngineSpend />
 
         {/* ── Deleting the account ─────────────────────────────────────
 

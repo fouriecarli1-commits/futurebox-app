@@ -769,6 +769,7 @@ export const STRINGS: Dict = {
   "account.channel": { en: "Your channel and your picture", af: "Jou kanaal en jou foto" },
   "account.channelNote": { en: "Your songs, your playlists, your profile picture.", af: "Jou liedjies, jou speellyste, jou profielfoto." },
   "account.legal": { en: "The", af: "Die" },
+  "spend.engines": { en: "What the engines have used this month", af: "Wat die enjins hierdie maand gebruik het" },
   "account.terms": { en: "terms", af: "voorwaardes" },
   "account.and": { en: "and the", af: "en die" },
   "account.privacy": { en: "privacy notice", af: "privaatheidskennisgewing" },

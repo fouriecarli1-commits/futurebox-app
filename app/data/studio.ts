@@ -179,31 +179,12 @@ export interface TrackFlavour {
   readonly isDemo?: boolean;
 }
 
+/* Two entries under the owner's own name — songs made elsewhere, embedded from
+   YouTube and credited to other people's engines — used to sit at the front of
+   this list and on the feed. They were scaffolding from before the app made
+   anything, and they had stopped being true: this app's own releases are the
+   ones that belong under her name. Taken out at her request. */
 export const TRACK_FLAVOURS: readonly TrackFlavour[] = [
-  {
-    id: 'ai-1',
-    title: 'Cherry Blossom Mail',
-    creator: 'Anre Fourie',
-    handle: '@anrefourie',
-    genre: 'Jingle Pop / Acoustic',
-    tags: ['acoustic', 'pop', 'warm', 'hand percussion', 'pedal steel'],
-    bpm: 96,
-    key: 'C Major',
-    models: ['FutureBox'],
-    onChannel: true,
-  },
-  {
-    id: 'ai-2',
-    title: 'Paul Gaan Skool Toe',
-    creator: 'Anre Fourie',
-    handle: '@anrefourie',
-    genre: 'Pop Rock & Anthemic Folk',
-    tags: ['anthemic', 'rock', 'folk', 'layered guitars', 'afrikaans'],
-    bpm: 120,
-    key: 'G Major',
-    models: ['FutureBox'],
-    onChannel: true,
-  },
   {
     id: 'ai-3',
     title: 'BRICKZ — FORGET YESTERDAY',

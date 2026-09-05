@@ -396,7 +396,7 @@ export default function Channel({
                 <button
                   type="button"
                   onClick={() => (playing === track.id ? stop() : void play(track.id))}
-                  className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity"
+                  className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:hover:opacity-100"
                 >
                   <span className="w-12 h-12 rounded-full bg-emerald-500 text-onAccent flex items-center justify-center">
                     {loading && playing === track.id ? (

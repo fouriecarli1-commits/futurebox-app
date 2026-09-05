@@ -1992,7 +1992,7 @@ export default function FutureBoxHome() {
                         url={pod.externalUrl || pod.embedUrl}
                         className="w-full h-full group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100">
                         <div className="w-12 h-12 rounded-full bg-emerald-500 text-onAccent flex items-center justify-center shadow-lg">
                           <Play className="w-5 h-5 fill-current translate-x-0.5" />
                         </div>
@@ -2142,7 +2142,7 @@ export default function FutureBoxHome() {
                           url={mc.embedUrl}
                           className="w-full h-full group-hover:scale-105 transition-transform duration-500"
                         />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100">
                           {isLocked ? (
                             <div className="w-12 h-12 rounded-full bg-amber-500 text-onAccent flex items-center justify-center shadow-lg">
                               <Lock className="w-5 h-5" />
@@ -2218,30 +2218,6 @@ export default function FutureBoxHome() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
               {[
                 {
-                  id: 'ai-1',
-                  title: 'Cherry Blossom Mail (Official AI Music Video)',
-                  creator: 'Anre Fourie',
-                  domain: profileAddress('anrefourie'),
-                  medium: 'Jingle Pop / Acoustic',
-                  tools: ['Suno v5.5', 'Runway Gen-3'],
-                  prompt: 'jingle style, 96 BPM, major key, claps and hand percussion, brushed snare, pedal steel swells, acoustic guitar strums',
-                  embedUrl: 'https://www.youtube.com/embed/bk-nQ7HF6k4',
-                  externalUrl: 'https://suno.com',
-                  type: 'youtube' as const
-                },
-                {
-                  id: 'ai-2',
-                  title: 'Paul Gaan Skool Toe (AI Folk Rock Release)',
-                  creator: 'Anre Fourie',
-                  domain: profileAddress('anrefourie'),
-                  medium: 'Pop Rock & Anthemic Folk',
-                  tools: ['Suno v5.5', 'Kling AI'],
-                  prompt: 'pop rock, anthemic pop, close-miked female vocals, layered electric guitars, punchy kick, clapping snare, upright bass',
-                  embedUrl: 'https://www.youtube.com/embed/sal78ACtGTc',
-                  externalUrl: 'https://runwayml.com',
-                  type: 'youtube' as const
-                },
-                {
                   id: 'ai-3',
                   title: 'BRICKZ — FORGET YESTERDAY (Official AI Video)',
                   creator: 'JL Records',
@@ -2282,7 +2258,7 @@ export default function FutureBoxHome() {
                           </span>
                         ))}
                       </div>
-                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100">
                         <Play className="w-12 h-12 text-cyan-400 fill-current" />
                       </div>
                     </div>

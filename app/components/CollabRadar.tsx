@@ -194,6 +194,10 @@ export default function CollabRadar({
             <button
               key={t.id}
               type="button"
+              /* Says which one is on, to a screen reader and to anything else
+                 reading the page — including the width probe, which uses it to
+                 tell a tab from a button that spends money. */
+              aria-pressed={isActive}
               onClick={() => setTab(t.id)}
               className={`px-3 py-2 rounded-xl text-sm font-bold flex items-center space-x-1.5 border transition-all ${
                 isActive
@@ -212,7 +216,7 @@ export default function CollabRadar({
       {/* Podcast matching + outreach drafting                              */}
       {/* ---------------------------------------------------------------- */}
       {tab === 'podcasts' && (
-        <div className="grid lg:grid-cols-2 gap-4">
+        <div className="grid lg:grid-cols-2 gap-4 [&>*]:min-w-0">
           <div className="space-y-2.5">
             {podcastMatches.map(({ podcast, score, shared, verdict }) => (
               <div
@@ -357,7 +361,7 @@ export default function CollabRadar({
       {/* TikTok Live                                                       */}
       {/* ---------------------------------------------------------------- */}
       {tab === 'live' && (
-        <div className="grid lg:grid-cols-2 gap-4">
+        <div className="grid lg:grid-cols-2 gap-4 [&>*]:min-w-0">
           <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 space-y-3">
             <div className="flex items-center space-x-2">
               <Video className="w-4 h-4 text-rose-400" />
@@ -408,7 +412,7 @@ export default function CollabRadar({
               <ListChecks className="w-4 h-4 text-cyan-400" />
               <span>{t('radar.liveBrief', "Live collab brief")}</span>
             </p>
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-1 gap-2 [&>*]:min-w-0">
               <input
                 value={coHost}
                 onChange={(e) => setCoHost(e.target.value)}
@@ -470,7 +474,7 @@ export default function CollabRadar({
             <span className="text-cyan-300">{source.models.join(' + ')}</span>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className="grid md:grid-cols-2 gap-3 [&>*]:min-w-0">
             {trackMatches.map(({ track, score, reasons, collabFormat, collabWhy }) => (
               <div key={track.id} className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-cyan-500/40 transition-all space-y-2">
                 <div className="flex items-start justify-between gap-3">
@@ -558,7 +562,7 @@ export default function CollabRadar({
               </div>
             )}
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 [&>*]:min-w-0">
               {SOCIAL_PLATFORMS.map((pf) => {
                 const url = profileUrlFor(pf, handles[pf.id] ?? '');
                 return (
@@ -595,7 +599,7 @@ export default function CollabRadar({
           {/* FutureBox's own channels */}
           <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4 space-y-2">
             <p className="text-sm font-bold text-white">{t('radar.channels', "FutureBox channels")}</p>
-            <div className="grid sm:grid-cols-2 gap-2">
+            <div className="grid sm:grid-cols-2 gap-2 [&>*]:min-w-0">
               {FUTUREBOX_CHANNELS.map((ch) => {
                 const pf = platformById(ch.platformId);
                 const url = profileUrlFor(pf, ch.handle);
@@ -624,7 +628,7 @@ export default function CollabRadar({
           </div>
 
           {/* Compose */}
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-3 gap-3 [&>*]:min-w-0">
             <div className="space-y-1.5">
               <label className="text-sm text-zinc-400">{t('radar.track', "Track")}</label>
               <select
@@ -680,7 +684,7 @@ export default function CollabRadar({
             <span className="text-sm text-zinc-300">Credit {FUTUREBOX_TAG} in the caption</span>
           </label>
 
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className="grid md:grid-cols-2 gap-3 [&>*]:min-w-0">
             {posts.map((post, i) => {
               const caption = buildCaption(post.caption, post.hashtags, {
                 creditFuturebox,

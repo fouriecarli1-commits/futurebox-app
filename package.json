@@ -43,7 +43,8 @@
     "check:artistname": "node audit/artistname.mjs",
     "check:reserved": "tsx scripts/check-reserved.mts",
     "check:back": "node audit/backbutton.mjs",
-    "check:simple": "node audit/simplemode.mjs"
+    "check:simple": "node audit/simplemode.mjs",
+    "check:wide": "node audit/wide.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

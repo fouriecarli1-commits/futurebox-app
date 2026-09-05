@@ -441,28 +441,12 @@ export default function VideoCanvas({
                 </span>
               </p>
 
-              {/* Only the operator ever sees this. It is the size of a bill. */}
-              {engine.engines?.map((one) => (
-                <div key={one.id} className="pt-1 space-y-1.5">
-                  <p className="text-sm text-zinc-400">
-                    {one.name}{' '}
-                    <span className="text-zinc-200 font-semibold">
-                      {one.used} / {one.ceiling}
-                    </span>{' '}
-                    <span className="text-zinc-600">· {one.model}</span>
-                  </p>
-                  <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-                    <div
-                      className={`h-full transition-all ${
-                        one.used / Math.max(1, one.ceiling) > 0.85 ? 'bg-rose-500' : 'bg-emerald-500'
-                      }`}
-                      style={{
-                        width: `${Math.min(100, Math.round((one.used / Math.max(1, one.ceiling)) * 100))}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
+              {/* The engine bill used to print here: every provider, its model
+                  version and a spend bar, in the middle of a room somebody
+                  came to make a video in. Only the operator ever saw it, and
+                  the operator is the one person who does not need to be told
+                  the model version while writing a shot. It is on the account
+                  screen behind **You** now — see `EngineSpend`. */}
             </>
           ) : (
             <p className="text-sm text-amber-300 flex items-start gap-2">

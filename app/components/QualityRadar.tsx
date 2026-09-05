@@ -259,7 +259,7 @@ export default function QualityRadar({
                     <button
                       type="button"
                       onClick={() => setOpenItem(open ? null : item.id)}
-                      className="text-sm text-zinc-600 hover:text-zinc-300 pt-1.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                      className="text-sm text-zinc-600 hover:text-zinc-300 pt-1.5 focus:opacity-100 transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100"
                     >
                       {open ? t('radar.closeWhy') : t('radar.why')}
                     </button>
