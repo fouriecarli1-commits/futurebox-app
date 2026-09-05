@@ -27,11 +27,12 @@
  * credit and neither needs a key.
  */
 
-import React, { useRef, useState } from 'react';
-import { Camera, Ear, Loader2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Camera, Ear, Loader2, PenLine } from 'lucide-react';
 import { listenTo, wordsFor as wordsForSound, type Heard } from '../lib/listen';
 import { measurePicture, moodFor, wordsFor as wordsForPicture, type Seen } from '../lib/photo';
 import { useLang } from '../lib/i18n';
+import { refusalText } from '../lib/apierror';
 
 const BIGGEST_SOUND = 40 * 1024 * 1024;
 const BIGGEST_PICTURE = 20 * 1024 * 1024;
@@ -41,18 +42,75 @@ const SIDE = 240;
 export default function StyleFrom({
   onWords,
   onMood,
+  onSong,
 }: {
   /** Words to add to the style box — never to replace what is there. */
   readonly onWords: (words: string[]) => void;
   /** Which shelf of the fifty starting points a picture pointed at. */
   readonly onMood: (mood: string) => void;
+  /**
+   * A whole song, when the app has a model behind it and the person asked
+   * for one. The measured reading cannot write words; this can.
+   */
+  readonly onSong: (song: { title: string; style: string; lyrics: string }) => void;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const soundInput = useRef<HTMLInputElement | null>(null);
   const pictureInput = useRef<HTMLInputElement | null>(null);
-  const [busy, setBusy] = useState<'sound' | 'picture' | null>(null);
+  const [busy, setBusy] = useState<'sound' | 'picture' | 'writing' | null>(null);
   const [said, setSaid] = useState('');
   const [problem, setProblem] = useState('');
+  /**
+   * Whether this app has a model behind it.
+   *
+   * Asked rather than assumed: with no key the route answers honestly and the
+   * second button should not be on the screen at all. A button that always
+   * fails is worse than one that is not offered.
+   */
+  const [canWrite, setCanWrite] = useState(false);
+  /* The last picture, kept in memory only for as long as this panel is open,
+     so "write the song too" does not mean picking the file again. Never
+     stored, never uploaded except on that press. */
+  const held = useRef<File | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    void fetch('/api/photosong')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((said_) => {
+        if (live && said_ && typeof said_.available === 'boolean') setCanWrite(said_.available);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const writeFromPicture = async () => {
+    const file = held.current;
+    if (!file) return;
+    setProblem('');
+    setBusy('writing');
+    try {
+      const form = new FormData();
+      form.append('picture', file);
+      form.append('lang', lang);
+      const response = await fetch('/api/photosong', { method: 'POST', body: form });
+      const answer = (await response.json().catch(() => null)) as
+        | { title?: string; style?: string; lyrics?: string; saw?: string; error?: string; message?: string }
+        | null;
+      if (!response.ok || !answer?.lyrics) {
+        setProblem(refusalText(answer, lang, t('pic.failed', 'That did not come back.')));
+        return;
+      }
+      onSong({ title: answer.title ?? '', style: answer.style ?? '', lyrics: answer.lyrics });
+      /* What it says it saw, so somebody can tell whether it looked properly
+         before they spend a generation on the words it wrote. */
+      if (answer.saw) setSaid(answer.saw);
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const takeSound = async (file: File | undefined) => {
     if (!file) return;
@@ -113,6 +171,7 @@ export default function StyleFrom({
       context.drawImage(picture, 0, 0, canvas.width, canvas.height);
       const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
       const seen: Seen = measurePicture(pixels.data, canvas.width, canvas.height);
+      held.current = file;
       onWords(wordsForPicture(seen));
       onMood(moodFor(seen));
       setSaid(
@@ -162,6 +221,32 @@ export default function StyleFrom({
         <p className="text-sm text-emerald-300 leading-snug">
           {t('from.measured', 'Measured:')} {said}
         </p>
+      )}
+
+      {/* And the version that reads the picture rather than measuring it.
+
+          Offered only once a picture has been picked and only where this app
+          has a model behind it, because a button that always fails is worse
+          than one that is not there. The line under it says what the
+          difference is: the measurement above knows warm from cold, this one
+          knows what is in the photograph. */}
+      {canWrite && held.current && (
+        <div className="space-y-1.5 border-t border-zinc-800 pt-2">
+          <button
+            type="button"
+            onClick={() => void writeFromPicture()}
+            disabled={busy !== null}
+            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-3 text-sm font-bold text-onAccent disabled:opacity-60"
+          >
+            {busy === 'writing' ? <Loader2 className="h-4 w-4 animate-spin" /> : <PenLine className="h-4 w-4" />}
+            {busy === 'writing'
+              ? t('pic.writing', 'Reading the picture…')
+              : t('pic.write', 'And write the song from it')}
+          </button>
+          <p className="text-sm text-zinc-500 leading-snug">
+            {t('pic.writeWhat', 'This one looks at what is in the picture and writes a title, a style and the words. It is sent to the model once and not kept.')}
+          </p>
+        </div>
       )}
     </div>
   );

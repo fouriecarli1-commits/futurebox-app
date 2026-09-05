@@ -853,6 +853,17 @@ export default function MakeMusic({
                 });
               }}
               onMood={(mood) => setFromPhoto(mood as typeof fromPhoto)}
+              onSong={({ title: name, style, lyrics: words }) => {
+                /* One write, like the starting points — two `setCanvas` calls
+                   built from the same captured object put the first one's
+                   change back, which cost the title once already. */
+                setCanvas({
+                  ...canvas,
+                  title: name || canvas.title,
+                  style: style || canvas.style,
+                  lyrics: words,
+                });
+              }}
             />
           </div>
 
