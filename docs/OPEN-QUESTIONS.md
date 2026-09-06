@@ -549,6 +549,10 @@ lines:
    intercepts pointer events" — and three runs were spent reading it as
    flakiness because only the first line of the error was ever looked at.
 
+**Verified, 6 September:** all twenty-six run and pass, each one on its own
+server and its own build, checked individually after the fixes rather than
+taken on trust from a green group.
+
 **A note for anyone running `npx tsc --noEmit` locally after a probe run:** the
 probe-page probes build with a page in `app/`, delete the page, and leave
 `.next/types` referencing it, so tsc reports a missing module that is not a
