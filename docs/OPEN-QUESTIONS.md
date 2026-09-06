@@ -304,8 +304,11 @@ or keep both is a decision nobody has made.
 
 ## F. Asked for, agreed, not yet built
 
-- The packaging rebuild — the card shape, a chevron and a wand on each. See
-  `docs/PACKAGING.md` §2.
+- **The packaging rebuild, in the other twelve rooms.** `Card` exists and
+  carries the shape from `docs/PACKAGING.md` §2 — a heading you can fold, one
+  box, small buttons underneath — and Make a song's two cards use it. The wand
+  slot is built and nothing fills it yet; the copilot is the obvious thing to
+  put behind it, with a shorter journey than the panel.
 - The right-hand rail on the live slider: Remix and **+ Hook**, which the
   packaging notes call the whole loop. Held back deliberately — remixing
   somebody else's post is a rights question before it is a button, and that
@@ -351,3 +354,8 @@ or keep both is a decision nobody has made.
 | One panel for both ways of pointing at a sound | 2026-09-05 | `a7d2209` |
 | The picture read by the model, not only measured | 2026-09-05 | `a109a66` |
 | The unheard dot, and a way to narrow the channel | 2026-09-05 | `aaf3ed2` |
+| The music video's words: whose timing, whose language | 2026-09-05 | `34e8ec9` |
+| The reading in every room, counted and cut | 2026-09-05 | `b49277e` |
+| The card shape: a chevron, a box, small buttons under | 2026-09-05 | `2161e68` |
+| The account is asked about voice conversion | 2026-09-05 | `644091c` |
+| The legal page proved right for both ways of selling | 2026-09-05 | `4d87b57` |
