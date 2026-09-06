@@ -91,11 +91,69 @@ export interface Storyboard {
    * sound off — which is why the room says so beside the switch.
    */
   readonly captions?: boolean;
+  /**
+   * The look every shot is made in.
+   *
+   * ── Why one line above rather than a phrase in each shot ─────────────
+   *
+   * Because it is one decision and twelve shots. Written into each prompt it
+   * has to be typed twelve times, stays right only until somebody changes
+   * their mind, and then the film has two looks in it — which is the exact
+   * thing that makes a set of clips read as clips instead of as a film.
+   *
+   * Here it is written once and joined onto every shot at the moment that
+   * shot is generated. The shot's own sentence stays about what happens in
+   * it, which is also what makes the copilot's job legible: it writes what
+   * the camera sees, and the look is set beside it and stays put.
+   *
+   * On the board rather than in component state, for the same reason as the
+   * background and the captions: it has to survive a reload, or somebody
+   * comes back to twelve shots that no longer agree with each other.
+   */
+  readonly look?: string;
 }
 
 const KEY = 'futurebox.storyboard.v1';
 
 export const EMPTY: Storyboard = { shots: [] };
+
+/**
+ * The sentence actually sent for a shot: what happens, then how it looks.
+ *
+ * Joined here rather than at the call site so there is one answer to "what did
+ * we ask for", and so the shot the person reads and the shot the engine gets
+ * differ in exactly one documented way.
+ *
+ * The look goes last. A prompt is read most strongly at its front by every
+ * engine this app talks to, and the subject of a shot is what is in it — a
+ * film whose every prompt opens with "grainy super-8, warm" is a film of
+ * grain, whatever the rest of the sentence asked for.
+ */
+export function askFor(shot: Shot, look?: string): string {
+  const what = shot.prompt.trim();
+  const how = (look ?? '').trim();
+  return how ? `${what}. ${how}` : what;
+}
+
+/**
+ * A written list of scenes, one per line, turned into shots.
+ *
+ * This is what the copilot hands over. It writes lines; numbering them is what
+ * anybody writing a list does, so the numbers are taken off rather than left to
+ * arrive in the prompt as "1." — which the engine would happily try to draw.
+ *
+ * `seconds` comes from the caller because only the desk knows what the engine
+ * behind it will accept, and a board full of shots at a length the engine
+ * refuses is a board that cannot be made.
+ */
+export function shotsFrom(text: string, seconds: number): Shot[] {
+  return text
+    .split('\n')
+    .map((line) => line.replace(/^\s*(?:\d+[.)]|[-*\u2022])\s*/, '').trim())
+    .filter((line) => line.length > 0)
+    .slice(0, MOST_SHOTS)
+    .map((prompt) => ({ id: shotId(), prompt, seconds }));
+}
 
 /**
  * A ceiling, because a browser cuts this in real time.
@@ -114,6 +172,7 @@ export function loadStoryboard(): Storyboard {
     const said = JSON.parse(raw) as Storyboard;
     if (!Array.isArray(said?.shots)) return EMPTY;
     return {
+      ...(typeof said.look === 'string' ? { look: said.look } : {}),
       shots: said.shots
         .filter((one) => one && typeof one.id === 'string')
         .slice(0, MOST_SHOTS)

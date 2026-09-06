@@ -55,9 +55,11 @@ import { canStitch, lengthOf, stitch } from '../lib/stitch';
 import { spokenLines } from '../lib/videoscenes';
 import { makeBlob } from '../lib/makes';
 import {
-  EMPTY, MOST_SHOTS, changed, clipsFor, loadStoryboard, missing, moved, playsFor,
-  runtime, saveStoryboard, shotId, withShot, withoutShot, type Shot, type Storyboard as Board,
+  EMPTY, MOST_SHOTS, askFor, changed, clipsFor, loadStoryboard, missing, moved, playsFor,
+  runtime, saveStoryboard, shotId, shotsFrom, withShot, withoutShot, type Shot,
+  type Storyboard as Board,
 } from '../lib/storyboard';
+import { useCopilotOps } from '../lib/copilotactions';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
 
@@ -156,6 +158,39 @@ export default function Storyboard({
     };
   }, [board.shots, clipLengths]);
 
+  /* What the copilot may do to this board.
+
+     "Wanneer die copilot in video prompt, moet daar darem 'n bar wees binne
+      die video wat my begelei om die regte keuses te maak vir die scenes.
+      Daar is huidiglik geen so window waarin die scenes en styl van die video
+      kom nie."
+
+     The board could already be written, reordered and thrown away by hand,
+     and each shot already shows the clip that came back for it. What it could
+     not do was receive any of that from the copilot — so the copilot could
+     describe a music video in the chat and the person had to retype it, shot
+     by shot, into the list beside it. That is the difference between an
+     assistant and a leaflet, and `copilotactions.ts` exists to close it.
+
+     `write_scenes` replaces rather than appends. A person asking for scenes
+     twice means the second answer is the one they want; appending would leave
+     them deleting the first set by hand, which is the retyping again in a
+     different direction. What it never touches is a shot that has already
+     been paid for — see the guard. */
+  useCopilotOps('canvas', {
+    set_look: (value) => setBoard((was) => ({ ...was, look: value.trim() })),
+    write_scenes: (value) => {
+      setBoard((was) => {
+        const made = was.shots.filter((one) => one.makeId);
+        const fresh = shotsFrom(value, lengths[0]?.seconds ?? 5);
+        /* Anything already generated stays, and stays first. Replacing a paid
+           shot with a sentence would be spending somebody's money and then
+           throwing away what it bought. */
+        return { ...was, shots: [...made, ...fresh].slice(0, MOST_SHOTS) };
+      });
+    },
+  });
+
   const shortest = lengths[0]?.seconds ?? 5;
   const total = runtime(board, clipLengths);
   const short = missing(board);
@@ -218,7 +253,7 @@ export default function Storyboard({
       try {
         const result = await engines.generateVideo({
           title: t('board.shot', 'Shot'),
-          treatment: shot.prompt.trim(),
+          treatment: askFor(shot, board.look),
           aspect,
           seconds: shot.seconds,
           grade,
@@ -234,7 +269,7 @@ export default function Storyboard({
             surface: 'canvas',
             kind: 'video',
             title: t('board.shot', 'Shot'),
-            note: shot.prompt.trim(),
+            note: askFor(shot, board.look),
             createdAt: new Date().toISOString(),
             seconds: shot.seconds,
             ext: 'mp4',
@@ -252,7 +287,7 @@ export default function Storyboard({
         setMaking(null);
       }
     },
-    [board.shots, making, aspect, grade, frame, onUpgrade, t],
+    [board.shots, board.look, making, aspect, grade, frame, onUpgrade, t],
   );
 
   const cut = useCallback(async () => {
@@ -334,6 +369,40 @@ export default function Storyboard({
               'No engine makes more than half a minute in one go, so a long video is short ones cut together. Write the shots, make them one at a time, and cut them into one file with a song under it.',
             )}</Note>
         </div>
+      </div>
+
+      {/* ── The look, once, above all of them ──────────────────────────
+
+          One decision and twelve shots. Written into each shot it has to be
+          typed twelve times, stays right only until somebody changes their
+          mind, and then the film has two looks in it — which is the exact
+          thing that makes a set of clips read as clips instead of as a film.
+
+          Joined onto every shot at the moment that shot is generated, and
+          joined on the end: a prompt is read most strongly at its front, and
+          the subject of a shot is what happens in it. A film whose every
+          prompt opens with "grainy super-8, warm" is a film of grain. */}
+      <div className="rounded-xl border border-zinc-800 bg-black/30 p-2.5 space-y-1.5">
+        <label
+          htmlFor="board-look"
+          className="flex items-center gap-1.5 text-sm font-semibold text-zinc-300"
+        >
+          <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+          {t('board.look', 'How the whole film looks')}
+        </label>
+        <input
+          id="board-look"
+          value={board.look ?? ''}
+          onChange={(event) => setBoard((was) => ({ ...was, look: event.target.value }))}
+          placeholder={t('board.lookHint', 'Warm evening light, shot on film, slow camera')}
+          className="min-h-[44px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+        />
+        <p className="text-xs text-zinc-600 leading-snug">
+          {t(
+            'board.lookWhy',
+            'Added to the end of every shot below, so all of them match without you typing it twelve times. Ask the copilot for a look and it fills this in.',
+          )}
+        </p>
       </div>
 
       {/* Written before anything is generated, on purpose — see the note at

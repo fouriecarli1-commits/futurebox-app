@@ -102,6 +102,12 @@ jobs:
       - name: A row can only claim its own file
         run: npm run check:ownedpath
 
+      # `write_scenes` replaces the shot list. A shot already generated has been
+      # paid for, and replacing it with a sentence is spending somebody's money
+      # and then throwing away what it bought.
+      - name: The copilot never rewrites a shot that was paid for
+        run: npm run check:storyboard
+
       # The bar pads itself away from the home indicator, so its real height is
       # not its constant. Reserving the constant hid a text field behind it on
       # every phone with an indicator — invisible on a desktop, invisible in a
