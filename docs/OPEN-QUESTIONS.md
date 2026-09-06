@@ -772,3 +772,71 @@ real deployment. Playwright is not launched with fake media devices, so no probe
 exercises `getUserMedia` at all — the mixing is checked as a rule and as source,
 not as a recording anybody has watched. The first take she films on her phone is
 the first real test of it.
+
+## M. The line she was meant to sing, and four more of the same shape
+
+### The one that matters
+
+`FollowWords` drew the current line with `text-white` over `bg-scrim`.
+Measured in a real browser: **rgb(19, 18, 17) on rgb(17, 16, 14) — a contrast
+ratio of 1.02.** The line she is meant to read, invisible, on the screen whose
+entire job is to show it to her while she films herself singing it.
+
+`text-white` is remapped onto `--fb-ink`, which is near-black because it is
+the ink colour for a light page. `LiveChannel` carries a comment about this
+exact trap and the exact fix; `FollowWords` was never given it.
+
+**It survived because it fails in the direction nobody looks.** The lines she
+is *not* singing use `text-zinc-700`, and `zinc` is remapped onto the surface
+family, which lands light — those measure 8.79 and look right. So the screen
+reads as working: there are words on it, they move, and the only one missing
+is the one in the middle. I began this expecting the opposite — that the zinc
+greys would be the dark ones — and measuring is what corrected it.
+
+1.02 before, 19.02 after. The selfie probe asserts it now: the sung line must
+clear 4.5 **and be the most readable thing on the screen rather than the
+least**. A screenshot did not make it obvious — at 1.02 on near-black it reads
+as a design choice.
+
+### What the sweep for that class turned up
+
+Four searches were clean: no component is never mounted, no browser call goes
+to a route that does not exist, all 1377 translation keys are in the
+dictionary, no server route is unreachable. Three were not:
+
+- **Eighteen variables** the code reads were in no document. The one that
+  mattered: `NEXT_PUBLIC_WELCOME_VIDEO_AFRIKAANS` has no default, so the front
+  door plays no introduction at all to an Afrikaans visitor. Drawing nothing
+  rather than an English recording is right, and is why nothing looked broken.
+  `check:envdoc` holds it both ways now.
+- **`audit/contrast.mjs` had never run.** It reads the real colour of every
+  text node against what is painted behind it, it is careful — it even carries
+  a fix for a bug where it skipped every room and called that a pass — and it
+  pointed at `localhost:3000` without starting a server, so it was in no
+  script and no CI step. Running it found nothing: 593 nodes, none below AA.
+  That is a limit of its scope, not a clean bill of health — it stops at
+  `z-50` and the invisible line was at `z-[100]`.
+- **A browser probe in a job with no browser.** `check:selfie` went in as a
+  step in the source job, which never installs Chromium. It passed locally and
+  would have failed in CI on its first line.
+
+### The rule, restated harder
+
+`check:everycheck` passed that last one because it asked whether the name
+appeared *somewhere* in the workflow. **Named is not run.** `check:probes`
+rule 3 passed a leaking probe because it asked whether the cleanup was
+*written down*. **Written down is not reached.** Both are the same mistake as
+the bugs they exist to catch, made inside the checks themselves.
+
+So: **the checks are not exempt from the thing they check for.** When writing
+one, the question is not "does the code say the right thing" but "would this
+fail if the thing were false". The way to know is to make it false and watch.
+Every check landed today was verified that way, and two of them passed the
+first time with the fault injected — the camera-button rule with a 400-
+character window that was too small, and the contrast rule before it existed.
+
+### Still not proven from here
+
+No probe has ever run against the deployed site, a real ElevenLabs key, or a
+real camera. Chromium's fake devices make the recording path testable and do
+not make it true.
