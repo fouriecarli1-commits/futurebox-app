@@ -39,6 +39,7 @@ import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
 import type { VoiceState } from './VoiceLab';
 import Note from './Note';
+import Card from './Card';
 
 const EXAMPLE = `Anre: So what actually changed this year?
 Carli: Everything, and none of it at once.
@@ -110,14 +111,11 @@ export default function TwoHosts({
   };
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-      <div>
-        <p className="text-base font-bold text-white flex items-center gap-2">
-          <MessagesSquare className="w-4 h-4 text-emerald-400" />
-          {t('hosts.title', 'Two people talking')}
-        </p>
-        <Note>{t('hosts.sub', 'Write it as a script and both voices are made in one pass, so they answer each other instead of reading in turn.')}</Note>
-      </div>
+    <Card
+      title={t('hosts.title', 'Two people talking')}
+      icon={<MessagesSquare className="w-4 h-4" />}
+    >
+      <Note>{t('hosts.sub', 'Write it as a script and both voices are made in one pass, so they answer each other instead of reading in turn.')}</Note>
 
       {/* ── Who is speaking ─────────────────────────────────────────────── */}
       <div className="grid gap-2 sm:grid-cols-2">
@@ -202,6 +200,6 @@ export default function TwoHosts({
           <audio src={made} controls className="w-full" />
         </div>
       )}
-    </div>
+    </Card>
   );
 }

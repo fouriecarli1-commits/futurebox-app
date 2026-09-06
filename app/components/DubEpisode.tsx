@@ -41,6 +41,7 @@ import { EVERY, askDub, collectDub, forget, recall, remember, startDub, type Pro
 import { DUB_LANGUAGES } from '../data/dublanguages';
 import Cost from './Cost';
 import Note from './Note';
+import Card from './Card';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 
@@ -154,16 +155,15 @@ export default function DubEpisode({
   const running = job !== null && !progress?.failed;
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2.5">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-bold text-white flex items-center gap-1.5 min-w-0">
-          <Languages className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-          <span className="truncate">{t('dub.title', 'Say it in another language')}</span>
-        </p>
+    <Card
+      title={t('dub.title', 'Say it in another language')}
+      icon={<Languages className="w-4 h-4" />}
+      aside={
         <button type="button" onClick={onClose} className="text-zinc-500 hover:text-white flex-shrink-0">
           <X className="w-4 h-4" />
         </button>
-      </div>
+      }
+    >
 
       {!running && (
         <>
@@ -262,6 +262,6 @@ export default function DubEpisode({
       )}
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
-    </div>
+    </Card>
   );
 }

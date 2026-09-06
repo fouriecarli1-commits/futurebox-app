@@ -27,6 +27,7 @@ import DubEpisode from './DubEpisode';
 import Transcript from './Transcript';
 import Cost from './Cost';
 import Note from './Note';
+import Card from './Card';
 import { episodeAudioUrl } from '../lib/episodeaudio';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
@@ -298,22 +299,21 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
   return (
     <div className="space-y-4">
       {/* ── The channel ─────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-base font-bold text-white">{t('pod.channel', 'Your channel')}</p>
-            <Note>{t('pod.channelNote', 'The name, the picture and the description a podcast app will show.')}</Note>
-          </div>
-          {!caps?.publish && (
-            <button
-              type="button"
-              onClick={onUpgrade}
-              className="text-sm font-semibold text-amber-300 flex-shrink-0"
-            >
-              {t('pod.needsPlan', 'Paid plan')}
-            </button>
-          )}
-        </div>
+      <Card
+        title={t('pod.channel', 'Your channel')}
+        aside={
+        !caps?.publish && (
+          <button
+            type="button"
+            onClick={onUpgrade}
+            className="text-sm font-semibold text-amber-300 flex-shrink-0"
+          >
+            {t('pod.needsPlan', 'Paid plan')}
+          </button>
+        )
+      }
+    >
+        <Note>{t('pod.channelNote', 'The name, the picture and the description a podcast app will show.')}</Note>
 
         <input
           value={show?.title ?? ''}
@@ -441,7 +441,7 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* ── Voices ──────────────────────────────────────────────────────── */}
       <VoiceLab
@@ -464,11 +464,8 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
       />
 
       {/* ── An episode ──────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-        <div>
-          <p className="text-base font-bold text-white">{t('pod.episode', 'An episode')}</p>
-          <Note>{t('pod.episodeNote', 'Record it here, or use something a voice read. Publishing puts the audio at a public address that podcast apps keep fetching.')}</Note>
-        </div>
+      <Card title={t('pod.episode', 'An episode')}>
+        <Note>{t('pod.episodeNote', 'Record it here, or use something a voice read. Publishing puts the audio at a public address that podcast apps keep fetching.')}</Note>
 
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
 
@@ -641,7 +638,7 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
             ))}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

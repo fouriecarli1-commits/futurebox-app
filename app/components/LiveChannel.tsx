@@ -44,6 +44,7 @@ import { refusalText } from '../lib/apierror';
 import RoomScreen from './RoomScreen';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
+import Card from './Card';
 
 /** Often enough that the room never blinks out, rare enough to be polite. */
 const HELLO_EVERY = 30_000;
@@ -268,8 +269,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
 
       {/* ── Put something in ──────────────────────────────────────────── */}
       {room.signedIn && (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-3">
-          <p className="text-base font-bold text-white">{t('live.putIn', 'Put something in the room')}</p>
+        <Card title={t('live.putIn', 'Put something in the room')}>
           <Note>{t('live.public')}</Note>
 
           {tracks.length === 0 ? (
@@ -378,7 +378,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
               </button>
             </div>
           )}
-        </div>
+        </Card>
       )}
 
       {/* ── The room ──────────────────────────────────────────────────── */}

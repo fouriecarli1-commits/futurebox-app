@@ -31,6 +31,18 @@
  * default unless it is told to. A card that opens shut is a control somebody
  * has to find; that is right for a sales panel and wrong for the box a room
  * is for. `open` is the caller's decision and the default is open.
+ *
+ * ── The two slots that were added when the rooms were converted ──────────
+ *
+ * `icon` and `aside`. Both exist because thirteen panels were already using
+ * them and dropping them would have been a rebuild that quietly deleted
+ * things — which is the failure this app has had twice before, where "too
+ * much on the screen" was answered by removing working features.
+ *
+ * The icon is the little emerald mark half the rooms put beside a heading.
+ * The aside is whatever sat *next to* the title and is pressable in its own
+ * right — a `Hint`, most often. It cannot go inside the fold button, because
+ * a button inside a button is not a thing a browser will render.
  */
 
 import React, { useState } from 'react';
@@ -39,12 +51,23 @@ import { useLang } from '../lib/i18n';
 
 export default function Card({
   title,
+  icon,
+  aside,
   wand,
   tools,
   children,
   startShut = false,
 }: {
   readonly title: string;
+  /** The small mark beside the heading, where a room already had one. */
+  readonly icon?: React.ReactNode;
+  /**
+   * Something pressable beside the title — a `Hint`, almost always.
+   *
+   * Outside the fold button rather than inside it: nesting a button in a
+   * button is invalid HTML, and browsers resolve it by dropping one of them.
+   */
+  readonly aside?: React.ReactNode;
   /**
    * The magic wand: one press that fills this card in.
    *
@@ -73,8 +96,11 @@ export default function Card({
           <ChevronDown
             className={`h-4 w-4 flex-shrink-0 text-zinc-500 transition-transform ${open ? '' : '-rotate-90'}`}
           />
+          {icon && <span className="flex-shrink-0 text-emerald-400">{icon}</span>}
           <span className="truncate text-sm font-semibold text-zinc-200">{title}</span>
         </button>
+
+        {aside && <span className="flex-shrink-0">{aside}</span>}
 
         {wand && (
           <button

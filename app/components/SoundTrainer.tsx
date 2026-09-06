@@ -26,6 +26,7 @@ import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { useLang } from '../lib/i18n';
 import Cost from './Cost';
 import Note from './Note';
+import Card from './Card';
 
 /** How often to ask again while something is still training. */
 const ASK_EVERY_MS = 20_000;
@@ -179,30 +180,29 @@ export default function SoundTrainer({
   const ready = chosen >= FEWEST && name.trim().length >= 5 && genre.trim().length > 0 && confirmed;
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-base font-bold text-white flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            {t('sound.title', 'A sound of your own')}
-          </p>
-          <Note>{t(
-              'sound.note',
-              'Train on a handful of your own songs and new ones come out sounding like them. It takes five or ten minutes, and you can close this while it runs.',
-            )}</Note>
-          {/* The most expensive thing this app does, said before anybody
-              starts rather than at the moment they are refused. */}
-          <p className="text-sm font-semibold text-amber-300 leading-snug pt-1.5">
-            {CREDITS.finetune} {t('sound.creditsEach', 'credits each time')}
-            {wallet.signedIn && (
-              <span className="text-zinc-500 font-normal">
-                {' · '}
-                {t('sound.youHave', 'you have')} {wallet.balance}
-              </span>
-            )}
-          </p>
-        </div>
-      </div>
+    <Card
+      title={t('sound.title', 'A sound of your own')}
+      icon={<Sparkles className="w-4 h-4" />}
+      /* The most expensive thing this app does, said beside the heading —
+         before anybody starts, rather than at the moment they are refused. */
+      aside={
+        <p className="text-sm font-semibold text-amber-300 leading-snug">
+          {CREDITS.finetune} {t('sound.creditsEach', 'credits each time')}
+          {wallet.signedIn && (
+            <span className="text-zinc-500 font-normal">
+              {' · '}
+              {t('sound.youHave', 'you have')} {wallet.balance}
+            </span>
+          )}
+        </p>
+      }
+    >
+      <Note>
+        {t(
+          'sound.note',
+          'Train on a handful of your own songs and new ones come out sounding like them. It takes five or ten minutes, and you can close this while it runs.',
+        )}
+      </Note>
 
       {sounds.mine.length > 0 && (
         <div className="space-y-1.5">
@@ -372,6 +372,6 @@ export default function SoundTrainer({
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

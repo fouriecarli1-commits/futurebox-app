@@ -29,6 +29,7 @@ import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
 import InviteLink from './InviteLink';
+import Card from './Card';
 
 /** Long enough that a conversation feels live, gentle enough to leave open. */
 const ASK_AGAIN_MS = 15_000;
@@ -245,10 +246,7 @@ export default function CollabRoom({
           Asked for, and worth the space: a Handshake icon and an empty list
           do not tell anybody what collaborating here actually means, and
           somebody who does not know will not press anything. */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-1.5">
-        <p className="text-base font-bold text-white">
-          {t('collab.whatTitle', 'Making something with somebody else')}
-        </p>
+      <Card title={t('collab.whatTitle', 'Making something with somebody else')}>
         <p className="text-sm text-zinc-400 leading-relaxed">
           {t(
             'collab.what',
@@ -259,7 +257,7 @@ export default function CollabRoom({
             'collab.whatPrivate',
             'Nothing is shared until you send it, and neither of you can read a word of the thread until you have both agreed — that is enforced in the database, not by a screen.',
           )}</Note>
-      </div>
+      </Card>
 
       {/* ── Waiting on you ───────────────────────────────────────────── */}
       {waiting.length > 0 && (
@@ -303,14 +301,11 @@ export default function CollabRoom({
       )}
 
       {/* ── The rooms ────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-        <div>
-          <p className="text-base font-bold text-white">{t('collab.rooms', 'Working together')}</p>
-          <Note>{t(
+      <Card title={t('collab.rooms', 'Working together')}>
+        <Note>{t(
               'collab.roomsNote',
               'A room opens when you both agree. Drop a song into it and the other person can hear what you mean — the song travels, not the file.',
             )}</Note>
-        </div>
 
         {rooms.length === 0 ? (
           <Note>{t('collab.noRooms', 'None yet. Find somebody whose sound is near yours below, and ask.')}</Note>
@@ -431,7 +426,7 @@ export default function CollabRoom({
             )}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* ── Waiting on them ──────────────────────────────────────────── */}
       {sent.length > 0 && (

@@ -26,6 +26,7 @@ import {
 import { useLang } from '../lib/i18n';
 import { AskToCollab } from './CollabRoom';
 import Note from './Note';
+import Card from './Card';
 
 const LINKS = ['website', 'x', 'instagram', 'youtube', 'tiktok', 'soundcloud'] as const;
 
@@ -126,14 +127,8 @@ export default function CollabFinder({
   return (
     <div className="space-y-4">
       {/* ── Who you are ──────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-        <div>
-          <p className="text-base font-bold text-white flex items-center gap-2">
-            <Users className="w-4 h-4 text-emerald-400" />
-            {t('radar.you', 'How people find you')}
-          </p>
-          <Note>{t('radar.youNote', 'A name and somewhere to be reached. Without these a match has nobody to write to.')}</Note>
-        </div>
+      <Card title={t('radar.you', 'How people find you')} icon={<Users className="w-4 h-4" />}>
+        <Note>{t('radar.youNote', 'A name and somewhere to be reached. Without these a match has nobody to write to.')}</Note>
         <div className="grid sm:grid-cols-2 gap-2">
           <input
             value={creator.name}
@@ -171,14 +166,11 @@ export default function CollabFinder({
           {busy === 'me' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
           {saved ? t('radar.saved', 'Saved') : t('radar.save', 'Save')}
         </button>
-      </div>
+      </Card>
 
       {/* ── What you are showing ─────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-        <div>
-          <p className="text-base font-bold text-white">{t('radar.showing', 'Songs on the radar')}</p>
-          <Note>{t('radar.showingNote', 'Off by default, one at a time, and you can turn it back off. Only the tempo, key and style words are shared — never the audio.')}</Note>
-        </div>
+      <Card title={t('radar.showing', 'Songs on the radar')}>
+        <Note>{t('radar.showingNote', 'Off by default, one at a time, and you can turn it back off. Only the tempo, key and style words are shared — never the audio.')}</Note>
         {mine.length === 0 ? (
           <p className="text-sm text-zinc-500">{t('radar.noSongs', 'Make a song first.')}</p>
         ) : (
@@ -209,14 +201,10 @@ export default function CollabFinder({
             })}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* ── Who is near your sound ───────────────────────────────────────── */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-        <p className="text-base font-bold text-white flex items-center gap-2">
-          <Radar className="w-4 h-4 text-emerald-400" />
-          {t('radar.matches', 'Near your sound')}
-        </p>
+      <Card title={t('radar.matches', 'Near your sound')} icon={<Radar className="w-4 h-4" />}>
 
         {loading ? (
           <p className="text-sm text-zinc-500 flex items-center gap-2">
@@ -308,7 +296,7 @@ export default function CollabFinder({
             })}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

@@ -42,6 +42,7 @@ import { refusalText } from '../lib/apierror';
 import { useLang } from '../lib/i18n';
 import Cost from './Cost';
 import Note from './Note';
+import Card from './Card';
 
 export default function DubFilm({
   film,
@@ -148,12 +149,10 @@ export default function DubFilm({
   const named = DUB_LANGUAGES.find((one) => one.code === (done?.language ?? to));
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2.5">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-bold text-white flex items-center gap-1.5 min-w-0">
-          <Languages className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-          <span className="truncate">{t('dubfilm.title', 'Put this film in another language')}</span>
-        </p>
+    <Card
+      title={t('dubfilm.title', 'Put this film in another language')}
+      icon={<Languages className="w-4 h-4" />}
+      aside={
         <button
           type="button"
           onClick={onClose}
@@ -162,7 +161,8 @@ export default function DubFilm({
         >
           <X className="w-4 h-4" />
         </button>
-      </div>
+      }
+    >
 
       {!running && !done && (
         <>
@@ -281,6 +281,6 @@ export default function DubFilm({
       )}
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
-    </div>
+    </Card>
   );
 }

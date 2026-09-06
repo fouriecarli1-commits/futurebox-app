@@ -60,7 +60,8 @@
     "check:videowords": "node audit/videowords.mjs",
     "check:writing": "node audit/writing.mjs",
     "check:entity": "tsx scripts/check-entity.mts",
-    "check:songlink": "tsx scripts/check-songlink.mts"
+    "check:songlink": "tsx scripts/check-songlink.mts",
+    "check:cards": "node audit/cards.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

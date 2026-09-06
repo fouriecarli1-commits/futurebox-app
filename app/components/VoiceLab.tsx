@@ -24,6 +24,7 @@ import { useCopilotOps } from '../lib/copilotactions';
 import Recommend from './Recommend';
 import VoicePicker from './VoicePicker';
 import Note from './Note';
+import Card from './Card';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { VOICE_CONSENT } from '@/app/lib/consent';
@@ -435,11 +436,8 @@ export default function VoiceLab({
   return (
     <div className="space-y-4">
       {/* ── Your voice ──────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-        <div>
-          <p className="text-base font-bold text-white">{t('voice.yours', 'Your own voice')}</p>
-          <Note>{t('voice.yoursNote', 'Record about a minute and this can read scripts in your voice. It reads — it does not sing.')}</Note>
-        </div>
+      <Card title={t('voice.yours', 'Your own voice')}>
+        <Note>{t('voice.yoursNote', 'Record about a minute and this can read scripts in your voice. It reads — it does not sing.')}</Note>
 
         {state.mine.length > 0 && (
           <div className="space-y-1.5">
@@ -524,14 +522,11 @@ export default function VoiceLab({
             </button>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* ── Read a script ───────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-        <div>
-          <p className="text-base font-bold text-white">{t('voice.readIt', 'Read a script aloud')}</p>
-          <Note>{t('voice.readNote', 'Write it, pick a voice, and hear it. An episode made this way says so on the episode.')}</Note>
-        </div>
+      <Card title={t('voice.readIt', 'Read a script aloud')}>
+        <Note>{t('voice.readNote', 'Write it, pick a voice, and hear it. An episode made this way says so on the episode.')}</Note>
 
         {underScript}
 
@@ -683,17 +678,14 @@ export default function VoiceLab({
         </div>
 
         <audio ref={playerRef} controls className={spoken ? 'w-full' : 'hidden'} />
-      </div>
+      </Card>
 
       {/* ── The same words, another voice ─────────────────────────── */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-        <div>
-          <p className="text-base font-bold text-white">{t('voice.changer', 'Say it again in another voice')}</p>
-          <Note>{t(
+      <Card title={t('voice.changer', 'Say it again in another voice')}>
+        <Note>{t(
               'voice.changerNote',
               'Bring in a recording, or make one here, and it comes back in the voice picked above \u2014 your timing and your delivery, their tone.',
             )}</Note>
-        </div>
 
         <div className="flex flex-wrap gap-2">
           <label className="flex-1 min-w-[9rem] cursor-pointer px-3 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-300 flex items-center justify-center gap-1.5 hover:border-zinc-700">
@@ -777,7 +769,7 @@ export default function VoiceLab({
         </div>
 
         <audio ref={changedRef} controls className={changed ? 'w-full' : 'hidden'} />
-      </div>
+      </Card>
     </div>
   );
 }

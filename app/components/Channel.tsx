@@ -44,6 +44,7 @@ import Sleeve from './Sleeve';
 import { heardHere, markHeard } from '../lib/heard';
 import { timeFor } from '../lib/lyrictime';
 import Note from './Note';
+import Card from './Card';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
 
 function clock(seconds: number): string {
@@ -378,12 +379,10 @@ export default function Channel({
       )}
 
       {/* ── Playlists ────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-base font-bold text-white flex items-center gap-2">
-            <ListMusic className="w-4 h-4 text-emerald-400" />
-            {t('chan.playlists', 'Playlists')}
-          </p>
+      <Card
+        title={t('chan.playlists', 'Playlists')}
+        icon={<ListMusic className="w-4 h-4" />}
+        aside={
           <button
             type="button"
             onClick={() => {
@@ -396,7 +395,8 @@ export default function Channel({
             <Plus className="w-3.5 h-3.5" />
             {t('chan.new', 'New')}
           </button>
-        </div>
+        }
+      >
 
         {lists.length === 0 ? (
           <Note>{t('chan.noLists', 'None yet. A playlist plays straight through, which is what makes it worth building.')}</Note>
@@ -476,7 +476,7 @@ export default function Channel({
             )}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* ── The music ────────────────────────────────────────────────────── */}
 

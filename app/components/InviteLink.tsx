@@ -32,6 +32,7 @@ import { makeInvite, type Invite } from '../lib/collab';
 import { useLang } from '../lib/i18n';
 import Hint from './Hint';
 import Note from './Note';
+import Card from './Card';
 
 export default function InviteLink({ from }: { readonly from?: string }): React.ReactElement {
   const { t } = useLang();
@@ -79,18 +80,18 @@ export default function InviteLink({ from }: { readonly from?: string }): React.
     : '';
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-      <p className="text-base font-bold text-white flex items-center gap-2">
-        <Link2 className="w-4 h-4 text-emerald-400" />
-        {t('invite.title', 'Invite somebody who is not here yet')}
+    <Card
+      title={t('invite.title', 'Invite somebody who is not here yet')}
+      icon={<Link2 className="w-4 h-4" />}
+      aside={
         <Hint>
           {t(
             'invite.why',
             'The room only exists once two people have agreed, so somebody who does not have an account cannot be reached from here. This link lands them on the app, survives them signing up, and turns into a request from you with your reason already on it.',
           )}
         </Hint>
-      </p>
-
+      }
+    >
       <div>
         <label htmlFor="invite-why" className="sr-only">
           {t('invite.reason', 'What it is about')}
@@ -148,6 +149,6 @@ export default function InviteLink({ from }: { readonly from?: string }): React.
       )}
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
-    </div>
+    </Card>
   );
 }

@@ -39,6 +39,7 @@ import { accessToken } from '../lib/cloud';
 import { CREDITS, perMinute } from '../lib/credits';
 import Cost from './Cost';
 import Note from './Note';
+import Card from './Card';
 import { useLang } from '../lib/i18n';
 
 interface Turn {
@@ -152,12 +153,10 @@ export default function Transcript({
   const speakers = Array.from(new Set((turns ?? []).map((one) => one.speaker)));
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2.5">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-bold text-white flex items-center gap-1.5 min-w-0">
-          <FileText className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-          <span className="truncate">{t('script.title', 'What was said')}</span>
-        </p>
+    <Card
+      title={t('script.title', 'What was said')}
+      icon={<FileText className="w-4 h-4" />}
+      aside={
         <button
           type="button"
           onClick={onClose}
@@ -165,7 +164,8 @@ export default function Transcript({
         >
           {t('script.close', 'Close')}
         </button>
-      </div>
+      }
+    >
 
       {!turns && (
         <>
@@ -240,6 +240,6 @@ export default function Transcript({
       )}
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
-    </div>
+    </Card>
   );
 }
