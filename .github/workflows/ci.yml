@@ -111,6 +111,11 @@ jobs:
       - name: Nobody's name on a talk they did not give
         run: npm run check:masterclasses
 
+      # The live room's link field publishes a URL to everybody in the room.
+      # It used to take any https address at all, which is not a link field.
+      - name: Only the seven platforms get into the room
+        run: npm run check:platformlink
+
       # The link bar takes a URL a stranger typed. It must never fetch that
       # URL — only the oEmbed endpoint of a host on a closed list. A route
       # that fetched whatever arrived would be an open proxy inside the

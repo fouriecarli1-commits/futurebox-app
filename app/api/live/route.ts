@@ -32,6 +32,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { readPlatformLink } from '@/app/lib/server/platformlink';
 import { guard } from '@/app/lib/server/safety';
 import { episodeAudioUrl } from '@/app/lib/episodeaudio';
 
@@ -271,14 +272,34 @@ export async function POST(request: Request): Promise<Response> {
   if (!allowed.ok) return allowed.response;
 
   if (body.what === 'elsewhere') {
-    const platform = String(body.platform ?? '').trim().slice(0, 40);
-    const link = String(body.link ?? '').trim().slice(0, 500);
-    // A link the room will offer to follow. Only the two schemes a browser
-    // should ever be handed — `javascript:` in an href is the oldest trick
-    // there is, and this one is typed by a person and read by everybody.
-    if (link && !/^https:\/\/[^\s]+$/i.test(link)) {
-      return Response.json({ message: 'That link has to be an https address.' }, { status: 400 });
+    /* One of the seven, and nothing else.
+ 
+       This used to take any https address, which is not a link field — it is
+       a place to publish a URL of your choosing to everybody in the room,
+       with nothing between it and wherever somebody wanted to send them
+       except the scheme. A closed list is the whole of the answer: it does
+       not make what is on the far end good, but it means the destination is
+       a platform with its own moderation and its own reporting rather than
+       an arbitrary server, and the room says exactly that where the link is
+       shown. `scripts/check-platformlink.mts` holds the matching.
+ 
+       The platform name comes back from the matcher rather than from the
+       request. A label the client chooses is a label that can say "YouTube"
+       over a link that goes somewhere else, and it is printed next to it. */
+    const read = readPlatformLink(String(body.link ?? '').slice(0, 500));
+    if (!read.ok) {
+      return Response.json(
+        {
+          message:
+            read.why === 'not_a_link'
+              ? 'Paste a link to the video or the song.'
+              : 'Links in the room have to go to YouTube, TikTok, Facebook, Vimeo, Spotify, Apple Music or SoundCloud — so everybody knows where a link goes before they press it.',
+        },
+        { status: 400 },
+      );
     }
+    const link = read.url;
+    const platform = read.platform;
     const startsAt = String(body.startsAt ?? '');
     const when = startsAt ? new Date(startsAt) : null;
     if (when && Number.isNaN(when.getTime())) {

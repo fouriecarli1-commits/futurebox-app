@@ -90,12 +90,54 @@ try {
   const p = await browser.newPage({ viewport: { width: 390, height: 844 } });
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
 
-  await p.route('**/api/live*', (route) =>
-    route.fulfill({
+  /* A POST is answered the way the real route answers it, so the link rule
+     can be exercised for real rather than described. Everything else is the
+     stub: the room needs a Supabase project and this environment has none. */
+  let refused = null;
+  await p.route('**/api/live*', async (route) => {
+    if (route.request().method() === 'POST') {
+      const sent = JSON.parse(route.request().postData() ?? '{}');
+      if (sent.what === 'elsewhere') {
+        const link = String(sent.link ?? '');
+        let ok = false;
+        try {
+          const url = new URL(link);
+          const host = url.hostname.toLowerCase().replace(/^www\./, '');
+          const sites = ['youtube.com', 'youtu.be', 'tiktok.com', 'facebook.com', 'fb.watch', 'fb.com',
+            'vimeo.com', 'spotify.com', 'music.apple.com', 'soundcloud.com'];
+          ok = url.protocol === 'https:' && !url.username && !url.password
+            && sites.some((one) => host === one || host.endsWith(`.${one}`));
+        } catch { ok = false; }
+        if (!ok) {
+          refused = link;
+          await route.fulfill({
+            status: 400,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              message: 'Links in the room have to go to YouTube, TikTok, Facebook, Vimeo, Spotify, Apple Music or SoundCloud — so everybody knows where a link goes before they press it.',
+            }),
+          });
+          return;
+        }
+      }
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
+      return;
+    }
+    await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ ready: true, signedIn: true, here: 3, posts: POSTS, says: [] }),
-    }));
+      body: JSON.stringify({
+        ready: true,
+        signedIn: true,
+        here: 3,
+        posts: POSTS,
+        says: [
+          { id: 's1', by: 'Riaan', body: 'Hierdie een is lekker.', at: '2026-09-06T09:00:00.000Z', mine: false },
+          { id: 's2', by: 'You', body: 'Dankie! Nog een kom nou.', at: '2026-09-06T09:01:00.000Z', mine: true },
+        ],
+      }),
+    });
+  });
   await p.route('**/probe-room-*.wav', (route) =>
     route.fulfill({ status: 200, contentType: 'audio/wav', body: wav() }));
 
@@ -117,6 +159,87 @@ try {
   const room = p.locator('div.fixed.inset-0.z-50').first();
   const says = async () => ((await room.innerText()) ?? '').replace(/\s+/g, ' ');
   check('the Live tab opens the room', (await says()).includes('Karoo Wind'), (await says()).slice(0, 60));
+
+  /* ── The two questions, and the messages ────────────────────────────
+ 
+     "die live kamer moet oop maak met die vraag of jy self liedjies wil post,
+      en ook die vraag of jy iets in die live room wil pos, die boodskappe van
+      die live room moet dan daar wys."
+ 
+     Two cards, shut, then what the room is saying, then the room itself. */
+  const asks = room.locator('section > div > button[aria-expanded]');
+  check('the room opens on two questions', (await asks.count()) === 2, `${await asks.count()}`);
+  const asked = (await asks.allInnerTexts()).map((one) => one.trim()).join(' | ');
+  check('one about your own songs', /own songs/i.test(asked), asked);
+  check('and one about putting something else in', /something else/i.test(asked), asked);
+  check('and they are shut, so the room is what you see first',
+    (await asks.evaluateAll((els) => els.every((el) => el.getAttribute('aria-expanded') === 'false'))));
+  check('what the room is saying is on the screen',
+    (await says()).includes('Hierdie een is lekker'), 'the messages');
+  check('and it is above the songs, not under every one of them',
+    (await says()).indexOf('Hierdie een is lekker') < (await says()).indexOf('Karoo Wind'));
+
+  /* ── A post is a panel, not a small block ──────────────────────────
+ 
+     "Dit moenie sulke klein blokkie wees soos dit nou is nie." Measured,
+     because "bigger" is an opinion until somebody counts the pixels. */
+  const panel = room.locator('article').first();
+  const panelBox = await panel.boundingBox();
+  check('a post fills most of the screen rather than three lines of it',
+    (panelBox?.height ?? 0) >= 380, `${Math.round(panelBox?.height ?? 0)}px tall`);
+  check('and is taller than it is wide, the way a phone shows video',
+    (panelBox?.height ?? 0) > (panelBox?.width ?? 0),
+    `${Math.round(panelBox?.width ?? 0)}×${Math.round(panelBox?.height ?? 0)}`);
+  await p.screenshot({ path: shot('liveroom-panels.png') });
+
+  /* ── The link rule, exercised rather than described ────────────────
+ 
+     "mense mag net toegang hê om tiktok links te post vir live chats. Jy moet
+      hierdie kan toets dat dit nie snaakse content deel nie." */
+  await asks.nth(1).click();
+  await p.waitForTimeout(500);
+  /* The rule is written inside the form, so the form has to be open before it
+     can be read. Asserted before opening it once, and it reported the rule
+     missing when what was missing was the press. */
+  const openIt = room.locator('button').filter({ hasText: /going live somewhere/i }).first();
+  if (await openIt.count()) { await openIt.click(); await p.waitForTimeout(500); }
+  check('the form names the sites it takes, before anything is typed',
+    /YouTube, TikTok, Facebook, Vimeo, Spotify, Apple Music or SoundCloud/.test(await says()));
+  check('and does not claim to have watched what is on the far end',
+    (await says()).includes('cannot tell you what is on the far end'));
+  const linkBox = room.locator('input[inputmode="url"]').first();
+  check('there is one link field', (await linkBox.count()) === 1);
+  await room.locator('input[placeholder*="What is it"]').first().fill('Live tonight');
+  for (const [bad, what] of [
+    ['https://evil.example/whatever', 'a stranger’s own server'],
+    ['https://tiktok.com.evil.example/1', 'a lookalike domain'],
+    ['https://twitter.com/someone/status/1', 'a platform that is not on the list'],
+  ]) {
+    /* The form is reopened each time. It closes itself on a successful post,
+       and a loop that assumes it stayed open reports the second refusal
+       missing when what is missing is the form. */
+    if (!(await linkBox.isVisible().catch(() => false))) {
+      await openIt.click().catch(() => undefined);
+      await p.waitForTimeout(400);
+    }
+    refused = null;
+    await room.locator('input[placeholder*="What is it"]').first().fill('Live tonight');
+    await linkBox.fill(bad);
+    await room.locator('button').filter({ hasText: /^Tell the room$/ }).last()
+      .click().catch(() => undefined);
+    for (let waited = 0; waited < 20 && !refused; waited += 1) await p.waitForTimeout(200);
+    check(`refused: ${what}`, refused === bad, refused ?? 'nothing reached the route');
+    /* `refused` is set the moment the request arrives at the route, which is
+       before the browser has had the answer, let alone drawn it. Asserting
+       straight after it is a race, and it reported the room silent about a
+       refusal it was about to print. */
+    await p.waitForTimeout(700);
+    const shown = await says();
+    check('and the room says why, in its own words',
+      shown.includes('have to go to YouTube'), `${shown.slice(0, 120)}…`);
+  }
+  await asks.nth(1).click();
+  await p.waitForTimeout(400);
 
   const playRoom = room.locator('button').filter({ hasText: /^Play the room$/ });
   check('and the room can be played, not only listed', (await playRoom.count()) === 1);

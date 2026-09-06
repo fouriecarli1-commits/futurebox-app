@@ -34,7 +34,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Eye, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users,
+  Eye, Loader2, Music, Play, Radio, Send, Sparkles, Square, Trash2, Upload, Users,
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { loadTracks, type Track } from '../lib/library';
@@ -42,6 +42,7 @@ import { visitorId } from '../lib/signal';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import RoomScreen from './RoomScreen';
+import Cover from './Cover';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
 import Card from './Card';
@@ -105,6 +106,140 @@ function until(when: string, t: (key: string, fallback?: string) => string): str
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `${t('live.in', 'in')} ${hours} ${t('live.hours', 'hours')}`;
   return `${t('live.in', 'in')} ${Math.round(hours / 24)} ${t('live.days', 'days')}`;
+}
+
+/**
+ * One post in the room, as a panel rather than a row.
+ *
+ *   "Dit moenie sulke klein blokkie wees soos dit nou is nie."
+ *
+ * It was three lines tall in a list of rows. A row is a thing you skim past;
+ * something that fills most of the screen is a thing you look at. So each post
+ * gets a panel with its cover on it, its own play button, and the person who
+ * made it on the front — the shape a phone has taught everybody to scroll.
+ *
+ * ── Why it is not simply the full-screen player inline ───────────────────
+ *
+ * `RoomScreen` is that, and it is still what opens when a panel is pressed —
+ * one at a time, snapped, with the words moving. It is the better place to
+ * watch and the wrong place to browse: a room whose contents are visible only
+ * after you decide to open one looks empty, which is the state this room is
+ * actually in and the last impression it should give.
+ *
+ * ── Literal colours ──────────────────────────────────────────────────────
+ *
+ * The cover is a picture and text sits on it, so `text-white` is wrong here:
+ * this app remaps Tailwind's white onto a theme variable and it renders
+ * near-black in the light theme. `#ffffff` and a real shadow, the same as
+ * `RoomScreen` and `SongScreen`.
+ */
+function RoomPanel({
+  post,
+  playing,
+  onOpen,
+  onPlay,
+  onTakeOut,
+}: {
+  readonly post: Post;
+  readonly playing: boolean;
+  readonly onOpen: () => void;
+  readonly onPlay: () => void;
+  readonly onTakeOut: () => void;
+}): React.ReactElement {
+  const { t } = useLang();
+  const listenable = post.kind !== 'elsewhere' && Boolean(post.audio);
+
+  return (
+    <article className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
+      {/* Tall, and taller than it is wide on a phone. Capped in viewport
+          height so two panels are never entirely off the screen at once —
+          somebody has to be able to see that there is a next one. */}
+      <button
+        type="button"
+        onClick={onOpen}
+        disabled={!listenable}
+        aria-label={post.title}
+        className="block aspect-[3/4] max-h-[70vh] w-full disabled:cursor-default"
+      >
+        <Cover seed={post.id} label={post.title} className="h-full w-full" />
+      </button>
+
+      {/* Over the picture, bottom left, out of the thumb's way on the right. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 p-4 pb-3"
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0))' }}
+      >
+        <p
+          className="truncate text-lg font-black leading-tight"
+          style={{ color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
+        >
+          {post.title}
+        </p>
+        <p className="truncate text-sm" style={{ color: 'rgba(255,255,255,0.78)' }}>
+          {post.by}
+          {post.kind === 'elsewhere'
+            ? ` · ${post.platform || t('live.somewhere', 'somewhere')}`
+            : post.seconds
+              ? ` · ${clock(post.seconds)}`
+              : ''}
+        </p>
+        {post.note && (
+          <p className="line-clamp-2 pt-1 text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.78)' }}>
+            {post.note}
+          </p>
+        )}
+      </div>
+
+      {/* The rail, on the right, where a thumb already is. */}
+      <div className="absolute bottom-4 right-3 flex flex-col items-center gap-2.5">
+        {listenable && (
+          <button
+            type="button"
+            onClick={onPlay}
+            aria-label={playing ? t('live.stop', 'Stop') : t('live.listen', 'Listen')}
+            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur"
+            style={{ background: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
+          >
+            {playing ? <Square className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5" />}
+          </button>
+        )}
+        {post.kind === 'elsewhere' && post.link && (
+          <a
+            href={post.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t('live.watch', 'Watch')}
+            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur"
+            style={{ background: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
+          >
+            <Eye className="h-5 w-5" />
+          </a>
+        )}
+        {post.mine && (
+          <button
+            type="button"
+            onClick={() => void onTakeOut()}
+            aria-label={t('live.take', 'Take it out')}
+            className="flex h-10 w-10 items-center justify-center rounded-full backdrop-blur"
+            style={{ background: 'rgba(0,0,0,0.5)', color: 'rgba(255,255,255,0.75)' }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {/* A post whose file has gone. Said on the panel rather than by a
+          button that does nothing when pressed. */}
+      {post.kind !== 'elsewhere' && !post.audio && (
+        <p
+          className="absolute left-4 top-4 rounded-full px-2.5 py-1 text-xs font-semibold"
+          style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(255,255,255,0.8)' }}
+        >
+          {t('live.gone', 'That file is not there any more.')}
+        </p>
+      )}
+    </article>
+  );
 }
 
 export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }): React.ReactElement {
@@ -278,9 +413,18 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
 
-      {/* ── Put something in ──────────────────────────────────────────── */}
+      {/* ── The two questions the room opens on ─────────────────────────
+
+          "die live kamer moet oop maak met die vraag of jy self liedjies wil
+           post, en ook die vraag of jy iets in die live room wil pos"
+
+          They were one card called "Put something in the room" holding both,
+          which is one heading over two different decisions. Two cards, each
+          asking its own question, and both shut to start with — the room is
+          for what is in it, and somebody who came to listen should not have
+          to scroll past two forms to reach it. */}
       {room.signedIn && (
-        <Card title={t('live.putIn', 'Put something in the room')}>
+        <Card title={t('live.askSongs', 'Do you want to put one of your own songs in?')} startShut>
           <Note>{t('live.public')}</Note>
 
           {tracks.length === 0 ? (
@@ -349,7 +493,11 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             </div>
           )}
 
-          {/* ── Or say you are going live somewhere this app cannot reach ── */}
+        </Card>
+      )}
+
+      {room.signedIn && (
+        <Card title={t('live.askElsewhere', 'Do you want to put something else in the room?')} startShut>
           <button
             type="button"
             onClick={() => setShowElsewhere(!showElsewhere)}
@@ -362,22 +510,24 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
           {showElsewhere && (
             <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
               <Note>{t('live.elsewhereNote')}</Note>
-              <div className="flex flex-wrap gap-1.5">
-                {(['tiktok', 'youtube', 'instagram'] as const).map((one) => (
-                  <button
-                    key={one}
-                    type="button"
-                    onClick={() => setWhere({ ...where, platform: one })}
-                    className={`px-3 py-1.5 rounded-xl text-sm font-semibold border ${
-                      where.platform === one
-                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
-                        : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-600'
-                    }`}
-                  >
-                    {one}
-                  </button>
-                ))}
-              </div>
+              {/* One site, and the reason on the screen.
+
+                  This was a choice of three platforms over a field that took
+                  any https address at all — which is not a link field, it is
+                  a place to publish a URL of your choosing to everybody in
+                  the room. TikTok only now, checked on the server as well
+                  because a rule enforced only in a form is not a rule.
+
+                  What it promises is the destination and nothing more. It
+                  cannot tell whether a video is decent, nothing on this side
+                  can, and saying so here is better than implying somebody
+                  watched it. */}
+              <p className="text-sm text-zinc-400 leading-snug">
+                {t(
+                  'live.linksOnly',
+                  'YouTube, TikTok, Facebook, Vimeo, Spotify, Apple Music or SoundCloud. That way everybody in the room knows where a link goes before they press it — we cannot tell you what is on the far end of it, only where it lands.',
+                )}
+              </p>
               <input
                 value={where.title}
                 onChange={(event) => setWhere({ ...where, title: event.target.value })}
@@ -387,7 +537,8 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
               <input
                 value={where.link}
                 onChange={(event) => setWhere({ ...where, link: event.target.value })}
-                placeholder="https://…"
+                inputMode="url"
+                placeholder={t('live.linkPaste', 'Paste the link')}
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
               />
               <input
@@ -421,112 +572,12 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
         </Card>
       )}
 
-      {/* ── The room ──────────────────────────────────────────────────── */}
-      {/* Play the room, rather than play one thing out of it. */}
-      {room.posts.some((one) => one.audio) && (
-        <button
-          type="button"
-          onClick={() => {
-            const first = room.posts.find((one) => one.audio);
-            if (first) setOpenAt(first.id);
-          }}
-          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold"
-        >
-          <Play className="h-4 w-4" />
-          {t('live.playRoom', 'Play the room')}
-        </button>
-      )}
+      {/* ── What the room is saying ─────────────────────────────────────
 
-      {openAt && (
-        <RoomScreen
-          posts={room.posts.map((one) => ({
-            id: one.id,
-            title: one.title,
-            by: one.by,
-            note: one.note,
-            seconds: one.seconds,
-            audio: one.audio,
-            sourceId: one.sourceId,
-          }))}
-          startAt={openAt}
-          onClose={() => setOpenAt(null)}
-        />
-      )}
-
-      <div className="space-y-2">
-        {room.posts.length === 0 && (
-          <Note>{t('live.quiet', 'Nothing in the room yet. Put a song in and it is the first thing anybody hears.')}</Note>
-        )}
-        {room.posts.map((post) => (
-          <div key={post.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex items-start gap-3">
-            {/* Tapping the row opens the room on that one, the same way
-                tapping a song in the channel opens it full screen. The
-                buttons on the right keep doing their own jobs. */}
-            <button
-              type="button"
-              onClick={() => post.audio && setOpenAt(post.id)}
-              disabled={!post.audio}
-              className="min-w-0 flex-1 text-left disabled:cursor-default"
-            >
-              <p className="text-sm font-semibold text-white truncate">{post.title}</p>
-              <p className="text-xs text-zinc-500">
-                {post.by}
-                {post.kind === 'elsewhere'
-                  ? ` · ${post.platform || t('live.somewhere', 'somewhere')}${post.startsAt ? ` · ${until(post.startsAt, t)}` : ''}`
-                  : post.seconds
-                    ? ` · ${clock(post.seconds)}`
-                    : ''}
-              </p>
-              {post.note && <p className="text-sm text-zinc-400 leading-snug pt-1">{post.note}</p>}
-            </button>
-
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {post.kind === 'elsewhere' && post.link && (
-                <a
-                  href={post.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-2.5 py-1.5 rounded-lg text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  {t('live.watch', 'Watch')}
-                </a>
-              )}
-              {post.kind !== 'elsewhere' && (
-                <button
-                  type="button"
-                  onClick={() => play(post)}
-                  disabled={!post.audio}
-                  title={post.audio ? undefined : t('live.gone', 'That file is not there any more.')}
-                  className="px-2.5 py-1.5 rounded-lg text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-40"
-                >
-                  <Music className="w-3.5 h-3.5" />
-                  {playing === post.id ? t('live.stop', 'Stop') : t('live.listen', 'Listen')}
-                </button>
-              )}
-              {post.mine && (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const token = await accessToken();
-                    await fetch(`/api/live?id=${encodeURIComponent(post.id)}`, {
-                      method: 'DELETE',
-                      headers: token ? { Authorization: `Bearer ${token}` } : {},
-                    }).catch(() => {});
-                    void ask();
-                  }}
-                  className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400"
-                  aria-label={t('live.take', 'Take it out')}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Talking ───────────────────────────────────────────────────── */}
+          Above the songs rather than at the bottom of the page. It was last,
+          under every post, which is where a chat goes when nobody has
+          decided it matters — and it is the half of a live room that tells
+          you whether anybody is actually here. */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
         <div className="space-y-1 max-h-64 overflow-y-auto">
           {room.says.length === 0 && (
@@ -569,6 +620,77 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
           <p className="text-sm text-zinc-500">{t('live.signInToSay', 'Sign in to say something. Listening needs no account.')}</p>
         )}
       </div>
+
+      {/* ── And then the room itself, one song at a time ─────────────────
+
+          "soos 'n tiktok wat jy scroll van een video na die volgende. Dit
+           moenie sulke klein blokkie wees soos dit nou is nie."
+
+          It was a list of rows about three lines tall. A row is a thing you
+          skim past; a panel that fills the screen is a thing you watch. So
+          each post is its own panel, snapped, and scrolling moves from one
+          to the next rather than through a list.
+
+          Inline rather than only on tap: the full-screen player still opens
+          when a panel is pressed, and it is still the better place to watch
+          — but a room whose contents are only visible after you decide to
+          open one is a room that looks empty. */}
+      {/* Play the whole room rather than one thing out of it. Kept above the
+          panels, where it was, because it is the one control that is about
+          the room instead of about a post. */}
+      {room.posts.some((one) => one.audio) && (
+        <button
+          type="button"
+          onClick={() => {
+            const first = room.posts.find((one) => one.audio);
+            if (first) setOpenAt(first.id);
+          }}
+          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold"
+        >
+          <Play className="h-4 w-4" />
+          {t('live.playRoom', 'Play the room')}
+        </button>
+      )}
+
+      {room.posts.length === 0 ? (
+        <Note>{t('live.quiet', 'Nothing in the room yet. Put a song in and it is the first thing anybody hears.')}</Note>
+      ) : (
+        <div className="-mx-1 space-y-3 px-1">
+          {room.posts.map((post) => (
+            <RoomPanel
+              key={post.id}
+              post={post}
+              playing={playing === post.id}
+              onOpen={() => post.audio && setOpenAt(post.id)}
+              onPlay={() => play(post)}
+              onTakeOut={async () => {
+                const token = await accessToken();
+                await fetch(`/api/live?id=${encodeURIComponent(post.id)}`, {
+                  method: 'DELETE',
+                  headers: token ? { Authorization: `Bearer ${token}` } : {},
+                }).catch(() => {});
+                void ask();
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {openAt && (
+        <RoomScreen
+          posts={room.posts.map((one) => ({
+            id: one.id,
+            title: one.title,
+            by: one.by,
+            note: one.note,
+            seconds: one.seconds,
+            audio: one.audio,
+            sourceId: one.sourceId,
+          }))}
+          startAt={openAt}
+          onClose={() => setOpenAt(null)}
+        />
+      )}
     </div>
   );
 }
