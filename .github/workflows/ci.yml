@@ -102,6 +102,12 @@ jobs:
       - name: A row can only claim its own file
         run: npm run check:ownedpath
 
+      # Three things have an opinion about the language and they do not carry
+      # equal weight. The rule lived inside two React effects where it could
+      # not be run, and the bug she hit was invisible to everything.
+      - name: A choice wins, the account answers, a guess does neither
+        run: npm run check:language
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

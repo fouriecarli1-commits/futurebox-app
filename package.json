@@ -11,6 +11,7 @@
     "check:sqlbundle": "tsx scripts/check-sqlbundle.mts",
     "costs:eleven": "tsx scripts/costs-eleven.mts",
     "check:probes": "tsx scripts/check-probes.mts",
+    "check:language": "tsx scripts/check-language.mts",
     "check:heard": "tsx scripts/check-heard.mts",
     "check:reachable": "tsx scripts/check-reachable.mts",
     "check:storyboard": "tsx scripts/check-storyboard.mts",
