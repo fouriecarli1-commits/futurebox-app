@@ -54,6 +54,7 @@ import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import type { Track } from '../lib/library';
 import Lanes from './Lanes';
 import Note from './Note';
+import Card from './Card';
 
 interface Part {
   name: string;
@@ -386,7 +387,7 @@ export default function SongSections({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
+      <Card title={t('sec.whichSong', 'Which song?')}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <select
             value={track?.id ?? ''}
@@ -436,7 +437,7 @@ export default function SongSections({
               'These sections are worked out from the words — this song did not carry a plan, so the times are close rather than exact. Everything you change here still travels through in full.',
             )}</Note>
         )}
-      </div>
+      </Card>
 
       {/* ── The song in tracks ──────────────────────────────────────────
           Under the transport and above the sections, which is the order the
@@ -566,7 +567,7 @@ export default function SongSections({
         {t('sec.add', 'Put another section in')}
       </button>
 
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-2.5">
+      <Card title={t('sec.remakeTitle', 'Make it again')}>
         {/* Said here rather than as a slider that does nothing: lengths are not
             carried in the lyric sheet, so a draggable number would be thrown
             away on the way out. */}
@@ -580,7 +581,7 @@ export default function SongSections({
           <Sparkles className="w-4 h-4" />
           {t('sec.remake', 'Make a new take with these changes')}
         </button>
-      </div>
+      </Card>
     </div>
   );
 }

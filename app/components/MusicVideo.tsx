@@ -20,6 +20,7 @@ import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import { addUpload, loadUploads, removeUpload } from '../lib/uploads';
 import Note from './Note';
+import Card from './Card';
 
 export default function MusicVideo() {
   const { t } = useLang();
@@ -102,7 +103,9 @@ export default function MusicVideo() {
           the button that brings one in. An empty channel is no longer a dead
           end: the room used to print "no songs yet" and stop, which was the
           wrong answer for anybody who already has a recording. */}
-      <div className="space-y-2">
+      {/* Boxed, like every other room. This was a loose paragraph over a row
+          of chips with no card around any of it. */}
+      <Card title={t('video.whichSong', 'Which song?')}>
         <p className="text-sm text-zinc-400">
           {tracks.length === 0 && brought.length === 0 ? t('video.none') : t('video.pick')}
         </p>
@@ -161,7 +164,7 @@ export default function MusicVideo() {
           )}
         </Note>
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
-      </div>
+      </Card>
 
       {selected && <VideoPanel track={selected} onClose={() => setSelected(null)} />}
     </div>

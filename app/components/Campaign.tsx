@@ -54,6 +54,7 @@ import BrandKit from './BrandKit';
 import { EMPTY as EMPTY_KIT, brandLine, type BrandKit as Kit } from '../lib/brandkit';
 import History from './History';
 import Note from './Note';
+import Card from './Card';
 import { makeId, rememberMake } from '../lib/makes';
 
 interface Ad {
@@ -286,11 +287,8 @@ export default function Campaign({
       {/* Where it is going, before it is written rather than after.
           The platforms decide the shape, the length and the hook window, and a
           shape decided after the copy is a rewrite. */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-zinc-200">{t('ads.whereTitle', 'Where is it going?')}</p>
-          <Note className="text-xs text-zinc-500 leading-relaxed">{t('ads.whereNote', 'This decides the shape, the length and how fast the hook has to land — so it is asked before the writing, not after.')}</Note>
-        </div>
+      <Card title={t('ads.whereTitle', 'Where is it going?')}>
+        <Note className="text-xs text-zinc-500 leading-relaxed">{t('ads.whereNote', 'This decides the shape, the length and how fast the hook has to land — so it is asked before the writing, not after.')}</Note>
         <div className="flex flex-wrap gap-2">
           {PLATFORMS.map((one) => {
             const on = going.indexOf(one.id) !== -1;
@@ -315,13 +313,13 @@ export default function Campaign({
             );
           })}
         </div>
-      </div>
+      </Card>
 
       {/* The brief. Only the first box is required: an ad for "my bakery in
           Bellville" is a worse ad than one with an audience and an offer, but
           it is a real one, and making somebody fill five boxes before they see
           anything is how a room gets abandoned. */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
+      <Card title={t('ads.aboutTitle', 'What the advert is about')}>
         <div className="space-y-1.5">
           <label className="text-sm text-zinc-400" htmlFor="ads-what">
             {t('ads.whatLabel', 'What are you advertising?')}
@@ -441,7 +439,7 @@ export default function Campaign({
             <span>{problem}</span>
           </p>
         )}
-      </div>
+      </Card>
 
       {ads.map((ad, index) => (
         <div key={`${ad.angle}-${index}`} className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">

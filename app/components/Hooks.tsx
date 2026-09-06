@@ -25,6 +25,7 @@ import { makeId, rememberMake } from '../lib/makes';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
 import Note from './Note';
+import Card from './Card';
 import { addUpload, loadUploads, removeUpload } from '../lib/uploads';
 import { cutHook, soundOf } from '../lib/videoclip';
 
@@ -294,7 +295,13 @@ export default function Hooks() {
           means they designate. A file you own is a different thing entirely,
           and it is the thing that was actually wanted. */}
       <>
-          <div className="space-y-2">
+          {/* Boxed, like every other room.
+
+              This section had no box at all: a loose paragraph, then chips,
+              then two more loose paragraphs down the page. `docs/PACKAGING.md`
+              §2 is one shape for all thirteen rooms and this was one of the
+              ones still writing its own. */}
+          <Card title={t('hooks.fromTitle', 'What are we cutting from?')}>
             <p className="text-sm text-zinc-400">
               {tracks.length === 0 && brought.length === 0 ? t('hooks.none') : t('hooks.pick')}
             </p>
@@ -383,11 +390,14 @@ export default function Hooks() {
               )}
             </Note>
             {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
-          </div>
+          </Card>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-400">{t('hooks.clipLength')}</span>
-            {LENGTHS.map((option) => (
+          {/* The length, as its own card with the choices as the small buttons
+              along the bottom — which is exactly what the `tools` row is for. */}
+          <Card
+            title={t('hooks.clipLength')}
+            /* eslint-disable-next-line react/jsx-no-useless-fragment */
+            tools={<>{LENGTHS.map((option) => (
               <button
                 key={option}
                 type="button"
@@ -403,8 +413,12 @@ export default function Hooks() {
               >
                 {option}s
               </button>
-            ))}
-          </div>
+            ))}</>}
+          >
+            <p className="text-sm text-zinc-500 leading-snug">
+              {t('hooks.clipLengthWhy', 'The first fifteen seconds decide whether anybody watches the rest, so shorter is usually better.')}
+            </p>
+          </Card>
 
           {finding && <p className="text-sm text-zinc-500">{t('hooks.looking')}</p>}
 

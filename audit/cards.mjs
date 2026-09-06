@@ -29,18 +29,21 @@ const PORT = process.argv[2] || '3181';
 /**
  * How many screens carry at least one foldable card. Only ever goes up.
  *
- * Five, measured rather than assumed: Spotlight (4 bars), Collab Radar (4),
- * Your voice (3), Make a song (2), Channel (1). Several rooms have had panels
- * converted — the podcast channel and episode, the two dubbing panels, the
- * transcript, the sound trainer, Live's "put something in" — and show zero
- * here because the panel is behind a state this probe does not reach: a show
- * that has been set up, a recording in progress, a song already chosen.
+ * Nine, measured rather than assumed. The five that still read zero here are
+ * not five rooms that were skipped — every one of them has converted cards
+ * that this probe cannot reach, because it opens each room cold:
  *
- * That gap is why the number is printed per screen rather than as one total.
- * A single figure would have read as "nine rooms are not done" when the truth
- * is "nine rooms are partly done and this probe cannot see the rest".
+ *   Studio      needs a song to edit; with none it draws its empty panel.
+ *   The Booth   needs a recording before "the voices in this song" exists.
+ *   Soundboard  the trained-sound card needs accounts configured.
+ *   Live        "put something in the room" needs a song of your own.
+ *   Podcast     the channel and episode cards need a show set up.
+ *
+ * That is why the count is printed per screen and never as one total. A
+ * single figure would read as "five rooms are not done" when the truth is
+ * "five rooms are done in a state this cannot open".
  */
-const FLOOR = Number(process.argv[3] || 5);
+const FLOOR = Number(process.argv[3] || 9);
 
 const ROOMS = [
   'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard', 'Music video',

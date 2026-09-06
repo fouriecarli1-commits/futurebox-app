@@ -49,6 +49,7 @@ import NoteBar, { type Trail } from './NoteBar';
 import Hint from './Hint';
 import Cost from './Cost';
 import ProBooth from './ProBooth';
+import Card from './Card';
 import { alignTo, fitInto, partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
 import { vocalSpanOf } from '../lib/vocalspan';
 import { phrasesOf } from '../lib/phrases';
@@ -1360,13 +1361,13 @@ export default function VocalBooth({
             places — a fader in the desk, a panel here, and one feature only
             the podcast screen had. One panel, one voice to a row. */}
         {recorded && (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2.5">
-            <p className="text-sm font-bold text-white flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              {t('booth.voices', 'The voices in this song')}
-            </p>
-
-            <div className="flex items-center gap-3 flex-wrap border-t border-zinc-800 pt-2.5">
+          <Card
+            title={t('booth.voices', 'The voices in this song')}
+            icon={<Sparkles className="w-4 h-4" />}
+          >
+            {/* The rule that used to be drawn under the heading is gone with
+                the heading: the card draws its own edge. */}
+            <div className="flex items-center gap-3 flex-wrap">
               <span className="text-sm font-semibold text-zinc-200 w-28 flex-shrink-0">
                 {t('booth.yourVoice', 'Your voice')}
               </span>
@@ -1502,7 +1503,7 @@ export default function VocalBooth({
                 </div>
               </div>
             )}
-          </div>
+          </Card>
         )}
 
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}

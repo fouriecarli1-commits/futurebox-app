@@ -48,6 +48,7 @@ import SafeZones from './SafeZones';
 import Storyboard from './Storyboard';
 import DubFilm from './DubFilm';
 import Note from './Note';
+import Card from './Card';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
@@ -531,15 +532,14 @@ export default function VideoCanvas({
           decision, and this one is easy to skip. It scrolls in its own box so
           ten chips cannot push the writing box off a phone screen. */}
       {scene?.id === 'music' && (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
-          <div className="flex items-baseline justify-between gap-3 flex-wrap">
-            <p className="text-sm font-semibold text-zinc-300">
-              {t('canvas.genre', 'What kind of song is it?')}
-            </p>
-            <p className="text-xs text-zinc-500">
+        <Card
+          title={t('canvas.genre', 'What kind of song is it?')}
+          aside={
+            <span className="text-xs text-zinc-500">
               {t('canvas.genreSkip', 'Optional — it just fills the box differently.')}
-            </p>
-          </div>
+            </span>
+          }
+        >
           <div className="flex flex-wrap gap-1.5">
             {GENRES.map((one) => {
               const active = genre?.id === one.id;
@@ -573,21 +573,26 @@ export default function VideoCanvas({
               );
             })}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* ── The box ───────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <label htmlFor="canvas-prompt" className="text-sm font-semibold text-zinc-300">
-            {t('canvas.shot', 'The shot')}
-          </label>
-          {prompt && (
+      <Card
+        title={t('canvas.shot', 'The shot')}
+        aside={
+          prompt ? (
             <button type="button" onClick={clear} className="text-xs text-zinc-500 hover:text-zinc-300">
               {t('canvas.clear', 'Clear')}
             </button>
-          )}
-        </div>
+          ) : null
+        }
+      >
+        {/* The label stays, unseen. The card's heading is the visible name of
+            this box, but a heading is not a label — a screen reader following
+            `aria-labelledby` on the textarea would have had nothing to read. */}
+        <label htmlFor="canvas-prompt" className="sr-only">
+          {t('canvas.shot', 'The shot')}
+        </label>
 
         <textarea
           id="canvas-prompt"
@@ -890,7 +895,7 @@ export default function VideoCanvas({
         )}
 
         {error && <p className="text-sm text-rose-400 leading-relaxed">{error}</p>}
-      </div>
+      </Card>
 
       {/* ── A film out of many shots ──────────────────────────────────────
 
