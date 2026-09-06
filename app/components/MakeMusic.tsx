@@ -31,6 +31,7 @@ import { expect as expectWait, remember } from '../lib/timing';
 import VideoPanel from './VideoPanel';
 import NowPlaying from './NowPlaying';
 import Sleeve from './Sleeve';
+import PostToLive from './PostToLive';
 import VocalBooth from './VocalBooth';
 import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
@@ -1313,6 +1314,11 @@ export default function MakeMusic({
                     <ImageIcon className="w-3.5 h-3.5" />
                     {t('make.cover', 'Cover art')}
                   </button>
+                  {/* Straight into the live room, from the room it was made
+                      in. Finishing a song and then having to open another
+                      room to put it in front of anybody was the long way
+                      round, and only worked for your six newest songs. */}
+                  <PostToLive track={track} />
                   <button
                     type="button"
                     onClick={() => share(track)}

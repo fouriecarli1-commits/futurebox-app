@@ -24,31 +24,67 @@
  * The alternative — a button labelled "Post to TikTok" that opens a tab and
  * does nothing else — is the kind of lie that costs a person a real minute
  * before they work it out.
+ *
+ * ── Why it opens as a sheet and not underneath the button ────────────────
+ *
+ *   "in library wanneer mens kliek post it, dan is die drop down menu van
+ *    opsies alles op mekaar gesquash."
+ *
+ * It used to open in place. In the channel that place is a cell of a grid
+ * that is three columns wide on a laptop — about two hundred and eighty
+ * pixels — and a caption, eight platform buttons and two paragraphs do not
+ * go in two hundred and eighty pixels. They stacked and overlapped, which is
+ * exactly what she saw.
+ *
+ * A width that depends on which room the row happens to be in is not a thing
+ * to tune; it is a thing to stop depending on. So the panel is a sheet over
+ * the whole screen, through a portal on `document.body` — because `fixed` is
+ * only viewport-relative when no ancestor has a transform, a filter or a
+ * containing block, and half the cards in this app have one.
  */
 
 import React, { useEffect, useState } from 'react';
-import { Check, Copy, ExternalLink, Share2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Check, Copy, ExternalLink, Share2, X } from 'lucide-react';
 import { PLATFORMS, FUTUREBOX_TAG } from '../data/social';
 import { buildCaption, loadHandles, shareUrlFor, type Handles } from '../lib/social';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
+import PostToLive from './PostToLive';
+import type { Track } from '../lib/library';
 
 export default function ShareRow({
   title,
   what,
   hashtags = [],
+  track,
 }: {
   title: string;
   /** A line about the thing, which becomes the first line of the caption. */
   what: string;
   hashtags?: readonly string[];
+  /**
+   * The song this row belongs to, where there is one.
+   *
+   * Only a song can go in the live room, and only the caller knows whether
+   * this row is on a song or on an advert. Where it is given, posting to the
+   * room is the first thing offered — it is the one place on this sheet that
+   * actually posts rather than opening somebody else's composer.
+   */
+  track?: Track;
 }): React.ReactElement {
   const { t } = useLang();
   const [handles, setHandles] = useState<Handles>({});
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
+  /* Portals need a document, and this component is rendered on the server
+     first. Without the guard the first paint disagrees with the second. */
+  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setHandles(loadHandles()), []);
+  useEffect(() => {
+    setHandles(loadHandles());
+    setMounted(true);
+  }, []);
 
   const caption = buildCaption(`${title}\n${what}`.trim(), hashtags, { creditFuturebox: true });
 
@@ -75,8 +111,41 @@ export default function ShareRow({
         {t('share.post', 'Post it')}
       </button>
 
-      {open && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2.5">
+      {open && mounted && createPortal(
+        <div className="fixed inset-0 z-[92] flex flex-col justify-end bg-black/60 backdrop-blur-sm">
+          {/* The ground, pressable, because a sheet with no way out except a
+              small button is a sheet somebody gets stuck in. */}
+          <button
+            type="button"
+            aria-label={t('share.close', 'Close')}
+            onClick={() => setOpen(false)}
+            className="flex-1"
+          />
+          <div className="max-h-[85vh] space-y-2.5 overflow-y-auto rounded-t-2xl border-t border-zinc-800 bg-zinc-950 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+            <div className="flex items-center justify-between gap-3">
+              <p className="min-w-0 flex-1 truncate text-sm font-semibold text-zinc-200">
+                {t('share.post', 'Post it')} — {title}
+              </p>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label={t('share.close', 'Close')}
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-300"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* The one thing here that really posts. */}
+            {track && (
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3">
+                <PostToLive track={track} />
+                <span className="min-w-0 flex-1 text-sm text-zinc-500">
+                  {t('share.liveIsReal', 'This one posts. Everything under it opens somebody else’s composer.')}
+                </span>
+              </div>
+            )}
+
           <Note className="text-xs text-zinc-500 leading-snug">{t(
               'share.how',
               'Copy the caption, save the file, then open the composer and drop it in. Nothing here uploads for you — posting on your behalf needs each platform to approve an app, which is a queue rather than a button.',
@@ -122,14 +191,16 @@ export default function ShareRow({
             })}
           </div>
 
-          <p className="text-xs text-zinc-600 leading-snug">
-            {t('share.tagNote', 'The caption credits')} {FUTUREBOX_TAG}{' '}
-            {t(
-              'share.tagWhy',
-              '— an untagged post is invisible to the channel that would share it on.',
-            )}
-          </p>
-        </div>
+            <p className="text-xs text-zinc-600 leading-snug">
+              {t('share.tagNote', 'The caption credits')} {FUTUREBOX_TAG}{' '}
+              {t(
+                'share.tagWhy',
+                '— an untagged post is invisible to the channel that would share it on.',
+              )}
+            </p>
+          </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

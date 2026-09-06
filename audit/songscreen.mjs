@@ -96,6 +96,56 @@ try {
     file?.suggestedFilename() === 'the-one-with-a-plan.wav',
     file?.suggestedFilename() ?? 'none');
 
+  /* ── Post it: a sheet, not a squashed menu ──────────────────────────
+ 
+     "in library wanneer mens kliek post it, dan is die drop down menu van
+      opsies alles op mekaar gesquash."
+ 
+     It opened inside the song's own card, which in this grid is a third of a
+     laptop's width. A caption, eight platform buttons and two paragraphs do
+     not fit there and they overlapped.
+ 
+     So what is asserted is the geometry, not the markup: the sheet is at
+     least as wide as the card was, and no two buttons in it sit on top of
+     each other. Counting the buttons would have passed on the broken
+     version — they were all there, they were just piled up. */
+  const cardBox = await p.locator('article').first().boundingBox();
+  await p.locator('button').filter({ hasText: /^Post it$/ }).first().click();
+  await p.waitForTimeout(700);
+  const postSheet = p.locator('div.fixed.inset-0.z-\\[92\\]');
+  check('pressing Post it opens a sheet over the whole screen', (await postSheet.count()) === 1);
+  const postBox = await postSheet.locator('> div').last().boundingBox();
+  check('and it is the width of the window, not of the card',
+    Boolean(postBox) && postBox.width >= 380,
+    postBox ? `${Math.round(postBox.width)}px against a card of ${Math.round(cardBox?.width ?? 0)}px` : 'none');
+
+  const boxes = await postSheet.locator('a, button').evaluateAll((els) =>
+    els
+      .map((el) => el.getBoundingClientRect())
+      .filter((r) => r.width > 8 && r.height > 8)
+      .map((r) => ({ x: r.x, y: r.y, w: r.width, h: r.height })),
+  );
+  let piled = 0;
+  for (let i = 0; i < boxes.length; i += 1) {
+    for (let j = i + 1; j < boxes.length; j += 1) {
+      const a = boxes[i];
+      const b = boxes[j];
+      const over = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) *
+        Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+      /* The backdrop is a button covering everything on purpose, so overlap
+         with something the size of the screen is not a pile. */
+      if (over > 40 && a.w * a.h < 200000 && b.w * b.h < 200000) piled += 1;
+    }
+  }
+  check('and nothing in it sits on top of anything else',
+    piled === 0, `${boxes.length} things, ${piled} overlapping pair(s)`);
+  check('the one option that really posts is on it',
+    (await postSheet.locator('button').filter({ hasText: /Post to Live/ }).count()) === 1);
+  await p.screenshot({ path: shot('postit-sheet.png') });
+  await postSheet.locator('button[aria-label="Close"]').last().click();
+  await p.waitForTimeout(500);
+  check('and it closes again', (await postSheet.count()) === 0);
+
   /* ── Tapping the picture opens it full screen ───────────────────────── */
   await p.locator('button[aria-label^="Open"]').first().click();
   await p.waitForTimeout(2200);

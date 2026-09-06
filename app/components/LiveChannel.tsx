@@ -130,6 +130,8 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
    */
   const [openAt, setOpenAt] = useState<string | null>(null);
   const [showElsewhere, setShowElsewhere] = useState(false);
+  /** What is typed into the box that narrows the list of your own songs. */
+  const [looking, setLooking] = useState('');
   const [where, setWhere] = useState({ platform: 'tiktok', title: '', link: '', startsAt: '' });
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -182,6 +184,13 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
     const beat = setInterval(() => void ask(), REFRESH_EVERY);
     return () => clearInterval(beat);
   }, [ask]);
+
+  /* Declared here rather than inside the render: derived from the state above
+     it, and a value read before the state it depends on is the mistake this
+     file has already made twice. */
+  const postable = looking.trim()
+    ? tracks.filter((one) => one.title.toLowerCase().includes(looking.trim().toLowerCase()))
+    : tracks;
 
   const send = async (payload: Record<string, unknown>): Promise<boolean> => {
     setProblem('');
@@ -283,29 +292,58 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             </button>
           ) : (
             <div className="space-y-1.5">
-              {tracks.slice(0, 6).map((track) => (
-                <div key={track.id} className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2">
-                  <Music className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
-                  <span className="text-sm text-zinc-300 truncate flex-1 min-w-0">{track.title}</span>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() =>
-                      void send({
-                        what: 'post',
-                        kind: 'track',
-                        sourceId: track.id,
-                        title: track.title,
-                        seconds: track.seconds,
-                      })
-                    }
-                    className="px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    {t('live.post', 'Post it')}
-                  </button>
-                </div>
-              ))}
+              {/* Every song, not the first six.
+
+                  "nie al my liedjies is daar as opsies nie." It was
+                  `tracks.slice(0, 6)`, which meant the seventh song anybody
+                  made could not be put in the room at all — not hidden behind
+                  a scroll, actually unreachable, and nothing on the screen
+                  said so. The list scrolls now, and once there are enough of
+                  them to scroll past there is a box to narrow it. */}
+              {tracks.length > 6 && (
+                <input
+                  value={looking}
+                  onChange={(event) => setLooking(event.target.value)}
+                  placeholder={t('live.findSong', 'Find one of your songs')}
+                  aria-label={t('live.findSong', 'Find one of your songs')}
+                  className="w-full min-h-[44px] rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                />
+              )}
+              <div className="max-h-72 space-y-1.5 overflow-y-auto">
+                {postable.map((track) => (
+                  <div key={track.id} className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+                    <Music className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
+                    <span className="text-sm text-zinc-300 truncate flex-1 min-w-0">{track.title}</span>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() =>
+                        void send({
+                          what: 'post',
+                          kind: 'track',
+                          sourceId: track.id,
+                          title: track.title,
+                          seconds: track.seconds,
+                        })
+                      }
+                      className="px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      {t('live.post', 'Post it')}
+                    </button>
+                  </div>
+                ))}
+                {postable.length === 0 && (
+                  <p className="text-sm text-zinc-500">
+                    {t('live.noneFound', 'No song of yours has that in its name.')}
+                  </p>
+                )}
+              </div>
+              <p className="text-xs text-zinc-600">
+                {t('live.howMany', '{shown} of {all} of your songs')
+                  .replace('{shown}', String(postable.length))
+                  .replace('{all}', String(tracks.length))}
+              </p>
             </div>
           )}
 

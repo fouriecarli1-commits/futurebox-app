@@ -36,6 +36,7 @@ import { saveCreator } from '../lib/radar';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
+import PostToLive from './PostToLive';
 import Hint from './Hint';
 import RecordingName from './RecordingName';
 import FollowWords from './FollowWords';
@@ -621,6 +622,7 @@ export default function Channel({
                   title={track.title}
                   what={t('chan.shareWhat', 'A song I made on FutureBox.')}
                   hashtags={['newmusic', track.genre.replace(/[^A-Za-z0-9]/g, '').toLowerCase()].filter(Boolean)}
+                  track={track}
                 />
 
                 {adding === track.id ? (
@@ -685,6 +687,10 @@ export default function Channel({
                         ? t('chan.keeping', 'Fetching the file\u2026')
                         : t('chan.keep', 'Download')}
                     </button>
+                    {/* And into the live room, from the room the finished
+                        songs are in. It used to be reachable only from a list
+                        inside Live that showed the first six. */}
+                    <PostToLive track={track} />
                     {onEdit && (
                       <button
                         type="button"
