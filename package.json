@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "costs:eleven": "tsx scripts/costs-eleven.mts",
+    "check:probes": "tsx scripts/check-probes.mts",
     "check:theme": "tsx scripts/check-theme-css.mts",
     "check:ops": "tsx scripts/check-copilot-ops.mts",
     "check:prices": "tsx scripts/check-prices.mts",

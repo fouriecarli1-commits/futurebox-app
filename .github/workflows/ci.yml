@@ -102,6 +102,14 @@ jobs:
       - name: A row can only claim its own file
         run: npm run check:ownedpath
 
+      # The click-through job below was written, merged, and did not work:
+      # three faults, each of which made whole groups of probes report the app
+      # as broken while the app was fine. This holds the isolation that fixed
+      # them, because a probe that works alone and lies in a group is the worst
+      # kind of test to own — the run that matters is always the group.
+      - name: Every probe stands on its own
+        run: npm run check:probes
+
       # Everything past stage one in docs/ADS_AS_A_SERVICE.md is attribution,
       # and none of it can recover a click that went out on an untagged link.
       - name: Every advert link is traceable

@@ -7,7 +7,13 @@ const OFFSITE = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|ERR_CONNECTI
 /** A fetch cancelled because the component unmounted is the design, not a fault. */
 const ABORTED = /ERR_ABORTED/;
 
-export async function enter({ width = 1280, height = 900 } = {}) {
+/**
+ * @param at  where the app is. Defaults to :3000 because twenty-six older
+ *            probes assume it; a probe that starts its own server passes
+ *            `serve()`'s url instead, which is what makes it able to run on a
+ *            machine where nobody has left a server lying around.
+ */
+export async function enter({ width = 1280, height = 900, at = 'http://localhost:3000' } = {}) {
   const browser = await chromium.launch(launchOptions());
   const page = await browser.newPage({ viewport: { width, height } });
   const problems = [];
@@ -20,15 +26,15 @@ export async function enter({ width = 1280, height = 900 } = {}) {
   page.on('requestfailed', (r) => {
     const why = r.failure()?.errorText ?? '';
     if (OFFSITE.test(why) || ABORTED.test(why)) return;
-    note(`request failed: ${r.url().replace('http://localhost:3000', '')} — ${why}`);
+    note(`request failed: ${r.url().replace(at, '')} — ${why}`);
   });
   page.on('response', (r) => {
-    if (r.status() >= 400 && r.url().startsWith('http://localhost:3000')) {
-      note(`HTTP ${r.status()}: ${r.url().replace('http://localhost:3000', '')}`);
+    if (r.status() >= 400 && r.url().startsWith(at)) {
+      note(`HTTP ${r.status()}: ${r.url().replace(at, '')}`);
     }
   });
 
-  await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
+  await page.goto(at, { waitUntil: 'networkidle' });
   // The first load after a restart compiles the route, so give the call to
   // action time to exist rather than assuming it is there on arrival.
   const cta = page.locator('button, a').filter({ hasText: /start free|begin|sign up/i }).first();
@@ -39,7 +45,25 @@ export async function enter({ width = 1280, height = 900 } = {}) {
   const pw = page.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('audit-password-1234');
   await page.locator('button[type="submit"]').first().click();
-  await page.waitForTimeout(1800);
+
+  /* Waited for, not slept through.
+
+     This was `waitForTimeout(1800)`, and 1800ms is how long signing in took on
+     an idle laptop. On a loaded machine it is sometimes not enough, and the
+     probe then measures the signed-out page while believing it is signed in —
+     which is not a probe failing, it is a probe answering a different question
+     and reporting the answer as a fault. `firstscreen` failed exactly that way
+     on the desk header: signed out, the page draws a different header, and the
+     probe read `static` where it expected `sticky`.
+
+     The bottom bar is the signal because it exists on every screen the app
+     shows a signed-in person and on none that it shows a signed-out one. */
+  await page
+    .locator('nav[aria-label]')
+    .first()
+    .waitFor({ state: 'visible', timeout: 30000 })
+    .catch(() => undefined);
+  await page.waitForTimeout(400);
 
   await dismissDoor(page);
   return { browser, page, problems };

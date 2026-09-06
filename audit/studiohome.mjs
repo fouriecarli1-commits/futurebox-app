@@ -12,7 +12,7 @@
  * to the screen that shows everything.
  */
 import { enter, studio } from './enter.mjs';
-import { shot } from './where.mjs';
+import { serve, shot } from './where.mjs';
 
 const problems = [];
 const check = (label, ok, detail = '') => {
@@ -21,7 +21,13 @@ const check = (label, ok, detail = '') => {
 };
 
 const DOOR = 'div.fixed.inset-0.z-\\[55\\]';
-const { browser, page } = await enter({ width: 390, height: 844 });
+/* This probe used to point at :3000 and assume somebody had put a server
+   there. Twenty-four of its twenty-six siblings start their own; now it does
+   too, so it runs on a bare machine rather than only on the one it was
+   written on. `serve` explains why one per probe rather than one per job. */
+const PORT = process.argv[2] || '3251';
+const server = await serve(PORT);
+const { browser, page } = await enter({ width: 390, height: 844, at: server.url });
 await studio(page);
 await page.waitForTimeout(1400);
 
@@ -55,6 +61,7 @@ await page.waitForTimeout(1200);
 check('and pressing it returns to the door', (await page.locator(`${DOOR} button`).count()) > 10);
 
 await browser.close();
+server.stop();
 if (problems.length) {
   console.error(`\n${problems.length} problem(s):\n  ${problems.join('\n  ')}\n`);
   process.exit(1);

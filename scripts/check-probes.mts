@@ -1,0 +1,157 @@
+/**
+ * The click-through probes can run on a machine that is not this one.
+ *
+ * ── Why this file exists ─────────────────────────────────────────────────
+ *
+ * The CI job that runs the twenty-six probes was written, merged, and did not
+ * work. Not subtly: three separate faults, each of which made whole groups of
+ * probes report the app as broken when the app was fine.
+ *
+ *   1. Two probes went straight to `http://localhost:3000` and assumed
+ *      somebody had put a server there. On the machine they were written on
+ *      somebody always had. The CI job never did, so both failed on their
+ *      first line with ERR_CONNECTION_REFUSED — which reads as a broken app
+ *      rather than a missing server.
+ *
+ *   2. `signupcode` builds with a Supabase address in the environment,
+ *      because `cloud.configured()` is read at build time. It never put the
+ *      plain build back. `.next` is a directory and not a scope, so every
+ *      probe after it in the same job signed in through a project that does
+ *      not exist, never reached the app, and reported whatever room it was
+ *      looking at as broken.
+ *
+ *   3. A probe that threw before its own cleanup left its server running.
+ *      The next run of that probe then found a server it had not started, on
+ *      a build it did not make.
+ *
+ * All three have the same shape: a probe that works alone and lies in a group.
+ * That is the worst kind of test to own, because the run that matters is
+ * always the group. So the rules below are about isolation, and they are read
+ * off the probe files rather than off a list somebody has to remember to keep.
+ *
+ * The probes CI runs are parsed out of the workflow, so a probe added to the
+ * job is checked from the moment it is added.
+ */
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+
+/**
+ * The code, without the prose about the code.
+ *
+ * The first version of the last rule below read the raw file and failed on a
+ * comment that *names* `waitForTimeout(1800)` while explaining why it is gone.
+ * A rule that a correct file cannot pass is worse than no rule: the next
+ * person makes the code match the rule rather than the other way round.
+ *
+ * Crude on purpose — this reads probe files, not arbitrary JavaScript, and
+ * none of them has a `//` inside a string.
+ */
+function code(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+}
+
+let failures = 0;
+function ok(what: string, passed: boolean, detail = ''): void {
+  console.log(`  ${passed ? 'ok ' : 'NOT'}  ${what}${detail && !passed ? ` — ${detail}` : ''}`);
+  if (!passed) failures += 1;
+}
+
+/* ── Which probes the job actually runs ─────────────────────────────────── */
+
+const workflow = readFileSync(join(ROOT, '.github/workflows/ci.yml'), 'utf8');
+const named = [...workflow.matchAll(/^\s*probes:\s*(.+)$/gm)]
+  .flatMap((line) => line[1].trim().split(/\s+/))
+  .filter((one) => one.startsWith('check:'));
+
+ok('the workflow names probes to run', named.length > 0, `${named.length}`);
+
+const scripts = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).scripts as Record<
+  string,
+  string
+>;
+
+/** The probe file behind a script name, or null when it is not one. */
+function fileFor(script: string): string | null {
+  const line = scripts[script];
+  if (!line) return null;
+  const found = /audit\/([\w-]+\.mjs)/.exec(line);
+  return found ? join(ROOT, 'audit', found[1]) : null;
+}
+
+/* ── The rules ──────────────────────────────────────────────────────────── */
+
+for (const script of named) {
+  const path = fileFor(script);
+  if (!path) {
+    ok(`${script} is a script that runs a probe`, false, 'no audit/*.mjs in the script line');
+    continue;
+  }
+  const source = code(readFileSync(path, 'utf8'));
+  const name = script.replace('check:', '');
+
+  /* 1. It brings its own server.
+
+     Either it calls the shared `serve()`, or it spawns `next start` itself.
+     What it may not do is navigate at a hard-coded address and hope. */
+  const usesServe = /\bserve\s*\(/.test(source);
+  const spawnsOwn = /'next',\s*'start'/.test(source);
+  ok(`${name} starts the server it talks to`, usesServe || spawnsOwn);
+
+  /* 2. Nothing points at :3000 by hand.
+
+     `enter.mjs` defaults to it for twenty-six older probes that are not in
+     this job; a probe in the job passes its own server's url instead. A bare
+     literal here is the fault this whole file exists for. */
+  ok(`${name} does not hard-code :3000`, !/localhost:3000/.test(source));
+
+  /* 3. A server it starts, it stops.
+
+     `serve()` does this for its caller, including when the probe throws before
+     reaching its own cleanup. A probe that spawns for itself has to say so. */
+  if (spawnsOwn && !usesServe) {
+    ok(`${name} kills the server it spawned`, /process\.kill\(-/.test(source));
+  }
+
+  /* 4. A build with a different environment is put back.
+
+     Only `signupcode` does this today. The rule is written for the shape
+     rather than for the file, because the next probe that needs a build-time
+     variable will be written by somebody who has never seen this go wrong. */
+  const buildsWithSupabase = /NEXT_PUBLIC_SUPABASE_URL:/.test(source) && /next build/.test(source);
+  if (buildsWithSupabase) {
+    const putsItBack =
+      /delete\s+\w+\.NEXT_PUBLIC_SUPABASE_URL/.test(source) &&
+      (source.match(/next build/g) ?? []).length >= 2;
+    ok(`${name} puts the plain build back afterwards`, putsItBack);
+  }
+}
+
+/* ── And the helper keeps the promise the rules rest on ─────────────────── */
+
+const where = code(readFileSync(join(ROOT, 'audit/where.mjs'), 'utf8'));
+ok('serve() exists', /export async function serve\(/.test(where));
+ok(
+  'serve() kills the whole process group, not just the parent',
+  /process\.kill\(-child\.pid/.test(where),
+);
+ok(
+  'serve() also stops on the way out, however the probe leaves',
+  /process\.once\('exit'/.test(where),
+);
+ok('serve() refuses to hand back a server that never came up', /throw new Error\(/.test(where));
+
+const enter = code(readFileSync(join(ROOT, 'audit/enter.mjs'), 'utf8'));
+ok('enter() can be pointed at a port of its own', /\bat = 'http:\/\/localhost:3000'/.test(enter));
+ok(
+  'enter() waits for the app rather than sleeping a fixed time',
+  /nav\[aria-label\]/.test(enter) && !/waitForTimeout\(1800\)/.test(enter),
+);
+
+if (failures) {
+  console.error(`\ncheck:probes — ${failures} assertion(s) failed.\n`);
+  process.exit(1);
+}
+console.log(`\ncheck:probes — all ${named.length} probes stand alone: own server, own build, no leaks.`);

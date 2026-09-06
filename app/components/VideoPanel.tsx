@@ -11,11 +11,17 @@
  * it is not a consolation prize — it is the only one of the two where the
  * picture is genuinely of the song.
  *
- * **Made by the engine.** Kling renders footage from a sentence. It costs
+ * **Made by the engine.** An engine renders footage from a sentence. It costs
  * credits, it takes minutes, and it has nothing to do with the audio: it is
  * footage to cut against the track. It is offered only once the server has
- * confirmed the engine is switched on, because a button for a thing that is
+ * confirmed an engine is switched on, because a button for a thing that is
  * not connected is worse than no button.
+ *
+ * Which engine is deliberately not named here, and this line used to say
+ * "Kling" — which was true the day it was written and stopped being true the
+ * day the owner decided not to use Kling. `server/video/index.ts` picks from
+ * whatever is configured and falls through the rest; a comment naming one of
+ * them is a comment that goes quietly wrong when the account changes.
  *
  * Nothing here publishes anywhere. The video appears on this page when it is
  * done, and then you decide: save it, or share it wherever you like.

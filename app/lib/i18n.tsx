@@ -862,6 +862,7 @@ export const STRINGS: Dict = {
   "canvas.len.30": { en: "A full spot. Longest anything here makes in one go.", af: "\u2019n Volle advertensie. Die langste wat enigiets hier in een slag maak." },
   "canvas.quality": { en: "Quality", af: "Kwaliteit" },
   "canvas.gradeGone": { en: "The engine you have picked does not offer this one.", af: "Die enjin wat jy gekies het bied nie hierdie een nie." },
+  "canvas.gradeOff": { en: "Not on this engine", af: "Nie op hierdie enjin nie" },
   "canvas.grade.standard": { en: "Standard", af: "Standaard" },
   "canvas.gradeNote.standard": { en: "Most shots. Silent.", af: "Die meeste skote. Stil." },
   "canvas.grade.better": { en: "Better", af: "Beter" },

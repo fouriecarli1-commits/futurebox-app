@@ -16,6 +16,20 @@
  * It owns its loop: builds with a Supabase address in the environment, since
  * `cloud.configured()` reads it at build time and without it the app keeps
  * every account on the device and never asks for anything.
+ *
+ * ── And puts `.next` back afterwards ─────────────────────────────────────
+ *
+ * That build is the whole point of this probe and it is poison for the next
+ * one. `.next` is a directory, not a scope: a build with a Supabase address
+ * baked in stays on disk, and every probe that runs after this one in the same
+ * job then signs in through a project that does not exist, never reaches the
+ * app, and reports the room it was looking at as broken.
+ *
+ * That is exactly what happened when the CI job for these was first written —
+ * this probe passed and the five after it failed, all of them with the same
+ * "cannot get in" shape, none of them about the room they were testing. The
+ * cost of the fix is one extra build, which is cheaper than five wrong
+ * answers.
  */
 import { execSync, spawn } from 'node:child_process';
 import { chromium } from 'playwright';
@@ -184,6 +198,25 @@ try {
   await b.close();
 } finally {
   if (server?.pid) { try { process.kill(-server.pid); } catch { /* gone */ } }
+  /* The plain build back, before anything else looks at `.next`. After the
+     server is stopped, because building underneath a running one leaves a
+     `.next` that serves a page the browser cannot finish loading — which is
+     its own afternoon of looking for a fault in the app.
+
+     The environment is copied and the two keys deleted rather than passing a
+     bare object: a build needs PATH and HOME like anything else. */
+  const clean = { ...process.env };
+  delete clean.NEXT_PUBLIC_SUPABASE_URL;
+  delete clean.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  console.log('putting the plain build back…');
+  try {
+    execSync('npx next build', { stdio: 'ignore', env: clean });
+  } catch {
+    // Said out loud. A silent failure here leaves the poisoned build in place
+    // and the next probe reports a room as broken.
+    console.error('\nCOULD NOT REBUILD — `.next` still has a Supabase address in it.\n');
+    process.exitCode = 1;
+  }
 }
 
 if (problems.length) {

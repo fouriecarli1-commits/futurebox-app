@@ -7,7 +7,7 @@
  * pinned, with the feed sliding underneath it.
  */
 import { enter } from './enter.mjs';
-import { shot } from './where.mjs';
+import { serve, shot } from './where.mjs';
 
 const problems = [];
 const check = (label, ok, detail = '') => {
@@ -15,7 +15,13 @@ const check = (label, ok, detail = '') => {
   if (!ok) problems.push(label);
 };
 
-const { browser, page } = await enter({ width: 390, height: 844 });
+/* This probe used to point at :3000 and assume somebody had put a server
+   there. Twenty-four of its twenty-six siblings start their own; now it does
+   too, so it runs on a bare machine rather than only on the one it was
+   written on. `serve` explains why one per probe rather than one per job. */
+const PORT = process.argv[2] || '3252';
+const server = await serve(PORT);
+const { browser, page } = await enter({ width: 390, height: 844, at: server.url });
 await page.waitForTimeout(1400);
 
 const read = await page.evaluate(() => {
@@ -54,12 +60,13 @@ await browser.close();
    The first version opened a bare context at 1280 and found a static header —
    which was true and meaningless: signed out, the page draws a different
    header entirely. A width check has to be looking at the same screen. */
-const { browser: deskBrowser, page: desk } = await enter({ width: 1280, height: 900 });
+const { browser: deskBrowser, page: desk } = await enter({ width: 1280, height: 900, at: server.url });
 await desk.waitForTimeout(1200);
 const deskPos = await desk.evaluate(() => getComputedStyle(document.querySelector('header')).position);
 console.log(`\ndesk @1280: position: ${deskPos}`);
 check('a desk keeps its pinned header', deskPos === 'sticky');
 await deskBrowser.close();
+server.stop();
 if (problems.length) {
   console.error(`\n${problems.length} problem(s):\n  ${problems.join('\n  ')}\n`);
   process.exit(1);

@@ -702,6 +702,9 @@ export default function VideoCanvas({
                      The engine panel above already says when nothing is
                      connected at all; this says why one of three is off when
                      the other two are not. */
+                  /* Kept for a mouse, where a tooltip is a real thing. It is
+                     no longer the only way to find out — see the line under
+                     the note. */
                   title={!there ? t('canvas.gradeGone', 'The engine you have picked does not offer this one.') : undefined}
                   onClick={() => setGrade(one.id)}
                   className={`text-left px-3 py-2.5 rounded-xl text-sm border transition-all disabled:opacity-40 ${
@@ -714,8 +717,26 @@ export default function VideoCanvas({
                   <span className="block text-xs text-zinc-500 leading-snug">
                     {t(`canvas.gradeNote.${one.id}`, one.note)}
                   </span>
+                  {/* A price, or the reason there is no price.
+
+                      This said the credits either way and put the reason in a
+                      `title` — a tooltip, which does not exist on a phone,
+                      which is where somebody making a reel is standing. This
+                      same file already says that about the shape row twenty
+                      lines up, and then did it here anyway.
+
+                      It is worse now than it was: with the premium engine
+                      switched off, that rung is greyed out for everybody for
+                      good, and a permanently dead button quoting a price it
+                      will never charge is the sort of thing a person decides
+                      the whole app is broken over. So the disabled one says
+                      what it is instead. */}
                   <span className="block text-xs pt-0.5">
-                    {videoCost(one.id, seconds)} {t('video.credits', 'credits')}
+                    {there ? (
+                      `${videoCost(one.id, seconds)} ${t('video.credits', 'credits')}`
+                    ) : (
+                      <span className="text-zinc-600">{t('canvas.gradeOff', 'Not on this engine')}</span>
+                    )}
                   </span>
                 </button>
               );
