@@ -563,3 +563,84 @@ there.
 **Also worth knowing:** building while a server serves the same `.next`
 produces a build the browser cannot finish loading. Not a probe fault, but it
 is an afternoon of looking for one.
+
+---
+
+## J. The afternoon she tested it on her phone
+
+Six things found in one sitting, all real, and the pattern in them is worth as
+much as the fixes: every one was a place where the app did something defensible
+and said nothing about it.
+
+**The language jumped on sign-in.** A language chosen in this browser is never
+overruled; the account answers only when this browser has nothing stored.
+Following the browser's own locale is a guess rather than a choice, so it stores
+nothing — right, because a guess should not beat somebody who told us once on
+another device. The hole is the moment in between: the page had been showing
+English, she had been reading it, and signing in swapped it with no word about
+why. The account still wins. It just says so now, with one press to go back,
+and pressing it stores the choice so the notice never returns on that device.
+
+**The live room's songs did not look like themselves.** `Cover` draws from a
+hash of its seed, and the room seeded it on the *post* rather than the song. One
+song had one picture in Make a song and a different one in the room — and two
+different ones if it was posted twice. Seeded on `sourceId` now. The full-screen
+player had no picture at all, which reads as a song that failed to load.
+
+**Play played under the list.** The swipe screen — the thing the room is for —
+could only be reached by pressing the picture. Two controls, one obvious and one
+not, and the obvious one went to the lesser place.
+
+**The bottom bar was eating the copilot's input.** The bar is `BAR_HEIGHT` of
+content *plus* `env(safe-area-inset-bottom)`, because it pads itself away from
+the home indicator; every page reserved the bare number. Short by exactly the
+inset — 34px on an iPhone, most of a text field. Invisible on a desktop,
+invisible in a screenshot without an inset, and invisible to anybody who does
+not already know the bar pads itself. `barClearance()` and `check:tabbar` now.
+
+**The share sheet never saved the file it told you to save.** Its own
+instruction said "save the file", its own doc comment claimed it saved one, and
+there was no button. The one step that needs the app was the one step missing,
+which is what made a portal read as a list of links.
+
+**The cancellation letter was correct and cold.** Every fact right and nothing
+human in it. She asked for "'n mooi brief om te sê jammer dat hulle gaan".
+
+### And the listen count
+
+`events` carries a unique index over (kind, listener, thing, day). That index is
+why the chart is honest — it stops somebody pressing their own song to the top —
+and it threw the repeats away, so "my song was played 47 times" had nowhere to
+come from. `supabase/listens.sql` puts a counter on the row that already
+existed: the chart still counts rows, so it still counts listeners and is
+unchanged, and the raw number is the sum of the counters. Both numbers on the
+card, never one — "40 listens" alone would make a song one person played forty
+times look like a song forty people heard.
+
+**It counts from the day the file was run.** Everything played before it counts
+as one listen each, and those repeats cannot be recovered.
+
+### The scene window, and what was already there
+
+Asked for an editable scene list and a storyboard showing each clip. Most of the
+second existed: the board already held shots you could write, reorder and throw
+away, each row already showed its clip with a trim. What was missing is the half
+she named — the copilot could describe a music video in the chat and the person
+had to retype it, shot by shot. `write_scenes` and `set_look` are registered
+now.
+
+The rule worth remembering: `write_scenes` replaces the list, and a shot already
+generated has been paid for. Made shots survive, and survive first.
+
+### Three questions answered rather than built
+
+- **Lipsync exists** — `creatify-aurora` in the Video desk, invisible because
+  `ELEVEN_AURORA_READY` is unset. It is a photo plus a voice recording, built
+  for a presenter reading a script. Whether it holds up on singing is unknown
+  and one clip answers it.
+- **The code on sign-in** is on sign-up only, and that is the right choice.
+- **Spotify and Apple Music cannot be uploaded to by anyone.** Not an approval
+  queue — there is no artist upload API at all. Everyone goes through a
+  distributor. Saying otherwise on a page of connection buttons would be the
+  exact lie `ShareRow` was written to avoid.
+
