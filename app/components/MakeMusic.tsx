@@ -46,6 +46,7 @@ import { loadOwned, levelOf, startCheckout, downloadLink, NOTHING, type Owned } 
 import { loadSounds, training, NO_SOUNDS, type Sounds } from '../lib/sounds';
 import { noteTaste } from '../lib/taste';
 import { looksAfrikaans, singDirection, type SingIn } from '../lib/lyriclang';
+import { refusalText } from '../lib/apierror';
 import StyleFrom from './StyleFrom';
 import Card from './Card';
 import SongStarts from './SongStarts';
@@ -87,7 +88,7 @@ export default function MakeMusic({
   onGoToChannel: () => void;
   engineReady: boolean;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const title = canvas.title;
   const lyrics = canvas.lyrics;
   /* Whether anybody is going to sing on this.
@@ -99,6 +100,90 @@ export default function MakeMusic({
   const wordless = splitSections(lyrics).length === 0;
   const setTitle = (value: string) => setCanvas({ ...canvas, title: value });
   const setLyrics = (value: string) => setCanvas({ ...canvas, lyrics: value });
+
+  /**
+   * The wand: one press that fills a card in.
+   *
+   * `docs/PACKAGING.md` §2 has had a ✨ on every card header since the shape
+   * was drawn off Carli's screenshots — "collapse, and fill it in" — and
+   * `Card` has had the slot since it was written. Nothing ever filled it.
+   *
+   * ── Why it is not the panel underneath, with fewer presses ───────────
+   *
+   * `LyricHelp` already asks the same route and comes back with four options
+   * to choose between, which is the right shape when somebody is deciding.
+   * The wand is for when they are not: an empty box, no idea, and a person
+   * who will close the app rather than read four suggestions. So it takes the
+   * first option and puts it in the box. Anything else is one more decision
+   * at the exact moment somebody has run out of them.
+   *
+   * ── Added, never replaced ────────────────────────────────────────────
+   *
+   * The words are appended to whatever is written. A wand that overwrote a
+   * verse somebody had typed would be pressed exactly once, by everybody,
+   * and never again.
+   *
+   * ── And it is not offered where it cannot work ───────────────────────
+   *
+   * The panel below degrades honestly, falling back to local suggestions
+   * labelled as not-AI. A wand cannot degrade: it is one press that either
+   * fills the card or does nothing. So it is on the screen only where the
+   * route says there is a model behind it.
+   */
+  const [wandReady, setWandReady] = useState(false);
+  const [wanding, setWanding] = useState<'words' | 'style' | null>(null);
+  const [wandProblem, setWandProblem] = useState('');
+
+  useEffect(() => {
+    let live = true;
+    void fetch('/api/songwriter')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((said) => {
+        if (live && said && typeof said.available === 'boolean') setWandReady(said.available);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const wave = async (what: 'words' | 'style') => {
+    setWandProblem('');
+    setWanding(what);
+    try {
+      const response = await fetch('/api/songwriter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: what === 'words' ? 'continue' : 'style',
+          title: canvas.title,
+          style: canvas.style,
+          lyrics: canvas.lyrics,
+        }),
+      });
+      const answer = (await response.json().catch(() => null)) as
+        | { suggestions?: Array<{ text?: string }>; error?: string; detail?: string; message?: string }
+        | null;
+      const first = answer?.suggestions?.[0]?.text?.trim();
+      if (!response.ok || !first) {
+        setWandProblem(
+          refusalText(answer, lang, t('wand.failed', 'That did not come back. The panel under the box still works.')),
+        );
+        return;
+      }
+      if (what === 'words') {
+        const now = canvas.lyrics.trimEnd();
+        setLyrics(now ? `${now}\n\n${first}` : first);
+      } else {
+        const now = canvas.style.trim();
+        setCanvas({ ...canvas, style: now ? `${now}, ${first}` : first });
+      }
+    } catch {
+      setWandProblem(t('wand.offline', 'Could not reach the app’s server.'));
+    } finally {
+      setWanding(null);
+    }
+  };
   /**
    * Simple, or everything.
    *
@@ -743,6 +828,15 @@ export default function MakeMusic({
             here is lost either way. */}
         <Card
           title={t('make.words')}
+          wand={
+            wandReady
+              ? {
+                  label: t('wand.words', 'Write the next part for me'),
+                  onPress: () => void wave('words'),
+                  busy: wanding === 'words',
+                }
+              : undefined
+          }
           tools={
             <LyricHelp
               title={title}
@@ -762,6 +856,10 @@ export default function MakeMusic({
           <p className="text-sm text-zinc-500 pt-1">
             {engineReady ? t('make.wordsReal') : t('make.wordsSketch')}
           </p>
+          {/* One line for both wands. They cannot run at once and a second
+              place to look for the same sentence is a second place to miss
+              it. */}
+          {wandProblem && <p className="text-sm text-amber-300 leading-snug">{wandProblem}</p>}
 
           {/* What language to sing it in.
 
@@ -808,6 +906,15 @@ export default function MakeMusic({
             smaller instrument than the model can play. */}
         <Card
           title={t('make.sound')}
+          wand={
+            wandReady
+              ? {
+                  label: t('wand.style', 'Work the style out from the words'),
+                  onPress: () => void wave('style'),
+                  busy: wanding === 'style',
+                }
+              : undefined
+          }
           tools={
             <>
               {canvas.style && (

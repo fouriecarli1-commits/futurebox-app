@@ -102,6 +102,30 @@ try {
     });
   });
 
+  /* The songwriter, stood in for.
+
+     `docs/PACKAGING.md` §2 has had a wand on every card header for four
+     sessions and nothing ever filled it. What is checked here is the wand,
+     not the writing: that pressing it sends the room's state, that what comes
+     back lands in the box, and — the one that matters — that it is added to
+     what was already typed rather than over it. */
+  let waved = null;
+  await p.route('**/api/songwriter', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{"available":true}' });
+      return;
+    }
+    waved = JSON.parse(route.request().postData() ?? '{}');
+    const text = waved.mode === 'style'
+      ? 'brushed drums, upright bass, close-mic vocal'
+      : '[Chorus]\nEn die pad vat my huis toe';
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ suggestions: [{ label: 'One', text, why: 'because' }] }),
+    });
+  });
+
   await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
   const cta = p.locator('button, a').filter({ hasText: /start free|begin|sign up/i }).first();
   await cta.waitFor({ state: 'visible', timeout: 60000 });
@@ -246,6 +270,52 @@ try {
     (await says()).includes('From a song') && (await says()).includes('From a photo'));
   check('saying it reads the light rather than the subject, and that nothing is uploaded',
     (await says()).includes('not what is in it') && (await says()).includes('leaves this device'));
+
+  /* ── The wand ───────────────────────────────────────────────────────
+ 
+     One press that fills the card in. The whole point is that it is one
+     press: the panel underneath already offers four options to choose
+     between, which is the right shape for somebody deciding and the wrong
+     one for somebody who has run out of decisions. */
+  const wands = room.locator('button[aria-label="Write the next part for me"]');
+  check('the words card carries a wand', (await wands.count()) === 1);
+  const wordsBefore = await room.locator('textarea[placeholder*="Verse 1"]').inputValue();
+  check('and there are already words in the box to protect', wordsBefore.length > 20);
+  await wands.first().click();
+  for (let waited = 0; waited < 30 && !waved; waited += 1) await p.waitForTimeout(300);
+  check('pressing it asks the songwriter to continue', waved?.mode === 'continue', JSON.stringify(waved?.mode));
+  check('and sends what is already written, so it does not start over',
+    (waved?.lyrics ?? '').includes('Karoo'), (waved?.lyrics ?? '').slice(0, 40));
+  await p.waitForTimeout(700);
+  const wordsAfter = await room.locator('textarea[placeholder*="Verse 1"]').inputValue();
+  check('what comes back lands in the box', wordsAfter.includes('En die pad vat my huis toe'));
+  /* The assertion this exists for. A wand that overwrote a verse somebody had
+     typed would be pressed exactly once, by everybody, and never again. */
+  check('added to what was typed, not over it',
+    wordsAfter.startsWith(wordsBefore.trimEnd()),
+    `${wordsBefore.length} characters became ${wordsAfter.length}`);
+
+  waved = null;
+  const styleWand = room.locator('button[aria-label="Work the style out from the words"]');
+  check('the sound card carries one too', (await styleWand.count()) === 1);
+  /* Two words typed by hand first. Written without them once and the "beside
+     whatever was there" half passed because there was nothing there — the
+     same way the link bar's version of this assertion passed for the wrong
+     reason before it was fixed. */
+  await room.locator('textarea').nth(1).fill('amapiano, log drum');
+  await p.waitForTimeout(300);
+  const wandStyleBefore = await room.locator('textarea').nth(1).inputValue();
+  await styleWand.first().click();
+  for (let waited = 0; waited < 30 && !waved; waited += 1) await p.waitForTimeout(300);
+  check('and it asks for a style rather than for words', waved?.mode === 'style');
+  await p.waitForTimeout(700);
+  const wandStyleAfter = await room.locator('textarea').nth(1).inputValue();
+  check('the style lands beside the two words that were typed by hand',
+    wandStyleBefore === 'amapiano, log drum'
+      && wandStyleAfter.includes('upright bass')
+      && wandStyleAfter.includes('amapiano')
+      && wandStyleAfter.includes('log drum'),
+    `was "${wandStyleBefore}", now "${wandStyleAfter.slice(0, 60)}"`);
 
   /* ── The link bar ───────────────────────────────────────────────────
  

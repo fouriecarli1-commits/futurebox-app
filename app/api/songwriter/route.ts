@@ -159,3 +159,15 @@ export async function POST(request: Request) {
     return Response.json({ error: 'unknown', detail: 'The writing help could not be reached.' }, { status: 502 });
   }
 }
+
+/**
+ * Whether there is a model behind this, so a wand can be offered or not.
+ *
+ * The four-option panel below the box degrades gracefully — it falls back to
+ * local suggestions that say they are not AI. A wand cannot: it is one press
+ * that either fills the card in or does nothing, and a button that always
+ * does nothing is worse than one that is not on the screen.
+ */
+export async function GET(): Promise<Response> {
+  return Response.json({ available: Boolean(process.env.ANTHROPIC_API_KEY) });
+}
