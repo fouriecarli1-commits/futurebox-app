@@ -71,6 +71,31 @@ try {
   check('every song carries the words button — including the one with no plan',
     (await lyricButtons.count()) === 2, `${await lyricButtons.count()} of 2`);
 
+  /* ── And you can take the song out of the app ───────────────────────
+ 
+     "In die channel moet hy ook die opsie hê om 'n liedjie te download."
+     The channel is the room the finished songs live in, and until now the
+     finished ones were the only work in the app you could not get a file of.
+ 
+     Asserted on the file that actually arrives, not on the button: the whole
+     failure mode here is a button that fires and produces nothing, because
+     the audio is on the account rather than on this device. */
+  const keepButtons = p.locator('button').filter({ hasText: /^Download$/ });
+  check('every song can be downloaded', (await keepButtons.count()) === 2,
+    `${await keepButtons.count()} of 2`);
+  const [file] = await Promise.all([
+    p.waitForEvent('download', { timeout: 15000 }).catch(() => null),
+    keepButtons.first().click(),
+  ]);
+  check('pressing it hands over a real file', Boolean(file),
+    file ? file.suggestedFilename() : 'nothing arrived');
+  /* Named after the song and carrying the extension of what is actually in
+     it. A wav called .mp3 is a file a phone refuses to open, and the person
+     is told nothing about why. */
+  check('named after the song, with the extension of what is in it',
+    file?.suggestedFilename() === 'the-one-with-a-plan.wav',
+    file?.suggestedFilename() ?? 'none');
+
   /* ── Tapping the picture opens it full screen ───────────────────────── */
   await p.locator('button[aria-label^="Open"]').first().click();
   await p.waitForTimeout(2200);

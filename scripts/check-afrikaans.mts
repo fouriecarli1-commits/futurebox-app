@@ -60,6 +60,48 @@ const halfDone = starts
   .map((match) => match[1]);
 
 /**
+ * Lines where the Afrikaans is a copy of the English.
+ *
+ *   "Kyk net dat al dieselfde funksies by afrikaans ook is."
+ *
+ * The check above catches a key with *no* Afrikaans. It cannot catch the other
+ * way of not translating something, which is to paste the English into the
+ * `af:` slot and move on — and that one is worse, because it reports as done.
+ * Thirty-nine of these were in the file and all thirty-nine turned out to be
+ * legitimate; the point is that the fortieth will not be, and nothing would
+ * have said so.
+ *
+ * A word that is genuinely the same in both languages is real and common here
+ * — "Stop", "Studio", "TikTok", "Premium", "Podcast". So they are named below
+ * rather than guessed at. Naming them costs one line when a new one appears
+ * and is the only way this check stays worth having: a check with a clever
+ * rule and no list starts producing false alarms and gets switched off.
+ */
+const SAME_IN_BOTH = new Set([
+  /* Borrowed whole, because that is what people actually say. */
+  'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',
+  'Collab Radar', 'Radar', 'Arena', 'Pro', 'S', 'handle', 'Tempo', 'min',
+  'Later', 'Warm', 'Afrikaans',
+  /* Names of other people's products. Translating one invents a thing that
+     does not exist — the same rule as not translating a podcast's title. */
+  'TikTok', 'Instagram Reels', 'YouTube Shorts', 'TikTok, Reels, Shorts',
+  '9:16 Reels, 15\u201330s',
+]);
+const copied: string[] = [];
+for (const [i, match] of starts.entries()) {
+  const from = match.index ?? 0;
+  const to = i + 1 < starts.length ? (starts[i + 1].index ?? dict.length) : dict.length;
+  const body = dict.slice(from, to);
+  const en = /\ben:\s*"((?:[^"\\]|\\.)*)"/.exec(body)?.[1];
+  const af = /\baf:\s*"((?:[^"\\]|\\.)*)"/.exec(body)?.[1];
+  if (en === undefined || af === undefined || en !== af) continue;
+  /* Unescaped once, so the list can be written the way the words look. */
+  const plain = JSON.parse(`"${en.replace(/"/g, '\\"')}"`) as string;
+  if (SAME_IN_BOTH.has(plain)) continue;
+  copied.push(`${match[1]} — both languages say "${plain.slice(0, 60)}"`);
+}
+
+/**
  * Afrikaans written with two different apostrophes.
  *
  * The dictionary held both: "Maak 'n snit" in the rail beside "Nog ’n liedjie"
@@ -126,10 +168,11 @@ for (const file of walk('app')) {
   }
 }
 
-if (missing.size === 0 && halfDone.length === 0 && straight.length === 0 && twice.length === 0 && dutch.length === 0) {
+if (missing.size === 0 && halfDone.length === 0 && straight.length === 0 && twice.length === 0 && dutch.length === 0 && copied.length === 0) {
   console.log(
     `check:afrikaans — ${known.size} keys, every one the code asks for has both languages,` +
-      '\n  and every Afrikaans ’n is the same character as every other one.',
+      '\n  and every Afrikaans ’n is the same character as every other one,' +
+      `\n  and no line is the English pasted into the Afrikaans slot (${SAME_IN_BOTH.size} words are the same in both and are named).`,
   );
   process.exit(0);
 }
@@ -150,6 +193,13 @@ if (halfDone.length) {
 if (dutch.length) {
   console.error(`\n${dutch.length} Afrikaans line(s) using a word that reads as Dutch:\n`);
   for (const line of dutch) console.error(`  ${line}`);
+}
+if (copied.length) {
+  console.error(
+    `\n${copied.length} entr(ies) where the Afrikaans is the English pasted in.` +
+      '\nIf the word really is the same in both, add it to SAME_IN_BOTH in this file:\n',
+  );
+  for (const line of copied) console.error(`  ${line}`);
 }
 if (straight.length) {
   console.error(

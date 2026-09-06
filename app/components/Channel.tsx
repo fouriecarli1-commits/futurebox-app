@@ -19,9 +19,9 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Check, Copy, Image as ImageIcon, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, X,
+  Check, Copy, Download, Image as ImageIcon, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, X,
 } from 'lucide-react';
-import { loadTracks, type Track } from '../lib/library';
+import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { levelOf, loadOwned, NOTHING, type Owned } from '../lib/purchases';
 import {
@@ -87,6 +87,15 @@ export default function Channel({
     },
   });
   const [adding, setAdding] = useState<string | null>(null);
+  /**
+   * Which song is being fetched to be kept, and what went wrong if it was.
+   *
+   * The file is not always on this device — a song made on a phone has a row
+   * on the account and nothing local until it is asked for. So keeping one is
+   * a fetch, and a button that does nothing for four seconds reads as broken.
+   */
+  const [keeping, setKeeping] = useState<string | null>(null);
+  const [keepFailed, setKeepFailed] = useState<string | null>(null);
   /** Which song has been asked for a real cover, if any. */
   const [sleeveFor, setSleeveFor] = useState<string | null>(null);
   /**
@@ -138,6 +147,41 @@ export default function Channel({
     loadOwned().then(setOwned);
     fetchCreator().then(setCreator);
   }, []);
+
+  /**
+   * Keep a copy of the song.
+   *
+   * Somebody who has made a song needs the file: to put it on a phone, to
+   * hand it to somebody, to upload it somewhere this app does not reach. Every
+   * other room that produces a file offers this and the channel — the room
+   * that is *for* the finished songs — did not, which made the finished ones
+   * the only work locked inside the app.
+   *
+   * The extension is read off the blob rather than assumed. ElevenLabs returns
+   * MPEG audio today; a file called `.mp3` that is a WAV is a file a phone
+   * refuses to open, and the person is then told nothing about why.
+   */
+  const keep = useCallback(
+    async (track: Track) => {
+      setKeepFailed(null);
+      setKeeping(track.id);
+      try {
+        const blob = await readAudio(track.id);
+        if (!blob) {
+          setKeepFailed(track.id);
+          return;
+        }
+        const kind = (blob.type || '').toLowerCase();
+        const ext = kind.includes('wav') ? 'wav' : kind.includes('ogg') ? 'ogg' : kind.includes('mp4') || kind.includes('m4a') ? 'm4a' : 'mp3';
+        downloadBlob(blob, safeFilename(track.title, ext));
+      } catch {
+        setKeepFailed(track.id);
+      } finally {
+        setKeeping(null);
+      }
+    },
+    [],
+  );
 
   const play = useCallback(
     async (id: string, rest: string[] = []) => {
@@ -620,6 +664,27 @@ export default function Channel({
                       <ImageIcon className="w-3.5 h-3.5" />
                       {t('make.cover', 'Cover art')}
                     </button>
+                    {/* The file itself.
+
+                        Beside the other two rather than hidden behind the
+                        full-screen player: this is the room the finished
+                        songs live in, and the finished ones were the only
+                        work in the app you could not take out of it. */}
+                    <button
+                      type="button"
+                      onClick={() => void keep(track)}
+                      disabled={keeping === track.id}
+                      className="text-sm text-zinc-400 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-60"
+                    >
+                      {keeping === track.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5" />
+                      )}
+                      {keeping === track.id
+                        ? t('chan.keeping', 'Fetching the file\u2026')
+                        : t('chan.keep', 'Download')}
+                    </button>
                     {onEdit && (
                       <button
                         type="button"
@@ -631,6 +696,15 @@ export default function Channel({
                       </button>
                     )}
                   </div>
+                )}
+
+                {keepFailed === track.id && (
+                  <p className="text-sm text-amber-300 leading-snug">
+                    {t(
+                      'chan.keepFailed',
+                      'The file for this song could not be found. It was made on another device and has not been uploaded.',
+                    )}
+                  </p>
                 )}
               </div>
             </article>

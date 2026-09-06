@@ -25,10 +25,23 @@
  * Both are `lib/listen.ts` and `lib/photo.ts`, which take samples and pixels
  * so they can be checked against signals built on purpose. Neither costs a
  * credit and neither needs a key.
+ *
+ * ── And the third one, which is a different kind of thing ────────────────
+ *
+ * The link bar. Paste a YouTube, Spotify, SoundCloud, Apple Music or TikTok
+ * link and `/api/songlink` reads the song's **name** off that site's own
+ * public oEmbed endpoint, then asks the model what that music sounds like.
+ *
+ * It does not listen to it. Downloading the audio behind one of those links
+ * breaks every one of their terms, and building that into something she sells
+ * would put the liability here rather than on whoever pasted the link. So the
+ * line under the bar says "reads its name, not its sound", in as many words:
+ * somebody who thinks the app heard the track will blame the app when the
+ * style is wrong about a cover version, and they would be right to.
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Camera, Ear, Loader2, PenLine } from 'lucide-react';
+import { ArrowRight, Camera, Ear, Link2, Loader2, PenLine } from 'lucide-react';
 import { listenTo, wordsFor as wordsForSound, type Heard } from '../lib/listen';
 import { measurePicture, moodFor, wordsFor as wordsForPicture, type Seen } from '../lib/photo';
 import { useLang } from '../lib/i18n';
@@ -57,7 +70,10 @@ export default function StyleFrom({
   const { t, lang } = useLang();
   const soundInput = useRef<HTMLInputElement | null>(null);
   const pictureInput = useRef<HTMLInputElement | null>(null);
-  const [busy, setBusy] = useState<'sound' | 'picture' | 'writing' | null>(null);
+  const [busy, setBusy] = useState<'sound' | 'picture' | 'writing' | 'link' | null>(null);
+  /** What is in the link bar, and whether the bar is offered at all. */
+  const [link, setLink] = useState('');
+  const [canRead, setCanRead] = useState(false);
   const [said, setSaid] = useState('');
   const [problem, setProblem] = useState('');
   /**
@@ -79,6 +95,12 @@ export default function StyleFrom({
       .then((response) => (response.ok ? response.json() : null))
       .then((said_) => {
         if (live && said_ && typeof said_.available === 'boolean') setCanWrite(said_.available);
+      })
+      .catch(() => undefined);
+    void fetch('/api/songlink')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((said_) => {
+        if (live && said_ && typeof said_.available === 'boolean') setCanRead(said_.available);
       })
       .catch(() => undefined);
     return () => {
@@ -107,6 +129,52 @@ export default function StyleFrom({
       /* What it says it saw, so somebody can tell whether it looked properly
          before they spend a generation on the words it wrote. */
       if (answer.saw) setSaid(answer.saw);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /**
+   * Read the style off a link somebody pasted.
+   *
+   * The style words go into the box the same way the measured ones do: added,
+   * never replacing what is already there. And what it says under the bar is
+   * whether the model actually recognised the song, because "I know this one"
+   * and "I guessed from the title" are different answers and only one of them
+   * is worth spending a generation on.
+   */
+  const takeLink = async () => {
+    const typed = link.trim();
+    if (!typed) return;
+    setProblem('');
+    setSaid('');
+    setBusy('link');
+    try {
+      const response = await fetch('/api/songlink', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ link: typed }),
+      });
+      const answer = (await response.json().catch(() => null)) as
+        | { style?: string; known?: boolean; because?: string; title?: string; error?: string; message?: string }
+        | null;
+      if (!response.ok || !answer?.style) {
+        setProblem(refusalText(answer, lang, t('link.failed', 'That link could not be read.')));
+        return;
+      }
+      onWords(answer.style.split(',').map((one) => one.trim()).filter(Boolean));
+      setSaid(
+        [
+          answer.title ?? '',
+          answer.known
+            ? t('link.knew', 'recognised')
+            : t('link.guessed', 'not recognised — read off the title alone'),
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      );
+    } catch {
+      setProblem(t('link.failed', 'That link could not be read.'));
     } finally {
       setBusy(null);
     }
@@ -209,12 +277,57 @@ export default function StyleFrom({
       <input ref={pictureInput} type="file" accept="image/*" className="hidden"
         onChange={(event) => void takePicture(event.target.files?.[0])} />
 
+      {/* And the third way in: a song that already exists, pointed at.
+
+          Offered only where this app has a model behind it, for the same
+          reason as the button below — a bar that always fails is worse than
+          one that is not there. */}
+      {canRead && (
+        <div className="flex gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3">
+            <Link2 className="h-4 w-4 flex-shrink-0 text-zinc-500" />
+            <input
+              type="url"
+              inputMode="url"
+              value={link}
+              onChange={(event) => setLink(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  void takeLink();
+                }
+              }}
+              placeholder={t('link.paste', 'Paste a song link')}
+              aria-label={t('link.paste', 'Paste a song link')}
+              className="min-h-[44px] min-w-0 flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => void takeLink()}
+            disabled={busy !== null || link.trim().length === 0}
+            aria-label={t('link.read', 'Read the style off it')}
+            className="flex h-[44px] w-[44px] flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-100 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-50"
+          >
+            {busy === 'link' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+          </button>
+        </div>
+      )}
+
       <p className="text-sm text-zinc-500 leading-snug">
         {t(
           'from.what',
           'A song gives its tempo, key and tone. A photo gives its colour, light and how busy it is — not what is in it. Both are measured here and neither file leaves this device.',
         )}
       </p>
+      {canRead && (
+        <p className="text-sm text-zinc-500 leading-snug">
+          {t(
+            'from.link',
+            'A link reads the song’s name off YouTube, Spotify, SoundCloud, Apple Music or TikTok and works the style out from that. It does not listen to it — downloading from those sites is against their rules, so this reads what the song is called, not how it sounds.',
+          )}
+        </p>
+      )}
 
       {problem && <p className="text-sm text-amber-300">{problem}</p>}
       {said && (

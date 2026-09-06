@@ -76,6 +76,32 @@ try {
     });
   });
 
+  /* The link bar's route, stood in for the same way.
+
+     There is no Anthropic key here either. What is being checked is that the
+     bar sends the link somebody pasted and puts the answer in the style box —
+     the model's judgement is not this probe's business. */
+  let linked = null;
+  await p.route('**/api/songlink', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{"available":true}' });
+      return;
+    }
+    linked = JSON.parse(route.request().postData() ?? '{}');
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        style: 'boeremusiek revival, concertina, walking bass, mid tempo, sung close',
+        known: true,
+        because: 'A well known Afrikaans rock ballad.',
+        title: 'De la Rey',
+        author: 'Bok van Blerk',
+        provider: 'YouTube',
+      }),
+    });
+  });
+
   await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
   const cta = p.locator('button, a').filter({ hasText: /start free|begin|sign up/i }).first();
   await cta.waitFor({ state: 'visible', timeout: 60000 });
@@ -220,6 +246,44 @@ try {
     (await says()).includes('From a song') && (await says()).includes('From a photo'));
   check('saying it reads the light rather than the subject, and that nothing is uploaded',
     (await says()).includes('not what is in it') && (await says()).includes('leaves this device'));
+
+  /* ── The link bar ───────────────────────────────────────────────────
+ 
+     "is dit moontlik om 'n link bar ook in te sit, waar jy dan na 'n youtube
+      liedjie ens luister, sodat jy die styl daar op tel."
+ 
+     What it does is read the song's *name* off the site's own oEmbed endpoint
+     — it does not listen to it, and it must not claim to. That sentence is
+     asserted here rather than left to a code review, because it is the whole
+     difference between an honest feature and one that gets blamed for being
+     wrong about a cover version. */
+  const linkBar = room.locator('input[type="url"]');
+  check('there is a bar to paste a song link into', (await linkBar.count()) === 1);
+  check('and it says it reads the name rather than listening to it',
+    (await says()).includes('does not listen to it'));
+  /* Two words typed by hand first, so the "it does not replace what is
+     there" assertion below has something to lose. It was written against an
+     empty box and passed for that reason rather than for the right one. */
+  await room.locator('textarea').nth(1).fill('kwaito, heavy bass');
+  await p.waitForTimeout(300);
+  const styleBefore = await room.locator('textarea').nth(1).inputValue();
+  await linkBar.first().fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await room.locator('button[aria-label="Read the style off it"]').first().click();
+  for (let waited = 0; waited < 30 && !linked; waited += 1) await p.waitForTimeout(300);
+  check('pressing it sends the link', linked?.link === 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    JSON.stringify(linked));
+  await p.waitForTimeout(700);
+  const styleAfter = await room.locator('textarea').nth(1).inputValue();
+  check('and the style it comes back with lands in the style box',
+    styleAfter.includes('concertina') && styleAfter.length > styleBefore.length,
+    styleAfter.slice(0, 80));
+  /* Added, never replacing. Somebody who typed their own two words and then
+     pointed at a song should still have their two words. */
+  check('without throwing away the two words that were typed by hand',
+    styleBefore === 'kwaito, heavy bass' && styleAfter.includes('kwaito') && styleAfter.includes('heavy bass'),
+    `was "${styleBefore}", now "${styleAfter.slice(0, 60)}"`);
+  check('and says whether it actually knew the song',
+    (await says()).includes('recognised'));
 
   const startsButton = room.locator('button').filter({ hasText: /^Give me a song to start from$/ });
   check('the room offers a song to start from', (await startsButton.count()) === 1);

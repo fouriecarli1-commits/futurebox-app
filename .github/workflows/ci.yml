@@ -96,6 +96,13 @@ jobs:
       - name: Every export reads back at the amount it says
         run: npm run check:adreport
 
+      # The link bar takes a URL a stranger typed. It must never fetch that
+      # URL — only the oEmbed endpoint of a host on a closed list. A route
+      # that fetched whatever arrived would be an open proxy inside the
+      # deployment's network, which is the fault /api/analyse/part had.
+      - name: The link bar only reads the sites on its list
+        run: npm run check:songlink
+
       # The security claims in docs/GOING_LIVE.md, as assertions. One of them
       # was badly wrong for weeks — a claim written once is a claim nobody
       # re-runs. This one needs the build above it to check the client bundle,
