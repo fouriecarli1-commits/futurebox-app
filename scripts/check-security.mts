@@ -84,12 +84,48 @@ if (failures === before2) pass('no dangerouslySetInnerHTML, eval or new Function
    Skipped when there is no build to look at, rather than passing quietly: a
    check that reports success without having looked is worse than no check. */
 const before3 = failures;
-const SECRETS = [
-  'SUPABASE_SERVICE_ROLE_KEY', 'ANTHROPIC_API_KEY', 'ELEVENLABS_API_KEY',
-  'KLINGAI_API_KEY', 'KLINGAI_SECRET_KEY', 'KLINGAI_ACCESS_KEY',
-  'PAYSTACK_SECRET_KEY', 'IP_SALT', 'OWNER_EMAIL',
-];
+
+/**
+ * Every server-only variable, read out of the code rather than listed here.
+ *
+ * This was nine names typed by hand, and six real secrets were not among them
+ * — `POST_SECRET`, `WATCH_SECRET`, `CRON_SECRET`, `MAIL_API_KEY`,
+ * `MUSIC_AI_API_KEY` and `SPOTIFY_CLIENT_SECRET`. Not carelessness: each was
+ * added in a commit about something else, and updating this list was a
+ * separate step nobody was reminded of, which is the same way seventeen checks
+ * ended up running nowhere.
+ *
+ * So it is derived. Every `process.env.X` in `app/` that is not
+ * `NEXT_PUBLIC_`-prefixed is server-only by definition, and a server-only name
+ * in a client chunk is the leak. The next secret is covered the moment it is
+ * read, with nothing to remember.
+ */
+function serverOnlyNames(): string[] {
+  const found = new Set<string>();
+  for (const file of walk('app')) {
+    const src = readFileSync(file, 'utf8');
+    for (const m of src.matchAll(/process\.env\.([A-Z][A-Z0-9_]*)/g)) found.add(m[1]);
+    for (const m of src.matchAll(/process\.env\[['"]([A-Z][A-Z0-9_]*)['"]\]/g)) found.add(m[1]);
+  }
+  found.delete('NEXT_PUBLIC_');
+  return [...found].filter((one) => !one.startsWith('NEXT_PUBLIC_')).sort();
+}
+const SECRETS = serverOnlyNames();
+
 if (existsSync('.next/static')) {
+  /* And the bundle has to be newer than the code, or this proves nothing.
+ 
+     This check does not build — CI builds before it. Run by hand after an
+     edit it reads whatever `.next/static` last happened to contain, and
+     reports a pass about code that was never compiled. It fooled me for three
+     runs while I concluded the rule was toothless; it was reading yesterday's
+     bundle. A stale pass is the failure mode this section's own comment calls
+     worse than no check, so it is now a failure rather than a pass. */
+  const newest = (dir: string, match: RegExp) =>
+    walk(dir, [], match).reduce((at, f) => Math.max(at, statSync(f).mtimeMs), 0);
+  if (newest('app', /\.(ts|tsx)$/) > newest('.next/static', /\.js$/)) {
+    fail('the bundle is newer than the code', 'run `npx next build` first — this read a stale bundle');
+  }
   const bundle = walk('.next/static', [], /\.js$/).map((f) => readFileSync(f, 'utf8')).join('\n');
   for (const secret of SECRETS) {
     if (bundle.includes(secret)) fail(`${secret} out of the client bundle`, 'found in .next/static');

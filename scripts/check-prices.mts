@@ -24,14 +24,35 @@ const say = (ok: boolean, line: string) => {
   console.log(`${ok ? '  ok ' : '  ✗  '} ${line}`);
 };
 
+/**
+ * The base rate, written here as a literal on purpose.
+ *
+ * This section used to read `price === CREDITS.video * units * mult`, with
+ * `CREDITS.video` on both sides of the comparison. That is a tautology: change
+ * the rate from 15 to 16 and both sides move together, every line still prints
+ * `ok`, and twenty-four green ticks say the price is right while the price has
+ * silently changed. Verified by doing exactly that.
+ *
+ * A price test's expected values are the specification, not a re-derivation of
+ * the thing being tested. So the number lives here too, and changing what a
+ * member is charged now means changing it in two places deliberately rather
+ * than in one place by accident. That duplication is the entire point of it.
+ */
+const BASE = 15;
+const GRADES = { standard: 1, better: 2, premium: 4 } as const;
+
+say(
+  CREDITS.video === BASE,
+  `the base rate is ${BASE} credits for five seconds (code says ${CREDITS.video})`,
+);
+
 console.log('video — every length the desk offers, at every grade');
 for (const grade of ['standard', 'better', 'premium'] as const) {
   for (const { seconds } of LENGTHS) {
     const price = videoCost(grade, seconds);
     const units = Math.ceil(seconds / 5);
-    const mult = grade === 'premium' ? 4 : grade === 'better' ? 2 : 1;
-    say(price === CREDITS.video * units * mult,
-      `${grade} ${seconds}s → ${price} (${units} × ${CREDITS.video} × ${mult})`);
+    const mult = GRADES[grade];
+    say(price === BASE * units * mult, `${grade} ${seconds}s → ${price} (${units} × ${BASE} × ${mult})`);
   }
 }
 
