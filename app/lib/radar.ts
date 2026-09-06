@@ -76,10 +76,20 @@ export function theirsAsFlavour(track: RadarTrack): TrackFlavour {
   };
 }
 
+/** Somebody who is here and can be written to. Not a song — a person. */
+export interface RadarPerson {
+  readonly name: string;
+  readonly handle: string;
+  readonly about: string;
+  readonly links: Record<string, string>;
+}
+
 export interface RadarReply {
   readonly tracks: RadarTrack[];
   /** Which of your own songs are already showing, so the switches start right. */
   readonly mineShared: string[];
+  /** Everybody findable, whether or not they have shown a song. */
+  readonly people: RadarPerson[];
 }
 
 export async function fetchRadar(): Promise<RadarReply> {
@@ -88,12 +98,51 @@ export async function fetchRadar(): Promise<RadarReply> {
     const response = await fetch('/api/radar', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-    if (!response.ok) return { tracks: [], mineShared: [] };
-    const data = (await response.json()) as { tracks?: RadarTrack[]; mineShared?: string[] };
-    return { tracks: data.tracks ?? [], mineShared: data.mineShared ?? [] };
+    if (!response.ok) return { tracks: [], mineShared: [], people: [] };
+    const data = (await response.json()) as {
+      tracks?: RadarTrack[];
+      mineShared?: string[];
+      people?: RadarPerson[];
+    };
+    return { tracks: data.tracks ?? [], mineShared: data.mineShared ?? [], people: data.people ?? [] };
   } catch {
-    return { tracks: [], mineShared: [] };
+    return { tracks: [], mineShared: [], people: [] };
   }
+}
+
+/**
+ * The same list, in a different order every day, the same for everybody.
+ *
+ *   "Dit sal goed wees as daardie radar elke dag die suggestions skommel."
+ *
+ * A list sorted by when somebody joined puts the same six names at the top
+ * for ever, and the seventh person is never introduced to anybody. Shuffled
+ * on the date rather than on `Math.random`, for two reasons: it does not
+ * reorder itself while somebody is reading it, and the server and the browser
+ * agree on the first paint.
+ *
+ * The seed is the day in the Republic — the day boundary should be the one
+ * the people using this app are living in, not UTC's.
+ */
+export function shuffledForToday<T>(list: readonly T[], today = new Date()): T[] {
+  const day = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Johannesburg',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(today);
+  let seed = 0;
+  for (const ch of day) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+  const out = list.slice();
+  /* Fisher-Yates with a small deterministic generator. Not a good random
+     number generator and it does not need to be one — it needs to be the
+     same all day and different tomorrow. */
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const j = seed % (i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
 }
 
 /** Turns sharing on or off for one song. Returns what went wrong, or null. */

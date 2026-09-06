@@ -8,6 +8,22 @@
  * POST here turns sharing on or off for one of your own songs. Opt-in, one at
  * a time, and reversible — nothing on this app makes anything public by
  * default.
+ *
+ * ── And everybody who is here ────────────────────────────────────────────
+ *
+ *   "Huidiglik is daar net paar mense ingeteken op die app wat die app toets.
+ *    Hoekom stel die collab radar nie ons aan mekaar voor nie?"
+ *
+ * Because the whole screen was built on songs somebody had chosen to show,
+ * and with a handful of testers nobody has flipped that switch yet. A matcher
+ * tuned for a crowd returns nothing from an empty room, and an empty screen
+ * looks identical to a broken one.
+ *
+ * So this also answers with the people. Filling in a name on "How people find
+ * you" IS the opt-in — that panel exists to be findable and says so — and
+ * what goes out is exactly what already goes out beside a shared song: a
+ * name, a handle, a line about them, their public links. Never an address,
+ * never an email, never anybody who has not filled the panel in.
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
@@ -18,11 +34,13 @@ export const maxDuration = 30;
 
 /** Enough to match against; more would be a page nobody scrolls. */
 const LIMIT = 120;
+/** And the people. Fewer, because each one is a card rather than a row. */
+const PEOPLE_LIMIT = 60;
 
 export async function GET(request: Request): Promise<Response> {
-  if (!metered()) return Response.json({ configured: false, tracks: [] });
+  if (!metered()) return Response.json({ configured: false, tracks: [], people: [] });
   const client = admin();
-  if (!client) return Response.json({ configured: false, tracks: [] });
+  if (!client) return Response.json({ configured: false, tracks: [], people: [] });
 
   // Who is asking, so their own songs can be left out of their own results.
   const caller = await callerFrom(request).catch(() => null);
@@ -56,9 +74,30 @@ export async function GET(request: Request): Promise<Response> {
     mineShared = (mine ?? []).map((one) => one.id as string);
   }
 
+  /* Everybody findable, whether or not they have shown a song.
+ 
+     Ordered newest first and capped: this is a list of people, and the screen
+     shuffles it once a day rather than always showing the same six names at
+     the top. */
+  const { data: people } = await client
+    .from('creators')
+    .select('owner, name, handle, about, links, created_at')
+    .order('created_at', { ascending: false })
+    .limit(PEOPLE_LIMIT);
+
   return Response.json({
     configured: true,
     mineShared,
+    people: (people ?? [])
+      /* Not yourself, and not a row somebody started and left blank — a card
+         with no name and no handle is one nobody can act on. */
+      .filter((one) => (!caller || one.owner !== caller.id) && String(one.name ?? '').trim())
+      .map((one) => ({
+        name: String(one.name),
+        handle: one.handle ? `@${one.handle}` : '',
+        about: String(one.about ?? ''),
+        links: one.links ?? {},
+      })),
     tracks: rows.map((one) => {
       const creator = byOwner.get(one.owner);
       return {

@@ -20,8 +20,8 @@ import { Check, Copy, ExternalLink, Handshake, Loader2, Radar, Users } from 'luc
 import { loadTracks, type Track } from '../lib/library';
 import { matchTracks, type TrackMatch } from '../lib/matching';
 import {
-  fetchCreator, fetchRadar, mineAsFlavour, saveCreator, setShared, theirsAsFlavour,
-  type Creator, type RadarTrack,
+  fetchCreator, fetchRadar, mineAsFlavour, saveCreator, setShared, shuffledForToday, theirsAsFlavour,
+  type Creator, type RadarPerson, type RadarTrack,
 } from '../lib/radar';
 import { useLang } from '../lib/i18n';
 import { AskToCollab } from './CollabRoom';
@@ -44,6 +44,7 @@ export default function CollabFinder({
 
   const [mine, setMine] = useState<Track[]>([]);
   const [others, setOthers] = useState<RadarTrack[]>([]);
+  const [people, setPeople] = useState<RadarPerson[]>([]);
   const [creator, setCreator] = useState<Creator>(BLANK);
   const [sharedIds, setSharedIds] = useState<string[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export default function CollabFinder({
     Promise.all([fetchRadar(), fetchCreator()]).then(([radar, me]) => {
       if (!live) return;
       setOthers(radar.tracks);
+      setPeople(radar.people);
       setSharedIds(radar.mineShared);
       if (me) setCreator(me);
       setLoading(false);
@@ -72,6 +74,10 @@ export default function CollabFinder({
   }, [reloadKey]);
 
   const catalogue = useMemo(() => others.map(theirsAsFlavour), [others]);
+  /* Shuffled on the date rather than on Math.random: it must not reorder
+     itself while somebody is reading, and it must be the same for everybody
+     so two people comparing screens see the same room. */
+  const today = useMemo(() => shuffledForToday(people), [people]);
   const byId = useMemo(() => new Map(others.map((one) => [one.id, one])), [others]);
 
   /**
@@ -199,6 +205,64 @@ export default function CollabFinder({
                 </label>
               );
             })}
+          </div>
+        )}
+      </Card>
+
+      {/* ── Everybody who is here ─────────────────────────────────────────
+
+          The card that was missing. The rest of this screen is built on songs
+          somebody chose to show, and with a handful of testers nobody has
+          flipped that switch — so a matcher tuned for a crowd returned
+          nothing, and an empty screen looks exactly like a broken one.
+
+          This one needs nothing to have been shared. Anybody who filled in the
+          panel at the top is findable, which is what that panel is for, and
+          the order changes once a day so the same six names are not for ever
+          at the top of it. */}
+      <Card title={t('radar.here', 'Who else is here')} icon={<Users className="w-4 h-4" />}>
+        {loading ? (
+          <p className="text-sm text-zinc-500 flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            {t('radar.looking', 'Looking…')}
+          </p>
+        ) : today.length === 0 ? (
+          <Note>{t(
+            'radar.nobodyYet',
+            'Nobody else has filled their name in yet. The moment somebody does they appear here, whether or not either of you has shown a song.',
+          )}</Note>
+        ) : (
+          <div className="space-y-2">
+            <Note>{t(
+              'radar.hereWhy',
+              'Everybody who has put a name on the radar. The order changes each day, so it is not the same few people at the top for ever. Nothing here is scored — that is the card below, and it needs songs on both sides.',
+            )}</Note>
+            {today.map((person) => (
+              <div key={person.handle || person.name} className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-1.5">
+                <p className="text-sm font-bold text-white truncate">
+                  {person.name}
+                  {person.handle && <span className="font-normal text-zinc-500"> {person.handle}</span>}
+                </p>
+                {person.about && (
+                  <p className="text-sm text-zinc-400 leading-snug line-clamp-2">{person.about}</p>
+                )}
+                <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                  <AskToCollab
+                    handle={person.handle}
+                    because={t(
+                      'radar.hereAsk',
+                      'We are both on FutureBox and I would like to make something with somebody.',
+                    )}
+                    onAsked={() => onAsked?.()}
+                  />
+                  {!person.handle && (
+                    <span className="text-sm text-zinc-600">
+                      {t('radar.noHandle', 'No handle yet — nothing to address a request to.')}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </Card>
