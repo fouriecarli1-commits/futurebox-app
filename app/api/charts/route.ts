@@ -8,7 +8,8 @@
  * ── Two charts, and they are not the same kind of thing ──────────────────
  *
  * **Ours** is counted from `events`: one person, one song, one day, one row,
- * over the last thirty days. It is honest, it is ours, and today it is small,
+ * over the last thirty days, and **only songs their maker has put on the
+ * radar**. That last clause is not a detail — see the note beside the query. It is honest, it is ours, and today it is small,
  * because the app has a handful of people on it. A chart that starts at three
  * songs and grows is worth more than a full one nobody can check — and the
  * screen says how many plays are behind each row, so nobody has to guess.
@@ -160,9 +161,20 @@ export async function GET(): Promise<Response> {
 
   if (client && playRows.length) {
     const ids = playRows.map((one) => String(one.ref ?? '')).filter(Boolean);
+    /* Only songs their maker has put on the radar.
+ 
+       Without this the chart is a hole rather than a chart. Plays are counted
+       one per person per song per day, so somebody playing their own song
+       once a day for a month reaches the top of it — and a song they never
+       shared would be published with its title and their name against it.
+       `shared` is the switch they already have, in the room where they turn
+       it on one song at a time, and it is the same consent this app asks for
+       everywhere else. A chart of four songs somebody chose to show beats a
+       chart of ten they did not. */
     const { data: tracks } = await client
       .from('tracks')
       .select('id, title, owner')
+      .eq('shared', true)
       .in('id', ids);
     const owners = Array.from(new Set((tracks ?? []).map((one) => one.owner)));
     const { data: makers } = owners.length

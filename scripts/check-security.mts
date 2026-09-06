@@ -118,6 +118,19 @@ const ANONYMOUS: Record<string, string> = {
      because it never touches the database. */
   'app/api/post/route.ts':
     'the posting queue worker — acts for every account by design, guarded by POST_SECRET instead',
+  /* The charts on Spotlight. Public by nature — a chart scoped to whoever is
+     looking at it is not a chart — and it holds nothing personal because it
+     reads only what its makers opted into showing.
+
+     It was written without that clause and this check is what found it:
+     plays are counted one per person per song per day, so somebody playing
+     their own song once a day for a month reaches the top, and a song they
+     never shared would have been published with its title and their name on
+     it. The `shared` filter is asserted below rather than trusted, because
+     the day it is deleted this line stops being true and nothing else would
+     notice. */
+  'app/api/charts/route.ts':
+    'the public charts — no caller to scope to, and it reads only tracks their maker set shared',
 };
 for (const file of walk('app/api')) {
   if (!file.endsWith('route.ts')) continue;
@@ -129,7 +142,16 @@ for (const file of walk('app/api')) {
        three counters above — or be behind a secret. Without this, adding a
        line to the list above is how the next unscoped route gets waved
        through. */
-    const counter = /here|events|stats/.test(file);
+    const counter = /here|events|stats|charts/.test(file);
+    /* The charts' whole safety is one clause in one query. Named here so that
+       deleting it fails the security check rather than quietly publishing
+       songs nobody shared. */
+    if (/charts/.test(file) && !/\.eq\('shared', true\)/.test(src)) {
+      fail(
+        'the public charts read only shared tracks',
+        `${file} builds a public chart without filtering on shared`,
+      );
+    }
     if (!counter && !/SECRET/.test(src)) {
       fail(
         'an anonymous service-key route is behind a secret',
