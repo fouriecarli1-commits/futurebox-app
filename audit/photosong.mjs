@@ -98,7 +98,10 @@ async function run(browser, hasModel) {
   /* The picture, through the file input the camera button opens. Waited for
      rather than assumed: `setInputFiles` auto-waits, but everything read
      afterwards does not, and a room that is still drawing has no input yet. */
-  const picker = room.locator('input[type="file"][accept="image/*"]').first();
+  /* Addressed by its own handle rather than by being first on the screen.
+     It was first until the prompt cards arrived above it with a camera of
+     their own, and then this probe filled theirs and measured nothing. */
+  const picker = room.locator('input[data-take="picture"]').first();
   await picker.waitFor({ state: 'attached', timeout: 20000 });
   await picker.setInputFiles({ name: 'wall.png', mimeType: 'image/png', buffer: PNG });
   await p.waitForTimeout(1500);

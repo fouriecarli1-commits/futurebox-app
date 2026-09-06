@@ -274,7 +274,16 @@ export default function StyleFrom({
       </div>
       <input ref={soundInput} type="file" accept="audio/*" className="hidden"
         onChange={(event) => void takeSound(event.target.files?.[0])} />
-      <input ref={pictureInput} type="file" accept="image/*" className="hidden"
+      {/* `data-take` is a handle for the click-through probe, and it is here
+          because position stopped being one. The probe addressed this input as
+          the first `accept="image/*"` on the screen, which it was until the
+          prompt cards were added above it with a camera of their own. The
+          probe then filled the wrong input, measured nothing, and reported the
+          room as broken — a true sentence about the wrong element.
+
+          Nothing in the app reads it. A person never meets this input at all:
+          the "From a photo" button opens it through the ref beside it. */}
+      <input ref={pictureInput} type="file" accept="image/*" className="hidden" data-take="picture"
         onChange={(event) => void takePicture(event.target.files?.[0])} />
 
       {/* And the third way in: a song that already exists, pointed at.

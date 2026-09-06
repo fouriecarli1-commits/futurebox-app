@@ -146,7 +146,24 @@ for (const script of named) {
     );
   }
 
-  /* 5. A build with a different environment is put back.
+  /* 5. The welcome door is waited for, not counted once.
+
+     It draws after two fetches settle. Asking whether it is there the instant
+     the bar appears gets "no", and half a second later it is there — over the
+     header, under the next press. `bringsong` timed out on exactly that, three
+     runs in a row, long after the first two faults were fixed.
+
+     `dismissDoor` in `enter.mjs` has waited properly since the day it was
+     written. The probes with their own way in each rewrote it as a single
+     `count()`, twelve times. */
+  if (/Not now/.test(source)) {
+    ok(
+      `${name} waits for the welcome door rather than counting it once`,
+      /dismissDoor/.test(source) || /Not now[\s\S]{0,200}?waitFor/.test(source),
+    );
+  }
+
+  /* 6. A build with a different environment is put back.
 
      Only `signupcode` does this today. The rule is written for the shape
      rather than for the file, because the next probe that needs a build-time

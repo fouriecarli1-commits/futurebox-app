@@ -23,6 +23,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
+import { dismissDoor } from './enter.mjs';
 import { launchOptions } from './where.mjs';
 
 const PORT = process.argv[2] || '3083';
@@ -59,8 +60,13 @@ try {
   if (await pw.count()) await pw.fill('back-password-1234');
   await p.locator('button[type="submit"]').first().click();
   await p.waitForTimeout(2600);
-  const notNow = p.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
-  if (await notNow.count()) await notNow.click().catch(() => undefined);
+  /* The welcome door, waited for and then gone.
+     `count()` once was the fault: the door draws after two fetches settle, so
+     asking the instant the bar appears gets "no", and half a second later it is
+     there — over the header, under the next press. `bringsong` timed out on
+     exactly that. `enter.mjs` has said it in a comment since the day it was
+     written; the probes with their own way in never got the lesson. */
+  await dismissDoor(p);
   await p.waitForTimeout(900);
 
   const bar = p.locator('nav[aria-label]').first();

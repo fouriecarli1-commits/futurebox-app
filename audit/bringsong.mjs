@@ -32,6 +32,19 @@ const PORT = process.argv[2] || '3071';
 const SECONDS = 6;
 const RATE = 44100;
 
+/** The welcome door out of the way, however long it takes to arrive. */
+async function door(p) {
+  const notNow = p.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
+  try {
+    await notNow.waitFor({ state: 'visible', timeout: 8000 });
+  } catch {
+    return; // Not every way in opens it.
+  }
+  await notNow.click({ timeout: 5000 }).catch(() => undefined);
+  await notNow.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => undefined);
+  await p.waitForTimeout(400);
+}
+
 const problems = [];
 const check = (label, ok, detail = '') => {
   console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${detail ? ` — ${detail}` : ''}`);
@@ -99,9 +112,14 @@ try {
   await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
   await p.waitForTimeout(400);
 
-  const notNow = p.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
-  if (await notNow.count()) await notNow.click().catch(() => undefined);
-  await p.waitForTimeout(500);
+  /* The welcome door, waited for and then gone.
+
+     `count()` once was the fault: the door draws after two fetches settle, so
+     asking the instant the bar appears gets "no", and half a second later it
+     is there — over the header, so the Studio press below lands on the door
+     and times out. `enter.mjs` has said this in a comment since the day it was
+     written; this probe has its own way in and never got the lesson. */
+  await door(p);
 
   const intoRoom = async (name) => {
     const door = p.locator('div.fixed.inset-0.z-\\[55\\] button');
@@ -189,8 +207,7 @@ try {
     await p.locator('button[type="submit"]').first().click();
     await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
     await p.waitForTimeout(400);
-    const again = p.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
-    if (await again.count()) await again.click().catch(() => undefined);
+    await door(p);
     await p.waitForTimeout(500);
   }
   await p.locator('header button').filter({ hasText: /Studio/i }).first().click();

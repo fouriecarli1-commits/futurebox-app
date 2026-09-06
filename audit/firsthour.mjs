@@ -151,7 +151,12 @@ try {
     /Make a song|Maak .n liedjie|first song|eerste liedjie/i.test(greeting),
     greeting.slice(0, 90));
 
+  /* The door is the subject here, not an obstacle, so it is counted rather
+     than dismissed by a helper. Waited for first all the same: it draws after
+     two fetches settle, and counting it the instant the bar appears gets zero
+     and calls the way out missing. */
   const notNow = p.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
+  await notNow.waitFor({ state: 'visible', timeout: 8000 }).catch(() => undefined);
   check('and a way past it, for somebody who came to look around',
     (await notNow.count()) === 1);
   if (await notNow.count()) await notNow.click().catch(() => undefined);
