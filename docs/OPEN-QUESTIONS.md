@@ -528,6 +528,27 @@ fault alone. Its own first version of the last rule asked only whether a file
 *named* the bottom bar, which `photosong` did — a rule a broken file passes is
 not a rule, so it asks for a `waitFor` on it now, and that found seven more.
 
+Two more, found only by reading whole failure logs rather than their first
+lines:
+
+4. **`check:photosong` had been broken since the prompt cards landed.** It
+   addressed the picture input as the first `accept="image/*"` on the screen,
+   which it was until twenty-six prompt cards were added above it with a camera
+   of their own. From then on it filled the prompt cards' input, StyleFrom
+   measured nothing, and the room was reported as broken. The input carries a
+   `data-take="picture"` handle now. Same lesson as `data-card` on the talking
+   cards: address the thing, not its position.
+
+   This one is the argument for the whole exercise. It was broken for three
+   days and nobody could have known, because the check that would have caught
+   it could not run.
+
+5. **`bringsong` pressed Studio through the screen it was trying to open.**
+   After its reload the app comes back at the studio's own front door, which
+   covers the header. Playwright said so for thirty seconds a run — "subtree
+   intercepts pointer events" — and three runs were spent reading it as
+   flakiness because only the first line of the error was ever looked at.
+
 **A note for anyone running `npx tsc --noEmit` locally after a probe run:** the
 probe-page probes build with a page in `app/`, delete the page, and leave
 `.next/types` referencing it, so tsc reports a missing module that is not a
