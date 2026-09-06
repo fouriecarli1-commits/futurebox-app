@@ -58,7 +58,8 @@
     "check:photo": "tsx scripts/check-photo.mts",
     "check:photosong": "node audit/photosong.mjs",
     "check:videowords": "node audit/videowords.mjs",
-    "check:writing": "node audit/writing.mjs"
+    "check:writing": "node audit/writing.mjs",
+    "check:entity": "tsx scripts/check-entity.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

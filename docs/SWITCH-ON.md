@@ -173,6 +173,15 @@ be reachable before somebody transacts; `/legal` is that page and it currently
 says the details are not published yet, which is defensible. A placeholder
 registration number would not be.
 
+**If you trade as yourself rather than as a company**, there is no
+registration number and there is nothing to register. Then set
+`FUTUREBOX_LEGAL_NAME` to your own full name and
+`FUTUREBOX_LEGAL_STATUS` to `Sole proprietor trading as FutureBox Studio`,
+and leave the registration empty. The page will not publish a person
+described as a private company — that is the one combination it refuses, and
+`npm run check:entity` holds it to that along with the other eight shapes, so
+whichever way you fill it in it is right the first time or it says nothing.
+
 ### 12. The trademark
 
 CIPC's register, classes 9 and 42. A registered domain and a registered company
