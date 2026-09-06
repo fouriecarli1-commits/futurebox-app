@@ -22,13 +22,13 @@
  * without undoing the rule it appears to break.
  */
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3000';
 /** Passed when the run is against a build with the particulars configured. */
 const configured = process.argv[3] === 'configured';
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1100, height: 900 } });
 const problems = [];
 const check = (label, ok, detail = '') => {

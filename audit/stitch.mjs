@@ -19,13 +19,11 @@
  */
 import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
+import { launchOptions } from './where.mjs';
 
 const BUNDLE = process.argv[2] || '/tmp/stitch.bundle.js';
 
-const b = await chromium.launch({
-  executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-  args: ['--autoplay-policy=no-user-gesture-required'],
-});
+const b = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required'] }));
 const p = await b.newPage();
 const problems = [];
 const check = (label, ok, detail = '') => {

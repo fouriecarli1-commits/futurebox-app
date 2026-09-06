@@ -26,7 +26,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3103';
 const TOKEN = 'a'.repeat(64);
@@ -50,9 +50,7 @@ try {
     } catch { /* not up yet */ }
   }
 
-  browser = await chromium.launch({
-    executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-  });
+  browser = await chromium.launch(launchOptions());
   const p = await browser.newPage({ viewport: { width: 1280, height: 950 } });
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
 

@@ -18,6 +18,7 @@
 import { cpSync, rmSync, existsSync } from 'node:fs';
 import { execSync, spawn } from 'node:child_process';
 import { chromium } from 'playwright';
+import { launchOptions } from './where.mjs';
 
 const PORT = process.argv[2] || '3051';
 const PROBE = 'app/mixprobe/page.probe.tsx';
@@ -44,10 +45,7 @@ try {
     } catch { /* not up yet */ }
   }
 
-  const b = await chromium.launch({
-    executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-    args: ['--autoplay-policy=no-user-gesture-required'],
-  });
+  const b = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required'] }));
   const p = await b.newPage({ viewport: { width: 900, height: 700 } });
   p.on('pageerror', (e) => problems.push(String(e).slice(0, 160)));
   await p.goto(`http://localhost:${PORT}/mixprobe`, { waitUntil: 'networkidle' });

@@ -1,7 +1,7 @@
 /** The help page: both halves, both languages, and the form that reaches a person. */
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+import { launchOptions, shot } from './where.mjs';
+const b = await chromium.launch(launchOptions());
 const problems = [];
 const check = (label, ok, detail = '') => {
   console.log(`${label}: ${ok}`);

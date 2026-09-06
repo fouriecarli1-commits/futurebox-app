@@ -29,7 +29,7 @@
 import { cpSync, rmSync } from 'node:fs';
 import { spawn, execSync } from 'node:child_process';
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3160';
 const PROBE = 'app/videowords/page.probe.tsx';
@@ -58,10 +58,7 @@ try {
     } catch { /* not up yet */ }
   }
 
-  browser = await chromium.launch({
-    executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-    args: ['--autoplay-policy=no-user-gesture-required'],
-  });
+  browser = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required'] }));
 
   /** One visit, with the translator either present or absent. */
   const visit = async (hasModel) => {

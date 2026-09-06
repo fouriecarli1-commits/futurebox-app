@@ -16,7 +16,7 @@
  * open.
  */
 import { chromium, devices } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3000';
 /**
@@ -48,7 +48,7 @@ const WANTED = [
   return Boolean(device);
 });
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const b = await chromium.launch(launchOptions());
 const problems = [];
 
 for (const [name, device] of WANTED) {

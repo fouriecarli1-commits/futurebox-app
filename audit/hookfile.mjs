@@ -31,6 +31,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
+import { launchOptions } from './where.mjs';
 
 const PORT = process.argv[2] || '3097';
 const SECONDS = 6;
@@ -53,10 +54,7 @@ try {
     } catch { /* not up yet */ }
   }
 
-  browser = await chromium.launch({
-    executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-    args: ['--autoplay-policy=no-user-gesture-required'],
-  });
+  browser = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required'] }));
   const p = await browser.newPage({ viewport: { width: 1280, height: 950 } });
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
   await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });

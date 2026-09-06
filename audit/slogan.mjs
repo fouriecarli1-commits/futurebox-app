@@ -7,9 +7,9 @@
  * Afrikaans text rather than the English fallback showing through.
  */
 import { chromium, devices } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const b = await chromium.launch(launchOptions());
 
 for (const [name, opts] of [
   ['phone', devices['iPhone SE'] ?? { viewport: { width: 320, height: 700 } }],

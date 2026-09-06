@@ -25,12 +25,12 @@
  * Needs the stub build — see `audit/README.md`.
  */
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3045';
 const af = process.argv[3] === 'af';
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const b = await chromium.launch(launchOptions());
 /* Johannesburg, deliberately. On UTC the whole conversion is the identity and
    every one of these checks would pass against a version that ignored the
    timezone entirely. */

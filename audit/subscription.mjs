@@ -1,7 +1,7 @@
 /** The cancel panel, with a live subscription pretended in. */
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+import { launchOptions, shot } from './where.mjs';
+const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));

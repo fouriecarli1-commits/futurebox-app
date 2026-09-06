@@ -1,6 +1,6 @@
 import { chromium, devices } from 'playwright';
-import { shot } from './where.mjs';
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+import { launchOptions, shot } from './where.mjs';
+const b = await chromium.launch(launchOptions());
 for (const [name, opts] of [['phone', devices['iPhone 13']], ['desktop', { viewport: { width: 1280, height: 900 } }]]) {
   const p = await b.newPage({ ...opts });
   const bad = [];

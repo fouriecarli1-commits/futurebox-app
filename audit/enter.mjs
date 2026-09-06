@@ -1,5 +1,6 @@
 /** Sign in, open the studio, and report what is there. Shared by every audit. */
 import { chromium } from 'playwright';
+import { launchOptions } from './where.mjs';
 
 /** The sandbox has no route to the open internet; those are not app faults. */
 const OFFSITE = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|ERR_CONNECTION_REFUSED/;
@@ -7,9 +8,7 @@ const OFFSITE = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|ERR_CONNECTI
 const ABORTED = /ERR_ABORTED/;
 
 export async function enter({ width = 1280, height = 900 } = {}) {
-  const browser = await chromium.launch({
-    executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-  });
+  const browser = await chromium.launch(launchOptions());
   const page = await browser.newPage({ viewport: { width, height } });
   const problems = [];
   const note = (s) => { if (!problems.includes(s)) problems.push(s); };

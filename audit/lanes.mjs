@@ -14,15 +14,12 @@
  * up as a difference rather than as two identical pictures.
  */
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3023';
 const af = process.argv[3] === 'af';
 
-const b = await chromium.launch({
-  executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-  args: ['--autoplay-policy=no-user-gesture-required'],
-});
+const b = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required'] }));
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
 const check = (label, ok, detail = '') => {

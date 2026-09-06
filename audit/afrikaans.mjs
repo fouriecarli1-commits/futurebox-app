@@ -49,7 +49,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3082';
 /** What the app is allowed to carry, and may only ever lower. */
@@ -116,9 +116,7 @@ try {
     } catch { /* not up yet */ }
   }
 
-  browser = await chromium.launch({
-    executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-  });
+  browser = await chromium.launch(launchOptions());
 
   /**
    * One walk of the app in one language, returning what each screen said.

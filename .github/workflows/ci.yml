@@ -1,3 +1,19 @@
+# Two jobs.
+#
+# `check` is the fast one: types, the theme, the prices, the Afrikaans, the
+# link gates, the build, the security claims. About a minute, and a pull
+# request that fails any of it is not ready to read.
+#
+# `screens` is the twenty-six click-through probes, which until now ran only
+# on the machine they were written on — every one of them carried that
+# machine's browser path as a constant, so anywhere else they failed on the
+# first line with a path error that reads like the app being broken. They
+# open the app in a real browser and press it the way a person does, which is
+# the only thing that catches a dead end between two rooms.
+#
+# Sharded four ways and not fail-fast: with one probe per room, "which rooms
+# broke" is the useful answer and stopping at the first one hides it.
+#
 # Runs the seven checks that would otherwise only ever run on somebody's laptop:
 # the types have to resolve, the CSS defaults have to match the theme they claim
 # to be, the copilot's operations have to be described, the prices have to add
@@ -111,6 +127,13 @@ jobs:
       - name: Nobody's name on a talk they did not give
         run: npm run check:masterclasses
 
+      # Sixty-one probes carried this machine's browser path as a constant,
+      # which is why fourteen click-through probes had never run anywhere but
+      # one laptop. The half that matters — no browser anywhere known, so let
+      # Playwright use its own — cannot be observed on a machine that has one.
+      - name: The probes can find a browser anywhere
+        run: npm run check:launch
+
       # Untrusted text goes to a model inside a tag so the prompt can say
       # "this is data". That holds until the text contains the closing tag —
       # and the case that happens is somebody saying the words, not an attack.
@@ -139,3 +162,79 @@ jobs:
 
       - name: Security claims still hold
         run: npm run check:security
+
+  # ── The click-through probes ────────────────────────────────────────────
+  #
+  # Split four ways by how long they take rather than alphabetically. The
+  # eight that copy a probe page into the app and rebuild are the slow ones —
+  # they cost a full `next build` each — so they are spread rather than
+  # bunched, and the group that carries three of them carries little else.
+  screens:
+    runs-on: ubuntu-latest
+    # Generous against a happy path of six or seven minutes. A probe that
+    # hangs waiting for a selector holds its runner until something stops it,
+    # and the neither-green-nor-red state is the worst of the three.
+    timeout-minutes: 30
+    strategy:
+      # Which rooms broke is the answer worth having. Stopping at the first
+      # failure would report one of them and hide the rest.
+      fail-fast: false
+      matrix:
+        include:
+          - group: doors
+            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin
+          - group: make
+            probes: check:makeroom check:simple check:bringsong check:songscreen check:artistname check:cards
+          - group: rooms
+            probes: check:liveroom check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords
+          - group: whole
+            probes: check:firsthour check:writing check:wide check:afrikaansscreen check:spotlight check:photosong check:singview
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      # The browser, and the system libraries it needs. `--with-deps` is not
+      # optional on a bare runner: without it Chromium installs and then
+      # refuses to start, which reads as a broken app rather than a missing
+      # libnss3.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Built once here. The eight probes that need their own probe page
+      # rebuild on top of this; the rest start the server against it.
+      - name: Build
+        run: npx next build
+
+      - name: ${{ matrix.group }}
+        run: |
+          failed=""
+          for one in ${{ matrix.probes }}; do
+            echo "::group::$one"
+            if npm run --silent "$one"; then
+              echo "$one ok"
+            else
+              echo "$one FAILED"
+              failed="$failed $one"
+            fi
+            echo "::endgroup::"
+          done
+          if [ -n "$failed" ]; then
+            echo "failed:$failed"
+            exit 1
+          fi
+
+      # The screenshots, which are the point of several of these — the packing
+      # of a room is an opinion until somebody looks at the picture.
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screens-${{ matrix.group }}
+          path: audit/*.png
+          if-no-files-found: ignore

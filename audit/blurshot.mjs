@@ -15,14 +15,12 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
+import { launchOptions } from './where.mjs';
 
 const BUNDLE = process.argv[2] || '/tmp/stitch.bundle.js';
 const OUT = process.argv[3] || 'audit/blur.png';
 
-const b = await chromium.launch({
-  executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-  args: ['--autoplay-policy=no-user-gesture-required'],
-});
+const b = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required'] }));
 const p = await b.newPage();
 await p.goto('about:blank');
 await p.addScriptTag({ content: readFileSync(BUNDLE, 'utf8') });

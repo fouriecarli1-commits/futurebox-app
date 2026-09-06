@@ -19,7 +19,7 @@
  */
 import { execSync, spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3061';
 const HOST = 'https://stub.supabase.co';
@@ -47,7 +47,7 @@ try {
     try { if ((await fetch(`http://localhost:${PORT}`)).ok) break; } catch { /* not up */ }
   }
 
-  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const b = await chromium.launch(launchOptions());
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
 
   /** What the stubbed project was asked to do, in order. */

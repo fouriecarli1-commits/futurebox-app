@@ -1,6 +1,6 @@
 import { chromium, devices } from 'playwright';
-import { shot } from './where.mjs';
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+import { launchOptions, shot } from './where.mjs';
+const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ ...devices['iPhone 13'] });
 await p.goto('http://localhost:3000', { waitUntil: 'networkidle' });
 const cta = p.locator('button, a').filter({ hasText: /start free/i }).first();

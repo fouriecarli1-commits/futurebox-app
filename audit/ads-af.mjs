@@ -7,11 +7,9 @@
  * and the advert route writes several.
  */
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
-const b = await chromium.launch({
-  executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-});
+const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
 p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 160)}`));

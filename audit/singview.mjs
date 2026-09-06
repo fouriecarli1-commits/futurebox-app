@@ -14,7 +14,7 @@
 import { cpSync, rmSync, existsSync } from 'node:fs';
 import { execSync, spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3059';
 const PROBE = 'app/singbooth/page.probe.tsx';
@@ -40,10 +40,7 @@ try {
     } catch { /* not up yet */ }
   }
 
-  const b = await chromium.launch({
-    executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-    args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
-  });
+  const b = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] }));
 
   for (const [name, width] of [['phone', 390], ['desk', 1280]]) {
     const p = await b.newPage({ viewport: { width, height: 844 } });

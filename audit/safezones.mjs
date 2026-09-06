@@ -22,7 +22,7 @@
 import { cpSync, rmSync, existsSync } from 'node:fs';
 import { execSync, spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { shot } from './where.mjs';
+import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3025';
 const af = process.argv[3] === 'af';
@@ -49,7 +49,7 @@ try {
     } catch { /* not up yet */ }
   }
 
-  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const b = await chromium.launch(launchOptions());
   const p = await b.newPage({ viewport: { width: 900, height: 950 } });
   p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
   await p.addInitScript((l) => { try { window.localStorage.setItem('futurebox.lang.v1', l); } catch {} }, af ? 'af' : 'en');

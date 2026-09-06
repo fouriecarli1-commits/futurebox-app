@@ -16,9 +16,10 @@
  * "their laptop" actually is.
  */
 import { chromium } from 'playwright';
+import { launchOptions } from './where.mjs';
 
 const PORT = process.argv[2] || '3018';
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const b = await chromium.launch(launchOptions());
 const problems = [];
 const check = (label, ok, detail = '') => {
   console.log(`${label}: ${ok}`);

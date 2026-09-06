@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+import { launchOptions } from './where.mjs';
+const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
 p.on('response', async (r) => {
   if (r.status() >= 400) console.log(r.status(), r.request().resourceType(), r.url().slice(0, 120));
