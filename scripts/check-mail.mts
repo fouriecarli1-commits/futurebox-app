@@ -10,7 +10,7 @@
  * customer saying they never got a receipt.
  */
 import { readFileSync } from 'node:fs';
-import { FREE_MAILBOXES, freeMailbox, fromDomain } from '../app/lib/server/email.ts';
+import { FREE_MAILBOXES, freeMailbox, fromDomain, recipients } from '../app/lib/server/email.ts';
 import { isOwnerEmail, ownerEmails } from '../app/lib/server/owners.ts';
 
 let bad = 0;
@@ -87,6 +87,28 @@ check('no mailbox is written into the letter footer',
   !/@[a-z0-9-]+\.[a-z]{2,}/i.test(email.slice(email.indexOf('function wrap'), email.indexOf('function wrap') + 900)),
   'an address in every letter is an address in every forwarded letter');
 
+
+/* ── A second owner ─────────────────────────────────────────────────────
+ 
+   "Kan ek 'n tweede owner stel, sodat anrefourie@gmail.com ook die app kan
+    toets saam met my?"
+ 
+   Yes, and asking turned up a bug that would have answered "no" without ever
+   saying so. The sender wrapped the address in an array — `to: [letter.to]` —
+   which is right for one address and silently wrong for a list: the allowance
+   warnings would have gone to one recipient literally named
+   "a@x.com,b@y.com", been refused at the far end, and stopped arriving with
+   nothing anywhere to say why. */
+check('one address is one recipient', recipients('one@futurebox.studio').length === 1);
+check('two become two, not one malformed one',
+  recipients('a@futurebox.studio,b@futurebox.studio').length === 2,
+  recipients('a@futurebox.studio,b@futurebox.studio').join(' | '));
+check('with the spaces around the comma taken off',
+  recipients(' a@futurebox.studio , b@futurebox.studio ').join('|') === 'a@futurebox.studio|b@futurebox.studio');
+check('a trailing comma does not become an empty recipient',
+  recipients('a@futurebox.studio,').length === 1);
+check('and nothing at all is nobody, rather than one empty address',
+  recipients('').length === 0 && recipients('  ,  ').length === 0);
 
 /* ── Who runs the place ─────────────────────────────────────────────────
  

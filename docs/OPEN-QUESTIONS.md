@@ -304,21 +304,40 @@ or keep both is a decision nobody has made.
 
 ## F. Asked for, agreed, not yet built
 
-- **The packaging rebuild, in the other twelve rooms.** `Card` exists and
-  carries the shape from `docs/PACKAGING.md` §2 — a heading you can fold, one
-  box, small buttons underneath — and Make a song's two cards use it. The wand
-  slot is built and nothing fills it yet; the copilot is the obvious thing to
-  put behind it, with a shorter journey than the panel.
 - The right-hand rail on the live slider: Remix and **+ Hook**, which the
   packaging notes call the whole loop. Held back deliberately — remixing
   somebody else's post is a rights question before it is a button, and that
-  decision has not been made.
-- **The prompt cards from `docs/PACKAGING.md` §4.** The photograph can be
-  read now, and the twelve written angles — "the view from right here", "your
-  plate, as a song", "the receipt song" — are not on the screen yet. The
-  route already takes an `idea` and screens it; nothing sends one.
+  decision has not been made. Still the only thing in this section nobody has
+  started, and it is a decision rather than a build.
+- **The talking half of `docs/PACKAGING.md` §4.** The photo cards are in —
+  twenty-six of them, `adef346` — and the microphone ones are not. They are a
+  different shape: recording, then transcription, which costs a credit, so the
+  card has to say so before it is pressed. Everything else about them is the
+  same chain.
 
 ---
+
+## Two corrections, kept where corrections belong
+
+**`df2994b`'s card count.** Its message says "14 cards across 5 rooms now, up
+from 10 across 4". I wrote that before running the probe; the run said 4
+rooms, because Spotlight is not one of the thirteen studio rooms
+`audit/cards.mjs` walks, so its four new bars were not counted at all. The
+probe counts Spotlight now and the figure is 21 across 10 of 14 screens.
+
+**`/api/charts` published songs nobody had shared.** I shipped that route in
+`df2994b` and did not run `check:security` after it. The chart is built from
+plays counted one per person per song per day, so somebody playing their own
+song once a day for a month reaches the top of it — and the query read every
+track by id, shared or not. A private song would have gone on the front
+screen with its title and its maker's name for thirty days. Fixed in
+`adef346`, with the `shared` clause asserted rather than described, and
+verified by deleting it and watching the check fail.
+
+Both are the same failure in different clothes: a claim made without running
+the thing that would have checked it. The rule that follows from the second
+one is narrow and worth writing down — **a new route that calls `admin()`
+needs `check:security` run before it is pushed, not two commits later.**
 
 ## A correction, kept where corrections belong
 
@@ -383,3 +402,9 @@ wearing the probe's clothes.
 | Every word Afrikaans, with a check that holds it | 2026-09-06 | `0e1b516` |
 | Three fabricated masterclasses deleted | 2026-09-06 | `6fb25e6` |
 | Spotlight's bars, on plays that are really counted | 2026-09-06 | `df2994b` |
+| The card shape in the rest of the rooms, proved room by room | 2026-09-06 | `399426c`, `3e7c33a` |
+| The wand fills a card in, one press | 2026-09-06 | `e2a985d` |
+| Twenty-six prompt cards instead of an empty box | 2026-09-06 | `b3aab44` |
+| CIPC 2026/714071/07 recorded; the number's shape checked | 2026-09-06 | `b3aab44` |
+| The owner is reported, not implied by a letter arriving | 2026-09-06 | `0e5b58f` |
+| The charts stopped publishing songs nobody shared | 2026-09-06 | `adef346` |

@@ -52,8 +52,32 @@ const API = process.env.MAIL_API_URL || 'https://api.resend.com/emails';
 const KEY = () => process.env.MAIL_API_KEY ?? '';
 const FROM = () => process.env.MAIL_FROM ?? '';
 
-/** Whose inbox gets told when something needs a person. */
+/**
+ * Whose inbox gets told when something needs a person.
+ *
+ * `OWNER_EMAIL` is a comma-separated list, so this can be one address or
+ * several. `send` splits it — see the note there, which exists because
+ * wrapping this string in an array was a real bug that would have appeared
+ * the first time somebody added a second owner and disappeared nothing but
+ * the warnings.
+ */
 export const OWNER = () => process.env.OWNER_EMAIL || ENQUIRIES;
+
+/**
+ * One recipient, or several, however they were written.
+ *
+ * A letter's `to` is usually one address and is sometimes `OWNER()`, which is
+ * whatever is in `OWNER_EMAIL` — and that is a comma-separated list the
+ * moment two people run the app together. Splitting here rather than at every
+ * call site means the second owner works without anybody remembering that it
+ * has to.
+ */
+export function recipients(to: string): string[] {
+  return to
+    .split(',')
+    .map((one) => one.trim())
+    .filter(Boolean);
+}
 
 /**
  * The provider's own base, worked out from the send endpoint.
@@ -257,7 +281,16 @@ export async function send(letter: Letter): Promise<Sent> {
       headers: { authorization: `Bearer ${KEY()}`, 'content-type': 'application/json' },
       body: JSON.stringify({
         from: FROM(),
-        to: [letter.to],
+        /* Split, not wrapped.
+ 
+           This was `[letter.to]`, which is right for one address and silently
+           wrong for two: `OWNER_EMAIL` is a comma-separated list, so the day
+           a second owner was added the allowance warnings would have gone to
+           one recipient literally named "a@x.com,b@y.com" and stopped
+           arriving. A warning that has quietly stopped is worse than no
+           warning, which is the same reasoning as the three secrets in
+           docs/SWITCH-ON.md §6. */
+        to: recipients(letter.to),
         reply_to: letter.replyTo || ENQUIRIES,
         subject: letter.subject,
         text: wrap(letter.text),

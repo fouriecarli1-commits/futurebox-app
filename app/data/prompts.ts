@@ -255,6 +255,68 @@ export const PROMPTS: readonly PromptCard[] = [
     af: 'Ouma se resep, gesing',
     idea: 'A handwritten recipe. Write it in Afrikaans, using the real steps as the verses. The chorus is who she made it for.',
   },
+
+  /* ── By talking ───────────────────────────────────────────────────────
+ 
+     The other half of §4. A different shape from the camera cards and worth
+     saying why: a photograph is on the phone already, and a sentence has to
+     be said out loud into a microphone, transcribed by a paid service, and
+     only then turned into a song. It costs two credits and the card says so
+     before it is pressed.
+ 
+     Nobody has to type anything, which on a phone is the whole point. */
+  {
+    id: 'talk-my-day',
+    kind: 'talk',
+    local: true,
+    en: 'Tell me about your day — I’ll sing it',
+    af: 'Vertel my van jou dag — ek sing dit',
+    idea: 'They are describing their own day. Keep the actual things that happened — the times, the places, the people. Write it in the language they spoke.',
+  },
+  {
+    id: 'talk-traffic',
+    kind: 'talk',
+    local: true,
+    en: 'Tell me about this morning’s traffic',
+    af: 'Vertel my van vanoggend se verkeer',
+    idea: 'They are complaining about traffic. Write it in the language they spoke, wry rather than bitter, and keep the specific road or the specific hold-up.',
+  },
+  {
+    id: 'talk-mom',
+    kind: 'talk',
+    en: 'One thing your mother does',
+    af: 'Een ding wat jou ma doen',
+    idea: 'One habit of their mother’s, which they have just described. Build the whole song out of that one thing rather than around the idea of a mother. Never describe how anybody looks.',
+  },
+  {
+    id: 'talk-miss',
+    kind: 'talk',
+    en: 'Describe the person you miss',
+    af: 'Beskryf die mens vir wie jy verlang',
+    idea: 'Somebody they miss. Use what they actually said about them. Never describe how anybody looks, and never invent a reason they are gone.',
+  },
+  {
+    id: 'talk-blessing',
+    kind: 'talk',
+    local: true,
+    en: 'Name the thing you need today',
+    af: 'Noem die ding wat jy vandag nodig het',
+    idea: 'Something they are asking for or hoping for. Write it in the language they spoke, plainly, without turning it into a sermon.',
+  },
+  {
+    id: 'talk-bestie',
+    kind: 'talk',
+    en: 'Celebrate your best friend at full volume',
+    af: 'Vier jou beste vriend op volle sterkte',
+    idea: 'A friend. Loud, funny, specific to the things they said about this person. Never describe how anybody looks.',
+  },
+  {
+    id: 'talk-love',
+    kind: 'talk',
+    en: 'A song for the person you love',
+    af: '’n Liedjie vir die mens vir wie jy lief is',
+    idea: 'Their partner. Use the ordinary specific thing they mentioned rather than the grand statement. Never describe anybody’s body or appearance.',
+  },
 ];
 
 /**

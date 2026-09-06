@@ -18,9 +18,18 @@ one line each; this is the one to actually work from.
 
 **Where:** Vercel → Settings → Environment Variables → `OWNER_EMAIL`, then
 redeploy.
-**What to put:** the address you sign in with. Comma-separated if there is more
-than one of you. No `NEXT_PUBLIC_` prefix, ever — that would ship the list of
-who runs the place to every visitor.
+**What to put:** the address you sign in with. **Comma-separated if there is
+more than one of you** — `carli@futurebox.studio,anrefourie@gmail.com` — and
+spaces around the commas are fine. Every address on the list is exempt from
+metering, may use the FutureBox name, and receives the allowance warnings.
+No `NEXT_PUBLIC_` prefix, ever — that would ship the list of who runs the
+place to every visitor.
+
+Adding a second one is a change to this variable and a redeploy. Nothing else
+moves. The letters go to all of them: `send` splits the list, which it did not
+always do — until 6 September it wrapped the whole string as one recipient, so
+a second owner would have stopped the warnings arriving and said nothing about
+it. `npm run check:mail` holds that now.
 
 **What is broken until you do.** Everything, quietly:
 

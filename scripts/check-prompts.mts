@@ -24,12 +24,21 @@ check('there are cards at all', PROMPTS.length >= 20, `${PROMPTS.length}`);
 const ids = PROMPTS.map((one) => one.id);
 check('no two cards share an id', new Set(ids).size === ids.length);
 
-/* An Afrikaans card whose idea does not say so produces an English song under
-   an Afrikaans label, which is the single worst outcome here: the person who
-   pressed "Ouma se kombuis" gets a song about a grandmother's kitchen in a
-   language she did not ask for, and nothing on the screen explains why. The
-   label never reaches the model — only the idea does. */
-for (const card of PROMPTS.filter((one) => one.local)) {
+/* An Afrikaans *photo* card whose idea does not say so produces an English
+   song under an Afrikaans label, which is the single worst outcome here: the
+   person who pressed "Ouma se kombuis" gets a song about a grandmother's
+   kitchen in a language she did not ask for, and nothing on the screen
+   explains why. The label never reaches the model — only the idea does.
+
+   Photo cards only, and the reason is not a technicality. A talking card is
+   given a recording, so the language is whatever the person spoke, and
+   pinning it to Afrikaans would hand an English speaker who pressed "Vertel
+   my van jou dag" a song in a language they did not use. This rule was
+   written before the talking cards existed and failed all three of the South
+   African ones the moment they arrived — correctly, in the sense that it was
+   doing what it said, and wrongly, in the sense that what it said was only
+   ever true of half the cards. */
+for (const card of PROMPTS.filter((one) => one.local && one.kind === 'photo')) {
   check(`${card.id}: a South African card says which language to write in`,
     /in Afrikaans/i.test(card.idea), card.idea.slice(0, 60));
 }
@@ -49,6 +58,8 @@ for (const card of PROMPTS) {
     !/\b(die|jou|wat|nie|met|van|hierdie|liedjie)\b/.test(card.idea.toLowerCase()),
     card.idea.slice(0, 50));
   /* The label is what a thumb presses on a phone. */
+  /* What fits on a card at 390 pixels. Measured off the widest one that
+     still reads as two lines rather than four. */
   check(`${at}: the labels fit on a card`,
     card.en.length <= 52 && card.af.length <= 52,
     `${card.en.length} / ${card.af.length}`);
@@ -82,9 +93,13 @@ const en = promptsFor('en');
 check('an Afrikaans reader meets a South African card first', Boolean(af[0]?.local), af[0]?.id);
 check('and still gets every one of them', af.length === en.length, `${af.length} / ${en.length}`);
 check('an English reader gets them unshuffled', en[0]?.id === PROMPTS[0].id, en[0]?.id);
-check('every card is a photo card until the talking ones are built',
-  PROMPTS.every((one) => one.kind === 'photo'),
-  `${PROMPTS.filter((one) => one.kind === 'talk').length} talking`);
+const talking = promptsFor('en', 'talk');
+check('there are talking cards too', talking.length >= 5, `${talking.length}`);
+check('and they are kept apart from the camera ones',
+  promptsFor('en', 'photo').every((one) => one.kind === 'photo')
+    && talking.every((one) => one.kind === 'talk'));
+check('an Afrikaans reader meets a South African talking card first',
+  Boolean(promptsFor('af', 'talk')[0]?.local), promptsFor('af', 'talk')[0]?.id);
 
 if (failures) {
   console.error(`\ncheck:prompts — ${failures} failure(s).\n`);
