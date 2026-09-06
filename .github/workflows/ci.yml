@@ -102,6 +102,13 @@ jobs:
       - name: A row can only claim its own file
         run: npm run check:ownedpath
 
+      # `callerFrom` reads the Authorization header and nothing else, so an
+      # unsigned call to a route that charges is a 401 for everybody. It
+      # shipped twice in one day, under probes that stub the route and so
+      # cannot catch it.
+      - name: Every call to a route that reads its caller carries one
+        run: npm run check:signed
+
       # Three things have an opinion about the language and they do not carry
       # equal weight. The rule lived inside two React effects where it could
       # not be run, and the bug she hit was invisible to everything.

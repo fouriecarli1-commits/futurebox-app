@@ -55,6 +55,7 @@ import { promptsFor, type PromptCard } from '../data/prompts';
 import { CREDITS, perMinute } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
+import { accessToken } from '../lib/cloud';
 import Note from './Note';
 
 /** The route's own ceiling. Said here too, so the refusal arrives before the upload. */
@@ -141,7 +142,19 @@ export default function PromptCards({
       const form = new FormData();
       form.append('file', clip, 'said.webm');
       form.append('seconds', String(Math.max(1, Math.round(howLong))));
-      const read = await fetch('/api/transcribe', { method: 'POST', body: form });
+      /* Signed. `callerFrom` reads the Authorization header and nothing else —
+         no cookie, no session — so an unsigned post to a route that charges is
+         a 401 every time, for everybody, however properly they are signed in.
+
+         This shipped unsigned and the probe did not catch it, because the
+         probe stubs the route: it proves this screen sends what it means to
+         send, and cannot prove the real route would accept it. */
+      const token = await accessToken();
+      const read = await fetch('/api/transcribe', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: form,
+      });
       const words = (await read.json().catch(() => null)) as
         | { text?: string; error?: string; message?: string }
         | null;
