@@ -115,7 +115,28 @@ for (const script of named) {
     ok(`${name} kills the server it spawned`, /process\.kill\(-/.test(source));
   }
 
-  /* 4. A build with a different environment is put back.
+  /* 4. It waits for the app rather than sleeping at it.
+
+     Every one of these signs in and then has to know it is in. A flat
+     `waitForTimeout` after the submit is how long that took on an idle
+     laptop; on a loaded one it is sometimes short, and the probe then drives
+     the signed-out page while believing it is in — which reports the room as
+     broken when the fault is the wait. `bringsong` failed exactly that way,
+     twice, on a machine doing nothing unusual.
+
+     The bottom bar is the signal because it is on every signed-in screen and
+     no signed-out one. Only probes that sign in are asked. */
+  const signsIn = /button\[type="submit"\]/.test(source);
+  /* One probe never gets in on purpose: `signup` is about the six-digit code
+     screen, which is the door rather than the room, and it would wait thirty
+     seconds for a bar that is correctly not there. Recognised by what it looks
+     for rather than by its name, so the exemption describes itself. */
+  const staysAtTheDoor = /one-time-code/.test(source);
+  if (signsIn && !staysAtTheDoor) {
+    ok(`${name} waits for the app after signing in`, /nav\[aria-label\]/.test(source));
+  }
+
+  /* 5. A build with a different environment is put back.
 
      Only `signupcode` does this today. The rule is written for the shape
      rather than for the file, because the next probe that needs a build-time

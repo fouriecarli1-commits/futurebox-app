@@ -90,7 +90,14 @@ try {
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('bring-password-1234');
   await p.locator('button[type="submit"]').first().click();
-  await p.waitForTimeout(2500);
+  /* Waited for, not slept through. The app is in when the bottom bar is —
+     it is on every signed-in screen and no signed-out one. The flat sleep
+     that was here is how long signing in took on an idle laptop; on a loaded
+     one it is sometimes short, and this probe then drives the signed-out page
+     while believing it is in, which reports the room as broken when the fault
+     is the wait. That is exactly how it failed. */
+  await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
+  await p.waitForTimeout(400);
 
   const notNow = p.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
   if (await notNow.count()) await notNow.click().catch(() => undefined);
@@ -180,7 +187,8 @@ try {
     const pw2 = p.locator('input[type="password"]').first();
     if (await pw2.count()) await pw2.fill('bring-password-1234');
     await p.locator('button[type="submit"]').first().click();
-    await p.waitForTimeout(2500);
+    await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
+    await p.waitForTimeout(400);
     const again = p.locator('button').filter({ hasText: /Not now|Nie nou nie/ }).first();
     if (await again.count()) await again.click().catch(() => undefined);
     await p.waitForTimeout(500);
