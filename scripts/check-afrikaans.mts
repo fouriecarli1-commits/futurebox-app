@@ -102,6 +102,103 @@ for (const [i, match] of starts.entries()) {
 }
 
 /**
+ * English words sitting inside an Afrikaans sentence.
+ *
+ *   "daar is engelse woorde tussen in, sy het gese dat ons loslit afrikaans
+ *    gebruik en elke woord en sin moet afrikaans wees, daar kan nie foute
+ *    tussen in wees nie."
+ *
+ * Carli had somebody read the Afrikaans. The two checks above could not have
+ * found what she found: a line can have an Afrikaans entry, not be a copy of
+ * the English, and still say "Post dit" or "Jou musiek en playlists". Sixty-
+ * nine lines did.
+ *
+ * ── Why this is a list of words and not something cleverer ───────────────
+ *
+ * Because Afrikaans and English share a great many words — `is`, `in`, `plan`,
+ * `sing`, `stop`, `film`, `week`, `minute`, `word`, `was`, `links`, `sent`,
+ * `want`, `note`, `mark`, `hand`, `item`, `stories` are all Afrikaans, and
+ * every one of them was a false alarm in the first pass of this. A check that
+ * cries wolf is a check somebody switches off, so what is listed here is only
+ * words that are English and are NOT also Afrikaans.
+ *
+ * Names are not in it and never should be: YouTube, Spotify, TikTok, Apple
+ * Music, FutureBox, Copilot, and the genres — afro house, gospel, indie —
+ * stay in both languages. Translating the name of somebody else's product
+ * invents a thing that does not exist, which is the same rule this file
+ * already applies to the title of a podcast.
+ *
+ * Her decisions, taken 6 September 2026 when this was written:
+ *   podcast → potgooi, app → toep, and `episode` and `video` stay as they are
+ *   because both are already Afrikaans words.
+ */
+const ENGLISH_ONLY = [
+  /* The ones her reader found, and their families. */
+  'post', 'posts', 'posted', 'posting',
+  'playlist', 'playlists', 'feed', 'feeds', 'caption', 'captions',
+  'chorus', 'clip', 'clips', 'preview', 'previews', 'handle',
+  'split', 'look', 'backing', 'track', 'tracks',
+  'app', 'apps', 'podcast', 'podcasts',
+  /* And the rest of English's most common words, which is what an untranslated
+     sentence is made of. */
+  'the', 'and', 'your', 'yours', 'you', 'with', 'from', 'this', 'that', 'these',
+  'those', 'for', 'are', 'were', 'have', 'has', 'had', 'will', 'would', 'could',
+  'should', 'make', 'makes', 'made', 'song', 'songs', 'voice', 'voices',
+  'room', 'rooms', 'play', 'plays', 'listen', 'new', 'more', 'less', 'all',
+  'not', 'can', 'one', 'two', 'three', 'how', 'when', 'where', 'who', 'why',
+  'what', 'words', 'sound', 'sounds', 'picture', 'pictures', 'file', 'files',
+  'line', 'lines', 'link', 'next', 'back', 'open', 'close', 'save', 'saved',
+  'share', 'shared', 'story', 'show', 'shows', 'people', 'person', 'times',
+  'days', 'free', 'paid', 'pay', 'price', 'cost', 'credit', 'credits',
+  'private', 'public', 'about', 'again', 'here', 'there', 'first', 'last',
+  'good', 'best', 'download', 'upload', 'settings', 'account', 'search',
+  'delete', 'remove', 'edit', 'start', 'stopped', 'ready', 'done', 'failed',
+  'end',
+] as const;
+const ENGLISH = new Set<string>(ENGLISH_ONLY);
+
+/**
+ * Words that look English and are not, or are names nobody translates.
+ *
+ * Kept beside the list above rather than folded into it, because the reason
+ * for each kind is different: one is "this is an Afrikaans word too", the
+ * other is "this is what the thing is called".
+ */
+const ALLOWED = new Set([
+  /* Placeholders — {name}, {room}, {what}, {all} — are stripped before the
+     words are counted, but their bare forms turn up in prose too. */
+  'ai', 'rss', 'url', 'bpm', 'mb', 'png', 'jpeg', 'webp', 'wav', 'webm', 'mp',
+  /* Names. */
+  'futurebox', 'youtube', 'spotify', 'tiktok', 'apple', 'music', 'soundcloud',
+  'instagram', 'meta', 'google', 'chrome', 'firefox', 'safari', 'edge',
+  'copilot', 'collab', 'collabs', 'radar', 'arena', 'spotlight', 'masterclass',
+  'masterclasses', 'premium', 'pro', 'reel', 'reels', 'shorts', 'studio',
+  'live', 'hook', 'hooks', 'dm', 'nam', 'sast', 'utc', 'rand', 'dollar',
+  /* Genres and the words a producer says in either language. */
+  'afro', 'house', 'gospel', 'rock', 'pop', 'indie', 'groove', 'beat', 'drum',
+  'pads', 'log', 'vibe', 'coded', 'coding', 'amp', 'modeler', 'neural',
+  'tokens', 'transformers', 'agent', 'intune', 'ups',
+]);
+
+const english: string[] = [];
+for (const [i, match] of starts.entries()) {
+  const from = match.index ?? 0;
+  const to = i + 1 < starts.length ? (starts[i + 1].index ?? dict.length) : dict.length;
+  const found = /\baf:\s*"((?:[^"\\]|\\.)*)"/.exec(dict.slice(from, to));
+  if (!found) continue;
+  const line = JSON.parse(`"${found[1]}"`) as string;
+  const bad = [
+    ...new Set(
+      /* Placeholders out first: `{what}` is the name of a slot, not a word
+         somebody reads. */
+      (line.replace(/\{[^}]*\}/g, ' ').toLowerCase().match(/[a-zà-ÿ’']+/g) ?? [])
+        .filter((word) => ENGLISH.has(word) && !ALLOWED.has(word)),
+    ),
+  ];
+  if (bad.length) english.push(`${match[1]} — ${bad.join(', ')} — "${line.slice(0, 70)}"`);
+}
+
+/**
  * Afrikaans written with two different apostrophes.
  *
  * The dictionary held both: "Maak 'n snit" in the rail beside "Nog ’n liedjie"
@@ -168,11 +265,12 @@ for (const file of walk('app')) {
   }
 }
 
-if (missing.size === 0 && halfDone.length === 0 && straight.length === 0 && twice.length === 0 && dutch.length === 0 && copied.length === 0) {
+if (missing.size === 0 && halfDone.length === 0 && straight.length === 0 && twice.length === 0 && dutch.length === 0 && copied.length === 0 && english.length === 0) {
   console.log(
     `check:afrikaans — ${known.size} keys, every one the code asks for has both languages,` +
       '\n  and every Afrikaans ’n is the same character as every other one,' +
-      `\n  and no line is the English pasted into the Afrikaans slot (${SAME_IN_BOTH.size} words are the same in both and are named).`,
+      `\n  and no line is the English pasted into the Afrikaans slot (${SAME_IN_BOTH.size} words are the same in both and are named),` +
+      `\n  and no Afrikaans sentence has an English word inside it (${ENGLISH_ONLY.length} watched, ${ALLOWED.size} named as Afrikaans or as names).`,
   );
   process.exit(0);
 }
@@ -193,6 +291,14 @@ if (halfDone.length) {
 if (dutch.length) {
   console.error(`\n${dutch.length} Afrikaans line(s) using a word that reads as Dutch:\n`);
   for (const line of dutch) console.error(`  ${line}`);
+}
+if (english.length) {
+  console.error(
+    `\n${english.length} Afrikaans line(s) with an English word in them.` +
+      '\nEvery word and every sentence has to be Afrikaans. If the word really is' +
+      '\nAfrikaans too, or is the name of something, add it to ALLOWED in this file:\n',
+  );
+  for (const line of english) console.error(`  ${line}`);
 }
 if (copied.length) {
   console.error(

@@ -60,15 +60,15 @@ interface Refusal {
 const SAID: Record<string, { en: string; af: string }> = {
   no_key: {
     en: 'That is not switched on for this app yet.',
-    af: 'Dit is nog nie vir hierdie app aangeskakel nie.',
+    af: 'Dit is nog nie vir hierdie toep aangeskakel nie.',
   },
   no_accounts: {
     en: 'This app has no accounts set up yet.',
-    af: 'Hierdie app het nog geen rekeninge opgestel nie.',
+    af: 'Hierdie toep het nog geen rekeninge opgestel nie.',
   },
   live_not_set_up: {
     en: 'The live room is not switched on for this app yet.',
-    af: 'Die lewendige kamer is nog nie vir hierdie app aangeskakel nie.',
+    af: 'Die lewendige kamer is nog nie vir hierdie toep aangeskakel nie.',
   },
   /* A paywall, not a fault. The distinction matters on the screen: "that
      broke" sends somebody to the help desk, "you have not bought this" sends
@@ -83,7 +83,7 @@ const SAID: Record<string, { en: string; af: string }> = {
   },
   not_metered: {
     en: 'Accounts are not set up for this app.',
-    af: 'Rekeninge is nie vir hierdie app opgestel nie.',
+    af: 'Rekeninge is nie vir hierdie toep opgestel nie.',
   },
   signed_out: {
     en: 'Sign in first.',
@@ -111,7 +111,7 @@ const SAID: Record<string, { en: string; af: string }> = {
   },
   bad_key: {
     en: 'The key this app uses was rejected. Nothing has been charged.',
-    af: 'Die sleutel wat hierdie app gebruik is verwerp. Niks is gehef nie.',
+    af: 'Die sleutel wat hierdie toep gebruik is verwerp. Niks is gehef nie.',
   },
   unreachable: {
     en: 'That service could not be reached. Try again in a moment.',
@@ -127,11 +127,11 @@ const SAID: Record<string, { en: string; af: string }> = {
   },
   unparsed: {
     en: 'That came back in a form this app could not read.',
-    af: 'Dit het teruggekom in ’n vorm wat hierdie app nie kon lees nie.',
+    af: 'Dit het teruggekom in ’n vorm wat hierdie toep nie kon lees nie.',
   },
   unreadable: {
     en: 'That came back in a form this app could not read.',
-    af: 'Dit het teruggekom in ’n vorm wat hierdie app nie kon lees nie.',
+    af: 'Dit het teruggekom in ’n vorm wat hierdie toep nie kon lees nie.',
   },
   nothing_heard: {
     en: 'Nothing could be heard in that.',

@@ -106,7 +106,7 @@ const MARKETS = ['English', 'Afrikaans', 'isiZulu', 'Sesotho', 'Portuguese', 'Fr
 /** Where it runs, which is really a question about length and shape. */
 const PLACEMENTS = [
   { id: 'feed', en: 'Social feed, sound off', af: 'Sosiale voer, klank af' },
-  { id: 'story', en: 'Story or reel, sound on', af: 'Story of reel, klank aan' },
+  { id: 'story', en: 'Story or reel, sound on', af: 'Storie of reel, klank aan' },
   { id: 'preroll', en: 'Before a video', af: 'Voor ’n video' },
   { id: 'display', en: 'A banner, no sound', af: '’n Banier, geen klank' },
 ] as const;
