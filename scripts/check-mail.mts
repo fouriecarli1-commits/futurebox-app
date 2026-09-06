@@ -11,6 +11,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { FREE_MAILBOXES, freeMailbox, fromDomain } from '../app/lib/server/email.ts';
+import { isOwnerEmail, ownerEmails } from '../app/lib/server/owners.ts';
 
 let bad = 0;
 const check = (label: string, ok: boolean, detail = ''): void => {
@@ -85,6 +86,43 @@ check('and its test letter is deliberately not deduped',
 check('no mailbox is written into the letter footer',
   !/@[a-z0-9-]+\.[a-z]{2,}/i.test(email.slice(email.indexOf('function wrap'), email.indexOf('function wrap') + 900)),
   'an address in every letter is an address in every forwarded letter');
+
+
+/* ── Who runs the place ─────────────────────────────────────────────────
+ 
+   The one setting on the whole switch-on list that costs money every day it
+   is missing, and the only one whose absence is completely silent: an app
+   with no owner meters the person who runs it as a free user, refuses them
+   their own name, and sends the allowance warnings nowhere.
+ 
+   `/api/mail/setup` reports it now. What is asserted here is the matching
+   itself, because it is an allowlist that grants exemptions, and the two
+   ways an allowlist becomes a hole are both one character wide. */
+const KEEP = process.env.OWNER_EMAIL;
+process.env.OWNER_EMAIL = ' Boss@FutureBox.Studio , second@futurebox.studio ';
+check('an owner is matched whatever case they typed', isOwnerEmail('boss@futurebox.studio'));
+check('and with the spaces around a comma-separated entry trimmed',
+  isOwnerEmail('second@futurebox.studio'));
+check('a stranger is not an owner', !isOwnerEmail('someone@example.com'));
+/* The standard way an allowlist becomes a hole: a substring test. */
+check('a lookalike that merely contains an owner address is refused',
+  !isOwnerEmail('boss@futurebox.studio.evil.example'));
+check('and one that an owner address contains is refused too',
+  !isOwnerEmail('boss@futurebox.stud'));
+check('an empty address is nobody', !isOwnerEmail('') && !isOwnerEmail('   '));
+process.env.OWNER_EMAIL = '';
+check('with nothing set, nobody is an owner', !isOwnerEmail('boss@futurebox.studio'));
+check('and the list is empty rather than one empty string',
+  ownerEmails().length === 0, `${ownerEmails().length}`);
+if (KEEP === undefined) delete process.env.OWNER_EMAIL;
+else process.env.OWNER_EMAIL = KEEP;
+
+/* And the prefix that would ship the list of who is privileged to every
+   visitor. check:security scans the built bundle; this catches it in source,
+   which is where somebody would type it. */
+const owners = readFileSync('app/lib/server/owners.ts', 'utf8');
+check('the owner list is never read from a NEXT_PUBLIC_ variable',
+  !/NEXT_PUBLIC_OWNER/.test(owners));
 
 if (bad) {
   console.error(`\ncheck:mail — ${bad} wrong.`);

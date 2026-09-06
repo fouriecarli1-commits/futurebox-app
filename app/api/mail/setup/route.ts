@@ -19,6 +19,18 @@
  * the only one that matters, and it is the one nobody checks until a customer
  * says they never got a receipt.
  *
+ * ── And who the owner is, said out loud ──────────────────────────────────
+ *
+ * `OWNER()` falls back to `MAIL_REPLY_TO` when `OWNER_EMAIL` is unset, which
+ * is right for the letters — a warning with nowhere to go is worse than one
+ * sent to the enquiries mailbox. It was quietly wrong *here*: the test letter
+ * arrived, and arriving is what somebody reads as "the owner is set". It is
+ * not. An app with no owner meters the person who runs it as a free user and
+ * refuses them their own name, and everything about that failure is silent.
+ *
+ * So the owner is reported first, before the domain, and the test letter says
+ * whether it went to a real owner or to the fallback.
+ *
  * ── Guarded ──────────────────────────────────────────────────────────────
  *
  * It reports the account's configuration and can send mail, so it refuses
@@ -30,6 +42,7 @@ import crypto from 'node:crypto';
 import {
   OWNER, configured, domainDetail, domains, freeMailbox, fromDomain, send,
 } from '@/app/lib/server/email';
+import { ownerEmails } from '@/app/lib/server/owners';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -60,11 +73,29 @@ export async function GET(request: Request): Promise<Response> {
   const from = process.env.MAIL_FROM ?? '';
   const domain = fromDomain();
 
+  /* Who runs the place, before anything about mail.
+ 
+     This is the one setting on the whole switch-on list that costs money
+     every day it is missing, and nothing anywhere says so — the app just
+     meters its own owner as a free user. The addresses are printed because
+     this route already needs POST_SECRET to answer at all; the list never
+     goes anywhere a browser can read it. */
+  const owners = ownerEmails();
+  const owner = {
+    set: owners.length > 0,
+    addresses: owners,
+    what:
+      owners.length > 0
+        ? 'Set. These accounts are not metered, may use the FutureBox name, and receive the allowance warnings.'
+        : 'NOT SET. Whoever runs this app is metered as a free user on their own engines, cannot use the FutureBox name as a recording name, and the allowance warnings from /api/watch have nowhere to go. Set OWNER_EMAIL in Vercel to the address you sign in with — comma-separated if more than one — and redeploy. Never with a NEXT_PUBLIC_ prefix.',
+  };
+
   /* The two variables, before anything else. `configured()` is the same test
      the rest of the app makes before it tries to send, so this cannot say
      "ready" about an app that will refuse. */
   if (!key || !from) {
     return Response.json({
+      owner,
       ready: false,
       why: !key && !from
         ? 'Neither MAIL_API_KEY nor MAIL_FROM is set.'
@@ -80,6 +111,7 @@ export async function GET(request: Request): Promise<Response> {
      far end — so every receipt vanishes and nothing anywhere says why. */
   if (freeMailbox(domain)) {
     return Response.json({
+      owner,
       ready: false,
       from,
       why: `MAIL_FROM is on ${domain}, which cannot be sent from.`,
@@ -90,6 +122,7 @@ export async function GET(request: Request): Promise<Response> {
   const all = await domains();
   if (all.length === 0) {
     return Response.json({
+      owner,
       ready: false,
       from,
       why: 'The key was refused, or this account has no domains on it yet.',
@@ -100,6 +133,7 @@ export async function GET(request: Request): Promise<Response> {
   const mine = all.find((one) => one.name.toLowerCase() === domain);
   if (!mine) {
     return Response.json({
+      owner,
       ready: false,
       from,
       why: `MAIL_FROM is on ${domain}, and that domain is not on this account.`,
@@ -124,7 +158,7 @@ export async function GET(request: Request): Promise<Response> {
 
   /* A real letter, on request. A verified domain and a letter that arrives are
      two different claims, and only the second one matters. */
-  let letter: { sent: boolean; to?: string; why?: string } | undefined;
+  let letter: { sent: boolean; to?: string; toOwner?: boolean; note?: string; why?: string } | undefined;
   if (url.searchParams.get('test') === '1') {
     if (!configured()) {
       letter = { sent: false, why: 'not_configured' };
@@ -144,11 +178,24 @@ export async function GET(request: Request): Promise<Response> {
            again after changing something, and a `once` key would make the
            second attempt silently claim success. */
       });
-      letter = sent.ok ? { sent: true, to: OWNER() } : { sent: false, why: sent.why };
+      /* Where it actually went, and whether that is the owner or the
+         fallback. A letter that arrives is what somebody reads as proof the
+         owner is set, and with OWNER_EMAIL empty it proves the opposite. */
+      letter = sent.ok
+        ? {
+            sent: true,
+            to: OWNER(),
+            toOwner: owner.set,
+            ...(owner.set
+              ? {}
+              : { note: 'This went to MAIL_REPLY_TO, not to an owner — OWNER_EMAIL is not set. The letter arriving does not mean the owner is.' }),
+          }
+        : { sent: false, why: sent.why };
     }
   }
 
   return Response.json({
+    owner,
     ready: verified,
     from,
     domain: mine.name,
