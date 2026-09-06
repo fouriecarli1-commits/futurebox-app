@@ -67,7 +67,8 @@
     "check:masterclasses": "tsx scripts/check-masterclasses.mts",
     "check:spotlight": "node audit/spotlight.mjs",
     "check:prompts": "tsx scripts/check-prompts.mts",
-    "check:platformlink": "tsx scripts/check-platformlink.mts"
+    "check:platformlink": "tsx scripts/check-platformlink.mts",
+    "check:asdata": "tsx scripts/check-asdata.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

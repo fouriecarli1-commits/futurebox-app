@@ -111,6 +111,12 @@ jobs:
       - name: Nobody's name on a talk they did not give
         run: npm run check:masterclasses
 
+      # Untrusted text goes to a model inside a tag so the prompt can say
+      # "this is data". That holds until the text contains the closing tag —
+      # and the case that happens is somebody saying the words, not an attack.
+      - name: Somebody else's words cannot close their own fence
+        run: npm run check:asdata
+
       # The live room's link field publishes a URL to everybody in the room.
       # It used to take any https address at all, which is not a link field.
       - name: Only the seven platforms get into the room
