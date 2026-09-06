@@ -119,12 +119,6 @@ jobs:
       - name: A selfie take holds the picture, the song and her voice
         run: npm run check:singmix
 
-      # And the same thing filmed for real, in a browser, against fake
-      # devices: a file comes back, the sound on it is the mix rather than
-      # the bare microphone, and the camera stops when it is switched off.
-      - name: Film a take and watch the camera light go out
-        run: npm run check:selfie
-
       # A variable the code reads and the switch-on page does not name is a
       # feature that silently does not work with nothing to say why. That is
       # how OWNER_EMAIL was missed, and how the Afrikaans welcome video was.
@@ -318,6 +312,12 @@ jobs:
             probes: check:liveroom check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords
           - group: whole
             probes: check:firsthour check:writing check:wide check:afrikaansscreen check:spotlight check:photosong check:singview
+          # Both need a real browser for what they measure rather than for
+          # what they click: `selfie` films a take against Chromium's fake
+          # camera, and `contrast` reads the computed colour of every piece of
+          # text against what is actually painted behind it.
+          - group: colour and camera
+            probes: check:selfie check:contrast
     steps:
       - uses: actions/checkout@v4
 

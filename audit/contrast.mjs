@@ -7,9 +7,22 @@
  * This reads the computed colours off the rendered page instead.
  */
 import { enter, studio, toRoom } from './enter.mjs';
+import { serve } from './where.mjs';
 
 const ROOMS = ['Make a song', 'Video desk', 'Adverts', 'Your voice', 'Collab Radar', 'Podcast'];
-const { browser, page } = await enter();
+const PORT = process.argv[2] || '3074';
+
+/* Its own server, like every other probe.
+ 
+   This file has been right since it was written and has never once run. It
+   pointed `enter()` at its default localhost:3000 and assumed somebody had
+   put a server there — which is exactly the fault check:probes exists to
+   prevent, and is why it is in no npm script and no CI step. So the tool that
+   reads the real colour of every piece of text against what is actually
+   behind it was sitting in the repository while the line she is meant to sing
+   measured 1.02:1 on the singing screen. */
+const server = await serve(PORT);
+const { browser, page } = await enter({ at: server.url });
 const room = await studio(page);
 let worst = { ratio: 99, what: '' };
 let failures = 0;
@@ -87,6 +100,7 @@ for (const name of ROOMS) {
 }
 console.log(`\n${checked} text nodes checked, ${failures} below AA. Lowest: ${worst.ratio}:1 — ${worst.what}`);
 await browser.close();
+server.stop();
 
 /* Nothing checked is not a clean run. */
 if (unreachable.length) {

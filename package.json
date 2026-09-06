@@ -48,6 +48,7 @@
     "prebuild": "node scripts/nam-copy.mjs",
     "check:singview": "node audit/singview.mjs",
     "check:selfie": "node audit/selfie.mjs",
+    "check:contrast": "node audit/contrast.mjs",
     "check:signup": "node audit/signupcode.mjs",
     "check:firstscreen": "node audit/firstscreen.mjs",
     "check:studiohome": "node audit/studiohome.mjs",
