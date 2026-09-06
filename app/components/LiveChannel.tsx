@@ -34,7 +34,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Eye, Loader2, Music, Play, Radio, Send, Sparkles, Square, Trash2, Upload, Users,
+  Eye, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users,
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { loadTracks, type Track } from '../lib/library';
@@ -135,15 +135,11 @@ function until(when: string, t: (key: string, fallback?: string) => string): str
  */
 function RoomPanel({
   post,
-  playing,
   onOpen,
-  onPlay,
   onTakeOut,
 }: {
   readonly post: Post;
-  readonly playing: boolean;
   readonly onOpen: () => void;
-  readonly onPlay: () => void;
   readonly onTakeOut: () => void;
 }): React.ReactElement {
   const { t } = useLang();
@@ -161,7 +157,15 @@ function RoomPanel({
         aria-label={post.title}
         className="block aspect-[3/4] max-h-[70vh] w-full disabled:cursor-default"
       >
-        <Cover seed={post.id} label={post.title} className="h-full w-full" />
+        {/* Seeded on the song, not on the post.
+
+            `Cover` draws from its seed, so seeding it on the post gave the
+            same song a different picture every time somebody put it in the
+            room — and a different one again from the picture it has in Make a
+            song, in the library and in the channel. One song, one picture,
+            everywhere. An `elsewhere` post has no song behind it and keeps its
+            own id. */}
+        <Cover seed={post.sourceId || post.id} label={post.title} className="h-full w-full" />
       </button>
 
       {/* Over the picture, bottom left, out of the thumb's way on the right. */}
@@ -192,15 +196,26 @@ function RoomPanel({
 
       {/* The rail, on the right, where a thumb already is. */}
       <div className="absolute bottom-4 right-3 flex flex-col items-center gap-2.5">
+        {/* Play opens the room, it does not play under the list.
+
+            "wanneer mens op play druk, moet jy met 'n swipe skuif van een
+             liedjie na die volgende."
+
+            It played the audio in place and left the page where it was, so
+            pressing play on the fourth song gave you sound and a list — and
+            the swiping screen, which is the thing the room is for, could only
+            be reached by pressing the picture instead. Two controls, one
+            obvious and one not, and the obvious one went to the lesser
+            place. */}
         {listenable && (
           <button
             type="button"
-            onClick={onPlay}
-            aria-label={playing ? t('live.stop', 'Stop') : t('live.listen', 'Listen')}
+            onClick={onOpen}
+            aria-label={t('live.listen', 'Listen')}
             className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur"
             style={{ background: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
           >
-            {playing ? <Square className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5" />}
+            <Play className="ml-0.5 h-5 w-5" />
           </button>
         )}
         {post.kind === 'elsewhere' && post.link && (
@@ -256,7 +271,6 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
   });
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
-  const [playing, setPlaying] = useState<string | null>(null);
   /**
    * Which post the full-screen room opened on, or nothing.
    *
@@ -270,7 +284,6 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
   /** What is typed into the box that narrows the list of your own songs. */
   const [looking, setLooking] = useState('');
   const [where, setWhere] = useState({ platform: 'tiktok', title: '', link: '', startsAt: '' });
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const ask = useCallback(async (): Promise<void> => {
     try {
@@ -355,20 +368,6 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
     } finally {
       setBusy(false);
     }
-  };
-
-  const play = (post: Post) => {
-    if (!post.audio) return;
-    if (playing === post.id) {
-      audioRef.current?.pause();
-      setPlaying(null);
-      return;
-    }
-    if (!audioRef.current) audioRef.current = new Audio();
-    audioRef.current.src = post.audio;
-    void audioRef.current.play();
-    audioRef.current.onended = () => setPlaying(null);
-    setPlaying(post.id);
   };
 
   // ── A room that is not switched on says so ─────────────────────────────
@@ -660,9 +659,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             <RoomPanel
               key={post.id}
               post={post}
-              playing={playing === post.id}
               onOpen={() => post.audio && setOpenAt(post.id)}
-              onPlay={() => play(post)}
               onTakeOut={async () => {
                 const token = await accessToken();
                 await fetch(`/api/live?id=${encodeURIComponent(post.id)}`, {

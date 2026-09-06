@@ -53,10 +53,16 @@ function wav() {
   return bytes;
 }
 
+/* `song` is the track behind the post, and it is deliberately not the post's
+   own id. The last two are the same song put in the room twice — which is the
+   case that caught the fault: `Cover` draws from its seed, so a cover seeded
+   on the post gave one song two different pictures, and neither of them was
+   the picture that song has in Make a song. */
 const POSTS = [
-  { title: 'Karoo Wind', by: 'Anré', note: 'First thing I made here.' },
-  { title: 'Second Song', by: 'Someone Else', note: '' },
-  { title: 'Third Song', by: 'A Third Person', note: 'Made on a phone.' },
+  { title: 'Karoo Wind', by: 'Anré', note: 'First thing I made here.', song: 't-1700000000001' },
+  { title: 'Second Song', by: 'Someone Else', note: '', song: 't-1700000000002' },
+  { title: 'Third Song', by: 'A Third Person', note: 'Made on a phone.', song: 't-1700000000003' },
+  { title: 'Karoo Wind', by: 'Anré', note: 'Put it back in.', song: 't-1700000000001' },
 ].map((one, i) => ({
   id: `post-${i}`,
   kind: 'track',
@@ -69,6 +75,7 @@ const POSTS = [
   at: new Date().toISOString(),
   by: one.by,
   mine: false,
+  sourceId: one.song,
   audio: `/probe-room-${i}.wav`,
 }));
 
@@ -190,6 +197,68 @@ try {
     `${Math.round(panelBox?.width ?? 0)}×${Math.round(panelBox?.height ?? 0)}`);
   await p.screenshot({ path: shot('liveroom-panels.png') });
 
+  /* ── One song, one picture ─────────────────────────────────────────
+
+     "die liedjies moet lyk soos dit lyk in make a song."
+
+     `Cover` draws deterministic artwork from a hash of its seed and names its
+     gradient after that hash, so the gradient's id is the seed's signature in
+     the DOM — two covers with the same id are the same picture, and the probe
+     needs no copy of the hash to say so.
+
+     The room seeded it on the *post*. The first and last fixture posts are the
+     same song, so that gave one song two pictures — and a third, different
+     again, in Make a song and the library and the channel, which seed on the
+     song. This is the assertion that the seed is the song. */
+  const coverId = async (index) =>
+    room.locator('article').nth(index).locator('svg linearGradient').first().getAttribute('id');
+  const firstCover = await coverId(0);
+  const sameSongCover = await coverId(3);
+  const otherCover = await coverId(1);
+  check('the same song put in the room twice draws the same picture',
+    Boolean(firstCover) && firstCover === sameSongCover, `${firstCover} vs ${sameSongCover}`);
+  check('and a different song draws a different one',
+    Boolean(otherCover) && otherCover !== firstCover, `${otherCover} vs ${firstCover}`);
+
+  /* ── Whose song it is, on the song ─────────────────────────────────
+
+     "die liedjie se naam en die persoon se handels naam moet wys. want die
+      liedjie behoort dan aan daardie persoon." */
+  const topPanel = ((await room.locator('article').first().innerText()) ?? '').replace(/\s+/g, ' ');
+  check('the newest song is the first one in the room',
+    topPanel.includes('Karoo Wind'), topPanel.slice(0, 60));
+  check('and it carries the name of the person whose song it is',
+    topPanel.includes('Anré'), topPanel.slice(0, 60));
+
+  /* ── Play opens the room, it does not play under the list ──────────
+
+     "wanneer mens op play druk, moet jy met 'n swipe skuif van een liedjie na
+      die volgende."
+
+     It played the audio in place and left the page where it was: sound, and a
+     list. The swiping screen could only be reached by pressing the picture
+     instead — two controls, one obvious and one not, and the obvious one went
+     to the lesser place. */
+  const panelPlay = room.locator('article').first().locator('button[aria-label="Listen"]');
+  check('every song panel has a play button', (await panelPlay.count()) === 1);
+  await panelPlay.first().click();
+  await p.waitForTimeout(1200);
+  const opened = p.locator('div.fixed.inset-0.z-\\[80\\]');
+  check('pressing play opens the room full screen, where a swipe moves on',
+    (await opened.count()) === 1, `${await opened.count()} full-screen views`);
+
+  /* And the panel it opened on has a picture behind it. These were black —
+     a title and a name over nothing, which reads as a song that failed to
+     load rather than as a song being played. */
+  const openCover = await opened.first().locator('section svg linearGradient').first().getAttribute('id');
+  check('and the song being played has its picture behind it',
+    Boolean(openCover), String(openCover));
+  check('the same picture it has in the list',
+    openCover === firstCover, `${openCover} vs ${firstCover}`);
+
+  await p.locator('button[aria-label="Close"]').first().click().catch(() => undefined);
+  await p.waitForTimeout(600);
+
   /* ── The link rule, exercised rather than described ────────────────
  
      "mense mag net toegang hê om tiktok links te post vir live chats. Jy moet
@@ -273,7 +342,7 @@ try {
   const first = await showing();
   check('opening on the first song in the room',
     first.at === 0 && first.text.includes('Karoo Wind'), `panel ${first.at}: ${first.text.slice(0, 46)}`);
-  check('and saying where you are in it', /1 \/ 3/.test(first.text), first.text.slice(0, 46));
+  check('and saying where you are in it', /1 \/ 4/.test(first.text), first.text.slice(0, 46));
   await p.screenshot({ path: shot('liveroom.png') });
 
   /* A thumb, which is the whole point of the shape. */
@@ -282,7 +351,7 @@ try {
   await p.waitForTimeout(1500);
   const next = await showing();
   check('scrolling moves to the next one',
-    next.at === 1 && next.text.includes('Second Song') && /2 \/ 3/.test(next.text),
+    next.at === 1 && next.text.includes('Second Song') && /2 \/ 4/.test(next.text),
     `panel ${next.at}: ${next.text.slice(0, 46)}`);
 
   /* The way out, and whether anything is sitting on top of it.

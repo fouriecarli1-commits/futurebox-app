@@ -40,6 +40,7 @@ import { createPortal } from 'react-dom';
 import { Loader2, Pause, Play, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { signal } from '../lib/signal';
+import Cover from './Cover';
 
 /** Literal, because the theme remaps `white` and `black` onto its own tokens. */
 const INK = '#ffffff';
@@ -211,9 +212,32 @@ export default function RoomScreen({
           <section
             key={one.id}
             data-at={index}
-            className="relative flex h-full w-full flex-col justify-end p-5"
+            className="relative flex h-full w-full flex-col justify-end overflow-hidden p-5"
             style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
           >
+            {/* The picture, and it is the song's own.
+
+                These panels were black. Title, name, and nothing behind them —
+                which reads as a song that failed to load rather than as a song
+                being played, and it is not what the same song looks like
+                anywhere else in the app.
+
+                Seeded on the song rather than on the post, which is the whole
+                point: `Cover` draws from its seed, so seeding it on the post
+                gave the same song a different picture every time somebody put
+                it in the room. One song, one picture, in Make a song, in the
+                channel, in the library and here. An `elsewhere` post has no
+                song behind it, so it falls back to its own id. */}
+            <Cover
+              seed={one.sourceId || one.id}
+              label={one.title}
+              className="absolute inset-0 h-full w-full"
+            />
+            {/* Strong in the middle as well as at the ends, like `SongScreen`:
+                the words sit there, and a scrim that fades out behind them is
+                a scrim that does nothing where it is needed. */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.55),rgba(0,0,0,0.45)_45%,rgba(0,0,0,0.88))]" />
+
             {/* The whole panel is the play control, which is what a thumb
                 expects on a screen like this. The button below is for anybody
                 who cannot rely on that — a pointer, a screen reader — and both
