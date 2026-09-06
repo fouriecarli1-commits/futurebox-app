@@ -119,6 +119,12 @@ jobs:
       - name: A selfie take holds the picture, the song and her voice
         run: npm run check:singmix
 
+      # And the same thing filmed for real, in a browser, against fake
+      # devices: a file comes back, the sound on it is the mix rather than
+      # the bare microphone, and the camera stops when it is switched off.
+      - name: Film a take and watch the camera light go out
+        run: npm run check:selfie
+
       # Three things have an opinion about the language and they do not carry
       # equal weight. The rule lived inside two React effects where it could
       # not be run, and the bug she hit was invisible to everything.
