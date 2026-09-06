@@ -19,6 +19,7 @@
  */
 
 import { callerFrom, metered, purchaseLevel } from '@/app/lib/server/account';
+import { storageId } from '@/app/lib/server/ownedpath';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -47,6 +48,11 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'bad_request', message: 'Which song?' }, { status: 400 });
   }
   if (!trackId) return Response.json({ error: 'bad_request', message: 'Which song?' }, { status: 400 });
+  /* The id goes into a storage path below. Checked here rather than there so
+     the refusal is a 400 about the request, not a 404 about a song. */
+  if (!storageId(trackId)) {
+    return Response.json({ error: 'bad_request', message: 'Which song?' }, { status: 400 });
+  }
 
   const owned = (await purchaseLevel(caller, trackId)) === 'owned';
   const onAPlan = caller.tier !== 'free';

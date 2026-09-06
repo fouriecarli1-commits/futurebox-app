@@ -22,6 +22,7 @@ import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { CREDITS } from '@/app/lib/credits';
 import { checkCover, configured, coverPrompt, startCover } from '@/app/lib/server/cover';
+import { storageId } from '@/app/lib/server/ownedpath';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,6 +52,15 @@ export async function GET(request: Request): Promise<Response> {
   const trackId = url.searchParams.get('track');
 
   if (!id && !trackId) return Response.json({ available: configured() });
+
+  /* Both of these end up in a storage path, and the one below is an *upload*
+     made with the service-role key — the key that does not consult the bucket
+     policies. The folder in the path is therefore the only thing deciding
+     whose account a picture lands in, so nothing shaped like a way out of it
+     gets that far. */
+  if ((id && !storageId(id)) || (trackId && !storageId(trackId))) {
+    return Response.json({ message: 'Which song?' }, { status: 400 });
+  }
 
   if (!metered()) return Response.json({ message: 'Accounts are not configured.' }, { status: 503 });
   const caller = await callerFrom(request);
@@ -103,7 +113,9 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const trackId = String(body.trackId ?? '').trim();
-  if (!trackId) return Response.json({ message: 'Which song?' }, { status: 400 });
+  if (!trackId || !storageId(trackId)) {
+    return Response.json({ message: 'Which song?' }, { status: 400 });
+  }
 
   if (!metered()) return Response.json({ message: 'Accounts are not configured.' }, { status: 503 });
   const caller = await callerFrom(request);

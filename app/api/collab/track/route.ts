@@ -29,6 +29,7 @@
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { filterSafe } from '@/app/lib/server/filtersafe';
+import { storageId } from '@/app/lib/server/ownedpath';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
@@ -55,6 +56,10 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'Could not read the request.' }, { status: 400 });
   }
   if (!trackId) return Response.json({ message: 'Which song?' }, { status: 400 });
+  // Two rows have to name this id before it reaches a path, so traversal is
+  // already unreachable here. Checked anyway: the rows are what makes it safe
+  // today, and a later shortcut past them would not come with a reminder.
+  if (!storageId(trackId)) return Response.json({ message: 'Which song?' }, { status: 400 });
 
   /* Refused rather than sent. An id that is not a UUID is not a caller this
      app made, and building a filter out of it is the one thing worth not

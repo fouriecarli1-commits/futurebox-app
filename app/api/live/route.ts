@@ -35,6 +35,7 @@ import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { readPlatformLink } from '@/app/lib/server/platformlink';
 import { guard } from '@/app/lib/server/safety';
 import { episodeAudioUrl } from '@/app/lib/episodeaudio';
+import { storageId } from '@/app/lib/server/ownedpath';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -322,6 +323,11 @@ export async function POST(request: Request): Promise<Response> {
   const kind = body.kind === 'episode' ? 'episode' : 'track';
   const sourceId = String(body.sourceId ?? '').trim().slice(0, 200);
   if (!sourceId) return Response.json({ message: 'Which song?' }, { status: 400 });
+  /* This id is stored on the post and read back into a storage path when
+     somebody plays it, so it is checked where it enters rather than where it
+     is used — a bad shape saved now is a bad path built later, by code that
+     has no idea the value came from a browser. */
+  if (!storageId(sourceId)) return Response.json({ message: 'Which song?' }, { status: 400 });
 
   // It has to be theirs, and it has to actually be there. Posting an id that
   // is not yours would have the server sign a path under your own folder that
