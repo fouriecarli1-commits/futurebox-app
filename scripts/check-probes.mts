@@ -133,7 +133,17 @@ for (const script of named) {
      for rather than by its name, so the exemption describes itself. */
   const staysAtTheDoor = /one-time-code/.test(source);
   if (signsIn && !staysAtTheDoor) {
-    ok(`${name} waits for the app after signing in`, /nav\[aria-label\]/.test(source));
+    /* A `waitFor` on the bar, not a mention of it.
+       The first version asked only whether the file named `nav[aria-label]`
+       anywhere. `photosong` names it — and then clicks it, which auto-waits,
+       and then reads a room with `count()`, which does not. It read an empty
+       room and reported "the picture is measured either way — nothing", a true
+       sentence about a room it had not opened yet. A rule that a broken file
+       passes is not a rule. */
+    ok(
+      `${name} waits for the app after signing in`,
+      /nav\[aria-label\][\s\S]{0,200}?waitFor/.test(source),
+    );
   }
 
   /* 5. A build with a different environment is put back.

@@ -123,7 +123,12 @@ try {
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('firsthour-password-1234');
   await p.locator('button[type="submit"]').first().click();
-  await p.waitForTimeout(2800);
+  /* Waited for, not slept through. A `click()` auto-waits, so a flat sleep here
+     survives right up to the first `count()` — and `count()` waits for
+     nothing. `photosong` failed exactly there: it read a room it had not
+     opened yet and reported the room as broken. The bottom bar is the
+     signal, because it is on every signed-in screen and no signed-out one. */
+  await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 30000 });
 
   /* What a new person is offered before they choose anything.
  

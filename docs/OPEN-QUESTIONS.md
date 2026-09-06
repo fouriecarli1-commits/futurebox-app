@@ -483,3 +483,58 @@ four plan rows are what the code has been assuming, not what was read off their
 page. That is the first thing the email has to confirm, and the whole answer
 hangs on it.
 
+
+---
+
+## I. The CI job for the click-through probes, which did not work
+
+Merged on 5 September with the claim that all twenty-six probes now run
+anywhere. Running the group the way CI runs it failed five of six in the first
+shard, and none of the failures was about the room being tested. Three faults,
+found by running the group rather than the probes:
+
+1. **Nothing started a server.** `firstscreen` and `studiohome` are the only
+   two of the twenty-six that do not start their own — they went to :3000 and
+   assumed one was there. On this machine one always was. Both start their own
+   now, via `serve()` in `audit/where.mjs`.
+2. **`signupcode` poisoned `.next` for everything after it.** It builds with a
+   Supabase address in the environment, because `cloud.configured()` is read at
+   build time, and that is the point of the probe. It never put the plain build
+   back, so every probe after it in the group signed in through a project that
+   does not exist and reported whatever room it was looking at as broken. It
+   rebuilds plainly in its `finally` now.
+3. **A probe that threw kept its server.** A `next-server` was found still
+   holding a port from a run half an hour earlier, quietly answering the next
+   probe that asked for it. `serve()` stops on process exit and kills the
+   group, because `next start` forks.
+
+And a fourth, in the probes rather than the job: ten of them slept a flat
+1800–2800ms after submitting the sign-in form instead of waiting for anything. That is how long signing in takes on an idle laptop.
+On a loaded one it is sometimes short, and the probe then drives the
+signed-out page while believing it is in — which reports the room as broken
+when the fault is the wait. They wait for the bottom bar now, which is on every
+signed-in screen and no signed-out one, and appears in about 130ms.
+
+The reason nine of the ten survived it is `click()`, which auto-waits — a
+sleep that is too short is invisible right up to the first `count()`, and
+`count()` waits for nothing. `photosong` is where it stopped being invisible:
+it read a room it had not opened yet, found no file input, set no picture, and
+reported "the picture is measured either way — nothing". A true sentence about
+the wrong room.
+
+`check:probes` reads the probes CI names out of the workflow and holds all of
+it. Verified by putting each fault back and watching the run go red for that
+fault alone. Its own first version of the last rule asked only whether a file
+*named* the bottom bar, which `photosong` did — a rule a broken file passes is
+not a rule, so it asks for a `waitFor` on it now, and that found seven more.
+
+**A note for anyone running `npx tsc --noEmit` locally after a probe run:** the
+probe-page probes build with a page in `app/`, delete the page, and leave
+`.next/types` referencing it, so tsc reports a missing module that is not a
+fault in the source. `rm -rf .next/types` clears it. Left alone rather than
+patched into seven working probes: CI checks out clean, so it costs nothing
+there.
+
+**Also worth knowing:** building while a server serves the same `.next`
+produces a build the browser cannot finish loading. Not a probe fault, but it
+is an afternoon of looking for one.
