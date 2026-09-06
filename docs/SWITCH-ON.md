@@ -187,23 +187,42 @@ it, make one clip, and unset it if the request comes back refused.
 
 ## Paperwork, on its own clock
 
-### 12. CIPC
+### 12. CIPC — registered, and what to type where
 
-The registration number, then `FUTUREBOX_LEGAL_NAME`,
-`FUTUREBOX_LEGAL_REGISTRATION`, `FUTUREBOX_LEGAL_ADDRESS` and
-`FUTUREBOX_LEGAL_PHONE` in Vercel. Section 43 of the ECT Act requires those to
-be reachable before somebody transacts; `/legal` is that page and it currently
-says the details are not published yet, which is defensible. A placeholder
-registration number would not be.
+**Done: CIPC issued `2026/714071/07` on 6 September 2026**, for the enterprise
+name `futureboxstudio`. The `/07` suffix is a private company, so the page's
+default status — "Private company registered in the Republic of South Africa"
+— is the right one and does not need setting.
 
-**If you trade as yourself rather than as a company**, there is no
-registration number and there is nothing to register. Then set
-`FUTUREBOX_LEGAL_NAME` to your own full name and
-`FUTUREBOX_LEGAL_STATUS` to `Sole proprietor trading as FutureBox Studio`,
-and leave the registration empty. The page will not publish a person
-described as a private company — that is the one combination it refuses, and
-`npm run check:entity` holds it to that along with the other eight shapes, so
-whichever way you fill it in it is right the first time or it says nothing.
+Four variables in Vercel, then redeploy. Two you have; two are still yours:
+
+| Variable | What to put | Have it? |
+|---|---|---|
+| `FUTUREBOX_LEGAL_REGISTRATION` | `2026/714071/07` | yes |
+| `FUTUREBOX_LEGAL_NAME` | The name **exactly as the CIPC certificate prints it**, including the `(Pty) Ltd` if it is on there | check the certificate |
+| `FUTUREBOX_LEGAL_ADDRESS` | The registered office, one line per line, pipe-separated: `12 Example Street\|Bellville\|Cape Town\|7530` | no |
+| `FUTUREBOX_LEGAL_PHONE` | A number a person can actually ring | no |
+
+**Copy the name off the certificate rather than typing what you call it.** The
+registered name and the trading name are allowed to differ and often do, and
+`/legal` is the one page whose whole job is to be true about a legal person.
+`FUTUREBOX_LEGAL_STATUS` stays empty — the number justifies the default, and
+setting it by hand is how the two end up disagreeing.
+
+**Nothing appears until all four are set.** That is deliberate: section 43 of
+the ECT Act wants the name, the status, the number, the address and a number
+together, and three out of five reads as a page with something missing rather
+than as a page still being filled in.
+
+**How to tell it worked:** open `/legal`. Either the particulars are there and
+right, or the page says they are not published yet. There is no third state.
+
+`npm run check:entity` holds the shape of the number and nine other cases. It
+catches a mangled year, a missing entity code, the wrong separators, and the
+name pasted into the number field. It does **not** catch a digit dropped from
+the serial — CIPC serials have had four to seven digits over the years, so a
+shorter one is somebody's real company. Read the number back off the page once
+after you set it.
 
 ### 13. The trademark
 

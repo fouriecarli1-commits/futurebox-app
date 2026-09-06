@@ -50,6 +50,7 @@ import { refusalText } from '../lib/apierror';
 import StyleFrom from './StyleFrom';
 import Card from './Card';
 import SongStarts from './SongStarts';
+import PromptCards from './PromptCards';
 import type { Mood } from '../data/songstarts';
 
 export interface Canvas {
@@ -791,6 +792,26 @@ export default function MakeMusic({
             what a bad song is made of — four vague words produce a take that
             wanders, and the person concludes the engine is no good. Fifty
             written starting points, none of which costs anything. */}
+        {/* And the shortest way in of all: press a sentence, pick a photo.
+
+            Above the fifty written starting points, because it asks for less
+            — a starting point is still a decision between fifty, and this is
+            one press and a picture somebody already has on their phone. It
+            draws nothing at all where there is no model behind it. */}
+        <PromptCards
+          onSong={({ title: name, style, lyrics: words }) => {
+            /* One write, for the reason the two below it also say: two
+               setCanvas calls built from the same captured object put the
+               first one's change back, and that cost the title once. */
+            setCanvas({
+              ...canvas,
+              title: name || canvas.title,
+              style: style || canvas.style,
+              lyrics: words,
+            });
+          }}
+        />
+
         <SongStarts
           openAt={fromPhoto}
           onPick={({ title: name, words, style, bpm: beat }) => {

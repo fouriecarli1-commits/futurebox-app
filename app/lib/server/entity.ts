@@ -19,10 +19,13 @@
  *
  * Two reasons, and the second is the one that matters.
  *
- * The company is not registered yet, so there is no registration number and
- * no registered address to write down. Inventing a plausible one would be
- * worse than having none: a wrong registration number on a legal page is a
- * false statement about a legal person.
+ * These belong to a legal person rather than to a codebase. The company is
+ * registered — CIPC issued 2026/714071/07 on 6 September 2026 — and the
+ * number goes into the deployment rather than into this file, along with the
+ * registered address, which nobody should have to open a pull request to
+ * change. Inventing a plausible one would have been worse than having none: a
+ * wrong registration number on a legal page is a false statement about a
+ * legal person.
  *
  * And these are read on the server and rendered into HTML. Nothing here
  * reaches the client bundle, so the address is on the page for a reader and a
@@ -61,6 +64,22 @@ export interface Entity {
   /** The named Information Officer for POPIA. Usually the director. */
   readonly informationOfficer?: string;
 }
+
+/**
+ * What a CIPC registration number looks like: 2026/714071/07.
+ *
+ * Year, a serial, and two digits for the kind of entity — `/07` is a private
+ * company, `/23` a non-profit, `/24` an external company. Checked rather than
+ * trusted because this value is typed once, by hand, into a settings page, by
+ * somebody who will never see it rendered — and a dropped digit produces a
+ * page that looks exactly as correct as a right one.
+ *
+ * Not enforced at runtime: a shape that refuses to publish would answer a
+ * typo by taking the whole legal page down, which is worse than the typo.
+ * `npm run check:entity` fails the build on it instead, where somebody is
+ * watching.
+ */
+export const CIPC_NUMBER = /^\d{4}\/\d{4,7}\/\d{2}$/;
 
 /** Split on the pipe, so one variable can hold a multi-line address. */
 function lines(value: string | undefined): string[] {

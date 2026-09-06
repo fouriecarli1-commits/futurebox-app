@@ -96,6 +96,13 @@ jobs:
       - name: Every export reads back at the amount it says
         run: npm run check:adreport
 
+      # A card's label is on the screen, so a mistake in it is found the
+      # first time somebody looks. Its instruction goes to the model and is
+      # shown to nobody, so a mistake there is found by somebody getting a
+      # bad song and blaming the engine.
+      - name: The prompt cards say what they mean to the model
+        run: npm run check:prompts
+
       # Three cards on the landing page put two real people's names on talks
       # they never gave and invented a third instructor, under a badge
       # reading "Verified", with two of them behind a paywall. The rule was

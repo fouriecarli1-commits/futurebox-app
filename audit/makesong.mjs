@@ -126,6 +126,30 @@ try {
     });
   });
 
+  /* The photo route, stood in for.
+
+     The card's own instruction is the thing being checked. It never reaches a
+     screen — it goes to the model and nowhere else — so the only way to know
+     the right card sent the right one is to read the request. */
+  let photographed = null;
+  await p.route('**/api/photosong', async (route) => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{"available":true}' });
+      return;
+    }
+    photographed = route.request().postData() ?? '';
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        title: 'Ouma se kombuis',
+        style: 'boeremusiek, concertina, brushed drums',
+        lyrics: '[Vers 1]\nDie ketel op die stoof\n\n[Refrein]\nEn die deur staan altyd oop',
+        saw: 'a kitchen, warm light, a kettle',
+      }),
+    });
+  });
+
   await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
   const cta = p.locator('button, a').filter({ hasText: /start free|begin|sign up/i }).first();
   await cta.waitFor({ state: 'visible', timeout: 60000 });
@@ -271,6 +295,55 @@ try {
   check('saying it reads the light rather than the subject, and that nothing is uploaded',
     (await says()).includes('not what is in it') && (await says()).includes('leaves this device'));
 
+  /* ── The prompt cards ───────────────────────────────────────────────
+ 
+     `docs/PACKAGING.md` §4: a row of cards, each a sentence and a camera. It
+     is called the single best idea in those screenshots and the reason is not
+     about design — a generator is only as good as the sentence it is given,
+     and the one almost everybody gives it under pressure is "write me a
+     song". */
+  const promptCards = room.locator('button:has(svg)').filter({ hasText: /Ouma se kombuis|Turn any photo/ });
+  check('the room opens with cards to press instead of an empty box',
+    (await promptCards.count()) >= 1, `${await promptCards.count()}`);
+  check('and says the picture is not kept, before anything is picked',
+    (await says()).includes('not kept'));
+
+  /* Pressing one opens a file picker, so the file is handed straight to the
+     input rather than through a dialogue Playwright would have to drive. */
+  const picture = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64',
+  );
+  /* The card first, then the file. The component remembers which card was
+     pressed so the file that arrives knows what it is for — setting the input
+     without pressing anything sends a picture with no instruction, which is
+     the blank box with a photograph attached and is exactly what this feature
+     is not. The first version of this probe did that and reported the feature
+     broken. */
+  p.on('filechooser', () => undefined);
+  await promptCards.first().click();
+  await p.waitForTimeout(400);
+  await room.locator('input[type="file"][accept="image/*"]').first()
+    .setInputFiles({ name: 'kombuis.png', mimeType: 'image/png', buffer: picture });
+  for (let waited = 0; waited < 40 && !photographed; waited += 1) await p.waitForTimeout(300);
+  check('picking a photograph sends it', Boolean(photographed));
+  /* The card's instruction, on the wire. This is the assertion the whole
+     feature turns on: a card that sends no idea is the blank box with a
+     picture attached. */
+  check('with the card’s own instruction on it, which no screen ever shows',
+    /name="idea"/.test(photographed ?? '') && (photographed ?? '').length > 200,
+    `${(photographed ?? '').length} bytes`);
+  check('and the reader’s language, so the words come back in it',
+    /name="lang"/.test(photographed ?? ''));
+  await p.waitForTimeout(900);
+  check('what comes back fills the room in — the title',
+    (await room.locator('input:visible').first().inputValue()) === 'Ouma se kombuis');
+  check('the words',
+    (await room.locator('textarea[placeholder*="Verse 1"]').inputValue()).includes('ketel op die stoof'));
+  check('and the style', (await room.locator('textarea').nth(1).inputValue()).includes('concertina'));
+  check('and it says what it saw, so the words can be judged before spending',
+    (await says()).includes('warm light'));
+
   /* ── The wand ───────────────────────────────────────────────────────
  
      One press that fills the card in. The whole point is that it is one
@@ -284,8 +357,12 @@ try {
   await wands.first().click();
   for (let waited = 0; waited < 30 && !waved; waited += 1) await p.waitForTimeout(300);
   check('pressing it asks the songwriter to continue', waved?.mode === 'continue', JSON.stringify(waved?.mode));
+  /* Against what is actually in the box, not against a line typed earlier in
+     this file. The prompt card above replaces the words, so a hard-coded
+     "Karoo" reported the wand broken when what had changed was the fixture. */
   check('and sends what is already written, so it does not start over',
-    (waved?.lyrics ?? '').includes('Karoo'), (waved?.lyrics ?? '').slice(0, 40));
+    (waved?.lyrics ?? '').includes(wordsBefore.split('\n')[1] ?? wordsBefore.slice(0, 20)),
+    (waved?.lyrics ?? '').slice(0, 40));
   await p.waitForTimeout(700);
   const wordsAfter = await room.locator('textarea[placeholder*="Verse 1"]').inputValue();
   check('what comes back lands in the box', wordsAfter.includes('En die pad vat my huis toe'));

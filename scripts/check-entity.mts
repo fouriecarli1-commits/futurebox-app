@@ -21,7 +21,7 @@
  * private company is not, and that was the default for anybody who filled in
  * four fields and left the number out.
  */
-import { entity } from '../app/lib/server/entity';
+import { CIPC_NUMBER, entity } from '../app/lib/server/entity';
 
 let failures = 0;
 const check = (label: string, ok: boolean, detail = '') => {
@@ -64,6 +64,33 @@ check('and the address is one line per line, split on the pipe',
   company?.address.length === 4 && company?.address[0] === '12 Example Street',
   (company?.address ?? []).join(' / '));
 check('with no VAT number invented', company?.vat === undefined);
+
+/* ── The real number, and the shapes a typo takes ───────────────────────
+ 
+   CIPC issued 2026/714071/07 on 6 September 2026. It is typed once, by hand,
+   into a settings page, by somebody who will never see it rendered.
+
+   What this shape can and cannot catch is worth being exact about. It catches
+   a mangled year, a missing entity code, the wrong separators, and the name
+   pasted into the number field. It does NOT catch a digit dropped from the
+   serial: CIPC serials have had between four and seven digits over the years,
+   so 2026/71407/07 is a shape somebody's real company has. A check that
+   claimed otherwise would be a check that is wrong about the world, which is
+   worse than a narrow one — this exact case was written as a failing
+   assertion first and the regex was nearly tightened to make it pass. */
+check('the real registration number is the shape CIPC issues',
+  CIPC_NUMBER.test('2026/714071/07'));
+check('and a shorter historic serial is not called invalid',
+  CIPC_NUMBER.test('2011/71407/07'));
+for (const [wrong, how] of [
+  ['226/714071/07', 'a digit dropped from the year'],
+  ['2026/714071/7', 'a digit dropped from the entity code'],
+  ['2026-714071-07', 'hyphens instead of slashes'],
+  ['2026/714071', 'the entity code left off'],
+  ['FUTUREBOXSTUDIO', 'the name pasted into the number field'],
+] as const) {
+  check(`refused: ${how}`, !CIPC_NUMBER.test(wrong), wrong);
+}
 
 /* ── A sole proprietor ─────────────────────────────────────────────────── */
 const sole = only({
