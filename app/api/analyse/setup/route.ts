@@ -21,7 +21,7 @@
  */
 
 import crypto from 'node:crypto';
-import { configured, listWorkflows, slugFor, whoAmI } from '@/app/lib/server/musicai';
+import { configured, listWorkflows, looksLikeVoiceConversion, slugFor, whoAmI } from '@/app/lib/server/musicai';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -63,9 +63,21 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const workflows = await listWorkflows();
+  /* And the one question this app has been unable to answer from the outside.
+     See `looksLikeVoiceConversion` — it is a guess about somebody else's
+     naming, reported as one. */
+  const singing = workflows.filter(looksLikeVoiceConversion);
   return Response.json({
     ready: true,
     account: account.name,
+    singingVoiceConversion: {
+      looksAvailable: singing.length > 0,
+      candidates: singing.map((one) => ({ slug: one.slug, name: one.name })),
+      what:
+        singing.length > 0
+          ? 'One or more workflows on this account look like singing voice conversion — the one step between a song made here and a song in your own voice. Open one in the Music.ai dashboard and check what it takes in and gives back; if it is conversion, that is the gap closed.'
+          : 'Nothing on this account looks like singing voice conversion. It may still exist under a name this cannot recognise — the check matches on what you called the workflow. If it genuinely is not offered over the API, the alternative is an RVC service such as Kits.AI. See docs/OPEN-QUESTIONS.md section A1.',
+    },
     /* What is set now, beside what exists — so the difference between "not
        configured" and "configured wrongly" is visible in one screen rather
        than being worked out from a failing job. */

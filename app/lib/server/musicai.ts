@@ -156,6 +156,50 @@ export async function forget(id: string): Promise<void> {
 }
 
 /** The real slugs on this account, so the owner does not have to guess. */
+/**
+ * Does this account carry singing voice conversion?
+ *
+ * ── The question this answers ────────────────────────────────────────────
+ *
+ * The one gap between a song made here and a song in your own voice.
+ * ElevenLabs Music takes no voice model, so "sing this in my voice" cannot be
+ * asked of the generator; the honest route is to make the song, split the
+ * vocal off, convert it, and mix it back. Three of those four are built. The
+ * third needs a singing model.
+ *
+ * Music.ai is the developer arm of Moises, and Moises' Voice Studio does that
+ * conversion. Whether it is exposed over the **API** — as a workflow on an
+ * account — could not be checked from the machine this was written on:
+ * `music.ai` is refused by the egress proxy and their documentation could not
+ * be read. See `docs/OPEN-QUESTIONS.md` §A1.
+ *
+ * So the app asks instead, the moment there is a key. This does not decide
+ * anything and does not call anything new — it reads the workflow list that
+ * `/api/analyse/setup` already fetches and says whether anything on it looks
+ * like the missing step.
+ *
+ * ── Why matching on the name is honest here ──────────────────────────────
+ *
+ * A workflow's slug and name are written by the account holder, so this is a
+ * guess about somebody else's naming rather than a fact about the API. It is
+ * reported as "looks like" for exactly that reason, and the sentence beside it
+ * says what to do either way. A guess labelled as a guess is worth having; the
+ * same guess presented as an answer is not.
+ */
+export function looksLikeVoiceConversion(one: { slug?: string; name?: string }): boolean {
+  const said = `${one.slug ?? ''} ${one.name ?? ''}`.toLowerCase();
+  /* "voice" alone is not enough — "voice removal" and "voice isolation" are
+     stem separation, which this app already has and which is not the missing
+     step. The pairing is what makes it a conversion. */
+  if (/\b(isolat|remov|extract|separat|split)/.test(said)) return false;
+  return (
+    /\bvoice\s*(studio|convert|conversion|changer|change|swap|transfer|model)/.test(said) ||
+    /\b(rvc|svc|timbre)\b/.test(said) ||
+    /\b(sing|singing|vocal)\s*(convert|conversion|swap|clone|transfer|model)/.test(said) ||
+    /\bconvert\s*(the\s*)?(voice|vocal|singing)/.test(said)
+  );
+}
+
 export async function listWorkflows(): Promise<Workflow[]> {
   const said = await call<{ workflows?: Workflow[] }>('GET', '/workflow?size=100');
   return said?.workflows ?? [];

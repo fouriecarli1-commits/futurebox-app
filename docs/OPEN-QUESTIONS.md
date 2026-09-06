@@ -39,11 +39,17 @@ only inside the Moises consumer app. `music.ai` is blocked by this
 environment's network egress proxy, so their documentation could not be read,
 and web search does not answer it.
 
-**How to settle it.** Two ways, both cheap:
+**How to settle it.** Two ways, both cheap, and the second one now answers
+the question rather than only listing:
 
 1. Their dashboard's workflow builder lists every module on the account.
-2. We already built `listWorkflows`. With `MUSIC_AI_API_KEY` set,
-   `/api/analyse/setup?key=…` prints the real workflows on the account.
+2. `/api/analyse/setup?key=…` prints the workflows on the account **and says
+   whether any of them looks like singing voice conversion**. It matches on
+   the names you gave your own workflows, so it is reported as "looks like"
+   rather than as a fact, and it deliberately refuses the ones that sound
+   similar and are not: vocal removal and voice isolation are stem separation,
+   which this app already does. `check:analyse` holds it to twelve named
+   cases, six that must match and six that must not.
 
 **The path that works either way**, with what is already built:
 

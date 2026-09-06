@@ -11,6 +11,7 @@
  * wrong thing, quietly, and put the metronome at half speed. This pins both
  * halves: what they must find, and what they must refuse.
  */
+import { looksLikeVoiceConversion } from '../app/lib/server/musicai';
 import { keyIn, spansIn, tempoIn } from '../app/lib/analyse.ts';
 
 let bad = 0;
@@ -105,6 +106,42 @@ for (const rubbish of [{ a: null }, { a: [null, 1, 'x'] }, { a: [[[{ chord: 'C' 
   } catch (thrown) {
     check(`rubbish is survived: ${JSON.stringify(rubbish).slice(0, 30)}`, false, String(thrown));
   }
+}
+
+
+
+/* ── Does this account carry the one missing step? ───────────────────────
+
+   Singing voice conversion is the gap between a song made here and a song in
+   your own voice, and whether Music.ai exposes it over the API could not be
+   checked from the machine this was written on — `music.ai` is refused by the
+   egress proxy. So the app asks the account instead, and this checks the
+   asking: it matches on a workflow's name, which the account holder wrote, so
+   it has to recognise the shapes people actually use and reject the ones that
+   look similar and are not.
+
+   The false positives are the point. "Vocal isolation" and "voice removal"
+   are stem separation, which this app already does; calling one of those the
+   missing step would close a gap that is still open. */
+for (const yes of [
+  { slug: 'voice-studio', name: 'Voice Studio' },
+  { slug: 'moises/voice-conversion', name: 'Voice conversion' },
+  { slug: 'my-rvc-model', name: 'RVC singing model' },
+  { slug: 'sing-swap', name: 'Singing voice swap' },
+  { slug: 'convert-the-vocal', name: 'Convert the vocal to my voice' },
+  { slug: 'timbre-transfer', name: 'Timbre transfer' },
+]) {
+  check(`"${yes.name}" reads as voice conversion`, looksLikeVoiceConversion(yes));
+}
+for (const no of [
+  { slug: 'music-ai/isolate-drums', name: 'Isolate drums' },
+  { slug: 'vocal-removal', name: 'Vocal removal' },
+  { slug: 'voice-isolation', name: 'Voice isolation' },
+  { slug: 'music-ai/generate-chords', name: 'Chords' },
+  { slug: 'stem-separation', name: 'Separate the voice from the music' },
+  { slug: 'transcribe', name: 'Transcription with speakers' },
+]) {
+  check(`"${no.name}" does not — it is not the missing step`, !looksLikeVoiceConversion(no));
 }
 
 if (bad) {
