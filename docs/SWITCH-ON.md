@@ -49,6 +49,7 @@ be. In this order:
 | `supabase/posting.sql` | The posting queue answers "not set up" |
 | `supabase/dubs.sql` | Dubbing answers "not set up" |
 | `supabase/invites.sql` | The invite link in a collab email answers "not set up" |
+| `supabase/charts.sql` | The Top 10 bars on Spotlight stay empty for ever |
 
 **How to tell:** open the room. Each of those says "not set up" in plain words
 rather than failing — that sentence *is* the check.
@@ -153,7 +154,29 @@ the workflows actually on the account and says which slugs are set.
 **Broken until then:** chords, key, tempo and named stems. Everything else in
 the studio works without it.
 
-### 10. The two engines behind a flag
+### 10. Spotify, for the chart beside ours on Spotlight
+
+`SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`, from
+developer.spotify.com — create an app, copy the two values, no callback URL
+needed. This uses the client-credentials flow, which reads public things and
+touches nobody's account, yours included.
+
+**Broken until then:** the "What South Africa is playing on Spotify" bar does
+not appear at all. Everything else on Spotlight works without it — our own
+Top 10 is counted here and needs nothing but `supabase/charts.sql`.
+
+**How to tell:** open Spotlight. The bar is either there or it is not; there
+is no half-state and no error to read.
+
+**One thing I could not check from where this was built:** the outbound call
+to Spotify is blocked in that environment, so the code path has never run
+against the real API. It finds their chart by searching for a playlist named
+"Top 50 … South Africa" **owned by Spotify themselves** rather than by a
+hard-coded playlist id, which is the version that fails honestly rather than
+silently if they rename or retire it. If the bar never appears with the keys
+set, that search is the first thing to look at.
+
+### 11. The two engines behind a flag
 
 `ELEVEN_SEEDANCE_READY=1` is the only way to a clip longer than ten seconds.
 `ELEVEN_AURORA_READY=1` is the talking presenter. Both are behind a flag
@@ -164,7 +187,7 @@ it, make one clip, and unset it if the request comes back refused.
 
 ## Paperwork, on its own clock
 
-### 11. CIPC
+### 12. CIPC
 
 The registration number, then `FUTUREBOX_LEGAL_NAME`,
 `FUTUREBOX_LEGAL_REGISTRATION`, `FUTUREBOX_LEGAL_ADDRESS` and
@@ -182,13 +205,13 @@ described as a private company — that is the one combination it refuses, and
 `npm run check:entity` holds it to that along with the other eight shapes, so
 whichever way you fill it in it is right the first time or it says nothing.
 
-### 12. The trademark
+### 13. The trademark
 
 CIPC's register, classes 9 and 42. A registered domain and a registered company
 are neither of them a trademark, and this is the part that decides whether you
 can trade under the name at all. EUIPO and USPTO are free and take minutes.
 
-### 13. POPIA
+### 14. POPIA
 
 An information officer registered with the Information Regulator, and
 `FUTUREBOX_LEGAL_INFORMATION_OFFICER` set. You process personal data of South

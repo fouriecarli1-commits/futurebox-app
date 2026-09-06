@@ -15,7 +15,16 @@
 import { admin } from './account';
 
 /** The things worth counting that nothing else records. */
-export const EVENT_KINDS = ['visit', 'video', 'masterclass', 'article', 'podcast'] as const;
+/**
+ * `play` was added last, and it is the only one the board does not count.
+ *
+ * The board counts reach — visits, videos rendered, things opened. A play is
+ * for the charts on Spotlight and nothing else, which is why adding it changed
+ * no number anywhere: `stats_board` asks for the kinds it names, and `play` is
+ * not one of them. `supabase/charts.sql` explains why a play may be written
+ * from the browser when a song may not.
+ */
+export const EVENT_KINDS = ['visit', 'video', 'masterclass', 'article', 'podcast', 'play'] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
 export function isEventKind(value: unknown): value is EventKind {

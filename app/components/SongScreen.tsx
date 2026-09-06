@@ -59,6 +59,7 @@ import { lineAt, type TimedLine } from '../lib/timeline';
 import { evenly, timeFor, type Timing } from '../lib/lyrictime';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
+import { signal } from '../lib/signal';
 
 /**
  * Literal colours, not the theme's.
@@ -173,6 +174,10 @@ export default function SongScreen({
     try {
       await element.play();
       setPlaying(true);
+      /* Counted here too, and deduplicated by `signal` — the same song played
+         in the channel and again on this screen is one play, which is what
+         makes the chart mean anything. */
+      signal('play', { ref: one.id });
     } catch {
       // A browser that will not start audio without a gesture. The button is
       // right there and says Play, which is the honest state to be left in.

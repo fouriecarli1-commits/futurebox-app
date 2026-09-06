@@ -43,6 +43,7 @@ import FollowWords from './FollowWords';
 import SongScreen, { wordsFor } from './SongScreen';
 import Sleeve from './Sleeve';
 import { heardHere, markHeard } from '../lib/heard';
+import { signal } from '../lib/signal';
 import { timeFor } from '../lib/lyrictime';
 import Note from './Note';
 import Card from './Card';
@@ -211,6 +212,10 @@ export default function Channel({
          lands on the last second would still be showing "unheard" on
          everything they skipped through. */
       setHeard(markHeard(id));
+      /* And counted, once per person per song per day, for the chart on
+         Spotlight. The same moment as the unheard mark for the same reason:
+         somebody who plays four seconds has met the song. */
+      signal('play', { ref: track.id });
       queueRef.current = rest;
       setQueue(rest);
     },

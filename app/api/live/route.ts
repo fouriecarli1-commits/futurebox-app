@@ -161,6 +161,13 @@ export async function GET(request: Request): Promise<Response> {
         by: names.get(post.owner) || 'someone',
         mine: caller ? post.owner === caller.id : false,
         audio,
+        /* The song behind the post, on a track post only.
+ 
+           The charts on Spotlight are keyed on the song, not on the post, so
+           the same song put in the room four times is one row rather than
+           four. Sent only for `track` because an episode's id belongs to a
+           different table and an `elsewhere` post has no song at all. */
+        sourceId: post.kind === 'track' ? post.source_id : undefined,
       };
     }),
   );

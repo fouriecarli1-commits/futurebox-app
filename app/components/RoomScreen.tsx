@@ -39,6 +39,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom';
 import { Loader2, Pause, Play, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { signal } from '../lib/signal';
 
 /** Literal, because the theme remaps `white` and `black` onto its own tokens. */
 const INK = '#ffffff';
@@ -54,6 +55,15 @@ export interface RoomPost {
   readonly seconds: number;
   /** A signed URL, or null once it has expired or the file is gone. */
   readonly audio: string | null;
+  /**
+   * The song this post is of, where it is one of somebody's own.
+   *
+   * Not the post's id: the charts on Spotlight are keyed on the song, and a
+   * chart keyed on posts would list the same song once per time it was put in
+   * the room. Absent for a post that only announces somebody going live
+   * somewhere else, which has no song behind it to count.
+   */
+  readonly sourceId?: string;
 }
 
 export default function RoomScreen({
@@ -128,6 +138,10 @@ export default function RoomScreen({
     try {
       await element.play();
       setPlaying(true);
+      /* The live room counts towards the same chart. `one.id` is the post
+         rather than the song, so the song's own id is what is sent — a chart
+         keyed on posts would list the same song four times. */
+      if (one.sourceId) signal('play', { ref: one.sourceId });
     } catch {
       /* Autoplay refused until somebody has touched the page. Not an error and
          not worth a message — the play button is right there and pressing it

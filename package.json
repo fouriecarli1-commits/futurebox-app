@@ -64,7 +64,8 @@
     "check:cards": "node audit/cards.mjs",
     "check:radarshuffle": "tsx scripts/check-radarshuffle.mts",
     "check:collabroom": "node audit/collabroom.mjs",
-    "check:masterclasses": "tsx scripts/check-masterclasses.mts"
+    "check:masterclasses": "tsx scripts/check-masterclasses.mts",
+    "check:spotlight": "node audit/spotlight.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

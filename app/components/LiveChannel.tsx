@@ -64,6 +64,8 @@ interface Post {
   by: string;
   mine: boolean;
   audio: string | null;
+  /** The song behind a track post, so a play is counted against the song. */
+  sourceId?: string;
 }
 
 interface Said {
@@ -444,6 +446,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             note: one.note,
             seconds: one.seconds,
             audio: one.audio,
+            sourceId: one.sourceId,
           }))}
           startAt={openAt}
           onClose={() => setOpenAt(null)}

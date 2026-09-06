@@ -2015,6 +2015,7 @@ export default function FutureBoxHome() {
               goToRoom(tab);
             }}
             onAppearance={() => setThemeOpen(true)}
+            onOpenRadar={() => setActiveTab('radar')}
           />
         )}
 

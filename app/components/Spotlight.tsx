@@ -20,18 +20,23 @@
 import React from 'react';
 import { useLang } from '../lib/i18n';
 import HereNow from './HereNow';
+import Charts from './Charts';
 
 export default function Spotlight({
   onGo,
   onAppearance,
+  onOpenRadar,
 }: {
   /** Open the studio on one of its screens. */
   onGo: (tab: 'make' | 'voice_studio' | 'podcast') => void;
   onAppearance: () => void;
+  /** The radar bar is a door to the radar tab, which is a page of its own. */
+  onOpenRadar: () => void;
 }): React.ReactElement {
   const { t } = useLang();
 
   return (
+    <div className="space-y-4">
       <section className="rounded-3xl border border-zinc-800 bg-gradient-to-b from-zinc-900/70 to-zinc-950/80 p-8 md:p-12 shadow-2xl">
         <div className="max-w-4xl space-y-6">
           <HereNow />
@@ -125,5 +130,17 @@ export default function Spotlight({
           </div>
         </div>
       </section>
+
+      {/* ── What is actually happening here, as bars you press ──────────
+
+          "net 'n bar waarop mens kliek en dan oop maak en opsies gee wat op
+           gekliek kan word."
+
+          Under the hero rather than above it: the hero says what this app is
+          for, which is what somebody arriving needs first. These say what is
+          on it, which is what brings them back. Shut to start with, so four
+          bars are four lines rather than four screens. */}
+      <Charts onOpenRadar={onOpenRadar} />
+    </div>
   );
 }
