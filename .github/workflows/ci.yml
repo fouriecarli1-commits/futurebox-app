@@ -102,6 +102,12 @@ jobs:
       - name: A row can only claim its own file
         run: npm run check:ownedpath
 
+      # A screen gated on something it does not need is a feature nobody can
+      # find; a row that looks pressable and is not wastes a press and teaches
+      # somebody the app is broken. Both are invisible to a typecheck.
+      - name: Nothing useful is hidden and nothing dead looks pressable
+        run: npm run check:reachable
+
       # `write_scenes` replaces the shot list. A shot already generated has been
       # paid for, and replacing it with a sentence is spending somebody's money
       # and then throwing away what it bought.

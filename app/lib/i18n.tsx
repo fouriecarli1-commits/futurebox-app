@@ -24,7 +24,8 @@
  *     "hermengsel" would be worse than borrowing.
  */
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { asLang, onArrival, onSignIn } from './langrule';
 
 export type Lang = 'en' | 'af';
 
@@ -807,6 +808,7 @@ export const STRINGS: Dict = {
   "board.look": { en: "How the whole film looks", af: "Hoe die hele film lyk" },
   "board.lookHint": { en: "Warm evening light, shot on film, slow camera", af: "Warm aandlig, op film geskiet, stadige kamera" },
   "board.lookWhy": { en: "Added to the end of every shot below, so all of them match without you typing it twelve times. Ask the copilot for a look and it fills this in.", af: "Word agteraan elke skoot hieronder gesit, sodat almal bymekaar pas sonder dat jy dit twaalf keer tik. Vra die kopiloot vir \u2019n voorkoms en dit vul dit hier in." },
+  "chan.filmIt": { en: "Film yourself to it", af: "Film jouself daarby" },
   "chan.listens": { en: "{listens} listens, {listeners} people", af: "{listens} luisterbeurte, {listeners} mense" },
   "share.save": { en: "Save the song", af: "Stoor die liedjie" },
   "share.notHere": { en: "That song is not on this device — it may only be on the one that made it. Open it in your library first and it comes down with you.", af: "Daardie liedjie is nie op hierdie toestel nie — dit is dalk net op die een wat dit gemaak het. Maak dit eers in jou biblioteek oop, dan kom dit saam met jou af." },
@@ -2201,6 +2203,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [switched, setSwitched] = useState<Lang | null>(null);
   const [lang, setLangState] = useState<Lang>('en');
 
+  /* The same value, readable from a callback that was registered once.
+
+     `onAccountChange` hands its listener to Supabase at mount, so the `lang`
+     that listener closed over is the one from mount — English, always, since
+     that is the initial state. Asking "what is on screen" through a ref is the
+     difference between announcing a switch that happened and announcing one
+     against a value from before the page had read its own storage. */
+  const showingRef = useRef<Lang>('en');
+  useEffect(() => {
+    showingRef.current = lang;
+  }, [lang]);
+
   /* The document's own language, kept in step with the app's.
      `<html lang="en">` is written by the server, which cannot know — and an
      Afrikaans page that says it is English is read aloud by a screen reader
@@ -2214,21 +2228,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // would mismatch the HTML it sent.
   useEffect(() => {
     try {
-      const saved = window.localStorage.getItem(STORAGE_KEY) as Lang | null;
-      if (saved === 'en' || saved === 'af') {
-        setLangState(saved);
-        return;
-      }
-      /* Nobody has chosen yet: follow the browser, since an Afrikaans speaker
-         opening this should not have to find a menu first.
-
-         Not written down, and that is the point. A guess is not a choice, so
-         it must not win against the account the way a choice does — somebody
-         who set Afrikaans on their phone still gets Afrikaans on an English
-         laptop. What it does mean is that the sign-in below has to notice it
-         is *changing* something a person has been reading, which is what
-         `showing` is for. */
-      if ((navigator.language ?? '').toLowerCase().startsWith('af')) setLangState('af');
+      const arrived = onArrival(window.localStorage.getItem(STORAGE_KEY), navigator.language);
+      setLangState(arrived.lang);
+      /* A choice ends it here. A guess does not: the account below may still
+         have something to say, and rule 3 is that a guess does not outrank
+         somebody who told us once on another device. */
+      if (arrived.fromChoice) return;
     } catch {
       // Storage blocked. English it is.
     }
@@ -2292,23 +2297,23 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         stop = cloud.onAccountChange((account) => {
           if (!account) return;
           void (async () => {
-            let mine: Lang | null = null;
+            let stored: string | null = null;
             try {
-              const saved = window.localStorage.getItem(STORAGE_KEY);
-              if (saved === 'en' || saved === 'af') mine = saved;
+              stored = window.localStorage.getItem(STORAGE_KEY);
             } catch {
               // Storage blocked; the account is the only answer there is.
             }
-            if (mine) {
-              /* Written up every sign-in rather than only when it differs.
-                 Reading the account first to compare costs a round trip to
-                 save a write that is idempotent, and the read is the half
-                 that can fail. */
-              await keepOnAccount(mine);
+            /* Asked only when this browser has nothing to say, because that is
+               the only case the answer changes anything — and it is a network
+               call. */
+            const said = asLang(stored) ? null : await cloud.accountLanguage();
+            if (!live) return;
+            const next = onSignIn(stored, said, showingRef.current);
+            if (next.keepOnAccount) {
+              await keepOnAccount(next.keepOnAccount);
               return;
             }
-            const said = await cloud.accountLanguage();
-            if (!live || !said) return;
+            if (!next.store) return;
             /* Changed under somebody who was already reading, so say so.
 
                The rule above is right and stays: a person who chose Afrikaans
@@ -2321,20 +2326,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
                Only when it actually differs from what is on screen. A page
                that was already in the account's language changed nothing and
                has nothing to announce. */
-            setLangState((wasShowing) => {
-              if (wasShowing !== said) setSwitched(wasShowing);
-              return said;
-            });
+            if (next.switched) setSwitched(next.switched);
+            setLangState(next.lang);
             try {
               /* Stored, not only applied. Without this the next page load on
                  this device starts in English again and the account is asked
                  all over again — and on a slow connection that is a visible
                  flip from English to Afrikaans on every load. */
-              window.localStorage.setItem(STORAGE_KEY, said);
+              window.localStorage.setItem(STORAGE_KEY, next.store);
             } catch {
               // Then it is applied for this page and asked again next time.
             }
-            document.documentElement.lang = said;
+            document.documentElement.lang = next.lang;
           })();
         });
       } catch {

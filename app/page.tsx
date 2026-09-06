@@ -2026,6 +2026,7 @@ export default function FutureBoxHome() {
             }}
             onAppearance={() => setThemeOpen(true)}
             onOpenRadar={() => setActiveTab('radar')}
+            onOpenLive={() => goTab('live')}
           />
         )}
 

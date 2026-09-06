@@ -19,7 +19,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Check, Copy, Download, Headphones, Image as ImageIcon, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, X,
+  Check, Copy, Download, Headphones, Image as ImageIcon, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, Video, X,
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
@@ -660,7 +660,23 @@ export default function Channel({
                   </p>
                 )}
 
-                {timedFor(track).length > 0 && (
+                {/* Always, not only when the app wrote words for this one.
+
+                    "Ek sien dit nie daar nie."
+
+                    She was looking for the selfie camera, which lives behind
+                    this button — and the button only drew when the song had
+                    timed lines. So an instrumental, a song made without lyrics
+                    and every song brought in from a file had no path to the
+                    camera at all, though the camera has nothing to do with
+                    words: it films you, the song plays out loud, and the lines
+                    are an overlay that never reaches the file.
+
+                    A screen gated on something it does not need is a feature
+                    nobody can find. It opens either way now, and says which of
+                    the two it is on the button itself rather than letting
+                    somebody press "Lyrics" and meet a blank. */}
+                {(
                   <button
                     type="button"
                     onClick={() => {
@@ -682,8 +698,14 @@ export default function Channel({
                     }}
                     className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[40px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
                   >
-                    <MessageSquareQuote className="w-4 h-4 flex-shrink-0" />
-                    {t('chan.lyrics', 'Lyrics')}
+                    {timedFor(track).length > 0 ? (
+                      <MessageSquareQuote className="w-4 h-4 flex-shrink-0" />
+                    ) : (
+                      <Video className="w-4 h-4 flex-shrink-0" />
+                    )}
+                    {timedFor(track).length > 0
+                      ? t('chan.lyrics', 'Lyrics')
+                      : t('chan.filmIt', 'Film yourself to it')}
                   </button>
                 )}
 

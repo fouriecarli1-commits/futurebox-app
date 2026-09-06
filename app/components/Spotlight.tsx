@@ -26,12 +26,15 @@ export default function Spotlight({
   onGo,
   onAppearance,
   onOpenRadar,
+  onOpenLive,
 }: {
   /** Open the studio on one of its screens. */
   onGo: (tab: 'make' | 'voice_studio' | 'podcast') => void;
   onAppearance: () => void;
   /** The radar bar is a door to the radar tab, which is a page of its own. */
   onOpenRadar: () => void;
+  /** Where a charting song actually is. See the note in `Charts`. */
+  onOpenLive: () => void;
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -140,7 +143,7 @@ export default function Spotlight({
           for, which is what somebody arriving needs first. These say what is
           on it, which is what brings them back. Shut to start with, so four
           bars are four lines rather than four screens. */}
-      <Charts onOpenRadar={onOpenRadar} />
+      <Charts onOpenRadar={onOpenRadar} onOpenLive={onOpenLive} />
     </div>
   );
 }

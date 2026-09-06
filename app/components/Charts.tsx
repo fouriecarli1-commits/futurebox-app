@@ -60,12 +60,31 @@ const EMPTY: Charts = { configured: false, music: [], podcasts: [], spotify: nul
 
 export default function Charts({
   onOpenRadar,
-  onOpenSong,
+  onOpenLive,
 }: {
   /** Take them to the radar tab, which is a bar here and a page there. */
   readonly onOpenRadar: () => void;
-  /** Open one of our own songs. */
-  readonly onOpenSong?: (ref: string) => void;
+  /**
+   * Take them to Live, which is where a charting song actually is.
+   *
+   * ── Why Live and not the song ────────────────────────────────────────
+   *
+   * "Ek kom ook agter die liedjies se links vat mens nerens heen nie."
+   *
+   * They went nowhere because nothing ever passed a handler in, so every row
+   * was a `disabled` button — a list that looks pressable and is not, which is
+   * worse than a list that plainly is not.
+   *
+   * The obvious fix is wrong: these rows are mostly *other people's* songs,
+   * and the full-screen player reads its audio out of this device by track id.
+   * Opening a stranger's song there is a black screen with a title on it.
+   *
+   * Live is where they are. A play is only counted from that room, and the
+   * chart only publishes songs their maker shared — so every row on it came
+   * from Live and Live is where it can be heard. One destination, always true,
+   * promising nothing it cannot do.
+   */
+  readonly onOpenLive: () => void;
 }): React.ReactElement {
   const { t } = useLang();
   const [charts, setCharts] = useState<Charts>(EMPTY);
@@ -143,7 +162,7 @@ export default function Charts({
           <>
             <div className="space-y-1.5">
               {charts.music.map((row, at) =>
-                line(row, at, 'ours', onOpenSong ? () => onOpenSong(row.ref) : undefined),
+                line(row, at, 'ours', onOpenLive),
               )}
             </div>
             <p className="text-xs text-zinc-600">
@@ -168,7 +187,9 @@ export default function Charts({
             )}
           </Note>
         ) : (
-          <div className="space-y-1.5">{charts.podcasts.map((row, at) => line(row, at, 'ours'))}</div>
+          <div className="space-y-1.5">
+            {charts.podcasts.map((row, at) => line(row, at, 'ours', onOpenLive))}
+          </div>
         )}
       </Card>
 
