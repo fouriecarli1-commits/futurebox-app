@@ -45,13 +45,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Copy, ExternalLink, Share2, X } from 'lucide-react';
+import { Check, Copy, Download, ExternalLink, Loader2, Share2, X } from 'lucide-react';
 import { PLATFORMS, FUTUREBOX_TAG } from '../data/social';
 import { buildCaption, loadHandles, shareUrlFor, type Handles } from '../lib/social';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
 import PostToLive from './PostToLive';
-import type { Track } from '../lib/library';
+import { downloadBlob, getAudio, safeFilename, type Track } from '../lib/library';
 
 export default function ShareRow({
   title,
@@ -87,6 +87,36 @@ export default function ShareRow({
   }, []);
 
   const caption = buildCaption(`${title}\n${what}`.trim(), hashtags, { creditFuturebox: true });
+
+  /* The file, which is the one step here that needs the app.
+
+     This sheet has told people to "save the file" since the day it was
+     written and never gave them a way to do it — the caption had a button,
+     the composers had buttons, and the thing they were actually going to post
+     had to be found somewhere else first. That is what made a portal read as
+     a list of links.
+
+     `null` while nothing has been pressed, `'busy'` while the audio is coming
+     out of storage, `'gone'` when it is not on this device. Said rather than
+     failing quietly: a song made on a phone and opened on a laptop is a real
+     case, and "nothing happened" is the worst answer to it. */
+  const [file, setFile] = useState<null | 'busy' | 'gone'>(null);
+
+  const save = async (): Promise<void> => {
+    if (!track) return;
+    setFile('busy');
+    try {
+      const audio = await getAudio(track.id);
+      if (!audio) {
+        setFile('gone');
+        return;
+      }
+      downloadBlob(audio, safeFilename(track.title, 'wav'));
+      setFile(null);
+    } catch {
+      setFile('gone');
+    }
+  };
 
   const copy = async (): Promise<void> => {
     try {
@@ -148,7 +178,7 @@ export default function ShareRow({
 
           <Note className="text-xs text-zinc-500 leading-snug">{t(
               'share.how',
-              'Copy the caption, save the file, then open the composer and drop it in. Nothing here uploads for you — posting on your behalf needs each platform to approve an app, which is a queue rather than a button.',
+              'Save the song, copy the caption, then open the composer and drop it in. Nothing here uploads for you — posting on your behalf needs each platform to approve an app, which is a queue rather than a button.',
             )}</Note>
 
           <pre className="text-xs text-zinc-300 whitespace-pre-wrap bg-zinc-900 rounded-lg p-2.5 leading-relaxed">
@@ -156,6 +186,26 @@ export default function ShareRow({
           </pre>
 
           <div className="flex flex-wrap gap-1.5">
+            {/* First, because it is first in the sentence above it: save the
+                file, copy the caption, open the composer. A row whose order
+                does not match its own instructions is a row that gets read
+                twice. */}
+            {track && (
+              <button
+                type="button"
+                onClick={() => void save()}
+                disabled={file === 'busy'}
+                className="px-2.5 py-1.5 rounded-lg text-xs bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {file === 'busy' ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Download className="w-3 h-3" />
+                )}
+                {t('share.save', 'Save the song')}
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => void copy()}
@@ -190,6 +240,15 @@ export default function ShareRow({
               );
             })}
           </div>
+
+          {file === 'gone' && (
+            <p className="text-xs text-amber-400 leading-snug">
+              {t(
+                'share.notHere',
+                'That song is not on this device — it may only be on the one that made it. Open it in your library first and it comes down with you.',
+              )}
+            </p>
+          )}
 
             <p className="text-xs text-zinc-600 leading-snug">
               {t('share.tagNote', 'The caption credits')} {FUTUREBOX_TAG}{' '}

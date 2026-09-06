@@ -77,6 +77,7 @@ import HereNow from './components/HereNow';
 import LanguagePicker from './components/LanguagePicker';
 import Balance from './components/Balance';
 import OutOfCredits from './components/OutOfCredits';
+import LanguageSwitched from './components/LanguageSwitched';
 import { PACKS } from './lib/credits';
 import type { Short } from './lib/wallet';
 import type { Pack } from './lib/credits';
@@ -1518,6 +1519,13 @@ export default function FutureBoxHome() {
     return null;
   })();
 
+  /* Said where a person is looking, not tucked into a settings screen.
+
+     It appears only when signing in changed the language under somebody who
+     was already reading, and it goes away the moment they answer it or choose
+     a language themselves. Mounted beside the invite banner because that is
+     already the strip this app uses for "something happened that you should
+     know about". */
   const inviteBanner = inviteLine ? (
     <div className="border-b border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-center text-sm text-emerald-200">
       {inviteLine}
@@ -1528,6 +1536,7 @@ export default function FutureBoxHome() {
     return (
       <>
         {inviteBanner}
+        <LanguageSwitched />
         <Landing
           onStart={() => openAuth('signup')}
           onGoogle={() => void handleGoogle()}
@@ -1908,6 +1917,7 @@ export default function FutureBoxHome() {
       </header>
 
       {inviteBanner}
+      <LanguageSwitched />
 
       {/* 🔍 SMART FILTERING SUB-BAR */}
       <div className="relative z-30 bg-zinc-950/80 border-b border-zinc-800/80 px-6 py-2.5 backdrop-blur-md">

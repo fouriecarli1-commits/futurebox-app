@@ -804,6 +804,10 @@ export const STRINGS: Dict = {
   "mc.comingSoon": { en: "coming soon", af: "kom binnekort" },
   "rail.video": { en: "Music video", af: "Musiekvideo" },
   "tab.nav": { en: "The five parts of the app", af: "Die vyf dele van die toep" },
+  "share.save": { en: "Save the song", af: "Stoor die liedjie" },
+  "share.notHere": { en: "That song is not on this device — it may only be on the one that made it. Open it in your library first and it comes down with you.", af: "Daardie liedjie is nie op hierdie toestel nie — dit is dalk net op die een wat dit gemaak het. Maak dit eers in jou biblioteek oop, dan kom dit saam met jou af." },
+  "lang.switched": { en: "Your account is set to this language, so the app followed it. It only does this when nothing was chosen on this device.", af: "Jou rekening is op hierdie taal gestel, so die toep het dit gevolg. Dit doen dit net wanneer niks op hierdie toestel gekies is nie." },
+  "lang.keep": { en: "Keep {language}", af: "Hou {language}" },
   "tab.spotlight": { en: "Spotlight", af: "Kollig" },
   "tab.live": { en: "Live", af: "Live" },
   "tab.search": { en: "Search", af: "Soek" },
@@ -817,7 +821,7 @@ export const STRINGS: Dict = {
   "canvas.title": { en: "Video desk", af: "Videolessenaar" },
   "canvas.what": { en: "Describe a shot and the engine makes it. Pick a kind of video to start from — everything it writes is yours to rewrite.", af: "Beskryf \u2019n skoot en die enjin maak dit. Kies \u2019n soort video om mee te begin \u2014 alles wat dit skryf is joune om oor te skryf." },
   "share.post": { en: "Post it", af: "Plaas dit" },
-  "share.how": { en: "Copy the caption, save the file, then open the composer and drop it in. Nothing here uploads for you — posting on your behalf needs each platform to approve an app, which is a queue rather than a button.", af: "Kopieer die byskrif, stoor die l\u00eaer, maak dan die opsteller oop en sit dit in. Niks hier laai vir jou op nie \u2014 om namens jou te plaas verg dat elke platform \u2019n toepassing goedkeur, wat \u2019n tou is eerder as \u2019n knoppie." },
+  "share.how": { en: "Save the song, copy the caption, then open the composer and drop it in. Nothing here uploads for you — posting on your behalf needs each platform to approve an app, which is a queue rather than a button.", af: "Stoor die liedjie, kopieer die byskrif, maak dan die opsteller oop en sit dit in. Niks hier laai vir jou op nie \u2014 om namens jou te plaas verg dat elke platform \u2019n toepassing goedkeur, wat \u2019n tou is eerder as \u2019n knoppie." },
   "share.copy": { en: "Copy the caption", af: "Kopieer die byskrif" },
   "share.copied": { en: "Copied", af: "Gekopieer" },
   "share.carries": { en: "Opens with the caption already in it", af: "Maak oop met die byskrif reeds in" },
@@ -2167,15 +2171,30 @@ interface LangContext {
   lang: Lang;
   setLang: (next: Lang) => void;
   t: (key: string, fallback?: string) => string;
+  /**
+   * The language this page was showing when the account changed it, or null.
+   *
+   * Set only when signing in swapped the language *under somebody who was
+   * already reading* — never on a first load, and never when they chose in
+   * this browser, because then nothing was swapped. `LanguageSwitched` turns
+   * it into a sentence and a way back.
+   */
+  switched: Lang | null;
+  /** Keep the language that was on screen before the account changed it. */
+  undoSwitch: () => void;
 }
 
 const Context = createContext<LangContext>({
   lang: 'en',
   setLang: () => {},
   t: (key, fallback) => fallback ?? STRINGS[key]?.en ?? key,
+  switched: null,
+  undoSwitch: () => {},
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  /* What was on screen when the account overruled it. See `switched`. */
+  const [switched, setSwitched] = useState<Lang | null>(null);
   const [lang, setLangState] = useState<Lang>('en');
 
   /* The document's own language, kept in step with the app's.
@@ -2196,8 +2215,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         setLangState(saved);
         return;
       }
-      // Nobody has chosen yet: follow the browser, since an Afrikaans speaker
-      // opening this should not have to find a menu first.
+      /* Nobody has chosen yet: follow the browser, since an Afrikaans speaker
+         opening this should not have to find a menu first.
+
+         Not written down, and that is the point. A guess is not a choice, so
+         it must not win against the account the way a choice does — somebody
+         who set Afrikaans on their phone still gets Afrikaans on an English
+         laptop. What it does mean is that the sign-in below has to notice it
+         is *changing* something a person has been reading, which is what
+         `showing` is for. */
       if ((navigator.language ?? '').toLowerCase().startsWith('af')) setLangState('af');
     } catch {
       // Storage blocked. English it is.
@@ -2279,7 +2305,22 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             }
             const said = await cloud.accountLanguage();
             if (!live || !said) return;
-            setLangState(said);
+            /* Changed under somebody who was already reading, so say so.
+
+               The rule above is right and stays: a person who chose Afrikaans
+               on their phone should not have to choose again on a laptop. What
+               was wrong is that the laptop had been showing English, they had
+               been reading it, and signing in swapped it with no explanation —
+               which reads as the app losing its place rather than remembering
+               theirs.
+
+               Only when it actually differs from what is on screen. A page
+               that was already in the account's language changed nothing and
+               has nothing to announce. */
+            setLangState((wasShowing) => {
+              if (wasShowing !== said) setSwitched(wasShowing);
+              return said;
+            });
             try {
               /* Stored, not only applied. Without this the next page load on
                  this device starts in English again and the account is asked
@@ -2302,7 +2343,32 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  /* Back to what was on screen, and written down this time.
+
+     Pressing it is a choice, so it is stored like any other choice and the
+     account is brought into step with it — which also means the notice never
+     comes back on this device. Being told twice about the same thing is worse
+     than not being told at all. */
+  const undoSwitch = useCallback(() => {
+    setSwitched((was) => {
+      if (was) {
+        setLangState(was);
+        try {
+          window.localStorage.setItem(STORAGE_KEY, was);
+          document.documentElement.lang = was;
+        } catch {
+          // Applied for this page; asked again next time, and that is fine.
+        }
+        void keepOnAccount(was);
+      }
+      return null;
+    });
+  }, []);
+
   const setLang = useCallback((next: Lang) => {
+    /* Any deliberate choice also puts the notice away: it is about a change
+       nobody asked for, and this is somebody asking. */
+    setSwitched(null);
     setLangState(next);
     try {
       window.localStorage.setItem(STORAGE_KEY, next);
@@ -2318,7 +2384,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     [lang],
   );
 
-  const value = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
+  const value = useMemo(
+    () => ({ lang, setLang, t, switched, undoSwitch }),
+    [lang, setLang, t, switched, undoSwitch],
+  );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 

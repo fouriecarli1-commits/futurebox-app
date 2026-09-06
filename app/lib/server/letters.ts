@@ -164,7 +164,10 @@ export function cancelledLetter(
 ): { subject: string; text: string } {
   const until = endsOn ? endsOn.toISOString().slice(0, 10) : null;
 
-  const en = `Your subscription is cancelled. There is nothing further to pay.
+  const en = `We are sorry to see you go, and thank you for the time you spent
+making things here.
+
+Your subscription is cancelled and there is nothing further to pay.
 
 ${
   until
@@ -176,9 +179,13 @@ and it is yours.`
 Whatever you made stays on your device; cancelling does not touch it. Download
 anything you want to keep before you clear your browser.
 
-All the best with it, and if you come back, your account will be here.`;
+Your account stays exactly as it is, so coming back is one sign-in and nothing
+else. We hope to see you again before long.`;
 
-  const af = `Jou intekening is gekanselleer. Daar is niks verder om te betaal nie.
+  const af = `Ons is jammer om jou te sien gaan, en dankie vir die tyd wat jy hier
+gemaak het.
+
+Jou intekening is gekanselleer en daar is niks verder om te betaal nie.
 
 ${
   until
@@ -190,10 +197,15 @@ dit is joune.`
 Wat jy ook al gemaak het bly op jou toestel; kansellasie raak dit nie. Laai af
 wat jy wil hou voordat jy jou blaaier skoonmaak.
 
-Alles van die beste daarmee, en as jy terugkom, sal jou rekening hier wees.`;
+Jou rekening bly presies soos dit is, so om terug te kom is een intekening en
+niks meer nie. Ons hoop om jou gou weer te sien.`;
 
   return {
     subject: pick(
+      /* The subject says the fact, because a letter about money that hides
+         what it is about is a letter somebody opens anxiously. The warmth is
+         in the first line, where it belongs — not in a subject line that has
+         to be findable in a search six months later. */
       { en: 'Your FutureBox subscription is cancelled', af: 'Jou FutureBox-intekening is gekanselleer' },
       lang,
     ),

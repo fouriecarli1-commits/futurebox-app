@@ -44,7 +44,31 @@ for (const lang of ['en', 'af'] as const) {
   ok(!/undefined|null|NaN/.test(noDate.text), `${lang}: no date renders cleanly`);
   ok(!/discount|korting|% off|come back and get/i.test(withDate.text), `${lang}: no parting offer`);
 }
-ok(cancelledLetter(null, 'af').text.includes('beste'), 'af wishes them well');
+/* Warmth, checked as a thing rather than as a word.
+
+   This asked whether the Afrikaans letter contained "beste" — from the phrase
+   "Alles van die beste" that happened to be in it. Rewriting the letter to be
+   warmer made the check fail, which is exactly backwards: a rule that a better
+   letter cannot pass is a rule that pins the wording rather than the promise.
+
+   The promise is what she asked for: sorry you are going, and your account is
+   still here when you come back. Both halves, both languages, and neither is
+   tied to one way of saying it. */
+for (const lang of ['en', 'af'] as const) {
+  const text = cancelledLetter(null, lang).text.toLowerCase();
+  ok(
+    /sorry to see you go|jammer om jou te sien gaan/.test(text),
+    `${lang}: says it is sorry they are going`,
+  );
+  ok(
+    /see you again|sien jou gou weer|weer te sien|coming back|terug te kom/.test(text),
+    `${lang}: and that the door is open`,
+  );
+  ok(
+    /account stays|rekening bly/.test(text),
+    `${lang}: and that the account is still theirs`,
+  );
+}
 
 console.log(bad === 0 ? '\nAll letters render.' : `\n${bad} problems.`);
 process.exit(bad === 0 ? 0 : 1);
