@@ -29,21 +29,32 @@ const PORT = process.argv[2] || '3181';
 /**
  * How many screens carry at least one foldable card. Only ever goes up.
  *
- * Nine, measured rather than assumed. The five that still read zero here are
- * not five rooms that were skipped — every one of them has converted cards
- * that this probe cannot reach, because it opens each room cold:
+ * Ten, measured. Studio joined the list the moment the probe put a song on
+ * the device — it had been reading zero for want of something to edit, which
+ * is the difference between "not converted" and "not reachable", and the two
+ * look identical in a count.
  *
- *   Studio      needs a song to edit; with none it draws its empty panel.
- *   The Booth   needs a recording before "the voices in this song" exists.
- *   Soundboard  the trained-sound card needs accounts configured.
- *   Live        "put something in the room" needs a song of your own.
- *   Podcast     the channel and episode cards need a show set up.
- *
- * That is why the count is printed per screen and never as one total. A
- * single figure would read as "five rooms are not done" when the truth is
- * "five rooms are done in a state this cannot open".
+ * Four still read zero and every one of them is converted. They need a
+ * database this probe deliberately runs without, so the reason is printed
+ * beside each rather than left as a bare nought — a zero with no explanation
+ * beside it is a claim nobody can check, which is the thing these probes
+ * exist to stop.
  */
-const FLOOR = Number(process.argv[3] || 9);
+const FLOOR = Number(process.argv[3] || 10);
+
+/**
+ * Why a room can read zero and still be done.
+ *
+ * Named here rather than in a comment, so the reason is printed in the run
+ * and goes stale loudly: if one of these ever renders its cards, the line
+ * next to it stops being true and somebody reading the output will see it.
+ */
+const NEEDS = {
+  'The Booth': 'a recording — "the voices in this song" only exists once you have sung',
+  Soundboard: 'accounts configured; a trained sound belongs to one',
+  Live: 'the live tables; without them the room says so instead of drawing',
+  Podcast: 'a show set up, which needs the podcast tables',
+};
 
 const ROOMS = [
   'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard', 'Music video',
@@ -105,6 +116,45 @@ try {
     return false;
   };
 
+  /* ── A song on the device, before anything is counted ───────────────
+ 
+     Five rooms read zero on the first version of this and the comment above
+     explained why: they open on an empty state, so their cards never render.
+     An explanation is not a measurement. If the claim is "those rooms are
+     converted", the probe has to be able to see it, and the difference
+     between the two is one song in the library.
+ 
+     Written straight into storage rather than made: making one needs a key,
+     a probe that needs a paid account is a probe nobody runs, and what is
+     being measured here is the shape of the room rather than the engine. */
+  await p.evaluate(() => {
+    localStorage.setItem(
+      'futurebox.tracks.v1',
+      JSON.stringify([
+        {
+          id: 'cards-probe-song',
+          title: 'A song to open the rooms with',
+          genre: 'Amapiano',
+          bpm: 112,
+          key: 'A Minor',
+          lyrics: '[Verse 1]\nA line\nAnd another\n\n[Chorus]\nThe part that comes back',
+          style: 'warm, late night',
+          models: ['Backing'],
+          source: 'engine',
+          seconds: 60,
+          createdAt: '2026-09-01T10:00:00.000Z',
+          seed: 7,
+          parts: [
+            { name: 'Verse 1', seconds: 30, lines: ['A line', 'And another'] },
+            { name: 'Chorus', seconds: 30, lines: ['The part that comes back'] },
+          ],
+        },
+      ]),
+    );
+  });
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.waitForTimeout(2200);
+
   const rows = [];
 
   /* Spotlight first, and counted, because its four bars are Cards and leaving
@@ -132,7 +182,11 @@ try {
 
   console.log('\n  foldable cards per room:\n');
   for (const row of rows.slice().sort((a, b) => b.count - a.count)) {
-    console.log(`  ${String(row.count).padStart(2)}  ${row.room}${row.count ? `  —  ${row.titles.join(' · ')}` : ''}`);
+    const why = row.count === 0 ? NEEDS[row.room] : null;
+    console.log(
+      `  ${String(row.count).padStart(2)}  ${row.room}` +
+        (row.count ? `  —  ${row.titles.join(' · ')}` : why ? `  —  converted; needs ${why}` : '  —  nothing yet'),
+    );
   }
   const withCards = rows.filter((one) => one.count > 0);
   const total = rows.reduce((sum, one) => sum + one.count, 0);
@@ -140,6 +194,13 @@ try {
 
   check(`at least ${FLOOR} rooms carry the card shape`, withCards.length >= FLOOR,
     `${withCards.length} do`);
+  /* Every remaining zero has to be a room whose reason is written down. A new
+     room quietly appearing with no cards and no explanation is the one thing
+     this whole probe is here to catch. */
+  const unexplained = rows.filter((one) => one.count === 0 && !NEEDS[one.room]);
+  check('every room still on zero has a reason printed beside it',
+    unexplained.length === 0,
+    unexplained.map((one) => one.room).join(', ') || 'all four accounted for');
 
   /* ── And that a card actually folds ─────────────────────────────────
  
