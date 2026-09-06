@@ -24,7 +24,10 @@ import { Maximize2 } from 'lucide-react';
 import FollowWords from './FollowWords';
 import Note from './Note';
 import { peaksOf, type Peaks } from '../lib/peaks';
-import { lineAt, timelineOf, type Part } from '../lib/timeline';
+import { lineAt, timelineOf, type Part, type TimedLine } from '../lib/timeline';
+import { heardFor } from '../lib/lyrictime';
+import { readAudio } from '../lib/trackaudio';
+import { CREDITS, perMinute } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
 
@@ -83,16 +86,23 @@ export default function NowPlaying({
 
   const duration = peaks?.duration || audio?.duration || track.seconds || 0;
 
-  const timed = useMemo(() => {
+  /* Words written out by listening to the song, once somebody has asked for
+     them. They win over the plan when they exist, because they are what was
+     actually sung rather than what was sent. */
+  const [heard, setHeard] = useState<readonly TimedLine[] | null>(null);
+
+  const planned = useMemo(() => {
     const parts = (track.parts ?? []) as readonly Part[];
     if (!parts.length || !duration) return [];
     // A free preview is fifteen seconds of a song that was planned as three
     // minutes. Stretching the whole lyric sheet over it would put the last
     // chorus in the first few seconds, so it is not followed at all.
-    const planned = track.plannedSeconds ?? 0;
-    if (planned && duration < planned * PREVIEW_RATIO) return [];
+    const asPlanned = track.plannedSeconds ?? 0;
+    if (asPlanned && duration < asPlanned * PREVIEW_RATIO) return [];
     return timelineOf(parts, duration);
   }, [duration, track.parts, track.plannedSeconds]);
+
+  const timed = heard ?? planned;
 
   const current = timed.length ? lineAt(timed, at) : -1;
   /**
@@ -224,6 +234,12 @@ export default function NowPlaying({
           audio={audio}
           title={track.title}
           onClose={() => setFollowing(false)}
+          wordCost={perMinute(track.seconds, CREDITS.transcribe)}
+          askWords={async () => {
+            const blob = await readAudio(track.id);
+            const found = await heardFor(track, blob);
+            if (found.lines.length) setHeard(found.lines);
+          }}
         />
       )}
     </div>

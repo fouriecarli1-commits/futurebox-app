@@ -102,6 +102,11 @@ jobs:
       - name: A row can only claim its own file
         run: npm run check:ownedpath
 
+      # Transcription costs credits per minute, so paying twice for one answer
+      # is a bug nobody reports — they just stop pressing it.
+      - name: A song's words are written out once and kept
+        run: npm run check:heard
+
       # A screen gated on something it does not need is a feature nobody can
       # find; a row that looks pressable and is not wastes a press and teaches
       # somebody the app is broken. Both are invisible to a typecheck.

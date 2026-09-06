@@ -50,7 +50,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Camera, CameraOff, Circle, Download, Loader2, Square, X } from 'lucide-react';
+import { Camera, CameraOff, Circle, Download, Ear, Loader2, Square, X } from 'lucide-react';
 import { lineAt, type TimedLine } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
 import { downloadBlob, safeFilename } from '../lib/library';
@@ -60,15 +60,34 @@ export default function FollowWords({
   audio,
   title,
   onClose,
+  askWords,
+  wordCost,
 }: {
   lines: readonly TimedLine[];
   /** The element that is actually playing, so the words follow the sound. */
   audio: HTMLAudioElement | null;
   title: string;
   onClose: () => void;
+  /**
+   * Write the words out by listening to the song, where that is possible.
+   *
+   * Offered here rather than on the card outside, because here is where
+   * somebody finds out the words are missing: they came to sing along and the
+   * screen is empty. A button on the card would be a button about a problem
+   * they have not met yet.
+   *
+   * Absent when there is nothing to listen to — a song with no file on this
+   * device — and the screen then says what it can do instead of offering
+   * something that would fail.
+   */
+  askWords?: () => Promise<void>;
+  /** What that costs, so the press is informed. */
+  wordCost?: number;
 }): React.ReactElement {
   const { t } = useLang();
   const [at, setAt] = useState(0);
+  /** True while the song is being listened to. See `askWords`. */
+  const [asking, setAsking] = useState(false);
   const frame = useRef<number>(0);
 
   // Read from the element every frame rather than counting: a paused track, a
@@ -244,7 +263,53 @@ export default function FollowWords({
       </div>
 
       <div className="relative flex-1 flex flex-col items-center justify-center gap-6 px-6 text-center">
-        {current < 0 ? (
+        {/* No words at all — a song brought in from a file, or one made
+            without any.
+
+            The camera still works and that is the point: it films the person,
+            the song plays out loud, and the lines are an overlay. So this says
+            what is missing rather than pretending the screen is loading, and
+            offers the one thing that can fix it.
+
+            Honest about what it is before the money, not after. A transcriber
+            is built for speech, and singing with a band behind it is the
+            hardest case there is — somebody who knows that reads a rough
+            result as a draft, and somebody who does not reads it as the app
+            being broken. */}
+        {lines.length === 0 ? (
+          <div className="max-w-sm space-y-3">
+            <p className="text-xl text-zinc-500 leading-snug">
+              {t('play.noWords', 'This song has no words written down. The camera still works — film yourself to it.')}
+            </p>
+            {askWords && (
+              <>
+                <button
+                  type="button"
+                  disabled={asking}
+                  onClick={() => {
+                    setAsking(true);
+                    void askWords().finally(() => setAsking(false));
+                  }}
+                  className="mx-auto flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-100 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-50"
+                >
+                  {asking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ear className="h-4 w-4" />}
+                  {asking
+                    ? t('play.listening', 'Listening to it…')
+                    : t('play.writeWords', 'Listen to it and write the words out')}
+                  {typeof wordCost === 'number' && !asking && (
+                    <span className="text-zinc-500">· {wordCost}</span>
+                  )}
+                </button>
+                <p className="text-sm text-zinc-600 leading-snug">
+                  {t(
+                    'play.writeWordsWhy',
+                    'It is a transcriber built for speech, and singing over a band is the hardest thing you can give it. Expect a draft you tidy up, not a lyric sheet.',
+                  )}
+                </p>
+              </>
+            )}
+          </div>
+        ) : current < 0 ? (
           <p className="text-2xl text-zinc-600">{t('play.waiting', 'Waiting for the first line…')}</p>
         ) : (
           window_.map((index) => {

@@ -157,3 +157,135 @@ export async function timeFor(track: Track, audio: Blob | null): Promise<Timed> 
   }
   return { lines: even, how: 'spread' };
 }
+
+/* ── The top of the ladder, which nothing used to build ───────────────────
+ *
+ * `heard` has been in `Timing` since the ladder was written, `SongScreen`
+ * checks for it, and no code path ever produced one. The rung was declared and
+ * empty.
+ *
+ * It is filled here, and the reason is the case that needed it:
+ *
+ *   "Dit sal baie cool wees as iemand ook hulle eie liedjies kon oplaai om
+ *    daai presies funksie te vervul."
+ *
+ * A song this app made has a lyric sheet and needs times. A song somebody
+ * brought in from a file has neither, so every rung below this one returns
+ * nothing at all — `evenly` has no sheet to spread. Transcription is the only
+ * thing that answers both halves at once, which is why it is not a rung on
+ * that ladder so much as a source for it.
+ *
+ * ── What it costs, and being honest about what it is ─────────────────────
+ *
+ * Charged by the minute at the route, which is where the credits live. And it
+ * is a transcriber built for speech: on singing with a band behind it, it is
+ * the hardest case there is. The screen that offers this says so before the
+ * press rather than after the money — a person who knows it may come back
+ * rough will read the result as a draft, and a person who does not will read
+ * it as the app being broken.
+ */
+
+/** A gap this long between two words ends a line. About a breath. */
+const BREATH = 0.6;
+/** And no line runs longer than this, however fast somebody sings. */
+const LONGEST_LINE = 46;
+
+interface HeardWord {
+  readonly text?: unknown;
+  readonly start?: unknown;
+  readonly end?: unknown;
+  readonly type?: unknown;
+}
+
+/**
+ * Timestamped words, grouped into lines somebody can read off a screen.
+ *
+ * Broken on silence first and on length second. A transcriber answers with
+ * words, and a wall of words is not something anybody sings along to — the
+ * places a singer breathes are the places a line ends, and they are visible in
+ * the timings without anybody having to guess at grammar.
+ */
+export function linesFromWords(words: readonly HeardWord[]): TimedLine[] {
+  const said = words
+    .filter((one) => typeof one.text === 'string' && (one.text as string).trim().length > 0)
+    .filter((one) => one.type !== 'spacing' && one.type !== 'audio_event')
+    .map((one) => ({
+      text: (one.text as string).trim(),
+      start: Number(one.start) || 0,
+      end: Number(one.end) || Number(one.start) || 0,
+    }));
+
+  const lines: TimedLine[] = [];
+  let holding: typeof said = [];
+
+  const close = (): void => {
+    if (!holding.length) return;
+    lines.push({
+      text: holding.map((one) => one.text).join(' '),
+      /* One section, named for what this is. The sections on a made song come
+         from the composition plan; a transcript has no plan behind it and
+         inventing chorus headings out of repetition would be the app claiming
+         to have understood the song's shape. */
+      section: 'Heard',
+      opensSection: lines.length === 0,
+      start: holding[0].start,
+      end: holding[holding.length - 1].end,
+    });
+    holding = [];
+  };
+
+  for (const word of said) {
+    const previous = holding[holding.length - 1];
+    const gap = previous ? word.start - previous.end : 0;
+    const wouldBe = holding.map((one) => one.text).join(' ').length + word.text.length + 1;
+    if (previous && (gap >= BREATH || wouldBe > LONGEST_LINE)) close();
+    holding.push(word);
+  }
+  close();
+
+  return lines;
+}
+
+/**
+ * Ask what was actually sung, and keep the answer.
+ *
+ * Returns `none` rather than throwing: every caller of this is a screen with
+ * something else to show, and a transcription that did not happen is a missing
+ * convenience rather than a broken room.
+ *
+ * `fetcher` is a parameter so the grouping and the keeping can be checked
+ * without a network or a key — the part worth checking is what comes back out,
+ * not that `fetch` was called.
+ */
+export async function heardFor(
+  track: Track,
+  audio: Blob | null,
+  fetcher: (body: FormData) => Promise<Response> = (body) =>
+    fetch('/api/transcribe', { method: 'POST', body }),
+): Promise<Timed> {
+  if (!audio) return { lines: [], how: 'none' };
+
+  const remembered = kept()[track.id];
+  if (remembered?.how === 'heard' && remembered.lines.length) {
+    return { lines: remembered.lines, how: 'heard' };
+  }
+
+  try {
+    const body = new FormData();
+    body.append('file', audio, 'song.wav');
+    /* The length, so the route bills what the song is rather than what a
+       browser claims. It measures a WAV from its own header; for anything else
+       this is the only number there is. */
+    body.append('seconds', String(Math.max(0, Math.round(track.seconds || 0))));
+    const answer = await fetcher(body);
+    if (!answer.ok) return { lines: [], how: 'none' };
+    const said = (await answer.json()) as { words?: readonly HeardWord[] };
+    const lines = linesFromWords(said.words ?? []);
+    if (!lines.length) return { lines: [], how: 'none' };
+    const timed: Timed = { lines, how: 'heard' };
+    keep(track.id, timed);
+    return timed;
+  } catch {
+    return { lines: [], how: 'none' };
+  }
+}

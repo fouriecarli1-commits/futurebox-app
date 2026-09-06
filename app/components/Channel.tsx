@@ -21,6 +21,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Check, Copy, Download, Headphones, Image as ImageIcon, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, Video, X,
 } from 'lucide-react';
+import { CREDITS, perMinute } from '../lib/credits';
 import { accessToken } from '../lib/cloud';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
@@ -45,7 +46,7 @@ import SongScreen, { wordsFor } from './SongScreen';
 import Sleeve from './Sleeve';
 import { heardHere, markHeard } from '../lib/heard';
 import { signal } from '../lib/signal';
-import { timeFor } from '../lib/lyrictime';
+import { heardFor, timeFor } from '../lib/lyrictime';
 import Note from './Note';
 import Card from './Card';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
@@ -864,6 +865,18 @@ export default function Channel({
           audio={audioRef.current}
           title={lyricsFor.track.title}
           onClose={() => setLyricsFor(null)}
+          wordCost={perMinute(lyricsFor.track.seconds, CREDITS.transcribe)}
+          askWords={async () => {
+            /* Read off this device rather than passed in: the words screen is
+               opened from a card that may have been drawn before the audio
+               finished syncing, and the file is what the route needs. */
+            const blob = await readAudio(lyricsFor.track.id);
+            const heard = await heardFor(lyricsFor.track, blob);
+            if (!heard.lines.length) return;
+            setLyricsFor((was) =>
+              was && was.track.id === lyricsFor.track.id ? { ...was, lines: heard.lines } : was,
+            );
+          }}
         />
       )}
     </div>
