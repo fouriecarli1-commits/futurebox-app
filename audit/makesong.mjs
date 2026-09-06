@@ -110,6 +110,30 @@ try {
   await p.waitForTimeout(700);
   const says = async () => ((await room.innerText()) ?? '').replace(/\s+/g, ' ');
 
+  /* ── The card shape ─────────────────────────────────────────────────
+ 
+     `docs/PACKAGING.md` §2, read off the screenshots: a heading you can fold,
+     one box, and the options as small buttons underneath. Asserted on the two
+     cards that carry the room — the words and the sound — because a shape
+     that is only in a document is a shape that never arrives. */
+  const cards = room.locator('section > div > button[aria-expanded]');
+  check('the words and the sound are cards that fold',
+    (await cards.count()) >= 2, `${await cards.count()} foldable headings`);
+  /* The words box by its own placeholder, not "the first textarea in the
+     room". Folding the card removes it, and `.first()` then resolves to the
+     style box instead — so the check for "it is gone" found a different box,
+     still visible, and failed while the feature worked. */
+  const wordsBox = room.locator('textarea[placeholder*="Verse 1"]');
+  check('and the box inside one is open to start with', (await wordsBox.count()) === 1);
+  await cards.first().click();
+  await p.waitForTimeout(500);
+  check('pressing the heading folds it away', (await wordsBox.count()) === 0);
+  check('and says so rather than leaving an empty card',
+    (await says()).includes('Folded away'));
+  await cards.first().click();
+  await p.waitForTimeout(500);
+  check('and pressing it again brings the box back', (await wordsBox.count()) === 1);
+
   check('Simple asks how long the song should be', (await says()).includes('How long?'));
   /* Not "the words How long are on the page" — the buttons themselves, because
      a label over nothing pressable is the same bug in a different shape. */

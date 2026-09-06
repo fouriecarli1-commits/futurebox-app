@@ -2033,6 +2033,7 @@ export const STRINGS: Dict = {
   "video.alsoEn": { en: "and English under it", af: "en Engels daaronder" },
   "video.alsoAf": { en: "and Afrikaans under it", af: "en Afrikaans daaronder" },
   "video.noTranslate": { en: "The second line could not be written; the film was made without it.", af: "Die tweede reël kon nie geskryf word nie; die film is daarsonder gemaak." },
+  "card.shut": { en: "Folded away — press the heading to open it.", af: "Toegevou — druk die opskrif om dit oop te maak." },
   "radar.unknown": { en: "Unknown", af: "Onbekend" },
   "radar.tab.podcasts": { en: "Podcast Match", af: "Podcast-pas" },
   "radar.tab.live": { en: "TikTok Live Room", af: "TikTok Live-kamer" },

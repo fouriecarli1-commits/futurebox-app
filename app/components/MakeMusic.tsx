@@ -46,6 +46,7 @@ import { loadSounds, training, NO_SOUNDS, type Sounds } from '../lib/sounds';
 import { noteTaste } from '../lib/taste';
 import { looksAfrikaans, singDirection, type SingIn } from '../lib/lyriclang';
 import StyleFrom from './StyleFrom';
+import Card from './Card';
 import SongStarts from './SongStarts';
 import type { Mood } from '../data/songstarts';
 
@@ -732,14 +733,24 @@ export default function MakeMusic({
           />
         </div>
 
-        {/* The words, on the same page as the button that sings them. With a
-            real engine these are what gets sung; without one they still travel
-            with the track, so nothing typed here is lost. */}
-        <div>
-          <div className="flex items-baseline justify-between gap-3">
-            <label className="text-sm text-zinc-400">{t('make.words')}</label>
-            {canvas.style && <span className="text-sm text-emerald-400 truncate max-w-[60%]">{canvas.style}</span>}
-          </div>
+        {/* The words, in the card shape from `docs/PACKAGING.md` §2: a heading
+            you can fold, the one box, and everything else as small buttons
+            along the bottom. "elke opsie is klein buttons onder."
+
+            The words themselves are what gets sung with a real engine, and
+            without one they still travel with the track — so nothing typed
+            here is lost either way. */}
+        <Card
+          title={t('make.words')}
+          tools={
+            <LyricHelp
+              title={title}
+              style={canvas.style}
+              lyrics={lyrics}
+              onLyrics={setLyrics}
+            />
+          }
+        >
           <textarea
             value={lyrics}
             onChange={(e) => setLyrics(e.target.value)}
@@ -787,39 +798,29 @@ export default function MakeMusic({
             </div>
           )}
 
-          {/* Help with the words, beside the words. This used to be its own
-              screen, which meant the lyrics you were helped with lived
-              somewhere other than the box you generate from. */}
-          <div className="pt-2">
-            <LyricHelp
-              title={title}
-              style={canvas.style}
-              lyrics={lyrics}
-              onLyrics={setLyrics}
-            />
-          </div>
-        </div>
+        </Card>
 
         {/* The style field is the whole instrument: ElevenLabs Music has no
             genre setting and no voice picker, only a list of plain-English
-            directions. So this is open text, and the chips below add to it
-            rather than replacing it — twelve fixed buttons was a smaller
-            instrument than the model can play. */}
-        <div>
-          <div className="flex items-baseline justify-between gap-3">
-            <label className="text-sm text-zinc-400">{t('make.sound')}</label>
-            {canvas.style && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCanvas({ ...canvas, style: '' });
-                }}
-                className="text-sm text-zinc-500 hover:text-white"
-              >
-                {t('make.clear')}
-              </button>
-            )}
-          </div>
+            directions. So this is open text, and the small buttons underneath
+            add to it rather than replacing it — twelve fixed buttons was a
+            smaller instrument than the model can play. */}
+        <Card
+          title={t('make.sound')}
+          tools={
+            <>
+              {canvas.style && (
+                <button
+                  type="button"
+                  onClick={() => setCanvas({ ...canvas, style: '' })}
+                  className="rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-sm text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+                >
+                  {t('make.clear')}
+                </button>
+              )}
+            </>
+          }
+        >
           <textarea
             value={canvas.style}
             onChange={(e) => setCanvas({ ...canvas, style: e.target.value })}
@@ -882,7 +883,7 @@ export default function MakeMusic({
               }}
             />
           </div>
-        </div>
+        </Card>
 
         {/* A voice is described, not chosen — there is no voice parameter in the
             Music API. These words lean on breath, room and imperfection, because
