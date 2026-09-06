@@ -33,14 +33,16 @@ import History from './History';
 import Note from './Note';
 import { makeId, rememberMake } from '../lib/makes';
 import { signal } from '../lib/signal';
-import { timelineOf, type Part } from '../lib/timeline';
+import { partsOf, type TimedLine } from '../lib/timeline';
+import { timeFor, type Timing } from '../lib/lyrictime';
 import { downloadBlob, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { useLang } from '../lib/i18n';
+import { refusalText } from '../lib/apierror';
 import { useCopilotOps } from '../lib/copilotactions';
 
 export default function VideoPanel({ track, onClose }: { track: Track; onClose: () => void }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [aspect, setAspect] = useState<Aspect>('9:16');
   const [clipSeconds, setClipSeconds] = useState(15);
   const [startAt, setStartAt] = useState(0);
@@ -57,6 +59,35 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
    * honestly: the app wrote the plan, so it knows where each line lands.
    */
   const [withWords, setWithWords] = useState(true);
+  /** How the last film's lines were timed, so the room can say which it was. */
+  const [timedHow, setTimedHow] = useState<Timing | null>(null);
+  /**
+   * A second line, under the words, in another language.
+   *
+   * `null` means the song travels in its own language only, which is the
+   * default and is right for most of them. Offered only where this app has a
+   * model behind it — a chooser that cannot do anything is worse than none. */
+  const [alsoIn, setAlsoIn] = useState<'en' | 'af' | null>(null);
+  const [canTranslate, setCanTranslate] = useState(false);
+  const [translateProblem, setTranslateProblem] = useState('');
+  /* Whether there is anything to put on screen: a plan, or a lyric sheet the
+     ladder can read parts out of. */
+  /* Whether this app has a model behind it, asked rather than assumed. */
+  useEffect(() => {
+    let live = true;
+    void fetch('/api/translate')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((answer) => {
+        if (live && answer && typeof answer.available === 'boolean') setCanTranslate(answer.available);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const hasWords =
+    (track.parts ?? []).length > 0 || partsOf(track.lyrics ?? '').length > 0;
   const [url, setUrl] = useState<string | null>(null);
 
   /**
@@ -226,12 +257,52 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
     setError(null);
     setMade(null);
     try {
-      // The plan, scaled to the file's real length. Empty when the song has
-      // none — a sketch, or one made before plans were kept — and the
-      // visualiser runs on its own.
-      const parts = (track.parts ?? []) as readonly Part[];
-      const lyrics =
-        withWords && parts.length ? timelineOf(parts, track.seconds || 0) : [];
+      /* Where the words fall, worked out the same way the player works it
+         out — by listening to the file rather than by trusting the plan.
+
+         It used to be `timelineOf(parts, seconds)`: the plan, spread evenly
+         over the length. That is the roughest rung of the ladder in
+         `lib/lyrictime.ts`, and it is the one that put a chorus a bar early on
+         a release. The song player was taught to listen weeks ago; the video
+         was still using the spread, so the same song had its words in two
+         different places depending on which screen you were on.
+
+         This also opens it to songs with no plan at all — one brought in from
+         a file, or made before plans were kept — because the ladder can read
+         the parts out of a lyric sheet and then time them against the audio. */
+      const timed = withWords ? await timeFor(track, audio) : { lines: [], how: 'none' as const };
+      setTimedHow(timed.how);
+      let lyrics: readonly TimedLine[] = timed.lines;
+
+      /* And the second line, if one was asked for.
+
+         Fetched once for the whole song rather than per line, because the
+         ordering is the contract: the route answers one for one and refuses
+         when it cannot, and a per-line call would have no way to notice a
+         line that came back missing. A failure here loses the subtitle and
+         not the film. */
+      setTranslateProblem('');
+      if (alsoIn && lyrics.length) {
+        try {
+          const response = await fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lines: lyrics.map((one) => one.text), to: alsoIn }),
+          });
+          const answer = (await response.json().catch(() => null)) as
+            | { lines?: string[]; error?: string; message?: string }
+            | null;
+          if (response.ok && answer?.lines?.length === lyrics.length) {
+            lyrics = lyrics.map((one, i) => ({ ...one, also: answer.lines?.[i] ?? '' }));
+          } else {
+            setTranslateProblem(
+              refusalText(answer, lang, t('video.noTranslate', 'The second line could not be written; the film was made without it.')),
+            );
+          }
+        } catch {
+          setTranslateProblem(t('video.noTranslate', 'The second line could not be written; the film was made without it.'));
+        }
+      }
 
       const result = await renderVideo({
         audio,
@@ -470,10 +541,16 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
             </div>
           </div>
 
-          {/* Only offered where it can be done properly. A song with no plan
-              has no line timings, and guessing them would put the chorus in
-              the wrong place on somebody's release. */}
-          {(track.parts ?? []).length > 0 && (
+          {/* Offered wherever there are words at all.
+
+              It used to need a plan, because a plan was the only way to know
+              where a line lands. `lib/lyrictime.ts` listens to the file now —
+              it finds the phrases in the audio and hangs the lines on them,
+              and falls back to the plan and then to an even spread when it
+              cannot. So a song brought in from a file can carry its words too,
+              and the line under the button says which of the three it used
+              rather than letting all three look alike. */}
+          {hasWords && (
             <label className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5 cursor-pointer">
               <input
                 type="checkbox"
@@ -484,6 +561,51 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-zinc-200">{t('video.words')}</span>
                 <span className="block text-sm text-zinc-500 leading-snug">{t('video.wordsNote')}</span>
+                {/* Which rung of the ladder the last film used. Shown after
+                    the fact rather than promised before it: it depends on what
+                    could be heard in the file, and only the render knows. */}
+                {/* Which language the second line is in.
+
+                    Under the words rather than beside them, because it is a
+                    property of the words. Three choices and no more: the song
+                    on its own, or the song with English or Afrikaans under
+                    it — those are the two languages this app is written in and
+                    a longer list would be a list nobody has asked for. */}
+                {canTranslate && withWords && (
+                  <span className="flex flex-wrap items-center gap-1.5 pt-2">
+                    {([null, 'en', 'af'] as const).map((one) => (
+                      <button
+                        key={String(one)}
+                        type="button"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          setAlsoIn(one);
+                        }}
+                        className={`rounded-lg border px-2.5 py-1.5 text-sm ${
+                          alsoIn === one
+                            ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                            : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-600'
+                        }`}
+                      >
+                        {one === null
+                          ? t('video.onlySong', 'Its own language')
+                          : one === 'en'
+                            ? t('video.alsoEn', 'and English under it')
+                            : t('video.alsoAf', 'and Afrikaans under it')}
+                      </button>
+                    ))}
+                  </span>
+                )}
+                {translateProblem && (
+                  <span className="block pt-1 text-sm text-amber-300 leading-snug">{translateProblem}</span>
+                )}
+                {timedHow && timedHow !== 'none' && (
+                  <span className="block pt-1 text-sm text-emerald-400/90 leading-snug">
+                    {timedHow === 'heard' || timedHow === 'sung' || timedHow === 'phrases'
+                      ? t('video.wordsHeard', 'Last time, the lines were placed by listening to the song.')
+                      : t('video.wordsSpread', 'Last time, the lines were spread evenly — nothing clear enough to listen to.')}
+                  </span>
+                )}
               </span>
             </label>
           )}

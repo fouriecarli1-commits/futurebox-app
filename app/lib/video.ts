@@ -211,12 +211,30 @@ function drawFrame(
     });
     context.globalAlpha = 1;
 
+    /* The same line in another language, under it.
+
+       Smaller and dimmer, because it is a subtitle rather than the lyric: the
+       song is in the language it is in and this is here so somebody who does
+       not speak it can still follow. Drawn before the next line so the two
+       never overlap on a long wrap. */
+    let under = wrapped.length;
+    if (words.also) {
+      const alsoSize = Math.round(size * 0.55);
+      context.font = `600 ${alsoSize}px -apple-system, "Segoe UI", Roboto, sans-serif`;
+      context.fillStyle = 'rgba(255,255,255,0.62)';
+      const alsoWrapped = wrap(context, words.also, width * 0.84);
+      alsoWrapped.forEach((line, i) => {
+        context.fillText(line, width / 2, height * 0.4 + (wrapped.length + i) * size * 1.25 + size * 0.35);
+      });
+      under += alsoWrapped.length;
+    }
+
     // The next line, held back, so a singer can see what is coming.
     const next = lyrics[current + 1];
     if (next && next.section === words.section) {
       context.fillStyle = 'rgba(255,255,255,0.3)';
       context.font = `600 ${Math.round(size * 0.6)}px -apple-system, "Segoe UI", Roboto, sans-serif`;
-      context.fillText(next.text.slice(0, 60), width / 2, height * 0.4 + wrapped.length * size * 1.25 + size * 0.5);
+      context.fillText(next.text.slice(0, 60), width / 2, height * 0.4 + under * size * 1.25 + size * 0.5);
     }
   }
 

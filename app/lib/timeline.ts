@@ -30,6 +30,14 @@ export interface TimedLine {
   readonly opensSection: boolean;
   readonly start: number;
   readonly end: number;
+  /**
+   * The same line in another language, for a film that has to travel.
+   *
+   * Optional, and absent everywhere except a music video that was asked for
+   * it. Drawn under the line rather than instead of it: the song is in the
+   * language it is in, and this is a subtitle rather than a replacement.
+   */
+  readonly also?: string;
 }
 
 /** Splits a lyric sheet on its [Section] tags. No timing, just the shape. */

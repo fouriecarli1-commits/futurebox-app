@@ -56,7 +56,8 @@
     "check:staysignedin": "node audit/staysignedin.mjs",
     "check:liveroom": "node audit/liveroom.mjs",
     "check:photo": "tsx scripts/check-photo.mts",
-    "check:photosong": "node audit/photosong.mjs"
+    "check:photosong": "node audit/photosong.mjs",
+    "check:videowords": "node audit/videowords.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
