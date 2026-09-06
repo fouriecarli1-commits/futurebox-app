@@ -11,6 +11,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
+import Note from './Note';
 import { useLang } from '../lib/i18n';
 import {
   Mic, Radio, Music, Send, Copy, Check, ExternalLink, Users, Sparkles,
@@ -184,15 +185,24 @@ export default function CollabRadar({
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
+        {/* `min-w-0`, because the clipped line inside `Note` only clips when
+            its ancestors let it. A flex item defaults to `min-width: auto`,
+            which is the width of its longest unbreakable content — so the
+            truncation did nothing and the header pushed the room 840 pixels
+            wide. Found by `check:wide` in the same commit that added it. */}
+        <div className="min-w-0 flex-1">
           <h4 className="text-sm font-extrabold text-white flex items-center space-x-2">
             <Handshake className="w-4 h-4 text-cyan-400" />
             <span>{t('radar.heading', "Collab Radar")}</span>
           </h4>
-          <p className="text-sm text-zinc-400 max-w-2xl leading-relaxed pt-1">
+          {/* How the room works, on the same terms as every other explanation
+              in this app: one clipped line and a mark on a phone. It was four
+              lines of grey above the first match, in the room whose whole job
+              is the matches. */}
+          <Note className="text-sm text-zinc-400 max-w-2xl leading-relaxed pt-1">
             {t('radar.how', 'Matches are worked out from what you have released — {genres} — and scored on tempo, key and shared subjects. Nothing here contacts anybody: every pitch is a draft you read, edit and send yourself.')
               .replace('{genres}', profile.genres.join(', ') || t('radar.noReleases', 'nothing released yet'))}
-          </p>
+          </Note>
         </div>
         <div className="text-[13px] text-zinc-500 bg-zinc-900/80 border border-zinc-800 rounded-lg px-2.5 py-1.5">
           {/* One follower is not "1 followers". The count decides the word,
@@ -329,12 +339,12 @@ export default function CollabRadar({
                 <Search className="w-3.5 h-3.5 text-cyan-400" />
                 <span>{t('radar.addShow', "Add a show you found yourself")}</span>
               </p>
-              <p className="text-[13px] text-zinc-500 leading-relaxed">
+              <Note className="text-[13px] text-zinc-500 leading-relaxed">
                 {t(
                   'radar.addShowWhy',
                   'The best targets are shows your size that nobody has pitched yet. FutureBox does not scrape podcast directories — add the ones you find and they join the ranking.',
                 )}
-              </p>
+              </Note>
               <div className="flex gap-2">
                 <input
                   value={ownTargetName}

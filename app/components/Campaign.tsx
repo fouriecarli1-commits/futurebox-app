@@ -264,12 +264,16 @@ export default function Campaign({
           <Megaphone className="w-5 h-5 text-emerald-400" />
           {t('ads.title', 'Adverts')}
         </h2>
-        <p className="text-sm text-zinc-400 pt-1 max-w-2xl leading-relaxed">
+        {/* The room's own sentence, on the same terms as every other
+            explanation here: one clipped line and a mark on a phone, the whole
+            thing on a desk. It was three lines of grey above the first
+            control. */}
+        <Note className="text-sm text-zinc-400 pt-1 max-w-2xl leading-relaxed">
           {t(
             'ads.what',
             'Say what you are selling and it writes the adverts — the line, the words under it, the button, and the shot to film. Then it hands each one to the desk that makes it.',
           )}
-        </p>
+        </Note>
       </div>
 
       <Steps steps={STEPS} at={ads.length ? 3 : what.trim() ? 1 : 0} />

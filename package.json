@@ -57,7 +57,8 @@
     "check:liveroom": "node audit/liveroom.mjs",
     "check:photo": "tsx scripts/check-photo.mts",
     "check:photosong": "node audit/photosong.mjs",
-    "check:videowords": "node audit/videowords.mjs"
+    "check:videowords": "node audit/videowords.mjs",
+    "check:writing": "node audit/writing.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

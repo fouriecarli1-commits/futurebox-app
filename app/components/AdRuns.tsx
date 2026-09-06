@@ -290,12 +290,12 @@ export default function AdRuns({
 
       {/* Said plainly, because a calendar that quietly fails to notify is
           worse than a list somebody knows to check. */}
-      <p className="text-xs text-zinc-600 leading-relaxed">
+      <Note className="text-xs text-zinc-600 leading-relaxed">
         {t(
           'run.noReminder',
           'Nothing is sent from here — this is a list you check, not a reminder. It is kept on this device.',
         )}
-      </p>
+      </Note>
     </section>
   );
 }

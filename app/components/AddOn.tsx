@@ -24,7 +24,7 @@
  */
 
 import React, { useState } from 'react';
-import { Lock, Check, Loader2, Sparkles } from 'lucide-react';
+import { ChevronDown, Lock, Check, Loader2, Sparkles } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { MARKETING, MARKETING_INCLUDES } from '../lib/addons';
 import { startCheckout } from '../lib/purchases';
@@ -42,6 +42,20 @@ export default function AddOn({
   const { t } = useLang();
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  /**
+   * Shut, until somebody wants to know.
+   *
+   * This panel is the single biggest thing on the advert desk — measured at
+   * about half of the room's prose before anybody had pressed anything, in a
+   * room whose job is writing an advert rather than buying one. That is a
+   * sales page standing in front of a tool.
+   *
+   * Not folded behind a hint mark, which is for explaining a control: this is
+   * an offer, and an offer reduced to a question mark is an offer nobody
+   * takes. A name, a price and a chevron — which is what the screenshots do
+   * with everything — leaves it findable and stops it being the room.
+   */
+  const [open, setOpen] = useState(false);
 
   const rand = priceOf(what, MARKETING, 199);
 
@@ -56,24 +70,41 @@ export default function AddOn({
 
   return (
     <section className="rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 to-transparent p-5 space-y-4">
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
-          <Sparkles className="w-5 h-5 text-emerald-400" />
-        </div>
-        <div className="min-w-0">
-          <h3 className="text-lg font-black text-white tracking-tight leading-tight">
+      {/* The whole panel opens from its own heading, so the price is visible
+          shut and the case for it is one press away. */}
+      <button
+        type="button"
+        onClick={() => setOpen((was) => !was)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 text-left"
+      >
+        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/15">
+          <Sparkles className="h-5 w-5 text-emerald-400" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-lg font-black leading-tight tracking-tight text-white">
             {t('addon.title', 'The marketing desk')}
-          </h3>
-          <p className="text-sm text-zinc-400 leading-relaxed">
-            {t(
-              'addon.pitch',
-              'An advert is the easy half. This is the other half: what you are actually selling, who buys it, what they are deciding between, and a week of posting with the days, the times and the platforms written down.',
-            )}
-          </p>
-        </div>
-      </div>
+          </span>
+          <span className="block text-sm text-zinc-400">
+            R{rand} {t('addon.perMonth', 'a month')}
+          </span>
+        </span>
+        <ChevronDown
+          className={`h-5 w-5 flex-shrink-0 text-zinc-400 transition-transform ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {open && (
+        <p className="text-sm text-zinc-400 leading-relaxed">
+          {t(
+            'addon.pitch',
+            'An advert is the easy half. This is the other half: what you are actually selling, who buys it, what they are deciding between, and a week of posting with the days, the times and the platforms written down.',
+          )}
+        </p>
+      )}
 
       {/* ── What is in it ─────────────────────────────────────────────── */}
+      {open && (
       <ul className="space-y-1.5">
         {MARKETING_INCLUDES.map((key) => (
           <li key={key} className="flex items-start gap-2 text-sm text-zinc-300 leading-snug">
@@ -82,24 +113,29 @@ export default function AddOn({
           </li>
         ))}
       </ul>
+      )}
 
       {/* ── What stays free, said before the price ─────────────────────
           Somebody reading a price is working out what they lose by saying no.
           Answering that first is honest and it is also the thing that stops
           this reading as a hostage note. */}
-      <p className="text-xs text-zinc-500 leading-relaxed border-t border-zinc-800 pt-3">
-        {t(
-          'addon.stillFree',
-          'The brief and the advert writer above stay open on every plan, including the free one. This add-on is the planning and the scheduling around them.',
-        )}
-      </p>
+      {open && (
+        <p className="text-xs text-zinc-500 leading-relaxed border-t border-zinc-800 pt-3">
+          {t(
+            'addon.stillFree',
+            'The brief and the advert writer above stay open on every plan, including the free one. This add-on is the planning and the scheduling around them.',
+          )}
+        </p>
+      )}
 
       {/* ── The price ─────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-3 pt-1">
-        <div>
-          <p className="text-2xl font-black text-white tabular-nums leading-none">R{rand}</p>
-          <p className="text-xs text-zinc-500">{t('addon.perMonth', 'a month')}</p>
-        </div>
+        {open && (
+          <div>
+            <p className="text-2xl font-black text-white tabular-nums leading-none">R{rand}</p>
+            <p className="text-xs text-zinc-500">{t('addon.perMonth', 'a month')}</p>
+          </div>
+        )}
         <button
           type="button"
           onClick={() => void buy()}
