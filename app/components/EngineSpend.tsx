@@ -21,12 +21,33 @@
  * `engines`. So for every other account this renders null, and it does that
  * by having nothing rather than by checking a list — the list never reaches
  * a browser, which is the rule in `server/owners.ts`.
+ *
+ * ── Why it says whose it is, out loud ────────────────────────────────────
+ *
+ *   "Hoekom moet die elevenlabs en kling in my profile wys? Is dit 'n moet of
+ *    kan ons dit heeltemal uithaal?"
+ *
+ * Because she set OWNER_EMAIL and became the owner, and this appeared. From
+ * her side it read as the app deciding to put two suppliers' names on her
+ * profile; from the code's side it is her own bill, on the screen where she
+ * deals with the account, seen by nobody else.
+ *
+ * Both of those were true and only one of them was on the screen. So the card
+ * says it: nobody else can see this, and it is what the engines cost *her*
+ * this month. It folds away, because a running total is a thing to check
+ * rather than a thing to be shown, and it starts folded for the same reason.
+ *
+ * It is not a "must" in any sense — no law needs it and no member sees it. It
+ * is the only place in the app that says what the month is costing, which is
+ * the argument for keeping it and is hers to overrule.
  */
 
 import React, { useEffect, useState } from 'react';
 import { Gauge } from 'lucide-react';
 import { probeVideoEngine, type VideoGrades } from '../lib/engines';
 import { useLang } from '../lib/i18n';
+import Card from './Card';
+import Note from './Note';
 
 export default function EngineSpend(): React.ReactElement | null {
   const { t } = useLang();
@@ -46,11 +67,17 @@ export default function EngineSpend(): React.ReactElement | null {
   if (!engines.length) return null;
 
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
-      <p className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-        <Gauge className="w-4 h-4 text-emerald-400" />
-        {t('spend.engines', 'What the engines have used this month')}
-      </p>
+    <Card
+      title={t('spend.engines', 'What the engines have used this month')}
+      icon={<Gauge className="h-4 w-4" />}
+      startShut
+    >
+      <Note>
+        {t(
+          'spend.yoursOnly',
+          'Only you see this. It is what your own engine accounts have used this month — nobody else who signs in has this card at all, and it is here because this is the screen where you deal with the account.',
+        )}
+      </Note>
       {engines.map((one) => (
         <div key={one.id} className="space-y-1.5">
           <p className="text-sm text-zinc-400">
@@ -72,6 +99,6 @@ export default function EngineSpend(): React.ReactElement | null {
           </div>
         </div>
       ))}
-    </section>
+    </Card>
   );
 }

@@ -96,6 +96,58 @@ export const PLATFORMS: readonly Platform[] = [
     maxHashtags: 0,
     connectRequires: 'Distribution through a distributor; Spotify has no upload API for artists.',
   },
+  /* The three she added: "youtube, tiktok, facebook, vimeo, spotify, apple
+     music, soundcloud, alles sal kan connect."
+
+     `connectRequires` stays as honest here as it is above. None of the seven
+     can be posted to from this app today and saying otherwise on a page of
+     connection buttons would be the exact lie `ShareRow` was written to
+     avoid — what a handle does is make the link right and put the name on a
+     post, which is real and is all that is claimed. */
+  {
+    id: 'facebook',
+    name: 'Facebook',
+    profileUrl: 'https://www.facebook.com/{handle}',
+    composerUrl: 'https://www.facebook.com/',
+    shareIntent: null,
+    bestFormat: '9:16 Reels, or 1:1 in feed',
+    hookWindow: 'the first 3 seconds',
+    maxHashtags: 3,
+    connectRequires: 'Facebook Graph API through a reviewed app, a Page rather than a profile, and pages_manage_posts.',
+  },
+  {
+    id: 'vimeo',
+    name: 'Vimeo',
+    profileUrl: 'https://vimeo.com/{handle}',
+    composerUrl: 'https://vimeo.com/upload',
+    shareIntent: null,
+    bestFormat: '16:9, any length',
+    hookWindow: 'the first 10 seconds',
+    maxHashtags: 3,
+    connectRequires: 'Vimeo API with the upload scope, which needs a paid plan and an approved app.',
+  },
+  {
+    id: 'applemusic',
+    name: 'Apple Music',
+    profileUrl: 'https://music.apple.com/profile/{handle}',
+    composerUrl: 'https://artists.apple.com/',
+    shareIntent: null,
+    bestFormat: 'Released track',
+    hookWindow: 'the first 30 seconds',
+    maxHashtags: 0,
+    connectRequires: 'Distribution through a distributor; there is no upload API for artists.',
+  },
+  {
+    id: 'soundcloud',
+    name: 'SoundCloud',
+    profileUrl: 'https://soundcloud.com/{handle}',
+    composerUrl: 'https://soundcloud.com/upload',
+    shareIntent: null,
+    bestFormat: 'The track itself',
+    hookWindow: 'the first bar',
+    maxHashtags: 3,
+    connectRequires: 'Their upload API has been closed to new applications for years.',
+  },
 ];
 
 /**

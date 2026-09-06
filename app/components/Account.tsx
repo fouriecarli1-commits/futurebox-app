@@ -31,6 +31,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, Loader2 } from 'lucide-react';
 import RecordingName from './RecordingName';
+import Connections from './Connections';
 import DeleteAccount from './DeleteAccount';
 import EngineSpend from './EngineSpend';
 import type { Creator } from '../lib/radar';
@@ -157,6 +158,18 @@ export default function Account({
             nowhere to change it; the one on their releases was somewhere else
             entirely. Both are this. */}
         <RecordingName onSaved={(row) => onNamed?.(row)} compact />
+
+        {/* ── Where else you are ─────────────────────────────────────────
+
+            "ek dink binne iemand se profile moet al die connection buttons
+             wees."
+
+            They were inside the Collab Radar, behind a panel about how
+            matches are computed. That is a fine place to be reminded a handle
+            makes a link work and a strange place for the only screen in the
+            app where somebody says who they are elsewhere. Directly under the
+            name their work goes out under, which is the thing it is about. */}
+        <Connections />
 
         {/* ── The plan ───────────────────────────────────────────────────── */}
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">

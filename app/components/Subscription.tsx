@@ -72,8 +72,26 @@ export default function Subscription(): React.ReactElement | null {
     void load();
   }, [load]);
 
-  // Nothing to show somebody who is not paying anything.
-  if (!state.subscribed) return null;
+  /* Somebody who is not paying anything.
+ 
+     This used to render nothing at all, which is defensible — there is no
+     subscription to cancel — and is exactly why Carli asked "waar is die
+     unsubscribe button?". A person looking for the way out of a payment does
+     not conclude "I must not have one" from an absence; they conclude the
+     button is hidden, which is the reputation this panel exists to avoid.
+ 
+     So it says so. One line, and it names where a charge would show if there
+     ever were one. */
+  if (!state.subscribed) {
+    return (
+      <p className="text-sm text-zinc-500 leading-snug">
+        {t(
+          'sub.none',
+          'You are not on a paid plan, so there is nothing to cancel. If you ever are, the button to end it is here, on this screen.',
+        )}
+      </p>
+    );
+  }
 
   const when = state.nextPaymentAt ? new Date(state.nextPaymentAt).toLocaleDateString() : null;
 

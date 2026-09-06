@@ -606,37 +606,43 @@ export default function CollabRadar({
               </div>
             )}
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 [&>*]:min-w-0">
+            {/* The fields themselves are on the profile now, which is where
+                somebody looks for their own names. One set, in one place: two
+                editors over one storage key is how the two quietly disagree
+                about what was saved last. What stays here is what this room
+                needs — which of them are filled in, and a way to get to the
+                rest. */}
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
               {SOCIAL_PLATFORMS.map((pf) => {
                 const url = profileUrlFor(pf, handles[pf.id] ?? '');
                 return (
-                  <div key={pf.id} className="space-y-1">
-                    <label className="text-sm text-zinc-400">{pf.name}</label>
-                    <input
-                      value={handles[pf.id] ?? ''}
-                      onChange={(e) => {
-                        const next = { ...handles, [pf.id]: e.target.value };
-                        setHandles(next);
-                        saveHandles(next);
-                      }}
-                      placeholder={t("radar.handleHint", "handle or paste your profile URL")}
-                      className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
-                    />
-                    {url && (
+                  <div
+                    key={pf.id}
+                    className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-sm text-zinc-400">{pf.name}</span>
+                    {url ? (
                       <a
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-cyan-400 hover:underline flex items-center gap-1 truncate"
+                        className="flex flex-shrink-0 items-center gap-1 text-sm text-emerald-400 hover:underline"
                       >
-                        {url.replace(/^https:\/\//, '')}
-                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                        {handles[pf.id]}
+                        <ExternalLink className="h-3 w-3 flex-shrink-0" />
                       </a>
+                    ) : (
+                      <span className="flex-shrink-0 text-sm text-zinc-600">
+                        {t('radar.notSet', 'not set')}
+                      </span>
                     )}
                   </div>
                 );
               })}
             </div>
+            <p className="text-sm text-zinc-500 leading-snug">
+              {t('radar.handlesOnProfile', 'These are set on your profile, under “Where else you are”.')}
+            </p>
             <p className="text-sm text-zinc-500">{t('radar.onDevice', "Saved on this device.")}</p>
           </div>
 
