@@ -107,6 +107,62 @@ try {
      being full screen — so the wrapper this waits on is correctly empty. */
   await page.waitForSelector('#mounted[data-ready="yes"]', { state: 'attached' });
 
+  /* Can she read the line she is meant to sing?
+     
+     The one property this screen exists for, and the one nothing measured.
+     `text-white` is remapped onto `--fb-ink` — near-black, the ink colour for
+     a light page — so over the scrim the sung line measured a contrast ratio
+     of 1.02 and was invisible, while the lines she is *not* singing use a
+     remapped `zinc` that lands light and measured 8.79. The screen therefore
+     looked like it was working, with only the middle line missing.
+     
+     Measured rather than eyeballed: on a screenshot a 1.02 on near-black is a
+     smudge that reads as a design choice. */
+  const readable = await page.evaluate(() => {
+    const lum = (colour) => {
+      const [r, g, b] = colour.match(/\d+/g).slice(0, 3).map(Number).map((v) => {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const behind = (el) => {
+      let at = el;
+      while (at) {
+        const bg = getComputedStyle(at).backgroundColor;
+        if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') return bg;
+        at = at.parentElement;
+      }
+      return 'rgb(255, 255, 255)';
+    };
+    const ratio = (el) => {
+      const a = lum(getComputedStyle(el).color);
+      const b = lum(behind(el));
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    };
+    const lines = Array.from(document.querySelectorAll('p')).filter((el) => el.innerText.trim());
+    const sung = lines
+      .map((el) => ({ el, size: parseFloat(getComputedStyle(el).fontSize) }))
+      .sort((a, b) => b.size - a.size)[0];
+    if (!sung) return null;
+    return {
+      text: sung.el.innerText.trim(),
+      ratio: Math.round(ratio(sung.el) * 100) / 100,
+      others: lines.filter((el) => el !== sung.el).map((el) => Math.round(ratio(el) * 100) / 100),
+    };
+  });
+
+  check(
+    'the line being sung can actually be read',
+    Boolean(readable) && readable.ratio >= 4.5,
+    readable ? `contrast ${readable.ratio} on "${readable.text.slice(0, 28)}"` : 'no line found',
+  );
+  check(
+    'and it is the most readable thing on the screen, not the least',
+    Boolean(readable) && readable.others.every((one) => one <= readable.ratio),
+    readable ? `sung ${readable.ratio} against ${readable.others.join(', ')}` : 'no line found',
+  );
+
   const film = page.getByRole('button', { name: 'Film yourself' });
   await film.click();
 

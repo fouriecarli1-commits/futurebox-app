@@ -345,11 +345,22 @@ export default function FollowWords({
           type="button"
           onClick={onClose}
           aria-label={t('play.close', 'Close')}
-          className="text-zinc-600 hover:text-white flex-shrink-0"
+          /* `hover:text-white` here would have hidden the way out under the
+             pointer, for the same reason as the line above. */
+          className="flex-shrink-0 opacity-75 hover:opacity-100"
+          style={{ color: '#ffffff' }}
         >
           <X className="w-6 h-6" />
         </button>
-        <p className="min-w-0 flex-1 truncate text-sm text-zinc-500">{title}</p>
+        {/* On the scrim, and over the camera once it is on, so a literal
+            rather than a palette grey: 2.49 measured, which is under the 4.5
+            a person needs for small text. */}
+        <p
+          className="min-w-0 flex-1 truncate text-sm"
+          style={{ color: 'rgba(255,255,255,0.72)' }}
+        >
+          {title}
+        </p>
       </div>
 
       <div className="relative flex-1 flex flex-col items-center justify-center gap-6 px-6 text-center">
@@ -413,13 +424,34 @@ export default function FollowWords({
             if (!line) return <span key={index} className="block h-8" />;
             const now = index === current;
             return (
+              /* The line being sung is a literal white with a shadow, not
+                 `text-white`.
+
+                 Tailwind's `white` is remapped onto `--fb-ink`, which is
+                 19 18 17 — near-black, because it is the ink colour for a
+                 light page. Over `bg-scrim` (17 16 14) that measures a
+                 contrast ratio of 1.02: the one line she is actually meant to
+                 read was invisible, on the screen whose entire job is to show
+                 it to her while she films herself.
+
+                 It went unnoticed because it fails in the direction nobody
+                 checks. The lines she is *not* singing use `text-zinc-700`,
+                 and `zinc` is remapped onto the surface family, which is light
+                 here — they measure 8.79 and look right. So the screen reads
+                 as working: there are words on it, they move, and the only one
+                 missing is the one in the middle.
+
+                 `LiveChannel` carries this same note and the same fix. */
               <p
                 key={`${index}-${line.start}`}
                 className={`transition-all duration-300 leading-tight ${
-                  now
-                    ? 'text-3xl sm:text-5xl font-black text-white'
-                    : 'text-xl sm:text-2xl text-zinc-700'
+                  now ? 'text-3xl sm:text-5xl font-black' : 'text-xl sm:text-2xl text-zinc-700'
                 }`}
+                style={
+                  now
+                    ? { color: '#ffffff', textShadow: '0 2px 12px rgba(0,0,0,0.9)' }
+                    : undefined
+                }
               >
                 {line.text}
               </p>
@@ -540,7 +572,10 @@ export default function FollowWords({
           </p>
         )}
 
-        <p className="text-sm text-zinc-600 text-center leading-snug">
+        <p
+          className="text-sm text-center leading-snug"
+          style={{ color: 'rgba(255,255,255,0.62)' }}
+        >
           {t(
             'play.followNote',
             'The sections are timed from the plan the app wrote. Inside a section the lines are spread evenly, so one can land a second or two out.',
