@@ -27,13 +27,20 @@ import { chromium } from 'playwright';
 
 const PORT = process.argv[2] || '3181';
 /**
- * How many rooms carry at least one foldable card. Only ever goes up.
+ * How many screens carry at least one foldable card. Only ever goes up.
  *
- * Eight, after this pass: Your voice (3), Collab Radar (3 + the room's 2 and
- * the invite's 1), Podcast (1 + the two-hosts panel), Live (1). Make a song
- * has had its two since the shape was written.
+ * Five, measured rather than assumed: Spotlight (4 bars), Collab Radar (4),
+ * Your voice (3), Make a song (2), Channel (1). Several rooms have had panels
+ * converted — the podcast channel and episode, the two dubbing panels, the
+ * transcript, the sound trainer, Live's "put something in" — and show zero
+ * here because the panel is behind a state this probe does not reach: a show
+ * that has been set up, a recording in progress, a song already chosen.
+ *
+ * That gap is why the number is printed per screen rather than as one total.
+ * A single figure would have read as "nine rooms are not done" when the truth
+ * is "nine rooms are partly done and this probe cannot see the rest".
  */
-const FLOOR = Number(process.argv[3] || 6);
+const FLOOR = Number(process.argv[3] || 5);
 
 const ROOMS = [
   'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard', 'Music video',
@@ -96,6 +103,16 @@ try {
   };
 
   const rows = [];
+
+  /* Spotlight first, and counted, because its four bars are Cards and leaving
+     them out made the total wrong in a commit message before anybody noticed.
+     It is not a studio room, so it is measured on its own terms: the bars are
+     on the page rather than inside the room overlay. */
+  await bar.locator('button').filter({ hasText: 'Spotlight' }).first().click().catch(() => undefined);
+  await p.waitForTimeout(1600);
+  const onSpotlight = await p.locator('section > div > button[aria-expanded]').allInnerTexts().catch(() => []);
+  rows.push({ room: 'Spotlight', count: onSpotlight.length, titles: onSpotlight.map((one) => one.trim()) });
+
   for (const room of ROOMS) {
     if (!(await intoRoom(room))) {
       problems.push(`${room}: no way in`);

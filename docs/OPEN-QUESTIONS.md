@@ -320,6 +320,22 @@ or keep both is a decision nobody has made.
 
 ---
 
+## A correction, kept where corrections belong
+
+`df2994b`'s message says "check:cards — 14 cards across 5 rooms now, up from
+10 across 4". That number was written before the probe was run and it was
+wrong: the run said 4 rooms, because Spotlight is not one of the thirteen
+studio rooms the probe walks, so its four new bars were not counted at all.
+
+The probe counts Spotlight now and the true figure is **13 cards across 5 of
+14 screens**. The commit is on `main` and its message is not being rewritten
+for one wrong sentence; this is the record instead.
+
+It is worth saying why it matters more here than it would elsewhere. The
+whole argument for these probes is that a claim gets measured rather than
+asserted — and a measured number quoted from memory is just an assertion
+wearing the probe's clothes.
+
 ## Settled
 
 | What | When | Where |
@@ -359,3 +375,11 @@ or keep both is a decision nobody has made.
 | The card shape: a chevron, a box, small buttons under | 2026-09-05 | `2161e68` |
 | The account is asked about voice conversion | 2026-09-05 | `644091c` |
 | The legal page proved right for both ways of selling | 2026-09-05 | `4d87b57` |
+| A song can be downloaded from the channel | 2026-09-06 | `8fcf9c7` |
+| A style off a link, reading the name and saying so | 2026-09-06 | `8fcf9c7` |
+| The card shape in nine more panels, coverage counted | 2026-09-06 | `3bb51d8` |
+| Post it is a sheet; every song reaches Live | 2026-09-06 | `76517ed` |
+| The radar introduces people, shuffled daily | 2026-09-06 | `01eafa5` |
+| Every word Afrikaans, with a check that holds it | 2026-09-06 | `0e1b516` |
+| Three fabricated masterclasses deleted | 2026-09-06 | `6fb25e6` |
+| Spotlight's bars, on plays that are really counted | 2026-09-06 | `df2994b` |
