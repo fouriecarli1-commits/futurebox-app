@@ -96,6 +96,14 @@ jobs:
       - name: Every export reads back at the amount it says
         run: npm run check:adreport
 
+      # Three cards on the landing page put two real people's names on talks
+      # they never gave and invented a third instructor, under a badge
+      # reading "Verified", with two of them behind a paywall. The rule was
+      # written at the top of the data file the whole time and the page drew
+      # its own cards underneath it.
+      - name: Nobody's name on a talk they did not give
+        run: npm run check:masterclasses
+
       # The link bar takes a URL a stranger typed. It must never fetch that
       # URL — only the oEmbed endpoint of a host on a closed list. A route
       # that fetched whatever arrived would be an open proxy inside the

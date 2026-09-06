@@ -91,6 +91,13 @@ export const PROVENANCE_NOTES: Record<Provenance, string> = {
 };
 
 /**
+ * Nothing here is `proOnly` unless it has a `url`.
+ *
+ * Three of these were sold and unmade — a Pro badge on a class whose own
+ * status field said `planned`. `npm run check:masterclasses` fails on it now,
+ * along with the rest of the rule at the top of this file, because a rule in
+ * a comment is a rule until somebody is in a hurry.
+ *
  * Curated entries are real, published lectures. The list is deliberately short —
  * a shelf of ten things worth watching beats a hundred nobody has vetted, and
  * every addition has to be watched by a person first.
@@ -229,7 +236,6 @@ export const MASTERCLASSES: readonly Masterclass[] = [
     minutes: 45,
     outcome: 'Plan a music video as one visual treatment rather than a reel of pretty shots.',
     url: '',
-    proOnly: true,
   },
   {
     id: 'mc-stack-map',
@@ -266,7 +272,6 @@ export const MASTERCLASSES: readonly Masterclass[] = [
     minutes: 22,
     outcome: 'Spot the three failure classes that generated code produces most often.',
     url: '',
-    proOnly: true,
   },
   {
     id: 'mc-one-person-company',
@@ -279,7 +284,6 @@ export const MASTERCLASSES: readonly Masterclass[] = [
     minutes: 40,
     outcome: 'Work out your own cost per finished minute, and where the model stops helping.',
     url: '',
-    proOnly: true,
   },
   {
     id: 'mc-research-reading',

@@ -10,7 +10,7 @@ import {
   UploadCloud, FileVideo, Music, Headphones, Lightbulb, Code2, 
   Link as LinkIcon, AlertCircle, Layers, DollarSign, Clock, 
   BookOpen, Bookmark, GraduationCap, Mic, Disc3, ExternalLink, Globe,
-  Crown, Lock, Zap, RefreshCw, Send, Mail, Check, Star, Loader2,
+  Crown, Zap, RefreshCw, Send, Mail, Check, Star, Loader2,
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
   Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard} from 'lucide-react';
@@ -2255,141 +2255,39 @@ export default function FutureBoxHome() {
               compact={activeTab === 'all'}
             />
 
-            <div className="flex items-center justify-between pt-2">
-              <div>
-                <h3 className="text-xl font-extrabold tracking-tight text-white flex items-center space-x-2">
-                  <GraduationCap className="w-5 h-5 text-cyan-400" />
-                  <span>{t('feed.featured')}</span>
-                </h3>
-                <p className="text-xs text-zinc-400">{t('feed.featuredSub')}</p>
-              </div>
-              <span className="text-xs text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-                Verified Masterclasses
-              </span>
-            </div>
+            {/* The three "Verified Masterclasses" that used to sit here are gone.
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
-              {[
-                {
-                  id: 'mc-1',
-                  title: 'Building & Scaling a $50k/MRR AI Micro-SaaS Solo',
-                  instructor: 'Garry Tan (CEO, Y Combinator)',
-                  duration: '45m',
-                  level: 'Business & Founders',
-                  embedUrl: 'https://www.youtube.com/embed/sPXZ_y2Yw3I',
-                  externalUrl: 'https://www.youtube.com/watch?v=sPXZ_y2Yw3I',
-                  isPro: false
-                },
-                {
-                  id: 'mc-2',
-                  title: 'Autonomous Multi-Agent AI Systems & Tool Calling',
-                  instructor: 'Harrison Chase (LangChain)',
-                  duration: '1h 22m',
-                  level: 'Advanced Architecture',
-                  embedUrl: 'https://www.youtube.com/embed/sal78ACtGTc',
-                  externalUrl: 'https://www.youtube.com/watch?v=sal78ACtGTc',
-                  isPro: true
-                },
-                {
-                  id: 'mc-3',
-                  title: 'Generative AI Cinema: Directing Films with Runway & Sora',
-                  instructor: 'Kaelen Voss (AI Filmmaker)',
-                  duration: '1h 30m',
-                  level: 'PRO Masterclass',
-                  embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
-                  externalUrl: 'https://runwayml.com',
-                  isPro: true
-                }
-              ].map((mc) => {
-                const isLocked = mc.isPro && userPlan === 'free';
-                return (
-                  <div 
-                    key={mc.id}
-                    className="group bg-zinc-900/60 rounded-2xl border border-zinc-800/80 overflow-hidden hover:border-cyan-500/50 transition-all flex flex-col justify-between relative"
-                  >
-                    {isLocked && (
-                      <div className="absolute top-3 right-3 z-20 bg-amber-500/90 text-onAccent text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center space-x-1 shadow-lg">
-                        <Lock className="w-3 h-3" />
-                        <span>PRO ONLY</span>
-                      </div>
-                    )}
+                "Sif ook deur die masterclass, kyk na regtige sinvolle goed."
 
-                    <div>
-                      <div 
-                        onClick={() => {
-                          if (isLocked) {
-                            setPricingModalOpen(true);
-                          } else {
-                            setSelectedMedia({
-                              title: mc.title,
-                              embedUrl: mc.embedUrl,
-                              externalUrl: mc.externalUrl,
-                              type: 'youtube',
-                              host: mc.instructor,
-                              counts: { kind: 'masterclass', category: 'featured', ref: mc.id }
-                            });
-                          }
-                        }}
-                        className="aspect-video relative overflow-hidden cursor-pointer"
-                      >
-                        <Cover
-                          seed={mc.id}
-                          label={mc.title}
-                          url={mc.embedUrl}
-                          className="w-full h-full group-hover:scale-105 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100">
-                          {isLocked ? (
-                            <div className="w-12 h-12 rounded-full bg-amber-500 text-onAccent flex items-center justify-center shadow-lg">
-                              <Lock className="w-5 h-5" />
-                            </div>
-                          ) : (
-                            <div className="w-12 h-12 rounded-full bg-cyan-500 text-onAccent flex items-center justify-center shadow-lg">
-                              <Play className="w-5 h-5 fill-current translate-x-0.5" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-md text-[10px] text-cyan-300 border border-cyan-500/30">
-                          {mc.level} • {mc.duration}
-                        </div>
-                      </div>
+                What was here, hard-coded into this page:
 
-                      <div className="p-5 space-y-3">
-                        <p className="text-[11px] text-zinc-400">{t('home.instructor', 'Instructor')}: <span className="text-white font-semibold">{mc.instructor}</span></p>
-                        <h4 className="font-bold text-sm text-white group-hover:text-cyan-400 transition-colors leading-snug">{mc.title}</h4>
-                      </div>
-                    </div>
+                  · "Building & Scaling a $50k/MRR AI Micro-SaaS Solo",
+                    attributed to Garry Tan, CEO of Y Combinator.
+                  · "Autonomous Multi-Agent AI Systems & Tool Calling",
+                    attributed to Harrison Chase of LangChain. Pro only.
+                  · "Generative AI Cinema: Directing Films with Runway & Sora"
+                    by "Kaelen Voss (AI Filmmaker)" — a person who does not
+                    appear to exist. Pro only, and its link went to
+                    runwayml.com rather than to any video.
 
-                    <div className="p-5 pt-0 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-400 border-t border-zinc-800/60">
-                      {isLocked ? (
-                        <button
-                          onClick={() => setPricingModalOpen(true)}
-                          className="text-amber-400 font-bold flex items-center space-x-1 hover:underline"
-                        >
-                          <Crown className="w-3.5 h-3.5 fill-current" />
-                          <span>{t('common.upgrade')} ({entryPrice.display})</span>
-                        </button>
-                      ) : (
-                        <button 
-                          onClick={() => setSelectedMedia({
-                            title: mc.title,
-                            embedUrl: mc.embedUrl,
-                            externalUrl: mc.externalUrl,
-                            type: 'youtube',
-                            host: mc.instructor,
-                            counts: { kind: 'masterclass', category: 'featured', ref: mc.id }
-                          })}
-                          className="text-cyan-400 font-semibold flex items-center space-x-1 hover:underline"
-                        >
-                          <Play className="w-3 h-3 fill-current" />
-                          <span>{t('feed.startClass')}</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                Two real people with titles they never gave a talk under, one
+                invented instructor, the row labelled "Verified", and two of
+                the three behind a paywall. That is a false attribution and a
+                charge for it, which is not a design problem to tidy — it is
+                the one thing this whole channel's claim rests on not being
+                true of it.
+
+                `app/data/masterclasses.ts` already says the rule in its own
+                words: every entry carries where it came from, and a class
+                that does not exist yet says "planned" on its face. The
+                component above renders that list. This block ignored all of
+                it and sat underneath.
+
+                The shelf is short now — three curated lectures that are
+                really published, and twelve entries that honestly say they
+                have not been made. Adding to it needs a person to watch the
+                thing first, which is what `curated` means in that file. */}
+
           </section>
         )}
 
