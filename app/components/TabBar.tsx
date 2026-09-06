@@ -57,8 +57,34 @@ import { useLang } from '../lib/i18n';
 
 export type TabId = 'spotlight' | 'live' | 'make' | 'library' | 'you';
 
-/** How tall the bar is, so a scrolling page can leave room for it. */
+/** How tall the bar's own content is. Not how tall the bar is — see below. */
 export const BAR_HEIGHT = 64;
+
+/**
+ * How much room a scrolling page has to leave under itself, as CSS.
+ *
+ * ── The bug this exists to end ───────────────────────────────────────────
+ *
+ * Carli: "in make a video, die buttons heel onder sny copilot se prompt bar
+ * af."
+ *
+ * The bar is `BAR_HEIGHT` of content *plus* `env(safe-area-inset-bottom)`,
+ * because it pads itself away from the home indicator — the note above says
+ * so. Every page that made room for it reserved the number instead, so on any
+ * phone with an indicator the page was short by exactly the inset: 34 pixels
+ * on an iPhone, which is most of a text field. The room whose last thing is
+ * the copilot's input is the room where that shows, and it did.
+ *
+ * A number cannot express this, because the inset is only known to the
+ * browser. So the clearance is a string, it is exported from the same file as
+ * the bar, and `check:tabbar` fails on a `paddingBottom` that uses the bare
+ * number — which is how it went wrong twice in one file.
+ *
+ * @param extra room above the bar, in pixels, for breathing space.
+ */
+export function barClearance(extra = 12): string {
+  return `calc(${BAR_HEIGHT}px + env(safe-area-inset-bottom) + ${extra}px)`;
+}
 
 const TABS: readonly {
   readonly id: TabId;

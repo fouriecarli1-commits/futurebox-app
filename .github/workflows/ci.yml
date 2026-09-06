@@ -102,6 +102,14 @@ jobs:
       - name: A row can only claim its own file
         run: npm run check:ownedpath
 
+      # The bar pads itself away from the home indicator, so its real height is
+      # not its constant. Reserving the constant hid a text field behind it on
+      # every phone with an indicator — invisible on a desktop, invisible in a
+      # screenshot without an inset, and invisible to anybody who does not
+      # already know the bar pads itself.
+      - name: Nothing is hidden behind the bottom bar
+        run: npm run check:tabbar
+
       # A copy of a schema that has gone stale is worse than no copy: it runs,
       # it succeeds, and it builds last month's tables. Nothing about that
       # looks like a failure — the rooms behave as though they were never

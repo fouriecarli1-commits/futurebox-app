@@ -804,6 +804,7 @@ export const STRINGS: Dict = {
   "mc.comingSoon": { en: "coming soon", af: "kom binnekort" },
   "rail.video": { en: "Music video", af: "Musiekvideo" },
   "tab.nav": { en: "The five parts of the app", af: "Die vyf dele van die toep" },
+  "chan.listens": { en: "{listens} listens, {listeners} people", af: "{listens} luisterbeurte, {listeners} mense" },
   "share.save": { en: "Save the song", af: "Stoor die liedjie" },
   "share.notHere": { en: "That song is not on this device — it may only be on the one that made it. Open it in your library first and it comes down with you.", af: "Daardie liedjie is nie op hierdie toestel nie — dit is dalk net op die een wat dit gemaak het. Maak dit eers in jou biblioteek oop, dan kom dit saam met jou af." },
   "lang.switched": { en: "Your account is set to this language, so the app followed it. It only does this when nothing was chosen on this device.", af: "Jou rekening is op hierdie taal gestel, so die toep het dit gevolg. Dit doen dit net wanneer niks op hierdie toestel gekies is nie." },

@@ -19,8 +19,9 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Check, Copy, Download, Image as ImageIcon, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, X,
+  Check, Copy, Download, Headphones, Image as ImageIcon, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, X,
 } from 'lucide-react';
+import { accessToken } from '../lib/cloud';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { levelOf, loadOwned, NOTHING, type Owned } from '../lib/purchases';
@@ -113,6 +114,44 @@ export default function Channel({
   const [unheardOnly, setUnheardOnly] = useState(false);
   useEffect(() => setHeard(heardHere()), []);
   const hasHeard = (id: string) => heard.indexOf(id) !== -1;
+
+  /* What each song has done out there, keyed by song id.
+
+     Named `counts` and not `heard`, because `heard` above is this device's
+     "you have not played this one yet" dot and the two mean nearly opposite
+     things — one is about the person looking at the screen, the other about
+     everybody else. The first draft of this called both of them `heard`. */
+  const [counts, setCounts] = useState<Record<string, { listens: number; listeners: number }>>({});
+
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      try {
+        const token = await accessToken();
+        if (!token) return;
+        const answer = await fetch('/api/listens', { headers: { Authorization: `Bearer ${token}` } });
+        if (!answer.ok) return;
+        const said = (await answer.json()) as {
+          songs?: ReadonlyArray<{ ref?: string; listens?: number; listeners?: number }>;
+        };
+        if (!live) return;
+        const next: Record<string, { listens: number; listeners: number }> = {};
+        for (const one of said.songs ?? []) {
+          if (one.ref) {
+            next[one.ref] = { listens: Number(one.listens) || 0, listeners: Number(one.listeners) || 0 };
+          }
+        }
+        setCounts(next);
+      } catch {
+        /* Signed out, offline, or the counting is not switched on. The songs
+           are the point of this screen and they are already there; a number
+           that could not be fetched is a number that is not shown. */
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, []);
   const nowHeard = (id: string) => setHeard(markHeard(id));
 
   /* What the grid actually draws. Both narrowings at once, because a person
@@ -595,6 +634,31 @@ export default function Channel({
                 <p className="text-sm text-zinc-500">
                   {track.genre} · {clock(track.seconds)}
                 </p>
+
+                {/* What it has actually done out there.
+
+                    "As ons top liedjies uitwys uit ons eie engine, track dit
+                     dan die hoeveelheid listens per liedjie?"
+
+                    Both numbers, never one. How many *times* on its own would
+                    make a song one person played forty times look like a song
+                    forty people heard — which is the exact lie the chart's
+                    once-per-person-per-day index exists to prevent, and it
+                    would be reintroduced here if this line said "40 listens"
+                    and stopped.
+
+                    Nothing at all until it has been heard once. A row of
+                    zeroes under every song is a wall of nothing happened,
+                    printed on the screen somebody visits to feel good about
+                    what they made. */}
+                {counts[track.id] && counts[track.id].listens > 0 && (
+                  <p className="flex items-center gap-1.5 text-sm text-emerald-300/90">
+                    <Headphones className="h-3.5 w-3.5 flex-shrink-0" />
+                    {t('chan.listens', '{listens} listens, {listeners} people')
+                      .replace('{listens}', String(counts[track.id].listens))
+                      .replace('{listeners}', String(counts[track.id].listeners))}
+                  </p>
+                )}
 
                 {timedFor(track).length > 0 && (
                   <button

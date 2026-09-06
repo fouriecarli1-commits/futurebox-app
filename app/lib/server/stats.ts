@@ -79,6 +79,29 @@ export async function recordEvent(event: {
 }): Promise<void> {
   const client = admin();
   if (!client) return;
+
+  /* Written through `note_event`, which inserts the first time and adds one to
+     a counter every time after that.
+
+     The row is still one per person per thing per day, so everything that
+     counts rows — the charts, the board — is untouched. What is new is that
+     the repeats are no longer thrown away: "how many people" and "how many
+     times" are different questions and a maker wants the second one about
+     their own song. See `supabase/listens.sql`.
+
+     Falls back to the plain insert when the function is not there, because it
+     arrives in a file somebody has to run and the day between deploying this
+     and running it must not be a day where nothing is counted at all. The
+     fallback loses the repeats, exactly as before, and loses nothing else. */
+  const { error } = await client.rpc('note_event', {
+    want_kind: event.kind,
+    want_category: event.category ?? null,
+    want_ref: event.ref ?? null,
+    want_owner: event.owner ?? null,
+    want_visitor: event.visitor,
+  });
+  if (!error) return;
+
   await client.from('events').insert({
     kind: event.kind,
     category: event.category ?? null,

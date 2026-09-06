@@ -49,7 +49,7 @@ import PasswordField from './components/PasswordField';
 import Campaign from './components/Campaign';
 import Greeting from './components/Greeting';
 import Account from './components/Account';
-import TabBar, { BAR_HEIGHT, type TabId } from './components/TabBar';
+import TabBar, { barClearance, type TabId } from './components/TabBar';
 import SearchCorner from './components/SearchCorner';
 import { fetchCreator, type Creator } from './lib/radar';
 import { useBackStack } from './lib/backstack';
@@ -2720,7 +2720,7 @@ export default function FutureBoxHome() {
               the part nobody could reach. */}
           <div
             className="min-h-full p-4 sm:p-8 pt-8 sm:pt-16 flex justify-center"
-            style={{ paddingBottom: BAR_HEIGHT + 24 }}
+            style={{ paddingBottom: barClearance(24) }}
           >
             <Greeting
               name={artistName || user?.name}
@@ -2801,7 +2801,7 @@ export default function FutureBoxHome() {
               copilot should be under it rather than beside it. */}
           <div
             className="w-full h-full p-3 md:p-5 flex flex-col gap-4 overflow-y-auto md:overflow-hidden"
-            style={{ paddingBottom: BAR_HEIGHT + 12 }}
+            style={{ paddingBottom: barClearance(12) }}
           >
             
             {/* Top Back Bar */}
