@@ -871,11 +871,20 @@ export default function Channel({
                opened from a card that may have been drawn before the audio
                finished syncing, and the file is what the route needs. */
             const blob = await readAudio(lyricsFor.track.id);
+            if (!blob) {
+              return t(
+                'play.noFile',
+                'The file for this song is not on this device, so there is nothing to listen to.',
+              );
+            }
             const heard = await heardFor(lyricsFor.track, blob);
-            if (!heard.lines.length) return;
+            if (!heard.lines.length) {
+              return heard.why ?? t('play.nothingHeard', 'Nothing could be made out in it.');
+            }
             setLyricsFor((was) =>
               was && was.track.id === lyricsFor.track.id ? { ...was, lines: heard.lines } : was,
             );
+            return null;
           }}
         />
       )}

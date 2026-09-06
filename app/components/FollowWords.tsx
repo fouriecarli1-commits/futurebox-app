@@ -79,8 +79,12 @@ export default function FollowWords({
    * Absent when there is nothing to listen to — a song with no file on this
    * device — and the screen then says what it can do instead of offering
    * something that would fail.
+   *
+   * Answers with the reason it could not, or null when it worked. Silence is
+   * not an answer: the first version of this posted without a token, the route
+   * refused it, and the button spun and then did nothing at all.
    */
-  askWords?: () => Promise<void>;
+  askWords?: () => Promise<string | null>;
   /** What that costs, so the press is informed. */
   wordCost?: number;
 }): React.ReactElement {
@@ -88,6 +92,8 @@ export default function FollowWords({
   const [at, setAt] = useState(0);
   /** True while the song is being listened to. See `askWords`. */
   const [asking, setAsking] = useState(false);
+  /** Why the last attempt to write the words out did not work. */
+  const [wordProblem, setWordProblem] = useState<string | null>(null);
   const frame = useRef<number>(0);
 
   // Read from the element every frame rather than counting: a paused track, a
@@ -288,7 +294,10 @@ export default function FollowWords({
                   disabled={asking}
                   onClick={() => {
                     setAsking(true);
-                    void askWords().finally(() => setAsking(false));
+                    setWordProblem(null);
+                    void askWords()
+                      .then((why) => setWordProblem(why))
+                      .finally(() => setAsking(false));
                   }}
                   className="mx-auto flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-100 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-50"
                 >
@@ -300,6 +309,9 @@ export default function FollowWords({
                     <span className="text-zinc-500">· {wordCost}</span>
                   )}
                 </button>
+                {wordProblem && (
+                  <p className="text-sm text-amber-300 leading-snug">{wordProblem}</p>
+                )}
                 <p className="text-sm text-zinc-600 leading-snug">
                   {t(
                     'play.writeWordsWhy',

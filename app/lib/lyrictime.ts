@@ -54,6 +54,15 @@ export type Timing = 'heard' | 'phrases' | 'sung' | 'spread' | 'none';
 export interface Timed {
   readonly lines: readonly TimedLine[];
   readonly how: Timing;
+  /**
+   * Why there are no lines, where the reason is worth saying.
+   *
+   * Only ever set by `heardFor`, and only when the server said something a
+   * person can act on — signed out, out of credits, a file too long. Every
+   * other rung of the ladder fails into a lower rung rather than into nothing,
+   * so there is nothing to explain.
+   */
+  readonly why?: string;
 }
 
 const KEY = 'futurebox.lyrictime.v1';
@@ -260,8 +269,28 @@ export function linesFromWords(words: readonly HeardWord[]): TimedLine[] {
 export async function heardFor(
   track: Track,
   audio: Blob | null,
-  fetcher: (body: FormData) => Promise<Response> = (body) =>
-    fetch('/api/transcribe', { method: 'POST', body }),
+  fetcher: (body: FormData) => Promise<Response> = async (body) => {
+    /* Signed, like every other caller of this route.
+
+       The first version of this posted without a token. The route reads the
+       caller to charge them, so with none it answers 401 — and this function
+       turns a bad answer into "no lines", which is right for every other
+       failure and was silence for this one. Somebody presses the button, waits
+       through a spinner, and nothing happens with no word about why. A button
+       that does nothing is the fault this codebase spends the most effort
+       avoiding, and I shipped one.
+
+       Imported here rather than at the top of the file so `lyrictime` stays
+       usable in a check: the module reaches for browser storage on load and
+       `cloud` reaches for a Supabase client, and only this one path needs it. */
+    const { accessToken } = await import('./cloud');
+    const token = await accessToken();
+    return fetch('/api/transcribe', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body,
+    });
+  },
 ): Promise<Timed> {
   if (!audio) return { lines: [], how: 'none' };
 
@@ -278,7 +307,18 @@ export async function heardFor(
        this is the only number there is. */
     body.append('seconds', String(Math.max(0, Math.round(track.seconds || 0))));
     const answer = await fetcher(body);
-    if (!answer.ok) return { lines: [], how: 'none' };
+    if (!answer.ok) {
+      /* The reason, carried out rather than swallowed. `none` is the right
+         answer for the screen either way, but a caller that wants to say
+         "sign in first" or "you are out of credits" cannot do it from a shape
+         that only ever means nothing happened. */
+      const why = (await answer.json().catch(() => null)) as { message?: unknown } | null;
+      return {
+        lines: [],
+        how: 'none',
+        ...(typeof why?.message === 'string' && why.message ? { why: why.message } : {}),
+      };
+    }
     const said = (await answer.json()) as { words?: readonly HeardWord[] };
     const lines = linesFromWords(said.words ?? []);
     if (!lines.length) return { lines: [], how: 'none' };

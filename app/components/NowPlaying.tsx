@@ -237,8 +237,18 @@ export default function NowPlaying({
           wordCost={perMinute(track.seconds, CREDITS.transcribe)}
           askWords={async () => {
             const blob = await readAudio(track.id);
+            if (!blob) {
+              return t(
+                'play.noFile',
+                'The file for this song is not on this device, so there is nothing to listen to.',
+              );
+            }
             const found = await heardFor(track, blob);
-            if (found.lines.length) setHeard(found.lines);
+            if (!found.lines.length) {
+              return found.why ?? t('play.nothingHeard', 'Nothing could be made out in it.');
+            }
+            setHeard(found.lines);
+            return null;
           }}
         />
       )}

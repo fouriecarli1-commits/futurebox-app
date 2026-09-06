@@ -113,7 +113,34 @@ ok(
 );
 ok('a failure is an answer, not a throw', /catch \{\s*return \{ lines: \[\], how: 'none' \}/.test(rule));
 
+/* ── Signed, and never silent ───────────────────────────────────────────
+ *
+ * The first version of `heardFor` posted to a route that charges credits
+ * without a token. The route reads the caller to bill them, so with none it
+ * answers 401 — and `heardFor` turns any bad answer into "no lines", which is
+ * right for every other failure and was silence for this one: a spinner, and
+ * then nothing, with no word about why.
+ *
+ * A button that does nothing is the fault this codebase spends the most effort
+ * avoiding, and it shipped. Both halves are held here: the request carries a
+ * token, and the reason comes back out where a screen can print it. */
+ok(
+  'the request to a paid route is signed',
+  /Authorization: `Bearer \$\{token\}`/.test(rule),
+  'without a token the route answers 401 and the button does nothing',
+);
+ok(
+  'and a refusal carries its reason out',
+  /why\?\.message/.test(rule) && /readonly why\?: string;/.test(rule),
+  'a shape that only means "nothing happened" cannot say "sign in first"',
+);
+
 const follow = read('app/components/FollowWords.tsx');
+ok('the screen prints that reason', /wordProblem/.test(follow));
+ok(
+  'and the handler answers with it rather than with nothing',
+  /askWords\?: \(\) => Promise<string \| null>;/.test(follow),
+);
 ok('the camera says when a song has no words', /play\.noWords/.test(follow));
 ok('and offers to listen to it', /play\.writeWords/.test(follow));
 ok(

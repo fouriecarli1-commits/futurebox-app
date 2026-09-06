@@ -808,6 +808,8 @@ export const STRINGS: Dict = {
   "board.look": { en: "How the whole film looks", af: "Hoe die hele film lyk" },
   "board.lookHint": { en: "Warm evening light, shot on film, slow camera", af: "Warm aandlig, op film geskiet, stadige kamera" },
   "board.lookWhy": { en: "Added to the end of every shot below, so all of them match without you typing it twelve times. Ask the copilot for a look and it fills this in.", af: "Word agteraan elke skoot hieronder gesit, sodat almal bymekaar pas sonder dat jy dit twaalf keer tik. Vra die kopiloot vir \u2019n voorkoms en dit vul dit hier in." },
+  "play.noFile": { en: "The file for this song is not on this device, so there is nothing to listen to.", af: "Die l\u00eaer vir hierdie liedjie is nie op hierdie toestel nie, so daar is niks om na te luister nie." },
+  "play.nothingHeard": { en: "Nothing could be made out in it.", af: "Niks kon daarin uitgemaak word nie." },
   "play.noWords": { en: "This song has no words written down. The camera still works — film yourself to it.", af: "Hierdie liedjie het geen woorde neergeskryf nie. Die kamera werk steeds \u2014 film jouself daarby." },
   "play.writeWords": { en: "Listen to it and write the words out", af: "Luister daarna en skryf die woorde uit" },
   "play.listening": { en: "Listening to it…", af: "Luister daarna\u2026" },
