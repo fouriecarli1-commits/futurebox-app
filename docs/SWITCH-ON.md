@@ -67,6 +67,13 @@ be. In this order:
 | `supabase/invites.sql` | The invite link in a collab email answers "not set up" |
 | `supabase/charts.sql` | The Top 10 bars on Spotlight stay empty for ever |
 
+**Or paste one file instead of five.** `supabase/ALMAL.sql` is those five in
+that order, generated from them by `npm run sql:bundle`, with a guard at the
+top that names which older file to run first if `public.events` or
+`public.collabs` is missing — a sentence rather than a Postgres error on line
+two hundred of something just pasted. `npm run check:sqlbundle` stops the copy
+drifting away from the originals.
+
 **How to tell:** open the room. Each of those says "not set up" in plain words
 rather than failing — that sentence *is* the check.
 

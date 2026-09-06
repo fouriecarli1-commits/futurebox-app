@@ -102,6 +102,13 @@ jobs:
       - name: A row can only claim its own file
         run: npm run check:ownedpath
 
+      # A copy of a schema that has gone stale is worse than no copy: it runs,
+      # it succeeds, and it builds last month's tables. Nothing about that
+      # looks like a failure — the rooms behave as though they were never
+      # switched on, weeks later, with a green Run behind them.
+      - name: The one-paste SQL still says what the five files say
+        run: npm run check:sqlbundle
+
       # The click-through job below was written, merged, and did not work:
       # three faults, each of which made whole groups of probes report the app
       # as broken while the app was fine. This holds the isolation that fixed

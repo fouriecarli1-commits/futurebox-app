@@ -57,6 +57,11 @@ Supabase → SQL Editor → plak → Run. Veilig om weer te loop.
 | `supabase/dubs.sql` | Oorklanking antwoord "nie opgestel nie" |
 | `supabase/invites.sql` | Die uitnodigingsskakel in 'n saamwerk-e-pos werk nie |
 
+**Of plak een lêer in plaas van vyf.** `supabase/ALMAL.sql` is daardie vyf in
+daardie volgorde, met 'n wag boaan wat sê watter ouer lêer eerste moet loop as
+`public.events` of `public.collabs` kort. Dit is 'n sin eerder as 'n
+Postgres-fout op reël tweehonderd van iets wat jy pas geplak het.
+
 Elkeen van daardie kamers sê "nie opgestel nie" in gewone woorde eerder as om
 te breek — daardie sin *is* die toets.
 

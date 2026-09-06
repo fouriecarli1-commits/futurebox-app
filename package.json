@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "sql:bundle": "tsx scripts/sql-bundle.mts",
+    "check:sqlbundle": "tsx scripts/check-sqlbundle.mts",
     "costs:eleven": "tsx scripts/costs-eleven.mts",
     "check:probes": "tsx scripts/check-probes.mts",
     "check:theme": "tsx scripts/check-theme-css.mts",
