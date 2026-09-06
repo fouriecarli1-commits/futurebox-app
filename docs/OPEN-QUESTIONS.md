@@ -644,3 +644,56 @@ generated has been paid for. Made shots survive, and survive first.
   distributor. Saying otherwise on a page of connection buttons would be the
   exact lie `ShareRow` was written to avoid.
 
+
+## K. The bug class I shipped twice in one day
+
+Three features went in that evening — the words of an uploaded song written out
+by the app, the language rule pulled out of two React effects so it could be
+tested, and the talking prompt cards. Two of the three shipped broken in exactly
+the same way, and the second one is what turned a patch into a check.
+
+**`callerFrom` reads the `Authorization: Bearer` header and nothing else.** No
+cookie, no session fallback. That is deliberate and it should stay that way. The
+consequence is easy to forget an hour later: a browser `fetch('/api/…')` that
+sends no header is a 401 for *everybody*, however properly they are signed in.
+It does not fail for some people, or intermittently, or under load. It has never
+worked once.
+
+`heardFor` posted `/api/transcribe` unsigned. That is the words button on a song
+— press it, it spins, nothing happens, no reason given. I found it an hour after
+reporting it done. `PromptCards` posted the same route unsigned. That is "say
+one thing to a card, get a song", which she asked for this session and which I
+also reported as done.
+
+**Neither probe could have caught it, and that is the part worth keeping.** A
+probe stubs the route it is testing. It proves the screen sends what the screen
+means to send. It cannot prove the real route would accept it, because the real
+route is not there. `check:makeroom` passed on both. So the answer is not a
+better probe — it is a check that reads the code:
+
+`scripts/check-signed.mts` walks `app/api` for every route that calls
+`callerFrom` (40 of them), then every `fetch('/api/…')` in `app/components` and
+`app/lib`, and requires an Authorization header on each call that lands on one.
+83 calls. Two are exempt, by name and with a reason written next to them:
+`engines.ts` asks `/api/music` what it can do before anybody has signed in, and
+`collab.ts` hands `/api/collab/invite` to strangers by definition. The check also
+asserts each exemption still points at a call that exists — an exemption must not
+outlive the thing it excused, quietly covering a different call that grew into
+its place later.
+
+Verified the only way that counts: the header taken back out, the check naming
+the file and the route and exiting 1, the header put back.
+
+**The general shape.** Twice now the failure has been "the screen is right, the
+wire is wrong, and the test stubs the wire". `check:reachable` came from the same
+shape — buttons that led nowhere. Where a probe has to stub something to run, the
+stub is the blind spot, and the blind spot needs a check that reads source rather
+than clicks.
+
+### What is still not proven
+
+None of this proves the routes work against ElevenLabs, only that they will be
+reached. Egress is blocked from here to elevenlabs.io, music.ai and the deployed
+site. The first real recording she makes on the phone is still the first true
+test of the talking cards, and if it fails now it will fail with a reason
+printed, which it did not before.
