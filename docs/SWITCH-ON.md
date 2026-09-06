@@ -127,6 +127,9 @@ end up on `futurebox.studio`.
    this app uses.
 3. Vercel: `MAIL_API_KEY`, `MAIL_FROM`, `MAIL_REPLY_TO`, and — the same value in
    all three — `WATCH_SECRET`, `POST_SECRET` and `CRON_SECRET`.
+   `MAIL_API_URL` is the fourth mail variable and needs no setting: it defaults
+   to Resend's own address, and exists so a different provider is a variable
+   rather than a code change.
 
 **`MAIL_FROM` must be on a domain whose DNS you control.** Not gmail.com:
 Google tells every receiving server to refuse mail claiming to be from gmail.com
@@ -159,9 +162,12 @@ company registered and a bank account in its name.
 **Broken until then:** nothing can be charged, and the app says so rather than
 pretending a checkout exists.
 
-The three plan codes (`PAYSTACK_PLAN_MAKER`, `_STUDIO`, `_LABEL`) and
-`PAYSTACK_PLAN_MARKETING` make a membership renew instead of being a single
-charge. Create them once with `node scripts/paystack-plans.mjs`.
+The three plan codes — `PAYSTACK_PLAN_MAKER`, `PAYSTACK_PLAN_STUDIO`,
+`PAYSTACK_PLAN_LABEL` — and `PAYSTACK_PLAN_MARKETING` make a membership renew
+instead of being a single charge. Create them once with
+`node scripts/paystack-plans.mjs`. Written out in full rather than as
+`_STUDIO` and `_LABEL`, so that searching this page for the name Vercel shows
+you actually finds it.
 
 ---
 
@@ -241,6 +247,13 @@ than as a page still being filled in.
 **How to tell it worked:** open `/legal`. Either the particulars are there and
 right, or the page says they are not published yet. There is no third state.
 
+**Two more the page will print if you set them, and skip if you do not.**
+`FUTUREBOX_LEGAL_VAT` is your VAT number, once SARS issues one — registration
+is compulsory above R1 million of turnover in twelve months and voluntary above
+R50 000, so for now this stays unset. `FUTUREBOX_LEGAL_INFORMATION_OFFICER` is
+item 14 below. Neither is part of the four: the particulars publish without
+them.
+
 `npm run check:entity` holds the shape of the number and nine other cases. It
 catches a mangled year, a missing entity code, the wrong separators, and the
 name pasted into the number field. It does **not** catch a digit dropped from
@@ -259,6 +272,82 @@ can trade under the name at all. EUIPO and USPTO are free and take minutes.
 An information officer registered with the Information Regulator, and
 `FUTUREBOX_LEGAL_INFORMATION_OFFICER` set. You process personal data of South
 Africans, so it applies.
+
+---
+
+## The rest of the variables
+
+Everything above is something to do. This is the remainder of what the code
+reads, so the list is complete — `npm run check:envdoc` fails if a variable is
+added to the code and not to this page. A variable that exists and is written
+down nowhere is a feature that silently does not work with nothing to tell you
+why, which is exactly how `OWNER_EMAIL` was missed.
+
+### The welcome video on the front door — one real gap
+
+| Variable | What it is |
+|---|---|
+| `NEXT_PUBLIC_WELCOME_VIDEO_ENGLISH` | The English introduction. Defaults to `/welcome.mp4`, which is in the repo, so English already has one. |
+| `NEXT_PUBLIC_WELCOME_VIDEO_AFRIKAANS` | The Afrikaans introduction. **No default.** |
+| `NEXT_PUBLIC_WELCOME_VIDEO_COVERE` | The still frame for the English one. Optional. |
+| `NEXT_PUBLIC_WELCOME_VIDEO_COVERA` | The still frame for the Afrikaans one. Optional. |
+| `NEXT_PUBLIC_WELCOME_VIDEO` | The old name for the English one, still honoured so an existing setup keeps working. |
+
+**An Afrikaans visitor sees no introduction at all.** The player draws nothing
+rather than playing the English recording at somebody who chose Afrikaans,
+which is the right behaviour and is why nothing looks broken — but it means
+the front door is doing less in your own language than in the other one, and
+there was no line anywhere saying the variable existed.
+
+A URL, not a file: put the recording anywhere it can be fetched from and set
+the address. Both cover frames are worth setting if you set a video — without
+one the player is a flat rectangle until somebody presses play, which reads as
+a thing that failed to load.
+
+### The keys that are already set, or nothing would work
+
+These are set, or you would not have a working app to read this about. They
+are named here for one reason: "rotate every key that has ever been in a
+`.env` file" at the bottom of this page is not a usable instruction if the
+keys it means are not written down anywhere.
+
+| Variable | What it is |
+|---|---|
+| `SUPABASE_SERVICE_ROLE_KEY` | The most powerful secret in the app. It reads and writes past every row-level rule, and never reaches a browser. If one key on this page is worth rotating carefully, it is this one. |
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project's address. Public by design — the browser has to reach it. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | The browser's key. Public by design too: it can only do what row-level security allows, which is why item 2's SQL files matter. |
+| `ELEVENLABS_API_KEY` | Every song, voice, picture and clip. Nothing generates without it. |
+| `ANTHROPIC_API_KEY` | The copilot in every room. |
+
+The two `NEXT_PUBLIC_` ones are meant to be visible and are the only kind that
+may carry that prefix. Nothing else here may ever have it — `OWNER_EMAIL` with
+that prefix would ship the list of who runs the place to every visitor.
+
+### Knobs with working defaults — nothing to do
+
+`ELEVEN_AURORA_MODEL`, `ELEVEN_IMAGE_MODEL`, `ELEVEN_SEEDANCE_MODEL` and
+`ELEVEN_VEO_MODEL` each override the model name sent to ElevenLabs for the
+presenter, the pictures, the short clips and the longer ones. They exist for
+one situation: ElevenLabs renames or retires a model and the app starts
+failing on a name that no longer exists. Then this is the knob, and it is a
+variable and a redeploy rather than a code change and a wait.
+
+`IP_SALT` salts the hash of a visitor's IP address. Unset, it falls back to
+the service-role key, which is already secret — so the hashing is sound
+either way. Setting it keeps the two apart, so that a leaked service-role key
+does not also make those hashes reversible.
+
+### Kling — read, and not in use
+
+You said plainly you are not using Kling. The integration is still in the
+code, switched off by having no key, and `docs/OPEN-QUESTIONS.md` §H is why.
+These are what it would read if it were ever turned back on:
+`KLINGAI_API_KEY` (or the older `KLINGAI_ACCESS_KEY` + `KLINGAI_SECRET_KEY`
+pair), `KLINGAI_BASE_URL`, `KLING_MODEL`, `KLING_SOUND` and
+`KLING_MONTHLY_CREDITS`.
+
+**Leave all of them unset.** With no key the video engine reports itself
+unavailable and no screen offers it, which is the state you want.
 
 ---
 

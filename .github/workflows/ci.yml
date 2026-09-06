@@ -125,6 +125,12 @@ jobs:
       - name: Film a take and watch the camera light go out
         run: npm run check:selfie
 
+      # A variable the code reads and the switch-on page does not name is a
+      # feature that silently does not work with nothing to say why. That is
+      # how OWNER_EMAIL was missed, and how the Afrikaans welcome video was.
+      - name: Every variable the app reads is written down
+        run: npm run check:envdoc
+
       # Three things have an opinion about the language and they do not carry
       # equal weight. The rule lived inside two React effects where it could
       # not be run, and the bug she hit was invisible to everything.
