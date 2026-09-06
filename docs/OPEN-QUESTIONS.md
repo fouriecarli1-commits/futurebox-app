@@ -314,6 +314,33 @@ or keep both is a decision nobody has made.
 
 ---
 
+## What was found by looking rather than by breaking
+
+Three things this session, all of the same kind: a thing that looked done and
+was not, found by asking the question rather than by anybody hitting it.
+
+**Sixty-one probes could only run on one laptop.** Each carried that machine's
+browser path as a constant. On any other machine they failed on the first line
+with a path error, which reads like the app being broken. Fourteen
+click-through probes had therefore never run in CI at all.
+
+**Nineteen checks ran nowhere.** `check:mail`, `check:entity`,
+`check:makesong`, `check:listen`, `check:tempo` and fourteen others — written
+on purpose, all passing, run only by somebody remembering to type them. That
+is worse than not having written them: the file exists, it is read during a
+review, and it is taken as evidence that the thing it describes is still true.
+`check:entity` is the sharpest case, since its whole point is to be right
+months later for somebody who will never open it.
+
+**Four assertions passed for the wrong reason**, three of them in one probe.
+All the same shape: asserting that words exist somewhere on the page rather
+than that a thing is in a place. One of them measured the probe's own click.
+
+The first two now have checks of their own — `check:launch` and
+`check:everycheck` — because none of the nineteen were added carelessly. Each
+arrived in a commit about something else, and wiring CI was a separate step
+nobody was reminded of. That will happen again with the sixty-third.
+
 ## Two corrections, kept where corrections belong
 
 **`df2994b`'s card count.** Its message says "14 cards across 5 rooms now, up
@@ -408,3 +435,7 @@ wearing the probe's clothes.
 | The live room: two questions, messages, panels, a closed link list | 2026-09-06 | `c9c4075` |
 | Connections on the profile; the engine bill removed | 2026-09-06 | `c398614`, `e98d21a` |
 | The talking prompt cards, recording and all | 2026-09-06 | `HEAD` |
+| Untrusted words cannot close their own fence | 2026-09-06 | `bfe8a2f` |
+| The first hour, as one path with no dead ends | 2026-09-06 | `1ce3103` |
+| The click-through probes run in CI at all | 2026-09-06 | `b9a2712` |
+| Nineteen checks that ran nowhere now run, and must | 2026-09-06 | `HEAD` |

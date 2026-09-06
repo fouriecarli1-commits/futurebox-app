@@ -70,7 +70,8 @@
     "check:platformlink": "tsx scripts/check-platformlink.mts",
     "check:asdata": "tsx scripts/check-asdata.mts",
     "check:firsthour": "node audit/firsthour.mjs",
-    "check:launch": "tsx scripts/check-launch.mts"
+    "check:launch": "tsx scripts/check-launch.mts",
+    "check:everycheck": "tsx scripts/check-everycheck.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

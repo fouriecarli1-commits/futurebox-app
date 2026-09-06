@@ -127,6 +127,60 @@ jobs:
       - name: Nobody's name on a talk they did not give
         run: npm run check:masterclasses
 
+      # ── The eighteen that were never run by anything ────────────────────
+      #
+      # Written on purpose, all passing, and run only by somebody remembering
+      # to type them. That is worse than not having written them: a check
+      # nobody runs is not a safety net, it is a claim that there is one — the
+      # file exists, it is read during a review, and it is taken as evidence
+      # that the thing it describes is still true.
+      #
+      # check:everycheck below is what stops the sixty-third from slipping in
+      # the same way, because none of these were added carelessly: each came
+      # in a commit about something else, and wiring CI was a separate step
+      # nobody was reminded of.
+
+      # Measured audio, not opinions about audio: the tempo detector against
+      # signals built at a known BPM, the mixer against what it actually
+      # sums, the tone shaping against the curve it claims.
+      - name: The audio does what it says
+        run: npm run check:tempo && npm run check:mix && npm run check:tone && npm run check:listen
+
+      # A song's plan, and what leaves the app for the engine. This is the
+      # room Carli says is what we actually sell.
+      - name: A song is built with a shape
+        run: npm run check:makesong
+
+      # The one page whose whole job is to be true, months after this was
+      # written, filled in by somebody who will never open the check.
+      - name: The legal page is right the first time
+        run: npm run check:entity
+
+      # Letters go out unread by anybody here — a receipt with the wrong
+      # amount is only ever seen by the member it was wrong for. Also holds
+      # the owner allowlist and the second-owner recipient split.
+      - name: The letters and the owner list
+        run: npm run check:mail
+
+      # A picture is measured on the device and a photo card claims what it
+      # saw. Both are arithmetic somebody can check.
+      - name: What it says it saw is what was there
+        run: npm run check:photo
+
+      # The radar's daily shuffle: the same all day, different tomorrow, and
+      # nobody silently dropped out of it.
+      - name: Nobody falls out of the radar
+        run: npm run check:radarshuffle
+
+      # The rooms that answer "not set up" rather than failing, the names
+      # nobody may take, and the marketing arithmetic that reaches a client.
+      - name: The rest of the arithmetic and the gates
+        run: npm run check:addons && npm run check:queue && npm run check:analyse && npm run check:brand && npm run check:reserved && npm run check:nam && npm run check:marketplan && npm run check:adweek && npm run check:habits
+
+      # And the rule that keeps this list honest.
+      - name: Every check runs somewhere
+        run: npm run check:everycheck
+
       # Sixty-one probes carried this machine's browser path as a constant,
       # which is why fourteen click-through probes had never run anywhere but
       # one laptop. The half that matters — no browser anywhere known, so let
