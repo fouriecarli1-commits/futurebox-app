@@ -150,6 +150,52 @@ try {
     });
   });
 
+  /* A microphone that is not one.
+
+     `getUserMedia` needs a device and a permission, and a probe that needs
+     either is a probe nobody runs. A silent track off an AudioContext is a
+     real MediaStream as far as MediaRecorder is concerned, which is the part
+     being checked — that pressing a card starts a recording, that pressing it
+     again stops one, and that what comes back gets sent on. */
+  await p.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = async () => {
+      const Ctx = window.AudioContext;
+      const ctx = new Ctx();
+      const out = ctx.createMediaStreamDestination();
+      const tone = ctx.createOscillator();
+      tone.connect(out);
+      tone.start();
+      return out.stream;
+    };
+  });
+
+  let transcribed = null;
+  await p.route('**/api/transcribe', async (route) => {
+    transcribed = (route.request().postData() ?? '').length;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        words: [{ text: 'Ek', start: 0, end: 0.3 }],
+        text: 'Vanoggend het die verkeer by die brug gestaan en ek was ’n uur laat.',
+      }),
+    });
+  });
+  let fromSaid = null;
+  await p.route('**/api/songfrom', async (route) => {
+    fromSaid = JSON.parse(route.request().postData() ?? '{}');
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        title: 'Die brug om sewe',
+        style: 'afrikaanse rock, driving drums, close vocal',
+        lyrics: '[Vers 1]\nDie brug staan stil om sewe',
+        heard: 'traffic at the bridge, an hour late',
+      }),
+    });
+  });
+
   await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
   const cta = p.locator('button, a').filter({ hasText: /start free|begin|sign up/i }).first();
   await cta.waitFor({ state: 'visible', timeout: 60000 });
@@ -343,6 +389,52 @@ try {
   check('and the style', (await room.locator('textarea').nth(1).inputValue()).includes('concertina'));
   check('and it says what it saw, so the words can be judged before spending',
     (await says()).includes('warm light'));
+
+  /* ── The talking cards ──────────────────────────────────────────────
+ 
+     The other half of `docs/PACKAGING.md` §4. Nothing is typed at all, which
+     on a phone is the shortest way in this app has — and it is the only one
+     of these that costs a credit, so the card has to say so before it is
+     pressed rather than in a receipt afterwards. */
+  /* By its id, not by its words: the label becomes "Press to stop" while it
+     records, so a locator that matched on the text lost the card at the exact
+     moment it was meant to be watching it. */
+  const talkCard = room.locator('button[data-card="talk-traffic"]');
+  check('there are cards you talk to as well', (await talkCard.count()) === 1);
+  check('and the price is on the screen before anything is pressed',
+    /Costs \d+ credits/.test(await says()), 'the price');
+  check('with what it does said, and that the recording is not kept',
+    (await says()).includes('is not kept'));
+
+  await talkCard.click();
+  await p.waitForTimeout(1200);
+  check('pressing one starts recording', (await talkCard.getAttribute('aria-pressed')) === 'true');
+  check('and it says how to stop', (await says()).includes('Press to stop'));
+  check('and counts down, so nobody talks into a card that stopped',
+    /\d+s/.test((await talkCard.innerText()) ?? ''), (await talkCard.innerText())?.split('\n')[0]);
+
+  /* Long enough to be a sentence. Under two seconds the card throws the clip
+     away rather than spending a credit to be told nothing was said, and the
+     first version of this stopped after one — which reported the whole chain
+     broken while the guard was doing its job. */
+  await p.waitForTimeout(3000);
+  await talkCard.click();
+  for (let waited = 0; waited < 40 && !fromSaid; waited += 1) await p.waitForTimeout(300);
+  check('pressing it again sends the recording to be read', Boolean(transcribed) && transcribed > 100,
+    `${transcribed} bytes`);
+  check('and what was said goes on to be turned into a song',
+    (fromSaid?.said ?? '').includes('verkeer by die brug'), (fromSaid?.said ?? '').slice(0, 40));
+  /* The card's own instruction, which no screen ever shows. Same assertion as
+     the picture cards, and the same reason: a card that sends no idea is the
+     blank box with a recording attached. */
+  check('with the card’s own instruction, which no screen ever shows',
+    (fromSaid?.idea ?? '').length > 60, `${(fromSaid?.idea ?? '').length} characters`);
+  await p.waitForTimeout(900);
+  check('and the song fills the room in',
+    (await room.locator('input:visible').first().inputValue()) === 'Die brug om sewe');
+  check('and it says what it understood, before a generation is spent',
+    (await says()).includes('an hour late'),
+    (await says()).includes('It saw') ? 'the line is there with other words' : 'no “it saw” line at all');
 
   /* ── The wand ───────────────────────────────────────────────────────
  

@@ -309,11 +309,8 @@ or keep both is a decision nobody has made.
   somebody else's post is a rights question before it is a button, and that
   decision has not been made. Still the only thing in this section nobody has
   started, and it is a decision rather than a build.
-- **The talking half of `docs/PACKAGING.md` §4.** The photo cards are in —
-  twenty-six of them, `adef346` — and the microphone ones are not. They are a
-  different shape: recording, then transcription, which costs a credit, so the
-  card has to say so before it is pressed. Everything else about them is the
-  same chain.
+- Nothing else from §4. Both halves are in: twenty-six photo cards and seven
+  you talk to.
 
 ---
 
@@ -408,3 +405,6 @@ wearing the probe's clothes.
 | CIPC 2026/714071/07 recorded; the number's shape checked | 2026-09-06 | `b3aab44` |
 | The owner is reported, not implied by a letter arriving | 2026-09-06 | `0e5b58f` |
 | The charts stopped publishing songs nobody shared | 2026-09-06 | `adef346` |
+| The live room: two questions, messages, panels, a closed link list | 2026-09-06 | `c9c4075` |
+| Connections on the profile; the engine bill removed | 2026-09-06 | `c398614`, `e98d21a` |
+| The talking prompt cards, recording and all | 2026-09-06 | `HEAD` |

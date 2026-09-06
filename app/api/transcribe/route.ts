@@ -260,6 +260,16 @@ export async function POST(request: Request): Promise<Response> {
      views of the same answer and the second costs a loop. */
   return Response.json({
     words,
-    ...(diarize ? { turns: turnsFrom(words), text: heard.text ?? '' } : {}),
+    /* The plain transcript, always.
+ 
+       It used to come back only when speakers were asked for, which was an
+       accident of the order these two were built rather than a decision: the
+       booth wanted words against a waveform and the transcript room wanted
+       turns, and nothing wanted the sentence on its own until the talking
+       prompt cards did. Joining the words back together on the client would
+       have worked and would have been the caller re-doing what the service
+       already sent. */
+    text: heard.text ?? words.map((one) => one.text).join(' ').replace(/\s+/g, ' ').trim(),
+    ...(diarize ? { turns: turnsFrom(words) } : {}),
   });
 }
