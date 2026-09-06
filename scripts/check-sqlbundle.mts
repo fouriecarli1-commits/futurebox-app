@@ -40,9 +40,12 @@ for (const name of ORDER) {
    where one of the two older files was never run. */
 ok('it refuses to run without public.events', /to_regclass\('public\.events'\) is null/.test(onDisk));
 ok('and without public.collabs', /to_regclass\('public\.collabs'\) is null/.test(onDisk));
+ok('and without public.tracks', /to_regclass\('public\.tracks'\) is null/.test(onDisk));
 ok(
   'and says which file to run first rather than raising a table error',
-  /Loop eers supabase\/events\.sql/.test(onDisk) && /Loop eers supabase\/collab\.sql/.test(onDisk),
+  /Loop eers supabase\/events\.sql/.test(onDisk) &&
+    /Loop eers supabase\/collab\.sql/.test(onDisk) &&
+    /Loop eers supabase\/schema\.sql/.test(onDisk),
 );
 
 if (failures) {

@@ -32,7 +32,7 @@ import { dirname, join } from 'node:path';
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 /** In the order they have to run. */
-export const ORDER = ['charts', 'addons', 'posting', 'dubs', 'invites'] as const;
+export const ORDER = ['charts', 'addons', 'posting', 'dubs', 'invites', 'listens'] as const;
 
 export const BUNDLE = join(ROOT, 'supabase/ALMAL.sql');
 
@@ -54,6 +54,8 @@ ${RULE}
 --   posting.sql   Die plaas-tou. Sonder dit antwoord dit "nie opgestel nie".
 --   dubs.sql      Oorklanking. Dieselfde antwoord sonder dit.
 --   invites.sql   Die uitnodigingsskakel in 'n saamwerk-e-pos.
+--   listens.sql   Hoeveel kere 'n liedjie geluister is, per liedjie, vir die
+--                 maker. Moet ná charts.sql loop.
 --
 -- ── Twee dinge moet reeds daar wees ────────────────────────────────────────
 --
@@ -61,6 +63,7 @@ ${RULE}
 --
 --   public.events    uit supabase/events.sql   — charts.sql brei dit uit
 --   public.collabs   uit supabase/collab.sql   — invites.sql wys daarna
+--   public.tracks    uit supabase/schema.sql   — listens.sql tel net jou eie
 --
 -- Die blok hieronder kyk daarvoor en sê in gewone woorde wat om eerste te
 -- loop as een van hulle kort. Dit is met opset 'n sin eerder as 'n Postgres-
@@ -81,6 +84,10 @@ begin
   if to_regclass('public.collabs') is null then
     raise exception
       'Loop eers supabase/collab.sql — invites.sql wys na public.collabs en dit bestaan nog nie.';
+  end if;
+  if to_regclass('public.tracks') is null then
+    raise exception
+      'Loop eers supabase/schema.sql — listens.sql tel luisterbeurte per liedjie en public.tracks bestaan nog nie.';
   end if;
 end $$;
 `;

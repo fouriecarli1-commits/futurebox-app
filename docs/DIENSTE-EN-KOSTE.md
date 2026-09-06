@@ -56,6 +56,7 @@ Supabase → SQL Editor → plak → Run. Veilig om weer te loop.
 | `supabase/posting.sql` | Die plaas-tou antwoord "nie opgestel nie" |
 | `supabase/dubs.sql` | Oorklanking antwoord "nie opgestel nie" |
 | `supabase/invites.sql` | Die uitnodigingsskakel in 'n saamwerk-e-pos werk nie |
+| `supabase/listens.sql` | 'n Maker sien nie hoeveel kere sy liedjie geluister is nie |
 
 **Of plak een lêer in plaas van vyf.** `supabase/ALMAL.sql` is daardie vyf in
 daardie volgorde, met 'n wag boaan wat sê watter ouer lêer eerste moet loop as
