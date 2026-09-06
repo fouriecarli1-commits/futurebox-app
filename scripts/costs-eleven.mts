@@ -313,6 +313,44 @@ for (const plan of EL_PLANS) {
 }
 say('');
 
+/* ── Video, en hoekom dit nie hier gereken word nie ───────────────────────
+ *
+ * Nie 'n leemte nie, 'n weiering. Twee getalle in die kode kan nie albei waar
+ * wees nie, en 'n som wat op een van hulle staan is 'n som wat mooi lyk en
+ * niks weet nie. */
+say('## Video — waarom dit hier ontbreek');
+say('');
+say("Video is nie in die somme hierbo nie, en dit is nie 'n leemte nie.");
+say('');
+{
+  /* Gereken, nie getik nie. Die eerste weergawe van hierdie paragraaf het
+     albei getalle uit die kop gegee en albei was verkeerd — in 'n paragraaf
+     wie se hele punt is dat 'n getal nie klop nie. */
+  const SEEDANCE_UNITS = 20;   // server/video/eleven.ts, per vyf sekondes
+  const SEEDANCE_RAND = 2.62;  // dieselfde lêer, "per greep"
+  const business = EL_PLANS[EL_PLANS.length - 1];
+  const atMusicRate = SEEDANCE_UNITS * randPerElCredit(business);
+  say("Die kode dra twee getalle vir dieselfde greep. `server/video/eleven.ts` sê");
+  say(`Seedance kos ${SEEDANCE_UNITS} ElevenLabs-eenhede per vyf sekondes, en dieselfde lêer sê`);
+  say(`'n greep kos ongeveer ${rand(SEEDANCE_RAND)}. By die koers wat die musiekkant gebruik —`);
+  say(`R${dec(randPerElCredit(business), 5)} per krediet op ${business.name} — is ${SEEDANCE_UNITS} krediete`);
+  say(`${rand(atMusicRate)}, nie ${rand(SEEDANCE_RAND)} nie. Die twee is ${Math.round(SEEDANCE_RAND / atMusicRate)} keer uit mekaar.`);
+}
+say('');
+say("Een van drie dinge is waar: video word teen 'n ander koers as musiek");
+say("gereken, of die R2,62 kom van 'n ander plan af, of een van die twee is");
+say('eenvoudig verkeerd. Van hier af kan dit nie uitgemaak word nie — die enigste');
+say("ding wat dit oplos is 'n regte faktuur.");
+say('');
+say('**Wat dit beteken vir jou:** die musiek-somme hierbo staan onafhanklik, want');
+say('musiek se koers is nagegaan. Moenie video by hulle optel voordat een faktuur');
+say('gesien is nie. En sit dit as vraag vyf by die e-pos aan ElevenLabs.');
+say('');
+say('Wat wel seker is: sonder Kling loop albei die video-enjins op die');
+say("ElevenLabs-sleutel wat jy reeds het, so video maak nie 'n nuwe rekening of");
+say("'n nuwe vaste koste nie — wat dit ook al per greep is.");
+say('');
+
 say('## Wat elke laag op sy eie los, by volle gebruik');
 say('');
 for (const plan of EL_PLANS) {

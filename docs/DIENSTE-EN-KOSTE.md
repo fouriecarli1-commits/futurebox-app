@@ -197,7 +197,7 @@ $990 is presies waar hierdie besigheid vir die eerste jaar gaan sit.
 
 ## Wat om te vra
 
-Nie "gee my afslag" nie. Vier spesifieke vrae, want 'n spesifieke vraag kry 'n
+Nie "gee my afslag" nie. Vyf spesifieke vrae, want 'n spesifieke vraag kry 'n
 spesifieke antwoord:
 
 1. **Is daar iets tussen Scale en Business?** 'n Trap teen ongeveer $500 met
@@ -209,7 +209,12 @@ spesifieke antwoord:
    eindgebruiker nie — dit is 'n toep wat ElevenLabs aan honderde
    Suid-Afrikaanse makers verkoop. Dit is verspreiding, en verspreiding is
    gewoonlik iets werd.
-4. **Dra die plan 'n kommersiële lisensie, en tot waar?** Lede mag wat hulle
+4. **Hoe word video gereken?** Twee getalle in ons eie kode kan nie albei waar
+   wees nie: Seedance is 20 eenhede per vyf sekondes, en dieselfde lêer sê 'n
+   greep kos ongeveer R2,62 — wat by die musiekkoers 91 keer uit mekaar is.
+   Vra of video uit dieselfde kredietpoel kom as musiek, en teen watter koers.
+   Sien `docs/KOSTE-EN-WINS.md`, "Video — waarom dit hier ontbreek".
+5. **Dra die plan 'n kommersiële lisensie, en tot waar?** Lede mag wat hulle
    maak verkoop en versprei. Kry dit skriftelik, met die planvlak by, want dit
    is die belofte waarop die toep se voorwaardes staan.
 

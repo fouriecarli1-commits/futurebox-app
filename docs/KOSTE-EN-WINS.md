@@ -116,6 +116,29 @@ sny.
 | Scale | 10 | — | Geen gratis toelae maak hierdie plan veilig nie — die plan self is te klein. |
 | Business | 10 | 10 | Niks hoef te verander nie. |
 
+## Video — waarom dit hier ontbreek
+
+Video is nie in die somme hierbo nie, en dit is nie 'n leemte nie.
+
+Die kode dra twee getalle vir dieselfde greep. `server/video/eleven.ts` sê
+Seedance kos 20 ElevenLabs-eenhede per vyf sekondes, en dieselfde lêer sê
+'n greep kos ongeveer R2,62. By die koers wat die musiekkant gebruik —
+R0,00144 per krediet op Business — is 20 krediete
+R0,03, nie R2,62 nie. Die twee is 91 keer uit mekaar.
+
+Een van drie dinge is waar: video word teen 'n ander koers as musiek
+gereken, of die R2,62 kom van 'n ander plan af, of een van die twee is
+eenvoudig verkeerd. Van hier af kan dit nie uitgemaak word nie — die enigste
+ding wat dit oplos is 'n regte faktuur.
+
+**Wat dit beteken vir jou:** die musiek-somme hierbo staan onafhanklik, want
+musiek se koers is nagegaan. Moenie video by hulle optel voordat een faktuur
+gesien is nie. En sit dit as vraag vyf by die e-pos aan ElevenLabs.
+
+Wat wel seker is: sonder Kling loop albei die video-enjins op die
+ElevenLabs-sleutel wat jy reeds het, so video maak nie 'n nuwe rekening of
+'n nuwe vaste koste nie — wat dit ook al per greep is.
+
 ## Wat elke laag op sy eie los, by volle gebruik
 
 ### Op ElevenLabs Creator
