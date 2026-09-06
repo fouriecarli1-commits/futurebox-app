@@ -30,7 +30,7 @@
  * nothing available the request is refused and nothing is charged.
  */
 
-import { admin, callerFrom, callerIsOwner, metered } from '@/app/lib/server/account';
+import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { CREDITS, videoCost } from '@/app/lib/credits';
@@ -134,43 +134,19 @@ export async function GET(request: Request): Promise<Response> {
     // The probe the studio asks before it offers the engine at all. `auth`
     // says which of the two key schemes was found, so somebody setting this up
     // can tell a missing key from a half-set pair without guessing.
-    //
-    // The month's spend is added for whoever runs the place, and only for
-    // them. It is the answer to "is this actually connected and how much of
-    // the allowance is gone", which is a question the operator should be able
-    // to answer by opening the video desk rather than by reading JSON — but it
-    // is also the size of somebody's bill, and that is nobody else's business.
-    const caller = metered() ? await callerFrom(request) : null;
     const grades = gradesAvailable();
 
-    // The operator gets every engine and what each has spent. Everybody else
-    // gets what the desk needs to draw itself and nothing about the bill.
-    let engines:
-      | { id: string; name: string; grade: string; model: string; used: number; ceiling: number }[]
-      | undefined;
+    /* The owner's spend used to be assembled here and sent with this answer.
+       It is gone, and so is the card on the profile that drew it — "haal die
+       elevenlabs en kling kaart heeltemal uit."
 
-    if (callerIsOwner(caller)) {
-      const client = admin();
-      engines = [];
-      for (const one of PROVIDERS) {
-        if (!one.configured()) continue;
-        const { data, error } = client
-          ? await client.rpc('video_spend_this_month', { p_provider: one.id })
-          : { data: null, error: true };
-        // Left out rather than reported as zero: a migration that has not been
-        // run and an allowance nobody has touched look identical from here,
-        // and only one of them is fine.
-        if (error || typeof data !== 'number') continue;
-        engines.push({
-          id: one.id,
-          name: one.name,
-          grade: one.grade,
-          model: one.model,
-          used: data,
-          ceiling: one.ceiling(),
-        });
-      }
-    }
+       Removed rather than left unrendered on purpose. A route that queries
+       every provider's month, builds a list of what each has cost, and sends
+       it to a screen that no longer exists is a database round trip per
+       provider on every load of the video desk, in exchange for nothing — and
+       it is the kind of thing that survives for a year because it does no
+       visible harm. The figures live in the ElevenLabs and Kling dashboards,
+       which is where an operator looks for a bill. */
 
     // What each grade can actually make, so the desk offers lengths and shapes
     // that exist rather than ones it will later refuse.
@@ -208,7 +184,6 @@ export async function GET(request: Request): Promise<Response> {
       // Whether attaching a picture does anything at all on any grade. The
       // desk hides the attachment rather than offering one that is dropped.
       startFrame: PROVIDERS.some((one) => one.configured() && one.can.startFrame),
-      ...(engines ? { engines } : {}),
     });
   }
 

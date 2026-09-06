@@ -33,7 +33,6 @@ import { X, CreditCard, Sparkles, LifeBuoy, ArrowRight, Mail, ListMusic, Brain, 
 import RecordingName from './RecordingName';
 import Connections from './Connections';
 import DeleteAccount from './DeleteAccount';
-import EngineSpend from './EngineSpend';
 import type { Creator } from '../lib/radar';
 import { useLang } from '../lib/i18n';
 import { TIER_SPECS, tierPrice, type Tier } from '../lib/plans';
@@ -351,8 +350,19 @@ export default function Account({
           </button>
         </section>
 
-        {/* Only the operator sees anything here — see `EngineSpend`. */}
-        <EngineSpend />
+        {/* The engine bill used to be here, and is gone.
+
+            "haal die elevenlabs en kling kaart heeltemal uit."
+
+            It appeared the hour OWNER_EMAIL was set and read, from her side,
+            as the app putting two suppliers' names on her own profile. It was
+            hers and only hers — no member ever had it — and it was still the
+            wrong thing on this screen. Removed rather than folded: the whole
+            chain behind it went too, because a route that assembles somebody's
+            spend and sends it to nothing is worse than one that never did.
+
+            What it told her lives where an operator actually looks for a bill:
+            the ElevenLabs and Kling dashboards, and `/api/analyse/setup`. */}
 
         {/* ── Deleting the account ─────────────────────────────────────
 

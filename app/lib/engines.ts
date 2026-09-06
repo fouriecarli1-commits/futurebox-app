@@ -186,19 +186,6 @@ export interface VideoGrades {
    * clip they paid for came from their picture.
    */
   readonly startFrame: boolean;
-  /**
-   * Every engine and what it has spent this month. Present only for whoever
-   * runs the place — it is the size of a bill, and the member buying a video
-   * has no business with it and no use for it.
-   */
-  readonly engines?: readonly {
-    readonly id: string;
-    readonly name: string;
-    readonly grade: string;
-    readonly model: string;
-    readonly used: number;
-    readonly ceiling: number;
-  }[];
 }
 
 /** Kept as the old name so screens that only wanted a yes or no still read. */
@@ -239,7 +226,6 @@ export async function probeVideoEngine(): Promise<VideoGrades> {
           sound: Boolean(data.sound),
           startFrame: Boolean(data.startFrame),
           ...(data.can ? { can: data.can } : {}),
-          ...(data.engines ? { engines: data.engines } : {}),
         };
       } catch {
         videoState = NO_ENGINE;

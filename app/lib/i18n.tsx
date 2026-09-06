@@ -770,8 +770,6 @@ export const STRINGS: Dict = {
   "account.channel": { en: "Your channel and your picture", af: "Jou kanaal en jou foto" },
   "account.channelNote": { en: "Your songs, your playlists, your profile picture.", af: "Jou liedjies, jou speellyste, jou profielfoto." },
   "account.legal": { en: "The", af: "Die" },
-  "spend.engines": { en: "What the engines have used this month", af: "Wat die enjins hierdie maand gebruik het" },
-  "spend.yoursOnly": { en: "Only you see this. It is what your own engine accounts have used this month \u2014 nobody else who signs in has this card at all, and it is here because this is the screen where you deal with the account.", af: "Net jy sien dit. Dit is wat jou eie enjinrekeninge hierdie maand gebruik het \u2014 niemand anders wat inteken het hierdie kaart glad nie, en dit is hier omdat dit die blad is waar jy die rekening hanteer." },
   "sub.none": { en: "You are not on a paid plan, so there is nothing to cancel. If you ever are, the button to end it is here, on this screen.", af: "Jy is nie op \u2019n betaalde plan nie, so daar is niks om te kanselleer nie. As jy ooit is, staan die knoppie om dit te be\u00ebindig hier, op hierdie blad." },
   "conn.title": { en: "Where else you are", af: "Waar jy nog is" },
   "conn.what": { en: "Your name on each platform. It is not a login and nothing is posted for you \u2014 what it does is make every link this app prints the right link, and put your name on every caption it writes. Kept on this device.", af: "Jou naam op elke platform. Dit is nie \u2019n intekening nie en niks word vir jou geplaas nie \u2014 wat dit doen is om elke skakel wat hierdie toep druk die regte skakel te maak, en jou naam op elke onderskrif te sit wat dit skryf. Op hierdie toestel gehou." },

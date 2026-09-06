@@ -447,7 +447,7 @@ export default function VideoCanvas({
                   came to make a video in. Only the operator ever saw it, and
                   the operator is the one person who does not need to be told
                   the model version while writing a shot. It is on the account
-                  screen behind **You** now — see `EngineSpend`. */}
+                  screen behind **You**, and then removed at her request. */}
             </>
           ) : (
             <p className="text-sm text-amber-300 flex items-start gap-2">
