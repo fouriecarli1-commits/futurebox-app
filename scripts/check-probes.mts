@@ -115,6 +115,33 @@ for (const script of named) {
     ok(`${name} kills the server it spawned`, /process\.kill\(-/.test(source));
   }
 
+  /* 3b. And the stopping actually runs.
+
+     Rule 3 asserts the cleanup is written down. It is not the same as the
+     cleanup running: `process.exit` ends the process immediately and a
+     `finally` below it never fires, so a probe that exits from inside its own
+     try leaves the server holding the port and its `page.tsx` sitting in
+     `app/` — which is the one thing that finally exists to prevent, and the
+     next run of that probe then talks to a server it did not start, with the
+     build from before.
+
+     `singview` did exactly this and rule 3 passed it, because the kill was
+     there and unreachable. Twenty-two other probes call `process.exit` too
+     and are fine: theirs sits *after* the finally, where the cleanup has
+     already happened. So the rule is about where it is, not whether it is.
+
+     `serve()` is exempt on purpose — it registers its stop on the process's
+     own `exit` event, which fires however the process leaves. */
+  const finallyAt = source.indexOf('} finally {');
+  const exitAt = source.search(/\bprocess\.exit\(/);
+  if (!usesServe && finallyAt !== -1 && exitAt !== -1) {
+    ok(
+      `${name} does not exit before its own cleanup`,
+      exitAt > finallyAt,
+      'process.exit sits inside the try, so the finally below it never runs',
+    );
+  }
+
   /* 4. It waits for the app rather than sleeping at it.
 
      Every one of these signs in and then has to know it is in. A flat

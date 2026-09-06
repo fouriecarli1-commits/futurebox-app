@@ -115,9 +115,10 @@ try {
   await b.close();
   if (problems.length) {
     console.error(`\n${problems.length} problem(s):\n  ${problems.join('\n  ')}\n`);
-    process.exit(1);
-  }
-  console.log('\nthe sing view: words first, waveform off the phone, the guide vocal named.');
+    process.exitCode = 1;   // not exit(): it would skip the finally below,
+                            // leaving the server on the port and this
+                            // probe's page.tsx sitting in app/.
+  } else console.log('\nthe sing view: words first, waveform off the phone, the guide vocal named.');
 
 } finally {
   /* The route goes, whether this passed, failed or threw. A probe page left
