@@ -250,16 +250,25 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     purpose:
       "The video desk: marketing, podcast and social clips built scene by scene.",
     helps: {
-      en: "I can write the scene, pick a starting point, and set the length and the shape.",
-      af: "Ek kan die toneel skryf, ’n beginpunt kies, en die lengte en die vorm stel.",
+      en: "I can write the whole shot list onto the board, set the look they all share, and set the length and the shape.",
+      af: "Ek kan die hele toneellys op die bord skryf, die voorkoms stel wat hulle almal deel, en die lengte en die vorm stel.",
     },
-    can: ["write a scene", "pick a template", "set the length and shape"],
+    can: [
+      "write the shot list onto the board",
+      "set the look the whole video shares",
+      "pick a template",
+      "set the length and shape",
+    ],
     ops: {
       set_prompt:
         "the value is the full description of the shot, as you would tell a camera operator",
       set_aspect: "the value is exactly one of 16:9, 9:16 or 1:1",
       set_seconds:
         "the value is a whole number of seconds, and one the desk offers",
+      write_scenes:
+        "the value is the whole shot list, one shot per line, in the order they should play \u2014 use this rather than describing the scenes in the chat, because the person cannot type them onto the board from a message",
+      set_look:
+        "the value is the look the whole video shares, in a few words \u2014 the film stock, the light, the palette \u2014 and not what happens in any one shot",
     },
     seeds: [
       {
