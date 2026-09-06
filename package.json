@@ -68,6 +68,7 @@
     "check:makesong": "tsx scripts/check-makesong.mts",
     "check:makeroom": "node audit/makesong.mjs",
     "check:listen": "tsx scripts/check-listen.mts",
+    "check:listencount": "tsx scripts/check-listencount.mts",
     "check:staysignedin": "node audit/staysignedin.mjs",
     "check:liveroom": "node audit/liveroom.mjs",
     "check:photo": "tsx scripts/check-photo.mts",

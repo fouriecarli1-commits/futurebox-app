@@ -115,6 +115,18 @@ for (const path of GATED) {
   check('a repeated charge cannot be counted twice',
     /addon_grants/.test(sql) && /on conflict \(reference\) do nothing/.test(sql),
     'a retried webhook hands out a second month for one payment');
+  /* And the constraint the clause above depends on.
+ 
+     `on conflict (reference)` is not valid SQL without a unique index on that
+     column — Postgres raises "no unique or exclusion constraint matching the
+     ON CONFLICT specification" and `grant_addon` throws on every call, so
+     nobody gets what they paid for. Taking `primary key` off the column left
+     this check printing ok, because it read the clause and not the thing that
+     makes the clause legal. */
+  check('and the column that clause relies on is actually unique',
+    /reference\s+text\s+(primary key|unique)/i.test(sql) ||
+      /unique\s*\(\s*reference\s*\)/i.test(sql),
+    'on conflict (reference) is invalid without it, so every grant throws');
   check('time is extended from the later of now and the current end',
     /greatest\(public\.addons\.until,\s*now\(\)\)/.test(sql),
     'buying early throws away the rest of the month, or buying late back-dates it');

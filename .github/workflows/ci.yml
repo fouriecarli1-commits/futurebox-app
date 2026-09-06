@@ -125,6 +125,11 @@ jobs:
       - name: Every variable the app reads is written down
         run: npm run check:envdoc
 
+      # Both numbers or neither, her songs only, and no browser may ask.
+      # The SQL appeared in the bundler and in no check at all.
+      - name: The listen count is hers, and honest
+        run: npm run check:listencount
+
       # Three things have an opinion about the language and they do not carry
       # equal weight. The rule lived inside two React effects where it could
       # not be run, and the bug she hit was invisible to everything.

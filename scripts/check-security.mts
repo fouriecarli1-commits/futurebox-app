@@ -124,7 +124,10 @@ if (existsSync('.next/static')) {
   const newest = (dir: string, match: RegExp) =>
     walk(dir, [], match).reduce((at, f) => Math.max(at, statSync(f).mtimeMs), 0);
   if (newest('app', /\.(ts|tsx)$/) > newest('.next/static', /\.js$/)) {
-    fail('the bundle is newer than the code', 'run `npx next build` first — this read a stale bundle');
+    fail(
+      'the bundle was built from this code',
+      'app/ has changed since the last `npx next build` — run it, or this reads a stale bundle',
+    );
   }
   const bundle = walk('.next/static', [], /\.js$/).map((f) => readFileSync(f, 'utf8')).join('\n');
   for (const secret of SECRETS) {
