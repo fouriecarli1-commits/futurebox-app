@@ -697,3 +697,78 @@ reached. Egress is blocked from here to elevenlabs.io, music.ai and the deployed
 site. The first real recording she makes on the phone is still the first true
 test of the talking cards, and if it fails now it will fail with a reason
 printed, which it did not before.
+
+## L. Three more of the same, and the one that was red on main
+
+### The scene window's operations were registered and never offered
+
+`write_scenes` and `set_look` went into the storyboard and `surfaces.ts` was
+never told they exist. The copilot is offered the operations named in the
+registry and nothing else, so it could still describe a music video in the chat
+and she would still have had to retype it shot by shot — which is the exact half
+of her ask that was missing before that commit.
+
+`check:ops` catches it. I did not run `check:ops` before landing that commit, so
+main was red from the moment it went in until it was found here. Every check
+lands straight on main, main is what Vercel deploys, and a check that is only run
+when somebody remembers is not a check. **The full source sweep is 44 checks and
+takes about four minutes; run it before landing, not the three that look
+relevant.**
+
+### Sing over a song you brought in yourself
+
+The selfie camera lives behind the words button on a card in the channel, and the
+channel read `loadTracks()` only. Uploads live beside it on purpose — the channel
+is what you made here, it syncs, it is what gets posted — so a recording she
+already had never had a card, and so never had the camera. The booth has stood
+the two side by side for months for exactly this reason.
+
+They are shown now and still not *in* it. Three of the card's controls would be
+false for a brought-in song and each is off: **Post to Live** would put it in the
+public room under her recording name, which is a claim of authorship over a file
+that may be anyone's — and the person that wrongs is not in the room to object;
+**Cover art** bills a generation and files artwork on the account for a song the
+account did not make; **the studio** regenerates from a plan a brought-in song has
+never had.
+
+### The take that did not have the song on it
+
+The words screen recorded the stream `getUserMedia` returns — camera and
+microphone — so the song reached the file only as room sound. On headphones it
+did not reach the file at all, and headphones are how anybody sings along.
+
+The clean copy is mixed in now, from a buffer source rather than an `<audio>`
+element: an element routed into a Web Audio graph stays routed after the screen
+closes, which is the objection that kept this unbuilt, and a buffer source does
+not have it.
+
+**It is a choice and the choice is real.** The microphone stays open, so a clean
+copy while the song also comes off a speaker puts the song on the file twice,
+milliseconds apart. No browser will say whether headphones are plugged in, so she
+is asked — once, remembered, because it is a fact about her and not about the
+song — and there is no Record button until it is answered.
+
+Two failures in that screen are silent until somebody plays a take back, so both
+are checked rather than trusted: the camera stream carries its own microphone
+track and the graph carries the same microphone again, and putting both on one
+file doubles every word she sings; and the shared element is muted while the mix
+runs, so a path out of recording that forgets to unmute leaves every song she
+plays afterwards silent.
+
+### Where the bug class stands
+
+Four instances now — two unsigned calls, one undescribed op pair, one screen
+reading the wrong list. All four are the same shape: the feature was built
+correctly and the thing that makes it reachable was not, and in every case the
+room's own probe passed. Four checks exist for it now (`check:signed`,
+`check:reachable`, `check:ops`, `check:broughtin`), and the general rule stands:
+**where a probe has to stub or mock something to run, the stub is the blind spot,
+and the blind spot needs a check that reads source rather than clicks.**
+
+### Still not proven from here
+
+Nothing in this section has run against a real camera, a real microphone or a
+real deployment. Playwright is not launched with fake media devices, so no probe
+exercises `getUserMedia` at all — the mixing is checked as a rule and as source,
+not as a recording anybody has watched. The first take she films on her phone is
+the first real test of it.
