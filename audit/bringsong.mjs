@@ -198,8 +198,20 @@ try {
     await dismissDoor(p);
     await p.waitForTimeout(500);
   }
-  await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
-  await p.waitForTimeout(1800);
+  /* The Studio press, only when it is needed.
+
+     After the reload the app comes back at the studio's own front door — the
+     `z-[55]` sheet — which covers the header. So this press was aimed at a
+     button behind the very screen it was trying to open, and Playwright said
+     so plainly for thirty seconds: "subtree intercepts pointer events". Three
+     runs were spent reading that as a timing fault.
+
+     The door being open already is the good case, not a special one. */
+  const atDoor = p.locator('div.fixed.inset-0.z-\\[55\\] button').first();
+  if (!(await atDoor.isVisible().catch(() => false))) {
+    await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
+    await atDoor.waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
+  }
   await intoRoom('Video desk');
 
   const addShot = room.locator('button').filter({ hasText: /^Add a shot/ }).first();
