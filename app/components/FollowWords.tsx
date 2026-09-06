@@ -50,10 +50,14 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Camera, CameraOff, Circle, Download, Ear, Loader2, Square, X } from 'lucide-react';
+import { Camera, CameraOff, Circle, Download, Ear, Headphones, Loader2, Speaker, Square, X } from 'lucide-react';
 import { lineAt, type TimedLine } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
 import { downloadBlob, safeFilename } from '../lib/library';
+import { mixFor, type Mix } from '../lib/singmix';
+
+/** Where the headphones answer is kept. Hers, not this song's. */
+const EARS_KEY = 'futurebox.sing.ears.v1';
 
 export default function FollowWords({
   lines,
@@ -62,6 +66,7 @@ export default function FollowWords({
   onClose,
   askWords,
   wordCost,
+  songFile,
 }: {
   lines: readonly TimedLine[];
   /** The element that is actually playing, so the words follow the sound. */
@@ -87,6 +92,18 @@ export default function FollowWords({
   askWords?: () => Promise<string | null>;
   /** What that costs, so the press is informed. */
   wordCost?: number;
+  /**
+   * The song itself, for mixing a clean copy onto the take.
+   *
+   * A function rather than a blob, because the file is read out of IndexedDB
+   * and this screen opens the instant the button is pressed — waiting for a
+   * read before the words appear would be a button that does nothing for a
+   * second. Called once, when recording starts and the mode needs it.
+   *
+   * Absent when there is no file on this device. The take is then whatever
+   * the microphone hears, which is what it always was.
+   */
+  songFile?: () => Promise<Blob | null>;
 }): React.ReactElement {
   const { t } = useLang();
   const [at, setAt] = useState(0);
@@ -127,14 +144,50 @@ export default function FollowWords({
   const [recording, setRecording] = useState(false);
   const [take, setTake] = useState<Blob | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  const mix = useRef<Mix | null>(null);
+
+  /**
+   * Whether she is wearing headphones — the one fact that decides what the
+   * take can hold, and the one no browser will tell us.
+   *
+   * On headphones the song can be mixed onto the file clean, which is what
+   * she asked for. Out loud it cannot: the microphone is open, so a clean
+   * copy plus the same song coming off a speaker is the song twice, a few
+   * milliseconds apart, which is an echo.
+   *
+   * Remembered, because it is a fact about her and not about this song, and
+   * being asked it before every take would be furniture. `null` means not
+   * asked yet, and until it is answered there is no Record button — this is
+   * the one question worth standing in front of the button.
+   */
+  const [ears, setEars] = useState<'phones' | 'aloud' | null>(null);
+  useEffect(() => {
+    try {
+      const was = window.localStorage.getItem(EARS_KEY);
+      if (was === 'phones' || was === 'aloud') setEars(was);
+    } catch {
+      /* Storage blocked. She is asked again, which is the safe way to be wrong. */
+    }
+  }, []);
+  const chooseEars = (which: 'phones' | 'aloud'): void => {
+    setEars(which);
+    try {
+      window.localStorage.setItem(EARS_KEY, which);
+    } catch {
+      /* Not remembered. Still answered for this take. */
+    }
+  };
 
   const stopCamera = React.useCallback((): void => {
     recorder.current?.state === 'recording' && recorder.current.stop();
     stream.current?.getTracks().forEach((one) => one.stop());
     stream.current = null;
+    mix.current?.stop();
+    mix.current = null;
+    if (audio) audio.muted = false;
     setFilming(false);
     setRecording(false);
-  }, []);
+  }, [audio]);
 
   // The camera is released when this closes, always. A light left on after
   // somebody thinks they have stopped filming is the worst bug this could have.
@@ -179,9 +232,9 @@ export default function FollowWords({
     }
   };
 
-  const startRecording = (): void => {
-    const source = stream.current;
-    if (!source || typeof MediaRecorder === 'undefined') return;
+  const startRecording = async (): Promise<void> => {
+    const camera = stream.current;
+    if (!camera || typeof MediaRecorder === 'undefined') return;
     const type = ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find((one) =>
       MediaRecorder.isTypeSupported(one),
     );
@@ -189,20 +242,51 @@ export default function FollowWords({
       setProblem(t('sing.noRecord', 'This browser cannot record video.'));
       return;
     }
+    setProblem(null);
+
+    /* The song onto the file, when she has said she is on headphones.
+
+       Out loud it is deliberately not mixed: the microphone is open and the
+       speaker is playing, so a clean copy would be the song twice, a few
+       milliseconds apart. Out loud the take is what the room sounds like,
+       which is what it always was. */
+    let built: Mix | null = null;
+    if (ears === 'phones' && songFile) {
+      const file = await songFile().catch(() => null);
+      built = await mixFor(camera, file, audio?.currentTime ?? 0);
+      /* One sound in the room, and it is the one being recorded. The shared
+         element is muted rather than paused, so the words keep following it —
+         `currentTime` is what they read, and a paused song stops the screen. */
+      if (built.withSong && audio) audio.muted = true;
+    }
+    mix.current = built;
+
     chunks.current = [];
-    const made = new MediaRecorder(source, { mimeType: type });
+    const made = new MediaRecorder(built ? built.stream : camera, { mimeType: type });
     made.ondataavailable = (event) => {
       if (event.data.size) chunks.current.push(event.data);
     };
     made.onstop = () => setTake(new Blob(chunks.current, { type }));
     recorder.current = made;
     made.start();
+    built?.start();
     setTake(null);
     setRecording(true);
   };
 
+  /* Give the song back to the room. Called from every path out of recording —
+     the stop button, closing the screen, the camera being switched off — so a
+     muted element cannot outlive the take that muted it and leave her with a
+     song that plays silently ever after. */
+  const endMix = React.useCallback((): void => {
+    mix.current?.stop();
+    mix.current = null;
+    if (audio) audio.muted = false;
+  }, [audio]);
+
   const stopRecording = (): void => {
     recorder.current?.stop();
+    endMix();
     setRecording(false);
   };
 
@@ -357,10 +441,52 @@ export default function FollowWords({
             </button>
           ) : (
             <>
+              {/* The one question worth standing in front of the button.
+
+                  No browser will say whether headphones are in, and the
+                  answer decides what the take can hold: on headphones the
+                  song is mixed onto the file clean, which is what she asked
+                  for; out loud it cannot be, because the microphone would
+                  catch the same song off the speaker and put it on twice.
+
+                  Asked once and remembered — it is a fact about her, not
+                  about this song. */}
+              {ears === null ? (
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => chooseEars('phones')}
+                    className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-emerald-500 text-onAccent hover:bg-emerald-400 flex items-center gap-2"
+                  >
+                    <Headphones className="w-4 h-4" />
+                    {t('sing.onPhones', 'I have headphones in')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => chooseEars('aloud')}
+                    className="px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-2"
+                  >
+                    <Speaker className="w-4 h-4" />
+                    {t('sing.onSpeaker', 'It is playing out loud')}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => chooseEars(ears === 'phones' ? 'aloud' : 'phones')}
+                  disabled={recording}
+                  aria-label={t('sing.switchEars', 'Change how you are listening')}
+                  className="px-3 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-400 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {ears === 'phones' ? <Headphones className="w-4 h-4" /> : <Speaker className="w-4 h-4" />}
+                  {ears === 'phones' ? t('sing.phones', 'Headphones') : t('sing.aloudShort', 'Out loud')}
+                </button>
+              )}
               <button
                 type="button"
-                onClick={recording ? stopRecording : startRecording}
-                className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 ${
+                disabled={ears === null}
+                onClick={recording ? stopRecording : () => void startRecording()}
+                className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-40 ${
                   recording
                     ? 'bg-rose-500 text-white'
                     : 'bg-emerald-500 text-onAccent hover:bg-emerald-400'
@@ -393,12 +519,24 @@ export default function FollowWords({
 
         {problem && <p className="text-sm text-rose-400 text-center leading-snug">{problem}</p>}
 
+        {/* What the take will actually hold, said before it is made rather
+            than discovered when it is played back. */}
         {filming && !recording && !take && (
           <p className="text-sm text-amber-300/90 text-center leading-snug">
-            {t(
-              'sing.aloud',
-              'The recording picks up whatever the microphone hears, so play the song out loud. On headphones the take comes back with only your voice on it.',
-            )}
+            {ears === null
+              ? t(
+                  'sing.whichEars',
+                  'How are you listening? On headphones the song goes onto the take clean. Out loud it cannot, because the microphone would catch it off the speaker and put it on twice.',
+                )
+              : ears === 'phones'
+                ? t(
+                    'sing.phonesNote',
+                    'The song goes onto the take clean, with your voice over it. Keep the headphones on \u2014 if it comes out of a speaker as well you will hear it twice.',
+                  )
+                : t(
+                    'sing.aloud',
+                    'The take is whatever the microphone hears, so play the song out loud. On headphones it would come back with only your voice on it.',
+                  )}
           </p>
         )}
 

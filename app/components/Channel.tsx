@@ -996,6 +996,12 @@ export default function Channel({
           title={lyricsFor.track.title}
           onClose={() => setLyricsFor(null)}
           wordCost={perMinute(lyricsFor.track.seconds, CREDITS.transcribe)}
+          /* For mixing a clean copy of the song onto the take, when she
+             says she is on headphones. Read here rather than passed as a
+             blob: the words screen opens the instant the button is
+             pressed, and a read from the database before anything drew
+             would be a button that does nothing for a second. */
+          songFile={() => readAudio(lyricsFor.track.id)}
           askWords={async () => {
             /* Read off this device rather than passed in: the words screen is
                opened from a card that may have been drawn before the audio

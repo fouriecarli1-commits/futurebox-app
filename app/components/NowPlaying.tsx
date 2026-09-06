@@ -235,6 +235,12 @@ export default function NowPlaying({
           title={track.title}
           onClose={() => setFollowing(false)}
           wordCost={perMinute(track.seconds, CREDITS.transcribe)}
+          /* For mixing a clean copy of the song onto the take, when she
+             says she is on headphones. Read here rather than passed as a
+             blob: the words screen opens the instant the button is
+             pressed, and a read from the database before anything drew
+             would be a button that does nothing for a second. */
+          songFile={() => readAudio(track.id)}
           askWords={async () => {
             const blob = await readAudio(track.id);
             if (!blob) {

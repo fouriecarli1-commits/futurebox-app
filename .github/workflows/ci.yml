@@ -114,6 +114,11 @@ jobs:
       - name: A brought-in song reaches the camera, and claims nothing
         run: npm run check:broughtin
 
+      # The song onto the take, and the microphone on it only once. Both
+      # faults are silent until somebody plays the recording back.
+      - name: A selfie take holds the picture, the song and her voice
+        run: npm run check:singmix
+
       # Three things have an opinion about the language and they do not carry
       # equal weight. The rule lived inside two React effects where it could
       # not be run, and the bug she hit was invisible to everything.

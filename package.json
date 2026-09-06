@@ -13,6 +13,7 @@
     "check:probes": "tsx scripts/check-probes.mts",
     "check:signed": "tsx scripts/check-signed.mts",
     "check:broughtin": "tsx scripts/check-broughtin.mts",
+    "check:singmix": "tsx scripts/check-singmix.mts",
     "check:language": "tsx scripts/check-language.mts",
     "check:heard": "tsx scripts/check-heard.mts",
     "check:reachable": "tsx scripts/check-reachable.mts",
