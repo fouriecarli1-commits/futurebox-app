@@ -25,6 +25,7 @@ import { CREDITS, perMinute } from '../lib/credits';
 import { accessToken } from '../lib/cloud';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
+import { addUpload, loadUploads, removeUpload } from '../lib/uploads';
 import { levelOf, loadOwned, NOTHING, type Owned } from '../lib/purchases';
 import {
   loadPlaylists, moved, newPlaylist, savePlaylists, withTrack, withoutTrack, type Playlist,
@@ -103,6 +104,9 @@ export default function Channel({
   const [keepFailed, setKeepFailed] = useState<string | null>(null);
   /** Which song has been asked for a real cover, if any. */
   const [sleeveFor, setSleeveFor] = useState<string | null>(null);
+  /** A file being taken in, and what was wrong with it if it was refused. */
+  const [taking, setTaking] = useState(false);
+  const [tookBadly, setTookBadly] = useState<string | null>(null);
   /**
    * What has been listened to on this device, and how the grid is narrowed.
    *
@@ -181,10 +185,64 @@ export default function Channel({
   /** The queue as the 'ended' handler will see it, which state alone would not. */
   const queueRef = useRef<string[]>([]);
 
+  /**
+   * The channel, and beside it the songs somebody brought in from a file.
+   *
+   * "Dit sal baie cool wees as iemand ook hulle eie liedjies kon oplaai om
+   *  daai presies funksie te vervul."
+   *
+   * The function she means is the selfie camera behind the words button: the
+   * phone films you, the song plays out loud, the lines scroll over the
+   * viewfinder and never reach the file. It lives on a card in this room and
+   * this room read `loadTracks()` and nothing else — so for the one case she
+   * named, a recording you already have, there was no card and therefore no
+   * camera. The booth already stands them side by side for the same reason.
+   *
+   * They are still not *in* the channel. The channel is what you made here;
+   * it syncs, it is what gets posted, and a file off a phone belongs in
+   * neither. What the card offers is narrowed to match, below.
+   */
+  const reload = useCallback(() => {
+    setTracks([...loadTracks(), ...loadUploads()]);
+  }, []);
+
   useEffect(() => {
-    setTracks(loadTracks());
+    reload();
     setLists(loadPlaylists());
-  }, [reloadKey]);
+  }, [reloadKey, reload]);
+
+  /* Take a file in from here.
+     Decoded before it is kept, so a file this browser cannot play is refused
+     with a sentence now rather than with a camera that films in silence. */
+  const bringIn = useCallback(
+    async (file: File | null) => {
+      if (!file) return;
+      setTaking(true);
+      setTookBadly(null);
+      try {
+        await addUpload(file);
+        reload();
+      } catch (error) {
+        const why = error instanceof Error ? error.message : '';
+        setTookBadly(
+          why === 'too-big'
+            ? t('chan.songTooBig', 'That file is over 60 MB. Trim it or export it smaller.')
+            : t('chan.songUnreadable', 'This browser could not read that audio. MP3, WAV or M4A work.'),
+        );
+      } finally {
+        setTaking(false);
+      }
+    },
+    [reload, t],
+  );
+
+  const dropUpload = useCallback(
+    async (id: string) => {
+      await removeUpload(id);
+      reload();
+    },
+    [reload],
+  );
 
   useEffect(() => {
     loadOwned().then(setOwned);
@@ -526,6 +584,42 @@ export default function Channel({
 
       {/* ── The music ────────────────────────────────────────────────────── */}
 
+      {/* Bring one in.
+
+          Here, and not only in the video rooms, because this is the room the
+          songs are in and the thing she asked to do with a brought-in song —
+          film yourself singing it with the words up — is a button on a card
+          in this grid. A song you cannot get into the grid is a song that
+          cannot reach it.
+
+          It stays on the device and never syncs. Said out loud on the label,
+          because a file uploaded into an app is normally gone somewhere. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <label
+          className={`inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 ${
+            taking ? 'pointer-events-none opacity-60' : ''
+          }`}
+        >
+          {taking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          {taking
+            ? t('chan.bringingIn', 'Reading it\u2026')
+            : t('chan.bringIn', 'Bring in a song of your own')}
+          <input
+            type="file"
+            accept="audio/*"
+            className="hidden"
+            onChange={(event) => {
+              void bringIn(event.target.files?.[0] ?? null);
+              event.target.value = '';
+            }}
+          />
+        </label>
+        <p className="text-sm text-zinc-500">
+          {t('chan.bringInWhy', 'It stays on this device. Sing over it with the words on screen.')}
+        </p>
+      </div>
+      {tookBadly && <p className="text-sm leading-snug text-amber-300">{tookBadly}</p>}
+
       {/* Narrowing it, once there is enough of it to need narrowing.
 
           Under five songs a filter is furniture: you can see all of them. It
@@ -565,7 +659,7 @@ export default function Channel({
 
       {tracks.length === 0 ? (
         <p className="text-base text-zinc-500 py-10 text-center border border-dashed border-zinc-800 rounded-2xl">
-          {t('chan.noSongs', 'Nothing here yet. Make a song and it lands in your channel.')}
+          {t('chan.noSongs', 'Nothing here yet. Make a song and it lands in your channel \u2014 or bring one in from a file and sing over that.')}
         </p>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -622,6 +716,17 @@ export default function Channel({
                     title={t('chan.unheard', 'Not heard yet')}
                     className="absolute right-2 top-2 h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-zinc-950"
                   />
+                )}
+                {/* Brought in, not made here.
+
+                    Said on the card rather than left to be inferred, because
+                    every other card in this grid is something this app wrote
+                    and a grid that mixes the two without saying so is a grid
+                    that quietly takes credit for somebody's own recording. */}
+                {track.source === 'upload' && (
+                  <span className="absolute left-2 top-2 px-2 py-0.5 rounded-full bg-zinc-950/80 text-zinc-300 text-[10px] font-bold ring-1 ring-zinc-700">
+                    {t('chan.broughtIn', 'Brought in')}
+                  </span>
                 )}
                 {playing === track.id && (
                   <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-emerald-500 text-onAccent text-[10px] font-bold">
@@ -749,15 +854,30 @@ export default function Channel({
                       <Plus className="w-3.5 h-3.5" />
                       {t('chan.addTo', 'Add to a playlist')}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setSleeveFor((open) => (open === track.id ? null : track.id))}
-                      aria-expanded={sleeveFor === track.id}
-                      className="text-sm text-zinc-400 hover:text-emerald-300 flex items-center gap-1.5"
-                    >
-                      <ImageIcon className="w-3.5 h-3.5" />
-                      {t('make.cover', 'Cover art')}
-                    </button>
+                    {/* Three of these are about a song this app made, and
+                        none of them is true of a file somebody brought in.
+
+                        Cover art bills a generation and files the result on
+                        the account as artwork for this song. Post to Live puts
+                        it in the public room under her handle, which is a
+                        claim of authorship over a recording that may be
+                        anyone's. The studio regenerates from a plan that a
+                        brought-in song has never had.
+
+                        What is left is what she asked for — play it, open it
+                        full screen, and sing over it with the words up — plus
+                        the playlist, which is only a list of ids. */}
+                    {track.source !== 'upload' && (
+                      <button
+                        type="button"
+                        onClick={() => setSleeveFor((open) => (open === track.id ? null : track.id))}
+                        aria-expanded={sleeveFor === track.id}
+                        className="text-sm text-zinc-400 hover:text-emerald-300 flex items-center gap-1.5"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        {t('make.cover', 'Cover art')}
+                      </button>
+                    )}
                     {/* The file itself.
 
                         Beside the other two rather than hidden behind the
@@ -782,8 +902,18 @@ export default function Channel({
                     {/* And into the live room, from the room the finished
                         songs are in. It used to be reachable only from a list
                         inside Live that showed the first six. */}
-                    <PostToLive track={track} />
-                    {onEdit && (
+                    {track.source !== 'upload' && <PostToLive track={track} />}
+                    {track.source === 'upload' && (
+                      <button
+                        type="button"
+                        onClick={() => void dropUpload(track.id)}
+                        className="text-sm text-zinc-500 hover:text-red-400 flex items-center gap-1.5"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        {t('chan.dropBrought', 'Take it out again')}
+                      </button>
+                    )}
+                    {onEdit && track.source !== 'upload' && (
                       <button
                         type="button"
                         onClick={() => onEdit(track.id)}

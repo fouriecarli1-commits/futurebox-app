@@ -109,6 +109,11 @@ jobs:
       - name: Every call to a route that reads its caller carries one
         run: npm run check:signed
 
+      # The camera she could not find, on the song she brought in herself —
+      # and the three controls on that card that would claim it as hers.
+      - name: A brought-in song reaches the camera, and claims nothing
+        run: npm run check:broughtin
+
       # Three things have an opinion about the language and they do not carry
       # equal weight. The rule lived inside two React effects where it could
       # not be run, and the bug she hit was invisible to everything.
