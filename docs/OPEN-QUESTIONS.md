@@ -840,3 +840,57 @@ character window that was too small, and the contrast rule before it existed.
 No probe has ever run against the deployed site, a real ElevenLabs key, or a
 real camera. Chromium's fake devices make the recording path testable and do
 not make it true.
+
+## N. Breaking the checks on purpose, and what a scan for it is worth
+
+Twelve of the seventy-six have now been broken deliberately to see whether they
+go red. Three did not, and each failure was a different shape.
+
+**A tautology.** `check:prices` compared `videoCost(...)` against
+`CREDITS.video * units * mult`, with the constant on both sides. Changing the
+video rate moved both together: twenty-four green ticks, and the price a member
+pays had changed. A price test's expected values are the specification, not a
+re-derivation of the thing being tested.
+
+**A clause that outlived its constraint.** `check:addons` asserted
+`on conflict (reference) do nothing` and not the unique index that clause needs
+to be legal. Take `primary key` off the column and the check still passed,
+while Postgres would raise on every call and nobody would get what they paid
+for.
+
+**A subject nothing looked at.** `check:listen` is about tempo and key
+detection. The listen count — both numbers, and the owner join that is the only
+access control on a `security definer` function — was in the bundler and in no
+assertion at all.
+
+### Scanning for the class, and what the scan was worth
+
+Two scans. The first looked for the tautology signature — the same imported
+value on both sides of a comparison — and found ten lines, of which eight were
+`f(a) === x && f(b) === y` split by the regex and fine. The two real ones are
+low stakes and now pinned anyway: `MOST_SHOTS` and `MOST_TILT_DB` were each
+compared against the constant that defines them, which proves the cap is
+applied and says nothing about what it is.
+
+The second looked for checks that match a regex against source without
+stripping comments, so a comment naming the thing satisfies the claim. It
+listed twelve. **The listing overstated it**: most test a small extracted
+substring — `check:tabbar` matches `paddingBottom` values, where a comment
+cannot appear — and the whole-file ones were the checks already verified
+against real injected faults. Recorded because the risk is real in principle,
+not acted on, because acting on it would have been twelve files of churn for a
+fault nobody has produced.
+
+Worth noting which way that one fails: a comment naming a *removed* thing
+breaks a negative assertion and raises a false **alarm**, which somebody
+investigates. `check:probes` actually suffered that. The false-pass direction
+needs a comment containing the exact expression the check looks for, which is
+rarer.
+
+### The method, since three of my own injections did not land
+
+A stale bundle, a comment edited instead of the code, and a regex that matched
+nothing. Each looked exactly like a check that does not work, and one of them
+had me three runs deep into concluding `check:security` was toothless when it
+was not. **Confirm the injection landed before drawing any conclusion from
+it** — print the changed line, not just the exit code.

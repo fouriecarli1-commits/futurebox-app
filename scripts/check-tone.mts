@@ -99,10 +99,15 @@ for (const drive of [0, 0.1, 0.35, 0.7, 1]) {
 
 // ── The tilt ─────────────────────────────────────────────────────────────
 check('the middle of the colour control is flat', tiltDb(0.5) === 0);
-check('all the way dark is the full cut', near(tiltDb(0), -MOST_TILT_DB, 1e-9), String(tiltDb(0)));
-check('all the way bright is the full lift', near(tiltDb(1), MOST_TILT_DB, 1e-9), String(tiltDb(1)));
+/* Pinned, for the reason check:prices was: comparing the clamp against the
+   constant that defines it proves the clamping happens and leaves the range
+   free to drift. Twelve decibels is the decision. */
+const FULL_DB = 12;
+check('the full tilt is 12 dB', MOST_TILT_DB === FULL_DB, String(MOST_TILT_DB));
+check('all the way dark is the full cut', near(tiltDb(0), -FULL_DB, 1e-9), String(tiltDb(0)));
+check('all the way bright is the full lift', near(tiltDb(1), FULL_DB, 1e-9), String(tiltDb(1)));
 check('and a value outside the range is clamped rather than exaggerated',
-  tiltDb(5) === MOST_TILT_DB && tiltDb(-5) === -MOST_TILT_DB);
+  tiltDb(5) === FULL_DB && tiltDb(-5) === -FULL_DB);
 
 if (bad) {
   console.error(`\ncheck:tone — ${bad} wrong.`);

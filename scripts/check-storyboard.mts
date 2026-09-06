@@ -67,7 +67,15 @@ ok('each one gets its own id', new Set(written.map((one) => one.id)).size === wr
 ok('and the length the desk said', written.every((one) => one.seconds === 5));
 
 const many = shotsFrom(Array.from({ length: MOST_SHOTS + 10 }, (_, i) => `Shot ${i}`).join('\n'), 5);
-ok(`no more than ${MOST_SHOTS} shots come back`, many.length === MOST_SHOTS, `${many.length}`);
+/* The cap's value written here too, not only its name.
+ 
+   `many.length === MOST_SHOTS` proves the cap is applied and says nothing
+   about what it is: change the constant and both sides move together, exactly
+   as check:prices did with the video rate. Thirty shots is a decision about
+   how long a board can get before it stops being usable, so it is pinned. */
+const CAP = 30;
+ok(`the cap is ${CAP} shots`, MOST_SHOTS === CAP, `the code says ${MOST_SHOTS}`);
+ok(`no more than ${CAP} shots come back`, many.length === CAP, `${many.length}`);
 
 /* ── And the room registers them, and keeps what was paid for ───────────── */
 
