@@ -217,13 +217,17 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
   canvas: {
     id: "canvas",
     stage: "show",
+    /* "Put it on your channel" was a promise nothing could keep: there was no
+       action anywhere that put a video on a channel, and somebody who asked
+       for one was told it had been done. Videos are in the channel by
+       themselves now, so the step is to go and look. */
     next: {
       to: "channels",
-      en: "Put it on your channel",
-      af: "Sit dit op jou kanaal",
+      en: "See it on your channel",
+      af: "Sien dit op jou kanaal",
     },
     purpose:
-      "The video desk: marketing, podcast and social clips built scene by scene.",
+      "The video desk: marketing, podcast and social clips built scene by scene. A finished clip is kept on this device and appears on their channel under Your videos without anybody doing anything \u2014 so there is nothing to press to put it there, and saying otherwise sends them looking for a button that is not there.",
     helps: {
       en: "I can write the whole shot list onto the board, set the look they all share, and set the length and the shape.",
       af: "Ek kan die hele toneellys op die bord skryf, die voorkoms stel wat hulle almal deel, en die lengte en die vorm stel.",
@@ -260,13 +264,15 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
   hooks_feed: {
     id: "hooks_feed",
     stage: "show",
+    /* Not "Put it on your channel". Nothing puts a clip anywhere — it is on
+       the channel already, under Your videos, the moment it is cut. */
     next: {
       to: "channels",
-      en: "Put it on your channel",
-      af: "Sit dit op jou kanaal",
+      en: "See it on your channel",
+      af: "Sien dit op jou kanaal",
     },
     purpose:
-      "Short vertical clips — the fifteen seconds that make somebody stop scrolling.",
+      "Short vertical clips — the fifteen seconds that make somebody stop scrolling. A finished clip appears on their channel under Your videos on its own; there is nothing to press to put it there.",
     helps: {
       en: "I can tell you where the good bit starts, write the caption, and set how long the clip runs.",
       af: "Ek kan jou sê waar die goeie deel begin, die onderskrif skryf, en stel hoe lank die liedjie loop.",
@@ -297,7 +303,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     stage: "release",
     next: { to: "live", en: "Play it live", af: "Speel dit live" },
     purpose:
-      "Your channel: your released music, in the order you want people to hear it.",
+      "Your channel: your released music, in the order you want people to hear it. Every video made anywhere in this app is here too, under Your videos \u2014 a clip arrives there on its own the moment it is made, so there is nothing to press and nothing to ask for.",
     helps: {
       en: "I can set the running order, write the description, and name a playlist.",
       af: "Ek kan die speelorde stel, die beskrywing skryf, en ’n speellys benoem.",

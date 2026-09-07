@@ -142,7 +142,19 @@ export default function ShareRow({
       </button>
 
       {open && mounted && createPortal(
-        <div className="fixed inset-0 z-[92] flex flex-col justify-end bg-black/60 backdrop-blur-sm">
+        /* Above the bottom bar, not under it.
+
+           This was z-[92] and the bar is z-[95], so the bar was painted over
+           the foot of a sheet that covers the whole screen — and the foot is
+           where the platform buttons are. On a short window with the system
+           text scaled up, which is her phone, the last two rows came out half
+           behind the bar with their labels sliced, which is what "die bars is
+           oor al oor mekaar gedruk" is a picture of.
+
+           Raised rather than padded. A sheet with its own scrim is modal: the
+           tab bar showing through one, and eating it, was the mistake. Above
+           the search button at 96 as well, for the same reason. */
+        <div className="fixed inset-0 z-[97] flex flex-col justify-end bg-black/60 backdrop-blur-sm">
           {/* The ground, pressable, because a sheet with no way out except a
               small button is a sheet somebody gets stuck in. */}
           <button
@@ -151,7 +163,12 @@ export default function ShareRow({
             onClick={() => setOpen(false)}
             className="flex-1"
           />
-          <div className="max-h-[85vh] space-y-2.5 overflow-y-auto rounded-t-2xl border-t border-zinc-800 bg-zinc-950 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <div
+            /* A handle for the probe that measures whether every button on
+               this sheet is whole and reachable. */
+            data-share-sheet
+            className="max-h-[85vh] space-y-2.5 overflow-y-auto rounded-t-2xl border-t border-zinc-800 bg-zinc-950 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+          >
             <div className="flex items-center justify-between gap-3">
               <p className="min-w-0 flex-1 truncate text-sm font-semibold text-zinc-200">
                 {t('share.post', 'Post it')} — {title}

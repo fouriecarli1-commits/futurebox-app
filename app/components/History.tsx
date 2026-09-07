@@ -42,18 +42,58 @@ export default function History({
   reloadKey = 0,
   /** Put a previous one back on the desk. Rooms that can, offer it. */
   onUseAgain,
+  only,
+  title,
+  startOpen = false,
 }: {
-  surface: SurfaceId;
+  /**
+   * Which room's work to show. Left out, it is every room's.
+   *
+   * The channel needs that: a video made at the desk is kept under `canvas`,
+   * one cut from a song under `make`, and somebody looking for "my video" is
+   * not thinking about which room it came out of. "Ek het nou net 'n video
+   * gegenerate ... en nou kry ek dit nie in my channel nie."
+   */
+  surface?: SurfaceId;
   reloadKey?: number;
   onUseAgain?: (make: Make) => void;
+  /**
+   * Only these kinds of thing.
+   *
+   * A list rather than one, because "a video" is not one kind here: the video
+   * desk keeps `video` and the hooks desk keeps `clip`, and both of them are a
+   * video to the person who made them. A single-kind filter would have shown
+   * her half of what she was looking for and looked like it worked.
+   */
+  only?: readonly Make['kind'][];
+  /** A heading of its own, where "Made here before" would be wrong. */
+  title?: string;
+  /** Open on arrival, for a list that is the point of the card rather than
+   *  yesterday's work at the bottom of a room. */
+  startOpen?: boolean;
 }): React.ReactElement | null {
   const { t } = useLang();
   const [makes, setMakes] = useState<Make[]>([]);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
   const [onlyKept, setOnlyKept] = useState(false);
   const [playing, setPlaying] = useState<{ id: string; url: string } | null>(null);
 
-  const refresh = useCallback(() => setMakes(loadMakes(surface)), [surface]);
+  /* One filter, used by the first load and by starring, because two copies of
+     it drift: the star used to re-filter by `surface` on its own, which with
+     no surface given would have emptied the list on the first press. */
+  const mine = useCallback(
+    (all: Make[]) =>
+      all.filter(
+        (one) =>
+          (surface === undefined || one.surface === surface) &&
+          (only === undefined || only.includes(one.kind)),
+      ),
+    [surface, only],
+  );
+  const refresh = useCallback(
+    () => setMakes(mine(surface === undefined ? loadMakes() : loadMakes(surface))),
+    [mine, surface],
+  );
   useEffect(refresh, [refresh, reloadKey]);
 
   // An object URL held open is a file the browser cannot release. One at a
@@ -94,7 +134,7 @@ export default function History({
           className="flex items-center gap-2 text-sm font-semibold text-zinc-300 hover:text-white"
         >
           <Clock className="w-3.5 h-3.5 text-emerald-400" />
-          {t('history.title', 'Made here before')}
+          {title ?? t('history.title', 'Made here before')}
           <span className="text-zinc-500 font-normal">({makes.length})</span>
         </button>
         {open && kept > 0 && (
@@ -140,7 +180,7 @@ export default function History({
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button
                       type="button"
-                      onClick={() => setMakes(favouriteMake(make.id, !make.favourite).filter((one) => one.surface === surface))}
+                      onClick={() => setMakes(mine(favouriteMake(make.id, !make.favourite)))}
                       aria-pressed={Boolean(make.favourite)}
                       aria-label={
                         make.favourite

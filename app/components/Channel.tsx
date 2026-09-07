@@ -20,6 +20,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Check, Copy, Download, Headphones, Image as ImageIcon, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, Video, X,
+  Film,
 } from 'lucide-react';
 import { CREDITS, perMinute } from '../lib/credits';
 import { accessToken } from '../lib/cloud';
@@ -51,6 +52,7 @@ import { heardFor, timeFor } from '../lib/lyrictime';
 import Note from './Note';
 import Card from './Card';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
+import History from './History';
 
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
@@ -481,6 +483,38 @@ export default function Channel({
           />
         </div>
       )}
+
+      {/* ── The videos ───────────────────────────────────────────────────
+
+          "Ek het nou net 'n video gegenerate, en toe gesê sit dit in my
+           channel, en nou kry ek dit nie in my channel nie."
+
+          It was not in the channel because nothing ever put it there. A
+          generated clip is kept under the room that made it — the video desk,
+          or Make a song — and the only two places it showed up were that
+          room's own history at the foot of the page and the Find tab. The
+          channel is what the Library tab opens and it held songs and nothing
+          else, so "my channel" was the one place it could not be.
+
+          Every room's videos, because somebody looking for their video is not
+          thinking about which desk it came off. Open on arrival: this is the
+          list she came for, not yesterday's work at the bottom of a room. */}
+      <Card
+        title={t('chan.videos', 'Your videos')}
+        icon={<Film className="w-4 h-4" />}
+      >
+        <History
+          only={['video', 'clip']}
+          title={t('chan.videosMade', 'Made in this app')}
+          startOpen
+        />
+        <Note className="text-xs text-zinc-500 leading-relaxed">
+          {t(
+            'chan.videosNote',
+            'Kept on this device, like your songs. Download one to post it anywhere — nothing here is published until you say so.',
+          )}
+        </Note>
+      </Card>
 
       {/* ── Playlists ────────────────────────────────────────────────────── */}
       <Card

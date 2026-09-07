@@ -98,7 +98,9 @@
     "check:boothwalk": "node audit/boothwalk.mjs",
     "check:whitescreen": "node audit/whitescreen.mjs",
     "check:bodylimit": "tsx scripts/check-bodylimit.mts",
-    "check:mixdown": "node audit/mixdown.mjs"
+    "check:mixdown": "node audit/mixdown.mjs",
+    "check:videohome": "node audit/videohome.mjs",
+    "check:sharesheet": "node audit/sharesheet.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
