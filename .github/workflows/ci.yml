@@ -334,7 +334,7 @@ jobs:
       matrix:
         include:
           - group: doors
-            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar
+            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk
           - group: make
             probes: check:makeroom check:simple check:bringsong check:songscreen check:artistname check:cards
           - group: rooms

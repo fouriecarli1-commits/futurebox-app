@@ -133,6 +133,14 @@ export default function VocalBooth({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
+  /**
+   * The current `stop`, reachable from the audio element's `ended` handler.
+   *
+   * That handler is registered once, on mount, and `stop` is a callback
+   * defined further down that closes over state — so calling it directly from
+   * there would either not compile or would call January's version of it.
+   */
+  const stopRef = useRef<() => Promise<void>>(async () => {});
   const chunksRef = useRef<BlobPart[]>([]);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const micCtxRef = useRef<AudioContext | null>(null);
@@ -302,6 +310,27 @@ export default function VocalBooth({
   useEffect(() => {
     const element = new Audio();
     element.addEventListener('ended', () => {
+      /* Sing to the end of the song and the take is finished — so finish it.
+
+         This used to be `setPhase('idle')` and nothing else, and the effect of
+         that was the whole booth: the song runs out, the phase goes idle, the
+         Stop button disappears and the Record button comes back — while the
+         MediaRecorder is still running and nobody ever calls `stop()`. So the
+         take never arrives. Everything she just sang is sitting in
+         `chunksRef` with no way to reach it, the keep button stays disabled,
+         and the microphone stays open because the recorder was never taken
+         down.
+
+         The only way to keep a take was to press Stop *before* the song
+         ended, which is the one thing nobody does — you sing to the end.
+         "met die booth is daar nogteeds probleme" is this.
+
+         The recorder's own state is the test rather than the phase, because
+         the phase is what was wrong. */
+      if (recorderRef.current?.state === 'recording') {
+        void stopRef.current();
+        return;
+      }
       setPhase('idle');
       const source = takeSourceRef.current;
       takeSourceRef.current = null;
@@ -746,6 +775,12 @@ export default function VocalBooth({
       setBusy(false);
     }
   }, [backing, duration, hush, offset, recorded, t]);
+
+  /* Kept current for the `ended` handler above, which was registered before
+     this existed. Assigned on every render rather than in an effect: the
+     handler can fire between a render and its effects, and a stale `stop` is
+     the bug this is here to prevent. */
+  stopRef.current = stop;
 
   const play = useCallback(() => {
     const element = audioRef.current;

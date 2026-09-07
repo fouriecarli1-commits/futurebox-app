@@ -12,9 +12,15 @@ const ABORTED = /ERR_ABORTED/;
  *            probes assume it; a probe that starts its own server passes
  *            `serve()`'s url instead, which is what makes it able to run on a
  *            machine where nobody has left a server lying around.
+ * @param args extra Chromium switches. A probe that has to sing needs a
+ *            microphone — `--use-fake-device-for-media-stream` and its
+ *            companion — and this is the only way in for one that walks the
+ *            app from the front door rather than opening a probe page.
  */
-export async function enter({ width = 1280, height = 900, at = 'http://localhost:3000' } = {}) {
-  const browser = await chromium.launch(launchOptions());
+export async function enter({
+  width = 1280, height = 900, at = 'http://localhost:3000', args = [],
+} = {}) {
+  const browser = await chromium.launch(launchOptions(args.length ? { args } : {}));
   const page = await browser.newPage({ viewport: { width, height } });
   const problems = [];
   const note = (s) => { if (!problems.includes(s)) problems.push(s); };
