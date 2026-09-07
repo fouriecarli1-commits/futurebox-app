@@ -69,6 +69,7 @@
     "check:makesong": "tsx scripts/check-makesong.mts",
     "check:makeroom": "node audit/makesong.mjs",
     "check:listen": "tsx scripts/check-listen.mts",
+    "check:onbeat": "tsx scripts/check-onbeat.mts",
     "check:listencount": "tsx scripts/check-listencount.mts",
     "check:voicechange": "tsx scripts/check-voicechange.mts",
     "check:backlayers": "tsx scripts/check-backlayers.mts",

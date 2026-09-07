@@ -150,6 +150,10 @@ jobs:
       - name: The room called Musiekvideo can make one
         run: npm run check:videoroom
 
+      # A cut half a beat late reads as an accident, not as slightly worse.
+      - name: The cuts land on the beat
+        run: npm run check:onbeat
+
       # Three things have an opinion about the language and they do not carry
       # equal weight. The rule lived inside two React effects where it could
       # not be run, and the bug she hit was invisible to everything.
