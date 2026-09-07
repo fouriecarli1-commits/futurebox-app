@@ -441,6 +441,20 @@ wearing the probe's clothes.
 | Nineteen checks that ran nowhere now run, and must | 2026-09-06 | `HEAD` |
 | An id cannot walk out of the folder it was put in | 2026-09-06 | `aba051c` |
 | What every service still wants, and what the money does | 2026-09-06 | `HEAD` |
+| A spending ceiling no scan could see | 2026-09-06 | `2e6af49` |
+| Back out of the booth a step at a time | 2026-09-07 | `b5e6cea` |
+| Afrikaans that is not Dutch, in one rule for eight routes | 2026-09-07 | `b5e6cea` |
+| A probe page can no longer be committed beside its own template | 2026-09-07 | `f02476e` |
+| One video room; the song walks into it from Make a song | 2026-09-07 | `ddf14e8` |
+| The beat rule, and the two faults its first test could not see | 2026-09-07 | `16a0b61` |
+| The copilot's box clears the bar, measured in a browser | 2026-09-07 | `b4b92ac` |
+| Which song, and which five seconds of it, dragged | 2026-09-07 | `242fbbc` |
+| The booth keeps a take that runs to the end of the song | 2026-09-07 | `2714c7e` |
+| A page that falls over says so, in her language, with a way out | 2026-09-07 | `f293a3a` |
+| Nine routes that promised a body the platform would not carry | 2026-09-07 | `4b0a859` |
+| Lanes you can cut; `audit/mixdown.mjs` is a check at last | 2026-09-07 | `cf8d191` |
+| Her videos are on her channel; the share sheet clears the bar | 2026-09-07 | `2ec6bac` |
+| The song-link bar is out, with the paragraph explaining it | 2026-09-07 | `077eecf` |
 
 ---
 
@@ -985,3 +999,398 @@ captions are switched on, so the usual case is one switch and no typing. The
 stitcher burns them into the picture rather than carrying a subtitle track,
 because a track is words nobody sees once the file is in a phone's gallery.
 Both ends are asserted by `check:videoroom`, at her end and at the encoder's.
+
+---
+
+## Q. A spending ceiling nothing could see
+
+`ELEVEN_VIDEO_CREDITS` capped what the app would spend on video generation.
+It was read as `process.env[`ELEVEN_${KIND}_CREDITS`]` — the name built at
+run time out of a variable — so no scan for `process.env.X` could find it, it
+appeared in no document, and nobody could see it was there.
+
+She asked the right question when it surfaced: *"Gaan dit oor krediete
+beperking van die verskaffer se kant af? Of my krediete wat op raak?"*
+
+**Neither.** It is a dial in her own app: how much of an ElevenLabs generation
+this app is willing to buy on somebody's behalf. Raise it when the account is
+comfortable and the demand is real; lower it if a month is running away. It
+was always there and it belonged in `docs/SWITCH-ON.md`, where it now is.
+
+The fix that mattered more was the scan: `check:security` derives the list of
+secret names from `process.env.X` across `app/`, so a key assembled from a
+template literal is invisible to it. Computed keys are named in the document
+now, and the doc is checked.
+
+**And the check bit me back.** My own doc-comment `process.env.X` was picked up
+as a secret named `X`, so `check:security` searched every client chunk for the
+letter X and failed. That was the comment-stripping weakness I had catalogued
+earlier the same day and explicitly decided not to act on. Comments are
+stripped now and names under four letters are ignored.
+
+---
+
+## R. Out of the booth a step at a time, and Afrikaans that is not Dutch
+
+Two from the same message.
+
+*"Binne pro booth is daar nie 'n manier om back te gaan nie, die foon se bak
+knoppie spring na die groot home page."*
+
+The phone's Back button walked the app's own layers — but only the layers
+`page.tsx` knew about. Every overlay a room opened for itself was invisible to
+it, so Back from inside the Pro Booth left the whole studio. `useBackLayer`
+lets any overlay register itself as a layer; the Pro Booth, the words screen, a
+full-screen song, the collab room and the theme studio all do. `check:backlayers`
+holds it.
+
+*"Die prompt in copilot is ook geneig om nederlands te prompt met afrikaanse
+goed."*
+
+Fifteen routes write Afrikaans and exactly one of them warned the model off
+Dutch. `lib/server/afrikaans.ts` is that rule, in one place, applied to eight:
+jy not je, die not het, nie not niet, and the double negative Afrikaans
+actually uses. The copilot now sends which language it is being spoken to in.
+
+`check:afrikaansrule` had to be rewritten before it was worth anything: its
+first version matched the *name* `AFRIKAANS_RULE`, which the import line
+satisfies, so deleting the rule from the prompt still passed. Imported is not
+used, the same way named is not run.
+
+---
+
+## S. A probe page on `main`, and a race I had already dismissed
+
+`app/videowords/page.tsx` — a test page, not part of the app — was committed to
+`main`. It happened by running `git add -A` while a probe was mid-run: the
+probes copy `page.probe.tsx` to `page.tsx`, build, measure, and delete it.
+
+Earlier the same afternoon I had noticed exactly that race and dismissed it as
+harmless because "in CI they are separate jobs". **The working tree is not two
+jobs.** `check:probes` now refuses any `page.tsx` committed beside a
+`page.probe.tsx`.
+
+---
+
+## T. One video room, and the song that walks into it
+
+Left open at the end of section P: two rooms, one named for the job and the
+other able to do it. Settled by removing the room rather than by swapping them.
+
+**Musiekvideo is gone.** Pressing "maak 'n musiek video" in Make a song now
+takes her to the Video desk with the song already in it, ready to prompt, with
+the lipsync panel there. `check:videoroom` asserts the whole hand-off: the
+offer goes to the desk, the desk is handed the song, the desk passes it to the
+board, and the board stops asking once it has one.
+
+### Which song, and which five seconds of it
+
+*"as op die music video kies, dan moet hy vir my dadelik opsies op pop van my
+liedjie, en 'n knoppie om een te kan upload. Dan moet die liedjie in 'n sound
+bar gesit word met twee dragging lines wat gecap word op die lengte wat die
+video lengte opsie gekies word."*
+
+The desk had a song picker. It was at the foot of the storyboard behind
+`board.shots.length > 0`, so it only appeared once a shot had been written —
+which meant somebody who arrived with a song already made was shown a prompt
+box and no way to name it. **A control that cannot be found is a control that
+does not exist.**
+
+`SongWindow` is under the Music tile now, the moment it is pressed: her songs
+as buttons rather than behind a dropdown, a button to bring a file in, the song
+drawn as its own waveform measured from the file, and two lines that drag. The
+window is exactly as long as the video, because the film is five or ten seconds
+and a shorter window would have to explain the silence.
+
+On a song this app wrote, the sections are named along the bar — dragging to
+"Chorus" beats dragging to 0:24 — and the start snaps to the beat, guarded by
+`sane(bpm)` rather than a truthy check, because a row carrying 0 or 6000 would
+drag the window to a grid that is not the song's.
+
+No video engine takes an audio file, so the song is laid under the finished
+clip by `lib/stitch.ts` in a second pass. That costs real time and the panel
+says so.
+
+### The beat rule, and two faults the test could not see
+
+`lib/onbeat.ts` holds the arithmetic. Writing the check found two things worth
+keeping: it passed with `floor` substituted for `round`, because every case
+happened to fall under half a beat; and one branch was unreachable dead code.
+
+The same trap showed up again in `check:songwindow`, which dragged to the
+midpoint of the bar — exactly 32 beats at 96 BPM — so the beat assertion passed
+whether the snapping ran or not. It drags to 0.53 now.
+
+---
+
+## U. Four wrong ways to measure a screen
+
+Two of her reports, and the same lesson four times.
+
+*"copilot se promting baar is nogsteeds weggesteek agter die button bar heel
+onder."* — said twice, the second time after it was supposedly fixed.
+
+`check:tabbar` was green both times, and reading what it asserts explains why:
+it reads `paddingBottom` values out of `page.tsx` and checks each one calls
+`barClearance()`. That is a rule about the page's padding. It never opens a
+browser and cannot see whether the box a person types into is reachable.
+
+*"die bars is oor al oor mekaar gedruk"* — the share sheet, with a photograph.
+The sheet is `z-[92]`; the tab bar is `z-[95]` and opaque, so the app's own bar
+was painted over the foot of a modal sheet, and the foot is where the platform
+buttons are.
+
+Both are fixed. What is worth writing down is the measuring:
+
+1. **It scrolled the wrong thing.** The studio scrolls inside a fixed layer
+   with the body behind it set to `overflow: hidden`. The numbers came back
+   byte-identical twice, which is the tell that nothing moved.
+2. **It measured the wrong element.** In Make a song it picked the song title
+   field. `data-copilot-ask` and `data-share-sheet` exist so a probe cannot
+   drift onto a neighbour.
+3. **It scrolled too far.** Scrolling `html` carried the input 1788 pixels
+   above the fold, and the check passed, because nothing off the screen can
+   overlap anything. **A pass earned by hiding the element is worse than the
+   failure it replaced.**
+4. **It measured at the wrong size.** 390x844 with default text found nothing
+   at all on the share sheet. Her screenshot is Samsung's in-app browser with
+   the system text scaled up — 390x640 and larger letters. A sheet that only
+   breaks there is not a sheet that works.
+
+And a fifth, which is the one to remember: the share-sheet check tested only
+*buttons*, so it went green while she was holding a photograph of it failing.
+What lands in the dead band under the bar depends on how much content the sheet
+happens to have. The rule is about the sheet now — nothing may be painted over
+any part of it.
+
+---
+
+## V. The booth threw away every take that ran to the end
+
+*"met die booth is daar nogteeds probleme."*
+
+I asked which booth and what she was seeing. That was the wrong move: the room
+is here and it can be pressed. `audit/boothwalk.mjs` walks it from the front
+door at 390x844 with a real song and Chromium's fake microphone.
+
+The take does not come back. The Stop button disappears on its own at nine
+seconds — the song ending — with the keep button still dead.
+
+The audio element's `ended` handler was `setPhase('idle')` and nothing else. So
+the song runs out, the phase goes idle, Stop disappears and Record comes back,
+while the `MediaRecorder` is still running and nobody ever calls `stop()`.
+Everything she sang sits in `chunksRef` with no way to reach it, and the
+microphone stays open.
+
+**The only way to keep a take was to press Stop before the song ended, which is
+the one thing nobody does.** You sing to the end.
+
+Before concluding any of that I measured the microphone itself — four seconds
+at full level through the same `getUserMedia` the booth uses. A probe that
+reports a room as broken when its own rig failed is worse than no probe, and
+this one had already misread the room twice.
+
+---
+
+## W. A white screen is never an acceptable answer
+
+*"I accidentally went out of videodesk, and now when I want to go back in, it
+only shows a white screen."*
+
+There was no error boundary in this app at all — no `app/error.tsx`, no
+`app/global-error.tsx`, no `componentDidCatch` anywhere. Anything that threw
+while drawing, and any piece of JavaScript that failed to arrive, emptied the
+page and left nothing: no words, no button, and no way to tell a broken app
+from a phone that had lost its signal.
+
+I could not reproduce her crash — in and out of the Video desk three times,
+Music video pressed and left and returned to, the phone's Back button through
+the whole stack, no error. What that leaves is the ordinary explanation: two
+deploys went out while her page was open, and a page left open across a deploy
+asks for a piece of itself by a filename the new deploy does not have.
+
+Both boundaries exist now, in Afrikaans and English both — because the thing
+that broke may be the thing that knows which language she reads — and with a
+reload as the only button on a stale bundle, since a retry redraws the same
+tree and asks for the same missing file.
+
+---
+
+## X. The 4.5 MB wall, which nine routes walked into
+
+*"Ek sien die measure the mix gooi 'n 413 warning en dat klank nie geseperate
+kan word nie."*
+
+A serverless function on Vercel refuses a request body over about four and a
+half megabytes, **at the edge, before any of this app's code runs**. So the
+route's own ceiling was never consulted, its message was never said, and what
+came back was a bare 413 with no body.
+
+Nine routes claimed more than that:
+
+| Route | Claimed | Real ceiling |
+|---|---|---|
+| `/api/analyse` | 60 MB | 53 seconds of WAV |
+| `/api/episode` | 114 MB | the same |
+| `/api/dub` | 100 MB | the same |
+| `/api/finetunes` | 100 MB | never worked at all |
+| `/api/voice/clean` | 57 MB | the same |
+| `/api/stems` | 25 MB | the same |
+| `/api/transcribe` | 25 MB | the same |
+| `/api/voice/change` | 25 MB | the same |
+
+`/api/analyse` posted `lane.wav` — 88 kB a second at 44.1 kHz mono — so reading
+a song stopped working at fifty-three seconds. Training a sound needs a handful
+of whole songs and has never worked for anybody with real music.
+
+The browser puts a big file in storage itself now, in the folder inside its own
+account the bucket policy already lets it write to, and posts the key.
+
+**A key and not a URL.** A route that fetched any URL handed to it is an open
+proxy — the rule `/api/analyse/part` was written under — and it does not bend
+for a bigger file. `workPath` pins the key to the folder of whoever's token
+signed *this* request, matched whole and refused rather than repaired.
+
+`check:bodylimit` is the rule, and it found two routes I had missed after I
+thought I had the list. Its own first version did not match `audioListFrom(`
+against a pattern for `audioFrom(` — the substring is `ListFrom` — so it called
+training broken after training was fixed.
+
+---
+
+## Y. Lanes you can cut, and a probe that was running nowhere
+
+*"Moet die booth ook nie opsies hê om klanke op te laai nie? ... Ek dink maar
+net of klanke gecut kan word? Dat verskillende klank bane onder mekaar kan sit
+en uit eindelik geedit kan word?"*
+
+Checked against the code rather than answered from memory. **Three of those
+already existed** and the problem is that Pro sits three levels down, behind a
+button inside an opened song:
+
+- bringing sounds in — "Bring audio in", several files at once
+- lanes stacked under each other, with levels, mutes and solos
+- stem separation per lane, tone shaping, voice change, mix and master
+
+**Cutting was the real gap.** A lane now carries `from` and `to` and each row
+has two edges to drag. It is a cut and not a deletion: the recording underneath
+is untouched and the whole shape is still drawn, faint where it was trimmed, so
+an edge drags back out again by eye.
+
+Trimming the front keeps the audio still on the clock — `at` moves by exactly
+as much as `from`, so a note on beat three stays on beat three. Which turned up
+a trap: `change` snaps `at` to the grid whenever `at` is in the patch, so a head
+trim would have slid the lane by up to half a beat on every drag while the drag
+fought the grid.
+
+`startLane` is one function because it was two. And what gets separated or
+voice-changed is the piece that plays, so a lane trimmed to its chorus is not
+billed by the minute for the verses she cut out.
+
+**`audit/mixdown.mjs` was wired to no check script at all.** It has been sitting
+in the repository being run by nobody — which `check:everycheck` could not see,
+because it only inspects things already called `check:`. It is `check:mixdown`
+now.
+
+### Still not built
+
+- a library of instrument samples
+- one AI button that balances the lanes: the pieces exist (measure, match
+  loudness, master) but nothing presses them together
+- **findability of Pro**, which is nearly free and is why she asked for three
+  things she already had
+
+---
+
+## Z. Her video, and a promise nothing kept
+
+*"Ek het nou net 'n video gegenerate, en toe gesê sit dit in my channel, en nou
+kry ek dit nie in my channel nie."* Then: *"Kan jy asb ook daardie video vir my
+soek? want ek kry dit meer nerens nie."*
+
+It was not in the channel because nothing ever put it there, and nothing could.
+A generated clip is kept under the room that made it, and the only two places
+it appeared were that room's own history and the Find tab. The Library tab
+opens the channel, the channel held songs and nothing else, so **"my channel"
+was the one place a video could not be.**
+
+Worse than missing: the copilot's next step out of the video desk said "Put it
+on your channel", and out of the hooks desk too. There was no action anywhere
+that put a video on a channel. **Somebody who asked for one was told it had been
+done.** Both say "See it on your channel" now, which is true.
+
+The channel has a Your videos card, from every room, covering both `video` and
+`clip` — a single-kind filter would have shown her half of what she was looking
+for and looked like it worked.
+
+---
+
+## AA. The link bar, taken out
+
+*"as ons daai funksie van die links nie kan gebruik om na die styl van die
+liedjie te luister nie, dan moet ons dit uithaal, asook die description oor wat
+die link bar doen."*
+
+She asked for it in the first place. What got built could not do it:
+downloading the audio behind a YouTube, Spotify, SoundCloud, Apple Music or
+TikTok link breaks every one of their terms, so it read the song's *name* off
+the site's oEmbed endpoint and asked a model what music by that name sounds
+like.
+
+Which meant the screen carried three sentences saying it does not listen,
+under a bar that looked exactly like the two beside it that really do measure a
+file. **A control that needs a paragraph of apology under it is a control that
+does not work, and the paragraph was the tell.**
+
+Out in one piece: the bar, the explanation, the route, `lib/server/songlink.ts`,
+`check:songlink` and its CI step, six dictionary entries, and the entry in
+`check:asdata`'s list of routes to guard. `check:makeroom` asserts the opposite
+of what it used to.
+
+My first pass at editing that probe cut across a `try` block and left the file
+unparseable, and **the source sweep went green anyway** — `check:makeroom` runs
+a browser and is not in it. A file that cannot be parsed is not a check that
+passed.
+
+---
+
+## What is still Carli's, as of this session
+
+Unchanged from section E unless noted:
+
+- **The legal entity.** CIPC `2026/714071/07` is recorded.
+  `FUTUREBOX_LEGAL_NAME`, `_ADDRESS` and `_PHONE` are hers to set in Vercel.
+  No placeholder registration number is published.
+- **Singing voice conversion.** Still the one gap between a made song and her
+  own voice. Stems and cloning are ElevenLabs and are built; step three needs a
+  *singing* model — Moises Voice Studio over Music.ai, or Kits.AI. Neither is
+  wired.
+- **The booth's remaining asks**: instrument samples, and one button that
+  balances a mix.
+- **`ELEVEN_AURORA_READY`**, the Spotify keys, the mail variables and the three
+  secrets, the Paystack plan codes, the Music.ai workflow slugs, the trademark
+  classes and the POPIA information officer — all still as listed in section E.
+
+### One question of hers still unanswered
+
+*"Hoe gaan ons die github situasie uitsorteer?"*
+
+Not answered, and it should be. What is known from this side: `git` itself
+works — fetch, push and `git ls-remote` all succeed — and every commit in this
+document reached `main`. What has repeatedly failed is the **GitHub MCP
+server**, which times out at thirty seconds, so from here I cannot read whether
+the CI job that runs these 88 checks is green. The checks are run locally
+before every push, which is why the numbers in this document can be trusted;
+the state of the run on GitHub cannot be, because nobody here has been able to
+look at it.
+
+That is a connection problem rather than a repository problem, and it is worth
+her deciding whether it matters: if the pushes land and the local sweep is
+green, CI is a second opinion rather than the gate.
+
+### And one asked and answered, kept because the answer was easy to miss
+
+*"het jy lipsync al ingewerk vir musiekvideos?"* — yes. `Presenter` is in the
+Video desk, behind `ELEVEN_AURORA_READY`. It carries a caveat in as many words:
+it is a lipsync model given a photograph and a *spoken* reading, and whether it
+holds up on singing has never been tested. One clip would answer it.
