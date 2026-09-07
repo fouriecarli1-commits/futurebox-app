@@ -902,7 +902,7 @@ export default function MakeMusic({
                     setSingIn(one);
                     setSingInChosen(true);
                   }}
-                  className={`px-3 py-1.5 rounded-xl border text-sm font-semibold transition-colors ${
+                  className={`min-h-[44px] px-3 py-1.5 rounded-xl border text-sm font-semibold transition-colors ${
                     singWanted === one
                       ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-300 hover:border-zinc-600'
@@ -942,7 +942,7 @@ export default function MakeMusic({
                 <button
                   type="button"
                   onClick={() => setCanvas({ ...canvas, style: '' })}
-                  className="rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-sm text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+                  className="min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-sm text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
                 >
                   {t('make.clear')}
                 </button>
@@ -1034,7 +1034,7 @@ export default function MakeMusic({
                 key={choice.seconds}
                 type="button"
                 onClick={() => setSeconds(choice.seconds)}
-                className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                className={`min-h-[44px] text-left px-3 py-2.5 rounded-xl border transition-all ${
                   seconds === choice.seconds
                     ? 'bg-emerald-500/15 border-emerald-500'
                     : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
@@ -1097,7 +1097,7 @@ export default function MakeMusic({
                   key={choice.id}
                   type="button"
                   onClick={() => setVoice(choice)}
-                  className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                  className={`min-h-[44px] text-left px-3 py-2.5 rounded-xl border transition-all ${
                     voice.id === choice.id
                       ? 'bg-emerald-500/15 border-emerald-500'
                       : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
@@ -1194,7 +1194,7 @@ export default function MakeMusic({
                       key={one.id}
                       type="button"
                       onClick={() => setOwnSound(one.id)}
-                      className={`text-left px-3 py-2.5 rounded-xl border transition-all ${
+                      className={`min-h-[44px] text-left px-3 py-2.5 rounded-xl border transition-all ${
                         ownSound === one.id
                           ? 'bg-emerald-500/15 border-emerald-500'
                           : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
@@ -1380,7 +1380,7 @@ export default function MakeMusic({
                     type="button"
                     onClick={() => save(track)}
                     title={levelOf(owned, track.id) === 'owned' ? undefined : t('buy.needsOwning')}
-                    className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                    className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                   >
                     <Download className="w-3.5 h-3.5" />
                     {t('make.save')}
@@ -1405,7 +1405,7 @@ export default function MakeMusic({
                         }
                         setTakeFor({ track: source, music, take });
                       }}
-                      className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                      className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                     >
                       <Sliders className="w-3.5 h-3.5" />
                       {t('make.editMix', 'Open it up again')}
@@ -1421,7 +1421,7 @@ export default function MakeMusic({
                       }
                       setTakeFor({ track, music });
                     }}
-                    className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                    className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                   >
                     <Mic className="w-3.5 h-3.5" />
                     {t('make.singOver')}
@@ -1437,7 +1437,7 @@ export default function MakeMusic({
                       setSleeveFor((open) => (open === track.id ? null : track.id))
                     }
                     aria-expanded={playing === track.id || sleeveFor === track.id}
-                    className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                    className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                   >
                     <ImageIcon className="w-3.5 h-3.5" />
                     {t('make.cover', 'Cover art')}
@@ -1450,7 +1450,7 @@ export default function MakeMusic({
                   <button
                     type="button"
                     onClick={() => share(track)}
-                    className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
+                    className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
                   >
                     <Share2 className="w-3.5 h-3.5" />
                     {shared === track.id ? t('make.copied') : t('make.share')}
@@ -1459,7 +1459,7 @@ export default function MakeMusic({
                     type="button"
                     onClick={() => make(track)}
                     disabled={busy}
-                    className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-violet-500 hover:text-violet-300 flex items-center gap-1.5 disabled:opacity-50"
+                    className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-violet-500 hover:text-violet-300 flex items-center gap-1.5 disabled:opacity-50"
                   >
                     <Repeat className="w-3.5 h-3.5" />
                     {t('make.again')}
@@ -1467,7 +1467,7 @@ export default function MakeMusic({
                   <button
                     type="button"
                     onClick={() => setVideoFor(track)}
-                    className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                    className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                   >
                     <VideoIcon className="w-3.5 h-3.5" />
                     {t('video.make')}

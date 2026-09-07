@@ -239,7 +239,7 @@ export default function Landing({
                 <button
                   type="button"
                   onClick={onStart}
-                  className={`w-full mt-5 py-2.5 rounded-xl text-sm font-bold ${
+                  className={`min-h-[44px] w-full mt-5 py-2.5 rounded-xl text-sm font-bold ${
                     lead
                       ? 'bg-emerald-500 text-onAccent'
                       : 'bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300'

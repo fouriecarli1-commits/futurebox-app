@@ -191,7 +191,7 @@ export default function DubFilm({
                     role="radio"
                     aria-checked={chosen}
                     onClick={() => setTo(one.code)}
-                    className={`px-2.5 py-1.5 rounded-xl text-sm font-semibold border text-left leading-tight ${
+                    className={`min-h-[44px] px-2.5 py-1.5 rounded-xl text-sm font-semibold border text-left leading-tight ${
                       chosen
                         ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
                         : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-600'

@@ -193,7 +193,7 @@ export default function DubEpisode({
                     onClick={() => setTo(one.code)}
                     // The name in its own language underneath, because a
                     // speaker of it recognises that faster than the English.
-                    className={`px-2.5 py-1.5 rounded-xl text-sm font-semibold border text-left leading-tight ${
+                    className={`min-h-[44px] px-2.5 py-1.5 rounded-xl text-sm font-semibold border text-left leading-tight ${
                       chosen
                         ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
                         : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-600'
@@ -231,7 +231,7 @@ export default function DubEpisode({
             type="button"
             onClick={() => void start()}
             disabled={busy || !/^[a-z]{2,3}$/.test(to.trim().toLowerCase())}
-            className="w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+            className="min-h-[44px] w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
             {t('dub.start', 'Dub it')} — {cost} {t('credits.credits', 'credits')}

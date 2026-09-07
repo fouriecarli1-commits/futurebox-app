@@ -150,7 +150,7 @@ export default function Sleeve({
             type="button"
             onClick={() => void make()}
             disabled={busy}
-            className="absolute bottom-2 right-2 px-2.5 py-1.5 rounded-lg text-xs bg-black/80 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-1.5 disabled:opacity-60"
+            className="min-h-[44px] absolute bottom-2 right-2 px-2.5 py-1.5 rounded-lg text-xs bg-black/80 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-1.5 disabled:opacity-60"
           >
             {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
             {t('cover.again', 'Another')}
@@ -161,7 +161,7 @@ export default function Sleeve({
           type="button"
           onClick={() => void make()}
           disabled={busy}
-          className="w-full py-2.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-2 disabled:opacity-60"
+          className="min-h-[44px] w-full py-2.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-2 disabled:opacity-60"
         >
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
           {busy

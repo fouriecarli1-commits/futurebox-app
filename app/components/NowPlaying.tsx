@@ -211,7 +211,7 @@ export default function NowPlaying({
                     audio.currentTime = line.start;
                     setAt(line.start);
                   }}
-                  className={`block w-full text-left px-2 py-1 rounded-lg transition-colors ${
+                  className={`min-h-[44px] block w-full text-left px-2 py-1 rounded-lg transition-colors ${
                     index === current
                       ? 'bg-emerald-500/15 text-emerald-200 font-semibold'
                       : index < current

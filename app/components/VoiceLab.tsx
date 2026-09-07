@@ -469,7 +469,7 @@ export default function VoiceLab({
           <button
             type="button"
             onClick={onUpgrade}
-            className="w-full py-2.5 rounded-xl bg-amber-500/15 border border-amber-500/50 text-amber-300 text-sm font-semibold"
+            className="min-h-[44px] w-full py-2.5 rounded-xl bg-amber-500/15 border border-amber-500/50 text-amber-300 text-sm font-semibold"
           >
             {t('voice.needsPlan', 'Cloning your voice needs a paid plan')}
           </button>
@@ -486,7 +486,7 @@ export default function VoiceLab({
               <button
                 type="button"
                 onClick={() => void finishSample()}
-                className="px-3 py-2 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-semibold flex items-center gap-1.5"
+                className="min-h-[44px] px-3 py-2 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-semibold flex items-center gap-1.5"
               >
                 <Square className="w-3.5 h-3.5 fill-current" />
                 {t('take.stop', 'Stop')}
@@ -520,7 +520,7 @@ export default function VoiceLab({
               type="button"
               onClick={() => void recordSample()}
               disabled={!consent || busy === 'clone'}
-              className="w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+              className="min-h-[44px] w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {busy === 'clone' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
               {busy === 'clone'
@@ -666,7 +666,7 @@ export default function VoiceLab({
             type="button"
             onClick={() => void read()}
             disabled={!script.trim() || over || busy === 'speak'}
-            className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+            className="min-h-[44px] flex-1 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {busy === 'speak' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
             {busy === 'speak' ? t('voice.reading', 'Reading…') : t('voice.readAloud', 'Read it aloud')}
@@ -676,7 +676,7 @@ export default function VoiceLab({
             <button
               type="button"
               onClick={() => onAudio(spoken, 'spoken')}
-              className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-emerald-500/50 text-emerald-300 text-sm font-semibold flex items-center gap-1.5"
+              className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-emerald-500/50 text-emerald-300 text-sm font-semibold flex items-center gap-1.5"
             >
               <Check className="w-3.5 h-3.5" />
               {t('voice.useIt', 'Use as an episode')}
@@ -713,7 +713,7 @@ export default function VoiceLab({
             <button
               type="button"
               onClick={() => void endClip()}
-              className="flex-1 min-w-[9rem] px-3 py-2.5 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-semibold flex items-center justify-center gap-1.5"
+              className="min-h-[44px] flex-1 min-w-[9rem] px-3 py-2.5 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-semibold flex items-center justify-center gap-1.5"
             >
               <Square className="w-3.5 h-3.5 fill-current" />
               {t('take.stop', 'Stop')}
@@ -722,7 +722,7 @@ export default function VoiceLab({
             <button
               type="button"
               onClick={() => void takeClip()}
-              className="flex-1 min-w-[9rem] px-3 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-300 flex items-center justify-center gap-1.5 hover:border-zinc-700"
+              className="min-h-[44px] flex-1 min-w-[9rem] px-3 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-300 flex items-center justify-center gap-1.5 hover:border-zinc-700"
             >
               <Mic className="w-4 h-4" />
               {t('voice.sayItHere', 'Say it here')}
@@ -757,7 +757,7 @@ export default function VoiceLab({
             type="button"
             onClick={() => void change()}
             disabled={!toChange || busy === 'change'}
-            className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+            className="min-h-[44px] flex-1 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {busy === 'change' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
             {busy === 'change' ? t('voice.changing', 'Changing\u2026') : t('voice.changeIt', 'Change the voice')}
@@ -767,7 +767,7 @@ export default function VoiceLab({
             <button
               type="button"
               onClick={() => onAudio(changed, 'spoken')}
-              className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-emerald-500/50 text-emerald-300 text-sm font-semibold flex items-center gap-1.5"
+              className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-emerald-500/50 text-emerald-300 text-sm font-semibold flex items-center gap-1.5"
             >
               <Check className="w-3.5 h-3.5" />
               {t('voice.useIt', 'Use as an episode')}

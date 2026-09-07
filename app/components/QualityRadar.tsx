@@ -146,7 +146,7 @@ export default function QualityRadar({
             type="button"
             onClick={() => setShowHow((v) => !v)}
             aria-expanded={showHow}
-            className={`px-3 py-1.5 rounded-xl text-sm border transition-colors ${
+            className={`min-h-[44px] px-3 py-1.5 rounded-xl text-sm border transition-colors ${
               showHow
                 ? 'bg-emerald-500/10 border-emerald-500 text-emerald-300'
                 : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
@@ -158,7 +158,7 @@ export default function QualityRadar({
             type="button"
             onClick={resync}
             disabled={syncing}
-            className="px-3 py-1.5 rounded-xl text-sm bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white flex items-center gap-1.5 disabled:opacity-50"
+            className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white flex items-center gap-1.5 disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
             {syncing ? t('radar.looking') : t('radar.findNew')}
@@ -200,7 +200,7 @@ export default function QualityRadar({
               type="button"
               onClick={() => toggleCategory(c)}
               aria-pressed={active}
-              className={`px-3 py-1.5 rounded-xl text-sm border transition-all ${
+              className={`min-h-[44px] px-3 py-1.5 rounded-xl text-sm border transition-all ${
                 active
                   ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500'
                   : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700'
@@ -214,7 +214,7 @@ export default function QualityRadar({
           <button
             type="button"
             onClick={() => setCategories([])}
-            className="px-3 py-1.5 rounded-xl text-sm bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+            className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
           >
             {t('radar.clear', 'Clear')}
           </button>

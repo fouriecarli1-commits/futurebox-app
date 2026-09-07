@@ -243,7 +243,7 @@ export default function SoundTrainer({
         <button
           type="button"
           onClick={onUpgrade}
-          className="w-full py-2.5 rounded-xl bg-amber-500/15 border border-amber-500/50 text-amber-300 text-sm font-semibold"
+          className="min-h-[44px] w-full py-2.5 rounded-xl bg-amber-500/15 border border-amber-500/50 text-amber-300 text-sm font-semibold"
         >
           {t('sound.needsPlan', 'Training a sound of your own starts on Studio')}
         </button>
@@ -256,7 +256,7 @@ export default function SoundTrainer({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2"
+          className="min-h-[44px] w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2"
         >
           <Music4 className="w-4 h-4" />
           {t('sound.start', 'Train a sound')}
@@ -355,7 +355,7 @@ export default function SoundTrainer({
               type="button"
               onClick={() => void start()}
               disabled={!ready || busy === 'train'}
-              className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+              className="min-h-[44px] flex-1 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {busy === 'train' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {busy === 'train'
@@ -365,7 +365,7 @@ export default function SoundTrainer({
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-400"
+              className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm font-semibold text-zinc-400"
             >
               {t('sound.cancel', 'Cancel')}
             </button>

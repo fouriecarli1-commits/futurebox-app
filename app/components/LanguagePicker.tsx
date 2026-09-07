@@ -22,7 +22,7 @@ export default function LanguagePicker({ compact = false }: { compact?: boolean 
         type="button"
         onClick={() => setLang(lang === 'en' ? 'af' : 'en')}
         title={t('lang.choose')}
-        className="flex items-center gap-1.5 px-3 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 text-xs font-bold rounded-xl transition-all"
+        className="min-h-[44px] flex items-center gap-1.5 px-3 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 text-xs font-bold rounded-xl transition-all"
       >
         <Languages className="w-4 h-4" />
         <span>{lang === 'en' ? 'EN' : 'AF'}</span>
@@ -40,7 +40,7 @@ export default function LanguagePicker({ compact = false }: { compact?: boolean 
             key={entry.code}
             type="button"
             onClick={() => setLang(entry.code)}
-            className={`px-3 py-1.5 rounded-xl text-sm font-semibold border transition-all ${
+            className={`min-h-[44px] px-3 py-1.5 rounded-xl text-sm font-semibold border transition-all ${
               lang === entry.code
                 ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
                 : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'

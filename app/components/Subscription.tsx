@@ -155,7 +155,7 @@ export default function Subscription(): React.ReactElement | null {
         <button
           type="button"
           onClick={() => setAsking(true)}
-          className="rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:border-zinc-600"
+          className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:border-zinc-600"
         >
           {t('sub.stop', 'Stop the monthly payment')}
         </button>
@@ -174,7 +174,7 @@ export default function Subscription(): React.ReactElement | null {
               type="button"
               onClick={() => void stop()}
               disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/60 bg-rose-500/10 px-3.5 py-2 text-sm font-semibold text-rose-200 hover:bg-rose-500/20 disabled:opacity-50"
+              className="min-h-[44px] inline-flex items-center gap-1.5 rounded-xl border border-rose-500/60 bg-rose-500/10 px-3.5 py-2 text-sm font-semibold text-rose-200 hover:bg-rose-500/20 disabled:opacity-50"
             >
               {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {t('sub.confirm', 'Yes, stop it')}
@@ -183,7 +183,7 @@ export default function Subscription(): React.ReactElement | null {
               type="button"
               onClick={() => setAsking(false)}
               disabled={busy}
-              className="rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2 text-sm font-semibold text-zinc-400 hover:text-white disabled:opacity-50"
+              className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 px-3.5 py-2 text-sm font-semibold text-zinc-400 hover:text-white disabled:opacity-50"
             >
               {t('sub.keep', 'Keep it')}
             </button>

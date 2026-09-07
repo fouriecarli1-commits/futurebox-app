@@ -561,7 +561,7 @@ export default function SongSections({
       <button
         type="button"
         onClick={add}
-        className="w-full py-2.5 rounded-xl border border-dashed border-zinc-700 text-sm font-semibold text-zinc-400 hover:border-emerald-500/60 hover:text-emerald-300 flex items-center justify-center gap-1.5"
+        className="min-h-[44px] w-full py-2.5 rounded-xl border border-dashed border-zinc-700 text-sm font-semibold text-zinc-400 hover:border-emerald-500/60 hover:text-emerald-300 flex items-center justify-center gap-1.5"
       >
         <Plus className="w-4 h-4" />
         {t('sec.add', 'Put another section in')}

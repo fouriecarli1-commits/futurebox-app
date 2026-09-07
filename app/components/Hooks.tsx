@@ -311,7 +311,7 @@ export default function Hooks() {
                   key={track.id}
                   type="button"
                   onClick={() => look(track, seconds)}
-                  className={`px-3 py-2 rounded-xl text-sm border transition-all flex items-center gap-2 ${
+                  className={`min-h-[44px] px-3 py-2 rounded-xl text-sm border transition-all flex items-center gap-2 ${
                     selected?.id === track.id
                       ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
@@ -333,7 +333,7 @@ export default function Hooks() {
                 type="button"
                 onClick={() => songFile.current?.click()}
                 disabled={taking}
-                className="px-3 py-2 rounded-xl text-sm border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-600 transition-all flex items-center gap-2 disabled:opacity-50"
+                className="min-h-[44px] px-3 py-2 rounded-xl text-sm border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-600 transition-all flex items-center gap-2 disabled:opacity-50"
               >
                 {taking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                 {t('board.bringSong', 'Bring a song in')}
@@ -353,7 +353,7 @@ export default function Hooks() {
                 type="button"
                 onClick={() => videoFile.current?.click()}
                 disabled={taking}
-                className="px-3 py-2 rounded-xl text-sm border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-600 transition-all flex items-center gap-2 disabled:opacity-50"
+                className="min-h-[44px] px-3 py-2 rounded-xl text-sm border border-zinc-700 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-600 transition-all flex items-center gap-2 disabled:opacity-50"
               >
                 {taking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Film className="w-3.5 h-3.5" />}
                 {t('hooks.bringVideo', 'Bring a video in')}
@@ -376,7 +376,7 @@ export default function Hooks() {
                     setVideo(null);
                     setHooks([]);
                   }}
-                  className="px-3 py-2 rounded-xl text-sm border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-all flex items-center gap-2"
+                  className="min-h-[44px] px-3 py-2 rounded-xl text-sm border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-all flex items-center gap-2"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   {t('board.dropSong', 'Take it back out')}
@@ -405,7 +405,7 @@ export default function Hooks() {
                   setSeconds(option);
                   if (selected) look(selected, option);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-sm border transition-all ${
+                className={`min-h-[44px] px-3 py-1.5 rounded-xl text-sm border transition-all ${
                   seconds === option
                     ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                     : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
@@ -444,7 +444,7 @@ export default function Hooks() {
                       type="button"
                       onClick={() => cut(hook, index)}
                       disabled={cutting !== null || !videoSupported()}
-                      className="w-full py-2.5 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      className="min-h-[44px] w-full py-2.5 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-1.5 disabled:opacity-50"
                     >
                       {cutting === index ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Scissors className="w-3.5 h-3.5" />}
                       {cutting === index ? t('hooks.cutting') : t('hooks.cut')}
@@ -473,7 +473,7 @@ export default function Hooks() {
                 onClick={() =>
                   downloadBlob(clip.blob, safeFilename(`${selected?.title ?? video?.name ?? 'hook'}-hook`, clip.ext))
                 }
-                className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                className="min-h-[44px] px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
               >
                 <Download className="w-3.5 h-3.5" />
                 {t('video.save')}

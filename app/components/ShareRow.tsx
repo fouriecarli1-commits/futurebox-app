@@ -218,7 +218,7 @@ export default function ShareRow({
                 type="button"
                 onClick={() => void save()}
                 disabled={file === 'busy'}
-                className="px-2.5 py-1.5 rounded-lg text-xs bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-1.5 disabled:opacity-50"
+                className="min-h-[44px] px-2.5 py-1.5 rounded-lg text-xs bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-1.5 disabled:opacity-50"
               >
                 {file === 'busy' ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -232,7 +232,7 @@ export default function ShareRow({
             <button
               type="button"
               onClick={() => void copy()}
-              className="px-2.5 py-1.5 rounded-lg text-xs bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-1.5"
+              className="min-h-[44px] px-2.5 py-1.5 rounded-lg text-xs bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-1.5"
             >
               {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
               {copied ? t('share.copied', 'Copied') : t('share.copy', 'Copy the caption')}

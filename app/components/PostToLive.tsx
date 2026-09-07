@@ -88,7 +88,7 @@ export default function PostToLive({
         type="button"
         onClick={() => void post()}
         disabled={busy}
-        className="px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-50"
+        className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-50"
       >
         {busy ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin" />

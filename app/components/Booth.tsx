@@ -256,7 +256,7 @@ export default function Booth({
           <button
             type="button"
             onClick={onGoToMake}
-            className="px-4 py-2 rounded-xl text-sm bg-emerald-500 text-zinc-950 font-semibold hover:bg-emerald-400 inline-flex items-center gap-2"
+            className="min-h-[44px] px-4 py-2 rounded-xl text-sm bg-emerald-500 text-zinc-950 font-semibold hover:bg-emerald-400 inline-flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4" />
             {t('booth.room.goMake', 'Make a song')}
@@ -290,7 +290,7 @@ export default function Booth({
                 type="button"
                 onClick={() => openOn(track)}
                 disabled={opening !== null}
-                className="flex-shrink-0 px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-50"
+                className="min-h-[44px] flex-shrink-0 px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-50"
               >
                 {opening === track.id ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

@@ -99,7 +99,8 @@
     "check:bodylimit": "tsx scripts/check-bodylimit.mts",
     "check:mixdown": "node audit/mixdown.mjs",
     "check:videohome": "node audit/videohome.mjs",
-    "check:sharesheet": "node audit/sharesheet.mjs"
+    "check:sharesheet": "node audit/sharesheet.mjs",
+    "check:buttonlook": "node audit/buttonlook.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

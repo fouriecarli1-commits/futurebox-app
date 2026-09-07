@@ -300,7 +300,7 @@ export default function Campaign({
                 onClick={() => setGoing(on ? going.filter((id) => id !== one.id) : [...going, one.id])}
                 aria-pressed={on}
                 title={t(`social.format.${one.id}`, one.bestFormat)}
-                className={`text-left rounded-xl border px-3 py-2 transition-all ${
+                className={`min-h-[44px] text-left rounded-xl border px-3 py-2 transition-all ${
                   on ? 'bg-emerald-500/10 border-emerald-500' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
                 }`}
               >
@@ -423,7 +423,7 @@ export default function Campaign({
                and this is the main button of the room. It cannot write an
                advert for a product nobody has named. */
             title={!what.trim() ? t('ads.needWhat', 'Say what you are advertising first.') : undefined}
-            className="px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent font-bold text-sm disabled:opacity-40 flex items-center gap-2"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent font-bold text-sm disabled:opacity-40 flex items-center gap-2"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             {ads.length ? t('ads.again', 'Write three more') : t('ads.write', 'Write the adverts')}
@@ -513,7 +513,7 @@ export default function Campaign({
                 onUseShot(ad.shot);
                 onGoTo('canvas');
               }}
-              className="flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
+              className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
             >
               <VideoIcon className="w-3.5 h-3.5 text-emerald-400" />
               {t('ads.film', 'Film this one')}
@@ -525,7 +525,7 @@ export default function Campaign({
                   onUseScript(ad.spoken);
                   onGoTo('voice_studio');
                 }}
-                className="flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
+                className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
               >
                 <Mic2 className="w-3.5 h-3.5 text-emerald-400" />
                 {t('ads.read', 'Read this line')}

@@ -75,7 +75,7 @@ export default function Balance({
       type="button"
       onClick={() => onTopUp(wallet)}
       title={t('credits.balanceTitle', 'What you have left to spend')}
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-sm font-bold transition-all ${
+      className={`min-h-[44px] flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-sm font-bold transition-all ${
         low
           ? 'border-amber-500/50 bg-amber-500/10 text-amber-300'
           : 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-zinc-600'

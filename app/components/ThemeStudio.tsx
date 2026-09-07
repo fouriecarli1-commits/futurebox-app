@@ -62,7 +62,7 @@ function Option({
     <button
       type="button"
       onClick={onClick}
-      className={`px-3 py-2 rounded-xl border text-left transition-all ${
+      className={`min-h-[44px] px-3 py-2 rounded-xl border text-left transition-all ${
         active
           ? 'border-emerald-500 bg-emerald-500/15 text-white'
           : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
@@ -231,7 +231,7 @@ export default function ThemeStudio({
         <button
           type="button"
           onClick={() => setTheme({ ...DEFAULT_THEME })}
-          className="w-full py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white text-sm font-semibold flex items-center justify-center gap-2"
+          className="min-h-[44px] w-full py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white text-sm font-semibold flex items-center justify-center gap-2"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           Back to the house style

@@ -1276,14 +1276,14 @@ export default function VocalBooth({
             <button
               type="button"
               onClick={() => setIntroAt(at)}
-              className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-amber-400 hover:text-amber-300"
+              className="min-h-[44px] px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-amber-400 hover:text-amber-300"
             >
               {t('booth.startHere', 'Start them here')}
             </button>
             <button
               type="button"
               onClick={() => setPointing((on) => !on)}
-              className={`px-2.5 py-1 rounded-lg border ${
+              className={`min-h-[44px] px-2.5 py-1 rounded-lg border ${
                 pointing
                   ? 'bg-amber-500/20 border-amber-400 text-amber-300'
                   : 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:border-amber-400 hover:text-amber-300'
@@ -1304,7 +1304,7 @@ export default function VocalBooth({
                   setIntroAt(null);
                   setWordsShift(0);
                 }}
-                className="px-2.5 py-1 rounded-lg text-zinc-500 hover:text-zinc-300"
+                className="min-h-[44px] px-2.5 py-1 rounded-lg text-zinc-500 hover:text-zinc-300"
               >
                 {t('booth.startBack', 'Back to the guess')}
               </button>
@@ -1344,7 +1344,7 @@ export default function VocalBooth({
                   key={String(choice.written)}
                   type="button"
                   onClick={() => setPreferWritten(choice.written)}
-                  className={`px-3 py-1.5 text-sm font-semibold ${
+                  className={`min-h-[44px] px-3 py-1.5 text-sm font-semibold ${
                     preferWritten === choice.written ? 'bg-emerald-500 text-onAccent' : 'bg-zinc-950 text-zinc-400'
                   }`}
                 >
@@ -1358,7 +1358,7 @@ export default function VocalBooth({
                   setHeard(null);
                   setPreferWritten(false);
                 }}
-                className="px-3 py-1.5 text-sm bg-zinc-950 text-zinc-600 hover:text-zinc-300"
+                className="min-h-[44px] px-3 py-1.5 text-sm bg-zinc-950 text-zinc-600 hover:text-zinc-300"
               >
                 {t('booth.readAgain', 'Read again')}
               </button>
@@ -1369,7 +1369,7 @@ export default function VocalBooth({
                 type="button"
                 onClick={() => void readWords()}
                 disabled={reading || busy || busyOrLive}
-                className="px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+                className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
               >
                 {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ear className="w-4 h-4" />}
                 {reading ? t('booth.reading', 'Listening to the song…') : t('booth.readWords', 'Read the words off the song')}
@@ -1393,7 +1393,7 @@ export default function VocalBooth({
               type="button"
               onClick={() => void split()}
               disabled={splitting || busy || busyOrLive}
-              className="px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+              className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
             >
               {splitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
               {splitting ? t('booth.splitting', 'Separating the voice…') : t('booth.split', 'Separate the voice')}
@@ -1423,7 +1423,7 @@ export default function VocalBooth({
                 type="button"
                 onClick={() => void cleanUp()}
                 disabled={cleaning || busy || busyOrLive}
-                className="px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+                className="min-h-[44px] px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
               >
                 {cleaning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
                 {cleaning ? t('booth.cleaning', 'Cleaning it up…') : t('booth.clean', 'Take the room off it')}
@@ -1512,7 +1512,7 @@ export default function VocalBooth({
                 type="button"
                 onClick={straighten}
                 disabled={busy || busyOrLive || strength === 0}
-                className="px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+                className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
               >
                 {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                 {tuned ? t('booth.tuneAgain', 'Tune again') : t('booth.tuneIt', 'Tune the take')}
@@ -1541,7 +1541,7 @@ export default function VocalBooth({
                         hush();
                         if (phase === 'playing') setPhase('idle');
                       }}
-                      className={`px-3 py-1.5 text-sm font-semibold ${
+                      className={`min-h-[44px] px-3 py-1.5 text-sm font-semibold ${
                         hearRaw === choice.raw ? 'bg-emerald-500 text-onAccent' : 'bg-zinc-950 text-zinc-400'
                       }`}
                     >
@@ -1632,7 +1632,7 @@ export default function VocalBooth({
             <button
               type="button"
               onClick={() => void stop()}
-              className="px-4 py-2.5 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-bold flex items-center gap-2"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-bold flex items-center gap-2"
             >
               <Square className="w-4 h-4 fill-current" />
               {t('take.stop', 'Stop')}
@@ -1642,7 +1642,7 @@ export default function VocalBooth({
               type="button"
               onClick={() => void start(region ? Math.max(0, region.from - PRE_ROLL) : 0)}
               disabled={busy || !backing}
-              className="px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-50"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-50"
             >
               {region ? <Scissors className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
               {region ? t('booth.punch', 'Sing just this part') : t('booth.record', 'Record from the top')}
@@ -1653,7 +1653,7 @@ export default function VocalBooth({
             type="button"
             onClick={play}
             disabled={busyOrLive || !backing}
-            className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+            className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
           >
             {phase === 'playing' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             {/* Before there is a take this button is a rehearsal: the song
@@ -1665,7 +1665,7 @@ export default function VocalBooth({
           <button
             type="button"
             onClick={() => setProOpen(true)}
-            className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5"
+            className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5"
           >
             <Layers className="w-4 h-4" />
             {t('booth.pro', 'Pro')}
@@ -1674,7 +1674,7 @@ export default function VocalBooth({
           <button
             type="button"
             onClick={() => setDeskOpen((open) => !open)}
-            className={`px-3.5 py-2.5 rounded-xl border text-sm font-semibold flex items-center gap-1.5 ${
+            className={`min-h-[44px] px-3.5 py-2.5 rounded-xl border text-sm font-semibold flex items-center gap-1.5 ${
               deskOpen ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-900 border-zinc-700 text-zinc-200'
             }`}
           >
@@ -1688,7 +1688,7 @@ export default function VocalBooth({
             type="button"
             onClick={() => void keep()}
             disabled={!take || busy}
-            className="px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-40"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-40"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
             {t('take.keep', 'Keep this take')}

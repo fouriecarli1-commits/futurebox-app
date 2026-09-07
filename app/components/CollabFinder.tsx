@@ -167,7 +167,7 @@ export default function CollabFinder({
           type="button"
           onClick={() => void save()}
           disabled={busy === 'me'}
-          className="w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+          className="min-h-[44px] w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60"
         >
           {busy === 'me' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
           {saved ? t('radar.saved', 'Saved') : t('radar.save', 'Save')}
@@ -331,7 +331,7 @@ export default function CollabFinder({
                         setCopied(entry.match.track.id);
                         setTimeout(() => setCopied(null), 1500);
                       }}
-                      className="px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5"
+                      className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5"
                     >
                       {copied === entry.match.track.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                       {copied === entry.match.track.id ? t('make.copied', 'Copied') : t('radar.copyNote', 'Copy the message')}

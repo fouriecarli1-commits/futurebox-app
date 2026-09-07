@@ -430,7 +430,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             <button
               type="button"
               onClick={onGoToMake}
-              className="w-full py-2.5 rounded-xl border border-dashed border-zinc-700 text-sm font-semibold text-zinc-400 hover:border-emerald-500/60 hover:text-emerald-300 flex items-center justify-center gap-1.5"
+              className="min-h-[44px] w-full py-2.5 rounded-xl border border-dashed border-zinc-700 text-sm font-semibold text-zinc-400 hover:border-emerald-500/60 hover:text-emerald-300 flex items-center justify-center gap-1.5"
             >
               <Sparkles className="w-4 h-4" />
               {t('live.noSongs', 'Make a song first — then it can go in the room')}
@@ -471,7 +471,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                           seconds: track.seconds,
                         })
                       }
-                      className="px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
+                      className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
                     >
                       <Upload className="w-3.5 h-3.5" />
                       {t('live.post', 'Post it')}
@@ -562,7 +562,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                     setShowElsewhere(false);
                   }
                 }}
-                className="w-full py-2 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold disabled:opacity-50"
+                className="min-h-[44px] w-full py-2 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold disabled:opacity-50"
               >
                 {t('live.tellThem', 'Tell the room')}
               </button>
@@ -609,7 +609,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
               type="button"
               disabled={busy || !draft.trim()}
               onClick={() => void send({ what: 'say', note: draft }).then((done) => { if (done) setDraft(''); })}
-              className="px-3 py-2 rounded-xl bg-emerald-500 text-onAccent flex-shrink-0 disabled:opacity-50"
+              className="min-h-[44px] px-3 py-2 rounded-xl bg-emerald-500 text-onAccent flex-shrink-0 disabled:opacity-50"
               aria-label={t('live.send', 'Send')}
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

@@ -187,7 +187,7 @@ export default function StyleFinder({
             type="button"
             onClick={() => void write()}
             disabled={asking}
-            className="px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 text-sm font-semibold flex items-center gap-1.5 hover:bg-emerald-500/25 disabled:opacity-60 flex-shrink-0"
+            className="min-h-[44px] px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 text-sm font-semibold flex items-center gap-1.5 hover:bg-emerald-500/25 disabled:opacity-60 flex-shrink-0"
           >
             {asking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
             {asking ? t('style.writing') : t('style.write')}

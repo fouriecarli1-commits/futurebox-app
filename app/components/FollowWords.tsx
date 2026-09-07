@@ -471,7 +471,7 @@ export default function FollowWords({
             <button
               type="button"
               onClick={() => void startCamera()}
-              className="px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-2"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-2"
             >
               <Camera className="w-4 h-4" />
               {t('sing.film', 'Film yourself')}
@@ -493,7 +493,7 @@ export default function FollowWords({
                   <button
                     type="button"
                     onClick={() => chooseEars('phones')}
-                    className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-emerald-500 text-onAccent hover:bg-emerald-400 flex items-center gap-2"
+                    className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold bg-emerald-500 text-onAccent hover:bg-emerald-400 flex items-center gap-2"
                   >
                     <Headphones className="w-4 h-4" />
                     {t('sing.onPhones', 'I have headphones in')}
@@ -501,7 +501,7 @@ export default function FollowWords({
                   <button
                     type="button"
                     onClick={() => chooseEars('aloud')}
-                    className="px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-2"
+                    className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-2"
                   >
                     <Speaker className="w-4 h-4" />
                     {t('sing.onSpeaker', 'It is playing out loud')}
@@ -513,7 +513,7 @@ export default function FollowWords({
                   onClick={() => chooseEars(ears === 'phones' ? 'aloud' : 'phones')}
                   disabled={recording}
                   aria-label={t('sing.switchEars', 'Change how you are listening')}
-                  className="px-3 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-400 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-50 flex items-center gap-2"
+                  className="min-h-[44px] px-3 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-400 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-50 flex items-center gap-2"
                 >
                   {ears === 'phones' ? <Headphones className="w-4 h-4" /> : <Speaker className="w-4 h-4" />}
                   {ears === 'phones' ? t('sing.phones', 'Headphones') : t('sing.aloudShort', 'Out loud')}
@@ -523,7 +523,7 @@ export default function FollowWords({
                 type="button"
                 disabled={ears === null}
                 onClick={recording ? stopRecording : () => void startRecording()}
-                className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-40 ${
+                className={`min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-40 ${
                   recording
                     ? 'bg-rose-500 text-white'
                     : 'bg-emerald-500 text-onAccent hover:bg-emerald-400'
@@ -535,7 +535,7 @@ export default function FollowWords({
               <button
                 type="button"
                 onClick={stopCamera}
-                className="px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-zinc-500 flex items-center gap-2"
+                className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-zinc-500 flex items-center gap-2"
               >
                 <CameraOff className="w-4 h-4" />
                 {t('sing.cameraOff', 'Camera off')}
@@ -546,7 +546,7 @@ export default function FollowWords({
             <button
               type="button"
               onClick={() => downloadBlob(take, safeFilename(title, take.type.includes('mp4') ? 'mp4' : 'webm'))}
-              className="px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-emerald-600 text-emerald-300 flex items-center gap-2"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-emerald-600 text-emerald-300 flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
               {t('sing.save', 'Save the take')}

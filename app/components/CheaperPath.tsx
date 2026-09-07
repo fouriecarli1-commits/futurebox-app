@@ -71,7 +71,7 @@ export default function CheaperPath({
       <button
         type="button"
         onClick={onTake}
-        className="flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
+        className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
       >
         <span>{action}</span>
         <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />

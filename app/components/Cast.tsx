@@ -222,7 +222,7 @@ export default function Cast({
                   <button
                     type="button"
                     onClick={() => setNaming(one.id)}
-                    className="block w-24 truncate rounded-lg border border-transparent px-1 py-1 text-left text-xs text-zinc-400 hover:text-white hover:border-zinc-700"
+                    className="min-h-[44px] block w-24 truncate rounded-lg border border-transparent px-1 py-1 text-left text-xs text-zinc-400 hover:text-white hover:border-zinc-700"
                   >
                     {one.name || t('cast.unnamed', 'Unnamed')}
                   </button>
@@ -233,7 +233,7 @@ export default function Cast({
                   onClick={() => void take(one)}
                   disabled={disabled || busy}
                   aria-label={`${t('cast.remove', 'Take out of the cast')}: ${one.name || t('cast.unnamed', 'Unnamed')}`}
-                  className="flex w-24 items-center justify-center gap-1 rounded-lg border border-zinc-800 bg-zinc-950 py-1 text-xs text-zinc-500 hover:text-rose-300 hover:border-rose-500/40 disabled:opacity-50"
+                  className="min-h-[44px] flex w-24 items-center justify-center gap-1 rounded-lg border border-zinc-800 bg-zinc-950 py-1 text-xs text-zinc-500 hover:text-rose-300 hover:border-rose-500/40 disabled:opacity-50"
                 >
                   <Trash2 className="w-3 h-3" />
                   {t('cast.out', 'Out')}

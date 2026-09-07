@@ -451,7 +451,7 @@ export default function Channel({
               setCopied(true);
               setTimeout(() => setCopied(false), 1500);
             }}
-            className="px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5 flex-shrink-0"
+            className="min-h-[44px] px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5 flex-shrink-0"
           >
             {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
             {copied ? t('make.copied', 'Copied') : t('chan.share', 'Share')}
@@ -532,7 +532,7 @@ export default function Channel({
               update(lists.concat(made));
               setOpenList(made.id);
             }}
-            className="px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5"
+            className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 text-sm flex items-center gap-1.5"
           >
             <Plus className="w-3.5 h-3.5" />
             {t('chan.new', 'New')}
@@ -549,7 +549,7 @@ export default function Channel({
                 key={one.id}
                 type="button"
                 onClick={() => setOpenList(openList === one.id ? null : one.id)}
-                className={`px-3 py-1.5 rounded-xl text-sm border transition-all ${
+                className={`min-h-[44px] px-3 py-1.5 rounded-xl text-sm border transition-all ${
                   openList === one.id
                     ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                     : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
@@ -575,7 +575,7 @@ export default function Channel({
                 type="button"
                 onClick={() => void play(list.trackIds[0], list.trackIds.slice(1))}
                 disabled={!listTracks.length}
-                className="px-2.5 py-1.5 rounded-lg bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-1.5 disabled:opacity-40"
+                className="min-h-[44px] px-2.5 py-1.5 rounded-lg bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-1.5 disabled:opacity-40"
               >
                 <Play className="w-3.5 h-3.5" />
                 {t('chan.playAll', 'Play it through')}

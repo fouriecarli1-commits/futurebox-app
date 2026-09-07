@@ -1103,7 +1103,7 @@ export default function ProBooth({
           <button
             type="button"
             onClick={() => void stopRecording()}
-            className="px-4 py-2.5 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-bold flex items-center gap-2"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-bold flex items-center gap-2"
           >
             <Square className="w-4 h-4 fill-current" />
             {t('pro.stop', 'Stop')}
@@ -1113,7 +1113,7 @@ export default function ProBooth({
             type="button"
             onClick={() => void record()}
             disabled={busy}
-            className="px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-50"
+            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-50"
           >
             <Circle className="w-4 h-4 fill-current" />
             {t('pro.record', 'Record a lane')}
@@ -1124,7 +1124,7 @@ export default function ProBooth({
           type="button"
           onClick={() => (playing ? stopPlaying() : play(at))}
           disabled={busy || recording || !heard.length}
-          className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+          className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
         >
           {playing ? <Square className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           {playing ? t('pro.stopPlaying', 'Stop') : t('pro.play', 'Play')}
@@ -1137,7 +1137,7 @@ export default function ProBooth({
             setAt(0);
           }}
           disabled={recording}
-          className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold disabled:opacity-50"
+          className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold disabled:opacity-50"
         >
           {t('pro.toStart', 'Back to the start')}
         </button>
@@ -1150,7 +1150,7 @@ export default function ProBooth({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={busy || recording}
-          className="px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+          className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
         >
           <Plus className="w-4 h-4" />
           {t('pro.bringIn', 'Bring audio in')}
@@ -1173,7 +1173,7 @@ export default function ProBooth({
           type="button"
           onClick={() => void keep()}
           disabled={busy || recording || !heard.length}
-          className="px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-40"
+          className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-40"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
           {t('pro.keep', 'Mix it down')}

@@ -613,7 +613,7 @@ export default function VideoCanvas({
                   type="button"
                   onClick={() => pickGenre(one)}
                   aria-pressed={active}
-                  className={`text-left rounded-xl border px-3 py-2 transition-colors ${
+                  className={`min-h-[44px] text-left rounded-xl border px-3 py-2 transition-colors ${
                     active
                       ? 'border-emerald-500 bg-emerald-500/10'
                       : 'border-zinc-800 bg-zinc-950 hover:border-zinc-600'
@@ -787,7 +787,7 @@ export default function VideoCanvas({
                      the note. */
                   title={!there ? t('canvas.gradeGone', 'The engine you have picked does not offer this one.') : undefined}
                   onClick={() => setGrade(one.id)}
-                  className={`text-left px-3 py-2.5 rounded-xl text-sm border transition-all disabled:opacity-40 ${
+                  className={`min-h-[44px] text-left px-3 py-2.5 rounded-xl text-sm border transition-all disabled:opacity-40 ${
                     active
                       ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
@@ -902,7 +902,7 @@ export default function VideoCanvas({
                   type="button"
                   onClick={() => setAspect(one.id)}
                   title={one.note}
-                  className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
+                  className={`min-h-[44px] flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
                     aspect === one.id
                       ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
@@ -931,7 +931,7 @@ export default function VideoCanvas({
                   type="button"
                   onClick={() => setSeconds(one.seconds)}
                   title={t(`canvas.len.${one.seconds}`, one.note)}
-                  className={`px-3 py-2 rounded-xl text-sm border transition-all ${
+                  className={`min-h-[44px] px-3 py-2 rounded-xl text-sm border transition-all ${
                     seconds === one.seconds
                       ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                       : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
@@ -1100,7 +1100,7 @@ export default function VideoCanvas({
                     <button
                       type="button"
                       onClick={() => setOpenLanguage(one.url)}
-                      className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                      className="min-h-[44px] px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                     >
                       <Languages className="w-3.5 h-3.5" />
                       {t('dubfilm.button', 'Another language')}

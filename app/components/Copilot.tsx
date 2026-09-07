@@ -188,7 +188,7 @@ export default function Copilot({
                   key={example}
                   type="button"
                   onClick={() => send(example)}
-                  className="text-left text-sm text-zinc-300 bg-zinc-950/60 border border-zinc-800 rounded-xl px-3 py-2 hover:border-emerald-500/60 hover:text-white transition-colors"
+                  className="min-h-[44px] text-left text-sm text-zinc-300 bg-zinc-950/60 border border-zinc-800 rounded-xl px-3 py-2 hover:border-emerald-500/60 hover:text-white transition-colors"
                 >
                   {example}
                 </button>
@@ -216,7 +216,7 @@ export default function Copilot({
                   <button
                     type="button"
                     onClick={() => approve(index)}
-                    className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-amber-500 text-onAccent flex items-center gap-1.5"
+                    className="min-h-[44px] px-3 py-1.5 rounded-lg text-sm font-semibold bg-amber-500 text-onAccent flex items-center gap-1.5"
                   >
                     <Check className="w-3.5 h-3.5" />
                     {t('copilot.yes')}
@@ -224,7 +224,7 @@ export default function Copilot({
                   <button
                     type="button"
                     onClick={() => decline(index)}
-                    className="px-3 py-1.5 rounded-lg text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 flex items-center gap-1.5"
+                    className="min-h-[44px] px-3 py-1.5 rounded-lg text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 flex items-center gap-1.5"
                   >
                     <X className="w-3.5 h-3.5" />
                     {t('copilot.no')}

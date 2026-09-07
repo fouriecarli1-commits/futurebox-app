@@ -178,7 +178,7 @@ export default function Transcript({
             type="button"
             onClick={() => void run()}
             disabled={busy}
-            className="w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+            className="min-h-[44px] w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
             {t('script.read', 'Read it back')} — {cost} {t('credits.credits', 'credits')}
@@ -231,7 +231,7 @@ export default function Transcript({
                 window.setTimeout(() => setCopied(false), 1600);
               });
             }}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-300 hover:text-white"
+            className="min-h-[44px] inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-300 hover:text-white"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? t('script.copied', 'Copied') : t('script.copy', 'Copy the whole thing')}

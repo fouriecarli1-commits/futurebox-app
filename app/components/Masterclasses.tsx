@@ -92,7 +92,7 @@ function Card({
         <button
           type="button"
           onClick={onUpgrade}
-          className="w-full py-2.5 rounded-xl text-sm font-semibold bg-amber-500/15 border border-amber-500/50 text-amber-300 hover:bg-amber-500/25 flex items-center justify-center gap-1.5"
+          className="min-h-[44px] w-full py-2.5 rounded-xl text-sm font-semibold bg-amber-500/15 border border-amber-500/50 text-amber-300 hover:bg-amber-500/25 flex items-center justify-center gap-1.5"
         >
           <Lock className="w-3.5 h-3.5" />
           {t('class.proOnly', 'Pro only')}
@@ -307,7 +307,7 @@ export default function Masterclasses({
                   key={t}
                   type="button"
                   onClick={() => setPlanTrack(t)}
-                  className={`px-2.5 py-1 rounded-lg text-sm border transition-all ${
+                  className={`min-h-[44px] px-2.5 py-1 rounded-lg text-sm border transition-all ${
                     planTrack === t ? 'bg-cyan-500/15 border-cyan-500 text-cyan-300' : 'bg-zinc-950/60 border-zinc-800 text-zinc-500 hover:text-zinc-300'
                   }`}
                 >
@@ -327,7 +327,7 @@ export default function Masterclasses({
               <button
                 type="button"
                 onClick={() => setSeed((s) => s + 1)}
-                className="px-3 py-1.5 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
+                className="min-h-[44px] px-3 py-1.5 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Another

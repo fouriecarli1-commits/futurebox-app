@@ -227,7 +227,7 @@ export default function RecordingName({
              when there is nothing to keep, which is the right place for that
              decision. */
           disabled={busy || taken}
-          className="px-3.5 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40"
+          className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40"
         >
           {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
           {t('chan.recNameSave', 'Save')}

@@ -78,7 +78,7 @@ export default function DeleteAccount({ email }: { email: string }): React.React
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="px-3.5 py-2 rounded-xl bg-zinc-900 border border-red-500/40 text-red-300 text-sm font-semibold hover:bg-red-500/10"
+          className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-900 border border-red-500/40 text-red-300 text-sm font-semibold hover:bg-red-500/10"
         >
           {t('gone.start', 'Delete my account')}
         </button>
@@ -131,7 +131,7 @@ export default function DeleteAccount({ email }: { email: string }): React.React
               type="button"
               onClick={() => void go()}
               disabled={!matches || busy}
-              className="px-3.5 py-2 rounded-xl bg-red-500 text-white text-sm font-bold flex items-center gap-2 disabled:opacity-40"
+              className="min-h-[44px] px-3.5 py-2 rounded-xl bg-red-500 text-white text-sm font-bold flex items-center gap-2 disabled:opacity-40"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               {busy ? t('gone.going', 'Deleting…') : t('gone.confirm', 'Delete it all')}
@@ -144,7 +144,7 @@ export default function DeleteAccount({ email }: { email: string }): React.React
                 setProblem(null);
               }}
               disabled={busy}
-              className="px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-sm font-semibold text-zinc-400 disabled:opacity-50"
+              className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-sm font-semibold text-zinc-400 disabled:opacity-50"
             >
               {t('gone.keep', 'Keep my account')}
             </button>

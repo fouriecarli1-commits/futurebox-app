@@ -176,7 +176,7 @@ export default function History({
             type="button"
             onClick={() => setOnlyKept(!onlyKept)}
             aria-pressed={onlyKept}
-            className={`text-xs font-semibold rounded-lg px-2.5 py-1 border transition-colors ${
+            className={`min-h-[44px] text-xs font-semibold rounded-lg px-2.5 py-1 border transition-colors ${
               onlyKept
                 ? 'bg-emerald-500/10 border-emerald-500 text-emerald-300'
                 : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'

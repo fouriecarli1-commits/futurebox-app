@@ -361,7 +361,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                 setMode(option);
                 setError(null);
               }}
-              className={`flex-1 px-3 py-2 rounded-xl text-sm border transition-all ${
+              className={`min-h-[44px] flex-1 px-3 py-2 rounded-xl text-sm border transition-all ${
                 mode === option
                   ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                   : 'bg-transparent border-transparent text-zinc-400 hover:text-zinc-200'
@@ -414,7 +414,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                       type="button"
                       onClick={() => applyLook(one.id)}
                       title={one.note}
-                      className={`text-left rounded-xl border px-3 py-2 transition-all ${
+                      className={`min-h-[44px] text-left rounded-xl border px-3 py-2 transition-all ${
                         look === one.id
                           ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
                           : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700'
@@ -481,7 +481,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                       type="button"
                       onClick={() => setEngineSeconds(option.seconds)}
                       title={option.note}
-                      className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
+                      className={`min-h-[44px] flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
                         engineSeconds === option.seconds
                           ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                           : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
@@ -504,7 +504,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                     key={option}
                     type="button"
                     onClick={() => setAspect(option)}
-                    className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
+                    className={`min-h-[44px] flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
                       aspect === option
                         ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                         : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
@@ -524,7 +524,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                     key={option}
                     type="button"
                     onClick={() => setClipSeconds(option)}
-                    className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
+                    className={`min-h-[44px] flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
                       clipSeconds === option
                         ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                         : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
@@ -591,7 +591,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                           event.preventDefault();
                           setAlsoIn(one);
                         }}
-                        className={`rounded-lg border px-2.5 py-1.5 text-sm ${
+                        className={`min-h-[44px] rounded-lg border px-2.5 py-1.5 text-sm ${
                           alsoIn === one
                             ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
                             : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-600'
@@ -629,7 +629,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                     key={option}
                     type="button"
                     onClick={() => setAspect(option)}
-                    className={`flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
+                    className={`min-h-[44px] flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
                       aspect === option
                         ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 font-semibold'
                         : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-600'
@@ -684,7 +684,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                 <button
                   type="button"
                   onClick={() => downloadBlob(made.blob, safeFilename(track.title, made.ext))}
-                  className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                  className="min-h-[44px] px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                 >
                   <Download className="w-3.5 h-3.5" />
                   {t('video.save')}
@@ -692,7 +692,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                 <button
                   type="button"
                   onClick={mode === 'engine' ? makeWithEngine : make}
-                  className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300"
+                  className="min-h-[44px] px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300"
                 >
                   {t('video.again')}
                 </button>

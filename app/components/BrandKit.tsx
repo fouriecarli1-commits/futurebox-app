@@ -170,7 +170,7 @@ export default function BrandKit({
             <button
               type="button"
               onClick={keep}
-              className="rounded-xl border border-emerald-500 bg-emerald-500/10 px-3.5 py-2 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/20 inline-flex items-center gap-1.5"
+              className="min-h-[44px] rounded-xl border border-emerald-500 bg-emerald-500/10 px-3.5 py-2 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/20 inline-flex items-center gap-1.5"
             >
               {saved ? <Check className="w-4 h-4" /> : null}
               {saved ? t('kit.saved', 'Saved') : t('kit.save', 'Keep this')}

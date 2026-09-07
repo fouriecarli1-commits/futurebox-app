@@ -49,7 +49,7 @@ function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) 
           () => setCopied(false),
         );
       }}
-      className="px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all flex items-center space-x-1.5"
+      className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 transition-all flex items-center space-x-1.5"
     >
       {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
       <span>{copied ? 'Copied' : label}</span>
@@ -228,7 +228,7 @@ export default function CollabRadar({
                  tell a tab from a button that spends money. */
               aria-pressed={isActive}
               onClick={() => setTab(t.id)}
-              className={`px-3 py-2 rounded-xl text-sm font-bold flex items-center space-x-1.5 border transition-all ${
+              className={`min-h-[44px] px-3 py-2 rounded-xl text-sm font-bold flex items-center space-x-1.5 border transition-all ${
                 isActive
                   ? 'bg-cyan-500/15 border-cyan-500 text-cyan-300'
                   : 'bg-zinc-950/60 border-zinc-800 text-zinc-500 hover:text-zinc-300'
@@ -355,7 +355,7 @@ export default function CollabRadar({
                 <button
                   type="button"
                   onClick={addOwnTarget}
-                  className="px-3 py-2 rounded-lg text-sm font-bold bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center space-x-1"
+                  className="min-h-[44px] px-3 py-2 rounded-lg text-sm font-bold bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center space-x-1"
                 >
                   <Plus className="w-3 h-3" />
                   <span>Add</span>
@@ -499,7 +499,7 @@ export default function CollabRadar({
                 key={t.id}
                 type="button"
                 onClick={() => setSourceId(t.id)}
-                className={`px-2.5 py-1.5 rounded-xl text-sm font-bold border transition-all ${
+                className={`min-h-[44px] px-2.5 py-1.5 rounded-xl text-sm font-bold border transition-all ${
                   sourceId === t.id
                     ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
                     : 'bg-zinc-950/60 border-zinc-800 text-zinc-500 hover:text-zinc-300'
@@ -766,7 +766,7 @@ export default function CollabRadar({
                       <button
                         type="button"
                         onClick={onUpgrade}
-                        className="px-2.5 py-1 rounded-lg text-sm font-semibold bg-amber-500/15 border border-amber-500/50 text-amber-300 hover:bg-amber-500/25 flex items-center gap-1.5"
+                        className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm font-semibold bg-amber-500/15 border border-amber-500/50 text-amber-300 hover:bg-amber-500/25 flex items-center gap-1.5"
                       >
                         <Lock className="w-3 h-3" />
                         Posting is Pro
@@ -775,7 +775,7 @@ export default function CollabRadar({
                     <button
                       type="button"
                       onClick={() => (canBoost ? setBoostFor(caption) : onUpgrade())}
-                      className="px-2.5 py-1 rounded-lg text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
+                      className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-cyan-500 hover:text-cyan-300 flex items-center gap-1.5"
                     >
                       {!canBoost && <Lock className="w-3 h-3 text-amber-400" />}
                       Ask FutureBox to boost
@@ -825,7 +825,7 @@ export default function CollabRadar({
                     setBoostFor(null);
                     setBoostUrl('');
                   }}
-                  className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-cyan-500/20 border border-cyan-500 text-cyan-200 disabled:opacity-40"
+                  className="min-h-[44px] px-3 py-1.5 rounded-lg text-sm font-semibold bg-cyan-500/20 border border-cyan-500 text-cyan-200 disabled:opacity-40"
                 >
                   {t('radar.queueIt', "Queue it")}
                 </button>

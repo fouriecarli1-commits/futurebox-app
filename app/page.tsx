@@ -1873,7 +1873,7 @@ export default function FutureBoxHome() {
           ) : (
             <button
               onClick={() => openAuth('signin')}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold rounded-xl border border-zinc-700 transition-all"
+              className="min-h-[44px] flex items-center space-x-1.5 px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold rounded-xl border border-zinc-700 transition-all"
             >
               <LogIn className="w-3.5 h-3.5 text-emerald-400" />
               <span>{t('home.signIn', 'Sign in')}</span>
@@ -1883,7 +1883,7 @@ export default function FutureBoxHome() {
           {userPlan === 'free' ? (
             <button
               onClick={() => setPricingModalOpen(true)}
-              className="hidden sm:flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-onAccent font-extrabold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              className="min-h-[44px] hidden sm:flex items-center space-x-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-onAccent font-extrabold text-xs rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]"
             >
               <Crown className="w-3.5 h-3.5 fill-current" />
               <span>{t('common.upgrade')} ({entryPrice.display})</span>
@@ -1910,7 +1910,7 @@ export default function FutureBoxHome() {
           <button
             onClick={() => setThemeOpen(true)}
             title="Appearance — colours, type, layout"
-            className="flex items-center space-x-1.5 px-3 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 text-xs font-bold rounded-xl transition-all"
+            className="min-h-[44px] flex items-center space-x-1.5 px-3 py-2 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 text-xs font-bold rounded-xl transition-all"
           >
             <Paintbrush className="w-4 h-4" />
             <span className="hidden lg:inline">{t('common.appearance')}</span>
@@ -1924,7 +1924,7 @@ export default function FutureBoxHome() {
               The door is the screen that shows all of them. */}
           <button
             onClick={() => { setAtDoor(true); setUploadModalOpen(true); }}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent text-xs font-bold rounded-xl hover:opacity-90 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+            className="min-h-[44px] flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent text-xs font-bold rounded-xl hover:opacity-90 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
           >
             <UploadCloud className="w-4 h-4" />
             <span className="hidden sm:inline">{t('common.studio')}</span>
@@ -1944,7 +1944,7 @@ export default function FutureBoxHome() {
             <div className="relative">
               <button
                 onClick={() => { setPodcasterDropdownOpen(!podcasterDropdownOpen); setCategoryDropdownOpen(false); }}
-                className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 px-3.5 py-1.5 rounded-xl text-zinc-200 transition-colors"
+                className="min-h-[44px] flex items-center space-x-2 bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 px-3.5 py-1.5 rounded-xl text-zinc-200 transition-colors"
               >
                 <Headphones className="w-3.5 h-3.5 text-emerald-400" />
                 <span>
@@ -1965,7 +1965,7 @@ export default function FutureBoxHome() {
                         setSelectedPodcasterFilter(pod.key);
                         setPodcasterDropdownOpen(false);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs text-zinc-300 hover:bg-emerald-500/10 hover:text-emerald-400 transition-colors flex items-center justify-between"
+                      className="min-h-[44px] w-full text-left px-3 py-2 rounded-xl text-xs text-zinc-300 hover:bg-emerald-500/10 hover:text-emerald-400 transition-colors flex items-center justify-between"
                     >
                       <span>{pod.name}</span>
                       {selectedPodcasterFilter === pod.key && <Check className="w-3.5 h-3.5 text-emerald-400" />}
@@ -1979,7 +1979,7 @@ export default function FutureBoxHome() {
             <div className="relative">
               <button
                 onClick={() => { setCategoryDropdownOpen(!categoryDropdownOpen); setPodcasterDropdownOpen(false); }}
-                className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 px-3.5 py-1.5 rounded-xl text-zinc-200 transition-colors"
+                className="min-h-[44px] flex items-center space-x-2 bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 px-3.5 py-1.5 rounded-xl text-zinc-200 transition-colors"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400" />
                 <span>{selectedCategoryFilter || t('feed.allCats', 'Explore All Categories')}</span>
@@ -1996,7 +1996,7 @@ export default function FutureBoxHome() {
                         setSelectedCategoryFilter(cat === 'All Categories' ? null : cat);
                         setCategoryDropdownOpen(false);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs text-zinc-300 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors flex items-center justify-between"
+                      className="min-h-[44px] w-full text-left px-3 py-2 rounded-xl text-xs text-zinc-300 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors flex items-center justify-between"
                     >
                       <span>{cat}</span>
                       {selectedCategoryFilter === cat && <Check className="w-3.5 h-3.5 text-cyan-400" />}
@@ -2536,7 +2536,7 @@ export default function FutureBoxHome() {
 
                     <button 
                       onClick={() => setSelectedBlueprint(item)}
-                      className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center space-x-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg border border-emerald-500/30 transition-colors"
+                      className="min-h-[44px] text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center space-x-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg border border-emerald-500/30 transition-colors"
                     >
                       <span>{t('feed.inspect')}</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
@@ -2682,7 +2682,7 @@ export default function FutureBoxHome() {
                         setPlanBusy(null);
                         if (problem) setPlanNote(problem);
                       }}
-                      className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50 ${
+                      className={`min-h-[44px] w-full py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50 ${
                         featured
                           ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-onAccent'
                           : 'bg-zinc-800 text-white hover:bg-zinc-700'
@@ -2854,7 +2854,7 @@ export default function FutureBoxHome() {
                 <button
                   type="button"
                   onClick={() => setSearchOpen(true)}
-                  className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2"
+                  className="min-h-[44px] flex items-center gap-2 text-sm text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2"
                 >
                   <SearchIcon className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">{t('search.open', 'Search')}</span>
@@ -2948,7 +2948,7 @@ export default function FutureBoxHome() {
                       onClick={() => setAtDoor(true)}
                       title={t('hello.home', 'Home')}
                       aria-current={atDoor ? 'page' : undefined}
-                      className={`flex-shrink-0 text-left rounded-xl flex items-center gap-3 transition-all ${
+                      className={`min-h-[44px] flex-shrink-0 text-left rounded-xl flex items-center gap-3 transition-all ${
                         theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
                       } ${atDoor ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
                     >
@@ -2982,7 +2982,7 @@ export default function FutureBoxHome() {
                         }}
                         title={`${meta.label} — ${meta.hint}`}
                         aria-current={isActive ? 'page' : undefined}
-                        className={`flex-shrink-0 text-left rounded-xl flex items-center gap-3 transition-all ${
+                        className={`min-h-[44px] flex-shrink-0 text-left rounded-xl flex items-center gap-3 transition-all ${
                           theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
                         } ${isActive ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
                       >
@@ -3193,7 +3193,7 @@ export default function FutureBoxHome() {
                       <button
                         type="button"
                         onClick={() => goToRoom(onward.to)}
-                        className="flex items-center gap-2 text-sm font-semibold text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
+                        className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
                       >
                         <span>{lang === 'af' ? onward.af : onward.en}</span>
                         <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
@@ -3261,14 +3261,14 @@ export default function FutureBoxHome() {
                 setUploadModalOpen(true);
                 setMadeTrack(null);
               }}
-              className="px-3 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent"
+              className="min-h-[44px] px-3 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent"
             >
               {t('video.suggestGo')}
             </button>
             <button
               type="button"
               onClick={() => setMadeTrack(null)}
-              className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300"
+              className="min-h-[44px] px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300"
             >
               {t('video.suggestNo')}
             </button>

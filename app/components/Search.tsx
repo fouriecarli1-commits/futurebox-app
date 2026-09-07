@@ -197,7 +197,7 @@ export default function Search({
                 type="button"
                 onMouseEnter={() => setAt(index)}
                 onClick={() => choose(hit)}
-                className={`w-full text-left px-4 py-2.5 flex items-start gap-3 ${
+                className={`min-h-[44px] w-full text-left px-4 py-2.5 flex items-start gap-3 ${
                   index === at ? 'bg-emerald-500/10' : 'hover:bg-zinc-800/60'
                 }`}
               >

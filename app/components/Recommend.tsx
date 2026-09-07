@@ -124,7 +124,7 @@ export default function Recommend({
            fills in the field you are looking at. It sits beside a field rather
            than in a row of actions, so the box is quiet: a border and no fill,
            at the same size as the chips it sits above. */
-        className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/5 px-2.5 py-1.5 text-sm font-semibold text-emerald-300 hover:text-emerald-200 hover:border-emerald-500/70 disabled:opacity-50 transition-colors"
+        className="min-h-[44px] inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/5 px-2.5 py-1.5 text-sm font-semibold text-emerald-300 hover:text-emerald-200 hover:border-emerald-500/70 disabled:opacity-50 transition-colors"
       >
         {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
         {t('pick.forMe', 'Pick for me')}

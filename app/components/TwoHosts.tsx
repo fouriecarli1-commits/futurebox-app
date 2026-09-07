@@ -185,7 +185,7 @@ export default function TwoHosts({
         type="button"
         onClick={() => void make()}
         disabled={busy || read.turns.length === 0 || overPlan}
-        className="w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+        className="min-h-[44px] w-full py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
       >
         {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessagesSquare className="w-4 h-4" />}
         {busy ? t('hosts.making', 'Making the conversation…') : t('hosts.make', 'Make the conversation')}
