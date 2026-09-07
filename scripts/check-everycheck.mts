@@ -150,7 +150,7 @@ const WAITING = new Set([
   'account', 'addon', 'adreport', 'adruns', 'ads-en', 'cast', 'greeting',
   'help', 'language', 'lanes', 'photo', 'playbutton', 'podlanguage',
   'presenter', 'queue', 'safezones', 'signinwith',
-  'storyboard', 'studioroute', 'subscription', 'taste', 'videodesk',
+  'studioroute', 'subscription', 'taste', 'videodesk',
 ]);
 /** What it was when this rule was written. It may go down and not up. */
 const WAITING_WAS = 25;

@@ -671,6 +671,23 @@ export default function Storyboard({
             )}
           </Note>
 
+        </div>
+      )}
+
+      {/* ── And everything that is about a film there is not yet ──────────
+
+          The gate above was moved off the song picker so somebody arriving
+          with a song could name it — and it wrapped this too, so removing it
+          put the background choice, "0 shots · 0:00" and a Cut it into one
+          film button on an empty board. A control for work that does not
+          exist is worse than one that is hidden: it reads as a thing that is
+          broken.
+
+          `audit/storyboard.mjs` caught it the first time it was ever run —
+          "there is nothing to cut before there are shots" — which is what it
+          was written for. */}
+      {board.shots.length > 0 && (
+        <div className="space-y-3 border-t border-zinc-800 pt-3">
           {/* ── Words on the film ────────────────────────────────────────
 
               Burned into the picture, because a subtitle file beside it is

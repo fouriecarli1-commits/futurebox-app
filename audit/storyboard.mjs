@@ -26,18 +26,29 @@
  * for the tab only, so the run signs in again afterwards. That is the app
  * behaving correctly and the test working around it, not the other way round.
  */
+/*
+ * ── Why this had never run ───────────────────────────────────────────────
+ *
+ * It navigated to `http://localhost:3027` and hoped somebody had left a server
+ * there — the fault `serve()` exists to fix and `check:probes` holds every
+ * wired probe to. So it was never given a `check:` name, and twenty-nine
+ * assertions about the room that cuts a music video together have sat here
+ * being run by nobody.
+ */
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
+import { dismissDoor, studio, toRoom } from './enter.mjs';
 
-const PORT = process.argv[2] || '3027';
+const PORT = process.argv[2] || '3094';
 const af = process.argv[3] === 'af';
 const CLIP_SECONDS = 2;
 
+const server = await serve(PORT);
 const b = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required'] }));
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
 const check = (label, ok, detail = '') => {
-  console.log(`${label}: ${ok}`);
+  console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${!ok && detail ? ` — ${detail}` : ''}`);
   if (!ok) problems.push(`${label}${detail ? ` (${detail})` : ''}`);
 };
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
@@ -78,25 +89,53 @@ await p.route('https://stub.supabase.co/**', async (route) =>
 
 async function signIn() {
   const cta = p.locator('button, a').filter({ hasText: af ? /begin|gratis|teken/i : /start free|begin|sign up/i }).first();
-  await cta.waitFor({ state: 'visible', timeout: 40000 });
+  /* Absent means already signed in, which is a pass and not a hang.
+
+     The note at the top of this file says the reload signs somebody out,
+     because without Supabase configured this app signs them in for the tab
+     only. That is no longer true on every path, and waiting forty seconds for
+     a front door that is not there reported the walk as fallen over when the
+     app was simply still signed in. What is being tested is the board, not
+     the sign-in. */
+  const there = await cta.isVisible({ timeout: 10000 }).catch(() => false);
+  if (!there) return;
   await cta.click();
   await p.waitForTimeout(700);
   await p.locator('input[type="email"]').first().fill('toets@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('toets-wagwoord-1234');
   await p.locator('button[type="submit"]').first().click();
-  await p.waitForTimeout(2500);
+  /* Waited for, not slept through.
+
+     `waitForTimeout(2500)` is how long signing in takes on an idle machine.
+     On a loaded one it is sometimes not enough, and the probe then measures
+     the signed-out page while believing it is signed in — which is not a
+     probe failing, it is a probe answering a different question and reporting
+     the answer as a fault. The bottom bar exists on every screen this app
+     shows a signed-in person and on none that it shows a signed-out one. */
+  await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 30000 })
+    .catch(() => undefined);
+  await p.waitForTimeout(400);
 }
 async function intoTheDesk() {
-  await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
-  await p.waitForTimeout(1800);
-  const room = p.locator('div.fixed.inset-0.z-50').first();
-  await room.locator('button').filter({ hasText: /^Video desk|^Videolessenaar/i }).first().click();
+  /* The shared way in, rather than a private copy of it.
+
+     This probe reached the desk by dismissing nothing and then clicking a
+     button it expected to find inside `div.fixed.inset-0.z-50`. Both were
+     wrong and both had already been solved: signing in lands on the welcome
+     door, which covers the header, so the Studio click was intercepted and
+     retried until it timed out; and the rooms are on the door at `z-[55]`,
+     not inside the studio layer, since the front door was rebuilt. `enter.mjs`
+     knows all of that, and a second copy of it is a second thing to fix. */
+  await dismissDoor(p);
+  await studio(p);
+  await toRoom(p, af ? 'Videolessenaar' : 'Video desk');
   await p.waitForTimeout(2200);
-  return room;
+  return p.locator('div.fixed.inset-0.z-50').first();
 }
 
-await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
+try {
+await p.goto(server.url, { waitUntil: 'networkidle' });
 
 // A real clip, recorded in the page, for the stubbed engine to hand back.
 clipBytes = Buffer.from(await p.evaluate(async (seconds) => {
@@ -278,6 +317,18 @@ check('and it can be saved',
   (await room.locator('button').filter({ hasText: af ? /^Stoor die film/ : /^Save the film/ }).count()) > 0);
 
 await p.screenshot({ path: shot(`storyboard-${af ? 'af' : 'en'}.png`), fullPage: true });
-console.log('problems:', problems.join(' ;; ') || 'none');
-await b.close();
-process.exit(problems.length ? 1 : 0);
+} catch (problem) {
+  /* Thrown, not exited: the server has to come down whatever happens, which
+     is the rule `check:probes` holds every wired probe to. */
+  problems.push(`the walk itself fell over — ${String(problem).slice(0, 220)}`);
+} finally {
+  await b.close();
+  await server.stop();
+}
+
+if (problems.length) {
+  console.error(`\ncheck:storyboard — ${problems.length} problem(s):`);
+  problems.forEach((one) => console.error(`  · ${one}`));
+  process.exit(1);
+}
+console.log('\ncheck:storyboard — a sentence becomes a shot, the shots become a film, and the film is as long as they are.');
