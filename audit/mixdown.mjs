@@ -176,6 +176,38 @@ try {
   check('a lane that starts before zero is trimmed, not shifted',
     near(said.earlySeconds, 2, 0.02), `${said.earlySeconds}s — the session got longer`);
 
+  /* ── A cut lane ───────────────────────────────────────────────────────
+     "Ek dink maar net of klanke gecut kan word?"
+
+     The lane is a tone that is quiet (0.2) for its first second and loud
+     (0.8) for its second. So the peak of the render says which half came out,
+     and a length check on its own would go green on a cut that kept the wrong
+     half — which is worse than a cut that does nothing. */
+  /* Centred, so each channel carries level/√2 — the equal-power law this
+     probe pins twenty lines above. The first version of these three expected
+     0.8 and 0.2 flat and called a working cut broken: the numbers it read,
+     0.566 and 0.141, are exactly 0.8/√2 and 0.2/√2. A check has to know the
+     law the rest of the file is enforcing. */
+  const centred = (level) => level / Math.SQRT2;
+  check('the whole lane is two seconds and reaches the loud half',
+    near(said.wholeSeconds, 2, 0.02) && near(said.wholePeak, centred(0.8), 0.02),
+    `${said.wholeSeconds}s, peak ${said.wholePeak}`);
+  check('cut to its second half, only the loud half comes out',
+    near(said.tailSeconds, 2, 0.02) && near(said.tailPeak, centred(0.8), 0.02),
+    `${said.tailSeconds}s, peak ${said.tailPeak}`);
+  check('cut to its first half, only the quiet half comes out',
+    near(said.headSeconds, 1, 0.02) && near(said.headPeak, centred(0.2), 0.02),
+    `${said.headSeconds}s, peak ${said.headPeak} — the loud level would mean the cut kept the wrong half`);
+  /* The tail case keeps `at` at 1, because cutting the head keeps the audio
+     still on the clock. Two seconds of session with one second of sound in
+     the second half of it. */
+  check('and cutting the head leaves the audio where it was on the clock',
+    near(said.tailSeconds, 2, 0.02),
+    `${said.tailSeconds}s — the lane slid instead of being trimmed`);
+  check('a window collapsed to nothing plays the whole lane rather than silence',
+    near(said.collapsedSeconds, 2, 0.02) && near(said.collapsedPeak, centred(0.8), 0.02),
+    `${said.collapsedSeconds}s, peak ${said.collapsedPeak}`);
+
   await b.close();
 } finally {
   if (server?.pid) {

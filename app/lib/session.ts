@@ -30,6 +30,23 @@ export interface Lane {
   readonly soloed: boolean;
   /** True for the song everything else was recorded against. */
   readonly backing?: boolean;
+  /**
+   * The piece of this lane that plays, in seconds into its own audio.
+   *
+   * Carli: "Ek dink maar net of klanke gecut kan word?"
+   *
+   * A cut and not a deletion. The recording underneath is untouched, so the
+   * cut can be moved or undone, and the amp and the stems — which are baked
+   * from `audio` — do not have to be redone every time somebody drags an edge.
+   * `windowOf` reads them; nothing else should, because a window that
+   * collapses to nothing means the whole lane and that rule belongs in one
+   * place.
+   *
+   * Absent means the whole thing, which is every lane made before this
+   * existed.
+   */
+  readonly from?: number;
+  readonly to?: number;
   /** −1 hard left to 1 hard right. Absent means centre, for lanes made before
    *  there was a pan at all. */
   readonly pan?: number;
@@ -158,9 +175,67 @@ export function audible(lanes: readonly Lane[]): Lane[] {
   return lanes.filter((lane) => (soloing ? lane.soloed && !lane.muted : !lane.muted));
 }
 
+/**
+ * The piece of a lane that plays.
+ *
+ * Clamped to the audio, and a window that has collapsed to nothing is read as
+ * the whole lane rather than as silence. That last rule is deliberate and it
+ * is the same one `lib/stitch.ts` uses on a scene: a lane somebody put in the
+ * session should be in the session, and an empty window is far more likely to
+ * be a drag that went wrong than a request for nothing.
+ */
+export function windowOf(lane: Lane): { readonly from: number; readonly to: number } {
+  const length = (lane.amped?.audio ?? lane.audio).duration;
+  if (!(length > 0)) return { from: 0, to: 0 };
+  const from = Math.min(Math.max(0, lane.from ?? 0), length);
+  const to = Math.min(Math.max(from, lane.to ?? length), length);
+  return to - from < 0.01 ? { from: 0, to: length } : { from, to };
+}
+
+/** How long a lane plays for, after its cut. */
+export function lengthOf(lane: Lane): number {
+  const window = windowOf(lane);
+  return window.to - window.from;
+}
+
 /** How long the session runs: the last thing to finish. */
 export function span(lanes: readonly Lane[]): number {
-  return lanes.reduce((longest, lane) => Math.max(longest, lane.at + lane.audio.duration), 0);
+  return lanes.reduce((longest, lane) => Math.max(longest, lane.at + lengthOf(lane)), 0);
+}
+
+/**
+ * A lane started at the right moment, from the right place, for the right
+ * length.
+ *
+ * ── Why this is a function and not two call sites ────────────────────────
+ *
+ * It was two. The live path in the Pro Booth worked out where to join a lane
+ * that had already begun; `mixSession` worked out the same thing again for a
+ * render. Both were four lines and neither knew about a cut, so adding one to
+ * either would have made the mixer and the mixdown disagree about what is in
+ * the song — which is the exact failure the note at the top of this file says
+ * must never happen. `wireLane` was already shared for the same reason; the
+ * `start` call was the piece left outside it.
+ *
+ * @param playFrom where on the session's clock playback begins.
+ * @param when     the context time that moment corresponds to.
+ */
+export function startLane(
+  source: AudioBufferSourceNode,
+  lane: Lane,
+  playFrom = 0,
+  when = 0,
+): void {
+  const window = windowOf(lane);
+  const length = window.to - window.from;
+  if (!(length > 0)) return;
+
+  // How far into the lane playback already is. Negative means it has not
+  // started yet and is scheduled ahead.
+  const into = playFrom - lane.at;
+  if (into >= length) return; // Already finished before this moment.
+  if (into >= 0) source.start(when, window.from + into, length - into);
+  else source.start(when - into, window.from, length);
 }
 
 /** A lane's level once solo and mute have had their say. */
@@ -259,9 +334,7 @@ export async function mixSession(
   bus.connect(offline.destination);
 
   heard.forEach((lane) => {
-    const source = wireLane(offline, lane, bus);
-    if (lane.at >= 0) source.start(lane.at);
-    else source.start(0, Math.min(-lane.at, lane.audio.duration));
+    startLane(wireLane(offline, lane, bus), lane);
   });
 
   try {
@@ -307,6 +380,34 @@ export async function readSession(
  */
 export function laneAlone(lane: Lane): AudioBuffer {
   return lane.audio;
+}
+
+/**
+ * The part of a lane that plays, as a buffer of its own.
+ *
+ * What gets separated, voice-changed or read has to be what she can hear. A
+ * lane trimmed to its chorus and then sent whole would be billed by the minute
+ * for the verses she cut out, and the stems that came back would not line up
+ * with the lane they were made from.
+ *
+ * The uncut case returns the buffer untouched rather than copying it: these
+ * are minutes of audio and a copy nobody needed is a phone running out of
+ * memory.
+ */
+export function pieceOf(lane: Lane, ctx: BaseAudioContext): AudioBuffer {
+  const source = lane.amped?.audio ?? lane.audio;
+  const window = windowOf(lane);
+  const rate = source.sampleRate;
+  const from = Math.round(window.from * rate);
+  const to = Math.min(source.length, Math.round(window.to * rate));
+  if (from <= 0 && to >= source.length) return source;
+
+  const length = Math.max(1, to - from);
+  const out = ctx.createBuffer(source.numberOfChannels, length, rate);
+  for (let channel = 0; channel < source.numberOfChannels; channel += 1) {
+    out.getChannelData(channel).set(source.getChannelData(channel).subarray(from, to));
+  }
+  return out;
 }
 
 /**

@@ -33,6 +33,19 @@ function tone(hz: number, seconds: number, level: number): AudioBuffer {
   return buffer;
 }
 
+/** A tone that is quiet for its first half and loud for its second. */
+function halves(quiet: number, loud: number, seconds: number): AudioBuffer {
+  const Ctx = (window as unknown as { OfflineAudioContext: typeof OfflineAudioContext }).OfflineAudioContext;
+  const offline = new Ctx(1, Math.ceil(seconds * RATE), RATE);
+  const buffer = offline.createBuffer(1, Math.ceil(seconds * RATE), RATE);
+  const data = buffer.getChannelData(0);
+  const middle = data.length / 2;
+  for (let i = 0; i < data.length; i += 1) {
+    data[i] = Math.sin((2 * Math.PI * 440 * i) / RATE) * (i < middle ? quiet : loud);
+  }
+  return buffer;
+}
+
 function laneOf(id: string, audio: AudioBuffer, how: Partial<Lane> = {}): Lane {
   return { id, name: id, audio, at: 0, gain: 1, muted: false, soloed: false, ...how };
 }
@@ -117,6 +130,39 @@ export default function MixProbe(): React.ReactElement {
     if (ampedMix && bareMix) {
       out.ampedPeak = peakOf(ampedMix);
       out.barePeak = peakOf(bareMix);
+    }
+
+    /* ── A cut lane plays only the piece that was kept ────────────────
+       "Ek dink maar net of klanke gecut kan word?"
+
+       The tone is quiet for its first second and loud for its second, so the
+       peak of the render says which half came out — a length check alone
+       would pass on a cut that kept the wrong half, and a cut that keeps the
+       wrong half is worse than one that does not work at all.
+
+       Cutting the head also moves `at`, because trimming the front keeps the
+       audio still on the session's clock. That is the desk's rule, and it is
+       what the screen does when an edge is dragged. */
+    const twoHalves = halves(0.2, 0.8, 2);
+    const wholeMix = await mixSession([laneOf('w', twoHalves)], RATE);
+    const tailMix = await mixSession([laneOf('w', twoHalves, { from: 1, to: 2, at: 1 })], RATE);
+    const headMix = await mixSession([laneOf('w', twoHalves, { from: 0, to: 1 })], RATE);
+    if (wholeMix && tailMix && headMix) {
+      out.wholeSeconds = Number(wholeMix.duration.toFixed(3));
+      out.wholePeak = peakOf(wholeMix);
+      out.tailSeconds = Number(tailMix.duration.toFixed(3));
+      out.tailPeak = peakOf(tailMix);
+      out.headSeconds = Number(headMix.duration.toFixed(3));
+      out.headPeak = peakOf(headMix);
+    }
+
+    /* A window that has collapsed to nothing means the whole lane, not
+       silence: an empty window is far more likely to be a drag that went
+       wrong than a request for nothing. */
+    const collapsed = await mixSession([laneOf('c', twoHalves, { from: 1, to: 1 })], RATE);
+    if (collapsed) {
+      out.collapsedSeconds = Number(collapsed.duration.toFixed(3));
+      out.collapsedPeak = peakOf(collapsed);
     }
 
     const plain = await mixSession([laneOf('p', tone(440, 1, 0.5))], RATE);

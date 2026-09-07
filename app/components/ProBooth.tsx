@@ -21,7 +21,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Circle, Gauge, Layers, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import {
-  FLAT_MASTER, audible, dbOf, mixSession, monoOf, readInto, readSession, span, wireLane,
+  FLAT_MASTER, audible, dbOf, lengthOf, mixSession, monoOf, pieceOf, readInto, readSession,
+  span, startLane, windowOf, wireLane,
   type Lane, type Master, type Reading,
 } from '../lib/session';
 import { failed, separate } from '../lib/stems';
@@ -220,14 +221,11 @@ export default function ProBooth({
 
       audible(lanes).forEach((lane) => {
         const source = wireLane(ctx, lane, bus);
-        // A lane that starts before the moment being played from is joined
-        // part-way through rather than from its beginning.
-        const into = from - lane.at;
-        if (into >= 0) {
-          if (into < lane.audio.duration) source.start(begins, into);
-        } else {
-          source.start(begins - into);
-        }
+        /* Joining part-way through, and stopping where the lane is cut — both
+           worked out in `startLane`, which the render calls too. This was four
+           lines here and four more in `mixSession`, and a cut added to one of
+           them would have made what she hears and what comes out disagree. */
+        startLane(source, lane, from, begins);
         playingRef.current.push(source);
       });
       startedRef.current = { at: begins, from };
@@ -412,11 +410,21 @@ export default function ProBooth({
       was.map((lane) => {
         if (lane.id !== id) return lane;
         const next = { ...lane, ...how };
-        /* The grid applies where a start time is being set, and nowhere else.
-           Snapping a gain or a name would be absurd, and snapping on every
-           change would move a lane somebody had placed by ear the moment they
-           renamed it. */
-        return how.at === undefined ? next : { ...next, at: snapped(next.at, sane(meter), snap) };
+        /* The grid applies where a start time is being *placed*, and nowhere
+           else. Snapping a gain or a name would be absurd, and snapping on
+           every change would move a lane somebody had placed by ear the moment
+           they renamed it.
+
+           A trim is the other exception, and it is not obvious. Cutting the
+           head of a lane moves `at` by exactly as much as it moves `from`,
+           which is what keeps the audio still on the clock — so the two
+           numbers have to agree to the sample. Snapping one of them and not
+           the other slides the lane by up to half a beat every time an edge is
+           dragged, and the drag then fights the grid. So: when `from` is in
+           the patch, `at` was derived rather than chosen, and it is left
+           alone. */
+        if (how.at === undefined || how.from !== undefined) return next;
+        return { ...next, at: snapped(next.at, sane(meter), snap) };
       }),
     )
   );
@@ -449,8 +457,13 @@ export default function ProBooth({
         /* Mono and on its own. Sent as itself from its own first sample, not
            as its position in the session — a lane sitting at forty seconds
            would otherwise be forty seconds of silence billed by the minute. */
-        const sent = encodeWav(monoOf(lane.audio, ctx));
-        const got = await separate(`lane:${lane.id}`, sent, lane.audio.duration);
+        /* The piece that plays, not the whole recording. A lane trimmed to
+           its chorus and sent whole would be billed by the minute for the
+           verses she cut out, and the stems would not line up with the lane
+           they came from. */
+        const piece = pieceOf(lane, ctx);
+        const sent = encodeWav(monoOf(piece, ctx));
+        const got = await separate(`lane:${lane.id}`, sent, piece.duration);
         if (failed(got)) {
           setProblem(got.message);
           return;
@@ -525,13 +538,15 @@ export default function ProBooth({
         const form = new FormData();
         /* A lane is a WAV, so anything past about fifty seconds is over the
            platform's body limit and has to go through storage first. */
-        const put = await attach(form, encodeWav(monoOf(lane.audio, ctx)), 'audio', 'lane.wav');
+        /* The piece that plays — see the note in `split`. */
+        const piece = pieceOf(lane, ctx);
+        const put = await attach(form, encodeWav(monoOf(piece, ctx)), 'audio', 'lane.wav');
         if (!put.ok) {
           setProblem(TOO_BIG_TO_SEND);
           return;
         }
         if (voiceId) form.append('voiceId', voiceId);
-        form.append('seconds', String(Math.round(lane.audio.duration)));
+        form.append('seconds', String(Math.round(piece.duration)));
 
         const token = await accessToken();
         const response = await fetch('/api/voice/change', {
@@ -1219,6 +1234,75 @@ function LaneRow({
   const [amping, setAmping] = useState(false);
   const [ampFailed, setAmpFailed] = useState('');
 
+  /* ── Cutting the lane ────────────────────────────────────────────────────
+
+     Pointer events with the pointer captured, so an edge dragged with a thumb
+     that slides off the strip keeps dragging rather than dropping where it
+     left. `touch-none` on the strip stops the page scrolling underneath, which
+     is the difference between trimming a lane and scrolling past one. */
+  const stripRef = useRef<HTMLDivElement | null>(null);
+  const dragging = useRef<'from' | 'to' | null>(null);
+  const window_ = windowOf(lane);
+  const played = lengthOf(lane);
+  const whole = (lane.amped?.audio ?? lane.audio).duration;
+  const cut = window_.from > 0.01 || window_.to < whole - 0.01;
+
+  /** Where on the session's clock a pointer is. */
+  const clockAt = (clientX: number): number => {
+    const strip = stripRef.current;
+    if (!strip || !(total > 0)) return 0;
+    const box = strip.getBoundingClientRect();
+    if (box.width <= 0) return 0;
+    return ((clientX - box.left) / box.width) * total;
+  };
+
+  /**
+   * An edge moved to a moment on the session's clock.
+   *
+   * The front and the back are not symmetrical. Cutting the head moves `at` by
+   * the same amount as `from`, which is what keeps the audio still: a note on
+   * beat three stays on beat three. Cutting the tail only moves `to`.
+   *
+   * A tenth of a second is the floor. Zero would be a lane that is in the
+   * session and cannot be heard, which reads as a lane that has vanished.
+   */
+  const moveEdge = (edge: 'from' | 'to', to: number) => {
+    const origin = lane.at - window_.from; // where sample zero sits on the clock
+    const wanted = Math.max(0, to - origin); // seconds into the lane's own audio
+    if (edge === 'from') {
+      const from = Math.min(Math.max(0, wanted), window_.to - 0.1);
+      onChange({ from, to: window_.to, at: origin + from });
+    } else {
+      const end = Math.min(Math.max(window_.from + 0.1, wanted), whole);
+      onChange({ from: window_.from, to: end });
+    }
+  };
+
+  const startDrag = (edge: 'from' | 'to') => (event: React.PointerEvent) => {
+    event.preventDefault();
+    (event.target as Element).setPointerCapture?.(event.pointerId);
+    dragging.current = edge;
+  };
+  const onDragMove = (event: React.PointerEvent) => {
+    if (!dragging.current) return;
+    moveEdge(dragging.current, clockAt(event.clientX));
+  };
+  const endDrag = () => { dragging.current = null; };
+
+  /* Arrow keys as well, a tenth of a second at a time — the same floor the
+     drag clamps to, so the two ways of moving an edge agree. */
+  const onEdgeKey = (edge: 'from' | 'to') => (event: React.KeyboardEvent) => {
+    const step = event.shiftKey ? 1 : 0.1;
+    const now = edge === 'from' ? lane.at : lane.at + played;
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      moveEdge(edge, now - step);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      moveEdge(edge, now + step);
+    }
+  };
+
   const bringAmp = async (file: File) => {
     setAmping(true);
     setAmpFailed('');
@@ -1249,19 +1333,35 @@ function LaneRow({
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     context.clearRect(0, 0, width, height);
 
-    // Where this lane sits on the session's clock, not on its own.
-    const left = (lane.at / total) * width;
-    const wide = (lane.audio.duration / total) * width;
+    /* Where this lane sits on the session's clock, not on its own — and what
+       of it plays.
+
+       The whole recording is drawn, cut parts included, because a cut you
+       cannot see is a cut you cannot undo by eye: dragging an edge back out
+       needs the shape of what is out there to aim at. The trimmed parts are
+       drawn faint, and the part that plays is drawn at full strength. */
+    /* Not called `window`: that shadows the global one, and the next line
+       down asks it for `devicePixelRatio`. */
+    const played_ = windowOf(lane);
+    const whole_ = (lane.amped?.audio ?? lane.audio).duration;
+    /* The head that was cut sits before `lane.at`, because trimming the front
+       keeps the audio still on the clock rather than sliding it. */
+    const originAt = lane.at - played_.from;
+    const left = (originAt / total) * width;
+    const wide = (whole_ / total) * width;
     const columns = Math.max(8, Math.floor(wide / 2));
-    const shape = shapeOf(lane.audio, columns);
-    context.fillStyle = quiet
+    const shape = shapeOf(lane.amped?.audio ?? lane.audio, columns);
+    const playing = quiet
       ? 'rgba(113,113,122,0.35)'
       : lane.backing
         ? 'rgba(148,163,184,0.55)'
         : 'rgba(16,185,129,0.75)';
+    const trimmed = 'rgba(113,113,122,0.18)';
     for (let i = 0; i < columns; i += 1) {
+      const second = (i / columns) * whole_;
       const x = left + (i / columns) * wide;
       const size = Math.max(1, shape[i] * (height - 6));
+      context.fillStyle = second >= played_.from && second < played_.to ? playing : trimmed;
       context.fillRect(x, height / 2 - size / 2, Math.max(1, wide / columns - 0.5), size);
     }
 
@@ -1320,11 +1420,63 @@ function LaneRow({
         </div>
       </div>
 
-      <canvas
-        ref={canvasRef}
-        className="flex-1 min-w-[180px] rounded-lg bg-zinc-950/70"
-        style={{ height: LANE_H }}
-      />
+      {/* ── The lane, and the two edges that cut it ───────────────────────
+
+          "Ek dink maar net of klanke gecut kan word? Dat verskillende klank
+           bane onder mekaar kan sit en uit eindelik geedit kan word?"
+
+          The lanes sat under each other already; this is the editing. Drag the
+          left edge and the head of the take is cut; drag the right and the
+          tail is. Nothing is destroyed — `from` and `to` are two numbers on the
+          lane and the recording underneath is untouched, so it drags back out
+          again and the amp and stems do not have to be redone.
+
+          Trimming the front keeps the audio still on the session's clock: the
+          lane's start moves by the same amount as the cut, so a note that was
+          on beat three stays on beat three. Sliding it instead would mean
+          every trim needed a nudge afterwards to put it back. */}
+      <div
+        ref={stripRef}
+        className="relative flex-1 min-w-[180px] touch-none"
+        onPointerMove={onDragMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+      >
+        <canvas
+          ref={canvasRef}
+          className="w-full rounded-lg bg-zinc-950/70"
+          style={{ height: LANE_H }}
+        />
+        {(['from', 'to'] as const).map((edge) => {
+          const seconds = edge === 'from' ? lane.at : lane.at + played;
+          return (
+            <div
+              key={edge}
+              data-lane-edge={edge}
+              role="slider"
+              tabIndex={0}
+              aria-label={
+                edge === 'from'
+                  ? t('pro.cutFrom', 'Where this lane starts')
+                  : t('pro.cutTo', 'Where this lane ends')
+              }
+              aria-valuemin={0}
+              aria-valuemax={Math.round(total)}
+              aria-valuenow={Math.round(seconds)}
+              aria-valuetext={clock(seconds)}
+              onPointerDown={startDrag(edge)}
+              onKeyDown={onEdgeKey(edge)}
+              className="absolute inset-y-0 w-8 cursor-ew-resize focus:outline-none"
+              style={{ left: `calc(${total > 0 ? (seconds / total) * 100 : 0}% - 16px)` }}
+            >
+              <span
+                className="pointer-events-none absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full"
+                style={{ background: cut ? 'rgb(52 211 153)' : 'rgba(82,82,91,0.7)' }}
+              />
+            </div>
+          );
+        })}
+      </div>
 
       <button
         type="button"

@@ -97,7 +97,8 @@
     "check:songwindow": "node audit/songwindow.mjs",
     "check:boothwalk": "node audit/boothwalk.mjs",
     "check:whitescreen": "node audit/whitescreen.mjs",
-    "check:bodylimit": "tsx scripts/check-bodylimit.mts"
+    "check:bodylimit": "tsx scripts/check-bodylimit.mts",
+    "check:mixdown": "node audit/mixdown.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

@@ -486,6 +486,8 @@ export const STRINGS: Dict = {
   "pro.masterLevel": { en: "Level", af: "Vlak" },
   "pro.ceiling": { en: "Ceiling", af: "Plafon" },
   "pro.matchLoudness": { en: "Match the loudness", af: "Pas die hardheid aan" },
+  "pro.cutFrom": { en: "Where this lane starts", af: "Waar hierdie baan begin" },
+  "pro.cutTo": { en: "Where this lane ends", af: "Waar hierdie baan eindig" },
   "pro.measure": { en: "Measure the mix", af: "Meet die mengsel" },
   "pro.peak": { en: "Peak", af: "Piek" },
   "pro.average": { en: "Average", af: "Gemiddeld" },
