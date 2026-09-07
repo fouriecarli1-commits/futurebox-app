@@ -105,6 +105,79 @@ check(
   homeless.join(' ') || 'all of them',
 );
 
+/* ── And the probes nobody named ────────────────────────────────────────
+ 
+   Everything above asks whether each `check:` script is run. It cannot see a
+   probe that was never given a `check:` name at all, and there are sixty of
+   those: `audit/mixdown.mjs` measured the whole mix and had been sitting in
+   this repository being run by nobody, and `audit/boxes.mjs` — "Buttons with
+   no box" — existed for exactly the fault she reported this week and never
+   ran once.
+ 
+   So every file in `audit/` is in one of three states, and has to be:
+ 
+     · wired to a `check:` script, which the rules above then hold;
+     · a TOOL — no assertions in it, run by a person who reads the output;
+     · WAITING — it makes assertions and is not yet run.
+ 
+   The third list is the honest one. It may shrink and it may never grow: a
+   probe that asserts something and is not run is a claim of coverage that
+   does not exist, and adding to that pile is how three hundred assertions
+   came to be written and never executed. */
+const audits = readdirSync('audit')
+  .filter((one) => one.endsWith('.mjs'))
+  .map((one) => one.replace(/\.mjs$/, ''))
+  .filter((one) => !['enter', 'where'].includes(one));
+
+/** No assertions in them: they walk, they print, a person reads it. */
+const TOOLS = new Set([
+  'a11y', 'ads-af', 'ads-af-fail', 'ads-en-fail', 'badge', 'blurshot', 'boxes',
+  'buttons', 'copilotplace', 'deep', 'devices', 'errors', 'frame', 'home',
+  'home2', 'homelength', 'land', 'landing', 'net', 'newui', 'newui2', 'one',
+  'phone', 'phoneshots', 'price', 'probe', 'radarcards', 'rooms', 'shots',
+  'slogan', 'small', 'thin', 'touch', 'transcript', 'voices', 'walk',
+]);
+
+/**
+ * Real checks that nobody runs. Every one of these has assertions in it.
+ *
+ * They were written against a server somebody had left on port 3000, which is
+ * the fault `serve()` exists to fix and `check:probes` holds every wired probe
+ * to. Bringing one back means giving it its own server and its own port, and
+ * making its assertions true of the app as it is now.
+ */
+const WAITING = new Set([
+  'account', 'addon', 'adreport', 'adruns', 'ads-en', 'cast', 'greeting',
+  'help', 'language', 'lanes', 'photo', 'playbutton', 'podlanguage',
+  'presenter', 'probooth', 'queue', 'safezones', 'signinwith', 'stitch',
+  'storyboard', 'studioroute', 'subscription', 'taste', 'videodesk',
+]);
+/** What it was when this rule was written. It may go down and not up. */
+const WAITING_WAS = 25;
+
+const wiredProbe = (name: string) =>
+  checks.some((one) => new RegExp(`audit/${name}\\.mjs`).test(scripts[one]));
+const unaccounted = audits.filter(
+  (one) => !wiredProbe(one) && !TOOLS.has(one) && !WAITING.has(one),
+);
+check(
+  'every probe in audit/ is wired, or named as a tool, or named as waiting',
+  unaccounted.length === 0,
+  unaccounted.join(' ') || `${audits.length} accounted for`,
+);
+check(
+  'and the number waiting has not gone up',
+  WAITING.size <= WAITING_WAS,
+  `${WAITING.size} waiting, was ${WAITING_WAS}`,
+);
+/* A name in either list that has since been wired is a list going stale. */
+const stale = [...TOOLS, ...WAITING].filter((one) => wiredProbe(one));
+check(
+  'and nothing is listed as unrun that is now run',
+  stale.length === 0,
+  stale.join(' ') || 'none',
+);
+
 if (failures) {
   console.error(
     '\ncheck:everycheck — a check nobody runs is not a safety net, it is a claim' +

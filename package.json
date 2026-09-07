@@ -100,7 +100,8 @@
     "check:mixdown": "node audit/mixdown.mjs",
     "check:videohome": "node audit/videohome.mjs",
     "check:sharesheet": "node audit/sharesheet.mjs",
-    "check:buttonlook": "node audit/buttonlook.mjs"
+    "check:buttonlook": "node audit/buttonlook.mjs",
+    "check:legalpage": "node audit/legalpage.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

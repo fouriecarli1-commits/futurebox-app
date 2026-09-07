@@ -99,11 +99,19 @@ export function launchOptions(extra = {}, look = existsSync, env = process.env) 
  */
 import { spawn } from 'node:child_process';
 
-export async function serve(port, { tries = 40, every = 1500 } = {}) {
+/**
+ * @param env extra environment for the server, for a probe that has to see the
+ *            app in a configured state. `/legal` is the one page whose whole
+ *            subject is what happens when four variables are set and what
+ *            happens when they are not, and it cannot ask that question with
+ *            one server.
+ */
+export async function serve(port, { tries = 40, every = 1500, env = {} } = {}) {
   const child = spawn('npx', ['next', 'start', '-p', String(port)], {
     cwd: dirname(HERE),
     detached: true,
     stdio: 'ignore',
+    env: { ...process.env, ...env },
   });
   const url = `http://localhost:${port}`;
   let up = false;
