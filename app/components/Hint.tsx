@@ -79,7 +79,16 @@ export default function Hint({
         onClick={() => (open ? setOpen(false) : show())}
         onMouseEnter={pointer ? show : undefined}
         onMouseLeave={pointer ? () => setOpen(false) : undefined}
-        className="inline-flex items-center justify-center w-8 h-8 rounded-full text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+        /* Forty-four across, thirty-two to look at.
+           The mark was 32x32, which is under the minimum a thumb hits
+           reliably and was the smallest pressable thing left in the app.
+           Growing the circle would have pushed every row it sits in
+           twelve pixels taller — it is beside a line of text in a
+           hundred places — so the hit area grows and the negative margin
+           gives the layout back exactly what the size took. The same
+           trick globals.css uses on standalone links, for the same
+           reason. */
+        className="inline-flex items-center justify-center w-11 h-11 -m-1.5 rounded-full text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
       >
         <HelpCircle className="w-4 h-4" />
       </button>

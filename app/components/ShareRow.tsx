@@ -160,7 +160,7 @@ export default function ShareRow({
            Raised rather than padded. A sheet with its own scrim is modal: the
            tab bar showing through one, and eating it, was the mistake. Above
            the search button at 96 as well, for the same reason. */
-        <div className="fixed inset-0 z-[97] flex flex-col justify-end bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[97] flex flex-col justify-end bg-black/70">
           {/* The ground, pressable, because a sheet with no way out except a
               small button is a sheet somebody gets stuck in. */}
           <button
@@ -183,7 +183,7 @@ export default function ShareRow({
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label={t('share.close', 'Close')}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-300"
+                className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-300"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -208,7 +208,7 @@ export default function ShareRow({
             {caption}
           </pre>
 
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid grid-cols-2 gap-2">
             {/* First, because it is first in the sentence above it: save the
                 file, copy the caption, open the composer. A row whose order
                 does not match its own instructions is a row that gets read
@@ -218,7 +218,7 @@ export default function ShareRow({
                 type="button"
                 onClick={() => void save()}
                 disabled={file === 'busy'}
-                className="min-h-[44px] px-2.5 py-1.5 rounded-lg text-xs bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-1.5 disabled:opacity-50"
+                className="w-full min-h-[44px] px-2.5 py-1.5 rounded-lg text-xs bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
                 {file === 'busy' ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -232,7 +232,7 @@ export default function ShareRow({
             <button
               type="button"
               onClick={() => void copy()}
-              className="min-h-[44px] px-2.5 py-1.5 rounded-lg text-xs bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-1.5"
+              className="w-full min-h-[44px] px-2.5 py-1.5 rounded-lg text-xs bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center justify-center gap-1.5"
             >
               {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
               {copied ? t('share.copied', 'Copied') : t('share.copy', 'Copy the caption')}
@@ -251,7 +251,7 @@ export default function ShareRow({
                       ? t('share.carries', 'Opens with the caption already in it')
                       : t('share.composer', 'Opens the composer — paste the caption there')
                   }
-                  className="px-2.5 py-1.5 rounded-lg text-xs bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                  className="w-full min-h-[44px] px-2.5 py-1.5 rounded-lg text-xs bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-1.5"
                 >
                   {platform.name}
                   {/* Only X can carry the text. Marked, so nobody expects the
