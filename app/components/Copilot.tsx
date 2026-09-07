@@ -252,6 +252,12 @@ export default function Copilot({
         className="flex-shrink-0 p-3 border-t border-zinc-800 flex gap-2"
       >
         <input
+          /* A handle for the probe that measures whether this box is reachable.
+             Matching it by placeholder does not work: the placeholder is
+             translated, and in Make a song the song's own title field sits
+             lower on the page and wins any "the last input" rule. Three
+             measurements in a row were of the wrong element because of it. */
+          data-copilot-ask
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={offline ? t('copilot.offPlaceholder') : t('copilot.placeholder')}

@@ -3210,7 +3210,29 @@ export default function FutureBoxHome() {
                   page; the fixed height was a desktop measurement applied where
                   there was no second column to measure against. */}
               {!copilotInside && (
-                <aside className={`${copilotFirst ? 'order-2 md:order-none' : ''} flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}>
+                /* Its own clearance, because the container's is not reaching it.
+ 
+                   The scrolling container already reserves `barClearance(12)`,
+                   and measured in a browser at 390px the box she types into
+                   still ends 45 pixels behind the bar in four rooms out of six
+                   — scrolled all the way to the end, which is where she is when
+                   she goes to type. The pane is the last child of a nested flex
+                   column, and the outer padding does not push it.
+ 
+                   Reserved here rather than debugged upward: the rule that
+                   matters is that this particular box clears the bar, and the
+                   thing that can guarantee that is the box's own wrapper. The
+                   bar is fixed at every width, so this is not phone-only.
+ 
+                   `audit/copilotbar.mjs` measures it now. `check:tabbar` never
+                   could — it reads `paddingBottom` values out of page.tsx and
+                   asserts they use the helper, which is a rule about the
+                   page's padding and says nothing about whether anybody can
+                   reach the thing they type into. */
+                <aside
+                  className={`${copilotFirst ? 'order-2 md:order-none' : ''} flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}
+                  style={{ paddingBottom: barClearance(12) }}
+                >
                   {copilotPane}
                 </aside>
               )}
