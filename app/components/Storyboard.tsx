@@ -582,7 +582,15 @@ export default function Storyboard({
         {t('board.add', 'Add a shot')}
       </button>
 
-      {board.shots.length > 0 && !songId && (
+      {/* Shown from the start, not once a shot has been written.
+
+          The gate used to be `board.shots.length > 0`, and the effect of it
+          was that somebody who came here to put a picture to a song they
+          already had was shown a prompt box and no way to name the song. The
+          desk above now asks first for a music video, and this stays for the
+          film: the song under a whole storyboard is a different choice from
+          the five seconds a single clip is cut against. */}
+      {!songId && (
         <div className="space-y-3 border-t border-zinc-800 pt-3">
           {/* ── The song under it ────────────────────────────────────────
 

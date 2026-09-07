@@ -74,9 +74,17 @@ ok(
 );
 ok(
   'and the board does not ask again when it was given one',
-  /board\.shots\.length > 0 && !songId/.test(board),
+  /\{!songId && \(/.test(board),
   'two pickers for one decision',
 );
+/* The claim is that the board stops asking once the desk has answered, and
+   `!songId` is the whole of it. The first version of this line also required
+   `board.shots.length > 0`, which is a different rule — that the picker is
+   hidden until a shot is written — and pinning it in here made this assertion
+   go red for removing it. That gate was the reason "die video desk het nie 'n
+   opsie om liedjies te kies nie" was a fair description of a desk that had
+   one, so it is gone deliberately, and a check should not hold a bug in place
+   by describing it. */
 ok(
   'the next step out of Make a song is the desk',
   /next: \{ to: "canvas", en: "Put a video to it"/.test(surfaces),

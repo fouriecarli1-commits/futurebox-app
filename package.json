@@ -93,7 +93,8 @@
     "check:asdata": "tsx scripts/check-asdata.mts",
     "check:firsthour": "node audit/firsthour.mjs",
     "check:launch": "tsx scripts/check-launch.mts",
-    "check:everycheck": "tsx scripts/check-everycheck.mts"
+    "check:everycheck": "tsx scripts/check-everycheck.mts",
+    "check:songwindow": "node audit/songwindow.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

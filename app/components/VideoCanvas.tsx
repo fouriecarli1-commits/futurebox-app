@@ -46,6 +46,9 @@ import StartFrame from './StartFrame';
 import Presenter from './Presenter';
 import SafeZones from './SafeZones';
 import Storyboard from './Storyboard';
+import SongWindow, { type SongCut } from './SongWindow';
+import { readAudio } from '../lib/trackaudio';
+import { canStitch, stitch } from '../lib/stitch';
 import DubFilm from './DubFilm';
 import Note from './Note';
 import Card from './Card';
@@ -99,6 +102,51 @@ const SHAPES: { id: Aspect; label: string; size: string; note: string }[] = [
   { id: '1:1', label: 'Square', size: '1080 × 1080', note: 'A feed post' },
 ];
 
+/**
+ * The chosen part of the song, laid under a finished clip.
+ *
+ * No video engine on the shelf takes an audio file, so a music video made here
+ * comes back silent and the song has to be put under it afterwards. That is
+ * `lib/stitch.ts` doing what it already does for the storyboard, with one
+ * scene instead of twelve and an offset into the song instead of the top of
+ * it.
+ *
+ * It costs what stitching always costs: real time, because the picture is
+ * recorded off a canvas as it is painted. Five seconds of video is five
+ * seconds of waiting, which at this length is not worth a progress bar.
+ *
+ * Anything that goes wrong gives back the clip it was handed. A silent video
+ * somebody can still download beats an error over a generation they have
+ * already paid for.
+ */
+async function withSong(
+  clip: Blob,
+  cut: SongCut | null,
+  aspect: Aspect,
+  seconds: number,
+): Promise<Blob> {
+  if (!cut || !canStitch()) return clip;
+  try {
+    const audio = await readAudio(cut.songId);
+    if (!audio) return clip;
+    const size = aspect === '9:16'
+      ? { width: 720, height: 1280 }
+      : aspect === '1:1'
+        ? { width: 1080, height: 1080 }
+        : { width: 1280, height: 720 };
+    const made = await stitch({
+      scenes: [{ clip, name: 'clip', to: seconds }],
+      audio,
+      audioFrom: cut.from,
+      ...size,
+      background: 'blur',
+    });
+    return made.ok ? made.blob : clip;
+  } catch {
+    return clip;
+  }
+}
+
 export default function VideoCanvas({
   onUpgrade,
   onGoTo,
@@ -126,6 +174,8 @@ export default function VideoCanvas({
   const [prompt, setPrompt] = useState('');
   const [aspect, setAspect] = useState<Aspect>('16:9');
   const [seconds, setSeconds] = useState<number>(5);
+  /** The song under a music video, and the window of it this clip uses. */
+  const [songCut, setSongCut] = useState<SongCut | null>(null);
 
   /* What the copilot may change here.
 
@@ -368,8 +418,12 @@ export default function VideoCanvas({
         speak: willSpeak,
         ...(frame ? { image: frame } : {}),
       });
-      const url = URL.createObjectURL(result.blob);
-      setMade((held) => [{ blob: result.blob, url, prompt: said, aspect, spoken: willSpeak, seconds }, ...held]);
+      /* The song goes under it before anything else sees the file, so what is
+         played back, what is kept and what is downloaded are one blob rather
+         than three that could drift apart. */
+      const clip = await withSong(result.blob, scene?.id === 'music' ? songCut : null, aspect, seconds);
+      const url = URL.createObjectURL(clip);
+      setMade((held) => [{ blob: clip, url, prompt: said, aspect, spoken: willSpeak, seconds }, ...held]);
       signal('video', { category: scene?.id ?? 'canvas' });
 
       /* Kept, rather than living only in this tab.
@@ -389,7 +443,7 @@ export default function VideoCanvas({
           ext: 'mp4',
           credits: videoCost(grade, seconds),
         },
-        result.blob,
+        clip,
       ).then(() => setKept((n) => n + 1));
     } catch (problem) {
       const message = problem instanceof Error ? problem.message : t('make.failed');
@@ -583,6 +637,22 @@ export default function VideoCanvas({
             })}
           </div>
         </Card>
+      )}
+
+      {/* ── The song, and the part of it this clip is cut against ─────────
+
+          Straight under the genre row, so pressing Music video puts the songs
+          on the screen rather than leaving them behind a condition at the
+          bottom of the storyboard — which is where they were, and why "die
+          video desk het nie 'n opsie om liedjies te kies vir 'n musiek video
+          nie" was a fair description of a desk that technically had one.
+
+          The window it returns is laid under the clip after the engine
+          answers. See `withSong` below for why that is a second pass rather
+          than something the engine is asked for: no video engine on the shelf
+          takes an audio file. */}
+      {scene?.id === 'music' && (
+        <SongWindow seconds={seconds} value={songCut} onChange={setSongCut} />
       )}
 
       {/* ── The box ───────────────────────────────────────────────────── */}

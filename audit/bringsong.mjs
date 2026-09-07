@@ -135,8 +135,14 @@ try {
   await p.waitForTimeout(1800);
   const room = p.locator('div.fixed.inset-0.z-50').first();
 
-  /* ── The music video room, on an empty channel ─────────────────────── */
-  await intoRoom('Music video');
+  /* ── The video desk, on an empty channel ───────────────────────────────
+
+     This walked into the Music video room until that room was removed, and
+     the walk failed with "no way into Music video" — the check went looking
+     for a door that had been taken out from under it. Bringing a song in is
+     the Video desk's job now, and it is the same button doing the same thing
+     one room over. */
+  await intoRoom('Video desk');
 
   const channelBefore = await p.evaluate(() =>
     JSON.parse(window.localStorage.getItem('futurebox.tracks.v1') || '[]').length);
@@ -144,7 +150,10 @@ try {
   check('the button is there before any song exists', (await bring.count()) === 1,
     `${channelBefore} song(s) in the channel`);
 
-  await room.locator('input[type="file"]').first().setInputFiles(song);
+  /* The audio input by name. The desk has more than one file input on it —
+     the start frame takes a picture — and `.first()` was fine in a room that
+     only ever had one. */
+  await room.locator('input[type="file"][accept="audio/*"]').first().setInputFiles(song);
   await p.waitForTimeout(2500);
 
   const stored = await p.evaluate(() =>
@@ -174,7 +183,7 @@ try {
   check('the audio itself is on the device', bytes > 44 + SECONDS * RATE, `${bytes} bytes`);
 
   const opened = await room.innerText();
-  check('picking it opened the video panel', /my own recording/.test(opened) && /Music video|Video/i.test(opened));
+  check('picking it opened the video panel', /my own recording/.test(opened) && /Video/i.test(opened));
   await p.screenshot({ path: shot('bringsong-video.png'), fullPage: false });
 
   /* ── It is still there after a reload ──────────────────────────────── */

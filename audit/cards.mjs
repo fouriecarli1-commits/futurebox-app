@@ -42,8 +42,6 @@ const PORT = process.argv[2] || '3181';
  * beside it is a claim nobody can check, which is the thing these probes
  * exist to stop.
  */
-const FLOOR = Number(process.argv[3] || 10);
-
 /**
  * Why a room can read zero and still be done.
  *
@@ -59,8 +57,7 @@ const NEEDS = {
 };
 
 const ROOMS = [
-  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard', 'Music video',
-  'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
+  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard',   'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
 ];
 
 const problems = [];
@@ -202,8 +199,22 @@ try {
   const total = rows.reduce((sum, one) => sum + one.count, 0);
   console.log(`\n  ${total} cards across ${withCards.length} of ${rows.length} rooms.\n`);
 
-  check(`at least ${FLOOR} rooms carry the card shape`, withCards.length >= FLOOR,
-    `${withCards.length} do`);
+  /* Every room is accounted for: it carries cards, or its reason for not
+     carrying them is written down below.
+
+     This was `withCards.length >= FLOOR` with FLOOR at ten, and it went red
+     when the Musiekvideo room was removed — from ten rooms with cards to
+     nine, out of one fewer room. Nothing about the card shape had changed.
+     A fixed floor against a changing denominator only ever measures how many
+     rooms there are, and the answer to a red like that is to lower the number,
+     which is a check training its reader to ignore it.
+
+     What the probe is actually for is the room that appears with no cards and
+     no explanation, and this is that rule stated directly. It cannot be
+     satisfied by deleting a room, and a floor could. */
+  check('every room either carries the card shape or says why not',
+    withCards.length + rows.filter((one) => one.count === 0 && NEEDS[one.room]).length === rows.length,
+    `${withCards.length} carry cards, ${rows.length - withCards.length} do not`);
   /* Every remaining zero has to be a room whose reason is written down. A new
      room quietly appearing with no cards and no explanation is the one thing
      this whole probe is here to catch. */

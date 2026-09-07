@@ -60,8 +60,7 @@ const CEILING = Number(process.argv[3] || 700);
 const PROSE = 60;
 
 const ROOMS = [
-  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard', 'Music video',
-  'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
+  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard',   'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
 ];
 
 const problems = [];

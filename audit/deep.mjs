@@ -11,8 +11,7 @@
  */
 import { dismissDoor, enter, studio } from './enter.mjs';
 
-const ROOMS_ALL = ['Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard', 'Music video',
-  'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar'];
+const ROOMS_ALL = ['Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard',   'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar'];
 const name = process.argv[2];
 const SKIP = /^(delete|sign out|back to futurebox|upgrade|choose |buy|pay)/i;
 const nameOf = (t) => (t ?? '').split('\n')[0].trim().replace(/\s+/g, ' ').slice(0, 50);

@@ -32,7 +32,7 @@ await page.waitForTimeout(1200);
 const text = await room2.innerText();
 console.log('start-frame offered:', /Start from a picture|Add a picture|Premium grade/i.test(text));
 console.log('genre row present:', /What kind of song is it/i.test(text));
-await room2.locator('button').filter({ hasText: /^Music video/ }).first().click().catch(() => {});
+await room2.locator('button').filter({ hasText: /^Video desk/ }).first().click().catch(() => {});
 await page.waitForTimeout(800);
 console.log('\nproblems:', problems.join(' ;; ') || 'none');
 await browser.close();

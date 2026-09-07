@@ -1847,6 +1847,23 @@ export const STRINGS: Dict = {
   "safe.all": { en: "All three", af: "Al drie" },
 
   /* The storyboard: a long film out of short shots. */
+  /* ── The song under a music video, and the window of it ──────────────── */
+  "songwin.title": { en: "Which song, and which part of it", af: "Watter liedjie, en watter deel daarvan" },
+  "songwin.why": { en: "Pick one and drag the window onto the part you want. It is exactly as long as the video, so what you hear here is what goes under it.", af: "Kies een en sleep die venster na die deel wat jy wil hê. Dit is presies so lank soos die video, so wat jy hier hoor is wat onder dit gaan." },
+  "songwin.bring": { en: "Bring one in", af: "Bring een in" },
+  "songwin.none": { en: "No songs on this device yet. Make one, or bring a file in with the button.", af: "Nog geen liedjies op hierdie toestel nie. Maak een, of bring ’n lêer in met die knoppie." },
+  "songwin.reading": { en: "Reading the song…", af: "Lees die liedjie…" },
+  "songwin.gone": { en: "That song’s file is not on this device. Open it in your library once and it will be.", af: "Daardie liedjie se lêer is nie op hierdie toestel nie. Maak dit een keer in jou biblioteek oop, dan is dit." },
+  "songwin.tooBig": { en: "That file is over 60 MB. Trim it or export it smaller.", af: "Daardie lêer is oor 60 MB. Sny dit korter of voer dit kleiner uit." },
+  "songwin.unreadable": { en: "This browser could not read that audio. MP3, WAV or M4A work.", af: "Hierdie blaaier kon nie daardie klank lees nie. MP3, WAV of M4A werk." },
+  "songwin.startAt": { en: "Where the video starts in the song", af: "Waar die video in die liedjie begin" },
+  "songwin.endAt": { en: "Where the video ends in the song", af: "Waar die video in die liedjie eindig" },
+  "songwin.hear": { en: "Hear this bit", af: "Hoor hierdie stukkie" },
+  "songwin.stop": { en: "Stop", af: "Stop" },
+  "songwin.onBeat": { en: "on the beat at", af: "op die maat teen" },
+  "songwin.take": { en: "Take it back out", af: "Haal dit weer uit" },
+  "songwin.cost": { en: "The song is laid under the clip after the engine answers, in this browser. That takes about as long as the video is — five seconds of video, five seconds of waiting — and costs no credits.", af: "Die liedjie word onder die video gesit nadat die enjin geantwoord het, in hierdie blaaier. Dit vat omtrent so lank soos die video is — vyf sekondes video, vyf sekondes wag — en kos geen krediete nie." },
+
   "board.title": { en: "Build a long one", af: "Bou ’n lang een" },
   "board.what": { en: "No engine makes more than half a minute in one go, so a long video is short ones cut together. Write the shots, make them one at a time, and cut them into one file with a song under it.", af: "Geen enjin maak meer as ’n halwe minuut in een slag nie, so ’n lang video is kort eentjies wat aanmekaar gesny word. Skryf die skote, maak hulle een vir een, en sny hulle in een l\u00eaer met ’n liedjie daaronder." },
   "board.writeFirst": { en: "Write them all first. A list of sentences is free to reorder and free to throw away, and seeing them together is when you notice two shots are the same idea.", af: "Skryf hulle eers almal. ’n Lys sinne kos niks om te herrangskik of weg te gooi nie, en om hulle saam te sien is wanneer jy agterkom twee skote is dieselfde idee." },

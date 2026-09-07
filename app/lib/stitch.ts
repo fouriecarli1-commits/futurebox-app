@@ -98,6 +98,22 @@ export interface Cut {
   readonly scenes: readonly Scene[];
   /** The song, laid under the whole thing. Optional: a silent film is allowed. */
   readonly audio?: Blob | null;
+  /**
+   * Where in the song to start, in seconds.
+   *
+   * A five-second clip cut against the first five seconds of a track is cut
+   * against the intro, which on most records is the one part with nothing in
+   * it. The desk lets somebody drag a window onto the part they want — the
+   * chorus, the drop — and this is where that window arrives.
+   *
+   * Only the start is needed: the film stops when the last scene does, so the
+   * end of the window is the start plus however long the pictures run. An
+   * offset past the end of the song is silence, which is what asking for it
+   * means; `AudioBufferSourceNode.start` handles that without complaint.
+   *
+   * Defaults to 0, which is what every existing cut was made with.
+   */
+  readonly audioFrom?: number;
   /** The film's shape. Clips are fitted into it, never stretched. */
   readonly width: number;
   readonly height: number;
@@ -457,7 +473,10 @@ export async function stitch(cut: Cut): Promise<Made> {
   try {
     recorder.start();
     await audioContext?.resume();
-    song?.start();
+    /* The second argument is the offset into the buffer, which is the whole
+       reason `audioFrom` exists — the same call with no offset would play the
+       intro under a window somebody deliberately dragged onto the chorus. */
+    song?.start(0, Math.max(0, cut.audioFrom ?? 0));
 
     for (let index = 0; index < cut.scenes.length; index += 1) {
       cut.onScene?.(index, cut.scenes.length);

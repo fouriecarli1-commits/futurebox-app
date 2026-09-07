@@ -1,5 +1,5 @@
 import { enter, studio } from './enter.mjs';
-const THIN = ['Studio', 'Soundboard', 'Music video', 'Hooks', 'Channel', 'Live', 'Podcast'];
+const THIN = ['Studio', 'Soundboard', 'Hooks', 'Channel', 'Live', 'Podcast'];
 const { browser, page } = await enter();
 const room = await studio(page);
 // The rail is the same on every room; subtract it by taking only the working pane.

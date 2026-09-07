@@ -11,7 +11,7 @@ import { shot } from './where.mjs';
 
 const ROOMS = [
   'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard',
-  'Music video', 'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast',
+  'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast',
   'Adverts', 'Collab Radar',
 ];
 

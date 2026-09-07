@@ -1,6 +1,5 @@
 import { enter, studio } from './enter.mjs';
-const ROOMS = ['Make a song','Studio','The Booth','Your voice','Soundboard','Music video',
-  'Video desk','Hooks','Channel','Live','Podcast','Adverts','Collab Radar'];
+const ROOMS = ['Make a song','Studio','The Booth','Your voice','Soundboard',  'Video desk','Hooks','Channel','Live','Podcast','Adverts','Collab Radar'];
 const { browser, page } = await enter();
 const room = await studio(page);
 for (const name of ROOMS) {
