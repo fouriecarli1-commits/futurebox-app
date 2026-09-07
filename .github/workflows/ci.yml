@@ -297,6 +297,9 @@ jobs:
       - name: The singing engine is wired, priced and honest about what it guesses
         run: npm run check:sing
 
+      - name: A clip that leaves the app carries the channel that made it
+        run: npm run check:maker
+
       - name: The probes can find a browser anywhere
         run: npm run check:launch
 

@@ -21,6 +21,18 @@ export interface VideoStyle {
   readonly hue: number;
   readonly title: string;
   readonly subtitle: string;
+  /**
+   * Whose it is: the channel name, or the @handle where there is no name yet.
+   *
+   * Carli: "let wel dat die creator van die liedjie se channel naam ook
+   * daarop moet verskyn." The clip carried the title and the style and said
+   * nothing about who made it, which on somebody else's feed is an anonymous
+   * clip — the one thing a snippet exists to stop being.
+   *
+   * Empty when there is no profile yet, and then nothing is drawn rather than
+   * a blank line or the word "Unknown".
+   */
+  readonly by?: string;
   readonly look: 'bars' | 'wave' | 'pulse';
 }
 
@@ -250,6 +262,18 @@ function drawFrame(
   context.font = `500 ${Math.round(titleSize * 0.46)}px -apple-system, "Segoe UI", Roboto, sans-serif`;
   context.fillText(style.subtitle, width / 2, titleY + titleSize * 0.75);
 
+  /* And whose it is, under the style line.
+
+     Brighter than the style and smaller than the title: on somebody else's
+     feed the name is the second thing worth reading and the tempo is the
+     third. Drawn only when there is one — an empty line under the title reads
+     as a fault, and "Unknown" reads as a worse one. */
+  if (style.by) {
+    context.fillStyle = 'rgba(255,255,255,0.8)';
+    context.font = `700 ${Math.round(titleSize * 0.5)}px -apple-system, "Segoe UI", Roboto, sans-serif`;
+    context.fillText(style.by.slice(0, 28), width / 2, titleY + titleSize * 1.35);
+  }
+
   // A quiet progress line — it reads as intent rather than decoration.
   context.fillStyle = 'rgba(255,255,255,0.18)';
   context.fillRect(width * 0.1, height * 0.93, width * 0.8, 3);
@@ -338,7 +362,7 @@ export async function renderVideo(options: RenderOptions): Promise<RenderResult>
 }
 
 /** Picks a look and a colour from the track, so releases do not all match. */
-export function styleFor(title: string, genre: string, bpm: number): VideoStyle {
+export function styleFor(title: string, genre: string, bpm: number, by = ''): VideoStyle {
   const source = `${title}${genre}`;
   let seed = 0;
   for (let i = 0; i < source.length; i++) seed += source.charCodeAt(i);
@@ -347,6 +371,7 @@ export function styleFor(title: string, genre: string, bpm: number): VideoStyle 
     hue: seed % 360,
     title,
     subtitle: `${genre} · ${bpm} BPM`,
+    by: by.trim(),
     look,
   };
 }

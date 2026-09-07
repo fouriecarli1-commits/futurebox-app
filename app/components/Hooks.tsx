@@ -28,6 +28,7 @@ import Note from './Note';
 import Card from './Card';
 import { addUpload, loadUploads, removeUpload } from '../lib/uploads';
 import { cutHook, soundOf } from '../lib/videoclip';
+import { fetchCreator, nameOf } from '../lib/radar';
 
 const LENGTHS = [15, 30];
 
@@ -54,6 +55,23 @@ export default function Hooks() {
   const [video, setVideo] = useState<{ name: string; file: Blob; sound: AudioBuffer | null } | null>(null);
   const [taking, setTaking] = useState(false);
   const [problem, setProblem] = useState('');
+
+  /* Whose channel this is, for the name drawn on the clip.
+
+     Fetched once and allowed to be empty: a snippet made before anybody has
+     set a profile still gets cut, it simply has no name on it. Waiting for
+     the profile before letting somebody cut a hook would be holding up the
+     work for the credit. */
+  const [maker, setMaker] = useState('');
+  useEffect(() => {
+    let alive = true;
+    void fetchCreator().then((creator) => {
+      if (alive) setMaker(nameOf(creator));
+    }).catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
   const songFile = useRef<HTMLInputElement | null>(null);
   const videoFile = useRef<HTMLInputElement | null>(null);
 
@@ -231,7 +249,7 @@ export default function Hooks() {
         aspect: '9:16',
         seconds: hook.seconds,
         startSeconds: hook.startSeconds,
-        style: styleFor(selected.title, selected.genre, selected.bpm),
+        style: styleFor(selected.title, selected.genre, selected.bpm, maker),
         onProgress: setProgress,
       });
       const ext = extensionFor(result.mimeType);

@@ -1850,7 +1850,7 @@ export const STRINGS: Dict = {
   "common.pause": { en: "Pause", af: "Wag" },
 
   /* Where each platform prints its own interface over your video. */
-  "safe.title": { en: "What the app covers", af: "Wat die toep toemaak" },
+  "safe.title": { en: "Where these apps cover your video", af: "Waar hierdie toeps jou video toemaak" },
   "safe.off": { en: "Off", af: "Af" },
   "safe.cropped": { en: "This clip is not the shape these apps play. Posted there it is shown in the marked column and the sides are cropped off \u2014 before anything is printed on top.", af: "Hierdie knipsel is nie die vorm wat hierdie programme speel nie. Daar geplaas, word dit in die gemerkte kolom gewys en die kante word afgesny \u2014 nog voordat enigiets bo-op gedruk word." },
   "safe.kept": { en: "of the frame is left", af: "van die raam bly oor" },

@@ -149,8 +149,8 @@ const TOOLS = new Set([
 const WAITING = new Set([
   'account', 'addon', 'adreport', 'adruns', 'ads-en', 'cast', 'greeting',
   'help', 'language', 'lanes', 'photo', 'playbutton', 'podlanguage',
-  'presenter', 'queue', 'safezones', 'signinwith',
-  'studioroute', 'subscription', 'taste', 'videodesk',
+  'presenter', 'queue', 'signinwith',
+  'studioroute', 'subscription', 'taste', 'videocover', 'videodesk',
 ]);
 /** What it was when this rule was written. It may go down and not up. */
 const WAITING_WAS = 25;

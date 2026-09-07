@@ -105,7 +105,8 @@
     "check:stitch": "node audit/stitch.mjs",
     "check:probooth": "node audit/probooth.mjs",
     "check:koste": "tsx scripts/check-koste.mts",
-    "check:sing": "tsx scripts/check-sing.mts"
+    "check:sing": "tsx scripts/check-sing.mts",
+    "check:maker": "tsx scripts/check-maker.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

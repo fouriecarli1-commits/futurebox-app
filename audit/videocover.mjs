@@ -213,7 +213,7 @@ try {
   check('and says plainly that the sides are cropped off',
     af ? /kante word afgesny/.test(wideWords) : /sides are cropped off/.test(wideWords));
 
-  await p.screenshot({ path: shot(`safezones-${af ? 'af' : 'en'}.png`), fullPage: true });
+  await p.screenshot({ path: shot(`videocover-${af ? 'af' : 'en'}.png`), fullPage: true });
   await b.close();
 } finally {
   if (server?.pid) {

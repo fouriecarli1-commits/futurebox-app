@@ -11,7 +11,7 @@
  * So this runs the real `mixSession` in a real browser, on tones whose numbers
  * can be worked out by hand, and reads the samples back.
  *
- * It owns the whole loop, as `safezones.mjs` does: copies the probe page in,
+ * It owns the whole loop, as `videocover.mjs` does: copies the probe page in,
  * builds, measures, and removes it again — whether it passed, failed or threw.
  * The app never ships a route that exists for a test.
  */

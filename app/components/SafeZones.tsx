@@ -148,7 +148,11 @@ export default function SafeZones({
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="inline-flex items-center gap-1.5 text-sm text-zinc-400 mr-1">
           <Smartphone className="w-4 h-4 text-emerald-400" />
-          {t('safe.title', 'What the app covers')}
+          {/* "What the app covers" — which app? Carli read that label and
+              could not tell whether it meant this one or theirs, which is
+              the whole question it exists to answer. "These apps" is
+              anchored by the three buttons standing next to it. */}
+          {t('safe.title', 'Where these apps cover your video')}
         </span>
         <button
           type="button"

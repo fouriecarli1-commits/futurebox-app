@@ -217,6 +217,25 @@ export async function fetchCreatorState(): Promise<{
   }
 }
 
+/**
+ * What to print on something that leaves the app: the channel name.
+ *
+ * Carli: "let wel dat die creator van die liedjie se channel naam ook daarop
+ * moet verskyn." A clip on somebody else's feed with no name on it is an
+ * anonymous clip, which is the one thing a snippet exists to stop being.
+ *
+ * The name if there is one, the @handle if there is not, and an empty string
+ * if there is neither — never a placeholder. Nothing is drawn for an empty
+ * string, and "Unknown" printed across somebody's video is worse than a blank
+ * line under the title.
+ */
+export function nameOf(creator: Creator | null | undefined): string {
+  const name = creator?.name?.trim();
+  if (name) return name;
+  const handle = creator?.handle?.trim();
+  return handle ? `@${handle}` : '';
+}
+
 export async function fetchCreator(): Promise<Creator | null> {
   return (await fetchCreatorState()).creator;
 }

@@ -46,9 +46,25 @@ import { readAudio } from '../lib/trackaudio';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { useCopilotOps } from '../lib/copilotactions';
+import { fetchCreator, nameOf } from '../lib/radar';
 
 export default function VideoPanel({ track, onClose }: { track: Track; onClose: () => void }) {
   const { t, lang } = useLang();
+  /* Whose channel this is, for the name drawn on the clip. Fetched once, and
+     allowed to be empty — a video made before a profile exists still gets
+     made, it simply carries no name. */
+  const [maker, setMaker] = useState('');
+  useEffect(() => {
+    let alive = true;
+    void fetchCreator()
+      .then((creator) => {
+        if (alive) setMaker(nameOf(creator));
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
   const [aspect, setAspect] = useState<Aspect>('9:16');
   const [clipSeconds, setClipSeconds] = useState(15);
   const [startAt, setStartAt] = useState(0);
@@ -320,7 +336,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
         lyrics,
         seconds: clipSeconds === 0 ? track.seconds : clipSeconds,
         startSeconds: startAt,
-        style: styleFor(track.title, track.genre, track.bpm),
+        style: styleFor(track.title, track.genre, track.bpm, maker),
         onProgress: setProgress,
       });
       setMade({ blob: result.blob, ext: extensionFor(result.mimeType) });
