@@ -72,6 +72,7 @@
     "check:listencount": "tsx scripts/check-listencount.mts",
     "check:voicechange": "tsx scripts/check-voicechange.mts",
     "check:backlayers": "tsx scripts/check-backlayers.mts",
+    "check:videoroom": "tsx scripts/check-videoroom.mts",
     "check:staysignedin": "node audit/staysignedin.mjs",
     "check:liveroom": "node audit/liveroom.mjs",
     "check:photo": "tsx scripts/check-photo.mts",

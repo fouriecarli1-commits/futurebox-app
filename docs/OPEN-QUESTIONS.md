@@ -937,3 +937,51 @@ written as a rule with a verdict, and it is wired now.
 
 Reported this way on purpose. "Sixty-one unused scripts" is the kind of number
 that costs somebody an afternoon and turns out to be nothing.
+
+## P. The music video was in the room next door
+
+"die music video het steeds nie 'n editing bar om woorde in te sit nie, en
+goeie video editing funksies nie."
+
+There are two video rooms and only one of them makes videos.
+
+**Musiekvideo** (`studioTab === 'video'` → `MusicVideo`) was 172 lines: pick a
+song, then one clip with a length and a shape.
+
+**Videolessenaar** (`studioTab === 'canvas'` → `VideoCanvas` → `Storyboard`) is
+nearly two thousand: the shot list, the look they share, the words burned onto
+the picture, the trim, and the stitcher that cuts them into one file.
+
+So everything that makes a music video sat in the room beside the one named
+for it. **This is a correction, not just a finding.** When she asked for a
+scene window — "daar is huidiglik geen so window waarin die scenes en styl van
+die video kom nie" — it was built into the board, in the room she was not
+standing in, and reported as done. She then had to say the same thing twice.
+
+### What it is now
+
+The room asks one question after the song — a music video, or one clip — and
+the answer decides what is on screen. Both sets of furniture at once would be
+the busiest room in the app, and "nie te besig nie" is a standing instruction.
+
+The board is **the same component the desk renders**, not a copy. Two boards
+drift, and the one that stops getting fixed is always the one somebody is
+actually standing in. It is handed the song the room already asked about, and
+hides its own picker when it has one: two pickers for one decision, in the
+room whose entire subject is that song, is furniture pretending to be a
+choice.
+
+### The rooms are still two, and that is the part left open
+
+`VideoPanel` — one clip — is arguably what a "Video desk" is for, and a
+storyboard is what "Musiekvideo" means. Swapping them outright is a decision
+about her product rather than a bug fix, so it has not been taken here. What
+has been fixed is that the room named for the job can now do the job.
+
+### Where the words come from
+
+`Shot.caption` is filled from the shot's own quoted line the first time
+captions are switched on, so the usual case is one switch and no typing. The
+stitcher burns them into the picture rather than carrying a subtitle track,
+because a track is words nobody sees once the file is in a phone's gallery.
+Both ends are asserted by `check:videoroom`, at her end and at the encoder's.

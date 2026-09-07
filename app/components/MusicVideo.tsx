@@ -21,6 +21,10 @@ import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import { addUpload, loadUploads, removeUpload } from '../lib/uploads';
 import Note from './Note';
 import Card from './Card';
+import Storyboard from './Storyboard';
+import { probeVideoEngine, type EngineAspect, type VideoGrades } from '../lib/engines';
+import { LENGTHS } from '../lib/videoscenes';
+import type { VideoGrade } from '../lib/credits';
 
 export default function MusicVideo() {
   const { t } = useLang();
@@ -86,6 +90,34 @@ export default function MusicVideo() {
     setBrought(loadUploads());
     setSelected((was) => (was?.id === id ? null : was));
   }, []);
+
+  /* What the engine will actually make, asked once. The board below needs
+     real lengths and shapes; guessing them is how a desk offers a length the
+     engine refuses two minutes and one charge later. */
+  const [engine, setEngine] = useState<VideoGrades | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void probeVideoEngine().then((found) => {
+      if (alive) setEngine(found);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const [grade] = useState<VideoGrade>('standard');
+  const [aspect] = useState<EngineAspect>('9:16');
+  const able = engine?.can?.[grade];
+  const lengths = LENGTHS.filter((one) => (able?.seconds ?? [5, 10]).includes(one.seconds));
+
+  /**
+   * Which of the two this room is being used for.
+   *
+   * A single clip and a whole music video are different jobs, and showing the
+   * furniture for both at once is the busiest this room could be. So it is one
+   * question after the song, and the answer decides what is on screen.
+   */
+  const [making, setMaking] = useState<'clip' | 'film' | null>(null);
 
   return (
     <div className="space-y-5">
@@ -166,7 +198,66 @@ export default function MusicVideo() {
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
       </Card>
 
-      {selected && <VideoPanel track={selected} onClose={() => setSelected(null)} />}
+      {/* ── One clip, or the whole thing ──────────────────────────────────
+
+          The room is called Musiekvideo and it made one clip. Everything that
+          makes a *music video* — the shot list, the look they share, the words
+          on screen, the trim, and cutting them into one file — lived in the
+          Video desk next door, which is not where anybody goes looking for it:
+
+            "die music video het steeds nie 'n editing bar om woorde in te sit
+             nie, en goeie video editing funksies nie."
+
+          The board is the same one the desk uses, not a second copy, and it is
+          handed the song this room already asked about rather than asking
+          again. */}
+      {selected && making === null && (
+        <Card title={t('video.whatKind', 'What are you making?')}>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setMaking('film')}
+              className="rounded-xl border border-zinc-700 bg-zinc-950/60 p-3 text-left hover:border-emerald-500"
+            >
+              <p className="text-sm font-bold text-white">{t('video.kindFilm', 'A music video')}</p>
+              <p className="pt-1 text-sm text-zinc-400 leading-snug">
+                {t(
+                  'video.kindFilmWhy',
+                  'Shot by shot, with the words on screen and the song underneath. Write the scenes, make them one at a time, cut them into one file.',
+                )}
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMaking('clip')}
+              className="rounded-xl border border-zinc-700 bg-zinc-950/60 p-3 text-left hover:border-emerald-500"
+            >
+              <p className="text-sm font-bold text-white">{t('video.kindClip', 'One clip')}</p>
+              <p className="pt-1 text-sm text-zinc-400 leading-snug">
+                {t('video.kindClipWhy', 'A single shot from this song — the quickest thing to post.')}
+              </p>
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {selected && making !== null && (
+        <button
+          type="button"
+          onClick={() => setMaking(null)}
+          className="text-sm text-zinc-400 hover:text-emerald-300"
+        >
+          {t('video.otherKind', '\u2190 Make something else with this song')}
+        </button>
+      )}
+
+      {selected && making === 'film' && (
+        <Storyboard aspect={aspect} grade={grade} lengths={lengths} frame={null} songId={selected.id} />
+      )}
+
+      {selected && making === 'clip' && (
+        <VideoPanel track={selected} onClose={() => setSelected(null)} />
+      )}
     </div>
   );
 }

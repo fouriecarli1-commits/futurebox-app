@@ -145,6 +145,11 @@ jobs:
       - name: Afrikaans prompts warn the model off Dutch
         run: npm run check:afrikaansrule
 
+      # Everything that makes a music video lived in the room next door to
+      # the one named for it.
+      - name: The room called Musiekvideo can make one
+        run: npm run check:videoroom
+
       # Three things have an opinion about the language and they do not carry
       # equal weight. The rule lived inside two React effects where it could
       # not be run, and the bug she hit was invisible to everything.

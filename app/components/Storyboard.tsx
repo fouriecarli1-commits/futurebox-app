@@ -88,6 +88,7 @@ export default function Storyboard({
   lengths,
   frame,
   onUpgrade,
+  songId,
 }: {
   readonly aspect: EngineAspect;
   readonly grade: VideoGrade;
@@ -96,6 +97,14 @@ export default function Storyboard({
   /** The cast member the desk has chosen, so every shot is the same person. */
   readonly frame: string | null;
   readonly onUpgrade?: () => void;
+  /**
+   * The song the room above has already chosen, when there is one.
+   *
+   * The music video room asks which song first, and this board asks again a
+   * screen later — two pickers for one decision, in the room whose whole
+   * subject is that song. Given one, the board takes it and does not ask.
+   */
+  readonly songId?: string;
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -194,6 +203,14 @@ export default function Storyboard({
   const shortest = lengths[0]?.seconds ?? 5;
   const total = runtime(board, clipLengths);
   const short = missing(board);
+  /* Taken from the room above when it has already asked. Not merged into the
+     board's initial state: the board is restored from storage, and the room's
+     answer is the newer one. */
+  useEffect(() => {
+    if (!songId) return;
+    setBoard((was) => (was.songId === songId ? was : { ...was, songId }));
+  }, [songId]);
+
   const song =
     tracks.find((one) => one.id === board.songId) ??
     brought.find((one) => one.id === board.songId) ??
@@ -565,7 +582,7 @@ export default function Storyboard({
         {t('board.add', 'Add a shot')}
       </button>
 
-      {board.shots.length > 0 && (
+      {board.shots.length > 0 && !songId && (
         <div className="space-y-3 border-t border-zinc-800 pt-3">
           {/* ── The song under it ────────────────────────────────────────
 
