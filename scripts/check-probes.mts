@@ -33,6 +33,7 @@
  * job is checked from the moment it is added.
  */
 import { readFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -207,6 +208,46 @@ for (const script of named) {
 /* ── And the helper keeps the promise the rules rest on ─────────────────── */
 
 const where = code(readFileSync(join(ROOT, 'audit/where.mjs'), 'utf8'));
+/**
+ * And no probe page is committed.
+ *
+ * A probe copies `page.probe.tsx` over `page.tsx`, builds, runs, and deletes
+ * it again in a `finally`. That works right up until somebody commits while a
+ * probe is mid-run: `git add -A` sweeps the copy up, and a probe route ships
+ * to production on the branch the site deploys from.
+ *
+ * Which is exactly what happened — `app/videowords/page.tsx` reached main that
+ * way, from my own commit, on the same afternoon I noticed that running a
+ * source check beside a probe gives a spurious failure and decided it was
+ * harmless because the two are separate jobs in CI. They are. The working
+ * tree is not two jobs.
+ *
+ * Cheap to assert and impossible to notice by eye, because the file is
+ * deleted again seconds later and `git status` is clean by the time anybody
+ * looks.
+ */
+{
+  const committed = execSync('git ls-files "*/page.probe.tsx"', { cwd: ROOT })
+    .toString()
+    .split('\n')
+    .filter(Boolean);
+  const shipped = committed
+    .map((one) => one.replace(/page\.probe\.tsx$/, 'page.tsx'))
+    .filter((one) => {
+      try {
+        execSync(`git ls-files --error-unmatch "${one}"`, { cwd: ROOT, stdio: 'ignore' });
+        return true;
+      } catch {
+        return false;
+      }
+    });
+  ok(
+    'no probe page is committed beside its probe',
+    shipped.length === 0,
+    `${shipped.join(', ')} — swept up by a commit while a probe was mid-run`,
+  );
+}
+
 ok('serve() exists', /export async function serve\(/.test(where));
 ok(
   'serve() kills the whole process group, not just the parent',
