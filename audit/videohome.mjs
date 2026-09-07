@@ -113,8 +113,56 @@ try {
      question she asked. */
   check('and the video she made is named on it',
     says.includes(TITLE), says.slice(0, 220));
+  says = ((await room.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ');
   check('with what it cost still on it, so the history is a receipt',
     /15 credits|15 krediete/.test(says), (says.match(/\d+ (credits|krediete)/) ?? ['nothing'])[0]);
+
+  /* ── The heading has to look like a button ────────────────────────────
+
+     "Die button, made here before is amper onsienbaar want dit lyk nie soos
+      'n button." It was a row of text with a small icon in front of it, the
+     same weight as the paragraph above and the same colour as the label
+     beside it — so the one control that opens everything she has made read as
+     a caption. Every button in this app gets a box.
+
+     Measured as a box rather than as a class name: a border and a background
+     that is not the card's own. */
+  const heading = room.locator('button').filter({ hasText: /Made in this app|Hier gemaak/ }).first();
+  check('the heading that opens her work is on the screen', (await heading.count()) > 0);
+  if ((await heading.count()) > 0) {
+    const looks = await heading.first().evaluate((one) => {
+      const style = getComputedStyle(one);
+      const parts = (style.backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
+      return {
+        border: style.borderTopWidth,
+        radius: style.borderTopLeftRadius,
+        filled: parts.length >= 4 ? parts[3] > 0.2 : true,
+        height: one.getBoundingClientRect().height,
+      };
+    });
+    check('and it looks like a button rather than a line of text',
+      parseFloat(looks.border) > 0 && parseFloat(looks.radius) > 0 && looks.filled,
+      JSON.stringify(looks));
+    /* A thumb needs forty-four pixels. A caption does not have them. */
+    check('and it is big enough to press with a thumb',
+      looks.height >= 40, `${Math.round(looks.height)}px tall`);
+  }
+
+  /* ── Somewhere to post it ─────────────────────────────────────────────
+
+     "dit het glad nie meer 'n share button daarop om dit moontlik na social
+      media toe te skuif nie." A clip could be downloaded and nothing else. */
+  check('every video offers a way to post it, not only to download it',
+    (await room.locator('button').filter({ hasText: /^(Post it|Plaas dit)/ }).count()) > 0,
+    'there is no share button on a video');
+
+  /* ── And nothing tells her to move it ─────────────────────────────────
+
+     She has now tried three times to move a video onto her channel. It is
+     already there and always was going to be, so the card has to say that in
+     as many words rather than leaving her to guess from its absence. */
+  check('the card says the video arrives on its own, so there is nothing to move',
+    /nothing to move|niks om te skuif/i.test(says), says.slice(0, 200));
 
   /* And it opens. A list that names a file nobody can play is a list. */
   const openIt = room.locator('button').filter({ hasText: /^(Open it|Maak dit oop)/ }).first();

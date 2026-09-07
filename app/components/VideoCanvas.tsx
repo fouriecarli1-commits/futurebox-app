@@ -55,6 +55,7 @@ import Card from './Card';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
+import ShareRow from './ShareRow';
 
 type Aspect = EngineAspect;
 
@@ -1055,14 +1056,24 @@ export default function VideoCanvas({
                   />
                 </SafeZones>
                 <p className="text-xs text-zinc-500 leading-snug line-clamp-2">{one.prompt}</p>
-                <button
-                  type="button"
-                  onClick={() => downloadBlob(one.blob, safeFilename(one.prompt.slice(0, 40), 'mp4'))}
-                  className="px-3 py-2 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  {t('video.save')}
-                </button>
+                {/* Save it, and post it.
+
+                    A finished clip could be downloaded and nothing else —
+                    "dit het glad nie meer 'n share button daarop om dit
+                    moontlik na social media toe te skuif nie." The share
+                    sheet has existed for songs since the channel did, and a
+                    video is the thing most likely to be posted. */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => downloadBlob(one.blob, safeFilename(one.prompt.slice(0, 40), 'mp4'))}
+                    className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white"
+                  >
+                    <Download className="w-4 h-4" />
+                    {t('video.save')}
+                  </button>
+                  <ShareRow title={scene?.label ?? 'Video'} what={one.prompt} />
+                </div>
 
                 {/* ── The language button ──────────────────────────────
 

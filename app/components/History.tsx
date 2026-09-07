@@ -29,12 +29,13 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Star, Download, Trash2, RotateCcw, Clock } from 'lucide-react';
+import { Star, ChevronDown, Download, Pause, Play, Trash2, RotateCcw, Clock } from 'lucide-react';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { favouriteMake, forgetMake, loadMakes, makeBlob, type Make } from '../lib/makes';
 import type { SurfaceId } from '../lib/surfaces';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
+import ShareRow from './ShareRow';
 
 export default function History({
   surface,
@@ -45,6 +46,7 @@ export default function History({
   only,
   title,
   startOpen = false,
+  whenEmpty,
 }: {
   /**
    * Which room's work to show. Left out, it is every room's.
@@ -71,6 +73,14 @@ export default function History({
   /** Open on arrival, for a list that is the point of the card rather than
    *  yesterday's work at the bottom of a room. */
   startOpen?: boolean;
+  /**
+   * What to say when there is nothing yet.
+   *
+   * Left out, an empty list draws nothing — right at the foot of a room.
+   * Given, it is a sentence, which is what a card whose whole subject is the
+   * list needs instead of a heading over a gap.
+   */
+  whenEmpty?: string;
 }): React.ReactElement | null {
   const { t } = useLang();
   const [makes, setMakes] = useState<Make[]>([]);
@@ -102,7 +112,16 @@ export default function History({
     if (playing) URL.revokeObjectURL(playing.url);
   }, [playing]);
 
-  if (makes.length === 0) return null;
+  if (makes.length === 0) {
+    /* Nothing at all, said rather than drawn as a blank.
+ 
+       At the foot of a room this returned null, which is right: yesterday's
+       work has no business taking up space before there is any. On the
+       channel it is the point of the card, and a card with a heading and
+       nothing under it reads as a thing that is broken — "ek het weer die
+       video probeer skuif na my channel toe maar dit het nie geskuif nie". */
+    return whenEmpty ? <p className="text-sm text-zinc-500 leading-snug">{whenEmpty}</p> : null;
+  }
 
   const shown = onlyKept ? makes.filter((one) => one.favourite) : makes;
   const kept = makes.filter((one) => one.favourite).length;
@@ -127,15 +146,30 @@ export default function History({
   return (
     <section className="border-t border-zinc-800 pt-4 space-y-3">
       <div className="flex items-center justify-between gap-3 flex-wrap">
+        {/* A button that looks like one.
+
+            "Die button, made here before is amper onsienbaar want dit lyk nie
+             soos 'n button." It was a row of text with an icon in front of
+            it — the same weight as the paragraph above it and the same colour
+            as the label beside it, so the one thing on the screen that opens
+            her past work read as a caption. Every button in this app gets a
+            box; this one did not, and it is the one that hides everything she
+            has made.
+
+            The chevron turns, so open and shut are visible before it is
+            pressed rather than only after. */}
         <button
           type="button"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
-          className="flex items-center gap-2 text-sm font-semibold text-zinc-300 hover:text-white"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-emerald-500 hover:text-white"
         >
-          <Clock className="w-3.5 h-3.5 text-emerald-400" />
+          <Clock className="w-4 h-4 text-emerald-400" />
           {title ?? t('history.title', 'Made here before')}
-          <span className="text-zinc-500 font-normal">({makes.length})</span>
+          <span className="font-normal text-zinc-400">({makes.length})</span>
+          <ChevronDown
+            className={`h-4 w-4 text-zinc-500 transition-transform ${open ? 'rotate-180' : ''}`}
+          />
         </button>
         {open && kept > 0 && (
           <button
@@ -228,15 +262,38 @@ export default function History({
 
                 {make.kind !== 'text' && (
                   <>
-                    <button
-                      type="button"
-                      onClick={() => void play(make)}
-                      className="text-sm font-semibold text-zinc-300 hover:text-white"
-                    >
-                      {playing?.id === make.id
-                        ? t('history.close', 'Close it')
-                        : t('history.open', 'Open it')}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void play(make)}
+                        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white"
+                      >
+                        {playing?.id === make.id ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                        {playing?.id === make.id
+                          ? t('history.close', 'Close it')
+                          : t('history.open', 'Open it')}
+                      </button>
+
+                      {/* ── Somewhere to post it ─────────────────────────────
+
+                          "dit het glad nie meer 'n share button daarop om dit
+                           moontlik na social media toe te skuif nie."
+
+                          A clip could be downloaded and nothing else. The
+                          share sheet has existed for songs since the channel
+                          did, and a video is the thing most likely to be
+                          posted — so it is on every one of these now. It
+                          takes no track, which means no "Post to Live" and no
+                          "Save the song": the caption, and the composers. */}
+                      <ShareRow
+                        title={make.title}
+                        what={make.note || t('history.madeHere', 'Made on FutureBox.')}
+                      />
+                    </div>
                     {playing?.id === make.id &&
                       (make.kind === 'audio' ? (
                         // eslint-disable-next-line jsx-a11y/media-has-caption

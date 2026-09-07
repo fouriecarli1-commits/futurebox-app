@@ -132,12 +132,18 @@ export default function ShareRow({
 
   return (
     <div className="space-y-2">
+      {/* A box, like every other button in this app.
+
+          It was a line of grey text with a small icon, which is the same
+          complaint she made about the history heading: "dit lyk nie soos 'n
+          button". The one control that gets a song or a video off this device
+          and onto a feed should not be the faintest thing on the card. */}
       <button
         type="button"
         onClick={() => setOpen((was) => !was)}
-        className="text-sm text-zinc-400 hover:text-zinc-200 flex items-center gap-1.5"
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-emerald-500 hover:text-white"
       >
-        <Share2 className="w-3.5 h-3.5" />
+        <Share2 className="w-4 h-4" />
         {t('share.post', 'Post it')}
       </button>
 

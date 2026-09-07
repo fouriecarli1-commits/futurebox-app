@@ -507,11 +507,15 @@ export default function Channel({
           only={['video', 'clip']}
           title={t('chan.videosMade', 'Made in this app')}
           startOpen
+          whenEmpty={t(
+            'chan.noVideos',
+            'No videos yet. Make one at the Video desk and it appears here on its own — there is nothing to move.',
+          )}
         />
         <Note className="text-xs text-zinc-500 leading-relaxed">
           {t(
             'chan.videosNote',
-            'Kept on this device, like your songs. Download one to post it anywhere — nothing here is published until you say so.',
+            'Every video you make anywhere in this app arrives here by itself — there is nothing to press and nothing to move. Kept on this device, like your songs. Post it opens the composers; nothing is published until you say so.',
           )}
         </Note>
       </Card>
