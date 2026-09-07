@@ -33,6 +33,7 @@ import NowPlaying from './NowPlaying';
 import Sleeve from './Sleeve';
 import PostToLive from './PostToLive';
 import VocalBooth from './VocalBooth';
+import SingItMine from './SingItMine';
 import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
 import Note from './Note';
@@ -1426,6 +1427,20 @@ export default function MakeMusic({
                     <Mic className="w-3.5 h-3.5" />
                     {t('make.singOver')}
                   </button>
+                  {/* And the other direction: not you singing over it, but it
+                      sung in your voice. Draws nothing at all until the
+                      singing engine is switched on. */}
+                  <SingItMine
+                    track={track}
+                    onMade={(made, audio) => {
+                      const next = [made, ...tracks];
+                      setTracks(next);
+                      saveTracks(next);
+                      setStatus(t('mine.kept', 'It is in your channel, in your voice.'));
+                      onMade(made);
+                      void cloud.pushTrack(made, audio);
+                    }}
+                  />
                   {/* The cover, without having to press play to find it.
                       Hidden until asked for rather than mounted on every card:
                       each sleeve asks the server whether one exists already,

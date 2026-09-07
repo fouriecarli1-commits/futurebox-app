@@ -169,9 +169,55 @@ ok(
 
 ok('the room is told which engines exist before it draws itself', /singing: singing\(\)/.test(state));
 
-/* ── 5. The key stays on the server ─────────────────────────────────────── */
+/* ── 5. Make a song, the other half of "in Pro Booth en in Make a song" ── */
 
-for (const path of ['app/components/ProBooth.tsx', 'app/components/VoiceLab.tsx', 'app/api/voice/route.ts']) {
+const mine = read('app/components/SingItMine.tsx');
+const make = read('app/components/MakeMusic.tsx');
+
+ok('a finished song can be sung in her own voice from the room it was made in',
+  /<SingItMine/.test(make));
+ok('and it goes to the singing engine, never the speech one',
+  /'\/api\/voice\/sing'/.test(mine) && !/voice\/change/.test(mine));
+ok('the result is a new song rather than the old one overwritten',
+  /mixOf: \{ source: track\.id \}/.test(mine) && /const id = `t-\$\{Date\.now\(\)\}`/.test(mine));
+ok('and the recording says what sang it',
+  /models: \[\.\.\.track\.models, 'Kits\.AI singing model'\]/.test(mine),
+  'a release whose credits do not name the voice on it is the one thing this must not be');
+ok('the whole song goes through storage rather than at the body limit',
+  /attach\(form, music, 'audio', 'song\.wav'\)/.test(mine));
+ok('whether the engine exists is asked once for the page, not once per song',
+  /let asked: Promise<Singing> \| null/.test(mine),
+  'twenty songs on a screen must not be twenty requests');
+ok('and nothing is drawn at all when it is switched off',
+  /if \(!state\?\.configured\) return null;/.test(mine));
+
+/* ── 6. The page that turns the remaining guesses into facts ───────────── */
+
+const setup = read('app/api/kits/setup/route.ts');
+const lib2 = lib;
+
+ok('there is a page that asks the account what it actually has',
+  /CANDIDATES/.test(setup) && /probe\(/.test(setup));
+ok('the candidate list keeps the known endpoint as a control',
+  /'voice-conversions',/.test(lib2),
+  'if the one endpoint that is known to work fails too, the key is the problem and no other answer means anything');
+ok('the page refuses without the shared secret',
+  /process\.env\.POST_SECRET/.test(setup) && /return new Response\('no', \{ status: 404 \}\)/.test(setup));
+ok('and compares it in constant time, after a length check',
+  /timingSafeEqual/.test(setup) && /a\.length !== b\.length/.test(setup));
+ok('it reports shapes rather than content',
+  /fields\?: string\[\]/.test(lib2) && !/answer,\s*\}\);/.test(setup),
+  'a page that gets pasted into a chat must not carry somebody’s audio or account details');
+ok('and the key is never in what it answers', !/KITS_API_KEY/.test(setup));
+
+/* ── 7. The key stays on the server ─────────────────────────────────────── */
+
+for (const path of [
+  'app/components/ProBooth.tsx',
+  'app/components/VoiceLab.tsx',
+  'app/components/SingItMine.tsx',
+  'app/api/voice/route.ts',
+]) {
   ok(`${path} never names the key`, !read(path).includes('KITS_API_KEY'));
 }
 

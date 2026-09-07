@@ -233,6 +233,84 @@ export function audioUrlIn(value: unknown): string | null {
   return best;
 }
 
+/* ── Finding out what the account really has ─────────────────────────────
+
+   The rest of Kits' product — cloning a voice, generating a vocal, splitting
+   a mix — is behind endpoints nobody here has seen. Guessing them would ship
+   buttons that fail against a service that is charging her, which is worse
+   than not shipping them.
+
+   So instead of guessing, this asks. `/api/kits/setup` walks the candidates
+   below with her real key and reports what actually answers, the way
+   `/api/analyse/setup` does for Music.ai's workflow slugs. One page open in a
+   browser turns every guess in this file into a fact.
+
+   The list is candidates, not claims. `voice-conversions` is the only one
+   that is known — it is the endpoint she sent — and it is in the list so the
+   report has a control in it: if that one fails too, the key is the problem
+   and none of the other answers mean anything. */
+export const CANDIDATES = [
+  'voice-conversions',
+  'voice-models',
+  'voices',
+  'models',
+  'text-to-speech',
+  'text-to-speech-conversions',
+  'vocal-generations',
+  'stem-splits',
+  'stem-separations',
+  'user',
+  'me',
+  'account',
+  'credits',
+] as const;
+
+/**
+ * What one candidate answers, described rather than dumped.
+ *
+ * The shape, not the content: how many, and what the fields of one of them are
+ * called. That is what is needed to wire an endpoint, and it keeps somebody
+ * else's audio and account details out of a page that gets pasted into a chat.
+ */
+export async function probe(path: string): Promise<{
+  path: string;
+  status: number;
+  count?: number;
+  fields?: string[];
+  note?: string;
+}> {
+  let response: Response;
+  try {
+    response = await fetch(`${BASE}/${path}`, { headers: { Authorization: `Bearer ${key()}` } });
+  } catch {
+    return { path, status: 0, note: 'could not be reached' };
+  }
+  if (!response.ok) {
+    const raw = await response.text().catch(() => '');
+    return { path, status: response.status, note: raw.slice(0, 160) };
+  }
+  const answer = (await response.json().catch(() => null)) as unknown;
+  const list = Array.isArray(answer)
+    ? answer
+    : Array.isArray((answer as { data?: unknown })?.data)
+      ? ((answer as { data: unknown[] }).data)
+      : null;
+  if (list) {
+    const first = list[0];
+    return {
+      path,
+      status: response.status,
+      count: list.length,
+      fields: first && typeof first === 'object' ? Object.keys(first as object).slice(0, 24) : [],
+    };
+  }
+  return {
+    path,
+    status: response.status,
+    fields: answer && typeof answer === 'object' ? Object.keys(answer as object).slice(0, 24) : [],
+  };
+}
+
 /* ── The two requests ────────────────────────────────────────────────────── */
 
 /** Starts a conversion. The shape of this one is hers, not a guess. */

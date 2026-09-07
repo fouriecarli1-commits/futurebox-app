@@ -233,6 +233,22 @@ the voice button. With the key set there are two boxed choices at the top of the
 panel — **Sangmodel** and **Spraakmodel** — and the singing one is chosen for
 you. Without it there are none.
 
+**The page that turns the rest of the guesses into facts.** Open
+
+    https://futurebox.studio/api/kits/setup?key=<POST_SECRET>
+
+once, with the key live, and **send me what it says**. It asks your Kits
+account which endpoints actually exist and reports the shape of each answer —
+how many of a thing there are and what the fields are called, never anybody's
+audio, and never the key itself. That one page is what stands between "singing
+conversion works" and "cloning, generation and the rest of Kits' product work
+too": those live behind addresses nobody here has seen, and inventing them
+would put buttons in your app that fail against a service that is billing you.
+
+The report has a control in it: `voice-conversions` is the endpoint that is
+known to work. If that one fails as well, the key is the problem, and none of
+the other answers mean anything.
+
 **What could not be checked from here:** arpeggi.io is blocked on the machine
 this was built on, so no request has ever been made against the real service.
 The half that starts a conversion is exactly what you sent me and is safe. The
