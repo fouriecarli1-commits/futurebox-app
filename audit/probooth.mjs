@@ -21,7 +21,7 @@ const LIVE = 'app/proboothprobe/page.tsx';
 
 const problems = [];
 const check = (label, ok, detail = '') => {
-  console.log(`${label}: ${ok}`);
+  console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${!ok && detail ? ` — ${detail}` : ''}`);
   if (!ok) problems.push(`${label}${detail ? ` (${detail})` : ''}`);
 };
 
@@ -404,5 +404,9 @@ try {
   if (existsSync(LIVE)) rmSync(LIVE);
 }
 
-console.log('problems:', problems.join(' ;; ') || 'none');
-process.exit(problems.length ? 1 : 0);
+if (problems.length) {
+  console.error(`\ncheck:probooth — ${problems.length} problem(s):`);
+  problems.forEach((one) => console.error(`  · ${one}`));
+  process.exit(1);
+}
+console.log('\ncheck:probooth — the room draws, its controls answer, and the master knows when it is stale.');

@@ -336,7 +336,7 @@ jobs:
           - group: doors
             probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:whitescreen
           - group: make
-            probes: check:makeroom check:simple check:bringsong check:songscreen check:artistname check:cards
+            probes: check:makeroom check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth
           - group: rooms
             probes: check:liveroom check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage
           - group: whole
