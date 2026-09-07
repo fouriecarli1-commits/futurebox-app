@@ -93,13 +93,22 @@ for (const script of named) {
   const source = code(readFileSync(path, 'utf8'));
   const name = script.replace('check:', '');
 
-  /* 1. It brings its own server.
+  /* 1. It brings its own server, unless it needs no page at all.
 
      Either it calls the shared `serve()`, or it spawns `next start` itself.
-     What it may not do is navigate at a hard-coded address and hope. */
+     What it may not do is navigate at a hard-coded address and hope.
+
+     The exception is a probe that tests a library rather than a screen:
+     `stitch` bundles `app/lib/stitch.ts` and runs it in `about:blank`, so
+     there is no app to serve and no address to get wrong. Recognised by that
+     — a probe that never leaves `about:blank` cannot be talking to a server
+     somebody left running — rather than by name, so the same is true of the
+     next one written this way. */
   const usesServe = /\bserve\s*\(/.test(source);
   const spawnsOwn = /'next',\s*'start'/.test(source);
-  ok(`${name} starts the server it talks to`, usesServe || spawnsOwn);
+  const noPage = /goto\('about:blank'\)/.test(source) && !/localhost/.test(source);
+  ok(`${name} starts the server it talks to`, usesServe || spawnsOwn || noPage,
+    noPage ? '' : 'it navigates to an address nobody started');
 
   /* 2. Nothing points at :3000 by hand.
 

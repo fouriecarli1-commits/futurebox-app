@@ -346,7 +346,7 @@ jobs:
           # camera, and `contrast` reads the computed colour of every piece of
           # text against what is actually painted behind it.
           - group: colour and camera
-            probes: check:selfie check:contrast check:mixdown
+            probes: check:selfie check:contrast check:mixdown check:stitch
     steps:
       - uses: actions/checkout@v4
 

@@ -17,23 +17,47 @@
  * under it comes out on the file, and that a clip of a different shape is
  * letterboxed rather than stretched or cropped.
  */
-import { readFileSync } from 'node:fs';
+/*
+ * ── Why this had never run ───────────────────────────────────────────────
+ *
+ * It wanted a bundle at `/tmp/stitch.bundle.js` that somebody had to build by
+ * hand, so it was never given a `check:` name and has sat here being run by
+ * nobody — twenty-two assertions about the one piece of code the long-video
+ * feature rests on entirely.
+ *
+ * It builds its own bundle now, with the esbuild that ships inside Next, so
+ * there is nothing to remember and nothing to leave stale. The module under
+ * test is `app/lib/stitch.ts` as it stands, not a copy of it.
+ */
+import { build } from 'esbuild';
 import { chromium } from 'playwright';
 import { launchOptions } from './where.mjs';
 
-const BUNDLE = process.argv[2] || '/tmp/stitch.bundle.js';
+/* Bundled to a global rather than a module, because the page it runs in is
+   `about:blank` — there is no server here and nothing to import from. */
+const built = await build({
+  entryPoints: ['app/lib/stitch.ts'],
+  bundle: true,
+  format: 'iife',
+  globalName: 'ST',
+  write: false,
+  platform: 'browser',
+  target: 'es2022',
+  loader: { '.ts': 'ts' },
+});
+const BUNDLE = built.outputFiles[0].text;
 
 const b = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required'] }));
 const p = await b.newPage();
 const problems = [];
 const check = (label, ok, detail = '') => {
-  console.log(`${label}: ${ok}`);
+  console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${!ok && detail ? ` — ${detail}` : ''}`);
   if (!ok) problems.push(`${label}${detail ? ` (${detail})` : ''}`);
 };
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
 
 await p.goto('about:blank');
-await p.addScriptTag({ content: readFileSync(BUNDLE, 'utf8') });
+await p.addScriptTag({ content: BUNDLE });
 
 const out = await p.evaluate(async () => {
   /** A clip of a given length and shape, recorded off a canvas.
@@ -397,6 +421,11 @@ if (!out.ok) {
     `${out.clamps[2].got.from}–${out.clamps[2].got.to}`);
 }
 
-console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
-process.exit(problems.length ? 1 : 0);
+
+if (problems.length) {
+  console.error(`\ncheck:stitch — ${problems.length} problem(s):`);
+  problems.forEach((one) => console.error(`  · ${one}`));
+  process.exit(1);
+}
+console.log('\ncheck:stitch — a dozen clips come out as one film, the right length, with the song on it.');
