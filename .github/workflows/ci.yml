@@ -130,6 +130,11 @@ jobs:
       - name: The listen count is hers, and honest
         run: npm run check:listencount
 
+      # "Sing it", with a credit cost beside it, over a speech model. Say what
+      # it is built for above the cost, or it is being said too late.
+      - name: The voice change says what it is built for
+        run: npm run check:voicechange
+
       # Three things have an opinion about the language and they do not carry
       # equal weight. The rule lived inside two React effects where it could
       # not be run, and the bug she hit was invisible to everything.

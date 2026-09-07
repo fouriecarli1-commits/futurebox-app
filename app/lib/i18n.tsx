@@ -500,6 +500,7 @@ export const STRINGS: Dict = {
   "pro.splitUnreadable": { en: "The separated parts came back in a form the browser could not read.", af: "Die geskeide dele het teruggekom in ’n vorm wat die blaaier nie kon lees nie." },
   "pro.sing": { en: "Sing this in another voice", af: "Sing dit in ’n ander stem" },
   "pro.singWhat": { en: "It keeps the performance — the timing, the phrasing, the breaths — and changes whose voice is carrying it. It does not fix the singing, and it will keep a wrong note as faithfully as a right one.", af: "Dit behou die vertolking — die tydsberekening, die frasering, die asemhaling — en verander wie se stem dit dra. Dit maak nie die sang reg nie, en dit hou ’n verkeerde noot net so getrou soos ’n regte een." },
+  "pro.singBuilt": { en: "The model behind it is built for speech. On a spoken lane it is reliable; on a sung one it is a gamble \u2014 the melody is what it handles worst. A model built for singing is the one thing this app still cannot do.", af: "Die model daaragter is vir spraak gebou. Op \u2019n gepraatte baan is dit betroubaar; op \u2019n gesingde een is dit \u2019n dobbelspel \u2014 die melodie is wat dit die slegste hanteer. \u2019n Model wat vir sang gebou is, is die een ding wat hierdie toep nog nie kan doen nie." },
   "pro.singGo": { en: "Sing it", af: "Sing dit" },
   "pro.sungBy": { en: "another voice", af: "’n ander stem" },
   "pro.voicesLoading": { en: "Fetching the voices…", af: "Haal die stemme…" },

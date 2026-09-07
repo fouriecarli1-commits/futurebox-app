@@ -894,3 +894,46 @@ nothing. Each looked exactly like a check that does not work, and one of them
 had me three runs deep into concluding `check:security` was toothless when it
 was not. **Confirm the injection landed before drawing any conclusion from
 it** — print the changed line, not just the exit code.
+
+## O. "Sing it", over a model built for speech
+
+The Pro Booth's voice-change panel is titled **"Sing this in another voice"**,
+its button says **"Sing it"**, and a credit cost sits on the same screen. Its
+note was careful about one thing — it will not fix your singing, and it keeps a
+wrong note as faithfully as a right one — and silent about the thing that
+decides whether the result is worth buying at all.
+
+Behind it is `eleven_multilingual_sts_v2`. Speech to speech. §A1 above records
+that it handles singing badly; §9 of `docs/DIENSTE-EN-KOSTE.md` calls a real
+singing model the one thing this app promises and cannot deliver. Money is
+spent from that panel, so being told afterwards is being told too late.
+
+The caveat is on the panel now, **above the cost** rather than below it, and
+`check:voicechange` holds the promise rather than the phrasing: it must name
+what the model is built for, in both languages, before the cost. Verified
+against the caveat removed, the caveat moved below the cost, and the Afrikaans
+reduced to something true but empty.
+
+### What was already honest, checked rather than assumed
+
+Worth writing down, because the alarming version of this finding would have
+been wrong. The landing page and the plan descriptions promise your own voice
+for **reading** and for podcasts — "Podcasts in your own voice", "cloned, for
+reading and for the show" — and never for singing. The Voice Lab, which calls
+the same route, is titled "Say it again in another voice": *say*, not sing,
+which is the accurate word for a speech model. `check:voicechange` pins that
+too, so the honest framing cannot drift into the other one.
+
+So the gap was one panel, not a claim running through the product.
+
+### And the audit directory, which looked worse than it is
+
+Ninety-one files in `audit/`, twenty-eight wired as checks, two helpers —
+sixty-one run by nothing. That reads like sixty-one abandoned checks. It is
+not: **none of the sixty-one has a failure path at all.** They are screenshot
+takers and walkthroughs, exploration tools that were never meant to pass or
+fail, and they are correctly outside CI. `contrast.mjs` was the single one
+written as a rule with a verdict, and it is wired now.
+
+Reported this way on purpose. "Sixty-one unused scripts" is the kind of number
+that costs somebody an afternoon and turns out to be nothing.

@@ -918,6 +918,24 @@ export default function ProBooth({
                 'pro.singWhat',
                 'It keeps the performance — the timing, the phrasing, the breaths — and changes whose voice is carrying it. It does not fix the singing, and it will keep a wrong note as faithfully as a right one.',
               )}</Note>
+            {/* And what it is built for, which decides whether the result is
+                worth buying at all.
+
+                The note above is careful about one thing — it will not fix the
+                singing — and was silent about the thing that matters more: the
+                model is `eleven_multilingual_sts_v2`, speech to speech.
+                §A1 of docs/OPEN-QUESTIONS.md records that it handles singing
+                badly, and §9 of docs/DIENSTE-EN-KOSTE.md calls a real singing
+                model the one thing this app promises and cannot deliver.
+
+                The panel is titled "Sing this in another voice", the button
+                says "Sing it", and the cost is on the same screen. Being told
+                afterwards is being told too late. Above the cost, deliberately:
+                the caveat has to be read before the press, not after it. */}
+            <Note className="text-sm text-amber-300/90 leading-relaxed">{t(
+                'pro.singBuilt',
+                'The model behind it is built for speech. On a spoken lane it is reliable; on a sung one it is a gamble \u2014 the melody is what it handles worst. A model built for singing is the one thing this app still cannot do.',
+              )}</Note>
             <Cost credits={perMinute(changing.audio.duration, CREDITS.voiceChange)} />
 
             {voices ? (
