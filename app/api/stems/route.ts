@@ -26,6 +26,7 @@ import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 import { pick, unzip } from '@/app/lib/server/zip';
+import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -84,10 +85,21 @@ export async function POST(request: Request): Promise<Response> {
   } catch {
     return Response.json({ error: 'bad_request', message: 'Could not read the request.' }, { status: 400 });
   }
-  const file = incoming.get('file');
-  if (!(file instanceof Blob) || file.size === 0) {
-    return Response.json({ error: 'bad_request', message: 'No audio was sent.' }, { status: 400 });
-  }
+  /* Either the song itself, or a key to one the browser already put in its own
+     folder in storage.
+
+     Posting it was the only way in, and for anything but a short file it could
+     not work: Vercel refuses a request body over about four and a half
+     megabytes at the edge, before this route runs, so the twenty-five megabyte
+     ceiling below was a promise the platform would never keep and every song
+     past the wall came back as a bare 413 with no body. Carli saw the other
+     end of that: "klank [kan] nie geseperate ... word nie."
+
+     A key, not a URL — see `lib/server/workfile.ts`. */
+  const got = await audioFrom(incoming, request, 'file');
+  if ('problem' in got) return got.problem;
+  const { audio: file, owner } = got;
+
   if (file.size > MAX_BYTES) {
     return Response.json({ error: 'too_big', message: 'That song is too long to separate here.' }, { status: 413 });
   }
@@ -129,6 +141,10 @@ export async function POST(request: Request): Promise<Response> {
   const outgoing = new FormData();
   outgoing.append('file', file, 'song.mp3');
   outgoing.append('stem_variation_id', VARIATION);
+
+  /* The scratch file has done its job now the bytes are in hand. Not awaited:
+     she is waiting on stems, not on our housekeeping. */
+  if (owner) void dropWork(got.key, owner, 'wav');
 
   let upstream: Response;
   try {

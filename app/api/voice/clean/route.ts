@@ -16,6 +16,7 @@ import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
+import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -54,10 +55,18 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'Could not read the recording.' }, { status: 400 });
   }
 
-  const audio = form.get('audio');
-  if (!(audio instanceof Blob) || audio.size === 0) {
-    return Response.json({ message: 'There was no recording in that.' }, { status: 400 });
-  }
+  /* Either the audio itself, or a key to a file the browser already put in
+     its own folder in storage. A request body over about four and a half
+     megabytes is refused by the platform before this route runs, so the
+     ceiling below was a promise it could never keep — a lane of any length
+     came back as a bare 413. `audioFrom` takes a key, never a URL. */
+  const got = await audioFrom(form, request, 'audio');
+  if ('problem' in got) return got.problem;
+  const { audio, owner: workOwner } = got;
+
+  /* Done with the scratch file the moment the bytes are in hand. */
+  if (workOwner) void dropWork(got.key, workOwner, 'wav');
+
   if (audio.size > MAX_BYTES) {
     return Response.json({ message: 'That file is too big to clean up here.' }, { status: 413 });
   }

@@ -15,6 +15,7 @@
 
 import { getAudio, putAudio } from './library';
 import { accessToken } from './cloud';
+import { TOO_BIG_TO_SEND, attach, dropWork } from './workfile';
 
 export interface Stems {
   /** The AI voice on its own. */
@@ -50,9 +51,16 @@ export async function separate(
   seconds: number,
 ): Promise<Stems | Failed> {
   const form = new FormData();
-  form.append('file', audio, 'song.mp3');
   form.append('seconds', String(Math.round(seconds)));
   form.append('trackId', id);
+
+  /* Over the wall, the song goes to storage first and only its key is posted.
+     See `lib/workfile.ts`: a body over about four and a half megabytes is
+     refused by the platform before the route runs, so the route's own
+     twenty-five megabyte ceiling never got a word in. */
+  const put = await attach(form, audio, 'file', 'song.mp3');
+  if (!put.ok) return { message: TOO_BIG_TO_SEND };
+  const key = put.key;
 
   const token = await accessToken();
   let response: Response;
@@ -67,7 +75,14 @@ export async function separate(
   }
 
   if (!response.ok) {
-    let message = `The voice could not be separated (${response.status}).`;
+    if (key) void dropWork(key);
+    /* A bare 413 is the platform refusing the body before the route ran, so
+       there is no message in it to read — hence one written here. This is the
+       number she saw. */
+    let message =
+      response.status === 413
+        ? 'That song is too big to send in one piece. Try a shorter one.'
+        : `The voice could not be separated (${response.status}).`;
     let outOfAllowance = false;
     try {
       const problem = (await response.json()) as { message?: string; error?: string };

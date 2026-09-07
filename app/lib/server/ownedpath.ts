@@ -68,3 +68,42 @@ export function storageId(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   return /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(value) ? value : null;
 }
+
+/**
+ * A scratch file the caller put in their own folder for one job.
+ *
+ * ── Why this exists ──────────────────────────────────────────────────────
+ *
+ * A serverless function on Vercel refuses a request body over about four and a
+ * half megabytes, and it refuses it at the edge — before any of this app's
+ * code runs, so none of this app's messages get said. `/api/analyse` posted a
+ * WAV: at 44.1 kHz mono that is 88 kB a second, so the wall is fifty-one
+ * seconds of audio, twenty-five in stereo. Every song longer than that came
+ * back as a bare 413 while the route's own ceiling claimed sixty megabytes —
+ * a promise the platform was never going to keep.
+ *
+ * So the browser puts the file in storage itself, under its own folder, where
+ * the bucket policy already says it may write, and hands the route the key.
+ * The request body is then a few hundred bytes.
+ *
+ * ── Why a key and not a URL ──────────────────────────────────────────────
+ *
+ * A route that fetched any URL handed to it is an open proxy: it would fetch
+ * an internal address, or somebody else's bucket, on request, with this app's
+ * network position. That is the rule `/api/analyse/part` was written under and
+ * it does not bend for a bigger file.
+ *
+ * A key is not a URL. It names one object in one bucket, and this pins it to
+ * the folder belonging to the caller of *this* request — an id out of a
+ * verified token, not a field on the form. A key pointing anywhere else, in
+ * any shape, is refused rather than repaired.
+ *
+ * The name is a uuid the browser mints, so nothing about it is guessable and
+ * two jobs at once cannot collide.
+ */
+export function workPath(value: unknown, owner: string, extension: string): string | null {
+  if (typeof value !== 'string' || !value || value.length > 200) return null;
+  if (!/^[0-9a-f-]{36}$/i.test(owner)) return null;
+  if (!/^[a-z0-9]{1,8}$/.test(extension)) return null;
+  return new RegExp(`^${owner}/work/[0-9a-f-]{36}\\.${extension}$`).test(value) ? value : null;
+}

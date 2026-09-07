@@ -44,6 +44,7 @@ import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Cost from './Cost';
 import Note from './Note';
+import { TOO_BIG_TO_SEND, attach } from '../lib/workfile';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
@@ -522,7 +523,13 @@ export default function ProBooth({
         const ctx = context();
         if (!ctx) return;
         const form = new FormData();
-        form.append('audio', encodeWav(monoOf(lane.audio, ctx)), 'lane.wav');
+        /* A lane is a WAV, so anything past about fifty seconds is over the
+           platform's body limit and has to go through storage first. */
+        const put = await attach(form, encodeWav(monoOf(lane.audio, ctx)), 'audio', 'lane.wav');
+        if (!put.ok) {
+          setProblem(TOO_BIG_TO_SEND);
+          return;
+        }
         if (voiceId) form.append('voiceId', voiceId);
         form.append('seconds', String(Math.round(lane.audio.duration)));
 

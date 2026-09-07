@@ -12,6 +12,7 @@
  */
 
 import { accessToken } from './cloud';
+import { TOO_BIG_TO_SEND, attach, dropWork } from './workfile';
 
 export type Reading =
   | {
@@ -35,9 +36,19 @@ export async function read(
   which: 'read' | 'stems' = 'read',
 ): Promise<Reading> {
   const form = new FormData();
-  form.append('audio', audio, 'lane.wav');
   form.append('seconds', String(Math.round(seconds)));
   form.append('which', which);
+
+  /* Over the wall, the file goes to storage first and only its key is posted.
+
+     `lane.wav` is uncompressed: 88 kB a second at 44.1 kHz mono, and Vercel
+     refuses a request body over about four and a half megabytes at the edge —
+     before the route runs, so nothing this app writes gets said. That made
+     fifty-one seconds the real ceiling on reading a song, while the route
+     claimed sixty megabytes. Everything past it came back as "(413)". */
+  const put = await attach(form, audio, 'audio', 'lane.wav');
+  if (!put.ok) return { ok: false, message: TOO_BIG_TO_SEND };
+  const key = put.key;
 
   const token = await accessToken();
   const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
@@ -50,7 +61,20 @@ export async function read(
   }
   const opened = (await started.json().catch(() => ({}))) as { id?: string; message?: string };
   if (!started.ok || !opened.id) {
-    return { ok: false, message: opened.message ?? 'That could not be read.' };
+    /* The scratch file, if the job never started. The route takes it back out
+       once it has the bytes; this is the other end, where it never got them. */
+    if (key) void dropWork(key);
+    /* A 413 with no body is the platform, not the route: nothing this app
+       wrote reached her, so it says what it means here instead of showing a
+       number. */
+    return {
+      ok: false,
+      message:
+        opened.message ??
+        (started.status === 413
+          ? 'That file is too big to send. Try a shorter piece of it.'
+          : 'That could not be read.'),
+    };
   }
 
   const deadline = Date.now() + GIVE_UP_AFTER;

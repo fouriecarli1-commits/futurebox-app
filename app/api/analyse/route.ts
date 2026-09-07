@@ -31,6 +31,7 @@ import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 import { tooMany } from '@/app/lib/server/brake';
+import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import {
   addJob, configured, forget, jobOf, slugFor, upload, type Which,
 } from '@/app/lib/server/musicai';
@@ -69,10 +70,22 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'bad_request', message: 'Could not read the request.' }, { status: 400 });
   }
 
-  const audio = form.get('audio');
-  if (!(audio instanceof Blob) || audio.size === 0) {
-    return Response.json({ error: 'bad_request', message: 'No audio was sent.' }, { status: 400 });
-  }
+  /* Either the file itself, for something short, or a key to one the browser
+     already put in its own folder in storage.
+
+     The direct path was the only one, and it could not work: Vercel refuses a
+     request body over about four and a half megabytes at the edge, before this
+     code runs, so the ceiling below was a promise the platform was never going
+     to keep. A WAV at 44.1 kHz mono is 88 kB a second — fifty-one seconds —
+     and everything longer came back as a bare 413 with no body.
+
+     A key rather than a URL: a route that fetched any URL handed to it is an
+     open proxy. `audioFrom` pins the key to the folder of whoever's token
+     signed this request. */
+  const got = await audioFrom(form, request, 'audio');
+  if ('problem' in got) return got.problem;
+  const { audio, owner } = got;
+
   if (audio.size > MAX_BYTES) {
     return Response.json({ error: 'too_big', message: 'That file is too long to read here.' }, { status: 413 });
   }
@@ -134,6 +147,10 @@ export async function POST(request: Request): Promise<Response> {
       { status: 502 },
     );
   }
+
+  /* The scratch file has done its job the moment the bytes are upstream. Not
+     awaited: the member is waiting on the job id, not on our housekeeping. */
+  if (owner) void dropWork(got.key, owner, 'wav');
 
   const id = await addJob(`futurebox-${job}-${Date.now()}`, workflow, { inputUrl: url });
   if (!id) {

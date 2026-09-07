@@ -28,6 +28,7 @@ import Card from './Card';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { VOICE_CONSENT } from '@/app/lib/consent';
+import { TOO_BIG_TO_SEND, attach } from '../lib/workfile';
 
 export interface Voice {
   readonly id: string;
@@ -393,7 +394,13 @@ export default function VoiceLab({
     setChanged(null);
     try {
       const form = new FormData();
-      form.append('audio', toChange, toChange.name);
+      /* A file somebody brought in can be any size at all, so over the wall
+         it goes to storage first. See lib/workfile.ts. */
+      const put = await attach(form, toChange, 'audio', toChange.name);
+      if (!put.ok) {
+        setProblem(TOO_BIG_TO_SEND);
+        return;
+      }
       if (voiceId) form.append('voiceId', voiceId);
       form.append('stability', String(stability));
       form.append('similarity', String(similarity));

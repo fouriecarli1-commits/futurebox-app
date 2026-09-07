@@ -283,6 +283,9 @@ jobs:
       # which is why fourteen click-through probes had never run anywhere but
       # one laptop. The half that matters — no browser anywhere known, so let
       # Playwright use its own — cannot be observed on a machine that has one.
+      - name: No route promises a body the platform will not carry
+        run: npm run check:bodylimit
+
       - name: The probes can find a browser anywhere
         run: npm run check:launch
 

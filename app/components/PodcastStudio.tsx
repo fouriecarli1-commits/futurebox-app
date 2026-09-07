@@ -35,6 +35,7 @@ import { CREDITS } from '../lib/credits';
 import { DUB_LANGUAGES } from '../data/dublanguages';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
+import { TOO_BIG_TO_SEND, attach } from '../lib/workfile';
 
 interface Show {
   id: string;
@@ -204,7 +205,13 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
     setProblem(null);
     const token = await accessToken();
     const form = new FormData();
-    form.append('audio', draft.audio, 'take.webm');
+    /* An episode take is long by definition. See lib/workfile.ts. */
+    const put = await attach(form, draft.audio, 'audio', 'take.webm');
+    if (!put.ok) {
+      setBusy(null);
+      setProblem(TOO_BIG_TO_SEND);
+      return;
+    }
     // Taking the room out is charged by the minute now, so the length has to
     // go with it. Without it the server bills at its ceiling, which for a
     // ninety-second episode would be a bill for thirty minutes.
@@ -231,7 +238,15 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
     setProblem(null);
     const token = await accessToken();
     const form = new FormData();
-    form.append('audio', draft.audio, 'episode.mp3');
+    /* An episode is long by definition, so it goes to storage first — a
+       request body over about four and a half megabytes never reaches the
+       route at all. See lib/workfile.ts. */
+    const put = await attach(form, draft.audio, 'audio', 'episode.mp3');
+    if (!put.ok) {
+      setBusy(null);
+      setProblem(TOO_BIG_TO_SEND);
+      return;
+    }
     form.append('title', title.trim());
     form.append('notes', notes.trim());
     form.append('made', draft.how);

@@ -9,6 +9,7 @@
  */
 
 import { accessToken } from './cloud';
+import { TOO_BIG_TO_SEND, attachAll, dropAll } from './workfile';
 
 export interface Sound {
   readonly id: string;
@@ -79,7 +80,16 @@ export async function train(
   form.append('genre', genre);
   form.append('origin', origin);
   form.append('confirm', 'my-music');
-  for (const file of files) form.append('files', file.blob, file.filename);
+  /* Every song goes to storage first and only the keys are posted.
+
+     A handful of whole songs is over the platform's request-body limit several
+     times over — it stops at about four and a half megabytes — so posting them
+     never reached the route at all. See lib/workfile.ts. */
+  const put = await attachAll(form, files);
+  if (!put.ok) {
+    await dropAll(put.keys);
+    return { ok: false, message: TOO_BIG_TO_SEND };
+  }
 
   const token = await accessToken();
   const response = await fetch('/api/finetunes', {
@@ -94,6 +104,7 @@ export async function train(
     needsPlan?: boolean;
   };
   if (!response.ok) {
+    await dropAll(put.keys);
     return { ok: false, message: data.message ?? 'That did not work.', needsPlan: data.needsPlan };
   }
   return {

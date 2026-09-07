@@ -27,6 +27,7 @@ import { SOUND_CAPS } from '@/app/lib/plans';
 import { CREDITS } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
+import { audioListFrom, dropWork } from '@/app/lib/server/workfile';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -156,17 +157,29 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const files = form
-    .getAll('files')
-    .filter((one): one is File => one instanceof File && one.size > 0)
-    .slice(0, MOST_FILES);
+  /* The songs, whether they were posted or put in storage first.
+
+     They are never small: training a sound needs a handful of whole songs, and
+     the platform refuses a request body over about four and a half megabytes
+     before this route runs. So the hundred-megabyte ceiling below was a
+     promise nothing could keep, and training has never worked for anybody with
+     real songs — a bare 413, no body, no explanation.
+
+     Keys, not URLs, each one pinned to the folder of the token that signed
+     this request. */
+  const brought = await audioListFrom(form, request, 'files');
+  if ('problem' in brought) return brought.problem;
+  /* Taken back out once the bytes are in hand. Not awaited: nobody is
+     waiting on our housekeeping. */
+  const tidy = () => { for (const one of brought.keys) if (brought.owner) void dropWork(one, brought.owner, 'wav'); };
+  const files = brought.files.slice(0, MOST_FILES);
   if (files.length < FEWEST_FILES) {
     return Response.json(
       { message: `Pick at least ${FEWEST_FILES} songs. Fewer than that teaches it one song, not a sound.` },
       { status: 400 },
     );
   }
-  const bytes = files.reduce((sum, file) => sum + file.size, 0);
+  const bytes = files.reduce((sum, file) => sum + file.blob.size, 0);
   if (bytes > MOST_BYTES) {
     return Response.json({ message: 'That is more audio than can go up at once.' }, { status: 413 });
   }
@@ -213,9 +226,10 @@ export async function POST(request: Request): Promise<Response> {
     // dashboard too and a support question does not need this database.
     `${name} · ${caller.id.slice(0, 8)}`,
     genre,
-    files.map((file, index) => ({ blob: file, filename: file.name || `track-${index + 1}.mp3` })),
+    files.map((file, index) => ({ blob: file.blob, filename: file.filename || `track-${index + 1}.mp3` })),
     MODEL_ID,
   );
+  tidy();
   if (!made.ok) {
     await paid.refund();
     return Response.json({ message: made.message }, { status: made.status });

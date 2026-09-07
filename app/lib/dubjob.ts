@@ -17,6 +17,7 @@
  */
 
 import { accessToken } from './cloud';
+import { TOO_BIG_TO_SEND, attach } from './workfile';
 
 /** How often to ask. A dub is minutes, so a second would be rude to both ends. */
 export const EVERY = 6000;
@@ -58,7 +59,11 @@ export async function startDub(
   title: string,
 ): Promise<Started> {
   const body = new FormData();
-  body.append('file', file, filename);
+  /* Over the wall the film goes to storage first and only its key is posted:
+     a request body over about four and a half megabytes is refused by the
+     platform before the route runs, which is most films. See lib/workfile.ts. */
+  const put = await attach(body, file, 'file', filename);
+  if (!put.ok) return { ok: false, said: { message: TOO_BIG_TO_SEND } };
   body.append('to', to.trim().toLowerCase());
   body.append('seconds', String(Math.max(0, Math.round(seconds))));
   body.append('title', title);

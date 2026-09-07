@@ -57,6 +57,7 @@ import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import type { Track } from '../lib/library';
+import { TOO_BIG_TO_SEND, attach } from '../lib/workfile';
 
 type Phase = 'idle' | 'counting' | 'recording' | 'playing';
 
@@ -886,7 +887,14 @@ export default function VocalBooth({
     setCleaning(true);
     try {
       const form = new FormData();
-      form.append('audio', encodeWav(recorded), 'take.wav');
+      /* Over the wall it goes to storage first: a take of any length is a
+         WAV, and a WAV is 88 kB a second — the platform stops carrying a body
+         at about four and a half megabytes. See lib/workfile.ts. */
+      const put = await attach(form, encodeWav(recorded), 'audio', 'take.wav');
+      if (!put.ok) {
+        setProblem(TOO_BIG_TO_SEND);
+        return;
+      }
       // A WAV states its own length, so the server does not need this — it is
       // sent so the two agree, and so the day this stops being a WAV the
       // charge does not quietly jump to the ceiling.

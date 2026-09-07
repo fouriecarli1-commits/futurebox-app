@@ -21,6 +21,7 @@
 
 import { accessToken } from './cloud';
 import type { TimedLine } from './timeline';
+import { TOO_BIG_TO_SEND, attach } from './workfile';
 
 export interface Heard {
   readonly text: string;
@@ -64,9 +65,11 @@ export interface Failed {
 
 export async function transcribe(id: string, audio: Blob, seconds: number): Promise<Heard[] | Failed> {
   const form = new FormData();
-  form.append('file', audio, 'song.mp3');
   form.append('seconds', String(Math.round(seconds)));
   form.append('trackId', id);
+  /* A whole song, so nearly always over the wall — see lib/workfile.ts. */
+  const put = await attach(form, audio, 'file', 'song.mp3');
+  if (!put.ok) return { message: TOO_BIG_TO_SEND };
 
   const token = await accessToken();
   let response: Response;

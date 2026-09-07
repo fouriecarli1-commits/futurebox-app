@@ -22,6 +22,7 @@
  */
 
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
+import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
@@ -130,10 +131,23 @@ export async function POST(request: Request): Promise<Response> {
   } catch {
     return Response.json({ error: 'bad_request', message: 'Could not read the request.' }, { status: 400 });
   }
-  const file = incoming.get('file');
-  if (!(file instanceof Blob) || file.size === 0) {
-    return Response.json({ error: 'bad_request', message: 'No audio was sent.' }, { status: 400 });
-  }
+  /* Either the file itself, or a key to one the browser already put in its own
+     folder in storage.
+
+     Vercel refuses a request body over about four and a half megabytes at the
+     edge, before this route runs — so the ceiling below was a promise the
+     platform would never keep, and anything past the wall came back as a bare
+     413 with no body and no explanation. `audioFrom` takes both shapes and
+     pins a key to the folder of whoever's token signed this request; it is a
+     key and never a URL, because a route that fetched any URL handed to it is
+     an open proxy. */
+  const got = await audioFrom(incoming, request, 'file');
+  if ('problem' in got) return got.problem;
+  const { audio: file, owner: workOwner } = got;
+  /* The scratch file has done its job — the bytes are in hand. Not awaited:
+     nobody is waiting on our housekeeping. */
+  if (workOwner) void dropWork(got.key, workOwner, 'wav');
+
   if (file.size > MAX_BYTES) {
     return Response.json({ error: 'too_big', message: 'That song is too long to read.' }, { status: 413 });
   }
