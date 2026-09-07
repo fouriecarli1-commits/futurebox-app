@@ -38,7 +38,6 @@ export const SURFACE_IDS = [
   "make",
   "studio",
   "booth",
-  "video",
   "canvas",
   "hooks_feed",
   "channels",
@@ -123,6 +122,17 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "write or rewrite the words",
       "make the track",
     ],
+    /* The video panel opens from this room, so what it can do belongs to this
+       room. These were described under a room called `video` that offered one
+       clip while the storyboard, the look and the words on screen lived next
+       door; that room is gone and the desk has all of it. */
+    ops: {
+      set_shot:
+        "the value is the full description of what is on screen: subject, what it is doing, the shot, the light, the mood. Never put anything in quotation marks here - quoted text is spoken aloud, and a voice over a song is two things fighting",
+      set_look:
+        "the value is one of: performance, story, road, room, abstract. It fills the shot, the shape and the length with that way of working",
+      set_shape: "the value is 9:16 or 16:9, and nothing else",
+    },
     seeds: [
       {
         en: "Write me a chorus about leaving home",
@@ -141,7 +151,7 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
   studio: {
     id: "studio",
     stage: "make",
-    next: { to: "video", en: "Put a video to it", af: "Sit ’n video daarby" },
+    next: { to: "canvas", en: "Put a video to it", af: "Sit ’n video daarby" },
     purpose:
       "Editing a song that already exists: its sections, its arrangement, its timing.",
     helps: {
@@ -202,41 +212,6 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         en: "Clean up the take I just did",
         af: "Maak die opname skoon wat ek nou gedoen het",
       },
-    ],
-  },
-  video: {
-    id: "video",
-    stage: "show",
-    next: {
-      to: "hooks_feed",
-      en: "Cut a short clip from it",
-      af: "Sny ’n kort knipsel daaruit",
-    },
-    purpose: "Turning one of your songs into a music video.",
-    helps: {
-      en: "I can describe the video, set how long it runs, and choose the look it goes for.",
-      af: "Ek kan die video beskryf, stel hoe lank dit loop, en die voorkoms kies waarvoor dit gaan.",
-    },
-    can: ["describe the video", "pick the length", "set the look"],
-    ops: {
-      pick_song:
-        "the value is the title of one of their own songs, as they said it, to make a video for. It opens the panel; making the video is still their button",
-      set_look:
-        "the value is one of: performance, story, road, room, abstract. It fills the shot, the shape and the length with that way of working",
-      set_shot:
-        "the value is the full description of what is on screen: subject, what it is doing, the shot, the light, the mood. Never put anything in quotation marks here - quoted text is spoken aloud, and a voice over a song is two things fighting",
-      set_shape: "the value is 9:16 or 16:9, and nothing else",
-    },
-    seeds: [
-      {
-        en: "What should this video look like?",
-        af: "Hoe moet hierdie video lyk?",
-      },
-      {
-        en: "Describe a video for my last song",
-        af: "Beskryf ’n video vir my laaste liedjie",
-      },
-      { en: "How long should it be?", af: "Hoe lank moet dit wees?" },
     ],
   },
   canvas: {

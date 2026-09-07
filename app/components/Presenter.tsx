@@ -277,6 +277,18 @@ export default function Presenter({
               'pres.what',
               'Somebody from your cast, reading words in a voice you choose, with their mouth moving to it. It speaks whatever language you write in — Afrikaans included — because it is handed the reading rather than the words.',
             )}</Note>
+          {/* And what it is not, because this panel sits in the video desk
+              beside the storyboard and the obvious question from there is
+              whether it will lipsync a singer.
+
+              It is a lipsync model given a photograph and a *spoken* reading.
+              Nobody here has put a sung take through it, and there is no way
+              to find out from where this was built — so it is offered as what
+              it is known to do rather than as what it might do. */}
+          <Note className="text-sm text-amber-300/90 leading-relaxed">{t(
+              'pres.notSinging',
+              'It is built for a spoken script. Whether it holds up on singing has never been tested \u2014 one clip would answer it, and until somebody makes that clip this is a presenter and not a music video.',
+            )}</Note>
         </div>
       </div>
 

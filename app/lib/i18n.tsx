@@ -1801,6 +1801,7 @@ export const STRINGS: Dict = {
   /* The presenter: a cast member, a voice, and the mouth moving. */
   "pres.title": { en: "A presenter who says your script", af: "’n Aanbieder wat jou skrif s\u00ea" },
   "pres.what": { en: "Somebody from your cast, reading words in a voice you choose, with their mouth moving to it. It speaks whatever language you write in \u2014 Afrikaans included \u2014 because it is handed the reading rather than the words.", af: "Iemand uit jou rolverdeling wat woorde lees in ’n stem wat jy kies, met hulle mond wat daarby beweeg. Dit praat watter taal jy ook al skryf \u2014 Afrikaans inkluis \u2014 want dit kry die voorlesing, nie die woorde nie." },
+  "pres.notSinging": { en: "It is built for a spoken script. Whether it holds up on singing has never been tested \u2014 one clip would answer it, and until somebody makes that clip this is a presenter and not a music video.", af: "Dit is vir \u2019n gepraatte skrif gebou. Of dit op sang hou, is nog nooit getoets nie \u2014 een greep sou dit antwoord, en totdat iemand daardie greep maak, is dit \u2019n aanbieder en nie \u2019n musiekvideo nie." },
   "pres.noCast": { en: "Put somebody in your cast first \u2014 the picture above is who the presenter will be.", af: "Sit eers iemand in jou rolverdeling \u2014 die foto hierbo is wie die aanbieder gaan wees." },
   "pres.who": { en: "Who says it", af: "Wie s\u00ea dit" },
   "pres.script": { en: "What they say", af: "Wat hulle s\u00ea" },

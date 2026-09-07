@@ -102,10 +102,19 @@ const SHAPES: { id: Aspect; label: string; size: string; note: string }[] = [
 export default function VideoCanvas({
   onUpgrade,
   onGoTo,
+  songId,
 }: {
   onUpgrade?: () => void;
   /** Move to another room. Used by the cheaper route out of a spoken line. */
   onGoTo?: (surface: SurfaceId) => void;
+  /**
+   * A song handed over by the room that sent her here.
+   *
+   * Make a song offers a music video the moment one is finished, and used to
+   * land her in an empty room to choose the song she had just made. The song
+   * comes with her now, and the board below opens on it.
+   */
+  songId?: string;
 }) {
   const { t } = useLang();
 
@@ -941,6 +950,7 @@ export default function VideoCanvas({
         grade={grade}
         lengths={lengths}
         frame={frame}
+        songId={songId}
         onUpgrade={onUpgrade}
       />
 

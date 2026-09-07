@@ -133,8 +133,12 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
   };
 
   /* What the copilot may do in this panel. It registers alongside the song
-     list's own `pick_song` rather than replacing it — the bus merges them. */
-  useCopilotOps('video', {
+     list's own `pick_song` rather than replacing it — the bus merges them.
+
+     Under `make`, because that is the room this panel opens from now. It used
+     to register under a room called `video` that offered one clip while
+     everything else about video lived next door; that room is gone. */
+  useCopilotOps('make', {
     set_shot: (value) => setTreatment(value),
     set_look: (value) => {
       const wanted = value.trim().toLowerCase();
@@ -230,8 +234,8 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
       // Kept, so a video paid for is not lost to a reload. See `lib/makes.ts`.
       void rememberMake(
         {
-          id: makeId('video'),
-          surface: 'video',
+          id: makeId('make'),
+          surface: 'make',
           kind: 'video',
           title: track.title,
           note: treatment,
@@ -698,7 +702,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
         </>
       )}
       <History
-        surface="video"
+        surface="make"
         reloadKey={kept}
         onUseAgain={(make) => {
           if (make.note) setTreatment(make.note);

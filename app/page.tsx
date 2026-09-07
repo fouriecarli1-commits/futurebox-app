@@ -29,7 +29,6 @@ import ThemeStudio from './components/ThemeStudio';
 import QualityRadar from './components/QualityRadar';
 import MakeMusic from './components/MakeMusic';
 import Hooks from './components/Hooks';
-import MusicVideo from './components/MusicVideo';
 import VideoCanvas from './components/VideoCanvas';
 import Copilot, { type CopilotAction } from './components/Copilot';
 import type { Canvas } from './components/MakeMusic';
@@ -463,7 +462,6 @@ export default function FutureBoxHome() {
     make: { label: t('rail.make'), hint: t('rail.make.hint'), icon: Sparkles },
     studio: { label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
     booth: { label: t('rail.booth'), hint: t('rail.booth.hint'), icon: Mic },
-    video: { label: t('rail.video'), hint: t('rail.video.hint'), icon: Video },
     canvas: { label: t('rail.canvas'), hint: t('rail.canvas.hint'), icon: Clapperboard },
     hooks_feed: { label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
     channels: { label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
@@ -608,6 +606,17 @@ export default function FutureBoxHome() {
       live = false;
     };
   }, [invite, user?.email]);
+
+  /**
+   * The song handed to the video desk when a room sends her there.
+   *
+   * "die liedjie moet dan klaar in daardie desk ingegooi word, gereed om te
+   *  prompt en die video te skep."
+   *
+   * Held here rather than passed through a room, because the hand-off is
+   * between two rooms and this is the only thing that sees both.
+   */
+  const [videoSong, setVideoSong] = useState<string | undefined>(undefined);
 
   const goToRoom = useCallback((id: SurfaceId) => {
     setStudioTab(id);
@@ -3040,9 +3049,12 @@ export default function FutureBoxHome() {
             )}
 
             {/* HOOKS: cut the bit worth posting, from your own tracks */}
-            {studioTab === 'video' && <MusicVideo />}
             {studioTab === 'canvas' && (
-              <VideoCanvas onUpgrade={() => setPricingModalOpen(true)} onGoTo={goToRoom} />
+              <VideoCanvas
+                onUpgrade={() => setPricingModalOpen(true)}
+                onGoTo={goToRoom}
+                songId={videoSong}
+              />
             )}
             {studioTab === 'hooks_feed' && <Hooks />}
 
@@ -3219,7 +3231,11 @@ export default function FutureBoxHome() {
             <button
               type="button"
               onClick={() => {
-                goToRoom('video');
+                /* The desk, not the old Musiekvideo room, and the song goes
+                   with her. That room offered one clip and everything that
+                   makes a music video was next door; it is gone now. */
+                setVideoSong(madeTrack.id);
+                goToRoom('canvas');
                 setUploadModalOpen(true);
                 setMadeTrack(null);
               }}

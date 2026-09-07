@@ -39,9 +39,15 @@ const names = (await page.locator(`${DOOR} button`).allInnerTexts())
 console.log(`\nthe door offers ${names.length}:`);
 names.forEach((n) => console.log('   · ' + n));
 
-/* Thirteen rooms and the way past. Named against the rail's own labels rather
-   than a count, so a room added to the registry and not to the door fails. */
-for (const room of ['Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard', 'Music video',
+/* Twelve rooms and the way past. Named against the rail's own labels rather
+   than a count, so a room added to the registry and not to the door fails.
+
+   `Music video` was the thirteenth and is deliberately gone: it offered one
+   clip while the shot list, the look, the words on screen and the stitcher
+   all lived in the Video desk beside it. Removing the room is what this list
+   is for — it failed the moment the room did, which is the whole point of
+   naming the doors rather than counting them. */
+for (const room of ['Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard',
                     'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar']) {
   check(`${room} has a button of its own`, names.some((n) => n.toLowerCase().startsWith(room.toLowerCase())));
 }
