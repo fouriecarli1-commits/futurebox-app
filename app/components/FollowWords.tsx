@@ -53,6 +53,7 @@ import { createPortal } from 'react-dom';
 import { Camera, CameraOff, Circle, Download, Ear, Headphones, Loader2, Speaker, Square, X } from 'lucide-react';
 import { lineAt, type TimedLine } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { mixFor, type Mix } from '../lib/singmix';
 
@@ -106,6 +107,10 @@ export default function FollowWords({
   songFile?: () => Promise<Blob | null>;
 }): React.ReactElement {
   const { t } = useLang();
+
+  /* The words screen, which somebody films themselves in front of. Back should
+     put the camera away, not leave the room. */
+  useBackLayer(true, onClose);
   const [at, setAt] = useState(0);
   /** True while the song is being listened to. See `askWords`. */
   const [asking, setAsking] = useState(false);

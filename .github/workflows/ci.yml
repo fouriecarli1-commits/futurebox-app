@@ -135,6 +135,16 @@ jobs:
       - name: The voice change says what it is built for
         run: npm run check:voicechange
 
+      # A whole room was one layer, so the phone's back gesture unwound the
+      # Pro Booth, the booth and the room in one press.
+      - name: Every full-screen overlay answers the back button
+        run: npm run check:backlayers
+
+      # "In Afrikaans" on its own is how a model gives you Dutch. One rule,
+      # everywhere the app writes Afrikaans prose.
+      - name: Afrikaans prompts warn the model off Dutch
+        run: npm run check:afrikaansrule
+
       # Three things have an opinion about the language and they do not carry
       # equal weight. The rule lived inside two React effects where it could
       # not be run, and the bug she hit was invisible to everything.

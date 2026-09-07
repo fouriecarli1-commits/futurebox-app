@@ -32,6 +32,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
+import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -122,6 +123,7 @@ const SYSTEM = [
   '- Nothing about health, money or safety that would need proof to stand behind.',
   '- No named living person, no real brand other than theirs, no borrowed slogan.',
   '- No urgency that is not real: no invented deadline, no invented stock level.',
+  `${AFRIKAANS_RULE}`,
 ].join('\n');
 
 function briefFor(body: Body): string {

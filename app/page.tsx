@@ -52,7 +52,7 @@ import Account from './components/Account';
 import TabBar, { barClearance, type TabId } from './components/TabBar';
 import SearchCorner from './components/SearchCorner';
 import { fetchCreator, type Creator } from './lib/radar';
-import { useBackStack } from './lib/backstack';
+import { useBackStack, useInnerLayers } from './lib/backstack';
 import { readInvite, redeemInvite, type Redeemed } from './lib/collab';
 import SignInWith from './components/SignInWith';
 import { noteTaste, loadTaste } from './lib/taste';
@@ -1429,6 +1429,13 @@ export default function FutureBoxHome() {
      A room is a layer above the door rather than beside it, so Back from a
      room lands on the door with every room on it — the same place the Make
      tab goes, which is the point: one way out, whichever way you reach for. */
+  /* What the rooms themselves have opened — the Pro Booth, the words screen,
+     a full-screen song. They register their own closers, because this file
+     cannot know about every overlay in the app without importing all of them
+     and tracking state it does not own. Appended last: they are inside the
+     room, so Back closes them first. */
+  const inner = useInnerLayers();
+
   useBackStack(
     useMemo(() => {
       const layers: (() => void)[] = [];
@@ -1441,8 +1448,8 @@ export default function FutureBoxHome() {
       }
       if (searchOpen) layers.push(() => setSearchOpen(false));
       if (accountOpen) layers.push(() => setAccountOpen(false));
-      return layers;
-    }, [uploadModalOpen, atDoor, searchOpen, accountOpen]),
+      return [...layers, ...inner];
+    }, [uploadModalOpen, atDoor, searchOpen, accountOpen, inner]),
   );
 
   /**

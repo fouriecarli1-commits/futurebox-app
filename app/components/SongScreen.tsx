@@ -58,6 +58,7 @@ import { readAudio } from '../lib/trackaudio';
 import { lineAt, type TimedLine } from '../lib/timeline';
 import { evenly, timeFor, type Timing } from '../lib/lyrictime';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
 import type { Track } from '../lib/library';
 import { signal } from '../lib/signal';
 
@@ -102,6 +103,9 @@ export default function SongScreen({
   readonly onClose: () => void;
 }): React.ReactElement {
   const { t } = useLang();
+
+  /* A song full screen. Back returns to the list it was opened from. */
+  useBackLayer(true, onClose);
   const scroller = useRef<HTMLDivElement | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
   const url = useRef<string | null>(null);

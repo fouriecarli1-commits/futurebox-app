@@ -55,6 +55,7 @@ import { vocalSpanOf } from '../lib/vocalspan';
 import { phrasesOf } from '../lib/phrases';
 import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
 import type { Track } from '../lib/library';
 
 type Phase = 'idle' | 'counting' | 'recording' | 'playing';
@@ -97,6 +98,10 @@ export default function VocalBooth({
   onClose: () => void;
 }): React.ReactElement {
   const { t } = useLang();
+
+  /* The booth. It is the overlay the Pro Booth opens from, so without a layer
+     of its own Back would skip past it to the room underneath. */
+  useBackLayer(true, onClose);
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [count, setCount] = useState(COUNT_IN);

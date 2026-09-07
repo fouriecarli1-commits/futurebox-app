@@ -30,6 +30,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
+import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -68,6 +69,7 @@ const SYSTEM = [
   '- Where the material is thin, say what you went on. "Nothing to go on yet, so: the one that suits most things" is honest and useful.',
   '- Answer in the language you are told they read.',
   '- Never flatter the work, and never call the choice obvious.',
+  `${AFRIKAANS_RULE}`,
 ].join('\n');
 
 export async function POST(request: Request): Promise<Response> {

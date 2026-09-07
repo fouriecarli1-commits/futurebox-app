@@ -41,6 +41,7 @@ import {
 } from '../lib/tempo';
 import { Metronome } from '../lib/metronome';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
 import Cost from './Cost';
 import Note from './Note';
 
@@ -70,6 +71,10 @@ export default function ProBooth({
   onClose: () => void;
 }): React.ReactElement {
   const { t } = useLang();
+
+  /* The booth itself. It is a full-screen overlay above the room, and until
+     now it was not a layer at all — so Back closed the room underneath it. */
+  useBackLayer(true, onClose);
 
   const [lanes, setLanes] = useState<Lane[]>([]);
   const [at, setAt] = useState(0);
@@ -101,6 +106,11 @@ export default function ProBooth({
   const [voices, setVoices] = useState<VoiceState | null>(null);
   const [voiceId, setVoiceId] = useState('');
   const [changing, setChanging] = useState<Lane | null>(null);
+
+  /* And the voice panel over it, so Back dismisses the panel rather than the
+     whole booth. Registered after the booth's own layer, so it is the
+     innermost and closes first. */
+  useBackLayer(changing !== null, () => setChanging(null));
 
   /* ── What a lane actually is ────────────────────────────────────────────
      Chords, key, tempo and sections, read by a service rather than guessed

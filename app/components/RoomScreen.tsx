@@ -39,6 +39,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom';
 import { Loader2, Pause, Play, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { useBackLayer } from '../lib/backstack';
 import { signal } from '../lib/signal';
 import Cover from './Cover';
 
@@ -78,6 +79,9 @@ export default function RoomScreen({
   readonly onClose: () => void;
 }): React.ReactElement {
   const { t } = useLang();
+
+  /* The live room full screen. */
+  useBackLayer(true, onClose);
   const scroller = useRef<HTMLDivElement | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
 

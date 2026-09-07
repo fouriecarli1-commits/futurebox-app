@@ -37,6 +37,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { callerFrom, metered } from '@/app/lib/server/account';
+import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { tooMany } from '@/app/lib/server/brake';
 import { hasAddon } from '@/app/lib/server/addons';
 import { MARKETING } from '@/app/lib/addons';
@@ -171,6 +172,7 @@ const SYSTEM = [
   '- Write in the market language given, written rather than translated. English idiom carried across is the clearest sign of an imported plan.',
   '',
   'Do not use the words "engagement", "leverage", "synergy", "brand awareness" or "content strategy". Say the thing itself.',
+  `${AFRIKAANS_RULE}`,
 ].join('\n');
 
 function briefFor(body: Body): string {

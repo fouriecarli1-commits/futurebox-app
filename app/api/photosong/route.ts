@@ -41,6 +41,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
+import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { screen } from '@/app/lib/moderation';
 import { tooMany } from '@/app/lib/server/brake';
 
@@ -92,7 +93,9 @@ Rules:
 - No real person's name unless it is written in the picture, and no claim about
   who anybody is.
 - If the picture has a person's face in it, write about the moment rather than
-  about their appearance.`;
+  about their appearance.
+
+${AFRIKAANS_RULE}`;
 
 export async function POST(request: Request): Promise<Response> {
   if (tooMany('photosong', request, LIMITS)) {

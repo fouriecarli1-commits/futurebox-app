@@ -14,6 +14,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
+import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -56,6 +57,7 @@ const SYSTEM = [
   '- Never imitate a named living artist, and never suggest prompting for one.',
   '- If the writer wrote in Afrikaans, or any language other than English, answer in that language.',
   '- Four options, genuinely different from each other. Not four rewrites of one idea.',
+  `${AFRIKAANS_RULE}`,
 ].join('\n');
 
 function promptFor(body: Body): string {

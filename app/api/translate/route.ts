@@ -33,6 +33,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
+import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { screen } from '@/app/lib/moderation';
 import { tooMany } from '@/app/lib/server/brake';
 
@@ -101,7 +102,9 @@ short enough to read in the time a line is on screen, and keep an idiom as the
 nearest idiom rather than word by word. Afrikaans means real spoken Afrikaans,
 not a textbook rendering of the English.
 
-Leave a proper name, a place and a brand as they are.`,
+Leave a proper name, a place and a brand as they are.
+
+${AFRIKAANS_RULE}`,
       output_config: { effort: 'low', format: zodOutputFormat(Answer) },
       messages: [
         {

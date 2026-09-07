@@ -11,6 +11,7 @@
  */
 
 import React from 'react';
+import { useBackLayer } from '../lib/backstack';
 import { X, RotateCcw, Check, Paintbrush } from 'lucide-react';
 import {
   SURFACES, ACCENTS, RADII, DENSITIES, FONTS, LAYOUTS, MOTIONS, PRESETS,
@@ -81,6 +82,10 @@ export default function ThemeStudio({
   setTheme: (t: Theme) => void;
   onClose: () => void;
 }) {
+  /* The theme studio, which covers the app while somebody is choosing
+     colours. Back should put it away, not leave the room behind it. */
+  useBackLayer(true, onClose);
+
   const set = <K extends keyof Theme>(key: K, value: Theme[K]) => setTheme({ ...theme, [key]: value });
 
   const roles: Array<{ key: keyof Theme; label: string; hint: string }> = [

@@ -25,6 +25,7 @@ import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { SURFACES, describeOps, isSurfaceId, surfaceDirectory, type SurfaceId } from '@/app/lib/surfaces';
 import { tooMany } from '@/app/lib/server/brake';
+import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -63,6 +64,8 @@ const ReplySchema = z.object({
 });
 
 interface Body {
+  /** The language the app is being used in: 'af' or 'en'. Sent, not guessed. */
+  lang?: string;
   message: string;
   /** Which room the question came from. */
   surface?: string;
@@ -104,7 +107,8 @@ const SYSTEM = [
   '',
   'How you talk:',
   '- Short. Two or three sentences. You are beside them while they work, not writing them a guide.',
-  '- Reply in the language they wrote in. If they write Afrikaans, answer in plain spoken Afrikaans, not formal or academic Afrikaans.',
+  '- Reply in the language they wrote in, and in the language named in the context when one is given.',
+  `- ${AFRIKAANS_RULE}`,
   '- Never describe the app to itself, never narrate what you are about to do, and never mention actions, fields or screens by their internal names.',
   '- Say the useful specific thing. "Ninety is slow for this" beats "consider adjusting the tempo".',
   '- Answer about the room they are actually in. The song canvas is sent every time, but on most screens it is background rather than the subject.',
@@ -123,7 +127,16 @@ function contextFor(body: Body): string {
   const room = SURFACES[here];
   const ops = describeOps(here, body.ops ?? []);
 
+  /* Named rather than left to inference. A short message is not much to
+     detect a language from, and the wrong guess for an Afrikaans speaker is
+     Dutch, which reads as an app written by somebody who is not from here. */
+  const speaking =
+    body.lang === 'af' ? 'They are using the app in Afrikaans, so answer in Afrikaans.'
+    : body.lang === 'en' ? 'They are using the app in English.'
+    : '';
+
   const lines = [
+    ...(speaking ? [speaking, ''] : []),
     `They are on the ${here} screen: ${room.purpose}`,
     `Here you can: ${room.can.join(', ')}.`,
     '',

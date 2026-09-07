@@ -97,6 +97,12 @@ export default function Copilot({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: question,
+          /* The language the app is being used in, sent rather than inferred.
+             The model was left to guess from the message, and on a short
+             Afrikaans phrase a guess is a coin toss that lands on Dutch often
+             enough to be noticed: "die prompt in copilot is ook geneig om
+             nederlands te prompt met afrikaanse goed." */
+          lang,
           // What this room will actually take, as of this turn. Sent rather
           // than assumed, so the model is never offered an operation the studio
           // would refuse — an unwired room simply gets no list and advises.
