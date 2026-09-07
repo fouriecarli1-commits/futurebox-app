@@ -323,6 +323,22 @@ The two `NEXT_PUBLIC_` ones are meant to be visible and are the only kind that
 may carry that prefix. Nothing else here may ever have it — `OWNER_EMAIL` with
 that prefix would ship the list of who runs the place to every visitor.
 
+### The one that decides how much video can be spent in a month
+
+`ELEVEN_VIDEO_CREDITS` is the ceiling on video generation for the month, in
+ElevenLabs credits. **Unset it is 13 000**, which at the advertised rate is
+roughly 650 five-second clips.
+
+It is deliberately small. A ceiling set too high never fires, and then the
+first anybody knows about it is a member paying for a generation that comes
+back as a billing error. Raise it when the bill is comfortable and the demand
+is real; lower it if a month gets away from you.
+
+It was read through a computed name until now, which meant no tool could see
+it and this page could not name it — a spending control nobody could tune
+because nobody had been told it was there. `npm run check:envdoc` refuses that
+pattern now.
+
 ### Knobs with working defaults — nothing to do
 
 `ELEVEN_AURORA_MODEL`, `ELEVEN_IMAGE_MODEL`, `ELEVEN_SEEDANCE_MODEL` and

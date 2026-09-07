@@ -58,6 +58,40 @@ function readsIn(dir: string, found = new Set<string>()): Set<string> {
   return found;
 }
 
+/**
+ * Where the name is computed, and so invisible to everything above.
+ *
+ * `process.env[name]` inside a helper hides the variable from this file, from
+ * `check:security`'s derived list of server-only names, and from anybody
+ * grepping. It hid `ELEVEN_VIDEO_CREDITS` — the month's video allowance, a
+ * spending ceiling — in `video/eleven.ts`, called through `allowance(name,
+ * fallback)` with the name as a string. Undocumented, unwatched, and untunable
+ * by somebody who had never been told it existed.
+ *
+ * Next has its own reason for the same rule: it replaces
+ * `process.env.NEXT_PUBLIC_*` at build time only where it can see the whole
+ * name in the source, so a computed one reaches the browser as `undefined`.
+ * `WelcomeVideo` carries that note already.
+ *
+ * So the helper takes the value. Comments are stripped first, because this
+ * file and the ones it reads discuss the pattern on purpose.
+ */
+function computedIn(dir: string, found: string[] = []): string[] {
+  for (const entry of readdirSync(dir)) {
+    const path = join(dir, entry);
+    if (statSync(path).isDirectory()) {
+      computedIn(path, found);
+      continue;
+    }
+    if (!/\.(ts|tsx)$/.test(entry)) continue;
+    const code = readFileSync(path, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    if (/process\.env\[(?!['"][A-Z])/.test(code)) found.push(path.slice(ROOT.length + 1));
+  }
+  return found;
+}
+
 const used = readsIn(join(ROOT, 'app'));
 
 /* `NEXT_PUBLIC_` on its own is the prefix test that keeps the owner list off
@@ -67,6 +101,13 @@ used.delete('NEXT_PUBLIC_');
 const page = readFileSync(join(ROOT, 'docs/SWITCH-ON.md'), 'utf8');
 
 ok('there are variables to check', used.size > 20, `only ${used.size} found — the sweep is not reading the code`);
+
+const computed = computedIn(join(ROOT, 'app'));
+ok(
+  'no variable is read through a computed name, where nothing can see it',
+  computed.length === 0,
+  `${computed.join(', ')} — pass the value, not the name`,
+);
 
 const missing = [...used].filter((one) => !page.includes(one)).sort();
 ok(

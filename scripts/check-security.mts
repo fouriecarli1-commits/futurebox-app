@@ -103,12 +103,25 @@ const before3 = failures;
 function serverOnlyNames(): string[] {
   const found = new Set<string>();
   for (const file of walk('app')) {
-    const src = readFileSync(file, 'utf8');
+    /* Comments stripped first, and this is not hypothetical: a doc comment
+       written the same afternoon said a tool "looks for `process.env.X`", and
+       this picked up `X` as a server-only name. It then searched every client
+       chunk for the letter X and failed, which reads as a leaked secret.
+       A check that cries wolf gets ignored, and this one guards the claim
+       that no secret reaches a browser. */
+    const src = readFileSync(file, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
     for (const m of src.matchAll(/process\.env\.([A-Z][A-Z0-9_]*)/g)) found.add(m[1]);
     for (const m of src.matchAll(/process\.env\[['"]([A-Z][A-Z0-9_]*)['"]\]/g)) found.add(m[1]);
   }
   found.delete('NEXT_PUBLIC_');
-  return [...found].filter((one) => !one.startsWith('NEXT_PUBLIC_')).sort();
+  /* And nothing shorter than a real variable name. A one- or two-letter
+     "secret" searched for as a substring matches every minified bundle ever
+     built, so it can only ever be a false alarm. */
+  return [...found]
+    .filter((one) => one.length >= 4 && !one.startsWith('NEXT_PUBLIC_'))
+    .sort();
 }
 const SECRETS = serverOnlyNames();
 

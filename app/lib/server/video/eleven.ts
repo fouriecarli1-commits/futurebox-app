@@ -66,9 +66,19 @@ const VEO = process.env.ELEVEN_VEO_MODEL || 'veo-3.1-fast-generate-001';
  * then the first anybody knows is a member paying for a generation that comes
  * back as a billing error.
  */
-function allowance(name: string, fallback: number): number {
-  const set = Number(process.env[name]);
-  return Number.isFinite(set) && set > 0 ? set : fallback;
+/**
+ * Takes the value, not the name.
+ *
+ * It used to take the name and read `process.env[name]`, which hid
+ * `ELEVEN_VIDEO_CREDITS` from every tool that looks for `process.env.X`:
+ * `check:envdoc` could not see it, so it was documented nowhere and she could
+ * not tune a spending ceiling she had never been told existed, and
+ * `check:security`'s derived list of server-only names could not see it
+ * either. `check:envdoc` bans the computed form now, for that reason.
+ */
+function allowance(set: string | undefined, fallback: number): number {
+  const value = Number(set);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
 interface Envelope {
@@ -335,7 +345,7 @@ export const seedance: Provider = {
     startFrame: false,
     maxPromptChars: 2000,
   },
-  ceiling: () => allowance('ELEVEN_VIDEO_CREDITS', 13_000),
+  ceiling: () => allowance(process.env.ELEVEN_VIDEO_CREDITS, 13_000),
   // ~20 credits a clip at the advertised rate, doubled for ten seconds. A
   // reading of a pricing page, and recorded as such: what each generation
   // really costs is written to the videos row.
@@ -360,7 +370,7 @@ export const veo: Provider = {
     startFrame: false,
     maxPromptChars: 2000,
   },
-  ceiling: () => allowance('ELEVEN_VIDEO_CREDITS', 13_000),
+  ceiling: () => allowance(process.env.ELEVEN_VIDEO_CREDITS, 13_000),
   cost: (seconds) => (seconds >= 8 ? 120 : 60),
   start: (request) => start(VEO, request, WIRE.veo),
   check,
