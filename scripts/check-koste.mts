@@ -69,6 +69,10 @@ const NAMED: Record<string, string> = {
   'api.spotify.com': 'Spotify',
   'accounts.spotify.com': 'Spotify',
   'api-singapore.klingai.com': 'Kling',
+  /* Kits.AI's API lives on their older name. Matched on the host the code
+     actually dials, not on the brand — a service renamed on the bill and left
+     alone in the code is exactly the drift this rule exists for. */
+  'arpeggi.io': 'Kits.AI',
 };
 
 const hosts = new Set<string>();
@@ -101,7 +105,7 @@ function randFor(label: string): number | null {
   return found ? Number(found[1].replace(/\s/g, '')) : null;
 }
 
-const lines = ['Anthropic', 'Vercel', 'Supabase', 'Resend'];
+const lines = ['Anthropic', 'Vercel', 'Supabase', 'Resend', 'Kits.AI'];
 const parts = lines.map(randFor);
 ok('every fixed line has a rand figure', parts.every((one) => one !== null),
   lines.filter((_, at) => parts[at] === null).join(', ') || parts.join(' + '));
@@ -145,6 +149,7 @@ const KEYED: Record<string, string> = {
   Paystack: 'PAYSTACK_SECRET_KEY',
   Resend: 'MAIL_API_KEY',
   Supabase: 'SUPABASE_SERVICE_ROLE_KEY',
+  'Kits.AI': 'KITS_API_KEY',
 };
 const undocumented = Object.entries(KEYED)
   .filter(([service]) => table.includes(service))
@@ -155,10 +160,19 @@ ok('every paid service on the bill has its key written down',
 
 /* ── And the one that decides the shape of the business ─────────────────── */
 
+/* The share is read off the page and compared with the arithmetic, rather
+   than both being typed here. The first version asserted `page.includes('72%')`
+   with the range hard-coded around it, so adding one line to the bill would
+   have turned it red over a rounding rather than over anything being wrong —
+   and worse, a page that had drifted to a wrong percentage while still saying
+   "72%" would have passed. */
 const share = eleven / (base + workshops + eleven);
+const claimed = /is R[\d\s]+ van R[\d\s]+ — (\d{1,3})%/.exec(page);
 ok('the bill says plainly which line decides everything',
-  page.includes('72%') && share > 0.7 && share < 0.73,
-  `ElevenLabs is ${(share * 100).toFixed(0)}% of the bill`);
+  claimed !== null && Number(claimed[1]) === Math.round(share * 100) && share > 0.5,
+  claimed
+    ? `the page says ${claimed[1]}%, the table works out to ${(share * 100).toFixed(1)}%`
+    : 'the page never says what share ElevenLabs is');
 
 if (failures) {
   console.error(

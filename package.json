@@ -104,7 +104,8 @@
     "check:legalpage": "node audit/legalpage.mjs",
     "check:stitch": "node audit/stitch.mjs",
     "check:probooth": "node audit/probooth.mjs",
-    "check:koste": "tsx scripts/check-koste.mts"
+    "check:koste": "tsx scripts/check-koste.mts",
+    "check:sing": "tsx scripts/check-sing.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

@@ -46,6 +46,18 @@ export interface VoiceState {
   readonly caps?: { voices: number; speakChars: number; speakPerDay: number; clean: boolean; publish: boolean };
   readonly mine: readonly Voice[];
   readonly stock: readonly Voice[];
+  /**
+   * The other engine: Kits.AI, which is built for singing rather than speech.
+   *
+   * Optional because the answer predates it and a stale cached reply should
+   * read as "not available" rather than throw. `models` is what she named in
+   * the environment; empty means the room asks for a model number instead,
+   * which is the honest fallback — this app cannot list her models.
+   */
+  readonly singing?: {
+    readonly configured: boolean;
+    readonly models: readonly { readonly id: string; readonly name: string }[];
+  };
 }
 
 /** Long enough for an instant clone to have something to learn from. */

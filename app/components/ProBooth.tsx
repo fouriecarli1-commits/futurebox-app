@@ -109,6 +109,53 @@ export default function ProBooth({
   const [voiceId, setVoiceId] = useState('');
   const [changing, setChanging] = useState<Lane | null>(null);
 
+  /* ── Which engine sings it ──────────────────────────────────────────────
+     Two of them now, and they are not the same job. `speech` is ElevenLabs'
+     speech-to-speech, which this room has always used and which handles a
+     melody badly — the warning under the button has said so since §80.
+     `singing` is Kits.AI, an RVC model trained on one singer, and it is the
+     thing this app has promised and not had.
+
+     The singing engine is the default the moment it is available. A panel
+     titled "Sing this in another voice" that quietly picks the speech model
+     when a singing one is switched on would be the same untruth in a new
+     place. */
+  const [engine, setEngine] = useState<'speech' | 'singing'>('speech');
+  const canSing = Boolean(voices?.singing?.configured);
+  /**
+   * Which trained voice at Kits, by its number.
+   *
+   * Kept in the browser rather than on the account, because this app cannot
+   * list her models — there is no endpoint here anybody has verified — so the
+   * number is either one she named in the environment or one she typed once.
+   * Remembering it is the difference between a feature and an errand.
+   */
+  const [modelId, setModelId] = useState('');
+  useEffect(() => {
+    if (modelId) return;
+    const named = voices?.singing?.models?.[0]?.id;
+    let kept: string | null = null;
+    try {
+      kept = window.localStorage.getItem('futurebox.singingModel');
+    } catch {
+      // A browser with storage switched off still gets to type a number.
+    }
+    const first = kept ?? named ?? '';
+    if (first) setModelId(first);
+  }, [modelId, voices]);
+  useEffect(() => {
+    if (canSing) setEngine('singing');
+  }, [canSing]);
+  const chooseModel = useCallback((value: string) => {
+    const digits = value.replace(/[^0-9]/g, '').slice(0, 20);
+    setModelId(digits);
+    try {
+      window.localStorage.setItem('futurebox.singingModel', digits);
+    } catch {
+      // Not worth telling anybody about; it just will not be remembered.
+    }
+  }, []);
+
   /* And the voice panel over it, so Back dismisses the panel rather than the
      whole booth. Registered after the booth's own layer, so it is the
      innermost and closes first. */
@@ -545,11 +592,15 @@ export default function ProBooth({
           setProblem(TOO_BIG_TO_SEND);
           return;
         }
-        if (voiceId) form.append('voiceId', voiceId);
+        /* Which engine, and what each one needs told about it: a voice id at
+           ElevenLabs, a trained model number at Kits. */
+        const sings = engine === 'singing' && canSing;
+        if (sings) form.append('voiceModelId', modelId);
+        else if (voiceId) form.append('voiceId', voiceId);
         form.append('seconds', String(Math.round(piece.duration)));
 
         const token = await accessToken();
-        const response = await fetch('/api/voice/change', {
+        const response = await fetch(sings ? '/api/voice/sing' : '/api/voice/change', {
           method: 'POST',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: form,
@@ -570,7 +621,7 @@ export default function ProBooth({
           ...was.map((one) => (one.id === lane.id ? { ...one, muted: true } : one)),
           {
             id: `${lane.id}-voice-${Date.now()}`,
-            name: `${lane.name} · ${t('pro.sungBy', 'another voice')}`,
+            name: `${lane.name} · ${sings ? t('pro.sungReally', 'sung') : t('pro.sungBy', 'another voice')}`,
             audio: sung,
             at: lane.at,
             gain: lane.gain,
@@ -585,7 +636,7 @@ export default function ProBooth({
         setBusy(false);
       }
     },
-    [context, rate, t, voiceId],
+    [canSing, context, engine, modelId, rate, t, voiceId],
   );
 
   /**
@@ -950,27 +1001,123 @@ export default function ProBooth({
                 'pro.singWhat',
                 'It keeps the performance — the timing, the phrasing, the breaths — and changes whose voice is carrying it. It does not fix the singing, and it will keep a wrong note as faithfully as a right one.',
               )}</Note>
-            {/* And what it is built for, which decides whether the result is
-                worth buying at all.
+            {/* ── Which engine ────────────────────────────────────────
+                Only drawn when there are two of them: a chooser with one
+                option is furniture. The singing model is first and selected,
+                because it is the one that does what the panel's title says. */}
+            {canSing && (
+              <div
+                className="grid grid-cols-2 gap-2"
+                role="group"
+                aria-label={t('pro.engine', 'Which model sings it')}
+              >
+                <button
+                  type="button"
+                  onClick={() => setEngine('singing')}
+                  aria-pressed={engine === 'singing'}
+                  className={`min-h-[44px] px-3 py-2 rounded-xl border text-sm font-bold ${
+                    engine === 'singing'
+                      ? 'border-emerald-500 bg-emerald-500/15 text-white'
+                      : 'border-zinc-800 bg-zinc-900 text-zinc-400'
+                  }`}
+                >
+                  {t('pro.engineSinging', 'Singing model')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEngine('speech')}
+                  aria-pressed={engine === 'speech'}
+                  className={`min-h-[44px] px-3 py-2 rounded-xl border text-sm font-bold ${
+                    engine === 'speech'
+                      ? 'border-emerald-500 bg-emerald-500/15 text-white'
+                      : 'border-zinc-800 bg-zinc-900 text-zinc-400'
+                  }`}
+                >
+                  {t('pro.engineSpeech', 'Speech model')}
+                </button>
+              </div>
+            )}
+
+            {/* And what the chosen one is built for, which decides whether the
+                result is worth buying at all.
 
                 The note above is careful about one thing — it will not fix the
-                singing — and was silent about the thing that matters more: the
-                model is `eleven_multilingual_sts_v2`, speech to speech.
+                singing — and was silent about the thing that matters more.
+                Over the speech model that is `eleven_multilingual_sts_v2`:
                 §A1 of docs/OPEN-QUESTIONS.md records that it handles singing
-                badly, and §9 of docs/DIENSTE-EN-KOSTE.md calls a real singing
+                badly, and §9 of docs/DIENSTE-EN-KOSTE.md called a real singing
                 model the one thing this app promises and cannot deliver.
 
                 The panel is titled "Sing this in another voice", the button
                 says "Sing it", and the cost is on the same screen. Being told
                 afterwards is being told too late. Above the cost, deliberately:
-                the caveat has to be read before the press, not after it. */}
-            <Note className="text-sm text-amber-300/90 leading-relaxed">{t(
-                'pro.singBuilt',
-                'The model behind it is built for speech. On a spoken lane it is reliable; on a sung one it is a gamble \u2014 the melody is what it handles worst. A model built for singing is the one thing this app still cannot do.',
-              )}</Note>
-            <Cost credits={perMinute(changing.audio.duration, CREDITS.voiceChange)} />
+                the caveat has to be read before the press, not after it.
 
-            {voices ? (
+                The singing model gets its own sentence rather than no sentence.
+                What it cannot do is different — it needs a model trained on a
+                voice, and it is not a spoken-word tool — and silence there
+                would read as "this one is perfect". */}
+            {engine === 'speech' || !canSing ? (
+              <Note className="text-sm text-amber-300/90 leading-relaxed">{t(
+                  'pro.singBuilt',
+                  'The model behind it is built for speech. On a spoken lane it is reliable; on a sung one it is a gamble \u2014 the melody is what it handles worst. A model built for singing is the one thing this app still cannot do.',
+                )}</Note>
+            ) : (
+              <Note className="text-sm text-zinc-500 leading-relaxed">{t(
+                  'pro.singReal',
+                  'This one is built for singing: it is a voice trained on one singer, and it follows a melody rather than fighting it. It needs a trained voice to sing in \u2014 yours, once you have made one at kits.ai \u2014 and it is the wrong tool for a spoken lane.',
+                )}</Note>
+            )}
+            <Cost
+              credits={perMinute(
+                changing.audio.duration,
+                engine === 'singing' && canSing ? CREDITS.sing : CREDITS.voiceChange,
+              )}
+            />
+
+            {engine === 'singing' && canSing ? (
+              /* No voice list to show. Kits' models are numbers on her own
+                 account and this app has never made a request that lists them,
+                 so it asks for the number instead of drawing an empty picker
+                 and blaming her for it. What she names in the environment
+                 appears as buttons; anything else is typed once and kept. */
+              <div className="space-y-2">
+                <label htmlFor="sing-model" className="block text-sm font-bold text-white">
+                  {t('pro.singModel', 'Which trained voice')}
+                </label>
+                {(voices?.singing?.models ?? []).length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {(voices?.singing?.models ?? []).map((one) => (
+                      <button
+                        key={one.id}
+                        type="button"
+                        onClick={() => chooseModel(one.id)}
+                        aria-pressed={modelId === one.id}
+                        className={`min-h-[44px] px-3 py-2 rounded-xl border text-sm font-bold ${
+                          modelId === one.id
+                            ? 'border-emerald-500 bg-emerald-500/15 text-white'
+                            : 'border-zinc-800 bg-zinc-900 text-zinc-400'
+                        }`}
+                      >
+                        {one.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <input
+                  id="sing-model"
+                  inputMode="numeric"
+                  value={modelId}
+                  onChange={(event) => chooseModel(event.target.value)}
+                  placeholder="1014961"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-zinc-800 bg-zinc-900 text-white"
+                />
+                <Note className="text-sm text-zinc-500 leading-relaxed">{t(
+                    'pro.singModelHelp',
+                    'The number of a voice model on your kits.ai account \u2014 it is in the address bar when you open one there. It is remembered on this device.',
+                  )}</Note>
+              </div>
+            ) : voices ? (
               <VoicePicker
                 mine={voices.mine ?? []}
                 stock={voices.stock ?? []}
@@ -980,14 +1127,14 @@ export default function ProBooth({
             ) : (
               <p className="text-sm text-zinc-500 flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                {t('pro.voicesLoading', 'Fetching the voices…')}
+                {t('pro.voicesLoading', 'Fetching the voices\u2026')}
               </p>
             )}
 
             <button
               type="button"
               onClick={() => void changeVoice(changing)}
-              disabled={busy || !voiceId}
+              disabled={busy || (engine === 'singing' && canSing ? !modelId : !voiceId)}
               className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent font-bold inline-flex items-center justify-center gap-2 disabled:opacity-40"
             >
               {busy && <Loader2 className="w-4 h-4 animate-spin" />}

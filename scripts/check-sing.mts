@@ -1,0 +1,183 @@
+/**
+ * The one thing the app promised and could not do.
+ *
+ * §9 of `docs/DIENSTE-EN-KOSTE.md` called singing voice conversion the gap
+ * between a song made here and somebody's own voice, and the Pro Booth has
+ * carried a warning under its "Sing it" button saying the model behind it is
+ * built for speech. Carli chose Kits.AI on 7 September 2026 and this is the
+ * wiring of it.
+ *
+ * ── Why this file is half assertions about behaviour ─────────────────────
+ *
+ * Because half of what is in `lib/server/kits.ts` could not be checked against
+ * the real service: arpeggi.io is blocked from the machine this was built on.
+ * The half she sent me — the POST that starts a job — is safe. The half that
+ * reads the answer back is inferred, and inferred code that nobody exercises
+ * is a guess with a comment on it.
+ *
+ * So the readers are actually run, against answers shaped the several ways
+ * this kind of API answers, including the ones that would be expensive to get
+ * wrong: a queued job read as a finished one (she is charged and handed
+ * nothing), and the file she uploaded handed back to her as the conversion.
+ */
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { audioUrlIn, idIn, namedModels, safeModelId, stateIn } from '../app/lib/server/kits.ts';
+import { CREDITS } from '../app/lib/credits.ts';
+
+const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const read = (path: string): string => readFileSync(join(ROOT, path), 'utf8');
+
+let failures = 0;
+function ok(what: string, passed: boolean, detail = ''): void {
+  console.log(`  ${passed ? 'ok ' : 'NOT'}  ${what}${detail && !passed ? ` — ${detail}` : ''}`);
+  if (!passed) failures += 1;
+}
+
+const lib = read('app/lib/server/kits.ts');
+const route = read('app/api/voice/sing/route.ts');
+const booth = read('app/components/ProBooth.tsx');
+const state = read('app/api/voice/route.ts');
+
+/* ── 1. The half that is hers, sent exactly as she sent it ──────────────── */
+
+ok(
+  'the conversion goes to the endpoint she gave',
+  lib.includes("https://arpeggi.io/api/kits/v1") && /voice-conversions/.test(lib),
+);
+ok(
+  'with a bearer key, which is what their own page says',
+  /Authorization: `Bearer \$\{key\(\)\}`/.test(lib),
+);
+ok(
+  'and as a multipart form with their two field names',
+  /form\.append\('voiceModelId'/.test(lib) && /form\.append\('soundFile'/.test(lib),
+  'their Quick Start says every POST that starts a job is multipart',
+);
+
+/* ── 2. The readers, run rather than described ──────────────────────────── */
+
+ok('a job id is found under any of the usual names', idIn({ id: 42 }) === '42' && idIn({ jobId: 'ab-9' }) === 'ab-9');
+ok('and its absence is null, not a guess', idIn({ nothing: true }) === null);
+
+/* The expensive one. A job that is queued must not read as finished: she has
+   already been charged by then, and "done with no file" is the shape that
+   hands her nothing and keeps the credits. */
+ok('a queued job is not finished', stateIn({ status: 'queued' }) === 'running');
+ok('nor is a word nothing here has ever seen', stateIn({ status: 'moderating' }) === 'running');
+ok('an answer with no status at all is not finished', stateIn({}) === 'running');
+ok('success in any of its spellings is', stateIn({ status: 'success' }) === 'done' && stateIn({ status: 'COMPLETED' }) === 'done');
+ok('and a failure is a failure', stateIn({ status: 'error' }) === 'failed' && stateIn({ status: 'job_failed' }) === 'failed');
+
+/* The other expensive one. Kits' answer can carry the file that was sent up
+   beside the one that came back; handing her back her own take, billed, would
+   look exactly like a conversion that changed nothing. */
+ok(
+  'the input she uploaded is never mistaken for the output',
+  audioUrlIn({
+    inputFileUrl: 'https://arpeggi.io/in/take.wav',
+    outputFileUrl: 'https://arpeggi.io/out/sung.wav',
+  }) === 'https://arpeggi.io/out/sung.wav',
+);
+ok(
+  'and the full-quality file wins over the preview',
+  audioUrlIn({
+    lqAudioUrl: 'https://arpeggi.io/out/small.mp3',
+    outputFileUrl: 'https://arpeggi.io/out/sung.wav',
+  }) === 'https://arpeggi.io/out/sung.wav',
+);
+ok('an answer with no file in it is null', audioUrlIn({ status: 'running' }) === null);
+ok(
+  'and a plain http address is refused',
+  audioUrlIn({ outputFileUrl: 'http://arpeggi.io/out/sung.wav' }) === null,
+);
+
+/* A model id reaches a URL and a form. Digits only, refused rather than
+   stripped — the rule `lib/server/ownedpath.ts` works under. */
+ok('a model id that is not digits is refused', safeModelId('1014961/../x') === null && safeModelId('') === null);
+ok('and one that is, is kept', safeModelId('1014961') === '1014961');
+ok(
+  'the named models list drops anything that is not a number',
+  (() => {
+    process.env.KITS_VOICE_MODELS = '1014961=Carli, rubbish=Nope, 22=Koor';
+    const got = namedModels();
+    delete process.env.KITS_VOICE_MODELS;
+    return got.length === 2 && got[0].name === 'Carli' && got[1].id === '22';
+  })(),
+);
+
+/* ── 3. The route, held to the same rules as its siblings ───────────────── */
+
+ok(
+  'the take arrives as a key in her own folder, never as a URL',
+  /audioFrom\(form, request, 'audio'\)/.test(route) && !/form\.get\('url'\)/.test(route),
+  'a route that fetched any URL handed to it is an open proxy',
+);
+ok(
+  'the finished file is fetched from Kits’ own answer and from nowhere else',
+  /fetchResult\(url\)/.test(lib) && /audioUrlIn\(answer\)/.test(lib) && !/fetchResult\([^)]*form/.test(route),
+);
+ok('and only over https', /parsed\.protocol !== 'https:'/.test(lib));
+ok('the credits are taken before the work', /const paid = await charge\(/.test(route));
+ok(
+  'and given back when the work fails',
+  /if \(!done\.ok\) \{\s*await paid\.refund\(\);/.test(route),
+);
+ok(
+  'the wait is bounded, so a job that never finishes is not an open function',
+  /Date\.now\(\) \+ WAIT_MS/.test(route) && /maxDuration = 300/.test(route),
+);
+ok('it says so plainly when the key is not set', /Singing in your own voice is not switched on/.test(route));
+
+/* ── 4. The room: two engines, each honest about itself ─────────────────── */
+
+ok('the panel offers the singing engine only when it is switched on', /canSing && \(/.test(booth));
+ok('and chooses it when it is there', /if \(canSing\) setEngine\('singing'\)/.test(booth));
+ok(
+  'the speech model keeps its warning',
+  booth.includes('pro.singBuilt'),
+  'the caveat §80 put on the button',
+);
+ok('and the singing model has one of its own', booth.includes('pro.singReal'));
+
+/* Both caveats before the money, on the same screen, whichever engine is
+   chosen. The whole point of §80 was that being told after the press is being
+   told too late, and a second engine is a second chance to get that wrong. */
+/* The cost *on this panel*, which means the first one after the caveat — not
+   the first in the file. `check:voicechange` carries the same note and the
+   same scar: searching from zero finds an earlier panel's price and reports a
+   caveat as coming after it while it sits two lines above. */
+for (const key of ['pro.singBuilt', 'pro.singReal']) {
+  const at = booth.indexOf(key);
+  ok(
+    `${key} is read before the cost, not after`,
+    at !== -1 && booth.indexOf('<Cost', at) !== -1,
+    at === -1 ? 'the caveat is not on the panel at all' : 'the price is shown first',
+  );
+}
+
+ok(
+  'the price is the engine’s own, not the other one’s',
+  /engine === 'singing' && canSing \? CREDITS\.sing : CREDITS\.voiceChange/.test(booth),
+);
+ok(
+  'and the better engine is not the cheaper one',
+  CREDITS.sing >= CREDITS.voiceChange,
+  `sing ${CREDITS.sing} against voiceChange ${CREDITS.voiceChange} — people would pick the worse one to save credits`,
+);
+
+ok('the room is told which engines exist before it draws itself', /singing: singing\(\)/.test(state));
+
+/* ── 5. The key stays on the server ─────────────────────────────────────── */
+
+for (const path of ['app/components/ProBooth.tsx', 'app/components/VoiceLab.tsx', 'app/api/voice/route.ts']) {
+  ok(`${path} never names the key`, !read(path).includes('KITS_API_KEY'));
+}
+
+if (failures > 0) {
+  console.log(`\ncheck:sing — ${failures} assertion(s) failed.`);
+  process.exitCode = 1;
+} else {
+  console.log('\ncheck:sing — the singing engine is wired, priced, bounded, and honest about which half was guessed.');
+}

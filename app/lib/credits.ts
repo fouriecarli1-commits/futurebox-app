@@ -99,6 +99,17 @@ export const CREDITS = {
   clean: 4,
   /** A recording said again in another voice, per minute. */
   voiceChange: 4,
+  /**
+   * A recording *sung* again in another voice, per minute. Kits.AI.
+   *
+   * The same four as the speech model above, and deliberately not less.
+   * Kits is a flat forty dollars a month rather than a per-minute bill, so
+   * the marginal cost of one conversion is close to nothing and the number
+   * could be argued down — but the two buttons sit on the same panel, and
+   * making the better engine the cheaper one would have people picking the
+   * worse one to save credits. One price, and the choice is about the result.
+   */
+  sing: 4,
   /** Making a voice from a minute of somebody reading. Estimated. */
   clone: 20,
   /** Training a sound of your own. Estimated, and deliberately high. */

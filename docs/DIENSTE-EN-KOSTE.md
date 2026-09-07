@@ -156,20 +156,43 @@ nie hiervandaan nagegaan word nie — music.ai is ook geblokkeer — so
 `CREDITS.read = 6` en `CREDITS.parts = 8` is met opset hoog gestel. Dit is die
 eerste twee getalle om teen 'n regte faktuur te toets.
 
-### 9. Sangstem-omskakeling — die een gat wat oorbly
+### 9. Sangstem-omskakeling — **toegemaak, 7 September 2026**
 
-**Waarvoor:** 'n gemaakte liedjie wat in **jou** stem sing. Dit is die enigste
-ding wat die toep belowe en nie kan lewer nie.
+**Waarvoor:** 'n gemaakte liedjie wat in **jou** stem sing. Dit was die enigste
+ding wat die toep belowe het en nie kon lewer nie.
 
-**Wat ek van jou nodig het:** 'n besluit tussen twee paaie, en ek kan nie
-hiervandaan uitvind watter een moontlik is nie:
+**Wat gekies is:** **Kits.AI**, $40 per maand = R640. RVC — modelle wat op een
+sanger afgerig is, wat 'n melodie volg eerder as om daarteen te baklei. Die
+ander pad (Music.ai se werkvloeie) is nie gevolg nie, want Kits doen presies
+hierdie een ding en niks anders nie.
 
-1. **Music.ai**, as hulle rekening 'n stem-omskakeling-werkvloei aanbied. Die
-   `/api/analyse/setup`-bladsy hierbo sal dit sê sodra die sleutel gestel is.
-2. **Kits.AI** of 'n soortgelyke RVC-diens, as Music.ai dit nie het nie. Dit is
-   'n nuwe rekening en 'n nuwe faktuur.
+**Wat gebou is:**
 
-**Wat dit kos:** onbekend totdat een van die twee geantwoord het.
+| Waar | Wat |
+|---|---|
+| `app/lib/server/kits.ts` | Die gesprek met hulle, op een plek |
+| `app/api/voice/sing/route.ts` | Die roete, met krediete en 'n perk op die wag |
+| Pro Booth se stem-paneel | Twee enjins: **Sangmodel** en **Spraakmodel** |
+| `npm run check:sing` | 36 bewerings, in CI |
+
+Die sangmodel word vir jou gekies sodra die sleutel gestel is. Die spraakmodel
+bly staan met sy waarskuwing daarby — dit is nog steeds die regte een vir 'n
+gepraatte baan.
+
+**Wat jy moet doen:** `KITS_API_KEY` in Vercel, en niks anders nie. Sien
+`docs/SWITCH-ON.md` §11. `KITS_VOICE_MODELS` is opsioneel en gee jou stemme
+name in plaas van nommers.
+
+**Wat nie hiervandaan nagegaan kon word nie:** arpeggi.io is geblokkeer op die
+masjien waarop dit gebou is. Die helfte wat 'n werk **begin** is presies wat jy
+vir my gestuur het en is veilig. Die helfte wat die **antwoord terugkry** is
+afgelei uit die gewone REST-gebruik. As dit verkeerd is, sal die foutboodskap
+Kits se eie antwoord woordeliks bevat — stuur my daardie sin en dit is 'n
+vyf-minuut-regmaak. **Maak een omskakeling die dag wanneer jy betaal**, want
+R640 koop niks totdat een klank werklik teruggekom het nie.
+
+**Wat dit aan die rekening doen:** R22 124 → R22 764. Gelykbreek skuif van 115
+na 118 lede (realisties). Sien `docs/MAANDELIKSE-KOSTE.md`.
 
 ---
 

@@ -67,6 +67,10 @@ const FIXED_CORE: Record<string, number> = {
   'Supabase Pro': 400,
   'Vercel Pro': 320,
   GitHub: 64,
+  /* Kits.AI, $40 = R640. Sangstem-omskakeling, gekies 7 September 2026. Die
+     een reël op hierdie lys wat 'n gat toemaak eerder as om iets te laat loop:
+     dit is die enigste model wat sing. Sien `docs/MAANDELIKSE-KOSTE.md`. */
+  'Kits.AI': 640,
 };
 const WORKSHOPS = 4000;
 

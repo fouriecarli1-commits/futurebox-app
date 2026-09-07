@@ -206,7 +206,43 @@ hard-coded playlist id, which is the version that fails honestly rather than
 silently if they rename or retire it. If the bar never appears with the keys
 set, that search is the first thing to look at.
 
-### 11. The two engines behind a flag
+### 11. Kits.AI — the model that actually sings
+
+`KITS_API_KEY`, from kits.ai → the API Access page → generate a token. It goes
+in Vercel and nowhere else. **Never in the repository**, and if it has ever been
+pasted into a chat, an email or a screenshot, rotate it on that page: a key that
+has been shown to anything is a key somebody else may already have.
+
+`KITS_VOICE_MODELS` is optional and holds the names of the voices you have
+trained there, because this app has no verified way to list them:
+
+    KITS_VOICE_MODELS=1014961=Carli, 1023456=Die koor
+
+The numbers are the model ids — they are in the address bar when you open a
+voice on kits.ai. Unset is fine: the Pro Booth then asks for the number and
+remembers it in that browser.
+
+**What is broken until you do.** The Pro Booth's "Sing this in another voice"
+panel offers one engine instead of two, and the one it offers is
+`eleven_multilingual_sts_v2` — a speech model, which handles a melody badly and
+says so on the screen. §9 of `docs/DIENSTE-EN-KOSTE.md` has called that the one
+thing the app promises and cannot deliver.
+
+**How to tell it worked:** open the Pro Booth, record or bring in a lane, press
+the voice button. With the key set there are two boxed choices at the top of the
+panel — **Sangmodel** and **Spraakmodel** — and the singing one is chosen for
+you. Without it there are none.
+
+**What could not be checked from here:** arpeggi.io is blocked on the machine
+this was built on, so no request has ever been made against the real service.
+The half that starts a conversion is exactly what you sent me and is safe. The
+half that fetches the result back is inferred from the usual REST convention,
+and if it is wrong the error message will contain Kits' own answer verbatim
+rather than "that did not work" — send me that sentence and it is a five-minute
+fix. **R640 a month buys nothing until one conversion has actually come back**,
+so make one the day you pay.
+
+### 12. The two engines behind a flag
 
 `ELEVEN_SEEDANCE_READY=1` is the only way to a clip longer than ten seconds.
 `ELEVEN_AURORA_READY=1` is the talking presenter. Both are behind a flag
@@ -217,7 +253,7 @@ it, make one clip, and unset it if the request comes back refused.
 
 ## Paperwork, on its own clock
 
-### 12. CIPC — registered, and what to type where
+### 13. CIPC — registered, and what to type where
 
 **Done: CIPC issued `2026/714071/07` on 6 September 2026**, for the enterprise
 name `futureboxstudio`. The `/07` suffix is a private company, so the page's
@@ -261,13 +297,13 @@ the serial — CIPC serials have had four to seven digits over the years, so a
 shorter one is somebody's real company. Read the number back off the page once
 after you set it.
 
-### 13. The trademark
+### 14. The trademark
 
 CIPC's register, classes 9 and 42. A registered domain and a registered company
 are neither of them a trademark, and this is the part that decides whether you
 can trade under the name at all. EUIPO and USPTO are free and take minutes.
 
-### 14. POPIA
+### 15. POPIA
 
 An information officer registered with the Information Regulator, and
 `FUTUREBOX_LEGAL_INFORMATION_OFFICER` set. You process personal data of South

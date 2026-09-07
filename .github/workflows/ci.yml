@@ -289,6 +289,14 @@ jobs:
       - name: The monthly bill adds up, and every service is on it
         run: npm run check:koste
 
+      # Half of the Kits.AI wiring is inferred rather than observed — arpeggi.io
+      # is blocked from the machine it was built on — so the readers are run
+      # here against the shapes an answer can arrive in, including the two that
+      # would cost her money quietly: a queued job read as finished, and her own
+      # upload handed back as the conversion.
+      - name: The singing engine is wired, priced and honest about what it guesses
+        run: npm run check:sing
+
       - name: The probes can find a browser anywhere
         run: npm run check:launch
 
