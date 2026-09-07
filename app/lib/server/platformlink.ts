@@ -30,7 +30,8 @@
  *
  * ── The matching, which is where this kind of gate fails ─────────────────
  *
- * Exactly the lessons `lib/server/songlink.ts` was written with, because they
+ * Exactly the lessons `lib/server/songlink.ts` was written with — it is gone
+ * with the link bar, and the lessons are not, because they
  * were learned the same way: an exact host or a real subdomain, never a
  * substring; credentials refused rather than stripped; https only. Every one
  * of those is one character away from a hole and every one of them is in

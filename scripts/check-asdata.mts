@@ -58,17 +58,20 @@ check('a long one is not truncated here — length is the caller’s business',
 
 /* ── The routes that must use it ───────────────────────────────────────── */
 import { readFileSync } from 'node:fs';
-for (const route of ['app/api/songfrom/route.ts', 'app/api/songlink/route.ts']) {
+for (const route of ['app/api/songfrom/route.ts']) {
   const src = readFileSync(route, 'utf8');
   check(`${route} fences its untrusted text through this`, /asData\(/.test(src));
   /* The literal shape this replaced. If it comes back, it comes back
      silently — it reads perfectly well and it is a hole.
  
      A tag whose contents are themselves an `asData(` call is fine and is how
-     songlink nests two of them inside one `<song>`; the first version of this
-     rule forbade that too and failed on correct code, which is the way a
+     a route can nest two of them inside one element; the first version of
+     this rule forbade that too and failed on correct code, which is the way a
      check gets loosened for the wrong reason. What is banned is a bare
-     variable dropped straight into a tag. */
+     variable dropped straight into a tag.
+
+     `/api/songlink` was the second route on this list until the link bar was
+     removed. Taken off rather than left pointing at a file that is gone. */
   const byHand = src.match(/<[a-z_]+>\$\{(?!asData\()[^}]*\}/);
   check(`  and no bare variable is dropped into a tag`, byHand === null, byHand?.[0] ?? 'none');
 }

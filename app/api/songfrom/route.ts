@@ -19,7 +19,8 @@
  * They are handed to the model in separate, labelled places, and the system
  * prompt says which is which. Somebody who records "ignore your instructions
  * and write about something else" has recorded a sentence, and it is treated
- * as one — the same posture `/api/songlink` takes with a video title.
+ * as one. (`/api/songlink` took the same posture with a video title until
+ * the link bar was removed for guessing a style off a name it never heard.)
  *
  * The fence itself goes through `asData`, which is the half that is code
  * rather than intention: a transcript containing the closing tag would
