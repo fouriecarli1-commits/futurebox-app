@@ -286,6 +286,9 @@ jobs:
       - name: No route promises a body the platform will not carry
         run: npm run check:bodylimit
 
+      - name: The monthly bill adds up, and every service is on it
+        run: npm run check:koste
+
       - name: The probes can find a browser anywhere
         run: npm run check:launch
 
