@@ -62,6 +62,13 @@ const ENDPOINT = 'https://api.elevenlabs.io/v1/music';
  * nothing and bills nothing, so asking once more at the format every plan
  * carries costs a second call and no credits. Without it, moving down a plan
  * would break every song in the app and the reason would be a query parameter.
+ *
+ * Both names checked against their documented enum on 8 September 2026, which
+ * runs `auto`, `mp3_48000_128/192/240/320`, `mp3_22050_32`, `mp3_24000_48`,
+ * `mp3_44100_32/64/96/128/192`, the `pcm_*` and `opus_*` rates, `ulaw_8000` and
+ * `alaw_8000`. `auto` and `mp3_44100_128` are both in it, so neither of the two
+ * constants below is a guess — which matters, because a format name this route
+ * gets wrong comes back as a 422 that looks exactly like a plan problem.
  */
 /* Both widened to `string` deliberately. Left as literals, TypeScript decides
    the two can never be equal and calls the guard below unreachable — which is
