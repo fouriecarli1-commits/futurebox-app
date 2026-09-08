@@ -162,9 +162,25 @@ eerste twee getalle om teen 'n regte faktuur te toets.
 ding wat die toep belowe het en nie kon lewer nie.
 
 **Wat gekies is:** **Kits.AI**, $40 per maand = R640. RVC — modelle wat op een
-sanger afgerig is, wat 'n melodie volg eerder as om daarteen te baklei. Die
-ander pad (Music.ai se werkvloeie) is nie gevolg nie, want Kits doen presies
-hierdie een ding en niks anders nie.
+sanger afgerig is, wat 'n melodie volg eerder as om daarteen te baklei.
+
+**Die dak, en dit is die belangrike getal.** Die plan sê "unlimited", en dit is
+waar vir omskakelingstyd. Dit is nie waar vir **aflaaiminute** nie, en ons toep
+laai elke resultaat af — dit is hoe die klank hier kom. Die Professional Plan
+gee **400 aflaaiminute per maand**, ongebruikte minute rol oor:
+
+* R640 ÷ 400 min = **R1.60 per minuut klank**
+* 'n snit van drie minute = **R4.80** — wat `CREDITS.sing = 4` naby genoeg maak
+* ongeveer **133 omskakelings per maand oor al die lede saam**
+
+Dit is nie 'n plek waar 'n mens sonder 'n teller kan speel nie. Die volgende
+stuk werk is 'n maandelikse minuut-teller met 'n rem, dieselfde vorm as
+`SPEND_CEILING`.
+
+Die ander pad (Music.ai se werkvloeie) is nie vir sang gevolg nie, want Kits
+doen dit reguit. Maar Kits doen ook **stemme skei, stem isoleer, toonaard en
+tempo** — vier dinge wat ons vandag per gebruik by Music.ai koop. Sien
+`docs/KITS-KAART.md`.
 
 **Wat gebou is:**
 

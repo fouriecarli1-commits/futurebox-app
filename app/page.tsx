@@ -328,6 +328,29 @@ export default function FutureBoxHome() {
     });
   }, []);
 
+  /**
+   * When somebody deliberately signed out, so a late event cannot undo it.
+   *
+   * Signing out is local first — the screen must not wait on the network to
+   * let somebody go. But a token refresh already in flight when they press it
+   * answers a moment later with a session that was still valid at the time it
+   * was asked, `onAccountChange` fires with an account, and they are signed
+   * back in without touching anything. Their name and their library come back
+   * on a device they were handing over.
+   *
+   * Seen, not reasoned about: `audit/greeting.mjs` pressed Sign out, and the
+   * screenshot it took afterwards has "Carli Fourie" and a Sign out button
+   * still in the header.
+   *
+   * A few seconds is the whole window — the request that can do this was
+   * already on the wire when they pressed. Signing back in does not need to
+   * clear it: every sign-in path sets the account itself rather than waiting
+   * for the library's event.
+   */
+  const leftAt = useRef(0);
+  /** Long enough for a request already in flight, short enough to forget. */
+  const JUST_LEFT_MS = 8_000;
+
   // With an account behind the app, a refresh should not sign you out and a
   // sign-out in another tab should not leave this one looking signed in.
   useEffect(() => {
@@ -347,6 +370,9 @@ export default function FutureBoxHome() {
       }
     });
     const stop = cloud.onAccountChange((account) => {
+      /* A session arriving right after a deliberate sign-out is the answer to
+         a question asked before it, not somebody signing in. */
+      if (account && Date.now() - leftAt.current < JUST_LEFT_MS) return;
       setUser(account ? { ...account, followers: 1 } : null);
       if (account) {
         sayHello();
@@ -1395,6 +1421,7 @@ export default function FutureBoxHome() {
      nothing on screen depends on it, and Supabase clears the stored session
      on its own side either way. */
   const handleSignOut = async () => {
+    leftAt.current = Date.now();
     try {
       window.localStorage.removeItem(LOCAL_ACCOUNT);
     } catch {

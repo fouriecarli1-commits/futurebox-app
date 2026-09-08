@@ -147,7 +147,7 @@ const TOOLS = new Set([
  * making its assertions true of the app as it is now.
  */
 const WAITING = new Set([
-  'account', 'addon', 'cast', 'greeting',
+  'account', 'addon', 'cast',
   'language', 'photo',
   'presenter', 'queue', 'taste',
 ]);

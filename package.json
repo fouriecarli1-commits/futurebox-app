@@ -111,6 +111,7 @@
     "check:subscription": "node audit/subscription.mjs",
     "check:playbutton": "node audit/playbutton.mjs",
     "check:signinwith": "node audit/signinwith.mjs",
+    "check:greeting": "node audit/greeting.mjs",
     "check:help": "node audit/help.mjs",
     "check:elevenprices": "tsx scripts/check-elevenprices.mts",
     "check:adreport": "node audit/adreport.mjs",

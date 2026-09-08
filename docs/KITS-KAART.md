@@ -3,11 +3,29 @@
 Carli het op 8 September 2026 die Professional Plan gekoop en skerms van elke
 skerm gestuur. Hierdie dokument is die kaart: elke ding wat Kits doen, waar dit
 by ons hoort, en wat dit **vervang** — want die plan is 'n vaste maandelikse
-bedrag met onbeperkte aflaaityd, en alles wat ons daarheen skuif is 'n rekening
-wat ophou per gebruik loop.
+bedrag, en alles wat ons daarheen skuif is 'n rekening wat ophou per gebruik
+loop — binne die dak hieronder.
 
-Kits se prys is R640 per maand, vas. Dit is die hele punt: 'n lid wat vyftig
-snitte stem-omskakel kos presies dieselfde as 'n lid wat een doen.
+Kits se prys is R640 per maand, vas — **maar met 'n dak van 400 aflaaiminute.**
+
+Dít is die getal wat saak maak, en dit is maklik om mis te lees. Kits se FAQ sê
+"unlimited conversion time"; die minute loop wanneer klank **afgelaai** word,
+en ons toep laai elke resultaat af — dit is hoe die klank hier kom. So elke
+minuut klank wat 'n lid terugkry, brand een van die 400.
+
+* 400 minute ÷ R640 = **R1.60 per minuut klank**.
+* 'n Liedjie van drie minute wat omgeskakel word = 3 minute = **R4.80**.
+* Dit is ongeveer **133 omskakelings per maand oor al die lede saam**.
+
+Ongebruikte minute rol oor na die volgende maand. "Unlimited" is onderhewig aan
+billike gebruik.
+
+Wat dit beteken vir die uitleg hieronder: die vier gereedskapstukke wat ons van
+Music.ai af kan skuif, skuif nie na 'n gratis plek toe nie — hulle skuif na 'n
+plek met 'n maandelikse dak. Die spaarplan bly reg (R1.60/min is goedkoper as
+Music.ai per gebruik), maar daar moet 'n teller wees wat weet hoeveel van die
+400 op is, en 'n rem wat stop voordat die dak breek. Dieselfde rem as
+`SPEND_CEILING`, net op minute in plaas van rande.
 
 ---
 

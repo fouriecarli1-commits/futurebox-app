@@ -79,8 +79,14 @@ const server = await serve(PORT, { env: STUB });
 const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
+/* The detail is printed, not only collected.
+
+   It used to go into `problems` and nowhere else, and `problems` is printed on
+   the last line — which a run that throws never reaches. So every failure in a
+   run that fell over showed as the word `false` and nothing more, and the
+   detail written to explain it was thrown away with the process. */
 const check = (label, ok, detail = '') => {
-  console.log(`${label}: ${ok}`);
+  console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${detail && !ok ? ` — ${detail}` : ''}`);
   if (!ok) problems.push(`${label}${detail ? ` (${detail})` : ''}`);
 };
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
@@ -122,8 +128,27 @@ await p.addInitScript((genre) => {
   } catch {}
 }, GENRE);
 
-await p.route('**/auth/v1/**', (r) => r.fulfill({ status: 200, contentType: 'application/json',
-  body: JSON.stringify({ id: WHO.id, email: WHO.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} }) }));
+/* Whether this run is currently signed out, and why a stub has to know.
+
+   Every request under `/auth/v1/` was answered with a valid user, always. That
+   is right up until somebody signs out: the auth library asks again a moment
+   later, is told the session is fine, and puts it straight back — so the app
+   went on showing the name and the library of somebody who had just left, and
+   the run below could not find the way back in.
+
+   That is the stub, not the app. A real project answers 401 once the session
+   is revoked, and this now does the same. It is also the only way the rest of
+   this file can prove anything: the whole point of the last third is signing
+   out and signing back in. */
+let signedOut = false;
+await p.route('**/auth/v1/**', (r) => {
+  if (signedOut) {
+    return r.fulfill({ status: 401, contentType: 'application/json',
+      body: JSON.stringify({ message: 'Invalid Refresh Token' }) });
+  }
+  return r.fulfill({ status: 200, contentType: 'application/json',
+    body: JSON.stringify({ id: WHO.id, email: WHO.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} }) });
+});
 await p.route('**/rest/v1/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
 
 // Their channel: a name, a handle, and a picture at a path in the public bucket.
@@ -156,7 +181,15 @@ const SESSION = {
   user: { id: WHO.id, email: WHO.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} },
 };
 for (const path of ['**/auth/v1/token*', '**/auth/v1/signup*']) {
-  await p.route(path, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SESSION) }));
+  await p.route(path, (r) => {
+    /* A refresh while signed out is refused; the sign-in form's own request is
+       not, because `signIn` clears the flag before it fills anything in. */
+    if (signedOut) {
+      return r.fulfill({ status: 401, contentType: 'application/json',
+        body: JSON.stringify({ message: 'Invalid Refresh Token' }) });
+    }
+    return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SESSION) });
+  });
 }
 
 /* The bottom bar. It is on every signed-in screen and no signed-out one, so
@@ -165,6 +198,7 @@ for (const path of ['**/auth/v1/token*', '**/auth/v1/signup*']) {
    takes on a loaded one. A probe that drives the signed-out page believing it
    is signed in reports the room as broken when the fault is the wait. */
 async function signIn() {
+  signedOut = false;
   await p.locator('button').filter({ hasText: af ? /^Begin verniet$/ : /^Start free$/ }).first().click();
   await p.locator('input[type="email"]').first().waitFor({ timeout: 20_000 });
   await p.locator('input[type="email"]').first().fill(WHO.email);
@@ -304,10 +338,42 @@ check('there is a way past it that is not a room',
 // in, which is also the route somebody takes to sign out in real life.
 await p.locator('button').filter({ hasText: af ? /^Terug na FutureBox$/ : /^Back to FutureBox$/ }).first().click();
 await p.waitForTimeout(900);
+/* Refused before the press, not after it.
+
+   The flag used to flip on the line below, which left a gap: the sign-out
+   request itself, and any refresh already on the wire, were still answered
+   with a valid session — so the app was signed back in by its own auth
+   library a moment after being told to leave. A real project revokes the
+   session when it is asked to; this is that. */
+signedOut = true;
 await p.locator('button').filter({ hasText: af ? /^Teken uit$/ : /^Sign out$/ }).first().click();
 await p.waitForTimeout(1500);
 check('signing out closes the door behind them',
   !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()));
+/* And actually leaves. The screen used to keep the name and the library of
+   somebody who had just signed out, because the press waited on the network
+   before touching anything — so on a bad connection nothing visible happened
+   at all. The way back in is the landing's own button, so its absence is the
+   failure that matters here. */
+const startAgain = p.locator('button').filter({ hasText: af ? /^Begin verniet$/ : /^Start free$/ }).first();
+/* Generously. Signing out against a stub project sets off a round of refused
+   token refreshes with a backoff behind them, and how long that takes to
+   settle varies from run to run — twenty seconds was enough most times, which
+   is the worst kind of enough. */
+await startAgain.waitFor({ timeout: 60_000 }).catch(() => undefined);
+/* What is on screen when it is not the landing page, named in the failure.
+
+   This check went red in a full run and green in a trimmed one built from the
+   same file, which is the shape of a fault nobody finds by re-reading the
+   code. A failure that says which buttons were there instead is one run away
+   from an answer; a failure that says `false` is an afternoon. */
+const back = (await startAgain.count()) > 0;
+check('and the screen actually goes back to signed out', back,
+  back ? '' : `on screen: ${(await p.locator('button:visible').allInnerTexts())
+    .map((one) => one.replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, 14).join(', ')}`);
+if (!back) {
+  await p.screenshot({ path: shot(`greeting-stuck-${af ? 'af' : 'en'}.png`), fullPage: false });
+}
 
 /* Signing out drops the whole app back to the landing page, so the way back
    in is the landing's own button rather than a header that is no longer
@@ -337,6 +403,15 @@ check('signing in arrives at the door without pressing anything else',
    to set one, which is what stops the next room-picker arriving with the same
    fault. */
 await p.goto(`${server.url}/`, { waitUntil: 'domcontentloaded' });
+/* Past the door first, because a page load carrying a session now lands on it
+   — which is the behaviour asserted three checks above. The front page is
+   underneath, and the row being tested is on the front page. Without this the
+   press below is aimed at a button the door is covering, and Playwright spends
+   thirty seconds explaining that in a way that reads like the button is
+   broken. */
+const pastIt = p.locator('button').filter({ hasText: af ? /^Nie nou nie/ : /^Not now/ }).first();
+await pastIt.waitFor({ timeout: 30_000 });
+await pastIt.click();
 const podcast = p.locator('button').filter({
   hasText: af ? /^Begin ’n potgooi$|^Begin ’n podsending$/ : /^Start a podcast$/,
 }).first();
@@ -369,13 +444,28 @@ check('coming back from Google arrives at the door too',
 check('and the mark is wiped out of the address bar',
   !p.url().includes('welcome='), p.url());
 
-/* And an ordinary load, with the same session and no mark, does not. Somebody
-   coming back to a tab came for the feed. */
+/* ── And an ordinary return, which used to be the opposite ──────────────
+
+   This check asserted that a plain reload with a session does *not* show the
+   greeting: coming back to a tab is not signing in, and the feed is what
+   somebody came back for. That reasoning was overturned, by the person who
+   uses the app: "na in log moet make die eerste blad wees wat die klient
+   sien." Somebody with an account opens this to make something.
+
+   So a session lands on the door however it got here, and the greeting on it
+   already says a different thing to a first arrival than to a return. The
+   assertion is kept rather than deleted, pointed the other way — a reversal
+   that leaves no test behind is a reversal nobody can undo safely.
+
+   What is still refused is the feed: being dropped on somebody else's songs
+   with a studio you have to go and find. */
 await p.goto(`${server.url}/`, { waitUntil: 'domcontentloaded' });
 await p.locator('nav[aria-label]').first().waitFor({ timeout: 40_000 });
 await p.waitForTimeout(2500);
-check('but an ordinary return to a signed-in tab does not take over the screen',
-  !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()));
+words = await p.locator('body').innerText();
+check('an ordinary return to a signed-in tab lands on the door, not the feed',
+  af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words),
+  words.split('\n').slice(0, 8).join(' / '));
 
 await p.screenshot({
   path: shot(`greeting-${af ? 'af' : 'en'}${GENRE === 'dubstep' ? '' : `-${GENRE}`}.png`),
