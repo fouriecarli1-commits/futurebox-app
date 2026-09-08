@@ -286,6 +286,12 @@ jobs:
       - name: No route promises a body the platform will not carry
         run: npm run check:bodylimit
 
+      # check:prices asks whether the button and the charge agree. This asks
+      # whether the price they agree on covers the bill — the question nothing
+      # asked while CREDITS.dub sold a R40,48 minute for R14,04.
+      - name: Every credit price covers what the work costs us
+        run: npm run check:kredietkoste
+
       - name: The monthly bill adds up, and every service is on it
         run: npm run check:koste
 

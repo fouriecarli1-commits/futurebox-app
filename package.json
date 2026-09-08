@@ -104,6 +104,7 @@
     "check:legalpage": "node audit/legalpage.mjs",
     "check:stitch": "node audit/stitch.mjs",
     "check:probooth": "node audit/probooth.mjs",
+    "check:kredietkoste": "tsx scripts/check-kredietkoste.mts",
     "check:koste": "tsx scripts/check-koste.mts",
     "check:bill": "tsx scripts/check-bill.mts",
     "check:sing": "tsx scripts/check-sing.mts",

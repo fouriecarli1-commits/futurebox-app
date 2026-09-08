@@ -127,8 +127,44 @@ export const CREDITS = {
   clone: 20,
   /** Training a sound of your own. Estimated, and deliberately high. */
   finetune: 300,
-  /** A minute of an episode dubbed into another language. Estimated. */
-  dub: 15,
+  /**
+   * A minute of an episode dubbed into another language.
+   *
+   * ── This was 15, and 15 sold below cost ──────────────────────────────
+   *
+   * The old value was a guess, and its comment said so: "Estimated, like the
+   * read, and for the same reason: the exact rate is not knowable from a
+   * pricing page with any confidence."
+   *
+   * It became knowable on 8 September 2026. ElevenLabs' own pricing page,
+   * which Carli sent, gives the plan's equivalences at $990:
+   *
+   *     450 minutes of dubbing v2 = $990
+   *
+   * On Business with VAT that is R18 216 / 450 = **R40,48 a minute paid**.
+   * Fifteen credits sold at Maker's effective R1,24 is R18,60 a minute
+   * charged. Every minute dubbed cost R21,88 out of her own pocket, and a
+   * twenty-minute episode lost R437,60 on one press. It was live in
+   * `/api/dub`.
+   *
+   * ── Where 162 comes from ─────────────────────────────────────────────
+   *
+   * The same anchor the rest of this scale is built on: **one credit is about
+   * R0,25 of what the work costs us.** R40,48 / R0,25 = 162. So this is not a
+   * price rise — it is this action finally being priced the way every other
+   * one already was.
+   *
+   * ── What it means, and it is not small ───────────────────────────────
+   *
+   * Dubbing becomes expensive, because dubbing IS expensive. A ten-minute
+   * episode is 1 620 credits, which is more than Maker or Studio hold. That
+   * is the honest shape: this is a Label-scale feature or a top-up purchase,
+   * and pretending otherwise was costing money on every press.
+   *
+   * `check:kredietkoste` now holds every one of these against its real
+   * upstream cost, so the next one cannot drift below the floor in silence.
+   */
+  dub: 162,
   /**
    * Reading a song: chords, key, tempo and where the sections are. Per minute.
    *
