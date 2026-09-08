@@ -55,6 +55,7 @@ import type { Track } from '../lib/library';
 import Lanes from './Lanes';
 import Note from './Note';
 import Card from './Card';
+import SongForm from './SongForm';
 
 interface Part {
   name: string;
@@ -441,6 +442,15 @@ export default function SongSections({
           <span>{clock(at)}</span>
           <span>{clock(duration)}</span>
         </div>
+
+        {/* And the same song as a shape, under its own waveform.
+
+            `docs/MUSIEKDENKE.md` §3.1. This room's whole subject is the
+            sections, so it is where naming the form belongs: the waveform
+            says how loud, the strip says what. Nothing is taught and nothing
+            is asked — the letters a musician would put under these parts are
+            simply written under them. */}
+        <SongForm parts={parts} />
 
         {/* Where the boundaries came from. A measured plan and a guess off the
             words look identical on a waveform, and only one of them is worth

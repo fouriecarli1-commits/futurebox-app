@@ -46,6 +46,7 @@ import RecordingName from './RecordingName';
 import FollowWords from './FollowWords';
 import SongScreen, { wordsFor } from './SongScreen';
 import Sleeve from './Sleeve';
+import SongForm from './SongForm';
 import { heardHere, markHeard } from '../lib/heard';
 import { countWhenPlayed } from '../lib/played';
 import { heardFor, timeFor } from '../lib/lyrictime';
@@ -888,6 +889,17 @@ export default function Channel({
                     </button>
                   </div>
                 ) : (
+                  <>
+                  {/* What the song is made of, above the things you can do to
+                      it. `docs/MUSIEKDENKE.md` §3.1 — the channel is a column
+                      of somebody's own work, which is the one place where
+                      twenty of these strips beside each other make the
+                      pattern visible without anybody being taught it.
+
+                      Draws nothing for a song with no plan, which is every
+                      brought-in file: inventing sections for somebody else's
+                      recording would be the app making something up. */}
+                  <SongForm parts={track.parts} className="mb-3" />
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
                     <button
                       type="button"
@@ -967,6 +979,7 @@ export default function Channel({
                       </button>
                     )}
                   </div>
+                  </>
                 )}
 
                 {keepFailed === track.id && (
