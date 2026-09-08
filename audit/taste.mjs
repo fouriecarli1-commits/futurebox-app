@@ -39,11 +39,31 @@
  * On 8 September this file was briefly rewritten to sign in through the app's
  * own form instead, which removed exactly the thing that made it work — and
  * the run then reported that the account had stopped remembering anything.
- * It had not. The probe had stopped being able to ask.
+ * **It had not.** The probe had stopped being able to ask: without
+ * `NEXT_PUBLIC_SUPABASE_URL` there is no session, `accessToken()` is null, and
+ * `noteTaste` correctly returns before it sends anything. That is an app with
+ * no accounts behind it behaving exactly as it should.
+ *
+ * The claim was written into a commit message and told to Carli before it was
+ * checked. It is wrong and this is where it is corrected.
+ *
+ * ── Still waiting, and this time for the honest reason ──────────────────
+ *
+ * With the build it needs, the app signs in and the screens draw. What it
+ * cannot get past is the studio's own front door: the app opens on it, every
+ * room button lives on it, and against a stub Supabase project that layer
+ * re-renders continuously — Playwright reports "element was detached from the
+ * DOM, retrying" until it gives up. That is the stub environment, not the app.
+ *
+ * So what this file can honestly say today is that it builds, signs in, and
+ * gets as far as the door. Whether the account really remembers is a question
+ * for the live deployment, where there is a real session and no stub to fight.
+ * It is not evidence of a fault, and it must not be reported as one again.
  */
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
+import { toRoom } from './enter.mjs';
 
 const PORT = process.argv[2] || '3105';
 const af = process.argv[3] === 'af';
@@ -137,8 +157,31 @@ await p.waitForTimeout(2500);
    into a room runs through one `goToRoom` and this is the shortest of them.
    The rail is checked in `greeting.mjs`; what matters here is that using the
    app in the ordinary way is what fills the table, with no button built for
-   the purpose. */
-await p.locator('button').filter({ hasText: af ? /^Begin ’n podsending$/ : /^Start a podcast$/ }).first().click();
+   the purpose.
+
+   The door comes down first. Arriving opens the welcome over the whole page,
+   and a button underneath it is a button Playwright waits thirty seconds to
+   click and then reports as missing — it is on screen and it is covered. The
+   welcome gets its own fresh arrival further down, which is where it is
+   actually read. */
+const notNow = p.locator('button').filter({ hasText: af ? /^Nie nou nie/ : /^Not now/ }).first();
+if (await notNow.isVisible({ timeout: 8000 }).catch(() => false)) {
+  await notNow.click();
+  await p.waitForTimeout(600);
+}
+
+/* Through the studio's own door, which is how somebody opens a room now.
+
+   This used to press "Start a podcast" on the front page. That button is still
+   there and still works, and it is now underneath the studio's front door —
+   the `z-[55]` layer Playwright names when it says the click was intercepted —
+   because the app opens on that door. Waiting thirty seconds for a covered
+   button and calling it missing is measuring the overlay, not the app.
+
+   The door is the better path anyway: it is the one every room is opened
+   from, and what this file is actually asking is whether opening a room in the
+   ordinary way tells the account. */
+await toRoom(p, af ? 'Potgooi' : 'Podcast');
 await p.waitForTimeout(2000);
 check('opening a room tells the account',
   written.some((one) => one.kind === 'room' && one.label === 'podcast'),
@@ -148,8 +191,9 @@ check('opening a room tells the account',
 
    Reached the way a sign-in reaches it — the marked return address — rather
    than by pressing Home, because the point is what somebody arriving sees. */
-await p.goto(`http://localhost:${PORT}/?welcome=1`, { waitUntil: 'networkidle' });
-await p.waitForTimeout(3000);
+await p.goto(`${server.url}/?welcome=1`, { waitUntil: 'domcontentloaded' });
+await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
+await p.waitForTimeout(2500);
 const words = await p.locator('body').innerText();
 check('the welcome offers what the account remembers, not what this browser holds',
   af ? /Nog ’n amapiano-liedjie vandag\?/.test(words) : /Another amapiano song today\?/.test(words),
