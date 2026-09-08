@@ -97,7 +97,7 @@ export default function ThemeStudio({
 
   return (
     <div className="fixed inset-0 z-[60] flex justify-end">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-scrim/80 backdrop-blur-sm" onClick={onClose} />
 
       <aside className="relative w-full max-w-md h-full overflow-y-auto bg-zinc-900 border-l border-zinc-800 p-5 space-y-6">
         <header className="flex items-start justify-between gap-3 sticky top-0 bg-zinc-900 pb-3 -mt-1 pt-1 z-10">

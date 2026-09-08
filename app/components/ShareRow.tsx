@@ -234,7 +234,7 @@ export default function ShareRow({
            Raised rather than padded. A sheet with its own scrim is modal: the
            tab bar showing through one, and eating it, was the mistake. Above
            the search button at 96 as well, for the same reason. */
-        <div className="fixed inset-0 z-[97] flex flex-col justify-end bg-black/70">
+        <div className="fixed inset-0 z-[97] flex flex-col justify-end bg-scrim/80">
           {/* The ground, pressable, because a sheet with no way out except a
               small button is a sheet somebody gets stuck in. */}
           <button

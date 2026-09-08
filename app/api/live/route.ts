@@ -71,6 +71,12 @@ interface PostRow {
   link: string;
   starts_at: string | null;
   created_at: string;
+  /* Optional in the type, not in the table. The column has a not-null default
+     and the app only ever reads rows written after `buildon.sql` — but a
+     project where that file has not been run yet answers without the column
+     at all, and a room that throws on a missing field is worse than a room
+     where nobody has given permission yet. */
+  build_on?: boolean;
 }
 
 /** Where a track's audio sits, which is the shape `pushTrack` writes. */
@@ -191,6 +197,10 @@ export async function GET(request: Request): Promise<Response> {
            four. Sent only for `track` because an episode's id belongs to a
            different table and an `elsewhere` post has no song at all. */
         sourceId: post.kind === 'track' ? post.source_id : undefined,
+        /* Only ever true on a track: an episode is somebody's published show
+           and 'elsewhere' has no file at all, so neither is a thing to cut a
+           hook from whatever the column says. */
+        buildOn: post.kind === 'track' && post.build_on === true,
         hearts: hearts.get(post.id as string) ?? 0,
         /* Whether this reader has hearted it, so the button opens in the
            right state rather than filling in a moment later. False for
@@ -229,6 +239,8 @@ export async function POST(request: Request): Promise<Response> {
     visitor?: string;
     /** Which post a heart is for. Unused by everything else. */
     id?: string;
+    /** Whether others may cut a hook from this song and build on its style. */
+    buildOn?: boolean;
     kind?: 'track' | 'episode';
     sourceId?: string;
     title?: string;
@@ -444,6 +456,11 @@ export async function POST(request: Request): Promise<Response> {
     title,
     note,
     seconds: Math.max(0, Math.round(Number(body.seconds) || 0)),
+    /* Asked at the moment of posting and stored with the post, never inferred
+       and never defaulted to true. `=== true` rather than a truthy read: a
+       browser can send the string "false", and a permission over somebody
+       else's music is the last place to be relaxed about what counts as yes. */
+    build_on: body.buildOn === true,
   });
   if (error) return Response.json(NOT_SET_UP, { status: 503 });
   return Response.json({ ok: true });

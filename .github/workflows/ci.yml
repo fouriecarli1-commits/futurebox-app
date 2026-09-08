@@ -62,6 +62,12 @@ jobs:
       - name: Theme defaults match the theme engine
         run: npm run check:theme
 
+      # `bg-black` is the themed void, which is a pale grey in the light theme
+      # the app ships. Six modals used it for the wash behind them and dimmed
+      # nothing at all.
+      - name: The wash behind a modal is dark in every theme
+        run: npm run check:scrim
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described
@@ -378,7 +384,7 @@ jobs:
           - group: make
             probes: check:makeroom check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes
           - group: rooms
-            probes: check:liveroom check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:videocover check:podlanguage
+            probes: check:liveroom check:buildon check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:videocover check:podlanguage
           - group: whole
             probes: check:firsthour check:writing check:wide check:afrikaansscreen check:spotlight check:photosong check:singview check:buttonlook check:subscription check:playbutton check:signinwith check:help
           # Both need a real browser for what they measure rather than for

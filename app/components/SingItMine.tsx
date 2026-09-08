@@ -209,7 +209,7 @@ export default function SingItMine({
           /* Over everything, and through a portal: the room this sits in is a
              list inside a transformed layer, and a `fixed` box inside one of
              those is fixed to the layer rather than to the window. */
-          <div className="fixed inset-0 z-[97] flex flex-col justify-end bg-black/70">
+          <div className="fixed inset-0 z-[97] flex flex-col justify-end bg-scrim/80">
             <button
               type="button"
               aria-label={t('mine.close', 'Close')}

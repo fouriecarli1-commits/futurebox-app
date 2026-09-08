@@ -997,7 +997,7 @@ export default function ProBooth({
           Over the room rather than beside it: choosing among forty voices is
           the only thing being done while it is open, and it is a paid one. */}
       {changing && (
-        <div className="fixed inset-0 z-[80] bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-6">
+        <div className="fixed inset-0 z-[80] bg-scrim/85 flex items-end sm:items-center justify-center p-0 sm:p-6">
           <div className="w-full sm:max-w-lg max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-zinc-800 bg-zinc-950 p-4 space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
