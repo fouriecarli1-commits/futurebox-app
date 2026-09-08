@@ -207,10 +207,32 @@ for (const script of named) {
      variable will be written by somebody who has never seen this go wrong. */
   const buildsWithSupabase = /NEXT_PUBLIC_SUPABASE_URL:/.test(source) && /next build/.test(source);
   if (buildsWithSupabase) {
-    const putsItBack =
-      /delete\s+\w+\.NEXT_PUBLIC_SUPABASE_URL/.test(source) &&
-      (source.match(/next build/g) ?? []).length >= 2;
-    ok(`${name} puts the plain build back afterwards`, putsItBack);
+    /* Two builds, and one of them without the stub in it.
+
+       The first version of this rule looked for `delete env.NEXT_PUBLIC_...`,
+       which is how `signupcode` happens to do it — one implementation, not the
+       property. `signinwith` never mutates `process.env` at all: it passes the
+       stub to the first build and nothing to the second, which is the same
+       promise kept more carefully, and the rule called it a failure.
+
+       What actually matters is that the last thing the probe does to the tree
+       is an ordinary build. */
+    const builds = [...source.matchAll(/execSync\((['`])[^'`]*next build[^'`]*\1[^)]*\)/g)].map(
+      (one) => one[0],
+    );
+    /* Two ways to keep the same promise, and both count: build a second time
+       with the variable deleted from a copy of the environment (`signupcode`),
+       or simply build a second time passing no environment at all
+       (`signinwith`). What is refused is one build, or two with the stub in
+       both. */
+    const cleared = /delete\s+\w+\.NEXT_PUBLIC_SUPABASE_URL/.test(source);
+    const plain = builds.filter((one) => !/env:/.test(one)).length;
+    const putsItBack = builds.length >= 2 && (cleared || plain >= 1);
+    ok(
+      `${name} puts the plain build back afterwards`,
+      putsItBack,
+      `${builds.length} build(s); ${plain} with no environment, ${cleared ? 'and the stub is deleted' : 'and the stub is never deleted'}`,
+    );
   }
 }
 

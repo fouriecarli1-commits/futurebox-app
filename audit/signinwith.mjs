@@ -11,16 +11,42 @@
  * checked is that the screen follows it exactly: all three, one, and none.
  * Needs the stub build — see `audit/README.md`.
  */
+import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
 
-const PORT = process.argv[2] || '3044';
+const PORT = process.argv[2] || '3102';
 const af = process.argv[3] === 'af';
 
+/* ── Its own build, and why this one cannot borrow anybody else's ─────────
+
+   `providersOn()` returns an empty list the moment
+   `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_ANON_KEY` is missing,
+   without asking anything — so on an ordinary build the fetch this probe
+   stubs never happens and every assertion below reads "no buttons", which is
+   the app behaving correctly and the probe measuring nothing.
+
+   `NEXT_PUBLIC_*` is inlined at build time, so an environment handed to
+   `next start` changes nothing. It has to be a build. That is what the old
+   header meant by "needs the stub build", and it is why this probe sat unrun:
+   the build it needed was a thing somebody had to remember to make.
+
+   So it makes one, and then puts the tree back. The values are obvious
+   nonsense on purpose — nothing here reaches Supabase, every call the screen
+   makes is answered by `page.route` below, and a real project's address in a
+   test build is how a probe ends up talking to production. */
+const STUB = {
+  NEXT_PUBLIC_SUPABASE_URL: 'https://stub.supabase.co',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'stub-anon-key',
+};
+console.log('building with a project that claims to have providers…');
+execSync('npx next build', { stdio: 'ignore', env: { ...process.env, ...STUB } });
+
+const server = await serve(PORT, { env: STUB });
 const b = await chromium.launch(launchOptions());
 const problems = [];
 const check = (label, ok, detail = '') => {
-  console.log(`${label}: ${ok}`);
+  console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${detail && !ok ? ` — ${detail}` : ''}`);
   if (!ok) problems.push(`${label}${detail ? ` (${detail})` : ''}`);
 };
 
@@ -31,7 +57,7 @@ async function withProviders(external) {
   await p.addInitScript((l) => { try { window.localStorage.setItem('futurebox.lang.v1', l); } catch {} }, af ? 'af' : 'en');
   await p.route('**/auth/v1/settings*', (r) =>
     r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ external }) }));
-  await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
+  await p.goto(server.url, { waitUntil: 'networkidle' });
   await p.locator('button').filter({ hasText: af ? /^Begin verniet$/ : /^Start free$/ }).first().click();
   await p.waitForTimeout(1500);
   const modal = p.locator('form').first().locator('..');
@@ -83,6 +109,18 @@ async function withProviders(external) {
   await p.close();
 }
 
-console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
-process.exit(problems.length ? 1 : 0);
+await server.stop();
+
+/* The tree as it was found. Every other probe in this directory shares one
+   ordinary build, and leaving a stubbed one behind would hand the next probe
+   an app that believes it has accounts. */
+console.log('putting the ordinary build back…');
+execSync('npx next build', { stdio: 'ignore' });
+
+if (problems.length) {
+  console.error(`\ncheck:signinwith — ${problems.length} problem(s):`);
+  problems.forEach((one) => console.error(`  · ${one}`));
+  process.exit(1);
+}
+console.log('\ncheck:signinwith — the sign-in row draws exactly the providers the project says are on.');

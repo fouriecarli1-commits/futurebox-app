@@ -17,8 +17,21 @@ const ABORTED = /ERR_ABORTED/;
  *            companion — and this is the only way in for one that walks the
  *            app from the front door rather than opening a probe page.
  */
+/**
+ * @param lang   'af' to arrive in Afrikaans. Set before the first paint rather
+ *               than clicked afterwards: a probe that switches language on
+ *               screen has already measured one page in English, and the
+ *               interesting failures — a missing translation, a line that no
+ *               longer fits — are on the first paint.
+ * @param before called with the page after it exists and before it is pointed
+ *               at the app. This is where a probe registers its `page.route`
+ *               stubs: registering them after `enter()` returns is too late
+ *               for anything the app fetches on mount, and reloading to fix
+ *               that signs the tab out again on a deployment with no accounts.
+ */
 export async function enter({
   width = 1280, height = 900, at = 'http://localhost:3000', args = [], touch = false,
+  lang = null, before = null,
 } = {}) {
   const browser = await chromium.launch(launchOptions(args.length ? { args } : {}));
   /* `touch` is not a detail on a phone-sized run.
@@ -47,6 +60,17 @@ export async function enter({
       note(`HTTP ${r.status()}: ${r.url().replace(at, '')}`);
     }
   });
+
+  if (lang) {
+    await page.addInitScript((one) => {
+      try {
+        window.localStorage.setItem('futurebox.lang.v1', one);
+      } catch {
+        /* Storage off. The probe will find English and say so. */
+      }
+    }, lang);
+  }
+  if (before) await before(page);
 
   await page.goto(at, { waitUntil: 'networkidle' });
   // The first load after a restart compiles the route, so give the call to

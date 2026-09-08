@@ -107,7 +107,10 @@
     "check:koste": "tsx scripts/check-koste.mts",
     "check:sing": "tsx scripts/check-sing.mts",
     "check:maker": "tsx scripts/check-maker.mts",
-    "check:roomtop": "node audit/roomtop.mjs"
+    "check:roomtop": "node audit/roomtop.mjs",
+    "check:subscription": "node audit/subscription.mjs",
+    "check:playbutton": "node audit/playbutton.mjs",
+    "check:signinwith": "node audit/signinwith.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

@@ -12,45 +12,46 @@
  * went wrong, measured as a contrast ratio the way every other colour in this
  * app is measured.
  */
-import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { serve, shot } from './where.mjs';
+import { enter, studio } from './enter.mjs';
 
-const PORT = process.argv[2] || '3024';
-const b = await chromium.launch(launchOptions());
-const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
+const PORT = process.argv[2] || '3101';
 const problems = [];
 const check = (label, ok, detail = '') => {
-  console.log(`${label}: ${ok}`);
+  console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${detail && !ok ? ` — ${detail}` : ''}`);
   if (!ok) problems.push(`${label}${detail ? ` (${detail})` : ''}`);
 };
-p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
 
 const WORDS = '[Verse]\nDie pad is lank vanaand\n[Chorus]\nHou vas, hou vas\n';
-await p.addInitScript((words) => {
-  try {
-    // The light preset, which is also this app's default.
-    window.localStorage.setItem('futurebox.theme.v1', JSON.stringify({ preset: 'clean' }));
-    window.localStorage.setItem('futurebox.tracks.v1', JSON.stringify([{
-      id: 'song-1', title: 'Toetsliedjie', genre: 'Afrikaans', bpm: 96, key: 'Am',
-      lyrics: words, style: 'warm', models: [], source: 'engine', seconds: 60,
-      createdAt: new Date().toISOString(), seed: 1,
-    }]));
-  } catch {}
-}, WORDS);
 
-await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
-const cta = p.locator('button, a').filter({ hasText: /start free|begin|sign up/i }).first();
-await cta.waitFor({ state: 'visible', timeout: 40000 });
-await cta.click();
-await p.waitForTimeout(700);
-await p.locator('input[type="email"]').first().fill('toets@futurebox.test');
-const pw = p.locator('input[type="password"]').first();
-if (await pw.count()) await pw.fill('toets-wagwoord-1234');
-await p.locator('button[type="submit"]').first().click();
-await p.waitForTimeout(2500);
-await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
-await p.waitForTimeout(1800);
-const room = p.locator('div.fixed.inset-0.z-50').first();
+/* Its own server on its own port, and the shared way in.
+
+   This probe went to `localhost:3024` and hoped somebody had left a server
+   there — the fault `serve()` exists to fix — and then signed itself in with
+   a `waitForTimeout(2500)`, which is how long it takes on an idle laptop and
+   not on a loaded one. `enter()` waits for the bottom bar instead, which only
+   exists on a screen the app shows a signed-in person. */
+const server = await serve(PORT);
+const { browser: b, page: p } = await enter({
+  at: server.url,
+  before: async (page) => {
+    await page.addInitScript((words) => {
+      try {
+        // The light preset, which is also this app's default.
+        window.localStorage.setItem('futurebox.theme.v1', JSON.stringify({ preset: 'clean' }));
+        window.localStorage.setItem('futurebox.tracks.v1', JSON.stringify([{
+          id: 'song-1', title: 'Toetsliedjie', genre: 'Afrikaans', bpm: 96, key: 'Am',
+          lyrics: words, style: 'warm', models: [], source: 'engine', seconds: 60,
+          createdAt: new Date().toISOString(), seed: 1,
+        }]));
+      } catch {
+        /* Storage off. The theme assertion below says so. */
+      }
+    }, WORDS);
+  },
+});
+p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
+await studio(p);
 
 check('the light preset is on', 'paper' === await p.evaluate(() =>
   getComputedStyle(document.documentElement).getPropertyValue('--fb-surface-name')?.trim() || 'paper'));
@@ -65,6 +66,22 @@ const measured = await p.evaluate(() => {
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
   const parse = (s) => (s.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+  /* What is actually behind the glyph.
+
+     `backgroundColor` on a button with no fill is `rgba(0, 0, 0, 0)`, and
+     parsing that gives [0, 0, 0] — black. The first run of this after it was
+     brought back reported a play button at 2.75:1 against a disc that does
+     not exist, which is the probe being wrong and not the app. A transparent
+     button shows whatever its parent shows, so that is what the glyph has to
+     be measured against. */
+  const behind = (el) => {
+    for (let one = el; one; one = one.parentElement) {
+      const colour = getComputedStyle(one).backgroundColor;
+      const alpha = Number((colour.match(/[\d.]+/g) ?? [])[3] ?? 1);
+      if (alpha > 0.05) return parse(colour);
+    }
+    return [255, 255, 255];
+  };
   const out = [];
   for (const el of document.querySelectorAll('button')) {
     const style = getComputedStyle(el);
@@ -72,12 +89,13 @@ const measured = await p.evaluate(() => {
     const box = el.getBoundingClientRect();
     if (box.width < 36 || box.width > 60 || Math.abs(box.width - box.height) > 4) continue;
     if (!el.querySelector('svg')) continue;
-    const fill = parse(style.backgroundColor);
+    const alpha = Number((style.backgroundColor.match(/[\d.]+/g) ?? [])[3] ?? 1);
+    const fill = alpha > 0.05 ? parse(style.backgroundColor) : behind(el.parentElement);
     const glyph = parse(getComputedStyle(el.querySelector('svg')).color);
     if (fill.length < 3 || glyph.length < 3) continue;
     const a = lum(fill), bb = lum(glyph);
     out.push({
-      fill: style.backgroundColor,
+      fill: alpha > 0.05 ? style.backgroundColor : `behind: rgb(${behind(el.parentElement).join(', ')})`,
       glyph: getComputedStyle(el.querySelector('svg')).color,
       ratio: Math.round(((Math.max(a, bb) + 0.05) / (Math.min(a, bb) + 0.05)) * 100) / 100,
     });
@@ -95,6 +113,12 @@ check('and none of them is a black disc',
   measured.map((o) => o.fill).join(' | '));
 
 await p.screenshot({ path: shot('playbutton-light.png'), fullPage: true });
-console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
-process.exit(problems.length ? 1 : 0);
+await server.stop();
+
+if (problems.length) {
+  console.error(`\ncheck:playbutton — ${problems.length} problem(s):`);
+  problems.forEach((one) => console.error(`  · ${one}`));
+  process.exit(1);
+}
+console.log('\ncheck:playbutton — every play button shows its glyph on its own disc, in the light theme.');
