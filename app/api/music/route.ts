@@ -41,7 +41,34 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 const ENDPOINT = 'https://api.elevenlabs.io/v1/music';
-const OUTPUT_FORMAT = 'mp3_44100_128';
+
+/**
+ * What the engine is asked to hand back, and why it is not a named format.
+ *
+ * music_v2 — the model `musicplan.ts` asks for — renders at 48 kHz. This route
+ * asked for `mp3_44100_128` from the day it was written, which made the engine
+ * resample its own output down to 44.1 kHz and encode it at the lower of the two
+ * bitrates it offers. Every song made here lost a little on the way out, for
+ * nothing. `auto` lets the engine give back its own rate: mp3_48000_192 for
+ * music_v2, mp3_44100_128 for music_v1.
+ *
+ * Naming 48 kHz here instead of asking for `auto` would pin the route to today's
+ * model and quietly do the same damage again the day the model changes — which
+ * is exactly how the old value got stale.
+ *
+ * The fallback is not caution, it is a plan rule: ElevenLabs gates 192 kbps
+ * behind Creator tier and above, and a plan that cannot have it refuses the
+ * request rather than quietly giving something smaller. A refusal generates
+ * nothing and bills nothing, so asking once more at the format every plan
+ * carries costs a second call and no credits. Without it, moving down a plan
+ * would break every song in the app and the reason would be a query parameter.
+ */
+/* Both widened to `string` deliberately. Left as literals, TypeScript decides
+   the two can never be equal and calls the guard below unreachable — which is
+   true today and stops being true the moment someone sets this to the plain
+   format, which is precisely the case the guard is there for. */
+const OUTPUT_FORMAT: string = 'auto';
+const PLAIN_FORMAT: string = 'mp3_44100_128';
 
 export async function POST(request: Request): Promise<Response> {
   let body: Body;
@@ -156,13 +183,26 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, songCost(length), 'song');
   if (!paid.ok) return paid.response;
 
+  const ask = (format: string) => fetch(`${ENDPOINT}?output_format=${format}`, {
+    method: 'POST',
+    headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
+    body: JSON.stringify(buildRequest(body)),
+  });
+
   let upstream: Response;
   try {
-    upstream = await fetch(`${ENDPOINT}?output_format=${OUTPUT_FORMAT}`, {
-      method: 'POST',
-      headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify(buildRequest(body)),
-    });
+    upstream = await ask(OUTPUT_FORMAT);
+
+    /* 422 is how the music service says the request itself is not acceptable,
+       and a format the plan may not have is one of the things it means by that.
+       The body is read and dropped so the first connection closes rather than
+       waiting to be collected. If the 422 was about something else — the lyrics,
+       the plan — the second attempt is refused in the same words, which is a
+       wasted call and not a wrong answer. */
+    if (upstream.status === 422 && OUTPUT_FORMAT !== PLAIN_FORMAT) {
+      await upstream.text().catch(() => undefined);
+      upstream = await ask(PLAIN_FORMAT);
+    }
   } catch {
     await paid.refund();
     return Response.json(
