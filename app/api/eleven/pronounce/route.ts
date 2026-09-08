@@ -44,7 +44,7 @@
  */
 
 import crypto from 'node:crypto';
-import { configured, speak } from '@/app/lib/server/eleven';
+import { configured, speak, stockVoices } from '@/app/lib/server/eleven';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -157,6 +157,21 @@ export async function GET(request: Request): Promise<Response> {
      also the half she needs OPEN while she listens, so it being the default is
      the right way round — read the list, then ask for the sound. */
   if (url.searchParams.get('hoor') !== '1') {
+    /* The voices, listed here rather than left as an errand.
+
+       Without this the page says "add &stem=<voice id>" and she has to go to
+       the ElevenLabs console, find the voice library, and copy an id out of
+       it — three screens away from the thing she is trying to do. One request
+       against a list she is allowed to read is a much better trade than the
+       task not getting done.
+
+       Which voice matters less than it looks. A pronunciation dictionary is
+       applied per REQUEST, through `pronunciation_dictionary_locators`, not
+       per voice — so a word this test catches is a word every voice gets
+       wrong, and the fix lands on all of them. Pick the one the rooms are
+       most likely to read in and the list is good for the rest. */
+    const voices = configured() ? await stockVoices() : [];
+
     return Response.json({
       wat: 'Die uitspraaktoets. Hou hierdie lys oop en luister dan na die klank.',
       hoeOm: [
@@ -165,7 +180,12 @@ export async function GET(request: Request): Promise<Response> {
         '3. Luister een keer deur. Skryf die NOMMER neer van elke woord wat verkeerd klink.',
         '4. Stuur my die nommers, en by elkeen hoe dit moet klink — sommer gespel soos jy dit vir ’n kind sou skryf. Geen fonetiese tekens nodig nie.',
       ],
-      klank: `${url.pathname}?key=<POST_SECRET>&hoor=1`,
+      klank: `${url.pathname}?key=<POST_SECRET>&hoor=1&stem=<voice id hieronder>`,
+      stemme: voices.length === 0
+        ? 'Kon nie die stemlys kry nie — die sleutel is dalk nie gestel nie. Jy kan steeds &stem=<voice id> self gee.'
+        : voices.map((one) => ({ id: one.id, naam: one.name, beskrywing: one.about ?? null })),
+      watterStem:
+        'Kies die een waarin die kamers die meeste lees. Dit maak minder saak as wat dit lyk: ’n uitspraakwoordeboek word per OPROEP toegepas, nie per stem nie, so ’n woord wat hierdie toets vang is ’n woord wat elke stem verkeerd kry — en die regmaak land op almal.',
       watDitKos: {
         karakters: text.length,
         opmerking:
@@ -188,13 +208,18 @@ export async function GET(request: Request): Promise<Response> {
      a measurement, and a measurement wants the model the app actually uses for
      a steady Afrikaans read — testing a model nobody ships would produce a
      word list that fixes nothing. */
-  const voice = process.env.ELEVEN_TEST_VOICE || url.searchParams.get('stem') || '';
+  /* The query parameter wins over the variable, so one read can be repeated in
+     a second voice without a redeploy — which is exactly what happens the
+     moment a word sounds wrong and the question becomes whether it is the
+     voice or the model. */
+  const voice = url.searchParams.get('stem') || process.env.ELEVEN_TEST_VOICE || '';
   if (!voice) {
     return Response.json(
       {
         error: 'no_voice',
         message:
-          'Give it a voice: add &stem=<voice id> from your ElevenLabs voice list, or set ELEVEN_TEST_VOICE. It must be the voice the app actually reads with, or the list will not match what members hear.',
+          'Give it a voice: add &stem=<voice id>, or set ELEVEN_TEST_VOICE. Open this page without &hoor=1 to see the ids.',
+        stemme: (await stockVoices()).map((one) => ({ id: one.id, naam: one.name })),
       },
       { status: 400 },
     );
