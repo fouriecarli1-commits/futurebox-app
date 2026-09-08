@@ -588,9 +588,17 @@ export default function Campaign({
         <summary className="text-xs text-zinc-500 leading-relaxed cursor-pointer flex items-start gap-2">
           <Link2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
           <span>
+            {/* It ended "— what that would take, per platform", which is not a
+                sentence: a summary line that trails off, on a `<details>`
+                nobody knew was pressable. Carli: "daai een sin ... maak nie
+                vir my sin nie."
+
+                It says the reason now — every platform wants its own approved
+                developer app — and asks to be pressed, which is the one thing
+                a summary has to do. */}
             {t(
               'ads.notPublishing',
-              'This writes the advert, makes it, and opens each platform ready to post. It does not upload for you — what that would take, per platform.',
+              'This writes the advert, makes it, and opens each platform with the post ready to go. It cannot upload for you: every platform wants its own approved developer app first. Press this line to see what each one asks for.',
             )}
           </span>
         </summary>

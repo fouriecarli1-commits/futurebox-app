@@ -114,7 +114,7 @@ export default function Queue({
           </h3>
           <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'queue.what',
-              'Plan a post and this reminds you at the moment you chose, with the words in front of you. It does not post for you — see below for what that would take.',
+              'Plan a post and this reminds you at the moment you chose, with the words in front of you. It cannot post for you: every platform wants its own approved developer app first. What each one asks for is listed below.',
             )}</Note>
         </div>
       </div>
