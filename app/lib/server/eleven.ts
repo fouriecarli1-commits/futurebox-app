@@ -27,6 +27,54 @@ function key(): string {
   return process.env.ELEVENLABS_API_KEY ?? '';
 }
 
+/**
+ * What ElevenLabs says a call actually cost, off the response itself.
+ *
+ * ── Why this exists ─────────────────────────────────────────────────────
+ *
+ * Every price in `lib/credits.ts` is a number somebody worked out from a rate
+ * card, and `check:prices` keeps it honest against that card. What neither can
+ * do is tell you what a real song, on a real evening, actually cost. Carli:
+ * "ek wil net hê ons moet konstant in ag neem wat ek alles maandelliks betaal
+ * want dit help nie ek maak nie 'n wins nie."
+ *
+ * ElevenLabs answers that question on every response. `character-cost` is what
+ * they billed; `request-id` and `x-trace-id` are what they ask for when
+ * somebody reports a bad generation, and there is no way to get them back
+ * afterwards — a request id not read off the response is a request id gone.
+ *
+ * ── Logged, not stored, and that is on purpose for now ──────────────────
+ *
+ * One structured line per billable call. Storing it beside the credits charged
+ * is the better answer and it needs a column, which is task #111's other half.
+ * A line in the log is worth having today: it is the difference between
+ * believing a song costs ten credits and knowing.
+ *
+ * Nothing here can throw. A missing header is an older endpoint or one that
+ * does not bill by character, and a cost report is never a reason for a
+ * generation to fail.
+ */
+export function noteCost(response: Response, what: string): void {
+  try {
+    const cost = response.headers.get('character-cost');
+    const request = response.headers.get('request-id');
+    const trace = response.headers.get('x-trace-id');
+    if (!cost && !request) return;
+    console.log(
+      JSON.stringify({
+        kind: 'eleven.cost',
+        what,
+        characters: cost ? Number(cost) : null,
+        request,
+        trace,
+        at: new Date().toISOString(),
+      }),
+    );
+  } catch {
+    // A header that could not be read is not a reason to fail a generation.
+  }
+}
+
 export interface Upstream {
   /** Always false, so a union with a success case discriminates on it. */
   readonly ok: false;
@@ -98,6 +146,7 @@ export async function cloneVoice(name: string, sample: Blob): Promise<
     headers: { 'xi-api-key': key() },
     body: form,
   });
+  noteCost(response, 'clone');
   if (!response.ok) return complain(response);
 
   const data = (await response.json()) as { voice_id?: string };
@@ -159,6 +208,7 @@ export async function speak(
       }),
     },
   );
+  noteCost(response, 'speak');
   if (!response.ok) return complain(response);
   return { ok: true, audio: await response.arrayBuffer() };
 }
@@ -194,6 +244,7 @@ export async function restage(
     `${BASE}/speech-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`,
     { method: 'POST', headers: { 'xi-api-key': key() }, body: form },
   );
+  noteCost(response, 'voice-change');
   if (!response.ok) return complain(response);
   return { ok: true, audio: await response.arrayBuffer() };
 }
@@ -320,6 +371,7 @@ export async function dub(
     headers: { 'xi-api-key': key() },
     body: form,
   });
+  noteCost(response, 'dub');
   if (!response.ok) return complain(response);
   const body = (await response.json()) as { dubbing_id?: string; expected_duration_sec?: number };
   if (!body?.dubbing_id) {
@@ -398,6 +450,7 @@ export async function isolate(audio: Blob): Promise<{ ok: true; audio: ArrayBuff
     headers: { 'xi-api-key': key() },
     body: form,
   });
+  noteCost(response, 'isolate');
   if (!response.ok) return complain(response);
   return { ok: true, audio: await response.arrayBuffer() };
 }

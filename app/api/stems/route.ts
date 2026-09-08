@@ -21,6 +21,7 @@
  * The key stays on the server, which is the reason this is a route.
  */
 
+import { noteCost } from '@/app/lib/server/eleven';
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
 import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
@@ -161,6 +162,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
+  noteCost(upstream, 'stems');
   if (!upstream.ok) {
     await paid.refund();
     const raw = await upstream.text().catch(() => '');

@@ -22,6 +22,7 @@
  * and raw audio bytes — not JSON — back.
  */
 
+import { noteCost } from '@/app/lib/server/eleven';
 import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
 import { buildRequest, forPreview, type Body } from '@/app/lib/server/musicplan';
 import { songCost } from '@/app/lib/credits';
@@ -170,6 +171,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
+  noteCost(upstream, 'music');
   if (!upstream.ok) {
     await paid.refund();
     const raw = await upstream.text().catch(() => '');
