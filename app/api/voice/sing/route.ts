@@ -106,7 +106,21 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, perMinute(billed, CREDITS.sing), 'sing');
   if (!paid.ok) return paid.response;
 
-  const done = await convert(wanted, audio, 'take.wav', Date.now() + WAIT_MS);
+  /* Whether the music comes back with the voice.
+
+     A whole song sent from Library or from a finished make wants the music
+     back — that is what "sing this in my voice" means to the person pressing
+     it. A lane in the Pro Booth wants only the voice, because the music is
+     already on its own lanes and sending it back would double it.
+
+     Kits returns both files and this used to take whichever their JSON
+     happened to list first. The caller says now, and anything that does not
+     say gets the bare voice, which is the safer of the two to be wrong
+     about: an acapella can be put back over the music here, and a mix cannot
+     be taken apart. */
+  const want = form.get('want') === 'mix' ? 'mix' : 'voice';
+
+  const done = await convert(wanted, audio, 'take.wav', Date.now() + WAIT_MS, want);
   if (!done.ok) {
     await paid.refund();
     return Response.json({ message: done.message }, { status: done.status });

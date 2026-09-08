@@ -199,13 +199,74 @@ export function stateIn(value: unknown): State {
 }
 
 /**
- * The finished audio's address, if the answer carries one.
+ * Which of the three files a caller wants back.
  *
- * Any https URL in the answer that looks like an audio file. Ranked rather
- * than picked: RVC services return a low-quality preview beside the real one
- * often enough that taking the first URL would quietly hand her the worse
- * file. The input she just uploaded can come back in the same object, so a
- * URL that names the input is skipped.
+ * A conversion of a whole song comes back three ways, and picking wrongly is
+ * not a small mistake: `recombinedAudioFileUrl` is the new voice put back over
+ * the music, and `outputFileUrl` is the bare voice with the music gone. Hand
+ * somebody the second when they asked to hear their song, and the answer is a
+ * dry acapella they did not ask for.
+ *
+ *   · `mix`   — "sing my song in my voice". The music comes back with it.
+ *   · `voice` — a lane in the Pro Booth, which already has the music on its
+ *               own lanes and wants only the voice.
+ */
+export type Want = 'mix' | 'voice';
+
+/**
+ * The finished audio's address, read off the fields Kits documents.
+ *
+ * ── What is now known, and what this replaces ────────────────────────────
+ *
+ * This used to be a scan of every https URL in the answer, scored by what its
+ * field was called, because nothing about their answer had ever been seen.
+ * Carli sent the Inference Job type on 8 September 2026 and the guessing is
+ * over. An inference job carries:
+ *
+ *     outputFileUrl           the converted audio
+ *     lossyOutputFileUrl      the same thing, smaller and worse
+ *     recombinedAudioFileUrl  the converted voice back over the music
+ *
+ * The scan had a fault worth recording. It scored a field name containing
+ * "output" at four, and `lossyOutputFileUrl` contains "output" — so the good
+ * file and the lossy one tied, and a tie went to whichever came first in their
+ * JSON. The penalty it did have was for `lq|low|preview|demo`, and "lossy" is
+ * none of those. It could have handed her the worse file on a paid plan,
+ * silently, and the only way anybody would have known is by listening.
+ *
+ * All three expire four hours after the job finishes, which is why nothing
+ * here stores one: `fetchResult` is called immediately and the bytes are kept,
+ * not the address.
+ *
+ * The scan is still here, underneath, for an answer shaped in some way this
+ * does not expect. It never runs when a documented field is present.
+ */
+export function outputIn(value: unknown, want: Want = 'voice'): string | null {
+  const record = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
+  const at = (name: string): string | null => {
+    const found = record[name];
+    return typeof found === 'string' && /^https:\/\//i.test(found) ? found : null;
+  };
+  const order = want === 'mix'
+    ? ['recombinedAudioFileUrl', 'outputFileUrl', 'lossyOutputFileUrl']
+    : ['outputFileUrl', 'recombinedAudioFileUrl', 'lossyOutputFileUrl'];
+  for (const name of order) {
+    const found = at(name);
+    if (found) return found;
+  }
+  return audioUrlIn(value);
+}
+
+/**
+ * The same question asked of an answer whose shape is not one of theirs.
+ *
+ * Kept as the fallback under `outputIn`, and kept exported because it is what
+ * `check:sing` exercises. Any https URL that looks like audio, ranked rather
+ * than taken first — an RVC service returns a preview beside the real thing
+ * often enough that the first URL is a coin toss, and the file that was just
+ * uploaded can come back in the same object.
+ *
+ * "lossy" is a penalty now. It was not, and that was the fault above.
  */
 export function audioUrlIn(value: unknown): string | null {
   let best: string | null = null;
@@ -222,9 +283,9 @@ export function audioUrlIn(value: unknown): string | null {
     if (!/\.(wav|mp3|flac|ogg|m4a|aac)$/.test(path) && !/audio|output|file|url/.test(named)) continue;
     if (/input|source|sound_?file|soundfile|original/.test(named)) continue;
     const score =
-      (/output|converted|result/.test(named) ? 4 : 0) +
+      (/output|converted|result|recombined/.test(named) ? 4 : 0) +
       (/\.wav$/.test(path) ? 2 : 0) +
-      (/lq|low|preview|demo/.test(named) ? -3 : 0);
+      (/lossy|lq|low|preview|demo/.test(named) ? -6 : 0);
     if (score > bestScore) {
       best = text;
       bestScore = score;
@@ -233,22 +294,43 @@ export function audioUrlIn(value: unknown): string | null {
   return best;
 }
 
-/* ── Finding out what the account really has ─────────────────────────────
+/**
+ * The stems out of a separation job, by instrument.
+ *
+ * Their Vocal Separation Job carries `stemFileUrls` as `{ instrument, url }`,
+ * with a `lossyStemFileUrls` beside it and a deprecated `backingAudioFileUrl`
+ * their own documentation says to stop using — the backing track is a stem
+ * named "backing" now.
+ *
+ * Nothing calls this yet. It is here because the shape is known today and will
+ * not be known any better later, and because the room that needs it — the Pro
+ * Booth, which splits a lane over Music.ai per use — is the one place moving
+ * to Kits saves money rather than adding a feature.
+ */
+export function stemsIn(value: unknown): { instrument: string; url: string }[] {
+  const record = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
+  const list = Array.isArray(record.stemFileUrls)
+    ? record.stemFileUrls
+    : Array.isArray(record.lossyStemFileUrls)
+      ? record.lossyStemFileUrls
+      : [];
+  const found: { instrument: string; url: string }[] = [];
+  for (const one of list) {
+    if (!one || typeof one !== 'object') continue;
+    const stem = one as { instrument?: unknown; url?: unknown };
+    if (typeof stem.instrument !== 'string' || typeof stem.url !== 'string') continue;
+    if (!/^https:\/\//i.test(stem.url)) continue;
+    found.push({ instrument: stem.instrument, url: stem.url });
+  }
+  /* The bare voice as a stem too, so a caller asking for "vocals" gets it
+     whichever field it arrived in. */
+  if (typeof record.vocalAudioFileUrl === 'string' && /^https:\/\//i.test(record.vocalAudioFileUrl)
+      && !found.some((one) => /vocal/i.test(one.instrument))) {
+    found.unshift({ instrument: 'vocals', url: record.vocalAudioFileUrl });
+  }
+  return found;
+}
 
-   The rest of Kits' product — cloning a voice, generating a vocal, splitting
-   a mix — is behind endpoints nobody here has seen. Guessing them would ship
-   buttons that fail against a service that is charging her, which is worse
-   than not shipping them.
-
-   So instead of guessing, this asks. `/api/kits/setup` walks the candidates
-   below with her real key and reports what actually answers, the way
-   `/api/analyse/setup` does for Music.ai's workflow slugs. One page open in a
-   browser turns every guess in this file into a fact.
-
-   The list is candidates, not claims. `voice-conversions` is the only one
-   that is known — it is the endpoint she sent — and it is in the list so the
-   report has a control in it: if that one fails too, the key is the problem
-   and none of the other answers mean anything. */
 export const CANDIDATES = [
   /* Their documentation's own contents page, 8 September 2026. Five APIs and
      no more:
@@ -273,7 +355,7 @@ export const CANDIDATES = [
   'voice-models',
   'vocal-separations',
   'stem-splits',
-  'voice-blends',
+  'voice-blender',
 
   /* What is left of the month. */
   'user',
@@ -456,18 +538,138 @@ export async function models(): Promise<Model[]> {
 
 /* ── The two requests ────────────────────────────────────────────────────── */
 
+/**
+ * Cleaning done before the voice is changed, by them rather than by us.
+ *
+ * Their `PreProcessingEffects` — a noise gate, a high pass, a low pass and a
+ * compressor, each optional. This matters more here than it looks: most of
+ * what arrives from this app is a phone microphone in a bedroom, and an RVC
+ * model converts whatever it is given, hum and room and all. A gate and a high
+ * pass in front of it is the difference between a take that sounds sung and
+ * one that sounds recorded on a phone in a bedroom.
+ *
+ * Numbers are theirs to validate; the shapes are pinned here so a typo is a
+ * compile error rather than a silently ignored field.
+ */
+export interface Cleanup {
+  readonly noiseGate?: {
+    threshold_db: number;
+    ratio: number;
+    attack_ms: number;
+    release_ms: number;
+  };
+  readonly highPassFilter?: { cutoff_frequency_hz: number };
+  readonly lowPassFilter?: { cutoff_frequency_hz: number };
+  readonly compressor?: {
+    threshold_db: number;
+    ratio: number;
+    attack_ms: number;
+    release_ms: number;
+  };
+}
+
+/**
+ * What a phone in a bedroom needs, and nothing a studio take would resent.
+ *
+ * A gate at −45 dB takes the room out between phrases without chewing the ends
+ * of words; a high pass at 80 Hz takes out desk rumble and the low end a phone
+ * microphone invents; nothing here touches the top or squashes the dynamics,
+ * because the model is about to do its own thing to both.
+ */
+export const PHONE_CLEANUP: Cleanup = {
+  noiseGate: { threshold_db: -45, ratio: 4, attack_ms: 5, release_ms: 120 },
+  highPassFilter: { cutoff_frequency_hz: 80 },
+};
+
+/**
+ * Effects put on the voice *after* it has been converted.
+ *
+ * Their `PostProcessingEffects` — chorus, reverb, compressor, delay. This is
+ * the thing a singer expects to find and this app cannot currently offer on a
+ * converted take: a dry RVC output sounds like a dry RVC output, and a little
+ * room on it is the difference between a demo and something worth posting.
+ *
+ * Nothing sends these yet. They are pinned here because the shapes are known
+ * today, and because the room they belong in — the Pro Booth's own effects,
+ * beside the tone drawer — is a screen rather than a request.
+ */
+export interface Polish {
+  readonly chorus?: {
+    rate_hz: number;
+    depth: number;
+    centre_delay_ms: number;
+    feedback: number;
+    mix: number;
+  };
+  readonly reverb?: {
+    room_size: number;
+    damping: number;
+    wet_level: number;
+    dry_level: number;
+    width: number;
+    freeze_mode: number;
+  };
+  readonly compressor?: {
+    threshold_db: number;
+    ratio: number;
+    attack_ms: number;
+    release_ms: number;
+  };
+  readonly delay?: { delay_seconds: number; feedback: number; mix: number };
+}
+
+/**
+ * One job a minute, for everybody together.
+ *
+ * Their rate limit is **1 POST per minute**, and it is counted against the
+ * Kits *account* rather than the key — so every member of this app shares one
+ * allowance. Two people pressing "Sing it" in the same minute is not a rare
+ * case; it is the ordinary case on any evening when more than one person is
+ * awake.
+ *
+ * This is not a queue. A queue is task #109's business, with somewhere to keep
+ * it that survives a cold start. This is the honest failure in the meantime:
+ * the second person is told what happened, in words that name the wait, and
+ * their credits are given back by the route above.
+ *
+ * The clock is per server instance, which on Vercel means it undercounts —
+ * two instances can each believe they are first. That is why the 429 below is
+ * handled as well: the local clock saves the common case, and their answer is
+ * what actually decides.
+ */
+let lastPost = 0;
+const A_MINUTE = 60_000;
+
 /** Starts a conversion. The shape of this one is hers, not a guess. */
 export async function startConversion(
   voiceModelId: string,
   audio: Blob,
   filename: string,
+  cleanup: Cleanup | null = PHONE_CLEANUP,
 ): Promise<{ ok: true; id: string; answer: unknown } | Upstream> {
+  const since = Date.now() - lastPost;
+  if (lastPost > 0 && since < A_MINUTE) {
+    const wait = Math.ceil((A_MINUTE - since) / 1000);
+    return {
+      ok: false,
+      status: 429,
+      message: `The singing service takes one job a minute for the whole app. Try again in ${wait} seconds.`,
+    };
+  }
+
   const form = new FormData();
   form.append('voiceModelId', voiceModelId);
   form.append('soundFile', audio, filename);
+  /* Their effects go as JSON in a multipart field. Sent only when there is
+     something to send: an empty object is a field they have to parse for no
+     reason, and a field name they might not recognise. */
+  if (cleanup && Object.keys(cleanup).length > 0) {
+    form.append('preProcessingEffects', JSON.stringify(cleanup));
+  }
 
   let response: Response;
   try {
+    lastPost = Date.now();
     response = await fetch(`${BASE}/voice-conversions`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${key()}` },
@@ -475,6 +677,14 @@ export async function startConversion(
     });
   } catch {
     return { ok: false, status: 502, message: 'Could not reach the singing service.' };
+  }
+  /* Their answer, not ours, and it is the one that counts. */
+  if (response.status === 429) {
+    return {
+      ok: false,
+      status: 429,
+      message: 'The singing service takes one job a minute for the whole app, and one has just started. Try again in a minute.',
+    };
   }
   if (!response.ok) return complain(response);
 
@@ -563,6 +773,9 @@ export async function convert(
   audio: Blob,
   filename: string,
   deadline: number,
+  /* Whether the music comes back with the voice. See `Want`: getting this
+     wrong hands somebody a dry acapella of a song they asked to hear. */
+  want: Want = 'voice',
 ): Promise<{ ok: true; audio: ArrayBuffer; type: string } | Upstream> {
   const started = await startConversion(voiceModelId, audio, filename);
   if (!started.ok) return started;
@@ -579,7 +792,7 @@ export async function convert(
         message: `The singing service could not convert that take: ${whatCameBack(answer)}`,
       };
     }
-    const url = stateIn(answer) === 'done' ? audioUrlIn(answer) : null;
+    const url = stateIn(answer) === 'done' ? outputIn(answer, want) : null;
     if (url) return fetchResult(url);
 
     if (Date.now() >= deadline) {

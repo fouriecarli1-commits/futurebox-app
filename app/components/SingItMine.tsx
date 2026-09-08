@@ -137,6 +137,10 @@ export default function SingItMine({
       }
       key = put.key;
       form.append('voiceModelId', modelId);
+      /* The music comes back with the voice. This is a finished song, and
+         somebody pressing "sing this in my voice" is asking to hear their
+         song — not a dry acapella of it. */
+      form.append('want', 'mix');
       form.append('seconds', String(Math.round(track.seconds || 0)));
 
       const token = await accessToken();

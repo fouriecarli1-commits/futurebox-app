@@ -23,7 +23,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { audioUrlIn, idIn, namedModels, safeModelId, stateIn } from '../app/lib/server/kits.ts';
+import { audioUrlIn, idIn, namedModels, outputIn, safeModelId, stateIn } from '../app/lib/server/kits.ts';
 import { CREDITS } from '../app/lib/credits.ts';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -116,7 +116,55 @@ ok(
 );
 ok(
   'the finished file is fetched from Kits’ own answer and from nowhere else',
-  /fetchResult\(url\)/.test(lib) && /audioUrlIn\(answer\)/.test(lib) && !/fetchResult\([^)]*form/.test(route),
+  /fetchResult\(url\)/.test(lib) && /outputIn\(answer, want\)/.test(lib) && !/fetchResult\([^)]*form/.test(route),
+);
+/* And the right one of the three files it answers with.
+
+   `outputFileUrl` is the bare converted voice; `recombinedAudioFileUrl` is
+   that voice back over the music; `lossyOutputFileUrl` is a smaller, worse
+   copy. Somebody pressing "sing this in my voice" on a finished song is asking
+   to hear their song, so that path asks for the mix. A Pro Booth lane asks for
+   nothing and gets the voice, which is right: the music is already on its own
+   lanes. */
+ok(
+  'a finished song asks for the music back with the voice',
+  /form\.append\('want', 'mix'\)/.test(readFileSync('app/components/SingItMine.tsx', 'utf8')),
+);
+ok(
+  'and the lossy copy is never preferred to the real one',
+  outputIn({
+    outputFileUrl: 'https://arpeggi.io/out/real.wav',
+    lossyOutputFileUrl: 'https://arpeggi.io/out/small.mp3',
+  }) === 'https://arpeggi.io/out/real.wav',
+);
+ok(
+  'even when their answer lists it first',
+  outputIn({
+    lossyOutputFileUrl: 'https://arpeggi.io/out/small.mp3',
+    outputFileUrl: 'https://arpeggi.io/out/real.wav',
+  }) === 'https://arpeggi.io/out/real.wav',
+  'a tie on the field name used to be broken by whichever came first',
+);
+ok(
+  'the mix is the recombined file, not the bare voice',
+  outputIn({
+    outputFileUrl: 'https://arpeggi.io/out/voice.wav',
+    recombinedAudioFileUrl: 'https://arpeggi.io/out/with-music.wav',
+  }, 'mix') === 'https://arpeggi.io/out/with-music.wav',
+);
+ok(
+  'and a lane gets the bare voice even when a mix is offered',
+  outputIn({
+    outputFileUrl: 'https://arpeggi.io/out/voice.wav',
+    recombinedAudioFileUrl: 'https://arpeggi.io/out/with-music.wav',
+  }) === 'https://arpeggi.io/out/voice.wav',
+);
+/* One job a minute, for the whole account rather than per key — their own
+   documented limit, and the reason a second person pressing Sing it in the
+   same minute has to be told something true rather than shown a failure. */
+ok(
+  'the one-a-minute limit is honoured before the request, not only after it',
+  /A_MINUTE/.test(lib) && /status: 429/.test(lib),
 );
 ok('and only over https', /parsed\.protocol !== 'https:'/.test(lib));
 ok('the credits are taken before the work', /const paid = await charge\(/.test(route));
