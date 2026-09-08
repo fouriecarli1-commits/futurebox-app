@@ -350,11 +350,29 @@ export default function FutureBoxHome() {
       setUser(account ? { ...account, followers: 1 } : null);
       if (account) {
         sayHello();
-        /* Armed, never opened. This event fires on a token refresh and on a
-           sign-in in another tab as readily as on one here, and it does not
-           say which — so it is treated as the weakest of the three claims.
-           The two that mean something call `arrived` themselves. */
-        restored();
+        /* The account, and nothing about the screen.
+
+           This event fires on a token refresh and on a sign-in in another tab
+           as readily as on one here, and it does not say which — so it is the
+           weakest of the three claims and the only one that must not move
+           anybody. The comment here used to say "armed, never opened" while
+           the line under it called `restored()`, which opens the welcome over
+           whatever is on screen. It had been true once; the line changed and
+           the comment did not, which is how a note becomes the last place
+           anybody looks.
+
+           What it cost: Supabase re-emits the session on a token refresh —
+           roughly hourly — and again when the tab is brought back. Each one
+           dropped a full-page greeting over work in progress. It is also a
+           race at sign-in: the form opens the door itself, somebody presses a
+           room, and this callback lands a moment later and puts the greeting
+           straight back. `audit/greeting.mjs` reproduces exactly that.
+
+           The two events that genuinely mean somebody has just arrived call
+           `arrived()` themselves — the sign-in form, and the marked return
+           from Google — and a session that was already there at page load is
+           answered by `restored()` above, once, where a page load is what it
+           is responding to. */
         return;
       }
       departed();
@@ -1364,8 +1382,19 @@ export default function FutureBoxHome() {
     }
   };
 
+  /* Signed out here first, and told to the server afterwards.
+
+     It used to `await cloud.signOut()` before touching anything on screen,
+     which makes leaving depend on the network answering. On a bad connection
+     — or a project that is not reachable at all — the press did nothing
+     visible and the person stayed looking at their own name and their own
+     library on a device they were trying to hand back. Whatever the server
+     says, the answer to "sign me out" on this device is yes.
+
+     The revoke still goes out, and its failure is swallowed on purpose:
+     nothing on screen depends on it, and Supabase clears the stored session
+     on its own side either way. */
   const handleSignOut = async () => {
-    await cloud.signOut();
     try {
       window.localStorage.removeItem(LOCAL_ACCOUNT);
     } catch {
@@ -1373,6 +1402,7 @@ export default function FutureBoxHome() {
     }
     setUser(null);
     departed();
+    await cloud.signOut().catch(() => undefined);
   };
 
   // Reopening the modal should not show the last attempt's error.

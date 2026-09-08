@@ -15,16 +15,66 @@
  *   · that it is a door and not a wall — one press into a room, and a way
  *     back to it afterwards.
  *
- * The songs are seeded into the same IndexedDB store `lib/library.ts` reads,
- * and the history into the same localStorage key `lib/makes.ts` reads, so what
- * runs is the real derivation over real storage. Only the account behind it is
- * stubbed. Needs the stub build — see `audit/README.md`.
+ * The songs are seeded into the same store `lib/library.ts` reads, and the
+ * history into the same localStorage key `lib/makes.ts` reads, so what runs is
+ * the real derivation over real storage. Only the account behind it is stubbed.
+ *
+ * ── The build it needs, and why it makes one ────────────────────────────
+ *
+ * The greeting is a signed-in screen, and there is no signing in without
+ * `NEXT_PUBLIC_SUPABASE_URL`: `cloud.configured()` is false, the form is not
+ * there to fill in, and the run gets no further than the landing page. That
+ * variable is inlined at build time, so an environment handed to `next start`
+ * changes nothing — this probe cannot borrow anybody else's build.
+ *
+ * So it makes one, and puts the ordinary build back on the way out. The
+ * header used to say "needs the stub build" and leave the making of it to
+ * somebody's memory, which is why it never ran: it went straight to a port
+ * nobody had started, on a build that had no accounts in it.
+ *
+ * The values are obvious nonsense on purpose. Nothing here reaches Supabase —
+ * every call the screen makes is answered by `page.route` below — and a real
+ * project's address in a test build is how a probe ends up talking to
+ * production.
  */
+import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
 
-const PORT = process.argv[2] || '3044';
+const PORT = process.argv[2] || '3253';
 const af = process.argv[3] === 'af';
+
+const STUB = {
+  NEXT_PUBLIC_SUPABASE_URL: 'https://stub.supabase.co',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'stub-anon-key',
+};
+console.log('building with a project that has accounts…');
+execSync('npx next build', { stdio: 'ignore', env: { ...process.env, ...STUB } });
+
+/* The tree as it was found, whatever happened above.
+
+   In a `process.on('exit')` handler rather than at the end of the run: a probe
+   that throws on its first assertion never reaches a tidy-up written at the
+   bottom, and the stubbed build it leaves behind is then read by the next
+   probe as a broken app — in a different file, with nothing pointing back
+   here. `taste` did exactly that, once, which is why the rule exists.
+
+   `execSync` in an exit handler is allowed to be slow. Nothing is waiting on
+   this process any more, and a slow tidy-up beats a poisoned build. */
+let putBack = false;
+const restore = () => {
+  if (putBack) return;
+  putBack = true;
+  console.log('putting the ordinary build back…');
+  try {
+    execSync('npx next build', { stdio: 'ignore' });
+  } catch {
+    console.error('the ordinary build could not be put back — run `npx next build`');
+  }
+};
+process.on('exit', restore);
+
+const server = await serve(PORT, { env: STUB });
 
 const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
@@ -109,17 +159,24 @@ for (const path of ['**/auth/v1/token*', '**/auth/v1/signup*']) {
   await p.route(path, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SESSION) }));
 }
 
+/* The bottom bar. It is on every signed-in screen and no signed-out one, so
+   it is how this run knows it is in — rather than a flat three seconds, which
+   is how long the sign-in took on an idle laptop and sometimes less than it
+   takes on a loaded one. A probe that drives the signed-out page believing it
+   is signed in reports the room as broken when the fault is the wait. */
 async function signIn() {
   await p.locator('button').filter({ hasText: af ? /^Begin verniet$/ : /^Start free$/ }).first().click();
-  await p.waitForTimeout(900);
+  await p.locator('input[type="email"]').first().waitFor({ timeout: 20_000 });
   await p.locator('input[type="email"]').first().fill(WHO.email);
   await p.locator('input[type="password"]').first().fill('hierdie-is-nie-eg-nie');
   await p.locator('form button[type="submit"]').first().click();
-  await p.waitForTimeout(3000);
+  await p.locator('nav[aria-label]').first().waitFor({ timeout: 40_000 });
+  await p.waitForTimeout(1200);
 }
 
-await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
-await p.waitForTimeout(1500);
+await p.goto(server.url, { waitUntil: 'domcontentloaded' });
+await p.locator('button').filter({ hasText: af ? /^Begin verniet$/ : /^Start free$/ }).first()
+  .waitFor({ timeout: 30_000 });
 check('a page load on its own shows no welcome — that is for arriving',
   !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()));
 await signIn();
@@ -177,9 +234,21 @@ const open = door.locator('button').filter({
 }).first();
 check('the suggestion has its own button', (await open.count()) > 0);
 await open.click();
-await p.waitForTimeout(1500);
+/* Waited out rather than glanced at, and this is the assertion that found the
+   fault the file was revived for.
+
+   The auth library re-emits the session after the sign-in has already been
+   answered — and the studio was treating every one of those as an arrival, so
+   the door came back over the room a second or two after somebody pressed
+   their way out of it. A check that read the screen 1.5s in saw the room and
+   said yes. Four seconds is longer than that callback takes and short enough
+   to keep the run honest; the same line covers the hourly token refresh,
+   which is the version of this that lands on somebody mid-verse. */
+await p.waitForTimeout(4000);
 words = await p.locator('body').innerText();
-check('pressing it lands in the room', !/Hello, Carli!|Hallo, Carli!/.test(words));
+check('pressing it lands in the room, and the room stays',
+  !/Hello, Carli!|Hallo, Carli!/.test(words),
+  'the greeting came back over the room');
 check('and the room is the one that was offered',
   af ? /Hoor hoe ’n styl klink|Skryf vir my ’n styl/.test(words) : /Hear what a style sounds like|Write me a style/.test(words),
   words.split('\n').slice(0, 10).join(' / '));
@@ -223,9 +292,9 @@ check('and it goes back',
    past a greeting. It is also what shuts the door so the sign-in below has
    something to prove — and the rail is deliberately behind this page and
    cannot be reached from it, which is what being a page means. */
-await door.locator('button').filter({
-  hasText: af ? /^Nie nou nie/ : /^Not now/,
-}).first().click();
+const notNow = door.locator('button').filter({ hasText: af ? /^Nie nou nie/ : /^Not now/ }).first();
+await notNow.waitFor({ timeout: 20_000 });
+await notNow.click();
 await p.waitForTimeout(1200);
 check('there is a way past it that is not a room',
   !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()),
@@ -267,9 +336,12 @@ check('signing in arrives at the door without pressing anything else',
    without leaving the door. There is one `goToRoom` now and it is the only way
    to set one, which is what stops the next room-picker arriving with the same
    fault. */
-await p.goto(`http://localhost:${PORT}/`, { waitUntil: 'networkidle' });
-await p.waitForTimeout(2500);
-await p.locator('button').filter({ hasText: af ? /^Begin ’n potgooi$|^Begin ’n podsending$/ : /^Start a podcast$/ }).first().click();
+await p.goto(`${server.url}/`, { waitUntil: 'domcontentloaded' });
+const podcast = p.locator('button').filter({
+  hasText: af ? /^Begin ’n potgooi$|^Begin ’n podsending$/ : /^Start a podcast$/,
+}).first();
+await podcast.waitFor({ timeout: 30_000 });
+await podcast.click();
 await p.waitForTimeout(2500);
 words = await p.locator('body').innerText();
 check('a room chosen on the front page opens that room, not the door',
@@ -287,8 +359,9 @@ check('and the rail moves with it',
 
    `cloud.signInWithGoogle` marks its own return address, and this is that
    return: a fresh load carrying the mark, with nothing pressed afterwards. */
-await p.goto(`http://localhost:${PORT}/?welcome=1`, { waitUntil: 'networkidle' });
-await p.waitForTimeout(3000);
+await p.goto(`${server.url}/?welcome=1`, { waitUntil: 'domcontentloaded' });
+await p.locator('nav[aria-label]').first().waitFor({ timeout: 40_000 });
+await p.waitForTimeout(2500);
 words = await p.locator('body').innerText();
 check('coming back from Google arrives at the door too',
   af ? /Hallo, Carli!/.test(words) : /Hello, Carli!/.test(words),
@@ -298,7 +371,8 @@ check('and the mark is wiped out of the address bar',
 
 /* And an ordinary load, with the same session and no mark, does not. Somebody
    coming back to a tab came for the feed. */
-await p.goto(`http://localhost:${PORT}/`, { waitUntil: 'networkidle' });
+await p.goto(`${server.url}/`, { waitUntil: 'domcontentloaded' });
+await p.locator('nav[aria-label]').first().waitFor({ timeout: 40_000 });
 await p.waitForTimeout(2500);
 check('but an ordinary return to a signed-in tab does not take over the screen',
   !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()));
@@ -309,4 +383,5 @@ await p.screenshot({
 });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
+server.stop();
 process.exit(problems.length ? 1 : 0);

@@ -250,19 +250,83 @@ export function audioUrlIn(value: unknown): string | null {
    report has a control in it: if that one fails too, the key is the problem
    and none of the other answers mean anything. */
 export const CANDIDATES = [
+  /* The control: the one endpoint whose shape is known, because she sent it.
+     If this fails, the key is the problem and nothing else below means
+     anything. */
   'voice-conversions',
-  'voice-models',
-  'voices',
-  'models',
-  'text-to-speech',
-  'text-to-speech-conversions',
+
+  /* ── Convert ────────────────────────────────────────────────────────────
+     "Voice changer", "Classic Convert" and "Harmonies" in their sidebar.
+     Conversion is the one already wired. Harmonies takes a single clean voice
+     and builds a harmony stack or a vocal layer out of it — the thing a chorus
+     costs a session for. */
+  'harmonies',
+  'harmony-generations',
+  'vocal-layers',
+
+  /* ── Generate ───────────────────────────────────────────────────────────
+     "Lead Vocals", their new one: lyrics, a backing instrumental, a style in
+     words, a length. That is a sung take from text — the piece this app has
+     never had, and it would sit in Make a song rather than in a tool drawer. */
+  'lead-vocals',
+  'lead-vocal-generations',
   'vocal-generations',
+
+  /* ── Clone Voices ───────────────────────────────────────────────────────
+     Training, which is the half the app cannot do yet: today it can only sing
+     in a voice already trained on their website, which is why the room links
+     out to a tutorial. If one of these answers, cloning comes in here.
+
+     Their "Create a voice" screen offers four ways, and they are different
+     products rather than settings: Instant (30 seconds of audio, straight
+     away), Professional (10–30 minutes, slower, sounds exactly like the
+     dataset), Blender (two models and a ratio), and Designer (no dataset at
+     all — a gender, a style, and three sliders). Instant cloning from thirty
+     seconds is the one that belongs in the booth, because thirty seconds is a
+     take somebody has already recorded there. */
+  'voice-models',
+  'voice-model-trainings',
+  'trainings',
+  'voice-blends',
+  'voice-designs',
+
+  /* Their library of 100+ voices, which the Voice changer screen browses.
+     Worth more than it looks: it is a voice to sing in for everybody who has
+     not trained one, which is everybody on their first day. */
+  'public-voice-models',
+  'community-voice-models',
+
+  /* ── Tools ──────────────────────────────────────────────────────────────
+     Vocal Isolator, AI Vocal Repair, AI Mastering, Stem Splitter, Key and BPM
+     Finder. Four of these are things this app already pays Music.ai per use
+     for, and Kits is a flat monthly fee with no download cap — so which of
+     them are reachable from the API is a bill question as much as a feature
+     question. */
   'stem-splits',
-  'stem-separations',
+  'vocal-isolations',
+  'vocal-separations',
+  'vocal-repairs',
+  'vocal-enhancements',
+  'masterings',
+  'mastering',
+  'key-bpm',
+  'audio-analyses',
+
+  /* ── The account itself ─────────────────────────────────────────────────
+     What the plan is and what is left of it. The Lead Vocal screen shows "400
+     min left this month", so there is a number somewhere worth reading before
+     this app starts spending it. */
   'user',
   'me',
   'account',
   'credits',
+  'subscription',
+  'usage',
+  /* And their History screen, which is every job this key has ever run. If it
+     answers, a member's conversions can be listed rather than remembered by
+     the browser they happened to be using at the time. */
+  'history',
+  'projects',
 ] as const;
 
 /**
@@ -330,6 +394,105 @@ export async function probe(path: string): Promise<{
     status: response.status,
     fields: answer && typeof answer === 'object' ? Object.keys(answer as object).slice(0, 24) : [],
   };
+}
+
+/* ── Her own trained voices ─────────────────────────────────────────────── */
+
+/**
+ * One trained voice, as this app needs it: a number and a name.
+ */
+export interface Model {
+  readonly id: string;
+  readonly name: string;
+}
+
+/**
+ * The name in a model record, whatever Kits calls the field.
+ *
+ * Read rather than insisted on, for the same reason as `idIn` above: the one
+ * request whose shape is known here is the conversion, and everything else is
+ * described by whoever wrote their API. A picker that shows the number because
+ * the field turned out to be `title` rather than `name` is not better than no
+ * picker; a picker that shows the number because there genuinely is no name is
+ * honest, and that is the fallback.
+ */
+function nameIn(record: Record<string, unknown>, id: string): string {
+  for (const field of ['name', 'title', 'modelName', 'displayName', 'label']) {
+    const value = record[field];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return id;
+}
+
+/**
+ * The models on the account behind the key.
+ *
+ * Why this exists: until the plan was paid, this endpoint answered 403 and the
+ * app asked people to type a number they had to go and find in the address bar
+ * at kits.ai. That is a fine fallback and a terrible front door. With a plan on
+ * the account it answers properly, so the room can show the voices by name.
+ *
+ * Names from `KITS_VOICE_MODELS` still win where they are set. Kits' own name
+ * is whatever was typed when the model was trained; hers is what she wants
+ * members to read.
+ *
+ * Failure is an empty list rather than a thrown error, on purpose. Every
+ * caller draws a screen, and none of them should turn into an error page
+ * because a list of voices could not be fetched — the number field is still
+ * there underneath.
+ */
+export async function listModels(): Promise<Model[]> {
+  if (!configured()) return [];
+  let response: Response;
+  try {
+    response = await fetch(`${BASE}/voice-models`, {
+      headers: { Authorization: `Bearer ${key()}` },
+      /* Their list, not a copy of it from an hour ago that no longer has the
+         voice somebody trained ten minutes back. Next caches fetches in route
+         handlers by default, which would do exactly that. */
+      cache: 'no-store',
+    });
+  } catch {
+    return [];
+  }
+  if (!response.ok) return [];
+  const answer = (await response.json().catch(() => null)) as unknown;
+  const list = Array.isArray(answer)
+    ? answer
+    : Array.isArray((answer as { data?: unknown })?.data)
+      ? (answer as { data: unknown[] }).data
+      : Array.isArray((answer as { voiceModels?: unknown })?.voiceModels)
+        ? (answer as { voiceModels: unknown[] }).voiceModels
+        : [];
+
+  const found: Model[] = [];
+  for (const one of list) {
+    if (!one || typeof one !== 'object') continue;
+    const record = one as Record<string, unknown>;
+    /* `safeModelId` and not a cast: this id goes back out in a form field and
+       in a URL, and the rule for both is digits only however friendly the
+       source looks. */
+    const raw = record.id ?? record.voiceModelId ?? record.modelId;
+    const id = safeModelId(typeof raw === 'number' ? String(raw) : raw);
+    if (!id || found.some((had) => had.id === id)) continue;
+    found.push({ id, name: nameIn(record, id) });
+  }
+  return found;
+}
+
+/**
+ * Her voices, named the way she wants them named.
+ *
+ * The environment variable is the override rather than the source now: a name
+ * set there wins, a model that is only at Kits still appears, and a name in the
+ * variable for a model that no longer exists is dropped rather than shown as a
+ * voice that cannot be sung in.
+ */
+export async function models(): Promise<Model[]> {
+  const theirs = await listModels();
+  const named = new Map(namedModels().map((one) => [one.id, one.name]));
+  if (theirs.length === 0) return namedModels();
+  return theirs.map((one) => ({ id: one.id, name: named.get(one.id) ?? one.name }));
 }
 
 /* ── The two requests ────────────────────────────────────────────────────── */

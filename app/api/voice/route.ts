@@ -8,7 +8,7 @@
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { configured, stockVoices } from '@/app/lib/server/eleven';
-import { configured as singConfigured, namedModels } from '@/app/lib/server/kits';
+import { configured as singConfigured, models as singModels } from '@/app/lib/server/kits';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 
 export const runtime = 'nodejs';
@@ -24,8 +24,23 @@ export const maxDuration = 30;
  * first place. Only whether the key is set and the names of the models — never
  * the key, and never the variable's name, which `check:security` scans for.
  */
-function singing(): { configured: boolean; models: { id: string; name: string }[] } {
-  return { configured: singConfigured(), models: singConfigured() ? namedModels() : [] };
+async function singing(): Promise<{
+  configured: boolean;
+  models: { id: string; name: string }[];
+}> {
+  /* Asked of Kits rather than read out of an environment variable.
+
+     It used to be the variable only, because on a free account the list
+     endpoint answered 403 and a picker that is empty for everybody is worse
+     than a number field. With a plan on the account it answers, so the rooms
+     can show her voices by name without anybody maintaining a second copy of
+     the list by hand — and `models()` still lets a name in the variable win
+     over whatever was typed at kits.ai.
+
+     A failure there is an empty list, not an error: the number field is still
+     under the picker, and a voice room that will not draw because a list could
+     not be fetched is a worse answer than a voice room with no list. */
+  return { configured: singConfigured(), models: singConfigured() ? await singModels() : [] };
 }
 
 export async function GET(request: Request): Promise<Response> {
@@ -35,7 +50,7 @@ export async function GET(request: Request): Promise<Response> {
       mine: [],
       stock: [],
       caps: PODCAST_CAPS.free,
-      singing: singing(),
+      singing: await singing(),
     });
   }
 
@@ -57,6 +72,6 @@ export async function GET(request: Request): Promise<Response> {
     caps,
     mine,
     stock: await stockVoices(),
-    singing: singing(),
+    singing: await singing(),
   });
 }

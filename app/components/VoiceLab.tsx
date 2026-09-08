@@ -25,6 +25,7 @@ import Recommend from './Recommend';
 import VoicePicker from './VoicePicker';
 import Note from './Note';
 import Card from './Card';
+import WatchTutorial from './WatchTutorial';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { VOICE_CONSENT } from '@/app/lib/consent';
@@ -457,6 +458,11 @@ export default function VoiceLab({
       {/* ── Your voice ──────────────────────────────────────────────────── */}
       <Card title={t('voice.yours', 'Your own voice')}>
         <Note>{t('voice.yoursNote', 'Record about a minute and this can read scripts in your voice. It reads — it does not sing.')}</Note>
+
+        {/* Before the consent tick and the record button, because somebody who
+            has never cloned a voice wants to know what they are agreeing to
+            and what comes out the other end. */}
+        <WatchTutorial />
 
         {state.mine.length > 0 && (
           <div className="space-y-1.5">

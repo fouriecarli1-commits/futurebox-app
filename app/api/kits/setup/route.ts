@@ -27,12 +27,15 @@
  */
 
 import crypto from 'node:crypto';
-import { CANDIDATES, configured, namedModels, probe } from '@/app/lib/server/kits';
+import { CANDIDATES, configured, listModels, namedModels, probe } from '@/app/lib/server/kits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-/** Thirteen requests to somebody else's API, one after another. */
-export const maxDuration = 60;
+/* Twenty-six requests to somebody else's API, one after another. The list
+   grew twice: once when the plan was bought and there was finally something to
+   find, and again when Carli sent screenshots of their whole product, which
+   turned a list of guessed names into a list of their actual tools. */
+export const maxDuration = 120;
 
 function sameSecret(given: string, wanted: string): boolean {
   const a = Buffer.from(given);
@@ -96,6 +99,13 @@ export async function GET(request: Request): Promise<Response> {
         : 'The known endpoint refused this key — check it, and check the plan carries API access.',
     needsPlan,
     realPaths: real,
+    /* The voices on the account, by name.
+
+       This is the one thing in the report that is not a shape: it is what the
+       picker in the Pro Booth and on a finished song will show, so seeing it
+       here is seeing what she will see. Names only — the ids are hers and
+       there is no reason to put them in a page that gets pasted into a chat. */
+    voices: (await listModels()).map((one) => one.name),
     namedModels: namedModels().map((one) => one.name),
     found,
   });
