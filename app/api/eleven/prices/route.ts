@@ -13,19 +13,50 @@
  * climbs, we are handing out more work per credit than we did, and the margin
  * is going the wrong way.
  *
+ * ── And the other half: what they will actually charge ───────────────────
+ *
+ * Everything above is still OUR arithmetic — better arithmetic than a table,
+ * because it is measured against real traffic, but inference all the same.
+ * `GET /v1/user/subscription` skips the inference. It gives the number
+ * ElevenLabs will take on the next invoice, and what is already being spent
+ * beyond the plan.
+ *
+ * The two halves are the same question from both ends:
+ *
+ *     bill      what ElevenLabs will charge us
+ *     perKind   what we charged members for that work
+ *
+ * and the gap between them is whether the month made a profit. That is the
+ * thing Carli keeps asking for, and until now no page could answer it.
+ *
+ * `keyGuard` is the third, smaller thing on the page: whether the key is
+ * fenced to the endpoints this app uses and whether it has a ceiling. It is a
+ * READ. Nothing here creates, changes or deletes a key — see `keyGuards` in
+ * `lib/server/eleven.ts` for why that line is drawn where it is.
+ *
  * ── Guarded, like every page that reports on money ───────────────────────
  *
  * It refuses without `POST_SECRET` rather than defaulting to open, compared in
  * constant time. It carries totals and rates, never anybody's text or audio,
  * so it is safe to paste into a chat — which is what it is for.
+ *
+ * One thing it must keep never carrying: the key itself. `bill` and
+ * `keyGuards` both allow-list their way out of ElevenLabs' answer rather than
+ * passing it through, because this page's whole purpose is to be pasted
+ * somewhere.
  */
 
 import crypto from 'node:crypto';
 import { admin } from '@/app/lib/server/account';
+import { bill, configured, keyGuards, warningsFor } from '@/app/lib/server/eleven';
 import { CREDITS } from '@/app/lib/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+/* Two reads against ElevenLabs on top of the database. The default ten seconds
+   is enough on a good day and not enough on the day this page is most worth
+   opening. */
+export const maxDuration = 30;
 
 function sameSecret(given: string, wanted: string): boolean {
   const a = Buffer.from(given);
@@ -49,29 +80,20 @@ export async function GET(request: Request): Promise<Response> {
   const given = new URL(request.url).searchParams.get('key') ?? '';
   if (!wanted || !sameSecret(given, wanted)) return new Response('no', { status: 404 });
 
-  const db = admin();
-  if (!db) {
-    return Response.json(
-      { message: 'The database is not configured, so there is nothing to compare.' },
-      { status: 503 },
-    );
-  }
+  /* The two halves are fetched together and reported separately.
 
-  const { data, error } = await db.from('eleven_price_check').select('*');
-  if (error) {
-    /* The most likely reason by far, and the one worth naming rather than
-       relaying a Postgres string that means nothing to the person reading. */
-    return Response.json(
-      {
-        message:
-          'Could not read the comparison. Run supabase/eleven.sql (or supabase/ALMAL.sql) in Supabase first.',
-        detail: error.message,
-      },
-      { status: 503 },
-    );
-  }
+     They used to be one: a database that could not be read returned 503 and
+     the page was over. That is now the wrong shape, because the half that
+     answers Carli's actual question — what ElevenLabs will charge — does not
+     touch the database at all. A missing table must not take the invoice down
+     with it, and a refused key must not take the margin table down with it. */
+  const [comparison, money, guard] = await Promise.all([
+    readComparison(),
+    configured() ? bill() : Promise.resolve(null),
+    configured() ? keyGuards() : Promise.resolve(null),
+  ]);
 
-  const rows = (data ?? []) as Row[];
+  const rows = comparison.rows;
   return Response.json({
     /* An empty answer is not a failure — it means no ElevenLabs work has been
        done since the table was created. Saying so beats an empty list that
@@ -81,6 +103,27 @@ export async function GET(request: Request): Promise<Response> {
       rows.length > 0
         ? 'Characters per credit is the number. Watch it over months; a rise means the margin is slipping.'
         : 'Nothing has been recorded yet. Make one podcast read or voice change and open this again.',
+
+    /* ── What ElevenLabs will charge ─────────────────────────────────────── */
+    bill: money === null
+      ? { message: 'The ElevenLabs key is not set on this deployment, so their own numbers cannot be read.' }
+      : money.ok
+        ? money.bill
+        : { message: money.message, status: money.status },
+
+    /* The sentences worth reading before the numbers. Written here rather than
+       left for a reader to work out, because the whole point of this page is
+       that somebody opens it once a month and sees the problem immediately. */
+    warnings: money !== null && money.ok ? warningsFor(money.bill) : [],
+
+    /* ── Whether the key is fenced in ────────────────────────────────────── */
+    keyGuard: guard === null
+      ? { message: 'No key set, so there is nothing to check.' }
+      : guard.ok
+        ? guard.keys
+        : { message: guard.message, status: guard.status },
+
+    /* ── What we charged for it ──────────────────────────────────────────── */
     /* What the app asks, so the two sit on one screen instead of one here and
        one in the source. */
     weCharge: {
@@ -92,5 +135,30 @@ export async function GET(request: Request): Promise<Response> {
       song: CREDITS.song,
     },
     perKind: rows,
+    /* Not fatal any more, so it has to be said out loud instead. */
+    comparisonProblem: comparison.problem,
   });
+}
+
+/**
+ * The margin table, or the reason there isn't one.
+ *
+ * Split out of `GET` when the invoice read was added: a missing table is now a
+ * note on a page that still works, not the end of the request.
+ */
+async function readComparison(): Promise<{ rows: Row[]; problem: string | null }> {
+  const db = admin();
+  if (!db) {
+    return { rows: [], problem: 'The database is not configured, so there is nothing to compare against.' };
+  }
+  const { data, error } = await db.from('eleven_price_check').select('*');
+  if (error) {
+    /* The most likely reason by far, and the one worth naming rather than
+       relaying a Postgres string that means nothing to the person reading. */
+    return {
+      rows: [],
+      problem: `Could not read the comparison — run supabase/eleven.sql (or supabase/ALMAL.sql) in Supabase first. (${error.message})`,
+    };
+  }
+  return { rows: (data ?? []) as Row[], problem: null };
 }

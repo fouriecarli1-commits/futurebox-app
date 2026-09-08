@@ -105,6 +105,7 @@
     "check:stitch": "node audit/stitch.mjs",
     "check:probooth": "node audit/probooth.mjs",
     "check:koste": "tsx scripts/check-koste.mts",
+    "check:bill": "tsx scripts/check-bill.mts",
     "check:sing": "tsx scripts/check-sing.mts",
     "check:maker": "tsx scripts/check-maker.mts",
     "check:roomtop": "node audit/roomtop.mjs",

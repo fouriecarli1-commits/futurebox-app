@@ -28,6 +28,239 @@ function key(): string {
   return process.env.ELEVENLABS_API_KEY ?? '';
 }
 
+/* ── What ElevenLabs will actually charge ────────────────────────────────── */
+
+/**
+ * The bill, read off ElevenLabs rather than worked out from a table.
+ *
+ * ── Why this exists ──────────────────────────────────────────────────────
+ *
+ * Carli, standing instruction: "ek wil net hê ons moet konstant in ag neem wat
+ * ek alles maandelliks betaal want dit help nie ek maak nie 'n wins nie."
+ *
+ * Everything we had on that was OUR arithmetic. `docs/KOSTE-EN-WINS.md` models
+ * the plans, `plans.ts` holds the credit rates, and `eleven_costs` compares
+ * what they charged against what we charged. All of it inferred from the
+ * character-cost header, and all of it able to drift from the invoice without
+ * anybody noticing.
+ *
+ * `GET /v1/user/subscription` just tells us. `nextInvoiceCents` is the number
+ * ElevenLabs will take; `overage` is money going out beyond the plan RIGHT
+ * NOW, which nothing in this app could see before.
+ *
+ * ── What is deliberately not returned ────────────────────────────────────
+ *
+ * Their answer carries account fields we have no business passing on. This
+ * picks the money and the allowance and drops the rest — the page it feeds is
+ * meant to be pasted into a chat, so an allow-list is the only safe shape.
+ * `GET /v1/user` carries this same object nested plus the account itself,
+ * which is exactly why this asks the narrower endpoint.
+ *
+ * NOT VERIFIED against the live API — the machine this is written on cannot
+ * reach elevenlabs.io. Read off the pages Carli sent. Every field is optional
+ * and every number is coerced, so a shape that differs comes back thin rather
+ * than throwing.
+ */
+export interface Bill {
+  readonly tier: string | null;
+  readonly status: string | null;
+  readonly billingPeriod: string | null;
+  /** Credits spent this period, and what the plan includes. */
+  readonly used: number | null;
+  readonly included: number | null;
+  /** `used` over `included`, 0-100, or null when either is missing. */
+  readonly percent: number | null;
+  /** When the allowance refills, as an ISO date. */
+  readonly resetsAt: string | null;
+  /** Whole days until that, or null. Negative is clamped to 0. */
+  readonly resetsInDays: number | null;
+  /** Already spent beyond the plan, in the currency they name. */
+  readonly overage: { amount: number; currency: string } | null;
+  /** What the next invoice comes to, in cents. The answer to her question. */
+  readonly nextInvoiceCents: number | null;
+  readonly openInvoices: number;
+  /**
+   * Whether usage-based billing is even switched on. `false` means a run past
+   * the allowance FAILS rather than costing money — which is a brake, and
+   * worth knowing it is there before somebody turns it off.
+   */
+  readonly canExceed: boolean | null;
+}
+
+function num(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function text(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+export async function bill(): Promise<{ ok: true; bill: Bill } | Upstream> {
+  const response = await fetch(`${BASE}/user/subscription`, {
+    headers: { 'xi-api-key': key() },
+    /* Their number now, not one from the last deploy. This is money. */
+    cache: 'no-store',
+  });
+  if (!response.ok) return complain(response);
+  const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!body || typeof body !== 'object') {
+    return { ok: false, status: 502, message: 'The subscription read came back as something other than an answer.' };
+  }
+
+  const used = num(body.character_count);
+  const included = num(body.character_limit);
+  const resetUnix = num(body.next_character_count_reset_unix);
+  const resetsAt = resetUnix ? new Date(resetUnix * 1000).toISOString() : null;
+
+  const over = body.current_overage as { amount?: unknown; currency?: unknown } | null | undefined;
+  const overAmount = num(over?.amount);
+  const invoice = body.next_invoice as { amount_due_cents?: unknown } | null | undefined;
+  const open = body.open_invoices;
+
+  return {
+    ok: true,
+    bill: {
+      tier: text(body.tier),
+      status: text(body.status),
+      billingPeriod: text(body.billing_period),
+      used,
+      included,
+      /* Guarded against a zero allowance rather than reporting Infinity as a
+         percentage, which is the kind of thing that reaches a dashboard. */
+      percent: used !== null && included !== null && included > 0
+        ? Math.round((used / included) * 1000) / 10
+        : null,
+      resetsAt,
+      resetsInDays: resetUnix
+        ? Math.max(0, Math.ceil((resetUnix * 1000 - Date.now()) / 86_400_000))
+        : null,
+      overage: overAmount !== null
+        ? { amount: overAmount, currency: text(over?.currency) ?? 'usd' }
+        : null,
+      nextInvoiceCents: num(invoice?.amount_due_cents),
+      openInvoices: Array.isArray(open) ? open.length : body.has_open_invoices === true ? 1 : 0,
+      canExceed: typeof body.can_extend_character_limit === 'boolean'
+        ? body.can_extend_character_limit
+        : null,
+    },
+  };
+}
+
+/**
+ * The things worth an eyebrow, in plain sentences.
+ *
+ * Both of these cost real money and neither is visible anywhere else in the
+ * app. Running out mid-month means members' songs start failing; going into
+ * overage means an invoice nobody predicted.
+ *
+ * Eighty per cent is the threshold because it leaves room to act. The date
+ * matters as much as the number — 85% with two days to run is fine, 85% with
+ * three weeks to run is not, so both go in the sentence and the reader can
+ * tell them apart.
+ */
+export function warningsFor(money: Bill): string[] {
+  const said: string[] = [];
+  if (money.overage && money.overage.amount > 0) {
+    said.push(
+      `Already ${money.overage.amount} ${money.overage.currency.toUpperCase()} past the plan this period. That is being spent now, not at renewal.`,
+    );
+  }
+  if (money.percent !== null && money.percent >= 80) {
+    const left = money.resetsInDays;
+    said.push(
+      `${money.percent}% of the plan's credits are gone` +
+        (left === null ? '.' : left <= 3 ? `, but it refills in ${left} day(s).` : `, with ${left} days still to run.`),
+    );
+  }
+  if (money.openInvoices > 0) {
+    said.push(`${money.openInvoices} invoice(s) are unpaid. Calls start failing when ElevenLabs suspends the account.`);
+  }
+  if (money.canExceed === false && money.percent !== null && money.percent >= 80) {
+    said.push('Usage-based billing is off, so work will FAIL rather than cost extra once the allowance is gone.');
+  }
+  return said;
+}
+
+/**
+ * Whether the key is fenced in, asked rather than assumed.
+ *
+ * ── Why this is a READ and only ever a read ──────────────────────────────
+ *
+ * The service-accounts surface can create, change and delete API keys. This
+ * function does none of that, and nothing in this app ever should:
+ *
+ *   1. `POST .../api-keys` returns the new key in PLAIN TEXT. That is a
+ *      secret, and a secret that passes through this app is a secret in a log.
+ *   2. Creating or changing a key changes HER ElevenLabs account, not our
+ *      code. That is her decision to make in front of her, not something a
+ *      deployment does on a schedule.
+ *
+ * So: GET, an allow-list on the way out, and the key value itself is not read
+ * even if they send one. What comes back answers one question — is the key we
+ * are using restricted to what this app needs, and does it have a ceiling on
+ * it — because that is what decides whether tightening it is three clicks in
+ * their console or a script somebody has to write.
+ *
+ * A refusal here is not a failure of the page. A normal key may well not be
+ * allowed to read the workspace's service accounts, and that answer is worth
+ * printing as itself rather than as an error.
+ */
+export interface KeyGuard {
+  readonly name: string | null;
+  readonly enabled: boolean | null;
+  /** The endpoint list, or null when the key is unrestricted. */
+  readonly permissions: readonly string[] | null;
+  /** A per-key monthly ceiling, or null when there is none. */
+  readonly ceiling: number | null;
+  /** CIDR ranges the key works from, or null when it works from anywhere. */
+  readonly onlyFrom: readonly string[] | null;
+}
+
+export async function keyGuards(): Promise<
+  { ok: true; keys: KeyGuard[] } | { ok: false; status: number; message: string }
+> {
+  const response = await fetch(`${BASE}/service-accounts`, {
+    headers: { 'xi-api-key': key() },
+    cache: 'no-store',
+  });
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      message:
+        response.status === 401 || response.status === 403
+          ? 'This key may not read the workspace service accounts, so the restriction cannot be checked from here. The console will show it.'
+          : `The service-account read came back ${response.status}.`,
+    };
+  }
+  const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  const accounts = Array.isArray(body?.service_accounts) ? body!.service_accounts : [];
+
+  const keys: KeyGuard[] = [];
+  for (const account of accounts) {
+    const list = (account as { api_keys?: unknown })?.api_keys;
+    if (!Array.isArray(list)) continue;
+    for (const one of list) {
+      if (!one || typeof one !== 'object') continue;
+      const record = one as Record<string, unknown>;
+      /* Named fields only. Their record carries a key hint and may carry more;
+         nothing goes out of here that was not asked for by name. */
+      keys.push({
+        name: text(record.name),
+        enabled: typeof record.is_enabled === 'boolean' ? record.is_enabled : null,
+        permissions: Array.isArray(record.permissions)
+          ? record.permissions.filter((p): p is string => typeof p === 'string')
+          : null,
+        ceiling: num(record.character_limit),
+        onlyFrom: Array.isArray(record.allowed_ips)
+          ? record.allowed_ips.filter((ip): ip is string => typeof ip === 'string')
+          : null,
+      });
+    }
+  }
+  return { ok: true, keys };
+}
+
 /**
  * What ElevenLabs says a call actually cost, off the response itself.
  *
