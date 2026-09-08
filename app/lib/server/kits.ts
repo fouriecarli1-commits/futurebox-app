@@ -479,6 +479,81 @@ export async function probe(path: string): Promise<{
   };
 }
 
+/**
+ * Can a voice be *made* here, or only listed?
+ *
+ * ── The one question the whole voice-training room hangs on ──────────────
+ *
+ * `listModels` proves `GET /voice-models` answers. A list says nothing about
+ * whether `POST /voice-models` exists. If it does, cloning belongs inside The
+ * Booth and the outbound link to kits.ai disappears; if it does not, the link
+ * and a tutorial are the honest answer and no amount of design fixes that.
+ *
+ * It cannot be settled from the machine this app is written on — arpeggi.io is
+ * blocked — but `/api/kits/setup` runs on Vercel, where it is not.
+ *
+ * ── How this asks without making anything ────────────────────────────────
+ *
+ * With a body that cannot possibly be a voice model: no audio, no name,
+ * nothing. A real create needs training audio, so this is refused on its
+ * contents wherever it is understood at all. What matters is WHICH refusal:
+ *
+ *   400 / 422   the address exists and takes a POST — it just hated this body.
+ *               Creating a voice is possible and the room can be built.
+ *   404 / 405   there is no POST here. Voice models are read-only over the
+ *               API, the link stays, and the room cannot be built.
+ *   401 / 403   the address is there and this key may not use it. A plan or a
+ *               permission question, not an API question.
+ *
+ * Nothing is created on any branch. That is the whole design of it: Carli's
+ * account is hers, and finding something out must not change it.
+ */
+export async function canCreateVoices(): Promise<{
+  status: number;
+  answer: 'yes' | 'no' | 'not-allowed' | 'unclear';
+  note: string;
+}> {
+  let response: Response;
+  try {
+    response = await fetch(`${BASE}/voice-models`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key()}`, 'Content-Type': 'application/json' },
+      /* Deliberately empty. A voice model needs audio; this cannot become one. */
+      body: '{}',
+    });
+  } catch {
+    return { status: 0, answer: 'unclear', note: 'could not be reached' };
+  }
+  const raw = (await response.text().catch(() => '')).slice(0, 200);
+  const answer =
+    response.status === 400 || response.status === 422
+      ? 'yes'
+      : response.status === 404 || response.status === 405
+        ? 'no'
+        : response.status === 401 || response.status === 403
+          ? 'not-allowed'
+          : 'unclear';
+  const note =
+    answer === 'yes'
+      ? 'The address takes a POST and refused this body on its contents. A voice CAN be created over the API, so voice training belongs inside The Booth.'
+      : answer === 'no'
+        ? 'There is no POST here. Voice models are read-only over the API — the link to kits.ai stays, and that is the honest answer.'
+        : answer === 'not-allowed'
+          ? 'The address is there and this key may not use it. A plan or permission question rather than an API one.'
+          : `Neither a refusal nor an acceptance: ${response.status}. ${raw}`;
+  /* A 2xx would mean something WAS made from an empty body, which should be
+     impossible. Said plainly rather than hidden, because if it ever happens it
+     is the one branch that needs a person to go and look. */
+  return {
+    status: response.status,
+    answer,
+    note:
+      response.status >= 200 && response.status < 300
+        ? `UNEXPECTED: an empty body was ACCEPTED (${response.status}). Check the Kits account for a voice model that should not be there. ${raw}`
+        : note,
+  };
+}
+
 /* ── Her own trained voices ─────────────────────────────────────────────── */
 
 /**

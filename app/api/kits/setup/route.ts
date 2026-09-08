@@ -27,7 +27,7 @@
  */
 
 import crypto from 'node:crypto';
-import { CANDIDATES, configured, listModels, namedModels, probe } from '@/app/lib/server/kits';
+import { CANDIDATES, canCreateVoices, configured, listModels, namedModels, probe } from '@/app/lib/server/kits';
 import { leftSeconds, monthlyMinutes, usedSeconds } from '@/app/lib/server/kitsminutes';
 
 export const runtime = 'nodejs';
@@ -109,6 +109,10 @@ export async function GET(request: Request): Promise<Response> {
        there is no reason to put them in a page that gets pasted into a chat. */
     voices: (await listModels()).map((one) => one.name),
     namedModels: namedModels().map((one) => one.name),
+    /* The question the voice-training room hangs on. Asked with a body that
+       cannot become a voice model, so nothing is created whatever the answer.
+       See `canCreateVoices` for what each status means. */
+    kanStemmeSkep: await canCreateVoices(),
     /* Where the month stands against the plan's roof.
 
        Kits' own dashboard is the authority on this; what is counted here is
