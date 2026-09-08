@@ -1394,3 +1394,74 @@ green, CI is a second opinion rather than the gate.
 Video desk, behind `ELEVEN_AURORA_READY`. It carries a caveat in as many words:
 it is a lipsync model given a photograph and a *spoken* reading, and whether it
 holds up on singing has never been tested. One clip would answer it.
+
+---
+
+# Session: the permission, the counts, and thinking like a musician
+
+## What landed
+
+Nine commits, all fast-forwarded onto `main`. 123 checks now run in CI, up
+from 113.
+
+| | |
+|---|---|
+| `33d437d` | The question asked before a song may be built on; six modal scrims fixed |
+| `eb65a18` | A shared song can be cut, and started from, in Hooks |
+| `caabf82` | A play counts once 65% has been listened to; the count on the row |
+| `2a8bfd3` | `docs/MUSIEKDENKE.md` — the plan for teaching musical thinking |
+| `6536aaf` | §3.1 A song drawn as its own shape |
+| `4bcc0b8` | §3.4 A take engraved on a stave |
+| `469fcfa` | §3.2 Every measurement says what it means |
+| `284de09` | The header showed one person's handle to everybody |
+| `7c6b745` | §3.3 The hook finder says *what* arrived |
+| `c13ef61` | §3.6 The Pro Booth counts bars |
+| `be4b208` | §3.5 The stave and the bar number explained; §3.5 closed |
+
+`docs/MUSIEKDENKE.md` is complete: all six pieces built.
+
+## Answered this session
+
+**"hoekom is die live room empty? is daar 'n tyd wat musiek verdwyn?"**
+
+Nothing expires. `live_posts` has no age filter and nothing deletes from it.
+The only thing cleaned on a clock is `live_here`, the presence list — counted
+over two minutes, swept after an hour. A song leaves the room when its maker
+takes it out, or when an account is deleted and the row cascades. An empty
+room means nothing has been put in it.
+
+Her photograph also answered a question she had not asked, and it was a real
+fault: see `284de09`.
+
+## Still hers, and new since the last section
+
+- **`supabase/buildon.sql` must be run again.** It gained
+  `style text not null default ''`. Confirmed run — both columns verified in
+  her SQL editor this session. *(Done.)*
+- **Nothing else new.** Everything in the previous "What is still Carli's"
+  section stands unchanged.
+
+## Open, and worth a decision
+
+- **Does anybody pay yet?** Still unanswered, and it still decides whether the
+  Paystack plan codes can simply be swapped or need a migration.
+- **#119, the brake on the ElevenLabs allowance.** Still held at her
+  instruction — "Moet nog nie bou nie" — pending ElevenLabs' reply.
+- **Voice Blender's request fields**, `/api/kits/setup` for the
+  `canCreateVoices` answer, and the pronunciation-test voice id (#115). All
+  still waiting on her.
+- **The GitHub MCP question**, unchanged and still worth her deciding: pushes
+  land and the local sweep is green before every one of them; CI is a second
+  opinion that nobody from this side has been able to read.
+
+## What I would do next, in order
+
+1. **#100, Kits.AI everywhere.** The largest thing still open that is not
+   blocked on somebody else. Voice training is the half she named as missing
+   and it is the reason she bought the product.
+2. **#117, the voice list stops at 500.** Every member adds a voice, so this
+   is a wall the app walks into on its own schedule rather than on anybody's
+   decision. Cheap now, expensive at 500 members.
+3. **#112 and #114**, both ElevenLabs cleanups: take the read's timings from
+   their response instead of paying to transcribe them back, and move off the
+   dubbing path they have labelled legacy.
