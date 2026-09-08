@@ -197,6 +197,16 @@ As dit nie kan nie, bly die skakel en die tutorial die eerlike antwoord. Dit
 kos een egte oproep om uit te vind, en dit skep iets op haar rekening — dus is
 dit haar besluit, nie 'n taak nie.
 
+**Die Voice Blender se velde — nou vraagbaar.** Dit was 'n vraag vir Carli:
+hulle dokumentasie noem die adres en nie die lyf nie, en 'n kamer gebou teen 'n
+raaiskoot is presies die knoppie waarteen §2 waarsku.
+
+`/api/kits/setup` vra dit nou self, met 'n leë lyf wat nie 'n vermenging kan
+word nie — dieselfde truuk as `kanStemmeSkep`. Wat terugkom is húlle eie klagte,
+en 'n geldigheidsklagte noem sy velde. Die antwoord staan onder `mengerWatVra`.
+Open die verslag een keer en die Sound trainer kan teen 'n gemete vorm gebou
+word in plaas van 'n vermoede.
+
 **Die veldname van drie werke.** `voice-conversions`, `vocal-separations` en
 `voice-blender` was leeg, dus is hulle vorms nog dokumentasie. Die eerste egte
 werk deur elkeen maak dit vas, en dit gebeur vanself sodra iemand die kamers

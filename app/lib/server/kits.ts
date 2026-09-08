@@ -554,6 +554,110 @@ export async function canCreateVoices(): Promise<{
   };
 }
 
+/**
+ * Field names out of whatever shape a validation complaint takes.
+ *
+ * Three shapes are common and none is guaranteed: a list of `{ path, message }`
+ * objects, an object keyed by field name, and a sentence naming the fields in
+ * prose. Rather than parse for one and report nothing for the other two, all
+ * three are tried and the raw text is reported alongside whatever this finds —
+ * a person reading the report can see what was actually said, which is the
+ * whole point of asking.
+ *
+ * Its own function so `check:blender` can drive it over real complaint bodies
+ * without a network. A parser only ever exercised against a live service is a
+ * parser nobody has tested against the case it was written for.
+ */
+export function fieldsIn(raw: string): string[] {
+  return Array.from(
+    new Set(
+      [
+        ...raw.matchAll(/"(?:path|field|param|loc)"\s*:\s*"?\[?"?([A-Za-z][\w.]*)/g),
+        ...raw.matchAll(/([A-Za-z][\w]*)\s+is\s+required/gi),
+        /* The quotes may be escaped: this is raw response text, and a field
+           name quoted inside a JSON string arrives as \\"name\\". A pattern
+           that only matched a bare quote read the opening one and then failed
+           on the closing backslash. */
+        ...raw.matchAll(/missing[^"\\]{0,20}\\?"([A-Za-z][\w]*)\\?"/gi),
+      ].map((one) => one[1]),
+    ),
+  ).slice(0, 12);
+}
+
+/**
+ * What the Voice Blender wants, asked without blending anything.
+ *
+ * ── The question this answers ────────────────────────────────────────────
+ *
+ * `/voice-blender` is one of the five real Kits APIs — proven to exist and to
+ * accept our key by `/api/kits/setup` — and nothing in this app has ever
+ * called it. `docs/KITS-KAART.md` §3 puts it in the Sound trainer: two voice
+ * models, a blend, one new voice, and "a thing nobody else in South Africa
+ * offers".
+ *
+ * It has not been built because nobody knows what to send it. Their
+ * documentation names the address and not the body, and a room built against
+ * a guess is a room that looks finished and fails against a live service —
+ * exactly the kind of button §2 of that document warns about.
+ *
+ * ── Why an empty body is safe to send ────────────────────────────────────
+ *
+ * The same trick as `canCreateVoices`, and for the same reason: `{}` cannot
+ * become a blend. There is nothing to blend in it. What comes back is the
+ * service's own complaint, and a validation complaint names the fields it
+ * wanted — which turns "ask Carli to find out" into one measurement she can
+ * take by opening a page.
+ *
+ * A 2xx would mean something WAS made out of nothing, and that is the one
+ * branch that needs a person to go and look at the account.
+ */
+export async function blenderNeeds(): Promise<{
+  status: number;
+  answer: 'asks' | 'no' | 'not-allowed' | 'unclear';
+  fields: string[];
+  note: string;
+}> {
+  let response: Response;
+  try {
+    response = await fetch(`${BASE}/voice-blender`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key()}`, 'Content-Type': 'application/json' },
+      /* Deliberately empty. There is nothing in it to blend. */
+      body: '{}',
+    });
+  } catch {
+    return { status: 0, answer: 'unclear', fields: [], note: 'could not be reached' };
+  }
+
+  const raw = (await response.text().catch(() => '')).slice(0, 600);
+
+  const fields = fieldsIn(raw);
+
+  const answer =
+    response.status === 400 || response.status === 422
+      ? 'asks'
+      : response.status === 404 || response.status === 405
+        ? 'no'
+        : response.status === 401 || response.status === 403
+          ? 'not-allowed'
+          : 'unclear';
+
+  const note =
+    response.status >= 200 && response.status < 300
+      ? `UNEXPECTED: an empty body was ACCEPTED (${response.status}). Check the Kits account for a blended voice that should not be there. ${raw}`
+      : answer === 'asks'
+        ? fields.length
+          ? `It refused this body on its contents and named what it wants: ${fields.join(', ')}. The Sound trainer can be built against that.`
+          : 'It refused this body on its contents but did not name the fields in a shape this could read. The raw complaint is below — read it and write the shape into docs/KITS-KAART.md §2.'
+        : answer === 'no'
+          ? 'There is no POST here. The blender is on their website and not in the API, whatever the contents page says.'
+          : answer === 'not-allowed'
+            ? 'The address is there and this key may not use it. A plan or permission question rather than an API one.'
+            : `Neither a refusal nor an acceptance: ${response.status}.`;
+
+  return { status: response.status, answer, fields, note: `${note}${raw ? ` — said: ${raw}` : ''}` };
+}
+
 /* ── Her own trained voices ─────────────────────────────────────────────── */
 
 /**

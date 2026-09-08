@@ -27,7 +27,9 @@
  */
 
 import crypto from 'node:crypto';
-import { CANDIDATES, canCreateVoices, configured, listModels, namedModels, probe } from '@/app/lib/server/kits';
+import {
+  CANDIDATES, blenderNeeds, canCreateVoices, configured, listModels, namedModels, probe,
+} from '@/app/lib/server/kits';
 import { leftSeconds, monthlyMinutes, usedSeconds } from '@/app/lib/server/kitsminutes';
 
 export const runtime = 'nodejs';
@@ -113,6 +115,14 @@ export async function GET(request: Request): Promise<Response> {
        cannot become a voice model, so nothing is created whatever the answer.
        See `canCreateVoices` for what each status means. */
     kanStemmeSkep: await canCreateVoices(),
+    /* And what the Voice Blender wants, asked the same safe way.
+
+       `/voice-blender` is one of the five real addresses and nothing in this
+       app has ever called it, because nobody knows what body it takes — their
+       documentation names the address and not the shape. An empty body cannot
+       become a blend, so what comes back is their own complaint, and a
+       validation complaint names its fields. See `blenderNeeds`. */
+    mengerWatVra: await blenderNeeds(),
     /* Where the month stands against the plan's roof.
 
        Kits' own dashboard is the authority on this; what is counted here is

@@ -118,6 +118,13 @@ jobs:
       - name: Kits' minutes count what comes back, not what was sent
         run: npm run check:kitsminutes
 
+      # The Voice Blender is a real Kits API that nothing has ever called,
+      # because their docs name the address and not the body. The setup report
+      # asks it with an empty body and reads the complaint — a parser with one
+      # chance to work, on the day she opens that page.
+      - name: A service's complaint can be read for the fields it names
+        run: npm run check:blender
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described
