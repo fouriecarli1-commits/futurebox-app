@@ -751,6 +751,14 @@ export async function splitStems(
   audio: Blob,
   filename: string,
   deadline: number,
+  /* Which of the two takes it apart.
+
+     `stem-splits` gives the instruments; `vocal-separations` gives the voice
+     out of the music. Their request and their answer are the same shape to the
+     field — the same multipart `inputFile`, the same 50 MB, the same
+     `stemFileUrls` back — so this is one function with the address as an
+     argument rather than two files that drift apart. */
+  which: 'stem-splits' | 'vocal-separations' = 'stem-splits',
 ): Promise<{ ok: true; stems: { instrument: string; url: string }[] } | Upstream> {
   if (audio.size > SPLIT_MAX_BYTES) {
     return {
@@ -776,7 +784,7 @@ export async function splitStems(
   let response: Response;
   try {
     lastPost = Date.now();
-    response = await fetch(`${BASE}/stem-splits`, {
+    response = await fetch(`${BASE}/${which}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${key()}` },
       body: form,
@@ -828,7 +836,7 @@ export async function splitStems(
 
     let asked: Response;
     try {
-      asked = await fetch(`${BASE}/stem-splits/${encodeURIComponent(id)}`, {
+      asked = await fetch(`${BASE}/${which}/${encodeURIComponent(id)}`, {
         headers: { Authorization: `Bearer ${key()}` },
       });
     } catch {
