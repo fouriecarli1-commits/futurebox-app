@@ -74,6 +74,32 @@ const STUB = {
 };
 console.log('building with a project that has accounts…');
 execSync('npx next build', { stdio: 'ignore', env: { ...process.env, ...STUB } });
+
+/* The tree as it was found, whatever happened above.
+
+   In a `process.on('exit')` handler rather than at the end of the run: this
+   probe threw once, before this line, and left the stubbed build behind — and
+   the next probe to run then signed in against an app that believed it had
+   accounts and could not find its way past the front page. Restoring on the
+   way out is the same discipline the probe pages keep with `rmSync` in a
+   `finally`, and for the same reason: the failure that skips the tidy-up is
+   the one that was never planned for.
+
+   `execSync` in an exit handler is allowed to be slow — nothing is waiting on
+   this process any more, and a slow tidy-up beats a poisoned build. */
+let putBack = false;
+const restore = () => {
+  if (putBack) return;
+  putBack = true;
+  console.log('putting the ordinary build back…');
+  try {
+    execSync('npx next build', { stdio: 'ignore' });
+  } catch {
+    console.error('the ordinary build could not be put back — run `npx next build`');
+  }
+};
+process.on('exit', restore);
+
 const server = await serve(PORT, { env: STUB });
 
 const b = await chromium.launch(launchOptions());
@@ -231,8 +257,7 @@ await server.stop();
 /* The tree as it was found. Every other probe here shares one ordinary build,
    and leaving a stubbed one behind would hand the next probe an app that
    believes it has accounts. */
-console.log('putting the ordinary build back…');
-execSync('npx next build', { stdio: 'ignore' });
+restore();
 
 if (problems.length) {
   console.error(`\ncheck:taste — ${problems.length} problem(s):`);

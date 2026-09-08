@@ -233,6 +233,26 @@ for (const script of named) {
       putsItBack,
       `${builds.length} build(s); ${plain} with no environment, ${cleared ? 'and the stub is deleted' : 'and the stub is never deleted'}`,
     );
+
+    /* And puts it back on the way out, not on the way through.
+
+       `taste` threw before reaching its restore and left the stubbed build
+       behind. The next probe then signed in against an app that believed it
+       had accounts, could not find its way past the front page, and reported
+       that as its own failure — a poisoned build reads as a broken app, in a
+       different file, with nothing pointing back here.
+
+       So the restore has to survive a throw: an `exit` handler, or a
+       `finally`. The same discipline the probe pages keep with `rmSync`, and
+       for the same reason — the failure that skips the tidy-up is the one
+       nobody planned for. */
+    const finallyAt = source.lastIndexOf('} finally {');
+    const restoreAt = source.lastIndexOf('next build');
+    ok(
+      `${name} restores it even when the run falls over`,
+      /process\.on\('exit'/.test(source) || (finallyAt !== -1 && restoreAt > finallyAt),
+      'a build restored only at the end of the happy path is a build left behind by every failure',
+    );
   }
 }
 
