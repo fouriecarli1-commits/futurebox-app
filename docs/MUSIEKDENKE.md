@@ -94,11 +94,26 @@ En die blaaier het een gevind wat geen enkeltoets kon sien nie: `keyOf` praat
 Engels — "E♭ major" — en dít het bo 'n Afrikaanse sin gestaan. Die toonaard
 word nou in die leser se taal gesê: "E♭ majeur".
 
-### 3.3 Die greepvinder moet sê *wat* aangekom het
+### 3.3 Die greepvinder moet sê *wat* aangekom het — **gebou**
 
 Hy sê reeds "hier kom iets aan". Noem dit: die dromme kom in, die digtheid
 verdubbel, die onderkant maak oop. Dit is arrangement, geleer op die oomblik
 dat iemand 'n greep sny.
+
+**Gedoen.** `lib/arrival.ts`. Die twee sekondes voor die oomblik word teen die
+twee daarna gemeet, in drie bande: onder 150 Hz, bo 3 kHz, en hoe dikwels iets
+nuuts begin.
+
+Die stuk wat dit reg moes kry: 'n koor is in *elke* band harder as 'n vers. 'n
+Styging in die onderkant beteken dus net "die bas het ingekom" as dit gróter is
+as die styging in alles saam — anders lees elke koor wat bestaan as 'n bas wat
+inkom. Alles is daarom 'n verhouding van 'n verhouding.
+
+En stilte na iets is 'n ander vraag: elke verhouding loop teen sy plafon vas,
+so daar word gevra waarvan die klank *gemaak* is eerder as wat verander het.
+`check:arrival` bou elke sein self — 'n 60 Hz sinus wat halfpad begin, 'n 9 kHz
+een, klikke wat verdriedubbel, en dieselfde musiek twee keer so hard — sodat
+die regte antwoord bekend is en nie aanvaar word nie.
 
 ### 3.4 Musiek *lees*, letterlik — **gebou**
 

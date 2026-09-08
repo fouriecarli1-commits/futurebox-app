@@ -12,6 +12,8 @@
  * hearing). The moments that score are loud *and* louder than what came before.
  */
 
+import { arrivalAt, type What } from './arrival';
+
 export interface Hook {
   readonly startSeconds: number;
   readonly seconds: number;
@@ -28,6 +30,18 @@ export interface Hook {
   readonly kind: 'section' | 'arrival' | 'fullest' | 'steady';
   /** The section's own name, when the reason is that it is one. */
   readonly label?: string;
+  /**
+   * What arrives here, when something does.
+   *
+   * `kind` says a moment was chosen because something arrived; this says what
+   * — the bottom coming in, the top opening up, twice as much happening, or
+   * simply louder. `docs/MUSIEKDENKE.md` §3.3: naming it is arrangement,
+   * taught at the moment somebody is choosing where to cut.
+   *
+   * '' when nothing moved enough to name, which includes a hook at 0:00 —
+   * there is nothing for it to have arrived out of. See `lib/arrival.ts`.
+   */
+  readonly arrived?: What;
 }
 
 const WINDOW = 0.1; // seconds per energy reading
@@ -50,6 +64,7 @@ function energyEnvelope(buffer: AudioBuffer): Float32Array {
 }
 
 export function findHooks(buffer: AudioBuffer, clipSeconds: number, count = 3): Hook[] {
+  const samples = buffer.getChannelData(0);
   const envelope = energyEnvelope(buffer);
   if (envelope.length === 0) return [];
 
@@ -99,6 +114,15 @@ export function findHooks(buffer: AudioBuffer, clipSeconds: number, count = 3): 
       score: best === 0 ? 0 : candidate.score / best,
       kind:
         candidate.rise > 0.18 ? 'arrival' : candidate.energy > 0.75 ? 'fullest' : 'steady',
+      /* Only for a moment chosen because something rose. On a 'fullest' or a
+         'steady' the reason is the level rather than a change, and asking
+         what arrived would be asking a question the moment is not an answer
+         to — `arrivalAt` filters four seconds of audio, so it is also three
+         needless passes on a phone. */
+      arrived:
+        candidate.rise > 0.18
+          ? arrivalAt(samples, buffer.sampleRate, candidate.index * WINDOW).what
+          : '',
     }))
     .sort((a, b) => a.startSeconds - b.startSeconds);
 }

@@ -203,6 +203,14 @@ export const STRINGS: Dict = {
      screen. See `sayKey` in lib/musictalk.ts. */
   "talk.major": { en: "major", af: "majeur" },
   "talk.minor": { en: "minor", af: "mineur" },
+
+  /* docs/MUSIEKDENKE.md §3.3 — the hook finder says what arrived, not just
+     that something did. Arrangement, at the moment somebody is choosing where
+     to cut. See lib/arrival.ts. */
+  "hooks.arrivedLow": { en: "The bottom comes in — the kick and the bass", af: "Die onderkant kom in — die kick en die bas" },
+  "hooks.arrivedTop": { en: "The top opens up — hats, cymbals, air", af: "Die bokant maak oop — hi-hats, simbale, lug" },
+  "hooks.arrivedFuller": { en: "Twice as much starts happening", af: "Twee keer soveel begin gebeur" },
+  "hooks.arrivedLouder": { en: "The same thing, and louder", af: "Dieselfde ding, en harder" },
   "hooks.sharedGone": { en: "That song could not be fetched. The room hands out an address that expires, so opening this tab again usually fixes it.", af: "Daardie liedjie kon nie gehaal word nie. Die kamer gee ’n adres uit wat verval, so as jy hierdie oortjie weer oopmaak, werk dit gewoonlik." },
   "live.gone": { en: "That file is not there any more.", af: "Daardie l\u00eaer is nie meer daar nie." },
   "live.somewhere": { en: "somewhere", af: "\u00eerens" },

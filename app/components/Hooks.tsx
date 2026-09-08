@@ -482,7 +482,18 @@ export default function Hooks({
    */
   const reasonFor = (hook: Hook): string => {
     if (hook.kind === 'section') return `${hook.label} — ${t('hooks.fromPlan')}`;
-    if (hook.kind === 'arrival') return t('hooks.arrives');
+    if (hook.kind === 'arrival') {
+      /* What arrived, where it could be named. "Something arrives" is the one
+         thing anybody could already hear; "the low end comes in" is a
+         decision somebody made, and hearing which one is the difference
+         between liking a drop and knowing how one is built.
+         `docs/MUSIEKDENKE.md` §3.3. */
+      if (hook.arrived === 'low') return t('hooks.arrivedLow', 'The bottom comes in — the kick and the bass');
+      if (hook.arrived === 'top') return t('hooks.arrivedTop', 'The top opens up — hats, cymbals, air');
+      if (hook.arrived === 'fuller') return t('hooks.arrivedFuller', 'Twice as much starts happening');
+      if (hook.arrived === 'louder') return t('hooks.arrivedLouder', 'The same thing, and louder');
+      return t('hooks.arrives');
+    }
     if (hook.kind === 'fullest') return t('hooks.fullest');
     return t('hooks.safe');
   };

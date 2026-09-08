@@ -100,6 +100,12 @@ jobs:
       - name: No screen names anybody but the person signed in
         run: npm run check:whoami
 
+      # "Something arrives" is the one thing anybody could already hear. Naming
+      # what arrived is arrangement — but a chorus is louder in every band at
+      # once, so a rise only names a band if it beats the rise in everything.
+      - name: What arrives at a hook is named, and only when it did
+        run: npm run check:arrival
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described

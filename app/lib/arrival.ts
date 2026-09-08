@@ -148,22 +148,49 @@ export function arrivalAt(
      at 0:00 has nothing to have arrived out of. */
   if (from < 0 || at + width > samples.length) return NOTHING;
 
-  const low = lowPass(samples, rate, LOW_HZ);
-  const body = lowPass(samples, rate, TOP_HZ);
-  /* The top is what the three-kilohertz low-pass did not keep. */
-  const top = new Float32Array(samples.length);
-  for (let i = 0; i < samples.length; i += 1) top[i] = samples[i] - body[i];
+  /* Only the four seconds this is about, rather than the whole song.
 
-  const loudBefore = rms(samples, from, at);
-  const loudAfter = rms(samples, at, at + width);
+     `findHooks` asks about three moments, and filtering a four-minute file
+     twice for each of them is forty million multiplies on a phone for an
+     answer that depends on four seconds of it. The filter loses its warm-up
+     state at the cut, which at a hundred-and-fifty-hertz corner settles in a
+     few milliseconds — nothing against a two-second window. */
+  const slice = samples.subarray(from, at + width);
+  const low = lowPass(slice, rate, LOW_HZ);
+  const body = lowPass(slice, rate, TOP_HZ);
+  /* The top is what the three-kilohertz low-pass did not keep. */
+  const top = new Float32Array(slice.length);
+  for (let i = 0; i < slice.length; i += 1) top[i] = slice[i] - body[i];
+  /* Everything below is indexed inside the slice, where the moment is at
+     `width` and the two windows are the halves either side of it. */
+  const loudBefore = rms(slice, 0, width);
+  const loudAfter = rms(slice, width, slice.length);
   const louder = grew(loudBefore, loudAfter);
   /* Everything is measured against the overall change, so a chorus that is
      simply louder does not read as any instrument arriving. Division by a
      `louder` of zero cannot happen: `grew` never returns less than 1/8 of
      anything, and returns exactly 1 for silence against silence. */
-  const lowRatio = grew(rms(low, from, at), rms(low, at, at + width)) / louder;
-  const topRatio = grew(rms(top, from, at), rms(top, at, at + width)) / louder;
-  const fullerRatio = grew(onsets(samples, rate, from, at), onsets(samples, rate, at, at + width)) / louder;
+  const lowRatio = grew(rms(low, 0, width), rms(low, width, slice.length)) / louder;
+  const topRatio = grew(rms(top, 0, width), rms(top, width, slice.length)) / louder;
+  const fullerRatio =
+    grew(onsets(slice, rate, 0, width), onsets(slice, rate, width, slice.length)) / louder;
+
+  /* Silence into something is a different question, and needs a different
+     answer.
+
+     Every ratio caps at 8 when what came before was silent, so dividing one
+     cap by another gives 1 and no band can ever clear its bar — the first
+     version of this called a bass note out of nothing "louder", which is true
+     and useless. What changed cannot be measured against nothing, so what it
+     is *made of* is measured instead: a stretch whose energy is almost all in
+     the bottom is the bottom arriving, whatever came before it. */
+  if (loudBefore <= 1e-4 && loudAfter > 1e-4) {
+    const all = rms(slice, width, slice.length);
+    const lowShare = rms(low, width, slice.length) / all;
+    const topShare = rms(top, width, slice.length) / all;
+    const what: What = lowShare >= 0.6 ? 'low' : topShare >= 0.4 ? 'top' : 'louder';
+    return { what, low: lowShare, top: topShare, fuller: fullerRatio, louder };
+  }
 
   const named: ReadonlyArray<readonly [What, number, number]> = [
     ['low', lowRatio, ENOUGH_BAND],
