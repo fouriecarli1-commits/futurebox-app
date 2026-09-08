@@ -15,6 +15,7 @@
  */
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
+import { studio, toRoom } from './enter.mjs';
 
 const PORT = process.argv[2] || '3012';
 const af = process.argv[3] === 'af';
@@ -65,11 +66,30 @@ await p.locator('input[type="email"]').first().fill('toets@futurebox.test');
 const pw = p.locator('input[type="password"]').first();
 if (await pw.count()) await pw.fill('toets-wagwoord-1234');
 await p.locator('button[type="submit"]').first().click();
-await p.waitForTimeout(2500);
-await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
-await p.waitForTimeout(1800);
-const room = p.locator('div.fixed.inset-0.z-50').first();
-await room.locator('button').filter({ hasText: /^Video desk|^Videolessenaar/i }).first().click();
+  /* Waited for, not slept through.
+
+   `waitForTimeout(2500)` is how long signing in takes on an idle machine.
+   On a loaded one it is sometimes not enough, and the probe then measures
+   the signed-out page while believing it is signed in — which is not a
+   probe failing, it is a probe answering a different question and
+   reporting the answer as a fault. The bottom bar exists on every screen
+   the app shows a signed-in person and on none that it shows a signed-out
+   one. */
+await p
+  .locator('nav[aria-label]')
+  .first()
+  .waitFor({ state: 'visible', timeout: 30000 })
+  .catch(() => undefined);
+await p.waitForTimeout(400);
+/* Through the door, the way a person gets there.
+
+   The studio opens on its own front door — a layer above it — so clicking a
+   room button on the studio underneath is clicking through an overlay, and
+   Playwright waits thirty seconds and then says the door "intercepts pointer
+   events". `studio()` dismisses it and `toRoom()` presses the room on
+   whichever of the two is actually in front. */
+const room = await studio(p);
+await toRoom(p, af ? 'Videolessenaar' : 'Video desk');
 await p.waitForTimeout(2200);
 
 const words = await room.innerText();

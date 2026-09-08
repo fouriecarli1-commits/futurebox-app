@@ -9,6 +9,7 @@
  */
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
+import { studio, toRoom } from './enter.mjs';
 
 const PORT = process.argv[2] || '3028';
 const af = process.argv[3] === 'af';
@@ -26,21 +27,48 @@ await p.context().grantPermissions(['clipboard-read', 'clipboard-write']);
 
 async function signIn() {
   const cta = p.locator('button, a').filter({ hasText: af ? /begin|gratis|teken/i : /start free|begin|sign up/i }).first();
-  await cta.waitFor({ state: 'visible', timeout: 40000 });
+  /* Absent means already signed in, which is a pass and not a hang.
+
+     This probe signs in twice — once at the start and once after a reload for
+     its second scenario — and the second time the front door is not there,
+     because the reload did not sign anybody out. Waiting forty seconds for a
+     door that has already been walked through reported the whole run as
+     fallen over, after every one of its assertions had passed. */
+  const there = await cta.isVisible({ timeout: 10000 }).catch(() => false);
+  if (!there) return;
   await cta.click();
   await p.waitForTimeout(700);
   await p.locator('input[type="email"]').first().fill('toets@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('toets-wagwoord-1234');
   await p.locator('button[type="submit"]').first().click();
-  await p.waitForTimeout(2500);
+  /* Waited for, not slept through.
+
+     `waitForTimeout(2500)` is how long signing in takes on an idle machine.
+     On a loaded one it is sometimes not enough, and the probe then measures
+     the signed-out page while believing it is signed in — which is not a
+     probe failing, it is a probe answering a different question and
+     reporting the answer as a fault. The bottom bar exists on every screen
+     the app shows a signed-in person and on none that it shows a signed-out
+     one. */
+  await p
+    .locator('nav[aria-label]')
+    .first()
+    .waitFor({ state: 'visible', timeout: 30000 })
+    .catch(() => undefined);
+  await p.waitForTimeout(400);
 }
 async function intoTheDesk() {
-  await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
-  await p.waitForTimeout(1800);
-  const room = p.locator('div.fixed.inset-0.z-50').first();
-  await room.locator('button').filter({ hasText: af ? /^Advertensies/ : /^Adverts/ }).first().click();
-  await p.waitForTimeout(1800);
+  /* Through the door, the way a person gets there.
+
+     The studio opens on its own front door — a layer above it — so clicking a
+     room button on the studio underneath is clicking through an overlay, and
+     Playwright waits thirty seconds and then says the door "intercepts
+     pointer events". `studio()` dismisses it and `toRoom()` presses the room
+     on whichever of the two is actually in front. */
+  const room = await studio(p);
+  await toRoom(p, af ? 'Advertensies' : 'Adverts');
+  await p.waitForTimeout(1500);
   return room;
 }
 

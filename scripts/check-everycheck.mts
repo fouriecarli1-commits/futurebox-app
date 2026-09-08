@@ -147,10 +147,9 @@ const TOOLS = new Set([
  * making its assertions true of the app as it is now.
  */
 const WAITING = new Set([
-  'account', 'addon', 'adreport', 'adruns', 'cast', 'greeting',
-  'language', 'lanes', 'photo', 'podlanguage',
-  'presenter', 'queue',
-  'studioroute', 'taste', 'videocover', 'videodesk',
+  'account', 'addon', 'cast', 'greeting',
+  'language', 'photo', 'podlanguage',
+  'presenter', 'queue', 'taste', 'videocover',
 ]);
 /** What it was when this rule was written. It may go down and not up. */
 const WAITING_WAS = 25;

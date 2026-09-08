@@ -112,7 +112,12 @@
     "check:playbutton": "node audit/playbutton.mjs",
     "check:signinwith": "node audit/signinwith.mjs",
     "check:help": "node audit/help.mjs",
-    "check:elevenprices": "tsx scripts/check-elevenprices.mts"
+    "check:elevenprices": "tsx scripts/check-elevenprices.mts",
+    "check:adreport": "node audit/adreport.mjs",
+    "check:adruns": "node audit/adruns.mjs",
+    "check:videodesk": "node audit/videodesk.mjs",
+    "check:lanes": "node audit/lanes.mjs",
+    "check:studioroute": "node audit/studioroute.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

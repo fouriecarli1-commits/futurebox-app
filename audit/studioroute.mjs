@@ -13,6 +13,7 @@
  */
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
+import { studio, toRoom } from './enter.mjs';
 
 const PORT = process.argv[2] || '3020';
 const af = process.argv[3] === 'af';
@@ -77,13 +78,32 @@ await p.locator('input[type="email"]').first().fill('toets@futurebox.test');
 const pw = p.locator('input[type="password"]').first();
 if (await pw.count()) await pw.fill('toets-wagwoord-1234');
 await p.locator('button[type="submit"]').first().click();
-await p.waitForTimeout(2500);
-await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
-await p.waitForTimeout(1800);
-const room = p.locator('div.fixed.inset-0.z-50').first();
+  /* Waited for, not slept through.
+
+   `waitForTimeout(2500)` is how long signing in takes on an idle machine.
+   On a loaded one it is sometimes not enough, and the probe then measures
+   the signed-out page while believing it is signed in — which is not a
+   probe failing, it is a probe answering a different question and
+   reporting the answer as a fault. The bottom bar exists on every screen
+   the app shows a signed-in person and on none that it shows a signed-out
+   one. */
+await p
+  .locator('nav[aria-label]')
+  .first()
+  .waitFor({ state: 'visible', timeout: 30000 })
+  .catch(() => undefined);
+await p.waitForTimeout(400);
+/* Through the door, the way a person gets there.
+
+   The studio opens on its own front door — a layer above it — so clicking a
+   room button on the studio underneath is clicking through an overlay, and
+   Playwright waits thirty seconds and then says the door "intercepts pointer
+   events". `studio()` dismisses it and `toRoom()` presses the room on
+   whichever of the two is actually in front. */
+const room = await studio(p);
 
 // ── The studio, opened on its own ────────────────────────────────────────
-await room.locator('button').filter({ hasText: af ? /^Studio/ : /^Studio/ }).first().click();
+await toRoom(p, 'Studio');
 await p.waitForTimeout(1500);
 
 const options = await room.locator('select option').allInnerTexts();
@@ -110,12 +130,44 @@ check('a song without a plan says its times are worked out from the words',
    wrong reason entirely — "This second verse is weak" is one of the copilot's
    starter prompts, sitting in the panel beside the room. The Afrikaans run
    said "vers" instead and failed, which is the only reason anybody looked. */
-const named = await room.locator('input.font-bold').evaluateAll((nodes) =>
-  nodes.map((node) => node.value),
-);
-check('and it still shows the sections', named.length === 3, named.join(','));
-check('with the names off the lyric sheet',
-  named.join(',') === 'Verse,Chorus,Verse', named.join(','));
+/** The section names on screen, in order. */
+const sectionNames = async () =>
+  room.locator('input.font-bold').evaluateAll((nodes) => nodes.map((node) => node.value));
+
+/* ── The two songs are two different cases, and the room treats them so ──
+
+   This used to read the sections without choosing a song, and expected the
+   carried plan. The room now opens on the *second* song — the one with only
+   words — and lays it out with an intro and an outro around the sung parts,
+   because `splitSections` hands the words to `shapeSong` and that is what a
+   song shape is. The old assertion was not catching a fault; it was reading
+   the other song.
+
+   So each case is asked for by name. That is the whole point of this file:
+   "Met plan" is a song made through the make screen, "Sonder plan" is every
+   song written by hand or made before plans were carried, and the second is
+   the one the studio used to turn away entirely. */
+const chooser = room.locator('select').first();
+
+await chooser.selectOption('song-with-plan');
+await p.waitForTimeout(800);
+const carried = await sectionNames();
+check('a song that carries a plan is laid out on that plan', carried.length === 3, carried.join(','));
+check('with the names it was made with, and nothing added',
+  carried.join(',') === 'Verse,Chorus,Verse', carried.join(','));
+
+await chooser.selectOption('song-no-plan');
+await p.waitForTimeout(800);
+const shaped = await sectionNames();
+check('a song with only words is laid out too, rather than turned away',
+  shaped.length > 0, shaped.join(','));
+check('its sung parts are the ones in the lyric sheet, in order',
+  shaped.filter((one) => /^(Verse|Chorus)$/i.test(one)).join(',') === 'Verse,Chorus,Verse',
+  shaped.join(','));
+check('and the shape around them is a real one, with an intro and an outro',
+  shaped[0] === 'Intro' && shaped[shaped.length - 1] === 'Outro',
+  shaped.join(','));
+const named = shaped;
 
 // ── From the channel ─────────────────────────────────────────────────────
 await room.locator('button').filter({ hasText: af ? /^Kanaal/ : /^Channel/ }).first().click();
