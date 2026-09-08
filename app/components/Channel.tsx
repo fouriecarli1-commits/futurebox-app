@@ -47,7 +47,7 @@ import FollowWords from './FollowWords';
 import SongScreen, { wordsFor } from './SongScreen';
 import Sleeve from './Sleeve';
 import { heardHere, markHeard } from '../lib/heard';
-import { signal } from '../lib/signal';
+import { countWhenPlayed } from '../lib/played';
 import { heardFor, timeFor } from '../lib/lyrictime';
 import Note from './Note';
 import Card from './Card';
@@ -184,6 +184,9 @@ export default function Channel({
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const urlRef = useRef<string | null>(null);
+  /** How to stop watching whatever was playing before this one. */
+  const watching = useRef<null | (() => void)>(null);
+  useEffect(() => () => watching.current?.(), []);
   /** The queue as the 'ended' handler will see it, which state alone would not. */
   const queueRef = useRef<string[]>([]);
 
@@ -312,10 +315,12 @@ export default function Channel({
          lands on the last second would still be showing "unheard" on
          everything they skipped through. */
       setHeard(markHeard(id));
-      /* And counted, once per person per song per day, for the chart on
-         Spotlight. The same moment as the unheard mark for the same reason:
-         somebody who plays four seconds has met the song. */
-      signal('play', { ref: track.id });
+      /* And counted for the chart on Spotlight — but not at this moment.
+         The unheard mark above is right where it is: four seconds is enough
+         to have *met* a song. A play on the chart is a different claim, and
+         it waits until 65% of the song has actually gone past. */
+      watching.current?.();
+      watching.current = countWhenPlayed(element, track.id);
       queueRef.current = rest;
       setQueue(rest);
     },

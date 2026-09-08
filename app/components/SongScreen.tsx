@@ -60,7 +60,7 @@ import { evenly, timeFor, type Timing } from '../lib/lyrictime';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import type { Track } from '../lib/library';
-import { signal } from '../lib/signal';
+import { countWhenPlayed } from '../lib/played';
 
 /**
  * Literal colours, not the theme's.
@@ -109,6 +109,8 @@ export default function SongScreen({
   const scroller = useRef<HTMLDivElement | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
   const url = useRef<string | null>(null);
+  /** How to stop watching whatever was playing before this one. */
+  const watching = useRef<null | (() => void)>(null);
 
   const opening = Math.max(0, tracks.findIndex((one) => one.id === startAt));
   const [at, setAt] = useState(opening);
@@ -178,16 +180,22 @@ export default function SongScreen({
     try {
       await element.play();
       setPlaying(true);
-      /* Counted here too, and deduplicated by `signal` — the same song played
-         in the channel and again on this screen is one play, which is what
-         makes the chart mean anything. */
-      signal('play', { ref: one.id });
+      /* Counted here too, and on the same rule as everywhere else: not when
+         it starts, but once 65% of it has gone past. The old comment said
+         `signal` deduplicated it so opening a song in two places was one
+         play — that is now the database's job rather than the browser's, and
+         it is the honest place for it: two people listening through are two
+         listens whatever one browser remembers. */
+      watching.current?.();
+      watching.current = countWhenPlayed(element, one.id);
     } catch {
       // A browser that will not start audio without a gesture. The button is
       // right there and says Play, which is the honest state to be left in.
       setPlaying(false);
     }
   }, []);
+
+  useEffect(() => () => watching.current?.(), []);
 
   useEffect(() => {
     if (!track) return undefined;

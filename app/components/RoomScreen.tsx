@@ -40,7 +40,7 @@ import { createPortal } from 'react-dom';
 import { Loader2, Pause, Play, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
-import { signal } from '../lib/signal';
+import { countWhenPlayed } from '../lib/played';
 import Cover from './Cover';
 
 /** Literal, because the theme remaps `white` and `black` onto its own tokens. */
@@ -135,6 +135,10 @@ export default function RoomScreen({
     return () => watcher.disconnect();
   }, [playable.length, mounted]);
 
+  /** How to stop watching whatever was playing before this one. */
+  const watching = useRef<null | (() => void)>(null);
+  useEffect(() => () => watching.current?.(), []);
+
   const start = useCallback(async (one: RoomPost) => {
     const element = audio.current;
     if (!element || !one.audio) return;
@@ -144,9 +148,16 @@ export default function RoomScreen({
       await element.play();
       setPlaying(true);
       /* The live room counts towards the same chart. `one.id` is the post
-         rather than the song, so the song's own id is what is sent — a chart
-         keyed on posts would list the same song four times. */
-      if (one.sourceId) signal('play', { ref: one.sourceId });
+         rather than the song, so the song's own id is what is watched — a
+         chart keyed on posts would list the same song four times.
+
+         Watched rather than counted here. The room plays a song for every
+         panel somebody scrolls past, so signalling at `play()` counted
+         scrolling; `countWhenPlayed` waits until 65% of it has actually gone
+         by. The previous song's watcher is dropped first, or a scroll through
+         twenty panels leaves twenty of them listening. */
+      watching.current?.();
+      watching.current = one.sourceId ? countWhenPlayed(element, one.sourceId) : null;
     } catch {
       /* Autoplay refused until somebody has touched the page. Not an error and
          not worth a message — the play button is right there and pressing it

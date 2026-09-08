@@ -62,14 +62,29 @@ function alreadySent(key: string): boolean {
   }
 }
 
-/** Records that something happened. Silent, and never throws. */
-export function signal(kind: EventKind, about?: { category?: string; ref?: string }): void {
+/**
+ * Records that something happened. Silent, and never throws.
+ *
+ * `again` skips the once-a-day memo below. Only a play uses it, and it has to:
+ * the memo is right for a visit — one person arriving twice is one arrival —
+ * and wrong for a listen, where the second time is the fact being counted.
+ * `events.times` was added for exactly that number and could never reach it
+ * while every play from a browser was thrown away here after the first.
+ *
+ * What still holds the line is the database, not this: one row per person per
+ * song per day whatever is sent, so a repeat raises a counter rather than
+ * making one listener look like forty. See `supabase/listens.sql`.
+ */
+export function signal(
+  kind: EventKind,
+  about?: { category?: string; ref?: string; again?: boolean },
+): void {
   if (typeof window === 'undefined') return;
   const who = visitorId();
   if (!who) return;
 
   const key = `${kind}:${about?.ref ?? ''}`;
-  if (alreadySent(key)) return;
+  if (!about?.again && alreadySent(key)) return;
 
   void fetch('/api/events', {
     method: 'POST',

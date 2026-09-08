@@ -16,6 +16,7 @@
     "check:singmix": "tsx scripts/check-singmix.mts",
     "check:envdoc": "tsx scripts/check-envdoc.mts",
     "check:language": "tsx scripts/check-language.mts",
+    "check:played": "tsx scripts/check-played.mts",
     "check:heard": "tsx scripts/check-heard.mts",
     "check:reachable": "tsx scripts/check-reachable.mts",
     "check:storyboard": "node audit/storyboard.mjs",

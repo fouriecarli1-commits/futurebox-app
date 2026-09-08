@@ -34,7 +34,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Eye, Heart, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users,
+  Eye, Headphones, Heart, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users,
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { loadTracks, type Track } from '../lib/library';
@@ -71,6 +71,15 @@ interface Post {
   hearts: number;
   /** Whether this reader is one of them. Always false when signed out. */
   hearted: boolean;
+  /**
+   * How many times the song has been listened through.
+   *
+   * A different question from `hearts`, and deliberately shown beside it:
+   * hearts are people, plays are times. A play is only counted once 65% of
+   * the song has actually gone past — a room whose songs play themselves as
+   * you scroll would otherwise be counting scrolling.
+   */
+  plays: number;
 }
 
 interface Said {
@@ -248,6 +257,33 @@ function RoomPanel({
             {post.hearts}
           </span>
         </button>
+
+        {/* Listened through, not opened.
+
+            Not a button: there is nothing to press. It sits under the heart
+            because the two belong together — how many people liked it, and
+            how many times it was actually heard — and because a number with
+            no icon beside a number with one reads as a second heart count.
+
+            `title` says what the number means, since "plays" and "views" are
+            used loosely everywhere else and this one has a rule behind it. */}
+        <span
+          className="flex flex-col items-center gap-1"
+          title={t('live.playsWhy', 'Counted once somebody has listened to 65% of the song')}
+        >
+          <span
+            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur"
+            style={{ background: 'rgba(0,0,0,0.5)', color: '#ffffff' }}
+          >
+            <Headphones className="h-5 w-5" />
+          </span>
+          <span
+            className="text-xs font-bold tabular-nums"
+            style={{ color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 6px rgba(0,0,0,0.9)' }}
+          >
+            {post.plays}
+          </span>
+        </span>
         {/* Play opens the room, it does not play under the list.
 
             "wanneer mens op play druk, moet jy met 'n swipe skuif van een

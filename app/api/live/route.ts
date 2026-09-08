@@ -131,6 +131,33 @@ export async function GET(request: Request): Promise<Response> {
     }
   }
 
+  /* How many times each song has been listened through.
+
+     Keyed on the *song*, not the post: the same song put in the room four
+     times is one song with one number, and a count keyed on posts would split
+     it four ways and show each of them as unpopular.
+
+     One read for the whole visible page, like the hearts above. `times` is
+     the counter `listens.sql` added — one row per person per song per day,
+     raised rather than duplicated on a return — so this is plays, and the
+     heart beside it is people. Two different questions, and neither is
+     dressed up as the other. */
+  const songs = Array.from(
+    new Set(((posts ?? []) as PostRow[]).filter((one) => one.kind === 'track').map((one) => one.source_id)),
+  );
+  const plays = new Map<string, number>();
+  if (songs.length > 0) {
+    const { data: rows } = await client
+      .from('events')
+      .select('ref, times')
+      .eq('kind', 'play')
+      .in('ref', songs);
+    for (const row of rows ?? []) {
+      const ref = row.ref as string;
+      plays.set(ref, (plays.get(ref) ?? 0) + (Number(row.times) || 1));
+    }
+  }
+
   // Names, so the room is people rather than uuids. Read once for everybody
   // mentioned, not once per row.
   const owners = Array.from(
@@ -217,6 +244,11 @@ export async function GET(request: Request): Promise<Response> {
            can read "no permission" as "no style set". */
         style: post.kind === 'track' && post.build_on === true ? (post.style ?? '') : undefined,
         hearts: hearts.get(post.id as string) ?? 0,
+        /* Listened through, not opened. A play only reaches the counter once
+           65% of the song has actually gone past — see `lib/played.ts`, and
+           the room the rule was asked for: songs there play themselves as
+           you scroll, so a count taken at `play()` counted scrolling. */
+        plays: post.kind === 'track' ? (plays.get(post.source_id) ?? 0) : 0,
         /* Whether this reader has hearted it, so the button opens in the
            right state rather than filling in a moment later. False for
            somebody signed out, who can see the count and cannot add to it. */

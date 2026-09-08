@@ -68,6 +68,13 @@ jobs:
       - name: The wash behind a modal is dark in every theme
         run: npm run check:scrim
 
+      # A play used to be counted the instant playback started, and in the live
+      # room the songs play themselves as you scroll — so the number counted
+      # scrolling past. It now waits for 65% of the song to actually go by, and
+      # a drag of the scrubber is not listening.
+      - name: A view is a listen, in every room that plays a song
+        run: npm run check:played
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described

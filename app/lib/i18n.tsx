@@ -153,6 +153,7 @@ export const STRINGS: Dict = {
   "buildon.make": { en: "Make a song from this", af: "Maak ’n liedjie hieruit" },
   "buildon.makeNot": { en: "The new song is written from the words, not from the recording. The music engine reads text — style words, sections, a prompt — and cannot listen to a song, so what you get shares the style you both describe rather than the sound of this one.", af: "Die nuwe liedjie word uit die woorde geskryf, nie uit die opname nie. Die musiekenjin lees teks — stylwoorde, koeplette, ’n aanwysing — en kan nie na ’n liedjie luister nie, so wat jy kry deel die styl wat julle albei beskryf eerder as die klank van hierdie een." },
   "buildon.after": { en: "after", af: "na" },
+  "live.playsWhy": { en: "Counted once somebody has listened to 65% of the song", af: "Getel sodra iemand 65% van die liedjie geluister het" },
   "hooks.sharedGone": { en: "That song could not be fetched. The room hands out an address that expires, so opening this tab again usually fixes it.", af: "Daardie liedjie kon nie gehaal word nie. Die kamer gee ’n adres uit wat verval, so as jy hierdie oortjie weer oopmaak, werk dit gewoonlik." },
   "live.gone": { en: "That file is not there any more.", af: "Daardie l\u00eaer is nie meer daar nie." },
   "live.somewhere": { en: "somewhere", af: "\u00eerens" },

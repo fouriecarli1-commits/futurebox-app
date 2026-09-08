@@ -80,19 +80,19 @@ const ROOM = {
       id: 'p1', kind: 'track', title: 'Stil water', note: '', seconds: 48,
       platform: '', link: '', startsAt: null, at: new Date().toISOString(),
       by: 'Carli', mine: true, audio: SILENCE, sourceId: 'buildon-song',
-      hearts: 12, hearted: true, buildOn: true,
+      hearts: 12, hearted: true, plays: 340, buildOn: true,
     },
     {
       id: 'p2', kind: 'track', title: 'Laatnag', note: '', seconds: 61,
       platform: '', link: '', startsAt: null, at: new Date().toISOString(),
       by: 'Thabo', mine: false, audio: SILENCE, sourceId: 'other-song',
-      hearts: 0, hearted: false, buildOn: false,
+      hearts: 0, hearted: false, plays: 0, buildOn: false,
     },
     {
       id: 'p3', kind: 'track', title: 'Bergwind', note: '', seconds: 55,
       platform: '', link: '', startsAt: null, at: new Date().toISOString(),
       by: 'Nomsa', mine: false, audio: SILENCE, sourceId: 'shared-song',
-      hearts: 4, hearted: false, buildOn: true, style: 'slow kwaito, deep bass',
+      hearts: 4, hearted: false, plays: 91, buildOn: true, style: 'slow kwaito, deep bass',
     },
   ],
 };
@@ -155,6 +155,15 @@ try {
   check('the un-hearted row is not', (await hearts.nth(1).getAttribute('aria-pressed')) === 'false');
   const counts = await hearts.allTextContents();
   check('the count is under the heart', counts.join('|').includes('12') && counts.join('|').includes('0'), counts.join(' · '));
+  /* Two numbers, and they must not be the same number twice. A row where
+     hearts and plays are both drawn from `hearts` looks entirely correct
+     until the day the counts differ, which is every day. */
+  const rail = await page.locator('[data-probe="room"]').innerText();
+  check('the play count is on the row beside the heart', /340/.test(rail));
+  check('and it is not the heart count wearing a second icon', /12/.test(rail) && /340/.test(rail));
+  check('a song nobody has listened through shows nothing yet, not a blank',
+    /\b0\b/.test(rail));
+
   const box = await hearts.nth(0).boundingBox();
   check('the heart is a thumb-sized target', box && box.height >= 44 && box.width >= 44,
     box ? `${Math.round(box.width)}x${Math.round(box.height)}` : 'no box');
@@ -162,6 +171,10 @@ try {
      viewport screenshot of the top of the page shows everything except the
      thing this probe is about. */
   await hearts.nth(0).scrollIntoViewIfNeeded();
+  /* `scrollIntoViewIfNeeded` stops the moment the heart's top edge is on
+     screen, which puts the count under it below the fold — and the count is
+     half of what this screenshot is for. */
+  await page.mouse.wheel(0, 260);
   await page.waitForTimeout(400);
   await page.screenshot({ path: shot('buildon-room.png'), fullPage: false });
 
