@@ -131,11 +131,11 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     id: 'maker',
     name: 'Maker',
     rand: 149,
-    songs: 12,
-    videos: 4,
+    songs: 9,
+    videos: 3,
     who: 'A song or two a week, kept and posted.',
     includes: [
-      '120 credits a month — 12 full songs, or 4 music videos',
+      '90 credits a month — 9 full songs, or 3 music videos',
       'The video engine, which the free tier does not have at all',
       'Your own voice, cloned, for reading and for the show',
       'The copilot, uncapped',
@@ -146,12 +146,12 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
   studio: {
     id: 'studio',
     name: 'Studio',
-    rand: 349,
-    songs: 35,
-    videos: 11,
+    rand: 399,
+    songs: 22,
+    videos: 7,
     who: 'Releasing regularly, and pitching for collabs.',
     includes: [
-      '350 credits a month — 35 full songs, or 11 music videos',
+      '220 credits a month — 22 full songs, or 7 music videos',
       'Train a sound of your own on your own songs',
       'Everything in Maker, and three cloned voices',
       'Ask FutureBox to boost a collab',
@@ -161,9 +161,9 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
   label: {
     id: 'label',
     name: 'Label',
-    rand: 749,
-    songs: 80,
-    videos: 26,
+    rand: 899,
+    songs: 44,
+    videos: 14,
     // "Five seats on one account" was on this card and was never built —
     // nothing in the codebase adds a second person to an account. It came off
     // rather than getting a rushed implementation: an overclaim on a paid tier
@@ -171,7 +171,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
     // cannot afford to be caught doing is describing something it does not do.
     who: 'Running a catalogue, and releasing every week.',
     includes: [
-      '800 credits a month — 80 full songs, or 26 music videos',
+      '440 credits a month — 44 full songs, or 14 music videos',
       'Everything in Studio, and ten cloned voices',
       'The feed uncapped — every item, no daily ceiling anywhere',
       'A say in which workshops get made',

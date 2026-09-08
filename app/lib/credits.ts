@@ -339,9 +339,27 @@ export const TIER_CREDITS: Record<Tier, number> = {
    * button.
    */
   free: 0,
-  maker: 120,
-  studio: 350,
-  label: 800,
+  /* Opsie E, 8 September 2026. Die toelae is kleiner en die pryse van die twee
+     boonste vlakke is hoër, en dit is met opset in daardie volgorde.
+
+     Vandag daal die marge hoe hoër die vlak — 70%, 64%, 62% — want elke tree
+     op die leer gee krediete vinniger weg as wat dit prys vat: van Maker na
+     Studio was die prys x2,34 teen krediete x2,92. By gewone sagteware kos dit
+     niks, want nog 'n gebruiker kos die verskaffer nul. By ons kos elke krediet
+     dieselfde, en ElevenLabs stel 'n dak op hoeveel daar in totaal is.
+
+     Onder daardie dak wen die goedkoop vlak: 'n Label-lid is 4,4x meer werd as
+     'n Maker-lid, maar die plan voed 6,7x meer Makers.
+
+     Met hierdie getalle styg die marge saam met die vlak — 76%, 79%, 81% — en
+     opkoop is vir albei kante beter. Wat 'n hoër vlak in plaas van meer
+     krediete kry, is die goed wat ons niks kos nie: Pro Booth se diepte,
+     kommersiële regte, voorrang in die tou, meer stemme.
+
+     Sien `docs/OPSIE-E.md` vir die hele som. */
+  maker: 90,
+  studio: 220,
+  label: 440,
 };
 
 /**
