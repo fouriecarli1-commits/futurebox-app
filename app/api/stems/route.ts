@@ -18,6 +18,28 @@
  * from memory. Two stems rather than six, because vocal-and-everything-else is
  * the whole question here and it is billed at half the rate of six.
  *
+ * ── Kits first, ElevenLabs behind it ─────────────────────────────────────
+ *
+ * Both services can do this. They are not the same kind of cost:
+ *
+ *   ElevenLabs  R2,21 a minute out of the $990 plan — the same budget that
+ *               caps the whole business at 335 members
+ *   Kits.AI     inside a flat R640 a month, with a 400-minute roof that is
+ *               currently sitting at zero used
+ *
+ * So this asks Kits first. Every minute separated there is a minute of music
+ * the ElevenLabs plan can serve instead, and the ceiling is what binds — see
+ * `docs/OPSIE-E.md`.
+ *
+ * It is a preference, not a replacement. Kits being down, out of its monthly
+ * minutes, or unable to take a particular recording all fall through to
+ * ElevenLabs exactly as before, and the member never learns which one answered.
+ * The one thing that must not happen is a working feature becoming a broken one
+ * to save money.
+ *
+ * `kitsminutes.ts` already knew about this: its `Kind` has carried `'split'`
+ * and `'isolate'` since #109 and nothing had ever written one.
+ *
  * The key stays on the server, which is the reason this is a route.
  */
 
@@ -28,6 +50,8 @@ import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 import { pick, unzip } from '@/app/lib/server/zip';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
+import { configured as kitsOn, fetchResult, splitStems } from '@/app/lib/server/kits';
+import { enough, note } from '@/app/lib/server/kitsminutes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -140,13 +164,20 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, ourPrice, 'stems');
   if (!paid.ok) return paid.response;
 
+  /* The scratch file has done its job now the bytes are in hand. Not awaited:
+     she is waiting on stems, not on our housekeeping. Moved above the Kits
+     attempt so it happens on whichever path answers. */
+  if (owner) void dropWork(got.key, owner, 'wav');
+
+  const viaKits = await kitsSplit(file, billed, owner);
+  if (viaKits) {
+    if (record) await record().catch(() => undefined);
+    return viaKits;
+  }
+
   const outgoing = new FormData();
   outgoing.append('file', file, 'song.mp3');
   outgoing.append('stem_variation_id', VARIATION);
-
-  /* The scratch file has done its job now the bytes are in hand. Not awaited:
-     she is waiting on stems, not on our housekeeping. */
-  if (owner) void dropWork(got.key, owner, 'wav');
 
   let upstream: Response;
   try {
@@ -240,5 +271,55 @@ export async function POST(request: Request): Promise<Response> {
   const out = new FormData();
   out.append('vocals', new Blob([new Uint8Array(vocals.bytes)], { type: 'audio/mpeg' }), 'vocals.mp3');
   out.append('instrumental', new Blob([new Uint8Array(music.bytes)], { type: 'audio/mpeg' }), 'instrumental.mp3');
+  return new Response(out);
+}
+
+/**
+ * The same two stems, from Kits, or null to let ElevenLabs have it.
+ *
+ * Null rather than an error on every failure path, on purpose: this is the
+ * cheaper of two services that can both do the job, and a member should never
+ * see a separation fail because the cheaper one was busy. Only the ElevenLabs
+ * path below is allowed to refuse.
+ *
+ * The minutes are written down only after the audio is in hand, matching
+ * `note`'s own rule — Kits' minutes burn on download, and a job that returned
+ * nothing downloaded nothing.
+ */
+async function kitsSplit(
+  file: Blob,
+  seconds: number,
+  owner: string | null,
+): Promise<Response | null> {
+  if (!kitsOn()) return null;
+  /* Out of monthly minutes is a fall-through, not a refusal. `enough` writes a
+     refusal message for the singing room, where Kits is the only engine; here
+     there is another one behind it and the member has no reason to hear about
+     an allowance that is not going to stop them. */
+  if (await enough(seconds)) return null;
+
+  /* Half of this route's own ceiling, so a slow split still leaves ElevenLabs
+     time to answer rather than turning a cheap attempt into a timeout. */
+  const split = await splitStems(file, 'song.mp3', Date.now() + 120_000, 'vocal-separations');
+  if (!split.ok) return null;
+
+  const vocal = split.stems.find((one) => /vocal|voice|lead|sing/i.test(one.instrument));
+  const backing = split.stems.find((one) => one !== vocal);
+  if (!vocal || !backing) return null;
+
+  const [gotVocal, gotBacking] = await Promise.all([
+    fetchResult(vocal.url),
+    fetchResult(backing.url),
+  ]);
+  if (!gotVocal.ok || !gotBacking.ok) return null;
+
+  await note(seconds, 'isolate', owner);
+
+  /* The same two parts under the same two names, so the booth cannot tell
+     which service answered — which is the whole point of putting one in front
+     of the other. */
+  const out = new FormData();
+  out.append('vocals', new Blob([gotVocal.audio], { type: gotVocal.type }), 'vocals.mp3');
+  out.append('instrumental', new Blob([gotBacking.audio], { type: gotBacking.type }), 'instrumental.mp3');
   return new Response(out);
 }
