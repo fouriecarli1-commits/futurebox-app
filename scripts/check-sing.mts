@@ -289,6 +289,39 @@ ok('and a page from their website is not counted as an endpoint',
 ok('the report says which paths are actually real',
   /realPaths/.test(setup) && /one\.status === 403/.test(setup));
 
+/* ── 6b. The month's 400 minutes, and the brake on them ─────────────────── */
+
+const minutes = read('app/lib/server/kitsminutes.ts');
+const sing = read('app/api/voice/sing/route.ts');
+
+ok('the plan\u2019s roof is written down as a number, not assumed',
+  /KITS_MONTHLY_MINUTES/.test(minutes) && /: 400;/.test(minutes),
+  'Kits\u2019 Professional Plan is R640 for 400 download minutes \u2014 unlimited conversion time, not unlimited audio');
+ok('the count is shared state, not one instance\u2019s memory',
+  /kits_seconds_this_month/.test(minutes) && /admin\(\)/.test(minutes),
+  'a brake in local memory is multiplied by however many instances are running; this one is a row in Postgres');
+ok('the table and its function exist in SQL',
+  /create table if not exists public\.kits_minutes/.test(read('supabase/kits.sql'))
+    && /kits_seconds_this_month/.test(read('supabase/kits.sql')));
+ok('and the function is not reachable from the browser',
+  /revoke all on function public\.kits_seconds_this_month\(\) from public, anon, authenticated/.test(
+    read('supabase/kits.sql'),
+  ));
+
+ok('singing asks whether there is room before it charges',
+  sing.indexOf('await enough(') < sing.indexOf("await charge(") && sing.includes('await enough('),
+  'a member turned away by a ceiling they cannot see must not also have paid for the turn');
+ok('and the refusal says how much is left',
+  /left: room\.left/.test(sing) && /\$\{minutes\} minute/.test(minutes),
+  '"come back next month" and "try a shorter take" are different answers, and only the number says which');
+ok('the spend is written down only after the audio is in hand',
+  sing.indexOf("void note(billed, 'sing'") > sing.indexOf('if (!done.ok)'),
+  'the minutes burn on download, and a conversion that failed downloaded nothing');
+ok('the bookkeeping cannot fail the member\u2019s request',
+  /void note\(/.test(sing) && /\(\) => undefined,/.test(minutes));
+ok('the setup page reports where the month stands',
+  /minutes: \{/.test(setup) && /leftMinutes/.test(setup));
+
 /* ── 7. The key stays on the server ─────────────────────────────────────── */
 
 for (const path of [

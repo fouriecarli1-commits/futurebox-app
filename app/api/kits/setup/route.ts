@@ -28,6 +28,7 @@
 
 import crypto from 'node:crypto';
 import { CANDIDATES, configured, listModels, namedModels, probe } from '@/app/lib/server/kits';
+import { leftSeconds, monthlyMinutes, usedSeconds } from '@/app/lib/server/kitsminutes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -108,6 +109,17 @@ export async function GET(request: Request): Promise<Response> {
        there is no reason to put them in a page that gets pasted into a chat. */
     voices: (await listModels()).map((one) => one.name),
     namedModels: namedModels().map((one) => one.name),
+    /* Where the month stands against the plan's roof.
+
+       Kits' own dashboard is the authority on this; what is counted here is
+       what this app spent, which is not the same number if anybody converts on
+       their website too. It is here so the two can be compared: a large gap
+       between them is worth knowing about before the roof is hit. */
+    minutes: {
+      ceiling: monthlyMinutes(),
+      usedMinutes: Math.round((await usedSeconds()) / 60),
+      leftMinutes: Math.floor((await leftSeconds()) / 60),
+    },
     found,
   });
 }

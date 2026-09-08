@@ -32,7 +32,7 @@ import { dirname, join } from 'node:path';
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 /** In the order they have to run. */
-export const ORDER = ['charts', 'addons', 'posting', 'dubs', 'invites', 'listens'] as const;
+export const ORDER = ['charts', 'addons', 'posting', 'dubs', 'invites', 'listens', 'kits'] as const;
 
 export const BUNDLE = join(ROOT, 'supabase/ALMAL.sql');
 
@@ -56,6 +56,9 @@ ${RULE}
 --   invites.sql   Die uitnodigingsskakel in 'n saamwerk-e-pos.
 --   listens.sql   Hoeveel kere 'n liedjie geluister is, per liedjie, vir die
 --                 maker. Moet ná charts.sql loop.
+--   kits.sql      Die Kits.AI minuut-teller. Sonder dit weet die rem nie
+--                 hoeveel van die 400 aflaaiminute oor is nie, en dan is daar
+--                 geen rem nie.
 --
 -- ── Twee dinge moet reeds daar wees ────────────────────────────────────────
 --

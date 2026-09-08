@@ -25,6 +25,7 @@ import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
+import { enough, note } from '@/app/lib/server/kitsminutes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -103,6 +104,15 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const billed = await billedSeconds(audio, Number(form.get('seconds')), MAX_SECONDS);
+
+  /* Kits' plan has a roof of 400 download minutes a month, and this app spends
+     one of them for every minute it hands back. The check goes here, before the
+     credits are taken: a member turned away by a ceiling they cannot see should
+     not also have paid for the turn. `kitsminutes.ts` carries the arithmetic
+     and why it errs towards stopping early. */
+  const room = await enough(billed);
+  if (room) return Response.json({ message: room.message, left: room.left }, { status: 429 });
+
   const paid = await charge(request, perMinute(billed, CREDITS.sing), 'sing');
   if (!paid.ok) return paid.response;
 
@@ -134,6 +144,11 @@ export async function POST(request: Request): Promise<Response> {
     await paid.refund();
     return Response.json({ message: done.message }, { status: done.status });
   }
+
+  /* Written down only once the audio is actually in hand, because the minutes
+     burn on download and a conversion that failed downloaded nothing. Not
+     awaited: the member's file is ready and the bookkeeping must not hold it. */
+  void note(billed, 'sing', caller?.id);
 
   return new Response(done.audio, {
     headers: { 'Content-Type': done.type, 'Cache-Control': 'no-store' },

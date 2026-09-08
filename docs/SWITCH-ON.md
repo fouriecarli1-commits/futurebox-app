@@ -222,6 +222,17 @@ The numbers are the model ids — they are in the address bar when you open a
 voice on kits.ai. Unset is fine: the Pro Booth then asks for the number and
 remembers it in that browser.
 
+`KITS_MONTHLY_MINUTES` is optional en hou die dak van die plan, in minute.
+Onstel beteken **400**, wat die Professional Plan se dak is. Dit is nie 'n
+raaiskoot nie: R640 ÷ 400 = R1.60 per minuut, 'n snit van drie minute kos
+R4.80, en dit is ongeveer 133 omskakelings vir die hele maand oor al die lede
+saam. Die toep tel elke minuut wat dit teruggee en weier voordat die dak breek
+— 'n weiering met 'n rede is goedkoper as 'n mislukking waarvoor iemand reeds
+betaal het. Verander die getal net as die plan verander.
+
+Loop `supabase/kits.sql` (of `supabase/ALMAL.sql`) in Supabase, anders is daar
+niks om in te tel nie en die rem staan oop.
+
 **What is broken until you do.** The Pro Booth's "Sing this in another voice"
 panel offers one engine instead of two, and the one it offers is
 `eleven_multilingual_sts_v2` — a speech model, which handles a melody badly and

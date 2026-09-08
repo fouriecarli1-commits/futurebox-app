@@ -27,6 +27,13 @@ Music.ai per gebruik), maar daar moet 'n teller wees wat weet hoeveel van die
 400 op is, en 'n rem wat stop voordat die dak breek. Dieselfde rem as
 `SPEND_CEILING`, net op minute in plaas van rande.
 
+**Daardie teller staan nou.** `supabase/kits.sql` hou die tabel,
+`app/lib/server/kitsminutes.ts` die somme en die rem, en `/api/voice/sing` vra
+of daar plek is **voordat** dit krediete vat — 'n lid wat teen 'n dak vasloop
+wat hy nie kan sien nie, moet nie ook daarvoor betaal het nie. Die dak self is
+`KITS_MONTHLY_MINUTES`, wat onstel 400 beteken. Loop `supabase/kits.sql` in
+Supabase, anders is daar niks om in te tel nie en die rem staan oop.
+
 ---
 
 ## 1. Wat Kits het
