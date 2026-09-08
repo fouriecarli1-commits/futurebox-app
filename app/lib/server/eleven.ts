@@ -214,6 +214,66 @@ export async function speak(
 }
 
 /**
+ * The same read, streamed instead of waited for.
+ *
+ * ── Why this matters more than it looks ─────────────────────────────────
+ *
+ * `speak` above waits for the whole file. A podcast script is not a sentence:
+ * ten minutes of speech is a minute of generating, and for that minute the
+ * person is looking at a spinner with nothing to judge. If the voice is wrong,
+ * they find out after paying for all ten minutes.
+ *
+ * Their streaming endpoint sends the audio as it is made. The first sound
+ * arrives in about a second, and the browser plays it while the rest is still
+ * being written.
+ *
+ * It also takes a real risk off the route. This app runs on functions with a
+ * five-minute ceiling; a long read that has not finished generating inside it
+ * fails outright and gives back nothing. A response that has already started
+ * streaming is a response that has started, and the bytes keep coming.
+ *
+ * ── The one honest cost ─────────────────────────────────────────────────
+ *
+ * The status is known before a single byte is sent, so a refusal — no credit,
+ * a bad voice, a rate limit — still refunds exactly as it did. What cannot be
+ * refunded is a stream that breaks halfway, because by then the answer has
+ * been sent and there is nothing left to turn into an error. That is rare, and
+ * it is the trade for a read that starts immediately rather than one that can
+ * time out having produced nothing at all.
+ *
+ * The body is handed back rather than read here: reading it into an
+ * ArrayBuffer would be the waiting this exists to avoid.
+ */
+export async function speakStream(
+  voiceId: string,
+  text: string,
+  modelId: string,
+  how?: Performance,
+): Promise<{ ok: true; body: ReadableStream<Uint8Array> } | Upstream> {
+  const voiceSettings = settings(how);
+  const response = await fetch(
+    `${BASE}/text-to-speech/${encodeURIComponent(voiceId)}/stream?output_format=mp3_44100_128`,
+    {
+      method: 'POST',
+      headers: { 'xi-api-key': key(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        model_id: modelId,
+        ...(voiceSettings ? { voice_settings: voiceSettings } : {}),
+      }),
+    },
+  );
+  /* The cost headers ride on the first response, before any audio — so this
+     still records what the read cost even though nothing has been read yet. */
+  noteCost(response, 'speak');
+  if (!response.ok) return complain(response);
+  if (!response.body) {
+    return { ok: false, status: 502, message: 'The reading service sent no audio.' };
+  }
+  return { ok: true, body: response.body };
+}
+
+/**
  * The same words, in a different voice: their speech-to-speech.
  *
  * A recording goes up and comes back performed by the chosen voice, with the

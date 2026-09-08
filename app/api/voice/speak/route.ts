@@ -13,7 +13,7 @@
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { guard } from '@/app/lib/server/safety';
-import { configured, speak, stockVoices, type Performance } from '@/app/lib/server/eleven';
+import { configured, speakStream, stockVoices, type Performance } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { readCost } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
@@ -161,7 +161,18 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, readCost(text.length), 'read');
   if (!paid.ok) return paid.response;
 
-  const read = await speak(
+  /* Streamed, so the first sound arrives in about a second.
+
+     A ten-minute script is a minute of generating, and waiting for all of it
+     before anything plays means somebody watches a spinner and only finds out
+     the voice is wrong after paying for the whole read. It also takes a real
+     risk off this route: the function has a five-minute ceiling, and a long
+     read that does not finish inside it used to fail having produced nothing.
+
+     The refusal path is unchanged — the status is known before a byte is sent,
+     so a rate limit or a bad voice still refunds. What cannot be refunded is a
+     stream that breaks halfway; see the note on `speakStream`. */
+  const read = await speakStream(
     voiceId,
     text,
     MODELS[String(body.model ?? 'steady')] ?? MODELS.steady,
@@ -172,12 +183,21 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: read.message }, { status: read.status });
   }
 
-  // Recorded after it worked, so a failure never counts against the day.
+  /* Recorded once the read has been accepted rather than once it has finished,
+     because with a stream there is no "finished" to wait for on this side. A
+     refused read never reaches here, which is what this line was for. */
   if (caller && client) {
     await client.from('speech_runs').insert({ owner: caller.id, characters: text.length });
   }
 
-  return new Response(read.audio, {
-    headers: { 'Content-Type': 'audio/mpeg', 'Cache-Control': 'no-store' },
+  return new Response(read.body, {
+    headers: {
+      'Content-Type': 'audio/mpeg',
+      'Cache-Control': 'no-store',
+      /* So nothing in front of this waits for the whole body before passing it
+         on, which would give back exactly the delay this removes. */
+      'Transfer-Encoding': 'chunked',
+      'X-Accel-Buffering': 'no',
+    },
   });
 }
