@@ -100,6 +100,27 @@ export async function GET(request: Request): Promise<Response> {
 
   const { data: here } = await client.rpc('live_room_count');
 
+  /* The hearts for everything on this page, in one read.
+
+     Every heart for the forty visible posts rather than a count per post: a
+     query per row is forty round trips for a number, and the rows are two
+     uuids each. Counted here in JavaScript, which is the cheaper half.
+
+     No counter column on `live_posts`. A count kept beside the rows it counts
+     is a count that disagrees with them one day, and then nobody knows which
+     one is true. */
+  const ids = (posts ?? []).map((one) => one.id as string);
+  const hearts = new Map<string, number>();
+  const mineHearted = new Set<string>();
+  if (ids.length > 0) {
+    const { data: rows } = await client.from('live_hearts').select('post, owner').in('post', ids);
+    for (const row of rows ?? []) {
+      const post = row.post as string;
+      hearts.set(post, (hearts.get(post) ?? 0) + 1);
+      if (caller && row.owner === caller.id) mineHearted.add(post);
+    }
+  }
+
   // Names, so the room is people rather than uuids. Read once for everybody
   // mentioned, not once per row.
   const owners = Array.from(
@@ -170,6 +191,11 @@ export async function GET(request: Request): Promise<Response> {
            four. Sent only for `track` because an episode's id belongs to a
            different table and an `elsewhere` post has no song at all. */
         sourceId: post.kind === 'track' ? post.source_id : undefined,
+        hearts: hearts.get(post.id as string) ?? 0,
+        /* Whether this reader has hearted it, so the button opens in the
+           right state rather than filling in a moment later. False for
+           somebody signed out, who can see the count and cannot add to it. */
+        hearted: mineHearted.has(post.id as string),
       };
     }),
   );
@@ -199,8 +225,10 @@ export async function GET(request: Request): Promise<Response> {
  */
 export async function POST(request: Request): Promise<Response> {
   let body: {
-    what?: 'hello' | 'post' | 'say' | 'elsewhere';
+    what?: 'hello' | 'post' | 'say' | 'elsewhere' | 'heart';
     visitor?: string;
+    /** Which post a heart is for. Unused by everything else. */
+    id?: string;
     kind?: 'track' | 'episode';
     sourceId?: string;
     title?: string;
@@ -263,6 +291,64 @@ export async function POST(request: Request): Promise<Response> {
     const { error } = await client.from('live_says').insert({ owner: caller.id, body: text });
     if (error) return Response.json(NOT_SET_UP, { status: 503 });
     return Response.json({ ok: true });
+  }
+
+  /* ── A heart, on or off ───────────────────────────────────────────────
+     One row per person per post, so pressing it again takes it back. The
+     table's own primary key is what makes that true — a second heart cannot
+     be inserted whatever this route does, which is a better place for the
+     rule than a check here that somebody could later move or forget.
+
+     No moderation gate. A heart carries no words: there is nothing in it to
+     screen, and running the safety model over a boolean would be spending
+     money to read an empty string. */
+  if (body.what === 'heart') {
+    const post = String(body.id ?? '').trim();
+    if (!post) return Response.json({ message: 'Which post?' }, { status: 400 });
+
+    const { data: already } = await client
+      .from('live_hearts')
+      .select('post')
+      .eq('post', post)
+      .eq('owner', caller.id)
+      .maybeSingle();
+
+    if (already) {
+      const { error } = await client
+        .from('live_hearts')
+        .delete()
+        .eq('post', post)
+        .eq('owner', caller.id);
+      if (error) return Response.json(NOT_SET_UP, { status: 503 });
+      return Response.json({ ok: true, hearted: false });
+    }
+
+    /* The post id is not checked against `live_posts` first: the foreign key
+       does that, and a read to find out what the write already enforces is a
+       round trip for nothing. */
+    const { error } = await client.from('live_hearts').insert({ post, owner: caller.id });
+    if (error) {
+      /* Two different things land here and they need different answers. A
+         foreign key refusal means the post is gone. A duplicate key means two
+         presses raced each other and the heart is already on — which is not a
+         failure at all, and telling somebody their heart failed while it sits
+         there filled in is worse than saying nothing.
+
+         Read it back rather than parsing the driver's message, which is
+         Postgres' wording and not ours to depend on. */
+      const { data: landed } = await client
+        .from('live_hearts')
+        .select('post')
+        .eq('post', post)
+        .eq('owner', caller.id)
+        .maybeSingle();
+      if (landed) return Response.json({ ok: true, hearted: true });
+      return Response.json(
+        { message: 'That post is no longer in the room.' },
+        { status: 404 },
+      );
+    }
+    return Response.json({ ok: true, hearted: true });
   }
 
   const title = String(body.title ?? '').trim().slice(0, 200);

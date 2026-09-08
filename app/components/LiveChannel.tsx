@@ -34,7 +34,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Eye, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users,
+  Eye, Heart, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users,
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { loadTracks, type Track } from '../lib/library';
@@ -67,6 +67,10 @@ interface Post {
   audio: string | null;
   /** The song behind a track post, so a play is counted against the song. */
   sourceId?: string;
+  /** How many people have hearted it, everybody included. */
+  hearts: number;
+  /** Whether this reader is one of them. Always false when signed out. */
+  hearted: boolean;
 }
 
 interface Said {
@@ -135,11 +139,15 @@ function until(when: string, t: (key: string, fallback?: string) => string): str
  */
 function RoomPanel({
   post,
+  signedIn,
   onOpen,
+  onHeart,
   onTakeOut,
 }: {
   readonly post: Post;
+  readonly signedIn: boolean;
   readonly onOpen: () => void;
+  readonly onHeart: () => void;
   readonly onTakeOut: () => void;
 }): React.ReactElement {
   const { t } = useLang();
@@ -196,6 +204,50 @@ function RoomPanel({
 
       {/* The rail, on the right, where a thumb already is. */}
       <div className="absolute bottom-4 right-3 flex flex-col items-center gap-2.5">
+        {/* The heart, first in the rail.
+
+            The room only counted words before this: somebody had to type to
+            register at all, and most people in a room read and listen without
+            typing. A heart is the smallest thing that still arrives at the
+            other person, and it belongs above Play because it is the one
+            people press most.
+
+            The count sits under it and is shown to everybody, signed in or
+            not — the number is the room's, not the reader's. Somebody signed
+            out sees it and cannot add to it, and the button says which of the
+            two they are rather than failing when pressed. */}
+        <button
+          type="button"
+          onClick={onHeart}
+          disabled={!signedIn}
+          aria-pressed={post.hearted}
+          aria-label={
+            signedIn
+              ? post.hearted
+                ? t('live.unheart', 'Take the heart back')
+                : t('live.heart', 'Heart it')
+              : t('live.heartSignIn', 'Sign in to heart it')
+          }
+          title={signedIn ? undefined : t('live.heartSignIn', 'Sign in to heart it')}
+          className="flex flex-col items-center gap-1 disabled:cursor-default"
+        >
+          <span
+            className="flex h-12 w-12 items-center justify-center rounded-full backdrop-blur transition-transform active:scale-90"
+            style={{
+              background: 'rgba(0,0,0,0.5)',
+              color: post.hearted ? '#34d399' : '#ffffff',
+              opacity: signedIn ? 1 : 0.65,
+            }}
+          >
+            <Heart className="h-5 w-5" fill={post.hearted ? 'currentColor' : 'none'} />
+          </span>
+          <span
+            className="text-xs font-bold tabular-nums"
+            style={{ color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 6px rgba(0,0,0,0.9)' }}
+          >
+            {post.hearts}
+          </span>
+        </button>
         {/* Play opens the room, it does not play under the list.
 
             "wanneer mens op play druk, moet jy met 'n swipe skuif van een
@@ -301,6 +353,45 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
       setRoom((current) => ({ ...current, ready: current.ready }));
     }
   }, []);
+
+  /**
+   * A heart, on or off.
+   *
+   * The panel changes before the server is asked. A heart is the cheapest
+   * thing in the room and it has to feel like it: a press that waits for a
+   * round trip before the shape fills reads as a press that did not land, and
+   * the next thing somebody does is press it again.
+   *
+   * The server is the truth, so a refusal puts it back by re-reading the room
+   * rather than by undoing the guess locally — the room may have moved on in
+   * the meantime, and the fresh read is right about all of it rather than
+   * right about this one post.
+   */
+  const heart = useCallback(async (post: Post): Promise<void> => {
+    const wanted = !post.hearted;
+    setRoom((current) => ({
+      ...current,
+      posts: current.posts.map((one) =>
+        one.id === post.id
+          ? { ...one, hearted: wanted, hearts: Math.max(0, one.hearts + (wanted ? 1 : -1)) }
+          : one,
+      ),
+    }));
+    try {
+      const token = await accessToken();
+      const response = await fetch('/api/live', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ what: 'heart', id: post.id }),
+      });
+      if (!response.ok) await ask();
+    } catch {
+      await ask();
+    }
+  }, [ask]);
 
   /** Being in the room, and being counted in it. */
   useEffect(() => {
@@ -659,7 +750,9 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             <RoomPanel
               key={post.id}
               post={post}
+              signedIn={Boolean(room.signedIn)}
               onOpen={() => post.audio && setOpenAt(post.id)}
+              onHeart={() => void heart(post)}
               onTakeOut={async () => {
                 const token = await accessToken();
                 await fetch(`/api/live?id=${encodeURIComponent(post.id)}`, {
