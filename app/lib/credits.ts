@@ -10,11 +10,24 @@
  *
  * Songs and video are derived from published rates and are trustworthy:
  *
- *   a 2-minute song   900 credits/min on ElevenLabs Business  →  R2.59
+ *   a 2-minute song   $0.15 a minute, ElevenLabs' own price  →  R4.80
  *   a 10-second video 70 credits on Kling Ultra               →  R6.89
  *
- * At 10 credits for a song those land at R0.259 and R0.230 a credit — within
- * 12% of each other, which is what makes one currency honest across both.
+ * At 10 credits for a song those land at R0.480 and R0.230 a credit, which is
+ * a factor of two apart rather than the 12% this note used to claim.
+ *
+ * The song figure was R2.59 until 8 September 2026, worked out from a credit
+ * rate nobody had ever checked against ElevenLabs. Carli sent their pricing
+ * page that day: music is $0.15 a minute, so a two-minute song costs us
+ * $0.30 — eighty-five per cent more than the number this file was built on.
+ * `docs/ELEVENLABS-PRYSE.md` has the whole list and what it does to the
+ * profit sums, and the short version is that the free tier can no longer be
+ * given music.
+ *
+ * The scale below has deliberately *not* been moved yet. Ten credits for a
+ * song is what everybody who has bought credits has been charged, and moving
+ * it is a price rise that belongs in its own decision rather than in a
+ * comment repair.
  *
  * The rest — reading a script, cloning a voice, training a sound — are priced
  * from estimates, marked below, and set deliberately high. Under-pricing an

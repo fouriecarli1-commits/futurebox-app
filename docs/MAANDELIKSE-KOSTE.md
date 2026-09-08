@@ -114,8 +114,12 @@ rekening kom, gaan hierdie drie na en werk die tabel by:
 
 1. **Anthropic R1 500** — die grootste skatting op die bladsy en die maklikste
    om verkeerd te hê. Die kopiloot loop op elke skerm.
-2. **ElevenLabs se planne** — die krediete per plan is wat die kode tot dusver
-   aangeneem het, nie wat hulle prysbladsy sê nie.
+2. ~~**ElevenLabs se planne**~~ — **klaar, 8 September 2026.** Carli het hulle
+   prysbladsy gestuur. Musiek kos $0,15 per minuut en 'n plan is 'n
+   dollar-begroting; die volledige lys en wat dit aan die winssomme doen staan
+   in `docs/ELEVENLABS-PRYSE.md`. Kortweg: 'n liedjie kos ons R4,80 en nie
+   R2,59 nie, en die realistiese geval werk nou net met die gratis laag se
+   musiek af.
 3. **Music.ai se koers per minuut** — `CREDITS.read = 6` en `CREDITS.parts = 8`
    is met opset hoog gestel omdat die egte koers nie hiervandaan gelees kon
    word nie.

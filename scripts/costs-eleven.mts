@@ -31,23 +31,53 @@ import { TIER_CREDITS, CREDITS } from '../app/lib/credits.ts';
 const RAND_PER_USD = 16;
 
 /**
- * ElevenLabs se planne.
+ * ElevenLabs se planne — **nagegaan**, 8 September 2026.
  *
- * ONGEVERIFIEER. Hierdie masjien kom nie by elevenlabs.io uit nie, so dit is
- * wat die kode tot dusver aangeneem het — die Business-reël kom uit
- * `plans.ts`, die res uit dieselfde bron. Dit is die eerste ding wat die
- * e-pos aan hulle moet bevestig, want die hele antwoord hieronder hang
- * daaraan.
+ * Carli het hulle prysbladsy gestuur. Dit was tot vandag die grootste
+ * onbekende in hierdie hele lêer: die reël hier het gesê "ONGEVERIFIEER ...
+ * dit is wat die kode tot dusver aangeneem het", en die aanname was met
+ * omtrent 85% te ruim.
+ *
+ * ── Wat die bladsy werklik sê ────────────────────────────────────────────
+ *
+ * Musiek kos **$0,15 per minuut**, op elke plan. Die "ingesluit"-getalle per
+ * plan is:
+ *
+ *   Free 3 · Starter 40 · Creator 147 · Pro 660 · Scale 1 993 · Business 6 600
+ *
+ * ── En die ding wat dit oopmaak ──────────────────────────────────────────
+ *
+ * Vermenigvuldig elkeen met $0,15 en jy kry die plan se prys terug:
+ *
+ *   147 x 0,15 = $22    660 x 0,15 = $99    6 600 x 0,15 = $990
+ *
+ * Dieselfde som werk vir elke ander produk op die bladsy: 8 250 minute
+ * stem-skeiding x $0,12 = $990; 4 500 uur transkripsie x $0,22 = $990;
+ * 9,9 miljoen karakters x $0,10 per 1 000 = $990.
+ *
+ * **'n Plan is dus 'n dollar-begroting, nie 'n stel aparte toelaes nie.** Die
+ * "ingesluit"-getalle is net verskillende maniere om dieselfde geld te spandeer.
+ * Dit maak die hele som eenvoudiger en eerliker: een liedjie van twee minute
+ * kos ons $0,30, oftewel R4,80, op elke plan.
+ *
+ * Die krediete hieronder is daardie minute maal `EL_CREDITS_PER_MINUTE`, sodat
+ * die res van hierdie lêer onveranderd bly werk. Sien `docs/ELEVENLABS-PRYSE.md`
+ * vir die volledige lys.
  */
 const EL_PLANS = [
-  { name: 'Creator', usd: 22, credits: 100_000 },
-  { name: 'Pro', usd: 99, credits: 500_000 },
-  { name: 'Scale', usd: 330, credits: 2_000_000 },
-  { name: 'Business', usd: 990, credits: 11_000_000 },
+  { name: 'Creator', usd: 22, credits: 147 * 900 },
+  { name: 'Pro', usd: 99, credits: 660 * 900 },
+  /* Scale is die een uitsondering: 1 993 x $0,15 = $299, nie $330 nie. Die
+     plan kos meer as wat dit aan gebruik teruggee, en dit wys hieronder as 'n
+     hoër koers per liedjie. Nie reggemaak nie — dit is wat die bladsy sê. */
+  { name: 'Scale', usd: 330, credits: 1_993 * 900 },
+  { name: 'Business', usd: 990, credits: 6_600 * 900 },
 ] as const;
 
 /** ElevenLabs se krediete per minuut musiek. Uit `plans.ts`. */
 const EL_CREDITS_PER_MINUTE = 900;
+/** Wat een minuut musiek werklik kos, van hulle prysbladsy af. */
+const MUSIC_USD_PER_MINUTE = 0.15;
 /** Wat 'n vol liedjie is, in minute. Uit `plans.ts`. */
 const SONG_MINUTES = 2;
 /** ElevenLabs-krediete vir een vol liedjie. */
@@ -229,10 +259,10 @@ say(`| Wat ons daarvoor vra | ${FB_PER_SONG} FutureBox-krediete | \`credits.ts\`
 say(`| Gratis lede per betalende een | ${FREE_PER_PAYING} | 5% omskakeling |`);
 say(`| Mengsel van betalende lede | 60% Maker, 30% Studio, 10% Label | \`plans.ts\` |`);
 say('');
-say('**Ongeverifieer:** ElevenLabs se planne self. Hierdie masjien kom nie by');
-say('elevenlabs.io uit nie, so die vier reëls hieronder is wat die kode tot');
-say('dusver aangeneem het. Dít is wat die e-pos aan ElevenLabs moet bevestig,');
-say('want die hele antwoord hang daaraan.');
+say('**Nagegaan op 8 September 2026** teen ElevenLabs se eie prysbladsy.');
+say(`Musiek kos $${MUSIC_USD_PER_MINUTE} per minuut op elke plan, en die minute wat`);
+say('elke plan insluit is presies die plan se prys gedeel deur daardie koers —');
+say("'n plan is 'n dollar-begroting. Sien `docs/ELEVENLABS-PRYSE.md`.");
 say('');
 say('| Plan | Per maand | Krediete | Rand per krediet | Wat een liedjie ons kos |');
 say('|---|---|---|---|---|');
