@@ -618,15 +618,61 @@ export default function FutureBoxHome() {
    */
   const [videoSong, setVideoSong] = useState<string | undefined>(undefined);
 
+  /**
+   * The two things that scroll in the studio, and why both are held here.
+   *
+   * The working surface is one element that outlives the room drawn inside it:
+   * on a phone the whole column scrolls, on a desk it is the pane beside the
+   * rail. Either way the scroll position belongs to the *container*, and the
+   * container does not change when the room does — so leaving the video desk
+   * two screens down and pressing Channel drops you two screens into the
+   * Channel, halfway through something you have never seen.
+   *
+   * Carli: "wanneer mens tussen kamers beweeg dat die kamer elke keer weer
+   * heel bo begin ... dan voel mens lost."
+   *
+   * Both, because which one is scrolling depends on the width and this file
+   * has no business knowing which. Setting the top of an element that is not
+   * scrolling costs nothing.
+   */
+  const roomColumn = useRef<HTMLDivElement | null>(null);
+  const workPane = useRef<HTMLDivElement | null>(null);
+
+  const toTheTop = useCallback(() => {
+    for (const one of [roomColumn.current, workPane.current]) {
+      /* `scrollTop = 0` rather than `scrollTo({ behavior: 'smooth' })`. A room
+         that animates its way back up is a room you watch scroll instead of a
+         room that opens — and on a long one the animation is still running
+         when the first thing is tapped. */
+      if (one) one.scrollTop = 0;
+    }
+  }, []);
+
   const goToRoom = useCallback((id: SurfaceId) => {
     setStudioTab(id);
     setAtDoor(false);
+    /* Now, and again after the new room has drawn. Now, so nothing is ever
+       painted at the old offset; again in the effect below, because a room
+       that is taller than the last one can otherwise be scrolled back down by
+       the browser as its content arrives. */
+    toTheTop();
     /* And remember it. Every way into a room already runs through here, which
        is what makes this the one place worth recording from — a room recorded
        in three of sixteen places is a count that describes the three. Fire and
        forget: nothing waits for it and nothing fails because of it. */
     noteTaste('room', id);
-  }, []);
+  }, [toTheTop]);
+
+  /* And after the room has actually been drawn.
+
+     Every way into a room runs through `goToRoom`, but not every way *out of
+     the door* does — the door is its own layer over the studio, and closing it
+     changes what is on screen without changing which room is chosen. So this
+     watches both. */
+  useEffect(() => {
+    if (atDoor) return;
+    toTheTop();
+  }, [atDoor, studioTab, toTheTop]);
   /**
    * Whether the door has already been shown for this arrival.
    *
@@ -2817,6 +2863,7 @@ export default function FutureBoxHome() {
               its height. The thing being made should have the room, and the
               copilot should be under it rather than beside it. */}
           <div
+            ref={roomColumn}
             className="w-full h-full p-3 md:p-5 flex flex-col gap-4 overflow-y-auto md:overflow-hidden"
             style={{ paddingBottom: barClearance(12) }}
           >
@@ -3035,7 +3082,10 @@ export default function FutureBoxHome() {
                 })()}
               </nav>
 
-              <div className={`${copilotFirst ? 'order-3 md:order-none' : ''} flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1`}>
+              <div
+                ref={workPane}
+                className={`${copilotFirst ? 'order-3 md:order-none' : ''} flex-1 min-w-0 md:min-h-0 md:overflow-y-auto space-y-6 md:pr-1`}
+              >
 
 
             {/* TAB 2: CUSTOM VOICE STUDIO (USE YOUR OWN VOICE OR CLONE) */}

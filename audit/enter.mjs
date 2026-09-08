@@ -18,10 +18,18 @@ const ABORTED = /ERR_ABORTED/;
  *            app from the front door rather than opening a probe page.
  */
 export async function enter({
-  width = 1280, height = 900, at = 'http://localhost:3000', args = [],
+  width = 1280, height = 900, at = 'http://localhost:3000', args = [], touch = false,
 } = {}) {
   const browser = await chromium.launch(launchOptions(args.length ? { args } : {}));
-  const page = await browser.newPage({ viewport: { width, height } });
+  /* `touch` is not a detail on a phone-sized run.
+
+     `app/globals.css` keeps a whole block behind `@media (pointer: coarse)` —
+     the forty-four pixel minimums and the rule that sizes a link for a thumb.
+     Playwright's desktop Chromium reports a *fine* pointer whatever viewport
+     it is handed, so a probe that only shrinks the window is measuring the app
+     with those rules switched off. That is how the share sheet passed three
+     rounds of measurement while Carli was holding a photograph of it failing. */
+  const page = await browser.newPage({ viewport: { width, height }, ...(touch ? { hasTouch: true } : {}) });
   const problems = [];
   const note = (s) => { if (!problems.includes(s)) problems.push(s); };
   page.on('console', (m) => {
