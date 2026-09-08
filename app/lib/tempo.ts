@@ -59,6 +59,48 @@ export function barSeconds(meter: Meter): number {
   return beatSeconds(meter) * sane(meter).beats;
 }
 
+/** Where a moment falls, counted the way a musician counts. */
+export interface Place {
+  /** Bars from the top, starting at 1. */
+  readonly bar: number;
+  /** Beats into that bar, starting at 1. */
+  readonly beat: number;
+}
+
+/**
+ * A moment on the clock, said as a bar and a beat.
+ *
+ * ── Why the room needs this ──────────────────────────────────────────────
+ *
+ * `docs/MUSIEKDENKE.md` §3.6. The transport said `1:24 / 3:02` and the grid
+ * counted seconds, and a room whose whole subject is a metronome, a time
+ * signature and a bar grid never once said the word "bar" with a number after
+ * it. Somebody working here for a week learns nothing about counting.
+ *
+ * Musicians count from one. Bar 1 beat 1 is the top of the song, not bar 0
+ * beat 0, and every sheet of music ever printed agrees — a room that counted
+ * from zero would be teaching the one convention nobody else uses.
+ *
+ * A moment before the start — a count-in runs at negative time on this
+ * clock — stays at bar 1 beat 1 rather than going to bar 0 or to a negative
+ * bar, both of which name a place that does not exist.
+ */
+export function placeAt(seconds: number, meter: Meter): Place {
+  const kept = sane(meter);
+  const beat = beatSeconds(kept);
+  if (!(seconds > 0)) return { bar: 1, beat: 1 };
+  const beats = Math.floor(seconds / beat);
+  return {
+    bar: Math.floor(beats / kept.beats) + 1,
+    beat: (beats % kept.beats) + 1,
+  };
+}
+
+/** "33.2", the way it is written on a chart. */
+export function sayPlace(place: Place): string {
+  return `${place.bar}.${place.beat}`;
+}
+
 export interface Position {
   /** One-based, as every sequencer since the first one has counted them. */
   readonly bar: number;

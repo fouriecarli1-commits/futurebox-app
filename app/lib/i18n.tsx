@@ -211,6 +211,11 @@ export const STRINGS: Dict = {
   "hooks.arrivedTop": { en: "The top opens up — hats, cymbals, air", af: "Die bokant maak oop — hi-hats, simbale, lug" },
   "hooks.arrivedFuller": { en: "Twice as much starts happening", af: "Twee keer soveel begin gebeur" },
   "hooks.arrivedLouder": { en: "The same thing, and louder", af: "Dieselfde ding, en harder" },
+
+  /* docs/MUSIEKDENKE.md §3.6 — the room whose subject is a metronome and a bar
+     grid had never said the word "bar" with a number after it. */
+  "pro.barShort": { en: "bar", af: "maat" },
+  "pro.barsAria": { en: "The session in bars", af: "Die sessie in mate" },
   "hooks.sharedGone": { en: "That song could not be fetched. The room hands out an address that expires, so opening this tab again usually fixes it.", af: "Daardie liedjie kon nie gehaal word nie. Die kamer gee ’n adres uit wat verval, so as jy hierdie oortjie weer oopmaak, werk dit gewoonlik." },
   "live.gone": { en: "That file is not there any more.", af: "Daardie l\u00eaer is nie meer daar nie." },
   "live.somewhere": { en: "somewhere", af: "\u00eerens" },

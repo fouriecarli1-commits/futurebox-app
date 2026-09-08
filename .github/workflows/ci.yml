@@ -106,6 +106,12 @@ jobs:
       - name: What arrives at a hook is named, and only when it did
         run: npm run check:arrival
 
+      # The Pro Booth counts bars. Musicians count from one, and bar 2 arrives
+      # after four beats in 4/4 and after three in a waltz — a room that got
+      # either wrong would teach a convention nobody else uses.
+      - name: The Pro Booth counts bars the way musicians do
+        run: npm run check:bars
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described

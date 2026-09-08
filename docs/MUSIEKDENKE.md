@@ -148,10 +148,27 @@ Elke term kry die `?` wat die app reeds oral gebruik (sien #32). Nooit 'n les
 nie — 'n verduideliking op die plek waar die woord staan, vir die een keer wat
 iemand dit wil weet.
 
-### 3.6 Die Pro Booth se rooster tel mate
+### 3.6 Die Pro Booth se rooster tel mate — **gebou**
 
 Merk die rooster `1.1, 1.2, 1.3, 1.4, 2.1 …` in plaas van sekondes. Mate tel
 word outomaties vir enigiemand wat 'n paar keer in die kamer gewerk het.
+
+**Gedoen.** `placeAt` in `lib/tempo.ts`, en die maatlyne in elke baan.
+
+Die kamer se hele onderwerp is 'n metronoom, 'n tydmaatteken en 'n
+maat-rooster, en dit het nooit een keer die woord "maat" met 'n nommer daarby
+gesê nie. Die vervoerbalk lees nou `0:24 / 3:02 · maat 33.2`.
+
+Twee dinge wat 'n mens hier verkeerd kan hê, en albei leer 'n konvensie wat
+niemand anders gebruik nie: **tel van nul af** (elke bladmusiek wat ooit
+gedruk is, begin by maat 1 slag 1) en **die tydmaatteken ignoreer** (maat 2 kom
+ná vier slae in 4/4 en ná drie in 'n wals).
+
+En een ding wat net kyk kon uitwys: die eerste weergawe was 'n liniaal bo-oor
+die kamer, terwyl elke baan se golfvorm ná die naamkolom begin en voor die
+knoppies ophou. Maat 2 op die liniaal was nêrens naby maat 2 in die klank nie.
+Die lyne word nou binne-in die baan se eie doek geteken, waar sekondes reeds na
+pixels vertaal is — dus in lyn deur konstruksie, en dit kan nie wegdryf nie.
 
 ---
 

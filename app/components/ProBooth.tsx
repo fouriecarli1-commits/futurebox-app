@@ -38,7 +38,8 @@ import { encodeWav } from '../lib/wav';
 import { knownLatency } from '../lib/mixdown';
 import {
   COUNT_INS, DEFAULT_METER, DIVISIONS, FASTEST, SLOWEST, barSeconds, countInSeconds,
-  displayOf, sane, snapped, type CountIn, type DivisionId, type Meter, type Snap,
+  displayOf, placeAt, sane, sayPlace, snapped,
+  type CountIn, type DivisionId, type Meter, type Snap,
 } from '../lib/tempo';
 import { Metronome } from '../lib/metronome';
 import { useLang } from '../lib/i18n';
@@ -969,6 +970,7 @@ export default function ProBooth({
             lanes={lanes}
             total={total}
             at={at}
+            meter={meter}
             onChange={(how) => change(lane.id, how)}
             onRemove={() => setLanes((was) => was.filter((one) => one.id !== lane.id))}
             onSplit={() => void split(lane)}
@@ -1291,8 +1293,22 @@ export default function ProBooth({
           {t('pro.toStart', 'Back to the start')}
         </button>
 
+        {/* Minutes, and bars.
+
+            `docs/MUSIEKDENKE.md` §3.6. This room's whole subject is a
+            metronome, a time signature and a bar grid, and it had never once
+            said the word "bar" with a number after it — so a week of work in
+            here taught nobody to count. The clock stays, because a clock is
+            what a file is measured in; the bar is what the music is.
+
+            Counted from one, and in the time signature that is actually set:
+            bar 2 arrives after four beats in 4/4 and after three in a waltz.
+            See `placeAt` in lib/tempo.ts. */}
         <span className="text-sm text-zinc-500 tabular-nums px-1">
           {clock(at)} / {clock(total)}
+          <span className="ml-2 text-zinc-400">
+            {t('pro.barShort', 'bar')} {sayPlace(placeAt(at, meter))}
+          </span>
         </span>
 
         <button
@@ -1338,6 +1354,7 @@ function LaneRow({
   lanes,
   total,
   at,
+  meter,
   onChange,
   onRemove,
   onSplit,
@@ -1353,6 +1370,8 @@ function LaneRow({
   lanes: readonly Lane[];
   total: number;
   at: number;
+  /** The session's tempo and time signature, for the bar lines on the wave. */
+  meter: Meter;
   onChange: (how: Partial<Lane>) => void;
   onRemove: () => void;
   onSplit: () => void;
@@ -1514,10 +1533,35 @@ function LaneRow({
       context.fillRect(x, height / 2 - size / 2, Math.max(1, wide / columns - 0.5), size);
     }
 
+    /* ── The bars, behind the sound ───────────────────────────────────
+
+       `docs/MUSIEKDENKE.md` §3.6. Drawn here rather than as a ruler above
+       the lanes, and the first version was that ruler: a strip across the
+       full width of the room, while every lane's waveform starts after the
+       lane-name column and ends before the controls. Bar 2 on the ruler sat
+       nowhere near bar 2 in the audio. A ruler that does not line up with
+       what it rules is worse than none, because it is read.
+
+       In here the mapping from seconds to pixels is the one the waveform is
+       already drawn with, so the grid is aligned by construction and cannot
+       drift. Every fourth line is brighter, which is how a bar count is
+       read at a glance — in fours, not one at a time.
+
+       Behind the sound, and faint: this is a thing to notice, not a thing to
+       look at. */
+    const bar = barSeconds(meter);
+    if (bar > 0 && total > 0 && total / bar <= 400) {
+      for (let n = 1; n * bar < total; n += 1) {
+        const x = ((n * bar) / total) * width;
+        context.fillStyle = n % 4 === 0 ? 'rgba(161,161,170,0.45)' : 'rgba(113,113,122,0.22)';
+        context.fillRect(x, 0, 1, height);
+      }
+    }
+
     const head = (at / total) * width;
     context.fillStyle = '#fff';
     context.fillRect(head - 1, 0, 2, height);
-  }, [at, lane, quiet, total]);
+  }, [at, lane, meter, quiet, total]);
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
