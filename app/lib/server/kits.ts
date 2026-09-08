@@ -716,6 +716,129 @@ export async function conversionStatus(
   return { ok: true, answer: (await response.json().catch(() => null)) as unknown };
 }
 
+/* ── Splitting a song into its parts ─────────────────────────────────────── */
+
+/** What Kits will take apart. Their own list, and their own 50 MB ceiling. */
+export const SPLIT_TYPES = ['wav', 'webm', 'mp3', 'flac'] as const;
+export const SPLIT_MAX_BYTES = 50 * 1024 * 1024;
+
+/**
+ * Splits a recording into its instruments.
+ *
+ * `POST /stem-splits`, multipart, one field called `inputFile`. The job is
+ * polled the same way a conversion is, and comes back as `stemFileUrls` —
+ * `{ instrument, url }` for each part, signed and good for four hours.
+ *
+ * ── Why this exists and is not wired to anything yet ────────────────────
+ *
+ * `/api/stems` splits over ElevenLabs today, per use, per minute. Kits does
+ * the same thing inside a monthly fee that is already paid, which is the whole
+ * shape of the saving in `docs/KITS-KAART.md`.
+ *
+ * What stops it being a one-line swap is the ceiling. Kits' plan carries 400
+ * download minutes a month and singing conversion is what it was bought for —
+ * the one thing this app promised and could not do. Splitting songs out of the
+ * same 400 minutes takes them away from that, and nobody can see how many are
+ * left, because the counter does not exist yet. That is task #109, and it
+ * comes first: a saving that quietly starves the headline feature is not a
+ * saving, it is a bill moved somewhere nobody is looking.
+ *
+ * So this is ready and deliberately unused. When the counter can answer "how
+ * many minutes are left this month", the swap is small and the trade is
+ * visible.
+ */
+export async function splitStems(
+  audio: Blob,
+  filename: string,
+  deadline: number,
+): Promise<{ ok: true; stems: { instrument: string; url: string }[] } | Upstream> {
+  if (audio.size > SPLIT_MAX_BYTES) {
+    return {
+      ok: false,
+      status: 413,
+      message: 'That recording is larger than the 50 MB the splitting service takes.',
+    };
+  }
+
+  const since = Date.now() - lastPost;
+  if (lastPost > 0 && since < A_MINUTE) {
+    const wait = Math.ceil((A_MINUTE - since) / 1000);
+    return {
+      ok: false,
+      status: 429,
+      message: `The splitting service takes one job a minute for the whole app. Try again in ${wait} seconds.`,
+    };
+  }
+
+  const form = new FormData();
+  form.append('inputFile', audio, filename);
+
+  let response: Response;
+  try {
+    lastPost = Date.now();
+    response = await fetch(`${BASE}/stem-splits`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key()}` },
+      body: form,
+    });
+  } catch {
+    return { ok: false, status: 502, message: 'Could not reach the splitting service.' };
+  }
+  if (response.status === 429) {
+    return {
+      ok: false,
+      status: 429,
+      message: 'The splitting service takes one job a minute for the whole app. Try again in a minute.',
+    };
+  }
+  if (!response.ok) return complain(response);
+
+  let answer = (await response.json().catch(() => null)) as unknown;
+  const id = idIn(answer);
+  if (!id) {
+    return {
+      ok: false,
+      status: 502,
+      message: `The splitting service started the job without saying which one it is: ${whatCameBack(answer)}`,
+    };
+  }
+
+  let waited = 0;
+  for (;;) {
+    if (stateIn(answer) === 'failed') {
+      return {
+        ok: false,
+        status: 502,
+        message: `The splitting service could not take that recording apart: ${whatCameBack(answer)}`,
+      };
+    }
+    const stems = stateIn(answer) === 'done' ? stemsIn(answer) : [];
+    if (stems.length > 0) return { ok: true, stems };
+
+    if (Date.now() >= deadline) {
+      return {
+        ok: false,
+        status: 504,
+        message: 'The splitting service is still working on that recording. Try a shorter piece.',
+      };
+    }
+    waited += 1;
+    const gap = Math.min(10_000, 3_000 + waited * 500);
+    await new Promise((wake) => setTimeout(wake, Math.min(gap, Math.max(0, deadline - Date.now()))));
+
+    let asked: Response;
+    try {
+      asked = await fetch(`${BASE}/stem-splits/${encodeURIComponent(id)}`, {
+        headers: { Authorization: `Bearer ${key()}` },
+      });
+    } catch {
+      return { ok: false, status: 502, message: 'Could not reach the splitting service.' };
+    }
+    if (!asked.ok) return complain(asked);
+    answer = (await asked.json().catch(() => null)) as unknown;
+  }
+}
+
 /**
  * Fetches the finished file.
  *
