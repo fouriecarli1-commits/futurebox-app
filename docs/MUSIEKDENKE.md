@@ -67,7 +67,7 @@ hoekom.
 **Dit is waar ons begin.** Die data is daar, dit kan nie verkeerd wees nie, en
 dit is die hoogste opbrengs per reël kode in die hele lys.
 
-### 3.2 Elke syfer kry sy betekenis, nie net sy waarde nie
+### 3.2 Elke syfer kry sy betekenis, nie net sy waarde nie — **gebou**
 
 `lib/listen.ts` sê nou "112 BPM, A mineur, helder, besig". Voeg een bysin by —
 *wat dit beteken*:
@@ -78,6 +78,21 @@ dit is die hoogste opbrengs per reël kode in die hele lys.
 - swaar onderkant — die kick en die bas deel dieselfde ruimte
 
 Teorie, gelewer as 'n feit oor hulle eie liedjie. Nie as 'n les nie.
+
+**Gedoen.** `lib/musictalk.ts` en `WhatWeHeard.tsx`, waar 'n mens die app na
+'n liedjie laat luister. Ses metings, elk met een sin wat sê wat dit beteken.
+Die voorbeelde is naslaanbare feite en nie menings nie — house *is* 124–128,
+amapiano *is* omtrent 112, drum & bass *word* op die helfte van 174 getel — want
+'n versinde voorbeeld sou beteken die app leer iets onwaar.
+
+Twee dinge wat dit reg moes kry: 'n meting wat nie geneem is nie kry géén
+lesing nie (`keyOf` gee '' as niks duidelik was nie, en "C majeur" vir stilte
+uit te dink is die een ding wat hierdie hele idee nie kan bekostig nie), en
+die relatiewe toonaard moet die regte kant om wees.
+
+En die blaaier het een gevind wat geen enkeltoets kon sien nie: `keyOf` praat
+Engels — "E♭ major" — en dít het bo 'n Afrikaanse sin gestaan. Die toonaard
+word nou in die leser se taal gesê: "E♭ majeur".
 
 ### 3.3 Die greepvinder moet sê *wat* aangekom het
 

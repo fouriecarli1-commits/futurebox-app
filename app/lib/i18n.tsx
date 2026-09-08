@@ -166,6 +166,43 @@ export const STRINGS: Dict = {
      and a paragraph explaining notation would be the lesson this is not. */
   "staff.title": { en: "What you sang", af: "Wat jy gesing het" },
   "staff.sub": { en: "The notes this app heard in your take, written down.", af: "Die note wat in jou opname gehoor is, neergeskryf." },
+
+  /* docs/MUSIEKDENKE.md §3.2 — every number the app already measures gets the
+     one clause that turns it into what a musician knows. Facts, not opinions:
+     house really is 124–128, amapiano really is about 112, and drum and bass
+     really is counted at half of 174. */
+  "talk.title": { en: "What that means", af: "Wat dit beteken" },
+  "talk.tempo.slow": { en: "Slow. A ballad sits here, and so does most of what gets sung in a church.", af: "Stadig. ’n Ballade sit hier, en so ook die meeste van wat in ’n kerk gesing word." },
+  "talk.tempo.walking": { en: "Walking pace. Soul, reggae and a great deal of Afrikaans music live here.", af: "Looppas. Soul, reggae en ’n groot deel van Afrikaanse musiek leef hier." },
+  "talk.tempo.pop": { en: "Where most pop sits: fast enough to move to, slow enough to sing over. Amapiano is about 112.", af: "Waar die meeste pop sit: vinnig genoeg om op te beweeg, stadig genoeg om oor te sing. Amapiano is omtrent 112." },
+  "talk.tempo.dance": { en: "Dance tempo. House is 124 to 128 almost exactly, which is why it all mixes together.", af: "Danstempo. House is byna presies 124 tot 128, en dít is hoekom dit alles inmekaar meng." },
+  "talk.tempo.fast": { en: "Fast. Above about 140 the beat is usually felt in half, so it moves rather than races.", af: "Vinnig. Bo omtrent 140 word die slag gewoonlik in die helfte gevoel, so dit beweeg eerder as wat dit jaag." },
+  "talk.tempo.double": { en: "Very fast, and almost always counted at half of it: 174 is drum and bass, felt as 87.", af: "Baie vinnig, en byna altyd op die helfte getel: 174 is drum & bass, gevoel as 87." },
+  "talk.key.minor": { en: "A minor key. The same seven notes as its relative major, with a different home — which is why a song can move between the two without changing key. Its relative major is", af: "’n Mineurtoonaard. Dieselfde sewe note as sy relatiewe majeur, met ’n ander tuiste — en dít is hoekom ’n liedjie tussen die twee kan beweeg sonder om van toonaard te verander. Sy relatiewe majeur is" },
+  "talk.key.major": { en: "A major key. The same seven notes as its relative minor, with a different home — which is why a song can move between the two without changing key. Its relative minor is", af: "’n Majeurtoonaard. Dieselfde sewe note as sy relatiewe mineur, met ’n ander tuiste — en dít is hoekom ’n liedjie tussen die twee kan beweeg sonder om van toonaard te verander. Sy relatiewe mineur is" },
+  "talk.bright.dark": { en: "Dark: little up top. Close and warm, or a recording with the top rolled off.", af: "Donker: min bo. Naby en warm, of ’n opname waarvan die bokant afgerol is." },
+  "talk.bright.warm": { en: "Warm: the energy sits in the middle, where voices and guitars live.", af: "Warm: die energie sit in die middel, waar stemme en kitare leef." },
+  "talk.bright.bright": { en: "Bright: the energy is up top, where the cymbals are and where a voice has to compete.", af: "Helder: die energie is bo, waar die simbale is en waar ’n stem moet meeding." },
+  "talk.weight.light": { en: "Light underneath. It will sound fine on a phone and thin on a big system.", af: "Lig onder. Dit sal reg klink op ’n selfoon en dun op ’n groot stelsel." },
+  "talk.weight.even": { en: "Even underneath: enough bottom to feel, not so much that it covers anything.", af: "Gelyk onder: genoeg onderkant om te voel, nie soveel dat dit iets toemaak nie." },
+  "talk.weight.heavy": { en: "Heavy underneath. The kick and the bass share everything below 120 Hz, and that is what you feel rather than hear.", af: "Swaar onder. Die kick en die bas deel alles onder 120 Hz, en dít is wat jy voel eerder as hoor." },
+  "talk.density.sparse": { en: "Sparse: room around everything. This is what a voice needs to sit in.", af: "Yl: ruimte om alles. Dít is waarin ’n stem moet sit." },
+  "talk.density.even": { en: "Steady: something new every few beats, which is what an arrangement is supposed to do.", af: "Bestendig: elke paar slae iets nuuts, wat is wat ’n verwerking veronderstel is om te doen." },
+  "talk.density.busy": { en: "Busy: something new starts several times a second. There is not much room left for a voice.", af: "Besig: iets nuuts begin ’n paar keer per sekonde. Daar bly nie veel ruimte vir ’n stem oor nie." },
+  "talk.punch.flat": { en: "Squashed flat: loud all the way through. Big at first, and tiring after two minutes.", af: "Plat gedruk: hard van begin tot einde. Groot met die eerste hoor, en vermoeiend ná twee minute." },
+  "talk.punch.even": { en: "Normal dynamics: the loud parts are louder, which is what makes a chorus arrive.", af: "Normale dinamiek: die harde dele is harder, en dít is wat ’n koor laat aankom." },
+  "talk.punch.wide": { en: "Wide dynamics: a long way between the quiet parts and the loud ones. Room to build.", af: "Wye dinamiek: ver tussen die sagte dele en die harde. Ruimte om op te bou." },
+  "talk.of.tempo": { en: "Tempo", af: "Tempo" },
+  "talk.of.key": { en: "Key", af: "Toonaard" },
+  "talk.of.brightness": { en: "Brightness", af: "Helderheid" },
+  "talk.of.weight": { en: "Low end", af: "Onderkant" },
+  "talk.of.density": { en: "New sounds", af: "Nuwe klanke" },
+  "talk.of.punch": { en: "Dynamics", af: "Dinamiek" },
+  /* The quality of a key, as a word. The root — E♭, A, F♯ — is notation and
+     stays as it is; "major" is a word and does not belong on an Afrikaans
+     screen. See `sayKey` in lib/musictalk.ts. */
+  "talk.major": { en: "major", af: "majeur" },
+  "talk.minor": { en: "minor", af: "mineur" },
   "hooks.sharedGone": { en: "That song could not be fetched. The room hands out an address that expires, so opening this tab again usually fixes it.", af: "Daardie liedjie kon nie gehaal word nie. Die kamer gee ’n adres uit wat verval, so as jy hierdie oortjie weer oopmaak, werk dit gewoonlik." },
   "live.gone": { en: "That file is not there any more.", af: "Daardie l\u00eaer is nie meer daar nie." },
   "live.somewhere": { en: "somewhere", af: "\u00eerens" },

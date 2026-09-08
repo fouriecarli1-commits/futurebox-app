@@ -48,6 +48,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Camera, Ear, Loader2, PenLine } from 'lucide-react';
 import { listenTo, wordsFor as wordsForSound, type Heard } from '../lib/listen';
+import WhatWeHeard from './WhatWeHeard';
 import { measurePicture, moodFor, wordsFor as wordsForPicture, type Seen } from '../lib/photo';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
@@ -77,6 +78,8 @@ export default function StyleFrom({
   const pictureInput = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState<'sound' | 'picture' | 'writing' | null>(null);
   const [said, setSaid] = useState('');
+  /** What the last sound measured, kept so it can be explained rather than listed. */
+  const [heardIt, setHeard] = useState<Heard | null>(null);
   const [problem, setProblem] = useState('');
   /**
    * Whether this app has a model behind it.
@@ -134,6 +137,7 @@ export default function StyleFrom({
     if (!file) return;
     setProblem('');
     setSaid('');
+    setHeard(null);
     if (file.size > BIGGEST_SOUND) {
       setProblem(t('hear.tooBig', 'That file is over 40 MB. A shorter piece of it is plenty.'));
       return;
@@ -146,16 +150,12 @@ export default function StyleFrom({
         return;
       }
       onWords(wordsForSound(heard));
-      setSaid(
-        [
-          heard.bpm ? `${heard.bpm} BPM` : '',
-          heard.key,
-          `${t('hear.bright', 'brightness')} ${Math.round(heard.brightness * 100)}%`,
-          `${t('hear.low', 'low end')} ${Math.round(heard.weight * 100)}%`,
-        ]
-          .filter(Boolean)
-          .join(' · '),
-      );
+      /* The measurements are kept rather than flattened into a line of
+         numbers. `docs/MUSIEKDENKE.md` §3.2: "112 BPM · A minor · brightness
+         62%" taught four numbers, and the same four with a clause each teach
+         four things a musician knows. `WhatWeHeard` says them. */
+      setHeard(heard);
+      setSaid('');
     } finally {
       setBusy(null);
       if (soundInput.current) soundInput.current.value = '';
@@ -166,6 +166,9 @@ export default function StyleFrom({
     if (!file) return;
     setProblem('');
     setSaid('');
+    /* Or the reading of the last song would sit under a picture's numbers,
+       explaining a file that is no longer the subject. */
+    setHeard(null);
     if (file.size > BIGGEST_PICTURE) {
       setProblem(t('pic.tooBig', 'That picture is over 20 MB. A smaller one measures the same.'));
       return;
@@ -244,11 +247,15 @@ export default function StyleFrom({
       </p>
 
       {problem && <p className="text-sm text-amber-300">{problem}</p>}
+      {/* A picture is still a line of numbers: light, colour and busyness are
+          three measurements of one image and none of them is a thing anybody
+          has to learn to read. A song is different, and gets the block. */}
       {said && (
         <p className="text-sm text-emerald-300 leading-snug">
           {t('from.measured', 'Measured:')} {said}
         </p>
       )}
+      <WhatWeHeard heard={heardIt} />
 
       {/* And the version that reads the picture rather than measuring it.
 

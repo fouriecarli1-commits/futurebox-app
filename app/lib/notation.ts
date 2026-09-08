@@ -120,6 +120,34 @@ export function signatureOf(key: string): number {
   return flats > 0 ? -flats : 0;
 }
 
+/**
+ * The key on the other side of a signature.
+ *
+ * A minor key and its relative major have the same seven notes and a
+ * different home, which is the single most useful thing a person can be told
+ * about a key — it is why a song moves between them without changing key, and
+ * it is what `lib/musictalk.ts` says out loud beside a measurement.
+ *
+ * Takes what `keyOf` produces — "A minor", "C♯ major" — and gives back the
+ * same shape, or '' for anything it cannot read.
+ */
+export function relativeOf(key: string): string {
+  const text = key.trim();
+  const match = /^([A-Ga-g])\s*([#♯b♭]?)/.exec(text);
+  if (!match) return '';
+  const root = match[1].toUpperCase() + (match[2] === '♯' ? '#' : match[2] === '♭' ? 'b' : match[2]);
+  if (/min/i.test(text)) return `${relativeMajor(root)} major`;
+  /* Down three semitones for the relative minor, spelled the way the major
+     is: E♭ major's is C minor, and A♭ major's is F minor. */
+  const semitone = (NATURAL[LETTERS.indexOf(root[0] as (typeof LETTERS)[number])]
+    + (root[1] === '#' ? 1 : root[1] === 'b' ? -1 : 0) - 3 + 12) % 12;
+  const wantFlat = root.includes('b') || root === 'F';
+  const names = wantFlat
+    ? ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+    : ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  return `${names[semitone]} minor`;
+}
+
 /** The major a minor key shares its signature with. */
 function relativeMajor(root: string): string {
   const semitone = (NATURAL[LETTERS.indexOf(root[0] as (typeof LETTERS)[number])]
