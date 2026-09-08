@@ -306,6 +306,31 @@ export function audioUrlIn(value: unknown): string | null {
  * not be known any better later, and because the room that needs it — the Pro
  * Booth, which splits a lane over Music.ai per use — is the one place moving
  * to Kits saves money rather than adding a feature.
+ *
+ * ── CONFIRMED against a real job, 8 September 2026 ─────────────────────────
+ *
+ * This was written off their documentation. Carli's account had one finished
+ * stem split on it, and `/api/kits/setup` read its field names back:
+ *
+ *     id, createdAt, type, status, jobStartTime, jobEndTime,
+ *     backingAudioFileUrl, vocalAudioFileUrl, lossyVocalAudioFileUrl,
+ *     stemFileUrls, lossyStemFileUrls
+ *
+ * Every field this function reaches for is there, spelled the way it is
+ * spelled here. So is `status`, which `stateIn` reads, and `id`, which `idIn`
+ * reads. Three guesses, all three right — recorded because next time they
+ * might not be, and because "we checked" is worth more than "it looks right".
+ *
+ * Three fields are real and unused: `type` (which format the split came back
+ * in) and `jobStartTime`/`jobEndTime`. The last two are the ones to remember —
+ * they are how long the job actually took, which is a better number to charge
+ * the minute counter than the estimate it makes today. See task #100.
+ *
+ * And the limit of what was learned: `voice-conversions`, `vocal-separations`
+ * and `voice-blender` were all EMPTY on her account, so they returned no field
+ * names at all. Those three endpoints are proven to exist and to accept her
+ * key; their record shapes are still documentation, not observation. The first
+ * real job through each is what settles them.
  */
 export function stemsIn(value: unknown): { instrument: string; url: string }[] {
   const record = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
@@ -349,8 +374,31 @@ export const CANDIDATES = [
      The four names below the documented five are the account itself. They are
      not in the contents page either, but a plan with a four-hundred-minute
      ceiling has to have a number somewhere, and one request each is a cheap
-     way to find out. Anything that answers is a bonus; anything that 404s is
-     an answer too. */
+     way to find out.
+
+     ── ASKED, AND ANSWERED. There is no account API. ──────────────────────
+
+     Carli ran this against the live account on 8 September 2026. All four
+     answered **200 with 5925 bytes of text/html** — their website's own page,
+     the same body for all four. Not a 404, which is the trap: a status check
+     alone would have reported four working endpoints and this file would now
+     be parsing a marketing page for a minute count.
+
+     The content-type guard in `probe` below is the only reason that is
+     legible, and it earned its keep here. Keep it.
+
+     What follows from it, and it is not small: **Kits will never tell us how
+     many of the 400 minutes are gone.** `kitsminutes.ts` counting what this
+     app itself spent is not a stopgap until a real endpoint turns up — it is
+     the only brake there is ever going to be, and `supabase/kits.sql` is what
+     makes it work. A member converting on kits.ai directly is spending minutes
+     we cannot see, so the two numbers drift apart by design; her dashboard is
+     the authority and ours is the brake.
+
+     These four stay in the list rather than being deleted. One request each,
+     nine in total, and if Kits ever ships an account endpoint this page is
+     where it shows up. A candidate that has been answered is still worth
+     asking. */
   'voice-conversions',
   'voice-models',
   'vocal-separations',
@@ -490,6 +538,29 @@ function httpsIn(value: unknown): string | null {
  * Failure is an empty list rather than a thrown error. Every caller draws a
  * screen, the number field is still under the picker, and a voice room that
  * will not draw because a list could not be fetched is the worse answer.
+ *
+ * ── CONFIRMED against the live account, 8 September 2026 ───────────────────
+ *
+ * A voice model record carries:
+ *
+ *     id, title, isUsable, tags, twitterLink, instagramLink, tiktokLink,
+ *     spotifyLink, youtubeLink, imageUrl, demoUrl
+ *
+ * `title`, `isUsable`, `tags` and `demoUrl` are the four this function reads,
+ * and all four are spelled as written here. `nameIn` falling through to
+ * `name`/`modelName`/`displayName`/`label` never fires — `title` is always
+ * there — but it costs nothing and it is what makes the fallthrough honest.
+ *
+ * `imageUrl` is real and unused. The picker shows names; it could show faces.
+ *
+ * ── And the fact that matters more than any field name ─────────────────────
+ *
+ * `myModels=true` came back EMPTY. Carli has trained no voices. So the
+ * catalogue read — `listModels(false)`, cached by `catalogue()` below — is not
+ * the nice-to-have that comment describes it as. Today it is the ONLY thing
+ * anybody can sing in, hers included. If it fails, every voice picker in this
+ * app is empty and the room is dead, and the empty-list-on-failure rule above
+ * means it fails quietly. Worth knowing before somebody "simplifies" it away.
  */
 export async function listModels(mine = true): Promise<Model[]> {
   if (!configured()) return [];

@@ -129,20 +129,93 @@ Music.ai, want Kits se Key and BPM Finder is nie oor die API beskikbaar nie.
 
 ---
 
-## 4. Wat nog nodig is
+## 4. Wat die egte rekening geantwoord het
 
-**Een bladsy uit hulle dokumentasie: die Voice Model API.** Dit beantwoord die
-een vraag wat die meeste werd is — of 'n stem oor die API **geskep** kan word,
-of net gelys. As dit geskep kan word, kom kloning in The Booth in en die
-uitgaande skakel na kits.ai verdwyn. As dit nie kan nie, bly die skakel en die
-tutorial die eerlike antwoord.
+Carli het `/api/kits/setup` op 8 September 2026 teen die lewendige rekening
+oopgemaak. Dít is nie meer afgelei nie — dit is gemeet.
 
-Die ander drie bladsye (Vocal Separations, Stem Splitter, Voice Blender) sê
-watter velde elke werk vat.
+**Die sleutel werk, en die plan is reg.** `ready: true`, `needsPlan: false`.
+Die vorige keer het elke adres geantwoord *"Free tier users are not allowed to
+use the api"*. Dit is verby; die betaalde plan is aan.
 
-**En `/api/kits/setup?key=<POST_SECRET>`**, wat nou nege adresse vra in plaas
-van een-en-dertig — die vyf gedokumenteerde plus vier plekke waar 'n
-minuut-telling kan wees.
+**Al vyf gedokumenteerde adresse is eg** — `voice-conversions`, `voice-models`,
+`vocal-separations`, `stem-splits`, `voice-blender`, elkeen 'n 200. Geen
+raaiskoot bly oor oor watter adres bestaan nie.
+
+**Daar is géén rekening-API nie.** `user`, `me`, `account` en `usage` het al
+vier 200 geantwoord met **5925 grepe HTML** — hulle webwerf se eie bladsy,
+dieselfde lyf vir al vier. Nie 'n 404 nie, wat die strik is: 'n toets wat net
+na die status kyk sou vier werkende adresse gerapporteer het.
+
+> **Wat daaruit volg:** Kits sal ons nooit vertel hoeveel van die 400 minute op
+> is nie. Ons eie telling in `kitsminutes.ts` is nie 'n lapmiddel tot 'n regte
+> adres opdaag nie — dit is die enigste rem wat daar ooit gaan wees. Iemand wat
+> direk op kits.ai omskakel, spandeer minute wat ons nie kan sien nie, dus
+> dryf die twee getalle met opset uitmekaar: húlle paneelbord is die
+> gesaghebbende, ons s'n is die rem.
+
+**Die stem-splitter se velde is bevestig** teen een egte klaar werk:
+
+```
+id, createdAt, type, status, jobStartTime, jobEndTime,
+backingAudioFileUrl, vocalAudioFileUrl, lossyVocalAudioFileUrl,
+stemFileUrls, lossyStemFileUrls
+```
+
+Elke veld wat `stemsIn`, `stateIn` en `idIn` soek is daar, presies so gespel.
+Drie raaiskote, al drie reg.
+
+**Die stemmodel se velde is bevestig:** `id, title, isUsable, tags,
+twitterLink, instagramLink, tiktokLink, spotifyLink, youtubeLink, imageUrl,
+demoUrl`. Ons lees vier van hulle. `imageUrl` is eg en ongebruik — die kieser
+wys name waar dit gesigte kon wys.
+
+**Jy het nul afgerigte stemme.** `myModels=true` kom leeg terug. Dus is Kits se
+eie katalogus vandag die **enigste** ding waarin enigiemand kan sing, joune
+ingesluit. Dit maak `catalogue()` draend, nie 'n ekstra nie.
+
+**Die minuut-teller antwoord** — `dak 400, gebruik 0, oor 400`. `kits.sql` het
+geland.
+
+### Wat nog nie gemeet is nie
+
+`voice-conversions`, `vocal-separations` en `voice-blender` was almal **leeg**
+op die rekening, dus het hulle géén veldname teruggegee nie. Daardie drie
+adresse is bewys om te bestaan en die sleutel te aanvaar; hulle rekord-vorms is
+steeds dokumentasie, nie waarneming nie. Die eerste egte werk deur elkeen is
+wat dit vasmaak.
+
+---
+
+## 5. Wat nog nodig is
+
+**Die een vraag wat die meeste werd is, staan nog oop: kan 'n stem oor die API
+geskép word, of net gelys?** Die verslag wys dat `voice-models` bestaan en
+antwoord, maar 'n lys-oproep sê niks oor of `POST` werk nie. As dit geskep kan
+word, kom kloning in The Booth in en die uitgaande skakel na kits.ai verdwyn.
+As dit nie kan nie, bly die skakel en die tutorial die eerlike antwoord. Dit
+kos een egte oproep om uit te vind, en dit skep iets op haar rekening — dus is
+dit haar besluit, nie 'n taak nie.
+
+**Die veldname van drie werke.** `voice-conversions`, `vocal-separations` en
+`voice-blender` was leeg, dus is hulle vorms nog dokumentasie. Die eerste egte
+werk deur elkeen maak dit vas, en dit gebeur vanself sodra iemand die kamers
+gebruik — niks om te beplan nie, net om te onthou om weer te kyk.
+
+**`imageUrl` in die kieser.** Eg, ongebruik, en die kieser is die leegste skerm
+in die app.
+
+**`jobStartTime` / `jobEndTime` na die minuut-teller.** Vandag skat die teller
+hoeveel minute 'n werk gekos het. Kits gee die egte begin- en eindtyd terug.
+Vir 'n dak van 400 minute teen R640 is die verskil tussen 'n skatting en die
+egte getal regte geld.
+
+### Die verslag self
+
+`/api/kits/setup?key=<POST_SECRET>` vra nege adresse: die vyf gedokumenteerde,
+plus die vier wat nou bewys is om nie te bestaan nie. Daardie vier bly in die
+lys — een oproep elk, en as Kits ooit 'n rekening-adres byvoeg, is dít waar dit
+gaan wys.
 
 Wat die verslag terugstuur:
 
@@ -151,3 +224,7 @@ Wat die verslag terugstuur:
 * `voices` — haar afgerigte stemme se name, wat presies is wat die kieser wys.
 * `found` — vir elke adres: die status, hoeveel dinge daar is, en wat die velde
   van een van hulle heet. Nooit iemand se klank of rekeningbesonderhede nie.
+
+Die inhoudstipe-toets in `probe()` is wat die vier HTML-antwoorde leesbaar
+gemaak het. Sonder dit sou die verslag vier werkende adresse aangemeld het.
+Moenie dit uithaal nie.
