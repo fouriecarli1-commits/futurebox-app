@@ -117,11 +117,24 @@ export async function GET(request: Request): Promise<Response> {
     warnings: money !== null && money.ok ? warningsFor(money.bill) : [],
 
     /* ── Whether the key is fenced in ────────────────────────────────────── */
+    /* An empty list is an ANSWER, not an absence, and it needs saying in
+       words. Carli's first real open of this page returned `[]`: the read
+       succeeded and the workspace has no service accounts, which means the key
+       in use is a personal key and the service-accounts restriction API does
+       not apply to it at all. Left as a bare `[]` that reads as "nothing
+       found", which is the opposite of useful — it is the thing that decides
+       whether tightening the key is a script or three clicks in their console. */
     keyGuard: guard === null
       ? { message: 'No key set, so there is nothing to check.' }
-      : guard.ok
-        ? guard.keys
-        : { message: guard.message, status: guard.status },
+      : !guard.ok
+        ? { message: guard.message, status: guard.status }
+        : guard.keys.length === 0
+          ? {
+              message:
+                'The read worked and this workspace has no service accounts, so the key in use is a personal key. The permission list, the per-key credit ceiling and the IP restriction are all service-account features and do not apply to it. Restricting this key is a job in the ElevenLabs console, not something an API call here can do.',
+              keys: [],
+            }
+          : guard.keys,
 
     /* ── What we charged for it ──────────────────────────────────────────── */
     /* What the app asks, so the two sit on one screen instead of one here and
