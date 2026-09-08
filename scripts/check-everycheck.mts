@@ -148,8 +148,8 @@ const TOOLS = new Set([
  */
 const WAITING = new Set([
   'account', 'addon', 'cast', 'greeting',
-  'language', 'photo', 'podlanguage',
-  'presenter', 'queue', 'taste', 'videocover',
+  'language', 'photo',
+  'presenter', 'queue', 'taste',
 ]);
 /** What it was when this rule was written. It may go down and not up. */
 const WAITING_WAS = 25;

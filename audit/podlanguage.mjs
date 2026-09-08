@@ -23,47 +23,49 @@
  *
  * Needs the stub build — see `audit/README.md`.
  */
-import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
-const PORT = process.argv[2] || '3044';
+import { serve, shot } from './where.mjs';
+import { enter, studio, toRoom } from './enter.mjs';
+
+const PORT = process.argv[2] || '3103';
 const af = process.argv[3] === 'af';
-const b = await chromium.launch(launchOptions());
-const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
-const check = (l, ok, d = '') => { console.log(`${l}: ${ok}`); if (!ok) problems.push(`${l}${d ? ` (${d})` : ''}`); };
+const check = (l, ok, d = '') => {
+  console.log(`${ok ? '  ok  ' : '  FAIL'} ${l}${d && !ok ? ` — ${d}` : ''}`);
+  if (!ok) problems.push(`${l}${d ? ` (${d})` : ''}`);
+};
+
+/* ── Its own server, and the ordinary way in ─────────────────────────────
+
+   This went to a port it did not start, and signed itself in by writing a
+   Supabase session into localStorage — which only works on a build that has
+   `NEXT_PUBLIC_SUPABASE_URL` in it, and that is what "needs the stub build"
+   meant and why this sat unrun.
+
+   None of it is necessary. `enter()` signs in the way a person does, and the
+   two routes below are the reason this probe exists in the first place: the
+   room asks the server who it is talking to, and a run without that answered
+   would test the signed-out screen and nothing else. That is the mistake
+   `cast.mjs` was written to stop making twice. */
+const server = await serve(PORT);
+const { browser: b, page: p } = await enter({
+  at: server.url,
+  lang: af ? 'af' : 'en',
+  before: async (page) => {
+    await page.route('**/api/show*', (r) => r.fulfill({ status: 200, contentType: 'application/json',
+      body: JSON.stringify({ signedIn: true, configured: true, show: null, episodes: [], caps: { publish: true, dub: true } }) }));
+    await page.route('**/api/voice*', (r) => r.fulfill({ status: 200, contentType: 'application/json',
+      body: JSON.stringify({ configured: true, mine: [], stock: [], caps: { publish: true, dub: true } }) }));
+  },
+});
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
-await p.addInitScript((l) => { try { window.localStorage.setItem('futurebox.lang.v1', l); } catch {} }, af ? 'af' : 'en');
-const WHO = { id: '11111111-2222-3333-4444-555555555555', email: 'toets@futurebox.test' };
-await p.addInitScript((who) => {
-  try {
-    window.localStorage.setItem('sb-stub-auth-token', JSON.stringify({
-      access_token: 'stub-access-token', refresh_token: 'stub-refresh-token', token_type: 'bearer',
-      expires_at: Math.floor(Date.now() / 1000) + 86400, expires_in: 86400,
-      user: { id: who.id, email: who.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} },
-    }));
-  } catch {}
-}, WHO);
-await p.route('**/auth/v1/**', (r) => r.fulfill({ status: 200, contentType: 'application/json',
-  body: JSON.stringify({ id: WHO.id, email: WHO.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} }) }));
-await p.route('**/rest/v1/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
 
-/* The room asks the server who it is talking to, and the stub bearer token is
-   not a JWT the real route can verify — so without this the run would test the
-   signed-out screen and nothing else, which is the mistake `cast.mjs` was
-   written to stop making a second time. */
-await p.route('**/api/show*', (r) => r.fulfill({ status: 200, contentType: 'application/json',
-  body: JSON.stringify({ signedIn: true, configured: true, show: null, episodes: [], caps: { publish: true, dub: true } }) }));
-await p.route('**/api/voice*', (r) => r.fulfill({ status: 200, contentType: 'application/json',
-  body: JSON.stringify({ configured: true, mine: [], stock: [], caps: { publish: true, dub: true } }) }));
-
-await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
-await p.locator('header button').filter({ hasText: /Studio/i }).first().waitFor({ timeout: 40000 });
-await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
-await p.waitForTimeout(1800);
-const room = p.locator('div.fixed.inset-0.z-50').first();
-// The room keeps its English name in both languages, so the same filter works.
-await room.locator('button').filter({ hasText: /^Podcast/i }).first().click();
-await p.waitForTimeout(2500);
+const room = await studio(p);
+/* Named in the language the run is in. The comment here used to say the room
+   keeps its English name in both, which was true when it was written and is
+   not now: `rail.podcast` is "Potgooi". An Afrikaans run then spent thirty
+   seconds failing to click a room that was on screen under another name. */
+await toRoom(p, af ? 'Potgooi' : 'Podcast');
+await p.waitForTimeout(2000);
 
 const box = room.locator('#show-language');
 check('the language field is a chooser, not a text box', (await box.count()) === 1, String(await box.count()));
@@ -78,10 +80,20 @@ if (await box.count()) {
   await box.selectOption('af');
   await p.waitForTimeout(300);
   check('and it can be changed', (await box.inputValue()) === 'af', await box.inputValue());
-  const label = await room.locator('label[for="show-language"]').innerText();
-  check('it has a label for a screen reader', label.length > 3, label);
+  /* `textContent`, not `innerText`. The label is `sr-only` — off-screen for
+     everybody but a screen reader, which is the point of it — and `innerText`
+     honours visibility, so it comes back empty and the assertion reads as a
+     missing label on a label that is there. */
+  const label = (await room.locator('label[for="show-language"]').textContent()) ?? '';
+  check('it has a label for a screen reader', label.trim().length > 3, label);
 }
 await p.screenshot({ path: shot(`podlanguage-${af ? 'af' : 'en'}.png`), fullPage: false });
-console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
-process.exit(problems.length ? 1 : 0);
+await server.stop();
+
+if (problems.length) {
+  console.error(`\ncheck:podlanguage — ${problems.length} problem(s):`);
+  problems.forEach((one) => console.error(`  · ${one}`));
+  process.exit(1);
+}
+console.log('\ncheck:podlanguage — the show\'s language is chosen from a list, not typed as a guess.');

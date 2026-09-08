@@ -22,7 +22,7 @@
 import { cpSync, rmSync, existsSync } from 'node:fs';
 import { execSync, spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3025';
 const af = process.argv[3] === 'af';
@@ -31,7 +31,7 @@ const LIVE = 'app/safezoneprobe/page.tsx';
 
 const problems = [];
 const check = (label, ok, detail = '') => {
-  console.log(`${label}: ${ok}`);
+  console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${detail && !ok ? ` — ${detail}` : ''}`);
   if (!ok) problems.push(`${label}${detail ? ` (${detail})` : ''}`);
 };
 
@@ -40,20 +40,20 @@ try {
   cpSync(PROBE, LIVE);
   console.log('building with the probe page…');
   execSync('npx next build', { stdio: 'ignore' });
-  server = spawn('npx', ['next', 'start', '-p', PORT], { detached: true, stdio: 'ignore' });
-  for (let tries = 0; tries < 40; tries += 1) {
-    await new Promise((r) => setTimeout(r, 2000));
-    try {
-      const r = await fetch(`http://localhost:${PORT}/safezoneprobe`);
-      if (r.ok) break;
-    } catch { /* not up yet */ }
-  }
+  /* `serve()` rather than a `spawn` of its own.
+
+     `next start` forks, so killing the parent leaves the worker holding the
+     port and the next run of this probe finds a server it did not start and
+     cannot restart. `serve()` kills the whole process group and also stops on
+     the way out however the probe leaves — which is the rule `check:probes`
+     holds every wired probe to. */
+  server = await serve(PORT);
 
   const b = await chromium.launch(launchOptions());
   const p = await b.newPage({ viewport: { width: 900, height: 950 } });
   p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
   await p.addInitScript((l) => { try { window.localStorage.setItem('futurebox.lang.v1', l); } catch {} }, af ? 'af' : 'en');
-  await p.goto(`http://localhost:${PORT}/safezoneprobe`, { waitUntil: 'networkidle' });
+  await p.goto(`${server.url}/safezoneprobe`, { waitUntil: 'networkidle' });
 
   const tall = p.locator('[data-probe="tall"]');
   const wide = p.locator('[data-probe="wide"]');
@@ -216,11 +216,13 @@ try {
   await p.screenshot({ path: shot(`videocover-${af ? 'af' : 'en'}.png`), fullPage: true });
   await b.close();
 } finally {
-  if (server?.pid) {
-    try { process.kill(-server.pid); } catch { /* already gone */ }
-  }
+  if (server) await server.stop();
   if (existsSync(LIVE)) rmSync(LIVE);
 }
 
-console.log('problems:', problems.join(' ;; ') || 'none');
-process.exit(problems.length ? 1 : 0);
+if (problems.length) {
+  console.error(`\ncheck:videocover — ${problems.length} problem(s):`);
+  problems.forEach((one) => console.error(`  · ${one}`));
+  process.exit(1);
+}
+console.log('\ncheck:videocover — the shading falls where these apps really cover a frame.');
