@@ -25,23 +25,23 @@ elke plan insluit is presies die plan se prys gedeel deur daardie koers —
 
 | Plan | Per maand | Krediete | Rand per krediet | Wat een liedjie ons kos |
 |---|---|---|---|---|
-| Creator | $22 = R352,00 | 132 300 | R0,00266 | R4,79 |
-| Pro | $99 = R1 584,00 | 594 000 | R0,00267 | R4,80 |
-| Scale | $330 = R5 280,00 | 1 793 700 | R0,00294 | R5,30 |
-| Business | $990 = R15 840,00 | 5 940 000 | R0,00267 | R4,80 |
+| Creator | $22 + BTW = R404,80 | 132 300 | R0,00306 | R5,51 |
+| Pro | $99 + BTW = R1 821,60 | 594 000 | R0,00307 | R5,52 |
+| Scale | $330 + BTW = R6 072,00 | 1 793 700 | R0,00339 | R6,09 |
+| Business | $990 + BTW = R18 216,00 | 5 940 000 | R0,00307 | R5,52 |
 
 ## Voorsigtig
 
 Elke lid brand elke krediet op, elke gratis gebruiker ook, en die werkswinkels loop. Dit gebeur nie — maar as die som hier werk, werk hy altyd.
 
-Vaste koste sonder ElevenLabs: R6 924,00 (werkswinkels ingesluit).
+Vaste koste sonder ElevenLabs: R7 165,50 (werkswinkels ingesluit).
 
 | ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede wat die plan se krediete hou | Werk dit? |
 |---|---|---|---|---|
-| Creator | R134,50 | 55 | 2 | nee |
-| Pro | R134,22 | 64 | 12 | nee |
-| Scale | R121,41 | 101 | 38 | nee |
-| Business | R134,22 | 170 | 128 | nee |
+| Creator | R116,04 | 66 | 2 | nee |
+| Pro | R115,72 | 78 | 12 | nee |
+| Scale | R100,99 | 132 | 38 | nee |
+| Business | R115,72 | 220 | 128 | nee |
 
 *"Werk dit" beteken: die getal lede wat jy nodig het om gelyk te breek,
 pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek
@@ -52,14 +52,14 @@ hoeveel mense ook al inteken.*
 
 Betalende lede gebruik 60% van hul toelae, die helfte van die gratis gebruikers maak ooit iets. Dít is die syfer om planne op te maak.
 
-Vaste koste sonder ElevenLabs: R6 924,00 (werkswinkels ingesluit).
+Vaste koste sonder ElevenLabs: R7 165,50 (werkswinkels ingesluit).
 
 | ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede wat die plan se krediete hou | Werk dit? |
 |---|---|---|---|---|
-| Creator | R183,74 | 40 | 4 | nee |
-| Pro | R183,57 | 47 | 21 | nee |
-| Scale | R175,88 | 70 | 64 | nee |
-| Business | R183,57 | 125 | 214 | **ja** |
+| Creator | R172,66 | 44 | 4 | nee |
+| Pro | R172,47 | 53 | 21 | nee |
+| Scale | R163,63 | 81 | 64 | nee |
+| Business | R172,47 | 148 | 214 | **ja** |
 
 *"Werk dit" beteken: die getal lede wat jy nodig het om gelyk te breek,
 pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek
@@ -70,14 +70,14 @@ hoeveel mense ook al inteken.*
 
 Die slegste geval weer, met die werkswinkels af. Dit wys of die slegste geval hoegenaamd veilig gemaak kan word.
 
-Vaste koste sonder ElevenLabs: R2 924,00 (sonder werkswinkels).
+Vaste koste sonder ElevenLabs: R3 165,50 (sonder werkswinkels).
 
 | ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede wat die plan se krediete hou | Werk dit? |
 |---|---|---|---|---|
-| Creator | R134,50 | 25 | 2 | nee |
-| Pro | R134,22 | 34 | 12 | nee |
-| Scale | R121,41 | 68 | 38 | nee |
-| Business | R134,22 | 140 | 128 | nee |
+| Creator | R116,04 | 31 | 2 | nee |
+| Pro | R115,72 | 44 | 12 | nee |
+| Scale | R100,99 | 92 | 38 | nee |
+| Business | R115,72 | 185 | 128 | nee |
 
 *"Werk dit" beteken: die getal lede wat jy nodig het om gelyk te breek,
 pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek
@@ -88,14 +88,14 @@ hoeveel mense ook al inteken.*
 
 Dieselfde as bo, met die werkswinkels af. Dit is die enigste hefboom wat oorbly noudat die gratis laag se musiek weg is.
 
-Vaste koste sonder ElevenLabs: R2 924,00 (sonder werkswinkels).
+Vaste koste sonder ElevenLabs: R3 165,50 (sonder werkswinkels).
 
 | ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede wat die plan se krediete hou | Werk dit? |
 |---|---|---|---|---|
-| Creator | R183,74 | 18 | 4 | nee |
-| Pro | R183,57 | 25 | 21 | nee |
-| Scale | R175,88 | 47 | 64 | **ja** |
-| Business | R183,57 | 103 | 214 | **ja** |
+| Creator | R172,66 | 21 | 4 | nee |
+| Pro | R172,47 | 29 | 21 | nee |
+| Scale | R163,63 | 57 | 64 | **ja** |
+| Business | R172,47 | 124 | 214 | **ja** |
 
 *"Werk dit" beteken: die getal lede wat jy nodig het om gelyk te breek,
 pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek
@@ -123,8 +123,8 @@ Video is nie in die somme hierbo nie, en dit is nie 'n leemte nie.
 Die kode dra twee getalle vir dieselfde greep. `server/video/eleven.ts` sê
 Seedance kos 20 ElevenLabs-eenhede per vyf sekondes, en dieselfde lêer sê
 'n greep kos ongeveer R2,62. By die koers wat die musiekkant gebruik —
-R0,00267 per krediet op Business — is 20 krediete
-R0,05, nie R2,62 nie. Die twee is 49 keer uit mekaar.
+R0,00307 per krediet op Business — is 20 krediete
+R0,06, nie R2,62 nie. Die twee is 43 keer uit mekaar.
 
 Een van drie dinge is waar: video word teen 'n ander koers as musiek
 gereken, of die R2,62 kom van 'n ander plan af, of een van die twee is
@@ -145,33 +145,33 @@ ElevenLabs-sleutel wat jy reeds het, so video maak nie 'n nuwe rekening of
 
 | Laag | Prys | Poortfooi | Musiek | Bly oor |
 |---|---|---|---|---|
-| Maker | R149,00 | −R7,22 | −R57,47 | **R84,32** |
-| Studio | R349,00 | −R14,22 | −R167,62 | **R167,17** |
-| Label | R749,00 | −R28,22 | −R383,13 | **R337,66** |
+| Maker | R149,00 | −R7,22 | −R66,09 | **R75,70** |
+| Studio | R349,00 | −R14,22 | −R192,76 | **R142,02** |
+| Label | R749,00 | −R28,22 | −R440,60 | **R280,19** |
 
 ### Op ElevenLabs Pro
 
 | Laag | Prys | Poortfooi | Musiek | Bly oor |
 |---|---|---|---|---|
-| Maker | R149,00 | −R7,22 | −R57,60 | **R84,19** |
-| Studio | R349,00 | −R14,22 | −R168,00 | **R166,79** |
-| Label | R749,00 | −R28,22 | −R384,00 | **R336,78** |
+| Maker | R149,00 | −R7,22 | −R66,24 | **R75,55** |
+| Studio | R349,00 | −R14,22 | −R193,20 | **R141,59** |
+| Label | R749,00 | −R28,22 | −R441,60 | **R279,19** |
 
 ### Op ElevenLabs Scale
 
 | Laag | Prys | Poortfooi | Musiek | Bly oor |
 |---|---|---|---|---|
-| Maker | R149,00 | −R7,22 | −R63,58 | **R78,20** |
-| Studio | R349,00 | −R14,22 | −R185,45 | **R149,34** |
-| Label | R749,00 | −R28,22 | −R423,88 | **R296,90** |
+| Maker | R149,00 | −R7,22 | −R73,12 | **R68,67** |
+| Studio | R349,00 | −R14,22 | −R213,27 | **R121,52** |
+| Label | R749,00 | −R28,22 | −R487,47 | **R233,32** |
 
 ### Op ElevenLabs Business
 
 | Laag | Prys | Poortfooi | Musiek | Bly oor |
 |---|---|---|---|---|
-| Maker | R149,00 | −R7,22 | −R57,60 | **R84,19** |
-| Studio | R349,00 | −R14,22 | −R168,00 | **R166,79** |
-| Label | R749,00 | −R28,22 | −R384,00 | **R336,78** |
+| Maker | R149,00 | −R7,22 | −R66,24 | **R75,54** |
+| Studio | R349,00 | −R14,22 | −R193,20 | **R141,59** |
+| Label | R749,00 | −R28,22 | −R441,60 | **R279,18** |
 
 ## Die antwoord
 
@@ -182,7 +182,7 @@ goedkoper per maand — maar omdat hulle te min krediete het. Elke plan het
 Pro en Scale hoër as die getal lede wat die plan se krediete kan voed. Meer
 mense laat inteken maak dit erger, nie beter nie.
 
-**2. Op Business werk dit — solank die werkswinkels nie loop nie.** Met alles op sy ergste: gelykbreek by **140 lede**, en die plan hou **128**. Sit die R4 000,00 werkswinkels terug en gelykbreek skuif na **170**, wat méér is as wat die plan kan voed. Die werkswinkels is dus nie 'n uitgawe nie, dit is 'n besluit: hulle mag eers terugkom wanneer die lede daar is.
+**2. Op Business werk dit — solank die werkswinkels nie loop nie.** Met alles op sy ergste: gelykbreek by **185 lede**, en die plan hou **128**. Sit die R4 000,00 werkswinkels terug en gelykbreek skuif na **220**, wat méér is as wat die plan kan voed. Die werkswinkels is dus nie 'n uitgawe nie, dit is 'n besluit: hulle mag eers terugkom wanneer die lede daar is.
 
 **3. Die gratis laag is die duurste ding in die toep.** Negentien gratis
 gebruikers agter elke betalende een, elk met 0 krediete, is meer
@@ -193,7 +193,7 @@ ons nul, en dit is die deel wat mense oortuig. Die twee half liedjies is die
 duur deel.
 
 **4. Moenie op Business begin nie.** Die syfers hierbo is nie 'n opdrag om
-vandag R15 840,00 'n maand te betaal nie. Met 'n handjievol toetsers is
+vandag R18 216,00 'n maand te betaal nie. Met 'n handjievol toetsers is
 Creator reg, en die verlies daarop is klein genoeg om te dra. Wat die syfers
 sê, is dat daar geen pad is wat by Creator of Pro of Scale bly en wins maak
 nie — so die groei moet die skuif na Business betaal, en dit moet gebeur

@@ -31,6 +31,33 @@ import { TIER_CREDITS, CREDITS } from '../app/lib/credits.ts';
 const RAND_PER_USD = 16;
 
 /**
+ * BTW op ElevenLabs se rekening. **Nagegaan, 8 September 2026.**
+ *
+ * Carli se egte faktuur, gelees deur `/api/eleven/prices`:
+ * `next_invoice.amount_due_cents` was 11385, oftewel $113,85. Pro se
+ * plakkerprys is $99. En $99 x 1,15 = $113,85, tot die sent. Dit is
+ * Suid-Afrikaanse BTW van 15%.
+ *
+ * Tot vandag was BTW nêrens in hierdie lêer, in `docs/MAANDELIKSE-KOSTE.md`
+ * of in `docs/KOSTE-EN-WINS.md` nie. Elke dollarbedrag was 'n plakkerprys, en
+ * elke som daaruit was 15% te laag.
+ *
+ * ── Waarop dit toegepas word, en waarop nie ──────────────────────────────
+ *
+ * NET op ElevenLabs, en op Zoho hieronder wat reeds ingesluit ingevoer word.
+ * Dit is wat Carli op haar staat gesien het en bevestig het.
+ *
+ * Anthropic, Vercel, Supabase, GitHub en Kits.AI is ook dollarrekeninge en hef
+ * dit dálk ook — maar dit is nie nagegaan nie, en 'n som wat 15% aanvaar waar
+ * niemand gekyk het nie is dieselfde fout as die een wat hier reggemaak word,
+ * net in die ander rigting. Hulle bly plakkerpryse totdat die staat anders sê.
+ */
+const VAT = 1.15;
+
+/** Wat 'n ElevenLabs-plan werklik van haar rekening af vat, BTW ingesluit. */
+const randForPlan = (plan: { usd: number }): number => plan.usd * RAND_PER_USD * VAT;
+
+/**
  * ElevenLabs se planne — **nagegaan**, 8 September 2026.
  *
  * Carli het hulle prysbladsy gestuur. Dit was tot vandag die grootste
@@ -101,6 +128,14 @@ const FIXED_CORE: Record<string, number> = {
      een reël op hierdie lys wat 'n gat toemaak eerder as om iets te laat loop:
      dit is die enigste model wat sing. Sien `docs/MAANDELIKSE-KOSTE.md`. */
   'Kits.AI': 640,
+  /* Zoho, R241,50 — BTW reeds ingesluit, want dit is wat op die staat staan
+     eerder as 'n plakkerprys wat omgereken moet word. Bevestig deur Carli op
+     8 September 2026.
+
+     Dit was tot vandag op GEEN kostelys nie. Nie 'n som wat verkeerd was nie —
+     'n reël wat glad nie bestaan het nie, en die soort wat 'n mens eers sien
+     wanneer die bank dit trek. */
+  Zoho: 241.5,
 };
 const WORKSHOPS = 4000;
 
@@ -113,7 +148,7 @@ const MIX: Record<Exclude<Tier, 'free'>, number> = { maker: 0.6, studio: 0.3, la
 /* ───────────────────────────────────────────────────────────── somme ─── */
 
 const randPerElCredit = (plan: (typeof EL_PLANS)[number]): number =>
-  (plan.usd * RAND_PER_USD) / plan.credits;
+  randForPlan(plan) / plan.credits;
 
 /** Wat een vol liedjie ons kos, op 'n gegewe plan. */
 const songCost = (plan: (typeof EL_PLANS)[number]): number => EL_PER_SONG * randPerElCredit(plan);
@@ -278,7 +313,7 @@ say('| Plan | Per maand | Krediete | Rand per krediet | Wat een liedjie ons kos 
 say('|---|---|---|---|---|');
 for (const plan of EL_PLANS) {
   say(
-    `| ${plan.name} | $${plan.usd} = ${rand(plan.usd * RAND_PER_USD)} | ${count(plan.credits)} | R${dec(randPerElCredit(plan), 5)} | ${rand(songCost(plan))} |`,
+    `| ${plan.name} | $${plan.usd} + BTW = ${rand(randForPlan(plan))} | ${count(plan.credits)} | R${dec(randPerElCredit(plan), 5)} | ${rand(songCost(plan))} |`,
   );
 }
 say('');
@@ -298,7 +333,7 @@ for (const scenario of SCENARIOS) {
   say('|---|---|---|---|---|');
   for (const plan of EL_PLANS) {
     const c = contribution(plan, scenario.use, scenario.freeUse, scenario.freeCredits);
-    const total = fixed + plan.usd * RAND_PER_USD;
+    const total = fixed + randForPlan(plan);
     const breakEven = c.net > 0 ? Math.ceil(total / c.net) : Infinity;
     const capacity = Math.floor(
       plan.credits / elPerPaying(scenario.use, scenario.freeUse, scenario.freeCredits),
@@ -337,7 +372,7 @@ for (const plan of EL_PLANS) {
   let best = -1;
   for (let free = TIER_CREDITS.free; free >= 0; free -= 1) {
     const c = contribution(plan, 1, 1, free);
-    const total = fixedNoWorkshops + plan.usd * RAND_PER_USD;
+    const total = fixedNoWorkshops + randForPlan(plan);
     const breakEven = c.net > 0 ? Math.ceil(total / c.net) : Infinity;
     const capacity = Math.floor(plan.credits / elPerPaying(1, 1, free));
     if (Number.isFinite(breakEven) && breakEven <= capacity) {
@@ -419,7 +454,7 @@ for (const plan of EL_PLANS) {
   const fixedNo = Object.values(FIXED_CORE).reduce((a, b) => a + b, 0);
   const worst = (plan: (typeof EL_PLANS)[number], workshops: boolean) => {
     const c = contribution(plan, 1, 1, TIER_CREDITS.free);
-    const total = fixedNo + (workshops ? WORKSHOPS : 0) + plan.usd * RAND_PER_USD;
+    const total = fixedNo + (workshops ? WORKSHOPS : 0) + randForPlan(plan);
     return {
       breakEven: c.net > 0 ? Math.ceil(total / c.net) : Infinity,
       capacity: Math.floor(plan.credits / elPerPaying(1, 1, TIER_CREDITS.free)),
@@ -451,7 +486,7 @@ for (const plan of EL_PLANS) {
   say('duur deel.');
   say('');
   say("**4. Moenie op Business begin nie.** Die syfers hierbo is nie 'n opdrag om");
-  say(`vandag ${rand(business.usd * RAND_PER_USD)} 'n maand te betaal nie. Met 'n handjievol toetsers is`);
+  say(`vandag ${rand(randForPlan(business))} 'n maand te betaal nie. Met 'n handjievol toetsers is`);
   say('Creator reg, en die verlies daarop is klein genoeg om te dra. Wat die syfers');
   say('sê, is dat daar geen pad is wat by Creator of Pro of Scale bly en wins maak');
   say('nie — so die groei moet die skuif na Business betaal, en dit moet gebeur');
@@ -482,7 +517,7 @@ for (const scenario of SCENARIOS) {
   console.log(`  ${scenario.name}`);
   for (const plan of EL_PLANS) {
     const c = contribution(plan, scenario.use, scenario.freeUse, scenario.freeCredits);
-    const total = fixed + plan.usd * RAND_PER_USD;
+    const total = fixed + randForPlan(plan);
     const breakEven = c.net > 0 ? Math.ceil(total / c.net) : Infinity;
     const capacity = Math.floor(
       plan.credits / elPerPaying(scenario.use, scenario.freeUse, scenario.freeCredits),

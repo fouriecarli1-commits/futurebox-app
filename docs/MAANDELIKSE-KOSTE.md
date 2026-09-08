@@ -19,9 +19,21 @@ winssomme gebruik, en elke diens met 'n sleutel moet daardie sleutel in
 
 Randkoers **R16 = $1**, dieselfde aanname as `app/lib/plans.ts`.
 
+**BTW.** Carli se egte ElevenLabs-faktuur is $113,85 waar die plakkerprys $99
+is — en $99 × 1,15 = $113,85, tot die sent. Dit is 15% Suid-Afrikaanse BTW, en
+tot 8 September 2026 was dit **nêrens** op hierdie bladsy of in
+`docs/KOSTE-EN-WINS.md` nie. Elke dollarbedrag hier was 'n plakkerprys.
+
+Dit is nou by **ElevenLabs** ingereken, en Zoho word reeds BTW-in ingevoer,
+want dít is wat sy op haar staat gesien het. Die ander dollarrekeninge —
+Anthropic, Vercel, Supabase, Resend, Kits.AI — hef dit **dalk** ook, maar
+niemand het gekyk nie. Hulle bly plakkerpryse tot die staat anders sê, want om
+15% aan te neem waar niemand gekyk het nie is dieselfde fout as die een wat pas
+reggemaak is, net in die ander rigting.
+
 | # | Diens | Waarvoor | Per maand | Soort | Nagegaan? |
 |---|---|---|---|---|---|
-| 1 | **ElevenLabs** | musiek, stemme, stem-skeiding, video | R15 840 (Business) | vas | **nee** — hierdie masjien kom nie by elevenlabs.io uit nie |
+| 1 | **ElevenLabs** | musiek, stemme, stem-skeiding, video | R18 216 (Business, BTW in) | vas | **BTW ja** — teen haar eie faktuur, 8 Sept. Die $990 self kom van hulle prysbladsy |
 | 2 | **Anthropic** | die kopiloot, die liedjieskrywer, die advertensies | R1 500 | vas, skatting | **nee** — 'n skatting, nie 'n faktuur nie |
 | 3 | **Vercel** | waar dit loop | R400 (Pro) | vas | nee |
 | 4 | **Supabase** | rekeninge, liedjies, die kanaal | R320 (Pro) | vas | nee |
@@ -32,6 +44,7 @@ Randkoers **R16 = $1**, dieselfde aanname as `app/lib/plans.ts`.
 | 9 | **Spotify** | die derde bar op Spotlight | niks | gratis | ja |
 | 10 | **Kits.AI** | sangstem-omskakeling — die stem wat sing | R640 ($40) | vas | **ja** — sleutel gestel 7 Sept |
 | 11 | **Kling** | video, duurder pad | nie in gebruik nie | — | jou besluit, 6 Sept |
+| 12 | **Zoho** | die posbus agter die domein | R241,50 (BTW in) | vas | **ja** — van haar staat af, 8 Sept |
 
 ### Die vaste totaal, uitgewerk
 
@@ -42,14 +55,21 @@ Randkoers **R16 = $1**, dieselfde aanname as `app/lib/plans.ts`.
 | Supabase | 320 |
 | Resend | 64 |
 | Kits.AI | 640 |
-| **Sonder ElevenLabs, sonder werkswinkels** | **2 924** |
+| Zoho | 241,50 |
+| **Sonder ElevenLabs, sonder werkswinkels** | **3 165,50** |
 | Werkswinkels | 4 000 |
-| **Sonder ElevenLabs, met werkswinkels** | **6 924** |
-| ElevenLabs Business | 15 840 |
-| **Alles saam** | **22 764** |
+| **Sonder ElevenLabs, met werkswinkels** | **7 165,50** |
+| ElevenLabs Business | 18 216 |
+| **Alles saam** | **25 381,50** |
 
-Dít is waar `R2 924` en `R6 924` in `docs/KOSTE-EN-WINS.md` vandaan kom, en
-`R22 764` is die getal waarteen gelykbreek uitgewerk word.
+Dít is waar `R3 165,50` en `R7 165,50` in `docs/KOSTE-EN-WINS.md` vandaan kom,
+en `R25 381,50` is die getal waarteen gelykbreek uitgewerk word.
+
+**Twee dinge het op 8 September verander en albei was groot.** Die ElevenLabs-
+reël het BTW gekry, en Zoho het bygekom — 'n reël wat op **geen** kostelys was
+nie. Dit was nie 'n som wat verkeerd was nie; dit was 'n koste wat glad nie
+bestaan het op papier nie, en presies die soort wat 'n mens eers sien wanneer
+die bank dit trek.
 
 **Een reël hier is nog nie seker nie.** Die R64 staan hier as Resend en die
 generator (`scripts/costs-eleven.mts`) noem dieselfde R64 GitHub, en Vercel en
@@ -71,6 +91,12 @@ dit nou regtig — sien `app/lib/server/kits.ts` en `/api/voice/sing`.
 | Lede om gelyk te breek — **voorsigtig** | 157 | **161** |
 | Lede om gelyk te breek — **realisties** | 115 | **118** |
 
+*Hierdie tabel meet die Kits-besluit alleen, teen die rekening soos dit op 7
+September gelyk het. Die getalle is met opset nie hierbo bygewerk nie: dit
+vergelyk twee weergawes van dieselfde oomblik, en om die "nou"-kolom na
+R25 381,50 te skuif sou die Kits-reël se koste laat lyk soos iets wat BTW en
+Zoho ingesluit het. Vir wat die rekening vandag is, kyk na die tabel hierbo.*
+
 Dit is **drie tot vier betalende lede meer**, vir die enigste ding wat die toep
 belowe het en nie kon lewer nie. Dit is 3% van die rekening en die enigste reël
 op hierdie bladsy wat 'n gat toemaak.
@@ -90,7 +116,7 @@ Twee dinge om na te gaan sodra jy die volledige pakket koop:
 
 ## Wat regtig die vorm van die besigheid bepaal
 
-Kyk na die tabel. **ElevenLabs Business is R15 840 van R22 764 — 70%.**
+Kyk na die tabel. **ElevenLabs Business is R18 216 van R25 381,50 — 72%.**
 
 Elke ander besluit op hierdie bladsy is klein daarnaas. Kits.AI is 3% van die
 rekening. Vercel en Supabase saam is 3%. Die werkswinkels is 18% en is die

@@ -99,13 +99,36 @@ for (const one of ['Supabase', 'Vercel']) {
 
 /* ── 2. The lines add up to the totals the profit sums use ──────────────── */
 
-/** A rand figure out of the derivation table: `| Vercel | 400 |`. */
-function randFor(label: string): number | null {
-  const found = new RegExp(`\\|\\s*${label}\\s*\\|\\s*([\\d\\s]+)\\s*\\|`).exec(page);
-  return found ? Number(found[1].replace(/\s/g, '')) : null;
+/**
+ * A rand figure, in Afrikaans, out of a table cell.
+ *
+ * Cents are new here. Every line on this bill was a whole rand until Zoho
+ * arrived at R241,50 — a figure that comes off a bank statement rather than a
+ * price page, which is precisely the kind that has cents in it. A cost table
+ * that cannot express them is a cost table that rounds quietly, and a table
+ * that rounds quietly is the thing this whole check exists to prevent.
+ *
+ * The comma is the decimal point, because the page is written in Afrikaans and
+ * says `R241,50`. The thousands separator is a space.
+ */
+function money(raw: string): number {
+  return Number(raw.replace(/\s/g, '').replace(',', '.'));
 }
 
-const lines = ['Anthropic', 'Vercel', 'Supabase', 'Resend', 'Kits.AI'];
+/** A rand figure out of the derivation table: `| Vercel | 400 |`. */
+function randFor(label: string): number | null {
+  const found = new RegExp(`\\|\\s*${label}\\s*\\|\\s*([\\d\\s]+(?:,\\d{2})?)\\s*\\|`).exec(page);
+  return found ? money(found[1]) : null;
+}
+
+/** Cents, compared as cents. Two sums of rands and cents are equal when they
+    are equal to the cent; floating point is not the thing being tested here. */
+const cents = (value: number): number => Math.round(value * 100);
+
+/* Zoho joined this list on 8 September 2026. It was on no cost page at all
+   until Carli named it — not a sum that was wrong, a line that did not exist,
+   and the kind nobody sees until the bank takes it. */
+const lines = ['Anthropic', 'Vercel', 'Supabase', 'Resend', 'Kits.AI', 'Zoho'];
 const parts = lines.map(randFor);
 ok('every fixed line has a rand figure', parts.every((one) => one !== null),
   lines.filter((_, at) => parts[at] === null).join(', ') || parts.join(' + '));
@@ -119,25 +142,25 @@ const eleven = randFor('ElevenLabs Business') ?? 0;
    I wrote agree with each other. */
 const quoted = (what: RegExp): number | null => {
   const found = what.exec(sums);
-  return found ? Number(found[1].replace(/\s/g, '')) : null;
+  return found ? money(found[1]) : null;
 };
-const withoutShops = quoted(/Vaste koste sonder ElevenLabs: R([\d\s]+),00 \(sonder werkswinkels\)/);
-const withShops = quoted(/Vaste koste sonder ElevenLabs: R([\d\s]+),00 \(werkswinkels ingesluit\)/);
+const withoutShops = quoted(/Vaste koste sonder ElevenLabs: R([\d\s]+,\d{2}) \(sonder werkswinkels\)/);
+const withShops = quoted(/Vaste koste sonder ElevenLabs: R([\d\s]+,\d{2}) \(werkswinkels ingesluit\)/);
 
 ok('the lines add up to what the profit sums call fixed costs',
-  withoutShops !== null && base === withoutShops,
+  withoutShops !== null && cents(base) === cents(withoutShops),
   `${base} against ${withoutShops}`);
 ok('and to the figure with the workshops in it',
-  withShops !== null && base + workshops === withShops,
+  withShops !== null && cents(base + workshops) === cents(withShops),
   `${base} + ${workshops} against ${withShops}`);
 /* Read as a number rather than matched as a formatted string. The first
    version built `22 124` with `toLocaleString` and compared the text, which
    fails on a thin space, a comma, or a different locale — a check that goes
    red over typography while the arithmetic is right is worse than none. */
-const everything = /\|\s*\*\*Alles saam\*\*\s*\|\s*\*\*R?([\d\s]+)\*\*\s*\|/.exec(page);
-const stated = everything ? Number(everything[1].replace(/\s/g, '')) : null;
+const everything = /\|\s*\*\*Alles saam\*\*\s*\|\s*\*\*R?([\d\s]+(?:,\d{2})?)\*\*\s*\|/.exec(page);
+const stated = everything ? money(everything[1]) : null;
 ok('the everything-in total is the sum of its own parts',
-  stated !== null && stated === base + workshops + eleven,
+  stated !== null && cents(stated) === cents(base + workshops + eleven),
   `${base} + ${workshops} + ${eleven} = ${base + workshops + eleven}, the table says ${stated}`);
 
 /* ── 3. Every paid service has a key, and the key is documented ─────────── */
@@ -167,7 +190,7 @@ ok('every paid service on the bill has its key written down',
    and worse, a page that had drifted to a wrong percentage while still saying
    "72%" would have passed. */
 const share = eleven / (base + workshops + eleven);
-const claimed = /is R[\d\s]+ van R[\d\s]+ — (\d{1,3})%/.exec(page);
+const claimed = /is R[\d\s]+(?:,\d{2})? van R[\d\s]+(?:,\d{2})? — (\d{1,3})%/.exec(page);
 ok('the bill says plainly which line decides everything',
   claimed !== null && Number(claimed[1]) === Math.round(share * 100) && share > 0.5,
   claimed

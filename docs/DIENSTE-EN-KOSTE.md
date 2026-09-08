@@ -217,6 +217,12 @@ R640 koop niks totdat een klank werklik teruggekom het nie.
 **Wat dit aan die rekening doen:** R22 124 → R22 764. Gelykbreek skuif van 115
 na 118 lede (realisties). Sien `docs/MAANDELIKSE-KOSTE.md`.
 
+*Daardie twee getalle meet die Kits-besluit alleen, teen die rekening soos dit
+op 7 September gelyk het. Op 8 September het BTW en Zoho bygekom en die
+rekening is nou R25 381,50 — sien `docs/MAANDELIKSE-KOSTE.md` vir wat dit
+vandag is. Die vergelyking hier bly staan soos dit is, want dit meet een
+besluit en nie die hele rekening nie.*
+
 ---
 
 ## Wat ek doelbewus **nie** voorstel nie
