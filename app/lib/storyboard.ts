@@ -92,6 +92,19 @@ export interface Storyboard {
    */
   readonly captions?: boolean;
   /**
+   * Which language the captions are written in, as a code.
+   *
+   * Empty or absent means the words as they were typed — which is the usual
+   * case, because they are pre-filled from the song's own lines. Set, they are
+   * put through `/api/translate` at cutting time, once for the whole film: the
+   * route answers one line for one line and refuses when it cannot, and a
+   * per-shot call would have no way to notice a line that came back missing.
+   *
+   * Carli: "Video desk moet ook 'n tick box hê vir add subtitles, en dan 'n
+   * tik boksie wat sê in watter language".
+   */
+  readonly subtitleLang?: string;
+  /**
    * The look every shot is made in.
    *
    * ── Why one line above rather than a phrase in each shot ─────────────

@@ -109,6 +109,27 @@ export default function Storyboard({
   const { t } = useLang();
 
   const [board, setBoard] = useState<Board>(EMPTY);
+
+  /* Which languages the subtitles can actually be written in.
+     Asked of the route that writes them, so the room cannot offer one the
+     server will refuse — and empty when the model behind it is not switched
+     on, which the room says rather than showing a choice that does nothing. */
+  const [languages, setLanguages] = useState<readonly { code: string; name: string }[]>([]);
+  /** Said on the screen when the translation failed and the film did not. */
+  const [translateProblem, setTranslateProblem] = useState('');
+  useEffect(() => {
+    let live = true;
+    void fetch('/api/translate')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((answer) => {
+        const writes = (answer as { available?: boolean; writes?: { code: string; name: string }[] } | null);
+        if (live && writes?.available && Array.isArray(writes.writes)) setLanguages(writes.writes);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
   const [tracks, setTracks] = useState<Track[]>([]);
   /** Songs brought in from a file, kept beside the channel rather than in it. */
   const [brought, setBrought] = useState<Track[]>([]);
@@ -322,6 +343,37 @@ export default function Storyboard({
       /* Each scene carries its own window, so the cut plays the trimmed part
          and nothing else. `stitch` clamps whatever arrives, which is what
          keeps a slider dragged somewhere odd from losing a scene. */
+      /* The captions, in the language that was asked for.
+
+         Once for the whole film rather than once per shot: the route answers
+         one line for one line and refuses when it cannot, so a per-shot call
+         would have no way to notice a line that came back missing. A failure
+         here loses the translation and not the film — the words are still cut
+         in, in the language they were typed, and the room says so. */
+      let captions = board.shots.map((shot) => captionOf(shot));
+      setTranslateProblem('');
+      if (board.captions && board.subtitleLang && captions.some((one) => one.trim())) {
+        try {
+          const response = await fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lines: captions, to: board.subtitleLang }),
+          });
+          const answer = (await response.json().catch(() => null)) as { lines?: string[] } | null;
+          if (response.ok && answer?.lines?.length === captions.length) {
+            captions = answer.lines;
+          } else {
+            setTranslateProblem(
+              t('board.noTranslate', 'The subtitles could not be written in that language; the film was cut with the words as they are.'),
+            );
+          }
+        } catch {
+          setTranslateProblem(
+            t('board.noTranslate', 'The subtitles could not be written in that language; the film was cut with the words as they are.'),
+          );
+        }
+      }
+
       const scenes = clips
         .map((clip, index) => ({
           clip,
@@ -330,8 +382,8 @@ export default function Storyboard({
           ...(board.shots[index].to !== undefined ? { to: board.shots[index].to } : {}),
           /* Only when the board is captioning. A caption left on a shot from a
              run with the switch on must not reappear in a run with it off. */
-          ...(board.captions && captionOf(board.shots[index])
-            ? { caption: captionOf(board.shots[index]) }
+          ...(board.captions && captions[index]?.trim()
+            ? { caption: captions[index] }
             : {}),
         }))
         .filter(
@@ -697,24 +749,77 @@ export default function Storyboard({
               Off by default all the same: burned-in words cannot be taken off
               afterwards, and a cut going somewhere that carries its own
               subtitle track wants clean pictures. */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-zinc-400">{t('board.captions', 'Words on the film')}</span>
-            {[true, false].map((on) => (
-              <button
-                key={String(on)}
-                type="button"
-                onClick={() => setBoard((was) => ({ ...was, captions: on }))}
-                aria-pressed={(board.captions ?? false) === on}
-                className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
-                  (board.captions ?? false) === on
-                    ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
-                    : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600'
-                }`}
-              >
-                {on ? t('board.captionsOn', 'Printed on') : t('board.captionsOff', 'None')}
-              </button>
-            ))}
-          </div>
+          {/* A tick, not two buttons.
+
+              Carli: "Video desk moet ook 'n tick box hê vir add subtitles, en
+              dan 'n tik boksie wat sê in watter language". Two buttons reading
+              "Printed on" and "None" is a switch dressed as a choice, and it
+              made somebody read both to work out which state they were in. A
+              tick has one state and you can see it from across the room. */}
+          <label className="flex min-h-[44px] items-center gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={board.captions ?? false}
+              onChange={(event) => setBoard((was) => ({ ...was, captions: event.target.checked }))}
+              className="h-5 w-5 shrink-0 rounded border-zinc-700 bg-zinc-950 text-emerald-500 focus:ring-emerald-500"
+            />
+            <span className="text-sm font-semibold text-zinc-200">
+              {t('board.captionsAdd', 'Add subtitles')}
+            </span>
+          </label>
+
+          {/* And which language they are in.
+
+              Only once the tick is on — a language for subtitles nobody asked
+              for is a question about nothing. The list comes from the route
+              that does the writing rather than being typed here, so a room
+              cannot offer a language the server will refuse. "As they are"
+              first, because the captions are pre-filled from the song's own
+              lines and most films want exactly that. */}
+          {board.captions && (
+            <div className="space-y-1.5">
+              <span className="text-sm text-zinc-400">
+                {t('board.captionLang', 'In which language')}
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setBoard((was) => ({ ...was, subtitleLang: '' }))}
+                  aria-pressed={!board.subtitleLang}
+                  className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
+                    !board.subtitleLang
+                      ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                      : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600'
+                  }`}
+                >
+                  {t('board.captionAsTyped', 'As they are')}
+                </button>
+                {languages.map((one) => (
+                  <button
+                    key={one.code}
+                    type="button"
+                    onClick={() => setBoard((was) => ({ ...was, subtitleLang: one.code }))}
+                    aria-pressed={board.subtitleLang === one.code}
+                    className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
+                      board.subtitleLang === one.code
+                        ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                        : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600'
+                    }`}
+                  >
+                    {one.name}
+                  </button>
+                ))}
+              </div>
+              {translateProblem && (
+                <p className="text-sm text-amber-400 leading-snug">{translateProblem}</p>
+              )}
+              {languages.length === 0 && (
+                <p className="text-xs text-zinc-500 leading-snug">
+                  {t('board.captionNoLang', 'Writing subtitles in another language is not switched on for this app, so they are cut in the words as they are typed.')}
+                </p>
+              )}
+            </div>
+          )}
           <Note className="text-xs text-zinc-500">
             {t(
               'board.captionsWhy',

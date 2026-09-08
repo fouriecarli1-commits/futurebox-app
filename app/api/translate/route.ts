@@ -52,6 +52,48 @@ const Answer = z.object({
     .describe('The same lines, in the same order, in the language asked for. One for one.'),
 });
 
+/**
+ * The languages this route will write, by code, and what to call each one.
+ *
+ * ── Why a list and not the word she typed ────────────────────────────────
+ *
+ * It was `body.to === 'af' ? 'Afrikaans' : 'English'` — two languages, and
+ * anything else silently came back in English. That is the worst shape for a
+ * subtitle: somebody asks for Zulu, gets English, and nothing on the screen
+ * says so.
+ *
+ * The obvious repair is to pass whatever was typed straight into the prompt,
+ * and that is the one thing this file already warns against — the lines are
+ * "the one field in this app somebody could use to get a model to" do
+ * something else, and a free-text language is a second such field with none
+ * of the screening. So: a list. It is the eleven official languages of this
+ * country plus the four this app's market actually also reads, every one of
+ * them named by us rather than by the request, and an unknown code is refused
+ * rather than quietly turned into English.
+ */
+const LANGUAGES: Record<string, string> = {
+  af: 'Afrikaans',
+  en: 'English',
+  zu: 'isiZulu',
+  xh: 'isiXhosa',
+  nso: 'Sepedi',
+  st: 'Sesotho',
+  tn: 'Setswana',
+  ss: 'siSwati',
+  ve: 'Tshivenda',
+  ts: 'Xitsonga',
+  nr: 'isiNdebele',
+  pt: 'Portuguese',
+  fr: 'French',
+  es: 'Spanish',
+  de: 'German',
+};
+
+/** The name for a code, or null when it is not one this route will write. */
+function languageNamed(value: unknown): string | null {
+  return typeof value === 'string' && Object.hasOwn(LANGUAGES, value) ? LANGUAGES[value] : null;
+}
+
 export async function POST(request: Request): Promise<Response> {
   if (tooMany('translate', request, LIMITS)) {
     return Response.json(
@@ -80,7 +122,20 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'empty', message: 'There were no lines in that.' }, { status: 400 });
   }
   const trimmed = lines.map((one) => one.slice(0, LONGEST_LINE));
-  const to = body.to === 'af' ? 'Afrikaans' : 'English';
+  const to = languageNamed(body.to);
+
+  if (!to) {
+    /* Named rather than defaulted. Somebody who asked for a language this
+       route cannot write needs to be told that, not handed English. */
+    return Response.json(
+      {
+        error: 'no_language',
+        message: 'That language is not one this app writes subtitles in yet.',
+        writes: Object.keys(LANGUAGES),
+      },
+      { status: 400 },
+    );
+  }
 
   const refused = screen(trimmed.join('\n'), 'song');
   if (refused) {
@@ -153,5 +208,11 @@ ${AFRIKAANS_RULE}`,
 
 /** Whether this app has a model behind it, so the panel can offer it or not. */
 export async function GET(): Promise<Response> {
-  return Response.json({ available: Boolean(process.env.ANTHROPIC_API_KEY) });
+  /* The languages come back with the answer, so a room that offers a choice
+     offers exactly the choice this route can honour. A list typed into a
+     component is a list that goes stale the first time this one changes. */
+  return Response.json({
+    available: Boolean(process.env.ANTHROPIC_API_KEY),
+    writes: Object.entries(LANGUAGES).map(([code, name]) => ({ code, name })),
+  });
 }
