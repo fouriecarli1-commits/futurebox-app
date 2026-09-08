@@ -32,7 +32,16 @@ import { dirname, join } from 'node:path';
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 /** In the order they have to run. */
-export const ORDER = ['charts', 'addons', 'posting', 'dubs', 'invites', 'listens', 'kits'] as const;
+export const ORDER = [
+  'charts',
+  'addons',
+  'posting',
+  'dubs',
+  'invites',
+  'listens',
+  'kits',
+  'eleven',
+] as const;
 
 export const BUNDLE = join(ROOT, 'supabase/ALMAL.sql');
 
@@ -59,6 +68,9 @@ ${RULE}
 --   kits.sql      Die Kits.AI minuut-teller. Sonder dit weet die rem nie
 --                 hoeveel van die 400 aflaaiminute oor is nie, en dan is daar
 --                 geen rem nie.
+--   eleven.sql    Wat ElevenLabs per oproep gehef het, langs wat ons gevat
+--                 het. Sonder dit is die eerste plek waar 'n verkeerde prys
+--                 wys die faktuur.
 --
 -- ── Twee dinge moet reeds daar wees ────────────────────────────────────────
 --

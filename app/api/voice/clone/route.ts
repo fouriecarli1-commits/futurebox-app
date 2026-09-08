@@ -104,7 +104,7 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, CREDITS.clone, 'clone');
   if (!paid.ok) return paid.response;
 
-  const made = await cloneVoice(`${name} · ${caller.id.slice(0, 8)}`, sample);
+  const made = await cloneVoice(`${name} · ${caller.id.slice(0, 8)}`, sample, CREDITS.clone);
   if (!made.ok) {
     await paid.refund();
     return Response.json({ message: made.message }, { status: made.status });

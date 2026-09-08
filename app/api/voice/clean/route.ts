@@ -74,10 +74,11 @@ export async function POST(request: Request): Promise<Response> {
   // By the minute. Their voice isolator is charged by the minute upstream,
   // and this broke even at about fifty seconds when it was flat.
   const billed = await billedSeconds(audio, Number(form.get('seconds')), MAX_SECONDS);
-  const paid = await charge(request, perMinute(billed, CREDITS.clean), 'clean');
+  const asked = perMinute(billed, CREDITS.clean);
+  const paid = await charge(request, asked, 'clean');
   if (!paid.ok) return paid.response;
 
-  const cleaned = await isolate(audio);
+  const cleaned = await isolate(audio, asked);
   if (!cleaned.ok) {
     // The engine refused, so the credits go back. A charge for work that did
     // not happen is the one thing a person never forgives.

@@ -183,6 +183,13 @@ const ANONYMOUS: Record<string, string> = {
      notice. */
   'app/api/charts/route.ts':
     'the public charts — no caller to scope to, and it reads only tracks their maker set shared',
+  /* The page that compares what ElevenLabs charged us against what we charged
+     the member. It is an account-wide question — one member's rows cannot
+     answer whether our prices cover the bill — so there is no caller to scope
+     it to. It reads a view of totals per kind of work, nothing per person,
+     and it refuses without POST_SECRET. */
+  'app/api/eleven/prices/route.ts':
+    'the price comparison — an account-wide total, guarded by POST_SECRET instead of a caller',
 };
 for (const file of walk('app/api')) {
   if (!file.endsWith('route.ts')) continue;

@@ -425,6 +425,25 @@ Hierdie is elke ding wat FutureBox werklik roep, gelees uit die kode op
 Niks anders nie. As iets later breek nadat jy beperk het, sê die foutboodskap
 watter een kort — dit is 'n vyf-sekonde-regmaak, en dit is 'n beter posisie as
 'n sleutel wat alles kan doen.
+
+### Hef ons genoeg? Die bladsy wat dit sê
+
+Elke antwoord van ElevenLabs dra 'n `character-cost` kop: presies hoeveel
+karakters daardie een oproep gekos het. Ons hef krediete per minuut; hulle hef
+per karakter. Daardie twee is nie dieselfde ding nie, en 'n verkeerde
+omskakeling tussen hulle is geld wat elke maand stilweg weg is.
+
+Loop `supabase/eleven.sql` (of `supabase/ALMAL.sql`) in Supabase, en maak dan
+
+    https://futurebox.studio/api/eleven/prices?key=<POST_SECRET>
+
+oop. Per soort werk, oor 90 dae: hoeveel keer, hoeveel karakters hulle gehef
+het, hoeveel krediete ons gevat het, en **karakters per krediet**. Daardie
+laaste kolom is die antwoord. As dit oor maande opstoot, gee ons meer werk per
+krediet weg as vantevore, en die prys moet verander.
+
+Die bladsy dra geen teks, klank of naam nie — net getalle en hulle versoek-id's
+— so dit is veilig om in 'n gesprek te plak. Dit weier sonder `POST_SECRET`.
 | `ANTHROPIC_API_KEY` | The copilot in every room. |
 
 The two `NEXT_PUBLIC_` ones are meant to be visible and are the only kind that

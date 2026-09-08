@@ -136,7 +136,8 @@ export async function POST(request: Request): Promise<Response> {
   // By the minute: splitting a twenty-minute recording is twenty times the
   // work of splitting a one-minute one, and was the same price.
   const billed = await billedSeconds(file, seconds, MAX_SECONDS);
-  const paid = await charge(request, perMinute(billed, CREDITS.stems), 'stems');
+  const ourPrice = perMinute(billed, CREDITS.stems);
+  const paid = await charge(request, ourPrice, 'stems');
   if (!paid.ok) return paid.response;
 
   const outgoing = new FormData();
@@ -162,7 +163,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  noteCost(upstream, 'stems');
+  noteCost(upstream, 'stems', ourPrice);
   if (!upstream.ok) {
     await paid.refund();
     const raw = await upstream.text().catch(() => '');

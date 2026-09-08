@@ -171,7 +171,7 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  noteCost(upstream, 'music');
+  noteCost(upstream, 'music', songCost(length));
   if (!upstream.ok) {
     await paid.refund();
     const raw = await upstream.text().catch(() => '');

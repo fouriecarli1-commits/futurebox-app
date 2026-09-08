@@ -42,7 +42,7 @@
     "check:adweek": "tsx scripts/check-adweek.mts",
     "check:habits": "tsx scripts/check-habits.mts",
     "check:adrun": "tsx scripts/check-adrun.mts",
-    "check:adreport": "tsx scripts/check-adreport.mts",
+    "check:adreport": "node audit/adreport.mjs",
     "handbook": "tsx scripts/build-handbook.mts",
     "check:nam": "tsx scripts/check-nam.mts",
     "nam:copy": "node scripts/nam-copy.mjs",
@@ -114,13 +114,13 @@
     "check:greeting": "node audit/greeting.mjs",
     "check:help": "node audit/help.mjs",
     "check:elevenprices": "tsx scripts/check-elevenprices.mts",
-    "check:adreport": "node audit/adreport.mjs",
     "check:adruns": "node audit/adruns.mjs",
     "check:videodesk": "node audit/videodesk.mjs",
     "check:lanes": "node audit/lanes.mjs",
     "check:studioroute": "node audit/studioroute.mjs",
     "check:videocover": "node audit/videocover.mjs",
-    "check:podlanguage": "node audit/podlanguage.mjs"
+    "check:podlanguage": "node audit/podlanguage.mjs",
+    "check:elevencost": "tsx scripts/check-elevencost.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

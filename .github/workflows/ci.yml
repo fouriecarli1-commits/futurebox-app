@@ -302,6 +302,13 @@ jobs:
       - name: The singing engine is wired, priced and honest about what it guesses
         run: npm run check:sing
 
+      # A pricing question needs months of rows, so the wiring that produces them
+      # has to survive every later edit. One dropped argument and a route's rows
+      # carry no credits, fall out of the comparison, and the margin goes
+      # unwatched until the invoice says so.
+      - name: What ElevenLabs charged lands beside what we charged
+        run: npm run check:elevencost
+
       - name: A clip that leaves the app carries the channel that made it
         run: npm run check:maker
 

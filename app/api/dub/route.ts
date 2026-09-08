@@ -135,7 +135,7 @@ export async function POST(request: Request): Promise<Response> {
   const paid = await charge(request, cost, 'dub');
   if (!paid.ok) return paid.response;
 
-  const started = await dub(file, source, target, speakers);
+  const started = await dub(file, source, target, speakers, cost);
   if (!started.ok) {
     await paid.refund();
     return Response.json({ message: started.message }, { status: started.status });

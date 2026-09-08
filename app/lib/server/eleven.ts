@@ -15,6 +15,7 @@
  */
 
 import { batches, type Turn } from '../dialogue.ts';
+import { noteSpend } from './elevencost.ts';
 import { joinPcm } from '../pcmwav.ts';
 
 const BASE = 'https://api.elevenlabs.io/v1';
@@ -54,22 +55,33 @@ function key(): string {
  * does not bill by character, and a cost report is never a reason for a
  * generation to fail.
  */
-export function noteCost(response: Response, what: string): void {
+export function noteCost(response: Response, what: string, credits?: number): void {
   try {
     const cost = response.headers.get('character-cost');
     const request = response.headers.get('request-id');
     const trace = response.headers.get('x-trace-id');
     if (!cost && !request) return;
+
+    const characters = cost ? Number(cost) : null;
     console.log(
       JSON.stringify({
         kind: 'eleven.cost',
         what,
-        characters: cost ? Number(cost) : null,
+        characters,
+        credits: credits ?? null,
         request,
         trace,
         at: new Date().toISOString(),
       }),
     );
+
+    /* The log is for reading one incident. The row is for answering the
+       standing question — whether the credit price covers what they bill —
+       which needs the two numbers side by side over months, not one line in
+       a log that rotates. `credits` is undefined where the caller had no way
+       to know, and such a row is left out of the comparison rather than
+       counted as free. */
+    noteSpend({ what, characters, credits, request });
   } catch {
     // A header that could not be read is not a reason to fail a generation.
   }
@@ -129,9 +141,12 @@ export async function complain(response: Response): Promise<Upstream> {
 }
 
 /** A voice made from recordings of one person, kept on the app's account. */
-export async function cloneVoice(name: string, sample: Blob): Promise<
-  { ok: true; voiceId: string } | Upstream
-> {
+export async function cloneVoice(
+  name: string,
+  sample: Blob,
+  /** What the caller charged for this, so the two can be compared later. */
+  billed?: number,
+): Promise<{ ok: true; voiceId: string } | Upstream> {
   const form = new FormData();
   form.append('name', name);
   // The field is repeated for several samples; one good one is enough for an
@@ -146,7 +161,7 @@ export async function cloneVoice(name: string, sample: Blob): Promise<
     headers: { 'xi-api-key': key() },
     body: form,
   });
-  noteCost(response, 'clone');
+  noteCost(response, 'clone', billed);
   if (!response.ok) return complain(response);
 
   const data = (await response.json()) as { voice_id?: string };
@@ -194,6 +209,7 @@ export async function speak(
   text: string,
   modelId: string,
   how?: Performance,
+  billed?: number,
 ): Promise<{ ok: true; audio: ArrayBuffer } | Upstream> {
   const voiceSettings = settings(how);
   const response = await fetch(
@@ -208,7 +224,7 @@ export async function speak(
       }),
     },
   );
-  noteCost(response, 'speak');
+  noteCost(response, 'speak', billed);
   if (!response.ok) return complain(response);
   return { ok: true, audio: await response.arrayBuffer() };
 }
@@ -249,6 +265,7 @@ export async function speakStream(
   text: string,
   modelId: string,
   how?: Performance,
+  billed?: number,
 ): Promise<{ ok: true; body: ReadableStream<Uint8Array> } | Upstream> {
   const voiceSettings = settings(how);
   const response = await fetch(
@@ -265,7 +282,7 @@ export async function speakStream(
   );
   /* The cost headers ride on the first response, before any audio — so this
      still records what the read cost even though nothing has been read yet. */
-  noteCost(response, 'speak');
+  noteCost(response, 'speak', billed);
   if (!response.ok) return complain(response);
   if (!response.body) {
     return { ok: false, status: 502, message: 'The reading service sent no audio.' };
@@ -292,6 +309,7 @@ export async function restage(
   modelId: string,
   how?: Performance,
   removeNoise = false,
+  billed?: number,
 ): Promise<{ ok: true; audio: ArrayBuffer } | Upstream> {
   const form = new FormData();
   form.append('audio', audio, 'take.webm');
@@ -304,7 +322,7 @@ export async function restage(
     `${BASE}/speech-to-speech/${encodeURIComponent(voiceId)}?output_format=mp3_44100_128`,
     { method: 'POST', headers: { 'xi-api-key': key() }, body: form },
   );
-  noteCost(response, 'voice-change');
+  noteCost(response, 'voice-change', billed);
   if (!response.ok) return complain(response);
   return { ok: true, audio: await response.arrayBuffer() };
 }
@@ -415,6 +433,7 @@ export async function dub(
   sourceLang: string,
   targetLang: string,
   speakers: number,
+  billed?: number,
 ): Promise<{ ok: true; dub: Dub } | Upstream> {
   const form = new FormData();
   form.append('file', audio, 'episode.mp3');
@@ -431,7 +450,7 @@ export async function dub(
     headers: { 'xi-api-key': key() },
     body: form,
   });
-  noteCost(response, 'dub');
+  noteCost(response, 'dub', billed);
   if (!response.ok) return complain(response);
   const body = (await response.json()) as { dubbing_id?: string; expected_duration_sec?: number };
   if (!body?.dubbing_id) {
@@ -501,7 +520,10 @@ export async function dubbed(
 }
 
 /** The voice without the room: their audio isolation, on a recording. */
-export async function isolate(audio: Blob): Promise<{ ok: true; audio: ArrayBuffer } | Upstream> {
+export async function isolate(
+  audio: Blob,
+  billed?: number,
+): Promise<{ ok: true; audio: ArrayBuffer } | Upstream> {
   const form = new FormData();
   form.append('audio', audio, 'take.webm');
 
@@ -510,7 +532,7 @@ export async function isolate(audio: Blob): Promise<{ ok: true; audio: ArrayBuff
     headers: { 'xi-api-key': key() },
     body: form,
   });
-  noteCost(response, 'isolate');
+  noteCost(response, 'isolate', billed);
   if (!response.ok) return complain(response);
   return { ok: true, audio: await response.arrayBuffer() };
 }

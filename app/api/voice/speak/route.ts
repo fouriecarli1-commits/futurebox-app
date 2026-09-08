@@ -158,7 +158,8 @@ export async function POST(request: Request): Promise<Response> {
 
   // A long episode is a real bill rather than a rounding error, so this is
   // charged by the character rather than per reading.
-  const paid = await charge(request, readCost(text.length), 'read');
+  const asked = readCost(text.length);
+  const paid = await charge(request, asked, 'read');
   if (!paid.ok) return paid.response;
 
   /* Streamed, so the first sound arrives in about a second.
@@ -177,6 +178,7 @@ export async function POST(request: Request): Promise<Response> {
     text,
     MODELS[String(body.model ?? 'steady')] ?? MODELS.steady,
     performance(body.how),
+    asked,
   );
   if (!read.ok) {
     await paid.refund();

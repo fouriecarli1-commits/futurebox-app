@@ -132,10 +132,18 @@ export async function POST(request: Request): Promise<Response> {
 
   // By the minute, like everything else that sends a whole file upstream.
   const billed = await billedSeconds(audio, Number(form.get('seconds')), MAX_SECONDS);
-  const paid = await charge(request, perMinute(billed, CREDITS.voiceChange), 'voiceChange');
+  const asked = perMinute(billed, CREDITS.voiceChange);
+  const paid = await charge(request, asked, 'voiceChange');
   if (!paid.ok) return paid.response;
 
-  const done = await restage(voiceId, audio, MODEL, how, form.get('removeNoise') === 'true');
+  const done = await restage(
+    voiceId,
+    audio,
+    MODEL,
+    how,
+    form.get('removeNoise') === 'true',
+    asked,
+  );
   if (!done.ok) {
     await paid.refund();
     return Response.json({ message: done.message }, { status: done.status });
