@@ -33,10 +33,33 @@
  * filtered, and then the real one is filtered too. Each threshold sends once
  * per billing month: crossing 75% tells you once, crossing 90% tells you once
  * more, and neither repeats until the allowance resets.
+ *
+ * ── And what it did not watch until now: the money ───────────────────────
+ *
+ * This route has always watched the allowance and only the allowance. The
+ * subscription answer carries three other things that cost real money and had
+ * nowhere to be seen:
+ *
+ *     current_overage             already being spent beyond the plan
+ *     has_open_invoices           unpaid, and ElevenLabs suspends for it
+ *     can_extend_character_limit  false means work FAILS instead of billing
+ *
+ * The first two are worse than the ceiling: running out of allowance is an
+ * outage, and an outage announces itself. An overage is silent and arrives as
+ * an invoice. So they are watched here too, and they go in the SAME letter as
+ * the allowance rather than a second one — two emails about one account on one
+ * morning is precisely the noise this file was written to avoid.
+ *
+ * ── Two thresholds for one number, on purpose ────────────────────────────
+ *
+ * `/api/eleven/prices` warns at 80%; this letter warns at 75, 90 and 98. That
+ * is deliberate, not a drift. A page is read when somebody chooses to read it,
+ * so one honest line is enough. A letter interrupts, so it has to earn each
+ * interruption — hence an escalation, and hence once per level per month.
  */
 
 import crypto from 'node:crypto';
-import { allowanceLeft } from '@/app/lib/server/eleven';
+import { bill, warningsFor } from '@/app/lib/server/eleven';
 import { tellOwner, configured as canEmail, unsent } from '@/app/lib/server/email';
 
 export const runtime = 'nodejs';
@@ -76,43 +99,70 @@ export async function GET(request: Request): Promise<Response> {
     return new Response('no', { status: 404 });
   }
 
-  const allowance = await allowanceLeft();
-  if (!allowance) {
-    return Response.json({ checked: 'eleven', reachable: false });
+  const read = await bill();
+  if (!read.ok) {
+    return Response.json({ checked: 'eleven', reachable: false, why: read.message });
   }
+  const money = read.bill;
 
-  const percent = Math.round(allowance.spent * 100);
-  const left = allowance.limit - allowance.used;
-  const resets = allowance.resetsAt ? allowance.resetsAt.toISOString().slice(0, 10) : 'unknown';
+  const percent = money.percent ?? 0;
+  const left = money.included !== null && money.used !== null ? money.included - money.used : null;
+  const resets = money.resetsAt ? money.resetsAt.slice(0, 10) : 'unknown';
   // One key per month, so a threshold tells you once and then goes quiet until
   // the allowance rolls over.
-  const month = (allowance.resetsAt ?? new Date()).toISOString().slice(0, 7);
+  const month = (money.resetsAt ?? new Date().toISOString()).slice(0, 7);
+
+  /* What is true this morning, as short tags. The letter is sent once per
+     distinct SET of these per month, which is the behaviour that falls out
+     right: an overage appearing at 60% sends a letter, and the allowance later
+     crossing 75% sends another, because the situation genuinely changed. The
+     same situation on a second morning does not. */
+  const flags: string[] = [];
+
+  // Highest crossed threshold only: at 91% there is no reason to also say 75%.
+  const crossed = [...STEPS].reverse().find((step) => percent >= step.at * 100);
+  if (crossed) flags.push(`allowance:${crossed.at}`);
+  if (money.overage && money.overage.amount > 0) flags.push('overage');
+  if (money.openInvoices > 0) flags.push('unpaid');
 
   let told: string | null = null;
-  // Highest crossed threshold only: at 91% there is no reason to also send the
-  // 75% letter, and two letters about one problem is how both get ignored.
-  const crossed = [...STEPS].reverse().find((step) => allowance.spent >= step.at);
-  if (crossed && canEmail()) {
+  if (flags.length > 0 && canEmail()) {
+    /* The money lines come from the same function the money page uses, so the
+       letter and the page can never say different things about one account. */
+    const lines = warningsFor(money);
+    const subject = crossed
+      ? `ElevenLabs allowance ${percent}% used — ${crossed.what}`
+      : money.overage && money.overage.amount > 0
+        ? `ElevenLabs is over its plan — ${money.overage.amount} ${money.overage.currency.toUpperCase()} so far`
+        : 'ElevenLabs has an unpaid invoice';
+
     const said = await tellOwner(
-      `ElevenLabs allowance ${percent}% used — ${crossed.what}`,
-      `The ElevenLabs plan behind this app is ${percent}% used.
+      subject,
+      `${lines.length > 0 ? `${lines.map((line) => `  * ${line}`).join('\n')}\n\n` : ''}The ElevenLabs plan behind this app is ${percent}% used.
 
-  Used        ${allowance.used.toLocaleString()} characters
-  Limit       ${allowance.limit.toLocaleString()}
-  Left        ${left.toLocaleString()}
-  Resets      ${resets}
-  Plan        ${allowance.tier}
+  Used         ${money.used?.toLocaleString() ?? 'unknown'} credits
+  Limit        ${money.included?.toLocaleString() ?? 'unknown'}
+  Left         ${left?.toLocaleString() ?? 'unknown'}
+  Resets       ${resets}${money.resetsInDays === null ? '' : ` (${money.resetsInDays} days)`}
+  Plan         ${money.tier ?? 'unknown'}
+  Next invoice ${money.nextInvoiceCents === null ? 'unknown' : `${(money.nextInvoiceCents / 100).toFixed(2)}`}
 
-When it runs out, every room that uses a voice stops at once — reading a
-script, dubbing an episode, transcribing one, cloning a voice, and generating
-music. They do not slow down; they refuse.
+When the allowance runs out, every room that uses a voice stops at once —
+reading a script, dubbing an episode, transcribing one, cloning a voice, and
+generating music. They do not slow down; they refuse.${
+        money.canExceed === false
+          ? '\n\nUsage-based billing is off on this account, so that is exactly what\nhappens: work fails rather than quietly costing more. That is a brake, and\nit is worth knowing it is there before anybody switches it off.'
+          : money.canExceed === true
+            ? '\n\nUsage-based billing is ON, so work past the allowance does not fail — it\ncosts extra, on an invoice nobody predicted.'
+            : ''
+      }
 
 Either move up a plan before that, or accept the stop and know when it is
-coming. This is the last warning at this level — the next one only comes if
-usage crosses a higher mark.`,
-      { once: `eleven:${crossed.at}:${month}`, kind: 'allowance' },
+coming. This is the last letter about this situation — the next one only comes
+if something changes.`,
+      { once: `eleven:${flags.join('+')}:${month}`, kind: 'allowance' },
     );
-    told = said.ok ? `${crossed.at}` : null;
+    told = said.ok ? flags.join('+') : null;
   }
 
   /* Letters that were claimed and never arrived. Reported here because this is
@@ -128,7 +178,14 @@ usage crosses a higher mark.`,
     percent,
     left,
     resets,
-    tier: allowance.tier,
+    tier: money.tier,
+    /* The money half, so opening this by hand is a status page and not only a
+       thing that sometimes sends email. */
+    overage: money.overage,
+    nextInvoiceCents: money.nextInvoiceCents,
+    openInvoices: money.openInvoices,
+    canExceed: money.canExceed,
+    warnings: warningsFor(money),
     told,
     canEmail: canEmail(),
     lettersNotDelivered: missing ?? undefined,

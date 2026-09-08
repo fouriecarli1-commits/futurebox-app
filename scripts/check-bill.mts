@@ -148,6 +148,79 @@ ok(
   /POST \.\.\.\/api-keys` returns the new key in PLAIN TEXT/.test(lib),
 );
 
+console.log('\nThe letter that interrupts\n');
+
+/* The route, run for real. The two cases that matter here are the ones the
+   old `/api/watch` was blind to: it read four fields out of the subscription
+   and none of them was money, so an account bleeding overage at 60% of its
+   allowance looked perfectly healthy every morning. */
+process.env.WATCH_SECRET = 'a-test-secret';
+process.env.MAIL_API_KEY = 'not-a-real-key';
+process.env.MAIL_FROM = 'FutureBox <hallo@futurebox.studio>';
+process.env.OWNER_EMAIL = 'owner@futurebox.studio';
+
+const posted: string[] = [];
+globalThis.fetch = (async (url: string, init?: RequestInit) => {
+  if (String(url).includes('resend')) {
+    posted.push(String(JSON.parse(String(init?.body ?? '{}')).subject ?? ''));
+    return { ok: true, status: 200, headers: new Headers(), json: async () => ({ id: 'x' }) };
+  }
+  return { ok: true, status: 200, headers: new Headers(), json: async () => answer };
+}) as unknown as typeof fetch;
+
+const { GET } = await import('../app/api/watch/route.ts');
+
+async function morning(sub: Record<string, unknown>) {
+  answer = sub;
+  posted.length = 0;
+  const body = (await (await GET(new Request('https://x/api/watch?key=a-test-secret'))).json()) as {
+    told?: string | null;
+  };
+  return { told: body.told ?? null, subjects: [...posted] };
+}
+
+const calm = await morning({
+  tier: 'pro', character_count: 25_647, character_limit: 601_026,
+  next_character_count_reset_unix: at(24), next_invoice: { amount_due_cents: 11_385 },
+  can_extend_character_limit: false, open_invoices: [],
+});
+ok('a healthy month interrupts nobody', calm.told === null && calm.subjects.length === 0, calm.subjects.join(''));
+
+const threequarters = await morning({
+  tier: 'pro', character_count: 460_000, character_limit: 601_026,
+  next_character_count_reset_unix: at(10),
+});
+ok('three quarters of the allowance still sends the letter it always sent',
+  threequarters.told === 'allowance:0.75' && /three quarters gone/.test(threequarters.subjects[0] ?? ''),
+  threequarters.subjects.join(''));
+
+/* The reason any of this was worth changing. */
+const bleeding = await morning({
+  tier: 'pro', character_count: 360_000, character_limit: 601_026,
+  next_character_count_reset_unix: at(10),
+  current_overage: { amount: 12.5, currency: 'usd' },
+});
+ok('an overage at 60% of the allowance is now caught — it never was before',
+  bleeding.told === 'overage' && /over its plan/.test(bleeding.subjects[0] ?? ''),
+  bleeding.subjects.join(''));
+
+const unpaid = await morning({
+  tier: 'pro', character_count: 10_000, character_limit: 601_026,
+  next_character_count_reset_unix: at(10), open_invoices: [{ id: 'a' }],
+});
+ok('so is an unpaid invoice on an otherwise quiet month',
+  unpaid.told === 'unpaid', unpaid.subjects.join(''));
+
+/* The once-key is what stops a warning arriving every morning for a week, and
+   what lets a CHANGED situation through. Both halves matter. */
+ok('the letter is keyed to the situation, not just the month',
+  threequarters.told !== bleeding.told && bleeding.told !== unpaid.told);
+
+const watch = read('app/api/watch/route.ts');
+ok('the letter and the money page share one set of sentences', watch.includes('warningsFor'));
+ok('and there is no second reader of the subscription left',
+  !read('app/lib/server/eleven.ts').includes('export async function allowanceLeft'));
+
 if (failures > 0) {
   console.log(`\ncheck:bill — ${failures} assertion(s) failed.`);
   process.exitCode = 1;

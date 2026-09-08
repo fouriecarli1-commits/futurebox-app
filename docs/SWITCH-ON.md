@@ -492,6 +492,20 @@ pair), `KLINGAI_BASE_URL`, `KLING_MODEL`, `KLING_SOUND` and
 **Leave all of them unset.** With no key the video engine reports itself
 unavailable and no screen offers it, which is the state you want.
 
+### 12. The pronunciation test read — optional, and only for you
+
+`ELEVEN_TEST_VOICE` holds the voice id that `/api/eleven/pronounce` reads the
+Afrikaans pronunciation test in. Optional: without it the route asks for the
+voice as `&stem=<voice id>` instead, so it works either way, and nothing else
+in the app reads it.
+
+Set it to **the voice the app actually reads with**. A test read in some other
+voice produces a word list that fixes a voice nobody hears.
+
+The route is guarded by `POST_SECRET` like the other owner-only pages. Open it
+with no arguments to get the forty-word list, then add `&hoor=1` to hear it. It
+spends about 1 000 characters of the ElevenLabs plan, once, and stores nothing.
+
 ---
 
 ## And before the first stranger pays

@@ -973,42 +973,9 @@ export async function dropFinetune(id: string): Promise<boolean> {
  * decisions.
  */
 
-export interface Allowance {
-  readonly used: number;
-  readonly limit: number;
-  /** 0 to 1. */
-  readonly spent: number;
-  readonly resetsAt: Date | null;
-  readonly tier: string;
-}
-
-export async function allowanceLeft(): Promise<Allowance | null> {
-  if (!configured()) return null;
-  try {
-    const response = await fetch(`${BASE}/user/subscription`, {
-      headers: { 'xi-api-key': key() },
-    });
-    if (!response.ok) return null;
-    const said = (await response.json()) as {
-      character_count?: number;
-      character_limit?: number;
-      next_character_count_reset_unix?: number;
-      tier?: string;
-    };
-    const used = said.character_count;
-    const limit = said.character_limit;
-    if (typeof used !== 'number' || typeof limit !== 'number' || limit <= 0) return null;
-    return {
-      used,
-      limit,
-      spent: used / limit,
-      resetsAt:
-        typeof said.next_character_count_reset_unix === 'number'
-          ? new Date(said.next_character_count_reset_unix * 1000)
-          : null,
-      tier: said.tier ?? 'unknown',
-    };
-  } catch {
-    return null;
-  }
-}
+/* `allowanceLeft` and its `Allowance` type used to live here: a second fetch of
+   `/user/subscription` that read four fields out of it. `bill()` above reads
+   the same answer and eleven more, `/api/watch` was its only caller, and two
+   readers of one endpoint is how the letter and the money page end up
+   disagreeing about the same account. Removed on 8 September 2026 rather than
+   left as the shorter of two truths. */
