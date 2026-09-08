@@ -51,13 +51,27 @@ export interface VoiceState {
    * The other engine: Kits.AI, which is built for singing rather than speech.
    *
    * Optional because the answer predates it and a stale cached reply should
-   * read as "not available" rather than throw. `models` is what she named in
-   * the environment; empty means the room asks for a model number instead,
-   * which is the honest fallback — this app cannot list her models.
+   * read as "not available" rather than throw.
+   *
+   * `models` is what has been trained on the Kits account; `stock` is Kits'
+   * own catalogue, which is what somebody who has trained nothing can sing in.
+   * Both empty means the room asks for a model number instead, which is still
+   * the honest fallback on a deployment where the list cannot be fetched.
    */
   readonly singing?: {
     readonly configured: boolean;
-    readonly models: readonly { readonly id: string; readonly name: string }[];
+    readonly models: readonly {
+      readonly id: string;
+      readonly name: string;
+      readonly demo?: string | null;
+      readonly tags?: readonly string[];
+    }[];
+    readonly stock?: readonly {
+      readonly id: string;
+      readonly name: string;
+      readonly demo?: string | null;
+      readonly tags?: readonly string[];
+    }[];
   };
 }
 

@@ -42,11 +42,15 @@ import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Cost from './Cost';
 import WatchTutorial from './WatchTutorial';
+import SingVoices, { type SingVoice } from './SingVoices';
 import Note from './Note';
 
 interface Singing {
   readonly configured: boolean;
-  readonly models: readonly { readonly id: string; readonly name: string }[];
+  /** Voices trained on this account. */
+  readonly models: readonly SingVoice[];
+  /** Kits' own catalogue — the answer for anybody who has trained none. */
+  readonly stock: readonly SingVoice[];
 }
 
 /** One request for the whole page, whatever it is asked by. */
@@ -58,8 +62,8 @@ function singingState(): Promise<Singing> {
         fetch('/api/voice', { headers: token ? { Authorization: `Bearer ${token}` } : undefined }),
       )
       .then((response) => (response.ok ? response.json() : null))
-      .then((said) => (said as { singing?: Singing } | null)?.singing ?? { configured: false, models: [] })
-      .catch(() => ({ configured: false, models: [] }));
+      .then((said) => (said as { singing?: Singing } | null)?.singing ?? { configured: false, models: [], stock: [] })
+      .catch(() => ({ configured: false, models: [], stock: [] }));
   }
   return asked;
 }
@@ -240,35 +244,12 @@ export default function SingItMine({
               <Cost credits={perMinute(track.seconds || 0, CREDITS.sing)} />
 
               <div className="space-y-2">
-                <label htmlFor={`mine-model-${track.id}`} className="block text-sm font-bold text-white">
-                  {t('pro.singModel', 'Which trained voice')}
-                </label>
-                {state.models.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {state.models.map((one) => (
-                      <button
-                        key={one.id}
-                        type="button"
-                        onClick={() => chooseModel(one.id)}
-                        aria-pressed={modelId === one.id}
-                        className={`min-h-[44px] px-3 py-2 rounded-xl border text-sm font-bold ${
-                          modelId === one.id
-                            ? 'border-emerald-500 bg-emerald-500/15 text-white'
-                            : 'border-zinc-800 bg-zinc-900 text-zinc-400'
-                        }`}
-                      >
-                        {one.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <input
-                  id={`mine-model-${track.id}`}
-                  inputMode="numeric"
+                <SingVoices
+                  mine={state.models}
+                  stock={state.stock ?? []}
                   value={modelId}
-                  onChange={(event) => chooseModel(event.target.value)}
-                  placeholder="1014961"
-                  className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-zinc-800 bg-zinc-900 text-white"
+                  onChange={chooseModel}
+                  idPrefix={`mine-${track.id}`}
                 />
                 <Note className="text-sm text-zinc-500 leading-relaxed">{t(
                     'pro.singModelHelp',

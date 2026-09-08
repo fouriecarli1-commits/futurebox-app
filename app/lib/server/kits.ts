@@ -439,57 +439,72 @@ export async function probe(path: string): Promise<{
 export interface Model {
   readonly id: string;
   readonly name: string;
+  /** A short clip of the voice, from their public bucket. Null on most of hers. */
+  readonly demo: string | null;
+  /** What it is good for, in their words: "Singing", "Chest Voice", "Opera". */
+  readonly tags: string[];
 }
 
 /**
- * The name in a model record, whatever Kits calls the field.
+ * The name in a model record.
  *
- * Read rather than insisted on, for the same reason as `idIn` above: the one
- * request whose shape is known here is the conversion, and everything else is
- * described by whoever wrote their API. A picker that shows the number because
- * the field turned out to be `title` rather than `name` is not better than no
- * picker; a picker that shows the number because there genuinely is no name is
- * honest, and that is the fallback.
+ * `title` is the documented field. The rest are kept as fallbacks costing
+ * nothing, and the id is the last resort — a picker showing a number because
+ * there genuinely is no name is honest; one showing a number because the field
+ * was called something else is not.
  */
 function nameIn(record: Record<string, unknown>, id: string): string {
-  for (const field of ['name', 'title', 'modelName', 'displayName', 'label']) {
+  for (const field of ['title', 'name', 'modelName', 'displayName', 'label']) {
     const value = record[field];
     if (typeof value === 'string' && value.trim()) return value.trim();
   }
   return id;
 }
 
+function httpsIn(value: unknown): string | null {
+  return typeof value === 'string' && /^https:\/\//i.test(value) ? value : null;
+}
+
 /**
- * The models on the account behind the key.
+ * Voice models off the account, or out of Kits' own catalogue.
  *
- * Why this exists: until the plan was paid, this endpoint answered 403 and the
- * app asked people to type a number they had to go and find in the address bar
- * at kits.ai. That is a fine fallback and a terrible front door. With a plan on
- * the account it answers properly, so the room can show the voices by name.
+ * ── The parameter that decides which, and why it nearly went wrong ──────
  *
- * Names from `KITS_VOICE_MODELS` still win where they are set. Kits' own name
- * is whatever was typed when the model was trained; hers is what she wants
- * members to read.
+ * `GET /voice-models` with no query returns **everything Kits has** — their
+ * hundred-and-something public voices, "Male Pop" and the rest. Hers are
+ * behind `myModels=true`. This code asked without it for a day, which would
+ * have put a stranger's voice at the top of a picker labelled "your trained
+ * voices" and left hers somewhere on page four.
  *
- * Failure is an empty list rather than a thrown error, on purpose. Every
- * caller draws a screen, and none of them should turn into an error page
- * because a list of voices could not be fetched — the number field is still
- * there underneath.
+ * The catalogue is not a mistake to be avoided, though — it is the answer to
+ * the emptiest screen in this app. Somebody who has never trained a voice has
+ * nothing to sing in, and "go and make one at kits.ai first" is where they
+ * stop. A hundred voices they can use immediately is a first day that works.
+ * So both are fetched, and the room shows them as two groups that say which
+ * is which.
+ *
+ * `instruments=true` filters to their instrument models — a sung line turned
+ * into a saxophone. Not used yet; recorded because it is one query parameter
+ * away and nobody would guess it exists.
+ *
+ * Failure is an empty list rather than a thrown error. Every caller draws a
+ * screen, the number field is still under the picker, and a voice room that
+ * will not draw because a list could not be fetched is the worse answer.
  */
-export async function listModels(): Promise<Model[]> {
+export async function listModels(mine = true): Promise<Model[]> {
   if (!configured()) return [];
+  /* `perPage`, because their lists are paged at ten. Without it a picker
+     silently shows the first ten and looks like a complete list — the worst
+     kind of wrong. A hundred is past what any account has and still one
+     request; the catalogue is longer than that and one page of it is plenty
+     to choose from. */
+  const query = `perPage=100${mine ? '&myModels=true' : ''}`;
   let response: Response;
   try {
-    /* `perPage`, because their lists are paged and the default page is ten.
-
-       Their own documentation says so. Without it a picker silently shows the
-       first ten voices somebody trained and nothing else — the worst kind of
-       wrong, because it looks like a complete list. A hundred is well past
-       what any one account has and still one request. */
-    response = await fetch(`${BASE}/voice-models?perPage=100`, {
+    response = await fetch(`${BASE}/voice-models?${query}`, {
       headers: { Authorization: `Bearer ${key()}` },
-      /* Their list, not a copy of it from an hour ago that no longer has the
-         voice somebody trained ten minutes back. Next caches fetches in route
+      /* Their list, not a copy from an hour ago that no longer has the voice
+         somebody trained ten minutes back. Next caches fetches in route
          handlers by default, which would do exactly that. */
       cache: 'no-store',
     });
@@ -502,21 +517,29 @@ export async function listModels(): Promise<Model[]> {
     ? answer
     : Array.isArray((answer as { data?: unknown })?.data)
       ? (answer as { data: unknown[] }).data
-      : Array.isArray((answer as { voiceModels?: unknown })?.voiceModels)
-        ? (answer as { voiceModels: unknown[] }).voiceModels
-        : [];
+      : [];
 
   const found: Model[] = [];
   for (const one of list) {
     if (!one || typeof one !== 'object') continue;
     const record = one as Record<string, unknown>;
-    /* `safeModelId` and not a cast: this id goes back out in a form field and
-       in a URL, and the rule for both is digits only however friendly the
+    /* A model that is still training or still blending is not usable yet, and
+       their own type says so. Offering it is offering a voice that fails. */
+    if (record.isUsable === false) continue;
+    /* `safeModelId` rather than a cast: this id goes back out in a form field
+       and in a URL, and the rule for both is digits only however friendly the
        source looks. */
     const raw = record.id ?? record.voiceModelId ?? record.modelId;
     const id = safeModelId(typeof raw === 'number' ? String(raw) : raw);
     if (!id || found.some((had) => had.id === id)) continue;
-    found.push({ id, name: nameIn(record, id) });
+    found.push({
+      id,
+      name: nameIn(record, id),
+      demo: httpsIn(record.demoUrl),
+      tags: Array.isArray(record.tags)
+        ? record.tags.filter((tag): tag is string => typeof tag === 'string').slice(0, 6)
+        : [],
+    });
   }
   return found;
 }
@@ -524,16 +547,39 @@ export async function listModels(): Promise<Model[]> {
 /**
  * Her voices, named the way she wants them named.
  *
- * The environment variable is the override rather than the source now: a name
- * set there wins, a model that is only at Kits still appears, and a name in the
- * variable for a model that no longer exists is dropped rather than shown as a
- * voice that cannot be sung in.
+ * `KITS_VOICE_MODELS` is the override rather than the source: a name set there
+ * wins, a model that is only at Kits still appears, and a name in the variable
+ * for a model that no longer exists is dropped rather than shown as a voice
+ * that cannot be sung in.
  */
 export async function models(): Promise<Model[]> {
-  const theirs = await listModels();
+  const theirs = await listModels(true);
   const named = new Map(namedModels().map((one) => [one.id, one.name]));
-  if (theirs.length === 0) return namedModels();
-  return theirs.map((one) => ({ id: one.id, name: named.get(one.id) ?? one.name }));
+  if (theirs.length === 0) {
+    return namedModels().map((one) => ({ ...one, demo: null, tags: [] }));
+  }
+  return theirs.map((one) => ({ ...one, name: named.get(one.id) ?? one.name }));
+}
+
+/**
+ * Kits' own voices — the ones anybody can sing in without training anything.
+ *
+ * This is the first-day answer. Cached for an hour in the module: their
+ * catalogue does not change between two people opening the Pro Booth, and one
+ * request per hour against a limit of a thousand a minute is nothing.
+ */
+let catalogueAt = 0;
+let catalogued: Model[] = [];
+const AN_HOUR = 3_600_000;
+
+export async function catalogue(): Promise<Model[]> {
+  if (catalogued.length > 0 && Date.now() - catalogueAt < AN_HOUR) return catalogued;
+  const found = await listModels(false);
+  if (found.length > 0) {
+    catalogued = found;
+    catalogueAt = Date.now();
+  }
+  return found;
 }
 
 /* ── The two requests ────────────────────────────────────────────────────── */
@@ -641,11 +687,45 @@ let lastPost = 0;
 const A_MINUTE = 60_000;
 
 /** Starts a conversion. The shape of this one is hers, not a guess. */
+/**
+ * The three dials on a conversion, from their own request body.
+ *
+ * `pitchShift` is the one that matters most and the one nobody would guess:
+ * a man singing through a woman's model, or the other way round, is an octave
+ * out and sounds like a mistake rather than a voice. Twelve semitones is that
+ * octave. Their range is -24 to 24.
+ *
+ * `conversionStrength` is how much of the model's accent comes through — their
+ * own note says high values mispronounce. `modelVolumeMix` trades the input's
+ * dynamics against the model's level, and their note says high values
+ * accentuate noise, which on a phone recording is the whole problem.
+ *
+ * Left out entirely rather than sent at a default: an omitted field is theirs
+ * to choose, and a number this app invented is a number nobody tuned.
+ */
+export interface Dials {
+  /** -24 to 24 semitones. 12 is an octave. */
+  readonly pitchShift?: number;
+  /** 0 to 1. More accent from the model, and more mispronunciation with it. */
+  readonly conversionStrength?: number;
+  /** 0 to 1. Up for the model's level, down to keep the input's dynamics. */
+  readonly modelVolumeMix?: number;
+}
+
+/** Their ceiling on a conversion, which is twice the splitters'. */
+export const CONVERT_MAX_BYTES = 100 * 1024 * 1024;
+
+function clamp(value: number, low: number, high: number): number {
+  return Math.min(high, Math.max(low, value));
+}
+
 export async function startConversion(
   voiceModelId: string,
   audio: Blob,
   filename: string,
   cleanup: Cleanup | null = PHONE_CLEANUP,
+  dials: Dials = {},
+  polish: Polish | null = null,
 ): Promise<{ ok: true; id: string; answer: unknown } | Upstream> {
   const since = Date.now() - lastPost;
   if (lastPost > 0 && since < A_MINUTE) {
@@ -660,11 +740,31 @@ export async function startConversion(
   const form = new FormData();
   form.append('voiceModelId', voiceModelId);
   form.append('soundFile', audio, filename);
-  /* Their effects go as JSON in a multipart field. Sent only when there is
-     something to send: an empty object is a field they have to parse for no
-     reason, and a field name they might not recognise. */
-  if (cleanup && Object.keys(cleanup).length > 0) {
-    form.append('preProcessingEffects', JSON.stringify(cleanup));
+  /* Their effects go as JSON in fields called `pre` and `post`.
+
+     Named from their request body rather than from the type reference: the
+     types are called `PreProcessingEffects` and `PostProcessingEffects`, and
+     the fields are called `pre` and `post`. This code sent
+     `preProcessingEffects` for an afternoon, which their server would have
+     ignored without saying so — the take would simply have come back ungated,
+     and nobody would have known which of the two it was.
+
+     Sent only when there is something to send: an empty object is a field they
+     have to parse for no reason. */
+  if (cleanup && Object.keys(cleanup).length > 0) form.append('pre', JSON.stringify(cleanup));
+  if (polish && Object.keys(polish).length > 0) form.append('post', JSON.stringify(polish));
+
+  /* And the dials, each clamped to their documented range rather than trusted.
+     These arrive from a form in the end, and a pitch shift of 400 semitones is
+     a request their server has to refuse on our behalf. */
+  if (typeof dials.pitchShift === 'number' && Number.isFinite(dials.pitchShift)) {
+    form.append('pitchShift', String(Math.round(clamp(dials.pitchShift, -24, 24))));
+  }
+  if (typeof dials.conversionStrength === 'number' && Number.isFinite(dials.conversionStrength)) {
+    form.append('conversionStrength', String(clamp(dials.conversionStrength, 0, 1)));
+  }
+  if (typeof dials.modelVolumeMix === 'number' && Number.isFinite(dials.modelVolumeMix)) {
+    form.append('modelVolumeMix', String(clamp(dials.modelVolumeMix, 0, 1)));
   }
 
   let response: Response;
@@ -907,8 +1007,16 @@ export async function convert(
   /* Whether the music comes back with the voice. See `Want`: getting this
      wrong hands somebody a dry acapella of a song they asked to hear. */
   want: Want = 'voice',
+  dials: Dials = {},
 ): Promise<{ ok: true; audio: ArrayBuffer; type: string } | Upstream> {
-  const started = await startConversion(voiceModelId, audio, filename);
+  if (audio.size > CONVERT_MAX_BYTES) {
+    return {
+      ok: false,
+      status: 413,
+      message: 'That take is larger than the 100 MB the singing service takes.',
+    };
+  }
+  const started = await startConversion(voiceModelId, audio, filename, PHONE_CLEANUP, dials);
   if (!started.ok) return started;
 
   /* The answer to the POST may already carry the file on a short take. */

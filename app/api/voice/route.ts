@@ -8,7 +8,11 @@
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { configured, stockVoices } from '@/app/lib/server/eleven';
-import { configured as singConfigured, models as singModels } from '@/app/lib/server/kits';
+import {
+  catalogue as singCatalogue,
+  configured as singConfigured,
+  models as singModels,
+} from '@/app/lib/server/kits';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 
 export const runtime = 'nodejs';
@@ -26,21 +30,30 @@ export const maxDuration = 30;
  */
 async function singing(): Promise<{
   configured: boolean;
-  models: { id: string; name: string }[];
+  models: { id: string; name: string; demo: string | null; tags: string[] }[];
+  stock: { id: string; name: string; demo: string | null; tags: string[] }[];
 }> {
-  /* Asked of Kits rather than read out of an environment variable.
+  /* Two lists, because Kits has two.
 
-     It used to be the variable only, because on a free account the list
-     endpoint answered 403 and a picker that is empty for everybody is worse
-     than a number field. With a plan on the account it answers, so the rooms
-     can show her voices by name without anybody maintaining a second copy of
-     the list by hand — and `models()` still lets a name in the variable win
-     over whatever was typed at kits.ai.
+     `models` is what this account has trained. `stock` is Kits' own catalogue —
+     a hundred-odd voices anybody can sing in without training anything, each
+     with a clip you can hear before you spend a credit.
 
-     A failure there is an empty list, not an error: the number field is still
-     under the picker, and a voice room that will not draw because a list could
-     not be fetched is a worse answer than a voice room with no list. */
-  return { configured: singConfigured(), models: singConfigured() ? await singModels() : [] };
+     The second one is not a nice extra. Somebody who has never trained a voice
+     has nothing to sing in, and "go and make one at kits.ai first" is where
+     their first day ends. This is the room having an answer instead.
+
+     Asked of Kits rather than read out of an environment variable, and a
+     failure on either side is an empty list, not an error: the number field is
+     still under the picker, and a voice room that will not draw because a list
+     could not be fetched is the worse answer.
+
+     `myModels=true` is what separates them, and asking without it returns the
+     whole catalogue — which is how a stranger's voice nearly ended up at the
+     top of a list labelled "your trained voices". */
+  if (!singConfigured()) return { configured: false, models: [], stock: [] };
+  const [mine, theirs] = await Promise.all([singModels(), singCatalogue()]);
+  return { configured: true, models: mine, stock: theirs };
 }
 
 export async function GET(request: Request): Promise<Response> {

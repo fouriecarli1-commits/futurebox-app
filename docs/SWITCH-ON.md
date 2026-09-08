@@ -385,6 +385,35 @@ keys it means are not written down anywhere.
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project's address. Public by design — the browser has to reach it. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | The browser's key. Public by design too: it can only do what row-level security allows, which is why item 2's SQL files matter. |
 | `ELEVENLABS_API_KEY` | Every song, voice, picture and clip. Nothing generates without it. |
+
+### Beperk daardie sleutel
+
+ElevenLabs se sleutelblad wys 'n rooi waarskuwing by 'n onbeperkte sleutel, en
+dit is 'n regverdige een: 'n onbeperkte sleutel wat uitlek kan **alles** op die
+rekening doen, insluitend nuwe stemme maak en geld uitgee.
+
+Hierdie is elke ding wat FutureBox werklik roep, gelees uit die kode op
+8 September 2026. Merk net dié, en niks anders nie:
+
+| Wat die toep roep | Waarvoor |
+|---|---|
+| `text-to-speech` | Potgooie, aankondigings, 'n skrif wat gelees word |
+| `text-to-dialogue` | Twee gashere wat met mekaar praat |
+| `speech-to-speech` | 'n Baan in 'n ander stem (die spraakmodel) |
+| `speech-to-text` | Transkripsies en onderskrifte |
+| `voices`, `voices/add` | Stemklonering en die stemlys |
+| `dubbing` | 'n Episode in 'n ander taal |
+| `audio-isolation` | Ruis van 'n opname af haal |
+| `music` | Elke liedjie |
+| `music/stem-separation` | Bane skei |
+| `music/finetunes` | Die Sound trainer |
+| `flows/image` | Omslae en prente |
+| `flows/video` | Die video-tafel |
+| `user/subscription` | Hoeveel van die maand oor is |
+
+Niks anders nie. As iets later breek nadat jy beperk het, sê die foutboodskap
+watter een kort — dit is 'n vyf-sekonde-regmaak, en dit is 'n beter posisie as
+'n sleutel wat alles kan doen.
 | `ANTHROPIC_API_KEY` | The copilot in every room. |
 
 The two `NEXT_PUBLIC_` ones are meant to be visible and are the only kind that

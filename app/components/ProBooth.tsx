@@ -45,6 +45,7 @@ import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Cost from './Cost';
 import WatchTutorial from './WatchTutorial';
+import SingVoices from './SingVoices';
 import Note from './Note';
 import { TOO_BIG_TO_SEND, attach } from '../lib/workfile';
 
@@ -1093,41 +1094,23 @@ export default function ProBooth({
             />
 
             {engine === 'singing' && canSing ? (
-              /* No voice list to show. Kits' models are numbers on her own
-                 account and this app has never made a request that lists them,
-                 so it asks for the number instead of drawing an empty picker
-                 and blaming her for it. What she names in the environment
-                 appears as buttons; anything else is typed once and kept. */
+              /* Her trained voices and Kits' own catalogue, in one picker.
+
+                 This used to say "no voice list to show" and ask for a number,
+                 because on the free tier the list endpoint answered 403. With
+                 the plan on the account it answers, and it answers twice: the
+                 voices trained here, and the hundred-odd anybody can sing in
+                 without training anything. */
               <div className="space-y-2">
-                <label htmlFor="sing-model" className="block text-sm font-bold text-white">
+                <p className="text-sm font-bold text-white">
                   {t('pro.singModel', 'Which trained voice')}
-                </label>
-                {(voices?.singing?.models ?? []).length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {(voices?.singing?.models ?? []).map((one) => (
-                      <button
-                        key={one.id}
-                        type="button"
-                        onClick={() => chooseModel(one.id)}
-                        aria-pressed={modelId === one.id}
-                        className={`min-h-[44px] px-3 py-2 rounded-xl border text-sm font-bold ${
-                          modelId === one.id
-                            ? 'border-emerald-500 bg-emerald-500/15 text-white'
-                            : 'border-zinc-800 bg-zinc-900 text-zinc-400'
-                        }`}
-                      >
-                        {one.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <input
-                  id="sing-model"
-                  inputMode="numeric"
+                </p>
+                <SingVoices
+                  mine={voices?.singing?.models ?? []}
+                  stock={voices?.singing?.stock ?? []}
                   value={modelId}
-                  onChange={(event) => chooseModel(event.target.value)}
-                  placeholder="1014961"
-                  className="w-full min-h-[44px] px-3 py-2 rounded-xl border border-zinc-800 bg-zinc-900 text-white"
+                  onChange={chooseModel}
+                  idPrefix="sing"
                 />
                 <Note className="text-sm text-zinc-500 leading-relaxed">{t(
                     'pro.singModelHelp',

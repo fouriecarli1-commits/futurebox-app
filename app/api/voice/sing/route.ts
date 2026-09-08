@@ -120,7 +120,16 @@ export async function POST(request: Request): Promise<Response> {
      be taken apart. */
   const want = form.get('want') === 'mix' ? 'mix' : 'voice';
 
-  const done = await convert(wanted, audio, 'take.wav', Date.now() + WAIT_MS, want);
+  /* How many semitones to move the take before the model sings it.
+
+     The one dial worth exposing today. A man singing through a voice trained
+     on a woman is an octave out and sounds like a fault rather than a voice,
+     and twelve semitones is that octave. Their range is -24 to 24 and the
+     library clamps to it; a form that sends nothing gets Kits' own default. */
+  const shift = Number(form.get('pitchShift'));
+  const dials = Number.isFinite(shift) && shift !== 0 ? { pitchShift: shift } : {};
+
+  const done = await convert(wanted, audio, 'take.wav', Date.now() + WAIT_MS, want, dials);
   if (!done.ok) {
     await paid.refund();
     return Response.json({ message: done.message }, { status: done.status });
