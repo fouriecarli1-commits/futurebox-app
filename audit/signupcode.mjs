@@ -62,7 +62,7 @@ try {
   }
 
   const b = await chromium.launch(launchOptions());
-  const p = await b.newPage({ viewport: { width: 390, height: 844 } });
+  const p = await b.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
   /** What the stubbed project was asked to do, in order. */
   const asked = [];

@@ -27,7 +27,7 @@ const DOOR = 'div.fixed.inset-0.z-\\[55\\]';
    written on. `serve` explains why one per probe rather than one per job. */
 const PORT = process.argv[2] || '3251';
 const server = await serve(PORT);
-const { browser, page } = await enter({ width: 390, height: 844, at: server.url });
+const { browser, page } = await enter({ width: 390, height: 844, at: server.url, touch: true });
 await studio(page);
 await page.waitForTimeout(1400);
 
@@ -47,7 +47,7 @@ names.forEach((n) => console.log('   · ' + n));
    all lived in the Video desk beside it. Removing the room is what this list
    is for — it failed the moment the room did, which is the whole point of
    naming the doors rather than counting them. */
-for (const room of ['Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard',
+for (const room of ['Make a song', 'Studio', 'The Booth', 'Your voice', 'Sound trainer',
                     'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar']) {
   check(`${room} has a button of its own`, names.some((n) => n.toLowerCase().startsWith(room.toLowerCase())));
 }

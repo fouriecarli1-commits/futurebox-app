@@ -43,7 +43,7 @@ try {
 
   /** What the page shows after it has fallen over. */
   const visit = async (query) => {
-    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
     /* The throw is the point of the page; its console noise is not a fault. */
     page.on('pageerror', () => undefined);
     await page.goto(`${server.url}/blowup${query}`, { waitUntil: 'networkidle' });

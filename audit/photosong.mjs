@@ -46,7 +46,7 @@ const WROTE = {
 
 /** The whole walk, once, with the model either present or absent. */
 async function run(browser, hasModel) {
-  const p = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  const p = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true })).newPage();
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
 
   await p.route('**/api/photosong', async (route) => {

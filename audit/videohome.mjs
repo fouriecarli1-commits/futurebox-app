@@ -75,7 +75,7 @@ const SEED = `(${(async (title) => {
 }).toString()})(${JSON.stringify(TITLE)})`;
 
 const server = await serve(PORT);
-const { browser, page } = await enter({ width: 390, height: 844, at: server.url });
+const { browser, page } = await enter({ width: 390, height: 844, at: server.url, touch: true });
 
 try {
   await page.evaluate(SEED);

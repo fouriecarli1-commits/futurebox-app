@@ -21,7 +21,7 @@ const check = (label, ok, detail = '') => {
    written on. `serve` explains why one per probe rather than one per job. */
 const PORT = process.argv[2] || '3252';
 const server = await serve(PORT);
-const { browser, page } = await enter({ width: 390, height: 844, at: server.url });
+const { browser, page } = await enter({ width: 390, height: 844, at: server.url, touch: true });
 await page.waitForTimeout(1400);
 
 const read = await page.evaluate(() => {

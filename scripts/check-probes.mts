@@ -268,6 +268,56 @@ ok(
 );
 ok('serve() refuses to hand back a server that never came up', /throw new Error\(/.test(where));
 
+/* ── A phone-sized probe has to hold a phone's pointer ──────────────────
+
+   `app/globals.css` keeps a whole block behind `@media (pointer: coarse)`:
+   the forty-four pixel minimums, and the rule that sizes a standalone link
+   for a thumb. Playwright's desktop Chromium reports a *fine* pointer
+   whatever viewport it is handed, so a probe that only shrinks the window is
+   measuring an app with those rules switched off.
+
+   That is not a theoretical gap. It is why three rounds of `check:sharesheet`
+   came back green while Carli was holding a photograph of the share sheet
+   with its buttons printed on top of each other: the rule that broke it only
+   exists on a touchscreen.
+
+   Any probe that opens a window narrower than a small tablet has to ask for
+   touch — `hasTouch: true` on the page or context, or `touch: true` through
+   `enter()`. `WITHOUT_TOUCH` is what was still outstanding when this rule was
+   written; it may shrink and it may not grow. */
+const WITHOUT_TOUCH = new Set<string>([
+  /* Empty. Every wired phone-sized probe asks for touch. Anything added here
+     is a probe measuring rules the app does not ship to a phone. */
+]);
+
+const PHONE_ENOUGH = 481;
+for (const script of named) {
+  /* `named` holds the npm script names the workflow runs; the file each one
+     drives is in package.json. Reading `audit/check:tabs.mjs` is how the first
+     version of this fell over. */
+  const file = /audit\/([A-Za-z0-9_-]+)\.mjs/.exec(scripts[script] ?? '')?.[1];
+  if (!file) continue;
+  const name = file;
+  const source = readFileSync(join(ROOT, `audit/${file}.mjs`), 'utf8');
+  const widths = [...source.matchAll(/width:\s*(\d+)/g)].map((one) => Number(one[1]));
+  const narrow = widths.filter((one) => one < PHONE_ENOUGH);
+  if (!narrow.length) continue;
+  const asksForTouch = /hasTouch:\s*true|touch:\s*true/.test(source);
+  if (WITHOUT_TOUCH.has(name)) {
+    ok(
+      `${name} is still on the list of probes without a touch pointer`,
+      !asksForTouch,
+      'it asks for touch now — take it off WITHOUT_TOUCH',
+    );
+    continue;
+  }
+  ok(
+    `${name} opens its phone window with a touch pointer`,
+    asksForTouch,
+    `narrowest ${Math.min(...narrow)}px, and pointer: coarse is switched off`,
+  );
+}
+
 const enter = code(readFileSync(join(ROOT, 'audit/enter.mjs'), 'utf8'));
 ok('enter() can be pointed at a port of its own', /\bat = 'http:\/\/localhost:3000'/.test(enter));
 ok(

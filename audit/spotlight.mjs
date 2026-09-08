@@ -58,7 +58,7 @@ try {
   }
 
   browser = await chromium.launch(launchOptions());
-  const p = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const p = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
   await p.route('**/api/charts', async (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(CHARTS) }));

@@ -56,7 +56,22 @@ try {
   }
 
   browser = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required'] }));
-  const p = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const p = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  /* No share sheet of the browser's own.
+
+     "Post it" asks the phone first now, and only draws the app's own sheet
+     when the browser has none — which is the desktop case and the one this
+     file measures. Taken away deliberately rather than left to whatever the
+     runner's Chromium happens to expose; `audit/sharesheet.mjs` is where the
+     phone path is asserted. */
+  await p.addInitScript(() => {
+    try {
+      delete Navigator.prototype.share;
+      delete Navigator.prototype.canShare;
+    } catch {
+      /* Frozen prototype: the assertions below say so by finding no sheet. */
+    }
+  });
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
   await p.goto(`http://localhost:${PORT}/songfull`, { waitUntil: 'networkidle' });
   await p.waitForTimeout(2500);
@@ -109,9 +124,14 @@ try {
   const cardBox = await p.locator('article').first().boundingBox();
   await p.locator('button').filter({ hasText: /^Post it$/ }).first().click();
   await p.waitForTimeout(700);
-  const postSheet = p.locator('div.fixed.inset-0.z-\\[92\\]');
+  /* Found by its handle rather than by its z-index. The sheet was raised from
+     92 to 97 the day the tab bar was found painted over its foot, and this
+     line went on looking for a number that no longer existed — a probe that
+     silently stops finding the thing it measures reports every assertion
+     under it as broken, which is what it did. */
+  const postSheet = p.locator('[data-share-sheet]');
   check('pressing Post it opens a sheet over the whole screen', (await postSheet.count()) === 1);
-  const postBox = await postSheet.locator('> div').last().boundingBox();
+  const postBox = await postSheet.boundingBox();
   check('and it is the width of the window, not of the card',
     Boolean(postBox) && postBox.width >= 380,
     postBox ? `${Math.round(postBox.width)}px against a card of ${Math.round(cardBox?.width ?? 0)}px` : 'none');

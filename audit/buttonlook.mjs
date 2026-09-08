@@ -62,7 +62,7 @@ const check = (label, ok, detail = '') => {
 };
 
 const server = await serve(PORT);
-const { browser, page } = await enter({ width: 390, height: 844, at: server.url });
+const { browser, page } = await enter({ width: 390, height: 844, at: server.url, touch: true });
 
 /** Every flat button on the screen right now. */
 const flatOnes = async (allowed) =>

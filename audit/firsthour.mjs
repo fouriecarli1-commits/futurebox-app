@@ -57,7 +57,7 @@ try {
   }
 
   browser = await chromium.launch(launchOptions());
-  const p = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+  const p = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true , hasTouch: true });
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
 
   /* The engine. A few bytes of WAV rather than MP3, because the download at

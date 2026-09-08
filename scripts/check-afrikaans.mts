@@ -170,6 +170,8 @@ const ALLOWED = new Set([
   'ai', 'rss', 'url', 'bpm', 'mb', 'png', 'jpeg', 'webp', 'wav', 'webm', 'mp',
   /* Names. */
   'futurebox', 'youtube', 'spotify', 'tiktok', 'apple', 'music', 'soundcloud',
+  /* Half of "Apple Podcasts", which is a product name and not a word. */
+  'podcasts',
   'instagram', 'meta', 'google', 'chrome', 'firefox', 'safari', 'edge',
   'copilot', 'collab', 'collabs', 'radar', 'arena', 'spotlight', 'masterclass',
   'masterclasses', 'premium', 'pro', 'reel', 'reels', 'shorts', 'studio',

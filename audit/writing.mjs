@@ -60,7 +60,7 @@ const CEILING = Number(process.argv[3] || 700);
 const PROSE = 60;
 
 const ROOMS = [
-  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard',   'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
+  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Sound trainer', 'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
 ];
 
 const problems = [];
@@ -77,7 +77,7 @@ try {
   }
 
   browser = await chromium.launch(launchOptions());
-  const p = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const p = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
 
   await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });

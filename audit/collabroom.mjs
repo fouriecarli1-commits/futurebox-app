@@ -74,7 +74,7 @@ try {
   }
 
   browser = await chromium.launch(launchOptions());
-  const p = await browser.newPage({ viewport: { width: 390, height: 900 } });
+  const p = await browser.newPage({ viewport: { width: 390, height: 900 }, hasTouch: true });
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
 
   /* The second person, stood in for. Messages first: Playwright hands a

@@ -60,7 +60,7 @@ try {
   }
 
   browser = await chromium.launch(launchOptions());
-  const page = await (await browser.newContext({ viewport: { width: 390, height: 900 } })).newPage();
+  const page = await (await browser.newContext({ viewport: { width: 390, height: 900 }, hasTouch: true })).newPage();
   page.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 160)}`));
   await page.goto(`http://localhost:${PORT}/songwindow`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(2500);

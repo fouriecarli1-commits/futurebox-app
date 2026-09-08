@@ -62,7 +62,7 @@ try {
 
   /** One visit, with the translator either present or absent. */
   const visit = async (hasModel) => {
-    const page = await (await browser.newContext({ viewport: { width: 390, height: 900 } })).newPage();
+    const page = await (await browser.newContext({ viewport: { width: 390, height: 900 }, hasTouch: true })).newPage();
     page.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
     let asked = null;
     await page.route('**/api/translate', async (route) => {

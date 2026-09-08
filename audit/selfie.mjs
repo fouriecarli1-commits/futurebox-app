@@ -97,7 +97,7 @@ try {
     }),
   );
 
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
   const errs = [];
   page.on('pageerror', (e) => errs.push(String(e).slice(0, 160)));
   await page.addInitScript(WATCH);

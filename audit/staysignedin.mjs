@@ -49,7 +49,7 @@ try {
   }
 
   browser = await chromium.launch(launchOptions());
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
   const p = await context.newPage();
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
 

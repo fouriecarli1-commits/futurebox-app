@@ -3123,6 +3123,7 @@ export default function FutureBoxHome() {
                   setTrackCount((count) => count + 1);
                 }}
                 onGoToChannel={() => goToRoom('channels')}
+                onGoToSound={() => goToRoom('sound')}
               />
             )}
 

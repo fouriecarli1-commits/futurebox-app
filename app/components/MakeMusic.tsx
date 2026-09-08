@@ -73,6 +73,7 @@ export default function MakeMusic({
   makeSignal,
   onMade,
   onGoToChannel,
+  onGoToSound,
   engineReady,
 }: {
   userPlan: Plan;
@@ -88,6 +89,8 @@ export default function MakeMusic({
   onMade: (track: Track) => void;
   /** A sound of your own is trained there, not here. */
   onGoToChannel: () => void;
+  /** Into the Sound trainer, which is where a sound is actually trained. */
+  onGoToSound: () => void;
   engineReady: boolean;
 }) {
   const { t, lang } = useLang();
@@ -1241,12 +1244,24 @@ export default function MakeMusic({
                   ) : (
                     <>
                       <Note>{t('make.ownSoundNone')}</Note>
+                      {/* Into the room that does it, not the Channel.
+
+                          Carli: "daai woorde in make a song vat mens na die
+                          verkeerde blad toe ... dan vat dit jou na die Sound
+                          trainer toe. huidiglik vat die mens na die channel
+                          toe." Training moved into its own room and this
+                          button kept pointing at where it used to live — so
+                          the one thing it promises is the one thing the screen
+                          it opens cannot do.
+
+                          Boxed, like every other button here. */}
                       <button
                         type="button"
-                        onClick={onGoToChannel}
-                        className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+                        onClick={onGoToSound}
+                        className="min-h-[44px] px-3 py-2 rounded-xl border border-emerald-500/60 bg-emerald-500/10 text-sm font-bold text-emerald-300 hover:border-emerald-500 flex items-center gap-1.5"
                       >
-                        {t('make.ownSoundTrain', 'Train one in your channel')}
+                        <Sparkles className="w-4 h-4" />
+                        {t('make.ownSoundTrain', 'Train one now')}
                       </button>
                     </>
                   )}
@@ -1286,11 +1301,25 @@ export default function MakeMusic({
         {busy && <Progress stage={stage} elapsed={elapsed} asked={seconds} t={t} />}
 
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-zinc-500">
-            {userPlan !== 'free'
-              ? t('make.unlimited')
-              : `${left ?? 0} / ${ENTITLEMENTS['publish.release'].caps.free} ${t('make.leftToday')}`}
-          </p>
+          {/* What is left, and only where there is a number that is true.
+
+              A paid plan used to be told "As many as you like on Pro", which
+              is not what a paid plan is: every one of them has a credit
+              ceiling, and the whole of `docs/KOSTE-EN-WINS.md` turns on that
+              ceiling being real. Carli: "die pro version het ook beperkte
+              krediete. haal dit uit."
+
+              Nothing is put in its place. The balance is in the studio header
+              on every screen, counted in the currency that is actually spent —
+              a second, vaguer sentence about the same thing under the button
+              is how the two drift apart. */}
+          {userPlan === 'free' ? (
+            <p className="text-sm text-zinc-500">
+              {`${left ?? 0} / ${ENTITLEMENTS['publish.release'].caps.free} ${t('make.leftToday')}`}
+            </p>
+          ) : (
+            <span />
+          )}
           {userPlan === 'free' && (left ?? 0) === 0 && (
             <button type="button" onClick={onUpgrade} className="text-sm text-amber-400 hover:underline">
               {t('make.getMore')}

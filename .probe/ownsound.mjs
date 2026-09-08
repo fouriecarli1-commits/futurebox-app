@@ -83,15 +83,27 @@ async function tickOn(page, where) {
   const page = await open({ configured: true, signedIn: true, keep: 3, mine: [] });
   const body = await page.locator('body').innerText();
   say(/not trained one yet/i.test(body), 'somebody with no trained sound is not told so');
-  say(/channel/i.test(body), 'it does not say where a sound is trained');
+  /* It used to have to say "channel", because that is where training lived.
+     It lives in the Sound trainer now, and the sentence under the tick is
+     what tells somebody a trained sound is a thing they can have at all. */
+  say(/not trained one yet/i.test(body), 'it does not say a sound can be trained');
   say(!/not included in your plan/i.test(body), 'a plan that allows training says it does not');
 
-  const train = page.getByRole('button', { name: /train one in your channel/i });
+  const train = page.getByRole('button', { name: /train one now/i });
   if ((await train.count()) === 0) problems.push('there is no way to reach training from here');
   else {
     await train.click();
     await page.waitForTimeout(200);
-    say(await page.locator('#mounted').getAttribute('data-channel') === 'yes', 'the way to train one goes nowhere');
+    /* The Sound trainer, and not the Channel.
+
+       Carli: "daai woorde in make a song vat mens na die verkeerde blad toe
+        ... huidiglik vat die mens na die channel toe." Training moved into
+       its own room and this button kept pointing at where it used to be, so
+       the one thing it promises is the one thing the screen it opened could
+       not do. Both are asserted: the right room, and not the wrong one. */
+    const mounted = page.locator('#mounted');
+    say(await mounted.getAttribute('data-trainer') === 'yes', 'the way to train one does not open the Sound trainer');
+    say(await mounted.getAttribute('data-channel') === 'no', 'it still opens the Channel, where nothing can be trained');
   }
   await page.close();
 }

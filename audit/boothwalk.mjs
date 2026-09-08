@@ -112,6 +112,7 @@ const { browser, page, problems: noise } = await enter({
     '--use-fake-ui-for-media-stream',
     '--use-fake-device-for-media-stream',
   ],
+  touch: true,
 });
 
 try {

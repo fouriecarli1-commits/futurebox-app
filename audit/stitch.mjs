@@ -48,7 +48,7 @@ const built = await build({
 const BUNDLE = built.outputFiles[0].text;
 
 const b = await chromium.launch(launchOptions({ args: ['--autoplay-policy=no-user-gesture-required'] }));
-const p = await b.newPage();
+const p = await b.newPage({ hasTouch: true });
 const problems = [];
 const check = (label, ok, detail = '') => {
   console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${!ok && detail ? ` — ${detail}` : ''}`);

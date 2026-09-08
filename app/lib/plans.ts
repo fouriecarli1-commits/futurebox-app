@@ -371,7 +371,7 @@ export const SPONSORSHIP: readonly Sponsorship[] = [
     from: 25_000,
     to: null,
     per: 'month',
-    gets: 'One a month, named on the Spotlight page. Nowhere else, and nothing that blinks.',
+    gets: 'One a month, named across the whole app — every room, not one page. Nothing that blinks.',
   },
 ];
 

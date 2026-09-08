@@ -18,9 +18,12 @@ import MakeMusic, { type Canvas } from '@/app/components/MakeMusic';
 export default function OwnSoundCheck() {
   const [canvas, setCanvas] = useState<Canvas>({ title: '', lyrics: '', style: '' });
   const [went, setWent] = useState(false);
+  /* Where "Train one now" actually goes. It used to open the Channel, which
+     is not where a sound is trained — see `make.ownSoundTrain`. */
+  const [toTrainer, setToTrainer] = useState(false);
   const [upgrades, setUpgrades] = useState(0);
   return (
-    <div id="mounted" data-ready="yes" data-channel={went ? 'yes' : 'no'} data-upgrades={String(upgrades)}>
+    <div id="mounted" data-ready="yes" data-channel={went ? 'yes' : 'no'} data-trainer={toTrainer ? 'yes' : 'no'} data-upgrades={String(upgrades)}>
       <MakeMusic
         userPlan="studio"
         onUpgrade={() => setUpgrades((n) => n + 1)}
@@ -29,6 +32,7 @@ export default function OwnSoundCheck() {
         makeSignal={0}
         onMade={() => {}}
         onGoToChannel={() => setWent(true)}
+        onGoToSound={() => setToTrainer(true)}
         engineReady
       />
     </div>

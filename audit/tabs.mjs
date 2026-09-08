@@ -52,7 +52,7 @@ try {
   }
 
   browser = await chromium.launch(launchOptions());
-  const p = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const p = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 140)}`));
   await p.addInitScript((l) => {
     try { window.localStorage.setItem('futurebox.lang.v1', l); } catch { /* storage off */ }
