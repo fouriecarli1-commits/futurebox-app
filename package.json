@@ -16,6 +16,7 @@
     "check:singmix": "tsx scripts/check-singmix.mts",
     "check:envdoc": "tsx scripts/check-envdoc.mts",
     "check:language": "tsx scripts/check-language.mts",
+    "check:whoami": "tsx scripts/check-whoami.mts",
     "check:musictalk": "tsx scripts/check-musictalk.mts",
     "check:notation": "tsx scripts/check-notation.mts",
     "check:form": "tsx scripts/check-form.mts",

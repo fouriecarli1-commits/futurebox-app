@@ -94,6 +94,12 @@ jobs:
       - name: A measurement says what it means
         run: npm run check:musictalk
 
+      # The studio header showed one person's handle to every visitor, signed
+      # in or out, because it was a useState default nothing ever set. An
+      # address is a claim about who is looking at the screen.
+      - name: No screen names anybody but the person signed in
+        run: npm run check:whoami
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described

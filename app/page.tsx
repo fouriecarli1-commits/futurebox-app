@@ -839,7 +839,6 @@ export default function FutureBoxHome() {
 
   // Studio Form State
   const [videoAspectRatio, setVideoAspectRatio] = useState<'16:9' | '9:16'>('16:9');
-  const [creatorDomain, setCreatorDomain] = useState('anrefourie');
   const [title, setTitle] = useState('');
   const [mediaLink, setMediaLink] = useState('');
 
@@ -1107,6 +1106,23 @@ export default function FutureBoxHome() {
 
   /** What this person is called, and where people write to them. */
   const artistName = creator?.name?.trim() || user?.name || '';
+  /**
+   * The handle in the header, from the account and from nowhere else.
+   *
+   * This was `useState('anrefourie')` and nothing ever set it, so the studio
+   * header showed one particular person's handle to everybody who opened the
+   * app — signed in, signed out, and on somebody else's phone. The block at
+   * the top of `creator` says the app had stopped calling one person two
+   * different things; this line was the half that never got done, and it is
+   * the worse half: the other one showed the wrong name for you, and this one
+   * showed *somebody else's* name as yours.
+   *
+   * Empty when nobody is signed in, and the chip is not drawn at all — an
+   * address is a claim about who is here, and there is no honest default for
+   * it. Found from a photograph of the Live room saying "sign in to say
+   * something" under a header showing a handle.
+   */
+  const creatorDomain = (creator?.handle || '').trim().replace(/^@/, '');
   const artistHandle = creator?.handle?.trim() ? `@${creator.handle.trim()}` : (user?.handle ?? '');
 
   // The Collab Radar reads what has actually been released rather than what the
@@ -2992,13 +3008,15 @@ export default function FutureBoxHome() {
                     room for it. Wrapped over two lines it was the largest
                     thing in the header and the least useful — an address
                     nobody taps, above the work. */}
-                <span
-                  title={profileAddress(creatorDomain)}
-                  className="text-sm text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap max-w-full truncate"
-                >
-                  <span className="sm:hidden">@{creatorDomain.replace(/^@/, '')}</span>
-                  <span className="hidden sm:inline">{profileAddress(creatorDomain)}</span>
-                </span>
+                {creatorDomain && (
+                  <span
+                    title={profileAddress(creatorDomain)}
+                    className="text-sm text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap max-w-full truncate"
+                  >
+                    <span className="sm:hidden">@{creatorDomain}</span>
+                    <span className="hidden sm:inline">{profileAddress(creatorDomain)}</span>
+                  </span>
+                )}
               </div>
             </div>
 
