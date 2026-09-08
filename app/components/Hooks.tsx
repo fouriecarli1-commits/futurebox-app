@@ -509,6 +509,17 @@ export default function Hooks() {
                   title={selected.title}
                   what={t('hooks.shareWhat', 'A hook from a song I made on FutureBox.')}
                   hashtags={['newmusic', selected.genre.replace(/[^A-Za-z0-9]/g, '').toLowerCase()].filter(Boolean)}
+                  /* The clip itself, so the phone's own share sheet hands the
+                     video to whichever app she picks rather than a caption
+                     with nothing attached. Nothing else can reach this blob —
+                     it is in this room's state and it is not in storage. */
+                  file={async () =>
+                    new File(
+                      [clip.blob],
+                      safeFilename(`${selected.title}-hook`, clip.ext),
+                      { type: clip.blob.type || 'video/mp4' },
+                    )
+                  }
                 />
               )}
             </div>

@@ -51,13 +51,13 @@ const PORT = process.argv[2] || '3181';
  */
 const NEEDS = {
   'The Booth': 'a recording — "the voices in this song" only exists once you have sung',
-  Soundboard: 'accounts configured; a trained sound belongs to one',
+  'Sound trainer': 'accounts configured; a trained sound belongs to one',
   Live: 'the live tables; without them the room says so instead of drawing',
   Podcast: 'a show set up, which needs the podcast tables',
 };
 
 const ROOMS = [
-  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard',   'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
+  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Sound trainer', 'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
 ];
 
 const problems = [];

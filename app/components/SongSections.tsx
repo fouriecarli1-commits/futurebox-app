@@ -387,6 +387,20 @@ export default function SongSections({
 
   return (
     <div className="space-y-4">
+      {/* What this room is for, before anything in it.
+
+          Carli: "studio moet bo set wat is die doel van studio. dit is die
+          plek waar liedjies ge-edit kan word en geregenerate word." The room
+          opened straight into "Which song?", which is a question, not an
+          answer — somebody who has not been told what the room does cannot
+          tell from a song picker whether they are in the right one. */}
+      <p className="text-sm text-zinc-400 leading-relaxed">
+        {t(
+          'sec.whatFor',
+          'This is where a song is edited and made again: move its sections, repeat one, take one out, then send it back to be regenerated with the changes in it.',
+        )}
+      </p>
+
       <Card title={t('sec.whichSong', 'Which song?')}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <select

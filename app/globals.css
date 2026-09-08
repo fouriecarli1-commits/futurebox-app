@@ -180,16 +180,57 @@ body {
      `display` is deliberately not set. The first version forced
      `inline-block`, which would have broken the several links that are flex
      rows — a word and a small icon beside it, which is most of the ones that
-     were too small. It is also unnecessary: vertical padding on an inline box
-     does not move the line it sits in, but it does extend the box the browser
-     hit-tests against, which is the whole point.
+     were too small.
 
      A link wrapping a picture is left alone. Those are already thumb-sized,
      and padding around an image is a gap somebody can press that does
-     nothing. */
+     nothing.
+
+     ── Why this is a pseudo-element and not padding ──────────────────────
+
+     It was `padding-block: 14px; margin-block: -14px`, which is a pair that
+     only works if both halves land. On any link that already carries a
+     Tailwind padding utility — every platform button on the share sheet, for
+     one — `py-1.5` wins the padding and the negative margin applies alone. The
+     link's border box is then twenty-eight pixels taller than the box its
+     parent laid out, so it overflows its own row, above and below, and prints
+     on its neighbours.
+
+     That is what Carli photographed three times: "die bars is oor al oor
+     mekaar gedruk", and again after the row was rebuilt as a grid, because a
+     grid cannot save you from an item that overflows its own cell.
+
+     And it is why no probe here ever saw it. This whole block is behind
+     `pointer: coarse`. Playwright's desktop Chromium reports a fine pointer
+     whatever viewport it is given, so every phone-sized probe in `audit/` was
+     measuring a page with these rules switched off. `audit/where.mjs` now
+     opens touch contexts for that reason.
+
+     ── And why it is not a pseudo-element either ─────────────────────────
+
+     The first repair was an `::after` overlay: no layout effect, and a hit
+     area fourteen pixels taller. It cannot half-apply, and it was still wrong.
+     A grid of links eight pixels apart gives every link an overlay that
+     reaches six pixels into its neighbour, so pressing the bottom edge of
+     "Copy the caption" opened TikTok. The probe caught it on the first run —
+     "Save the song" is under a.w-full — which is the whole reason the touch
+     pointer was worth fixing.
+
+     ── What it is ───────────────────────────────────────────────────────
+
+     The same rule the buttons get, and nothing clever: a minimum height. It
+     cannot overlap anything and it cannot half-apply, because there is only
+     one half.
+
+     It does nothing to a link that is still a plain inline box — a minimum
+     height on an inline box is ignored, which is what sent the first version
+     to padding in the first place. That is accepted rather than worked
+     around: almost every standalone link in this app is already a flex row
+     with an icon in it, where this works; the handful that are bare text in a
+     footer are a per-link job, and a wrong blanket rule has now cost more
+     than they would. */
   a:not(p a):not(li a):not(:has(img)) {
-    padding-block: 14px;
-    margin-block: -14px;
+    min-height: 44px;
   }
 }
 

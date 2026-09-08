@@ -11,7 +11,7 @@
 import React, { useEffect, useState } from 'react';
 import ShareRow from '@/app/components/ShareRow';
 import TabBar from '@/app/components/TabBar';
-import { saveTracks, type Track } from '@/app/lib/library';
+import { putAudio, saveTracks, type Track } from '@/app/lib/library';
 
 const TRACK = {
   id: 'sharesheet-song',
@@ -32,7 +32,14 @@ export default function ShareSheetProbe() {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     saveTracks([TRACK]);
-    setReady(true);
+    /* And the audio, because the share button hands the *file* to the phone's
+       own sheet. A fixture with a track row and no bytes behind it made the
+       probe assert that no file was shared, which was true of the fixture and
+       not of the app. Half a second of silence is enough to be a file. */
+    void putAudio(TRACK.id, new Blob([new Uint8Array(4410)], { type: 'audio/wav' })).then(
+      () => setReady(true),
+      () => setReady(true),
+    );
   }, []);
   if (!ready) return <p className="p-6 text-zinc-400">…</p>;
   return (

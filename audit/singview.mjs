@@ -60,7 +60,11 @@ try {
       /* The note stave. The words are drawn on it, so leaving it on a phone
          leaves the words on a music bar — which is the whole thing that was
          meant to go. It is every canvas that is not the waveform. */
-      const stave = Array.from(document.querySelectorAll('canvas')).find((el) => el !== canvas) ?? null;
+      const stave = document.querySelector('canvas[data-stave]');
+      /* The phone's own instrument: the notes the song sings with your voice
+         drawn on them. Not the stave — no clef, no key signature, no words —
+         and it is there precisely where the stave is not. */
+      const strip = document.querySelector('canvas[data-take-strip]');
       const shown = (el) => !!el && el.getBoundingClientRect().height > 2;
       const body = document.body.innerText;
       const big = Array.from(document.querySelectorAll('p'))
@@ -75,6 +79,7 @@ try {
       return {
         waveform: shown(canvas),
         stave: shown(stave),
+        strip: shown(strip),
         wide: document.documentElement.scrollWidth,
         guideLine: /sing along with it|sing saam met hom/i.test(body),
       /* The four things that went missing when the waveform's whole section
@@ -96,6 +101,25 @@ try {
     check(
       name === 'phone' ? 'and so is the music bar the words sat on' : 'and the stave is there on a desk',
       name === 'phone' ? !read.stave : read.stave,
+    );
+    /* And what replaced them on a phone.
+
+       §27 took the stave and the waveform off a phone because they crowded
+       the words, and it was right about that. What it did not notice is that
+       it also took away the answer to the only question somebody singing
+       asks. Carli, holding the phone: "dit vat mens nie na 'n recording
+       studio toe ... of dalk 'n note balk dat mens kan sien of mens op noot
+       sing nie."
+
+       So the phone gets a ribbon instead: the song's notes, your voice drawn
+       against them, and nothing that needs a mouse. Both halves are asserted
+       — it is there on a phone and it is not on a desk — because a strip that
+       appeared on both would be the crowding this room already fixed once. */
+    check(
+      name === 'phone'
+        ? 'but the phone can still see whether it is on the note'
+        : 'and the phone’s ribbon stays off the desk, which has the stave',
+      name === 'phone' ? read.strip : !read.strip,
     );
     check('the AI singer is named on an unsplit song', read.guideLine);
     check('reading the words off the recording is still offered', read.readsTheWords);

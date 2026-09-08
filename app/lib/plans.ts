@@ -111,7 +111,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       '10 credits a month — two half songs, one minute each, yours to keep',
       'Unlimited browser sketches — real audio and video, made on your device',
       'The recording booth, with no limit at all',
-      'Hooks, the timeline, the soundboard and the radar',
+      'Hooks, the timeline, the sound trainer and the radar',
       'The video engine is on a plan — a generated clip costs real money to make',
     ],
   },

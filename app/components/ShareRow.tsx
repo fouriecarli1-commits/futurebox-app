@@ -58,6 +58,7 @@ export default function ShareRow({
   what,
   hashtags = [],
   track,
+  file: fileFor,
 }: {
   title: string;
   /** A line about the thing, which becomes the first line of the caption. */
@@ -72,6 +73,15 @@ export default function ShareRow({
    * actually posts rather than opening somebody else's composer.
    */
   track?: Track;
+  /**
+   * The actual thing, for the phone's own share sheet.
+   *
+   * A song is fetched from storage by its id, so a `track` is enough. A hook
+   * clip is a blob the room is holding and nothing else can reach, so that
+   * room hands it over here instead. Called only when somebody presses share,
+   * because building a file nobody asked for is work for nothing.
+   */
+  file?: () => Promise<File | null>;
 }): React.ReactElement {
   const { t } = useLang();
   const [handles, setHandles] = useState<Handles>({});
@@ -118,6 +128,62 @@ export default function ShareRow({
     }
   };
 
+  /**
+   * The phone's own share sheet, which is the right answer on a phone.
+   *
+   * Carli: "Elke foon se eie share window moet op pop. dit maak dit makliker,
+   * want op die foon is ons reeds connected aan accounts."
+   *
+   * She is right, and the version of this sheet that listed ten platforms was
+   * solving a problem the phone had already solved. Android and iOS both hand
+   * the file to whichever app the person picks, already signed in, with no
+   * caption to copy and no composer to find. Make a song has worked this way
+   * from the start; this row did not.
+   *
+   * The in-app sheet is not gone: on a desktop browser there is no share sheet
+   * to open, and there the list of composers with the caption ready to copy is
+   * the only thing that gets the song onto a feed at all.
+   *
+   * Returns false when the phone could not be asked, so the caller can fall
+   * back rather than leaving somebody with a button that did nothing.
+   */
+  const askThePhone = async (): Promise<boolean> => {
+    if (typeof navigator === 'undefined' || !navigator.share) return false;
+
+    /* The file first, because a post with the song in it is the point. A
+       caption on its own is what the old sheet already did badly. */
+    let carrying: File | null = null;
+    try {
+      if (fileFor) carrying = await fileFor();
+      else if (track) {
+        const audio = await getAudio(track.id);
+        if (audio) carrying = new File([audio], safeFilename(track.title, 'wav'), { type: 'audio/wav' });
+      }
+    } catch {
+      // Not on this device, or storage refused. The caption still goes.
+    }
+
+    const canFile =
+      carrying !== null &&
+      typeof navigator.canShare === 'function' &&
+      navigator.canShare({ files: [carrying] });
+
+    try {
+      await navigator.share(
+        canFile && carrying
+          ? { title, text: caption, files: [carrying] }
+          : { title, text: caption },
+      );
+      return true;
+    } catch (problem) {
+      /* Cancelled is not a failure, and must not fall through to the in-app
+         sheet: somebody who backed out of the phone's sheet has said no, and
+         answering that by opening a second one is the app arguing. */
+      if (problem instanceof DOMException && problem.name === 'AbortError') return true;
+      return false;
+    }
+  };
+
   const copy = async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(caption);
@@ -140,7 +206,15 @@ export default function ShareRow({
           and onto a feed should not be the faintest thing on the card. */}
       <button
         type="button"
-        onClick={() => setOpen((was) => !was)}
+        onClick={() => {
+          if (open) {
+            setOpen(false);
+            return;
+          }
+          void askThePhone().then((asked) => {
+            if (!asked) setOpen(true);
+          });
+        }}
         className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-emerald-500 hover:text-white"
       >
         <Share2 className="w-4 h-4" />

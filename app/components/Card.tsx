@@ -86,12 +86,23 @@ export default function Card({
 
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60">
-      <div className="flex items-center gap-2 px-3.5 py-2.5">
+      {/* Wrapping, and the title gets first claim on the width.
+
+          It did not wrap, and the aside — usually a price and a balance,
+          "300 credits each time · you have 2370" — never shrank. On a phone
+          with the system text scaled up that left the heading exactly two
+          characters: "A sound of your own" rendered as "A.". A card whose
+          name has been truncated to one letter is a card with no name.
+
+          So the row wraps, the heading is given a basis it will not go below
+          before the row breaks, and the aside is the thing that moves to the
+          second line. The wand stays beside the title where it belongs. */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3.5 py-2.5">
         <button
           type="button"
           onClick={() => setOpen((was) => !was)}
           aria-expanded={open}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          className="flex min-w-0 flex-1 basis-[11rem] items-center gap-2 text-left"
         >
           <ChevronDown
             className={`h-4 w-4 flex-shrink-0 text-zinc-500 transition-transform ${open ? '' : '-rotate-90'}`}
@@ -100,8 +111,6 @@ export default function Card({
           <span className="truncate text-sm font-semibold text-zinc-200">{title}</span>
         </button>
 
-        {aside && <span className="flex-shrink-0">{aside}</span>}
-
         {wand && (
           <button
             type="button"
@@ -109,11 +118,13 @@ export default function Card({
             disabled={wand.busy}
             aria-label={wand.label}
             title={wand.label}
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 text-emerald-300 hover:border-emerald-500 disabled:opacity-50"
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 text-emerald-300 hover:border-emerald-500 disabled:opacity-50"
           >
             <Sparkles className={`h-4 w-4 ${wand.busy ? 'animate-pulse' : ''}`} />
           </button>
         )}
+
+        {aside && <span className="min-w-0 max-w-full shrink">{aside}</span>}
       </div>
 
       {open && (

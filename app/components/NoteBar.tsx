@@ -411,6 +411,10 @@ export default function NoteBar({
   return (
     <canvas
       ref={canvasRef}
+      /* A handle for the probes. There are three canvases in the booth now and
+         "the one that is not the waveform" stopped identifying this one the
+         day a third arrived. */
+      data-stave
       className={`w-full rounded-2xl bg-zinc-950 border border-zinc-800 touch-none ${
         onDrag ? 'cursor-grab active:cursor-grabbing' : ''
       }`}

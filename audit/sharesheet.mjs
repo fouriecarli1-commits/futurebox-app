@@ -77,13 +77,41 @@ try {
   for (const size of SIZES) {
     const at = `${size.width}x${size.height} at ${size.root}px`;
     console.log(`\n— ${at} · ${size.why}`);
-    const page = await browser.newPage({ viewport: { width: size.width, height: size.height } });
+    /* A touch pointer, which is not a detail.
+
+       `app/globals.css` keeps a whole block behind `@media (pointer: coarse)`
+       — the forty-four pixel minimums, and the rule that grows a link's hit
+       area. Playwright's desktop Chromium reports a *fine* pointer whatever
+       viewport it is handed, so every phone-sized probe in this directory has
+       been measuring the page with those rules switched off.
+
+       That is why three rounds of this file came back green while she was
+       holding a photograph of the failure. The rule that broke her share sheet
+       only exists on a touchscreen. */
+    const page = await browser.newPage({
+      viewport: { width: size.width, height: size.height },
+      hasTouch: true,
+    });
     page.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 160)}`));
     await page.emulateMedia({ colorScheme: 'light' });
     await page.addInitScript((root) => {
       const style = document.createElement('style');
       style.textContent = `html { font-size: ${root}px !important; }`;
       document.addEventListener('DOMContentLoaded', () => document.head.append(style));
+      /* No share sheet of its own, which is the desktop case.
+
+         The button now asks the phone first and only falls back to the sheet
+         in this file when the browser has none — so a browser that has one
+         would never draw the sheet, and everything below would be measuring
+         nothing. Taken away deliberately rather than left to whatever the
+         runner's Chromium happens to expose; the phone path has its own
+         assertion further down. */
+      try {
+        delete Navigator.prototype.share;
+        delete Navigator.prototype.canShare;
+      } catch {
+        /* Frozen prototype: the assertions below will say so by finding no sheet. */
+      }
     }, size.root);
     await page.goto(`${server.url}/sharesheet`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(1000);
@@ -347,6 +375,47 @@ try {
     await page.screenshot({ path: shot(`sharesheet-${size.width}x${size.height}.png`), fullPage: false });
     await page.close();
   }
+  /* ── And on a phone, it is the phone's own sheet ──────────────────────
+
+     Carli: "Elke foon se eie share window moet op pop. dit maak dit makliker,
+     want op die foon is ons reeds connected aan accounts."
+
+     The list of ten composers was solving a problem the phone had already
+     solved. So the button asks the phone first, and this is the assertion that
+     it actually does: `navigator.share` is stubbed, the button is pressed, and
+     what the app handed over is read back. The in-app sheet must not open on
+     top of it — a person who backed out of the phone's sheet has said no, and
+     answering that with a second sheet is the app arguing. */
+  {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.addInitScript(() => {
+      const seen = [];
+      window.__shared = seen;
+      Navigator.prototype.share = function share(data) {
+        seen.push({ title: data?.title ?? '', text: data?.text ?? '', files: (data?.files ?? []).length });
+        return Promise.resolve();
+      };
+      Navigator.prototype.canShare = () => true;
+    });
+    await page.goto(`${server.url}/sharesheet`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1000);
+    await page.locator('button').filter({ hasText: /Post it|Share|Plaas/ }).first().click();
+    await page.waitForTimeout(1200);
+
+    const shared = await page.evaluate(() => window.__shared ?? []);
+    check('on a phone it opens the phone’s own share sheet',
+      shared.length === 1, `${shared.length} call(s) to navigator.share`);
+    check('and hands it the song, not only a caption',
+      shared.length === 1 && shared[0].files === 1,
+      shared.length ? `${shared[0].files} file(s)` : 'nothing was shared');
+    check('and the caption goes with it',
+      shared.length === 1 && /FutureBox/i.test(shared[0].text),
+      shared.length ? shared[0].text.slice(0, 60) : '');
+    const alsoOpened = await page.evaluate(() => Boolean(document.querySelector('[data-share-sheet]')));
+    check('and the in-app sheet does not open on top of it', !alsoOpened);
+    await page.close();
+  }
 } catch (problem) {
   fell = true;
   console.error(`  FAIL the probe itself fell over — ${String(problem).slice(0, 240)}`);
@@ -361,4 +430,4 @@ if (problems.length || fell) {
   problems.forEach((one) => console.error(`  · ${one}`));
   process.exit(1);
 }
-console.log('\ncheck:sharesheet — at three sizes: a grid that cannot stagger, nothing under a thumb, and no blur over it.');
+console.log('\ncheck:sharesheet — the phone’s own sheet first, and behind it a desktop sheet that holds at three sizes.');

@@ -89,7 +89,7 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
     freeNote: 'Two finished releases a day is more than most people write.',
   },
   soundboard: {
-    label: 'Genre soundboard and voice studio',
+    label: 'Sound trainer and voice studio',
     area: 'Songwriter',
     caps: { free: null, maker: null, studio: null, label: null },
     unit: '',

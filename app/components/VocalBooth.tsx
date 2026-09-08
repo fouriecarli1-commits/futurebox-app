@@ -27,7 +27,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Ear, Layers, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
+import { ArrowLeft, Check, Circle, Ear, Layers, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
 import { decode, knownLatency, mixdown } from '../lib/mixdown';
 import { encodeWav } from '../lib/wav';
 import { accessToken } from '../lib/cloud';
@@ -46,6 +46,7 @@ import {
 } from '../lib/transcript';
 import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
+import TakeStrip from './TakeStrip';
 import Hint from './Hint';
 import Cost from './Cost';
 import ProBooth from './ProBooth';
@@ -993,14 +994,30 @@ export default function VocalBooth({
 
   return (
     <div className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col">
-      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
+      <div className="flex items-center gap-3 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
+        {/* Out of the room, and it says so.
+
+            Carli: "the booth en the pro booth het nie 'n back knoppie nie."
+            There was a way out — a bare grey cross in the top right — and it
+            was not a button by this app's own rule: no box, no word, the
+            lightest grey on the screen, in the corner a thumb reaches last.
+            On a phone the only reliable way back was the hardware key.
+
+            Left, boxed, with the word on it, and the cross is gone: two
+            controls that do the same thing is how you get somebody wondering
+            which one loses their take. */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('booth.back', 'Back')}
+        </button>
         <div className="min-w-0">
           <p className="text-base font-bold text-white truncate">{t('booth.title', 'The booth')}</p>
           <p className="text-sm text-zinc-500 truncate">{track.title}</p>
         </div>
-        <button type="button" onClick={onClose} className="p-2 -m-2 sm:p-0 sm:m-0 text-zinc-500 hover:text-white flex-shrink-0">
-          <X className="w-5 h-5" />
-        </button>
       </div>
 
       {/* ── The words ─────────────────────────────────────────────────────── */}
@@ -1083,6 +1100,33 @@ export default function VocalBooth({
           </>
         )}
         </div>
+
+      {/* ── The phone's own instrument ──────────────────────────────────
+
+          Everything below this until the buttons is `hidden sm:block`: the
+          stave and the waveform are desk instruments and they crowd the words
+          off a phone, which is why §27 took them out. What §27 also took out,
+          without meaning to, was the answer to the only question somebody
+          singing actually asks — am I on the note — and whether the microphone
+          is hearing anything at all.
+
+          Carli, holding the phone: "dit vat mens nie na 'n recording studio
+          toe wat die liedjie se woorde wys, of enigsins 'n klank baan wys of
+          dalk 'n note balk dat mens kan sien of mens op noot sing nie."
+
+          So the phone gets the part that answers her, and not the parts that
+          need a mouse. */}
+      <TakeStrip
+        className="sm:hidden flex-shrink-0 px-5 pb-2"
+        at={at}
+        guide={guide}
+        trail={trailRef.current}
+        note={note}
+        level={level}
+        hot={hot}
+        live={busyOrLive}
+        guideRead={guideRead}
+      />
 
       {/* ── The note bar ────────────────────────────────────────────────────
           Where you are and whether you are on it. It sits with the waveform
@@ -1554,7 +1598,6 @@ export default function VocalBooth({
           </Card>
         )}
 
-        {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
       </div>
       </div>
       </div>
@@ -1627,6 +1670,15 @@ export default function VocalBooth({
       {/* The buttons stay put. Scrolling to find "stop" is not a thing anybody
           should have to do with a microphone open. */}
       <div className="flex-shrink-0 px-5 pt-2 pb-3 border-t border-zinc-800 space-y-2">
+        {/* Whatever went wrong, beside the button that caused it.
+
+            This sat in the scrolling middle of the page, and the record button
+            is pinned to the foot: press record with the microphone blocked,
+            and the sentence explaining why nothing happened was drawn a
+            screenful above the fold. From where she was standing the app did
+            nothing at all and said nothing at all — which is exactly what she
+            reported. */}
+        {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
         <div className="flex flex-wrap items-center gap-2">
           {busyOrLive ? (
             <button

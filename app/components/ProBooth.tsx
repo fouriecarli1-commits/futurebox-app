@@ -19,7 +19,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Circle, Gauge, Layers, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, Check, Circle, Gauge, Layers, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, dbOf, lengthOf, mixSession, monoOf, pieceOf, readInto, readSession,
   span, startLane, windowOf, wireLane,
@@ -776,7 +776,26 @@ export default function ProBooth({
        sm the whole room is one column that scrolls, every section laid out in
        full, nothing pinned. */
     <div className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col overflow-y-auto sm:overflow-hidden">
-      <div className="flex items-center justify-between gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
+      <div className="flex items-center gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
+        {/* Out of the room, and it says so.
+
+            Carli: "the booth en the pro booth het nie 'n back knoppie nie."
+            There was a way out — a bare grey cross in the top right — and it
+            was not a button by this app's own rule: no box, no word, the
+            lightest grey on the screen, in the corner a thumb reaches last.
+            On a phone the only reliable way back was the hardware key.
+
+            Left, boxed, with the word on it, and the cross is gone: two
+            controls that do the same thing is how you get somebody wondering
+            which one loses their take. */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('booth.back', 'Back')}
+        </button>
         <div className="min-w-0">
           <p className="text-base font-bold text-white truncate">{t('pro.title', 'The booth — pro')}</p>
           <p className="text-sm text-zinc-500 truncate">
@@ -789,9 +808,6 @@ export default function ProBooth({
               all do. */}
           <Cost credits={0} className="pt-0.5" />
         </div>
-        <button type="button" onClick={onClose} className="p-2 -m-2 sm:p-0 sm:m-0 text-zinc-500 hover:text-white flex-shrink-0">
-          <X className="w-5 h-5" />
-        </button>
       </div>
 
       {/* ── The clock: tempo, time signature, key, click and grid ───────
