@@ -167,7 +167,17 @@ ok(
   `sing ${CREDITS.sing} against voiceChange ${CREDITS.voiceChange} — people would pick the worse one to save credits`,
 );
 
-ok('the room is told which engines exist before it draws itself', /singing: singing\(\)/.test(state));
+/* `await` allowed, because the answer stopped being local.
+
+   The list of singing voices is fetched from Kits now rather than read out of
+   an environment variable, so the call is asynchronous. What this line is for
+   is unchanged: the room is told which engines exist in the same request that
+   tells it everything else, rather than finding out afterwards and redrawing
+   itself. */
+ok(
+  'the room is told which engines exist before it draws itself',
+  /singing: (await )?singing\(\)/.test(state),
+);
 
 /* ── 5. Make a song, the other half of "in Pro Booth en in Make a song" ── */
 

@@ -63,7 +63,38 @@ Music.ai per gebruik), maar daar moet 'n teller wees wat weet hoeveel van die
 
 ---
 
-## 2. Waar elke stuk by ons land
+## 2. Wat oor die API bereikbaar is, en wat nie
+
+Carli het op 8 September Kits se API-dokumentasie gestuur. Die inhoudsblad lys
+**vyf** API's en niks meer nie:
+
+| API | Wat dit gee |
+|---|---|
+| **Voice Conversion API** | Lys omskakelings, haal een op sy nommer, begin 'n nuwe |
+| **Voice Model API** | Stemmodelle |
+| **Vocal Separations API** | Die Vocal Isolator |
+| **Stem Splitter API** | Sang / tromme / bas / res |
+| **Voice Blender API** | Twee stemme, een nuwe |
+
+Dít is die hele oppervlak. **Harmonies, Lead Vocals, AI Mastering, AI Vocal
+Repair, Key and BPM Finder en die Voice Designer is op hulle webwerf en nié in
+hulle API nie.** Ons kan dit nie in ons toep inbou nie — nie omdat ons nie wil
+nie, maar omdat daar geen adres is om te bel nie.
+
+Dit is 'n goeie ding om vroeg te weet. Dit is presies die soort knoppie wat
+gebou word, mooi lyk, en dan breek teen 'n diens wat reeds gelaai het.
+
+Die dokumentasie bevestig ook drie dinge wat ons moes aflei:
+
+* `GET /voice-conversions/{id}` bestaan — ons manier om te vra hoe 'n werk
+  gevorder het was reg.
+* Antwoorde kom as `{ "data": [ … ], "meta": { … } }`, en `id` is 'n **getal**.
+* Lyste is **gepaginaseer op 10 per bladsy**. Sonder `perPage` wys 'n kieser
+  stilweg net die eerste tien stemme — reggemaak.
+
+---
+
+## 3. Waar elke bereikbare stuk by ons land
 
 Ons bou nie Kits se uitleg oor nie. Ons vat die funksie en sit dit waar 'n mens
 in **ons** app reeds staan wanneer hulle dit nodig kry.
@@ -71,42 +102,40 @@ in **ons** app reeds staan wanneer hulle dit nodig kry.
 | Kits se ding | Waar dit by ons hoort | Wat dit vervang of oopmaak |
 |---|---|---|
 | Voice conversion | **Klaar gebou** — "Sing dit in my stem" op 'n klaar liedjie, en die sangmodel in Pro Booth. | Die enigste ding wat die app belowe het en nie kon lewer nie. |
-| 100+ publieke stemme | Dieselfde twee plekke, as die keuse vir enigeen wat nog nie 'n stem afgerig het nie. | Vandag is die antwoord "gaan maak eers een by kits.ai". Dit is 'n leë kamer op dag een. |
-| Instant cloning (30s) | **Die Booth.** Dertig sekondes is 'n opname wat reeds daar gemaak is. | Die uitgaande skakel na kits.ai. 'n Mens kan hul stem in ons app kloon sonder om die app te verlaat. |
-| Professional cloning | **Sound trainer**, langs die musiek-afrigting. Dieselfde kamer, dieselfde belofte: rig jou eie klank af. | — |
-| Voice Blender | Sound trainer. Twee stemme, een nuwe. | 'n Ding wat niemand anders in SA aanbied nie. |
-| Voice Designer | **Make a song**, waar 'n mens reeds 'n styl in woorde beskryf. Geen datastel, geen opname. | Dit is die stem-weergawe van wat ons reeds vir musiek doen. |
-| Lead Vocals | **Make a song.** Ons het reeds die woorde en die begeleiding — dit is die knoppie wat dit laat sing. | Vandag maak ElevenLabs die hele snit met sang in. Hierdie gee beheer oor die stem apart van die musiek. |
-| Harmonies | **Pro Booth**, op 'n sangbaan. | 'n Koor sonder 'n koor. |
-| Vocal Isolator | Pro Booth en die Video-tafel. | Music.ai per gebruik. |
-| Stem Splitter | Pro Booth (bestaan reeds oor Music.ai). | **Music.ai per gebruik → Kits vas.** |
-| Key and BPM | Make a song en Pro Booth (bestaan reeds oor Music.ai). | **Music.ai per gebruik → Kits vas.** |
-| AI Vocal Repair | Die Booth, na 'n opname op 'n foonmikrofoon. | Die grootste enkele kwaliteitsprong vir iemand wat op 'n foon opneem. |
-| AI Mastering | Laaste stap in Pro Booth en op 'n klaar liedjie. | Ons eie meng-en-master. Ses presets is verstaanbaarder as skuiwe. |
-| History | Die lid se eie lys, oor toestelle heen. | Vandag onthou die blaaier dit. |
+| Voice Model API — lys | **Klaar gebou.** Jou stemme op naam, in albei kamers. | Die nommer wat 'n mens in 'n adresbalk moes gaan soek. |
+| Voice Model API — skep | **The Booth**, as dit skep toelaat. Dít is die vraag wat die Voice Model-bladsy beantwoord. | Die uitgaande skakel na kits.ai. Kloning sonder om die app te verlaat. |
+| Voice Blender | **Sound trainer.** Twee stemme, een nuwe. | 'n Ding wat niemand anders in SA aanbied nie. |
+| Vocal Separations | Pro Booth en die Video-tafel. | **Music.ai per gebruik → Kits binne die dak.** |
+| Stem Splitter | Pro Booth (bestaan reeds oor Music.ai). | **Music.ai per gebruik → Kits binne die dak.** |
+
+En wat op hulle webwerf bly, met 'n eerlike sin daarby eerder as 'n knoppie wat
+breek: Harmonies, Lead Vocals, Mastering, Vocal Repair, Key and BPM, Voice
+Designer.
 
 ---
 
-## 3. Wat dit aan die rekening doen
+## 3b. Wat dit aan die rekening doen
 
-Die vier onderste ryes hierbo is die geldsaak. Stem-isolasie, stemme skei,
-toonaard en tempo loop vandag oor **Music.ai, per gebruik**. Kits doen al vier,
-en Kits is klaar betaal.
-
-Dit is nie 'n raaiskoot dat Kits dit kán nie — hulle skerms wys dit werk. Wat
-nog nie bekend is nie, is of dit **oor die API** beskikbaar is of net op hulle
-webwerf. Dít is die een vraag wat alles hieronder oophou.
+Stem-isolasie en stemme skei loop vandag oor **Music.ai, per gebruik**. Kits
+doen albei binne die R640 se dak van 400 minute. Toonaard en tempo bly by
+Music.ai, want Kits se Key and BPM Finder is nie oor die API beskikbaar nie.
 
 ---
 
-## 4. Die een ding wat nog nodig is
+## 4. Wat nog nodig is
 
-`/api/kits/setup?key=<POST_SECRET>` vra al een-en-dertig moontlike adresse met
-haar eie sleutel en rapporteer watter werklik antwoord. Een besoek in 'n
-blaaier, en elke raaiskoot in `lib/server/kits.ts` word 'n feit.
+**Een bladsy uit hulle dokumentasie: die Voice Model API.** Dit beantwoord die
+een vraag wat die meeste werd is — of 'n stem oor die API **geskep** kan word,
+of net gelys. As dit geskep kan word, kom kloning in The Booth in en die
+uitgaande skakel na kits.ai verdwyn. As dit nie kan nie, bly die skakel en die
+tutorial die eerlike antwoord.
 
-Sonder daardie verslag sou ons knoppies bou wat breek teen 'n diens wat haar
-reeds laai — en dit is erger as om dit nie te bou nie.
+Die ander drie bladsye (Vocal Separations, Stem Splitter, Voice Blender) sê
+watter velde elke werk vat.
+
+**En `/api/kits/setup?key=<POST_SECRET>`**, wat nou nege adresse vra in plaas
+van een-en-dertig — die vyf gedokumenteerde plus vier plekke waar 'n
+minuut-telling kan wees.
 
 Wat die verslag terugstuur:
 

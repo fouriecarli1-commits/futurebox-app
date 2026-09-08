@@ -250,83 +250,36 @@ export function audioUrlIn(value: unknown): string | null {
    report has a control in it: if that one fails too, the key is the problem
    and none of the other answers mean anything. */
 export const CANDIDATES = [
-  /* The control: the one endpoint whose shape is known, because she sent it.
-     If this fails, the key is the problem and nothing else below means
-     anything. */
+  /* Their documentation's own contents page, 8 September 2026. Five APIs and
+     no more:
+
+         Voice Conversion API   — list, fetch one by id, create a job
+         Voice Model API
+         Vocal Separations API
+         Stem Splitter API
+         Voice Blender API
+
+     That is the whole reachable surface, and it settles what "use everything
+     Kits has" can mean. Harmonies, Lead Vocals, AI Mastering, AI Vocal Repair,
+     Key and BPM Finder and the Voice Designer are on their website and not in
+     their API — see `docs/KITS-KAART.md`, which now says which is which.
+
+     The four names below the documented five are the account itself. They are
+     not in the contents page either, but a plan with a four-hundred-minute
+     ceiling has to have a number somewhere, and one request each is a cheap
+     way to find out. Anything that answers is a bonus; anything that 404s is
+     an answer too. */
   'voice-conversions',
-
-  /* ── Convert ────────────────────────────────────────────────────────────
-     "Voice changer", "Classic Convert" and "Harmonies" in their sidebar.
-     Conversion is the one already wired. Harmonies takes a single clean voice
-     and builds a harmony stack or a vocal layer out of it — the thing a chorus
-     costs a session for. */
-  'harmonies',
-  'harmony-generations',
-  'vocal-layers',
-
-  /* ── Generate ───────────────────────────────────────────────────────────
-     "Lead Vocals", their new one: lyrics, a backing instrumental, a style in
-     words, a length. That is a sung take from text — the piece this app has
-     never had, and it would sit in Make a song rather than in a tool drawer. */
-  'lead-vocals',
-  'lead-vocal-generations',
-  'vocal-generations',
-
-  /* ── Clone Voices ───────────────────────────────────────────────────────
-     Training, which is the half the app cannot do yet: today it can only sing
-     in a voice already trained on their website, which is why the room links
-     out to a tutorial. If one of these answers, cloning comes in here.
-
-     Their "Create a voice" screen offers four ways, and they are different
-     products rather than settings: Instant (30 seconds of audio, straight
-     away), Professional (10–30 minutes, slower, sounds exactly like the
-     dataset), Blender (two models and a ratio), and Designer (no dataset at
-     all — a gender, a style, and three sliders). Instant cloning from thirty
-     seconds is the one that belongs in the booth, because thirty seconds is a
-     take somebody has already recorded there. */
   'voice-models',
-  'voice-model-trainings',
-  'trainings',
-  'voice-blends',
-  'voice-designs',
-
-  /* Their library of 100+ voices, which the Voice changer screen browses.
-     Worth more than it looks: it is a voice to sing in for everybody who has
-     not trained one, which is everybody on their first day. */
-  'public-voice-models',
-  'community-voice-models',
-
-  /* ── Tools ──────────────────────────────────────────────────────────────
-     Vocal Isolator, AI Vocal Repair, AI Mastering, Stem Splitter, Key and BPM
-     Finder. Four of these are things this app already pays Music.ai per use
-     for, and Kits is a flat monthly fee with no download cap — so which of
-     them are reachable from the API is a bill question as much as a feature
-     question. */
-  'stem-splits',
-  'vocal-isolations',
   'vocal-separations',
-  'vocal-repairs',
-  'vocal-enhancements',
-  'masterings',
-  'mastering',
-  'key-bpm',
-  'audio-analyses',
+  'stem-splits',
+  'voice-blends',
 
-  /* ── The account itself ─────────────────────────────────────────────────
-     What the plan is and what is left of it. The Lead Vocal screen shows "400
-     min left this month", so there is a number somewhere worth reading before
-     this app starts spending it. */
+  /* What is left of the month. */
   'user',
   'me',
   'account',
-  'credits',
-  'subscription',
   'usage',
-  /* And their History screen, which is every job this key has ever run. If it
-     answers, a member's conversions can be listed rather than remembered by
-     the browser they happened to be using at the time. */
-  'history',
-  'projects',
 ] as const;
 
 /**
@@ -445,7 +398,13 @@ export async function listModels(): Promise<Model[]> {
   if (!configured()) return [];
   let response: Response;
   try {
-    response = await fetch(`${BASE}/voice-models`, {
+    /* `perPage`, because their lists are paged and the default page is ten.
+
+       Their own documentation says so. Without it a picker silently shows the
+       first ten voices somebody trained and nothing else — the worst kind of
+       wrong, because it looks like a complete list. A hundred is well past
+       what any one account has and still one request. */
+    response = await fetch(`${BASE}/voice-models?perPage=100`, {
       headers: { Authorization: `Bearer ${key()}` },
       /* Their list, not a copy of it from an hour ago that no longer has the
          voice somebody trained ten minutes back. Next caches fetches in route

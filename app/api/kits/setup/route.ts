@@ -31,11 +31,12 @@ import { CANDIDATES, configured, listModels, namedModels, probe } from '@/app/li
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-/* Twenty-six requests to somebody else's API, one after another. The list
-   grew twice: once when the plan was bought and there was finally something to
-   find, and again when Carli sent screenshots of their whole product, which
-   turned a list of guessed names into a list of their actual tools. */
-export const maxDuration = 120;
+/* Nine requests, and it used to be thirty-one.
+
+   The list grew twice on guesses and then shrank once on a fact: Carli sent
+   their API documentation, whose contents page lists five APIs. Guessing at
+   twenty-two more addresses was work this page no longer has to do. */
+export const maxDuration = 60;
 
 function sameSecret(given: string, wanted: string): boolean {
   const a = Buffer.from(given);
