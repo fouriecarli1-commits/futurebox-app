@@ -125,6 +125,12 @@ jobs:
       - name: A service's complaint can be read for the fields it names
         run: npm run check:blender
 
+      # A part is asked for the way a session player is asked for one — bars,
+      # a key, a tempo, a time signature — and never through a second money
+      # path: /api/music already charges, guards, meters and refunds.
+      - name: A generated part makes sense to a musician
+        run: npm run check:parts
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described

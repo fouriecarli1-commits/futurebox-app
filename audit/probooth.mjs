@@ -245,6 +245,54 @@ try {
 
   await p.screenshot({ path: shot(`probooth-${af ? 'af' : 'en'}.png`), fullPage: false });
 
+  /* ── Generating a part ───────────────────────────────────────────────
+
+     The thing that makes this room worth opening for somebody who does this
+     for a living: a part asked for the way a session player is asked for one.
+     `check:parts` proves the arithmetic and the words that reach the engine;
+     what only a browser settles is whether the room actually says the four
+     things a musician says, in the reader's own language, before the press. */
+  const openPart = p.locator('button').filter({ hasText: af ? /Genereer ’n party/ : /Generate a part/ }).first();
+  check('the room can generate a part', (await openPart.count()) > 0);
+  await openPart.click();
+  await p.waitForTimeout(600);
+  /* The panel's own text, not the whole page. The room behind it is two
+     hundred characters of tempo and key controls, so a failure that printed
+     the page printed the room and never reached the panel. */
+  const panel = await p.locator('[role="dialog"], .fixed.inset-0').last().innerText().catch(() => '');
+
+  /* Grouped like a channel list rather than one flat run of twenty-three. */
+  /* Case-insensitive: the family headings are uppercased in CSS, so
+     `innerText` hands back DRUMS AND PERCUSSION and a case-sensitive test
+     fails on a panel that is completely correct. The second time that has
+     caught me this session. */
+  check('the instruments are grouped',
+    af ? /tromme en slagwerk/i.test(panel) && /klawers/i.test(panel)
+       : /drums and percussion/i.test(panel) && /keys/i.test(panel),
+    panel.replace(/\n/g, ' · ').slice(0, 400));
+
+  /* The request, read back in the four terms. The session in this probe is
+     96 BPM in 4/4 with a key on it, and every one of those has to be on the
+     screen — a panel that showed only an instrument and a length would be a
+     genre picker with extra steps. */
+  check('the request names the bars', af ? /8 mate/.test(panel) : /8 bars/.test(panel));
+  check('and the tempo and the time signature', /96 BPM/.test(panel) && /4\/4/.test(panel));
+  check('and how long it will be', /0:20/.test(panel), 'no length on the panel');
+  check('and what it costs', af ? /krediet/i.test(panel) : /credit/i.test(panel));
+
+  /* The limit, in front of the button and not behind a mark. The engine reads
+     words and cannot hear the session; a professional needs that before the
+     press, not after a part that will not sit in time. */
+  check('the panel says the engine cannot hear the session',
+    af ? /lees woorde, nie die sessie nie/.test(panel) : /reads words, not the session/.test(panel),
+    'the room implies a generated part is locked to the click');
+
+  await p.screenshot({ path: shot(`propart-${af ? 'af' : 'en'}.png`), fullPage: false });
+  await p.keyboard.press('Escape');
+  await p.locator('button').filter({ hasText: af ? /^Maak toe$/ : /^Close$/ }).first().click().catch(() => {});
+  await p.locator('[aria-label="Close"], [aria-label="Maak toe"]').first().click().catch(() => {});
+  await p.waitForTimeout(400);
+
   /* ── Nothing overlaps, at either size ────────────────────────────────
      The first version of this row fitted on a desktop and had the pan
      slider sitting on top of the start-time field at 1280 px — which is

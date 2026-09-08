@@ -82,6 +82,9 @@ const SAME_IN_BOTH = new Set([
   'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',
   'Collab Radar', 'Radar', 'Arena', 'Pro', 'S', 'handle', 'Tempo', 'min',
   'Later', 'Warm', 'Afrikaans',
+  /* An instrument whose name is the same word in both. Afrikaans borrows the
+     Cuban name whole, the way English does. */
+  'Congas',
   /* Names of other people's products. Translating one invents a thing that
      does not exist — the same rule as not translating a podcast's title. */
   'TikTok', 'Instagram Reels', 'YouTube Shorts', 'TikTok, Reels, Shorts',

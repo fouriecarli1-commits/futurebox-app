@@ -50,6 +50,11 @@ import WatchTutorial from './WatchTutorial';
 import SingVoices from './SingVoices';
 import Note from './Note';
 import { TOO_BIG_TO_SEND, attach } from '../lib/workfile';
+import {
+  BAR_CHOICES, INSTRUMENTS, bodyFor, instrumentBy, secondsFor,
+  type Bars, type Family,
+} from '../lib/parts';
+import { songCost } from '../lib/credits';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
@@ -423,6 +428,73 @@ export default function ProBooth({
   }, [rate, stopPlaying, t]);
 
   // ── bringing audio in from outside ────────────────────────────────────────
+  /* What to generate, and how much of it. `docs/MUSIEKDENKE.md`'s rule holds
+     here too: the request is written in bars, a key and a tempo, which are
+     the four things a musician says when they ask a player for a part. */
+  const [partOpen, setPartOpen] = useState(false);
+  const [partId, setPartId] = useState('pad');
+  const [partBars, setPartBars] = useState<Bars>(8);
+  const [making, setMaking] = useState(false);
+
+  /**
+   * A part, generated and dropped in as a lane at the playhead.
+   *
+   * Posted to `/api/music` rather than to a route of its own: a part is a
+   * short instrumental song, and that route already charges by length, guards
+   * the words before spending, handles the free allowance and refunds a
+   * refusal. A second copy of a money path is how two copies stop agreeing.
+   * See `lib/parts.ts`.
+   */
+  const makePart = useCallback(async () => {
+    const instrument = instrumentBy(partId);
+    if (!instrument) return;
+    const kept = sane(meter);
+    setProblem(null);
+    setMaking(true);
+    try {
+      const token = await accessToken();
+      const response = await fetch('/api/music', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(
+          bodyFor({ bars: partBars, beats: kept.beats, bpm: kept.bpm, key: kept.key, instrument }),
+        ),
+      });
+      if (!response.ok) {
+        setProblem(t('part.failed', 'That part could not be generated. Nothing was charged.'));
+        return;
+      }
+      const audio = await readInto(await response.blob(), rate);
+      if (!audio) {
+        setProblem(t('pro.badFile', 'That file could not be read as audio.'));
+        return;
+      }
+      /* At the playhead, like a file brought in, and named for what it is —
+         "Synth pad · 8 bars" is what a mixer's channel would be called. */
+      setLanes((was) => [
+        ...was,
+        {
+          id: `part-${Date.now()}-${instrument.id}`,
+          name: `${t(instrument.name, instrument.english)} · ${partBars} ${t('part.bars', 'bars')}`,
+          audio,
+          at,
+          gain: 1,
+          muted: false,
+          soloed: false,
+        },
+      ]);
+      setStale(true);
+      setPartOpen(false);
+    } catch {
+      setProblem(t('part.failed', 'That part could not be generated. Nothing was charged.'));
+    } finally {
+      setMaking(false);
+    }
+  }, [at, meter, partBars, partId, rate, t]);
+
   const bringIn = useCallback(
     async (files: FileList | null) => {
       if (!files?.length) return;
@@ -999,6 +1071,148 @@ export default function ProBooth({
       {/* ── Picking a voice for a lane ──────────────────────────────────
           Over the room rather than beside it: choosing among forty voices is
           the only thing being done while it is open, and it is a paid one. */}
+      {/* ── Generate a part ───────────────────────────────────────────────
+
+          The whole point of this panel is the sentence at the bottom of it.
+          A genre picker would have been quicker to build and would not have
+          made sense to anybody who does this for a living; what a player is
+          actually asked for is *eight bars of Rhodes in A minor at 96, in
+          four*, and the room already knows three of those four. So the
+          request is written in those terms every time, in front of somebody
+          about to press a button — which is `docs/MUSIEKDENKE.md`'s rule
+          applied to the one room where the reader is already a musician.
+
+          The limit is under the button and not behind a mark: the engine
+          reads words and cannot hear the session, so the part comes back
+          *described* as being in this key and tempo rather than locked to the
+          click. A professional needs that before the press, not after. */}
+      {partOpen && (
+        <div className="fixed inset-0 z-[80] bg-scrim/85 flex items-end sm:items-center justify-center p-0 sm:p-6">
+          {/* A column with a scrolling middle, not one long scrolling box.
+
+              The first version scrolled the whole panel, which put the
+              request, the price and the button below the fold — so the thing
+              this panel exists for was the one thing you could not see, and
+              somebody had to scroll past twenty-three instruments to find out
+              what pressing would cost. The list scrolls; the decision does
+              not move. */}
+          <div className="flex w-full sm:max-w-lg max-h-[88vh] flex-col rounded-t-2xl sm:rounded-2xl border border-zinc-800 bg-zinc-950">
+            <div className="flex items-start justify-between gap-3 p-4 pb-2">
+              <p className="text-base font-bold text-white">{t('part.title', 'Generate a part')}</p>
+              <button
+                type="button"
+                onClick={() => setPartOpen(false)}
+                aria-label={t('share.close', 'Close')}
+                className="p-2 -m-2 sm:p-0 sm:m-0 text-zinc-500 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Grouped the way a mixer's channel list is grouped. Twenty-three
+                names in one flat run is a wall nobody reads to the end of. */}
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-2 space-y-3">
+            {(['drums', 'bass', 'keys', 'guitars', 'winds', 'texture'] as Family[]).map((family) => (
+              <div key={family} className="space-y-1.5">
+                <p className="text-xs font-bold uppercase tracking-wide text-zinc-600">
+                  {t(`part.family.${family}`, family)}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {INSTRUMENTS.filter((one) => one.family === family).map((one) => (
+                    <button
+                      key={one.id}
+                      type="button"
+                      onClick={() => setPartId(one.id)}
+                      aria-pressed={partId === one.id}
+                      className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
+                        partId === one.id
+                          ? 'border-emerald-500 bg-emerald-500/15 text-white'
+                          : 'border-zinc-800 bg-zinc-900 text-zinc-300'
+                      }`}
+                    >
+                      {t(one.name, one.english)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold uppercase tracking-wide text-zinc-600">
+                {t('part.bars', 'bars')}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {BAR_CHOICES.map((bars) => (
+                  <button
+                    key={bars}
+                    type="button"
+                    onClick={() => setPartBars(bars)}
+                    aria-pressed={partBars === bars}
+                    className={`min-h-[44px] rounded-xl border px-4 py-2 text-sm font-semibold tabular-nums ${
+                      partBars === bars
+                        ? 'border-emerald-500 bg-emerald-500/15 text-white'
+                        : 'border-zinc-800 bg-zinc-900 text-zinc-300'
+                    }`}
+                  >
+                    {bars}
+                  </button>
+                ))}
+              </div>
+            </div>
+            </div>
+
+            {/* The request, the price and the button, which never move. */}
+            <div className="space-y-2.5 border-t border-zinc-800 p-4">
+            {/* The request, read back. Somebody who presses this forty times
+                has read the four things a musician says forty times. */}
+            <p className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 text-sm leading-snug text-zinc-300">
+              <span className="font-bold text-white">
+                {partBars} {t('part.bars', 'bars')}
+              </span>{' '}
+              {t('part.of', 'of')}{' '}
+              <span className="font-bold text-white">
+                {t(instrumentBy(partId)?.name ?? '', instrumentBy(partId)?.english ?? '')}
+              </span>
+              {sane(meter).key ? (
+                <>
+                  {' · '}
+                  <span className="font-bold text-white">{sane(meter).key}</span>
+                </>
+              ) : null}
+              {' · '}
+              {t('part.at', 'at')}{' '}
+              <span className="tabular-nums">
+                {sane(meter).bpm} BPM · {sane(meter).beats}/4
+              </span>
+              <span className="block pt-1 text-xs text-zinc-500 tabular-nums">
+                {clock(secondsFor(partBars, sane(meter).bpm, sane(meter).beats))}
+              </span>
+            </p>
+
+            <Cost credits={songCost(secondsFor(partBars, sane(meter).bpm, sane(meter).beats))} />
+
+            <button
+              type="button"
+              onClick={() => void makePart()}
+              disabled={making}
+              className="min-h-[44px] w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-4 py-3 font-bold text-onAccent flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {making ? <Loader2 className="w-4 h-4 animate-spin" /> : <Music2 className="w-4 h-4" />}
+              {making ? t('part.making', 'Generating\u2026') : t('part.make', 'Generate it')}
+            </button>
+
+            <Note className="text-xs leading-snug text-zinc-500">
+              {t(
+                'part.limit',
+                'The engine reads words, not the session. What comes back is described as being in this key and tempo — it is not locked to the click, so a part may need nudging into place. Drag it on its lane.',
+              )}
+            </Note>
+            <p className="text-xs text-zinc-600">{t('part.landed', 'It is a new lane, at the playhead.')}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {changing && (
         <div className="fixed inset-0 z-[80] bg-scrim/85 flex items-end sm:items-center justify-center p-0 sm:p-6">
           <div className="w-full sm:max-w-lg max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-zinc-800 bg-zinc-950 p-4 space-y-3">
@@ -1328,6 +1542,19 @@ export default function ProBooth({
         >
           <Plus className="w-4 h-4" />
           {t('pro.bringIn', 'Bring audio in')}
+        </button>
+
+        {/* Beside bringing a file in, because it is the same decision — this
+            session needs a part it does not have — and the room should not
+            make somebody leave to answer it. */}
+        <button
+          type="button"
+          onClick={() => setPartOpen(true)}
+          disabled={busy || recording || making}
+          className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+        >
+          <Music2 className="w-4 h-4" />
+          {t('part.title', 'Generate a part')}
         </button>
         <input
           ref={fileRef}
