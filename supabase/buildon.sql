@@ -36,3 +36,17 @@ alter table public.live_posts
 create index if not exists live_posts_buildon_idx
   on public.live_posts (created_at desc)
   where build_on;
+
+-- ── Die styl, want 'n titel alleen is te dun ─────────────────────────────
+--
+-- Punt 2 hierbo beloof dat iemand 'n nuwe liedjie by hierdie een se styl kan
+-- begin. Die styl is die substansie van daardie belofte: dit is die enkele
+-- string wat die musiekenjin werklik lees. Sonder hierdie kolom dra die
+-- oorhandiging na Maak 'n liedjie net 'n titel oor, en 'n titel is nie 'n
+-- styl nie.
+--
+-- Leeg by verstek, want elke plasing wat reeds in die kamer is, is geplaas
+-- voordat hierdie kolom bestaan het. 'n Oop plasing sonder styl gee die
+-- volgende maker steeds die titel en die krediet; dit gee net minder.
+alter table public.live_posts
+  add column if not exists style text not null default '';

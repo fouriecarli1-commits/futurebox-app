@@ -3183,7 +3183,30 @@ export default function FutureBoxHome() {
                 songId={videoSong}
               />
             )}
-            {studioTab === 'hooks_feed' && <Hooks />}
+            {studioTab === 'hooks_feed' && (
+              <Hooks
+                /* A song somebody opened up, carried into Make a song. The
+                   same hand-off the Studio's Remake uses — canvas, handoff,
+                   go — with one difference: the title says whose it was.
+
+                   The credit is put in the title rather than appended to the
+                   style, because the style string is a prompt the engine
+                   reads. "in die styl van Carli" inside it is an instruction
+                   to the model about a person it has never heard, which is
+                   both useless and the wrong kind of claim. In the title it
+                   is what it actually is: a note about where this started. */
+                onBuildOn={(from) => {
+                  const next = {
+                    title: from.title ? `${from.title} — ${t('buildon.after', 'after')} ${from.by}` : '',
+                    lyrics: '',
+                    style: from.style,
+                  };
+                  setHandoff(next);
+                  setCanvas(next);
+                  goToRoom('make');
+                }}
+              />
+            )}
 
             {/* MAKE: the button people came for */}
             {studioTab === 'make' && (

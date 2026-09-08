@@ -77,6 +77,10 @@ interface PostRow {
      at all, and a room that throws on a missing field is worse than a room
      where nobody has given permission yet. */
   build_on?: boolean;
+  /* Optional for the same reason as `build_on`, and empty for a second one:
+     every post made before this column existed has no style, and the room
+     answers for those too. */
+  style?: string;
 }
 
 /** Where a track's audio sits, which is the shape `pushTrack` writes. */
@@ -201,6 +205,17 @@ export async function GET(request: Request): Promise<Response> {
            and 'elsewhere' has no file at all, so neither is a thing to cut a
            hook from whatever the column says. */
         buildOn: post.kind === 'track' && post.build_on === true,
+        /* The style words, and only where they may be used.
+ 
+           Sent on an open post and withheld on a closed one — not because a
+           style string is a secret, but because this field is the whole
+           substance of what the permission grants. A room that hands the
+           style to everybody and marks only some posts as open is a room
+           where the flag is decoration and the thing itself is already out.
+
+           `undefined` rather than '' on a closed post, so nothing downstream
+           can read "no permission" as "no style set". */
+        style: post.kind === 'track' && post.build_on === true ? (post.style ?? '') : undefined,
         hearts: hearts.get(post.id as string) ?? 0,
         /* Whether this reader has hearted it, so the button opens in the
            right state rather than filling in a moment later. False for
@@ -241,6 +256,8 @@ export async function POST(request: Request): Promise<Response> {
     id?: string;
     /** Whether others may cut a hook from this song and build on its style. */
     buildOn?: boolean;
+    /** The style words the song was made from, for whoever builds on it. */
+    style?: string;
     kind?: 'track' | 'episode';
     sourceId?: string;
     title?: string;
@@ -461,6 +478,11 @@ export async function POST(request: Request): Promise<Response> {
        browser can send the string "false", and a permission over somebody
        else's music is the last place to be relaxed about what counts as yes. */
     build_on: body.buildOn === true,
+    /* Stored whatever the answer is, because the answer can change: a song
+       taken out of the room and put back in with permission would otherwise
+       have lost the one string that makes the permission worth anything.
+       Bounded, since it goes in a row and comes back out to everybody. */
+    style: String(body.style ?? '').slice(0, 300),
   });
   if (error) return Response.json(NOT_SET_UP, { status: 503 });
   return Response.json({ ok: true });

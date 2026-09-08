@@ -93,6 +93,10 @@ export default function PostToLive({
           title: track.title,
           seconds: track.seconds,
           buildOn,
+          /* Sent whichever answer was given, because the room stores it
+             either way — see the note on the insert. What gates its use is
+             the permission, not whether the string was ever sent. */
+          style: track.style,
         }),
       });
       if (!response.ok) {

@@ -45,15 +45,29 @@ const check = (label, ok, detail = '') => {
    art, which is the right thing for a post whose file has gone and the wrong
    thing to look at a heart against — the first screenshot from this probe was
    two rows of an error message. */
-const SILENCE = `data:audio/wav;base64,${Buffer.concat([
-  Buffer.from('RIFF'), Buffer.from(new Uint32Array([36 + 4410]).buffer),
+/* Four seconds of silence, served over http rather than inlined.
+
+   The first version handed the room a `data:` URI, and every fetch of it was
+   refused: `Refused to connect to 'data:audio/wav...'`. The app sets a
+   Content-Security-Policy whose `connect-src` does not include `data:` — and
+   it is right not to, because the real room hands out a signed https address
+   for a file in the bucket, never an inlined one. A fixture that could only
+   work with the app's own security switched off is a fixture testing a
+   different app; the probe serves the bytes instead. */
+const RATE = 44100;
+const SAMPLES = RATE * 4;
+const BYTES = SAMPLES * 2;
+const WAV = Buffer.concat([
+  Buffer.from('RIFF'), Buffer.from(new Uint32Array([36 + BYTES]).buffer),
   Buffer.from('WAVEfmt '), Buffer.from(new Uint32Array([16]).buffer),
   Buffer.from(new Uint16Array([1, 1]).buffer),
-  Buffer.from(new Uint32Array([8820, 17640]).buffer),
+  Buffer.from(new Uint32Array([RATE, RATE * 2]).buffer),
   Buffer.from(new Uint16Array([2, 16]).buffer),
-  Buffer.from('data'), Buffer.from(new Uint32Array([4410]).buffer),
-  Buffer.alloc(4410),
-]).toString('base64')}`;
+  Buffer.from('data'), Buffer.from(new Uint32Array([BYTES]).buffer),
+  Buffer.alloc(BYTES),
+]);
+/** Same origin as the page, so nothing in the app's CSP has to bend for it. */
+const SILENCE = '/probe-silence.wav';
 
 /** What the room hands back. Two posts, so one hearted row sits beside a bare one. */
 const ROOM = {
@@ -73,6 +87,12 @@ const ROOM = {
       platform: '', link: '', startsAt: null, at: new Date().toISOString(),
       by: 'Thabo', mine: false, audio: SILENCE, sourceId: 'other-song',
       hearts: 0, hearted: false, buildOn: false,
+    },
+    {
+      id: 'p3', kind: 'track', title: 'Bergwind', note: '', seconds: 55,
+      platform: '', link: '', startsAt: null, at: new Date().toISOString(),
+      by: 'Nomsa', mine: false, audio: SILENCE, sourceId: 'shared-song',
+      hearts: 4, hearted: false, buildOn: true, style: 'slow kwaito, deep bass',
     },
   ],
 };
@@ -99,6 +119,10 @@ try {
   browser = await chromium.launch(launchOptions());
   const page = await browser.newPage({ viewport: { width: 430, height: 932 }, hasTouch: true });
   page.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 160)}`));
+  /* A room that swallows its own failure — Hooks catches everything around
+     the fetch and the decode on purpose — leaves a probe with nothing but an
+     empty panel to look at. The console is where the reason actually is. */
+  page.on('console', (m) => { if (m.type() === 'error') console.log(`  console: ${m.text().slice(0, 200)}`); });
 
   /* Every song put in the room, so the permission can be read off the wire.
 
@@ -109,6 +133,9 @@ try {
      probe that reads the wrong request is not a probe. */
   const sent = [];
   const posted = () => sent.filter((one) => one && one.what === 'post');
+  await page.route('**/probe-silence.wav', async (route) =>
+    route.fulfill({ status: 200, contentType: 'audio/wav', body: WAV }));
+
   await page.route('**/api/live*', async (route) => {
     const request = route.request();
     if (request.method() === 'POST') {
@@ -123,7 +150,7 @@ try {
 
   /* ── The room row ─────────────────────────────────────────────────── */
   const hearts = page.locator('[data-probe="room"] button[aria-pressed]');
-  check('there is a heart on every row', (await hearts.count()) === 2, `found ${await hearts.count()}`);
+  check('there is a heart on every row', (await hearts.count()) === 3, `found ${await hearts.count()}`);
   check('the hearted row is pressed', (await hearts.nth(0).getAttribute('aria-pressed')) === 'true');
   check('the un-hearted row is not', (await hearts.nth(1).getAttribute('aria-pressed')) === 'false');
   const counts = await hearts.allTextContents();
@@ -173,6 +200,40 @@ try {
   check('the two answers differ in nothing but the permission',
     posted().length === 2
       && JSON.stringify({ ...posted()[0], buildOn: null }) === JSON.stringify({ ...posted()[1], buildOn: null }));
+  /* ── The far end: Hooks ───────────────────────────────────────────── */
+  const sources = page.locator('[data-probe="hooks"] button');
+  const names = (await sources.allTextContents()).join(' | ');
+  check('a song somebody opened up is offered to cut from', /Bergwind/.test(names), names.slice(0, 120));
+  check('and the maker\'s name is on it', /Nomsa/.test(names));
+  check('a song nobody opened up is not', !/Laatnag/.test(names));
+  /* Her own open post is already in the list above under its real title.
+     Offering it again as somebody else's is two rows for one thing. */
+  check('and neither is her own, twice', !/Stil water/.test(names));
+
+  await sources.filter({ hasText: /Bergwind/ }).first().click();
+  /* Fetched, decoded and searched — three awaits deep, and a fixed sleep that
+     is long enough on this machine is the thing that makes a probe flake on a
+     slower one. Wait for the room to say it found something instead. */
+  await page.locator('[data-probe="hooks"]')
+    .getByText(/Make a song from this/)
+    .waitFor({ timeout: 30000 })
+    .catch(() => {});
+  const hooksText = await page.locator('[data-probe="hooks"]').innerText();
+  check('picking it finds a moment to cut', /\d+:\d\d/.test(hooksText), hooksText.replace(/\n+/g, ' · '));
+  check('the style is shown before anything is pressed', /slow kwaito/.test(hooksText));
+  check('and the room says the new song comes from the words', /words|woorde/i.test(hooksText));
+
+  const make = page.locator('[data-probe="hooks"] button').filter({ hasText: /Make a song from this/ }).first();
+  check('there is a way to start a song from it', (await make.count()) > 0);
+  await make.click();
+  await page.waitForTimeout(400);
+  const handed = JSON.parse((await page.locator('[data-probe="handed"]').innerText()) || '{}');
+  check('the title goes over', handed.title === 'Bergwind', JSON.stringify(handed.title));
+  check('the style goes over', handed.style === 'slow kwaito, deep bass', JSON.stringify(handed.style));
+  check('and so does whose it was', handed.by === 'Nomsa', JSON.stringify(handed.by));
+  await page.locator('[data-probe="hooks"]').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('buildon-hooks.png'), fullPage: false });
 } finally {
   if (browser) await browser.close().catch(() => {});
   if (server) server.stop();
