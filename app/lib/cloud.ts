@@ -101,8 +101,66 @@ export async function rememberLanguage(lang: 'en' | 'af'): Promise<boolean> {
   if (!supabase) return false;
   const account = await currentAccount();
   if (!account) return false;
+
+  /* Already what it says, so writing it again is not a no-op — it is a loop.
+     ── The bug this guard is for ──────────────────────────────────────────
+     `updateUser` is a write, and supabase-js emits an account change when the
+     user is updated. `i18n.tsx` listens for that change and, on rule 1, writes
+     the browser's language up to the account — which is this call, which emits
+     the change, which re-enters the handler. Measured against a stub project,
+     where the answer comes back instantly, that ran at about forty-eight
+     rounds a second and never stopped; against a real one it is rarer and
+     still a request storm the moment events arrive in a burst.
+     `langrule.ts` has a comment saying the write is sent every sign-in rather
+     than only when it differs, because "reading the account first to compare
+     costs a round trip". That reasoning is sound and its premise is wrong
+     here: `currentAccount()` above reads `getSession()`, which is this
+     browser's own token, and the language rides along in it. The comparison is
+     free, and it was already fetched a line ago.
+     Staleness is the honest caveat, and it heals itself. A session issued
+     before a change made on another device carries the old value, so this can
+     skip a write that was wanted. The next token refresh brings the server's
+     value into the session — and a token refresh is the very event that used
+     to spin this — so the following pass sees the difference and writes. The
+     failure mode is one delayed write, not a lost one. */
+  if (account.lang === lang) return true;
+
+  /* And a second guard, because the first one trusts the answer.
+     The comparison above only settles once the account echoes the write back
+     into this browser's session. That is what happens when the write lands.
+     When it does not — offline, an error swallowed by the caller, a stub that
+     answers every read with empty metadata, which is exactly what audit/ does —
+     nothing ever becomes equal and the loop is back at full speed. Measured:
+     914 PUTs in eight seconds with the comparison alone in place.
+     So this browser also remembers what it has already asked for, per account.
+     A write it has already made is not made twice, whatever comes back. The
+     account id is part of the memo so signing in as somebody else still
+     writes; `forgetLanguageWrite` clears it on sign-out. */
+  const already = written.get(account.id);
+  if (already === lang) return true;
+  written.set(account.id, lang);
+
   const { error } = await supabase.auth.updateUser({ data: { lang } });
-  return !error;
+  if (error) {
+    // Nothing was stored, so nothing should be remembered as stored.
+    written.delete(account.id);
+    return false;
+  }
+  return true;
+}
+
+/** What this browser has already written up, by account. See `rememberLanguage`. */
+const written = new Map<string, 'en' | 'af'>();
+
+/**
+ * Forget what was written for an account, so the next choice is sent again.
+ *
+ * Called when the session ends. Without it a sign-out and a sign-in as the
+ * same person inside one page load would keep the memo from a session that no
+ * longer exists.
+ */
+export function forgetLanguageWrite(): void {
+  written.clear();
 }
 
 /**
@@ -378,7 +436,11 @@ export function onAccountChange(handler: (account: Account | null) => void): () 
   const supabase = getClient();
   if (!supabase) return () => undefined;
   const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-    handler(session?.user ? toAccount(session.user) : null);
+    const account = session?.user ? toAccount(session.user) : null;
+    // The session ended, so what was written under it is no longer known to
+    // hold. See `rememberLanguage`.
+    if (!account) forgetLanguageWrite();
+    handler(account);
   });
   return () => data.subscription.unsubscribe();
 }
