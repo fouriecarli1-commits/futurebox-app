@@ -85,7 +85,7 @@ Hy sê reeds "hier kom iets aan". Noem dit: die dromme kom in, die digtheid
 verdubbel, die onderkant maak oop. Dit is arrangement, geleer op die oomblik
 dat iemand 'n greep sny.
 
-### 3.4 Musiek *lees*, letterlik
+### 3.4 Musiek *lees*, letterlik — **gebou**
 
 Sy het "hoe om musiek te lees" gesê, en dit hoef nie 'n metafoor te wees nie.
 Wanneer iemand in die Booth 'n opname maak, weet ons die toonhoogte oor tyd.
@@ -94,6 +94,23 @@ Teken dit op 'n notebalk — die werklike note wat hulle gesing het.
 Niemand hoef dit te kan lees om die app te gebruik nie. Maar dit sit notasie
 voor hulle, vasgemaak aan hulle eie stem, en dít is presies wat "stilweg leer"
 beteken.
+
+**Gedoen.** `lib/notation.ts` en `Staff.tsx`, onder die woorde in die Booth.
+Drie dinge wat dit reg moes kry, want 'n verkeerde notebalk leer iets onwaar:
+
+- **Spelling volgens die toonaard.** MIDI 61 is C♯ in D majeur en D♭ in A♭
+  majeur — een klank, twee name, en net een van hulle lees.
+- **Die toonaardtekens één keer voor.** 'n Balk met 'n kruis op elke F is wat
+  iemand maak wat nog nooit gegraveer het nie. Die moeiliker helfte is die
+  ander rigting: 'n F **herstel** in G majeur móét 'n ♮ dra, anders lees dit
+  as F♯.
+- **Notewaardes volgens verhouding**, want duur word vermenigvuldigend gehoor.
+
+Dit graveer **net 'n opname** — een stem, ná die tyd, wat presies die sein is
+wat `lib/melody.ts` op 91% lees. Niks graveer 'n volle mengsel nie, en
+`readable()` besluit steeds of 'n lesing hoegenaamd gewys mag word. Die ou
+paragraaf in `lib/pitch.ts` wat téén bladmusiek argumenteer, is reggestel
+eerder as weerspreek: dit was nooit oor hierdie geval nie.
 
 ### 3.5 Een woordeskat, elke term één keer verduidelik
 

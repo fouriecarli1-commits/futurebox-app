@@ -81,6 +81,12 @@ jobs:
       - name: A song's form is read off its own plan
         run: npm run check:form
 
+      # The stave drawn beside a take is real notation, so a wrong spelling
+      # teaches something untrue: C sharp in D major and D flat in A flat are
+      # one sound with two names, and an F natural in G major must say so.
+      - name: A take is engraved in the key it was sung in
+        run: npm run check:notation
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described
@@ -395,7 +401,7 @@ jobs:
           - group: doors
             probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:whitescreen check:roomtop check:greeting
           - group: make
-            probes: check:makeroom check:songform check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes
+            probes: check:makeroom check:songform check:staff check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes
           - group: rooms
             probes: check:liveroom check:buildon check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:videocover check:podlanguage
           - group: whole

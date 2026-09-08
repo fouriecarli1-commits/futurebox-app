@@ -3,12 +3,18 @@
 /**
  * What note is being sung, right now.
  *
- * This is here instead of sheet music, and the reason is worth stating: the
- * app has no score. ElevenLabs returns audio, not notes, so there is nothing
- * to engrave. Working notation back out of a finished mix means transcribing a
- * melody from under drums and bass, which is unreliable enough that a stave
- * drawn from it would be confidently wrong — and a singer following a wrong
- * stave is worse off than one following nothing.
+ * This is here instead of sheet music *for a song*, and the reason is worth
+ * stating: the app has no score. ElevenLabs returns audio, not notes, so
+ * there is nothing to engrave. Working notation back out of a finished mix
+ * means transcribing a melody from under drums and bass, which is unreliable
+ * enough that a stave drawn from it would be confidently wrong — and a singer
+ * following a wrong stave is worse off than one following nothing.
+ *
+ * There is now a stave in the Booth (`lib/notation.ts`, `Staff.tsx`), and it
+ * does not weaken any of that. It engraves **a take** — one voice, after the
+ * fact, which is the signal `lib/melody.ts` reads at 91% and the case this
+ * paragraph was never about. Nothing engraves a mix, and `melodyOf`'s own
+ * `readable()` still decides whether a reading may be shown at all.
  *
  * What can be done honestly, and is more use to somebody singing: measure the
  * pitch of a monophonic signal in real time. That answers the question a

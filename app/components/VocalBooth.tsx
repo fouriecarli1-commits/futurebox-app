@@ -48,6 +48,7 @@ import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
 import TakeStrip from './TakeStrip';
 import Hint from './Hint';
+import Staff from './Staff';
 import Cost from './Cost';
 import ProBooth from './ProBooth';
 import Card from './Card';
@@ -1226,6 +1227,25 @@ export default function VocalBooth({
                 : t('booth.barReading', 'Reading the backing…')}
           </p>
         </div>
+      </div>
+
+      {/* ── What you actually sang, as notation ───────────────────────────
+
+          `docs/MUSIEKDENKE.md` §3.4. She asked that the app teach people to
+          read music without teaching anybody anything, and this is the place
+          it can be done honestly: a take is one voice, which is exactly the
+          signal `lib/melody.ts` reads well. Nobody has to be able to read it;
+          somebody who records forty takes starts to read the shape of a line
+          anyway, and that is the whole idea.
+
+          Only ever the *take*. The guide melody read off a backing is drawn
+          on the moving stave above, where it is a thing to sing along with —
+          engraving it would be presenting a reading of somebody else's mix as
+          a score, and `lib/pitch.ts` has said since it was written why that
+          is not allowed. `Staff` draws nothing when there is nothing read, so
+          this needs no condition of its own. */}
+      <div className="flex-shrink-0 px-5">
+        <Staff notes={sung} musicKey={track.key ?? ''} bpm={track.bpm ?? 0} />
       </div>
 
       {/* ── The waveform ──────────────────────────────────────────────────

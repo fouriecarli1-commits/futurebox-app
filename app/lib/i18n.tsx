@@ -162,6 +162,10 @@ export const STRINGS: Dict = {
   "form.strophic": { en: "strophic — one section, new words each time", af: "strofies — een deel, elke keer nuwe woorde" },
   "form.chorusAt": { en: "The chorus first lands at", af: "Die koor land die eerste keer op" },
   "form.chorusWhy": { en: "On most records people finish, it is there inside the first forty-five seconds.", af: "Op die meeste plate wat mense klaar luister, is dit binne die eerste vyf-en-veertig sekondes daar." },
+  /* docs/MUSIEKDENKE.md §3.4. Two lines and no more: the stave is the thing,
+     and a paragraph explaining notation would be the lesson this is not. */
+  "staff.title": { en: "What you sang", af: "Wat jy gesing het" },
+  "staff.sub": { en: "The notes this app heard in your take, written down.", af: "Die note wat in jou opname gehoor is, neergeskryf." },
   "hooks.sharedGone": { en: "That song could not be fetched. The room hands out an address that expires, so opening this tab again usually fixes it.", af: "Daardie liedjie kon nie gehaal word nie. Die kamer gee ’n adres uit wat verval, so as jy hierdie oortjie weer oopmaak, werk dit gewoonlik." },
   "live.gone": { en: "That file is not there any more.", af: "Daardie l\u00eaer is nie meer daar nie." },
   "live.somewhere": { en: "somewhere", af: "\u00eerens" },
