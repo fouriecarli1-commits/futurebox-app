@@ -30,8 +30,8 @@ export const maxDuration = 30;
  */
 async function singing(): Promise<{
   configured: boolean;
-  models: { id: string; name: string; demo: string | null; tags: string[] }[];
-  stock: { id: string; name: string; demo: string | null; tags: string[] }[];
+  models: { id: string; name: string; demo: string | null; tags: string[]; hasPicture: boolean }[];
+  stock: { id: string; name: string; demo: string | null; tags: string[]; hasPicture: boolean }[];
 }> {
   /* Two lists, because Kits has two.
 

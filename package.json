@@ -110,6 +110,7 @@
     "check:videohome": "node audit/videohome.mjs",
     "check:buildon": "node audit/buildon.mjs",
     "check:heard2": "node audit/heard.mjs",
+    "check:singvoices": "node audit/singvoices.mjs",
     "check:staff": "node audit/staff.mjs",
     "check:songform": "node audit/songform.mjs",
     "check:sharesheet": "node audit/sharesheet.mjs",

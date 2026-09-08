@@ -566,6 +566,38 @@ export interface Model {
   readonly demo: string | null;
   /** What it is good for, in their words: "Singing", "Chest Voice", "Opera". */
   readonly tags: string[];
+  /**
+   * Whether Kits keeps a picture for this voice.
+   *
+   * A flag rather than the address, for the same reason `Voice.hasSample` in
+   * `lib/server/eleven.ts` is a flag: the picture lives on Kits' storage host,
+   * which the app's Content-Security-Policy does not allow images from, and
+   * widening `img-src` for a thumbnail would be the wrong trade. The address
+   * stays on this side and the picture is served through `/api/kits/face`.
+   *
+   * Confirmed real by `/api/kits/setup` against the live account and read by
+   * nothing for a week — `docs/KITS-KAART.md` §5, "the picker shows names
+   * where it could show faces". A hundred rows of text is the emptiest screen
+   * in the app, and choosing between "Male Pop" and "Male Pop 2" by name is
+   * choosing blind twice over.
+   */
+  readonly hasPicture: boolean;
+}
+
+/** Their picture URLs, kept on the server. See `hasPicture` above. */
+const faces = new Map<string, string>();
+
+/**
+ * The picture for a voice, if a listing has been fetched since this process
+ * started.
+ *
+ * The same shape as `sampleUrlFor` in `lib/server/eleven.ts`, and for the same
+ * reason: it is what stops `/api/kits/face` being an open proxy. An id that
+ * has never come back from `GET /voice-models` under our own key is not in
+ * this map and cannot be fetched through us.
+ */
+export function faceUrlFor(id: string): string | null {
+  return faces.get(id) ?? null;
 }
 
 /**
@@ -586,6 +618,13 @@ function nameIn(record: Record<string, unknown>, id: string): string {
 
 function httpsIn(value: unknown): string | null {
   return typeof value === 'string' && /^https:\/\//i.test(value) ? value : null;
+}
+
+/** Files the address away and says whether there was one. */
+function rememberFace(id: string, url: string | null): boolean {
+  if (!url) return false;
+  faces.set(id, url);
+  return true;
 }
 
 /**
@@ -682,6 +721,7 @@ export async function listModels(mine = true): Promise<Model[]> {
       id,
       name: nameIn(record, id),
       demo: httpsIn(record.demoUrl),
+      hasPicture: rememberFace(id, httpsIn(record.imageUrl)),
       tags: Array.isArray(record.tags)
         ? record.tags.filter((tag): tag is string => typeof tag === 'string').slice(0, 6)
         : [],
@@ -702,7 +742,9 @@ export async function models(): Promise<Model[]> {
   const theirs = await listModels(true);
   const named = new Map(namedModels().map((one) => [one.id, one.name]));
   if (theirs.length === 0) {
-    return namedModels().map((one) => ({ ...one, demo: null, tags: [] }));
+    /* A model named in the environment variable and nowhere else: a number
+       and a name, with nothing behind it to hear or to look at. */
+    return namedModels().map((one) => ({ ...one, demo: null, tags: [], hasPicture: false }));
   }
   return theirs.map((one) => ({ ...one, name: named.get(one.id) ?? one.name }));
 }

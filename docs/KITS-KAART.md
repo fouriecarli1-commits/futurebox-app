@@ -202,8 +202,18 @@ dit haar besluit, nie 'n taak nie.
 werk deur elkeen maak dit vas, en dit gebeur vanself sodra iemand die kamers
 gebruik — niks om te beplan nie, net om te onthou om weer te kyk.
 
-**`imageUrl` in die kieser.** Eg, ongebruik, en die kieser is die leegste skerm
-in die app.
+**~~`imageUrl` in die kieser.~~ Gedoen.** Elke ry in die sangstem-kieser het nou
+'n teël: Kits se prent waar daar een is, en die eerste letter waar nie. Dieselfde
+vorm vir elke ry, want 'n lys waar party rye 'n prent het en party nie, is 'n
+rafelrige lys.
+
+Die adres self kom nooit in die bladsy nie. Kits se stoorgasheer is nié in
+hierdie app se `img-src` nie — en behoort nie te wees nie — so die prent kom
+deur `/api/kits/face` terug, dieselfde ruil as `/api/voice/preview` vir
+ElevenLabs se monsters. Dit is ook die veiliger keuse: die gasheer is nog nooit
+waargeneem nie, net gedokumenteer, so om die beleid te verbreed sou beteken om
+'n gasheernaam te ráái — en 'n verkeerde raaiskoot misluk stilweg as 'n
+geblokkeerde prent.
 
 **~~`jobStartTime` / `jobEndTime` na die minuut-teller.~~ Moet dit nie doen
 nie — hierdie punt was verkeerd.**
