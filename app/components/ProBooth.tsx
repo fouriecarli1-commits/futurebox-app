@@ -44,6 +44,7 @@ import {
 import { Metronome } from '../lib/metronome';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
+import Hint from './Hint';
 import Cost from './Cost';
 import WatchTutorial from './WatchTutorial';
 import SingVoices from './SingVoices';
@@ -1309,6 +1310,14 @@ export default function ProBooth({
           <span className="ml-2 text-zinc-400">
             {t('pro.barShort', 'bar')} {sayPlace(placeAt(at, meter))}
           </span>
+          {/* `docs/MUSIEKDENKE.md` §3.5. "33.2" is the whole vocabulary of
+              this feature and it is not guessable from looking at it. */}
+          <Hint>
+            {t(
+              'pro.barWhat',
+              'Bars, then the beat inside the bar — 33.2 is the second beat of the thirty-third bar. Both count from one, and how many beats make a bar is the time signature set above.',
+            )}
+          </Hint>
         </span>
 
         <button

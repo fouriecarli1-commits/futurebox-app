@@ -142,11 +142,31 @@ wat `lib/melody.ts` op 91% lees. Niks graveer 'n volle mengsel nie, en
 paragraaf in `lib/pitch.ts` wat téén bladmusiek argumenteer, is reggestel
 eerder as weerspreek: dit was nooit oor hierdie geval nie.
 
-### 3.5 Een woordeskat, elke term één keer verduidelik
+### 3.5 Een woordeskat, elke term één keer verduidelik — **gebou, en kleiner as verwag**
 
 Elke term kry die `?` wat die app reeds oral gebruik (sien #32). Nooit 'n les
 nie — 'n verduideliking op die plek waar die woord staan, vir die een keer wat
 iemand dit wil weet.
+
+**Gedoen, en dit was twee plekke in plaas van 'n woordeskat.**
+
+Hierdie punt is geskryf met die aanname dat 'n klomp onverduidelikte terme sou
+ophoop. Deur §3.1–3.4 en §3.6 elkeen mét sy betekenis aan te heg, het dit
+grootliks nie gebeur nie: elke lesing in `WhatWeHeard` *is* sy eie
+verduideliking, "vers–koor" dra sy betekenis in die woorde, en "die onderkant
+kom in" verduidelik homself.
+
+Twee dinge noem hulleself sonder om te sê wat hulle is, en dié twee het die
+`?` gekry:
+
+- **die notebalk** — vyf lyne en vier spasies is nie afleibaar deur daarna te
+  kyk nie
+- **"maat 33.2"** — die hele woordeskat van daardie kenmerk, en 'n mens kan
+  dit nie raai nie
+
+Dit is die punt van die reël, en nie 'n verkorting daarvan nie: 'n term wat by
+sy gebruikspunt verduidelik is, hoef nie 'n tweede keer verduidelik te word
+nie.
 
 ### 3.6 Die Pro Booth se rooster tel mate — **gebou**
 

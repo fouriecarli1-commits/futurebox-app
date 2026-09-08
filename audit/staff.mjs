@@ -44,7 +44,14 @@ try {
 
   /** Everything drawn inside one stave, by tag. */
   const parts = (which) => page.evaluate((sel) => {
-    const svg = document.querySelector(`[data-probe="${sel}"] svg`);
+    /* `svg[role="img"]`, not the first svg in the box.
+
+       The `?` beside the heading is a lucide icon, which is an svg, and it
+       comes first in the DOM — so the moment one was added every measurement
+       here was taken of a question mark. Three assertions went red at once
+       and none of them said why, which is what a selector that matches the
+       wrong element looks like from the outside. */
+    const svg = document.querySelector(`[data-probe="${sel}"] svg[role="img"]`);
     if (!svg) return null;
     const heads = Array.from(svg.querySelectorAll('ellipse')).map((one) => ({
       x: Number(one.getAttribute('cx')), y: Number(one.getAttribute('cy')),
@@ -89,7 +96,7 @@ try {
      itself. Measured rather than eyeballed: the first screenshot had it
      floating above the stave and every assertion above was green. */
   const signaturePlace = await page.evaluate(() => {
-    const svg = document.querySelector('[data-probe="g"] svg');
+    const svg = document.querySelector('[data-probe="g"] svg[role="img"]');
     if (!svg) return null;
     const mark = Array.from(svg.querySelectorAll('text')).find((one) => one.textContent.trim() === '♯');
     const line = svg.querySelector('line');

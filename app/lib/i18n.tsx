@@ -215,6 +215,8 @@ export const STRINGS: Dict = {
   /* docs/MUSIEKDENKE.md §3.6 — the room whose subject is a metronome and a bar
      grid had never said the word "bar" with a number after it. */
   "pro.barShort": { en: "bar", af: "maat" },
+  "pro.barWhat": { en: "Bars, then the beat inside the bar — 33.2 is the second beat of the thirty-third bar. Both count from one, and how many beats make a bar is the time signature set above.", af: "Mate, dan die slag binne die maat — 33.2 is die tweede slag van die drie-en-dertigste maat. Albei tel van een af, en hoeveel slae ’n maat maak, is die tydmaatteken wat hierbo gestel is." },
+  "staff.what": { en: "Five lines and the four spaces between them. Higher on the page is a higher note, and the sign at the front says which notes the song sharpens or flattens all the way through. Nothing here needs reading to use the app.", af: "Vyf lyne en die vier spasies tussen hulle. Hoër op die bladsy is ’n hoër noot, en die teken heel voor sê watter note die liedjie deurgaans verhoog of verlaag. Niks hiervan hoef gelees te kan word om die toepassing te gebruik nie." },
   "pro.barsAria": { en: "The session in bars", af: "Die sessie in mate" },
   "hooks.sharedGone": { en: "That song could not be fetched. The room hands out an address that expires, so opening this tab again usually fixes it.", af: "Daardie liedjie kon nie gehaal word nie. Die kamer gee ’n adres uit wat verval, so as jy hierdie oortjie weer oopmaak, werk dit gewoonlik." },
   "live.gone": { en: "That file is not there any more.", af: "Daardie l\u00eaer is nie meer daar nie." },

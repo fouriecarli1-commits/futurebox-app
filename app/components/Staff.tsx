@@ -36,6 +36,7 @@
 import React from 'react';
 import { engrave, type Heard } from '../lib/notation';
 import { useLang } from '../lib/i18n';
+import Hint from './Hint';
 
 /** Half the gap between two stave lines, which is one diatonic step. */
 const STEP = 5;
@@ -105,11 +106,24 @@ export default function Staff({
 
   return (
     <div className={`space-y-1.5 ${className}`}>
-      <div className="flex flex-wrap items-baseline gap-x-2">
+      <div className="flex flex-wrap items-center gap-x-2">
         <span className="text-sm font-semibold text-zinc-300">{t('staff.title', 'What you sang')}</span>
         <span className="text-xs text-zinc-500">
           {t('staff.sub', 'The notes this app heard in your take, written down.')}
         </span>
+        {/* `docs/MUSIEKDENKE.md` §3.5: the term, explained once, where it is.
+
+            The stave is the one thing built out of that document that names
+            something without saying what it is — every reading in
+            `WhatWeHeard` is its own explanation, and "verse–chorus" carries
+            its meaning in the words. Five lines and four spaces does not.
+            Two sentences, behind a mark, for the one time somebody wonders. */}
+        <Hint>
+          {t(
+            'staff.what',
+            'Five lines and the four spaces between them. Higher on the page is a higher note, and the sign at the front says which notes the song sharpens or flattens all the way through. Nothing here needs reading to use the app.',
+          )}
+        </Hint>
       </div>
 
       <div className="overflow-x-auto">
