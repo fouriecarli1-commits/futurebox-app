@@ -217,22 +217,32 @@ const SCENARIOS: Scenario[] = [
     why: 'Betalende lede gebruik 60% van hul toelae, die helfte van die gratis gebruikers maak ooit iets. Dít is die syfer om planne op te maak.',
   },
   {
-    name: 'Voorsigtig, gratis laag sonder musiek',
+    name: 'Voorsigtig, sonder werkswinkels',
     use: 1,
-    freeUse: 0,
+    freeUse: 1,
     freeCredits: TIER_CREDITS.free,
     workshops: false,
-    why: 'Die slegste geval weer, maar met die gratis laag se musiek af en die werkswinkels af. Dit wys of die slegste geval hoegenaamd veilig gemaak kan word.',
+    why: 'Die slegste geval weer, met die werkswinkels af. Dit wys of die slegste geval hoegenaamd veilig gemaak kan word.',
   },
   {
-    name: 'Realisties, gratis laag sonder musiek',
+    name: 'Realisties, sonder werkswinkels',
     use: 0.6,
-    freeUse: 0,
+    freeUse: 0.5,
     freeCredits: TIER_CREDITS.free,
     workshops: false,
-    why: 'Dieselfde as bo, maar die gratis laag kry blaaierskesse in plaas van musiekkrediete, en die werkswinkels is af. Die twee hefbome wat die meeste beweeg.',
+    why: 'Dieselfde as bo, met die werkswinkels af. Dit is die enigste hefboom wat oorbly noudat die gratis laag se musiek weg is.',
   },
 ];
+
+/* ── Hoekom daar nie meer 'n "sonder musiek"-scenario is nie ─────────────
+
+   Daar was twee, en hulle het die gratis laag se gebruik op nul gestel om te
+   wys wat sou gebeur as die gratis laag nie musiek kry nie. Op 8 September
+   2026 is dit gedoen: `TIER_CREDITS.free` is nul.
+
+   'n Scenario wat 'n besluit modelleer wat reeds geneem is, is nie 'n scenario
+   nie — dit is dieselfde som twee keer, en die tweede een lyk soos 'n keuse
+   wat nog oop is. Wat oorbly om oop te wees, is die werkswinkels. */
 
 /* ─────────────────────────────────────────────────────────── uitset ──── */
 

@@ -289,7 +289,28 @@ export async function probe(path: string): Promise<{
     const raw = await response.text().catch(() => '');
     return { path, status: response.status, note: raw.slice(0, 160) };
   }
-  const answer = (await response.json().catch(() => null)) as unknown;
+
+  /* A 200 is not the same as an endpoint.
+     Their website answers an unknown path with a page, and a page parses as
+     no JSON at all — which the first version reported as `status 200, fields
+     []`, indistinguishable from a real endpoint that happens to be empty. Nine
+     of the thirteen candidates came back looking real that way. What tells
+     them apart is the content type and whether the body is JSON at all. */
+  const type = response.headers.get('content-type') ?? '';
+  const raw = await response.text().catch(() => '');
+  if (!/json/i.test(type)) {
+    return {
+      path,
+      status: response.status,
+      note: `not an endpoint — answered ${type || 'an unknown type'}, ${raw.length} bytes`,
+    };
+  }
+  let answer: unknown = null;
+  try {
+    answer = JSON.parse(raw) as unknown;
+  } catch {
+    return { path, status: response.status, note: 'answered something that is not JSON' };
+  }
   const list = Array.isArray(answer)
     ? answer
     : Array.isArray((answer as { data?: unknown })?.data)

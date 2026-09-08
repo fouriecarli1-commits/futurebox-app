@@ -183,6 +183,13 @@ gepraatte baan.
 `docs/SWITCH-ON.md` §11. `KITS_VOICE_MODELS` is opsioneel en gee jou stemme
 name in plaas van nommers.
 
+**Wat die opstelbladsy op 8 September gesê het:** die sleutel werk, en die API
+is 'n betaalde funksie. Elke egte adres antwoord `403 {"error":"Free tier users
+are not allowed to use the api"}`. Dit is die beste soort mislukking: dit
+beteken hulle het die sleutel herken en die rekening betaal net nie. Dit sê ook
+watter adresse eg is — 'n 403 bewys 'n pad bestaan en is bewaak — naamlik
+`voice-conversions`, `voice-models` en `stem-splits`.
+
 **Wat nie hiervandaan nagegaan kon word nie:** arpeggi.io is geblokkeer op die
 masjien waarop dit gebou is. Die helfte wat 'n werk **begin** is presies wat jy
 vir my gestuur het en is veilig. Die helfte wat die **antwoord terugkry** is

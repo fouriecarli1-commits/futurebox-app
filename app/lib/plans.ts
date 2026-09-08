@@ -106,13 +106,25 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
        device, costing nobody anything — and that has no allowance and never
        needed one. */
     videos: 0,
-    who: 'Hear what it can do before anything costs anything.',
+    who: 'Everything your own phone can make, without limit and without paying.',
+    /* No generated music on the free tier either, since 8 September 2026.
+
+       It was two half songs. ElevenLabs' real prices — $0.15 a minute, half
+       the minutes per plan this repo had assumed — put nineteen free users
+       behind every paying one at more music than the paying member makes, and
+       that is the difference between a business that works and one that does
+       not. `app/lib/credits.ts` has the numbers and
+       `docs/ELEVENLABS-PRYSE.md` the derivation.
+
+       What is left is not nothing, and the card says what it is rather than
+       what it lost. Everything below costs us nothing to run, and it is the
+       part people stay for. */
     includes: [
-      '10 credits a month — two half songs, one minute each, yours to keep',
-      'Unlimited browser sketches — real audio and video, made on your device',
-      'The recording booth, with no limit at all',
+      'Unlimited browser sketches — real audio and real video, made on your own device',
+      'The recording booth, with no limit at all: sing, record, mix, master',
       'Hooks, the timeline, the sound trainer and the radar',
-      'The video engine is on a plan — a generated clip costs real money to make',
+      'Style previews, so you can hear a sound before you buy anything',
+      'A generated song is on a plan — every one of them costs real money to make',
     ],
   },
   maker: {

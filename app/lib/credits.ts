@@ -270,16 +270,39 @@ export function readCost(characters: number): number {
  * There is air between them now.
  */
 export const TIER_CREDITS: Record<Tier, number> = {
-  // Two half songs, given whole on the first visit of the month.
-  //
-  // There was a weekly refill on top of this — five now, five on Monday — as a
-  // reason to come back. It was not one. The month's budget is ten, so the
-  // second Monday's five was the last, and "five every Monday" then said
-  // nothing for the rest of the month. A weekly promise that stops halfway
-  // through is worse than no weekly promise, and making it genuinely weekly
-  // costs 20 to 25 a month — which puts what the engines can serve *below*
-  // what break-even needs. So it is one grant, and the card says one grant.
-  free: 10,
+  /**
+   * None. The free tier does not generate music.
+   *
+   * ── Why it was ten, and why it is nought ────────────────────────────────
+   *
+   * Ten was two half songs, and it was decided when a song was assumed to
+   * cost us R2.59. On 8 September 2026 Carli sent ElevenLabs' own pricing
+   * page: music is $0.15 a minute, so a song costs R4.80, and a plan holds
+   * about half the minutes this file had assumed. `docs/ELEVENLABS-PRYSE.md`
+   * has the whole derivation.
+   *
+   * With the real numbers the realistic case stops working — not because the
+   * margin per member is thin, it is healthy, but because the plan cannot
+   * feed the number of members it takes to break even. Nineteen free users
+   * stand behind every paying one, and ten credits each is more music than
+   * the paying member makes.
+   *
+   * Turning that off is the whole difference between a business that works
+   * and one that does not: break-even goes from 165 members against a
+   * capacity of 132, to 103 against 214. Carli's decision, 8 September.
+   *
+   * ── What the free tier is instead, and why it is not nothing ────────────
+   *
+   * Everything the device can make by itself, without limit: browser sketches
+   * that are real audio and real video, the whole recording booth, the
+   * timeline, hooks, the sound trainer, the radar, the style previews. None
+   * of that costs us a cent, and it is the part that convinces people — the
+   * two half songs were the expensive part and the part nobody stayed for.
+   *
+   * The card says so plainly rather than letting somebody find out at the
+   * button.
+   */
+  free: 0,
   maker: 120,
   studio: 350,
   label: 800,

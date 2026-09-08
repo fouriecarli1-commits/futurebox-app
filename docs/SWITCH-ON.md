@@ -233,6 +233,22 @@ the voice button. With the key set there are two boxed choices at the top of the
 panel — **Sangmodel** and **Spraakmodel** — and the singing one is chosen for
 you. Without it there are none.
 
+**Answered, 8 September 2026: the API needs the paid plan.** Carli ran the
+page below and every real endpoint came back:
+
+    403  {"error":"Free tier users are not allowed to use the api"}
+
+That is the best possible failure. The key had reached them and they had
+recognised it — the account simply was not paying. So the $40 is not only for
+more conversions; it is what switches the API on at all. Nothing in the app
+can work before it is bought.
+
+It also told us which paths are real, because a 403 proves a path exists and
+is guarded where a 404 proves it does not: **`voice-conversions`,
+`voice-models` and `stem-splits`**. The second one is the interesting one —
+with it, the Pro Booth can list the voices you have trained instead of asking
+you to type a number.
+
 **The page that turns the rest of the guesses into facts.** Open
 
     https://futurebox.studio/api/kits/setup?key=<POST_SECRET>

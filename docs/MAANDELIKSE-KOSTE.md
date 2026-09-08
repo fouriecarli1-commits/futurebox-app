@@ -77,10 +77,11 @@ op hierdie bladsy wat 'n gat toemaak.
 
 Twee dinge om na te gaan sodra jy die volledige pakket koop:
 
-1. **Of die $40-plan API-toegang insluit.** Party "unlimited"-planne is net vir
-   hulle eie webwerf. Die sleutel werk klaarblyklik, maar 'n sleutel wat 'n
-   werk begin en 'n sleutel wat mag, is nie dieselfde ding nie. Die eerste
-   omskakeling in die toep sal dit sê.
+1. ~~**Of die $40-plan API-toegang insluit.**~~ **Geantwoord, 8 September.**
+   Ja — en meer as dit: die API werk **glad nie** op die gratis laag nie. Elke
+   egte adres antwoord `403 {"error":"Free tier users are not allowed to use
+   the api"}`. Die sleutel is goed en hulle herken dit; die rekening betaal net
+   nie. Niks in die toep kan werk voordat die plan gekoop is nie.
 2. **Of daar 'n limiet op omskakelings per maand is.** As daar een is, moet
    `CREDITS.sing` daarteen gemeet word; dit staan nou op 4 krediete per minuut,
    dieselfde as die spraakmodel.

@@ -90,6 +90,24 @@ export default function OutOfCredits({
               )}
               {t('credits.topUpNote', 'A pack never expires, and it is used before next month’s allowance.')}
             </p>
+            {/* The one sentence somebody on nought actually needs.
+
+                Since 8 September 2026 the free tier has no music credits at
+                all — ElevenLabs charge us $0.15 a minute and nineteen free
+                users stand behind every paying one, which is the difference
+                between a business that works and one that does not. Somebody
+                who arrives here on a balance of nought is not being punished
+                and has not run out; they were never given any, and what they
+                *do* have is worth naming. Offering a shelf of packs and
+                nothing else lets them conclude the app does nothing. */}
+            {short.balance === 0 && (
+              <p className="text-sm text-zinc-400 leading-snug pt-2">
+                {t(
+                  'credits.freeIsReal',
+                  'A generated song runs on an engine that charges by the minute, which is why it is the one thing that is not free. Everything your own device can make — the booth, the sketches, the timeline, the sound trainer — has no limit and never costs anything.',
+                )}
+              </p>
+            )}
           </div>
           <button
             type="button"

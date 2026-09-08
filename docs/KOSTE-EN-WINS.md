@@ -38,10 +38,10 @@ Vaste koste sonder ElevenLabs: R6 924,00 (werkswinkels ingesluit).
 
 | ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede wat die plan se krediete hou | Werk dit? |
 |---|---|---|---|---|
-| Creator | R43,51 | 168 | 1 | nee |
-| Pro | R43,02 | 198 | 7 | nee |
-| Scale | R20,74 | 589 | 22 | nee |
-| Business | R43,02 | 530 | 73 | nee |
+| Creator | R134,50 | 55 | 2 | nee |
+| Pro | R134,22 | 64 | 12 | nee |
+| Scale | R121,41 | 101 | 38 | nee |
+| Business | R134,22 | 170 | 128 | nee |
 
 *"Werk dit" beteken: die getal lede wat jy nodig het om gelyk te breek,
 pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek
@@ -56,19 +56,19 @@ Vaste koste sonder ElevenLabs: R6 924,00 (werkswinkels ingesluit).
 
 | ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede wat die plan se krediete hou | Werk dit? |
 |---|---|---|---|---|
-| Creator | R138,24 | 53 | 2 | nee |
-| Pro | R137,97 | 62 | 13 | nee |
-| Scale | R125,55 | 98 | 39 | nee |
-| Business | R137,97 | 165 | 132 | nee |
+| Creator | R183,74 | 40 | 4 | nee |
+| Pro | R183,57 | 47 | 21 | nee |
+| Scale | R175,88 | 70 | 64 | nee |
+| Business | R183,57 | 125 | 214 | **ja** |
 
 *"Werk dit" beteken: die getal lede wat jy nodig het om gelyk te breek,
 pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek
 meer lede vra as wat die plan kan voed, kan daardie plan nooit wins maak nie —
 hoeveel mense ook al inteken.*
 
-## Voorsigtig, gratis laag sonder musiek
+## Voorsigtig, sonder werkswinkels
 
-Die slegste geval weer, maar met die gratis laag se musiek af en die werkswinkels af. Dit wys of die slegste geval hoegenaamd veilig gemaak kan word.
+Die slegste geval weer, met die werkswinkels af. Dit wys of die slegste geval hoegenaamd veilig gemaak kan word.
 
 Vaste koste sonder ElevenLabs: R2 924,00 (sonder werkswinkels).
 
@@ -84,9 +84,9 @@ pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek
 meer lede vra as wat die plan kan voed, kan daardie plan nooit wins maak nie —
 hoeveel mense ook al inteken.*
 
-## Realisties, gratis laag sonder musiek
+## Realisties, sonder werkswinkels
 
-Dieselfde as bo, maar die gratis laag kry blaaierskesse in plaas van musiekkrediete, en die werkswinkels is af. Die twee hefbome wat die meeste beweeg.
+Dieselfde as bo, met die werkswinkels af. Dit is die enigste hefboom wat oorbly noudat die gratis laag se musiek weg is.
 
 Vaste koste sonder ElevenLabs: R2 924,00 (sonder werkswinkels).
 
@@ -111,10 +111,10 @@ sny.
 
 | Plan | Gratis toelae vandag | Grootste wat nog werk | Wat dit beteken |
 |---|---|---|---|
-| Creator | 10 | — | Geen gratis toelae maak hierdie plan veilig nie — die plan self is te klein. |
-| Pro | 10 | — | Geen gratis toelae maak hierdie plan veilig nie — die plan self is te klein. |
-| Scale | 10 | — | Geen gratis toelae maak hierdie plan veilig nie — die plan self is te klein. |
-| Business | 10 | — | Geen gratis toelae maak hierdie plan veilig nie — die plan self is te klein. |
+| Creator | 0 | — | Geen gratis toelae maak hierdie plan veilig nie — die plan self is te klein. |
+| Pro | 0 | — | Geen gratis toelae maak hierdie plan veilig nie — die plan self is te klein. |
+| Scale | 0 | — | Geen gratis toelae maak hierdie plan veilig nie — die plan self is te klein. |
+| Business | 0 | — | Geen gratis toelae maak hierdie plan veilig nie — die plan self is te klein. |
 
 ## Video — waarom dit hier ontbreek
 
@@ -182,10 +182,10 @@ goedkoper per maand — maar omdat hulle te min krediete het. Elke plan het
 Pro en Scale hoër as die getal lede wat die plan se krediete kan voed. Meer
 mense laat inteken maak dit erger, nie beter nie.
 
-**2. Op Business werk dit — solank die werkswinkels nie loop nie.** Met alles op sy ergste: gelykbreek by **437 lede**, en die plan hou **73**. Sit die R4 000,00 werkswinkels terug en gelykbreek skuif na **530**, wat méér is as wat die plan kan voed. Die werkswinkels is dus nie 'n uitgawe nie, dit is 'n besluit: hulle mag eers terugkom wanneer die lede daar is.
+**2. Op Business werk dit — solank die werkswinkels nie loop nie.** Met alles op sy ergste: gelykbreek by **140 lede**, en die plan hou **128**. Sit die R4 000,00 werkswinkels terug en gelykbreek skuif na **170**, wat méér is as wat die plan kan voed. Die werkswinkels is dus nie 'n uitgawe nie, dit is 'n besluit: hulle mag eers terugkom wanneer die lede daar is.
 
 **3. Die gratis laag is die duurste ding in die toep.** Negentien gratis
-gebruikers agter elke betalende een, elk met 10 krediete, is meer
+gebruikers agter elke betalende een, elk met 0 krediete, is meer
 ElevenLabs-krediete as wat die betalende lid self gebruik. Dit is die een
 hefboom wat die meeste beweeg, en dit kos niks om te trek nie: die gratis
 laag se blaaierskesse — regte klank en video, op die foon self gemaak — kos

@@ -210,6 +210,27 @@ ok('it reports shapes rather than content',
   'a page that gets pasted into a chat must not carry somebody’s audio or account details');
 ok('and the key is never in what it answers', !/KITS_API_KEY/.test(setup));
 
+/* The two things the first real run taught it.
+
+   Carli ran the page on 8 September and every real endpoint answered
+   `403 {"error":"Free tier users are not allowed to use the api"}`. That is
+   not a refused key — it is the key working and the account not paying — and
+   it is the exact question the page was built to settle, so it gets its own
+   sentence rather than being read as "the key is wrong".
+
+   The same run showed nine of thirteen candidates answering 200 with no
+   fields, which looked like nine real endpoints and was their website
+   answering an unknown path with a page. A 403 proves a path exists and is
+   guarded; a 200 full of HTML proves nothing. */
+ok('a plan-shaped refusal is told apart from a wrong key',
+  /needsPlan/.test(setup) && /free tier/i.test(setup),
+  'the most useful answer this page can give is "the key is fine, pay them"');
+ok('and a page from their website is not counted as an endpoint',
+  /not an endpoint/.test(lib2) && /content-type/i.test(lib2),
+  'a 200 that is HTML looked exactly like a real endpoint that happens to be empty');
+ok('the report says which paths are actually real',
+  /realPaths/.test(setup) && /one\.status === 403/.test(setup));
+
 /* ── 7. The key stays on the server ─────────────────────────────────────── */
 
 for (const path of [

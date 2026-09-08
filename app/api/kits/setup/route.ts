@@ -70,11 +70,32 @@ export async function GET(request: Request): Promise<Response> {
   const control = found.find((one) => one.path === 'voice-conversions');
   const keyWorks = Boolean(control && control.status > 0 && control.status !== 401 && control.status !== 403);
 
+  /* A 403 that names the plan is the most useful answer this page can give,
+     and it is not the same as a refused key.
+
+     Carli's first real run came back exactly this way: "Free tier users are
+     not allowed to use the api" on every real endpoint. The key had reached
+     them and they had recognised it — the account simply was not paying. That
+     is the question this page was built to settle, and it deserves its own
+     sentence rather than being lumped in with a wrong key. */
+  const needsPlan = found.some((one) => /free tier|not allowed to use the api/i.test(one.note ?? ''));
+
+  /* And which paths are real. A 403 proves a path exists and is guarded; a
+     404 proves it does not. Both are worth more than a 200 from their
+     website. */
+  const real = found
+    .filter((one) => one.status === 403 || (one.status === 200 && !/not an endpoint/.test(one.note ?? '')))
+    .map((one) => one.path);
+
   return Response.json({
     ready: keyWorks,
-    why: keyWorks
-      ? 'The key answers. Everything below with a 200 is real and can be wired.'
-      : 'The known endpoint refused this key — check it, and check the plan carries API access.',
+    why: needsPlan
+      ? 'The key is good and they recognised it — the account is on the free tier, and Kits does not allow the API there. Buying the plan is what switches this on.'
+      : keyWorks
+        ? 'The key answers. Everything below that is real can be wired.'
+        : 'The known endpoint refused this key — check it, and check the plan carries API access.',
+    needsPlan,
+    realPaths: real,
     namedModels: namedModels().map((one) => one.name),
     found,
   });

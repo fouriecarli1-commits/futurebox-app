@@ -117,23 +117,42 @@ Lees daardie laaste reël stadig. **Met die egte pryse werk die realistiese
 geval nie meer nie** — nie omdat die winsgrens te dun is nie, maar omdat die
 plan te min minute het vir die getal lede wat jy nodig het.
 
-## En die een hefboom wat dit terug regmaak
+## Die hefboom — en dis nou getrek
 
-Daar is presies één scenario wat nog werk, en `costs-eleven.mts` reken dit
-elke keer uit:
+Negentien gratis gebruikers staan agter elke betalende een. Elk met tien
+krediete is dit **meer ElevenLabs-minute as wat die betalende lid self
+gebruik**. Dit was altyd die grootste hefboom; met die egte pryse was dit nie
+meer 'n hefboom nie, dit was die enigste pad.
 
-**Realisties, met die gratis laag se musiek af** — gelykbreek by **103 lede**,
-en die plan hou **214**. Dit werk, met ruimte oor.
+**Carli het dit op 8 September 2026 getrek: die gratis laag kry nie meer
+musiek nie.** `TIER_CREDITS.free` is nul.
 
-Die gratis laag kry dan blaaierskesse in plaas van musiekkrediete: regte klank
-en video wat op die foon self gemaak word, wat ons **niks** kos nie en wat die
-deel is wat mense oortuig. Die twee half-liedjies is die duur deel, en dit is
-die deel wat weg moet.
+| | Voorheen | Nou |
+|---|---|---|
+| Realisties: gelykbreek | 165 lede | **125** |
+| Realisties: wat die plan kan voed | 132 | **214** |
+| Werk dit? | nee | **ja** |
+| Sonder werkswinkels: gelykbreek | — | **103** teen 214 |
 
-Negentien gratis gebruikers agter elke betalende een, elk met tien krediete,
-is meer ElevenLabs-minute as wat die betalende lid self gebruik. Dit was altyd
-die grootste hefboom; met die egte pryse is dit nie meer 'n hefboom nie, dit
-is die enigste pad.
+Wat die gratis laag in die plek daarvan het, is nie niks nie, en die
+pryskaartjie sê dit so:
+
+- Onbeperkte sketse in die blaaier — **regte** klank en **regte** video, op die
+  toestel self gemaak
+- Die opnamekamer, sonder enige perk: sing, neem op, meng, masteer
+- Hooks, die tydlyn, die klankafrigter en die radar
+- Styl-voorsmakies, sodat jy 'n klank kan hoor voor jy enigiets koop
+
+Nie een van daardie kos ons 'n sent nie, en dít is die deel wat mense oortuig.
+Die twee half-liedjies was die duur deel en die deel waarvoor niemand gebly
+het nie.
+
+En op die skerm waar iemand met nul krediete beland, staan dit nou ook: 'n
+gegenereerde liedjie loop op 'n enjin wat per minuut vra, en dit is hoekom dit
+die een ding is wat nie gratis is nie.
+
+**Wat nou nog oop is, is die werkswinkels.** Dit is die enigste hefboom wat
+oorbly: R4 000 'n maand, en gelykbreek skuif van 125 na 103.
 
 ---
 
