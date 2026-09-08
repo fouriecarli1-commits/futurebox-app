@@ -45,6 +45,8 @@ reggemaak is, net in die ander rigting.
 | 10 | **Kits.AI** | sangstem-omskakeling — die stem wat sing | R640 ($40) | vas | **ja** — sleutel gestel 7 Sept |
 | 11 | **Kling** | video, duurder pad | nie in gebruik nie | — | jou besluit, 6 Sept |
 | 12 | **Zoho** | die posbus agter die domein | R241,50 (BTW in) | vas | **ja** — van haar staat af, 8 Sept |
+| 13 | **Domeine** | die name self | R168 | vas | **ja** — van haar staat af, 8 Sept |
+| 14 | **Spaceship** | domeinregistrateur | $13,14 = R210,24 | vas | **ja** — van haar staat af, 8 Sept |
 
 ### Die vaste totaal, uitgewerk
 
@@ -56,14 +58,28 @@ reggemaak is, net in die ander rigting.
 | Resend | 64 |
 | Kits.AI | 640 |
 | Zoho | 241,50 |
-| **Sonder ElevenLabs, sonder werkswinkels** | **3 165,50** |
+| Domeine | 168 |
+| Spaceship | 210,24 |
+| **Sonder ElevenLabs, sonder werkswinkels** | **3 543,74** |
 | Werkswinkels | 4 000 |
-| **Sonder ElevenLabs, met werkswinkels** | **7 165,50** |
+| **Sonder ElevenLabs, met werkswinkels** | **7 543,74** |
 | ElevenLabs Business | 18 216 |
-| **Alles saam** | **25 381,50** |
+| **Alles saam** | **25 759,74** |
 
-Dít is waar `R3 165,50` en `R7 165,50` in `docs/KOSTE-EN-WINS.md` vandaan kom,
-en `R25 381,50` is die getal waarteen gelykbreek uitgewerk word.
+Dít is waar `R3 543,74` en `R7 543,74` in `docs/KOSTE-EN-WINS.md` vandaan kom,
+en `R25 759,74` is die getal waarteen gelykbreek uitgewerk word.
+
+### Een vraag oor hierdie twee reëls, en dit raak geld
+
+**Is die R168 se domeine dieselfde domeine wat by Spaceship staan?**
+
+Spaceship is self 'n domeinregistrateur. Hulle staan hier as twee reëls omdat
+Carli hulle met 'n "en" tussenin genoem het, wat hulle apart maak. As dit
+eintlik een ding is, tel ons dit twee keer en die rekening is **R210,24 te
+hoog**.
+
+Een woord maak dit reg. Dit staan hier eerder as in 'n kommentaar in die kode,
+want 'n aanname oor geld hoort waar die geld staan.
 
 **Twee dinge het op 8 September verander en albei was groot.** Die ElevenLabs-
 reël het BTW gekry, en Zoho het bygekom — 'n reël wat op **geen** kostelys was
@@ -77,6 +93,34 @@ Supabase se twee getalle is tussen die twee bladsye omgeruil. Die totaal is
 dieselfde, so niks se som is verkeerd nie — maar een van die twee bladsye noem
 'n diens op die verkeerde naam. Wanneer die eerste regte faktuur kom, is dit
 die maklikste een om reg te maak.
+
+---
+
+## Die gat in hierdie bladsy, en hoekom dit 'n gat is
+
+Op 8 September 2026 het **drie** verskaffers in een gesprek by hierdie tabel
+gekom: Zoho, die domeine, en Spaceship. Saam R619,74 per maand — omtrent 'n
+kwart van alles behalwe ElevenLabs en die werkswinkels.
+
+Nie een van hulle was 'n som wat verkeerd was nie. Al drie was reëls wat **glad
+nie bestaan het nie**, en al drie het dieselfde rede.
+
+`check:koste` se eerste reël soek elke gasheer wat die **bediener-kode bel** —
+dit lees `app/api/` en `app/lib/server/` en soek `https://`-adresse. Dit is 'n
+goeie reël en dit werk: geen API waarvoor sy betaal kan van hierdie tabel af
+wegraak nie.
+
+Maar 'n domein, 'n posbus en 'n registrateur word **nooit deur kode gebel nie**.
+Hulle is struktureel onsigbaar vir daardie reël, en dus vir hierdie bladsy, tot
+iemand hulle met die hand byvoeg. Dieselfde geld vir enigiets anders van
+daardie soort: rekeningkundige sagteware, 'n ontwerpgereedskap, 'n
+skyfbergingsplan, 'n telefoonrekening.
+
+**Dus: hierdie tabel kan nie homself volledig maak nie.** Die enigste ding wat
+'n koste van hierdie soort kan vind, is 'n mens wat na 'n bankstaat kyk. Die
+regte gewoonte is nie 'n beter kontrole nie — dit is om een keer per maand die
+staat langs hierdie tabel te hou en te vra wat op die een is en nie op die
+ander nie.
 
 ---
 
@@ -116,7 +160,7 @@ Twee dinge om na te gaan sodra jy die volledige pakket koop:
 
 ## Wat regtig die vorm van die besigheid bepaal
 
-Kyk na die tabel. **ElevenLabs Business is R18 216 van R25 381,50 — 72%.**
+Kyk na die tabel. **ElevenLabs Business is R18 216 van R25 759,74 — 71%.**
 
 Elke ander besluit op hierdie bladsy is klein daarnaas. Kits.AI is 3% van die
 rekening. Vercel en Supabase saam is 3%. Die werkswinkels is 18% en is die

@@ -136,6 +136,20 @@ const FIXED_CORE: Record<string, number> = {
      'n reël wat glad nie bestaan het nie, en die soort wat 'n mens eers sien
      wanneer die bank dit trek. */
   Zoho: 241.5,
+  /* Domeine en Spaceship, bygevoeg 8 September 2026 nadat Carli gesê het
+     "dit is nie net dit nie, dit is domains".
+
+     AANNAME, en dit staan hier omdat dit geld raak: dit is TWEE reëls, nie
+     een nie. Sy het hulle met 'n "en" tussenin genoem, wat hulle apart maak.
+     Spaceship is self 'n domeinregistrateur, so as die R168 se domeine BY
+     Spaceship staan, tel ons dit twee keer en die rekening is R210,24 te
+     hoog. Een woord van haar maak dit reg; sien `docs/MAANDELIKSE-KOSTE.md`,
+     waar dieselfde vraag staan sodat dit nie hier begrawe lê nie. */
+  Domeine: 168,
+  /* $13,14 deur dieselfde koers as al die ander dollarreëls, eerder as 'n
+     rand-bedrag hier ingetik: verander die koers en hierdie reël volg saam.
+     'n Ingetikte R210,24 sou stilweg verouder. */
+  Spaceship: 13.14 * RAND_PER_USD,
 };
 const WORKSHOPS = 4000;
 

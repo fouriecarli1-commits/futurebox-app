@@ -128,7 +128,7 @@ const cents = (value: number): number => Math.round(value * 100);
 /* Zoho joined this list on 8 September 2026. It was on no cost page at all
    until Carli named it — not a sum that was wrong, a line that did not exist,
    and the kind nobody sees until the bank takes it. */
-const lines = ['Anthropic', 'Vercel', 'Supabase', 'Resend', 'Kits.AI', 'Zoho'];
+const lines = ['Anthropic', 'Vercel', 'Supabase', 'Resend', 'Kits.AI', 'Zoho', 'Domeine', 'Spaceship'];
 const parts = lines.map(randFor);
 ok('every fixed line has a rand figure', parts.every((one) => one !== null),
   lines.filter((_, at) => parts[at] === null).join(', ') || parts.join(' + '));
