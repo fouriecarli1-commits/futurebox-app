@@ -175,7 +175,25 @@ export default function FutureBoxHome() {
    * press it, but that copy has to agree with what the routes enforce. When it
    * did not, the page won — it refused before the request was ever sent, so a
    * server-side allowance like OWNER_EMAIL never got a chance to say yes.
+   *
+   * Asked again when the ACCOUNT changes, not when the object holding it is
+   * rebuilt.
+   *
+   * `user` is set from `onAccountChange`, and that fires on a token refresh and
+   * on a sign-in in another tab as readily as on one here — the comment further
+   * down says so. Each time, `setUser({ ...account, followers: 1 })` builds a
+   * fresh object. Depend on the object and this effect re-runs for every one of
+   * those events; it then calls loadOwned(), which asks Supabase for a token,
+   * which is itself an event. Against a stubbed project, where that answer comes
+   * back instantly, the loop was measured at forty-eight rounds a second, which
+   * is what stopped every probe that waited for the network to go quiet. Against
+   * a real project it is rarer, and it is still a request storm we pay Vercel
+   * for and a phone burns battery on the moment events arrive in a burst.
+   *
+   * The email is the account. Two objects with the same email mean nothing has
+   * happened that the tier could depend on.
    */
+  const who = user?.email ?? null;
   useEffect(() => {
     let live = true;
     loadOwned().then((owned) => {
@@ -184,7 +202,7 @@ export default function FutureBoxHome() {
     return () => {
       live = false;
     };
-  }, [user]);
+  }, [who]);
   const [planNote, setPlanNote] = useState<string | null>(null);
 
   // Only the server knows whether a music key is set, so ask once.
@@ -585,7 +603,9 @@ export default function FutureBoxHome() {
     return () => {
       live = false;
     };
-  }, [user, trackCount]);
+    /* `who` rather than `user`, for the reason written out above the tier
+       effect: the object is rebuilt on every account event, the email is not. */
+  }, [who, trackCount]);
 
   /**
    * Go to a room. The only way to set one.
