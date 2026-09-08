@@ -110,7 +110,8 @@
     "check:roomtop": "node audit/roomtop.mjs",
     "check:subscription": "node audit/subscription.mjs",
     "check:playbutton": "node audit/playbutton.mjs",
-    "check:signinwith": "node audit/signinwith.mjs"
+    "check:signinwith": "node audit/signinwith.mjs",
+    "check:help": "node audit/help.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

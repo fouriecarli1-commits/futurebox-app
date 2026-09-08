@@ -12,7 +12,7 @@
  * refused.
  */
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3020';
 const af = process.argv[3] === 'af';
@@ -21,7 +21,7 @@ const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
 const check = (label, ok, detail = '') => {
-  console.log(`${label}: ${ok}`);
+  console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${detail && !ok ? ` — ${detail}` : ''}`);
   if (!ok) problems.push(`${label}${detail ? ` (${detail})` : ''}`);
 };
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
@@ -60,7 +60,15 @@ await p.addInitScript(({ lang, words }) => {
   } catch {}
 }, { lang: af ? 'af' : 'en', words: WORDS });
 
-await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
+/* ── Its own server, on its own port ─────────────────────────────────────
+
+   This went to a port it did not start and hoped somebody had left a server
+   there. That is the fault `serve()` exists to fix, and it is the reason this
+   probe sat in the waiting list: it passed on the machine it was written on
+   and could not run anywhere else. */
+const server = await serve(PORT);
+
+await p.goto(server.url, { waitUntil: 'networkidle' });
 const cta = p.locator('button, a').filter({ hasText: af ? /begin|gratis|teken/i : /start free|begin|sign up/i }).first();
 await cta.waitFor({ state: 'visible', timeout: 40000 });
 await cta.click();
@@ -132,6 +140,12 @@ check('and on that song, not the top of the list',
   ['song-with-plan', 'song-no-plan'].includes(chosenTitle), chosenTitle);
 
 await p.screenshot({ path: shot(`studioroute-${af ? 'af' : 'en'}.png`), fullPage: true });
-console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
-process.exit(problems.length ? 1 : 0);
+await server.stop();
+
+if (problems.length) {
+  console.error(`\ncheck:studioroute — ${problems.length} problem(s):`);
+  problems.forEach((one) => console.error(`  · ${one}`));
+  process.exit(1);
+}
+console.log('\ncheck:studioroute — every assertion in this file holds.');

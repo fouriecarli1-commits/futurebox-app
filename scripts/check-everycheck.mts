@@ -147,8 +147,8 @@ const TOOLS = new Set([
  * making its assertions true of the app as it is now.
  */
 const WAITING = new Set([
-  'account', 'addon', 'adreport', 'adruns', 'ads-en', 'cast', 'greeting',
-  'help', 'language', 'lanes', 'photo', 'podlanguage',
+  'account', 'addon', 'adreport', 'adruns', 'cast', 'greeting',
+  'language', 'lanes', 'photo', 'podlanguage',
   'presenter', 'queue',
   'studioroute', 'taste', 'videocover', 'videodesk',
 ]);

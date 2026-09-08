@@ -1,10 +1,10 @@
 /** The help page: both halves, both languages, and the form that reaches a person. */
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
 const b = await chromium.launch(launchOptions());
 const problems = [];
 const check = (label, ok, detail = '') => {
-  console.log(`${label}: ${ok}`);
+  console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${detail && !ok ? ` — ${detail}` : ''}`);
   if (!ok) problems.push(`${label}${detail ? ` (${detail})` : ''}`);
 };
 
@@ -12,7 +12,7 @@ const PORT = process.argv[2] || '3005';
 const af = process.argv[3] === 'af';
 
 // A phone, because that is where somebody stuck actually asks.
-const p = await b.newPage({ viewport: { width: 390, height: 844 } });
+const p = await b.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
 p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
 
 // The language is remembered in localStorage, so it is set before the page runs.
@@ -32,7 +32,15 @@ await p.route('**/api/help', async (route) => {
   return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ reply: af ? "'n Musiekvideo kos 15 krediete per vyf sekondes." : 'A music video costs 15 credits per five seconds.' }) });
 });
 
-await p.goto(`http://localhost:${PORT}/help`, { waitUntil: 'networkidle' });
+/* ── Its own server, on its own port ─────────────────────────────────────
+
+   This went to a port it did not start and hoped somebody had left a server
+   there. That is the fault `serve()` exists to fix, and it is the reason this
+   probe sat in the waiting list: it passed on the machine it was written on
+   and could not run anywhere else. */
+const server = await serve(PORT);
+
+await p.goto(`${server.url}/help`, { waitUntil: 'networkidle' });
 const text = await p.locator('body').innerText();
 
 check('no mailbox is printed anywhere on it', !/@[a-z0-9.-]+\.[a-z]{2,}/i.test(text) && !/mailto:/.test(await p.content()), (text.match(/\S*@\S*/) || [])[0] || 'mailto:');
@@ -148,6 +156,12 @@ const unnamed = await p.evaluate(() => {
 check('every control is named', unnamed.length === 0, unnamed.join(' | '));
 
 await p.screenshot({ path: shot(`help-${af ? 'af' : 'en'}.png`), fullPage: true });
-console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
-process.exit(problems.length ? 1 : 0);
+await server.stop();
+
+if (problems.length) {
+  console.error(`\ncheck:help — ${problems.length} problem(s):`);
+  problems.forEach((one) => console.error(`  · ${one}`));
+  process.exit(1);
+}
+console.log('\ncheck:help — every assertion in this file holds.');
