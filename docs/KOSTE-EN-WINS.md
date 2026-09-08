@@ -182,7 +182,79 @@ goedkoper per maand — maar omdat hulle te min krediete het. Elke plan het
 Pro en Scale hoër as die getal lede wat die plan se krediete kan voed. Meer
 mense laat inteken maak dit erger, nie beter nie.
 
-**2. Op Business werk dit — solank die werkswinkels nie loop nie.** Met alles op sy ergste: gelykbreek by **189 lede**, en die plan hou **128**. Sit die R4 000,00 werkswinkels terug en gelykbreek skuif na **223**, wat méér is as wat die plan kan voed. Die werkswinkels is dus nie 'n uitgawe nie, dit is 'n besluit: hulle mag eers terugkom wanneer die lede daar is.
+**2. Op Business hang dit af van hoeveel lede werklik verbruik.** In die slegste geval — elke lid brand elke krediet — is gelykbreek **189 lede** en die plan hou **128**: dit **werk nie**. Met die werkswinkels terug word dit **223** teen **128**, en dit werk ook nie.
+
+Realisties — 60% verbruik — is gelykbreek **127 lede** sonder werkswinkels en **150** met, teen 'n dak van **214** lede. Albei werk. Die werkswinkels is dus nie 'n uitgawe nie, dit is 'n besluit: hulle kos 23 ekstra lede.
+
+
+### En wat SARS daarvan vat
+
+Carli, 8 September 2026: *"ek dink sars tot en met 30% van my inkomste
+neem van hierdie produk, dus wil ek nie 'n verlies ly nie."*
+
+**Die belangrikste ding eerste: maatskappybelasting is op WINS, nie op
+omset nie.** Geen wins, geen belasting. Gelykbreek skuif dus glad nie —
+dit bly 127 lede sonder werkswinkels en 150 met. Belasting
+vat net 'n stuk van wat bo gelykbreek oorbly.
+
+Dit is die hele antwoord op "moet ons die pryse herbesin?". Nie oor SARS
+nie.
+
+| By vol kapasiteit | Sonder werkswinkels | Met werkswinkels |
+|---|---|---|
+| Lede | 214 | 214 |
+| Omset | R57 566,00 | R57 566,00 |
+| Wins voor belasting | R15 148,11 | R11 148,11 |
+| Ná 27% | R11 058,12 | R8 138,12 |
+| Ná 30% | R10 603,68 | R7 803,68 |
+| Ná 30%, per jaar | R127 244,14 | R93 644,14 |
+
+**Ja, dit maak wins. Maar kyk na wat daardie tabel eintlik sê.**
+
+Dit is nie wins by die huidige skaal nie — dit is die **meeste wat hierdie
+plan ooit kan verdien**, hoe goed dit ook al verkoop word. Die dak is nie
+die mark nie, dit is ElevenLabs se krediete: by 214 lede is die plan se
+krediete op, en lid 215 kan nie bedien word nie.
+
+**Dít is die ding om te herbesin, en dit is nie belasting nie.**
+
+Drie hefbome, in volgorde van hoeveel hulle beweeg:
+
+1. **Prys.** Elke rand op die maandprys gaan reguit deur na bydrae — daar
+   is geen ekstra ElevenLabs-koste aan 'n hoër prys nie. Tien persent op
+   die prys is ongeveer R5 756,60 per maand by vol kapasiteit,
+   en dit skuif gelykbreek af sowel as die dak op.
+2. **Die dak self.** Meer lede as die plan kan voed, beteken 'n groter
+   plan of minder krediete per lid. Albei is prysbesluite.
+3. **Die werkswinkels.** Hulle kos
+   23 ekstra lede en R4 000,00 per maand.
+
+### Twee dinge vir haar rekenmeester, en albei kan die 30% laat val
+
+**1. Klein Sake Korporasie (SBC).** 'n (Pty) Ltd wat kwalifiseer betaal
+nie 27% op alles nie: die eerste R95 750 belasbare inkomste is teen **0%**,
+en die snit tot R365 000 teen **7%**. Die maksimum jaarwins hierbo is
+R181 777,35 — heeltemal binne daardie tweede snit.
+   Die effektiewe koers sou dan naby **3%** wees, nie 30% nie. Kwalifikasie
+   het voorwaardes (alle aandeelhouers natuurlike persone, omset onder
+   R20m, nie 'n persoonlike diensverskaffer nie) en dit is 'n vraag vir
+   'n rekenmeester, nie vir hierdie lêer nie.
+
+**2. BTW-registrasie.** Die 15% wat sy nou aan ElevenLabs en Zoho betaal is
+   'n dooie koste **solank sy nie geregistreer is nie**. Geregistreer kan sy
+   dit terugeis — maar dan moet sy 15% op lidmaatskappe hef of dit self dra.
+   Verpligte registrasie is by R1 miljoen omset oor 12 maande; by vol
+   kapasiteit is die omset R690 792,00 per jaar, dus
+   **bereik sy dit nooit op hierdie plan nie**. Vrywillige registrasie is
+   moontlik bo R50 000 omset, en dan word die BTW terugeisbaar.
+
+   Wat dit werd is: die BTW op ElevenLabs alleen is R2 376,00 per maand,
+   oftewel R28 512,00 per jaar. Teen 'n maksimum jaarwins van
+   R181 777,35 is dit nie klein nie.
+
+*Geen van hierdie twee is belastingadvies nie. Albei is gedokumenteerde
+SARS-reëls wat groot genoeg is om te vra, met die somme reeds gedoen sodat
+die gesprek met 'n rekenmeester een vraag is en nie 'n navorsingstaak nie.*
 
 **3. Die gratis laag is die duurste ding in die toep.** Negentien gratis
 gebruikers agter elke betalende een, elk met 0 krediete, is meer

@@ -466,14 +466,28 @@ for (const plan of EL_PLANS) {
  * waarop dit staan nie. */
 {
   const fixedNo = Object.values(FIXED_CORE).reduce((a, b) => a + b, 0);
-  const worst = (plan: (typeof EL_PLANS)[number], workshops: boolean) => {
-    const c = contribution(plan, 1, 1, TIER_CREDITS.free);
+  /* `use` is how much of their allowance members actually burn. At 1 it is the
+     worst case and at 0,6 the realistic one — the same two the scenario tables
+     above use, so this conclusion cannot drift from them. */
+  const at = (plan: (typeof EL_PLANS)[number], workshops: boolean, use: number, freeUse: number) => {
+    const c = contribution(plan, use, freeUse, TIER_CREDITS.free);
     const total = fixedNo + (workshops ? WORKSHOPS : 0) + randForPlan(plan);
+    const capacity = Math.floor(plan.credits / elPerPaying(use, freeUse, TIER_CREDITS.free));
+    const breakEven = c.net > 0 ? Math.ceil(total / c.net) : Infinity;
     return {
-      breakEven: c.net > 0 ? Math.ceil(total / c.net) : Infinity,
-      capacity: Math.floor(plan.credits / elPerPaying(1, 1, TIER_CREDITS.free)),
+      breakEven,
+      capacity,
+      net: c.net,
+      fixed: total,
+      works: Number.isFinite(breakEven) && breakEven <= capacity,
+      /* What is left at the ceiling. The plan's credits run out before the
+         market does, so this is not "profit at current scale" — it is the most
+         this plan can ever earn, however well anybody sells. */
+      ceilingProfit: capacity * c.net - total,
     };
   };
+  const worst = (plan: (typeof EL_PLANS)[number], workshops: boolean) => at(plan, workshops, 1, 1);
+  const real = (plan: (typeof EL_PLANS)[number], workshops: boolean) => at(plan, workshops, 0.6, 0.5);
   const business = EL_PLANS[EL_PLANS.length - 1];
   const withShops = worst(business, true);
   const without = worst(business, false);
@@ -487,9 +501,94 @@ for (const plan of EL_PLANS) {
   say('Pro en Scale hoër as die getal lede wat die plan se krediete kan voed. Meer');
   say('mense laat inteken maak dit erger, nie beter nie.');
   say('');
+  /* Afgelei, nie getik nie. Hierdie sin het "Op Business werk dit" beweer
+     terwyl sy eie twee getalle die teenoorgestelde gesê het — 140 teen 128 —
+     en dit was al so voordat die koste in September gestyg het. 'n Sin wat 'n
+     gevolgtrekking hardkodeer terwyl die syfers langs hom uitgereken word, sal
+     op 'n dag lieg, en hierdie een het. */
+  const realNo = real(business, false);
+  const realWs = real(business, true);
   say(
-    `**2. Op Business werk dit — solank die werkswinkels nie loop nie.** Met alles op sy ergste: gelykbreek by **${without.breakEven} lede**, en die plan hou **${without.capacity}**. Sit die ${rand(WORKSHOPS)} werkswinkels terug en gelykbreek skuif na **${withShops.breakEven}**, wat méér is as wat die plan kan voed. Die werkswinkels is dus nie 'n uitgawe nie, dit is 'n besluit: hulle mag eers terugkom wanneer die lede daar is.`,
+    `**2. Op Business hang dit af van hoeveel lede werklik verbruik.** In die slegste geval — elke lid brand elke krediet — is gelykbreek **${without.breakEven} lede** en die plan hou **${without.capacity}**: dit ${without.works ? 'werk' : '**werk nie**'}. Met die werkswinkels terug word dit **${withShops.breakEven}** teen **${withShops.capacity}**, en dit ${withShops.works ? 'werk' : 'werk ook nie'}.`,
   );
+  say('');
+  say(
+    `Realisties — 60% verbruik — is gelykbreek **${realNo.breakEven} lede** sonder werkswinkels en **${realWs.breakEven}** met, teen 'n dak van **${realNo.capacity}** lede. Albei ${realNo.works && realWs.works ? 'werk' : 'werk nie'}. Die werkswinkels is dus nie 'n uitgawe nie, dit is 'n besluit: hulle kos ${realWs.breakEven - realNo.breakEven} ekstra lede.`,
+  );
+  say('');
+  say('');
+  say('### En wat SARS daarvan vat');
+  say('');
+  say('Carli, 8 September 2026: *"ek dink sars tot en met 30% van my inkomste');
+  say('neem van hierdie produk, dus wil ek nie \'n verlies ly nie."*');
+  say('');
+  say('**Die belangrikste ding eerste: maatskappybelasting is op WINS, nie op');
+  say('omset nie.** Geen wins, geen belasting. Gelykbreek skuif dus glad nie —');
+  say(`dit bly ${realNo.breakEven} lede sonder werkswinkels en ${realWs.breakEven} met. Belasting`);
+  say('vat net \'n stuk van wat bo gelykbreek oorbly.');
+  say('');
+  say('Dit is die hele antwoord op "moet ons die pryse herbesin?". Nie oor SARS');
+  say('nie.');
+  say('');
+  const REV_PER_MEMBER = (['maker', 'studio', 'label'] as const).reduce(
+    (sum, tier) => sum + TIER_SPECS[tier].rand * MIX[tier], 0,
+  );
+  say('| By vol kapasiteit | Sonder werkswinkels | Met werkswinkels |');
+  say('|---|---|---|');
+  say(`| Lede | ${realNo.capacity} | ${realWs.capacity} |`);
+  say(`| Omset | ${rand(realNo.capacity * REV_PER_MEMBER)} | ${rand(realWs.capacity * REV_PER_MEMBER)} |`);
+  say(`| Wins voor belasting | ${rand(realNo.ceilingProfit)} | ${rand(realWs.ceilingProfit)} |`);
+  for (const rate of [0.27, 0.3]) {
+    say(`| Ná ${Math.round(rate * 100)}% | ${rand(realNo.ceilingProfit * (1 - rate))} | ${rand(realWs.ceilingProfit * (1 - rate))} |`);
+  }
+  say(`| Ná 30%, per jaar | ${rand(realNo.ceilingProfit * 0.7 * 12)} | ${rand(realWs.ceilingProfit * 0.7 * 12)} |`);
+  say('');
+  say('**Ja, dit maak wins. Maar kyk na wat daardie tabel eintlik sê.**');
+  say('');
+  say(`Dit is nie wins by die huidige skaal nie — dit is die **meeste wat hierdie`);
+  say('plan ooit kan verdien**, hoe goed dit ook al verkoop word. Die dak is nie');
+  say(`die mark nie, dit is ElevenLabs se krediete: by ${realNo.capacity} lede is die plan se`);
+  say('krediete op, en lid 215 kan nie bedien word nie.');
+  say('');
+  say('**Dít is die ding om te herbesin, en dit is nie belasting nie.**');
+  say('');
+  say('Drie hefbome, in volgorde van hoeveel hulle beweeg:');
+  say('');
+  say('1. **Prys.** Elke rand op die maandprys gaan reguit deur na bydrae — daar');
+  say('   is geen ekstra ElevenLabs-koste aan \'n hoër prys nie. Tien persent op');
+  say(`   die prys is ongeveer ${rand(realNo.capacity * REV_PER_MEMBER * 0.1)} per maand by vol kapasiteit,`);
+  say('   en dit skuif gelykbreek af sowel as die dak op.');
+  say('2. **Die dak self.** Meer lede as die plan kan voed, beteken \'n groter');
+  say('   plan of minder krediete per lid. Albei is prysbesluite.');
+  say('3. **Die werkswinkels.** Hulle kos');
+  say(`   ${realWs.breakEven - realNo.breakEven} ekstra lede en ${rand(WORKSHOPS)} per maand.`);
+  say('');
+  say('### Twee dinge vir haar rekenmeester, en albei kan die 30% laat val');
+  say('');
+  say('**1. Klein Sake Korporasie (SBC).** \'n (Pty) Ltd wat kwalifiseer betaal');
+  say('nie 27% op alles nie: die eerste R95 750 belasbare inkomste is teen **0%**,');
+  say('en die snit tot R365 000 teen **7%**. Die maksimum jaarwins hierbo is');
+  say(`${rand(realNo.ceilingProfit * 12)} — heeltemal binne daardie tweede snit.`);
+  say('   Die effektiewe koers sou dan naby **3%** wees, nie 30% nie. Kwalifikasie');
+  say('   het voorwaardes (alle aandeelhouers natuurlike persone, omset onder');
+  say('   R20m, nie \'n persoonlike diensverskaffer nie) en dit is \'n vraag vir');
+  say('   \'n rekenmeester, nie vir hierdie lêer nie.');
+  say('');
+  say('**2. BTW-registrasie.** Die 15% wat sy nou aan ElevenLabs en Zoho betaal is');
+  say('   \'n dooie koste **solank sy nie geregistreer is nie**. Geregistreer kan sy');
+  say('   dit terugeis — maar dan moet sy 15% op lidmaatskappe hef of dit self dra.');
+  say(`   Verpligte registrasie is by R1 miljoen omset oor 12 maande; by vol`);
+  say(`   kapasiteit is die omset ${rand(realNo.capacity * REV_PER_MEMBER * 12)} per jaar, dus`);
+  say('   **bereik sy dit nooit op hierdie plan nie**. Vrywillige registrasie is');
+  say('   moontlik bo R50 000 omset, en dan word die BTW terugeisbaar.');
+  say('');
+  say(`   Wat dit werd is: die BTW op ElevenLabs alleen is ${rand(randForPlan(business) - business.usd * RAND_PER_USD)} per maand,`);
+  say(`   oftewel ${rand((randForPlan(business) - business.usd * RAND_PER_USD) * 12)} per jaar. Teen \'n maksimum jaarwins van`);
+  say(`   ${rand(realNo.ceilingProfit * 12)} is dit nie klein nie.`);
+  say('');
+  say('*Geen van hierdie twee is belastingadvies nie. Albei is gedokumenteerde');
+  say('SARS-reëls wat groot genoeg is om te vra, met die somme reeds gedoen sodat');
+  say('die gesprek met \'n rekenmeester een vraag is en nie \'n navorsingstaak nie.*');
   say('');
   say('**3. Die gratis laag is die duurste ding in die toep.** Negentien gratis');
   say(`gebruikers agter elke betalende een, elk met ${TIER_CREDITS.free} krediete, is meer`);
