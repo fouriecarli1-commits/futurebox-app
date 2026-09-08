@@ -25,7 +25,7 @@ import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
-import { enough, note } from '@/app/lib/server/kitsminutes';
+import { downloadSeconds, enough, note } from '@/app/lib/server/kitsminutes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -110,7 +110,13 @@ export async function POST(request: Request): Promise<Response> {
      credits are taken: a member turned away by a ceiling they cannot see should
      not also have paid for the turn. `kitsminutes.ts` carries the arithmetic
      and why it errs towards stopping early. */
-  const room = await enough(billed);
+  /* One file comes back from a conversion — the voice, or the mix, never
+     both — so what is downloaded is one take's length. Said through
+     `downloadSeconds` rather than left implicit, because the route beside
+     this one downloads two and the difference is the whole point of that
+     function. */
+  const spend = downloadSeconds(billed, 1);
+  const room = await enough(spend);
   if (room) return Response.json({ message: room.message, left: room.left }, { status: 429 });
 
   const paid = await charge(request, perMinute(billed, CREDITS.sing), 'sing');
@@ -148,7 +154,7 @@ export async function POST(request: Request): Promise<Response> {
   /* Written down only once the audio is actually in hand, because the minutes
      burn on download and a conversion that failed downloaded nothing. Not
      awaited: the member's file is ready and the bookkeeping must not hold it. */
-  void note(billed, 'sing', caller?.id);
+  void note(spend, 'sing', caller?.id);
 
   return new Response(done.audio, {
     headers: { 'Content-Type': done.type, 'Cache-Control': 'no-store' },

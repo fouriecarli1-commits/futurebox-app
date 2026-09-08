@@ -111,6 +111,42 @@ export async function enough(seconds: number): Promise<Refusal | null> {
 export type Kind = 'sing' | 'split' | 'isolate';
 
 /**
+ * What a job actually spends: the audio that comes *back*, not the audio sent.
+ *
+ * ── The undercount this exists to stop ───────────────────────────────────
+ *
+ * Kits' four hundred minutes burn on **download** — `docs/KITS-KAART.md` §1,
+ * and it is the sentence the whole ceiling rests on. Every caller here was
+ * writing down the length of the file it *sent*, which is right for a voice
+ * conversion, where one file goes and one comes back.
+ *
+ * It is wrong for a separation. `/api/stems` downloads two files — the voice
+ * and the backing — each the full length of the song, and wrote down one
+ * song's length. Half of what it burned. A four-stem split would have been a
+ * quarter.
+ *
+ * At R640 for 400 minutes that is R1.60 a minute of real money, and a ceiling
+ * that reads half of what has been spent is not a ceiling: it lets the plan
+ * run out at two hundred minutes on the counter while Kits' own dashboard —
+ * the authoritative one — says four hundred.
+ *
+ * ── Why files times length, rather than measuring the files ─────────────
+ *
+ * A separation returns stems that are exactly as long as what went in; that
+ * is what a separation is. So the length is known without decoding anything,
+ * and it stays known when the stems come back as MP3, which
+ * `lib/server/audiolen.ts` cannot read the length of anyway.
+ *
+ * The one thing this must not do is guess low. `Math.max(1, files)` means a
+ * caller that forgets to say still bills one file rather than zero.
+ */
+export function downloadSeconds(seconds: number, files: number): number {
+  const each = Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
+  const many = Number.isFinite(files) && files > 1 ? Math.floor(files) : 1;
+  return each * many;
+}
+
+/**
  * Write down what a finished piece of work spent.
  *
  * Called after the work succeeds, never before: minutes burn on download, and

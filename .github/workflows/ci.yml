@@ -112,6 +112,12 @@ jobs:
       - name: The Pro Booth counts bars the way musicians do
         run: npm run check:bars
 
+      # Kits' 400 minutes burn on download. /api/stems fetches two files, each
+      # the whole song, and wrote down one song's length — half of what it
+      # spent, on the number that governs a R640 ceiling.
+      - name: Kits' minutes count what comes back, not what was sent
+        run: npm run check:kitsminutes
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described

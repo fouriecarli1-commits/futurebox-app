@@ -205,10 +205,28 @@ gebruik — niks om te beplan nie, net om te onthou om weer te kyk.
 **`imageUrl` in die kieser.** Eg, ongebruik, en die kieser is die leegste skerm
 in die app.
 
-**`jobStartTime` / `jobEndTime` na die minuut-teller.** Vandag skat die teller
-hoeveel minute 'n werk gekos het. Kits gee die egte begin- en eindtyd terug.
-Vir 'n dak van 400 minute teen R640 is die verskil tussen 'n skatting en die
-egte getal regte geld.
+**~~`jobStartTime` / `jobEndTime` na die minuut-teller.~~ Moet dit nie doen
+nie — hierdie punt was verkeerd.**
+
+Dit het gesê die teller *skat* en dat Kits die egte getal teruggee. Albei
+helftes is verkeerd:
+
+* Die teller skat nie. `lib/server/audiolen.ts` lees die WAV se kop en kry die
+  presiese lengte; die "skatting" is net die terugval vir 'n lêer waarvan die
+  kop nie gelees kan word nie.
+* `jobStartTime` en `jobEndTime` is hoe lank die **werk geloop het**, nie
+  hoeveel klank teruggekom het nie. 'n Liedjie van drie minute kan in twintig
+  sekondes verwerk word. Om dit te volg sou 'n presiese getal met een vervang
+  het wat vier keer te klein is.
+
+Wat *wel* verkeerd was, en nou reg is: die teller het die lêer getel wat
+**gestuur** is. Die minute brand op **aflaai**, en `/api/stems` laai twee
+lêers af — die stem én die begeleiding, elk die hele liedjie lank — en het een
+liedjie se lengte neergeskryf. Die helfte van wat dit gebrand het. Sien
+`downloadSeconds` in `lib/server/kitsminutes.ts` en `check:kitsminutes`.
+
+'n Dokument wat die volgende persoon sê om die ding te breek, is erger as een
+wat niks sê nie — daarom staan die ou punt hier deurgehaal eerder as uitgevee.
 
 ### Die verslag self
 

@@ -51,7 +51,7 @@ import { charge } from '@/app/lib/server/credits';
 import { pick, unzip } from '@/app/lib/server/zip';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { configured as kitsOn, fetchResult, splitStems } from '@/app/lib/server/kits';
-import { enough, note } from '@/app/lib/server/kitsminutes';
+import { downloadSeconds, enough, note } from '@/app/lib/server/kitsminutes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -296,7 +296,12 @@ async function kitsSplit(
      refusal message for the singing room, where Kits is the only engine; here
      there is another one behind it and the member has no reason to hear about
      an allowance that is not going to stop them. */
-  if (await enough(seconds)) return null;
+  /* Two files come back, each the whole length of the song: the voice and
+     the backing. Kits' minutes burn on download, so this job spends twice the
+     song — and it used to be checked and written down as once. See
+     `downloadSeconds`. */
+  const spend = downloadSeconds(seconds, 2);
+  if (await enough(spend)) return null;
 
   /* Half of this route's own ceiling, so a slow split still leaves ElevenLabs
      time to answer rather than turning a cheap attempt into a timeout. */
@@ -313,7 +318,7 @@ async function kitsSplit(
   ]);
   if (!gotVocal.ok || !gotBacking.ok) return null;
 
-  await note(seconds, 'isolate', owner);
+  await note(spend, 'isolate', owner);
 
   /* The same two parts under the same two names, so the booth cannot tell
      which service answered — which is the whole point of putting one in front
