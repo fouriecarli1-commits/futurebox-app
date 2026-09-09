@@ -37,7 +37,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, Pause, Play, X } from 'lucide-react';
+import { Headphones, Heart, Loader2, Pause, Play, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import { countWhenPlayed } from '../lib/played';
@@ -66,17 +66,38 @@ export interface RoomPost {
    * somewhere else, which has no song behind it to count.
    */
   readonly sourceId?: string;
+  /**
+   * How many people have hearted it, and whether this reader is one of them.
+   *
+   * Carli, seeing them on the list and not in here: "dit moet binne die play
+   * the room funksie ook wees wanneer mens scroll van 1 liedjie na die
+   * volgende." She is right that this is the screen that needs them most —
+   * the list is the directory of the room and this is the room, and a heart
+   * you have to leave the song to give is a heart nobody gives.
+   *
+   * Null where the count could not be read. Never nought: see `/api/live`.
+   */
+  readonly hearts: number | null;
+  readonly hearted: boolean;
+  /** Listened through, not opened. Null for the same reason as `hearts`. */
+  readonly plays: number | null;
 }
 
 export default function RoomScreen({
   posts,
   startAt,
   onClose,
+  onHeart,
+  signedIn,
 }: {
   readonly posts: readonly RoomPost[];
   /** The post that was tapped, so it opens on that one. */
   readonly startAt: string;
   readonly onClose: () => void;
+  /** Heart it, or take the heart back. The parent owns the count. */
+  readonly onHeart: (id: string) => void;
+  /** Somebody signed out can see the count and cannot add to it. */
+  readonly signedIn: boolean;
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -264,6 +285,76 @@ export default function RoomScreen({
               className="absolute inset-0"
               style={{ background: 'transparent' }}
             />
+
+            {/* The rail, on the right, where a thumb already is.
+
+                Above the panel's own play control rather than inside it: the
+                whole panel is a play button, so a heart drawn as part of that
+                stack would be pressed by anybody trying to pause. `z-10` and
+                `stopPropagation` on the press are both needed — the first
+                puts it over the invisible full-panel button, the second stops
+                the press travelling on to it and pausing the song as a heart
+                is given.
+
+                Only on the panel being looked at. Drawing it on all of them
+                is forty buttons in the accessibility tree for one screen, and
+                a thumb resting between two panels could reach the wrong
+                song's heart. */}
+            {index === at && (
+              <div className="absolute bottom-32 right-3 z-10 flex flex-col items-center gap-4">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    /* The panel underneath is the pause control. Without this
+                       a heart pauses the song it is given to. */
+                    event.stopPropagation();
+                    onHeart(one.id);
+                  }}
+                  disabled={!signedIn}
+                  aria-pressed={one.hearted}
+                  aria-label={
+                    signedIn
+                      ? one.hearted
+                        ? t('live.unheart', 'Take the heart back')
+                        : t('live.heart', 'Heart it')
+                      : t('live.heartSignIn', 'Sign in to heart it')
+                  }
+                  className="flex flex-col items-center gap-1 disabled:cursor-default"
+                >
+                  <span
+                    className="flex h-12 w-12 items-center justify-center rounded-full transition-transform active:scale-90"
+                    style={{
+                      background: GLASS,
+                      color: one.hearted ? '#34d399' : INK,
+                      opacity: signedIn ? 1 : 0.65,
+                    }}
+                  >
+                    <Heart className="h-5 w-5" fill={one.hearted ? 'currentColor' : 'none'} />
+                  </span>
+                  <span className="text-xs font-bold tabular-nums" style={{ color: INK_SOFT }}>
+                    {one.hearts ?? '–'}
+                  </span>
+                </button>
+
+                {/* Not a button: there is nothing to press. Hearts are people
+                    and plays are times, and the two belong beside each
+                    other — see the same pair on the list. */}
+                <span
+                  className="flex flex-col items-center gap-1"
+                  title={t('live.playsWhy', 'Counted once somebody has listened to 65% of the song')}
+                >
+                  <span
+                    className="flex h-12 w-12 items-center justify-center rounded-full"
+                    style={{ background: GLASS, color: INK }}
+                  >
+                    <Headphones className="h-5 w-5" />
+                  </span>
+                  <span className="text-xs font-bold tabular-nums" style={{ color: INK_SOFT }}>
+                    {one.plays ?? '–'}
+                  </span>
+                </span>
+              </div>
+            )}
 
             <div className="relative flex items-center gap-3 pb-2">
               <span

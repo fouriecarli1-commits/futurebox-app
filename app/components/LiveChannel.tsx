@@ -891,9 +891,21 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             seconds: one.seconds,
             audio: one.audio,
             sourceId: one.sourceId,
+            hearts: one.hearts,
+            hearted: one.hearted,
+            plays: one.plays,
           }))}
           startAt={openAt}
           onClose={() => setOpenAt(null)}
+          /* The same handler the list uses, so the two can never disagree
+             about a count. `room.posts` is the one copy: the full-screen
+             panel is a view of it, and hearting in here updates the list
+             behind it as well. */
+          onHeart={(id) => {
+            const one = room.posts.find((post) => post.id === id);
+            if (one) void heart(one);
+          }}
+          signedIn={Boolean(room.signedIn)}
         />
       )}
     </div>

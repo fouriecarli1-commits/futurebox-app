@@ -77,6 +77,13 @@ const POSTS = [
   mine: false,
   sourceId: one.song,
   audio: `/probe-room-${i}.wav`,
+  /* Distinct per post, and never equal, so an assertion cannot pass by
+     reading the wrong panel's number. The third is null on purpose: that is
+     what `/api/live` sends when the count could not be read at all, and the
+     screen has to draw a dash rather than a confident nought. */
+  hearts: [7, 12, null, 3][i],
+  hearted: i === 1,
+  plays: [41, 5, null, 88][i],
 }));
 
 let server = null;
@@ -353,6 +360,111 @@ try {
   check('scrolling moves to the next one',
     next.at === 1 && next.text.includes('Second Song') && /2 \/ 4/.test(next.text),
     `panel ${next.at}: ${next.text.slice(0, 46)}`);
+
+  /* ── The heart and the listens, inside the full-screen room ─────────
+
+     "ek sien nou die hartjie en views, maar dit moet binne die play the room
+      funksie ook wees wanneer mens scroll van 1 liedjie na die volgende."
+
+     They were on the list and not in here, which is the wrong way round: the
+     list is the directory of the room and this is the room. A heart you have
+     to leave the song to give is a heart nobody gives.
+
+     Three things have to be true and only the first is about layout.
+
+     The number has to belong to the panel in front. It is read off the panel
+     under the middle of the window rather than off the DOM, because every
+     panel's markup exists at once and "a 12 is somewhere in the scroller" is
+     true before anybody scrolls.
+
+     It has to be reachable. The tab bar is `z-[95]` and this screen is
+     `z-[80]`, so anything near the bottom of it is painted over — the fault
+     she has reported three times in three different rooms. A rectangle in the
+     right place proves nothing; `elementFromPoint` is the only thing that
+     says what a thumb actually lands on.
+
+     And it must not pause the song. The whole panel is a play control, so a
+     heart drawn over it without `stopPropagation` gives the heart and stops
+     the music in the same press. */
+  const railOn = async () =>
+    p.evaluate(() => {
+      const mid = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+      const panel = mid?.closest('[data-at]');
+      const heart = panel?.querySelector('button[aria-pressed]');
+      if (!heart) return null;
+      const box = heart.getBoundingClientRect();
+      const x = box.x + box.width / 2;
+      const y = box.y + box.height / 2;
+      const hit = document.elementFromPoint(x, y);
+      return {
+        at: Number(panel?.getAttribute('data-at')),
+        said: (heart.textContent ?? '').trim(),
+        pressed: heart.getAttribute('aria-pressed'),
+        /* What is actually painted at the heart's own middle. Anything but
+           the heart means something is over it. */
+        reaches: hit ? Boolean(hit.closest('button[aria-pressed]')) : false,
+        onTop: hit?.closest('button')?.getAttribute('aria-label') ?? hit?.tagName ?? 'nothing',
+        bottom: Math.round(window.innerHeight - box.bottom),
+      };
+    });
+
+  const rail = await railOn();
+  check('the second song carries its own heart count in the full-screen room',
+    rail?.at === 1 && rail?.said === '12', JSON.stringify(rail));
+  check('and it opens filled in for a song this reader has hearted',
+    rail?.pressed === 'true', JSON.stringify(rail));
+  check('nothing is painted on top of it',
+    rail?.reaches === true, `${rail?.onTop} is in front of the heart`);
+  check('and it clears the bottom button bar',
+    (rail?.bottom ?? 0) >= 64, `${rail?.bottom}px above the bottom`);
+
+  /* The listens, beside it. Hearts are people and plays are times. */
+  const plays = await p.evaluate(() => {
+    const mid = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+    const panel = mid?.closest('[data-at]');
+    const span = panel?.querySelector('[title]');
+    return (span?.textContent ?? '').trim();
+  });
+  check('the listen count is beside it, and is the right song’s', plays === '5', plays);
+
+  /* A count that could not be read is a dash, never a nought. The third song
+     is the one `/api/live` had no answer for. */
+  /* One panel at a time. `scroll-snap-stop: always` is on these sections on
+     purpose — it is what stops a flick throwing four songs past somebody —
+     and it refuses a programmatic jump of two panels just as firmly. The
+     first version of this assertion asked for `clientHeight * 2` in one go
+     and read the second song's number while believing it was the third's. */
+  const scrollTo = async (panel) => {
+    /* Scoped to `screen`, not to the page. Unscoped, `div.overflow-y-auto`
+       first matches a scroller in the room *behind* this portal, and every
+       scroll went there — the panel never moved and the assertion read the
+       second song's number believing it was the third's. The same mistake
+       boothwalk made counting an anchor behind an overlay. */
+    const box = screen.locator('div.overflow-y-auto').first();
+    for (let step = 0; step < panel + 2; step += 1) {
+      const at = (await railOn())?.at ?? -1;
+      if (at === panel) return;
+      await box.evaluate((el, want) => el.scrollTo({ top: el.clientHeight * want, behavior: 'auto' }),
+        at < panel ? at + 1 : at - 1);
+      await p.waitForTimeout(900);
+    }
+  };
+
+  await scrollTo(2);
+  const unknown = await railOn();
+  check('a count that could not be read draws a dash rather than a nought',
+    unknown?.at === 2 && unknown?.said === '–', JSON.stringify(unknown));
+
+  /* Back to the second, and press it. */
+  await scrollTo(1);
+  const wasPlaying = await p.evaluate(() =>
+    Array.from(document.querySelectorAll('audio')).some((one) => !one.paused));
+  await p.locator('[data-at="1"] button[aria-pressed]').first().click();
+  await p.waitForTimeout(600);
+  const afterPress = await p.evaluate(() =>
+    Array.from(document.querySelectorAll('audio')).some((one) => !one.paused));
+  check('pressing the heart does not pause the song underneath it',
+    wasPlaying === afterPress, `playing ${wasPlaying} before, ${afterPress} after`);
 
   /* The way out, and whether anything is sitting on top of it.
 
