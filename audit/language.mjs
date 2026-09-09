@@ -169,6 +169,12 @@ async function fresh() {
  * to print.
  */
 async function chooseAfrikaans(p) {
+  /* The welcome door first. It is `fixed inset-0 z-[55]`, it draws over the
+     header, and Playwright calls a button under it visible — so the click is
+     intercepted for forty seconds and then reported as a missing button. Fifth
+     control found under this door, and the one that mattered most: it is what
+     stopped the two scenes that reproduce her report from ever running. */
+  await dismissDoor(p);
   const full = p.locator('button', { hasText: /^Afrikaans$/ }).first();
   if (await full.count()) {
     await full.click();
@@ -412,9 +418,16 @@ async function chooseAfrikaans(p) {
   check('on a phone the account still wins, which is what she is reporting',
     'en' === (await p.evaluate(() => document.documentElement.lang)),
     await p.evaluate(() => document.documentElement.lang));
+  /* Read here rather than relied on from an earlier scene. `words` was a
+     variable belonging to a different scene and this line referenced it after
+     that scene's block had closed — so the probe threw a ReferenceError at
+     this exact point and every scene after it, including the two that
+     reproduce her report, has never run once. A probe that dies halfway
+     reports nothing about the half it never reached. */
+  const onScreen = (await p.locator('body').innerText()).replace(/\s+/g, ' ');
   check('and nothing apologises for a change that did not happen',
-    !/Your account is set to this language|Jou rekening is op hierdie taal gestel/.test(words),
-    words.slice(0, 140));
+    !/Your account is set to this language|Jou rekening is op hierdie taal gestel/.test(onScreen),
+    onScreen.slice(0, 140));
 
   /* A reload is a different question, and the honest answer is "English".
 
@@ -551,6 +564,98 @@ async function chooseAfrikaans(p) {
       'en' === (await p.evaluate(() => document.documentElement.lang)),
       await p.evaluate(() => document.documentElement.lang));
   }
+  await context.close();
+}
+
+/* ── Seven: the sign-in that comes back somewhere else ────────────────────
+
+   Her sixth report, and the one none of the three earlier fixes can reach:
+   "dit kom direk van die app af wat op my foon is." She is in the app
+   installed on her home screen, not a browser tab.
+
+   Signing in with Google, Apple or Facebook navigates away from that app and
+   back. On a phone the return leg can land in a place that cannot see what the
+   first page wrote — a home-screen app and the browser it hands off to do not
+   share a cookie jar — so the ref is gone with the page, the storage is
+   another jar's, and the cookie is another jar's too. All three of the fixes
+   so far live on the device, and the device is what changed.
+
+   A brand new context is exactly that: no storage, no cookie, nothing carried
+   over. The only thing that survives is the address, which is why the choice
+   now rides in it. */
+{
+  const context = await b.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    /* An English phone, so anything that falls through to the locale gives
+       the wrong answer loudly rather than passing by luck. */
+    locale: 'en-ZA',
+  });
+  const p = await context.newPage();
+  p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
+  await p.route('**/auth/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
+  await p.route('**/rest/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+
+  /* Nothing was carried over. If any of this is non-empty the scene is not
+     testing what it says it is. */
+  await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
+  const carriedNothing = await p.evaluate(() => ({
+    stored: window.localStorage.getItem('futurebox.lang.v1'),
+    cookie: document.cookie.includes('futurebox.lang'),
+  }));
+  check('this is a jar with nothing in it, the way a sign-in can come back',
+    carriedNothing.stored === null && carriedNothing.cookie === false,
+    JSON.stringify(carriedNothing));
+
+  /* The return leg, exactly as `signInWith` builds it. */
+  await p.goto(`http://localhost:${PORT}/?welcome=1&lang=af`, { waitUntil: 'networkidle' });
+  await p.waitForTimeout(2500);
+  check('a sign-in that carries the choice in the address lands in Afrikaans',
+    'af' === (await p.evaluate(() => document.documentElement.lang)),
+    await p.evaluate(() => document.documentElement.lang));
+
+  /* Written down properly, so the next load does not need the address again. */
+  const kept = await p.evaluate(() => ({
+    stored: window.localStorage.getItem('futurebox.lang.v1'),
+    cookie: document.cookie.includes('futurebox.lang=af'),
+  }));
+  check('and it is written down, so the next load does not depend on the address',
+    kept.stored === 'af' && kept.cookie === true, JSON.stringify(kept));
+
+  /* Out of the address bar. A language pinned in a URL is a language somebody
+     shares with a friend and cannot get rid of — the same reason `justArrived`
+     wipes its own mark. */
+  check('the language is taken back out of the address',
+    !(await p.evaluate(() => window.location.search)).includes('lang='),
+    await p.evaluate(() => window.location.search));
+
+  /* And the other direction, because half of her sentence is about English. */
+  const other = await context.newPage();
+  await other.route('**/auth/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
+  await other.route('**/rest/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+  await other.goto(`http://localhost:${PORT}/?welcome=1&lang=en`, { waitUntil: 'networkidle' });
+  await other.waitForTimeout(2000);
+  check('and carrying English lands in English',
+    'en' === (await other.evaluate(() => document.documentElement.lang)),
+    await other.evaluate(() => document.documentElement.lang));
+
+  /* Nonsense in the address is ignored rather than obeyed. It is a public URL
+     and anybody can put anything in it. */
+  const junk = await context.newPage();
+  await junk.route('**/auth/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
+  await junk.route('**/rest/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+  await junk.goto(`http://localhost:${PORT}/?welcome=1&lang=%3Cscript%3E`, { waitUntil: 'networkidle' });
+  await junk.waitForTimeout(1500);
+  check('a language nobody offers is ignored, not obeyed',
+    ['en', 'af'].includes(await junk.evaluate(() => document.documentElement.lang)),
+    await junk.evaluate(() => document.documentElement.lang));
+
   await context.close();
 }
 

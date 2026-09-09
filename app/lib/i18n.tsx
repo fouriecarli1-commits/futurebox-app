@@ -26,6 +26,10 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { asLang, onArrival, onSignIn } from './langrule';
+/* The name of the query parameter only, so this does not pull the Supabase
+   client into every page that renders a word of text. `cloud.ts` is imported
+   dynamically everywhere else in this file for exactly that reason. */
+import { CHOSE_LANG as FROM_SIGNIN } from './cloudnames';
 
 export type Lang = 'en' | 'af';
 
@@ -2451,11 +2455,53 @@ interface LangContext {
   switched: Lang | null;
   /** Keep the language that was on screen before the account changed it. */
   undoSwitch: () => void;
+  /**
+   * Where the language came from, for a person holding the phone it is wrong
+   * on.
+   *
+   * This has been reported five times, fixed three times, and each fix was a
+   * different guess about which of four things fails on her device. The
+   * guessing is the problem: nothing in the app can be looked at from her side,
+   * so every round is a theory built on a sentence.
+   *
+   * `/taal` prints this. It is not diagnostics for their own sake — it turns
+   * "the language is still wrong" into a screenshot that names which input
+   * was there, which was empty, and which one won.
+   */
+  sources: LangSources;
 }
+
+/** What each of the four places had to say on this load, and what won. */
+export interface LangSources {
+  /** Carried back from a sign-in in the address. Null when there was none. */
+  readonly address: Lang | null;
+  /** localStorage: a language, `null` when empty, `'blocked'` when it threw. */
+  readonly storage: Lang | 'blocked' | null;
+  readonly cookie: Lang | null;
+  /** What the browser says the device is set to. A guess, never a choice. */
+  readonly locale: string;
+  /** The account, once asked. `'unasked'` until it has been. */
+  readonly account: Lang | 'unasked' | 'none' | 'failed';
+  /** Which of them decided what is on screen. */
+  readonly won: 'address' | 'storage' | 'cookie' | 'account' | 'locale';
+  /** Running as an installed app rather than in a browser tab. */
+  readonly installed: boolean;
+}
+
+const NOTHING_YET: LangSources = {
+  address: null,
+  storage: null,
+  cookie: null,
+  locale: '',
+  account: 'unasked',
+  won: 'locale',
+  installed: false,
+};
 
 const Context = createContext<LangContext>({
   lang: 'en',
   setLang: () => {},
+  sources: NOTHING_YET,
   t: (key, fallback) => fallback ?? STRINGS[key]?.en ?? key,
   switched: null,
   undoSwitch: () => {},
@@ -2611,6 +2657,36 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return chose.current;
   };
 
+  /**
+   * The choice carried through a sign-in in the address bar.
+   *
+   * `cloud.signInWith` puts it on `redirectTo`, so it comes back on the return
+   * leg of a Google, Apple or Facebook sign-in whatever happened to storage in
+   * between — a home-screen app handing off to a browser does not share a
+   * cookie jar with it, and that is the case none of the three device-side
+   * copies can cover.
+   *
+   * Read once and taken straight out of the address, so a refresh or a shared
+   * link does not pin somebody to a language they never chose. Same discipline
+   * as `justArrived`.
+   */
+  /* Recorded rather than only used, so `/taal` can print it. Nothing here
+     changes what the app does — it is the same four reads, kept. */
+  const [sources, setSources] = useState<LangSources>(NOTHING_YET);
+
+  const fromAddress = (): Lang | null => {
+    try {
+      const url = new URL(window.location.href);
+      const said = asLang(url.searchParams.get(FROM_SIGNIN));
+      if (!said) return null;
+      url.searchParams.delete(FROM_SIGNIN);
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+      return said;
+    } catch {
+      return null;
+    }
+  };
+
   /* The document's own language, kept in step with the app's.
      `<html lang="en">` is written by the server, which cannot know — and an
      Afrikaans page that says it is English is read aloud by a screen reader
@@ -2628,10 +2704,60 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
          is null and the locale answers, which is the old behaviour; on one
          that keeps only the cookie — a phone after signing in — the choice is
          still a choice, and rule 1 applies instead of the account. */
+      /* The address first, then storage, then the cookie.
+
+         The address is only ever set by this app's own `redirectTo`, and only
+         on the leg coming back from a sign-in — so when it is there it is the
+         most recent thing anybody pressed, and it is the only one of the four
+         that survives the round trip on a phone. It is written down here as
+         well, so the next load does not depend on the address again. */
+      const carried = fromAddress();
+      if (carried) {
+        chose.current = carried;
+        bakeCookie(carried);
+        try {
+          window.localStorage.setItem(STORAGE_KEY, carried);
+        } catch {
+          // The cookie and the ref still hold it.
+        }
+      }
+
+      /* Each read kept apart, and a storage that *threw* kept apart from a
+         storage that was simply empty. Those two are the same blank on screen
+         and they mean opposite things — the first is a phone refusing to keep
+         anything, the second is somebody who has not chosen yet. Telling them
+         apart is the whole point of printing this. */
+      let stored: Lang | 'blocked' | null = null;
+      try {
+        stored = asLang(window.localStorage.getItem(STORAGE_KEY));
+      } catch {
+        stored = 'blocked';
+      }
+      const baked = inCookie();
+      const locale = navigator.language ?? '';
+      const installed =
+        window.matchMedia?.('(display-mode: standalone)').matches === true ||
+        (window.navigator as { standalone?: boolean }).standalone === true;
+
       const arrived = onArrival(
-        asLang(window.localStorage.getItem(STORAGE_KEY)) ?? inCookie(),
-        navigator.language,
+        carried ?? (stored === 'blocked' ? null : stored) ?? baked,
+        locale,
       );
+      setSources({
+        address: carried,
+        storage: stored,
+        cookie: baked,
+        locale,
+        account: 'unasked',
+        won: carried
+          ? 'address'
+          : stored && stored !== 'blocked'
+            ? 'storage'
+            : baked
+              ? 'cookie'
+              : 'locale',
+        installed,
+      });
       setLangState(arrived.lang);
       /* A choice ends it here. A guess does not: the account below may still
          have something to say, and rule 3 is that a guess does not outrank
@@ -2668,6 +2794,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         document.documentElement.lang = said;
       } catch {
         // Whatever this device worked out on its own stands.
+        setSources((was) => ({ ...was, account: 'failed' }));
       }
     })();
     return () => {
@@ -2808,8 +2935,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ lang, setLang, t, switched, undoSwitch }),
-    [lang, setLang, t, switched, undoSwitch],
+    () => ({ lang, setLang, t, switched, undoSwitch, sources }),
+    [lang, setLang, t, switched, undoSwitch, sources],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

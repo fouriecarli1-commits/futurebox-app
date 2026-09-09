@@ -1437,7 +1437,9 @@ export default function FutureBoxHome() {
       setAuthModalOpen(true);
       return;
     }
-    const result = await cloud.signInWithGoogle();
+    /* With the language they chose, so it survives the round trip through
+       Google. See `CHOSE_LANG` in `lib/cloud.ts`. */
+    const result = await cloud.signInWithGoogle(lang);
     if (!result.ok) {
       setAuthError(result.message);
       setAuthModalOpen(true);

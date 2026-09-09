@@ -75,7 +75,7 @@ export default function SignInWith({
   /** Said in the modal that owns this, beside whatever the form said. */
   readonly onProblem: (message: string) => void;
 }): React.ReactElement | null {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   const [on, setOn] = useState<Provider[] | null>(null);
   const [going, setGoing] = useState<Provider | null>(null);
 
@@ -107,7 +107,11 @@ export default function SignInWith({
           disabled={going !== null}
           onClick={() => {
             setGoing(provider);
-            void signInWith(provider).then((result) => {
+            /* The language goes with them. Signing in this way is a
+               navigation away from this app and back, and on a phone that
+               round trip can land somewhere that cannot see what this page
+               wrote down — see `CHOSE_LANG` in `cloud.ts`. */
+            void signInWith(provider, lang).then((result) => {
               // A success leaves the page, so there is nothing to undo here.
               if (!result.ok) {
                 setGoing(null);

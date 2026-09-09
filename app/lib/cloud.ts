@@ -331,6 +331,36 @@ export async function signIn(email: string, password: string): Promise<AuthResul
 export const ARRIVED = 'welcome';
 
 /**
+ * The language somebody chose, carried through the sign-in in the address.
+ *
+ * ── Why the choice needs a lift ──────────────────────────────────────────
+ *
+ * Carli, five times: she picks Afrikaans on the sign-in page and lands in
+ * English. On a laptop it works. On the app installed on her phone it does
+ * not. Three fixes have gone in — a ref, then localStorage, then a cookie —
+ * and each one is a different place on the device to leave the choice while
+ * signing in happens.
+ *
+ * The device is the problem. Signing in with Google, Apple or Facebook is a
+ * navigation *away from this app and back*, and on a phone that round trip
+ * can land somewhere that cannot see what the first page wrote: a home-screen
+ * app and the browser it hands off to do not share a cookie jar, and a phone
+ * that refuses storage refuses it on both legs.
+ *
+ * The address is the one channel that survives all of it. `redirectTo` is a
+ * URL this app builds, so the choice rides in it and comes back on the return
+ * leg whatever happened to storage on the way. It is read before anything
+ * else, applied, written down properly, and then taken out of the address bar.
+ *
+ * This is deliberately belt as well as braces: the ref, the storage and the
+ * cookie all stay. Each of them is right in a case the others are not, and
+ * none of them costs anything. What this adds is the one case none of them
+ * covers — a sign-in that comes back somewhere else entirely.
+ */
+export { CHOSE_LANG } from './cloudnames';
+import { CHOSE_LANG } from './cloudnames';
+
+/**
  * Was this page load the return leg of a sign-in?
  *
  * Answers once and clears the mark out of the address bar, so a refresh or a
@@ -395,6 +425,12 @@ export async function providersOn(): Promise<Provider[]> {
 
 export async function signInWith(
   provider: Provider,
+  /**
+   * What they had chosen when they pressed the button, so it survives the
+   * round trip through the provider. Optional: a caller that does not know
+   * changes nothing, and the device's own copies still apply.
+   */
+  lang?: string | null,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const supabase = getClient();
   if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
@@ -414,7 +450,9 @@ export async function signInWith(
       redirectTo:
         typeof window === 'undefined'
           ? undefined
-          : `${window.location.origin}${window.location.pathname}?${ARRIVED}=1`,
+          : `${window.location.origin}${window.location.pathname}?${ARRIVED}=1${
+              lang ? `&${CHOSE_LANG}=${encodeURIComponent(lang)}` : ''
+            }`,
     },
   });
   if (error) return { ok: false, message: error.message };
@@ -422,8 +460,10 @@ export async function signInWith(
 }
 
 /** The one that was here before the others, kept so nothing else has to move. */
-export async function signInWithGoogle(): Promise<{ ok: true } | { ok: false; message: string }> {
-  return signInWith('google');
+export async function signInWithGoogle(
+  lang?: string | null,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  return signInWith('google', lang);
 }
 
 export async function signOut(): Promise<void> {
