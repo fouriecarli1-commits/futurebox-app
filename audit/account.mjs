@@ -14,14 +14,53 @@
  * exactly like a working free account, and a screen that collapses them back
  * together undoes that.
  *
- * Needs the stub build — see `audit/README.md`.
+ * ── Why this had never run ───────────────────────────────────────────────
+ *
+ * It was written against a server somebody had left on port 3000 — the fault
+ * `serve()` exists to fix and `check:probes` holds every wired probe to — so
+ * it never got a `check:` name and sat here being run by nobody. Eleven
+ * assertions about the one screen that holds somebody's money and the button
+ * that deletes everything they have made.
+ *
+ * It builds its own stubbed project and starts its own server now, and puts
+ * the ordinary build back in an exit handler however the run ends.
  */
+import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
 
-const PORT = process.argv[2] || '3044';
+const PORT = Number(process.argv[2] || 3044);
 const af = process.argv[3] === 'af';
 
+/* A project that has accounts, so the header draws a signed-in person at all.
+   `stub.supabase.co` is nonsense on purpose — nothing here reaches Supabase —
+   and the storage key the app derives from it is `sb-stub-auth-token`, which
+   is what this probe has always seeded. Copied from `audit/language.mjs`
+   rather than reinvented. */
+const STUB = {
+  NEXT_PUBLIC_SUPABASE_URL: 'https://stub.supabase.co',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'stub-anon-key',
+};
+console.log('building with a project that has accounts…');
+execSync('npx next build', { stdio: 'ignore', env: { ...process.env, ...STUB } });
+
+/* Put back however this run ends. In an exit handler rather than at the
+   bottom: a probe that throws on its first assertion never reaches a tidy-up
+   written at the end, and the stubbed build it leaves behind is read by the
+   next probe as a broken app. */
+let putBack = false;
+process.on('exit', () => {
+  if (putBack) return;
+  putBack = true;
+  console.log('putting the ordinary build back…');
+  try {
+    execSync('npx next build', { stdio: 'ignore' });
+  } catch {
+    console.error('the ordinary build could not be put back — run `npx next build`');
+  }
+});
+
+const server = await serve(PORT, { env: STUB });
 const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
@@ -58,6 +97,25 @@ await p.route('**/api/subscription*', (r) => r.fulfill({ status: 200, contentTyp
 
 await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
 await p.waitForTimeout(2500);
+
+/* Past the front door first, the way a person does.
+
+   A signed-in load opens on the welcome screen, which is `fixed inset-0
+   z-[55]` over everything including the header. That is deliberate — it is
+   the thing you arrive at — but it means the header cannot be pressed until
+   it is closed, and this probe timed out on exactly that with Playwright
+   naming the panel as the thing intercepting the click.
+
+   Worth doing by pressing its own way out rather than by hiding the element,
+   because a door with no visible way past it is its own fault and this walks
+   into it if it ever appears. */
+const door = p.locator('button').filter({ hasText: /Not now|Nie nou/ }).first();
+check('the welcome screen has a way past it', (await door.count()) > 0,
+  'it covers the header, so a screen with no way out is a trap');
+if (await door.count()) {
+  await door.click();
+  await p.waitForTimeout(900);
+}
 
 /* The press itself. Their own name in the corner — which is where somebody
    looks for their account, and which used to do nothing at all. */
@@ -106,7 +164,63 @@ check('a balance that could not be fetched says so rather than showing zero',
   af ? /kon nou nie gehaal word nie/.test(words) : /could not be fetched/.test(words),
   /\b0\b/.test(words) ? 'it showed a zero' : words.split('\n').slice(0, 8).join(' / '));
 
+/* ── The button that deletes everything, and what it promises ────────────
+
+   On 9 September 2026 the DELETE behind this button was found to read the
+   member's cloned voices, treat a failed read as "there are none", and then
+   delete the account anyway — leaving a recording of somebody's voice on
+   ElevenLabs after telling them it was gone.
+
+   The route refuses now. What is checked here is the half a route cannot
+   check: that the screen says what will happen before the press, in the
+   reader's own language, and that it cannot be pressed by accident. A
+   destructive button one tap away from the balance is its own fault. */
+await p.keyboard.press('Escape');
+await p.waitForTimeout(500);
+await mine.click();
+await p.waitForTimeout(1200);
+const open = p.locator('[role="dialog"]').first();
+words = await open.innerText();
+
+check('the way to delete the account is on the screen',
+  af ? /verwyder|skrap/i.test(words) : /delete/i.test(words),
+  words.split('\n').filter((one) => /delete|verwyder|skrap/i.test(one)).join(' / ') || 'nothing about deleting');
+
+/* Not one press. Pressing "Delete my account" opens the confirmation rather
+   than deleting anything: the route asks for the address to be typed, and a
+   screen that deleted on a single tap beside the balance is how somebody
+   loses everything by aiming badly on a phone. */
+const start = open.locator('button').filter({ hasText: af ? /Vee my rekening uit/ : /Delete my account/ }).first();
+check('the first press opens a confirmation rather than deleting',
+  (await start.count()) > 0);
+await start.click();
+await p.waitForTimeout(700);
+words = await open.innerText();
+check('and it asks for the address to be typed',
+  (await open.locator('input').count()) > 0 &&
+    (af ? /om te bevestig/ : /to confirm/).test(words),
+  'a destructive button beside the balance needs something typed first');
+
+/* The promise the route was breaking, checked where somebody actually reads
+   it — on the list this panel shows before the press.
+
+   ── The assertion that was wrong ──────────────────────────────────────
+
+   This first looked for the word "ElevenLabs" and failed. The screen was
+   right and the check was not: it says "removed from the voice service too,
+   not just from here", which is better — this app deliberately does not put
+   its suppliers' names in front of members anywhere else, and a screen that
+   suddenly did would be the odd one out rather than the honest one.
+
+   What matters is the promise, not the supplier: the terms and the privacy
+   notice both say the cloned voice goes from the service as well as from
+   here, and this is the sentence somebody relies on when they press it. */
+check('and it says the cloned voice goes from the voice service as well',
+  (af ? /stemdiens/i : /voice service/i).test(words),
+  words.split('\n').filter((one) => /voice|stem/i.test(one)).join(' / ') || 'nothing about the voice');
+
 await p.screenshot({ path: shot(`account-${af ? 'af' : 'en'}.png`), fullPage: false });
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
+server.stop();
 process.exit(problems.length ? 1 : 0);

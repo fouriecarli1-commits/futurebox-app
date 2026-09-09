@@ -94,11 +94,24 @@ ok('and the body says the app has stopped generating',
   elevenLetter(600_000, PLAN_CREDITS, 1).body.includes('stopped generating'));
 
 /* Kits is a real roof, so its letter must not tell her to top up — there is
-   nothing to top up, and the card is not being charged. */
+   nothing to top up, and the card is not being charged.
+
+   Kits support confirmed the shape of it on 9 September 2026: the roof is
+   their fair-use policy, it resets at the start of the next billing cycle,
+   and there is NO add-on to buy capacity beyond it. That last clause is
+   stronger than what the letter used to say, and it is what these two
+   assertions now hold — a letter that offers a purchase which does not exist
+   sends her looking for a button nobody has built. */
 const kits = kitsLetter(200, 400, 0.5);
 ok('the Kits letter says the roof is real', /real roof/.test(kits.body));
-ok('and that buying more means a bigger plan, not a top-up',
-  /bigger Kits plan, not a top-up/.test(kits.body));
+ok('and that there is nothing to buy past it',
+  /no add-on to buy capacity beyond it/i.test(kits.body),
+  'confirmed by Kits in writing; a letter that implies a top-up exists is a wrong instruction');
+ok('and that it comes back on its own next cycle',
+  /resets on its own at the start of the next billing cycle/i.test(kits.body),
+  'the one piece of good news in that letter, and the thing that says how long to wait');
+ok('and that the only lever is a bigger plan',
+  /bigger plan/.test(kits.body));
 ok('and it repeats that minutes burn on what comes back',
   /burn on what comes back/.test(kits.body));
 ok('a four-part split is named as twelve minutes, not three',

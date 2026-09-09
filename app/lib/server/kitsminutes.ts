@@ -4,7 +4,23 @@
  * ── Why a ceiling exists at all ──────────────────────────────────────────
  *
  * Kits' Professional Plan is R640 a month and is not unlimited: it carries a
- * roof of **400 download minutes**. Conversion time is free; the minutes burn
+ * roof of **400 download minutes**.
+ *
+ * ── What Kits confirmed, 9 September 2026 ────────────────────────────────
+ *
+ * Their support, in writing, to a direct question: the roof is their **fair
+ * use policy**, it **resets automatically at the start of the next billing
+ * cycle**, and **there is no add-on to purchase additional capacity beyond
+ * it**.
+ *
+ * That last clause is the one that matters here. It means this counter is not
+ * a warning before a purchase — there is nothing to purchase. When the four
+ * hundred are gone, singing conversion, stem splitting and cleaning are off
+ * for the rest of the cycle for everybody, and the only lever is a bigger
+ * plan next month. A brake that runs out is therefore the whole of the
+ * safety, not the first half of it.
+ *
+ * Conversion time is free; the minutes burn
  * when audio is downloaded, and this app downloads every result, because that
  * is how the audio gets here. So every minute a member gets back spends one of
  * the 400.

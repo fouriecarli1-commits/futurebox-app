@@ -1694,6 +1694,63 @@ And it walked past `((data as Row[] | null) ?? [])` until it learned to see
 through a type assertion, which is how it found `purchaseLevel`, a case two
 earlier sweeps had both missed.
 
+## Kits answered, 9 September 2026
+
+Their support, in writing, to a direct question. Two things, and the second
+changes what the app's own warning should say.
+
+**Commercial use: yes, and no credit needed.** "Assuming you created your AI
+voice model using content you have the rights to, as required by our Terms of
+Service, you have a license to use the output of your voice models however you
+like, for both personal and commercial use. You don't need to credit or add
+our name to the generated products." The condition is the member's own voice,
+which `/api/voice/clone` already refuses without.
+
+Worth noting rather than assuming: this is the same downstream question
+ElevenLabs answered *against* us. The models sit on her Kits account, so
+whether that licence reaches her members is not settled by this answer either.
+Kits' wording is looser than ElevenLabs' and does not carve platforms out —
+but it does not name them in either, and it is worth one more question before
+launch rather than a reading of silence.
+
+**The 400 minutes are a fair-use policy, they reset on their own, and there is
+NO add-on to buy more.** That last clause is the material one. Until today the
+warning letter said "buying more means a bigger Kits plan, not a top-up",
+which was right in spirit; it is now confirmed as the whole truth. When the
+month runs out, singing conversion, stem splitting and cleaning are simply off
+for everybody until the next billing cycle. There is nothing to purchase.
+
+So the brake in `kitsminutes.ts` is not a warning before a purchase — it is
+the whole of the safety. `check:spendwatch` now holds the letter to all three
+facts: nothing to buy past it, it comes back on its own next cycle, and the
+only lever is a bigger plan.
+
+## audit/account.mjs runs (#96)
+
+Sixteen assertions about the one screen holding somebody's money and the
+button that deletes everything they have made — written against a server
+somebody had left on port 3000, so never given a `check:` name and never run.
+It builds its own stubbed project, starts its own server, and puts the
+ordinary build back in an exit handler. Waiting is 6, was 25.
+
+Three things it found on the way, and only one is a fault in the app:
+
+1. **The welcome door covers the header.** Playwright timed out pressing the
+   member's own name with `fixed inset-0 z-[55]` named as the interceptor —
+   the same panel that hid the language notice this morning. That one is
+   deliberate: it is the thing you arrive at, and it has its own way out. The
+   probe presses it, and asserts the way out exists, because a door with no
+   visible way past it would be its own fault.
+2. **My assertion about ElevenLabs was wrong, not the screen.** It looked for
+   the supplier's name and failed; the screen says "removed from the voice
+   service too, not just from here", which is better — this app does not put
+   its suppliers' names in front of members anywhere else, and one screen that
+   suddenly did would be the odd one out. The assertion matches the promise
+   now, not the supplier.
+3. **My "not a single press away" assertion measured the wrong moment**,
+   looking for the typed-address field before the confirmation had been
+   opened. It opens it now and checks there.
+
 ## Open, and worth a decision
 
 - **Does anybody pay yet?** Still unanswered, and it still decides whether the

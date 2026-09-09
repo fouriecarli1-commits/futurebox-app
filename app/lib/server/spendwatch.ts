@@ -177,7 +177,9 @@ export function kitsLetter(usedMin: number, ceilingMin: number, step: number): {
       ? `Voice splitting, stem splitting and singing conversion have stopped. ${Math.round(usedMin)} of ${ceilingMin} download minutes are spent.`
       : `${Math.round(usedMin)} of ${ceilingMin} download minutes are spent this month. ${Math.round(left)} left.`,
     '',
-    'Kits is a real roof rather than a prepayment: it stops on its own and no card is charged past the R640. Buying more means a bigger Kits plan, not a top-up.',
+    'Kits is a real roof rather than a prepayment: it stops on its own and no card is charged past the R640.',
+    '',
+    'Kits support confirmed on 9 September 2026 that the roof is their fair-use policy, that it resets on its own at the start of the next billing cycle, and that there is NO add-on to buy capacity beyond it. So there is no way to spend your way out of a month that has run out: the only lever is a bigger plan next cycle, and until then the conversion, the splitting and the cleaning are simply off.',
     '',
     'Minutes burn on what comes back, not what is sent — a four-part split of a three-minute song is twelve minutes, not three.',
   ].join('\n');
