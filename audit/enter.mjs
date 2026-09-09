@@ -160,12 +160,20 @@ export async function studio(page) {
  * rail is used when it is visible.
  */
 export async function toRoom(page, name) {
-  /** A room's own button on the door, matched on its first line.
+  /** The one button among these whose FIRST LINE is the room's name.
    *
    *  The hint under each one holds room names too — "Podcast" appears in the
-   *  video desk's — so matching the whole button opened the wrong room. */
-  const onDoor = async () => {
-    const buttons = page.locator('div.fixed.inset-0.z-\\[55\\] button');
+   *  video desk's, and so does "Adverts" — so matching the whole button opens
+   *  the wrong room. Playwright's `hasText` searches the whole subtree, which
+   *  is why this is a loop rather than a filter.
+   *
+   *  Shared by the door and the rail. It was written for the door only, and
+   *  the rail kept its `filter({ hasText: name })` — so `toRoom(page,
+   *  'Adverts')` from inside a room walked into the Video desk, whose hint
+   *  reads "Adverts, podcasts, social". The probe then measured the wrong room
+   *  and reported the Adverts screen as missing. Found the first time
+   *  `audit/addon.mjs` was ever run. */
+  const firstLineIs = async (buttons) => {
     const many = await buttons.count();
     for (let i = 0; i < many; i += 1) {
       const first = ((await buttons.nth(i).innerText().catch(() => '')) ?? '').split('\n')[0].trim();
@@ -173,6 +181,8 @@ export async function toRoom(page, name) {
     }
     return null;
   };
+
+  const onDoor = () => firstLineIs(page.locator('div.fixed.inset-0.z-\\[55\\] button'));
 
   /* The door may already be open — the studio opens on it — in which case
      reaching for the way back clicks through an overlay and times out. */
@@ -184,8 +194,8 @@ export async function toRoom(page, name) {
        visible, because visibility does not account for being covered by a
        full-screen overlay — and then spent thirty seconds retrying a click
        that the studio kept intercepting. */
-    const rail = page.locator('div.fixed.inset-0.z-50 nav button').filter({ hasText: name }).first();
-    if ((await rail.count()) && (await rail.isVisible().catch(() => false))) {
+    const rail = await firstLineIs(page.locator('div.fixed.inset-0.z-50 nav button'));
+    if (rail && (await rail.isVisible().catch(() => false))) {
       await rail.click();
       await page.waitForTimeout(900);
       return;

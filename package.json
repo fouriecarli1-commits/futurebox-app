@@ -157,6 +157,7 @@
     "check:elevenmodels": "tsx scripts/check-elevenmodels.mts",
     "check:couldnotask": "tsx scripts/check-couldnotask.mts",
     "check:accountscreen": "node audit/account.mjs 3044",
+    "check:addonroom": "node audit/addon.mjs 3049",
     "check:kitseach": "tsx scripts/check-kitseach.mts"
   },
   "dependencies": {

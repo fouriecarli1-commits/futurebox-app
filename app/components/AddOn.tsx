@@ -128,29 +128,48 @@ export default function AddOn({
         </p>
       )}
 
-      {/* ── The price ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-3 pt-1">
-        {open && (
-          <div>
-            <p className="text-2xl font-black text-white tabular-nums leading-none">R{rand}</p>
-            <p className="text-xs text-zinc-500">{t('addon.perMonth', 'a month')}</p>
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() => void buy()}
-          disabled={busy}
-          className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold inline-flex items-center justify-center gap-2 disabled:opacity-60"
-        >
-          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-          {t('addon.buy', 'Unlock the marketing desk')}
-        </button>
-      </div>
+      {/* ── The price, and the button ──────────────────────────────────
 
-      <Note className="text-xs text-zinc-500 leading-relaxed">{t(
-          'addon.cancel',
-          'Stops whenever you say so, from your account screen. What you have already planned stays where it is and you can still take it out of the queue after it lapses.',
-        )}</Note>
+          Both behind the same chevron as the description, and that is the
+          point rather than an oversight of layout.
+
+          Shut, this panel used to show a name, a price and a button that
+          starts a recurring R249-a-month charge, while every word saying what
+          the money buys — the pitch, the seven things included, and the line
+          promising the advert writer stays free — was collapsed above it. The
+          whole case for the price was one press away and the price was not.
+
+          Everywhere else in this app the rule is that a button says what it
+          costs before it is pressed. This is the same rule facing the other
+          way: a subscription cannot be bought from a panel that has not said
+          what it is. Opening it is one press, and it is the press that turns
+          a price into an offer.
+
+          `audit/addon.mjs` found this the first time it was ever run. */}
+      {open && (
+        <>
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <div>
+              <p className="text-2xl font-black text-white tabular-nums leading-none">R{rand}</p>
+              <p className="text-xs text-zinc-500">{t('addon.perMonth', 'a month')}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void buy()}
+              disabled={busy}
+              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+              {t('addon.buy', 'Unlock the marketing desk')}
+            </button>
+          </div>
+
+          <Note className="text-xs text-zinc-500 leading-relaxed">{t(
+              'addon.cancel',
+              'Stops whenever you say so, from your account screen. What you have already planned stays where it is and you can still take it out of the queue after it lapses.',
+            )}</Note>
+        </>
+      )}
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
 

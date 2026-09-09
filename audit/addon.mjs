@@ -14,14 +14,52 @@
  * customer it already has, and that is a failure of words — so this is the
  * only place it can be caught.
  *
- * Needs the stub build — see `audit/README.md`.
+ * ── Why this had never run ───────────────────────────────────────────────
+ *
+ * It was written against a server somebody had left running on a port, which
+ * is the fault `serve()` exists to fix — so it never earned a `check:` name
+ * and sat here being run by nobody. Twenty assertions about the one screen in
+ * this app that asks for money for something other than credits.
+ *
+ * It builds its own stubbed project and starts its own server now, and puts
+ * the ordinary build back in an exit handler however the run ends.
  */
+import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
+import { dismissDoor, toRoom } from './enter.mjs';
 
-const PORT = process.argv[2] || '3049';
+const PORT = Number(process.argv[2] || 3049);
 const af = process.argv[3] === 'af';
 
+/* A project that has accounts, so the header draws a signed-in person at all.
+   `stub.supabase.co` is nonsense on purpose — nothing here reaches Supabase —
+   and the storage key the app derives from it is `sb-stub-auth-token`, which
+   is what this probe seeds below. */
+const STUB = {
+  NEXT_PUBLIC_SUPABASE_URL: 'https://stub.supabase.co',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'stub-anon-key',
+};
+console.log('building with a project that has accounts…');
+execSync('npx next build', { stdio: 'ignore', env: { ...process.env, ...STUB } });
+
+/* Put back however this run ends — in an exit handler rather than at the
+   bottom, because a probe that throws on its first assertion never reaches a
+   tidy-up written at the end, and the stubbed build it leaves behind is read
+   by the next probe as a broken app. */
+let putBack = false;
+process.on('exit', () => {
+  if (putBack) return;
+  putBack = true;
+  console.log('putting the ordinary build back…');
+  try {
+    execSync('npx next build', { stdio: 'ignore' });
+  } catch {
+    console.error('the ordinary build could not be put back — run `npx next build`');
+  }
+});
+
+const server = await serve(PORT, { env: STUB });
 const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
@@ -63,15 +101,42 @@ await p.route('**/api/addons*', (r) => r.fulfill({
   }),
 }));
 
-await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
+await p.goto(server.url, { waitUntil: 'networkidle' });
 await p.waitForTimeout(2000);
+/* The welcome door, which did not exist when this probe was written. It is
+   `fixed inset-0 z-[55]` and sits over the header, so going straight for the
+   Studio button times out against a door rather than against a fault — and a
+   probe that cannot get in reports nothing at all, which is worse than one
+   that fails. Fourth control found under it. */
+await dismissDoor(p);
 await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
 await p.waitForTimeout(1800);
 const room = p.locator('div.fixed.inset-0.z-50').first();
-await room.locator('button').filter({ hasText: af ? /^Advertensies/ : /^Adverts/ }).first().click();
-await p.waitForTimeout(2000);
+/* Through the shared helper rather than a hand-rolled click, because the way
+   into a room has changed twice — a dropdown, then a rail, then the studio's
+   own front door — and every probe that spelled it out itself broke silently
+   each time by finding no button and passing anyway. */
+await toRoom(p, af ? 'Advertensies' : 'Adverts');
+await p.waitForTimeout(1400);
 
 // ── Not bought ───────────────────────────────────────────────────────────
+/* Shut first: a name, a price and a chevron, and no way to start a recurring
+   charge from a panel that has not yet said what the money buys. */
+const collapsed = await room.innerText();
+check('shut, it names itself and its price',
+  /The marketing desk|Die bemarkingslessenaar/.test(collapsed) && /R\s?249/.test(collapsed),
+  collapsed.slice(0, 160).replace(/\n/g, ' / '));
+check('and shut, there is nothing to press that starts a monthly charge',
+  (await room.locator('button').filter({ hasText: af ? /Sluit die bemarkingslessenaar oop/ : /Unlock the marketing desk/ }).count()) === 0,
+  'a R249-a-month button is offered above a collapsed description');
+
+/* Then open it, the way somebody deciding does. Everything below is the
+   opened panel. */
+await room.locator('button[aria-expanded="false"]')
+  .filter({ hasText: af ? /Die bemarkingslessenaar/ : /The marketing desk/ })
+  .first()
+  .click();
+await p.waitForTimeout(700);
 const shut = await room.innerText();
 check('the sales screen is there when it is not bought',
   af ? /Die bemarkingslessenaar/.test(shut) : /The marketing desk/.test(shut),
@@ -112,10 +177,10 @@ await p.screenshot({ path: shot(`addon-shut-${af ? 'af' : 'en'}.png`), fullPage:
 owned = true;
 /* Through the room's own reload rather than a page refresh, because what is
    being tested is that coming back from a checkout opens the desk. */
-await room.locator('button').filter({ hasText: af ? /^Kanaal/ : /^Channel/ }).first().click();
-await p.waitForTimeout(1200);
-await room.locator('button').filter({ hasText: af ? /^Advertensies/ : /^Adverts/ }).first().click();
-await p.waitForTimeout(2000);
+await toRoom(p, af ? 'Kanaal' : 'Channel');
+await p.waitForTimeout(1000);
+await toRoom(p, af ? 'Advertensies' : 'Adverts');
+await p.waitForTimeout(1600);
 
 const open = await room.innerText();
 check('paying opens the desk', af ? /Die mark, en die week/.test(open) : /The market, and the week/.test(open),
