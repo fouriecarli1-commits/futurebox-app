@@ -1629,6 +1629,36 @@ outright), so it is worth doing properly rather than quickly. The dub
 transcript (`GET /v1/dubbing/{id}/transcript/{lang}`) and
 `/v1/music/detailed` are also still untouched.
 
+## Their model numbers, read instead of assumed
+
+`GET /v1/models` was in nothing. It carries four fields this app had been
+guessing at, and `/api/allowance` now reports the two models we name against
+what we assume:
+
+- **`maximum_text_length_per_request`** is the one that can bite. The biggest
+  plan lets somebody send a **12,000-character** script (`PODCAST_CAPS.label`
+  → `speakChars`). If a model takes less, that read is charged here and
+  refused there — the 4.5 MB wall (#90) all over again, and invisible for the
+  same reason: nobody asked. The page prints the comparison and says which of
+  `speakChars` or the script to change. **Open until she runs the page:**
+  whether there is anything to fix.
+- **`model_rates.character_cost_multiplier`** is what they actually bill,
+  against `lib/credits.ts`, which is a number worked out from a document.
+  `cost_discount_multiplier` sits beside it and is exactly the field an
+  Enterprise agreement moves — worth watching before and after that
+  conversation.
+- **`languages`** says which models know Afrikaans. `/api/voice/speak` picks
+  `eleven_v3` for a wide script on the strength of a comment; this is where
+  that stops being a comment and bears on #115.
+- **`concurrency_group`** is how many members can generate at once, which is a
+  launch number rather than a curiosity.
+
+`check:elevenmodels` drives the reader over five shapes that are not an
+answer. An unreadable list comes back null — could not ask — and never an
+empty one, because an empty list of models reads as "there are no models" and
+the app would then have nothing to say about its own prices with complete
+confidence. That is the sixth time that distinction has been made today.
+
 ## Open, and worth a decision
 
 - **Does anybody pay yet?** Still unanswered, and it still decides whether the

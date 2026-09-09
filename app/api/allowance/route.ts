@@ -25,7 +25,8 @@
 
 import crypto from 'node:crypto';
 import { PLAN_CREDITS, USD_PER_CREDIT } from '@/app/lib/server/elevenceiling';
-import { voiceRoom, whichVoiceList } from '@/app/lib/server/eleven';
+import { elevenModels, voiceRoom, whichVoiceList, type ElevenModel } from '@/app/lib/server/eleven';
+import { PODCAST_CAPS, type PodcastCaps } from '@/app/lib/plans';
 import { CREDITS_A_MEMBER, RAND_PER_CREDIT, STEPS, standing } from '@/app/lib/server/spendwatch';
 
 export const runtime = 'nodejs';
@@ -38,6 +39,22 @@ function sameSecret(given: string, wanted: string): boolean {
   if (a.length !== b.length) return false;
   return crypto.timingSafeEqual(a, b);
 }
+
+/**
+ * The models this app names, so the report is about the ones we actually use.
+ *
+ * Hard-coded rather than scanned out of the routes: a list built by reading
+ * source would be a second, drifting copy of what those files say, and this is
+ * a report rather than a mechanism. A route that starts using a third model
+ * and is not added here makes this page say less than it could — never
+ * something untrue.
+ */
+const USED_MODELS = ['eleven_multilingual_v2', 'eleven_v3'] as const;
+
+/** The longest script any plan lets somebody send. See `PODCAST_CAPS`. */
+const BIGGEST_SCRIPT = Math.max(
+  ...Object.values(PODCAST_CAPS).map((one: PodcastCaps) => one.speakChars),
+);
 
 function percent(part: number): string {
   return `${Math.round(part * 100)}%`;
@@ -60,6 +77,7 @@ export async function GET(request: Request): Promise<Response> {
   /* One read, after the guard and before the answer is assembled. Behind the
      secret on purpose: it is a fact about her ElevenLabs account. */
   const slots = await voiceRoom();
+  const said = await elevenModels();
 
   return Response.json({
     eleven: {
@@ -157,6 +175,46 @@ export async function GET(request: Request): Promise<Response> {
           note:
             'The voice slots could not be read from ElevenLabs. Not the same as none left: cloning is allowed through while this is unknown, on purpose. If it stays unknown, `voice_limit` and `voice_slots_used` are not the field names their subscription answer actually uses.',
         },
+    /* What ElevenLabs say about the two models this app reads with, against
+       what this app assumes.
+
+       `maximum_text_length_per_request` is the one that can bite: the Label
+       plan allows a 12,000-character script, and if a model takes less then
+       that read is charged here and refused there. Same shape as the 4.5 MB
+       wall — a ceiling we promise and the service will not keep — and
+       invisible for the same reason, which is that nobody asked.
+
+       Null throughout means the model list could not be read. Not "there are
+       no models". */
+    models: said
+      ? USED_MODELS.map((id) => {
+          const one = said.find((model: ElevenModel) => model.id === id) ?? null;
+          if (!one) {
+            return {
+              id,
+              found: false,
+              note: 'This app asks for this model by name and ElevenLabs did not list it. Either it has been renamed or this key cannot use it — and either way a read with it will fail.',
+            };
+          }
+          const roof = one.maxText;
+          return {
+            id,
+            found: true,
+            name: one.name,
+            costMultiplier: one.costMultiplier,
+            discount: one.discount,
+            maxText: roof,
+            afrikaans: one.languages.length ? one.languages.includes('af') : null,
+            concurrency: one.concurrency,
+            note:
+              roof !== null && roof < BIGGEST_SCRIPT
+                ? `The biggest plan allows a ${BIGGEST_SCRIPT.toLocaleString('en')}-character script and this model takes ${roof.toLocaleString('en')}. Anything between the two is charged here and refused there. Lower speakChars in lib/plans.ts, or split the read.`
+                : roof === null
+                  ? 'They did not say how long a script this model takes, so the plan ceilings are unchecked against it.'
+                  : `Room for the plan ceilings: they take ${roof.toLocaleString('en')} and the largest we allow is ${BIGGEST_SCRIPT.toLocaleString('en')}.`,
+          };
+        })
+      : null,
     warnings: {
       at: STEPS.map((step) => percent(step)),
       to: now.to,

@@ -897,6 +897,114 @@ export async function dubSubtitles(
   return { ok: true, text: said };
 }
 
+/**
+ * What ElevenLabs say about their own models, rather than what we assumed.
+ *
+ * ── Why this is worth a call ─────────────────────────────────────────────
+ *
+ *   GET /v1/models
+ *
+ * Four fields on it answer questions this app has been guessing at.
+ *
+ * **`model_rates.character_cost_multiplier`** is the multiplier they actually
+ * bill at. Every price in `lib/credits.ts` is a number worked out from a rate
+ * card, and `check:elevenprices` keeps it honest against that card — which is
+ * a document, not the service. This is the service. There is a
+ * `cost_discount_multiplier` beside it, which is exactly the field an
+ * Enterprise agreement would move.
+ *
+ * **`maximum_text_length_per_request`** is the one that can bite. The Label
+ * plan lets somebody send a 12,000-character script. If their model takes
+ * less, that read is charged here and refused there — a ceiling this app
+ * promises and the service will not keep, which is the same fault as the
+ * 4.5 MB wall in #90 and was invisible for the same reason: nobody asked.
+ *
+ * **`languages`** says which models know Afrikaans. `/api/voice/speak` picks
+ * `eleven_v3` for a wide script on the strength of a comment saying it covers
+ * Afrikaans. This is where that stops being a comment.
+ *
+ * **`concurrency_group`** is how many members can generate at the same time,
+ * which is a launch question rather than a curiosity.
+ *
+ * ── Read once an hour, and never in the way ──────────────────────────────
+ *
+ * Models change a few times a year. This is behind the same kind of cache as
+ * the stock voice list, and every failure answers `null` — could not ask —
+ * rather than an empty list, because an empty list of models would read as
+ * "there are no models" and this app would have nothing to say about its own
+ * prices with great confidence.
+ */
+export interface ElevenModel {
+  readonly id: string;
+  readonly name: string | null;
+  /** What they multiply characters by when billing. Null when not given. */
+  readonly costMultiplier: number | null;
+  /** Any discount on that, which is the field an agreement moves. */
+  readonly discount: number | null;
+  /** The longest text they will take in one request. Null when not given. */
+  readonly maxText: number | null;
+  /** Their language ids, lower-cased. Empty when they did not say. */
+  readonly languages: readonly string[];
+  readonly concurrency: string | null;
+  readonly speech: boolean;
+}
+
+const MODELS_FOR_MS = 60 * 60 * 1000;
+let models: { models: ElevenModel[]; at: number } | null = null;
+
+export function elevenModelsFrom(body: unknown): ElevenModel[] | null {
+  if (!Array.isArray(body)) return null;
+  const out: ElevenModel[] = [];
+  for (const one of body) {
+    if (!one || typeof one !== 'object') continue;
+    const said = one as Record<string, unknown>;
+    const id = text(said.model_id);
+    if (!id) continue;
+    const rates = (said.model_rates && typeof said.model_rates === 'object'
+      ? said.model_rates
+      : {}) as Record<string, unknown>;
+    const langs = Array.isArray(said.languages) ? said.languages : [];
+    out.push({
+      id,
+      name: text(said.name),
+      costMultiplier: num(rates.character_cost_multiplier),
+      discount: num(rates.cost_discount_multiplier),
+      maxText: num(said.maximum_text_length_per_request),
+      languages: langs
+        .map((l) => (l && typeof l === 'object' ? text((l as { language_id?: unknown }).language_id) : null))
+        .filter((l): l is string => Boolean(l))
+        .map((l) => l.toLowerCase()),
+      concurrency: text(said.concurrency_group),
+      speech: said.can_do_text_to_speech === true,
+    });
+  }
+  /* An answer with no readable model in it is a shape we do not understand,
+     not an account with no models. Null, like every other "could not ask" in
+     this file. */
+  return out.length ? out : null;
+}
+
+export async function elevenModels(): Promise<ElevenModel[] | null> {
+  if (models && Date.now() - models.at < MODELS_FOR_MS) return models.models;
+  try {
+    const response = await fetch(`${BASE}/models`, { headers: { 'xi-api-key': key() } });
+    if (!response.ok) return models?.models ?? null;
+    const read = elevenModelsFrom(await response.json());
+    if (!read) return models?.models ?? null;
+    models = { models: read, at: Date.now() };
+    return read;
+  } catch {
+    /* The last good answer if there is one, not re-stamped, so the next caller
+       tries again rather than sitting on it for an hour. */
+    return models?.models ?? null;
+  }
+}
+
+/** Cleared between tests. Not used by the app. */
+export function forgetElevenModels(): void {
+  models = null;
+}
+
 /** The voice without the room: their audio isolation, on a recording. */
 export async function isolate(
   audio: Blob,

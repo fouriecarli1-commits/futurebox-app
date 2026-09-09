@@ -253,6 +253,12 @@ jobs:
       - name: The dub webhook fails closed and touches no money
         run: npm run check:dubhook
 
+      # The biggest plan allows a 12,000-character script. If a model takes
+      # less, that read is charged here and refused there — the 4.5 MB wall
+      # again, and invisible for the same reason: nobody asked.
+      - name: ElevenLabs own model numbers are read, not assumed
+        run: npm run check:elevenmodels
+
       # Two unauthenticated routes call a reasoning model. The only thing
       # between them and an unbounded bill looks identical working or broken.
       - name: The rate brake holds
