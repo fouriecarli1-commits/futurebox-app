@@ -190,6 +190,20 @@ const ANONYMOUS: Record<string, string> = {
      and it refuses without POST_SECRET. */
   'app/api/eleven/prices/route.ts':
     'the price comparison — an account-wide total, guarded by POST_SECRET instead of a caller',
+  /* ElevenLabs telling us a dub has finished. There is no caller by
+     construction — that is what a webhook is — so the rule below cannot be
+     satisfied and the question becomes what stands in its place.
+
+     Three things do. It refuses outright without ELEVEN_WEBHOOK_SECRET, which
+     is the unset state today. Every delivery is verified by HMAC over the raw
+     bytes with a thirty-minute replay window, so the secret is checked rather
+     than merely present. And it writes `status` and `error` only: not
+     `refunded_at`, not `charged`. Nothing that decides money is writable from
+     an address on the open internet, however well signed, and the refund is
+     still claimed in /api/dub's GET by a request carrying the owner's own
+     token. */
+  'app/api/dub/hook/route.ts':
+    "ElevenLabs' dub webhook — no caller exists; HMAC-verified, and it writes no field that decides money",
 };
 for (const file of walk('app/api')) {
   if (!file.endsWith('route.ts')) continue;
@@ -314,8 +328,8 @@ if (failures === before7) pass('no mailbox or mailto: link reaches the browser')
    read as "no address anywhere". It is not the same claim, and the difference
    matters: section 43 of the Electronic Communications and Transactions Act
    requires a supplier selling to South Africans to make its name, legal
-   status, registration number, physical address and telephone number
-   available to a consumer *before* they transact.
+   status, registration number, physical address, telephone number and e-mail
+   address available to a consumer *before* they transact.
 
    So this rule is not a relaxation of rule 7. It is the other half of it. Rule
    7 keeps an address out of every screen somebody works in; this one refuses
@@ -331,7 +345,11 @@ if (!existsSync(LEGAL_PAGE)) {
   fail('the supplier disclosure page exists', `${LEGAL_PAGE} is missing`);
 } else {
   const page = readFileSync(LEGAL_PAGE, 'utf8');
-  for (const wanted of ['Registered name', 'Registration number', 'Registered address', 'Telephone']) {
+  /* Both contact rows, because section 43(1) asks for a telephone number
+     (b) and an e-mail address (c). The page renders the telephone row whether
+     or not a number is set — an unset one says so in words rather than
+     disappearing — so this stays a fair thing to require of the source. */
+  for (const wanted of ['Registered name', 'Registration number', 'Registered address', 'Telephone', 'Email']) {
     if (!page.includes(wanted)) {
       fail('the disclosure page carries what ECTA asks for', `no "${wanted}" on ${LEGAL_PAGE}`);
     }

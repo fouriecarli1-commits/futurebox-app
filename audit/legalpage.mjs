@@ -27,13 +27,15 @@
  * It was written against a server somebody had left on port 3000 — the fault
  * `serve()` exists to fix and `check:probes` holds every wired probe to — so
  * it was never given a `check:` name and has sat here being run by nobody.
- * Fourteen assertions about the one page in this app with a legal duty
- * attached to it.
+ * Assertions about the one page in this app with a legal duty attached to it.
  *
- * Both states are checked in one run now, on two servers. The unset state is
- * hers today; the configured state is what she gets the moment she puts the
- * four variables into Vercel, and it has to be right before she does rather
- * than after.
+ * Three states are checked in one run, on three servers. The unset state is
+ * what she had before registering; the configured state is what she gets with
+ * every variable filled in; and the third is the one she is actually in — a
+ * registered company whose owner works from home and does not want her own
+ * mobile number on a public page. That third state used to render as "the
+ * company is being registered", months after it was, and this is the probe
+ * that would have caught it.
  */
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
@@ -46,8 +48,16 @@ const FIXTURE = {
   FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
   FUTUREBOX_LEGAL_STATUS: 'Private company',
   FUTUREBOX_LEGAL_PHONE: '+27 21 555 0100',
+  FUTUREBOX_LEGAL_EMAIL: 'toetsdoos@voorbeeld.co.za',
   FUTUREBOX_LEGAL_ADDRESS: '12 Voorbeeldstraat\nKaapstad\n8001',
 };
+
+/* The state she is actually likely to be in: registered, addressed, and with
+   no business telephone line yet — because the only number she has is her own
+   mobile and she has said she does not want it published. This used to make
+   the page fall back to "the company is being registered", which is both
+   untrue and the shape a payments reviewer stops on. */
+const NO_PHONE = { ...FIXTURE, FUTUREBOX_LEGAL_PHONE: '' };
 
 const problems = [];
 /* The detail here is written for the failure — "name missing", "one appeared"
@@ -58,10 +68,18 @@ const check = (label, ok, detail = '') => {
   if (!ok) problems.push(`${label}${detail ? ` (${detail})` : ''}`);
 };
 
-/** One pass over the page, in one of its two states. */
-async function look(configured) {
-  console.log(`\n  ${configured ? 'with the particulars set' : 'with nothing set'}:`);
-  const server = await serve(configured ? PORT + 1 : PORT, configured ? { env: FIXTURE } : {});
+/** One pass over the page, in one of its three states. */
+async function look(state) {
+  const configured = state !== 'unset';
+  const HOW = {
+    unset: 'with nothing set',
+    full: 'with the particulars set',
+    nophone: 'registered, but with no telephone number to publish',
+  };
+  console.log(`\n  ${HOW[state]}:`);
+  const OFFSET = { unset: 0, full: 1, nophone: 2 };
+  const ENV = { unset: {}, full: FIXTURE, nophone: NO_PHONE };
+  const server = await serve(PORT + OFFSET[state], { env: ENV[state] });
   const b = await chromium.launch(launchOptions());
   const p = await b.newPage({ viewport: { width: 1100, height: 900 } });
   p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
@@ -88,16 +106,33 @@ async function look(configured) {
     check('the registration number is printed', /2026\/123456\/07/.test(words), 'number missing');
     check('the address is printed, line by line',
       /12 Voorbeeldstraat/.test(words) && /Kaapstad/.test(words), 'address missing');
-    check('a telephone number is printed', /\+27 21 555 0100/.test(words), 'phone missing');
+    check('an address to write to is printed', /toetsdoos@voorbeeld\.co\.za/.test(words), 'email missing');
     check('and it does not still claim the details are unpublished',
       !/not published yet/.test(words));
+
+    if (state === 'full') {
+      check('a telephone number is printed', /\+27 21 555 0100/.test(words), 'phone missing');
+    } else {
+      /* The point of this state. Four true particulars are published, the one
+         that is missing is named out loud, and no number is invented to fill
+         the row — the failure this page exists to prevent is a plausible
+         particular, not an admitted gap. */
+      check('the registered name is still published without a telephone number',
+        /Toetsdoos \(Edms\) Bpk/.test(words), 'the page went dark over the missing number');
+      check('the telephone row says it is not published, rather than vanishing',
+        /Telephone/.test(words) && /Not published/.test(words), 'no telephone row at all');
+      check('and no number is invented to fill it',
+        !/\+27\s*\d/.test(words), 'a telephone number appeared from somewhere');
+      check('and the reader is sent somewhere that answers',
+        /form on the help page/.test(words));
+    }
 
     /* The whole reason this page is a server component. If the address is in a
        JavaScript file, the page has undone the rule it was allowed to break. */
     let inBundle = null;
     for (const r of scripts) {
       const text = await r.text().catch(() => '');
-      if (/12 Voorbeeldstraat|2026\/123456\/07|\+27 21 555 0100/.test(text)) {
+      if (/12 Voorbeeldstraat|2026\/123456\/07|\+27 21 555 0100|toetsdoos@voorbeeld\.co\.za/.test(text)) {
         inBundle = r.url().split('/').pop();
         break;
       }
@@ -125,8 +160,9 @@ async function look(configured) {
   }
 }
 
-await look(false);
-await look(true);
+await look('unset');
+await look('full');
+await look('nophone');
 
 if (problems.length) {
   console.error(`\ncheck:legalpage — ${problems.length} problem(s):`);

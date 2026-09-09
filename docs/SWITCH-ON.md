@@ -230,6 +230,26 @@ saam. Die toep tel elke minuut wat dit teruggee en weier voordat die dak breek
 — 'n weiering met 'n rede is goedkoper as 'n mislukking waarvoor iemand reeds
 betaal het. Verander die getal net as die plan verander.
 
+`KITS_MINUTES_EACH` is die dak **per lid** per maand, in minute. Onstel
+beteken **5**.
+
+Dit is die knoppie wat die vorige een beskerm. Kits het op 9 September 2026
+bevestig dat die 400 minute 'n *fair use*-beleid is wat aan die begin van die
+volgende faktuurmaand terugstel, en dat daar **niks is om by te koop** wanneer
+dit op is nie. Daar is dus geen manier om jou uit die probleem te betaal nie:
+as tien lede elk veertig minute vat, is die maand klaar vir almal anders, en
+niks kan dit terugbring nie.
+
+Vyf minute elk beteken tagtig lede kan die funksie gebruik voordat die
+gedeelde dak in sig kom. Verhoog dit as die plan groei; verlaag dit as die
+maand te vinnig opraak. Die toep sê vooraf hoeveel van jou eie minute oor is,
+en weier voor die opname eerder as daarna.
+
+**En as die telling self stukkend is, weier dit ook.** Dit is die een plek in
+hierdie kodebasis waar "ons kon nie vra nie" as "nee" gelees word, en dit is
+opsetlik: 'n dak wat oopgaan wanneer die databasis nie antwoord nie, kos almal
+die hele maand.
+
 `ELEVEN_MONTHLY_CREDITS` is die rem op ElevenLabs, in krediete per
 kalendermaand. **Onstel beteken 600 000 — presies wat die Pro-plan insluit, en
 dus geen sent bykoop nie.**
@@ -324,14 +344,44 @@ name `futureboxstudio`. The `/07` suffix is a private company, so the page's
 default status — "Private company registered in the Republic of South Africa"
 — is the right one and does not need setting.
 
-Four variables in Vercel, then redeploy. Two you have; two are still yours:
+Variables in Vercel, then redeploy:
 
 | Variable | What to put | Have it? |
 |---|---|---|
 | `FUTUREBOX_LEGAL_REGISTRATION` | `2026/714071/07` | yes |
-| `FUTUREBOX_LEGAL_NAME` | The name **exactly as the CIPC certificate prints it**, including the `(Pty) Ltd` if it is on there | check the certificate |
-| `FUTUREBOX_LEGAL_ADDRESS` | The registered office, one line per line, pipe-separated: `12 Example Street\|Bellville\|Cape Town\|7530` | no |
-| `FUTUREBOX_LEGAL_PHONE` | A number a person can actually ring | no |
+| `FUTUREBOX_LEGAL_NAME` | `FUTUREBOXSTUDIO (Pty) Ltd` — **one word**, exactly as the certificate prints it | yes |
+| `FUTUREBOX_LEGAL_ADDRESS` | The registered office, one line per line, pipe-separated: `12 Example Street\|Bellville\|Cape Town\|7530` | yes |
+| `FUTUREBOX_LEGAL_EMAIL` | An address a person can write to, on the domain rather than a personal one | **set this** |
+| `FUTUREBOX_LEGAL_PHONE` | A number a person can actually ring — **not necessarily your own** | when you have a business line |
+
+### Your own phone number, and why it is not the price of admission
+
+Section 43(1) asks for a telephone number, subsection (b), **and** an e-mail
+address, subsection (c). They are two separate requirements and one does not
+replace the other.
+
+It used to be the case here that the page published nothing at all without a
+telephone number, which offered exactly two options: your own mobile number on
+a public page, or a legal page that said "the company is being registered"
+months after CIPC registered it. The second is worse — it withholds four true
+particulars to enforce a fifth, and a payments reviewer opening it finds a
+supplier declaring itself unavailable.
+
+So now: **set the e-mail address and the page publishes.** The telephone row is
+still printed, and it says the number is not published and a business line is
+being arranged. An admitted gap is defensible. An invented number is not, and a
+missing row that reads as a shorter list is not either.
+
+**Then get a number that is not yours.** It costs very little and it closes the
+gap properly:
+
+- a second prepaid SIM in a cheap handset — the least effort, R10 or so;
+- a WhatsApp Business number, which can be that same second SIM;
+- a VoIP number that rings through to your phone, roughly R50–R150 a month,
+  and it can be a Cape Town `021` number rather than a mobile.
+
+Any of those is a real number a consumer can ring, which is what the Act asks
+for, and none of them is the number your family uses.
 
 **Copy the name off the certificate rather than typing what you call it.** The
 registered name and the trading name are allowed to differ and often do, and
@@ -339,13 +389,14 @@ registered name and the trading name are allowed to differ and often do, and
 `FUTUREBOX_LEGAL_STATUS` stays empty — the number justifies the default, and
 setting it by hand is how the two end up disagreeing.
 
-**Nothing appears until all four are set.** That is deliberate: section 43 of
-the ECT Act wants the name, the status, the number, the address and a number
-together, and three out of five reads as a page with something missing rather
-than as a page still being filled in.
+**Nothing appears until the name, the address and at least one way to reach a
+person are all set.** Three out of five reads as a page with something missing
+rather than as a page still being filled in — but a page with a name, a number
+and an address on it and no way to make contact has met the letter of a list
+and missed the point of it, so the floor is one contact, never none.
 
 **How to tell it worked:** open `/legal`. Either the particulars are there and
-right, or the page says they are not published yet. There is no third state.
+right, or the page says they are not published yet.
 
 **Two more the page will print if you set them, and skip if you do not.**
 `FUTUREBOX_LEGAL_VAT` is your VAT number, once SARS issues one — registration
@@ -520,6 +571,29 @@ It was read through a computed name until now, which meant no tool could see
 it and this page could not name it — a spending control nobody could tune
 because nobody had been told it was there. `npm run check:envdoc` refuses that
 pattern now.
+
+### `ELEVEN_WEBHOOK_SECRET` — optional, and it saves money
+
+Unset is the state today and everything works. Setting it makes dubbing
+cheaper.
+
+While a dub runs, the browser asks `/api/dub` every few seconds whether it has
+finished. Every one of those is a Vercel invocation *and* a call to ElevenLabs,
+and a long dub is many of both. ElevenLabs will instead tell us the moment it
+is done, if we let them: on their console, add a webhook pointing at
+`https://futurebox.studio/api/dub/hook`, and paste the secret they give you
+into this variable.
+
+**Polling is not switched off, and that is deliberate.** A webhook registered
+against a stale URL, or dropped in transit, would be a dub that never finishes
+on screen. So the poll stays the source of truth and the webhook only ever gets
+there first. If you never set this, nothing changes.
+
+**Without the secret the route accepts nothing at all** — it answers 404, and
+does not fall back to trusting whatever is posted to it. That matters because
+this is a public address that writes a dub's status, and a status is what
+decides a refund. Even a signed delivery can only write `status` and `error`;
+nothing that decides money is writable from the open internet.
 
 ### Knobs with working defaults — nothing to do
 

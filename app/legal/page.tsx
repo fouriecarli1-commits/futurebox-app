@@ -11,8 +11,8 @@
  *
  * The Electronic Communications and Transactions Act asks for something a form
  * cannot give: a supplier selling to South Africans must make its full name,
- * legal status, registration number, physical address and a telephone number
- * available to a consumer *before* they transact. The usual and honest
+ * legal status, registration number, physical address, telephone number and
+ * e-mail address available to a consumer *before* they transact. The usual and honest
  * resolution is not to abandon the form — it is one page that carries the
  * particulars, linked from the footer of every page, with the form still doing
  * the actual contacting.
@@ -118,7 +118,31 @@ export default function Legal(): React.ReactElement {
                   </span>
                 ))}
               </Row>
-              <Row label="Telephone">{who.phone}</Row>
+              {/* The Act asks for a telephone number and an e-mail address —
+                  section 43(1)(b) and (c) — so both rows are here, and the one
+                  that is not set says so instead of vanishing. A row quietly
+                  missing reads as a list that was never that long; a row that
+                  admits the gap is a reader being told the truth, and it is
+                  also the only version that stays honest when the supplier is
+                  one person who has not yet separated her own mobile number
+                  from her business. */}
+              <Row label="Telephone">
+                {who.phone ?? (
+                  <span className="text-zinc-400">
+                    Not published. This is a small company run by one person, and the only number
+                    it has is a private one; a business line is being arranged and will be printed
+                    here. Until it is, write to the address below or use{' '}
+                    <Link
+                      href={CONTACT_PAGE}
+                      className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
+                    >
+                      the form on the help page
+                    </Link>
+                    , which is answered by a person.
+                  </span>
+                )}
+              </Row>
+              {who.email && <Row label="Email">{who.email}</Row>}
               {who.vat && <Row label="VAT number">{who.vat}</Row>}
               <Row label="Website">{SITE_HOST}</Row>
               <Row label="Writing to us">

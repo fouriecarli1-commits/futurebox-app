@@ -57,8 +57,50 @@ export interface Entity {
   readonly registration?: string;
   /** The registered office, as one line per line. */
   readonly address: readonly string[];
-  /** A number a person can actually ring. */
-  readonly phone: string;
+  /**
+   * A number a person can actually ring.
+   *
+   * ── Why this is optional, when the Act names it ────────────────────────
+   *
+   * Section 43(1)(b) asks for a physical address *and* a telephone number, so
+   * a published number is the goal and not a nicety. It is optional here for a
+   * reason that has nothing to do with the law and everything to do with what
+   * happens when it is missing.
+   *
+   * The owner of this app is one person working from home. The number she has
+   * is her own mobile, and putting it on a public page is not a compliance
+   * decision — it is a personal-safety one, and it is hers to make rather than
+   * this file's. Requiring it meant the page had exactly two states: her
+   * private number on the internet, or a page saying "the company is being
+   * registered" months after CIPC registered it.
+   *
+   * That second state is the worse one. It withholds four particulars that are
+   * true and useful — name, status, registration number, registered address —
+   * because a fifth is not settled, and it does so while telling a reader
+   * something that is no longer accurate. A payment processor's compliance
+   * reviewer opening that page finds a supplier declaring itself unavailable.
+   *
+   * So: publish what is known, say out loud what is not, and never publish
+   * with no way to reach a person at all — see `entity()` below, which refuses
+   * without either this or an address to write to.
+   */
+  readonly phone?: string;
+  /**
+   * An address a person can write to.
+   *
+   * Section 43(1)(c) asks for the web site address *and* an e-mail address, so
+   * this was a genuine gap rather than an alternative: the page carried the
+   * host and nothing to write to. It is not a substitute for the telephone
+   * number — the Act asks for both — but it is a real way to reach the
+   * supplier, and it is the one the owner can publish today without publishing
+   * where she sleeps.
+   *
+   * It is read from the environment for the same reason as everything else
+   * here: `check:security` keeps mailboxes out of the client bundle, and this
+   * page is server-rendered, so the address reaches a reader and a regulator
+   * without reaching a crawler walking the JavaScript.
+   */
+  readonly email?: string;
   /** The VAT number, once there is one. Optional: most start without. */
   readonly vat?: string;
   /** The named Information Officer for POPIA. Usually the director. */
@@ -105,15 +147,28 @@ function lines(value: string | undefined): string[] {
  * exactly what this file exists to avoid — and it would have been the default
  * for anybody who filled in the other four and left the number out.
  *
- * Name, status, address and a telephone number, or nothing at all.
+ * Name, status, address, and at least one way to reach a person — a telephone
+ * number, an address to write to, or both. Never a page with no contact on it,
+ * and never a person described as a company.
  */
 export function entity(): Entity | null {
   const name = (process.env.FUTUREBOX_LEGAL_NAME ?? '').trim();
   const registration = (process.env.FUTUREBOX_LEGAL_REGISTRATION ?? '').trim();
   const status = (process.env.FUTUREBOX_LEGAL_STATUS ?? '').trim();
   const phone = (process.env.FUTUREBOX_LEGAL_PHONE ?? '').trim();
+  const email = (process.env.FUTUREBOX_LEGAL_EMAIL ?? '').trim();
   const address = lines(process.env.FUTUREBOX_LEGAL_ADDRESS);
-  if (!name || !phone || !address.length) return null;
+  if (!name || !address.length) return null;
+
+  /* One way to reach a person, at the very least.
+     
+     This used to demand the telephone number specifically, which meant the
+     only way to publish anything was to publish a private mobile. Now either
+     will do — but not neither. A supplier disclosure with a name, a number and
+     an address on it and no way to make contact is a page that has met the
+     letter of a list and missed the point of it, and that is exactly the shape
+     a rule like this drifts into when nobody writes down what it is for. */
+  if (!phone && !email) return null;
 
   /* The default only applies where there is a registration number to justify
      it. Without one, the status has to be said out loud — a sole proprietor
@@ -126,7 +181,8 @@ export function entity(): Entity | null {
     status: status || 'Private company registered in the Republic of South Africa',
     ...(registration ? { registration } : {}),
     address,
-    phone,
+    ...(phone ? { phone } : {}),
+    ...(email ? { email } : {}),
     ...(process.env.FUTUREBOX_LEGAL_VAT?.trim()
       ? { vat: process.env.FUTUREBOX_LEGAL_VAT.trim() }
       : {}),

@@ -35,6 +35,7 @@ const KEYS = [
   'FUTUREBOX_LEGAL_REGISTRATION',
   'FUTUREBOX_LEGAL_ADDRESS',
   'FUTUREBOX_LEGAL_PHONE',
+  'FUTUREBOX_LEGAL_EMAIL',
   'FUTUREBOX_LEGAL_VAT',
   'FUTUREBOX_LEGAL_INFORMATION_OFFICER',
 ] as const;
@@ -115,7 +116,7 @@ check('no number and no status publishes nothing, rather than calling a person a
   unstated === null, unstated ? `it said: ${unstated.status}` : 'nothing');
 
 /* ── The half-filled cases ─────────────────────────────────────────────── */
-check('a name with no telephone number is not enough',
+check('a name with no way at all to reach anybody is not enough',
   only({
     FUTUREBOX_LEGAL_NAME: 'FutureBox Studio (Pty) Ltd',
     FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
@@ -134,12 +135,53 @@ check('nor an address with no name',
     FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
   }) === null);
 
+/* ── Reaching a person: the telephone number, the mailbox, or both ──────
+
+   This used to be one rule — a telephone number or nothing — and the cost of
+   it was not visible until the company was actually registered. The owner is
+   one person working from home whose only number is her own mobile, so the
+   rule offered her a choice between publishing that number and publishing a
+   page that said "the company is being registered" months after it was. Four
+   true particulars withheld to enforce a fifth.
+
+   Now either reaches a person, and the page says out loud which one is
+   missing. What has NOT been relaxed is the floor: a supplier page with no way
+   to make contact on it publishes nothing, because that is the failure this
+   whole file exists to prevent. */
+const byMail = only({
+  FUTUREBOX_LEGAL_NAME: 'FUTUREBOXSTUDIO (Pty) Ltd',
+  FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
+  FUTUREBOX_LEGAL_ADDRESS: '12 Example Street|Cape Town|8001',
+  FUTUREBOX_LEGAL_EMAIL: 'legal@example.com',
+});
+check('an address to write to and no telephone number still publishes', byMail !== null);
+check('and no number is invented to fill the row', byMail?.phone === undefined, byMail?.phone ?? '(none)');
+check('and the mailbox is on it', byMail?.email === 'legal@example.com', byMail?.email ?? '(none)');
+
+const byPhone = only({
+  FUTUREBOX_LEGAL_NAME: 'FUTUREBOXSTUDIO (Pty) Ltd',
+  FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
+  FUTUREBOX_LEGAL_ADDRESS: '12 Example Street|Cape Town|8001',
+  FUTUREBOX_LEGAL_PHONE: '+27 21 000 0000',
+});
+check('a telephone number and no mailbox still publishes', byPhone !== null);
+check('and no address is invented to fill that row',
+  byPhone?.email === undefined, byPhone?.email ?? '(none)');
+
+check('but neither one publishes nothing at all, rather than a page nobody can answer',
+  only({
+    FUTUREBOX_LEGAL_NAME: 'FUTUREBOXSTUDIO (Pty) Ltd',
+    FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
+    FUTUREBOX_LEGAL_ADDRESS: '12 Example Street|Cape Town|8001',
+  }) === null);
+
 /* ── The optional two, which appear only when set ──────────────────────── */
 const full = only({
   FUTUREBOX_LEGAL_NAME: 'FutureBox Studio (Pty) Ltd',
   FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
   FUTUREBOX_LEGAL_ADDRESS: '12 Example Street|Cape Town|8001',
   FUTUREBOX_LEGAL_PHONE: '+27 21 000 0000',
+  FUTUREBOX_LEGAL_EMAIL: 'legal@example.com',
   FUTUREBOX_LEGAL_VAT: '4123456789',
   FUTUREBOX_LEGAL_INFORMATION_OFFICER: 'Anré Fourie',
 });
