@@ -767,6 +767,136 @@ export async function dubbed(
   return { ok: true, audio: await response.arrayBuffer(), type };
 }
 
+/**
+ * The dub's own transcript, in either language, for a dub already paid for.
+ *
+ * ── What we were leaving on the table ────────────────────────────────────
+ *
+ *   GET /v1/dubbing/{id}/transcript/{language}?format_type=json|srt|webvtt
+ *
+ * `json` gives utterances with a speaker and a start and end, and inside each
+ * one the **words** with their own start and end. `srt` and `webvtt` give a
+ * finished subtitle file.
+ *
+ * Nothing in this app has ever asked for it. `dubbed()` above fetches the
+ * audio and that is all — so every dub anybody has made has had word-level
+ * timings, in both languages, sitting on ElevenLabs' side, paid for, unread.
+ *
+ * ── Why it is better than what we do instead, for a dub ──────────────────
+ *
+ * `/api/translate` puts a second line under the first on a music video. It is
+ * careful work: it holds the line count on the way back, because "a subtitle
+ * that is one line out for the rest of a song is worse than no subtitle". It
+ * should stay exactly as it is for **songs**, where this app owns the words
+ * and there is no dub to ask.
+ *
+ * For a **dubbed episode** the dub's own transcript wins on both counts. It is
+ * the translation that was actually spoken, with the times it was actually
+ * spoken at, so it cannot drift from the audio the way a separately-translated
+ * line can. A translation made beside the audio and a translation made *of*
+ * the audio are different things, and only one of them is guaranteed to match.
+ *
+ * ── `source`, and why the caller passes a language at all ────────────────
+ *
+ * Their API takes the target language code, or the literal `source` for the
+ * original. Both are worth having: the target is the subtitle somebody reads,
+ * and the source is the original transcript with the timings — which is the
+ * `dubbed` rung of the timing ladder in `lib/lyrictime.ts`.
+ *
+ * Nothing here is verified against the live API; arpeggi and elevenlabs are
+ * both unreachable from the machine this is written on. Every field is
+ * optional and every number coerced, so a shape that differs comes back thin
+ * rather than throwing.
+ */
+export interface DubWord {
+  readonly text: string;
+  readonly start: number;
+  readonly end: number;
+  readonly speaker?: string;
+}
+
+interface WireUtterance {
+  speaker_id?: unknown;
+  start_s?: unknown;
+  end_s?: unknown;
+  words?: unknown;
+}
+
+/** Their words out of one utterance, with the speaker carried down onto each. */
+function wordsIn(utterance: WireUtterance): DubWord[] {
+  const speaker = text(utterance.speaker_id);
+  const list = Array.isArray(utterance.words) ? utterance.words : [];
+  const out: DubWord[] = [];
+  for (const one of list) {
+    if (!one || typeof one !== 'object') continue;
+    const word = one as { text?: unknown; start_s?: unknown; end_s?: unknown };
+    const said = text(word.text);
+    const start = num(word.start_s);
+    const end = num(word.end_s);
+    if (!said || start === null || end === null) continue;
+    out.push({ text: said, start, end, ...(speaker ? { speaker } : {}) });
+  }
+  return out;
+}
+
+export async function dubTranscript(
+  id: string,
+  language: string,
+): Promise<{ ok: true; words: DubWord[] } | Upstream> {
+  const response = await fetch(
+    `${BASE}/dubbing/${encodeURIComponent(id)}/transcript/${encodeURIComponent(language)}?format_type=json`,
+    { headers: { 'xi-api-key': key() } },
+  );
+  if (!response.ok) return complain(response);
+  const body = (await response.json().catch(() => null)) as unknown;
+  /* Two shapes are plausible and neither is confirmed: a bare list of
+     utterances, or an object with them under a key. Both are read rather than
+     one being assumed, because the cost of guessing wrong here is an empty
+     subtitle track with nothing saying why. */
+  const list = Array.isArray(body)
+    ? body
+    : Array.isArray((body as { utterances?: unknown })?.utterances)
+      ? ((body as { utterances: unknown[] }).utterances)
+      : [];
+  const words: DubWord[] = [];
+  for (const one of list) {
+    if (one && typeof one === 'object') words.push(...wordsIn(one as WireUtterance));
+  }
+  if (!words.length) {
+    /* Could not read it, said as itself. An empty transcript for a dub that
+       exists is not "the episode is silent" — it is a shape this code does not
+       understand, and the caller must be able to tell those apart. */
+    return { ok: false, status: 502, message: 'The dub has no transcript this app could read.' };
+  }
+  return { ok: true, words };
+}
+
+/**
+ * The same transcript as a finished subtitle file.
+ *
+ * `srt` and `webvtt` come back as text rather than JSON, so this hands the
+ * body over as it is. The Video desk burns its own lines onto the picture and
+ * does not need a file — but a member downloading their episode to put on
+ * YouTube does, and that is a `.srt` next to the audio rather than a feature
+ * to build.
+ */
+export async function dubSubtitles(
+  id: string,
+  language: string,
+  format: 'srt' | 'webvtt' = 'srt',
+): Promise<{ ok: true; text: string } | Upstream> {
+  const response = await fetch(
+    `${BASE}/dubbing/${encodeURIComponent(id)}/transcript/${encodeURIComponent(language)}?format_type=${format}`,
+    { headers: { 'xi-api-key': key() } },
+  );
+  if (!response.ok) return complain(response);
+  const said = await response.text().catch(() => '');
+  if (!said.trim()) {
+    return { ok: false, status: 502, message: 'The dub came back with an empty subtitle file.' };
+  }
+  return { ok: true, text: said };
+}
+
 /** The voice without the room: their audio isolation, on a recording. */
 export async function isolate(
   audio: Blob,

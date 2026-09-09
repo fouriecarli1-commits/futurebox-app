@@ -38,7 +38,7 @@
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { EXPENSIVE, refuseIfTooMany } from '@/app/lib/server/brake';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
-import { configured, dub, dubState, dubbed } from '@/app/lib/server/eleven';
+import { configured, dub, dubState, dubSubtitles, dubTranscript, dubbed } from '@/app/lib/server/eleven';
 import { dubCost } from '@/app/lib/credits';
 import { charge, refund } from '@/app/lib/server/credits';
 
@@ -240,7 +240,21 @@ export async function GET(request: Request): Promise<Response> {
     }
   }
 
-  if (!state.state.done || url.searchParams.get('collect') !== '1') {
+  /* What to collect, now that there is more than one thing to collect.
+
+     `1` is the audio and stays the default shape, because that is what every
+     caller written before today asks for. `words` and `srt` are the dub's own
+     transcript — word-level timings and a finished subtitle file, both of
+     which ElevenLabs has been holding for every dub anybody has made here and
+     which nothing has ever asked for. See `dubTranscript` in eleven.ts.
+
+     On this route rather than a new one, because the four lines above it are
+     the load-bearing part: the dub has to be theirs. A second route would be a
+     second copy of that check, and a second copy is one that drifts. */
+  const collect = url.searchParams.get('collect') ?? '';
+  const wanted = collect === '1' || collect === 'words' || collect === 'srt' ? collect : '';
+
+  if (!state.state.done || !wanted) {
     return Response.json({
       status: state.state.status,
       done: state.state.done,
@@ -251,10 +265,38 @@ export async function GET(request: Request): Promise<Response> {
     });
   }
 
-  const want = row?.target_lang || state.state.languages[0] || '';
+  /* Which language's transcript. Theirs takes the target code or the literal
+     `source` for the original — and the original is the one with the timings
+     for the audio somebody actually recorded, which is what the timing ladder
+     wants. Only those two, so this cannot be pointed at another language on
+     somebody else's dub. */
+  const asked = url.searchParams.get('lang');
+  const want =
+    asked === 'source' ? 'source' : row?.target_lang || state.state.languages[0] || '';
   if (!want) {
     return Response.json({ message: 'The dub finished without saying which language it is in.' }, { status: 502 });
   }
+
+  if (wanted === 'words') {
+    const said = await dubTranscript(id, want);
+    if (!said.ok) return Response.json({ message: said.message }, { status: said.status });
+    /* Free with the dub, and said so plainly: this costs nothing extra, which
+       is the whole reason to prefer it over transcribing the result back. */
+    return Response.json({ words: said.words, language: want, cost: 'none' });
+  }
+
+  if (wanted === 'srt') {
+    const said = await dubSubtitles(id, want, 'srt');
+    if (!said.ok) return Response.json({ message: said.message }, { status: said.status });
+    return new Response(said.text, {
+      headers: {
+        'Content-Type': 'application/x-subrip; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'Content-Disposition': `attachment; filename="${(row?.title || 'episode').replace(/[^\w.-]+/g, '-')}.${want}.srt"`,
+      },
+    });
+  }
+
   const audio = await dubbed(id, want);
   if (!audio.ok) return Response.json({ message: audio.message }, { status: audio.status });
 

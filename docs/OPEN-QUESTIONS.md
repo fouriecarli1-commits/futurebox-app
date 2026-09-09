@@ -1599,6 +1599,23 @@ guessed:
    rung — and the raw number goes back on every answer, so the first real
    songs settle it.
 
+**The dub's own transcript is now read (#112's fifth source).** Every dub
+anybody has made on this app has carried word-level timings in both languages
+and a finished SRT, on ElevenLabs' side, paid for, and nothing ever asked for
+them — `dubbed()` fetched the audio and stopped. `/api/dub?collect=words` and
+`?collect=srt` read them, off the same GET and behind the same ownership check
+as the audio, because a second route would be a second copy of that check.
+`?lang=source` gets the original rather than the target.
+
+`/api/translate` stays exactly as it is. It holds the line count on the way
+back — "a subtitle that is one line out for the rest of a song is worse than no
+subtitle" — and it is the right answer for a **song**, where this app owns the
+words and there is no dub to ask. Only a dubbed episode gets the dub's own
+transcript, and it wins there because it is the translation that was actually
+spoken at the times it was actually spoken, so it cannot drift from the audio.
+`check:dubwords` holds both halves of that, including that the translate route
+is not deleted to "simplify".
+
 **What is still #112's and not built:** the `spoken` rung. TTS
 `/with-timestamps` gives character-level alignment free with every read, and
 `speakStream` is the caller that matters. It was left because

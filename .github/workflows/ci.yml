@@ -242,6 +242,12 @@ jobs:
       - name: A poor word alignment is not drawn as an exact one
         run: npm run check:align
 
+      # A dub already carries word timings and a subtitle file in both
+      # languages, paid for. They were never read, and the timing ladder went
+      # off and paid to transcribe the result back.
+      - name: A dub's own transcript is read rather than paid for twice
+        run: npm run check:dubwords
+
       # Two unauthenticated routes call a reasoning model. The only thing
       # between them and an unbounded bill looks identical working or broken.
       - name: The rate brake holds
