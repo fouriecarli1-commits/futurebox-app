@@ -141,16 +141,28 @@ const TOOLS = new Set([
 /**
  * Real checks that nobody runs. Every one of these has assertions in it.
  *
+ * **It is empty. It was twenty-five.**
+ *
  * They were written against a server somebody had left on port 3000, which is
  * the fault `serve()` exists to fix and `check:probes` holds every wired probe
- * to. Bringing one back means giving it its own server and its own port, and
+ * to. Bringing one back meant giving it its own server and its own port, and
  * making its assertions true of the app as it is now.
+ *
+ * The list stays here, and the ratchet with it. Emptying it is not the end of
+ * the rule — the rule is what stops the pile rebuilding, and it was written
+ * because three hundred assertions had already been written and never run
+ * once. A new probe is wired or it is a tool. There is no third state to
+ * park something in any more.
+ *
+ * What the twenty-five were worth is worth recording, because "nobody runs it"
+ * sounds like tidiness and was not. Between them they found: a R249-a-month
+ * subscription sold from a panel whose entire description was collapsed; a
+ * queue probe green against a heading belonging to a different component while
+ * the queue itself was not on the page; a room-entry helper that walked into
+ * the Video desk whenever it was asked for Adverts; and two probes that had
+ * written down an inability to ask as an answer.
  */
-const WAITING = new Set([
-  'cast',
-  'photo',
-  'presenter',
-]);
+const WAITING: Set<string> = new Set([]);
 /** What it was when this rule was written. It may go down and not up. */
 const WAITING_WAS = 25;
 

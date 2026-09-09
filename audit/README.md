@@ -71,10 +71,16 @@ through a real `<input>` — so it needs that module as something a page can
 load:
 
 ```
-npx esbuild app/lib/avatar.ts --bundle --format=iife --global-name=AV \
-  --outfile=/tmp/avatar.bundle.js
-node audit/photo.mjs 3000 en /tmp/avatar.bundle.js
+npm run check:photoscreen
 ```
+
+It bundles `app/lib/avatar.ts` itself, into a directory of its own, and
+removes it however the run ends. It used to take the path to a bundle as a
+fourth argument with the `esbuild` command written out here for somebody to
+run first — and two steps in a document is the same thing as one step nobody
+does: the file was never on the machine, the probe died on `ENOENT` before its
+first assertion, and that is half of why it never ran. A path can still be
+handed in as a fourth argument for anybody debugging a build of their own.
 
 Injecting the shipped module rather than reimplementing the squaring in the
 page is the whole point: a test that redraws the canvas itself proves the test

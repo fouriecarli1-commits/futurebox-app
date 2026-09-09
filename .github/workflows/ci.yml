@@ -557,7 +557,7 @@ jobs:
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes
           - group: rooms
-            probes: check:accountscreen check:addonroom check:taste check:queueroom check:liveroom check:buildon check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:videocover check:podlanguage
+            probes: check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:videocover check:podlanguage
           - group: whole
             probes: check:firsthour check:writing check:wide check:afrikaansscreen check:spotlight check:photosong check:singview check:buttonlook check:subscription check:playbutton check:signinwith check:help
           # Both need a real browser for what they measure rather than for

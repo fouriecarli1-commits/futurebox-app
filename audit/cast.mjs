@@ -8,12 +8,45 @@
  * engine, and that the picture survives a reload — which is the half a
  * device-local shelf could never do.
  */
+import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
+import { dismissDoor, toRoom } from './enter.mjs';
 
-const PORT = process.argv[2] || '3015';
+const PORT = Number(process.argv[2] || 3015);
 const af = process.argv[3] === 'af';
 
+/* ── Its own build, and its own server ───────────────────────────────────
+
+   This went to a port it did not start and hoped somebody had left a server
+   there — the fault `serve()` exists to fix, and the reason it sat on the
+   waiting list. The cast lives on the account, so it also needs a project
+   that has accounts: `NEXT_PUBLIC_*` is inlined at build time, so handing the
+   values to `next start` changes nothing and a build has to be made.
+
+   `stub.supabase.co` is nonsense on purpose. Nothing here reaches Supabase —
+   every call is answered by `page.route` below — and a real project's address
+   in a probe build is how one ends up writing to production. */
+const STUB = {
+  NEXT_PUBLIC_SUPABASE_URL: 'https://stub.supabase.co',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'stub-anon-key',
+};
+console.log('building with a project that has accounts…');
+execSync('npx next build', { stdio: 'ignore', env: { ...process.env, ...STUB } });
+
+let putBack = false;
+process.on('exit', () => {
+  if (putBack) return;
+  putBack = true;
+  console.log('putting the ordinary build back…');
+  try {
+    execSync('npx next build', { stdio: 'ignore' });
+  } catch {
+    console.error('the ordinary build could not be put back — run `npx next build`');
+  }
+});
+
+const server = await serve(PORT, { env: STUB });
 const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
@@ -119,14 +152,21 @@ await p.route('**/storage/v1/object/**', async (route) => {
 });
 
 async function intoTheDesk() {
-  await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
+  /* `domcontentloaded`, not `networkidle`: the stub project's address keeps a
+     realtime socket open that never settles, so `networkidle` waits thirty
+     seconds and gives up on a page that drew fine in two. */
+  await p.goto(server.url, { waitUntil: 'domcontentloaded' });
   // The seeded session means the app comes up signed in; no form to fill.
+  await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 40000 }).catch(() => undefined);
+  /* The welcome door, which did not exist when this probe was written and
+     covers the header at `z-[55]`. */
+  await dismissDoor(p);
   await p.locator('header button').filter({ hasText: /Studio/i }).first().waitFor({ timeout: 40000 });
   await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
   await p.waitForTimeout(1800);
   const room = p.locator('div.fixed.inset-0.z-50').first();
-  await room.locator('button').filter({ hasText: /^Video desk|^Videolessenaar/i }).first().click();
-  await p.waitForTimeout(2200);
+  await toRoom(p, af ? 'Videolessenaar' : 'Video desk');
+  await p.waitForTimeout(2000);
   return room;
 }
 

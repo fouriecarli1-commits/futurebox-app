@@ -13,14 +13,47 @@
  * duration is measured rather than asserted, and the presenter route answers
  * the way it would with `ELEVEN_AURORA_READY=1` set. Neither is switched on in
  * this environment, and a run that only proved the refusal would be a run
- * about the flag.
+ * about the flag. *
+ * ── Why this had never run ───────────────────────────────────────────────
+ *
+ * It was written against a server somebody had left running on a port, which
+ * is the fault `serve()` exists to fix — so it never earned a `check:` name
+ * and sat here being run by nobody. It builds its own stubbed project and
+ * starts its own server now, and puts the ordinary build back in an exit
+ * handler however the run ends.
  */
+import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
+import { dismissDoor, toRoom } from './enter.mjs';
 
-const PORT = process.argv[2] || '3021';
+const PORT = Number(process.argv[2] || 3021);
 const af = process.argv[3] === 'af';
 
+/* A project that has accounts, so the header draws a signed-in person at all.
+   `stub.supabase.co` is nonsense on purpose — nothing here reaches Supabase —
+   and the storage key the app derives from it is `sb-stub-auth-token`, which
+   is what this probe seeds below. */
+const STUB = {
+  NEXT_PUBLIC_SUPABASE_URL: 'https://stub.supabase.co',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'stub-anon-key',
+};
+console.log('building with a project that has accounts…');
+execSync('npx next build', { stdio: 'ignore', env: { ...process.env, ...STUB } });
+
+let putBack = false;
+process.on('exit', () => {
+  if (putBack) return;
+  putBack = true;
+  console.log('putting the ordinary build back…');
+  try {
+    execSync('npx next build', { stdio: 'ignore' });
+  } catch {
+    console.error('the ordinary build could not be put back — run `npx next build`');
+  }
+});
+
+const server = await serve(PORT, { env: STUB });
 const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 const problems = [];
@@ -112,13 +145,20 @@ await p.route('**/api/voice/speak', async (route) => {
   return route.fulfill({ status: 200, contentType: 'audio/wav', body: wav(2) });
 });
 
-await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
+/* `domcontentloaded`, not `networkidle`: the stub project's Supabase address
+   keeps a realtime socket open that never settles. */
+await p.goto(server.url, { waitUntil: 'domcontentloaded' });
+await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 40000 }).catch(() => undefined);
+await p.waitForTimeout(1500);
+/* The welcome door, which did not exist when this probe was written and sits
+   over the header at `z-[55]`. */
+await dismissDoor(p);
 await p.locator('header button').filter({ hasText: /Studio/i }).first().waitFor({ timeout: 40000 });
 await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
 await p.waitForTimeout(1800);
 const room = p.locator('div.fixed.inset-0.z-50').first();
-await room.locator('button').filter({ hasText: /^Video desk|^Videolessenaar/i }).first().click();
-await p.waitForTimeout(2500);
+await toRoom(p, af ? 'Videolessenaar' : 'Video desk');
+await p.waitForTimeout(2200);
 
 const words = await room.innerText();
 check('the presenter is on the desk',

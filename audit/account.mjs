@@ -109,12 +109,18 @@ await p.waitForTimeout(2500);
    Worth doing by pressing its own way out rather than by hiding the element,
    because a door with no visible way past it is its own fault and this walks
    into it if it ever appears. */
+/* Waited for, not counted once. The door draws after two fetches settle, so
+   asking whether it is there the instant the bottom bar appears gets "no" —
+   and half a second later it is there, over the header and under the next
+   press. `check:probes` holds every probe to this now. */
 const door = p.locator('button').filter({ hasText: /Not now|Nie nou/ }).first();
-check('the welcome screen has a way past it', (await door.count()) > 0,
+const there = await door.waitFor({ state: 'visible', timeout: 8000 }).then(() => true, () => false);
+check('the welcome screen has a way past it', there,
   'it covers the header, so a screen with no way out is a trap');
-if (await door.count()) {
+if (there) {
   await door.click();
-  await p.waitForTimeout(900);
+  await door.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => undefined);
+  await p.waitForTimeout(600);
 }
 
 /* The press itself. Their own name in the corner — which is where somebody

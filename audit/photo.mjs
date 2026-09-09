@@ -25,16 +25,73 @@
  * controls are thumb-sized. With storage switched off it must also *say* so
  * rather than appearing to work, which is the failure mode worth catching.
  */
-import { readFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
+import { dismissDoor, toRoom } from './enter.mjs';
 
-const BUNDLE = process.argv[4] || '/tmp/avatar.bundle.js';
-const PORT = process.argv[2] || '3011';
+const PORT = Number(process.argv[2] || 3011);
 const af = process.argv[3] === 'af';
 
+/* ── The bundle, made here rather than asked for ──────────────────────────
+
+   This used to take the path to a bundle as a fourth argument, with the
+   esbuild command written in `audit/README.md` for somebody to run first. Two
+   steps in a document is the same thing as one step nobody does: the file was
+   never on this machine, the probe died on `ENOENT` before its first
+   assertion, and that is half of why it sat on the waiting list.
+
+   It builds its own now, into a directory of its own, and removes it however
+   the run ends. A path can still be handed in as the fourth argument for
+   somebody debugging a build of their own. */
+const given = process.argv[4];
+const mine = given ? null : mkdtempSync(join(tmpdir(), 'fb-avatar-'));
+const BUNDLE = given ?? join(mine, 'avatar.bundle.js');
+if (mine) {
+  console.log('bundling app/lib/avatar.ts…');
+  /* `--define:process.env={}` is not decoration.
+
+     `avatar.ts` pulls in the Supabase browser client, which reads
+     `process.env` at module scope. Next inlines those; esbuild does not — so
+     the bundle threw `process is not defined` the instant it was injected,
+     `window.AV` was never assigned, and the probe reported "Cannot read
+     properties of undefined (reading 'squared')". Which reads as a broken
+     module and was a missing flag.
+
+     Obvious nonsense rather than the real values on purpose: nothing here
+     talks to Supabase, every call is answered in the page, and a probe
+     carrying a real project's address is how one ends up writing to
+     production. The address still has to be *there*, though — `publicUrl`
+     returns an empty string without one, and "a stored path becomes a public
+     url" then fails on a module that is working perfectly. */
+  const ENV = JSON.stringify({
+    NEXT_PUBLIC_SUPABASE_URL: 'https://stub.supabase.co',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: 'stub-anon-key',
+  });
+  execSync(
+    `npx esbuild app/lib/avatar.ts --bundle --format=iife --global-name=AV` +
+      ` --define:process.env='${ENV}' --outfile=${BUNDLE}`,
+    { stdio: 'ignore' },
+  );
+  /* In an exit handler, not at the end: a probe that throws on its first
+     assertion never reaches a tidy-up written at the bottom. */
+  process.on('exit', () => {
+    try { rmSync(mine, { recursive: true, force: true }); } catch { /* already gone */ }
+  });
+}
+
 const b = await chromium.launch(launchOptions());
-const p = await b.newPage({ viewport: { width: 390, height: 844 } });
+/* `hasTouch`, and it is not a detail at 390px.
+
+   `app/globals.css` keeps a whole block behind `@media (pointer: coarse)` —
+   the forty-four pixel minimums this file's last assertion measures. Desktop
+   Chromium reports a *fine* pointer whatever viewport it is handed, so a probe
+   that only shrinks the window measures the app with those rules switched off
+   and reports the thumb sizes as passing whether they hold or not. */
+const p = await b.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
 const problems = [];
 const check = (label, ok, detail = '') => {
   console.log(`${ok ? '  ok  ' : '  FAIL'} ${label}${detail && !ok ? ` — ${detail}` : ''}`);
@@ -125,11 +182,21 @@ await p.locator('input[type="email"]').first().fill('anri.fourie@futurebox.test'
 const pw = p.locator('input[type="password"]').first();
 if (await pw.count()) await pw.fill('toets-wagwoord-1234');
 await p.locator('button[type="submit"]').first().click();
-await p.waitForTimeout(2500);
+/* Waited for, not slept through. The bottom bar exists on every screen shown
+   to a signed-in person and on none shown to a signed-out one, so it is the
+   signal that signing in finished — a fixed 2.5 seconds on a loaded machine
+   measures the signed-out page and reports the difference as a fault. */
+await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
+await p.waitForTimeout(600);
+/* The welcome door, which did not exist when this probe was written. Signing
+   in lands on it and it covers the header at `z-[55]`, so going straight for
+   the Studio button waits thirty seconds against an overlay and then reports
+   the button as missing. */
+await dismissDoor(p);
 await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
 await p.waitForTimeout(1800);
 const room = p.locator('div.fixed.inset-0.z-50').first();
-await room.locator('button').filter({ hasText: af ? /^Kanaal/ : /^Channel/ }).first().click();
+await toRoom(p, af ? 'Kanaal' : 'Channel');
 await p.waitForTimeout(1500);
 
 const words = await room.innerText();
