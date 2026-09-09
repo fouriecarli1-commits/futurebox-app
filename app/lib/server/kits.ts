@@ -715,17 +715,47 @@ export async function blenderNeeds(): Promise<{
  * refused and nothing is created — the same property `blenderNeeds` relies on,
  * which is what makes hunting like this free rather than reckless.
  *
- * ── What counts as a hit ─────────────────────────────────────────────────
+ * ── What counts as a hit, and the mistake in the first version ───────────
  *
- * Not a 2xx, which would mean something was made. A **different refusal**: any
- * status or code that is not `E_VALIDATION_FAILURE` means that body got
- * further than the empty one did, and the field names in it are the right
- * ones. The first body to do that is the shape.
+ * Not a 2xx, which would mean something was made.
+ *
+ * The first version of this said: any code that is not `E_VALIDATION_FAILURE`
+ * means that body got further. Carli ran it and it answered, confidently, that
+ * `voiceModelIds` was the shape — on the strength of **429
+ * E_TOO_MANY_REQUESTS**. Kits had rate-limited the sixth POST in a row to the
+ * same address, which says nothing whatever about the body, and the report
+ * told her it had found the answer.
+ *
+ * That is the fault this whole session has been fixing in other people's code,
+ * written fresh into mine: a signal meaning "could not ask" read as an answer.
+ * It is worse here than usual, because it does not fail — it produces a
+ * plausible field name that a room would then be built on.
+ *
+ * So a hit is now narrow and positive rather than "not the thing I expected":
+ * a **validation-shaped refusal with a different code**. Status 400 or 422,
+ * carrying a code that is not `E_VALIDATION_FAILURE` — that is the service
+ * reading the body and complaining about something further in. Everything
+ * else stops the hunt and says why:
+ *
+ *   429       rate-limited. Nothing was learned and the next guess will be
+ *             too, so stop and tell her to wait.
+ *   5xx, 0    their side, or the network. Nothing was learned.
+ *   401/403   a permission answer, not a shape answer.
  *
  * A 2xx is reported as loudly as the code can manage. It should be impossible
  * — these bodies name model ids that do not exist on the account — and if it
  * ever happens there is a blended voice on her account that nobody asked for.
+ *
+ * ── And it waits between guesses ─────────────────────────────────────────
+ *
+ * Six POSTs to one address inside a second is what drew the 429 in the first
+ * place. A pause between them costs a few seconds on a page nobody opens
+ * twice, and without it the hunt reliably rate-limits itself before it has
+ * asked anything.
  */
+
+/** Long enough not to trip their limiter, short enough to stay in one request. */
+const HUNT_PAUSE_MS = 1500;
 const BLENDER_GUESSES: { readonly why: string; readonly body: Record<string, unknown> }[] = [
   /* Their own camel case, matching `voiceModelId` in the conversion API — the
      one field name on this service anybody here has actually seen work. */
@@ -742,11 +772,15 @@ const BLENDER_GUESSES: { readonly why: string; readonly body: Record<string, unk
 export async function blenderShape(): Promise<{
   tried: { why: string; status: number; code: string; changed: boolean }[];
   found: string | null;
+  /** Why it ended early — 'rate-limited', 'not allowed', 'their side' — or null. */
+  stopped: string | null;
   note: string;
 }> {
   const tried: { why: string; status: number; code: string; changed: boolean }[] = [];
   let found: string | null = null;
   let made = false;
+  /* Why the hunt ended early, when it did. Null means it ran to the end. */
+  let stopped: string | null = null;
 
   for (const guess of BLENDER_GUESSES) {
     let response: Response;
@@ -763,28 +797,55 @@ export async function blenderShape(): Promise<{
     const raw = (await response.text().catch(() => '')).slice(0, 300);
     const code = /"code"\s*:\s*"([^"]+)"/.exec(raw)?.[1] ?? `${response.status}`;
     const ok2xx = response.status >= 200 && response.status < 300;
-    /* Anything that is not the empty body's own complaint got further. */
-    const changed = ok2xx || code !== 'E_VALIDATION_FAILURE';
+    /* A hit is a validation refusal with a DIFFERENT complaint — the service
+       read the body and objected to something further in. Not merely "some
+       other status", which is how a rate limit got reported as the answer. */
+    const validation = response.status === 400 || response.status === 422;
+    const changed = ok2xx || (validation && code !== 'E_VALIDATION_FAILURE');
     tried.push({ why: guess.why, status: response.status, code, changed });
+
     if (ok2xx) {
       made = true;
       found = guess.why;
       break;
     }
-    if (changed && !found) {
+    if (changed) {
       found = guess.why;
       break;
     }
+    /* Nothing was learned and nothing will be. Stopping is the honest move:
+       every further guess draws the same wall and fills the report with
+       lines that look like measurements. */
+    if (response.status === 429) {
+      stopped = 'rate-limited';
+      break;
+    }
+    if (response.status === 401 || response.status === 403) {
+      stopped = 'not allowed';
+      break;
+    }
+    if (response.status >= 500 || response.status === 0) {
+      stopped = 'their side';
+      break;
+    }
+    await new Promise((rest) => setTimeout(rest, HUNT_PAUSE_MS));
   }
 
   return {
     tried,
     found,
+    stopped,
     note: made
       ? 'UNEXPECTED: one of these was ACCEPTED. Check the Kits account for a blended voice that should not be there, and delete it.'
       : found
-        ? `"${found}" got a different refusal from the empty body, so those are the field names. Write them into docs/KITS-KAART.md §2 and the Sound trainer can be built.`
-        : 'Every guess drew the same E_VALIDATION_FAILURE as an empty body, so none of them is closer than nothing. The shape is something else — ask Kits support for the request body of POST /voice-blender.',
+        ? `"${found}" drew a different validation complaint from the empty body, so those are the field names. Write them into docs/KITS-KAART.md §2 and the Sound trainer can be built.`
+        : stopped === 'rate-limited'
+          ? 'Kits rate-limited this before it learned anything. Nothing here is an answer about the shape. Wait a few minutes and open the page again.'
+          : stopped === 'not allowed'
+            ? 'The blender refused this key rather than this body. A plan or permission question, not a shape question.'
+            : stopped === 'their side'
+              ? 'Their side failed or could not be reached, so nothing was learned. Try again later.'
+              : 'Every guess drew the same E_VALIDATION_FAILURE as an empty body, so none of them is closer than nothing. The shape is something else — ask Kits support for the request body of POST /voice-blender.',
   };
 }
 

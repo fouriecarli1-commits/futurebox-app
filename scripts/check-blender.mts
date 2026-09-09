@@ -83,6 +83,74 @@ const call = kits.slice(kits.indexOf('export async function blenderNeeds'));
 ok('and asks with a body that cannot become a blend', /body: '\{\}'/.test(call.slice(0, 1200)));
 ok('and says so plainly if one is ever made anyway', /UNEXPECTED/.test(call.slice(0, 3000)));
 
+/* ── The shape hunt, and the answer it once invented ───────────────────────
+
+   `blenderShape()` sends a small ordered set of plausible bodies and watches
+   for the complaint to change. The first version counted **any** status other
+   than E_VALIDATION_FAILURE as a hit, and the first time Carli ran it against
+   the live account it reported, confidently, that `voiceModelIds` was the
+   shape — on the strength of a 429. Kits had rate-limited the sixth POST in a
+   row to one address, which says nothing at all about the body.
+
+   That is a worse failure than a crash. It does not look broken: it produces
+   a plausible field name, and a room gets built on it.
+
+   So the rule is now positive rather than "not the thing I expected" — a hit
+   is a *validation-shaped* refusal carrying a different code — and everything
+   that means "could not ask" stops the hunt and says so. These assertions
+   drive the classifier over the answers a live service actually gives. */
+const { blenderShape } = await import('../app/lib/server/kits');
+
+const answers: Record<string, { status: number; body: string }> = {};
+const realFetch = globalThis.fetch;
+let asked = 0;
+globalThis.fetch = (async (url: unknown) => {
+  const step = Object.keys(answers)[Math.min(asked, Object.keys(answers).length - 1)];
+  asked += 1;
+  const said = answers[step];
+  void url;
+  return new Response(said.body, { status: said.status });
+}) as typeof globalThis.fetch;
+
+const run = async (
+  label: string,
+  replies: { status: number; body: string }[],
+  want: { found: string | null; stopped: string | null },
+): Promise<void> => {
+  for (const key of Object.keys(answers)) delete answers[key];
+  replies.forEach((one, i) => { answers[`r${i}`] = one; });
+  asked = 0;
+  const out = await blenderShape();
+  ok(
+    label,
+    out.found === want.found && out.stopped === want.stopped,
+    `found ${JSON.stringify(out.found)}, stopped ${JSON.stringify(out.stopped)}`,
+  );
+};
+
+const SAME = { status: 422, body: '{"error":"E_VALIDATION_FAILURE","code":"E_VALIDATION_FAILURE"}' };
+const LIMITED = { status: 429, body: '{"error":"Too many requests","code":"E_TOO_MANY_REQUESTS"}' };
+
+await run('a rate limit is not the shape — the bug Carli found', [LIMITED], {
+  found: null, stopped: 'rate-limited',
+});
+await run('nor is a server error', [{ status: 502, body: 'bad gateway' }], {
+  found: null, stopped: 'their side',
+});
+await run('nor is a refused key', [{ status: 403, body: '{"code":"E_FORBIDDEN"}' }], {
+  found: null, stopped: 'not allowed',
+});
+await run('the same complaint on every guess finds nothing, and says so', [SAME], {
+  found: null, stopped: null,
+});
+await run(
+  'a different validation complaint IS the shape',
+  [{ status: 400, body: '{"error":"name is required","code":"E_MISSING_NAME"}' }],
+  { found: 'voiceModelIds as a list', stopped: null },
+);
+
+globalThis.fetch = realFetch;
+
 console.log(
   failures
     ? `\ncheck:blender — ${failures} assertion(s) failed.`

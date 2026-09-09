@@ -151,6 +151,7 @@ export async function GET(request: Request): Promise<Response> {
                 `  ${one.changed ? '>>' : '  '} ${one.why} — ${one.status} ${one.code}`,
             ),
             `  gevind: ${hunt.found ?? 'niks'}`,
+            ...(hunt.stopped ? [`  gestop: ${hunt.stopped} — niks hiervan is 'n antwoord oor die vorm nie`] : []),
             `  ${hunt.note}`,
           ]
         : []),

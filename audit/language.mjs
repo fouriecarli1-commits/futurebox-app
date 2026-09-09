@@ -309,6 +309,128 @@ async function chooseAfrikaans(p) {
   await context.close();
 }
 
+// ── Five: the same rule on a phone, and whether she is told ──────────────
+/*
+   Carli, 9 September 2026: "Op my foon log die afrikaans steeds in in engels.
+   Maar op die rekenaar se login sien ek dit werk reg."
+
+   The first theory was storage: phones lose it, laptops do not. That theory is
+   written down here because it was wrong and the test is what proved it — a
+   `localStorage` that throws on every write changes nothing, because the
+   sign-in handler only ever calls `setLangState` on rule 2, and rule 2 needs
+   the *account* to have an answer. With nothing stored and nothing on the
+   account, signing in leaves the screen exactly as it was.
+
+   So the only way signing in turns her page English is rule 2 doing its job:
+   her account says English, her phone has no stored choice, and the Afrikaans
+   she is looking at is the locale's guess. That is the rule working, and
+   scene four already proves it announces itself — at 1280 wide.
+
+   This is the same scene at 390. The rule is not the question here; whether
+   she can SEE what it did is, and whether she can press the way back. Today
+   has already found three controls painted under the bottom bar, so a notice
+   arriving at the moment somebody is confused is worth measuring rather than
+   assuming.
+*/
+{
+  stored = { lang: 'en' };
+  const context = await b.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    // Her phone's own language, which is what makes the first paint Afrikaans.
+    locale: 'af-ZA',
+  });
+  const p = await context.newPage();
+  p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
+  await p.addInitScript((who) => {
+    try {
+      window.localStorage.setItem(
+        'sb-stub-auth-token',
+        JSON.stringify({
+          access_token: 'stub-access-token',
+          refresh_token: 'stub-refresh-token',
+          token_type: 'bearer',
+          expires_at: Math.floor(Date.now() / 1000) + 86400,
+          expires_in: 86400,
+          user: { id: who.id, email: who.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} },
+        }),
+      );
+    } catch {}
+  }, WHO);
+  await p.route('**/auth/v1/**', async (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: WHO.id, email: WHO.email, aud: 'authenticated', role: 'authenticated',
+        app_metadata: {}, user_metadata: stored,
+      }),
+    }));
+  await p.route('**/rest/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+  await p.route('**/storage/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+
+  await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
+  await p.waitForTimeout(3000);
+
+  check('on a phone too, the English account beats the Afrikaans guess',
+    'en' === (await p.evaluate(() => document.documentElement.lang)),
+    await p.evaluate(() => document.documentElement.lang));
+
+  /* The way back. Found by what it does, then asked of the document at its own
+     middle — a rectangle in the right place says nothing about what is painted
+     over it, and the bottom bar is z-[95]. */
+  const back = p.locator('button', { hasText: /Keep Afrikaans|Hou Afrikaans/ });
+  check('and the way back to Afrikaans is on the screen', (await back.count()) > 0,
+    `${await back.count()} of them`);
+  if (await back.count()) {
+    /* Every copy of it, not the first.
+
+       The notice renders in more than one place — the studio behind, and the
+       welcome panel over it — and `.first()` picked the one underneath, then
+       reported the panel's own heading as the thing in front of it. That is
+       true and it is not the question. What matters is whether she can press
+       it *somewhere*, so each one is asked of the document at its own middle
+       and the best answer wins. */
+    const all = await back.evaluateAll((els) =>
+      els.map((el) => {
+        el.scrollIntoView({ block: 'center' });
+        const box = el.getBoundingClientRect();
+        const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+        return {
+          onScreen: box.width > 0 && box.height > 0 && box.top >= 0 && box.bottom <= window.innerHeight,
+          reaches: hit ? hit === el || el.contains(hit) : false,
+          onTop: hit ? (hit.closest('button')?.textContent ?? hit.tagName).trim().slice(0, 30) : 'nothing',
+          bottom: Math.round(window.innerHeight - box.bottom),
+        };
+      }),
+    );
+    const usable = all.find((one) => one.reaches && one.onScreen) ?? null;
+    check(`the way back is inside the phone's screen`, all.some((one) => one.onScreen), JSON.stringify(all));
+    check('and at least one of them can actually be pressed', Boolean(usable),
+      all.map((one) => `${one.onTop} in front`).join(' ;; '));
+    check('and it clears the bottom button bar',
+      !usable || usable.bottom >= 64 || usable.bottom < 0, `${usable?.bottom}px above the bottom`);
+
+    /* Forced, because the point of the assertion above is that something may
+       be over it — a plain click throws a timeout and takes the whole run
+       down with it, which reports as a crash rather than as a finding. */
+    const pressable = usable ? back.nth(all.indexOf(usable)) : back.first();
+    await pressable.click({ force: true }).catch(() => problems.push('the way back could not be pressed at all'));
+    await p.waitForTimeout(1200);
+    check('pressing it puts the page back into Afrikaans',
+      'af' === (await p.evaluate(() => document.documentElement.lang)),
+      await p.evaluate(() => document.documentElement.lang));
+    await p.reload({ waitUntil: 'networkidle' });
+    await p.waitForTimeout(2500);
+    check('and it stays Afrikaans on the next load, so she is not asked twice',
+      'af' === (await p.evaluate(() => document.documentElement.lang)),
+      await p.evaluate(() => document.documentElement.lang));
+  }
+  await context.close();
+}
+
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 server.stop();

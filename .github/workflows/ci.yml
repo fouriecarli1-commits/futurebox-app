@@ -231,6 +231,11 @@ jobs:
       - name: The music licence is stated as the engine grants it
         run: npm run check:musiclicence
 
+      # The voice desk belongs in both rooms, and a finished mix must not be
+      # noise-gated like a phone take on its way to the singing engine.
+      - name: The song mixer is wired in both rooms
+        run: npm run check:songmixer
+
       # Two unauthenticated routes call a reasoning model. The only thing
       # between them and an unbounded bill looks identical working or broken.
       - name: The rate brake holds

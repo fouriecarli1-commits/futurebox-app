@@ -44,6 +44,7 @@ import Cost from './Cost';
 import HowToTrain from './HowToTrain';
 import SingVoices, { type SingVoice } from './SingVoices';
 import Note from './Note';
+import VoiceMixer, { SONG_SETTINGS, settingsToForm, type VoiceSettings } from './VoiceMixer';
 
 interface Singing {
   readonly configured: boolean;
@@ -85,6 +86,9 @@ export default function SingItMine({
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
   const [modelId, setModelId] = useState('');
+  /* The desk, and it starts different from the booth's on purpose: this room
+     sends a finished mix rather than a take off a phone. See `SONG_SETTINGS`. */
+  const [desk, setDesk] = useState<VoiceSettings>(SONG_SETTINGS);
 
   useEffect(() => {
     let alive = true;
@@ -146,6 +150,10 @@ export default function SingItMine({
          song — not a dry acapella of it. */
       form.append('want', 'mix');
       form.append('seconds', String(Math.round(track.seconds || 0)));
+      /* How much model, how much them, and what to clean or polish. Started at
+         `SONG_SETTINGS`, so even untouched this sends an empty `pre` and stops
+         the route applying the phone cleanup to a mastered mix. */
+      settingsToForm(form, desk);
 
       const token = await accessToken();
       const response = await fetch('/api/voice/sing', {
@@ -186,7 +194,7 @@ export default function SingItMine({
       if (key) void dropWork(key);
       setBusy(false);
     }
-  }, [modelId, onMade, t, track]);
+  }, [desk, modelId, onMade, t, track]);
 
   /* Nothing at all until the engine is switched on. A button that opens a
      panel to say "not available" is a button that wasted a press. */
@@ -258,6 +266,20 @@ export default function SingItMine({
                 {/* The way to get one, for anybody who has not. */}
                 <HowToTrain />
               </div>
+
+              {/* ── The desk ────────────────────────────────────────────
+ 
+                  "Daar moet ook 'n mixer setting wees vir die stemme wat
+                   gebruik word wat 'n conversion slider het, 'n dynamic
+                   slider (model volume), pre en post processing effects om te
+                   hoor wat klink die beste."
+ 
+                  It went into the Pro Booth first and belonged here just as
+                  much — this is the room most people are in. Same component,
+                  same request fields, different starting point: the booth
+                  cleans a phone take and this one leaves a finished mix
+                  alone. */}
+              <VoiceMixer settings={desk} onChange={setDesk} />
 
               {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
 

@@ -61,6 +61,37 @@ export const DEFAULT_SETTINGS: VoiceSettings = {
   chosen: false,
 };
 
+/**
+ * A finished song, which is not a take off a phone.
+ *
+ * ── The bug this fixes ───────────────────────────────────────────────────
+ *
+ * `/api/voice/sing` applies `PHONE_CLEANUP` — a noise gate and a high-pass —
+ * to anything that does not say otherwise. That is right for the booth, where
+ * the input is somebody singing into a handset in a room with a fridge in it.
+ *
+ * Make a song sends something else entirely: a finished, mastered mix straight
+ * out of the music engine. A noise gate over a full mix chews the reverb tails
+ * and the quiet ends of phrases, and a high-pass at the phone's corner takes
+ * the bottom off the bass. Nobody asked for either, nothing on the screen said
+ * it was happening, and it has been happening to every song sung in a member's
+ * own voice from that room.
+ *
+ * `chosen: true` from the start is what fixes it, and it is not a misuse of
+ * the flag. `chosen` means "these settings are meant to be sent" — for the
+ * booth that becomes true when somebody moves a control, and here it is true
+ * on arrival, because differing from the server's default IS the choice this
+ * room is making. An empty `pre` is a real instruction: clean nothing.
+ */
+export const SONG_SETTINGS: VoiceSettings = {
+  pitchShift: 0,
+  conversionStrength: null,
+  modelVolumeMix: null,
+  pre: [],
+  post: [],
+  chosen: true,
+};
+
 const PRE = ['noiseGate', 'highPass', 'lowPass', 'compressor'] as const;
 const POST = ['compressor', 'chorus', 'reverb', 'delay'] as const;
 

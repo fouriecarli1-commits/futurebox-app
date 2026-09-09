@@ -2498,6 +2498,56 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * The choice made in this session, when storage could not keep it.
+   *
+   * ── Carli's phone ────────────────────────────────────────────────────
+   *
+   * "Op my foon log die afrikaans steeds in in engels. Maar op die rekenaar
+   * se login sien ek dit werk reg."
+   *
+   * Desktop working and phone not is the whole clue: the rule is right and
+   * the thing it reads is missing. Every branch of it starts from
+   * `localStorage.getItem(STORAGE_KEY)`, and there are browsers where that
+   * throws or is silently discarded — Safari private browsing, an in-app
+   * webview, or ITP clearing site data after a week of not visiting. All
+   * three are ordinary on a phone and none of them happens on her laptop.
+   *
+   * In one of those, pressing Afrikaans on the sign-in screen works: the page
+   * turns Afrikaans, and `setLang`'s write throws into a catch that says "then
+   * it is applied for this page". Then she signs in, and the handler asks
+   * storage what she chose. Storage says nothing. So rule 1 — a choice in this
+   * browser wins — never fires, the account has nothing either (she was not
+   * signed in when she chose, so it could not be written up), and `deviceWould`
+   * reports what her phone's locale says, which is English.
+   *
+   * Every step is behaving as designed, and she is reading English.
+   *
+   * ── Why a ref, when the last ref was the bug ─────────────────────────
+   *
+   * The ref removed above held *what was painted*, updated by an effect, and
+   * raced the sign-in listener that fires inside the first effect pass. This
+   * one holds something different and has no such race: it is written
+   * **synchronously inside `setLang`**, at the moment of the press, and it
+   * only ever holds a deliberate choice. There is nothing to be stale — a
+   * press has either happened before the listener reads it or it has not.
+   *
+   * It stands in for storage rather than replacing it. Storage is still
+   * written and still read first; this answers only when storage could not.
+   */
+  const chose = useRef<Lang | null>(null);
+
+  /** What this browser was told, from storage or from this session's press. */
+  const wasChosen = (): Lang | null => {
+    try {
+      const kept = asLang(window.localStorage.getItem(STORAGE_KEY));
+      if (kept) return kept;
+    } catch {
+      // Blocked. The press below is the only record there is.
+    }
+    return chose.current;
+  };
+
   /* The document's own language, kept in step with the app's.
      `<html lang="en">` is written by the server, which cannot know — and an
      Afrikaans page that says it is English is read aloud by a screen reader
@@ -2531,7 +2581,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     let stillUnasked = true;
     void (async () => {
       try {
-        if (window.localStorage.getItem(STORAGE_KEY)) return;
+        /* The press counts here too. Without it, a browser that cannot store
+           asks the account on every load and lets it overrule a choice made a
+           moment ago on this very page. */
+        if (wasChosen()) return;
         const cloud = await import('./cloud');
         if (!cloud.configured()) return;
         // Asked of the server, not of the session in this browser — see
@@ -2539,7 +2592,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         // answer this, because a new device's session predates the choice.
         const said = await cloud.accountLanguage();
         if (!stillUnasked || !said) return;
-        if (window.localStorage.getItem(STORAGE_KEY)) return;
+        // Asked again after the wait: they may have pressed while it flew.
+        if (wasChosen()) return;
         setLangState(said);
         document.documentElement.lang = said;
       } catch {
@@ -2580,12 +2634,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         stop = cloud.onAccountChange((account) => {
           if (!account) return;
           void (async () => {
-            let stored: string | null = null;
-            try {
-              stored = window.localStorage.getItem(STORAGE_KEY);
-            } catch {
-              // Storage blocked; the account is the only answer there is.
-            }
+            /* Storage first, then the press. On a browser that cannot keep
+               the choice, the press is the only record of it — and without
+               this the rule falls through to the device's locale and undoes
+               what she just asked for. */
+            const stored: string | null = wasChosen();
             /* Asked only when this browser has nothing to say, because that is
                the only case the answer changes anything — and it is a network
                call. */
@@ -2642,6 +2695,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const undoSwitch = useCallback(() => {
     setSwitched((was) => {
       if (was) {
+        // A press, like any other. Same reason as `setLang`.
+        chose.current = was;
         setLangState(was);
         try {
           window.localStorage.setItem(STORAGE_KEY, was);
@@ -2659,6 +2714,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     /* Any deliberate choice also puts the notice away: it is about a change
        nobody asked for, and this is somebody asking. */
     setSwitched(null);
+    /* Written before anything that can fail, and synchronously, so a browser
+       that refuses to store still knows what was pressed. See `chose`. */
+    chose.current = next;
     setLangState(next);
     try {
       window.localStorage.setItem(STORAGE_KEY, next);

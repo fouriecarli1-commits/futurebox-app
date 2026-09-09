@@ -2875,9 +2875,33 @@ export default function FutureBoxHome() {
               taller than the screen — so the greeting itself would have been
               the part nobody could reach. */}
           <div
-            className="min-h-full p-4 sm:p-8 pt-8 sm:pt-16 flex justify-center"
+            className="min-h-full p-4 sm:p-8 pt-8 sm:pt-16 flex flex-col items-center"
             style={{ paddingBottom: barClearance(24) }}
           >
+            {/* The language notice, here as well as in the studio behind.
+
+                ── The fault this fixes ──────────────────────────────────
+
+                "Op my foon log die afrikaans steeds in in engels."
+
+                The rule was right and the notice was rendering — behind this
+                panel. Signing in is the one moment the account can overrule
+                what is on screen, and the very next thing that happens is
+                arriving at this door, which is `fixed inset-0 z-[55]` over
+                everything. So the sentence explaining the switch and the one
+                press back to Afrikaans were both painted under it, and what
+                she got was a page that had silently turned English with no
+                way back.
+
+                Measured rather than reasoned: `audit/language.mjs` scene five
+                asks `elementFromPoint` at the middle of the "Keep Afrikaans"
+                button on a 390-wide screen, and Playwright named this div as
+                the thing intercepting the press.
+
+                The fourth control found painted under another layer today. */}
+            <div className="w-full max-w-3xl">
+              <LanguageSwitched />
+            </div>
             <Greeting
               name={artistName || user?.name}
               onGo={(id) => {
