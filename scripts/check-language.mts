@@ -120,16 +120,70 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const read = (path: string): string => readFileSync(join(ROOT, path), 'utf8');
 
 const provider = read('app/lib/i18n.tsx');
+/* ── Her second report, and the race that silenced the notice ───────────
+ *
+ * Carli, 9 September 2026: "Wanneer ek vanuit die afrikaanse skerm in log,
+ * spring hy na die engels toe wanneer mens in is." The mirror image of the
+ * first one, which is why the notice exists at all.
+ *
+ * The switch itself is the rule working: nothing was chosen on this device —
+ * an Afrikaans page from an Afrikaans phone is a guess, and a guess stores
+ * nothing — so the account answers, and it says English.
+ *
+ * What was wrong is that it happened in silence. The decision compared the
+ * account against a ref holding "what is on screen", and Supabase's listener
+ * fires immediately on registration with the session it already has. On a load
+ * where somebody is already signed in that happens inside the first effect
+ * pass: `onArrival` has queued Afrikaans, React has not committed it, and the
+ * effect that copies it into the ref has not run. The ref still says English.
+ * English against English matches, so nothing is announced — and the Afrikaans
+ * that was about to paint is replaced without a word.
+ *
+ * The rule was never wrong. It was being asked the wrong question. */
+{
+  /* Both readings of "what this device shows", one stale and one not, so the
+     consequence is on the record rather than in a commit message. */
+  const stale = onSignIn(null, 'en', 'en');
+  ok('against a stale English, an English account announces nothing',
+    stale.switched === null, String(stale.switched));
+
+  const fresh = onSignIn(null, 'en', 'af');
+  ok('against what the device would actually show, the same switch is announced',
+    fresh.switched === 'af', String(fresh.switched));
+  ok('and it still switches, because a guess does not outrank the account',
+    fresh.lang === 'en');
+  ok('and stores it, so the next load does not ask again', fresh.store === 'en');
+}
+
+/* And the provider must not be able to ask the stale question again. The ref
+   is gone; the decision works the answer out from the same two inputs
+   `onArrival` uses, at the moment it decides. */
+ok('the sign-in decision does not read what has been painted',
+  !/showingRef/.test(provider),
+  'a value that depends on whether React has committed yet is a race, not a reading');
+ok('it works out what this device would show, from the device',
+  /onSignIn\(stored, said, deviceWould\(stored\)\)/.test(provider));
+ok('and that reading uses the arrival rule rather than a second copy of it',
+  /const deviceWould[\s\S]{0,300}?onArrival\(stored, navigator\.language\)/.test(provider));
+
 ok('the provider uses the rule rather than a second copy of it', /onSignIn\(/.test(provider) && /onArrival\(/.test(provider));
 ok(
   'and asks the account only when this browser has nothing to say',
   /asLang\(stored\) \? null : await cloud\.accountLanguage\(\)/.test(provider),
   'otherwise every sign-in is a network call for an answer that cannot be used',
 );
+/* This assertion used to require the opposite: that the value came through a
+   ref rather than being closed over. That was right about the closure and
+   wrong about the race — a ref written by an effect is stale for exactly the
+   one fire that matters, the immediate one on a page where somebody is
+   already signed in. Requiring the ref was requiring the bug.
+
+   Kept as a rule about the shape rather than deleted: nothing in this decision
+   may depend on what React has committed. */
 ok(
-  'what is on screen is read through a ref, not closed over',
-  /showingRef\.current/.test(provider),
-  'the listener is registered once, so `lang` inside it is the one from mount',
+  'nothing in the decision depends on a value another effect has to write',
+  !/showingRef/.test(provider) && !/useRef<Lang>/.test(provider),
+  'a value another effect fills in is stale on the first fire, which is the fire that matters',
 );
 ok('choosing a language puts the notice away', /setSwitched\(null\);/.test(provider));
 

@@ -2424,17 +2424,43 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [switched, setSwitched] = useState<Lang | null>(null);
   const [lang, setLangState] = useState<Lang>('en');
 
-  /* The same value, readable from a callback that was registered once.
-
-     `onAccountChange` hands its listener to Supabase at mount, so the `lang`
-     that listener closed over is the one from mount — English, always, since
-     that is the initial state. Asking "what is on screen" through a ref is the
-     difference between announcing a switch that happened and announcing one
-     against a value from before the page had read its own storage. */
-  const showingRef = useRef<Lang>('en');
-  useEffect(() => {
-    showingRef.current = lang;
-  }, [lang]);
+  /**
+   * What this device thinks, worked out again rather than remembered.
+   *
+   * ── The ref that was here, and why it was wrong ──────────────────────
+   *
+   * This was a ref holding the language on screen, updated by an effect on
+   * `lang`, so that the sign-in listener — registered once at mount — would
+   * not compare against the mount-time value. That fixed the closure and left
+   * a race underneath it.
+   *
+   * Supabase's listener fires immediately on registration with the session it
+   * already has. On any load where somebody is already signed in, that happens
+   * inside the *first* effect pass: `onArrival` has queued `setLangState('af')`
+   * but React has not committed it, so the effect that copies `lang` into the
+   * ref has not run, and the ref still says English — the initial state.
+   *
+   * The comparison that decides whether to announce the switch is
+   * `said === showing`. With a stale `showing` of English and an account that
+   * says English, they match, so nothing is announced — and then the Afrikaans
+   * that `onArrival` had queued is replaced by English with no word about it.
+   *
+   * Which is exactly what Carli saw, in the opposite direction to last time:
+   * "Wanneer ek vanuit die afrikaanse skerm in log, spring hy na die engels toe
+   * wanneer mens in is." The switch is the rule working. The silence was a
+   * race.
+   *
+   * So the decision no longer asks what has been painted. It works out what
+   * this device would show, from the same two inputs `onArrival` uses, at the
+   * moment it decides. Nothing to be stale, and no ordering to get right.
+   */
+  const deviceWould = (stored: string | null): Lang => {
+    try {
+      return onArrival(stored, navigator.language).lang;
+    } catch {
+      return 'en';
+    }
+  };
 
   /* The document's own language, kept in step with the app's.
      `<html lang="en">` is written by the server, which cannot know — and an
@@ -2529,7 +2555,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
                call. */
             const said = asLang(stored) ? null : await cloud.accountLanguage();
             if (!live) return;
-            const next = onSignIn(stored, said, showingRef.current);
+            const next = onSignIn(stored, said, deviceWould(stored));
             if (next.keepOnAccount) {
               await keepOnAccount(next.keepOnAccount);
               return;
