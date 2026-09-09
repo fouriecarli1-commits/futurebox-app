@@ -1751,6 +1751,60 @@ Three things it found on the way, and only one is a fault in the app:
    looking for the typed-address field before the confirmation had been
    opened. It opens it now and checks there.
 
+## Five Kits minutes each (her decision, 9 September 2026)
+
+"Ek dink ons gaan baie streng cap op elke user moet sit vir kits se
+stemkloning. Dus iets soos 5min per persoon."
+
+Built. `minutesEach()` defaults to 5 and reads `KITS_MINUTES_EACH`;
+`mineSeconds(owner)` counts that member's own rows for the calendar month;
+`enough(seconds, owner)` checks their share **before** the workspace roof,
+because their share is the one they can act on.
+
+**What it buys, said plainly, because the arithmetic is unforgiving.** Four
+hundred minutes divided by five is eighty members, and the cap does not make
+it eighty-one. It adds no capacity. What it changes is *who* gets the four
+hundred: without it, one member converting fifty minutes takes the month from
+everybody else and the first anybody hears of it is a refusal in a room that
+worked yesterday. "The person who found the button first took the month" is
+not a rule anybody would choose, and that is what this replaces.
+
+**The one deliberate reversal.** Everywhere else in this codebase a failed
+read must not be mistaken for an empty answer — that is `check:couldnotask`,
+built the same day. Here it is the other way round: `mineSeconds` answers null
+on a failed read and `enough` treats null as **no room**, because this cap is
+what stands between one member and everybody else's month, and a failed read
+reporting "nothing used" would take the cap off at exactly the moment it
+stopped working. A held take costs one member one refusal with a reason; a cap
+that fails open costs everybody the month. `check:kitseach` holds that
+direction and was proved to fail if it is flipped.
+
+**She must run `supabase/ALMAL.sql` again** — it now carries
+`kits_seconds_this_month_for(uuid)` and an index on `(owner, at desc)`.
+
+**Still open:** whether the same cap belongs on the ElevenLabs side. That is
+#119, still held at her instruction, and the shape is different — ElevenLabs
+bills past the plan, Kits simply stops.
+
+## Two checks were red and I had not looked
+
+Worth recording because both were mine and neither was caught by a build.
+
+`check:sing` had been red since the `?as=text` commit hours earlier: its
+assertion matched the literal `minutes: {` in the setup route, and that
+refactor hoisted the object into a `const` so the JSON and the plain-text
+report could share one read. I ran typecheck and the build after that change
+and not the check. Matching a shape rather than a fact is how a check fails
+for a reason that is not the reason it exists; it matches the fields now.
+
+`check:kitsminutes` went red on this change and was right to look: it verifies
+that the number passed to `enough()` is the number written down by `note()` —
+a real property, since a route that asks about one file and notes two has a
+ceiling that lets everything through and a counter that fills twice as fast.
+Its pattern required a closing bracket straight after the first argument, so
+`enough(spend, owner)` extracted `undefined`. The property held; the pattern
+now reads the first argument whatever follows it.
+
 ## Open, and worth a decision
 
 - **Does anybody pay yet?** Still unanswered, and it still decides whether the

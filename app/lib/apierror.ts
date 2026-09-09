@@ -85,6 +85,24 @@ const SAID: Record<string, { en: string; af: string }> = {
     en: 'Voice cloning is full on this app right now. It is not something you have done, the owner has been told, and nothing has been charged.',
     af: 'Stemkloning is op die oomblik vol op hierdie toep. Dit is nie iets wat jy gedoen het nie, die eienaar is ingelig, en niks is gehef nie.',
   },
+  /* The three Kits refusals, kept apart on the screen because they mean
+     three different things and only one of them is about this person.
+
+     Kits confirmed on 9 September 2026 that there is no add-on to buy past
+     the monthly roof, so none of these may suggest a purchase — the honest
+     answer to all three is a date, not a button. */
+  kits_yours_used: {
+    en: 'You have used your singing minutes for this month. They start again on the first.',
+    af: 'Jy het jou sangminute vir hierdie maand opgebruik. Dit begin weer op die eerste.',
+  },
+  kits_month_used: {
+    en: 'The singing allowance for the whole app is used up for this month. It starts again on the first.',
+    af: 'Die sangtoelaag vir die hele toep is vir hierdie maand op. Dit begin weer op die eerste.',
+  },
+  kits_unknown: {
+    en: 'Your singing allowance could not be checked just now, so this one is held rather than guessed at. Try again in a moment.',
+    af: 'Jou sangtoelaag kon nou nie nagegaan word nie, so hierdie een word gehou eerder as geraai. Probeer weer oor ’n oomblik.',
+  },
   /* A paywall, not a fault. The distinction matters on the screen: "that
      broke" sends somebody to the help desk, "you have not bought this" sends
      them to the thing that sells it. */

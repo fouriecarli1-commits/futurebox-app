@@ -334,8 +334,15 @@ ok('and what is written down is the downloaded length, not the song\u2019s',
   'a two-file job downloads twice the audio and must count twice the minutes');
 ok('the bookkeeping cannot fail the member\u2019s request',
   /void note\(/.test(sing) && /\(\) => undefined,/.test(minutes));
+/* Matched on the fields rather than on the literal `minutes: {`.
+
+   That literal went stale the moment the setup route hoisted the object into
+   a `const` so the JSON and the plain-text report could share one read — and
+   this assertion sat red through a commit because I ran typecheck and the
+   build after that change and not this. Matching a shape rather than a fact
+   is how a check fails for a reason that is not the reason it exists. */
 ok('the setup page reports where the month stands',
-  /minutes: \{/.test(setup) && /leftMinutes/.test(setup));
+  /minutes:/.test(setup) && /leftMinutes/.test(setup) && /usedMinutes/.test(setup));
 
 /* ── 7. The key stays on the server ─────────────────────────────────────── */
 

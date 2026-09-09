@@ -124,8 +124,21 @@ export async function POST(request: Request): Promise<Response> {
      this one downloads two and the difference is the whole point of that
      function. */
   const spend = downloadSeconds(billed, 1);
-  const room = await enough(spend);
-  if (room) return Response.json({ message: room.message, left: room.left }, { status: 429 });
+  /* The member's own share as well as the workspace's.
+
+     Without the owner, `enough` only checks Kits' roof — which one member can
+     empty on their own, leaving everybody else with a refusal in a room that
+     worked yesterday. Five minutes each is the cap; see `minutesEach`. */
+  const room = await enough(spend, caller?.id ?? null);
+  if (room) {
+    /* The code as well as the sentence, so `lib/apierror.ts` can say it in
+       Afrikaans — and so "you are out" and "everybody is out" stay different
+       answers on the screen as well as in here. */
+    return Response.json(
+      { error: room.code, message: room.message, left: room.left },
+      { status: 429 },
+    );
+  }
 
   const paid = await charge(request, perMinute(billed, CREDITS.sing), 'sing');
   if (!paid.ok) return paid.response;

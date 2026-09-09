@@ -265,6 +265,12 @@ jobs:
       - name: Could-not-ask is never drawn as none
         run: npm run check:couldnotask
 
+      # Five minutes of Kits each. The cap adds no capacity — 400 over 5 is
+      # 80 members either way — it decides who gets the 400. And unlike every
+      # other read in this app, a failed one holds rather than opens.
+      - name: Five Kits minutes each, and a read that fails holds
+        run: npm run check:kitseach
+
       # Two unauthenticated routes call a reasoning model. The only thing
       # between them and an unbounded bill looks identical working or broken.
       - name: The rate brake holds

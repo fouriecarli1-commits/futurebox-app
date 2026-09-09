@@ -59,6 +59,34 @@ export function monthlyMinutes(): number {
 }
 
 /**
+ * What one member may spend of it in a month, in minutes.
+ *
+ * ── Why a per-member cap on top of the workspace roof ────────────────────
+ *
+ * Carli, 9 September 2026: "Ek dink ons gaan baie streng cap op elke user moet
+ * sit vir kits se stemkloning. Dus iets soos 5min per persoon."
+ *
+ * `monthlyMinutes()` above is Kits' own roof and it stops the account running
+ * out. What it cannot do is say *who* used it. One member converting fifty
+ * minutes leaves everybody else with nothing, and the first they hear of it is
+ * a refusal in a room that worked yesterday.
+ *
+ * It is worth being plain about what this does and does not buy, because the
+ * arithmetic is unforgiving: four hundred minutes divided by five is eighty
+ * members, and it stays eighty. **The cap adds no capacity.** What it changes
+ * is who gets the four hundred — shared out rather than first-come — and that
+ * is worth having on its own, because "the person who found the button first
+ * took the month" is not a rule anybody would choose.
+ *
+ * Five is hers. Overridable because it is a number to tune once real members
+ * are using it, not a law.
+ */
+export function minutesEach(): number {
+  const said = Number(process.env.KITS_MINUTES_EACH);
+  return Number.isFinite(said) && said > 0 ? Math.floor(said) : 5;
+}
+
+/**
  * A short memory of the last answer.
  *
  * The count is asked for on every conversion, before the credits are charged.
@@ -95,9 +123,35 @@ export async function leftSeconds(): Promise<number> {
   return Math.max(0, monthlyMinutes() * 60 - (await usedSeconds()));
 }
 
+/**
+ * What one member has already spent this month.
+ *
+ * Not cached, unlike the workspace count. That one is shared by everybody and
+ * moves as fast as the whole app converts; this one moves only when this
+ * member does, and a member who has just finished a conversion asking again a
+ * second later must not be told they have room they no longer have. It is one
+ * indexed read on their own rows.
+ *
+ * A read that fails answers **null** — could not ask. Never nought: the cap
+ * is the thing standing between one member and everybody else's month, and a
+ * failed read that reported "nothing used" would take the cap off at exactly
+ * the moment it stops working. The caller treats null as no room rather than
+ * as all of it.
+ */
+export async function mineSeconds(owner: string): Promise<number | null> {
+  const db = admin();
+  if (!db) return null;
+  const { data, error } = await db.rpc('kits_seconds_this_month_for', { p_owner: owner });
+  if (error) return null;
+  const seconds = Number(data);
+  return Number.isFinite(seconds) ? seconds : null;
+}
+
 export interface Refusal {
   readonly message: string;
   readonly left: number;
+  /** Which of the three refusals this is, so it can be said in Afrikaans. */
+  readonly code: 'kits_yours_used' | 'kits_month_used' | 'kits_unknown';
 }
 
 /**
@@ -108,13 +162,48 @@ export interface Refusal {
  * just "no", because "come back next month" and "try a shorter take" are
  * different answers and only the number tells you which one applies.
  */
-export async function enough(seconds: number): Promise<Refusal | null> {
+export async function enough(seconds: number, owner?: string | null): Promise<Refusal | null> {
+  /* The member's own share first, because it is the one they can act on.
+
+     Told apart from the workspace roof on purpose: "everybody is out until the
+     first" and "you are out until the first" are different sentences, and only
+     one of them means somebody else can still use the room. They carry
+     different codes so `lib/apierror.ts` can say each in Afrikaans. */
+  if (owner) {
+    const mine = await mineSeconds(owner);
+    if (mine === null) {
+      /* Could not ask. Refused rather than waved through: this cap is what
+         stands between one member and everybody else's month, and a failed
+         read that let the take past would take the cap off at exactly the
+         moment it stopped working. */
+      return {
+        left: 0,
+        code: 'kits_unknown',
+        message:
+          'Your singing allowance could not be checked just now, so this one is held rather than guessed at. Try again in a moment.',
+      };
+    }
+    const ownLeft = Math.max(0, minutesEach() * 60 - mine);
+    if (seconds > ownLeft) {
+      const own = Math.floor(ownLeft / 60);
+      return {
+        left: ownLeft,
+        code: 'kits_yours_used',
+        message:
+          own > 0
+            ? `You have about ${own} minute${own === 1 ? '' : 's'} of singing left this month, and this take is longer than that. A shorter take will still go through.`
+            : `You have used your ${minutesEach()} minutes of singing for this month. It starts again on the first.`,
+      };
+    }
+  }
+
   const left = await leftSeconds();
   if (seconds <= left) return null;
 
   const minutes = Math.floor(left / 60);
   return {
     left,
+    code: 'kits_month_used',
     message:
       minutes > 0
         ? `This month's singing allowance is nearly used up — about ${minutes} minute${

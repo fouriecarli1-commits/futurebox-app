@@ -347,7 +347,10 @@ async function kitsSplit(
      four-part job spends twice what the two-part one does — which is exactly
      why this number is passed rather than assumed. */
   const spend = downloadSeconds(seconds, four ? 4 : 2);
-  if (await enough(spend)) return null;
+  /* The owner's own share counts here too. Still a fall-through rather than a
+     refusal — ElevenLabs is behind this one, so a member who has used their
+     five minutes gets a split from the other engine rather than a wall. */
+  if (await enough(spend, owner)) return null;
 
   /* Half of this route's own ceiling, so a slow split still leaves ElevenLabs
      time to answer rather than turning a cheap attempt into a timeout. */

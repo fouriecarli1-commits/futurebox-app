@@ -56,7 +56,15 @@ for (const path of ROUTES) {
      `enough` about one file and then notes two has a ceiling that lets
      everything through and a counter that fills twice as fast — both wrong,
      in opposite directions, from one typo. */
-  const asked = /enough\(\s*(\w+)\s*\)/.exec(source)?.[1];
+  /* The first argument, whatever follows it.
+
+     `enough` grew a second argument — the member, so the five-minutes-each
+     cap has somebody to count — and this pattern required the closing bracket
+     straight after the first. It then extracted `undefined` and reported that
+     the route checks a different number from the one it writes down, which
+     was alarming and untrue. The property is about the FIRST argument; the
+     pattern now says so. */
+  const asked = /enough\(\s*(\w+)\s*[,)]/.exec(source)?.[1];
   const noted = /note\(\s*(\w+)\s*,/.exec(source)?.[1];
   ok(`${path} checks the same number it writes down`, Boolean(asked) && asked === noted,
     `enough(${asked}) vs note(${noted})`);
