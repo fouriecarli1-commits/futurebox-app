@@ -432,6 +432,64 @@ try {
       check('at 390px the tab bar covers nothing the room offers', covered.length === 0,
         covered.slice(0, 6).join(', '));
 
+      /* ── Nothing is hidden sideways ────────────────────────────────
+
+         "wat ek bedoel met swipe links. ek moes die bar links skuif om daai
+          opname mic te sien. niemand gaan weet dit is daar nie."
+
+         The page-width check above asks `documentElement.scrollWidth`, which
+         is the *page*. A row inside the room that scrolls sideways on its own
+         passes that happily, and the controls past its right edge — the mic
+         that records into the lane, the bin that removes it — are reachable
+         only by somebody who thinks to drag a row nothing says is draggable.
+
+         Two questions, because the fault has two shapes. A box that scrolls
+         is one. A box whose contents are simply wider than it is — fixed
+         width, `flex-shrink-0`, more in it than fits — is the other, and that
+         one does not scroll at all: it paints its overflow over the control
+         beside it. Both were present here. */
+      const sideways = await p.evaluate(() => {
+        const room = document.querySelector('div.fixed.inset-0.z-\\[70\\]');
+        if (!room) return ['no room'];
+        const out = [];
+        for (const el of Array.from(room.querySelectorAll('div'))) {
+          /* Eight pixels, and the limit is stated rather than tuned until it
+             passed. A control in this room is at least thirty-two pixels
+             square, so nothing eight pixels over its box can be a control that
+             is out of reach — and the assertion below, which asks whether any
+             button actually falls outside its own card, is what catches that.
+             Under eight is a text node a hair wider than the box that holds
+             it, and chasing those turns a check that found four real faults
+             into one nobody trusts. */
+          if (el.scrollWidth > el.clientWidth + 8 && el.clientWidth > 40) {
+            out.push(`${Math.round(el.clientWidth)} wide holding ${Math.round(el.scrollWidth)}: .${String(el.className).slice(0, 50)}`);
+          }
+        }
+        return out;
+      });
+      check('at 390px nothing in the room is hidden off to the side',
+        sideways.length === 0, sideways.slice(0, 4).join(' | '));
+
+      /* And every control is inside the card it belongs to. Overflow that does
+         not scroll still puts a button where nobody can see it. */
+      const outside = await p.evaluate(() => {
+        const out = [];
+        for (const card of Array.from(document.querySelectorAll('div.rounded-xl.border'))) {
+          const box = card.getBoundingClientRect();
+          if (box.width < 100) continue;
+          for (const el of Array.from(card.querySelectorAll('button, input'))) {
+            const r = el.getBoundingClientRect();
+            if (r.width < 2) continue;
+            if (r.right > box.right + 1 || r.left < box.left - 1) {
+              out.push(`${(el.getAttribute('aria-label') || el.type || '?')} sticks out`);
+            }
+          }
+        }
+        return out;
+      });
+      check('and no control sticks out of the lane it belongs to',
+        outside.length === 0, [...new Set(outside)].slice(0, 5).join(', '));
+
       await p.screenshot({ path: shot('probooth-phone.png'), fullPage: false });
     }
   }

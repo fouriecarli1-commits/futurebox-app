@@ -1813,8 +1813,29 @@ export default function ProBooth({
           className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-40"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-          {t('pro.keep', 'Mix it down')}
+          {/* Not "Mix it down".
+ 
+              Carli: "wanneer daar baie klanke en sound bars gelayer word, hoe
+              word dit uiteindelik as een liedjie ge-export? is dit duidelik?
+              gaan mense weet hoe?"
+ 
+              No. "Mix it down" is what the thing is called by people who
+              already know what it is called. Somebody looking at eight lanes
+              and wondering how they become one file is not helped by a term
+              that assumes the answer. The button now says what it makes. */}
+          {t('pro.keep', 'Make one song')}
         </button>
+        {/* And the sentence, because a button alone still leaves "and then
+            what?" — the room closes and the song is in the Library, and both
+            halves of that are worth knowing before it is pressed. */}
+        <p className="w-full text-[11px] leading-snug text-zinc-500">
+          {heard.length
+            ? t(
+                'pro.keepWhat',
+                'Every lane you can hear becomes one song, with its levels, cuts and tone baked in. It lands in your Library and this room closes.',
+              )
+            : t('pro.keepNone', 'Record a take or bring audio in, and this makes one song out of all of it.')}
+        </p>
       </div>
     </div>
   );
@@ -1882,6 +1903,21 @@ function LaneRow({
      is the difference between trimming a lane and scrolling past one. */
   const stripRef = useRef<HTMLDivElement | null>(null);
   const dragging = useRef<'from' | 'to' | null>(null);
+  /**
+   * The same thing as `dragging`, in state, so the readout can be drawn.
+   *
+   * The ref stays because the pointer handlers read it synchronously between
+   * renders and a state read there would be one frame stale. Keeping both is
+   * deliberate: one drives the drag, one draws it.
+   *
+   * Carli: "moet daar nie 'n getal verskuif soos wat die bar getrek word nie."
+   * There was none. The edges moved, the waveform dimmed behind them, and
+   * nothing anywhere said what the cut had been set to — so a trim was a thing
+   * you did by eye and could not repeat.
+   */
+  const [held, setHeld] = useState<'from' | 'to' | null>(null);
+  /** And which edge has the keyboard, so arrow keys get the same readout. */
+  const [focused, setFocused] = useState<'from' | 'to' | null>(null);
   const window_ = windowOf(lane);
   const played = lengthOf(lane);
   const whole = (lane.amped?.audio ?? lane.audio).duration;
@@ -1922,12 +1958,16 @@ function LaneRow({
     event.preventDefault();
     (event.target as Element).setPointerCapture?.(event.pointerId);
     dragging.current = edge;
+    setHeld(edge);
   };
   const onDragMove = (event: React.PointerEvent) => {
     if (!dragging.current) return;
     moveEdge(dragging.current, clockAt(event.clientX));
   };
-  const endDrag = () => { dragging.current = null; };
+  const endDrag = () => {
+    dragging.current = null;
+    setHeld(null);
+  };
 
   /* Arrow keys as well, a tenth of a second at a time — the same floor the
      drag clamps to, so the two ways of moving an edge agree. */
@@ -2131,13 +2171,46 @@ function LaneRow({
               aria-valuetext={clock(seconds)}
               onPointerDown={startDrag(edge)}
               onKeyDown={onEdgeKey(edge)}
+              onFocus={() => setFocused(edge)}
+              onBlur={() => setFocused((was) => (was === edge ? null : was))}
               className="absolute inset-y-0 w-8 cursor-ew-resize focus:outline-none"
-              style={{ left: `calc(${total > 0 ? (seconds / total) * 100 : 0}% - 16px)` }}
+              /* Held inside the strip.
+ 
+                 The handle is 32 pixels wide and centred on the edge it moves,
+                 so at the very end it hung 16 pixels past the waveform — half
+                 a handle outside the lane, which on a phone is half a handle
+                 nobody can grab. Clamped rather than clipped: `overflow-hidden`
+                 would hide the half instead of moving it. */
+              style={{
+                left: `max(0px, min(calc(${total > 0 ? (seconds / total) * 100 : 0}% - 16px), calc(100% - 32px)))`,
+              }}
             >
               <span
                 className="pointer-events-none absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full"
                 style={{ background: cut ? 'rgb(52 211 153)' : 'rgba(82,82,91,0.7)' }}
               />
+              {/* ── The number, while the edge is being moved ────────────
+ 
+                  Two of them, because one is not enough to work with: where
+                  the edge now sits on the session's clock, and how long the
+                  lane plays for once it is cut. The first is what you are
+                  aiming at; the second is what you are actually deciding.
+ 
+                  `bg-scrim` rather than a black at any opacity — every colour
+                  in this app is a theme variable and `black` resolves to a
+                  pale grey in the shipped light theme, so a label written on
+                  `bg-black/70` is white on white. `check:scrim` holds the rule.
+ 
+                  Shown on keyboard focus too. The edges take arrow keys, and a
+                  readout only a mouse can summon is not a readout. */}
+              {(held === edge || focused === edge) && (
+                <span className="pointer-events-none absolute -top-1 left-1/2 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md bg-scrim px-1.5 py-1 text-[11px] font-bold tabular-nums text-white shadow-lg">
+                  {clock(seconds)}
+                  <span className="pl-1 font-semibold text-zinc-400">
+                    {clock(Math.max(0, window_.to - window_.from))}
+                  </span>
+                </span>
+              )}
             </div>
           );
         })}
@@ -2158,7 +2231,18 @@ function LaneRow({
         <Sliders className="w-4 h-4" />
       </button>
 
-      <div className="w-32 flex-shrink-0 flex items-center gap-1.5">
+      {/* Sized by what is in it, not by a number that was right once.
+
+          This was `w-32` — 128 pixels — and `flex-shrink-0`, holding an L, a
+          slider and an R that come to 155. A box that may not shrink and is
+          smaller than its contents does not scroll and does not wrap: it
+          paints the overflow over whatever is beside it. What Carli saw was
+          this block's "R" printed underneath the start-time field next to it:
+          "kyk fyn na bar langs die skertjie. daar is iets dubbel daar."
+
+          The row around it already wraps. Letting these blocks be as wide as
+          they need means the wrap can do its job. */}
+      <div className="flex-shrink-0 flex flex-wrap items-center gap-1.5">
         <span className="text-[11px] text-zinc-600">L</span>
         <input
           type="range"
@@ -2172,7 +2256,15 @@ function LaneRow({
         <span className="text-[11px] text-zinc-600">R</span>
       </div>
 
-      <div className="w-32 flex-shrink-0 flex items-center gap-1">
+      {/* The same fault, and the one that hid the mic.
+
+          128 pixels holding 190: a start-time field, a unit, and five actions
+          — split, parts, read, sing, remove. The last two were simply outside
+          the card, reachable only by dragging a row nothing says is draggable.
+
+          "ek moes die bar links skuif om daai opname mic te sien. niemand
+           gaan weet dit is daar nie." Nobody was going to. */}
+      <div className="flex-shrink-0 flex flex-wrap items-center gap-1">
         <input
           type="number"
           step={0.05}
@@ -2191,7 +2283,7 @@ function LaneRow({
           disabled={busy}
           title={`${t('pro.split', 'Split the voice off')} — ${perMinute(lane.audio.duration, CREDITS.stems)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.split', 'Split the voice off')}
-          className="p-2 sm:p-0 -m-1 sm:m-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
           <Scissors className="w-4 h-4" />
         </button>
@@ -2201,7 +2293,7 @@ function LaneRow({
           disabled={busy || reading}
           title={`${t('pro.parts', 'Split into named parts')} — ${perMinute(lane.audio.duration, CREDITS.parts)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.parts', 'Split into named parts')}
-          className="p-2 sm:p-0 -m-1 sm:m-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
           <Layers className="w-4 h-4" />
         </button>
@@ -2211,7 +2303,7 @@ function LaneRow({
           disabled={busy || reading}
           title={`${t('pro.read', 'Read the chords, key and tempo')} — ${perMinute(lane.audio.duration, CREDITS.read)} ${t('video.credits', 'credits')}`}
           aria-label={t('pro.read', 'Read the chords, key and tempo')}
-          className="p-2 sm:p-0 -m-1 sm:m-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
           {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
         </button>
@@ -2221,12 +2313,12 @@ function LaneRow({
           disabled={busy}
           title={t('pro.sing', 'Sing this in another voice')}
           aria-label={t('pro.sing', 'Sing this in another voice')}
-          className="p-2 sm:p-0 -m-1 sm:m-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
+          className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
           <Mic2 className="w-4 h-4" />
         </button>
         {!lane.backing && (
-          <button type="button" onClick={onRemove} className="p-2 sm:p-0 -m-1 sm:m-0 text-zinc-600 hover:text-red-400 ml-auto">
+          <button type="button" onClick={onRemove} className="p-2 sm:p-0 text-zinc-600 hover:text-red-400 ml-auto">
             <Trash2 className="w-4 h-4" />
           </button>
         )}
@@ -2378,7 +2470,7 @@ function LaneRow({
             It bakes into the lane rather than sitting in the graph, because
             inference is a function over samples and not an audio node. The
             recording underneath is kept, so taking the amp off is instant. */}
-        <div className="pt-1.5 border-t border-zinc-800 space-y-1.5">
+        <div className="pt-1.5 border-t border-zinc-800 space-y-1.5 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-zinc-500">{t('pro.amp', 'Amp')}</span>
             {lane.amped ? (
