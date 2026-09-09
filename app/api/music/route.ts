@@ -23,6 +23,7 @@
  */
 
 import { noteCost } from '@/app/lib/server/eleven';
+import { enough as enoughAllowance } from '@/app/lib/server/elevenceiling';
 import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
 import { buildRequest, forPreview, type Body } from '@/app/lib/server/musicplan';
 import { songCost } from '@/app/lib/credits';
@@ -182,6 +183,29 @@ export async function POST(request: Request): Promise<Response> {
     const seconds = allowance.kind === 'preview' ? allowance.seconds : (body.seconds ?? 60);
     if (caller) record = () => recordGeneration(caller, allowance.kind, seconds, undefined, request);
     length = seconds;
+  }
+
+  /* The brake, before the charge.
+
+     ElevenLabs' plan is a prepayment and not a ceiling — their support
+     confirmed on 9 September 2026 that top-up runs at the same rate and that
+     Auto Top Up can be switched on. With it on, nothing upstream ever stops:
+     it keeps buying credits until somebody reads an invoice. The only place
+     that can stop is here.
+
+     Asked before `charge` for the same reason `/api/voice/sing` asks about
+     the Kits minutes first: somebody turned away by a ceiling they cannot
+     see must not also have paid for the turn.
+
+     `length * 900` is this app's own credits-per-minute figure from
+     `plans.ts`. It is an estimate compared against a real running total, so
+     being a little high stops a little early — the safe direction. */
+  const room = await enoughAllowance(length * 900);
+  if (room) {
+    return Response.json(
+      { error: 'allowance_used', message: room.message, left: room.left },
+      { status: 429 },
+    );
   }
 
   // Paid for before a byte is asked for, and given back below if the engine

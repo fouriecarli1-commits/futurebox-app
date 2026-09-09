@@ -137,6 +137,12 @@ jobs:
       - name: ElevenLabs' plan and top-up rates still match
         run: npm run check:elevenplans
 
+      # Auto Top Up means nothing upstream ever stops: it keeps buying credits
+      # until somebody reads an invoice. This is the only place that can stop,
+      # so it has to be safe unset, and asked before the member is charged.
+      - name: The brake on ElevenLabs spending is a brake
+        run: npm run check:elevenceiling
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described

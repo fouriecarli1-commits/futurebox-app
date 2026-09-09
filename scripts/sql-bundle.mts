@@ -43,6 +43,7 @@ export const ORDER = [
   'eleven',
   'hearts',
   'buildon',
+  'elevenrem',
 ] as const;
 
 export const BUNDLE = join(ROOT, 'supabase/ALMAL.sql');

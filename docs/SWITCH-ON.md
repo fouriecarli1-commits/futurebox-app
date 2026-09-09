@@ -230,6 +230,27 @@ saam. Die toep tel elke minuut wat dit teruggee en weier voordat die dak breek
 — 'n weiering met 'n rede is goedkoper as 'n mislukking waarvoor iemand reeds
 betaal het. Verander die getal net as die plan verander.
 
+`ELEVEN_MONTHLY_CREDITS` is die rem op ElevenLabs, in krediete per
+kalendermaand. **Onstel beteken 600 000 — presies wat die Pro-plan insluit, en
+dus geen sent bykoop nie.**
+
+Dít is die belangrikste knoppie in hierdie hele dokument, en die rede is
+ElevenLabs se eie antwoord van 9 September 2026: bykoop kos $0,000165 per
+krediet, en **Auto Top Up kan aangeskakel word**. Sonder Auto Top Up gaan die
+diens dood wanneer die krediete op is — sleg, maar sigbaar en gratis. Mét Auto
+Top Up gaan dit *nooit* dood nie: dit hou aan koop, teen ongeveer R3,08 per
+duisend krediete, totdat iemand die rekening lees.
+
+Om die getal te verhoog is dieselfde ding as om te sê "ek betaal vir soveel bo
+die plan". Elke 600 000 krediete bo die plan is omtrent **R1 851** — dieselfde
+as 'n tweede Pro-plan. Die toep tel wat ElevenLabs sélf vir elke oproep gehef
+het (hulle `character-cost`-kop) en weier vóórdat 'n lid betaal, want iemand
+wat teen 'n plafon vasloop wat hy nie kan sien nie, moet nie ook daarvoor
+betaal het nie.
+
+Loop `supabase/elevenrem.sql` (of `supabase/ALMAL.sql`) — sonder daardie
+funksie is daar niks om in te tel nie en die rem staan oop.
+
 Loop `supabase/kits.sql` (of `supabase/ALMAL.sql`) in Supabase, anders is daar
 niks om in te tel nie en die rem staan oop.
 
