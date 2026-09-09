@@ -11,10 +11,26 @@
  *
  * A `.probe.tsx` is not served. `audit/probooth.mjs` copies it to `page.tsx`,
  * builds, presses things, and removes it again.
+ *
+ * ── Why the tab bar is here ──────────────────────────────────────────────
+ *
+ * It was not, and that is how the room's own "Mix it down" button came to be
+ * unreachable on a phone without a single assertion noticing. The room is
+ * `z-[70]`; `TabBar` is `fixed bottom-0 z-[95]`, so in the real app the bar is
+ * painted **over** the bottom of the room. Rendering the room alone tests a
+ * screen nobody has.
+ *
+ * Carli, 9 September 2026, from a phone: "hoe export mens of bring alles by
+ * mekaar? Iets soos 'n mix together knoppie?" The button was there. The bar
+ * was on top of it.
+ *
+ * So the bar is rendered here exactly as the app renders it, and the probe
+ * asks what is painted at each control rather than where it would be.
  */
 
 import React, { useEffect, useState } from 'react';
 import ProBooth from '../components/ProBooth';
+import TabBar from '../components/TabBar';
 
 const RATE = 48_000;
 const SECONDS = 8;
@@ -49,6 +65,8 @@ export default function ProBoothProbe(): React.ReactElement {
           onClose={() => undefined}
         />
       )}
+      {/* Over the room, as it is in the app. */}
+      <TabBar active="make" onGo={() => undefined} />
     </main>
   );
 }

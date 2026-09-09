@@ -915,7 +915,23 @@ export default function ProBooth({
        a sliver, and everything appears to sit behind everything else. So below
        sm the whole room is one column that scrolls, every section laid out in
        full, nothing pinned. */
-    <div className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col overflow-y-auto sm:overflow-hidden">
+    /* The room stops where the tab bar starts.
+
+       `TabBar` is `fixed bottom-0 z-[95]` and this room is `z-[70]`, so the
+       bar is painted over the foot of the room at every width. The transport
+       lives there — and so did "Mix it down", the button that produces the
+       file this whole room exists to make. On a phone it was underneath the
+       bar with nothing to say so, and every probe had rendered the room
+       without the bar, so nothing had ever noticed.
+
+       Carli, 9 September 2026: "hoe export mens of bring alles by mekaar?
+       Iets soos 'n mix together knoppie?" It was there. It was covered.
+
+       Fifty-six pixels is the bar's own `min-h`, plus its top border and the
+       phone's safe area. `audit/probooth.mjs` asks what is painted at each
+       control rather than trusting this number, so a taller bar fails there
+       instead of quietly swallowing a button again. */
+    <div className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col overflow-y-auto sm:overflow-hidden pb-[calc(57px+env(safe-area-inset-bottom))]">
       <div className="flex items-center gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
         {/* Out of the room, and it says so.
 
@@ -1536,7 +1552,13 @@ export default function ProBooth({
             className="min-h-[44px] px-4 py-2.5 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-bold flex items-center gap-2"
           >
             <Square className="w-4 h-4 fill-current" />
-            {t('pro.stop', 'Stop')}
+            {/* Not "Stop".
+
+                While a take is being recorded the transport beside this one
+                also reads "Stop", and Carli hit both: two buttons, the same
+                word, one ends the recording and one ends the playback. A
+                stop button has to say what it stops. */}
+            {t('pro.stopRecording', 'Stop recording')}
           </button>
         ) : (
           <button

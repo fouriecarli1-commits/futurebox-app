@@ -394,6 +394,45 @@ try {
         return out;
       });
       check('at 390px every control is big enough for a thumb', small.length === 0, small.slice(0, 6).join(', '));
+
+      /* ── Nothing the room offers is painted over by the tab bar ────────
+         The room is z-[70]; TabBar is fixed to the bottom at z-[95]. Every
+         probe before this one rendered the room alone, so the bar was not
+         there to cover anything, and the room's own "Mix it down" — the
+         button that produces the file — sat underneath it on a phone with
+         nothing to say so. Carli found it by using the app.
+
+         Scrolled to the bottom, because that is where somebody looking for
+         the finishing button goes, and it is where the bar bites. */
+      await p.evaluate(() => {
+        const room = document.querySelector('div.fixed.inset-0.z-\\[70\\]');
+        if (room) room.scrollTop = room.scrollHeight;
+      });
+      await p.waitForTimeout(300);
+
+      const covered = await p.evaluate(() => {
+        const bar = document.querySelector('nav.fixed.bottom-0');
+        if (!bar) return ['no tab bar in the probe at all'];
+        const over = bar.getBoundingClientRect();
+        const out = [];
+        for (const el of Array.from(document.querySelectorAll('button, input, select'))) {
+          if (bar.contains(el)) continue;
+          const r = el.getBoundingClientRect();
+          if (r.width < 2 || r.height < 2) continue;
+          if (r.bottom < 0 || r.top > window.innerHeight) continue;
+          /* Any part of it under the bar is enough: half a button is not a
+             button, and the half that is covered is the half a thumb lands on
+             when somebody reaches for the bottom of the screen. */
+          if (r.bottom > over.top && r.top < over.bottom) {
+            out.push(`${(el.innerText || el.getAttribute('aria-label') || el.type || '?').replace(/\\s+/g, ' ').trim().slice(0, 28)}`);
+          }
+        }
+        return out;
+      });
+      check('at 390px the tab bar covers nothing the room offers', covered.length === 0,
+        covered.slice(0, 6).join(', '));
+
+      await p.screenshot({ path: shot('probooth-phone.png'), fullPage: false });
     }
   }
   /* ── The pinned strips are not see-through ───────────────────────────

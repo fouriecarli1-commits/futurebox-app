@@ -1727,6 +1727,7 @@ export const STRINGS: Dict = {
   "pro.lanes": { en: "lanes", af: "bane" },
   "pro.record": { en: "Record a lane", af: "Neem \u2019n baan op" },
   "pro.stop": { en: "Stop", af: "Stop" },
+  "pro.stopRecording": { en: "Stop recording", af: "Stop opname" },
   "pro.play": { en: "Play", af: "Speel" },
   "pro.stopPlaying": { en: "Stop", af: "Stop" },
   "pro.toStart": { en: "Back to the start", af: "Terug na die begin" },
