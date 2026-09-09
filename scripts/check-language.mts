@@ -76,12 +76,26 @@ ok(
 
 console.log('\nsigning in');
 
-/* Her case, named. The page was showing English because nothing was stored and
-   the browser is not Afrikaans; the account says Afrikaans from her phone. */
+/* Her case, and the rule that changed because of it.
+
+   Three reports over one day, the last after two separate fixes that were
+   both real and neither of which stopped it: "wanneer ek op my mobile app van
+   afrikaans af inlog, spring hy nogsteeds engels toe."
+
+   The account used to win here. It no longer does — not because the account
+   is wrong, but because it already had its say on arrival, before anything
+   was on the screen, and applying it a second time can only take a page away
+   from somebody reading it. See `langrule.ts`.
+
+   These four assert the new rule in the shape of the old one's failure, so
+   that a change back would be loud rather than quiet. */
 const hers = onSignIn(null, 'af', 'en');
-ok('her case: the account still wins', hers.lang === 'af');
-ok('and it is stored, so the next load does not flip again', hers.store === 'af');
-ok('and it says what it changed', hers.switched === 'en', String(hers.switched));
+ok('her case: what is on the screen stays on the screen', hers.lang === 'en',
+  'signing in must never change the language of a page somebody is reading');
+ok('and nothing is written to this browser', hers.store === null);
+ok('and nothing is announced, because nothing was swapped', hers.switched === null);
+ok('and the account is not written over either', hers.keepOnAccount === null,
+  'writing the guess up would destroy the very choice the account is holding');
 
 const chose = onSignIn('en', 'af', 'en');
 ok('a choice made here is never overruled', chose.lang === 'en');
@@ -91,7 +105,7 @@ ok('nor re-stored, because it is already stored', chose.store === null);
 
 const agreed = onSignIn(null, 'af', 'af');
 ok(
-  'a page already in the account\'s language announces nothing',
+  'a page already in the account\'s language is left alone',
   agreed.lang === 'af' && agreed.switched === null,
   'nothing was swapped, so there is nothing to say',
 );
@@ -105,9 +119,20 @@ ok(
 const nonsense = onSignIn(null, 'français', 'en');
 ok('and neither does an answer that is not a language', nonsense.switched === null);
 
-/* The other direction, which is the one somebody would forget. */
+/* The other direction, which is the one somebody would forget. An English
+   account no longer takes an Afrikaans page away either — the rule is about
+   not moving the screen, not about which language wins. */
 const other = onSignIn(null, 'en', 'af');
-ok('it works the other way round too', other.lang === 'en' && other.switched === 'af');
+ok('it works the other way round too', other.lang === 'af' && other.switched === null);
+
+/* And the reason this is safe: the account is still asked, earlier, where
+   there is no reader to disturb. A check that only asserted the removal would
+   be asserting that the feature was deleted. */
+ok('the account is still asked on arrival, before anything is on screen',
+  /const said = await cloud\.accountLanguage\(\);/.test(
+    readFileSync('app/lib/i18n.tsx', 'utf8').split('── Signing in')[0],
+  ),
+  'the laptop case is served there, and that is the whole reason sign-in need not');
 
 /* ── And nobody is asked twice, or paid for twice in attention ──────────── */
 
@@ -139,20 +164,30 @@ const provider = read('app/lib/i18n.tsx');
  * English against English matches, so nothing is announced — and the Afrikaans
  * that was about to paint is replaced without a word.
  *
- * The rule was never wrong. It was being asked the wrong question. */
+ * That race was real and the fix for it was real. What it could not do was
+ * stop the swap, and she reported the swap a third time. The rule changed:
+ * signing in no longer consults the account at all.
+ *
+ * Which makes the race **unreachable** rather than merely fixed, and that is
+ * a stronger thing to be able to assert. These two put both readings of "what
+ * this device shows" through the rule and require the same answer from each —
+ * if the outcome cannot depend on that value, it cannot depend on whether the
+ * value was stale. */
 {
-  /* Both readings of "what this device shows", one stale and one not, so the
-     consequence is on the record rather than in a commit message. */
   const stale = onSignIn(null, 'en', 'en');
-  ok('against a stale English, an English account announces nothing',
-    stale.switched === null, String(stale.switched));
-
   const fresh = onSignIn(null, 'en', 'af');
-  ok('against what the device would actually show, the same switch is announced',
-    fresh.switched === 'af', String(fresh.switched));
-  ok('and it still switches, because a guess does not outrank the account',
-    fresh.lang === 'en');
-  ok('and stores it, so the next load does not ask again', fresh.store === 'en');
+
+  ok('a stale reading of the screen changes nothing',
+    stale.switched === null && stale.store === null && stale.keepOnAccount === null,
+    JSON.stringify(stale));
+  ok('and a fresh one changes nothing either',
+    fresh.switched === null && fresh.store === null && fresh.keepOnAccount === null,
+    JSON.stringify(fresh));
+  ok('so the race that silenced the notice cannot be reached at all',
+    stale.store === fresh.store && stale.switched === fresh.switched,
+    'if the outcome cannot depend on that reading, it cannot depend on it being stale');
+  ok('and each keeps its own screen', stale.lang === 'en' && fresh.lang === 'af',
+    'the page somebody is reading is the page they keep');
 }
 
 /* And the provider must not be able to ask the stale question again. The ref

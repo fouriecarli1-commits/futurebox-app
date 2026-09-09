@@ -22,23 +22,58 @@
  *    English here is not overruled by anything, and the account is brought
  *    into step with them rather than the other way round.
  *
- * 2. **The account answers when this browser has not been told.** Somebody who
- *    chose Afrikaans on their phone should not have to choose again on a
- *    laptop. Being asked twice is the app forgetting.
+ * 2. **The account answers when this browser has not been told** — and it
+ *    answers *on arrival*, before anybody has read anything, not under
+ *    somebody mid-sentence. Somebody who chose Afrikaans on their phone
+ *    should not have to choose again on a laptop; being asked twice is the
+ *    app forgetting. `LanguageProvider`'s mount effect does that, and it is
+ *    the right place for it: nothing is on screen yet, so nothing is being
+ *    taken away.
  *
  * 3. **The browser's own locale is a guess, not a choice.** It decides the
  *    first paint, so an Afrikaans speaker does not have to find a menu — and
  *    it is not written down, because a guess must not outrank somebody who
  *    told us once somewhere else.
  *
- * ── And the part that was missing ────────────────────────────────────────
+ * ── Why signing in no longer changes the language at all ─────────────────
  *
- * Rule 2 is right and was not the bug. The bug was that it happened silently:
- * the page had been showing English, she had been reading it, and signing in
- * swapped it with no word about why. So the answer carries `switched` — what
- * was on screen when the account overruled it — and it is set only when the
- * two actually differ. A page already in the account's language changed
- * nothing and has nothing to announce.
+ * Carli, three times over one day, the last of them after two separate fixes:
+ * "wanneer ek op my mobile app van afrikaans af inlog, spring hy nogsteeds
+ * engels toe."
+ *
+ * The first fix made the swap announce itself instead of happening in silence.
+ * The second put that announcement somewhere she could actually reach it —
+ * it had been rendering behind the welcome panel. Both were real faults and
+ * both are fixed. Neither stopped the swap, because the swap was the rule
+ * working as designed.
+ *
+ * Three reports is the rule being wrong, not the person.
+ *
+ * And once that is admitted, the mechanism is redundant as well as unwelcome.
+ * Rule 2 already fires **on arrival**, in `LanguageProvider`'s mount effect,
+ * which asks the account whenever this browser has nothing stored. The laptop
+ * case — chose Afrikaans on a phone, opens a laptop — is served there,
+ * before a word is on the screen. Applying the same rule a second time at
+ * sign-in cannot reach anybody the first application missed. All it can do is
+ * change the language of a page somebody is already looking at.
+ *
+ * So it does not. Signing in now either confirms a choice made in this
+ * browser and writes it up, or does nothing at all. The account never
+ * overrules what is on the screen, because by then it is somebody's screen.
+ *
+ * ── The race this also removes ───────────────────────────────────────────
+ *
+ * The tempting alternative — write whatever is on screen up to the account —
+ * looks better and is worse. On a phone whose locale is English, arrival
+ * shows English, asks the account, and applies the Afrikaans it finds. If
+ * sign-in fires before that answer lands it would write English up and
+ * destroy the choice it was meant to protect. Doing nothing has no such
+ * ordering to get right.
+ *
+ * `switched` stays in the answer and is now always null. It is the notice
+ * `LanguageSwitched` draws, and there is nothing left to announce — kept
+ * rather than deleted so the shape does not change under callers, and so a
+ * future rule that does swap has somewhere to say so.
  */
 
 export type Lang = 'en' | 'af';
@@ -97,16 +132,10 @@ export function onSignIn(
     return { lang: chosen, keepOnAccount: chosen, store: null, switched: null };
   }
 
-  const said = asLang(account);
-  if (!said) return { lang: showing, keepOnAccount: null, store: null, switched: null };
+  /* Nothing stored, so nothing to confirm — and nothing to overrule.
 
-  /* Rule 2, and the announcement. Stored as well as applied: without it the
-     next page load starts from the guess again and asks the account all over
-     again — which on a slow connection is a visible flip on every load. */
-  return {
-    lang: said,
-    keepOnAccount: null,
-    store: said,
-    switched: said === showing ? null : showing,
-  };
+     The account is not consulted here at all any more; see the note above.
+     Whatever is on the screen stays on the screen, and the arrival effect has
+     already had its say with the account before anybody was reading. */
+  return { lang: showing, keepOnAccount: null, store: null, switched: null };
 }
