@@ -20,12 +20,26 @@
  * The four things fit on a card. So they are on one, in both languages, beside
  * the step they are about.
  *
- * ── Why it does not promise the app will do it ───────────────────────────
+ * ── Whose gap this is, said correctly ────────────────────────────────────
  *
- * Training happens at kits.ai. This app can sing in a model that exists; it
- * cannot yet make one — `canCreateVoices` in `lib/server/kits.ts` is a question
- * still waiting on an answer from their API. So this is advice for the
- * recordings somebody takes *before* they go there, and it says where they go.
+ * This card used to end: "The training itself happens at kits.ai — this app
+ * sings in a voice that already exists."
+ *
+ * Carli, 9 September 2026: "Sjoe hierdie is net nie waar nie. kits doen juis
+ * ook stemkloning vir liedjies. Ek het juis al daardie geld betaal vir hierdie
+ * funksie."
+ *
+ * She is right, and the sentence was wrong in the way that matters. Training a
+ * singing voice is not something Kits leaves to its website — it is the
+ * product, it is in their documented Voice Model API, and it is what the
+ * subscription was bought for. Writing "the training happens at kits.ai"
+ * described a hole in THIS app as though it were how the service works, and it
+ * sent a paying member out of the room to do a thing she had already paid for.
+ *
+ * What is actually true: `GET /voice-models` is wired and `POST /voice-models`
+ * is not, because nobody here has ever seen its answer — arpeggi.io is
+ * unreachable from the machine this is written on. That is our gap, and the
+ * card now says so in those words.
  *
  * Writing "tick these and we will clean it up" would be the easy version and
  * would be a lie until the cleaning is wired to the takes. When it is, the
@@ -70,7 +84,7 @@ export default function HowToTrain({
       {/* Where the training itself happens, said plainly rather than left for
           somebody to discover after they have recorded six takes. */}
       <p className="mt-3 text-[11px] leading-relaxed text-zinc-500">
-        {t('train.where', 'The training itself happens at kits.ai — this app sings in a voice that already exists. Take your recordings there, then bring the model’s number back here.')}{' '}
+        {t('train.where', 'Training a singing voice is what Kits.AI is for, and your plan pays for it. This app cannot hand your takes over yet — that part is still to be built here — so for now the takes go up at kits.ai and you bring the model’s number back.')}{' '}
         <a
           href={KITS}
           target="_blank"

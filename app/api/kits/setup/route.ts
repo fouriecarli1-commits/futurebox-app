@@ -69,6 +69,20 @@ export async function GET(request: Request): Promise<Response> {
     });
   }
 
+  /* Plain lines instead of JSON, for the person this page is actually for.
+
+     Carli, 9 September 2026: "help my mooier met hierdie asb." Fair. She has
+     been asked three times to send back one field out of this answer, and
+     what the page gives her is a wall of unwrapped JSON on a phone — with the
+     thing being asked for somewhere in the middle of it, unlabelled, in
+     English. That is not a report, it is a dump with a request attached.
+
+     `?as=text` answers the same questions in sentences she can read on a
+     phone and hand back whole. Nothing here is a second source of truth: the
+     lines are written from the same values the JSON carries, further down,
+     and the JSON stays exactly as it was for anything already reading it. */
+  const plain = new URL(request.url).searchParams.get('as') === 'text';
+
   const found = [];
   for (const path of CANDIDATES) found.push(await probe(path));
 
@@ -94,6 +108,52 @@ export async function GET(request: Request): Promise<Response> {
     .filter((one) => one.status === 403 || (one.status === 200 && !/not an endpoint/.test(one.note ?? '')))
     .map((one) => one.path);
 
+  const blender = await blenderNeeds();
+  const canMake = await canCreateVoices();
+  const voiceNames = (await listModels()).map((one) => one.name);
+  const spent = {
+    ceiling: monthlyMinutes(),
+    usedMinutes: Math.round((await usedSeconds()) / 60),
+    leftMinutes: Math.floor((await leftSeconds()) / 60),
+  };
+
+  if (plain) {
+    /* Written to be read top to bottom and pasted back whole. The two
+       questions this page exists to settle come first, before the account
+       detail, because they are the reason anybody opens it. */
+    const lines = [
+      '── KITS.AI ─────────────────────────────────────────',
+      '',
+      `SLEUTEL: ${keyWorks ? 'werk' : 'werk nie'}`,
+      needsPlan
+        ? 'PLAN: die gratis vlak — Kits laat die API nie daar toe nie. Die plan koop is wat dit aanskakel.'
+        : `PLAN: ${keyWorks ? 'in orde' : 'nagaan'}`,
+      '',
+      '── 1. WAT DIE MENGER VRA (die antwoord waarop ek wag) ──',
+      `status: ${blender.status}`,
+      `antwoord: ${blender.answer}`,
+      blender.fields.length
+        ? `velde: ${blender.fields.join(', ')}`
+        : 'velde: geen wat hierdie kon uitlees',
+      `nota: ${blender.note}`,
+      '',
+      '── 2. KAN ’N STEM GESKEP WORD OOR DIE API ──',
+      `status: ${canMake.status}`,
+      `antwoord: ${canMake.answer}`,
+      `nota: ${canMake.note}`,
+      '',
+      '── DIE REKENING ────────────────────────────────────',
+      `adresse wat regtig bestaan: ${real.length ? real.join(', ') : 'geen'}`,
+      `stemme op die rekening: ${voiceNames.length ? voiceNames.join(', ') : 'geen'}`,
+      `minute: ${spent.usedMinutes} van ${spent.ceiling} gebruik, ${spent.leftMinutes} oor`,
+      '',
+      'Stuur die hele bladsy terug — die twee genommerde blokke is die wat saak maak.',
+    ];
+    return new Response(lines.join('\n'), {
+      headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
+    });
+  }
+
   return Response.json({
     ready: keyWorks,
     why: needsPlan
@@ -109,12 +169,12 @@ export async function GET(request: Request): Promise<Response> {
        picker in the Pro Booth and on a finished song will show, so seeing it
        here is seeing what she will see. Names only — the ids are hers and
        there is no reason to put them in a page that gets pasted into a chat. */
-    voices: (await listModels()).map((one) => one.name),
+    voices: voiceNames,
     namedModels: namedModels().map((one) => one.name),
     /* The question the voice-training room hangs on. Asked with a body that
        cannot become a voice model, so nothing is created whatever the answer.
        See `canCreateVoices` for what each status means. */
-    kanStemmeSkep: await canCreateVoices(),
+    kanStemmeSkep: canMake,
     /* And what the Voice Blender wants, asked the same safe way.
 
        `/voice-blender` is one of the five real addresses and nothing in this
@@ -122,18 +182,14 @@ export async function GET(request: Request): Promise<Response> {
        documentation names the address and not the shape. An empty body cannot
        become a blend, so what comes back is their own complaint, and a
        validation complaint names its fields. See `blenderNeeds`. */
-    mengerWatVra: await blenderNeeds(),
+    mengerWatVra: blender,
     /* Where the month stands against the plan's roof.
 
        Kits' own dashboard is the authority on this; what is counted here is
        what this app spent, which is not the same number if anybody converts on
        their website too. It is here so the two can be compared: a large gap
        between them is worth knowing about before the roof is hit. */
-    minutes: {
-      ceiling: monthlyMinutes(),
-      usedMinutes: Math.round((await usedSeconds()) / 60),
-      leftMinutes: Math.floor((await leftSeconds()) / 60),
-    },
+    minutes: spent,
     found,
   });
 }
