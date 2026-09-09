@@ -448,18 +448,68 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
       }
     };
     void hello();
-    const beat = setInterval(() => { if (live) void hello(); }, HELLO_EVERY);
+    /* And the same for saying you are here. Announcing a presence from a tab
+       in somebody's pocket is both a wasted invocation and a wrong answer: the
+       room's count is meant to be who is looking, not who has the page open. */
+    const beat = setInterval(() => { if (live && !document.hidden) void hello(); }, HELLO_EVERY);
     return () => {
       live = false;
       clearInterval(beat);
     };
   }, []);
 
+  /**
+   * The refresh, and why it stops when nobody is looking.
+   *
+   * ── The arithmetic that made this matter ─────────────────────────────
+   *
+   * Every eight seconds this asks `/api/live`, which is one serverless
+   * invocation and one query behind it. That is fine for one person and it is
+   * the whole platform bill at scale: fifty people with the tab open, around
+   * the clock, is about sixteen million invocations a month — from a room
+   * nobody is looking at.
+   *
+   * Carli, planning for five to ten thousand users in the first month, asked
+   * which plans she needs. This is the answer to a good part of it: a phone
+   * that has been put in a pocket, or a tab behind six others, went on asking
+   * at full rate for as long as the page existed.
+   *
+   * `Counters.tsx` and `HereNow.tsx` have watched `visibilitychange` all
+   * along. This room — the one that polls four times as often as either of
+   * them — did not.
+   *
+   * ── Why it asks again on the way back ────────────────────────────────
+   *
+   * A room that stopped refreshing and then showed the old contents would be
+   * worse than one that never stopped: it would look current and be stale. So
+   * coming back is a refresh, immediately, before the next interval.
+   */
   useEffect(() => {
     setTracks(loadTracks());
+    let beat = 0;
+    const stop = () => {
+      if (beat) window.clearInterval(beat);
+      beat = 0;
+    };
+    const start = () => {
+      stop();
+      beat = window.setInterval(() => void ask(), REFRESH_EVERY);
+    };
+    const onSwitch = () => {
+      if (document.hidden) {
+        stop();
+        return;
+      }
+      void ask();
+      start();
+    };
     void ask();
-    const beat = setInterval(() => void ask(), REFRESH_EVERY);
-    return () => clearInterval(beat);
+    if (!document.hidden) start();
+    document.addEventListener('visibilitychange', onSwitch);
+    return () => {
+      stop();
+      document.removeEventListener('visibilitychange', onSwitch);
+    };
   }, [ask]);
 
   /* Declared here rather than inside the render: derived from the state above

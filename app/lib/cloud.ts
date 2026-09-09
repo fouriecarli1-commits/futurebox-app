@@ -517,7 +517,19 @@ export async function pushTrack(track: Track, audio: Blob): Promise<PushResult> 
 
   const upload = await supabase.storage
     .from(BUCKET)
-    .upload(audioPath(account.id, track.id), audio, { contentType: 'audio/wav', upsert: true });
+    /* The blob's own type, not a constant.
+ 
+       This said `'audio/wav'` for every upload, and most of what goes through
+       here is not a WAV: `/api/music` returns `audio/mpeg` — mp3_48000_192
+       from music_v2 — so every generated song has been stored and served
+       labelled as something it is not. Booth mixdowns really are WAVs, which
+       is how one wrong constant went on looking right.
+ 
+       `lib/workfile.ts` has always done it this way; this was the odd one out. */
+    .upload(audioPath(account.id, track.id), audio, {
+      contentType: audio.type || 'audio/wav',
+      upsert: true,
+    });
   if (upload.error) {
     return { saved: false, reason: 'upload', message: `Audio did not upload: ${upload.error.message}` };
   }
