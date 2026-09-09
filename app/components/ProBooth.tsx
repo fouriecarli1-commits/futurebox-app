@@ -25,7 +25,7 @@ import {
   span, startLane, windowOf, wireLane,
   type Lane, type Master, type Reading,
 } from '../lib/session';
-import { failed, separate } from '../lib/stems';
+import { failed, separate, separateParts } from '../lib/stems';
 import { done as forgetJob, keyIn, partOf, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
 import { CLEAN, isClean, type Tone } from '../lib/tone';
 import { ampName, through } from '../lib/nam';
@@ -759,6 +759,27 @@ export default function ProBooth({
    * The source is muted rather than removed, for the same reason as the other
    * split: it is paid for, and a person may want the original back.
    */
+  /**
+   * A lane into its named parts — vocals, drums, bass, and the rest.
+   *
+   * ── Two services, one button ─────────────────────────────────────────
+   *
+   * `docs/KITS-KAART.md` §3: the stem splitter belongs on Kits, "Music.ai per
+   * gebruik → Kits binne die dak". Kits' plan is a fixed R640 a month with a
+   * roof of four hundred download minutes; Music.ai bills per use, every use,
+   * for ever.
+   *
+   * So Kits is asked first and Music.ai catches everything Kits cannot do:
+   * the key not being set, the monthly roof being reached, a job that fails.
+   * Exactly the arrangement `/api/stems` already runs for the two-way split,
+   * and for the same reason — one button, one result, and the cheaper
+   * supplier tried first.
+   *
+   * A second button would have been quicker to build and would have made the
+   * room worse. She asked for this to be simple; two nearly identical split
+   * controls beside each other is not simple, and nobody could tell which one
+   * to press.
+   */
   const intoParts = useCallback(
     async (lane: Lane) => {
       setProblem(null);
@@ -766,6 +787,49 @@ export default function ProBooth({
       try {
         const ctx = context();
         if (!ctx) return;
+
+        /* Kits first. The piece that plays, not the whole recording — a lane
+           trimmed to its chorus would otherwise be billed by the minute for
+           the verses that were cut, and its parts would not line up with the
+           lane they came from. */
+        const piece = pieceOf(lane, ctx);
+        const viaKits = await separateParts(encodeWav(monoOf(piece, ctx)), piece.duration);
+        if (!('message' in viaKits)) {
+          const kitsLanes: Lane[] = [];
+          for (const part of viaKits.parts) {
+            const audio = await readInto(part.audio, rate);
+            if (!audio) continue;
+            kitsLanes.push({
+              id: `${lane.id}-${part.instrument}-${kitsLanes.length}`,
+              /* Their word for it, not ours. "drums" is what Kits called the
+                 file and what the lane is called, so a room reading four
+                 lanes is reading their names rather than a translation. */
+              name: `${lane.name} · ${part.instrument}`,
+              audio,
+              at: lane.at,
+              gain: lane.gain,
+              muted: false,
+              soloed: false,
+              pan: lane.pan,
+            });
+          }
+          if (kitsLanes.length > 0) {
+            setStale(true);
+            setLanes((was) => [
+              ...was.map((one) => (one.id === lane.id ? { ...one, muted: true } : one)),
+              ...kitsLanes,
+            ]);
+            return;
+          }
+        }
+        /* Out of allowance is the member's own limit and not a reason to try
+           the other supplier — the second one would refuse in the same words
+           after another wait. */
+        if ('message' in viaKits && viaKits.outOfAllowance) {
+          setProblem(viaKits.message);
+          return;
+        }
+
         const got = await readSong(encodeWav(monoOf(lane.audio, ctx)), lane.audio.duration, 'stems');
         if (!got.ok) {
           setProblem(got.message);

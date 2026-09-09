@@ -118,6 +118,13 @@ jobs:
       - name: Kits' minutes count what comes back, not what was sent
         run: npm run check:kitsminutes
 
+      # docs/KITS-KAART.md §3 has said since it was written that the stem
+      # splitter belongs on Kits: "Music.ai per gebruik → Kits binne die dak."
+      # Four files come back, not two, and a four-part ask must never fall
+      # through to a two-part engine and hand back half a job as a whole one.
+      - name: Four stems are billed as four, and Kits is asked first
+        run: npm run check:fourstems
+
       # The Voice Blender is a real Kits API that nothing has ever called,
       # because their docs name the address and not the body. The setup report
       # asks it with an empty body and reads the complaint — a parser with one

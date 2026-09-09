@@ -129,6 +129,17 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'too_big', message: 'That song is too long to separate here.' }, { status: 413 });
   }
   const seconds = Number(incoming.get('seconds')) || 0;
+  /* Two parts or four.
+
+     Two is the voice and everything else, which is what somebody singing over
+     a song needs. Four — voice, drums, bass, and the rest — is what somebody
+     rebuilding a mix needs, and it is Kits' `stem-splits` rather than their
+     `vocal-separations`.
+
+     Asked for explicitly rather than inferred. A room that quietly returned
+     four lanes where two were expected would be a room whose price and whose
+     result both changed without anybody saying so. */
+  const wantsFour = incoming.get('parts') === 'four';
   const asked = incoming.get('trackId');
   const trackId = typeof asked === 'string' ? asked : undefined;
 
@@ -160,7 +171,11 @@ export async function POST(request: Request): Promise<Response> {
   // By the minute: splitting a twenty-minute recording is twenty times the
   // work of splitting a one-minute one, and was the same price.
   const billed = await billedSeconds(file, seconds, MAX_SECONDS);
-  const ourPrice = perMinute(billed, CREDITS.stems);
+  /* Four parts costs twice what two costs, because it *is* twice the work
+     downstream: Kits' minutes burn on download and four files of a song are
+     four times its length against two. Not a markup — the same margin on
+     twice the upstream. See `downloadSeconds` in `kitsminutes.ts`. */
+  const ourPrice = perMinute(billed, CREDITS.stems) * (wantsFour ? 2 : 1);
   const paid = await charge(request, ourPrice, 'stems');
   if (!paid.ok) return paid.response;
 
@@ -169,10 +184,28 @@ export async function POST(request: Request): Promise<Response> {
      attempt so it happens on whichever path answers. */
   if (owner) void dropWork(got.key, owner, 'wav');
 
-  const viaKits = await kitsSplit(file, billed, owner);
+  const viaKits = await kitsSplit(file, billed, owner, wantsFour);
   if (viaKits) {
     if (record) await record().catch(() => undefined);
     return viaKits;
+  }
+
+  /* Four parts is Kits or nothing.
+
+     ElevenLabs' separation gives the voice and the backing and no more, so
+     falling through to it on a four-part ask would hand back two lanes to
+     somebody who asked for four and paid for four. A refusal with a reason
+     is the honest answer, and the money goes back. */
+  if (wantsFour) {
+    await paid.refund();
+    return Response.json(
+      {
+        error: 'four_unavailable',
+        message:
+          'Splitting into four parts needs the Kits service, and it did not answer. Separating the voice from the backing still works.',
+      },
+      { status: 503 },
+    );
   }
 
   const outgoing = new FormData();
@@ -290,6 +323,7 @@ async function kitsSplit(
   file: Blob,
   seconds: number,
   owner: string | null,
+  four = false,
 ): Promise<Response | null> {
   if (!kitsOn()) return null;
   /* Out of monthly minutes is a fall-through, not a refusal. `enough` writes a
@@ -300,13 +334,46 @@ async function kitsSplit(
      the backing. Kits' minutes burn on download, so this job spends twice the
      song — and it used to be checked and written down as once. See
      `downloadSeconds`. */
-  const spend = downloadSeconds(seconds, 2);
+  /* Two files come back for a voice separation and four for a stem split,
+     each the whole length of the song. Kits' minutes burn on download, so the
+     four-part job spends twice what the two-part one does — which is exactly
+     why this number is passed rather than assumed. */
+  const spend = downloadSeconds(seconds, four ? 4 : 2);
   if (await enough(spend)) return null;
 
   /* Half of this route's own ceiling, so a slow split still leaves ElevenLabs
      time to answer rather than turning a cheap attempt into a timeout. */
-  const split = await splitStems(file, 'song.mp3', Date.now() + 120_000, 'vocal-separations');
+  const split = await splitStems(
+    file,
+    'song.mp3',
+    Date.now() + 120_000,
+    four ? 'stem-splits' : 'vocal-separations',
+  );
   if (!split.ok) return null;
+
+  if (four) {
+    /* Every part Kits named, under its own name. Nothing is renamed on the
+       way through: "drums" is what they called it and what the lane is
+       called, so a room reading four lanes is reading their words and not a
+       translation of them.
+
+       Fewer than two is not a split — one file back is the song, and handing
+       it over as "stems" would be charging for a copy. */
+    const wanted = split.stems.slice(0, 6);
+    if (wanted.length < 2) return null;
+    const got = await Promise.all(wanted.map((one) => fetchResult(one.url)));
+    if (got.some((one) => !one.ok)) return null;
+
+    await note(spend, 'split', owner);
+
+    const out = new FormData();
+    wanted.forEach((one, i) => {
+      const file_ = got[i];
+      if (!file_.ok) return;
+      out.append('parts', new Blob([file_.audio], { type: file_.type }), `${one.instrument}.mp3`);
+    });
+    return new Response(out);
+  }
 
   const vocal = split.stems.find((one) => /vocal|voice|lead|sing/i.test(one.instrument));
   const backing = split.stems.find((one) => one !== vocal);

@@ -113,3 +113,99 @@ export async function separate(
 export function failed(result: Stems | Failed): result is Failed {
   return typeof (result as Failed).message === 'string';
 }
+
+/** One part of a four-way split, under the name the service gave it. */
+export interface Part {
+  /** "vocals", "drums", "bass", "other" — Kits' own word for it. */
+  readonly instrument: string;
+  readonly audio: Blob;
+}
+
+/**
+ * Split a song into its parts, not just its voice.
+ *
+ * ── Why this is a second function and not a flag on the first ────────────
+ *
+ * `separate` promises exactly two halves and its callers destructure them.
+ * A flag that sometimes returned four would make every one of those callers
+ * wrong in a way TypeScript could not see, because a `Stems` with extra
+ * fields still type-checks.
+ *
+ * What they share is the route, the money path and the wall-avoiding upload —
+ * `/api/stems` takes `parts=four` and does the rest.
+ *
+ * ── What it does not do ──────────────────────────────────────────────────
+ *
+ * It does not keep anything. `separate` writes both halves into the device's
+ * own store under the song's id, because the booth reads them back on the
+ * next visit. Four parts arrive as four lanes in a session that is already
+ * being edited; storing them under invented ids would leave four copies of
+ * every song on the device with nothing that reads them again.
+ *
+ * And it never falls back to two. Kits' `stem-splits` is the only thing that
+ * makes four; ElevenLabs makes the voice and the backing and no more. Handing
+ * back two lanes to somebody who asked for four and paid for four is worse
+ * than saying so — the route refuses and refunds, and the message arrives
+ * here.
+ */
+export async function separateParts(
+  audio: Blob,
+  seconds: number,
+): Promise<{ parts: Part[] } | Failed> {
+  const form = new FormData();
+  form.append('seconds', String(Math.round(seconds)));
+  form.append('parts', 'four');
+
+  const put = await attach(form, audio, 'file', 'song.mp3');
+  if (!put.ok) return { message: TOO_BIG_TO_SEND };
+  const key = put.key;
+
+  const token = await accessToken();
+  let response: Response;
+  try {
+    response = await fetch('/api/stems', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: form,
+    });
+  } catch {
+    return { message: 'Could not reach the app\u2019s server. Check your connection and try again.' };
+  }
+
+  if (!response.ok) {
+    if (key) void dropWork(key);
+    let message =
+      response.status === 413
+        ? 'That song is too big to send in one piece. Try a shorter one.'
+        : `The song could not be split (${response.status}).`;
+    let outOfAllowance = false;
+    try {
+      const problem = (await response.json()) as { message?: string; error?: string };
+      if (problem.message) message = problem.message;
+      outOfAllowance = problem.error === 'out_of_allowance' || problem.error === 'signed_out';
+    } catch {
+      // The body was not json. The status line above already says enough.
+    }
+    return { message, outOfAllowance };
+  }
+
+  let form_: FormData;
+  try {
+    form_ = await response.formData();
+  } catch {
+    return { message: 'The split came back in a form the browser could not read.' };
+  }
+
+  /* Every `parts` entry, named by its filename — which is the instrument the
+     service called it. `getAll` rather than `get`: there is one field name
+     and several values, which is how a multipart carries a list. */
+  const parts: Part[] = [];
+  for (const one of form_.getAll('parts')) {
+    if (!(one instanceof File)) continue;
+    parts.push({ instrument: one.name.replace(/\.[^.]+$/, ''), audio: one });
+  }
+  if (parts.length < 2) {
+    return { message: 'The split came back with fewer parts than a split has.' };
+  }
+  return { parts };
+}
