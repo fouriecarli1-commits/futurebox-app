@@ -507,6 +507,22 @@ export async function probe(path: string): Promise<{
  *
  * Nothing is created on any branch. That is the whole design of it: Carli's
  * account is hers, and finding something out must not change it.
+ *
+ * ── ASKED, AND ANSWERED: 404. There is no create. ────────────────────────
+ *
+ * Carli ran this against the live account on 9 September 2026. `POST
+ * /voice-models` answers **404**, which is the `no` branch below: the address
+ * takes a GET and not a POST.
+ *
+ * That settles the largest open question in `docs/KITS-KAART.md` §5, and it
+ * settles it against the room. Voice training cannot be brought inside The
+ * Booth — not because it has not been built, but because Kits does not offer
+ * it over the API at all. Their own site trains voices and that is what the
+ * subscription pays for; the API lists them and sings in them.
+ *
+ * The function stays. It is one request, it creates nothing, and it is how
+ * the answer changes if Kits ever ships the endpoint — at which point the
+ * room becomes buildable and `HowToTrain` has a different last paragraph.
  */
 export async function canCreateVoices(): Promise<{
   status: number;
@@ -596,6 +612,26 @@ export function fieldsIn(raw: string): string[] {
  * offers".
  *
  * It has not been built because nobody knows what to send it. Their
+ * ── ASKED, AND HALF-ANSWERED, 9 September 2026 ───────────────────────────
+ *
+ * `POST /voice-blender` with an empty body answers **422** with exactly this
+ * and nothing else:
+ *
+ *     {"error":"E_VALIDATION_FAILURE: Validation Exception",
+ *      "code":"E_VALIDATION_FAILURE"}
+ *
+ * So the address is real, it takes a POST, and it refused this body on its
+ * contents — the blender can be built. What it will not do is say what it
+ * wants: there is no field list in that body, in any of the three shapes
+ * `fieldsIn` reads, because there is nothing there to read. `fieldsIn`
+ * correctly found none rather than inventing one.
+ *
+ * The next step is therefore elimination rather than a single question: send
+ * a small ordered set of plausible bodies and watch for the error to change.
+ * A 422 creates nothing, so the hunt is free and safe. That is worth doing
+ * before the room is designed, and it is written up in
+ * `docs/KITS-KAART.md` §2.
+ *
  * documentation names the address and not the body, and a room built against
  * a guess is a room that looks finished and fails against a live service —
  * exactly the kind of button §2 of that document warns about.
@@ -656,6 +692,100 @@ export async function blenderNeeds(): Promise<{
             : `Neither a refusal nor an acceptance: ${response.status}.`;
 
   return { status: response.status, answer, fields, note: `${note}${raw ? ` — said: ${raw}` : ''}` };
+}
+
+/**
+ * Which body the blender actually wants, found by elimination.
+ *
+ * ── Why one question was not enough ──────────────────────────────────────
+ *
+ * `blenderNeeds` above asks with `{}` and reads the complaint. On 9 September
+ * 2026 that came back 422 with the whole of the answer being:
+ *
+ *     {"error":"E_VALIDATION_FAILURE: Validation Exception",
+ *      "code":"E_VALIDATION_FAILURE"}
+ *
+ * The address is real and it refused the body on its contents, so the blender
+ * can be built — but there is no field list in that, and `fieldsIn` correctly
+ * found none rather than inventing one. A single question has taken this as
+ * far as it goes.
+ *
+ * So: a small ordered set of plausible bodies, and watch for the error to
+ * change. Every one of them is still short of a real blend, so every one is
+ * refused and nothing is created — the same property `blenderNeeds` relies on,
+ * which is what makes hunting like this free rather than reckless.
+ *
+ * ── What counts as a hit ─────────────────────────────────────────────────
+ *
+ * Not a 2xx, which would mean something was made. A **different refusal**: any
+ * status or code that is not `E_VALIDATION_FAILURE` means that body got
+ * further than the empty one did, and the field names in it are the right
+ * ones. The first body to do that is the shape.
+ *
+ * A 2xx is reported as loudly as the code can manage. It should be impossible
+ * — these bodies name model ids that do not exist on the account — and if it
+ * ever happens there is a blended voice on her account that nobody asked for.
+ */
+const BLENDER_GUESSES: { readonly why: string; readonly body: Record<string, unknown> }[] = [
+  /* Their own camel case, matching `voiceModelId` in the conversion API — the
+     one field name on this service anybody here has actually seen work. */
+  { why: 'voiceModelIds as a list', body: { voiceModelIds: [1, 2] } },
+  { why: 'voiceModels as a list', body: { voiceModels: [1, 2] } },
+  { why: 'models as a list', body: { models: [1, 2] } },
+  /* Two named fields rather than a list. Blending is inherently two things,
+     so an API can reasonably ask for them by name. */
+  { why: 'two named model fields', body: { voiceModelId1: 1, voiceModelId2: 2 } },
+  /* Perhaps the complaint was never about the voices at all. */
+  { why: 'a name alongside the voices', body: { name: 'shape test', voiceModelIds: [1, 2] } },
+];
+
+export async function blenderShape(): Promise<{
+  tried: { why: string; status: number; code: string; changed: boolean }[];
+  found: string | null;
+  note: string;
+}> {
+  const tried: { why: string; status: number; code: string; changed: boolean }[] = [];
+  let found: string | null = null;
+  let made = false;
+
+  for (const guess of BLENDER_GUESSES) {
+    let response: Response;
+    try {
+      response = await fetch(`${BASE}/voice-blender`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(guess.body),
+      });
+    } catch {
+      tried.push({ why: guess.why, status: 0, code: 'could not be reached', changed: false });
+      continue;
+    }
+    const raw = (await response.text().catch(() => '')).slice(0, 300);
+    const code = /"code"\s*:\s*"([^"]+)"/.exec(raw)?.[1] ?? `${response.status}`;
+    const ok2xx = response.status >= 200 && response.status < 300;
+    /* Anything that is not the empty body's own complaint got further. */
+    const changed = ok2xx || code !== 'E_VALIDATION_FAILURE';
+    tried.push({ why: guess.why, status: response.status, code, changed });
+    if (ok2xx) {
+      made = true;
+      found = guess.why;
+      break;
+    }
+    if (changed && !found) {
+      found = guess.why;
+      break;
+    }
+  }
+
+  return {
+    tried,
+    found,
+    note: made
+      ? 'UNEXPECTED: one of these was ACCEPTED. Check the Kits account for a blended voice that should not be there, and delete it.'
+      : found
+        ? `"${found}" got a different refusal from the empty body, so those are the field names. Write them into docs/KITS-KAART.md §2 and the Sound trainer can be built.`
+        : 'Every guess drew the same E_VALIDATION_FAILURE as an empty body, so none of them is closer than nothing. The shape is something else — ask Kits support for the request body of POST /voice-blender.',
+  };
 }
 
 /* ── Her own trained voices ─────────────────────────────────────────────── */

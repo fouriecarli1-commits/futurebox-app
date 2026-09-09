@@ -1518,6 +1518,60 @@ it says `used`/`limit`/`left` with numbers, the field names are right. If it
 stays `null` with the note about field names, they are wrong and the guard is
 doing nothing — which is the safe direction, but it is not the working one.
 
+## Kits, measured — 9 September 2026
+
+Her `/api/kits/setup` run against the live account, which closes one long-open
+question and half-opens another.
+
+**`POST /voice-models` answers 404. There is no create over the API.** Voice
+training cannot come inside The Booth. Not because it has not been built —
+because Kits does not offer it. This is worth stating carefully, because the
+app got it wrong twice in one day in opposite directions: Kits *does* clone
+voices for singing, it is the product, and it is what the subscription pays
+for. It happens on their own site. Their API lists voices and sings in them.
+So the link to kits.ai is not a hole being papered over; it is the only door
+there is. `HowToTrain` says that now, with the date.
+
+**`POST /voice-blender` answers 422 with no field names.** The whole body is
+`{"error":"E_VALIDATION_FAILURE: Validation Exception","code":"E_VALIDATION_FAILURE"}`.
+So the address is real, it takes a POST, it refused this body on its contents
+— the blender is buildable — and it will not say what it wants. `fieldsIn`
+correctly found none rather than inventing one. `blenderShape()` now hunts by
+elimination: five plausible bodies, each still short of a real blend so each
+refused and nothing created, watching for the error code to stop being
+`E_VALIDATION_FAILURE`. It runs from the setup page only when the plain ask
+named nothing.
+
+**No trained voices on the account at all.** "stemme op die rekening: geen".
+So "Sing it in my voice" currently offers only Kits' stock catalogue — which
+works, and is not her voice. One voice trained at kits.ai fixes it, and the
+number goes in the field that is already there.
+
+**16 of 400 download minutes used.**
+
+## ElevenLabs: the downstream licence is NOT covered on Pro
+
+Asked and answered, 9 September 2026, after the first answer left it open:
+
+> "the scenario you're describing — where your end users receive and
+> commercially sell AI-generated output produced under your API key — is a
+> platform/B2B2C arrangement that is not explicitly covered by ElevenLabs'
+> self-serve plan terms."
+
+**This makes `app/terms/page.tsx` over-promise.** It was rewritten this
+morning to say "You may sell what you make", on the strength of their first
+answer about the account holder's own commercial use. Their second answer says
+that licence does not extend to members. Nobody is paying yet, so nobody has
+relied on it, but the promise is live on the site and it is hers to decide:
+soften it now, or leave it and close the gap with an Enterprise agreement
+before launch. It should not simply be left un-decided.
+
+A requirements document for that conversation was written for her:
+downstream rights first, then the scale numbers (Pro carries 20–33 members
+against a 5,000–10,000 launch, and their ladder has no volume discount), voice
+slots, POPIA/GDPR and consent, the film/TV/radio carve-out, Seedance, and
+operations.
+
 ## Open, and worth a decision
 
 - **Does anybody pay yet?** Still unanswered, and it still decides whether the

@@ -189,13 +189,20 @@ wat dit vasmaak.
 
 ## 5. Wat nog nodig is
 
-**Die een vraag wat die meeste werd is, staan nog oop: kan 'n stem oor die API
-geskép word, of net gelys?** Die verslag wys dat `voice-models` bestaan en
-antwoord, maar 'n lys-oproep sê niks oor of `POST` werk nie. As dit geskep kan
-word, kom kloning in The Booth in en die uitgaande skakel na kits.ai verdwyn.
-As dit nie kan nie, bly die skakel en die tutorial die eerlike antwoord. Dit
-kos een egte oproep om uit te vind, en dit skep iets op haar rekening — dus is
-dit haar besluit, nie 'n taak nie.
+**BEANTWOORD, 9 September 2026: nee. `POST /voice-models` gee 404.**
+
+Carli het die verslag teen die lewendige rekening laat loop. Daar is geen skep
+oor die API nie — stemmodelle is lees-alleen. Dit maak die vraag toe, en dit
+maak dit teen die kamer toe: stem-opleiding kán nie in The Booth inkom nie.
+Nie omdat dit nie gebou is nie, maar omdat Kits dit glad nie oor die API
+aanbied nie.
+
+Dit is belangrik om die rede reg te stel, want dit is twee keer verkeerd
+gestel. Kits doen wél stemkloning vir sang — dit is die produk, en dit is
+waarvoor die intekening betaal. Dit gebeur net op **hulle werf**. Hulle API
+lys stemme en sing daarin; dit maak nie een nie. Die uitgaande skakel na
+kits.ai is dus nie 'n gat in hierdie toep nie — dit is die enigste deur wat
+bestaan, en `HowToTrain` sê dit nou so, met die datum van die meting.
 
 **Die Voice Blender se velde — nou vraagbaar.** Dit was 'n vraag vir Carli:
 hulle dokumentasie noem die adres en nie die lyf nie, en 'n kamer gebou teen 'n
@@ -203,9 +210,36 @@ raaiskoot is presies die knoppie waarteen §2 waarsku.
 
 `/api/kits/setup` vra dit nou self, met 'n leë lyf wat nie 'n vermenging kan
 word nie — dieselfde truuk as `kanStemmeSkep`. Wat terugkom is húlle eie klagte,
-en 'n geldigheidsklagte noem sy velde. Die antwoord staan onder `mengerWatVra`.
-Open die verslag een keer en die Sound trainer kan teen 'n gemete vorm gebou
-word in plaas van 'n vermoede.
+en 'n geldigheidsklagte noem gewoonlik sy velde.
+
+**HALF BEANTWOORD, 9 September 2026.** Die antwoord is **422** met presies dit,
+en niks meer nie:
+
+```json
+{"error":"E_VALIDATION_FAILURE: Validation Exception","code":"E_VALIDATION_FAILURE"}
+```
+
+Wat dít vasmaak: die adres is eg, dit vat 'n POST, en dit het hierdie lyf op sy
+**inhoud** geweier. Die menger kán dus gebou word. Wat dit nié doen nie, is sê
+wat hy wil hê — daar is geen veldlys in daardie lyf nie, in geen van die drie
+vorms wat `fieldsIn` lees nie. (Die parser het korrek *geen* teruggegee eerder
+as om een uit te dink.)
+
+Die volgende stap is dus eliminasie eerder as een vraag: stuur 'n klein
+geordende stel waarskynlike lywe en kyk of die fout verander. 'n 422 skep
+niks, so die soektog is gratis en veilig. Waarskynlike name om te probeer, in
+hierdie volgorde:
+
+| Probeer | Waarom |
+|---|---|
+| `{"voiceModelIds":[1,2]}` | Hulle eie kamelnotasie, soos `voiceModelId` in die omskakeling |
+| `{"voiceModels":[1,2]}` | Dieselfde, sonder die `Id`-agtervoegsel |
+| `{"models":[1,2]}` | Die kortste vorm |
+| `{"voiceModelId1":1,"voiceModelId2":2}` | Twee genoemde velde eerder as 'n lys |
+| `{"name":"toets","voiceModelIds":[1,2]}` | Dalk kla dit oor 'n naam eerder as oor die stemme |
+
+Die oomblik as die fout van `E_VALIDATION_FAILURE` af verander — na 'n ander
+kode, of na iets wat 'n veld noem — is die vorm gevind.
 
 **Die veldname van drie werke.** `voice-conversions`, `vocal-separations` en
 `voice-blender` was leeg, dus is hulle vorms nog dokumentasie. Die eerste egte

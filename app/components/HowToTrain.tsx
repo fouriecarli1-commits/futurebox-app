@@ -36,10 +36,24 @@
  * described a hole in THIS app as though it were how the service works, and it
  * sent a paying member out of the room to do a thing she had already paid for.
  *
- * What is actually true: `GET /voice-models` is wired and `POST /voice-models`
- * is not, because nobody here has ever seen its answer — arpeggi.io is
- * unreachable from the machine this is written on. That is our gap, and the
- * card now says so in those words.
+ * ── Then it was measured, and the answer was neither ────────────────────
+ *
+ * She ran `/api/kits/setup` against the live account the same day.
+ * `POST /voice-models` answers **404**. There is no create over the API at
+ * all — voice models are read-only, and no amount of work in this app can
+ * hand a set of takes to Kits.
+ *
+ * So both earlier versions of this card were wrong, in opposite directions.
+ * The first blamed Kits for a limitation it framed as ours to live with. The
+ * second promised "that part is still to be built here", which was a promise
+ * this app cannot keep.
+ *
+ * What is true, and now measured rather than assumed: training a singing
+ * voice is exactly what Kits.AI is for and the subscription pays for it — on
+ * their own site. Their API offers listing and conversion and does not offer
+ * creating. Going to kits.ai is not a gap in this app being papered over; it
+ * is the only door there is, and the card says so with the date the answer
+ * was taken.
  *
  * Writing "tick these and we will clean it up" would be the easy version and
  * would be a lie until the cleaning is wired to the takes. When it is, the

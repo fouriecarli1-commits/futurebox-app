@@ -28,7 +28,7 @@
 
 import crypto from 'node:crypto';
 import {
-  CANDIDATES, blenderNeeds, canCreateVoices, configured, listModels, namedModels, probe,
+  CANDIDATES, blenderNeeds, blenderShape, canCreateVoices, configured, listModels, namedModels, probe,
 } from '@/app/lib/server/kits';
 import { leftSeconds, monthlyMinutes, usedSeconds } from '@/app/lib/server/kitsminutes';
 
@@ -109,6 +109,12 @@ export async function GET(request: Request): Promise<Response> {
     .map((one) => one.path);
 
   const blender = await blenderNeeds();
+  /* When the empty body's complaint named no fields, go hunting.
+
+     Only then: if it named them there is nothing to look for, and these are
+     five extra requests. Every guess is still short of a real blend, so every
+     one is refused and nothing is created. */
+  const hunt = blender.answer === 'asks' && blender.fields.length === 0 ? await blenderShape() : null;
   const canMake = await canCreateVoices();
   const voiceNames = (await listModels()).map((one) => one.name);
   const spent = {
@@ -136,6 +142,18 @@ export async function GET(request: Request): Promise<Response> {
         ? `velde: ${blender.fields.join(', ')}`
         : 'velde: geen wat hierdie kon uitlees',
       `nota: ${blender.note}`,
+      ...(hunt
+        ? [
+            '',
+            'gesoek deur eliminasie:',
+            ...hunt.tried.map(
+              (one: { why: string; status: number; code: string; changed: boolean }) =>
+                `  ${one.changed ? '>>' : '  '} ${one.why} — ${one.status} ${one.code}`,
+            ),
+            `  gevind: ${hunt.found ?? 'niks'}`,
+            `  ${hunt.note}`,
+          ]
+        : []),
       '',
       '── 2. KAN ’N STEM GESKEP WORD OOR DIE API ──',
       `status: ${canMake.status}`,
@@ -183,6 +201,9 @@ export async function GET(request: Request): Promise<Response> {
        become a blend, so what comes back is their own complaint, and a
        validation complaint names its fields. See `blenderNeeds`. */
     mengerWatVra: blender,
+    /* The elimination hunt, when the complaint named nothing. Null when it
+       did, because then there was nothing to look for. */
+    mengerVorm: hunt,
     /* Where the month stands against the plan's roof.
 
        Kits' own dashboard is the authority on this; what is counted here is
