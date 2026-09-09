@@ -843,22 +843,83 @@ export function sampleUrlFor(id: string): string | null {
  * So: their own description, flattened into a phrase, and a flag saying a free
  * sample exists. Forty rather than eight, because the list is filterable now
  * and a longer list stops being a burden the moment it can be searched.
+ *
+ * ── The wall this used to walk into ──────────────────────────────────────
+ *
+ * It asked `GET /v1/voices` with no bounds at all, and that endpoint returns
+ * **every voice on the account**. Everything in this app is made on one
+ * ElevenLabs account, and every member who clones a voice adds one to it — so
+ * the response grows with the membership. ElevenLabs' own guidance is that the
+ * v1 listing stops being usable past roughly five hundred voices, which is
+ * five hundred members, and their answer is the paginated `GET /v2/voices`.
+ *
+ * The failure was the bad kind. `if (!response.ok) return []` turns "we could
+ * not ask" into "there are no voices": the picker would simply be empty, for
+ * everybody, with nothing anywhere saying why.
+ *
+ * And it was on the hot path. Eight callers use this, three of them on every
+ * single generation — speak, change, preview — so at five hundred members
+ * every take downloaded five hundred voices to show forty.
+ *
+ * Three things change. It asks for a **bounded page of premade voices only**,
+ * so the request no longer grows with the membership. It **remembers** the
+ * answer, because the stock list changes a few times a year and was being
+ * fetched a few times a minute. And a failed ask **keeps the last good list**
+ * rather than reporting an empty one — the same rule `elevenceiling.ts` and
+ * `kitsminutes.ts` already follow, for the same reason.
+ *
+ * ── What could not be checked from here ──────────────────────────────────
+ *
+ * api.elevenlabs.io is not reachable from the machine this is written on, so
+ * the v2 request shape is from their documentation and not from a response
+ * anybody here has seen. That is exactly why v1 is still in the code as a
+ * fallback rather than deleted: if v2 answers 400, 404 or 405 — a wrong
+ * parameter, a path that is not there — the old call runs and nothing breaks.
+ * `whichVoiceList()` reports which one actually answered, so the guess can be
+ * turned into a fact by opening one page.
  */
-export async function stockVoices(): Promise<StockVoice[]> {
-  const response = await fetch(`${BASE}/voices`, { headers: { 'xi-api-key': key() } });
-  if (!response.ok) return [];
-  const data = (await response.json()) as {
-    voices?: Array<{
-      voice_id?: string;
-      name?: string;
-      category?: string;
-      preview_url?: string;
-      labels?: Record<string, string>;
-    }>;
-  };
-  return (data.voices ?? [])
+
+/** How the stock list was fetched last, for the report she can open. */
+export type VoiceListWay = 'v2' | 'v1' | 'cache' | 'none';
+
+interface StockCache {
+  voices: StockVoice[];
+  at: number;
+  way: VoiceListWay;
+}
+
+/**
+ * An hour.
+ *
+ * ElevenLabs add a premade voice occasionally; nobody is waiting on one to
+ * appear. Against that, this was being asked several times per generation.
+ */
+const STOCK_FOR_MS = 60 * 60 * 1000;
+let stock: StockCache | null = null;
+
+/**
+ * Forty is what the screens show; a hundred is what is asked for.
+ *
+ * The gap is deliberate. Their premade catalogue is larger than forty and the
+ * filtering happens here, so asking for exactly forty would mean the fortieth
+ * voice changing whenever they reorder theirs. A hundred is bounded, small,
+ * and does not grow with the membership — which was the whole fault.
+ */
+const ASK_FOR = 100;
+const SHOW = 40;
+
+interface WireVoice {
+  voice_id?: string;
+  name?: string;
+  category?: string;
+  preview_url?: string;
+  labels?: Record<string, string>;
+}
+
+function shapeVoices(list: readonly WireVoice[]): StockVoice[] {
+  return list
     .filter((one) => one.category === 'premade' && one.voice_id && one.name)
-    .slice(0, 40)
+    .slice(0, SHOW)
     .map((one) => {
       const id = one.voice_id as string;
       if (one.preview_url) samples.set(id, one.preview_url);
@@ -876,6 +937,75 @@ export async function stockVoices(): Promise<StockVoice[]> {
         ...(one.preview_url ? { hasSample: true } : {}),
       };
     });
+}
+
+async function askVoices(url: string): Promise<StockVoice[] | null> {
+  try {
+    const response = await fetch(url, { headers: { 'xi-api-key': key() } });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { voices?: WireVoice[] };
+    if (!Array.isArray(data.voices)) return null;
+    return shapeVoices(data.voices);
+  } catch {
+    /* A network failure is "could not ask", which is what null means here.
+       It must never become an empty list — that is the fault this rewrite
+       exists to remove. */
+    return null;
+  }
+}
+
+export async function stockVoices(): Promise<StockVoice[]> {
+  if (stock && Date.now() - stock.at < STOCK_FOR_MS) return stock.voices;
+
+  /* Bounded, and premade only. `category` and `page_size` are theirs; if
+     either is not accepted the request fails and v1 answers instead. */
+  const v2 = await askVoices(
+    `https://api.elevenlabs.io/v2/voices?category=premade&page_size=${ASK_FOR}`,
+  );
+  if (v2) {
+    stock = { voices: v2, at: Date.now(), way: 'v2' };
+    return v2;
+  }
+
+  /* The old call, unbounded, which is why it is second. It still works today
+     and stops working as the membership grows — so it is the fallback rather
+     than the plan. */
+  const v1 = await askVoices(`${BASE}/voices`);
+  if (v1) {
+    stock = { voices: v1, at: Date.now(), way: 'v1' };
+    return v1;
+  }
+
+  /* Both failed. The last good list, if there is one, rather than an empty
+     picker with nothing to explain it. Not re-stamped, so the next caller
+     tries again rather than sitting on a stale answer for an hour. */
+  if (stock) return stock.voices;
+  return [];
+}
+
+/**
+ * Which listing answered, how many it gave, and how old that is.
+ *
+ * For the page she opens. The v2 shape is documented rather than observed —
+ * see the note above — and this is what turns it into a fact: if it says `v1`
+ * on a live account, the v2 request is wrong and the wall is still there.
+ */
+export function whichVoiceList(): {
+  readonly way: VoiceListWay;
+  readonly count: number;
+  readonly agoSeconds: number | null;
+} {
+  if (!stock) return { way: 'none', count: 0, agoSeconds: null };
+  return {
+    way: stock.way,
+    count: stock.voices.length,
+    agoSeconds: Math.round((Date.now() - stock.at) / 1000),
+  };
+}
+
+/** Cleared between tests. Not used by the app. */
+export function forgetStockVoices(): void {
+  stock = null;
 }
 
 /**

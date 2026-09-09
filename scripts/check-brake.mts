@@ -106,6 +106,7 @@ forgetEverything();
  */
 const REPORTS_ONLY: Record<string, string> = {
   'app/api/account/route.ts': 'the member’s own account, no supplier call',
+  'app/api/allowance/route.ts': 'reports where the allowances stand; reads a cached figure, calls nothing',
   'app/api/analyse/setup/route.ts': 'a guarded report on what Music.ai answers',
   'app/api/eleven/prices/route.ts': 'reads our own eleven_costs rows',
   'app/api/eleven/pronounce/route.ts': 'a fixed pronunciation table, no call',

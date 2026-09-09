@@ -25,6 +25,7 @@
 
 import crypto from 'node:crypto';
 import { PLAN_CREDITS, USD_PER_CREDIT } from '@/app/lib/server/elevenceiling';
+import { whichVoiceList } from '@/app/lib/server/eleven';
 import { CREDITS_A_MEMBER, RAND_PER_CREDIT, STEPS, standing } from '@/app/lib/server/spendwatch';
 
 export const runtime = 'nodejs';
@@ -103,6 +104,26 @@ export async function GET(request: Request): Promise<Response> {
       part: percent(now.kits.part),
       step: now.kits.step,
       note: 'A real roof: it stops on its own and the card is not charged past the monthly fee. Minutes burn on what comes back, not what is sent.',
+    },
+    /* Which voice listing answers, because the fix for the 500-voice wall
+       rests on a request shape nobody here could test.
+ 
+       `/v1/voices` returns every voice on the account, and everything in this
+       app is made on one account, so it grows with the membership — their own
+       guidance is that it stops being usable past about five hundred. The code
+       now asks the paginated v2 listing first and keeps v1 as a fallback.
+ 
+       If this says `v1` on a live account, the v2 request is being refused and
+       the wall is still ahead. If it says `v2`, it is gone. One page, one
+       word, and a guess becomes a fact. */
+    voiceList: {
+      ...whichVoiceList(),
+      note:
+        whichVoiceList().way === 'v1'
+          ? 'The paginated listing was refused and the old unbounded one answered. That one returns every voice on the account and stops working at around five hundred — which is five hundred members. Send me this and I will fix the request.'
+          : whichVoiceList().way === 'v2'
+            ? 'The paginated listing answered. The request no longer grows with the membership.'
+            : 'Nothing has asked for the voices yet since this instance started. Open a room that lists them, then look again.',
     },
     warnings: {
       at: STEPS.map((step) => percent(step)),

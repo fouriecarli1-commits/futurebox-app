@@ -158,6 +158,13 @@ jobs:
       - name: The allowance warns her at half, and retries if it cannot send
         run: npm run check:spendwatch
 
+      # `GET /v1/voices` returns every voice on the account, everything here is
+      # made on one account, and every member who clones adds one — so the
+      # request grew with the membership and stops working at about five
+      # hundred. Carli is planning for five to ten thousand users in month one.
+      - name: The voice list asks for a page, not for the whole membership
+        run: npm run check:voicewall
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described
