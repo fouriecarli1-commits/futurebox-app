@@ -11,6 +11,7 @@
  */
 
 import React from 'react';
+import { barClearance } from './TabBar';
 import { useBackLayer } from '../lib/backstack';
 import { X, RotateCcw, Check, Paintbrush } from 'lucide-react';
 import {
@@ -96,7 +97,8 @@ export default function ThemeStudio({
   ];
 
   return (
-    <div className="fixed inset-0 z-[60] flex justify-end below-tabs">
+    <div className="fixed inset-0 z-[60] flex justify-end"
+      style={{ paddingBottom: barClearance(0) }}>
       <div className="absolute inset-0 bg-scrim/80 backdrop-blur-sm" onClick={onClose} />
 
       <aside className="relative w-full max-w-md h-full overflow-y-auto bg-zinc-900 border-l border-zinc-800 p-5 space-y-6">

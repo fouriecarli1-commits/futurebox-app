@@ -306,28 +306,3 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
-/* ── Room for the tab bar ───────────────────────────────────────────────
- 
-   `TabBar` is `fixed bottom-0 z-[95]`. Every full-screen room in this app is
-   below that — the Pro Booth at z-[70], The Booth at z-[60], the song and
-   live screens at z-[80] — so the bar is painted over the foot of each of
-   them, and whatever a room keeps down there is under it.
- 
-   That is not theoretical. The Pro Booth's "Mix it down" — the button the
-   whole room exists to reach — sat underneath it, and Carli asked for a
-   feature that had been built and covered. Asking the same question of The
-   Booth found two more, one of them "Take the room off it", which is a paid
-   control.
- 
-   One rule rather than eleven copies of a number. `check:belowtabs` requires
-   every room below the bar to carry it, so a new room cannot be written
-   without it and a changed bar is one edit.
- 
-   Fifty-seven pixels is the bar's own `min-h-[56px]` plus its top border,
-   and the safe area is the strip a phone reserves below it. The probes ask
-   what is actually painted at each control rather than trusting this number,
-   so a taller bar fails there instead of quietly swallowing a button. */
-.below-tabs {
-  padding-bottom: calc(57px + env(safe-area-inset-bottom));
-}

@@ -2865,7 +2865,7 @@ export default function FutureBoxHome() {
           Above the studio's own layer, because it is the thing you arrive at
           and the studio is what you arrive into. */}
       {atDoor && (
-        <div className="fixed inset-0 z-[55] bg-zinc-950 overflow-y-auto below-tabs">
+        <div className="fixed inset-0 z-[55] bg-zinc-950 overflow-y-auto">
           {/* Top-aligned with room around it, not vertically centred.
 
               Centring inside a scrolling box is the classic way to make the
@@ -3357,7 +3357,20 @@ export default function FutureBoxHome() {
                   const onward = SURFACES[studioTab].next;
                   if (!onward) return null;
                   return (
-                    <div className="pt-2 pb-1 border-t border-zinc-800 flex items-center justify-between gap-4">
+                    /* Its own clearance, for the same reason the copilot pane
+                       above has one: this is the last thing in the middle
+                       column, the column is a nested flex child, and the
+                       scrolling container's padding does not reach it.
+ 
+                       `audit/underbar.mjs` found it on its first run — "Sing on
+                       it yourself", the whole button, behind the tab bar in
+                       Make a song. That is the fourth room Carli has had to
+                       report this in, which is why that probe now walks all
+                       twelve rather than waiting to be told about a fifth. */
+                    <div
+                      className="pt-2 pb-1 border-t border-zinc-800 flex items-center justify-between gap-4"
+                      style={{ paddingBottom: barClearance(8) }}
+                    >
                       <p className="text-xs text-zinc-500">{t('rail.next', 'Next')}</p>
                       <button
                         type="button"

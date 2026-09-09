@@ -22,6 +22,7 @@
  */
 
 import React, { useState } from 'react';
+import { barClearance } from './TabBar';
 import { Loader2, X, Zap } from 'lucide-react';
 import { startCheckout } from '../lib/purchases';
 import { buys, type Pack } from '../lib/credits';
@@ -69,7 +70,8 @@ export default function OutOfCredits({
   };
 
   return (
-    <div className="fixed inset-0 z-[80] bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto below-tabs">
+    <div className="fixed inset-0 z-[80] bg-scrim/90 backdrop-blur-md flex items-start justify-center p-4 overflow-y-auto"
+      style={{ paddingBottom: barClearance(16) }}>
       <div className="bg-zinc-900 border border-zinc-800 w-full max-w-lg rounded-3xl p-6 space-y-5 shadow-2xl my-auto">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">

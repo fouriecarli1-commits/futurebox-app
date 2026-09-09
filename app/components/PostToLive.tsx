@@ -53,6 +53,7 @@
  */
 
 import React, { useState } from 'react';
+import { barClearance } from './TabBar';
 import { Check, Loader2, Radio } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { refusalText } from '../lib/apierror';
@@ -146,7 +147,8 @@ export default function PostToLive({
 
       {asking && (
         <div
-          className="fixed inset-0 z-[70] flex items-end justify-center bg-scrim/80 p-4 sm:items-center below-tabs"
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-scrim/80 p-4 sm:items-center"
+          style={{ paddingBottom: barClearance(16) }}
           role="dialog"
           aria-modal="true"
           aria-label={t('buildon.title', 'May others build on this?')}

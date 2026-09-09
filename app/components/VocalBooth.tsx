@@ -27,6 +27,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { barClearance } from './TabBar';
 import { ArrowLeft, Check, Circle, Ear, Layers, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
 import { decode, knownLatency, mixdown } from '../lib/mixdown';
 import { encodeWav } from '../lib/wav';
@@ -998,7 +999,8 @@ export default function VocalBooth({
        See the rule in `globals.css`. Without it the voices panel and "Take the
        room off it" are underneath it on a phone — which is where they were
        until `check:boothwalk` was taught to ask. */
-    <div className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col below-tabs">
+    <div className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col"
+      style={{ paddingBottom: barClearance(0) }}>
       <div className="flex items-center gap-3 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
         {/* Out of the room, and it says so.
 

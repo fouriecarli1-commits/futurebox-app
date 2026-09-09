@@ -40,13 +40,25 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 const bar = readFileSync('app/components/TabBar.tsx', 'utf8');
 const barZ = Number(/fixed bottom-0 inset-x-0 z-\[(\d+)\]/.exec(bar)?.[1] ?? 0);
 ok('the tab bar states its own layer', barZ > 0, String(barZ));
-ok('and its height is the one the rule is built on',
-  /min-h-\[56px\]/.test(bar),
-  'globals.css reserves 57px — the min-height plus the top border');
+ok('and states its height as a number other files can import',
+  /export const BAR_HEIGHT/.test(bar));
 
-const rule = readFileSync('app/globals.css', 'utf8');
-ok('the rule exists once, in the stylesheet',
-  /\.below-tabs \{\s*padding-bottom: calc\(57px \+ env\(safe-area-inset-bottom\)\);/.test(rule));
+/* One number, and it is `TabBar`'s own.
+ 
+   This check first shipped with a `.below-tabs` rule in globals.css carrying
+   its own 57 — read off the bar's `min-h-[56px]` plus a border. `TabBar`
+   already exported `barClearance()` built on `BAR_HEIGHT`, which is **64**,
+   and already had `check:tabbar` guarding it. So the new rule was a second
+   source of truth that was seven pixels short, and Carli found the difference
+   the way it is always found: "By your voice is daar ook 'n hele button onder
+   agter die main button bar."
+ 
+   The rule is gone. Every room uses the helper. */
+ok('there is no second clearance rule to drift from the first',
+  !/below-tabs/.test(readFileSync('app/globals.css', 'utf8')));
+ok('the clearance is built on the bar\u2019s own height',
+  /export const BAR_HEIGHT = \d+;/.test(bar)
+  && /calc\(\$\{BAR_HEIGHT\}px \+ env\(safe-area-inset-bottom\)/.test(bar));
 
 /**
  * Rooms that clear the bar another way, or that do not need to.
@@ -56,7 +68,7 @@ ok('the rule exists once, in the stylesheet',
  */
 const OTHERWISE: Record<string, { why: string; holds: (source: string) => boolean }> = {
   'app/components/Account.tsx': {
-    why: 'clears it with pb-24, which is 96px against the bar’s 57',
+    why: 'clears it with pb-24, which is 96px against the bar’s 64',
     holds: (s) => /pb-24/.test(s),
   },
   'app/components/Search.tsx': {
@@ -92,7 +104,18 @@ const files = [...walk('app/components'), 'app/page.tsx'];
 const rooms: string[] = [];
 for (const path of files) {
   const source = readFileSync(path, 'utf8');
-  for (const found of source.matchAll(/fixed inset-0 z-\[(\d+)\]/g)) {
+  /* `z-50` as well as `z-[50]`.
+ 
+     Tailwind's own scale needs no brackets, and this pattern only matched the
+     bracketed arbitrary values — so the studio, which is `fixed inset-0 z-50`
+     and holds Make a song, was not in the list at all. `audit/underbar.mjs`
+     found a button under the bar in that very room on its first run, in a
+     file this check had never looked at. */
+  for (const found of source.matchAll(/fixed inset-0 z-(?:\[(\d+)\]|(\d+))/g)) {
+    const layer = Number(found[1] ?? found[2]);
+    if (layer < barZ) rooms.push(path);
+  }
+  for (const found of [] as RegExpMatchArray[]) {
     if (Number(found[1]) < barZ) rooms.push(path);
   }
 }
@@ -103,9 +126,10 @@ const bare: string[] = [];
 for (const path of under) {
   const source = readFileSync(path, 'utf8');
   if (path in OTHERWISE) continue;
-  if (!/below-tabs/.test(source)) bare.push(path.replace('app/components/', ''));
+  if (!/barClearance\(/.test(source)) bare.push(path.replace('app/components/', ''));
 }
-ok('every room below the bar reserves its strip', bare.length === 0, bare.join(', '));
+ok('every room below the bar reserves its strip with the exported clearance',
+  bare.length === 0, bare.join(', '));
 
 for (const [path, { why, holds }] of Object.entries(OTHERWISE)) {
   ok(`the exemption for ${path.replace('app/components/', '')} still holds — ${why}`,
