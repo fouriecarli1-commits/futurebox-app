@@ -259,6 +259,12 @@ jobs:
       - name: ElevenLabs own model numbers are read, not assumed
         run: npm run check:elevenmodels
 
+      # The fault found six times in one day: a read that failed rendered as
+      # "there are none". Every instance is fixed or named with a reason, and
+      # the count cannot go up.
+      - name: Could-not-ask is never drawn as none
+        run: npm run check:couldnotask
+
       # Two unauthenticated routes call a reasoning model. The only thing
       # between them and an unbounded bill looks identical working or broken.
       - name: The rate brake holds

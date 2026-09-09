@@ -100,20 +100,80 @@ export async function DELETE(request: Request): Promise<Response> {
     }
   }
 
-  // ── 2. What lives on ElevenLabs ─────────────────────────────────────
-  const { data: voices } = await client.from('voices').select('id').eq('owner', caller.id);
+  /* ── 2. What lives on ElevenLabs ─────────────────────────────────────
+
+     ── The fault this refuses over ────────────────────────────────────
+
+     Both of these reads used to discard their error, so a read that failed
+     came back as `voices ?? []` — an empty list — and the loop below simply
+     did not run. The account was then deleted anyway, the `voices` row
+     cascaded away with it, and the member was told `deleted: true` with
+     nothing in `left`.
+
+     What that means in practice: a recording of somebody's voice stays on
+     ElevenLabs, with no row anywhere pointing at it, after this app told them
+     it was gone. The terms say "deleting a voice or a sound removes it from
+     ElevenLabs as well as from here — removing only our row would be hiding
+     it, not deleting it", and the privacy policy makes the same promise. This
+     is the one place in the app where "could not ask" read as "there are
+     none" and the cost was unrecoverable.
+
+     So it refuses, exactly as the subscription above does, and for the same
+     reason: nothing has been destroyed yet at this point, so "try again" is a
+     real answer. Once files start being removed in step 3 that stops being
+     true, which is why that step reports into `left` instead. */
+  const { data: voices, error: voicesUnread } = await client
+    .from('voices')
+    .select('id')
+    .eq('owner', caller.id);
+  if (voicesUnread) {
+    return Response.json(
+      {
+        message:
+          'The cloned voices on this account could not be listed, so nothing was deleted. ' +
+          'Deleting now would leave a recording of your voice on the voice service after ' +
+          'telling you it was gone. Try again in a moment.',
+      },
+      { status: 502 },
+    );
+  }
   for (const one of (voices ?? []) as Array<{ id: string }>) {
     if (!(await forgetVoice(one.id))) left.push(`voice ${one.id}`);
   }
 
-  const { data: sounds } = await client.from('finetunes').select('id').eq('owner', caller.id);
+  const { data: sounds, error: soundsUnread } = await client
+    .from('finetunes')
+    .select('id')
+    .eq('owner', caller.id);
+  if (soundsUnread) {
+    return Response.json(
+      {
+        message:
+          'The trained sounds on this account could not be listed, so nothing further was deleted. ' +
+          'Try again in a moment.',
+      },
+      { status: 502 },
+    );
+  }
   for (const one of (sounds ?? []) as Array<{ id: string }>) {
     if (!(await dropFinetune(one.id))) left.push(`trained sound ${one.id}`);
   }
 
   // ── 3. The files, in every bucket that can hold one ─────────────────
   for (const bucket of BUCKETS) {
-    const { data: files } = await client.storage.from(bucket).list(caller.id, { limit: 1000 });
+    const { data: files, error: unread } = await client.storage
+      .from(bucket)
+      .list(caller.id, { limit: 1000 });
+    /* Reported rather than refused, and the difference from step 2 is the
+       point: by here files in earlier buckets are already gone, so stopping
+       cannot put anything back. `left` is what this list is for — it is
+       printed to them and it is what the help desk works from. An unlistable
+       bucket used to read as an empty one and leave their audio in place
+       silently. */
+    if (unread) {
+      left.push(`the files in ${bucket} could not be listed, so they are still there`);
+      continue;
+    }
     const paths = ((files ?? []) as Array<{ name: string }>).map((one) => `${caller.id}/${one.name}`);
     if (!paths.length) continue;
     const { error } = await client.storage.from(bucket).remove(paths);

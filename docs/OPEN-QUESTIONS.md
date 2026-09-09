@@ -1659,6 +1659,41 @@ empty one, because an empty list of models reads as "there are no models" and
 the app would then have nothing to say about its own prices with complete
 confidence. That is the sixth time that distinction has been made today.
 
+## "Could not ask" rendered as "none" — a class, now ratcheted
+
+Six times on 9 September 2026, in six unrelated places, none of which looked
+like the others: `/api/live`'s hearts and plays, `stockVoices` returning `[]`,
+`check:sing`'s `indexOf` answering −1, the voice-slot reader that would have
+refused every clone on the site over one mistyped field name, the Kits blender
+hunt reading a 429 as an answer, and `/api/account`'s delete.
+
+Six is a class. The tab-bar faults went the same way and were ended by one
+exported number and one probe; `check:couldnotask` is that, for this.
+
+**The one that cost the most.** `/api/account`'s DELETE read the member's
+cloned voices and, on a failed read, looped over nothing — then deleted the
+account, cascading the `voices` row away with it, and answered
+`deleted: true`. A recording of somebody's voice stays on ElevenLabs with no
+row pointing at it, after this app told them it was gone. The terms and the
+privacy policy both promise otherwise. It now refuses, like the subscription
+step above it does, because at that point nothing has been destroyed and "try
+again" is a real answer; the file-bucket listing reports into `left` instead,
+because by then things are already gone and stopping cannot put them back.
+
+**The check is a ratchet, not a wall.** Sixty reads in this app discard their
+error and most are right to — a `maybeSingle` for ownership genuinely means
+"not found". The narrow shape that has bitten every time is a read whose
+failure turns into an empty list or a nought that somebody is shown. Fifteen
+of those exist; every one is named with the reason it is harmless, a new one
+fails the run, and the count cannot rise.
+
+Two of its own bugs are worth recording, because both were found by the check
+catching itself rather than by review. A trailing `\b` after `[]` meant the
+pattern matched five of sixteen — `]` followed by `)` is not a word boundary.
+And it walked past `((data as Row[] | null) ?? [])` until it learned to see
+through a type assertion, which is how it found `purchaseLevel`, a case two
+earlier sweeps had both missed.
+
 ## Open, and worth a decision
 
 - **Does anybody pay yet?** Still unanswered, and it still decides whether the
