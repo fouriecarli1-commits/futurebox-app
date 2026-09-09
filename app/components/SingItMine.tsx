@@ -52,6 +52,15 @@ interface Singing {
   readonly models: readonly SingVoice[];
   /** Kits' own catalogue — the answer for anybody who has trained none. */
   readonly stock: readonly SingVoice[];
+  /**
+   * Minutes of singing this member has left this month, or null.
+   *
+   * Null means it could not be read, or nobody is signed in. Drawn as nothing
+   * rather than as a nought: "0 minutes left" that really means "we could not
+   * ask" would stop somebody using a feature they still have.
+   */
+  readonly minutesLeft?: number | null;
+  readonly minutesEach?: number;
 }
 
 /** One request for the whole page, whatever it is asked by. */
@@ -250,6 +259,35 @@ export default function SingItMine({
                   'This one is built for singing: it is a voice trained on one singer, and it follows a melody rather than fighting it. It needs a trained voice to sing in — yours, once you have made one at kits.ai — and it is the wrong tool for a spoken lane.',
                 )}</Note>
               <Cost credits={perMinute(track.seconds || 0, CREDITS.sing)} />
+
+              {/* What is left of their month, before they spend a minute of
+                  it — not after.
+
+                  Kits' minutes are capped per member and until now the only
+                  way to learn that was to press the button and be refused,
+                  with the recording already made. A ceiling somebody meets
+                  only by walking into it is the same fault as a button that
+                  does nothing.
+
+                  Drawn only when it is known. Null is "could not ask", and a
+                  nought printed for that would talk somebody out of a feature
+                  they still have. */}
+              {typeof state.minutesLeft === 'number' && (
+                <p
+                  className={`text-sm leading-snug ${
+                    state.minutesLeft === 0 ? 'text-amber-400' : 'text-zinc-500'
+                  }`}
+                >
+                  {state.minutesLeft === 0
+                    ? t(
+                        'mine.noneLeft',
+                        'You have used your singing minutes for this month. They start again on the first.',
+                      )
+                    : `${t('mine.leftThis', 'Singing left this month:')} ${state.minutesLeft}${
+                        state.minutesEach ? ` / ${state.minutesEach}` : ''
+                      } ${t('mine.minutes', 'minutes')}`}
+                </p>
+              )}
 
               <div className="space-y-2">
                 <SingVoices

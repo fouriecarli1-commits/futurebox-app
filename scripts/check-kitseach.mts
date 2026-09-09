@@ -84,6 +84,24 @@ for (const code of ['kits_yours_used', 'kits_month_used']) {
     said.slice(0, 90));
 }
 
+/* ── Somebody must be able to see it before they spend it ──────────────── */
+const voiceRoute = readFileSync('app/api/voice/route.ts', 'utf8');
+const minePanel = readFileSync('app/components/SingItMine.tsx', 'utf8');
+
+ok('the voice answer says how many minutes are left', /minutesLeft/.test(voiceRoute));
+ok('and how many each member gets, so it can read "3 of 5"', /minutesEach: minutesEach\(\)/.test(voiceRoute));
+ok('it is floored, never rounded up into minutes that are not there',
+  /Math\.floor\(\(minutesEach\(\) \* 60 - used\) \/ 60\)/.test(voiceRoute),
+  'saying one minute left when there are forty seconds sets somebody up to be refused');
+ok('a signed-out reader is not counted against somebody else',
+  /await singing\(null\)/.test(voiceRoute));
+ok('the screen draws it before the button, not after the refusal',
+  /minutesLeft/.test(minePanel) && minePanel.indexOf('state.minutesLeft') < minePanel.indexOf("t('mine.go'"),
+  'a ceiling somebody meets only by walking into it is a button that does nothing');
+ok('and it draws nothing at all when the number is unknown',
+  /typeof state\.minutesLeft === 'number'/.test(minePanel),
+  'a nought printed for "could not ask" talks somebody out of a feature they still have');
+
 /* ── And the counting it rests on ──────────────────────────────────────── */
 ok('the per-member SQL function is in the bundle she runs',
   /create or replace function public\.kits_seconds_this_month_for/.test(sql));

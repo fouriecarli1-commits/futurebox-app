@@ -14,6 +14,7 @@ import {
   models as singModels,
 } from '@/app/lib/server/kits';
 import { PODCAST_CAPS } from '@/app/lib/plans';
+import { mineSeconds, minutesEach } from '@/app/lib/server/kitsminutes';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,10 +29,29 @@ export const maxDuration = 30;
  * first place. Only whether the key is set and the names of the models — never
  * the key, and never the variable's name, which `check:security` scans for.
  */
-async function singing(): Promise<{
+async function singing(owner?: string | null): Promise<{
   configured: boolean;
   models: { id: string; name: string; demo: string | null; tags: string[]; hasPicture: boolean }[];
   stock: { id: string; name: string; demo: string | null; tags: string[]; hasPicture: boolean }[];
+  /**
+   * How much singing this member has left this month, in whole minutes.
+   *
+   * ── Why it belongs on this answer ────────────────────────────────────
+   *
+   * Kits' minutes are capped per member — five a month, see `minutesEach` —
+   * and until now the only way to find that out was to record a take, press
+   * the button, and be refused. A ceiling somebody only meets by walking into
+   * it is the same fault as a button that does nothing: the work is already
+   * done by the time the app says no.
+   *
+   * `null` means it could not be read, or there is nobody signed in to read
+   * it for. The screens draw nothing rather than a nought — a "0 minutes
+   * left" that is really "we could not ask" would stop somebody using a
+   * feature they still have.
+   */
+  minutesLeft: number | null;
+  /** What each member gets a month, so the screen can say "3 of 5". */
+  minutesEach: number;
 }> {
   /* Two lists, because Kits has two.
 
@@ -51,9 +71,24 @@ async function singing(): Promise<{
      `myModels=true` is what separates them, and asking without it returns the
      whole catalogue — which is how a stranger's voice nearly ended up at the
      top of a list labelled "your trained voices". */
-  if (!singConfigured()) return { configured: false, models: [], stock: [] };
-  const [mine, theirs] = await Promise.all([singModels(), singCatalogue()]);
-  return { configured: true, models: mine, stock: theirs };
+  if (!singConfigured()) {
+    return { configured: false, models: [], stock: [], minutesLeft: null, minutesEach: minutesEach() };
+  }
+  const [mine, theirs, used] = await Promise.all([
+    singModels(),
+    singCatalogue(),
+    owner ? mineSeconds(owner) : Promise.resolve(null),
+  ]);
+  return {
+    configured: true,
+    models: mine,
+    stock: theirs,
+    /* Floored, so it never rounds up into minutes that are not there: a
+       screen saying one minute left when there are forty seconds is a screen
+       that sets somebody up to be refused. */
+    minutesLeft: used === null ? null : Math.max(0, Math.floor((minutesEach() * 60 - used) / 60)),
+    minutesEach: minutesEach(),
+  };
 }
 
 export async function GET(request: Request): Promise<Response> {
@@ -63,7 +98,7 @@ export async function GET(request: Request): Promise<Response> {
       mine: [],
       stock: [],
       caps: PODCAST_CAPS.free,
-      singing: await singing(),
+      singing: await singing(null),
     });
   }
 
@@ -85,6 +120,6 @@ export async function GET(request: Request): Promise<Response> {
     caps,
     mine,
     stock: await stockVoices(),
-    singing: await singing(),
+    singing: await singing(caller?.id ?? null),
   });
 }
