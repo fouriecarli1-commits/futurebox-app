@@ -77,6 +77,14 @@ const SAID: Record<string, { en: string; af: string }> = {
     en: 'The hearts and the listens are not set up on this app yet — the owner needs to run supabase/ALMAL.sql.',
     af: 'Die harte en die luisters is nog nie op hierdie toep opgestel nie — die eienaar moet supabase/ALMAL.sql laat loop.',
   },
+  /* Not the member's fault and not their problem to solve, which is the whole
+     reason it is worded away from the per-plan voice cap. That one says
+     "remove one first"; this one must not, because there is nothing of theirs
+     to remove. */
+  voice_slots_full: {
+    en: 'Voice cloning is full on this app right now. It is not something you have done, the owner has been told, and nothing has been charged.',
+    af: 'Stemkloning is op die oomblik vol op hierdie toep. Dit is nie iets wat jy gedoen het nie, die eienaar is ingelig, en niks is gehef nie.',
+  },
   /* A paywall, not a fault. The distinction matters on the screen: "that
      broke" sends somebody to the help desk, "you have not bought this" sends
      them to the thing that sells it. */

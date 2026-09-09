@@ -105,6 +105,66 @@ for (const path of hot) {
     /stockVoices\(\)/.test(readFileSync(path, 'utf8')));
 }
 
+/* ── 5. The wall itself, not only the listing ──────────────────────────────
+
+   Everything above is about *reading* a list that grows with the membership.
+   This is what happens when the workspace runs out of room for the next one.
+
+   Every member's cloned voice lands on one ElevenLabs workspace and holds a
+   slot until it is deleted. When the slots run out, the member records a
+   minute of audio and is refused at the end of it — and the per-member cap in
+   the clone route cannot see that, because it is counting a different thing.
+
+   The direction of the unknown answer is the whole design. `voice_limit` and
+   `voice_slots_used` are documented rather than observed, so one wrong field
+   name has to degrade into "let the clone through", never into "the workspace
+   is full" — which would switch voice cloning off for the entire site while
+   reporting a reason that is not true. */
+const room = readFileSync('app/lib/server/eleven.ts', 'utf8');
+const clone = readFileSync('app/api/voice/clone/route.ts', 'utf8');
+
+ok('the workspace slots are read at all', /export async function voiceRoom\(/.test(room));
+ok('and the clone route asks before it charges',
+  clone.indexOf('await voiceRoom()') > -1 &&
+    clone.indexOf('await voiceRoom()') < clone.indexOf('await charge('),
+  'a member should not pay and be refunded to learn the workspace is full');
+ok('the refusal carries a code, so it can be read in Afrikaans',
+  /error: 'voice_slots_full'/.test(clone) &&
+    /voice_slots_full: \{/.test(readFileSync('app/lib/apierror.ts', 'utf8')));
+ok('and does not tell the member to delete one of theirs',
+  !/voice_slots_full[\s\S]{0,400}?[Rr]emove one/.test(clone),
+  'that is the per-plan cap’s advice, and it is wrong for this failure');
+ok('a landed clone takes a slot without asking again', /noteVoiceTaken\(\)/.test(clone));
+ok('she is warned before it is full, not after',
+  /watchVoiceSlots\(/.test(clone) && /export function voicesLetter\(/.test(
+    readFileSync('app/lib/server/spendwatch.ts', 'utf8')));
+
+/* The property, proved rather than described. Nine shapes that are not an
+   answer, and one that is. */
+const { voiceRoomFrom } = await import('../app/lib/server/eleven');
+const notAnAnswer: [string, Record<string, unknown>][] = [
+  ['an empty body', {}],
+  ['no limit', { voice_slots_used: 400 }],
+  ['no used count', { voice_limit: 500 }],
+  ['a limit of zero', { voice_limit: 0, voice_slots_used: 0 }],
+  ['a negative limit', { voice_limit: -1, voice_slots_used: 0 }],
+  ['a negative used count', { voice_limit: 500, voice_slots_used: -3 }],
+  ['strings where numbers belong', { voice_limit: '500', voice_slots_used: '400' }],
+  ['nulls', { voice_limit: null, voice_slots_used: null }],
+  ['the field names misspelt', { voiceLimit: 500, voiceSlotsUsed: 400 }],
+];
+for (const [what, body] of notAnAnswer) {
+  ok(`${what} reads as could-not-ask, never as no room`,
+    voiceRoomFrom(body) === null,
+    JSON.stringify(voiceRoomFrom(body)));
+}
+const real = voiceRoomFrom({ voice_limit: 500, voice_slots_used: 498 });
+ok('and a real answer is read as one',
+  real?.used === 498 && real?.limit === 500 && real?.left === 2, JSON.stringify(real));
+const over = voiceRoomFrom({ voice_limit: 500, voice_slots_used: 512 });
+ok('with what is left floored at nought rather than going negative',
+  over?.left === 0, JSON.stringify(over));
+
 console.log(
   failures
     ? `\ncheck:voicewall — ${failures} assertion(s) failed.`

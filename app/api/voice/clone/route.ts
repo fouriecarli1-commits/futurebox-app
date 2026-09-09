@@ -18,13 +18,14 @@
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
-import { cloneVoice, configured, forgetVoice } from '@/app/lib/server/eleven';
+import { cloneVoice, configured, forgetVoice, noteVoiceTaken, voiceRoom } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { addressKey } from '@/app/lib/server/identity';
 import { VOICE_CONSENT } from '@/app/lib/consent';
+import { watchVoiceSlots } from '@/app/lib/server/spendwatch';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -98,6 +99,37 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
+  /* The workspace's own room, which is a different wall from the one above.
+
+     The check above is this member's plan: how many voices they may keep, and
+     "remove one first" is advice they can act on. This one is the single
+     ElevenLabs workspace every member's voice lands on running out of slots
+     underneath all of them at once — nothing is wrong with their voices and
+     there is nothing for them to delete.
+
+     Asked before `charge()` on purpose. Charging, failing upstream and
+     refunding does leave the credits right, but it puts a minute of recording
+     and an error message about somebody else's account limit in front of a
+     member who did nothing wrong.
+
+     `null` means the slots could not be read, and the clone goes ahead. See
+     `voiceRoom()` for why that direction: a mistyped field name must not
+     become an app that refuses every voice on the site. */
+  const left = await voiceRoom();
+  /* Sent whatever the answer, so the steps below full are warned on too. It
+     is not awaited — she is not what the member is waiting for. */
+  void watchVoiceSlots(left);
+  if (left && left.left <= 0) {
+    return Response.json(
+      {
+        error: 'voice_slots_full',
+        message:
+          'Voice cloning is full on this app right now, and it is not something you have done. The owner has been told. Nothing has been charged.',
+      },
+      { status: 503 },
+    );
+  }
+
   const name = String(form.get('name') ?? '').trim().slice(0, 60) || caller.email.split('@')[0];
 
   // What a voice is called is not decoration: a clone named after a singer is
@@ -117,6 +149,10 @@ export async function POST(request: Request): Promise<Response> {
     await paid.refund();
     return Response.json({ message: made.message }, { status: made.status });
   }
+
+  /* One fewer slot, without asking again. Five members cloning inside the
+     five-minute cache window would otherwise all read the same "one left". */
+  noteVoiceTaken();
 
   // The consent, written down. See supabase/moderation.sql for why a checkbox
   // that leaves no trace is not consent.

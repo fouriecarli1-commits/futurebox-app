@@ -25,7 +25,7 @@
 
 import crypto from 'node:crypto';
 import { PLAN_CREDITS, USD_PER_CREDIT } from '@/app/lib/server/elevenceiling';
-import { whichVoiceList } from '@/app/lib/server/eleven';
+import { voiceRoom, whichVoiceList } from '@/app/lib/server/eleven';
 import { CREDITS_A_MEMBER, RAND_PER_CREDIT, STEPS, standing } from '@/app/lib/server/spendwatch';
 
 export const runtime = 'nodejs';
@@ -57,6 +57,9 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const now = await standing();
+  /* One read, after the guard and before the answer is assembled. Behind the
+     secret on purpose: it is a fact about her ElevenLabs account. */
+  const slots = await voiceRoom();
 
   return Response.json({
     eleven: {
@@ -125,6 +128,35 @@ export async function GET(request: Request): Promise<Response> {
             ? 'The paginated listing answered. The request no longer grows with the membership.'
             : 'Nothing has asked for the voices yet since this instance started. Open a room that lists them, then look again.',
     },
+    /* The other half of the same wall.
+
+       Above is whether the *listing* still works. This is whether there is
+       room for the next voice at all: every member's clone holds a slot on
+       the one workspace until it is deleted, and when the slots run out
+       cloning stops for everybody at once.
+
+       `null` means the two fields could not be read, which is reported as
+       exactly that. It is the one number on this page that must never be
+       shown as a confident zero — see `voiceRoom()`. */
+    voiceSlots: slots
+      ? {
+          used: slots.used,
+          limit: slots.limit,
+          left: slots.left,
+          part: percent(slots.used / slots.limit),
+          note:
+            slots.left <= 0
+              ? 'Full. Nobody can clone a voice until slots are freed or the ElevenLabs plan is bigger. Look for voices belonging to members who cloned once and never used it before paying for more.'
+              : `Room for about ${slots.left} more members to clone a voice. Buying credits does not add slots — a bigger ElevenLabs plan does.`,
+        }
+      : {
+          used: null,
+          limit: null,
+          left: null,
+          part: null,
+          note:
+            'The voice slots could not be read from ElevenLabs. Not the same as none left: cloning is allowed through while this is unknown, on purpose. If it stays unknown, `voice_limit` and `voice_slots_used` are not the field names their subscription answer actually uses.',
+        },
     warnings: {
       at: STEPS.map((step) => percent(step)),
       to: now.to,

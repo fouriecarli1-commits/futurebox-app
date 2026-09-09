@@ -1482,6 +1482,42 @@ them is a different question, and their answer did not reach it. It is not a
 reason to hold anything up — it is the ordinary shape of a platform reselling
 a service — but it should be asked plainly rather than assumed.
 
+## The voice wall, both halves (#117)
+
+The listing half was fixed earlier: `stockVoices()` asks the paginated
+`GET /v2/voices?category=premade&page_size=100` and keeps the unbounded v1
+call underneath as a floor.
+
+The wall itself is now guarded too. Every member's cloned voice takes a slot
+on the one ElevenLabs workspace and holds it until the voice is deleted, so
+the slots run out under everybody at once — and the per-member cap in
+`/api/voice/clone` cannot see that, because it counts a different thing.
+Before this, the member recorded a minute, was charged, was refused upstream,
+was refunded, and read ElevenLabs' English sentence about an account limit
+they have never heard of. Then so did the next member, and nothing told Carli.
+
+Now: `voiceRoom()` reads the slots, the clone route asks **before** charging
+and refuses with `voice_slots_full` (its own code, its own Afrikaans, and
+deliberately not the per-plan cap's "remove one first" — there is nothing of
+theirs to remove), a landed clone takes a slot locally so a burst inside the
+cache window cannot all read the same "one left", and `watchVoiceSlots()`
+writes to her at 50/75/90/100% on the same steps as the credits.
+
+**Two field names that are documented and not observed**: `voice_limit` and
+`voice_slots_used` on `GET /v1/user/subscription`. This machine cannot reach
+elevenlabs.io, so the direction of the unknown answer is the design:
+`voiceRoomFrom()` returns `null` — could not ask — for a missing field, a
+wrong type, a misspelt name, a limit of zero or a negative count, and the
+clone route lets the clone **through** on null. One mistyped field name must
+degrade into a confusing upstream error for one member, never into voice
+cloning switched off for the whole site with a reason that is not true.
+`check:voicewall` puts nine such shapes through it.
+
+**How she confirms it**: `/api/allowance?key=…` now reports `voiceSlots`. If
+it says `used`/`limit`/`left` with numbers, the field names are right. If it
+stays `null` with the note about field names, they are wrong and the guard is
+doing nothing — which is the safe direction, but it is not the working one.
+
 ## Open, and worth a decision
 
 - **Does anybody pay yet?** Still unanswered, and it still decides whether the

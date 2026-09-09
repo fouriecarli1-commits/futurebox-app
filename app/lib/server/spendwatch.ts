@@ -48,6 +48,12 @@ import { admin } from './account';
 import { OWNER, configured, tellOwner } from './email';
 import { PLAN_CREDITS, RAND_PER_USD, USD_PER_CREDIT, leftCredits, monthlyCredits, usedCredits } from './elevenceiling';
 import { leftSeconds, monthlyMinutes, usedSeconds } from './kitsminutes';
+/* Type only, so this stays a one-way dependency. `eleven.ts` imports this
+   module for `watchEleven`, and importing it back for a value would make a
+   cycle — which works today by hoisting and stops working the first time
+   somebody moves a call to the top level of either file. The reading is
+   passed in instead, by the one caller that has already taken it. */
+import type { VoiceRoom } from './eleven';
 
 /**
  * Where the letters go out.
@@ -72,7 +78,7 @@ export function monthKey(now = new Date()): string {
   return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
-export type Supplier = 'eleven' | 'kits';
+export type Supplier = 'eleven' | 'kits' | 'voices';
 
 /** One claim per supplier, per step, per month. */
 export function claimKey(supplier: Supplier, step: number, month = monthKey()): string {
@@ -180,6 +186,39 @@ export function kitsLetter(usedMin: number, ceilingMin: number, step: number): {
 }
 
 /**
+ * What the voice-slot letter says.
+ *
+ * A different kind of warning from the two above, and the advice differs with
+ * it. Credits and download minutes run out every month and come back; voice
+ * slots fill up once and stay full, because a member's cloned voice is not
+ * something that expires. So there is no "it resets on the 1st" to wait for —
+ * the workspace either gets a bigger plan or it stops taking new voices, and
+ * the members it stops are the ones who have just recorded a minute of audio.
+ */
+export function voicesLetter(used: number, limit: number, step: number): { subject: string; body: string } {
+  const left = Math.max(0, limit - used);
+  const percent = Math.round(step * 100);
+  const subject =
+    step >= 1
+      ? 'ElevenLabs: the workspace has no voice slots left'
+      : `ElevenLabs: ${percent}% of the workspace’s voice slots are used`;
+
+  const body = [
+    step >= 1
+      ? `Voice cloning has stopped for everybody. All ${limit} voice slots on the ElevenLabs workspace are taken, and a member who records a minute now is refused at the end of it.`
+      : `${used} of ${limit} voice slots on the ElevenLabs workspace are used. ${left} left — so about ${left} more members can clone a voice.`,
+    '',
+    'This is not the same as running out of credits, and buying credits does not help.',
+    '',
+    'Every member who clones a voice takes one slot on the one ElevenLabs workspace, and a slot is only given back when that voice is deleted. The number of slots comes with the plan, so more of them means a bigger ElevenLabs plan rather than a top-up.',
+    '',
+    'The cheaper half first: voices belonging to deleted accounts should already be gone, but voices belonging to members who cloned once and never used it are still holding slots. Those are the ones to look at before paying for more.',
+  ].join('\n');
+
+  return { subject, body };
+}
+
+/**
  * Look at where ElevenLabs stands and write if a step has just been crossed.
  *
  * Fire and forget. The caller has audio in hand and is on its way out.
@@ -206,6 +245,31 @@ export async function watchKits(): Promise<void> {
     if (step === null) return;
     const { subject, body } = kitsLetter(used, ceiling, step);
     await tell('kits', step, subject, body);
+  } catch {
+    // As above.
+  }
+}
+
+/**
+ * The workspace's voice slots, warned on the same steps as everything else.
+ *
+ * Fire and forget, like the two above, and for the same reason: this is
+ * called from the clone path with a member waiting, and a warning that could
+ * break a clone would be worse than no warning.
+ *
+ * A null reading means the slots could not be read. Nothing is sent then — a
+ * letter saying the workspace is full, written because a field name changed,
+ * is worse than no letter at all. The caller passes what it already read
+ * rather than this asking again, so the refusal and the warning can never
+ * disagree about the same moment.
+ */
+export async function watchVoiceSlots(seen: VoiceRoom | null): Promise<void> {
+  try {
+    if (!seen) return;
+    const step = stepFor(seen.used, seen.limit);
+    if (step === null) return;
+    const { subject, body } = voicesLetter(seen.used, seen.limit, step);
+    await tell('voices', step, subject, body);
   } catch {
     // As above.
   }

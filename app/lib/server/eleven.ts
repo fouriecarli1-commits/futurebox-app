@@ -1124,3 +1124,120 @@ export async function dropFinetune(id: string): Promise<boolean> {
    readers of one endpoint is how the letter and the money page end up
    disagreeing about the same account. Removed on 8 September 2026 rather than
    left as the shorter of two truths. */
+
+/**
+ * How much room is left for cloned voices on the workspace.
+ *
+ * ── The other half of the five-hundred wall ──────────────────────────────
+ *
+ * `stockVoices()` above fixed the *listing*: asking for every voice on the
+ * account stops working somewhere past five hundred of them. This is the
+ * wall itself. Every member who clones a voice adds it to one ElevenLabs
+ * workspace — hers — and that workspace has a fixed number of voice slots on
+ * its plan. Her own estimate for month one is five to ten thousand members.
+ *
+ * What happens today when the last slot goes: the member records a minute of
+ * audio, credits are charged, `POST /v1/voices/add` is refused, the credits
+ * are refunded, and they are shown ElevenLabs' own English sentence about a
+ * limit on an account they have never heard of. Then it happens to the next
+ * member, and the next, and nothing tells Carli — the first she knows is
+ * somebody writing to say voice cloning is broken.
+ *
+ * The per-member cap in `/api/voice/clone` does not help here. That one says
+ * how many voices *one member* may keep, and it is working correctly; this is
+ * the workspace running out underneath all of them at once. They are
+ * different problems with different fixes and they must not share a sentence:
+ * "remove one first" is advice a member can act on, and it is the wrong
+ * advice when there is nothing wrong with their voices.
+ *
+ * ── Why null is not zero ─────────────────────────────────────────────────
+ *
+ * These two fields are documented rather than observed — this machine cannot
+ * reach elevenlabs.io — so the shape may differ from what is read here. That
+ * makes the failure mode the whole design.
+ *
+ * If the fields are missing, or the read fails, or the numbers do not make
+ * sense, this returns **null**, meaning "could not ask". It never returns
+ * zero slots left. Getting that backwards would take one mistyped field name
+ * and turn it into an app that refuses every voice clone on the site while
+ * reporting, confidently, that the workspace is full. The caller is written
+ * to let a clone through on null, so an unknown answer costs a confusing
+ * upstream error at worst rather than a feature that is off for everybody.
+ */
+export interface VoiceRoom {
+  /** Voice slots in use on the workspace. */
+  readonly used: number;
+  /** What the plan allows. */
+  readonly limit: number;
+  /** What is left, floored at zero. */
+  readonly left: number;
+}
+
+/**
+ * Five minutes.
+ *
+ * Slots move when somebody clones or deletes, which is rare, and this sits in
+ * front of a member pressing a button — so it may not be a fresh read every
+ * time. Short enough that a wall reached by another instance is noticed
+ * quickly, and the count is adjusted locally on a successful clone besides.
+ */
+const ROOM_FOR_MS = 5 * 60 * 1000;
+let room: { room: VoiceRoom; at: number } | null = null;
+
+/**
+ * The reading, separated from the fetching so a check can put shapes through
+ * it. Every "could not ask" path in this function has to answer null, and
+ * that is the one property worth proving rather than describing.
+ */
+export function voiceRoomFrom(body: Record<string, unknown>): VoiceRoom | null {
+  const used = num(body.voice_slots_used);
+  const limit = num(body.voice_limit);
+  /* Both, and a limit that is a real number of slots. A plan reporting a
+     limit of zero is a shape this code does not understand rather than a
+     workspace with no room, and the safe reading of "do not understand" is
+     to say nothing. */
+  if (used === null || limit === null || limit <= 0 || used < 0) return null;
+  return { used, limit, left: Math.max(0, limit - used) };
+}
+
+export async function voiceRoom(): Promise<VoiceRoom | null> {
+  if (room && Date.now() - room.at < ROOM_FOR_MS) return room.room;
+  try {
+    const response = await fetch(`${BASE}/user/subscription`, {
+      headers: { 'xi-api-key': key() },
+      cache: 'no-store',
+    });
+    if (!response.ok) return null;
+    const body = (await response.json()) as Record<string, unknown> | null;
+    if (!body || typeof body !== 'object') return null;
+    const read = voiceRoomFrom(body);
+    if (!read) return null;
+    room = { room: read, at: Date.now() };
+    return read;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * One more slot has gone, without asking again.
+ *
+ * Called after a clone lands. Without it, five members cloning inside the
+ * cache window all read the same "one slot left" and four of them are charged
+ * for a request the workspace cannot take. Cheaper and more correct than
+ * dropping the cache, which would put a subscription read in front of every
+ * clone on a busy afternoon.
+ */
+export function noteVoiceTaken(): void {
+  if (!room) return;
+  const used = room.room.used + 1;
+  room = {
+    room: { used, limit: room.room.limit, left: Math.max(0, room.room.limit - used) },
+    at: room.at,
+  };
+}
+
+/** Cleared between tests. Not used by the app. */
+export function forgetVoiceRoom(): void {
+  room = null;
+}
