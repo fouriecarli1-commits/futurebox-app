@@ -159,6 +159,23 @@ export default function VoiceLab({
   const [recording, setRecording] = useState(false);
   const [left, setLeft] = useState(SAMPLE_SECONDS);
   const [consent, setConsent] = useState(false);
+  /**
+   * Take the room off the sample before it is cloned.
+   *
+   * Carli: "Daar moet dan tick boksies wees wat sê remove backing vocals, en
+   * remove reverb & echo."
+   *
+   * This one is real here and the other is not, which is why only this one is
+   * on the screen. The sample is recorded in this room, seconds ago, by
+   * somebody speaking — there are no backing vocals in it to remove, and a box
+   * that spends credits to take nothing off a spoken take would be a control
+   * that costs money to do nothing. Where a sample can carry music, the
+   * separator already exists as its own button.
+   *
+   * Off by default. It costs credits, and a take made somewhere quiet — which
+   * is the first thing `HowToTrain` above asks for — does not need it.
+   */
+  const [deRoom, setDeRoom] = useState(false);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
@@ -270,9 +287,33 @@ export default function VoiceLab({
     streamRef.current = null;
     setRecording(false);
 
-    const sample = await finished;
+    let sample = await finished;
     setBusy('clone');
     try {
+      /* Cleaned first, when asked. A model learns whatever is in the file, so
+         the room has to come off before the sample goes up rather than after.
+ 
+         A failure here does not stop the cloning: the sample as recorded is
+         still a sample, and losing a take because the cleaner was busy is a
+         worse outcome than a slightly roomy voice. It says so rather than
+         failing quietly. */
+      if (deRoom) {
+        const clean = new FormData();
+        clean.append('audio', sample, 'sample.webm');
+        clean.append('seconds', String(SAMPLE_SECONDS));
+        const token_ = await accessToken();
+        const cleaned = await fetch('/api/voice/clean', {
+          method: 'POST',
+          headers: token_ ? { Authorization: `Bearer ${token_}` } : undefined,
+          body: clean,
+        }).catch(() => null);
+        if (cleaned?.ok) {
+          sample = await cleaned.blob();
+        } else {
+          setProblem(t('voice.roomFailed', 'The room could not be taken off, so the take went up as it was recorded.'));
+        }
+      }
+
       const form = new FormData();
       form.append('sample', sample, 'sample.webm');
       form.append('name', name.trim());
@@ -296,7 +337,7 @@ export default function VoiceLab({
     } finally {
       setBusy(null);
     }
-  }, [name, onChanged]);
+  }, [deRoom, name, onChanged, t]);
 
   const forget = useCallback(
     async (id: string) => {
@@ -545,6 +586,21 @@ export default function VoiceLab({
                 {t('voice.consent', VOICE_CONSENT)}
               </span>
             </label>
+            {/* The one cleaner that means something on a spoken take made in
+                this room. See `deRoom`. */}
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={deRoom}
+                onChange={(event) => setDeRoom(event.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+              />
+              <span className="text-sm text-zinc-400 leading-snug">
+                {t('voice.deRoom', 'Take the room off it first — the echo, the reverb and whatever else is behind you. A model learns whatever is in the file.')}
+              </span>
+            </label>
+            {deRoom && <Cost rate={CREDITS.clean} seconds={SAMPLE_SECONDS} className="pl-6" />}
+
             {/* Making the voice is charged the moment the sample goes up, so
                 the figure belongs above the record button, not after it. */}
             <Cost credits={CREDITS.clone} />

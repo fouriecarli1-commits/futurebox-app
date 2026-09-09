@@ -1741,6 +1741,8 @@ export const STRINGS: Dict = {
   "pro.toWords": { en: "Sing with the words", af: "Sing saam met die woorde" },
   "train.title": { en: "What makes a good voice", af: "Wat maak ’n goeie stem" },
   "mix.title": { en: "The voice desk", af: "Die stemtafel" },
+  "voice.deRoom": { en: "Take the room off it first — the echo, the reverb and whatever else is behind you. A model learns whatever is in the file.", af: "Haal eers die vertrek af — die eggo, die nagalm en wat ook al agter jou is. ’n Model leer wat ook al in die lêer is." },
+  "voice.roomFailed": { en: "The room could not be taken off, so the take went up as it was recorded.", af: "Die vertrek kon nie afgehaal word nie, so die opname het opgegaan soos dit opgeneem is." },
   "mix.theirs": { en: "theirs", af: "hulle s’n" },
   "mix.pitch": { en: "Pitch", af: "Toonhoogte" },
   "mix.semitones": { en: "semitones", af: "halftone" },
