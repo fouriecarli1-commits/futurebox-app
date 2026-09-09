@@ -478,6 +478,102 @@ export async function speak(
 }
 
 /**
+ * The same read, and the times it put every character at.
+ *
+ * ── What this is for ─────────────────────────────────────────────────────
+ *
+ * `/v1/text-to-speech/{voice}/with-timestamps` is the ordinary read with one
+ * more field on the answer. Same model, same voice, same price — the alignment
+ * is not sold separately, it is simply something this app had never asked for.
+ *
+ * What it saves is `/api/transcribe`. Showing the words of a read on screen at
+ * the moment they are spoken would otherwise mean sending audio we had just
+ * generated **out of words we already had** to a transcriber, and paying for
+ * it. The read knew all along.
+ *
+ * Stated exactly: nothing here does that today. The three callers of
+ * `/api/transcribe` send a member's own recording or a song, and none of them
+ * is replaced by this. The saving is locked in ahead of the screen that would
+ * need it, rather than collected from one that exists.
+ *
+ * ── The cost of asking, which is real and is not money ───────────────────
+ *
+ * This is the buffered endpoint, not the streaming one. The answer is JSON
+ * with the whole audio inside it as base64, so nothing plays until all of it
+ * has arrived, and a read long enough to outlast the function ceiling fails
+ * having produced nothing — which is exactly the risk `speakStream` was
+ * written to take off this route.
+ *
+ * So it is opt-in and it is capped, and the caller decides. `/api/voice/speak`
+ * keeps streaming by default and refuses `timings` above a length it can
+ * finish; see `TIMED_LIMIT` there.
+ *
+ * There is a `/stream/with-timestamps` as well, which sends newline-delimited
+ * JSON — audio and alignment interleaved. That is the version that would give
+ * both at once, and it means transforming the stream on this side and finding
+ * somewhere to put an alignment that only completes after the body has been
+ * sent. Worth doing; not needed for the two callers this app has today, both
+ * of which read `await response.blob()` before anything plays, so neither is
+ * streaming in any sense that reaches a person.
+ *
+ * ── Base64, and why the audio is decoded here ────────────────────────────
+ *
+ * Their answer carries the mp3 as a base64 string. Handing that on to the
+ * browser as-is would make every caller decode it, and one of them would get
+ * it wrong. It is decoded once, here, and the route sends bytes.
+ */
+export async function speakTimed(
+  voiceId: string,
+  text: string,
+  modelId: string,
+  how?: Performance,
+  billed?: number,
+): Promise<{ ok: true; audio: ArrayBuffer; alignment: unknown } | Upstream> {
+  const voiceSettings = settings(how);
+  const response = await fetch(
+    `${BASE}/text-to-speech/${encodeURIComponent(voiceId)}/with-timestamps?output_format=mp3_44100_128`,
+    {
+      method: 'POST',
+      headers: { 'xi-api-key': key(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        model_id: modelId,
+        ...(voiceSettings ? { voice_settings: voiceSettings } : {}),
+      }),
+    },
+  );
+  noteCost(response, 'speak', billed);
+  if (!response.ok) return complain(response);
+
+  let said: { audio_base64?: unknown; alignment?: unknown; normalized_alignment?: unknown };
+  try {
+    said = (await response.json()) as typeof said;
+  } catch {
+    return { ok: false, status: 502, message: 'The reading came back in a form this app could not read.' };
+  }
+
+  if (typeof said.audio_base64 !== 'string' || !said.audio_base64) {
+    /* No audio is a failure whatever else came back — this is a read, and the
+       point of it is the sound. A missing *alignment* is not: that is handed
+       on as null and the caller drops a rung. */
+    return { ok: false, status: 502, message: 'The reading came back without any audio in it.' };
+  }
+
+  const bytes = Buffer.from(said.audio_base64, 'base64');
+  /* `alignment` is per character as sent; `normalized_alignment` is the same
+     against the text after their own normalisation — numbers spelled out,
+     abbreviations expanded. The plain one is preferred because it lines up
+     with the script the member actually typed, which is what a screen shows
+     them. The normalised one is the fallback rather than nothing. */
+  const alignment = said.alignment ?? said.normalized_alignment ?? null;
+  return {
+    ok: true,
+    audio: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
+    alignment,
+  };
+}
+
+/**
  * The same read, streamed instead of waited for.
  *
  * ── Why this matters more than it looks ─────────────────────────────────

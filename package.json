@@ -155,6 +155,7 @@
     "check:dubwords": "tsx scripts/check-dubwords.mts",
     "check:dubhook": "tsx scripts/check-dubhook.mts",
     "check:elevenmodels": "tsx scripts/check-elevenmodels.mts",
+    "check:spokentimings": "tsx scripts/check-spokentimings.mts",
     "check:couldnotask": "tsx scripts/check-couldnotask.mts",
     "check:accountscreen": "node audit/account.mjs 3044",
     "check:addonroom": "node audit/addon.mjs 3049",

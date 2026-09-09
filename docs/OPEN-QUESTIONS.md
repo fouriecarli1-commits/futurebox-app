@@ -1616,18 +1616,61 @@ spoken at the times it was actually spoken, so it cannot drift from the audio.
 `check:dubwords` holds both halves of that, including that the translate route
 is not deleted to "simplify".
 
-**What is still #112's and not built:** the `spoken` rung. TTS
-`/with-timestamps` gives character-level alignment free with every read, and
-`speakStream` is the caller that matters. It was left because
-`/stream/with-timestamps` returns newline-delimited JSON rather than mp3
-bytes, and `/api/voice/speak` pipes its body straight to the browser as
-`audio/mpeg` — so taking the timings means transforming the stream server-side
-and finding somewhere to put the alignment, which arrives only once the stream
-ends. Streaming there is load-bearing (first sound in about a second, and a
-long read that has not finished inside the five-minute function ceiling fails
-outright), so it is worth doing properly rather than quickly. The dub
-transcript (`GET /v1/dubbing/{id}/transcript/{lang}`) and
-`/v1/music/detailed` are also still untouched.
+**The `spoken` rung is built, and the reason it had not been was wrong.**
+
+The paragraph that used to stand here said the rung was blocked because
+`/api/voice/speak` streams and `/stream/with-timestamps` returns
+newline-delimited JSON, so taking the timings would mean transforming the
+stream server-side — and that streaming there is load-bearing: first sound in
+about a second, and a long read that outlasts the five-minute function ceiling
+fails outright.
+
+The second half of that is true of the route and **not true of the app**. Both
+callers of `/api/voice/speak` — `Presenter.tsx` and `VoiceLab.tsx` — do
+`await response.blob()` and only then create an object URL and play. Neither
+of them streams in any sense that reaches a person: the first sound arrives
+when the last byte does, exactly as it would from a buffered endpoint. The
+blocker was measured against the route's design rather than against its two
+callers.
+
+So what shipped is the buffered `/v1/text-to-speech/{voice}/with-timestamps`,
+opt-in behind `timings: true`:
+
+- The default path is **untouched** — still `speakStream`, still `audio/mpeg`,
+  still chunked. Nothing that does not ask sees any change, and the streaming
+  is kept for the day a caller actually wants it.
+- The timed path gives up streaming, so it is capped at **3,000 characters**
+  (`TIMED_LIMIT`) and **refuses** above that rather than quietly returning
+  audio with no timings on it. A caller that asked and was not told would have
+  no way to tell that from an alignment it could not read.
+- `wordsFromAlignment` turns their per-character timings into words, and
+  returns **null** on anything it cannot read — a renamed field, a length off
+  by one, a NaN. Null means "could not be read"; an empty list means "the read
+  had no words in it". `check:spokentimings` holds twelve separate refusals
+  and the one case that must *not* refuse.
+- `Presenter.tsx` is the first caller. The lines sit under the player, the one
+  being spoken lights up, and pressing a line plays from there. A script too
+  long for timings says so in different words from an alignment that could not
+  be read, because they are different things.
+
+**Still open, and it is the shape:** the alignment fields
+(`characters`, `character_start_times_seconds`,
+`character_end_times_seconds`) are from ElevenLabs' documentation and have
+**never been seen from the live API from this machine**, which cannot reach
+it. Everything above is written so that a different shape produces null and a
+sentence on screen rather than invented timings — but whether it is null or
+words in practice is settled by the first read Carli makes in the presenter.
+
+**Said exactly, because the loose version is not true:** this saves
+`/api/transcribe` for speech this app generates — and nothing does that today.
+All three callers of `/api/transcribe` send something else: `PromptCards` and
+`Transcript` send a recording somebody made, `lyrictime` sends a song. None of
+them is replaced. The saving is locked in ahead of the screen that would need
+it, rather than collected from one that exists.
+
+**`/v1/music/detailed` is still untouched.** (The dub transcript,
+`GET /v1/dubbing/{id}/transcript/{lang}`, used to be listed here beside it and
+is built — see the paragraph above.)
 
 ## Their model numbers, read instead of assumed
 

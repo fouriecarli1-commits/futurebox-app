@@ -40,6 +40,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { SpokenWord } from '../lib/spokenwords';
 import { AlertTriangle, Check, Loader2, Mic, Play, UserRound, Video as VideoIcon } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { loadCast, pictureOf, type Member } from '../lib/cast';
@@ -90,6 +91,29 @@ export default function Presenter({
   const [voiceId, setVoiceId] = useState('');
   const [script, setScript] = useState('');
   const [reading, setReading] = useState<{ blob: Blob; seconds: number } | null>(null);
+  /**
+   * The lines of the read and when each is spoken — from ElevenLabs' own
+   * alignment, which arrives with the audio at no extra cost. Null means the
+   * timings could not be read, which is NOT the same as a read with no words
+   * in it, and the screen says so rather than showing nothing.
+   */
+  const [lines, setLines] = useState<SpokenWord[] | null>(null);
+  /** Which line is being said right now, as the preview plays. */
+  const [atLine, setAtLine] = useState(-1);
+  /**
+   * Why there are no lines under the player, where that is worth saying.
+   *
+   * Two ways to have none, and they are not the same thing:
+   *
+   *   `tooLong`    — the script is past what the timed read can do, so the
+   *                  timings were never asked for. Nothing went wrong.
+   *   `unreadable` — they were asked for and came back in a shape this app
+   *                  could not read. The audio is still fine.
+   *
+   * Collapsing those two into one blank space is exactly the fault
+   * `check:couldnotask` was written for, one screen further out.
+   */
+  const [noLines, setNoLines] = useState<'tooLong' | 'unreadable' | null>(null);
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState<'read' | 'make' | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
@@ -144,7 +168,45 @@ export default function Presenter({
   useEffect(() => {
     setReading(null);
     setMade(null);
+    /* And the words under it with it. Leaving them behind would light up a
+       line of the old script while the new one plays, which is worse than
+       showing nothing: it looks like the timings are wrong rather than like
+       they belong to a read that no longer exists. */
+    setLines(null);
+    setAtLine(-1);
+    setNoLines(null);
   }, [script, voiceId]);
+
+  /* ── Following the read ─────────────────────────────────────────────────
+
+     `timeupdate` rather than a timer: the audio element is the clock, and a
+     timer started beside it drifts from it the moment anybody pauses, seeks,
+     or the tab goes to the background.
+
+     Ended is handled separately because `timeupdate` does not fire again
+     after the last one, so the final line would stay lit over silence. */
+  useEffect(() => {
+    const element = player.current;
+    if (!element || !lines?.length) return undefined;
+    const follow = (): void => {
+      const at = element.currentTime;
+      let found = -1;
+      for (let i = 0; i < lines.length; i += 1) {
+        if (at >= lines[i].start && at <= lines[i].end) { found = i; break; }
+        /* Between two lines — a pause for breath — the one just finished
+           stays lit rather than the screen going blank and back. */
+        if (at > lines[i].end) found = i;
+      }
+      setAtLine(found);
+    };
+    const stop = (): void => setAtLine(-1);
+    element.addEventListener('timeupdate', follow);
+    element.addEventListener('ended', stop);
+    return () => {
+      element.removeEventListener('timeupdate', follow);
+      element.removeEventListener('ended', stop);
+    };
+  }, [lines]);
 
   useEffect(
     () => () => {
@@ -162,23 +224,68 @@ export default function Presenter({
     setProblem(null);
     try {
       const token = await accessToken();
-      const response = await fetch('/api/voice/speak', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ voiceId, text: script }),
-      });
+      /* ── Asked for with its timings ────────────────────────────────
+
+         `timings: true` gets the same audio from the same model at the same
+         price, with ElevenLabs' own character alignment on the answer. That
+         is what puts the words under the player and lights the one being
+         said — without it, showing that would mean paying `/api/transcribe`
+         to work out where the words fell in speech this app had just made
+         out of words it already had.
+
+         The trade is that the timed read does not stream, so the route
+         refuses it above 3,000 characters. That refusal is answered by
+         asking again plainly rather than by failing: a long script still
+         gets read, it simply gets no words under it. */
+      const ask = (timings: boolean) =>
+        fetch('/api/voice/speak', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ voiceId, text: script, ...(timings ? { timings: true } : {}) }),
+        });
+
+      let response = await ask(true);
+      let timed = true;
+      if (response.status === 413) {
+        /* Too long for the buffered read, and nothing has been charged: the
+           route refuses on length before it asks for anything. */
+        response = await ask(false);
+        timed = false;
+      }
       if (!response.ok) {
         const said = (await response.json().catch(() => ({}))) as { message?: string; needsPlan?: boolean };
         setProblem(said.message ?? t('pres.readFailed', 'That could not be read just now.'));
         if (said.needsPlan) onUpgrade?.();
         return;
       }
-      const blob = await response.blob();
+
+      let blob: Blob;
+      let said: SpokenWord[] | null = null;
+      if (timed) {
+        const answer = (await response.json()) as {
+          audio: string;
+          type?: string;
+          lines?: SpokenWord[] | null;
+        };
+        /* Their base64 back into bytes. `atob` gives one character per byte,
+           which is what `Uint8Array.from` is reading here — anything cleverer
+           mangles a byte above 127 and the file will not play. */
+        const raw = atob(answer.audio);
+        const bytes = Uint8Array.from(raw, (one) => one.charCodeAt(0));
+        blob = new Blob([bytes], { type: answer.type ?? 'audio/mpeg' });
+        said = answer.lines ?? null;
+      } else {
+        blob = await response.blob();
+      }
+
       const seconds = await lengthOf(blob);
       setReading({ blob, seconds });
+      setLines(said);
+      setAtLine(-1);
+      setNoLines(said?.length ? null : timed ? 'unreadable' : 'tooLong');
       const element = player.current;
       if (element) {
         if (heard.current) URL.revokeObjectURL(heard.current);
@@ -382,6 +489,75 @@ export default function Presenter({
             )}
           </div>
           <audio ref={player} className="hidden" />
+
+          {/* ── The words, as they are said ──────────────────────────────
+
+              From ElevenLabs' own alignment, which came back with the audio
+              at no extra cost. Press play and the line being spoken lights
+              up — which is the cheap answer to "is this read right", because
+              a voice that is right and paced wrong is still a clip nobody
+              wants, and hearing it while watching where it is tells you
+              which of the two is wrong.
+
+              `lines === null` is a different state from an empty list and is
+              drawn differently. Null means the timings could not be read;
+              empty means the read genuinely had no words in it. A screen
+              that shows the same nothing for both is the fault
+              `check:couldnotask` exists for. */}
+          {reading && lines !== null && lines.length > 0 && (
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-1">
+              {lines.map((line, i) => (
+                <button
+                  key={`${line.start}-${i}`}
+                  type="button"
+                  onClick={() => {
+                    const element = player.current;
+                    if (!element) return;
+                    element.currentTime = line.start;
+                    void element.play();
+                  }}
+                  className={`block w-full text-left rounded-lg px-2 py-1.5 text-sm leading-snug transition-colors ${
+                    i === atLine
+                      ? 'bg-emerald-500/15 text-white font-semibold'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  {line.text}
+                </button>
+              ))}
+              <Note className="text-xs text-zinc-600 leading-relaxed">{t(
+                  'pres.followWhy',
+                  'These times come from the reading itself, not from a guess — press a line to hear it from there.',
+                )}</Note>
+            </div>
+          )}
+
+          {reading && noLines === 'unreadable' && (
+            /* Said out loud rather than left blank. The read is fine and was
+               paid for; what is missing is the alignment, and somebody who is
+               not told that will read the empty space as the app being
+               broken. */
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              {t(
+                'pres.noTimings',
+                'The reading is here, but the times of each line did not come back with it — so the words are not shown following along. Nothing is wrong with the audio.',
+              )}
+            </p>
+          )}
+
+          {reading && noLines === 'tooLong' && (
+            /* A different sentence, because it is a different thing. Nothing
+               failed: the script is longer than the timed read can take, so
+               the words were never asked for. Telling somebody their timings
+               "did not come back" when they were never sent for is how a
+               working app gets reported as broken. */
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              {t(
+                'pres.tooLongForTimings',
+                'This script is long enough that it has to be read in one go rather than followed word by word. The reading itself is exactly the same — shorten it if you want the words to follow along.',
+              )}
+            </p>
+          )}
 
           {/* Cheap first, dear second — and the cheap one is a real answer to
               "is this the right voice", which is most of what goes wrong. */}

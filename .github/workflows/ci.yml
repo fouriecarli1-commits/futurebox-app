@@ -259,6 +259,12 @@ jobs:
       - name: ElevenLabs own model numbers are read, not assumed
         run: npm run check:elevenmodels
 
+      # The read already knew where every word fell. #112: the alignment comes
+      # back with the audio at the same price, and this holds it to saying
+      # null when it cannot be read rather than inventing times.
+      - name: A read hands back its own timings
+        run: npm run check:spokentimings
+
       # The fault found six times in one day: a read that failed rendered as
       # "there are none". Every instance is fixed or named with a reason, and
       # the count cannot go up.

@@ -66,7 +66,7 @@ const NAMED: Record<string, string> = {
     'A collaboration list. A failed read shows no requests, which is wrong but costs nobody anything irreversible — and the room has no way to say more yet. Worth fixing when that room is next opened.',
   'app/api/dialogue/route.ts:116':
     'A day’s speech count, used to refuse past a cap. A failed read reads as nought used, which is generous rather than harmful: the ceiling above it still holds, and the brake in front of it does not depend on this.',
-  'app/api/voice/speak/route.ts:126':
+  'app/api/voice/speak/route.ts:160':
     'The same day-count as dialogue, same reasoning.',
   'app/api/voice/change/route.ts:96':
     'The same day-count again.',

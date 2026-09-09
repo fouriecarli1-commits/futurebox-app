@@ -14,7 +14,8 @@
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { guard } from '@/app/lib/server/safety';
-import { configured, speakStream, stockVoices, type Performance } from '@/app/lib/server/eleven';
+import { configured, speakStream, speakTimed, stockVoices, type Performance } from '@/app/lib/server/eleven';
+import { linesFromWords, wordsFromAlignment } from '@/app/lib/spokenwords';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { readCost } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
@@ -32,6 +33,32 @@ const MODELS: Record<string, string> = {
   steady: 'eleven_multilingual_v2',
   wide: 'eleven_v3',
 };
+
+/**
+ * The longest script this route will read *with timings*.
+ *
+ * ── What the number is protecting ────────────────────────────────────────
+ *
+ * The ordinary read streams. The first sound arrives in about a second and
+ * the bytes keep coming, which is what takes the five-minute function ceiling
+ * off this route: a response that has started is a response that has started.
+ *
+ * The timed read cannot do that. `/with-timestamps` answers with one JSON
+ * document holding the whole audio as base64, so nothing exists until all of
+ * it exists, and a read that outlasts the ceiling fails having produced
+ * nothing and charged for everything.
+ *
+ * 3,000 characters is roughly three minutes of speech and well under a minute
+ * of generating. It is the `maker` plan's own `speakChars`, chosen so the
+ * refusal below is never the *first* thing a paying member meets — their plan
+ * already stops them there.
+ *
+ * A longer script is refused rather than quietly read without timings, which
+ * is the same rule as everywhere else here: a caller who asked for something
+ * and did not get it must be told, not handed a plausible answer with a field
+ * missing.
+ */
+const TIMED_LIMIT = 3_000;
 
 /**
  * The performance dials, clamped here rather than trusted.
@@ -81,6 +108,13 @@ export async function POST(request: Request): Promise<Response> {
       speed?: number;
       speakerBoost?: boolean;
     };
+    /**
+     * Ask for the times every character was said at, alongside the audio.
+     *
+     * Opt-in because it costs the streaming — see `TIMED_LIMIT`. Nothing that
+     * does not set it sees any change at all.
+     */
+    timings?: boolean;
   };
   try {
     body = (await request.json()) as typeof body;
@@ -181,6 +215,69 @@ export async function POST(request: Request): Promise<Response> {
      The refusal path is unchanged — the status is known before a byte is sent,
      so a rate limit or a bad voice still refunds. What cannot be refunded is a
      stream that breaks halfway; see the note on `speakStream`. */
+  /* ── The timed read, when it is asked for ─────────────────────────────
+
+     Opt-in, and off by default: this path gives up the streaming that keeps
+     a long read inside the function ceiling. What it buys is the alignment —
+     where every character of the script actually fell in the audio — which is
+     the thing this app used to buy back from `/api/transcribe` after
+     generating the speech from words it already had.
+
+     Same endpoint family, same model, same price. The timings are a field on
+     the answer, not a product. */
+  if (body.timings === true) {
+    if (text.length > TIMED_LIMIT) {
+      /* Refused, not silently downgraded. A caller that asked for timings and
+         got audio with none would have no way to tell that from a read whose
+         alignment could not be parsed. */
+      return Response.json(
+        {
+          error: 'too_long_for_timings',
+          message: `Timings can be taken from a read up to ${TIMED_LIMIT} characters; this one is ${text.length}. Read it without timings, or split it.`,
+          limit: TIMED_LIMIT,
+        },
+        { status: 413 },
+      );
+    }
+
+    const timed = await speakTimed(
+      voiceId,
+      text,
+      MODELS[String(body.model ?? 'steady')] ?? MODELS.steady,
+      performance(body.how),
+      asked,
+    );
+    if (!timed.ok) {
+      await paid.refund();
+      return Response.json({ message: timed.message }, { status: timed.status });
+    }
+
+    if (caller && client) {
+      await client.from('speech_runs').insert({ owner: caller.id, characters: text.length });
+    }
+
+    /* Null, not an empty list, when the alignment could not be read.
+
+       The audio is good and is sent either way — the member paid for a read
+       and gets one. What must not happen is a screen that shows no words
+       because the shape changed looking exactly like a screen showing a file
+       with nothing in it. `words: null` with `why` beside it is the whole
+       difference, and `check:couldnotask` is the rule it belongs to. */
+    const words = wordsFromAlignment(timed.alignment);
+    return Response.json({
+      /* Base64 rather than bytes, because this answer is JSON. The caller
+         turns it back into a Blob; `speakTimed` already did the decoding of
+         their base64, so this is one encode rather than two guesses. */
+      audio: Buffer.from(timed.audio).toString('base64'),
+      type: 'audio/mpeg',
+      words,
+      lines: words ? linesFromWords(words) : null,
+      ...(words
+        ? {}
+        : { why: 'The reading came back without timings this app could read. The audio is fine.' }),
+    });
+  }
+
   const read = await speakStream(
     voiceId,
     text,
