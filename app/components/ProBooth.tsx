@@ -1722,6 +1722,42 @@ export default function ProBooth({
           </button>
         )}
 
+        {/* ── The way to the words ─────────────────────────────────────────
+
+            Carli: "wanneer mens record moet daar op 'n manier 'n baie meer
+            duidelike riglyn wees hoe om te kom by die plek waar mens saam met
+            die woorde kan record en dan die opsie om saam met die AI stem te
+            record."
+
+            Both of those exist, and both are in The Booth, one step back: the
+            words move with the song there, and "Sing next to the AI voice"
+            takes the singer off the record and puts it in your headphones
+            without leaving it in what you keep.
+
+            This room has neither and never said so. Somebody who came here to
+            sing — and this is the room with the big green Record button — had
+            no way to know they were in the wrong one, and the way out was a
+            "Back" that named nothing.
+
+            The button is offered next to Record rather than in a note, because
+            what is wanted at that moment is not an explanation, it is the
+            other room.
+
+            Not while a take is running. Leaving mid-recording would throw the
+            take away, and a button that does that beside "Stop recording" is
+            a trap. */}
+        {!recording && (
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <Mic2 className="w-4 h-4" />
+            {t('pro.toWords', 'Sing with the words')}
+          </button>
+        )}
+
         <button
           type="button"
           onClick={() => (playing ? stopPlaying() : play(at))}
@@ -1825,6 +1861,24 @@ export default function ProBooth({
               that assumes the answer. The button now says what it makes. */}
           {t('pro.keep', 'Make one song')}
         </button>
+        {/* ── What is in the other room, said once ──────────────────────
+
+            The button above is the way there; this is what is there, because
+            "Sing with the words" does not say that the AI voice is in the same
+            place, and that is the half she keeps saying matters most.
+
+            And it says the lanes are safe. Somebody who has recorded four
+            takes will not press a button that leaves the room unless they are
+            told they can come back — which they now can, since the session is
+            written down. A true sentence here is what makes the button
+            usable. */}
+        <p className="w-full text-[11px] leading-snug text-zinc-500">
+          {t(
+            'pro.wordsWhere',
+            'The words on screen, and the AI voice in your ear to sing next to, are in The Booth — the room this one opened from. Your lanes here are saved, so you can go and come back.',
+          )}
+        </p>
+
         {/* And the sentence, because a button alone still leaves "and then
             what?" — the room closes and the song is in the Library, and both
             halves of that are worth knowing before it is pressed. */}

@@ -541,6 +541,29 @@ try {
 
   await p.setViewportSize({ width: 1280, height: 900 });
 
+  /* ── The way to the words is in the room that has none ───────────────
+
+     "wanneer mens record moet daar op 'n manier 'n baie meer duidelike
+      riglyn wees hoe om te kom by die plek waar mens saam met die woorde kan
+      record en dan die opsie om saam met die AI stem te record."
+
+     Both of those live in The Booth. This room has a large green Record
+     button, no words, no guide voice, and used to have nothing at all saying
+     where either was — so somebody who came here to sing was in the wrong
+     room with no way to find that out. */
+  {
+    const said = (await p.locator('body').innerText()).replace(/\s+/g, ' ');
+    check('the room offers the way to the words',
+      await p.locator('button', { hasText: /Sing with the words|Sing saam met die woorde/ }).count() > 0);
+    check('and says the AI voice is there too',
+      /AI voice in your ear|AI-stem in jou oor/.test(said), said.slice(0, 160));
+    /* Nobody presses a button that leaves a room holding four takes unless
+       they are told the takes survive it. Since they now do, saying so is
+       what makes the button usable rather than frightening. */
+    check('and that the lanes are kept if you go',
+      /lanes here are saved|bane hier is gestoor/i.test(said));
+  }
+
   /* ── The session is still there after the room is closed ─────────────
 
      Carli, 9 September 2026: "toe ek terug swipe of back druk, dan gooi hy

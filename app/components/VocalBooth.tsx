@@ -1734,13 +1734,26 @@ export default function VocalBooth({
             {take ? t('booth.listen', 'Listen back') : t('booth.playAlong', 'Play it and follow the words')}
           </button>
 
+          {/* ── The door to the multitrack, labelled ─────────────────────
+
+              This said "Pro", which is a name and not a direction. Somebody
+              pressed it, landed in a room with a large green Record button and
+              no words on screen, and had no way to know what they had left
+              behind — Carli did exactly that, then asked how to get back to
+              the place where you sing along with the words.
+
+              The label says what the room is for and the title says what it
+              costs you, because both halves are the decision. Naming the trade
+              on the way in is cheaper than a way back on the far side, and
+              there is now one of those too. */}
           <button
             type="button"
             onClick={() => setProOpen(true)}
+            title={t('booth.proWhat', 'Many lanes, cutting, tone and mixing. The words are not on screen there — this room is where you sing along with them.')}
             className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5"
           >
             <Layers className="w-4 h-4" />
-            {t('booth.pro', 'Pro')}
+            {t('booth.pro', 'Lanes and mixing')}
           </button>
 
           <button
