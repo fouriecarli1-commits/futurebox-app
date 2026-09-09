@@ -67,8 +67,9 @@ interface Post {
   audio: string | null;
   /** The song behind a track post, so a play is counted against the song. */
   sourceId?: string;
-  /** How many people have hearted it, everybody included. */
-  hearts: number;
+  /** How many people have hearted it, everybody included. Null where the
+   *  server could not read the count — which is not nought. */
+  hearts: number | null;
   /** Whether this reader is one of them. Always false when signed out. */
   hearted: boolean;
   /**
@@ -78,8 +79,10 @@ interface Post {
    * hearts are people, plays are times. A play is only counted once 65% of
    * the song has actually gone past — a room whose songs play themselves as
    * you scroll would otherwise be counting scrolling.
+   *
+   * Null for the same reason as `hearts`: could not ask, not none.
    */
-  plays: number;
+  plays: number | null;
 }
 
 interface Said {
@@ -97,6 +100,9 @@ interface Room {
      translatable — see `lib/apierror.ts`. */
   error?: string;
   message?: string;
+  /** False when the hearts or the plays could not be read at all. */
+  counting?: boolean;
+  countingError?: string;
   here: number;
   posts: Post[];
   says: Said[];
@@ -254,7 +260,7 @@ function RoomPanel({
             className="text-xs font-bold tabular-nums"
             style={{ color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 6px rgba(0,0,0,0.9)' }}
           >
-            {post.hearts}
+            {post.hearts ?? '–'}
           </span>
         </button>
 
@@ -281,7 +287,7 @@ function RoomPanel({
             className="text-xs font-bold tabular-nums"
             style={{ color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 6px rgba(0,0,0,0.9)' }}
           >
-            {post.plays}
+            {post.plays ?? '–'}
           </span>
         </span>
         {/* Play opens the room, it does not play under the list.
@@ -409,7 +415,13 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
       ...current,
       posts: current.posts.map((one) =>
         one.id === post.id
-          ? { ...one, hearted: wanted, hearts: Math.max(0, one.hearts + (wanted ? 1 : -1)) }
+          ? {
+              ...one,
+              hearted: wanted,
+              // Left alone when the count is unknown: guessing 1 from null
+              // would print a number the server never said.
+              hearts: one.hearts === null ? null : Math.max(0, one.hearts + (wanted ? 1 : -1)),
+            }
           : one,
       ),
     }));
@@ -575,6 +587,23 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
         </h4>
         <p className="text-base text-zinc-400 pt-1 max-w-2xl">{t('live.sub')}</p>
       </div>
+
+      {/* The counts could not be read.
+
+          Said out loud rather than shown as a nought beside every song. The
+          hearts and the plays live in `live_hearts` and `events`, and a
+          project where those have not been created yet used to render the
+          whole rail as zeroes — a feature that looks built and broken when
+          what is missing is one SQL file. */}
+      {room.counting === false && (
+        <p className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-sm text-amber-200/90 leading-snug">
+          {refusalText(
+            { error: room.countingError },
+            lang,
+            t('live.noCounts', 'The hearts and the listens cannot be read yet.'),
+          )}
+        </p>
+      )}
 
       {/* Who is here. A real number or nothing — never a comforting one. */}
       <div className="flex items-center gap-2 text-sm text-zinc-400">

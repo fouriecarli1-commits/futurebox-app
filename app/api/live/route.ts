@@ -122,8 +122,27 @@ export async function GET(request: Request): Promise<Response> {
   const ids = (posts ?? []).map((one) => one.id as string);
   const hearts = new Map<string, number>();
   const mineHearted = new Set<string>();
+  /* Whether the question could be asked at all — which is not the same thing
+     as the answer being none.
+
+     This read used to discard its error. A project where `live_hearts` has
+     not been created yet came back with no rows, every post reported nought
+     hearts and nought plays, and there was nothing anywhere on the screen or
+     in the response saying the read had failed. Somebody looking at the room
+     sees a feature that was built and does not work, with no way to tell that
+     what is actually missing is one SQL file.
+
+     The room is not refused over it: forty songs you can play with no counts
+     beside them is still a room, and the two reads below fail independently.
+     So the counts go null and the response says why, and the room prints a
+     line rather than a zero. */
+  let counted = true;
   if (ids.length > 0) {
-    const { data: rows } = await client.from('live_hearts').select('post, owner').in('post', ids);
+    const { data: rows, error: heartsError } = await client
+      .from('live_hearts')
+      .select('post, owner')
+      .in('post', ids);
+    if (heartsError) counted = false;
     for (const row of rows ?? []) {
       const post = row.post as string;
       hearts.set(post, (hearts.get(post) ?? 0) + 1);
@@ -146,12 +165,14 @@ export async function GET(request: Request): Promise<Response> {
     new Set(((posts ?? []) as PostRow[]).filter((one) => one.kind === 'track').map((one) => one.source_id)),
   );
   const plays = new Map<string, number>();
+  let played = true;
   if (songs.length > 0) {
-    const { data: rows } = await client
+    const { data: rows, error: playsError } = await client
       .from('events')
       .select('ref, times')
       .eq('kind', 'play')
       .in('ref', songs);
+    if (playsError) played = false;
     for (const row of rows ?? []) {
       const ref = row.ref as string;
       plays.set(ref, (plays.get(ref) ?? 0) + (Number(row.times) || 1));
@@ -243,12 +264,16 @@ export async function GET(request: Request): Promise<Response> {
            `undefined` rather than '' on a closed post, so nothing downstream
            can read "no permission" as "no style set". */
         style: post.kind === 'track' && post.build_on === true ? (post.style ?? '') : undefined,
-        hearts: hearts.get(post.id as string) ?? 0,
+        /* Null where the count could not be read, never nought. A zero is a
+           real answer — nobody has hearted this — and printing it over a
+           failed read is how a missing table looks exactly like an unpopular
+           song. */
+        hearts: counted ? (hearts.get(post.id as string) ?? 0) : null,
         /* Listened through, not opened. A play only reaches the counter once
            65% of the song has actually gone past — see `lib/played.ts`, and
            the room the rule was asked for: songs there play themselves as
            you scroll, so a count taken at `play()` counted scrolling. */
-        plays: post.kind === 'track' ? (plays.get(post.source_id) ?? 0) : 0,
+        plays: post.kind === 'track' ? (played ? (plays.get(post.source_id) ?? 0) : null) : 0,
         /* Whether this reader has hearted it, so the button opens in the
            right state rather than filling in a moment later. False for
            somebody signed out, who can see the count and cannot add to it. */
@@ -260,6 +285,11 @@ export async function GET(request: Request): Promise<Response> {
   return Response.json({
     ready: true,
     signedIn: Boolean(caller),
+    /* False when either count could not be read, with the code that says so
+       in the reader's own language — see `lib/apierror.ts`. Separate from
+       `ready`, because the room itself is fine. */
+    counting: counted && played,
+    countingError: counted && played ? undefined : 'live_counts_not_set_up',
     here: typeof here === 'number' ? here : Number(here ?? 0),
     posts: listed,
     says: ((says ?? []) as { id: string; owner: string; body: string; created_at: string }[])

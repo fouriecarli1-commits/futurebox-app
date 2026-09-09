@@ -70,6 +70,13 @@ const SAID: Record<string, { en: string; af: string }> = {
     en: 'The live room is not switched on for this app yet.',
     af: 'Die lewendige kamer is nog nie vir hierdie toep aangeskakel nie.',
   },
+  /* The room works, the counting does not. Its own code because the two are
+     separate faults with separate fixes, and a room that says "not switched
+     on" over songs somebody is listening to is telling them the wrong thing. */
+  live_counts_not_set_up: {
+    en: 'The hearts and the listens are not set up on this app yet — the owner needs to run supabase/ALMAL.sql.',
+    af: 'Die harte en die luisters is nog nie op hierdie toep opgestel nie — die eienaar moet supabase/ALMAL.sql laat loop.',
+  },
   /* A paywall, not a fault. The distinction matters on the screen: "that
      broke" sends somebody to the help desk, "you have not bought this" sends
      them to the thing that sells it. */

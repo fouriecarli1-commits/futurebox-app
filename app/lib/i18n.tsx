@@ -154,6 +154,7 @@ export const STRINGS: Dict = {
   "buildon.makeNot": { en: "The new song is written from the words, not from the recording. The music engine reads text — style words, sections, a prompt — and cannot listen to a song, so what you get shares the style you both describe rather than the sound of this one.", af: "Die nuwe liedjie word uit die woorde geskryf, nie uit die opname nie. Die musiekenjin lees teks — stylwoorde, koeplette, ’n aanwysing — en kan nie na ’n liedjie luister nie, so wat jy kry deel die styl wat julle albei beskryf eerder as die klank van hierdie een." },
   "buildon.after": { en: "after", af: "na" },
   "live.playsWhy": { en: "Counted once somebody has listened to 65% of the song", af: "Getel sodra iemand 65% van die liedjie geluister het" },
+  "live.noCounts": { en: "The hearts and the listens cannot be read yet.", af: "Die harte en die luisters kan nog nie gelees word nie." },
   /* docs/MUSIEKDENKE.md §3.1. Named in a musician's words, in her language,
      and never explained at more length than this — the strip is the lesson. */
   "form.title": { en: "The shape of it", af: "Die vorm daarvan" },
