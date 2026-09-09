@@ -186,6 +186,14 @@ jobs:
       - name: Every dial on the voice desk reaches Kits
         run: npm run check:voicedesk
 
+      # A cleaner that ran only in the render would make the file differ from
+      # what was approved, invisibly. Both paths go through `wireLane`, so a
+      # lane's cleaner has to be built there and nowhere else — and in front of
+      # the tone stack, because driving a take that still has rumble in it
+      # drives the rumble too.
+      - name: A lane is cleaned before it is shaped, in both paths
+        run: npm run check:lanecleaners
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described

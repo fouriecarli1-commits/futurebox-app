@@ -1,6 +1,6 @@
 'use client';
 
-import { isClean, wireTone, type Tone } from './tone';
+import { isClean, isUncleaned, wireClean, wireTone, type Clean, type Tone } from './tone';
 
 /**
  * A session: several pieces of audio on one clock.
@@ -52,6 +52,15 @@ export interface Lane {
   readonly pan?: number;
   /** Drive, colour and a speaker. Absent means untouched. */
   readonly tone?: Tone;
+  /**
+   * What to take *off* before any of that.
+   *
+   * A separate thing from `tone` and it runs first: driving a take that still
+   * has desk rumble in it drives the rumble too, and no amount of tilting
+   * afterwards puts that back. Absent means nothing is taken off, which is
+   * every lane made before this existed.
+   */
+  readonly clean?: Clean;
   /**
    * A neural amp capture, already run through.
    *
@@ -266,6 +275,10 @@ export function wireLane(
      hard the lane is driven, so turning a lane down would clean it up and
      turning it up would dirty it. Nobody expects a volume control to do that. */
   const shaped = lane.tone && !isClean(lane.tone) ? wireTone(ctx, lane.tone) : null;
+  /* Cleaning before shaping. See `Clean` in `lib/tone.ts` for why the order is
+     not a preference. Built here rather than inside `wireTone` so a lane can
+     be cleaned without being shaped, which is the common case. */
+  const cleaned = lane.clean && !isUncleaned(lane.clean) ? wireClean(ctx, lane.clean) : null;
 
   const level = ctx.createGain();
   level.gain.value = lane.gain;
@@ -278,7 +291,9 @@ export function wireLane(
      `audit/mixdown.mjs` pins the law, because swapping this for a linear
      panner would change every mix in the app and nothing would say so. */
   const place = typeof ctx.createStereoPanner === 'function' ? ctx.createStereoPanner() : null;
-  const head: AudioNode = shaped ? shaped.input : level;
+  /* clean → tone → level → pan. Whichever of the first two exist. */
+  const head: AudioNode = cleaned ? cleaned.input : shaped ? shaped.input : level;
+  if (cleaned) cleaned.output.connect(shaped ? shaped.input : level);
   if (shaped) shaped.output.connect(level);
 
   if (place) {

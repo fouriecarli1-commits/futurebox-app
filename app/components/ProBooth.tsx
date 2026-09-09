@@ -28,7 +28,7 @@ import {
 } from '../lib/session';
 import { failed, separate, separateParts } from '../lib/stems';
 import { done as forgetJob, keyIn, partOf, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
-import { CLEAN, isClean, type Tone } from '../lib/tone';
+import { CLEAN, isClean, type Tone, NOTHING_OFF } from '../lib/tone';
 import { ampName, through } from '../lib/nam';
 import { accessToken } from '../lib/cloud';
 import VoicePicker from './VoicePicker';
@@ -900,6 +900,64 @@ export default function ProBooth({
    * controls beside each other is not simple, and nobody could tell which one
    * to press.
    */
+  /**
+   * Take the room off one lane.
+   *
+   * The half a biquad cannot do. A high pass takes out rumble and a low pass
+   * takes off hiss, and both are free and identical in the live path and in
+   * the render — but reverb and a room are a model's job. This is the isolator
+   * the booth has always had on a take in the other room, per lane.
+   *
+   * It replaces `audio` rather than adding a lane. A cleaned take is the same
+   * take, and the cut, the level and the place in time all belong to it; a
+   * second lane would leave somebody muting one of two things that are the
+   * same performance.
+   */
+  const deRoom = useCallback(
+    async (lane: Lane) => {
+      const ctx = context();
+      if (!ctx) return;
+      setBusy(true);
+      setProblem(null);
+      try {
+        const form = new FormData();
+        /* The piece that plays, like every other paid lane action — a trimmed
+           lane is not billed for what was cut off it. */
+        const piece = pieceOf(lane, ctx);
+        form.append('audio', encodeWav(piece), 'lane.wav');
+        form.append('seconds', String(Math.round(piece.duration)));
+        const token = await accessToken();
+        const response = await fetch('/api/voice/clean', {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          body: form,
+        });
+        if (!response.ok) {
+          const said = (await response.json().catch(() => ({}))) as { message?: string };
+          setProblem(said.message ?? t('pro.deRoomFailed', 'The room could not be taken off that lane.'));
+          return;
+        }
+        const cleaned = await readInto(await response.blob(), rate);
+        if (!cleaned) {
+          setProblem(t('pro.badFile', 'That file could not be read as audio.'));
+          return;
+        }
+        /* The cut is spent: what comes back is already the piece that played,
+           so `from` and `to` would trim it a second time. */
+        setLanes((was) => was.map((one) => (
+          one.id === lane.id
+            ? { ...one, audio: cleaned, from: undefined, to: undefined, amped: undefined }
+            : one
+        )));
+      } catch {
+        setProblem(t('pro.deRoomFailed', 'The room could not be taken off that lane.'));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [context, rate, t],
+  );
+
   const intoParts = useCallback(
     async (lane: Lane) => {
       setProblem(null);
@@ -1292,6 +1350,7 @@ export default function ProBooth({
             at={at}
             meter={meter}
             onChange={(how) => change(lane.id, how)}
+            onDeRoom={() => void deRoom(lane)}
             onRemove={() => setLanes((was) => was.filter((one) => one.id !== lane.id))}
             onSplit={() => void split(lane)}
             onVoice={() => setChanging(lane)}
@@ -1931,6 +1990,7 @@ function LaneRow({
   meter,
   onChange,
   onRemove,
+  onDeRoom,
   onSplit,
   onVoice,
   onRead,
@@ -1948,6 +2008,8 @@ function LaneRow({
   meter: Meter;
   onChange: (how: Partial<Lane>) => void;
   onRemove: () => void;
+  /** Take the reverb and the room off this lane. Costs credits; see `deRoom`. */
+  onDeRoom: () => void;
   onSplit: () => void;
   onVoice: () => void;
   onRead: () => void;
@@ -2509,6 +2571,67 @@ function LaneRow({
         right to be annoyed. */}
     {open && (
       <div className="border-t border-zinc-800 px-3 py-2.5 space-y-2">
+        {/* ── Taking things off, before shaping what is left ─────────────
+
+            Carli: "by die booth moet daar oor die algemeen ook reverb, echo en
+            background cleaners wees."
+
+            Above the tone stack because that is the order it runs in, and the
+            order is not a preference: driving a take that still has desk
+            rumble in it drives the rumble too.
+
+            Two switches and not four. A rumble filter and a hiss filter are
+            one biquad each and sound identical in the live path and in the
+            render — which is the law `lib/session.ts` exists to keep. A gate
+            has to look at the samples and Web Audio has no node for it; doing
+            it only in the render would make the file differ from what was
+            approved, invisibly. So the free half is here, and the rest is the
+            isolator beside it, which says what it costs. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+            {t('pro.cleanUp', 'Take off')}
+            <Hint>{t(
+              'pro.cleanWhat',
+              'Rumble is a high pass at 80 Hz — desk knocks, footsteps, and the low end a phone microphone invents. Hiss is a low pass at 12 kHz, which takes the fizz off a small microphone without dulling a voice. Both run before the tone stack, because driving a take that still has rumble in it drives the rumble too. Neither costs anything: they happen on this device.',
+            )}</Hint>
+          </span>
+          {([
+            ['rumble', t('pro.rumble', 'Rumble')],
+            ['hiss', t('pro.hiss', 'Hiss')],
+          ] as const).map(([key, label]) => {
+            const on = !!lane.clean?.[key];
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={on}
+                onClick={() => onChange({
+                  clean: { ...(lane.clean ?? NOTHING_OFF), [key]: !on },
+                })}
+                className={`min-h-[38px] rounded-lg border px-3 py-2 text-xs font-bold ${
+                  on
+                    ? 'border-emerald-500 bg-emerald-500/15 text-white'
+                    : 'border-zinc-700 bg-zinc-950 text-zinc-500 hover:text-zinc-200'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+          {/* The half a filter cannot do. Reverb and a room are a model's job,
+              not a biquad's, and this is the isolator the booth already has —
+              per lane now, rather than only on a take in the other room. */}
+          <button
+            type="button"
+            onClick={onDeRoom}
+            disabled={busy}
+            className="min-h-[38px] rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-bold text-zinc-400 hover:text-white disabled:opacity-40"
+          >
+            {t('pro.deRoom', 'Take the room off')}
+          </button>
+          <Cost rate={CREDITS.clean} seconds={lane.audio.duration} />
+        </div>
+
         {/* Each control takes a whole line on a phone. Wrapping alone is not
             enough: a label and a slider that together are wider than half the
             screen still get put on one line by `flex-wrap`, and then they sit

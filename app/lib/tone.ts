@@ -194,3 +194,87 @@ export function wireTone(
   end.connect(wet).connect(output);
   return { input, output };
 }
+
+/**
+ * Cleaning, which is a different job from shaping.
+ *
+ * ── Why it is not part of `Tone` ─────────────────────────────────────────
+ *
+ * Carli: "by die booth moet daar oor die algemeen ook reverb, echo en
+ * background cleaners wees."
+ *
+ * The tone stack shapes a sound somebody wants. This takes away a sound
+ * nobody wants, and the order matters: clean first, then shape. Driving a
+ * take that still has desk rumble in it drives the rumble too, and no amount
+ * of tilting afterwards puts that back.
+ *
+ * ── Two switches, and why not four ───────────────────────────────────────
+ *
+ * A rumble filter and a hiss filter are one biquad each. They sound exactly
+ * the same in the live path and in the render, which is the law this whole
+ * area of the app is built on — `session.ts` exists to keep the mixer and the
+ * mixdown from ever disagreeing about what somebody is listening to.
+ *
+ * A **gate** and a **de-reverb** are not like that. A gate has to look at the
+ * samples and decide, and Web Audio has no node that does it; doing it
+ * offline only would mean the file differs from what was approved, invisibly,
+ * which is the one thing this file must not allow. De-reverb is not signal
+ * processing at all — it is a model.
+ *
+ * So the free half is here and honest about being half, and the lane offers
+ * "take the room off it" for the rest, which is the isolator that already
+ * exists and already says what it costs.
+ */
+export interface Clean {
+  /** A high pass at 80 Hz: desk rumble, footsteps, the low end a phone invents. */
+  readonly rumble: boolean;
+  /** A low pass at 12 kHz: the hiss a small capsule adds, without dulling a voice. */
+  readonly hiss: boolean;
+}
+
+export const NOTHING_OFF: Clean = { rumble: false, hiss: false };
+
+/** The same numbers `PHONE_CLEANUP` uses on the server, for the same reasons. */
+export const RUMBLE_HZ = 80;
+export const HISS_HZ = 12000;
+
+/** True when this would build nothing, so nothing is built. */
+export function isUncleaned(clean: Clean | undefined): boolean {
+  return !clean || (!clean.rumble && !clean.hiss);
+}
+
+/**
+ * The cleaner as an audio graph, or null when there is nothing to do.
+ *
+ * The same shape as `wireTone` so `wireLane` can put one in front of the
+ * other without either knowing about the other.
+ */
+export function wireClean(
+  ctx: BaseAudioContext,
+  clean: Clean,
+): { input: AudioNode; output: AudioNode } | null {
+  if (isUncleaned(clean)) return null;
+
+  const input = ctx.createGain();
+  let end: AudioNode = input;
+
+  if (clean.rumble) {
+    const cut = ctx.createBiquadFilter();
+    cut.type = 'highpass';
+    cut.frequency.value = RUMBLE_HZ;
+    end.connect(cut);
+    end = cut;
+  }
+
+  if (clean.hiss) {
+    const cut = ctx.createBiquadFilter();
+    cut.type = 'lowpass';
+    cut.frequency.value = HISS_HZ;
+    end.connect(cut);
+    end = cut;
+  }
+
+  const output = ctx.createGain();
+  end.connect(output);
+  return { input, output };
+}
