@@ -53,8 +53,15 @@ jobs:
       # fails if the lockfile and package.json have drifted apart.
       - run: npm ci
 
+      # The same command `npm run typecheck` runs, so what fails here fails on
+      # a laptop with the same words. That script replaced `next lint`, which
+      # was left over from `create-next-app` and had never once run in this
+      # repository: there is no ESLint installed and no config for it, so it
+      # failed on the argument parser before it reached any code. A script
+      # nobody can run is worse than no script — the whole session's lesson,
+      # in package.json.
       - name: Typecheck
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
       # The literal :root block in globals.css exists so the first paint is
       # right before any JavaScript runs. When it drifts from the theme engine
@@ -477,7 +484,7 @@ jobs:
       matrix:
         include:
           - group: doors
-            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:whitescreen check:roomtop check:greeting
+            probes: check:signup check:firstscreen check:studiohome check:tabs check:back check:staysignedin check:copilotbar check:boothwalk check:whitescreen check:roomtop check:greeting check:langtrip
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes
           - group: rooms

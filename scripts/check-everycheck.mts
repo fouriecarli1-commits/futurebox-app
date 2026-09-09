@@ -148,7 +148,7 @@ const TOOLS = new Set([
  */
 const WAITING = new Set([
   'account', 'addon', 'cast',
-  'language', 'photo',
+  'photo',
   'presenter', 'queue', 'taste',
 ]);
 /** What it was when this rule was written. It may go down and not up. */
