@@ -48,7 +48,7 @@ import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Hint from './Hint';
 import Cost from './Cost';
-import WatchTutorial from './WatchTutorial';
+import HowToTrain from './HowToTrain';
 import SingVoices from './SingVoices';
 import Note from './Note';
 import { TOO_BIG_TO_SEND, attach } from '../lib/workfile';
@@ -1567,7 +1567,7 @@ export default function ProBooth({
                     'The voices above are the ones trained on your kits.ai account. If one is missing, type its number \u2014 it is in the address bar when you open that voice there. Your choice is remembered on this device.',
                   )}</Note>
                 {/* The way to get one, for anybody who has not. */}
-                <WatchTutorial />
+                <HowToTrain />
               </div>
             ) : voices ? (
               <VoicePicker

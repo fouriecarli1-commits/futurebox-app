@@ -25,7 +25,7 @@ import Recommend from './Recommend';
 import VoicePicker from './VoicePicker';
 import Note from './Note';
 import Card from './Card';
-import WatchTutorial from './WatchTutorial';
+import HowToTrain from './HowToTrain';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { VOICE_CONSENT } from '@/app/lib/consent';
@@ -476,7 +476,7 @@ export default function VoiceLab({
         {/* Before the consent tick and the record button, because somebody who
             has never cloned a voice wants to know what they are agreeing to
             and what comes out the other end. */}
-        <WatchTutorial />
+        <HowToTrain />
 
         {state.mine.length > 0 && (
           <div className="space-y-1.5">

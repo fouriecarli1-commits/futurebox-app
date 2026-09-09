@@ -41,7 +41,7 @@ import { attach, dropWork, TOO_BIG_TO_SEND } from '../lib/workfile';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Cost from './Cost';
-import WatchTutorial from './WatchTutorial';
+import HowToTrain from './HowToTrain';
 import SingVoices, { type SingVoice } from './SingVoices';
 import Note from './Note';
 
@@ -256,7 +256,7 @@ export default function SingItMine({
                     'The voices above are the ones trained on your kits.ai account. If one is missing, type its number — it is in the address bar when you open that voice there. Your choice is remembered on this device.',
                   )}</Note>
                 {/* The way to get one, for anybody who has not. */}
-                <WatchTutorial />
+                <HowToTrain />
               </div>
 
               {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
