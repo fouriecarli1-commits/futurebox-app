@@ -152,7 +152,8 @@
     "check:musiclicence": "tsx scripts/check-musiclicence.mts",
     "check:songmixer": "tsx scripts/check-songmixer.mts",
     "check:align": "tsx scripts/check-align.mts",
-    "check:dubwords": "tsx scripts/check-dubwords.mts"
+    "check:dubwords": "tsx scripts/check-dubwords.mts",
+    "check:dubhook": "tsx scripts/check-dubhook.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

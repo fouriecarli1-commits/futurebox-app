@@ -203,12 +203,12 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ message: 'Sign in first.', signedIn: false }, { status: 401 });
   }
 
-  interface Row { owner: string; target_lang: string; title: string | null; status: string }
+  interface Row { owner: string; target_lang: string; title: string | null; status: string; error: string | null }
   let row: Row | null = null;
   if (caller && client) {
     const { data, error } = await client
       .from('dubs')
-      .select('owner, target_lang, title, status')
+      .select('owner, target_lang, title, status, error')
       .eq('id', id)
       .maybeSingle();
     if (error) return Response.json(NOT_SET_UP, { status: 503 });
@@ -220,10 +220,38 @@ export async function GET(request: Request): Promise<Response> {
     row = data as unknown as Row;
   }
 
-  const state = await dubState(id);
+  /* Already settled, so do not ask again.
+
+     `/api/dub/hook` writes the finished status onto the row when ElevenLabs
+     tells us. Once that has happened there is nothing left to learn from
+     another call to them — a dub does not un-finish — and this is where the
+     webhook actually saves the money: every remaining poll of a settled dub
+     used to be a round trip to ElevenLabs for an answer we already had.
+
+     Only ever the two terminal states. A row still saying `dubbing` is asked
+     about, exactly as before, so an unregistered or dropped webhook changes
+     nothing at all. */
+  const settled = row?.status === 'dubbed' || row?.status === 'failed';
+  const state = settled
+    ? {
+        ok: true as const,
+        state: {
+          status: row!.status,
+          done: row!.status === 'dubbed',
+          failed: row!.status === 'failed',
+          ...(row!.error ? { error: row!.error } : {}),
+          /* The row knows one language, which is the one it was made for. The
+             list is only used to guess a language when the row has none, and
+             a row we are reading here always does. */
+          languages: row!.target_lang ? [row!.target_lang] : [],
+        },
+      }
+    : await dubState(id);
   if (!state.ok) return Response.json({ message: state.message }, { status: state.status });
 
-  if (caller && client) {
+  if (caller && client && !settled) {
+    /* Skipped when the row is where this answer came from: writing a row back
+       onto itself is a round trip to say nothing. */
     await client
       .from('dubs')
       .update({ status: state.state.status, error: state.state.error ?? null, updated_at: new Date().toISOString() })
@@ -238,6 +266,19 @@ export async function GET(request: Request): Promise<Response> {
       const give = typeof data === 'number' ? data : Number(data ?? 0);
       if (give > 0) await refund(caller.id, give, `dub:${id}`);
     }
+  }
+
+  /* And the refund for a failure the webhook recorded rather than this poll.
+
+     It sits outside the block above because that one is skipped for a settled
+     row — but a dub the webhook marked failed still owes its credits back, and
+     the claim is where it has always been: here, on a request carrying the
+     owner's own token, through an RPC that takes the owner as an argument.
+     The webhook itself never goes near money, however well signed it is. */
+  if (caller && client && settled && state.state.failed) {
+    const { data } = await client.rpc('claim_dub_refund', { p_dub: id, p_owner: caller.id });
+    const give = typeof data === 'number' ? data : Number(data ?? 0);
+    if (give > 0) await refund(caller.id, give, `dub:${id}`);
   }
 
   /* What to collect, now that there is more than one thing to collect.

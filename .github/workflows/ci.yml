@@ -248,6 +248,11 @@ jobs:
       - name: A dub's own transcript is read rather than paid for twice
         run: npm run check:dubwords
 
+      # A public address that writes a dub's status, next to a route that
+      # refunds a failed dub. Signed or refused, and never near the money.
+      - name: The dub webhook fails closed and touches no money
+        run: npm run check:dubhook
+
       # Two unauthenticated routes call a reasoning model. The only thing
       # between them and an unbounded bill looks identical working or broken.
       - name: The rate brake holds
