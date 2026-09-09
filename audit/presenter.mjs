@@ -140,9 +140,45 @@ function wav(seconds) {
   return buffer;
 }
 let reads = 0;
+/* ── What the read answers with, and both shapes of it ────────────────────
+
+   `timings: true` asks for JSON — the audio as base64 with ElevenLabs' own
+   alignment beside it. Anything that has not been deployed yet, or anything
+   in front of the route that answers plainly, sends audio. The screen has to
+   cope with both, and this probe drives both: `asJson` is flipped part-way
+   down so the raw-audio path is walked as well.
+
+   The language is checked here rather than on the screen, because it is the
+   whole of #115 and it is invisible: an Afrikaans script read by the model
+   chosen for English looks identical on the page. */
+let asJson = true;
+/** What the screen sent to have the script read. `sent` above is the video. */
+let asked = null;
 await p.route('**/api/voice/speak', async (route) => {
   reads += 1;
-  return route.fulfill({ status: 200, contentType: 'audio/wav', body: wav(2) });
+  asked = JSON.parse(route.request().postData() || '{}');
+  if (!asJson || asked.timings !== true) {
+    return route.fulfill({ status: 200, contentType: 'audio/wav', body: wav(2) });
+  }
+  return route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      audio: wav(2).toString('base64'),
+      type: 'audio/wav',
+      model: 'eleven_v3',
+      modelWhy: 'measured',
+      /* Inside the two seconds the file lasts, so the follow-along has
+         somewhere real to land. */
+      words: [
+        { text: 'Hallo,', start: 0, end: 0.4 },
+        { text: 'ek', start: 0.5, end: 0.7 },
+        { text: 'is', start: 0.8, end: 1 },
+        { text: 'Sarel.', start: 1.1, end: 1.6 },
+      ],
+      lines: [{ text: 'Hallo, ek is Sarel.', start: 0, end: 1.6 }],
+    }),
+  });
 });
 
 /* `domcontentloaded`, not `networkidle`: the stub project's Supabase address
@@ -177,6 +213,32 @@ check('nothing can be made before it has been heard',
 await room.locator('button').filter({ hasText: af ? /Luister eers/ : /Hear it first/ }).first().click();
 await p.waitForTimeout(2500);
 check('the voice route was asked once', reads === 1, String(reads));
+
+/* ── #115, checked where it is invisible ──────────────────────────────────
+
+   An Afrikaans script read by the model chosen for English looks exactly like
+   one read by the right model. The only place it can be caught is on the
+   wire: the screen has to say which language it is written in, or the route
+   has nothing to choose with — and for the whole life of this room it did
+   not. */
+check('the read says which language the script is written in',
+  asked?.language === (af ? 'af' : 'en'),
+  `it sent ${JSON.stringify(asked?.language)}`);
+check('and it asks for the timings, which cost nothing extra',
+  asked?.timings === true,
+  'without this the words cannot follow the read without paying to transcribe it back');
+
+/* ── The words, following the read ────────────────────────────────────────
+
+   The lines come back with the audio and are drawn under the player. What is
+   checked is that they are on the screen and pressable — the highlight itself
+   moves on `timeupdate`, which needs the file to actually play, and a headless
+   run with no audio device is not the place to assert on that. */
+const readLines = room.locator('button').filter({ hasText: 'Hallo, ek is Sarel.' });
+check('the words of the read are under the player', (await readLines.count()) > 0,
+  'the alignment came back and nothing was drawn with it');
+check('and a line can be pressed to hear it from there',
+  (await readLines.first().isEnabled().catch(() => false)));
 
 const afterRead = await room.innerText();
 check('the length is measured off the reading', /\b2s\b/.test(afterRead), afterRead.match(/\d+s/g)?.join(',') || 'none');

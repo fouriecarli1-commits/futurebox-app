@@ -276,7 +276,16 @@ export default function Presenter({
 
       let blob: Blob;
       let said: SpokenWord[] | null = null;
-      if (timed) {
+      /* By what came back, not by what was asked for.
+
+         Asking for timings does not guarantee JSON: a route that has not been
+         deployed yet, or anything in front of it that answers plainly, sends
+         audio — and `response.json()` on audio throws, which would turn a
+         perfectly good read into "that could not be read just now". Reading
+         the content type costs nothing and cannot be wrong about what is
+         actually in the body. */
+      const isJson = (response.headers.get('Content-Type') ?? '').includes('application/json');
+      if (timed && isJson) {
         const answer = (await response.json()) as {
           audio: string;
           type?: string;
@@ -297,6 +306,11 @@ export default function Presenter({
       setReading({ blob, seconds });
       setLines(said);
       setAtLine(-1);
+      /* `timed` is false only where the route answered 413 — the script is
+         past what the timed read takes — so it is the one case that means
+         "too long". Everything else that leaves us without lines, including a
+         route that sent audio when JSON was asked for, is "they did not come
+         back", which is what the other sentence says. */
       setNoLines(said?.length ? null : timed ? 'unreadable' : 'tooLong');
       const element = player.current;
       if (element) {
