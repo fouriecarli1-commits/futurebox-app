@@ -1805,6 +1805,39 @@ Its pattern required a closing bracket straight after the first argument, so
 `enough(spend, owner)` extracted `undefined`. The property held; the pattern
 now reads the first argument whatever follows it.
 
+## The CIPC certificate arrived (#36)
+
+Registered **5 September 2026**. `FUTUREBOXSTUDIO (Pty) Ltd`, enterprise
+number `2026/714071/07`, one director.
+
+**The name is one word.** Not "FutureBox Studio (Pty) Ltd" with a space, which
+is how the product is written everywhere else and is what `.env.example`
+suggested — and what I told her to set an hour before the certificate arrived.
+A legal page must carry the name **on the register**, because that is the one a
+payment processor, a bank or a court cross-references, and a space is a
+mismatch. `.env.example` says so now, with the reason.
+
+`FUTUREBOX_LEGAL_NAME`, `_REGISTRATION`, `_STATUS`, `_ADDRESS` and `_PHONE`
+are hers to set in Vercel; the code and `check:legalpage` have been ready
+since 6 September. Nothing about the certificate is written into this
+repository — the address and the director's ID stay out of git on purpose,
+which is the whole reason the legal page reads them from the environment.
+
+**One thing to decide before publishing the address.** The registered address
+on the certificate is her home. Section 43 of the ECT Act wants a physical
+address for the supplier, and Paystack's review wants one that matches CIPC —
+so the honest options are to publish it, or to change the registered address
+with CIPC to a business address service first and publish that. That is a
+choice about her privacy, not a technical question, and it is the last thing
+standing between the legal page and being complete.
+
+**Why this is urgent rather than tidy.** Her Paystack review is slow and she
+does not know why. `futurebox.studio/legal` currently says, in as many words,
+"These details are not published yet… The company behind FutureBox is being
+registered." A payments reviewer opens the site and finds the supplier page —
+the one thing their KYC is for — declaring itself unavailable. Unproven from
+here (the live site is unreachable), and the first thing worth ruling out.
+
 ## Open, and worth a decision
 
 - **Does anybody pay yet?** Still unanswered, and it still decides whether the

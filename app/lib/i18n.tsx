@@ -2458,6 +2458,61 @@ const Context = createContext<LangContext>({
   undoSwitch: () => {},
 });
 
+/**
+ * The same choice, in a cookie as well as in storage.
+ *
+ * ── Why two places for one small string ──────────────────────────────────
+ *
+ * Carli, for the third time and then in plain words: "By die inteken blad kan
+ * jy jou taal kies. As ek afrikaans kies, dan moet dit afrikaans in log."
+ *
+ * She is right, that is rule 1, and it should already work — she presses the
+ * picker, `setLang` stores Afrikaans, and signing in confirms it. It does work
+ * on her laptop. What is different on a phone is that signing in **reloads the
+ * page**, and two of the three places the choice lives do not survive that:
+ *
+ *   · `chose.current` is a ref inside a React component. A new document is a
+ *     new component tree, and the ref is gone.
+ *   · `localStorage` survives a reload — unless the browser is refusing to
+ *     keep it, which is ordinary on a phone: Safari private browsing, an
+ *     in-app webview, ITP clearing site data after a week away.
+ *
+ * With both gone, the app opens the new document with nothing stored, asks the
+ * account, and applies the English it finds. She watches Afrikaans become
+ * English and calls it a jump, which is exactly what it is.
+ *
+ * A cookie is the third place, and it is the one that covers the gap: it
+ * survives a navigation like storage does, and it is written by a different
+ * mechanism, so a browser refusing one is not refusing the other. It also
+ * reaches the server, which is what would let `<html lang>` be right on the
+ * first byte rather than corrected by an effect — worth having and not what
+ * this is for.
+ *
+ * A year, because a language choice does not go stale. `SameSite=Lax` so it
+ * rides an ordinary navigation and not a cross-site one; no `Secure` flag, so
+ * it works on localhost for the probes as well as over https in production.
+ */
+const COOKIE = 'futurebox.lang';
+
+function inCookie(): Lang | null {
+  try {
+    const found = document.cookie
+      .split('; ')
+      .find((one) => one.startsWith(`${COOKIE}=`));
+    return asLang(found ? decodeURIComponent(found.slice(COOKIE.length + 1)) : null);
+  } catch {
+    return null;
+  }
+}
+
+function bakeCookie(next: Lang): void {
+  try {
+    document.cookie = `${COOKIE}=${next}; path=/; max-age=${365 * 24 * 60 * 60}; SameSite=Lax`;
+  } catch {
+    // Then storage and the ref are what there is, which is where this started.
+  }
+}
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   /* What was on screen when the account overruled it. See `switched`. */
   const [switched, setSwitched] = useState<Lang | null>(null);
@@ -2540,14 +2595,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
    */
   const chose = useRef<Lang | null>(null);
 
-  /** What this browser was told, from storage or from this session's press. */
+  /** What this browser was told: storage, then the cookie, then this session. */
   const wasChosen = (): Lang | null => {
     try {
       const kept = asLang(window.localStorage.getItem(STORAGE_KEY));
       if (kept) return kept;
     } catch {
-      // Blocked. The press below is the only record there is.
+      // Blocked. The cookie below is the record that survives that.
     }
+    const baked = inCookie();
+    if (baked) return baked;
     return chose.current;
   };
 
@@ -2564,7 +2621,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // would mismatch the HTML it sent.
   useEffect(() => {
     try {
-      const arrived = onArrival(window.localStorage.getItem(STORAGE_KEY), navigator.language);
+      /* Storage first, then the cookie. On a browser that keeps neither this
+         is null and the locale answers, which is the old behaviour; on one
+         that keeps only the cookie — a phone after signing in — the choice is
+         still a choice, and rule 1 applies instead of the account. */
+      const arrived = onArrival(
+        asLang(window.localStorage.getItem(STORAGE_KEY)) ?? inCookie(),
+        navigator.language,
+      );
       setLangState(arrived.lang);
       /* A choice ends it here. A guess does not: the account below may still
          have something to say, and rule 3 is that a guess does not outrank
@@ -2700,6 +2764,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       if (was) {
         // A press, like any other. Same reason as `setLang`.
         chose.current = was;
+        bakeCookie(was);
         setLangState(was);
         try {
           window.localStorage.setItem(STORAGE_KEY, was);
@@ -2720,12 +2785,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     /* Written before anything that can fail, and synchronously, so a browser
        that refuses to store still knows what was pressed. See `chose`. */
     chose.current = next;
+    /* Before storage, because storage is the one that throws. A cookie
+       written first is a choice that survives the reload signing in causes,
+       whatever localStorage does about it. */
+    bakeCookie(next);
     setLangState(next);
     try {
       window.localStorage.setItem(STORAGE_KEY, next);
       document.documentElement.lang = next;
     } catch {
-      // As above.
+      // The cookie above already holds it; this is the faster read.
     }
     void keepOnAccount(next);
   }, []);

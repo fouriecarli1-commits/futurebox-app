@@ -446,6 +446,114 @@ async function chooseAfrikaans(p) {
   await context.close();
 }
 
+// ── Six: her own words, and the reload that was losing them ──────────────
+/*
+   Carli, after three reports and two wrong fixes: "By die inteken blad kan jy
+   jou taal kies. As ek afrikaans kies, dan moet dit afrikaans in log. As ek
+   engels kies moet dit in engels in log."
+
+   That is rule 1 and it should already work: she presses the picker, the
+   choice is stored, and signing in confirms it. It does work on her laptop.
+
+   What is different on a phone is that signing in **reloads the page**, and
+   two of the three places the choice lived did not survive that — the React
+   ref dies with the document, and localStorage is refused outright on a phone
+   often enough to matter. With both gone the new document has nothing stored,
+   asks the account, and applies the English it finds.
+
+   So: a phone that cannot store anything, a press on Afrikaans, and then a
+   full reload with an account that says English. If Afrikaans survives, the
+   cookie is doing its job.
+*/
+{
+  stored = { lang: 'en' };
+  const context = await b.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    locale: 'en-ZA',
+  });
+  const p = await context.newPage();
+  p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
+
+  /* localStorage that reads empty and throws on every write — Safari's
+     private mode. The session is kept in a plain object so the app can still
+     sign in; it is the language that cannot be written. */
+  await p.addInitScript((who) => {
+    const kept = {
+      'sb-stub-auth-token': JSON.stringify({
+        access_token: 'stub-access-token', refresh_token: 'stub-refresh-token',
+        token_type: 'bearer', expires_at: Math.floor(Date.now() / 1000) + 86400,
+        expires_in: 86400,
+        user: { id: who.id, email: who.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} },
+      }),
+    };
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: {
+        getItem: (k) => (k in kept ? kept[k] : null),
+        setItem: (k, v) => {
+          if (k === 'sb-stub-auth-token') { kept[k] = v; return; }
+          throw new DOMException('QuotaExceededError', 'QuotaExceededError');
+        },
+        removeItem: (k) => { delete kept[k]; },
+        clear: () => undefined,
+        key: () => null,
+        get length() { return Object.keys(kept).length; },
+      },
+    });
+  }, WHO);
+  await p.route('**/auth/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json',
+      body: JSON.stringify({ id: WHO.id, email: WHO.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: stored }) }));
+  await p.route('**/rest/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+  await p.route('**/storage/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+
+  await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
+  await p.waitForTimeout(1500);
+
+  /* The trap really is set. Without this the scene would pass on a browser
+     that quietly stored the choice and prove nothing. */
+  const writable = await p.evaluate(() => {
+    try { window.localStorage.setItem('futurebox.lang.v1', 'af'); return true; } catch { return false; }
+  });
+  check('storage really does refuse to keep the language on this phone',
+    writable === false, String(writable));
+
+  await chooseAfrikaans(p);
+  await p.waitForTimeout(1000);
+  check('choosing Afrikaans on the sign-in page turns the page Afrikaans',
+    'af' === (await p.evaluate(() => document.documentElement.lang)),
+    await p.evaluate(() => document.documentElement.lang));
+
+  /* The reload signing in causes, on a browser that kept nothing. */
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.waitForTimeout(3000);
+  check('and it is STILL Afrikaans after the reload signing in causes',
+    'af' === (await p.evaluate(() => document.documentElement.lang)),
+    await p.evaluate(() => document.documentElement.lang));
+  const said = (await p.locator('body').innerText()).replace(/\s+/g, ' ');
+  check('the words are Afrikaans too, not only the lang attribute',
+    !/Make a song|Sign in to/i.test(said), said.slice(0, 120));
+
+  /* And the other direction, which is the half of her sentence somebody
+     would forget: choosing English must log in in English, against an
+     account that says Afrikaans. */
+  stored = { lang: 'af' };
+  const english = p.locator('button', { hasText: /^English$/ }).first();
+  if (await english.count()) {
+    await english.click();
+    await p.waitForTimeout(900);
+    await p.reload({ waitUntil: 'networkidle' });
+    await p.waitForTimeout(3000);
+    check('and choosing English logs in in English, whatever the account says',
+      'en' === (await p.evaluate(() => document.documentElement.lang)),
+      await p.evaluate(() => document.documentElement.lang));
+  }
+  await context.close();
+}
+
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 server.stop();
