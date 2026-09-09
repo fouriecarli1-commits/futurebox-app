@@ -148,7 +148,8 @@
     "check:studioroute": "node audit/studioroute.mjs",
     "check:videocover": "node audit/videocover.mjs",
     "check:podlanguage": "node audit/podlanguage.mjs",
-    "check:elevencost": "tsx scripts/check-elevencost.mts"
+    "check:elevencost": "tsx scripts/check-elevencost.mts",
+    "check:musiclicence": "tsx scripts/check-musiclicence.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

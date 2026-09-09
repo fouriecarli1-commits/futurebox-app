@@ -224,6 +224,13 @@ jobs:
       - name: The handbook matches the policy pages
         run: npm run check:handbook
 
+      # The terms tell members they may sell what they make. ElevenLabs carves
+      # out film, television, radio and studio games, and a member who places a
+      # song in a television advert on the strength of our page has been told
+      # something untrue by us.
+      - name: The music licence is stated as the engine grants it
+        run: npm run check:musiclicence
+
       # Two unauthenticated routes call a reasoning model. The only thing
       # between them and an unbounded bill looks identical working or broken.
       - name: The rate brake holds

@@ -1441,10 +1441,54 @@ fault: see `284de09`.
 - **Nothing else new.** Everything in the previous "What is still Carli's"
   section stands unchanged.
 
+## The commercial licence, settled in writing
+
+ElevenLabs support answered the legal question on **9 September 2026**, in
+writing, to a direct question from her. Recorded here because it is the sort
+of thing that gets remembered as roughly the opposite of what was said:
+
+- **The Pro plan carries a commercial licence** covering music generated
+  through ElevenLabs, the API included. So a member's song may be sold,
+  streamed, put in their own videos, and played at a gig.
+- **No attribution is required on a paid plan.** This was the open question —
+  TONE3000 asks for its name on the product and it was reasonable to assume
+  ElevenLabs might too. It does not. Nothing in this app has to carry their
+  name, and nothing does.
+- **Film, television, radio and studio games are carved out** and need an
+  Enterprise Music plan. This is the one new fact, it affects every member,
+  and it is now stated in `app/terms/page.tsx` rather than left under "satisfy
+  yourself that you are entitled to". The terms date moved to 9 September 2026
+  and `handbook.generated.ts` was rebuilt, so the help assistant answers it too.
+  Terms: <https://elevenlabs.io/music-terms> and
+  <https://elevenlabs.io/eleven-music-model-specific-terms>.
+- **No certificate, registration or form** is needed to use ElevenLabs or its
+  API in a business. Agreeing to the standard terms is the whole of it. This
+  is separate from CIPC, which the ECT Act wants for a different reason —
+  see the legal page.
+- **Cloned voices are her responsibility**: the voice must be the member's own
+  or the owner's explicit consent must be held. Already built and already
+  stronger than a tick box — `app/api/voice/clone/route.ts` refuses without
+  `consent === 'own-voice'` and writes the consent text, the moment and a
+  hashed address into the row. See `supabase/moderation.sql`.
+- **SOC 2, HIPAA and GDPR documentation is Enterprise.** Not needed for a
+  South African consumer product under POPIA, and worth knowing before a
+  business customer asks. <https://compliance.elevenlabs.io>.
+
+**Still genuinely open, and worth one more question to them:** whether the
+licence passes *through* her workspace to her members. Every generation on
+FutureBox happens on her Pro key, so the licence is hers; whether she may
+grant her members the commercial rights that `app/terms/page.tsx` promises
+them is a different question, and their answer did not reach it. It is not a
+reason to hold anything up — it is the ordinary shape of a platform reselling
+a service — but it should be asked plainly rather than assumed.
+
 ## Open, and worth a decision
 
 - **Does anybody pay yet?** Still unanswered, and it still decides whether the
-  Paystack plan codes can simply be swapped or need a migration.
+  Paystack plan codes can simply be swapped or need a migration. It also
+  decides whether the terms change of 9 September owes anybody an email: the
+  document promises notice before a change takes effect, and with no paying
+  members there is nobody to notify.
 - **#119, the brake on the ElevenLabs allowance.** Still held at her
   instruction — "Moet nog nie bou nie" — pending ElevenLabs' reply.
 - **Voice Blender's request fields**, `/api/kits/setup` for the
