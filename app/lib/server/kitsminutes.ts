@@ -175,6 +175,21 @@ export async function note(seconds: number, kind: Kind, owner?: string | null): 
       () => undefined,
       () => undefined,
     );
+
+  /* And look at whether the roof is close enough to write about.
+
+     Imported here rather than at the top on purpose: `spendwatch` reads this
+     module's `usedSeconds` and `monthlyMinutes`, so a static import would be a
+     cycle. A cycle between two modules of hoisted functions happens to work,
+     and "happens to work" is not a thing to leave in the path that decides
+     whether a warning goes out.
+
+     Not awaited. The caller has already downloaded the audio this row is
+     about; a letter may not stand in front of handing it over. */
+  void import('./spendwatch').then(
+    (watch) => watch.watchKits(),
+    () => undefined,
+  );
 }
 
 /** Cleared between tests. Not used by the app. */

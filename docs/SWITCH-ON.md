@@ -471,6 +471,40 @@ The two `NEXT_PUBLIC_` ones are meant to be visible and are the only kind that
 may carry that prefix. Nothing else here may ever have it — `OWNER_EMAIL` with
 that prefix would ship the list of who runs the place to every visitor.
 
+### Die waarskuwing as die krediete opraak — en die twee dinge wat moet gebeur
+
+Carli, 9 September 2026: *"Ek gaan op 'n manier 'n alert moet kry as die
+krediete laag raak, sodat ek kan koop."*
+
+Die app skryf nou self aan `OWNER_EMAIL` by **50%, 75%, 90% en 100%** van die
+maand se toelae — vir ElevenLabs se krediete én vir Kits se aflaaiminute. Een
+brief per drumpel, per verskaffer, per kalendermaand. Vyftig is doelbewus
+vroeg: daar moet nog dae oor wees om iets aan te doen, want 'n top-up is 'n
+kaart, 'n bladsy en 'n bedrag wat jy moet kies.
+
+**Die strik wat elke brief hardop noem.** Krediete koop by ElevenLabs lig
+**nie** hierdie app se plafon nie. `ELEVEN_MONTHLY_CREDITS` is 'n aparte
+getal, op Vercel, en dít is wat die app laat stop. Wie net top-up en niks
+anders doen nie, sit met krediete wat sy betaal het en 'n app wat steeds
+weier. Altwee moet gebeur, elke keer.
+
+Ongestel is die plafon 600 000 — presies wat die Pro-plan insluit, dus **nie
+een sent top-up gemagtig nie**. Dit is die veilige kant om verkeerd te wees:
+ElevenLabs se Auto Top Up hou nooit op nie, dit koop aan tot iemand 'n faktuur
+lees. Kits is anders — daar is 'n regte dak by 400 minute, dit gaan self dood,
+en die kaart word nie verder gehef nie.
+
+**Die bladsy vir tussenin.** Die brief kan nog nie stuur nie: `MAIL_FROM`
+wag op 'n domein (§6 hierbo). Tot dan is dit die enigste waarskuwing wat werk:
+
+    https://futurebox.studio/api/allowance?key=<POST_SECRET>
+
+Albei toelaes, waar die maand staan, hoeveel minute musiek oor is, wat 'n
+duisend krediete kos — en `canWrite`, wat reguit sê of 'n brief hoegenaamd
+gestuur kán word. 'n Waarskuwingstelsel wat afgeskakel is en dit nie sê nie,
+word by die faktuur ontdek.
+
+
 ### The one that decides how much video can be spent in a month
 
 `ELEVEN_VIDEO_CREDITS` is the ceiling on video generation for the month, in

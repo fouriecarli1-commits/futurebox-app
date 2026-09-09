@@ -150,6 +150,14 @@ jobs:
       - name: The brake on ElevenLabs spending is a brake
         run: npm run check:elevenceiling
 
+      # She asked, 9 September 2026: "Is daar 'n manier dat ek 'n waarskuwing
+      # kan kry?" There was not. The brake refuses at the ceiling and
+      # ElevenLabs writes at 75%; between them this app said nothing. A
+      # warning that arrives only at the end, or is lost forever on one failed
+      # send, or names the top-up without naming the ceiling, is not a warning.
+      - name: The allowance warns her at half, and retries if it cannot send
+        run: npm run check:spendwatch
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described

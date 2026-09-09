@@ -17,6 +17,7 @@
     "check:envdoc": "tsx scripts/check-envdoc.mts",
     "check:language": "tsx scripts/check-language.mts",
     "check:elevenceiling": "tsx scripts/check-elevenceiling.mts",
+    "check:spendwatch": "tsx scripts/check-spendwatch.mts",
     "check:elevenplans": "tsx scripts/check-elevenplans.mts",
     "check:parts": "tsx scripts/check-parts.mts",
     "check:blender": "tsx scripts/check-blender.mts",

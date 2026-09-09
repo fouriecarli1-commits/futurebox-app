@@ -16,6 +16,7 @@
 
 import { batches, type Turn } from '../dialogue.ts';
 import { noteSpend } from './elevencost.ts';
+import { watchEleven } from './spendwatch';
 import { joinPcm } from '../pcmwav.ts';
 
 const BASE = 'https://api.elevenlabs.io/v1';
@@ -315,6 +316,20 @@ export function noteCost(response: Response, what: string, credits?: number): vo
        to know, and such a row is left out of the comparison rather than
        counted as free. */
     noteSpend({ what, characters, credits, request });
+
+    /* And look at where the month now stands.
+
+       This is the one funnel every ElevenLabs call already passes through, so
+       hooking the warning here is the only version of it that cannot be
+       forgotten when a new route is written. Not awaited: the caller is
+       holding audio and on its way out, and a letter must never be in front of
+       a member's song.
+
+       The row above is written fire-and-forget, so this read can miss the very
+       call that crossed the line. That errs low by one generation and the next
+       one catches it — the safe direction for a warning, and the same trade
+       `usedCredits`'s thirty-second cache already makes. */
+    void watchEleven();
   } catch {
     // A header that could not be read is not a reason to fail a generation.
   }
