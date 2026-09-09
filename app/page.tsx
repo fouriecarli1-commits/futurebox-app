@@ -2865,7 +2865,7 @@ export default function FutureBoxHome() {
           Above the studio's own layer, because it is the thing you arrive at
           and the studio is what you arrive into. */}
       {atDoor && (
-        <div className="fixed inset-0 z-[55] bg-zinc-950 overflow-y-auto">
+        <div className="fixed inset-0 z-[55] bg-zinc-950 overflow-y-auto below-tabs">
           {/* Top-aligned with room around it, not vertically centred.
 
               Centring inside a scrolling box is the classic way to make the

@@ -146,7 +146,7 @@ export default function PostToLive({
 
       {asking && (
         <div
-          className="fixed inset-0 z-[70] flex items-end justify-center bg-scrim/80 p-4 sm:items-center"
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-scrim/80 p-4 sm:items-center below-tabs"
           role="dialog"
           aria-modal="true"
           aria-label={t('buildon.title', 'May others build on this?')}

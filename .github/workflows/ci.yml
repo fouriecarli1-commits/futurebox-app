@@ -172,6 +172,13 @@ jobs:
       - name: The voice list asks for a page, not for the whole membership
         run: npm run check:voicewall
 
+      # TabBar is `fixed bottom-0 z-[95]` and every full-screen room in this app
+      # is below it, so the bar is painted over the foot of each of them. The
+      # Pro Booth's "Mix it down" was underneath it, and Carli asked for a
+      # feature that had been built and covered. One number, in one place.
+      - name: Every room below the tab bar leaves it its own strip
+        run: npm run check:belowtabs
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described

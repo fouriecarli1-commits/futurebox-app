@@ -1032,11 +1032,12 @@ export default function ProBooth({
        Carli, 9 September 2026: "hoe export mens of bring alles by mekaar?
        Iets soos 'n mix together knoppie?" It was there. It was covered.
 
-       Fifty-six pixels is the bar's own `min-h`, plus its top border and the
-       phone's safe area. `audit/probooth.mjs` asks what is painted at each
-       control rather than trusting this number, so a taller bar fails there
-       instead of quietly swallowing a button again. */
-    <div className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col overflow-y-auto sm:overflow-hidden pb-[calc(57px+env(safe-area-inset-bottom))]">
+       The number lives in one place now — the `below-tabs` rule in
+       `globals.css` — because this is not one room's problem: eleven
+       full-screen overlays sit below that bar, and The Booth had two controls
+       under it as well. `check:belowtabs` requires every one of them to carry
+       the rule. */
+    <div className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col overflow-y-auto sm:overflow-hidden below-tabs">
       <div className="flex items-center gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
         {/* Out of the room, and it says so.
 
@@ -2304,7 +2305,21 @@ function LaneRow({
           max={100}
           value={Math.round((lane.pan ?? 0) * 100)}
           onChange={(event) => onChange({ pan: Number(event.target.value) / 100 })}
-          className="flex-1 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
+          /* A width, not `flex-1`, and this is the second half of the same bug.
+ 
+             Taking `w-32` off this block let it size to its contents, which
+             fixed the box. But the slider inside it was `flex-1` — that is
+             `flex: 1 1 0%`, a basis of nothing — so a container measured by
+             its contents measured this one as **zero wide**. The block came
+             out the width of "L", a gap and "R", and the slider painted
+             straight across the R and into the start-time field beside it.
+ 
+             Carli, looking at the fix: "daar is steeds iets bo oor die R. dit
+             lyk soos 'n 0." It was the slider, over the R, over the 0.
+ 
+             A stated width contributes itself to the measurement, which is
+             what a content-sized box needs from every child in it. */
+          className="w-24 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
           aria-label={t('pro.pan', 'Where it sits, left to right')}
         />
         <span className="text-[11px] text-zinc-600">R</span>
@@ -2376,6 +2391,27 @@ function LaneRow({
             <Trash2 className="w-4 h-4" />
           </button>
         )}
+        {/* ── What the row of icons does, before it is pressed ────────────
+
+            Carli: "daar moet pop out vraagtekens wees by die skêr, en die
+            layer, en die sirkel. voordat mense daarop click moet hulle weet
+            wat dit gaan doen."
+
+            Every one of these carries a `title`, which on a phone is nothing
+            at all — there is no pointer to hover with, so on the device most
+            of them are used the icons are unlabelled and two of them spend
+            money.
+
+            One mark for the row rather than one beside each. Five more marks
+            in a row that only just fits would be five more things to hit by
+            accident, and the question a person actually has is not "what is
+            this one" but "what are these". */}
+        <Hint className="ml-1">
+          {t(
+            'pro.whatRow',
+            'Scissors: split the voice off this lane, so the singing and the music become two lanes. Layers: split it into named parts — drums, bass, and the rest. Magnifier: read the chords, key and tempo. Microphone: sing this lane in another voice. Bin: remove the lane. The first four cost credits and each one says how many; the bin costs nothing.',
+          )}
+        </Hint>
       </div>
     </div>
 

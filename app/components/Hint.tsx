@@ -39,6 +39,21 @@ export default function Hint({
   const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [side, setSide] = useState<'left' | 'right'>('left');
+  /**
+   * Which way it opens vertically.
+   *
+   * It always opened downwards. Near the foot of a phone that puts it behind
+   * the transport buttons and then behind the tab bar, which is `fixed
+   * bottom-0 z-[95]` — and this panel is `z-50`, so it loses.
+   *
+   * Carli: "hierdie onderste pop out window moet boontoe beweeg. ondertoe
+   * beweeg hy agter die buttons in."
+   *
+   * The horizontal half of this was already here, and for the same reason: a
+   * panel that hangs off the edge is a panel nobody can read. The vertical
+   * half was simply missing.
+   */
+  const [up, setUp] = useState(false);
   const [pointer, setPointer] = useState(false);
   const box = useRef<HTMLSpanElement | null>(null);
   const id = useId();
@@ -63,9 +78,22 @@ export default function Hint({
     };
   }, [open]);
 
+  /** Roughly how tall the panel gets. Enough to decide which way to open. */
+  const TALL = 140;
+
   const show = () => {
     const at = box.current?.getBoundingClientRect();
-    if (at) setSide(at.left > window.innerWidth / 2 ? 'right' : 'left');
+    if (at) {
+      setSide(at.left > window.innerWidth / 2 ? 'right' : 'left');
+      /* Measured against the space that is actually usable, not against the
+         viewport. The tab bar owns the bottom strip of every screen in this
+         app, so the floor for this decision is above it — otherwise a mark
+         with "enough room" by the viewport's reckoning opens into the bar.
+         `--tabs` is the same 57 pixels `globals.css` reserves. */
+      const bar = document.querySelector('nav.fixed.bottom-0');
+      const floor = bar ? bar.getBoundingClientRect().top : window.innerHeight;
+      setUp(at.bottom + TALL > floor && at.top - TALL > 0);
+    }
     setOpen(true);
   };
 
@@ -96,9 +124,9 @@ export default function Hint({
         <span
           id={id}
           role="tooltip"
-          className={`absolute z-50 top-full mt-1 w-60 max-w-[70vw] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-xs font-normal leading-relaxed text-zinc-300 shadow-2xl ${
+          className={`absolute z-[96] w-60 max-w-[70vw] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-xs font-normal leading-relaxed text-zinc-300 shadow-2xl ${
             side === 'right' ? 'right-0' : 'left-0'
-          }`}
+          } ${up ? 'bottom-full mb-1' : 'top-full mt-1'}`}
         >
           {children}
         </span>

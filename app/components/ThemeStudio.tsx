@@ -96,7 +96,7 @@ export default function ThemeStudio({
   ];
 
   return (
-    <div className="fixed inset-0 z-[60] flex justify-end">
+    <div className="fixed inset-0 z-[60] flex justify-end below-tabs">
       <div className="absolute inset-0 bg-scrim/80 backdrop-blur-sm" onClick={onClose} />
 
       <aside className="relative w-full max-w-md h-full overflow-y-auto bg-zinc-900 border-l border-zinc-800 p-5 space-y-6">

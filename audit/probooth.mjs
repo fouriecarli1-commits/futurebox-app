@@ -298,7 +298,11 @@ try {
      slider sitting on top of the start-time field at 1280 px — which is
      not a narrow screen, and which no assertion about text would ever
      have caught. Boxes are compared, not looked at. */
-  for (const width of [1280, 390]) {
+  /* 360 as well as 390. A great many Android phones report 360 CSS pixels —
+     Carli's own screenshots are one — and a row that fits at 390 and overflows
+     at 360 is a row that overflows for a large share of the people using this.
+     The phone-only assertions below run at both. */
+  for (const width of [1280, 390, 360]) {
     await p.setViewportSize({ width, height: 900 });
     await p.waitForTimeout(500);
     /* Only controls somebody can actually reach.
@@ -353,7 +357,7 @@ try {
 
        Only checked on the phone. A mouse is precise and a desk that copies the
        phone's padding is a desk with half the density it should have. */
-    if (width === 390) {
+    if (width <= 390) {
       /* One page, not four strips around a sliver.
 
          The room is built as a desk: header and clock nailed to the top,
@@ -379,7 +383,7 @@ try {
         `${shape?.innerScrollers} inner scroller(s)`);
     }
 
-    if (width === 390) {
+    if (width <= 390) {
       const small = await p.evaluate(() => {
         const out = [];
         for (const el of Array.from(document.querySelectorAll('button, [role="button"], a, input, select'))) {
@@ -489,6 +493,44 @@ try {
       });
       check('and no control sticks out of the lane it belongs to',
         outside.length === 0, [...new Set(outside)].slice(0, 5).join(', '));
+
+      /* ── A hint near the foot opens upwards ─────────────────────────
+
+         "hierdie onderste pop out window moet boontoe beweeg. ondertoe beweeg
+          hy agter die buttons in."
+
+         `Hint` chose a side and not a direction, so a mark low on the screen
+         opened its panel down into the transport and then behind the tab bar,
+         which is z-[95] against the panel's z-50. Two faults in one: the wrong
+         direction and the wrong layer.
+
+         Asserted by where the panel lands, not by the class that put it
+         there — a rule that reads a class name passes a class that has been
+         renamed and stopped working. */
+      const marks = p.locator('button[aria-label="What this does"], button[aria-label="Wat dit doen"]');
+      const low = await marks.count();
+      if (low) {
+        await marks.last().scrollIntoViewIfNeeded();
+        await marks.last().click();
+        await p.waitForTimeout(300);
+        const panel = await p.evaluate(() => {
+          const tip = document.querySelector('[role="tooltip"]');
+          const bar = document.querySelector('nav.fixed.bottom-0');
+          if (!tip || !bar) return null;
+          const t = tip.getBoundingClientRect();
+          const b = bar.getBoundingClientRect();
+          return {
+            clear: t.bottom <= b.top + 1,
+            onTop: Number(getComputedStyle(tip).zIndex) > Number(getComputedStyle(bar).zIndex),
+            top: Math.round(t.top), bottom: Math.round(t.bottom), bar: Math.round(b.top),
+          };
+        });
+        check('a hint near the foot of the room does not open into the tab bar',
+          !!panel && (panel.clear || panel.onTop),
+          panel ? `panel ${panel.top}-${panel.bottom}, bar at ${panel.bar}` : 'no panel');
+        await p.keyboard.press('Escape');
+        await p.waitForTimeout(200);
+      }
 
       await p.screenshot({ path: shot('probooth-phone.png'), fullPage: false });
     }

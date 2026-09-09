@@ -261,6 +261,72 @@ try {
   check('nothing in the room runs off the right edge of the phone',
     over.length === 0, over.join(' · '));
 
+  /* ── The tab bar is over this room too ────────────────────────────────
+
+     The Pro Booth's "Mix it down" was underneath it for months and nothing
+     said so: that room is z-[70], TabBar is `fixed bottom-0 z-[95]`, and
+     asking whether the *page* scrolls sideways or off the bottom never sees
+     it. Carli found it by asking for a button that was already there.
+
+     Eleven full-screen overlays in this app sit below that bar. This is the
+     room she actually records in, and its whole toolbar — play, the way to
+     the Pro booth, the desk, and the button that keeps the take — lives at
+     the foot of it. So the same question is asked here, of the real bar in
+     the real app rather than of a probe page that renders the room alone.
+
+     Any overlap at all counts. Half a button is not a button, and the half
+     that goes under is the half a thumb lands on when somebody reaches for
+     the bottom of the screen. */
+  /* Scrolled to the end first.
+
+     In a room that scrolls, a control passing under a fixed bar on the way
+     past is ordinary — you scroll on and it comes clear. The question that
+     matters is whether anything is *stranded*: still under the bar when there
+     is no more scrolling to do. Asking it at whatever position the walk
+     happened to leave reports the ordinary case as a fault, which is how a
+     check gets switched off. */
+  await page.evaluate(() => {
+    const room = document.querySelector('div.fixed.inset-0.z-\\[60\\]');
+    const boxes = room ? [room, ...room.querySelectorAll('div')] : [];
+    for (const one of boxes) {
+      if (one.scrollHeight > one.clientHeight + 4) one.scrollTop = one.scrollHeight;
+    }
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+  await page.waitForTimeout(400);
+
+  const covered = await page.evaluate(() => {
+    const bar = document.querySelector('nav.fixed.bottom-0');
+    if (!bar) return ['no tab bar on screen'];
+    /* Inside the room only.
+ 
+       Scanning the whole document counts what is *behind* the overlay too —
+       the page the room opened over, whose links are still in the DOM at
+       their old positions and are neither visible nor reachable. The first
+       run of this reported an anchor 224 pixels tall that belongs to the
+       page underneath, which is the same mistake `audit/probooth.mjs` records
+       about `getBoundingClientRect`: it answers where a thing would be, not
+       whether anybody can get at it. */
+    const room = document.querySelector('div.fixed.inset-0.z-\\[60\\]');
+    if (!room) return ['the booth is not open'];
+    const over = bar.getBoundingClientRect();
+    const out = [];
+    for (const el of Array.from(room.querySelectorAll('button, input, select, a'))) {
+      if (bar.contains(el)) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) continue;
+      if (r.bottom < 0 || r.top > window.innerHeight) continue;
+      if (r.bottom > over.top && r.top < over.bottom) {
+        const said = (el.innerText || el.getAttribute('aria-label') || el.type || '')
+          .replace(/\s+/g, ' ').trim();
+        out.push(`${el.tagName.toLowerCase()}${said ? ` "${said.slice(0, 24)}"` : ''} .${String(el.className).slice(0, 40)} @${Math.round(r.top)}-${Math.round(r.bottom)}`);
+      }
+    }
+    return [...new Set(out)];
+  });
+  check('nothing is stranded under the tab bar at the end of the room',
+    covered.length === 0, covered.slice(0, 6).join(', '));
+
   const faults = noise.filter((one) => /pageerror|console: /.test(one));
   check('and the room throws nothing while she uses it',
     faults.length === 0, faults.slice(0, 3).join(' · '));

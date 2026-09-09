@@ -994,7 +994,11 @@ export default function VocalBooth({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col">
+    /* `below-tabs`: the app's tab bar is painted over the foot of this room.
+       See the rule in `globals.css`. Without it the voices panel and "Take the
+       room off it" are underneath it on a phone — which is where they were
+       until `check:boothwalk` was taught to ask. */
+    <div className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col below-tabs">
       <div className="flex items-center gap-3 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
         {/* Out of the room, and it says so.
 
