@@ -1572,6 +1572,46 @@ against a 5,000–10,000 launch, and their ladder has no volume discount), voice
 slots, POPIA/GDPR and consent, the film/TV/radio carve-out, Seedance, and
 operations.
 
+## Two numbers ElevenLabs has not published (#112)
+
+`/api/align` is new and calls `POST /v1/forced-alignment` — the words we
+already have, placed against the audio instead of transcribed back out of it.
+It is the better answer for a sung Afrikaans line, because a transcriber has
+to work out *which* words as well as when, and a mis-heard word is not a
+timing problem. It also reports a `loss`, which is the first confidence signal
+anywhere in the timing ladder: `heard` has none, so a bad transcription has
+always looked exactly like a good one.
+
+Two things about it are unknown and are treated as unknown rather than
+guessed:
+
+1. **What it costs.** Their page does not say. The member is charged what a
+   transcription of the same length costs — the call it replaces — so nobody
+   is worse off than today, and the real figure arrives on the first live
+   call: `noteCost` reads `character-cost` off the response and logs it.
+   **When that number is known, revise the charge.** Charging nothing until
+   then would have left a paid call with no ceiling.
+
+2. **What a bad `loss` looks like.** Their scale is undocumented and this
+   machine cannot reach the API. `POOR_LOSS = 1` in `app/api/align/route.ts`
+   has never been checked against a real answer and says so in its own
+   comment. It refuses nothing — it only sets a flag the client uses to drop a
+   rung — and the raw number goes back on every answer, so the first real
+   songs settle it.
+
+**What is still #112's and not built:** the `spoken` rung. TTS
+`/with-timestamps` gives character-level alignment free with every read, and
+`speakStream` is the caller that matters. It was left because
+`/stream/with-timestamps` returns newline-delimited JSON rather than mp3
+bytes, and `/api/voice/speak` pipes its body straight to the browser as
+`audio/mpeg` — so taking the timings means transforming the stream server-side
+and finding somewhere to put the alignment, which arrives only once the stream
+ends. Streaming there is load-bearing (first sound in about a second, and a
+long read that has not finished inside the five-minute function ceiling fails
+outright), so it is worth doing properly rather than quickly. The dub
+transcript (`GET /v1/dubbing/{id}/transcript/{lang}`) and
+`/v1/music/detailed` are also still untouched.
+
 ## Open, and worth a decision
 
 - **Does anybody pay yet?** Still unanswered, and it still decides whether the

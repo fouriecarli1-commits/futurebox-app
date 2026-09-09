@@ -49,7 +49,7 @@ import Sleeve from './Sleeve';
 import SongForm from './SongForm';
 import { heardHere, markHeard } from '../lib/heard';
 import { countWhenPlayed } from '../lib/played';
-import { heardFor, timeFor } from '../lib/lyrictime';
+import { exactFor, timeFor } from '../lib/lyrictime';
 import Note from './Note';
 import Card from './Card';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
@@ -1069,7 +1069,7 @@ export default function Channel({
                 'The file for this song is not on this device, so there is nothing to listen to.',
               );
             }
-            const heard = await heardFor(lyricsFor.track, blob);
+            const heard = await exactFor(lyricsFor.track, blob);
             if (!heard.lines.length) {
               return heard.why ?? t('play.nothingHeard', 'Nothing could be made out in it.');
             }

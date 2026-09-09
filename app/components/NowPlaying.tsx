@@ -25,7 +25,7 @@ import FollowWords from './FollowWords';
 import Note from './Note';
 import { peaksOf, type Peaks } from '../lib/peaks';
 import { lineAt, timelineOf, type Part, type TimedLine } from '../lib/timeline';
-import { heardFor } from '../lib/lyrictime';
+import { exactFor } from '../lib/lyrictime';
 import { readAudio } from '../lib/trackaudio';
 import { CREDITS, perMinute } from '../lib/credits';
 import { useLang } from '../lib/i18n';
@@ -249,7 +249,7 @@ export default function NowPlaying({
                 'The file for this song is not on this device, so there is nothing to listen to.',
               );
             }
-            const found = await heardFor(track, blob);
+            const found = await exactFor(track, blob);
             if (!found.lines.length) {
               return found.why ?? t('play.nothingHeard', 'Nothing could be made out in it.');
             }

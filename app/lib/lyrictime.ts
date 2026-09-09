@@ -21,9 +21,21 @@
  * the same song read correctly in one room and drifted in another. It is one
  * function now, and every screen that puts words on a song uses it.
  *
+ *   **aligned** — the words we already have, placed against the audio by
+ *   ElevenLabs' forced alignment. Better than `heard` for the one reason that
+ *   matters here: a transcriber has to work out *which* words as well as
+ *   when, and on a sung Afrikaans line it can get the first half wrong — at
+ *   which point no timing work helps, because the screen is lighting up a
+ *   word that is not in the song. Alignment is given the words and only
+ *   places them. It also comes back with a `loss`, so a placement that did
+ *   not really work says so and the ladder drops a rung instead of drawing
+ *   confident nonsense. Needs the lyrics, so it is only available where we
+ *   have them.
+ *
  *   **heard** — a transcription with a timestamp on every word. Exact,
  *   because it is what was sung rather than what was sent. It costs credits
- *   and is kept once it is made.
+ *   and is kept once it is made. Still the answer where there are no words on
+ *   file to align against.
  *
  *   **phrases** — the singing is *measured* in the audio: a voice is silent
  *   between phrases, so the phrases can be found and the lines hung on them.
@@ -49,7 +61,7 @@ import { partsOf, timelineOf, alignTo, fitInto, type Part, type TimedLine } from
 import { phrasesOf } from './phrases';
 import type { Track } from './library';
 
-export type Timing = 'heard' | 'phrases' | 'sung' | 'spread' | 'none';
+export type Timing = 'aligned' | 'heard' | 'phrases' | 'sung' | 'spread' | 'none';
 
 export interface Timed {
   readonly lines: readonly TimedLine[];
@@ -266,6 +278,103 @@ export function linesFromWords(words: readonly HeardWord[]): TimedLine[] {
  * without a network or a key — the part worth checking is what comes back out,
  * not that `fetch` was called.
  */
+/**
+ * Line the words we already have up against the audio.
+ *
+ * The rung above `heardFor`, and the same shape: a `fetcher` so the grouping
+ * and the keeping can be checked without a network, `none` rather than a
+ * throw, and the answer kept once it is made.
+ *
+ * Two things it does that `heardFor` cannot:
+ *
+ * It needs the lyrics, and says so plainly rather than falling back on its
+ * own — a caller with no words wants `heardFor`, and choosing between them
+ * silently would hide which one was used.
+ *
+ * And it reads the confidence. A `poor` alignment returns `none`, so the
+ * ladder drops to `phrases` and the screen goes on saying "measured" instead
+ * of claiming exact times for words that were not sung. That is the whole
+ * reason to prefer this rung: `heard` has no such signal, so a wrong answer
+ * from it looks exactly like a right one.
+ */
+export async function alignedFor(
+  track: Track,
+  audio: Blob | null,
+  words: string,
+  fetcher: (body: FormData) => Promise<Response> = async (body) => {
+    const { accessToken } = await import('./cloud');
+    const token = await accessToken();
+    return fetch('/api/align', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body,
+    });
+  },
+): Promise<Timed> {
+  if (!audio) return { lines: [], how: 'none' };
+  const text = words.trim();
+  if (!text) return { lines: [], how: 'none' };
+
+  const remembered = kept()[track.id];
+  if (remembered?.how === 'aligned' && remembered.lines.length) {
+    return { lines: remembered.lines, how: 'aligned' };
+  }
+
+  try {
+    const body = new FormData();
+    body.append('file', audio, 'song.wav');
+    body.append('text', text);
+    body.append('seconds', String(Math.max(0, Math.round(track.seconds || 0))));
+    const answer = await fetcher(body);
+    if (!answer.ok) {
+      const why = (await answer.json().catch(() => null)) as { message?: unknown } | null;
+      return {
+        lines: [],
+        how: 'none',
+        ...(typeof why?.message === 'string' && why.message ? { why: why.message } : {}),
+      };
+    }
+    const said = (await answer.json()) as {
+      words?: readonly HeardWord[];
+      trust?: 'good' | 'poor' | 'unsaid';
+    };
+    /* A placement the service itself is not happy with is not used. `unsaid`
+       is kept, because "they did not report a loss" is not "the loss was
+       bad" — the same distinction three other reads in this codebase got
+       wrong by treating a missing answer as a negative one. */
+    if (said.trust === 'poor') return { lines: [], how: 'none' };
+    const lines = linesFromWords(said.words ?? []);
+    if (!lines.length) return { lines: [], how: 'none' };
+    const timed: Timed = { lines, how: 'aligned' };
+    keep(track.id, timed);
+    return timed;
+  } catch {
+    return { lines: [], how: 'none' };
+  }
+}
+
+/**
+ * The exact rung, whichever of the two can answer.
+ *
+ * Two call sites wanted this and would each have grown the same three lines,
+ * which is how a ladder ends up with a different shape in each room — the
+ * fault the file's own opening comment describes.
+ *
+ * Alignment first where the song has words, because it is the better answer:
+ * it is told what was sung and only has to place it, and it reports whether
+ * it managed. Transcription second, which is the only answer where there are
+ * no words on file, and the fallback when an alignment was poor or refused.
+ */
+export async function exactFor(track: Track, audio: Blob | null): Promise<Timed> {
+  if (!audio) return { lines: [], how: 'none' };
+  const words = (track.lyrics ?? '').trim();
+  if (words) {
+    const lined = await alignedFor(track, audio, words);
+    if (lined.lines.length) return lined;
+  }
+  return heardFor(track, audio);
+}
+
 export async function heardFor(
   track: Track,
   audio: Blob | null,

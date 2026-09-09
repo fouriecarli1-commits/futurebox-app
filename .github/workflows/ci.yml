@@ -236,6 +236,12 @@ jobs:
       - name: The song mixer is wired in both rooms
         run: npm run check:songmixer
 
+      # Forced alignment reports how well it managed. That number is the only
+      # thing in the timing ladder that can tell a right answer from a
+      # confident wrong one, and a missing one is not a bad one.
+      - name: A poor word alignment is not drawn as an exact one
+        run: npm run check:align
+
       # Two unauthenticated routes call a reasoning model. The only thing
       # between them and an unbounded bill looks identical working or broken.
       - name: The rate brake holds

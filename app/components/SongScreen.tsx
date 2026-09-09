@@ -339,7 +339,11 @@ export default function SongScreen({
                     correctly" look identical for the first line and diverge by
                     the third, and somebody filming themselves to this needs to
                     know which one they are looking at. */}
-                {here && its.lines.length > 0 && its.how !== 'heard' && (
+                {/* `aligned` and `heard` are both exact and both say nothing,
+                    for the same reason: a screen that announces "these times
+                    are right" on the one occasion they are right is noise. It
+                    is the guesses that have to be labelled. */}
+                {here && its.lines.length > 0 && its.how !== 'heard' && its.how !== 'aligned' && (
                   <p className={`pt-1.5 text-xs leading-snug ${INK_SOFT}`}>
                     {its.how === 'phrases'
                       ? t('song.byEar', 'The words are laid on the singing this app measured in the song.')

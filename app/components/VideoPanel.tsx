@@ -627,7 +627,7 @@ export default function VideoPanel({ track, onClose }: { track: Track; onClose: 
                 )}
                 {timedHow && timedHow !== 'none' && (
                   <span className="block pt-1 text-sm text-emerald-400/90 leading-snug">
-                    {timedHow === 'heard' || timedHow === 'sung' || timedHow === 'phrases'
+                    {timedHow === 'aligned' || timedHow === 'heard' || timedHow === 'sung' || timedHow === 'phrases'
                       ? t('video.wordsHeard', 'Last time, the lines were placed by listening to the song.')
                       : t('video.wordsSpread', 'Last time, the lines were spread evenly — nothing clear enough to listen to.')}
                   </span>

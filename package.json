@@ -150,7 +150,8 @@
     "check:podlanguage": "node audit/podlanguage.mjs",
     "check:elevencost": "tsx scripts/check-elevencost.mts",
     "check:musiclicence": "tsx scripts/check-musiclicence.mts",
-    "check:songmixer": "tsx scripts/check-songmixer.mts"
+    "check:songmixer": "tsx scripts/check-songmixer.mts",
+    "check:align": "tsx scripts/check-align.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
