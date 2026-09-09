@@ -22,14 +22,52 @@
  * words rather than of code — which means no type check or unit test will ever
  * catch it and this is the only place that can.
  *
- * Needs the stub build — see `audit/README.md`.
+ * ── Why this had never run ───────────────────────────────────────────────
+ *
+ * It was written against a server somebody had left running on a port, which
+ * is the fault `serve()` exists to fix — so it never earned a `check:` name
+ * and sat here being run by nobody, guarding the one screen in this app whose
+ * whole failure mode is a time shown back an hour wrong.
+ *
+ * It builds its own stubbed project and starts its own server now, and puts
+ * the ordinary build back in an exit handler however the run ends.
  */
+import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
+import { dismissDoor, toRoom } from './enter.mjs';
 
-const PORT = process.argv[2] || '3045';
+const PORT = Number(process.argv[2] || 3045);
 const af = process.argv[3] === 'af';
 
+/* A project that has accounts, so the header draws a signed-in person at all.
+   `stub.supabase.co` is nonsense on purpose — nothing here reaches Supabase —
+   and the storage key the app derives from it is `sb-stub-auth-token`, which
+   is what this probe seeds below. */
+const STUB = {
+  NEXT_PUBLIC_SUPABASE_URL: 'https://stub.supabase.co',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'stub-anon-key',
+};
+console.log('building with a project that has accounts…');
+execSync('npx next build', { stdio: 'ignore', env: { ...process.env, ...STUB } });
+
+/* Put back however this run ends. In an exit handler rather than at the
+   bottom: a probe that throws on its first assertion never reaches a tidy-up
+   written at the end, and the stubbed build it leaves behind is read by the
+   next probe as a broken app. */
+let putBack = false;
+process.on('exit', () => {
+  if (putBack) return;
+  putBack = true;
+  console.log('putting the ordinary build back…');
+  try {
+    execSync('npx next build', { stdio: 'ignore' });
+  } catch {
+    console.error('the ordinary build could not be put back — run `npx next build`');
+  }
+});
+
+const server = await serve(PORT, { env: STUB });
 const b = await chromium.launch(launchOptions());
 /* Johannesburg, deliberately. On UTC the whole conversion is the identity and
    every one of these checks would pass against a version that ignored the
@@ -61,6 +99,20 @@ await p.addInitScript((who) => {
 await p.route('**/auth/v1/**', (r) => r.fulfill({ status: 200, contentType: 'application/json',
   body: JSON.stringify({ id: WHO.id, email: WHO.email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} }) }));
 await p.route('**/rest/v1/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+/* The queue lives behind the marketing add-on, so it does not render at all
+   for somebody who has not bought it. Without this the room drew the sales
+   screen, `#queue-date` was never on the page, and the first assertion passed
+   anyway — because `AdRuns` is titled "When it goes out, and where" and a
+   loose match found that instead. A probe measuring the wrong panel and
+   reporting green is the failure this whole task is about. */
+await p.route('**/api/addons*', (r) => r.fulfill({
+  status: 200, contentType: 'application/json',
+  body: JSON.stringify({
+    owns: { marketing: new Date(Date.now() + 2.6e9).toISOString() },
+    ready: true,
+    sells: [{ id: 'marketing', rand: 249 }],
+  }),
+}));
 await p.route('**/api/taste*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ taste: [], ready: true }) }));
 
 /* ── The queue, stood up in memory ────────────────────────────────────────
@@ -102,25 +154,47 @@ await p.route('**/api/schedule*', async (route) => {
   return json({ posts: rows, ready: true, sends });
 });
 
-await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
+/* `domcontentloaded`, not `networkidle`. The stub project has a Supabase
+   address in it and the client opens a realtime socket to it that never
+   settles, so `networkidle` waits thirty seconds and gives up on a page that
+   drew fine in two. */
+await p.goto(server.url, { waitUntil: 'domcontentloaded' });
+await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
 await p.waitForTimeout(2000);
 
 // Into the advert desk, where the queue lives.
+await dismissDoor(p);
 await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
 await p.waitForTimeout(1800);
 const room = p.locator('div.fixed.inset-0.z-50').first();
-await room.locator('button').filter({ hasText: af ? /^Advertensies/ : /^Adverts/ }).first().click();
-await p.waitForTimeout(2000);
+await toRoom(p, af ? 'Advertensies' : 'Adverts');
+await p.waitForTimeout(1600);
 
+/* The queue's own fields, waited for rather than slept towards. They are the
+   thing every assertion below reads, and a room still drawing is a room that
+   answers "not there" to all of them. */
+await room.locator('#queue-date').waitFor({ state: 'visible', timeout: 30000 });
 const words = await room.innerText();
+/* By its own controls, not by its heading. `AdRuns` in the same room is
+   titled "When it goes out, and where", so a match on the title alone said
+   the queue was present when it was not — for the whole life of this file. */
 check('the queue is in the advert desk',
-  af ? /Wanneer dit uitgaan/.test(words) : /When it goes out/.test(words),
+  (await room.locator('#queue-date').count()) > 0 &&
+  (await room.locator('#queue-time').count()) > 0 &&
+  (af ? /Wanneer dit uitgaan/ : /When it goes out/).test(words),
   words.slice(0, 160).replace(/\n/g, ' / '));
 
 /* The sentence, on the face of the room rather than folded away. Somebody who
    never opens the explanation must still know before they queue anything. */
+/* The app says "It cannot post for you", which is the same promise made
+   slightly stronger — the probe was written against an older wording. Both
+   are accepted, and a room that says neither fails: this is the one sentence
+   the whole feature is shaped around, and it is a failure of words, which no
+   type check will ever catch. */
 check('it says on its face that it does not post for you',
-  af ? /Dit plaas nie vir jou nie/.test(words) : /It does not post for you/.test(words),
+  af
+    ? /Dit (kan nie|plaas nie) vir jou (plaas nie|nie)/.test(words)
+    : /It (cannot|does not|can not) post for you/.test(words),
   'the honest line is missing or has been softened');
 
 check('an empty queue says so rather than showing nothing',

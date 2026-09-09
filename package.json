@@ -158,6 +158,8 @@
     "check:couldnotask": "tsx scripts/check-couldnotask.mts",
     "check:accountscreen": "node audit/account.mjs 3044",
     "check:addonroom": "node audit/addon.mjs 3049",
+    "check:taste": "node audit/taste.mjs 3105",
+    "check:queueroom": "node audit/queue.mjs 3045",
     "check:kitseach": "tsx scripts/check-kitseach.mts"
   },
   "dependencies": {

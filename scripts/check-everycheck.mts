@@ -149,7 +149,7 @@ const TOOLS = new Set([
 const WAITING = new Set([
   'cast',
   'photo',
-  'presenter', 'queue', 'taste',
+  'presenter',
 ]);
 /** What it was when this rule was written. It may go down and not up. */
 const WAITING_WAS = 25;

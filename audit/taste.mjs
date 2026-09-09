@@ -47,23 +47,28 @@
  * The claim was written into a commit message and told to Carli before it was
  * checked. It is wrong and this is where it is corrected.
  *
- * ── Still waiting, and this time for the honest reason ──────────────────
+ * ── A second correction, of the first correction ────────────────────────
  *
- * With the build it needs, the app signs in and the screens draw. What it
- * cannot get past is the studio's own front door: the app opens on it, every
- * room button lives on it, and against a stub Supabase project that layer
- * re-renders continuously — Playwright reports "element was detached from the
- * DOM, retrying" until it gives up. That is the stub environment, not the app.
+ * This header used to say the probe could not get past the studio's front
+ * door, because against a stub Supabase project that layer re-rendered
+ * continuously and Playwright gave up. That was written down as a fact about
+ * the environment and it kept this file on the waiting list.
  *
- * So what this file can honestly say today is that it builds, signs in, and
- * gets as far as the door. Whether the account really remembers is a question
- * for the live deployment, where there is a real session and no stub to fight.
- * It is not evidence of a fault, and it must not be reported as one again.
+ * It was wrong. There was no re-render and nothing to fight. The probe
+ * dismissed the *welcome* door and then asked `toRoom` for a room, and
+ * `toRoom` looks for rooms on the *studio's* door — which had never been
+ * opened. The two layers share a `z-[55]`, so a missing step read as an
+ * environment that would not settle.
+ *
+ * One line — open the studio first — and all nine assertions pass, in English
+ * and in Afrikaans. Twice now this file has recorded an inability to ask as
+ * an answer, which is the exact fault `check:couldnotask` exists to catch in
+ * the app; it turns out the probes can do it to themselves.
  */
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
-import { toRoom } from './enter.mjs';
+import { studio, toRoom } from './enter.mjs';
 
 const PORT = process.argv[2] || '3105';
 const af = process.argv[3] === 'af';
@@ -207,6 +212,12 @@ if (await notNow.isVisible({ timeout: 8000 }).catch(() => false)) {
    The door is the better path anyway: it is the one every room is opened
    from, and what this file is actually asking is whether opening a room in the
    ordinary way tells the account. */
+/* The studio is opened first, because `toRoom` looks for a room on a door
+   and the door it looks for is the studio's — not the welcome overlay that
+   was dismissed above. They share a `z-[55]`, which is why this read as "no
+   way into Podcast" rather than as a step that had been left out. */
+await studio(p);
+await p.waitForTimeout(800);
 await toRoom(p, af ? 'Potgooi' : 'Podcast');
 await p.waitForTimeout(2000);
 check('opening a room tells the account',
