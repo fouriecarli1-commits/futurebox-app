@@ -40,9 +40,32 @@ const perMinute = /Musiek kos \*\*\$([\d,]+) per minuut\*\*/.exec(page);
 const musicUsd = perMinute ? Number(perMinute[1].replace(',', '.')) : null;
 ok('the page says what a minute of music costs', musicUsd !== null, 'the rate is the whole model');
 
-/** The plans, as the generator uses them: `{ name: 'Pro', usd: 99, credits: 660 * 900 }`. */
-const plans = [...generator.matchAll(/\{ name: '(\w+)', usd: (\d+), credits: ([\d_]+) \* (\d+) \}/g)].map(
-  (one) => ({ name: one[1], usd: Number(one[2]), minutes: Number(one[3].replace(/_/g, '')) }),
+/**
+ * The plans, as the generator uses them.
+ *
+ * Two shapes, and the second one broke this. It read only
+ * `credits: 147 * 900` — minutes times the credits-per-minute rate — which is
+ * how every plan was written when this was first put together. ElevenLabs'
+ * support then gave their own credit counts on 9 September 2026, so Pro,
+ * Scale and Business became `credits: 600_000` and the pattern matched one
+ * plan out of four. It failed rather than passing wrongly, which is the good
+ * direction, but for a whole release it was testing Creator alone.
+ *
+ * Both shapes now, and minutes are derived either way rather than read off a
+ * factor that may not be there.
+ */
+const CREDITS_A_MINUTE = 900;
+const plans = [...generator.matchAll(/\{ name: '(\w+)', usd: (\d+), credits: ([\d_]+)(?: \* ([\d_]+))? \}/g)].map(
+  (one) => {
+    const figure = Number(one[3].replace(/_/g, ''));
+    const times = one[4] ? Number(one[4].replace(/_/g, '')) : 1;
+    return {
+      name: one[1],
+      usd: Number(one[2]),
+      credits: figure * times,
+      minutes: Math.round((figure * times) / CREDITS_A_MINUTE),
+    };
+  },
 );
 ok('the generator prices four plans', plans.length === 4, `${plans.length} found`);
 
@@ -60,30 +83,47 @@ for (const plan of plans) {
 
 /* ── The claim the whole model rests on ─────────────────────────────────── */
 
+/* Proportionally, not within a fixed dollar.
+
+   The page quotes $0.15 a minute. The real rate is $0.1485 — 900 credits at
+   ElevenLabs' own $0.000165 — so every one of these sums is about 1% high,
+   and 1% of Business is ten dollars where 1% of Creator is twenty cents. A
+   fixed one-dollar tolerance therefore passed the small plans and failed the
+   large one for no reason but their size. Two percent covers the rounding on
+   every plan and still catches a price that is actually wrong.
+
+   The old Scale exception is gone with it. It said 1 993 x $0.15 = $299
+   against a $330 plan, and took $330 as the safe reading. ElevenLabs settled
+   it on 9 September 2026: Scale is $299. */
+const TOLERANCE = 0.02;
 for (const plan of plans) {
   if (musicUsd === null) break;
   const budget = plan.minutes * musicUsd;
-  /* Within a dollar: the page rounds its minutes to whole numbers, so 147 x
-     0.15 is $22.05 against a $22 plan and that is the rounding, not a
-     different price. */
-  const holds = Math.abs(budget - plan.usd) <= 1;
-  if (plan.name === 'Scale') {
-    /* The one plan where it does not, and it is recorded rather than fudged:
-       1 993 x $0.15 = $299 against a $330 plan. The generator keeps $330,
-       which is the safe reading, and the document says why. */
-    ok(
-      'Scale is still the one plan whose minutes do not buy back its price',
-      !holds && page.includes('Scale is die uitsondering'),
-      `${plan.minutes} x ${musicUsd} = ${budget.toFixed(2)} against $${plan.usd}`,
-    );
-    continue;
-  }
   ok(
     `${plan.name}'s minutes times the rate come back to its own price`,
-    holds,
+    Math.abs(budget - plan.usd) <= plan.usd * TOLERANCE,
     `${plan.minutes} x ${musicUsd} = ${budget.toFixed(2)}, the plan is $${plan.usd}`,
   );
 }
+
+/* ── The finding that replaced the exception ────────────────────────────── */
+
+/* Pro and Business are the same price per credit, exactly. That is the whole
+   answer to "should we upgrade": there is nothing to buy by upgrading except
+   seats, and a cost model resting on a volume discount rests on nothing. */
+const perCredit = (plan: { usd: number; credits: number }): number => plan.usd / plan.credits;
+const pro = plans.find((one) => one.name === 'Pro');
+const business = plans.find((one) => one.name === 'Business');
+ok('Pro and Business cost exactly the same per credit',
+  !!pro && !!business && Math.abs(perCredit(pro) - perCredit(business)) < 1e-9,
+  pro && business ? `${perCredit(pro)} against ${perCredit(business)}` : 'a plan is missing');
+ok('and that is the same rate a top-up is bought at',
+  !!pro && Math.abs(perCredit(pro) - 0.000165) < 1e-9,
+  pro ? String(perCredit(pro)) : 'Pro is missing');
+ok('the page says there is no volume discount, rather than leaving it to be worked out',
+  /geen volume-afslag/.test(page));
+ok('and it names the exact rate the $0,15 is a rounding of',
+  page.includes('$0,1485'), 'a rounded rate that is not said to be rounded is a wrong rate');
 
 /* ── And the number a song actually costs ───────────────────────────────── */
 

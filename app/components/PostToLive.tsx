@@ -56,6 +56,7 @@ import React, { useState } from 'react';
 import { Check, Loader2, Radio } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { refusalText } from '../lib/apierror';
+import { useBackLayer } from '../lib/backstack';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
 
@@ -73,6 +74,13 @@ export default function PostToLive({
   const [problem, setProblem] = useState('');
   /** The question is open. Nothing has been posted and nothing is decided. */
   const [asking, setAsking] = useState(false);
+
+  /* The question paints over the whole app, so the phone's Back button has to
+     close it rather than leave the room behind it. Without this the press
+     unwinds past an overlay the member can still see, which reads as the app
+     jumping somewhere on its own. `check:backlayers` holds the rule for every
+     full-screen overlay; this one was the last that had not registered. */
+  useBackLayer(asking, () => setAsking(false));
 
   const post = async (buildOn: boolean) => {
     setAsking(false);

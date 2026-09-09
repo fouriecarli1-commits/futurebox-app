@@ -314,9 +314,24 @@ ok('singing asks whether there is room before it charges',
 ok('and the refusal says how much is left',
   /left: room\.left/.test(sing) && /\$\{minutes\} minute/.test(minutes),
   '"come back next month" and "try a shorter take" are different answers, and only the number says which');
+/* Found by position rather than by a literal argument list.
+
+   This assertion used to look for the exact string `void note(billed, 'sing'`.
+   When `downloadSeconds` arrived the variable was renamed to `spend`, the
+   literal stopped matching, and `indexOf` answered -1 — which is less than
+   every real position, so the assertion failed rather than passing wrongly.
+   That is the good direction to break in, but it had stopped testing the
+   order it was written for. A regex for the call keeps it testing that. */
+const noteAt = sing.search(/void note\(/);
 ok('the spend is written down only after the audio is in hand',
-  sing.indexOf("void note(billed, 'sing'") > sing.indexOf('if (!done.ok)'),
+  noteAt > -1 && noteAt > sing.indexOf('if (!done.ok)'),
   'the minutes burn on download, and a conversion that failed downloaded nothing');
+/* And the number written down is what came back, not the length of the song.
+   The two are the same here — one file — and `downloadSeconds` is what makes
+   that a stated fact rather than a coincidence the next route can break. */
+ok('and what is written down is the downloaded length, not the song\u2019s',
+  /const spend = downloadSeconds\(/.test(sing) && /void note\(spend,/.test(sing),
+  'a two-file job downloads twice the audio and must count twice the minutes');
 ok('the bookkeeping cannot fail the member\u2019s request',
   /void note\(/.test(sing) && /\(\) => undefined,/.test(minutes));
 ok('the setup page reports where the month stands',

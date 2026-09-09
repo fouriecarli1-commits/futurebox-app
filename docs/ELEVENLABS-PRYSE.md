@@ -15,18 +15,24 @@ Die aanname was met omtrent **85% te ruim**.
 Musiek kos **$0,15 per minuut**, op elke plan. Elke plan sluit 'n aantal
 minute in:
 
-| Plan | Minute musiek ingesluit |
-|---|---|
-| Free | 3 |
-| Starter | 40 |
-| Creator | 147 |
-| Pro | 660 |
-| Scale | 1 993 |
-| Business | 6 600 |
+| Plan | Minute musiek ingesluit | Waar dit vandaan kom |
+|---|---|---|
+| Free | 3 | afgelei |
+| Starter | 40 | afgelei |
+| Creator | 147 | afgelei |
+| Pro | 667 | ElevenLabs, 9 Sep 2026 |
+| Scale | 2 000 | ElevenLabs, 9 Sep 2026 |
+| Business | 6 667 | ElevenLabs, 9 Sep 2026 |
+
+Die laaste drie ry se getalle is nie meer afgelei nie. ElevenLabs se
+ondersteuning het op 9 September 2026 die krediete self gegee — 600 000,
+1 800 000 en 6 000 000 — en 900 krediete is een minuut musiek. Die ou
+afgeleide getalle was 660, 1 993 en 6 600; hulle het tot binne 1% gestem,
+en hulle s'n is die gesaghebbende een.
 
 Vermenigvuldig elkeen met $0,15:
 
-    147 × 0,15 = $22       660 × 0,15 = $99       6 600 × 0,15 = $990
+    147 × 0,15 = $22       667 × 0,15 = $100      6 667 × 0,15 = $1 000
 
 Dit is die planne se eie pryse terug. En dieselfde som werk vir elke ander
 produk op die bladsy:
@@ -156,14 +162,36 @@ oorbly: R4 000 'n maand, en gelykbreek skuif van 125 na 103.
 
 ---
 
-## Wat nog nie hier staan nie
+## Wat vroeër hier as onbekend gestaan het
 
-Die **maandelikse prys van elke plan** is nie op die skerms wat gestuur is
-nie. Die kode neem Creator $22, Pro $99, Scale $330 en Business $990 aan, en
-drie van daardie vier word deur die som hierbo bevestig — die ingeslote minute
-maal $0,15 gee presies daardie bedrae terug.
+Hierdie afdeling het gevra wat elke plan maandeliks kos, want dit was nie op
+die skerms wat gestuur is nie. Die kode het Creator $22, Pro $99, **Scale
+$330** en Business $990 aangeneem, en het aangeteken dat Scale die
+uitsondering is: 1 993 × $0,15 = $299, nie $330 nie.
 
-**Scale is die uitsondering:** 1 993 × $0,15 = $299, nie $330 nie. Óf Scale
-kos $299, óf dit kos $330 en gee minder gebruik terug as wat jy betaal. Die
-kode neem die duurder lesing aan, wat die veilige een is, en dit wys as 'n
-hoër koers per liedjie op daardie plan.
+**ElevenLabs se ondersteuning het dit op 9 September 2026 beslis.** Scale kos
+$299. Die duurder lesing was verkeerd, en dit is reggemaak in
+`scripts/costs-eleven.mts`. Wat hulle gegee het:
+
+| Plan | Prys | Krediete | Per krediet |
+|---|---|---|---|
+| Pro | $99 | 600 000 | $0,000165 |
+| Scale | $299 | 1 800 000 | $0,000166 |
+| Business | $990 | 6 000 000 | $0,000165 |
+| Top-up | — | teen $0,000165 elk, min. $5, verval na 12 maande | $0,000165 |
+
+**Daar is geen volume-afslag nie.** $99 ÷ 600 000 en $990 ÷ 6 000 000 is
+presies dieselfde getal, en dit is ook presies wat 'n top-up kos. Business is
+tien keer die prys vir tien keer die krediete en niks anders nie. Scale is die
+enigste een wat effens uit pas val — 0,7% duurder per krediet as die ander
+twee.
+
+Dit trek 'n streep deur die ou gevolgtrekking dat "Business die enigste plan
+is wat ooit wins kan maak". Daardie som het op 'n dak gestaan wat nie bestaan
+nie: die plan is 'n vooruitbetaling, nie 'n limiet nie, en die marge per lid
+is op elke plan dieselfde.
+
+**Die presiese koers is $0,1485 per minuut**, nie $0,15 nie — 900 krediete maal
+$0,000165. Die $0,15 op hierdie bladsy is die afronding daarvan, en dit is
+hoekom die somme hierbo op Business $10 verby die planprys land. Die fout is
+1%, en sy groei saam met die plan.
