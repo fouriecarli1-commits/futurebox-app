@@ -47,6 +47,7 @@ import { Metronome } from '../lib/metronome';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Hint from './Hint';
+import VoiceMixer, { DEFAULT_SETTINGS, settingsToForm, type VoiceSettings } from './VoiceMixer';
 import Cost from './Cost';
 import HowToTrain from './HowToTrain';
 import SingVoices from './SingVoices';
@@ -145,6 +146,15 @@ export default function ProBooth({
      when a singing one is switched on would be the same untruth in a new
      place. */
   const [engine, setEngine] = useState<'speech' | 'singing'>('speech');
+  /**
+   * The voice desk, and why it is kept beside the engine choice.
+   *
+   * It only means anything on the singing engine — the dials and the effects
+   * are Kits' — so it is drawn only when that one is chosen. Kept out here
+   * rather than inside the panel so a take that came out wrong can be tried
+   * again with one thing moved, without the settings resetting underneath.
+   */
+  const [desk, setDesk] = useState<VoiceSettings>(DEFAULT_SETTINGS);
   const canSing = Boolean(voices?.singing?.configured);
   /**
    * Which trained voice at Kits, by its number.
@@ -780,6 +790,10 @@ export default function ProBooth({
         if (sings) form.append('voiceModelId', modelId);
         else if (voiceId) form.append('voiceId', voiceId);
         form.append('seconds', String(Math.round(piece.duration)));
+        /* The desk, and only on the engine it belongs to. Untouched it puts
+           nothing on the form, so the request is byte for byte the one that
+           was sent before this panel existed. */
+        if (sings) settingsToForm(form, desk);
 
         const token = await accessToken();
         const response = await fetch(sings ? '/api/voice/sing' : '/api/voice/change', {
@@ -1568,6 +1582,16 @@ export default function ProBooth({
                   )}</Note>
                 {/* The way to get one, for anybody who has not. */}
                 <HowToTrain />
+                {/* ── The desk ──────────────────────────────────────────
+
+                    Only on this engine: every dial and every effect is Kits',
+                    and drawing them beside the speech engine would offer
+                    controls that go nowhere.
+
+                    Below the voice rather than above it, because the order is
+                    the order of the decision — which voice first, then how
+                    much of it. */}
+                <VoiceMixer settings={desk} onChange={setDesk} />
               </div>
             ) : voices ? (
               <VoicePicker

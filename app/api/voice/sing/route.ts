@@ -20,7 +20,7 @@
 
 import { callerFrom, metered } from '@/app/lib/server/account';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
-import { configured, convert, namedModels, safeModelId } from '@/app/lib/server/kits';
+import { configured, convert, namedModels, safeModelId, PHONE_CLEANUP, cleanupFrom, polishFrom } from '@/app/lib/server/kits';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
@@ -151,9 +151,47 @@ export async function POST(request: Request): Promise<Response> {
      and twelve semitones is that octave. Their range is -24 to 24 and the
      library clamps to it; a form that sends nothing gets Kits' own default. */
   const shift = Number(form.get('pitchShift'));
-  const dials = Number.isFinite(shift) && shift !== 0 ? { pitchShift: shift } : {};
 
-  const done = await convert(wanted, audio, 'take.wav', Date.now() + WAIT_MS, want, dials);
+  /* ── The rest of the desk, which nothing could reach ──────────────────
+ 
+     `Dials`, `Cleanup` and `Polish` have been in `lib/server/kits.ts` since
+     they were written down, and `startConversion` has always sent all of
+     them. This route read one field. `conversionStrength`, `modelVolumeMix`
+     and both sets of effects were supported end to end and reachable by
+     nothing — which is the same shape of fault as a button behind a bar.
+ 
+     Carli: "Daar moet ook 'n mixer setting wees vir die stemme wat gebruik
+     word wat 'n conversion slider het, 'n dynamic slider (model volume), pre
+     en post processing effects om te hoor wat klink die beste."
+ 
+     A ratio that is not a number is left out rather than defaulted: an
+     omitted field is Kits' to choose, and a number this app invented is a
+     number nobody tuned. */
+  const ratio = (name: string): number | undefined => {
+    const said = Number(form.get(name));
+    return Number.isFinite(said) && said >= 0 && said <= 1 ? said : undefined;
+  };
+  const strength = ratio('conversionStrength');
+  const modelVolume = ratio('modelVolumeMix');
+
+  const dials = {
+    ...(Number.isFinite(shift) && shift !== 0 ? { pitchShift: shift } : {}),
+    ...(strength === undefined ? {} : { conversionStrength: strength }),
+    ...(modelVolume === undefined ? {} : { modelVolumeMix: modelVolume }),
+  };
+
+  /* Names, not numbers. A gate is four numbers and a browser that could send
+     them could send a threshold of +40 dB; the shapes live on the server and
+     the wire carries what to switch on. An absent field keeps the tuned
+     default for a phone take, which is what most of these are. */
+  const named = (name: string): string[] =>
+    String(form.get(name) ?? '').split(',').map((one) => one.trim()).filter(Boolean);
+  const asked = form.has('pre') ? cleanupFrom(named('pre')) : PHONE_CLEANUP;
+  const after = form.has('post') ? polishFrom(named('post')) : null;
+
+  const done = await convert(
+    wanted, audio, 'take.wav', Date.now() + WAIT_MS, want, dials, asked, after,
+  );
   if (!done.ok) {
     await paid.refund();
     return Response.json({ message: done.message }, { status: done.status });

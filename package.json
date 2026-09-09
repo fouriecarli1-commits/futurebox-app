@@ -22,6 +22,7 @@
     "check:voicewall": "tsx scripts/check-voicewall.mts",
     "check:belowtabs": "tsx scripts/check-belowtabs.mts",
     "check:underbar": "node audit/underbar.mjs 3061",
+    "check:voicedesk": "tsx scripts/check-voicedesk.mts",
     "check:elevenplans": "tsx scripts/check-elevenplans.mts",
     "check:parts": "tsx scripts/check-parts.mts",
     "check:blender": "tsx scripts/check-blender.mts",

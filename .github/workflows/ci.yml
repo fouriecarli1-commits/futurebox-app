@@ -179,6 +179,13 @@ jobs:
       - name: Every room below the tab bar leaves it its own strip
         run: npm run check:belowtabs
 
+      # `Dials`, `Cleanup` and `Polish` were in lib/server/kits.ts, sent by
+      # startConversion, and reachable by nothing: /api/voice/sing read one
+      # field out of five. Built, working, impossible to get at — the same
+      # fault as a button behind the tab bar, one layer down.
+      - name: Every dial on the voice desk reaches Kits
+        run: npm run check:voicedesk
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described

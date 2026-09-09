@@ -1004,6 +1004,75 @@ export interface Dials {
   readonly modelVolumeMix?: number;
 }
 
+/**
+ * The effects by name, and why names rather than numbers.
+ *
+ * Carli, 9 September 2026: "Daar moet ook 'n mixer setting wees vir die stemme
+ * wat gebruik word wat 'n conversion slider het, 'n dynamic slider (model
+ * volume), pre en post processing effects om te hoor wat klink die beste."
+ *
+ * Every one of those already existed on this side. `Dials`, `Cleanup` and
+ * `Polish` have been here since they were written down, `startConversion`
+ * sends all of them — and `/api/voice/sing` read one field, `pitchShift`. The
+ * rest was reachable by nothing at all.
+ *
+ * ── Why the wire carries names ───────────────────────────────────────────
+ *
+ * A gate is four numbers: a threshold in dB, a ratio, an attack and a release.
+ * Putting those on a screen asks a singer to be an engineer, and putting them
+ * on the wire lets a browser send a threshold of +40 dB, which is a request
+ * their server has to refuse on our behalf.
+ *
+ * So the screen offers what Kits' own screen offers — a switch per effect —
+ * and the numbers behind each switch are chosen here, once, and tuned for the
+ * thing this app actually records: a phone, indoors, close.
+ *
+ * A name that is not in these tables is dropped rather than guessed at.
+ */
+export const PRE_EFFECTS = ['noiseGate', 'highPass', 'lowPass', 'compressor'] as const;
+export const POST_EFFECTS = ['compressor', 'chorus', 'reverb', 'delay'] as const;
+export type PreEffect = (typeof PRE_EFFECTS)[number];
+export type PostEffect = (typeof POST_EFFECTS)[number];
+
+/* Tuned for a phone held close, indoors — see `PHONE_CLEANUP`, whose gate and
+   high pass these two reuse rather than restate. A low pass at 12 kHz takes
+   off the hiss a small capsule adds without dulling a voice; a gentle 3:1 at
+   −18 dB evens a take out without flattening it. */
+const PRE_SHAPES: Record<PreEffect, Cleanup> = {
+  noiseGate: { noiseGate: PHONE_CLEANUP.noiseGate },
+  highPass: { highPassFilter: PHONE_CLEANUP.highPassFilter },
+  lowPass: { lowPassFilter: { cutoff_frequency_hz: 12000 } },
+  compressor: { compressor: { threshold_db: -18, ratio: 3, attack_ms: 10, release_ms: 150 } },
+};
+
+/* Small on purpose. A converted take with a lot of room on it sounds like a
+   converted take in a lot of room; the point of these is to stop it sounding
+   dry, not to become the effect. */
+const POST_SHAPES: Record<PostEffect, Polish> = {
+  compressor: { compressor: { threshold_db: -14, ratio: 2.5, attack_ms: 10, release_ms: 180 } },
+  chorus: { chorus: { rate_hz: 0.8, depth: 0.2, centre_delay_ms: 12, feedback: 0.1, mix: 0.2 } },
+  reverb: { reverb: { room_size: 0.35, damping: 0.5, wet_level: 0.18, dry_level: 0.85, width: 1, freeze_mode: 0 } },
+  delay: { delay: { delay_seconds: 0.22, feedback: 0.2, mix: 0.15 } },
+};
+
+function known<T extends string>(names: readonly string[], allowed: readonly T[]): T[] {
+  return allowed.filter((one) => names.includes(one));
+}
+
+/** The named pre-effects as their own shape, or null when none were asked for. */
+export function cleanupFrom(names: readonly string[]): Cleanup | null {
+  const picked = known(names, PRE_EFFECTS);
+  if (!picked.length) return null;
+  return picked.reduce<Cleanup>((all, one) => ({ ...all, ...PRE_SHAPES[one] }), {});
+}
+
+/** And the post-effects. Null rather than `{}` — see `startConversion`. */
+export function polishFrom(names: readonly string[]): Polish | null {
+  const picked = known(names, POST_EFFECTS);
+  if (!picked.length) return null;
+  return picked.reduce<Polish>((all, one) => ({ ...all, ...POST_SHAPES[one] }), {});
+}
+
 /** Their ceiling on a conversion, which is twice the splitters'. */
 export const CONVERT_MAX_BYTES = 100 * 1024 * 1024;
 
@@ -1300,6 +1369,11 @@ export async function convert(
      wrong hands somebody a dry acapella of a song they asked to hear. */
   want: Want = 'voice',
   dials: Dials = {},
+  /* The effects, chosen by the singer. Null means the tuned default for a
+     phone take; an empty object would mean "no cleaning at all", which is a
+     different thing and worse for the recordings this app actually gets. */
+  cleanup: Cleanup | null = PHONE_CLEANUP,
+  polish: Polish | null = null,
 ): Promise<{ ok: true; audio: ArrayBuffer; type: string } | Upstream> {
   if (audio.size > CONVERT_MAX_BYTES) {
     return {
@@ -1308,7 +1382,7 @@ export async function convert(
       message: 'That take is larger than the 100 MB the singing service takes.',
     };
   }
-  const started = await startConversion(voiceModelId, audio, filename, PHONE_CLEANUP, dials);
+  const started = await startConversion(voiceModelId, audio, filename, cleanup, dials, polish);
   if (!started.ok) return started;
 
   /* The answer to the POST may already carry the file on a short take. */
