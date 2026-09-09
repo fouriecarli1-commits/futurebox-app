@@ -482,6 +482,44 @@ try {
     onPhone > onDesktop, `${onPhone}px on a phone, ${onDesktop}px on a desktop`);
 
   await p.setViewportSize({ width: 1280, height: 900 });
+
+  /* ── The session is still there after the room is closed ─────────────
+
+     Carli, 9 September 2026: "toe ek terug swipe of back druk, dan gooi hy
+     mens heeltemal uit na die home screen toe en jy verloor jou hele projek.
+     'n projek waarmee mens besig is moet half kan stoor, en restart waar 'n
+     mens is."
+
+     A reload is the same event as everything that used to lose it — the back
+     gesture, a tab, the browser reclaiming a backgrounded page — and it is the
+     one this probe can actually cause. Asserted on what comes back rather than
+     on the store being called, because a save that writes and a restore that
+     never reads look identical from the outside and lose the same takes.
+
+     Last, because it throws away the page every other assertion is standing
+     on. The wait is for the debounce: the room writes two seconds after the
+     last change, so reloading sooner would prove nothing but the timer. */
+  await p.waitForTimeout(3000);
+  const laneNames = async () =>
+    p.locator('input[aria-label="Lane name"], input[aria-label="Baan se naam"]')
+      .evaluateAll((nodes) => nodes.map((node) => node.value).sort());
+  const wasNamed = await laneNames();
+  await p.reload({ waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(4000);
+  const nowNamed = await laneNames();
+  check('a session survives the room being closed', nowNamed.length === wasNamed.length,
+    `${wasNamed.length} lanes before, ${nowNamed.length} after`);
+  check('and every lane comes back by name', nowNamed.join(' | ') === wasNamed.join(' | '),
+    `${wasNamed.join(' | ')} → ${nowNamed.join(' | ')}`);
+  const said = (await p.locator('body').innerText()).replace(/\s+/g, ' ');
+  check('and the room says it picked the work back up',
+    /Carried on from where you left off|Verder gegaan waar jy opgehou het/.test(said),
+    said.slice(0, 120));
+  /* Not resuming has to be one press away, or somebody starting something new
+     is stuck with last night's takes. */
+  check('with one press to start fresh instead',
+    await p.locator('button', { hasText: /^(Start fresh|Begin oor)$/ }).count() > 0);
+
   await b.close();
 } finally {
   if (server?.pid) {

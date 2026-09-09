@@ -34,6 +34,7 @@ import VoicePicker from './VoicePicker';
 import type { VoiceState } from './VoiceLab';
 import { CREDITS, perMinute } from '../lib/credits';
 import { decodeAt, shapeOf } from '../lib/takes';
+import { forgetSession, keepSession, keptSession, soundOf } from '../lib/keepsession';
 import { encodeWav } from '../lib/wav';
 import { knownLatency } from '../lib/mixdown';
 import {
@@ -88,6 +89,19 @@ export default function ProBooth({
   useBackLayer(true, onClose);
 
   const [lanes, setLanes] = useState<Lane[]>([]);
+  /**
+   * Whether the saved session has been looked for yet.
+   *
+   * Nothing may seed or save until this is false. The backing lane is added by
+   * an effect that fires on mount, and if it ran first it would put a fresh
+   * backing in beside the restored one; if a save ran first it would write an
+   * empty session over the one being restored. One flag settles both orders.
+   */
+  const [restoring, setRestoring] = useState(true);
+  /** When the session was last written down, and what went wrong if it was not. */
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [saveFailed, setSaveFailed] = useState<'unavailable' | 'full' | 'failed' | null>(null);
+  const [cameBack, setCameBack] = useState(false);
   const [at, setAt] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -206,7 +220,7 @@ export default function ProBooth({
 
   // The song is the first lane, and it arrives once.
   useEffect(() => {
-    if (!backing) return;
+    if (!backing || restoring) return;
     setLanes((was) =>
       was.some((lane) => lane.backing)
         ? was
@@ -224,7 +238,98 @@ export default function ProBooth({
             ...was,
           ],
     );
-  }, [backing, title]);
+  }, [backing, restoring, title]);
+
+  /**
+   * Come back to where she was.
+   *
+   * Carli, 9 September 2026: "'n projek waarmee mens besig is moet half kan
+   * stoor, en restart waar 'n mens is."
+   *
+   * Runs once. A lane whose audio will not decode is dropped rather than
+   * failing the whole restore — losing one take is bad and losing four
+   * because of it is worse.
+   */
+  useEffect(() => {
+    let gone = false;
+    void (async () => {
+      const kept = await keptSession(title);
+      if (gone) return;
+      if (!kept || !kept.lanes.length) {
+        setRestoring(false);
+        return;
+      }
+      const ctx = context();
+      if (!ctx) {
+        setRestoring(false);
+        return;
+      }
+      const back: Lane[] = [];
+      for (const lane of kept.lanes) {
+        const audio = await soundOf(lane.wav, ctx);
+        if (!audio) continue;
+        const amped = lane.ampedWav ? await soundOf(lane.ampedWav, ctx) : null;
+        back.push({
+          id: lane.id,
+          name: lane.name,
+          audio,
+          at: lane.at,
+          gain: lane.gain,
+          muted: lane.muted,
+          soloed: lane.soloed,
+          ...(lane.backing ? { backing: true } : {}),
+          ...(lane.from === undefined ? {} : { from: lane.from }),
+          ...(lane.to === undefined ? {} : { to: lane.to }),
+          ...(lane.pan === undefined ? {} : { pan: lane.pan }),
+          ...(lane.tone ? { tone: lane.tone } : {}),
+          ...(amped && lane.ampedName ? { amped: { name: lane.ampedName, audio: amped } } : {}),
+        });
+      }
+      if (gone) return;
+      if (back.length) {
+        setLanes(back);
+        setMeter(kept.meter);
+        setMaster(kept.master);
+        /* The master's trim is worked out from a measurement, and a
+           measurement of a mix this room has not rendered yet is not one it
+           may claim. So the master comes back set and stale: what she chose,
+           marked as needing measuring again. */
+        setStale(true);
+        setSavedAt(kept.savedAt);
+        setCameBack(true);
+      }
+      setRestoring(false);
+    })();
+    return () => {
+      gone = true;
+    };
+    /* Once, on the room opening. `context` is stable and `title` identifies
+       the session; re-running this on anything else would restore over work. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * And write it down again whenever it changes.
+   *
+   * Debounced, because dragging a fader is a hundred renders and each save
+   * re-encodes every lane to WAV. Two seconds after the last change is soon
+   * enough to survive a back gesture and slow enough not to be in the way.
+   */
+  useEffect(() => {
+    if (restoring) return undefined;
+    if (!lanes.length) return undefined;
+    const timer = window.setTimeout(() => {
+      void keepSession(title, meter, master, lanes).then((done) => {
+        if (done.ok) {
+          setSavedAt(Date.now());
+          setSaveFailed(null);
+        } else {
+          setSaveFailed(done.why);
+        }
+      });
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [lanes, master, meter, restoring, title]);
 
   const context = useCallback((): AudioContext | null => {
     const Ctx =
@@ -965,6 +1070,51 @@ export default function ProBooth({
           <Cost credits={0} className="pt-0.5" />
         </div>
       </div>
+
+      {/* ── That the work is being kept, and that it was picked back up ────
+
+          Carli lost a whole session to a back gesture: "toe ek terug swipe of
+          back druk, dan gooi hy mens heeltemal uit na die home screen toe en
+          jy verloor jou hele projek."
+
+          It is written down now, on the device, two seconds after every
+          change. This strip is the part of that she can see — because storage
+          that works silently and storage that has quietly stopped look exactly
+          the same from a chair, and the difference is a night's takes. */}
+      {(cameBack || savedAt !== null || saveFailed) && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-zinc-800 bg-zinc-950 px-5 py-2 text-xs">
+          {saveFailed ? (
+            <span className="font-semibold text-amber-300">
+              {saveFailed === 'full'
+                ? t('pro.keptFull', 'This device has no room left, so the session is not being saved. Mix it down, or free some space.')
+                : t('pro.keptNo', 'This browser will not keep the session, so leaving the room will lose it. Mix it down before you go.')}
+            </span>
+          ) : (
+            <span className="text-zinc-500">
+              {cameBack
+                ? t('pro.keptBack', 'Carried on from where you left off.')
+                : t('pro.kept', 'Saved on this device. Leaving the room will not lose it.')}
+            </span>
+          )}
+          {cameBack && !saveFailed && (
+            /* The one thing a resume has to offer: not resuming. Somebody who
+               opened the room to start something new must not have to work out
+               how to get rid of last night's takes. */
+            <button
+              type="button"
+              onClick={() => {
+                void forgetSession();
+                setLanes((was) => was.filter((lane) => lane.backing));
+                setCameBack(false);
+                setSavedAt(null);
+              }}
+              className="min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 font-semibold text-zinc-300 hover:border-emerald-500 hover:text-white"
+            >
+              {t('pro.startFresh', 'Start fresh')}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ── The clock: tempo, time signature, key, click and grid ───────
           One strip rather than a panel behind a menu. Everything on it changes
