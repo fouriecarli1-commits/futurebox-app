@@ -1097,6 +1097,74 @@ export async function elevenModels(): Promise<ElevenModel[] | null> {
 }
 
 /** Cleared between tests. Not used by the app. */
+/**
+ * Which of our speech models actually knows the language being read.
+ *
+ * ── The complaint underneath this ────────────────────────────────────────
+ *
+ * Fifteen routes pin Afrikaans in the *writing* — `check:afrikaansrule` holds
+ * every one of them, down to warning the model off Dutch. Nothing pinned it in
+ * the *speaking*. `/api/voice/speak` has two models on it, its own comment
+ * says one of them "covers far more languages — Afrikaans among them — so a
+ * script in one of those is better served by it, and the caller says which it
+ * wants", and then the only two callers in the app never said, so every
+ * Afrikaans read went to the other one.
+ *
+ * ── Measured, not assumed ────────────────────────────────────────────────
+ *
+ * The obvious fix is a rule — "Afrikaans goes to v3" — and that rule would be
+ * this file asserting something about ElevenLabs' models from memory. They
+ * publish the list: `GET /v1/models` carries `languages` per model, which
+ * `elevenModels()` already reads for `/api/allowance`.
+ *
+ * So this asks. And the three answers it can give are kept apart, because two
+ * of them look identical from the outside and mean opposite things:
+ *
+ *   `measured`  — the list was read and a model names this language. Use it.
+ *   `unlisted`  — the list was read and **no** model names it. The first
+ *                 choice is used anyway, because refusing to read a script in
+ *                 a language they have not tabulated would be worse than
+ *                 reading it, and their coverage is broader than their list.
+ *   `unasked`   — the list could not be read at all: no key, a rate limit,
+ *                 their side down. This is NOT "no model supports it". It is
+ *                 the state where nothing is known, and the honest move is to
+ *                 change nothing and say so.
+ *
+ * That last distinction is the one this codebase keeps getting wrong; see
+ * `check:couldnotask`.
+ */
+export interface ModelChoice {
+  readonly id: string;
+  readonly why: 'measured' | 'unlisted' | 'unasked';
+}
+
+export async function modelForLanguage(
+  want: string,
+  candidates: readonly string[],
+): Promise<ModelChoice> {
+  const first = candidates[0] ?? '';
+  const language = want.trim().toLowerCase().split(/[-_]/)[0];
+  if (!language || !candidates.length) return { id: first, why: 'unasked' };
+
+  const known = await elevenModels();
+  /* Null is "could not ask". Falling through to the default here is the
+     whole point: a rate limit must never quietly change which voice model
+     reads somebody's script. */
+  if (!known) return { id: first, why: 'unasked' };
+
+  const byId = new Map(known.map((one) => [one.id, one] as const));
+  for (const id of candidates) {
+    const model = byId.get(id);
+    /* An empty `languages` is them not saying, not them saying no — so a
+       model with no list is skipped here rather than ruled out, and it can
+       still be reached as the `unlisted` fallback below. */
+    if (model?.languages.some((one) => one.split(/[-_]/)[0] === language)) {
+      return { id, why: 'measured' };
+    }
+  }
+  return { id: first, why: 'unlisted' };
+}
+
 export function forgetElevenModels(): void {
   models = null;
 }

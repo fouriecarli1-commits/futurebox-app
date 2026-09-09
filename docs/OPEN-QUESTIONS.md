@@ -1672,6 +1672,49 @@ it, rather than collected from one that exists.
 `GET /v1/dubbing/{id}/transcript/{lang}`, used to be listed here beside it and
 is built — see the paragraph above.)
 
+## Afrikaans in the speaking, not only in the writing (#115)
+
+Fifteen routes pin Afrikaans when the app **writes**, and `check:afrikaansrule`
+holds every one of them down to warning the model off Dutch. Nothing pinned it
+when the app **speaks**.
+
+`/api/voice/speak` carries two models, and its own comment has said since the
+day it was written that v3 "covers far more languages — Afrikaans among them —
+so a script in one of those is better served by it, **and the caller says which
+it wants**". Both callers in this app — `Presenter` and `VoiceLab` — never
+said. So every Afrikaans read went to the model chosen for English, and the
+instruction sat in a comment being followed by nobody. An instruction to a
+caller that no caller follows is a default in the wrong place.
+
+**Measured, not ruled.** The tempting fix is "Afrikaans goes to v3", which
+would be this repository asserting something about somebody else's models from
+memory. They publish it: `GET /v1/models` carries `languages` per model, which
+`elevenModels()` already reads. `modelForLanguage` asks, and keeps three
+answers apart:
+
+- `measured` — their list was read and a model names the language.
+- `unlisted` — their list was read and none names it. It is read anyway, on
+  the first choice, because their coverage is wider than their table and
+  refusing to read a script would be worse than reading it.
+- `unasked` — the list could not be read at all. **Not** "no model has this
+  language": nothing is known, so nothing is changed and the answer says so.
+  A rate limit must never quietly move somebody onto a different voice model.
+
+Both answers now carry which model read the script and why — on
+`X-Read-Model` / `X-Read-Model-Why` for the streamed read, in the body for the
+timed one. `check:readmodel` holds all of it, including that a caller naming a
+model still gets the one it named.
+
+**Open until she reads something aloud:** whether ElevenLabs' list actually
+names `af` on either model. If it names it on neither, every Afrikaans read
+comes back `unlisted` and nothing changes from today — which is the safe
+direction and is visible on the header rather than silent. `/api/allowance`
+prints the same list.
+
+**Not addressed here:** how Afrikaans *sounds* once the right model has it —
+pronunciation, the Dutch drift in a sung line. That is the other half of #115
+and it is a prompt-and-voice question, not a routing one.
+
 ## Their model numbers, read instead of assumed
 
 `GET /v1/models` was in nothing. It carries four fields this app had been

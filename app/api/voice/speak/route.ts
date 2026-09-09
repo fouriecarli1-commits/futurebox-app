@@ -14,7 +14,14 @@
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { guard } from '@/app/lib/server/safety';
-import { configured, speakStream, speakTimed, stockVoices, type Performance } from '@/app/lib/server/eleven';
+import {
+  configured,
+  modelForLanguage,
+  speakStream,
+  speakTimed,
+  stockVoices,
+  type Performance,
+} from '@/app/lib/server/eleven';
 import { linesFromWords, wordsFromAlignment } from '@/app/lib/spokenwords';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { readCost } from '@/app/lib/credits';
@@ -33,6 +40,17 @@ const MODELS: Record<string, string> = {
   steady: 'eleven_multilingual_v2',
   wide: 'eleven_v3',
 };
+
+/**
+ * The order to try when the caller says which language is being read.
+ *
+ * `wide` first, because the point of asking is that it is the one with the
+ * longer language list; `steady` behind it, because for a language both of
+ * them know it is the better long read. `modelForLanguage` takes the first of
+ * these that ElevenLabs' own `GET /v1/models` says covers the language, and
+ * changes nothing at all when that list cannot be read.
+ */
+const BY_LANGUAGE = [MODELS.wide, MODELS.steady] as const;
 
 /**
  * The longest script this route will read *with timings*.
@@ -115,6 +133,13 @@ export async function POST(request: Request): Promise<Response> {
      * does not set it sees any change at all.
      */
     timings?: boolean;
+    /**
+     * The language the script is written in, so the model that covers it can
+     * be chosen. `af`, `en`, or anything with a language in front of a dash.
+     *
+     * Ignored when `model` is set: a caller that named a model meant it.
+     */
+    language?: string;
   };
   try {
     body = (await request.json()) as typeof body;
@@ -215,6 +240,27 @@ export async function POST(request: Request): Promise<Response> {
      The refusal path is unchanged — the status is known before a byte is sent,
      so a rate limit or a bad voice still refunds. What cannot be refunded is a
      stream that breaks halfway; see the note on `speakStream`. */
+  /* ── Which model reads it ─────────────────────────────────────────────
+
+     A caller that names the language gets the model ElevenLabs' own list says
+     covers it. A caller that does not gets exactly what it always got.
+
+     This is #115's other half. Fifteen routes pin Afrikaans in the writing and
+     `check:afrikaansrule` holds every one of them; nothing pinned it in the
+     speaking. The comment on `MODELS` above has said since the day it was
+     written that a script in one of the wider languages "is better served by"
+     v3 and that "the caller says which it wants" — and neither of the two
+     callers in this app ever said, so every Afrikaans read went to the other
+     model. An instruction to a caller that no caller follows is a default in
+     the wrong place. */
+  const readIn = typeof body.language === 'string' ? body.language : '';
+  const named = MODELS[String(body.model ?? '')] ?? '';
+  const chosen = named
+    ? { id: named, why: 'asked' as const }
+    : readIn
+      ? await modelForLanguage(readIn, BY_LANGUAGE)
+      : { id: MODELS.steady, why: 'default' as const };
+
   /* ── The timed read, when it is asked for ─────────────────────────────
 
      Opt-in, and off by default: this path gives up the streaming that keeps
@@ -243,7 +289,7 @@ export async function POST(request: Request): Promise<Response> {
     const timed = await speakTimed(
       voiceId,
       text,
-      MODELS[String(body.model ?? 'steady')] ?? MODELS.steady,
+      chosen.id,
       performance(body.how),
       asked,
     );
@@ -270,6 +316,12 @@ export async function POST(request: Request): Promise<Response> {
          their base64, so this is one encode rather than two guesses. */
       audio: Buffer.from(timed.audio).toString('base64'),
       type: 'audio/mpeg',
+      /* Which model read it and why that one. `unasked` means the model list
+         could not be read and nothing was changed — which is not the same as
+         "no model has this language", and the two must never render as the
+         same sentence. */
+      model: chosen.id,
+      modelWhy: chosen.why,
       words,
       lines: words ? linesFromWords(words) : null,
       ...(words
@@ -281,7 +333,7 @@ export async function POST(request: Request): Promise<Response> {
   const read = await speakStream(
     voiceId,
     text,
-    MODELS[String(body.model ?? 'steady')] ?? MODELS.steady,
+    chosen.id,
     performance(body.how),
     asked,
   );
@@ -301,6 +353,10 @@ export async function POST(request: Request): Promise<Response> {
     headers: {
       'Content-Type': 'audio/mpeg',
       'Cache-Control': 'no-store',
+      /* On a header, because the body of this one is audio. Same two fields
+         as the timed answer carries in its JSON. */
+      'X-Read-Model': chosen.id,
+      'X-Read-Model-Why': chosen.why,
       /* So nothing in front of this waits for the whole body before passing it
          on, which would give back exactly the delay this removes. */
       'Transfer-Encoding': 'chunked',

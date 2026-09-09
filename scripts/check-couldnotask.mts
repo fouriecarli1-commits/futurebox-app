@@ -62,35 +62,35 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
  * Fixing an entry means deleting its line, and the count below goes down.
  */
 const NAMED: Record<string, string> = {
-  'app/api/collab/route.ts:43':
+  "app/api/collab/route.ts :: const { data } = await client":
     'A collaboration list. A failed read shows no requests, which is wrong but costs nobody anything irreversible — and the room has no way to say more yet. Worth fixing when that room is next opened.',
-  'app/api/dialogue/route.ts:116':
+  "app/api/dialogue/route.ts :: const { data } = await client.rpc('speech_today', { p_owner: caller.id });":
     'A day’s speech count, used to refuse past a cap. A failed read reads as nought used, which is generous rather than harmful: the ceiling above it still holds, and the brake in front of it does not depend on this.',
-  'app/api/voice/speak/route.ts:160':
+  "app/api/voice/speak/route.ts :: const { data } = await client.rpc('speech_today', { p_owner: caller.id });":
     'The same day-count as dialogue, same reasoning.',
-  'app/api/voice/change/route.ts:96':
+  "app/api/voice/change/route.ts :: const { data } = await client.rpc('speech_today', { p_owner: caller.id });":
     'The same day-count again.',
-  'app/api/cast/route.ts:38':
+  "app/api/cast/route.ts :: const { data } = await client":
     'The cast list for an episode. Empty reads as "no speakers named", which is the same as the default state, so it cannot be told apart from it by design.',
-  'app/api/dub/route.ts:265':
+  "app/api/dub/route.ts :: const { data } = await client.rpc('claim_dub_refund', { p_dub: id, p_owner: caller.id });":
     'The refund claim’s own answer. Nought means "somebody else already claimed it", which is exactly what the RPC returns and what the code wants.',
-  'app/api/dub/route.ts:279':
+  "app/api/dub/route.ts :: const { data } = await client.rpc('claim_dub_refund', { p_dub: id, p_owner: caller.id }); #2":
     'The same refund claim on the webhook-settled path.',
-  'app/api/finetunes/route.ts:83':
+  "app/api/finetunes/route.ts :: const { data } = await client":
     'A list of trained sounds. Empty reads as none trained; a member who has trained one would notice immediately, and nothing is spent or lost on it.',
-  'app/api/live/route.ts:189':
+  "app/api/live/route.ts :: const { data: who } = await client.from('creators').select('owner, handle, name').in('owner', owners);":
     'Names for the room. A failed read shows everybody as "someone", which is the documented fallback for a member with no name set, so it degrades into a real state rather than a false one.',
-  'app/api/live/route.ts:212':
+  "app/api/live/route.ts :: const { data: files } = await client.from('episodes').select('id, audio_path').in('id', episodeIds);":
     'Episode file paths. A failed read draws the post without a player, which the room already handles as "the episode is gone" — wrong, but it says something rather than nothing.',
-  'app/api/radar/route.ts:69':
+  "app/api/radar/route.ts :: const { data: mine } = await client":
     'Songs on the collaboration radar. Empty reads as none shared, which is the default and the safe direction: it under-shares rather than over-shares.',
-  'app/api/purchases/route.ts:28':
+  "app/api/purchases/route.ts :: const { data } = await db.from('purchases').select('track_id, level').eq('owner', caller.id);":
     'What somebody has bought. Empty means nothing unlocked, which fails closed — the wrong way for them and the right way for the money. A member who paid and is told they have not will say so; the reverse would be silent.',
-  'app/lib/server/account.ts:288':
+  "app/lib/server/account.ts :: const { data } = await db":
     'purchaseLevel, the same question for one track, with the same direction: a failed read answers "none". Found only when this check learned to see past a type assertion, which is worth noting — it is the case the first two sweeps both walked past.',
-  'app/api/charts/route.ts:174':
+  "app/api/charts/route.ts :: const { data: tracks } = await client":
     'Songs on the chart. An empty chart reads as "nobody has listened", which is this fault exactly — but Spotlight has no way to say "could not be read" yet, and inventing one is a screen change rather than a read fix. Named so it is not forgotten.',
-  'app/api/charts/route.ts:204':
+  "app/api/charts/route.ts :: const { data: shows } = await client.from('shows').select('id, title, author').in('id', ids);":
     'Shows on the chart, same as above.',
 };
 
@@ -105,9 +105,24 @@ const walk = (dir: string): void => {
 };
 walk('app');
 
-const found: { at: string; line: string }[] = [];
+/**
+ * How an instance is named, and why it is not a line number.
+ *
+ * It used to be `file:lineNumber`, and every edit anywhere above one of these
+ * reads renamed it. Twice in one day that turned an unrelated change into two
+ * red assertions — "this one is not named" and "this reason stands over code
+ * that was fixed" — about a line that had not been touched, which is a check
+ * crying wolf about its own bookkeeping.
+ *
+ * The key is the code itself now. Where a file holds the same read twice —
+ * `/api/dub` claims its refund on two paths with an identical line — the
+ * second gets ` #2`. That is stable as long as their order is, which is a far
+ * weaker thing to disturb than an absolute line number.
+ */
+const found: { at: string; file: string; n: number; line: string }[] = [];
 for (const file of files) {
   const lines = readFileSync(file, 'utf8').split('\n');
+  const seen = new Map<string, number>();
   for (let i = 0; i < lines.length; i += 1) {
     const said = /const \{ data(?::\s*(\w+))?\s*\} = await/.exec(lines[i]);
     if (!said) continue;
@@ -126,7 +141,16 @@ for (const file of files) {
        it — found by the stale-reason assertion below pointing at a line the
        scan was no longer reaching. */
     const empties = new RegExp(`\\b${name}\\b(?: as [^?]*?)?[\\s)]*\\?\\?\\s*(\\[\\]|0)`);
-    if (empties.test(after)) found.push({ at: `${file}:${i + 1}`, line: lines[i].trim().slice(0, 70) });
+    if (!empties.test(after)) continue;
+    const code = lines[i].trim();
+    const nth = (seen.get(code) ?? 0) + 1;
+    seen.set(code, nth);
+    found.push({
+      at: `${file} :: ${code}${nth > 1 ? ` #${nth}` : ''}`,
+      file,
+      n: i + 1,
+      line: code.slice(0, 70),
+    });
   }
 }
 
@@ -134,7 +158,7 @@ const unnamed = found.filter((one) => !(one.at in NAMED));
 ok(
   'every read whose failure becomes an empty list or a nought is fixed or named',
   unnamed.length === 0,
-  unnamed.map((one) => `${one.at} — ${one.line}`).join(' ;; '),
+  unnamed.map((one) => `${one.file}:${one.n} — ${one.line}`).join(' ;; '),
 );
 
 /* The ratchet. Fifteen once the sweep could see past a type assertion, with

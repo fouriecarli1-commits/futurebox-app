@@ -81,7 +81,7 @@ export default function Presenter({
 }: {
   onUpgrade?: () => void;
 }): React.ReactElement | null {
-  const { t } = useLang();
+  const { lang, t } = useLang();
 
   const [available, setAvailable] = useState<boolean | null>(null);
   const [cast, setCast] = useState<Member[]>([]);
@@ -244,7 +244,19 @@ export default function Presenter({
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify({ voiceId, text: script, ...(timings ? { timings: true } : {}) }),
+          /* The language the script is being written in, so the route can
+             pick the model ElevenLabs' own list says covers it. This is what
+             was missing: the route has always said "the caller says which it
+             wants" and this caller never said, so an Afrikaans script was
+             read by the model chosen for English. The app's own language is
+             the signal — not a guess at the text, which would be a detector
+             this app does not have and would get wrong on a short script. */
+          body: JSON.stringify({
+            voiceId,
+            text: script,
+            language: lang,
+            ...(timings ? { timings: true } : {}),
+          }),
         });
 
       let response = await ask(true);
@@ -298,7 +310,7 @@ export default function Presenter({
     } finally {
       setBusy(null);
     }
-  }, [busy, script, voiceId, onUpgrade, t]);
+  }, [busy, script, voiceId, lang, onUpgrade, t]);
 
   const make = useCallback(async () => {
     if (busy || !reading || !face || !consent) return;

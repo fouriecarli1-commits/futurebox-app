@@ -154,7 +154,7 @@ export default function VoiceLab({
    */
   underScript?: React.ReactNode;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { lang, t } = useLang();
 
   const [recording, setRecording] = useState(false);
   const [left, setLeft] = useState(SAMPLE_SECONDS);
@@ -369,6 +369,12 @@ export default function VoiceLab({
           voiceId,
           text: script,
           model,
+          /* Sent even though this screen names a model: the route ignores the
+             language when a model is named, and the day this screen stops
+             naming one it must not silently go back to reading Afrikaans on
+             the English model. A field that is right and unused beats one
+             that has to be remembered later. */
+          language: lang,
           how: { stability, similarity, style, speed, speakerBoost },
         }),
       });
@@ -390,7 +396,7 @@ export default function VoiceLab({
     } finally {
       setBusy(null);
     }
-  }, [model, onUpgrade, script, similarity, speakerBoost, speed, stability, style, voiceId]);
+  }, [lang, model, onUpgrade, script, similarity, speakerBoost, speed, stability, style, voiceId]);
 
   const takeClip = useCallback(async () => {
     setProblem(null);

@@ -259,6 +259,13 @@ jobs:
       - name: ElevenLabs own model numbers are read, not assumed
         run: npm run check:elevenmodels
 
+      # #115: fifteen routes pin Afrikaans in the writing and nothing pinned
+      # it in the speaking. The model that reads a script is now the one
+      # ElevenLabs' own list says knows the language — and a list that cannot
+      # be read changes nothing rather than meaning "no".
+      - name: A script is read by a model that knows its language
+        run: npm run check:readmodel
+
       # The read already knew where every word fell. #112: the alignment comes
       # back with the audio at the same price, and this holds it to saying
       # null when it cannot be read rather than inventing times.
