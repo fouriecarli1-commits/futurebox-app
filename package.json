@@ -16,6 +16,7 @@
     "check:singmix": "tsx scripts/check-singmix.mts",
     "check:envdoc": "tsx scripts/check-envdoc.mts",
     "check:language": "tsx scripts/check-language.mts",
+    "check:elevenplans": "tsx scripts/check-elevenplans.mts",
     "check:parts": "tsx scripts/check-parts.mts",
     "check:blender": "tsx scripts/check-blender.mts",
     "check:kitsminutes": "tsx scripts/check-kitsminutes.mts",

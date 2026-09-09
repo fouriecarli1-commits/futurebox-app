@@ -87,19 +87,55 @@ const randForPlan = (plan: { usd: number }): number => plan.usd * RAND_PER_USD *
  * Dit maak die hele som eenvoudiger en eerliker: een liedjie van twee minute
  * kos ons $0,30, oftewel R4,80, op elke plan.
  *
- * Die krediete hieronder is daardie minute maal `EL_CREDITS_PER_MINUTE`, sodat
- * die res van hierdie lêer onveranderd bly werk. Sien `docs/ELEVENLABS-PRYSE.md`
- * vir die volledige lys.
+ * ── Wat ElevenLabs se ondersteuning self gesê het, 9 September 2026 ─────
+ *
+ * Carli het gevra wat gebeur as die krediete opraak. Hulle antwoord het drie
+ * dinge vasgemaak wat hierdie lêer tot nou afgelei het, en een daarvan draai
+ * die hele gevolgtrekking om.
+ *
+ *   1. Die krediet-getalle self: Pro 600 000, Scale 1 800 000, Business
+ *      6 000 000. Hieronder afgelei as minute x 900, wat 594 000 gegee het —
+ *      1% te laag. Hulle getal is die gesaghebbende een.
+ *   2. Scale kos **$299**, nie $330 nie. Die reël hieronder het $330 gesê met
+ *      'n opmerking wat erken het dat die som $299 gee.
+ *   3. **Bykoop kos presies dieselfde as die plan.** $0,000165 per krediet,
+ *      minimum $5, verval ná 12 maande. En $99 / 600 000 = $0,000165 presies.
+ *
+ * ── Wat punt 3 beteken ──────────────────────────────────────────────────
+ *
+ * **Daar is geen volume-afslag nie.** Pro, Business en bykoop is dieselfde
+ * koers tot op die tiende desimaal; Scale is 0,7% duurder. Om na Business op
+ * te gradeer koop $891 se krediete vir $891 — plus nege werkplek-sitplekke.
+ *
+ * Die plan is dus **nie 'n dak** nie. Dit is 'n vooruitbetaling. Bo die plan
+ * loop dit teen dieselfde koers aan, en die marge per lid verander glad nie.
+ * Die ou gevolgtrekking hieronder — "Business is die enigste plan wat ooit
+ * wins kan maak" — het op die dak gestaan, en die dak bestaan nie.
+ *
+ * Sien `docs/ELEVENLABS-PRYSE.md` vir die volledige lys.
  */
 const EL_PLANS = [
   { name: 'Creator', usd: 22, credits: 147 * 900 },
-  { name: 'Pro', usd: 99, credits: 660 * 900 },
-  /* Scale is die een uitsondering: 1 993 x $0,15 = $299, nie $330 nie. Die
-     plan kos meer as wat dit aan gebruik teruggee, en dit wys hieronder as 'n
-     hoër koers per liedjie. Nie reggemaak nie — dit is wat die bladsy sê. */
-  { name: 'Scale', usd: 330, credits: 1_993 * 900 },
-  { name: 'Business', usd: 990, credits: 6_600 * 900 },
+  /* Pro, Scale en Business se krediete kom uit ElevenLabs se eie e-pos van
+     9 September 2026 en nie meer uit minute x 900 nie. Die twee stem tot op
+     1% saam; hulle s'n is die gesaghebbende een. */
+  { name: 'Pro', usd: 99, credits: 600_000 },
+  { name: 'Scale', usd: 299, credits: 1_800_000 },
+  { name: 'Business', usd: 990, credits: 6_000_000 },
 ] as const;
+
+/**
+ * Wat 'n krediet bo die plan kos.
+ *
+ * ElevenLabs se ondersteuning, 9 September 2026: "The per-credit rate for your
+ * plan is $0.000165 USD per credit (minimum top-up is $5)." Krediete verval
+ * 12 maande ná aankoop, en Auto Top Up kan aangeskakel word.
+ *
+ * Dit is presies Pro se eie koers ($99 / 600 000) en presies Business s'n
+ * ($990 / 6 000 000). Die toets hieronder hou dit so — die dag waarop hierdie
+ * drie getalle uitmekaar dryf, is die dag waarop opgradeer weer iets beteken.
+ */
+const PAYG_USD_PER_CREDIT = 0.000165;
 
 /** ElevenLabs se krediete per minuut musiek. Uit `plans.ts`. */
 const EL_CREDITS_PER_MINUTE = 900;
@@ -343,7 +379,7 @@ for (const scenario of SCENARIOS) {
     `Vaste koste sonder ElevenLabs: ${rand(fixed)} ${scenario.workshops ? '(werkswinkels ingesluit)' : '(sonder werkswinkels)'}.`,
   );
   say('');
-  say('| ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede wat die plan se krediete hou | Werk dit? |');
+  say('| ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede voor bykoop begin | Genoeg krediete ingesluit? |');
   say('|---|---|---|---|---|');
   for (const plan of EL_PLANS) {
     const c = contribution(plan, scenario.use, scenario.freeUse, scenario.freeCredits);
@@ -358,10 +394,21 @@ for (const scenario of SCENARIOS) {
     );
   }
   say('');
-  say('*"Werk dit" beteken: die getal lede wat jy nodig het om gelyk te breek,');
-  say('pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek');
-  say('meer lede vra as wat die plan kan voed, kan daardie plan nooit wins maak nie —');
-  say('hoeveel mense ook al inteken.*');
+  /* Hierdie voetnoot het gesê 'n plan wat sy dak voor gelykbreek bereik "kan
+     nooit wins maak nie". Dit was waar solank die dak 'n muur was. ElevenLabs
+     se ondersteuning (9 September 2026) het bevestig bykoop kos presies
+     dieselfde as die plan, so daar is geen muur nie — net 'n punt waar die
+     rekening van vooruitbetaald na namaands skuif. Die kolom bly, want dit is
+     'n kontantvloei-feit wat sy moet weet; die gevolgtrekking wat daarop
+     gestaan het, is weg. */
+  say("*Die laaste kolom is nie 'n slaag-of-druip nie. Dit sê waar die plan se");
+  say('ingeslote krediete opraak en bykoop begin — teen presies dieselfde koers,');
+  say('so die wins per lid verander nie daar nie. Wat verander is kontantvloei:');
+  say('bo daardie punt betaal jy namaands eerder as vooruit.*');
+  say('');
+  say('*Waarop dit neerkom: die goedkoopste plan wat jou werkplek-sitplekke dek,');
+  say('is altyd die regte een. Op Pro breek jy gelyk by veel minder lede as op');
+  say('Business, want gelykbreek hang aan die vaste koste en nie aan die dak nie.*');
   say('');
 }
 
@@ -492,14 +539,39 @@ for (const plan of EL_PLANS) {
   const withShops = worst(business, true);
   const without = worst(business, false);
 
+  /* Die drie koerse, uitgereken en nie beweer nie. Die hele gevolgtrekking
+     hieronder hang aan die vraag of hulle dieselfde is. */
+  const proRate = 99 / 600_000;
+  const bizRate = 990 / 6_000_000;
+  const scaleRate = 299 / 1_800_000;
+  const flat = Math.abs(proRate - PAYG_USD_PER_CREDIT) < 1e-9
+    && Math.abs(bizRate - PAYG_USD_PER_CREDIT) < 1e-9;
+
   say('## Die antwoord');
   say('');
-  say('**1. Op ElevenLabs se gewone lys is Business die enigste plan wat ooit');
-  say('wins kan maak.** Nie omdat die kleiner planne te duur is nie — hulle is');
-  say('goedkoper per maand — maar omdat hulle te min krediete het. Elke plan het');
-  say("'n dak, en die getal lede wat jy nodig het om gelyk te breek is by Creator,");
-  say('Pro en Scale hoër as die getal lede wat die plan se krediete kan voed. Meer');
-  say('mense laat inteken maak dit erger, nie beter nie.');
+  say('**1. Daar is geen volume-afslag by ElevenLabs nie, en dit verander alles');
+  say('wat hierdie lêer voorheen gesê het.**');
+  say('');
+  say('Hulle ondersteuning, 9 September 2026: bykoop kos $0,000165 per krediet.');
+  say(`Pro se eie koers is $${proRate.toFixed(9)}. Business s'n is $${bizRate.toFixed(9)}.`);
+  say(`Scale s'n is $${scaleRate.toFixed(9)} — 0,7% duurder as albei.`);
+  say('');
+  say(
+    flat
+      ? '**Dieselfde koers, tot op die tiende desimaal.** Om na Business op te gradeer koop $891 se krediete vir $891, plus nege werkplek-sitplekke.'
+      : '**Die koerse verskil nou.** Reken die opgradering weer uit — hierdie sin het aangeneem hulle is dieselfde.',
+  );
+  say('');
+  say('Hierdie lêer het voorheen gesê Business is die enigste plan wat ooit wins');
+  say("kan maak, omdat elke kleiner plan 'n dak het wat laer is as gelykbreek.");
+  say('**Daardie dak bestaan nie.** Bo die plan loop dit teen presies dieselfde');
+  say('koers aan, so die marge per lid verander nie by die dak nie — net die');
+  say('kontantvloei doen. Die getal hieronder bly dus die moeite werd om te weet');
+  say('(dit is waar bykoop begin), maar dit is nie meer \'n muur nie.');
+  say('');
+  say('**Wat volg: bly op Pro.** Die goedkoopste plan wat haar sitplekke dek, is');
+  say('altyd reg, want die krediete daarbo kos dieselfde. Business is $891 per');
+  say('maand vir nege sitplekke wat sy nie het nie.');
   say('');
   /* Afgelei, nie getik nie. Hierdie sin het "Op Business werk dit" beweer
      terwyl sy eie twee getalle die teenoorgestelde gesê het — 140 teen 128 —
@@ -509,11 +581,11 @@ for (const plan of EL_PLANS) {
   const realNo = real(business, false);
   const realWs = real(business, true);
   say(
-    `**2. Op Business hang dit af van hoeveel lede werklik verbruik.** In die slegste geval — elke lid brand elke krediet — is gelykbreek **${without.breakEven} lede** en die plan hou **${without.capacity}**: dit ${without.works ? 'werk' : '**werk nie**'}. Met die werkswinkels terug word dit **${withShops.breakEven}** teen **${withShops.capacity}**, en dit ${withShops.works ? 'werk' : 'werk ook nie'}.`,
+    `**2. Gelykbreek hang aan die vaste koste, nie aan die dak nie.** In die slegste geval — elke lid brand elke krediet — is gelykbreek op Business **${without.breakEven} lede**, en die plan se krediete hou **${without.capacity}** voor bykoop begin. Met die werkswinkels terug word dit **${withShops.breakEven}** teen **${withShops.capacity}**.`,
   );
   say('');
   say(
-    `Realisties — 60% verbruik — is gelykbreek **${realNo.breakEven} lede** sonder werkswinkels en **${realWs.breakEven}** met, teen 'n dak van **${realNo.capacity}** lede. Albei ${realNo.works && realWs.works ? 'werk' : 'werk nie'}. Die werkswinkels is dus nie 'n uitgawe nie, dit is 'n besluit: hulle kos ${realWs.breakEven - realNo.breakEven} ekstra lede.`,
+    `Realisties — 60% verbruik — is gelykbreek **${realNo.breakEven} lede** sonder werkswinkels en **${realWs.breakEven}** met; bykoop begin by **${realNo.capacity}** lede. Die werkswinkels is nie 'n uitgawe nie, dit is 'n besluit: hulle kos ${realWs.breakEven - realNo.breakEven} ekstra lede.`,
   );
   say('');
   say('');

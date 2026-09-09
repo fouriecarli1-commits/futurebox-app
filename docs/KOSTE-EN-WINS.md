@@ -5,7 +5,7 @@
 > verander die prys in daardie lêers en loop die skrip weer, anders sê die
 > pryskaart en hierdie som twee verskillende dinge.
 
-Geskryf 2026-09-08. Kling is uit die som uit.
+Geskryf 2026-09-09. Kling is uit die som uit.
 
 ## Waarop dit rus
 
@@ -26,9 +26,9 @@ elke plan insluit is presies die plan se prys gedeel deur daardie koers —
 | Plan | Per maand | Krediete | Rand per krediet | Wat een liedjie ons kos |
 |---|---|---|---|---|
 | Creator | $22 + BTW = R404,80 | 132 300 | R0,00306 | R5,51 |
-| Pro | $99 + BTW = R1 821,60 | 594 000 | R0,00307 | R5,52 |
-| Scale | $330 + BTW = R6 072,00 | 1 793 700 | R0,00339 | R6,09 |
-| Business | $990 + BTW = R18 216,00 | 5 940 000 | R0,00307 | R5,52 |
+| Pro | $99 + BTW = R1 821,60 | 600 000 | R0,00304 | R5,46 |
+| Scale | $299 + BTW = R5 501,60 | 1 800 000 | R0,00306 | R5,50 |
+| Business | $990 + BTW = R18 216,00 | 6 000 000 | R0,00304 | R5,46 |
 
 ## Voorsigtig
 
@@ -36,17 +36,21 @@ Elke lid brand elke krediet op, elke gratis gebruiker ook, en die werkswinkels l
 
 Vaste koste sonder ElevenLabs: R7 543,74 (werkswinkels ingesluit).
 
-| ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede wat die plan se krediete hou | Werk dit? |
+| ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede voor bykoop begin | Genoeg krediete ingesluit? |
 |---|---|---|---|---|
 | Creator | R196,21 | 41 | 4 | nee |
-| Pro | R196,01 | 48 | 20 | nee |
-| Scale | R186,60 | 73 | 60 | nee |
-| Business | R196,01 | 132 | 201 | **ja** |
+| Pro | R196,91 | 48 | 20 | nee |
+| Scale | R196,31 | 67 | 60 | nee |
+| Business | R196,91 | 131 | 203 | **ja** |
 
-*"Werk dit" beteken: die getal lede wat jy nodig het om gelyk te breek,
-pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek
-meer lede vra as wat die plan kan voed, kan daardie plan nooit wins maak nie —
-hoeveel mense ook al inteken.*
+*Die laaste kolom is nie 'n slaag-of-druip nie. Dit sê waar die plan se
+ingeslote krediete opraak en bykoop begin — teen presies dieselfde koers,
+so die wins per lid verander nie daar nie. Wat verander is kontantvloei:
+bo daardie punt betaal jy namaands eerder as vooruit.*
+
+*Waarop dit neerkom: die goedkoopste plan wat jou werkplek-sitplekke dek,
+is altyd die regte een. Op Pro breek jy gelyk by veel minder lede as op
+Business, want gelykbreek hang aan die vaste koste en nie aan die dak nie.*
 
 ## Realisties
 
@@ -54,17 +58,21 @@ Betalende lede gebruik 60% van hul toelae, die helfte van die gratis gebruikers 
 
 Vaste koste sonder ElevenLabs: R7 543,74 (werkswinkels ingesluit).
 
-| ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede wat die plan se krediete hou | Werk dit? |
+| ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede voor bykoop begin | Genoeg krediete ingesluit? |
 |---|---|---|---|---|
 | Creator | R232,34 | 35 | 7 | nee |
-| Pro | R232,22 | 41 | 33 | nee |
-| Scale | R226,58 | 61 | 101 | **ja** |
-| Business | R232,22 | 111 | 335 | **ja** |
+| Pro | R232,76 | 41 | 33 | nee |
+| Scale | R232,40 | 57 | 101 | **ja** |
+| Business | R232,76 | 111 | 338 | **ja** |
 
-*"Werk dit" beteken: die getal lede wat jy nodig het om gelyk te breek,
-pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek
-meer lede vra as wat die plan kan voed, kan daardie plan nooit wins maak nie —
-hoeveel mense ook al inteken.*
+*Die laaste kolom is nie 'n slaag-of-druip nie. Dit sê waar die plan se
+ingeslote krediete opraak en bykoop begin — teen presies dieselfde koers,
+so die wins per lid verander nie daar nie. Wat verander is kontantvloei:
+bo daardie punt betaal jy namaands eerder as vooruit.*
+
+*Waarop dit neerkom: die goedkoopste plan wat jou werkplek-sitplekke dek,
+is altyd die regte een. Op Pro breek jy gelyk by veel minder lede as op
+Business, want gelykbreek hang aan die vaste koste en nie aan die dak nie.*
 
 ## Voorsigtig, sonder werkswinkels
 
@@ -72,17 +80,21 @@ Die slegste geval weer, met die werkswinkels af. Dit wys of die slegste geval ho
 
 Vaste koste sonder ElevenLabs: R3 543,74 (sonder werkswinkels).
 
-| ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede wat die plan se krediete hou | Werk dit? |
+| ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede voor bykoop begin | Genoeg krediete ingesluit? |
 |---|---|---|---|---|
 | Creator | R196,21 | 21 | 4 | nee |
-| Pro | R196,01 | 28 | 20 | nee |
-| Scale | R186,60 | 52 | 60 | **ja** |
-| Business | R196,01 | 112 | 201 | **ja** |
+| Pro | R196,91 | 28 | 20 | nee |
+| Scale | R196,31 | 47 | 60 | **ja** |
+| Business | R196,91 | 111 | 203 | **ja** |
 
-*"Werk dit" beteken: die getal lede wat jy nodig het om gelyk te breek,
-pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek
-meer lede vra as wat die plan kan voed, kan daardie plan nooit wins maak nie —
-hoeveel mense ook al inteken.*
+*Die laaste kolom is nie 'n slaag-of-druip nie. Dit sê waar die plan se
+ingeslote krediete opraak en bykoop begin — teen presies dieselfde koers,
+so die wins per lid verander nie daar nie. Wat verander is kontantvloei:
+bo daardie punt betaal jy namaands eerder as vooruit.*
+
+*Waarop dit neerkom: die goedkoopste plan wat jou werkplek-sitplekke dek,
+is altyd die regte een. Op Pro breek jy gelyk by veel minder lede as op
+Business, want gelykbreek hang aan die vaste koste en nie aan die dak nie.*
 
 ## Realisties, sonder werkswinkels
 
@@ -90,17 +102,21 @@ Dieselfde as bo, met die werkswinkels af. Dit is die enigste hefboom wat oorbly 
 
 Vaste koste sonder ElevenLabs: R3 543,74 (sonder werkswinkels).
 
-| ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede wat die plan se krediete hou | Werk dit? |
+| ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede voor bykoop begin | Genoeg krediete ingesluit? |
 |---|---|---|---|---|
 | Creator | R232,34 | 17 | 7 | nee |
-| Pro | R232,22 | 24 | 33 | **ja** |
-| Scale | R226,58 | 43 | 101 | **ja** |
-| Business | R232,22 | 94 | 335 | **ja** |
+| Pro | R232,76 | 24 | 33 | **ja** |
+| Scale | R232,40 | 39 | 101 | **ja** |
+| Business | R232,76 | 94 | 338 | **ja** |
 
-*"Werk dit" beteken: die getal lede wat jy nodig het om gelyk te breek,
-pas binne die getal lede wat die plan se krediete kan bedien. As gelykbreek
-meer lede vra as wat die plan kan voed, kan daardie plan nooit wins maak nie —
-hoeveel mense ook al inteken.*
+*Die laaste kolom is nie 'n slaag-of-druip nie. Dit sê waar die plan se
+ingeslote krediete opraak en bykoop begin — teen presies dieselfde koers,
+so die wins per lid verander nie daar nie. Wat verander is kontantvloei:
+bo daardie punt betaal jy namaands eerder as vooruit.*
+
+*Waarop dit neerkom: die goedkoopste plan wat jou werkplek-sitplekke dek,
+is altyd die regte een. Op Pro breek jy gelyk by veel minder lede as op
+Business, want gelykbreek hang aan die vaste koste en nie aan die dak nie.*
 
 ## Wat dit sou regmaak
 
@@ -123,7 +139,7 @@ Video is nie in die somme hierbo nie, en dit is nie 'n leemte nie.
 Die kode dra twee getalle vir dieselfde greep. `server/video/eleven.ts` sê
 Seedance kos 20 ElevenLabs-eenhede per vyf sekondes, en dieselfde lêer sê
 'n greep kos ongeveer R2,62. By die koers wat die musiekkant gebruik —
-R0,00307 per krediet op Business — is 20 krediete
+R0,00304 per krediet op Business — is 20 krediete
 R0,06, nie R2,62 nie. Die twee is 43 keer uit mekaar.
 
 Een van drie dinge is waar: video word teen 'n ander koers as musiek
@@ -153,38 +169,51 @@ ElevenLabs-sleutel wat jy reeds het, so video maak nie 'n nuwe rekening of
 
 | Laag | Prys | Poortfooi | Musiek | Bly oor |
 |---|---|---|---|---|
-| Maker | R149,00 | −R7,22 | −R49,68 | **R92,11** |
-| Studio | R399,00 | −R15,97 | −R121,44 | **R261,60** |
-| Label | R899,00 | −R33,47 | −R242,88 | **R622,66** |
+| Maker | R149,00 | −R7,22 | −R49,18 | **R92,60** |
+| Studio | R399,00 | −R15,97 | −R120,23 | **R262,81** |
+| Label | R899,00 | −R33,47 | −R240,45 | **R625,08** |
 
 ### Op ElevenLabs Scale
 
 | Laag | Prys | Poortfooi | Musiek | Bly oor |
 |---|---|---|---|---|
-| Maker | R149,00 | −R7,22 | −R54,84 | **R86,95** |
-| Studio | R399,00 | −R15,97 | −R134,05 | **R248,98** |
-| Label | R899,00 | −R33,47 | −R268,11 | **R597,43** |
+| Maker | R149,00 | −R7,22 | −R49,51 | **R92,27** |
+| Studio | R399,00 | −R15,97 | −R121,04 | **R262,00** |
+| Label | R899,00 | −R33,47 | −R242,07 | **R623,46** |
 
 ### Op ElevenLabs Business
 
 | Laag | Prys | Poortfooi | Musiek | Bly oor |
 |---|---|---|---|---|
-| Maker | R149,00 | −R7,22 | −R49,68 | **R92,10** |
-| Studio | R399,00 | −R15,97 | −R121,44 | **R261,60** |
-| Label | R899,00 | −R33,47 | −R242,88 | **R622,66** |
+| Maker | R149,00 | −R7,22 | −R49,18 | **R92,60** |
+| Studio | R399,00 | −R15,97 | −R120,23 | **R262,81** |
+| Label | R899,00 | −R33,47 | −R240,45 | **R625,08** |
 
 ## Die antwoord
 
-**1. Op ElevenLabs se gewone lys is Business die enigste plan wat ooit
-wins kan maak.** Nie omdat die kleiner planne te duur is nie — hulle is
-goedkoper per maand — maar omdat hulle te min krediete het. Elke plan het
-'n dak, en die getal lede wat jy nodig het om gelyk te breek is by Creator,
-Pro en Scale hoër as die getal lede wat die plan se krediete kan voed. Meer
-mense laat inteken maak dit erger, nie beter nie.
+**1. Daar is geen volume-afslag by ElevenLabs nie, en dit verander alles
+wat hierdie lêer voorheen gesê het.**
 
-**2. Op Business hang dit af van hoeveel lede werklik verbruik.** In die slegste geval — elke lid brand elke krediet — is gelykbreek **112 lede** en die plan hou **201**: dit werk. Met die werkswinkels terug word dit **132** teen **201**, en dit werk.
+Hulle ondersteuning, 9 September 2026: bykoop kos $0,000165 per krediet.
+Pro se eie koers is $0.000165000. Business s'n is $0.000165000.
+Scale s'n is $0.000166111 — 0,7% duurder as albei.
 
-Realisties — 60% verbruik — is gelykbreek **94 lede** sonder werkswinkels en **111** met, teen 'n dak van **335** lede. Albei werk. Die werkswinkels is dus nie 'n uitgawe nie, dit is 'n besluit: hulle kos 17 ekstra lede.
+**Dieselfde koers, tot op die tiende desimaal.** Om na Business op te gradeer koop $891 se krediete vir $891, plus nege werkplek-sitplekke.
+
+Hierdie lêer het voorheen gesê Business is die enigste plan wat ooit wins
+kan maak, omdat elke kleiner plan 'n dak het wat laer is as gelykbreek.
+**Daardie dak bestaan nie.** Bo die plan loop dit teen presies dieselfde
+koers aan, so die marge per lid verander nie by die dak nie — net die
+kontantvloei doen. Die getal hieronder bly dus die moeite werd om te weet
+(dit is waar bykoop begin), maar dit is nie meer 'n muur nie.
+
+**Wat volg: bly op Pro.** Die goedkoopste plan wat haar sitplekke dek, is
+altyd reg, want die krediete daarbo kos dieselfde. Business is $891 per
+maand vir nege sitplekke wat sy nie het nie.
+
+**2. Gelykbreek hang aan die vaste koste, nie aan die dak nie.** In die slegste geval — elke lid brand elke krediet — is gelykbreek op Business **111 lede**, en die plan se krediete hou **203** voor bykoop begin. Met die werkswinkels terug word dit **131** teen **203**.
+
+Realisties — 60% verbruik — is gelykbreek **94 lede** sonder werkswinkels en **111** met; bykoop begin by **338** lede. Die werkswinkels is nie 'n uitgawe nie, dit is 'n besluit: hulle kos 17 ekstra lede.
 
 
 ### En wat SARS daarvan vat
@@ -202,18 +231,18 @@ nie.
 
 | By vol kapasiteit | Sonder werkswinkels | Met werkswinkels |
 |---|---|---|
-| Lede | 335 | 335 |
-| Omset | R100 165,00 | R100 165,00 |
-| Wins voor belasting | R56 033,36 | R52 033,36 |
-| Ná 27% | R40 904,35 | R37 984,35 |
-| Ná 30% | R39 223,35 | R36 423,35 |
-| Ná 30%, per jaar | R470 680,20 | R437 080,20 |
+| Lede | 338 | 338 |
+| Omset | R101 062,00 | R101 062,00 |
+| Wins voor belasting | R56 913,60 | R52 913,60 |
+| Ná 27% | R41 546,93 | R38 626,93 |
+| Ná 30% | R39 839,52 | R37 039,52 |
+| Ná 30%, per jaar | R478 074,26 | R444 474,26 |
 
 **Ja, dit maak wins. Maar kyk na wat daardie tabel eintlik sê.**
 
 Dit is nie wins by die huidige skaal nie — dit is die **meeste wat hierdie
 plan ooit kan verdien**, hoe goed dit ook al verkoop word. Die dak is nie
-die mark nie, dit is ElevenLabs se krediete: by 335 lede is die plan se
+die mark nie, dit is ElevenLabs se krediete: by 338 lede is die plan se
 krediete op, en lid 215 kan nie bedien word nie.
 
 **Dít is die ding om te herbesin, en dit is nie belasting nie.**
@@ -222,7 +251,7 @@ Drie hefbome, in volgorde van hoeveel hulle beweeg:
 
 1. **Prys.** Elke rand op die maandprys gaan reguit deur na bydrae — daar
    is geen ekstra ElevenLabs-koste aan 'n hoër prys nie. Tien persent op
-   die prys is ongeveer R10 016,50 per maand by vol kapasiteit,
+   die prys is ongeveer R10 106,20 per maand by vol kapasiteit,
    en dit skuif gelykbreek af sowel as die dak op.
 2. **Die dak self.** Meer lede as die plan kan voed, beteken 'n groter
    plan of minder krediete per lid. Albei is prysbesluite.
@@ -234,7 +263,7 @@ Drie hefbome, in volgorde van hoeveel hulle beweeg:
 **1. Klein Sake Korporasie (SBC).** 'n (Pty) Ltd wat kwalifiseer betaal
 nie 27% op alles nie: die eerste R95 750 belasbare inkomste is teen **0%**,
 en die snit tot R365 000 teen **7%**. Die maksimum jaarwins hierbo is
-R672 400,28 — heeltemal binne daardie tweede snit.
+R682 963,23 — heeltemal binne daardie tweede snit.
    Die effektiewe koers sou dan naby **3%** wees, nie 30% nie. Kwalifikasie
    het voorwaardes (alle aandeelhouers natuurlike persone, omset onder
    R20m, nie 'n persoonlike diensverskaffer nie) en dit is 'n vraag vir
@@ -244,13 +273,13 @@ R672 400,28 — heeltemal binne daardie tweede snit.
    'n dooie koste **solank sy nie geregistreer is nie**. Geregistreer kan sy
    dit terugeis — maar dan moet sy 15% op lidmaatskappe hef of dit self dra.
    Verpligte registrasie is by R1 miljoen omset oor 12 maande; by vol
-   kapasiteit is die omset R1 201 980,00 per jaar, dus
+   kapasiteit is die omset R1 212 744,00 per jaar, dus
    **bereik sy dit nooit op hierdie plan nie**. Vrywillige registrasie is
    moontlik bo R50 000 omset, en dan word die BTW terugeisbaar.
 
    Wat dit werd is: die BTW op ElevenLabs alleen is R2 376,00 per maand,
    oftewel R28 512,00 per jaar. Teen 'n maksimum jaarwins van
-   R672 400,28 is dit nie klein nie.
+   R682 963,23 is dit nie klein nie.
 
 *Geen van hierdie twee is belastingadvies nie. Albei is gedokumenteerde
 SARS-reëls wat groot genoeg is om te vra, met die somme reeds gedoen sodat

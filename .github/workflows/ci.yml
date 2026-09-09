@@ -131,6 +131,12 @@ jobs:
       - name: A generated part makes sense to a musician
         run: npm run check:parts
 
+      # ElevenLabs' plan rate and their top-up rate are the same number, so
+      # upgrading buys seats and not cheaper credits. The advice to stay on the
+      # cheapest plan is true only while that holds.
+      - name: ElevenLabs' plan and top-up rates still match
+        run: npm run check:elevenplans
+
       # An operation a room registers but the registry does not describe is
       # never offered to the copilot, and nothing about that failure is visible.
       - name: Copilot operations are described
