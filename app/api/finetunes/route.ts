@@ -22,6 +22,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { EXPENSIVE, refuseIfTooMany } from '@/app/lib/server/brake';
 import { configured, createFinetune, dropFinetune, finetuneStatus } from '@/app/lib/server/eleven';
 import { SOUND_CAPS } from '@/app/lib/plans';
 import { CREDITS } from '@/app/lib/credits';
@@ -117,6 +118,12 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  /* Training a voice is one of the dearest single things this app can ask
+     for, and it was exempted from the brake by a reading of the GET beside
+     it — `check:brake`'s coverage assertion caught that on its first run. */
+  const flood = refuseIfTooMany('finetune', request, EXPENSIVE);
+  if (flood) return flood;
+
   if (!configured()) {
     return Response.json({ message: 'Training is not switched on for this app yet.' }, { status: 503 });
   }

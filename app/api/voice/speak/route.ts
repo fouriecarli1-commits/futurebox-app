@@ -12,6 +12,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { guard } from '@/app/lib/server/safety';
 import { configured, speakStream, stockVoices, type Performance } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
@@ -61,6 +62,13 @@ function performance(how?: {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  /* A retry loop is stopped here, before anything is charged or asked for.
+     `GENERATION` explains what these numbers are chosen against: not a
+     person, but how fast one address could eat the month's allowance
+     before the warning at half of it has time to arrive. */
+  const flood = refuseIfTooMany('voice-speak', request, GENERATION);
+  if (flood) return flood;
+
   let body: {
     voiceId?: string;
     text?: string;

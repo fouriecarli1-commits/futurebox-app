@@ -31,11 +31,19 @@
  */
 
 import { configured, sampleUrlFor, stockVoices } from '@/app/lib/server/eleven';
+import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 
 /** A sample does not change. Let the browser keep it. */
 const CACHE = 'public, max-age=86400, immutable';
 
 export async function GET(request: Request): Promise<Response> {
+  /* A retry loop is stopped here, before anything is charged or asked for.
+     `GENERATION` explains what these numbers are chosen against: not a
+     person, but how fast one address could eat the month's allowance
+     before the warning at half of it has time to arrive. */
+  const flood = refuseIfTooMany('voice-preview', request, GENERATION);
+  if (flood) return flood;
+
   if (!configured()) {
     return Response.json({ message: 'The voice service is not switched on.' }, { status: 503 });
   }

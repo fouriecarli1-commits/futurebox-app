@@ -22,6 +22,7 @@
  */
 
 import { allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
+import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
@@ -117,6 +118,13 @@ async function ask(key: string, file: Blob, model: string, diarize: boolean): Pr
 }
 
 export async function POST(request: Request): Promise<Response> {
+  /* A retry loop is stopped here, before anything is charged or asked for.
+     `GENERATION` explains what these numbers are chosen against: not a
+     person, but how fast one address could eat the month's allowance
+     before the warning at half of it has time to arrive. */
+  const flood = refuseIfTooMany('transcribe', request, GENERATION);
+  if (flood) return flood;
+
   const key = process.env.ELEVENLABS_API_KEY;
   if (!key) {
     return Response.json(

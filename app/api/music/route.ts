@@ -23,6 +23,7 @@
  */
 
 import { noteCost } from '@/app/lib/server/eleven';
+import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { enough as enoughAllowance } from '@/app/lib/server/elevenceiling';
 import { admin, allowanceFor, callerFrom, metered, recordGeneration } from '@/app/lib/server/account';
 import { buildRequest, forPreview, type Body } from '@/app/lib/server/musicplan';
@@ -79,6 +80,13 @@ const OUTPUT_FORMAT: string = 'auto';
 const PLAIN_FORMAT: string = 'mp3_44100_128';
 
 export async function POST(request: Request): Promise<Response> {
+  /* A retry loop is stopped here, before anything is charged or asked for.
+     `GENERATION` explains what these numbers are chosen against: not a
+     person, but how fast one address could eat the month's allowance
+     before the warning at half of it has time to arrive. */
+  const flood = refuseIfTooMany('music', request, GENERATION);
+  if (flood) return flood;
+
   let body: Body;
   try {
     body = (await request.json()) as Body;

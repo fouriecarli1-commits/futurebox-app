@@ -31,7 +31,8 @@
  */
 import { readFileSync } from 'node:fs';
 import {
-  RAND_PER_CREDIT, STEPS, claimKey, elevenLetter, kitsLetter, monthKey, stepFor,
+  CREDITS_A_MEMBER, RAND_PER_CREDIT, STEPS, ceilingFor, claimKey, elevenLetter, kitsLetter,
+  monthKey, stepFor,
 } from '../app/lib/server/spendwatch';
 import { PLAN_CREDITS } from '../app/lib/server/elevenceiling';
 
@@ -133,6 +134,37 @@ ok('compared in constant time', /timingSafeEqual/.test(page));
 ok('and it refuses rather than defaulting to open',
   /return Response\.json\(\{ error: 'not_allowed' \}, \{ status: 403 \}\)/.test(page));
 ok('no supplier key is in the answer', !/KITS_API_KEY|ELEVEN(LABS)?_API_KEY/.test(page));
+
+/* ── 8. The ceiling it recommends ──────────────────────────────────────── */
+
+/* She asked where the roof should be. The honest answer depends on how many
+   people are paying, so it is worked out rather than named — and it is a
+   recommendation, never applied, because a ceiling that raised itself would be
+   raised by the very runaway it exists to stop. */
+ok('the plan is the floor, so a quiet month never recommends less than she has bought',
+  ceilingFor(0) === PLAN_CREDITS && ceilingFor(5) === PLAN_CREDITS,
+  `${ceilingFor(0)} and ${ceilingFor(5)}`);
+ok('a member is twenty thousand credits', CREDITS_A_MEMBER === 20_000, String(CREDITS_A_MEMBER));
+/* 33 members is what the plan holds, per scripts/costs-eleven.mts. */
+ok('the plan\u2019s own capacity lands on the plan\u2019s own figure',
+  ceilingFor(30) === PLAN_CREDITS, String(ceilingFor(30)));
+ok('sixty members recommends twice the plan', ceilingFor(60) === 1_200_000,
+  String(ceilingFor(60)));
+ok('and it is rounded to something a person types', ceilingFor(47) % 10_000 === 0,
+  String(ceilingFor(47)));
+ok('the recommendation rises with members', ceilingFor(100) > ceilingFor(60));
+
+const report = readFileSync('app/api/allowance/route.ts', 'utf8');
+ok('the page reports the recommendation beside what is actually set',
+  /recommended/.test(report) && /setTo/.test(report));
+ok('and what the top-up to reach it would cost',
+  /randOfTopUpAtRecommended/.test(report));
+ok('an unreadable member count recommends nothing rather than guessing',
+  /could not be read, so no ceiling is recommended/.test(report)
+  && /members === null \? null/.test(readFileSync('app/lib/server/spendwatch.ts', 'utf8')));
+ok('and the count includes members who have cancelled but are still paid up',
+  /'non-renewing'/.test(readFileSync('app/lib/server/spendwatch.ts', 'utf8')),
+  'a non-renewing subscription still uses credits until its date');
 
 /* ── The price quoted is their published one ───────────────────────────── */
 ok('a thousand credits is about R3,09', Math.abs(RAND_PER_CREDIT * 1000 - 3.086) < 0.01,

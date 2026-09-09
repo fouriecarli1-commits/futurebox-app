@@ -31,6 +31,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { EXPENSIVE, refuseIfTooMany } from '@/app/lib/server/brake';
 import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { CREDITS, videoCost } from '@/app/lib/credits';
@@ -294,6 +295,13 @@ async function link(client: ReturnType<typeof admin>, path: string): Promise<str
 }
 
 export async function POST(request: Request): Promise<Response> {
+  /* A retry loop is stopped here, before anything is charged or asked for.
+     `GENERATION` explains what these numbers are chosen against: not a
+     person, but how fast one address could eat the month's allowance
+     before the warning at half of it has time to arrive. */
+  const flood = refuseIfTooMany('video', request, EXPENSIVE);
+  if (flood) return flood;
+
   let body: Body;
   try {
     body = (await request.json()) as Body;

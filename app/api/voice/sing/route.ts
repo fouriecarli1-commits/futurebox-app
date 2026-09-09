@@ -19,6 +19,7 @@
  */
 
 import { callerFrom, metered } from '@/app/lib/server/account';
+import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { configured, convert, namedModels, safeModelId } from '@/app/lib/server/kits';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS, perMinute } from '@/app/lib/credits';
@@ -50,6 +51,13 @@ const MAX_BYTES = 25 * 1024 * 1024;
 const MAX_SECONDS = 10 * 60;
 
 export async function POST(request: Request): Promise<Response> {
+  /* A retry loop is stopped here, before anything is charged or asked for.
+     `GENERATION` explains what these numbers are chosen against: not a
+     person, but how fast one address could eat the month's allowance
+     before the warning at half of it has time to arrive. */
+  const flood = refuseIfTooMany('voice-sing', request, GENERATION);
+  if (flood) return flood;
+
   if (!configured()) {
     return Response.json(
       { message: 'Singing in your own voice is not switched on for this app yet.' },

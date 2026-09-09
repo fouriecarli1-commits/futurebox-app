@@ -18,6 +18,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
 import { CREDITS } from '@/app/lib/credits';
@@ -105,6 +106,13 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  /* A retry loop is stopped here, before anything is charged or asked for.
+     `GENERATION` explains what these numbers are chosen against: not a
+     person, but how fast one address could eat the month's allowance
+     before the warning at half of it has time to arrive. */
+  const flood = refuseIfTooMany('cover', request, GENERATION);
+  if (flood) return flood;
+
   let body: Body;
   try {
     body = (await request.json()) as Body;

@@ -26,6 +26,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { guard } from '@/app/lib/server/safety';
 import { configured, converse, stockVoices } from '@/app/lib/server/eleven';
 import { spoken, type Turn } from '@/app/lib/dialogue';
@@ -43,6 +44,13 @@ export const maxDuration = 300;
 const MAX_TURNS = 400;
 
 export async function POST(request: Request): Promise<Response> {
+  /* A retry loop is stopped here, before anything is charged or asked for.
+     `GENERATION` explains what these numbers are chosen against: not a
+     person, but how fast one address could eat the month's allowance
+     before the warning at half of it has time to arrive. */
+  const flood = refuseIfTooMany('dialogue', request, GENERATION);
+  if (flood) return flood;
+
   let body: {
     turns?: { voiceId?: string; text?: string }[];
     /** ISO 639-1, to hold the model to a language. Afrikaans is 'af'. */

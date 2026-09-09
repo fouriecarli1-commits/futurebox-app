@@ -211,6 +211,57 @@ export async function watchKits(): Promise<void> {
   }
 }
 
+/**
+ * Credits a month per paying member, for the ceiling this app recommends.
+ *
+ * ── Where the number comes from ──────────────────────────────────────────
+ *
+ * `scripts/costs-eleven.mts`, realistically and without workshops: the Pro
+ * plan breaks even at 24 paying members and its 600,000 credits hold 33. So a
+ * member's realistic music use is 600,000 / 33 — about 18,000 credits, or ten
+ * minutes of music a month. Twenty thousand is that with a little room.
+ *
+ * ── Why this is a recommendation and not the ceiling ─────────────────────
+ *
+ * A ceiling that rises on its own is not a brake against a bug: the runaway
+ * that this whole file exists to catch would simply raise its own roof as it
+ * went. So the app works out what the ceiling *should* be from the real member
+ * count and reports it; `ELEVEN_MONTHLY_CREDITS` is still set by hand.
+ *
+ * ── Why topping up is not the thing to be afraid of ──────────────────────
+ *
+ * Each member past the plan costs about 20,000 credits — R62 of top-up — and
+ * pays R149 at the lowest tier. That is R87 of margin, so growth past the plan
+ * pays for itself and then some. The ceiling is not protection from members.
+ * It is protection from a loop and from abuse, which is why the recommendation
+ * is tied to members who are actually paying rather than to traffic.
+ */
+export const CREDITS_A_MEMBER = 20_000;
+
+/** How many paying members there are, or null when it cannot be counted. */
+export async function payingMembers(): Promise<number | null> {
+  const db = admin();
+  if (!db) return null;
+  const { count, error } = await db
+    .from('subscriptions')
+    .select('owner', { count: 'exact', head: true })
+    /* Paystack's own words. 'non-renewing' is still paid up to its date, so it
+       still uses credits this month and still has to be planned for. */
+    .in('status', ['active', 'non-renewing']);
+  if (error) return null;
+  return typeof count === 'number' ? count : null;
+}
+
+/**
+ * What the ceiling should be for this many members, never below the plan.
+ *
+ * The plan is the floor because credits already paid for are credits to use;
+ * a recommendation below it would authorise less than she has bought.
+ */
+export function ceilingFor(members: number): number {
+  return Math.max(PLAN_CREDITS, Math.ceil((members * CREDITS_A_MEMBER) / 10_000) * 10_000);
+}
+
 export interface Standing {
   readonly used: number;
   readonly ceiling: number;
@@ -234,7 +285,10 @@ export async function standing(): Promise<{
   canWrite: boolean;
   to: string;
   randToTopUpEleven: number;
+  members: number | null;
+  recommend: number | null;
 }> {
+  const members = await payingMembers();
   const elevenCeiling = monthlyCredits();
   const elevenUsed = await usedCredits();
   const kitsCeiling = monthlyMinutes();
@@ -258,5 +312,10 @@ export async function standing(): Promise<{
     canWrite: configured(),
     to: OWNER(),
     randToTopUpEleven: Math.max(0, elevenCeiling - PLAN_CREDITS) * RAND_PER_CREDIT,
+    members,
+    /* Null rather than a guess when the count could not be read. A
+       recommendation built on an unknown member count is a number that looks
+       authoritative and is not. */
+    recommend: members === null ? null : ceilingFor(members),
   };
 }

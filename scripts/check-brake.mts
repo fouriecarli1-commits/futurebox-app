@@ -13,7 +13,10 @@
  * short-circuit, and every call the minute window refused would stop counting
  * towards the hour. It would pass every other test here.
  */
-import { tooMany, forgetEverything, callerAddress } from '../app/lib/server/brake.ts';
+import { readFileSync, readdirSync } from 'node:fs';
+import {
+  EXPENSIVE, GENERATION, callerAddress, forgetEverything, tooMany,
+} from '../app/lib/server/brake.ts';
 
 let failures = 0;
 function ok(what: string, passed: boolean, detail = ''): void {
@@ -75,8 +78,111 @@ forgetEverything();
 }
 
 forgetEverything();
+
+/* ── Coverage: every route that spends a supplier's money is braked ────────
+ *
+ * The assertions above test the mechanism. Nothing tested who used it, and
+ * that is exactly how the gap happened: eleven routes ended up braked and
+ * every one of them spent *text* money, while music, stems, dubbing, video and
+ * every voice route — the ones that spend ElevenLabs and Kits — had nothing.
+ * `docs/SAFETY-REVIEW.md` even recorded the state as complete.
+ *
+ * Carli, 9 September 2026: "kan een retry op enige funksie nie gestop word
+ * nie, kan ons nie iets in bou wat dit stop nie?"
+ *
+ * So this is discovered rather than listed: any route that reaches a supplier
+ * must brake, and a new one that does not is a failure here on the day it is
+ * written. The exemptions are named with a reason, and each is checked to still
+ * be the read-only thing its reason claims.
+ */
+
+/**
+ * Reads a supplier's account or reports on it. Spends nothing per call.
+ *
+ * `finetunes` was on this list, on the strength of the GET that lists trained
+ * voices. Its POST trains one and charges for it — the coverage assertion
+ * below caught that the first time it ran, which is the reason the exemptions
+ * are checked rather than trusted.
+ */
+const REPORTS_ONLY: Record<string, string> = {
+  'app/api/account/route.ts': 'the member’s own account, no supplier call',
+  'app/api/analyse/setup/route.ts': 'a guarded report on what Music.ai answers',
+  'app/api/eleven/prices/route.ts': 'reads our own eleven_costs rows',
+  'app/api/eleven/pronounce/route.ts': 'a fixed pronunciation table, no call',
+  'app/api/kits/face/route.ts': 'proxies a picture already listed under our key',
+  'app/api/kits/setup/route.ts': 'a guarded report on what Kits answers',
+  'app/api/voice/route.ts': 'lists voices, generates nothing',
+  'app/api/watch/route.ts': 'reports where the allowance stands',
+};
+
+const SUPPLIER = /from '@\/app\/lib\/server\/(eleven|kits|musicai)'/;
+
+const walk = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+    entry.isDirectory()
+      ? walk(`${dir}/${entry.name}`)
+      : entry.name === 'route.ts'
+        ? [`${dir}/${entry.name}`]
+        : [],
+  );
+
+const spenders = walk('app/api').filter((path) => SUPPLIER.test(readFileSync(path, 'utf8')));
+ok('there are supplier routes to check', spenders.length > 10, `${spenders.length} found`);
+
+const unbraked: string[] = [];
+for (const path of spenders) {
+  if (path in REPORTS_ONLY) continue;
+  const source = readFileSync(path, 'utf8');
+  if (!/refuseIfTooMany\(|tooMany\(/.test(source)) unbraked.push(path);
+}
+ok(
+  'every route that spends a supplier’s money brakes a retry loop',
+  unbraked.length === 0,
+  unbraked.join(', '),
+);
+
+/* An exemption that stopped being read-only is the same gap wearing a reason.
+   A route claiming to report on an account must not also charge for one. */
+for (const [path, why] of Object.entries(REPORTS_ONLY)) {
+  const source = readFileSync(path, 'utf8');
+  ok(
+    `the exemption for ${path.replace('app/api/', '')} is still a report — ${why}`,
+    !/await charge\(/.test(source),
+    'it charges the member, so it spends and must brake',
+  );
+}
+
+/* The numbers themselves, because a limit set too high is not a brake.
+   Twenty songs an hour is seventeen hours to eat a 600,000-credit month; the
+   warning at half arrives after about eight. Sixty an hour would be five and a
+   half, which fits inside one night's sleep. */
+ok('a generation limit leaves the warning time to arrive',
+  GENERATION.perHour <= 20 && GENERATION.perMinute <= 3,
+  `${GENERATION.perMinute}/min, ${GENERATION.perHour}/hour`);
+ok('and dearer work is held tighter still',
+  EXPENSIVE.perHour < GENERATION.perHour && EXPENSIVE.perMinute < GENERATION.perMinute,
+  `${EXPENSIVE.perMinute}/min, ${EXPENSIVE.perHour}/hour`);
+
+/* Dubbing v2 is $2.20 a minute against music's $0.1485 — fifteen times — and
+   video is billed per second by Kling. Both are on the tighter limit. */
+for (const path of ['app/api/dub/route.ts', 'app/api/video/route.ts']) {
+  ok(`${path.replace('app/api/', '')} uses the tighter limit`,
+    /refuseIfTooMany\('[a-z-]+', request, EXPENSIVE\)/.test(readFileSync(path, 'utf8')));
+}
+
+/* Braked before the money moves, not after. A caller stopped by a limit must
+   not have been charged for the turn — the same rule the allowance follows. */
+for (const path of spenders) {
+  if (path in REPORTS_ONLY) continue;
+  const source = readFileSync(path, 'utf8');
+  const brake = source.search(/refuseIfTooMany\(|tooMany\(/);
+  const charge = source.indexOf('await charge(');
+  if (charge === -1) continue;
+  ok(`${path.replace('app/api/', '')} brakes before it charges`, brake > -1 && brake < charge);
+}
+
 if (failures) {
   console.error(`\ncheck:brake — ${failures} assertion(s) failed.\n`);
   process.exit(1);
 }
-console.log('\ncheck:brake — the brake holds.');
+console.log('\ncheck:brake — the brake holds, and every route that spends money uses it.');

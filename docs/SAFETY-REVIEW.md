@@ -30,11 +30,34 @@ somewhere in this code where it is enforced.
 | **Commercial use needs a paid plan.** | This one is about **your** ElevenLabs plan, not your members'. Everything made here is made on one account. | **Unverified, and it needs you.** If that account is on the free tier, nothing made in this app may be released commercially — by anybody. Check the plan before the first paying member. |
 
 **Rate limiting**, which is not their rule but is what stops a loop spending the
-month's allowance in an afternoon: the two routes that can be called without an
-account — the copilot and the help desk — are capped per address in
-`lib/server/brake.ts`. The allowance itself is watched by `/api/watch`, which
-emails at three quarters, nine tenths and nearly gone, once each per billing
-month.
+month's allowance in an afternoon.
+
+~~The two routes that can be called without an account — the copilot and the
+help desk — are capped per address in `lib/server/brake.ts`.~~ **That was true
+and was a wrong reassurance.** Eleven routes ended up capped and every one of
+them spent *text* money. The fifteen that spend **ElevenLabs and Kits** money —
+music, stems, dubbing, video, voice training and every voice route — had no cap
+at all, so a retry loop could spend the ElevenLabs month in a few hours and the
+Kits month faster than that.
+
+Carli found it by asking, 9 September 2026: *"kan een retry op enige funksie nie
+gestop word nie, kan ons nie iets in bou wat dit stop nie?"* Every one of them
+is capped now, before anything is charged or asked for, and `check:brake`
+**discovers** the routes rather than listing them — a new route that reaches a
+supplier and does not cap fails on the day it is written. That coverage
+assertion found `/api/finetunes` on its first run: it was exempted on the
+strength of the GET beside it, and its POST trains a voice and charges for it.
+
+The numbers are chosen against how fast one address can eat the month before
+the warning arrives, not against a person: twenty generations an hour is
+seventeen hours to spend 600,000 credits, and `spendwatch` writes at half of
+that. Sixty an hour would be five and a half hours, which fits inside one
+night's sleep.
+
+The allowance itself is watched two ways. `/api/watch` emails at three
+quarters, nine tenths and nearly gone, once each per billing month; and
+`lib/server/spendwatch.ts` writes at 50%, 75%, 90% and 100% of the ceiling this
+app sets for itself, for Kits' minutes as well as ElevenLabs' credits.
 
 **Not checked, because it cannot be from here:** whether a real request is
 accepted, what a real refusal looks like, and whether the account's plan carries

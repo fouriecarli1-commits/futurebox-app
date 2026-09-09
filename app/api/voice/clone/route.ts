@@ -17,6 +17,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { cloneVoice, configured, forgetVoice } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS } from '@/app/lib/credits';
@@ -35,6 +36,13 @@ const MIN_BYTES = 40_000;
 
 
 export async function POST(request: Request): Promise<Response> {
+  /* A retry loop is stopped here, before anything is charged or asked for.
+     `GENERATION` explains what these numbers are chosen against: not a
+     person, but how fast one address could eat the month's allowance
+     before the warning at half of it has time to arrive. */
+  const flood = refuseIfTooMany('voice-clone', request, GENERATION);
+  if (flood) return flood;
+
   if (!configured()) {
     return Response.json({ message: 'Voice cloning is not switched on for this app yet.' }, { status: 503 });
   }

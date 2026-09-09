@@ -25,7 +25,7 @@
 
 import crypto from 'node:crypto';
 import { PLAN_CREDITS, USD_PER_CREDIT } from '@/app/lib/server/elevenceiling';
-import { RAND_PER_CREDIT, STEPS, standing } from '@/app/lib/server/spendwatch';
+import { CREDITS_A_MEMBER, RAND_PER_CREDIT, STEPS, standing } from '@/app/lib/server/spendwatch';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -72,6 +72,29 @@ export async function GET(request: Request): Promise<Response> {
         now.eleven.ceiling === PLAN_CREDITS
           ? 'The ceiling is the plan itself, so no top-up is authorised. Raising ELEVEN_MONTHLY_CREDITS is what authorises spending past it — buying credits at ElevenLabs alone will not.'
           : 'The ceiling is above the plan, so the difference will be bought as top-up credits if it is used.',
+    },
+    /* What the ceiling should be, worked out rather than guessed.
+ 
+       Carli asked where the roof ought to sit. The honest answer is that it
+       depends on how many people are paying, so this reports it from the real
+       count instead of naming a figure that goes stale. It is deliberately a
+       recommendation: a ceiling that raised itself would be raised by the very
+       runaway it exists to stop. */
+    ceiling: {
+      payingMembers: now.members,
+      creditsAMember: CREDITS_A_MEMBER,
+      recommended: now.recommend,
+      setTo: now.eleven.ceiling,
+      randOfTopUpAtRecommended:
+        now.recommend === null
+          ? null
+          : Number((Math.max(0, now.recommend - PLAN_CREDITS) * RAND_PER_CREDIT).toFixed(2)),
+      note:
+        now.members === null
+          ? 'The member count could not be read, so no ceiling is recommended. A recommendation on an unknown count is a number that looks authoritative and is not.'
+          : now.recommend !== null && now.recommend > now.eleven.ceiling
+            ? `There are more members than the ceiling covers. Raise ELEVEN_MONTHLY_CREDITS to ${now.recommend} and top up to match — each member past the plan costs about R62 of credits and pays at least R149, so this is growth rather than a leak.`
+            : 'The ceiling covers the members who are paying. Nothing to do.',
     },
     kits: {
       used: Number(now.kits.used.toFixed(1)),
