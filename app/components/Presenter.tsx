@@ -364,10 +364,30 @@ export default function Presenter({
         return;
       }
 
-      /* Waiting on the video desk's own poll, which is where every clip this
-         app makes is carried from "started" to a file we keep. */
-      for (let tries = 0; tries < 120; tries += 1) {
-        await new Promise((wait) => setTimeout(wait, 4000));
+      /* ── Waiting, at the pace ElevenLabs asks for ──────────────────
+
+         This asked every four seconds. Their own guidance, on the Image &
+         Video quickstart Carli sent on 10 September 2026, is **no more than
+         once every ten seconds** for video, and that sustained aggressive
+         polling earns 429s. Four seconds is two and a half times too fast,
+         and every one of those asks is a Vercel invocation *and* a call to
+         ElevenLabs — so the cost of being impatient was paid twice and bought
+         nothing: a generation's status does not change sooner because it was
+         asked twice.
+
+         Ten to start, doubling to a minute, which is the back-off they ask
+         for by name. A clip takes minutes rather than seconds, so the early
+         asks are the wasteful ones; `engines.ts` has polled at ten from the
+         beginning and this is now in step with it.
+
+         The ceiling is the same eight minutes, kept as a deadline rather than
+         a count of tries: the interval grows, so a fixed number of tries
+         would quietly become a different amount of time. */
+      const deadline = Date.now() + 8 * 60_000;
+      let wait = 10_000;
+      while (Date.now() < deadline) {
+        await new Promise((wake) => setTimeout(wake, wait));
+        wait = Math.min(wait * 2, 60_000);
         const asked = await fetch(`/api/video?id=${encodeURIComponent(said.id)}`, { headers }).catch(
           () => null,
         );

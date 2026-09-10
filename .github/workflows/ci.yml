@@ -349,6 +349,12 @@ jobs:
       - name: The room called Musiekvideo can make one
         run: npm run check:videoroom
 
+      # ElevenLabs answers a video ask with a job id and rate-limits anyone
+      # who asks back faster than every ten seconds. Seedance they do not sell
+      # to a Pro plan at all, so a flag set on faith costs a certain refusal.
+      - name: The video wire matches what ElevenLabs actually sells
+        run: npm run check:videowire
+
       # A cut half a beat late reads as an accident, not as slightly worse.
       - name: The cuts land on the beat
         run: npm run check:onbeat

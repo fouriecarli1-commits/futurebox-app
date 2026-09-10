@@ -32,6 +32,28 @@
  * only place in the app that has one. It earns its place because the
  * alternative is charging people for a request that cannot succeed.
  *
+ * ── And support answered: not on this plan, ever ─────────────────────────
+ *
+ * ElevenLabs, 10 September 2026, to Carli:
+ *
+ *   "I checked internally and Seedance models are available via API for
+ *    Enterprise customers, who can request access... As such, it won't be
+ *    available for your subscription tier (Pro). My advice is to use a
+ *    different video model (such as Veo, as you said)."
+ *
+ * The item is not on order. It is not sold to this shop.
+ *
+ * The flag stays, and stays off, for one reason: it is the only thing between
+ * a Pro workspace and a clip that is queued, charged and then refused with
+ * `model_access_denied`. What has changed is that it is no longer a question
+ * waiting on an answer — the answer is no, until the day the plan is
+ * Enterprise. `.env.example` and `docs/SWITCH-ON.md` say so rather than
+ * inviting her to switch it on.
+ *
+ * Veo is the whole shelf on Pro, and it is the better model anyway. What the
+ * cheap rung was for — pictures without speech — is still served, by Veo with
+ * `generate_audio` off.
+ *
  * ── The wire format ──────────────────────────────────────────────────────
  *
  * Taken from @elevenlabs/elevenlabs-js — the serializers, not the docs, so the

@@ -326,12 +326,35 @@ rather than "that did not work" — send me that sentence and it is a five-minut
 fix. **R640 a month buys nothing until one conversion has actually come back**,
 so make one the day you pay.
 
-### 12. The two engines behind a flag
+### 12. The two engines behind a flag — and one of them is settled
 
-`ELEVEN_SEEDANCE_READY=1` is the only way to a clip longer than ten seconds.
-`ELEVEN_AURORA_READY=1` is the talking presenter. Both are behind a flag
-because whether the broker accepts the model id depends on your plan — so set
-it, make one clip, and unset it if the request comes back refused.
+**`ELEVEN_SEEDANCE_READY` — leave it empty. It is not for sale on Pro.**
+
+ElevenLabs support answered on 10 September 2026:
+
+> "Seedance models are available via API for Enterprise customers, who can
+> request access... As such, it won't be available for your subscription tier
+> (Pro). My advice is to use a different video model (such as Veo, as you
+> said)."
+
+This section used to tell you to set it, make one clip, and unset it if the
+request came back refused. Do not. The request **will** come back refused, with
+`model_access_denied`, and the clip is queued and charged before that happens.
+Setting it costs money and buys a failure.
+
+What it costs you not to have: the thirty-second clip. No engine on the Pro
+plan makes one — Veo does 4, 6 or 8 seconds — so the video desk's longest is
+ten seconds and it says so rather than offering a length nothing can produce.
+Veo is the better model anyway, and pictures without speech are Veo with the
+audio switched off.
+
+The line stays in `.env.example`, empty, because it is the one thing to change
+the day the plan becomes Enterprise.
+
+**`ELEVEN_AURORA_READY=1` is the talking presenter**, and it is still an open
+question rather than a closed one: whether the broker accepts `creatify-aurora`
+on this plan has not been asked. Set it, make one clip, and unset it if the
+request comes back refused.
 
 ---
 
