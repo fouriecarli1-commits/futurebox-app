@@ -2417,3 +2417,52 @@ the other one more visible, and nothing in it touches the second.
 of MAU before overage, that number is the real ceiling on a free-tier launch,
 and it is not a percentage of anything — it is a count, and it is the count a
 launch is measured in.
+
+## A music quiz at the bottom of the creative page (hers, 10 September)
+
+"ek wil hê jy moet heel onder aan die creative page 'n music quiz op sit wat
+music knowledge leer. dit moet abcd tick boxes hê en dan kom die antwoord aan
+die einde uit."
+
+Thirty questions, four lettered options each, both languages, a new one every
+time somebody comes back. Which they have seen lives in this browser and
+nowhere else; nothing is scored and nothing is sent anywhere.
+
+**The explanation is the feature.** A quiz that answers "right" or "wrong"
+teaches nobody anything — somebody who guessed correctly has learnt exactly
+as much as somebody who guessed wrong, and both close the card. So every
+question carries a `why` that says what the answer MEANS and, wherever
+possible, what to do with it on a screen in this app. The tick boxes exist to
+make somebody commit before they read, which is the only reason a quiz beats
+a list of facts, and the reveal button is dead until one is ticked.
+
+**Every question changes a decision on a screen here.** Nothing is in the bank
+because it is a fact about music. "Who wrote the Brandenburg Concertos" is a
+fact about music and tells nobody anything about their own song. "The log drum
+is what makes it amapiano rather than house" changes what they type into the
+style box.
+
+### Three faults my own checks found, in my own work
+
+1. **Every right answer was A or B — 7 and 23 out of 30, nothing at C or D.**
+   The bank was answerable without reading it, which is the whole feature
+   failing quietly. Redistributed to 8/8/7/7 and asserted.
+2. **The check matched its own prose, for the third time today.** It looked
+   for `/score/` across the card and hit the paragraph explaining why there is
+   no score, and the line telling a member "Nothing is scored." It looks for
+   the *mechanics* now — `setScore`, `fetch(`, `sendBeacon` — not the word.
+   The general lesson has now cost three fixes in one day: **look for the
+   thing, not the word for it.**
+3. **The probe slept 2600ms after signing in instead of waiting for the app.**
+   `check:probes` caught it. That rule exists because a fixed pause reports a
+   working app as broken on a machine that was busy for a second, and it has
+   done exactly that before.
+
+### And one gap it exposed
+
+`check:contrast` walks six rooms and **the creative page is not one of them**,
+so nothing was measuring whether this card is readable. A grey sub-line on a
+white card reads fine to whoever wrote it and not at all to somebody outside.
+The card's own probe now measures every text node on it against the same AA
+rule and the same maths — but the gap in `contrast.mjs` is real and still
+there for everything else on that page.

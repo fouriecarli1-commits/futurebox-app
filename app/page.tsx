@@ -19,6 +19,7 @@ import {
 } from './data/studio';
 import { profileFromTracks } from './lib/matching';
 import CollabRadar from './components/CollabRadar';
+import MusicQuiz from './components/MusicQuiz';
 import CollabFinder from './components/CollabFinder';
 import CollabRoom from './components/CollabRoom';
 import Channel from './components/Channel';
@@ -2558,6 +2559,13 @@ export default function FutureBoxHome() {
                 </div>
               ))}
             </div>
+
+            {/* Right at the bottom, which is where she asked for it and is
+                also the only place it belongs: somebody came here to make
+                music, and a question that interrupts that is a question in
+                the way. At the end of the scroll it is an aside they can
+                take or leave. */}
+            <MusicQuiz />
           </section>
         )}
 

@@ -171,7 +171,9 @@
     "check:videowire": "tsx scripts/check-videowire.mts",
     "check:singer": "tsx scripts/check-singer.mts",
     "check:sayit": "tsx scripts/check-sayit.mts",
-    "check:elevenroom": "tsx scripts/check-elevenroom.mts"
+    "check:elevenroom": "tsx scripts/check-elevenroom.mts",
+    "check:quiz": "tsx scripts/check-quiz.mts",
+    "check:quizroom": "node audit/quiz.mjs 3112"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
