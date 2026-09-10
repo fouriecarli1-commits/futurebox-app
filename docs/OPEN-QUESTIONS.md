@@ -2596,3 +2596,33 @@ answer is a rule somebody learns to ignore**, which is worse than no rule.
 **The ceiling came down 24 → 18**, and only for the right reason: the fault
 it was tolerating is fixed. A ratchet that moves because somebody wanted a
 green build is not a ratchet.
+
+## The quiz was in the middle of the page she reads most
+
+Small, and worth the entry because the check I wrote for it described a
+property it never measured.
+
+She asked for the card "**heel onder aan die creative page**". It went at the
+end of the creations *section*, which IS the bottom of the creative page — so
+on the creations chip it was exactly right. But that section is also part of
+the Spotlight scroll, and the radar comes after it. So on **the tab most
+people land on**, the card sat mid-page and interrupted the feed rather than
+ending it.
+
+Moved out of the section to the end of `<main>`, where it is the last thing
+on whichever tab is open, the creative page included.
+
+**And the check said "it sits at the bottom" while proving only that the
+string `<MusicQuiz />` existed somewhere in the file.** That is the same
+fault as measuring a subset, one step earlier: a check describing a property
+it never looked at. It now slices the file at `</main>` and asserts nothing
+renders after the card. Verified by putting the card back where it was — the
+assertion fails and prints the radar section as what comes after it.
+
+Three shapes of the same fault are now on record from one day:
+
+- a check that asserts a **claim** rather than a constraint;
+- a check that measures a **subset** and reports on the whole;
+- a check that **names a property it never measured**.
+
+All three pass. All three read exactly like a check that works.

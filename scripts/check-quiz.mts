@@ -115,9 +115,25 @@ ok('and the question is chosen after mount, not during render',
   'picking during render is a hydration mismatch and a question that changes under somebody reading it');
 
 const page = readFileSync('app/page.tsx', 'utf8');
-ok('and it sits at the bottom of the creative page',
+ok('the card is on the page at all',
   /<MusicQuiz \/>/.test(page),
   'she asked for it "heel onder aan die creative page"');
+
+/* LAST, not merely present — which is the property she asked for and the
+   one the first version got wrong.
+ 
+   It went at the end of the creations SECTION, which is the bottom of the
+   creative page. That section is also part of the Spotlight scroll, and the
+   radar comes after it, so on the tab most people land on the card sat in
+   the middle and interrupted the feed. The assertion said "it sits at the
+   bottom" and proved only that the string existed — a check describing a
+   property it never measured, which is the same fault as measuring a subset,
+   one step earlier. */
+const inMain = page.slice(0, page.indexOf('</main>'));
+const afterCard = inMain.slice(inMain.lastIndexOf('<MusicQuiz />') + '<MusicQuiz />'.length);
+ok('  and nothing on the page comes after it',
+  !/<[A-Z][A-Za-z]*[\s/>]|<section/.test(afterCard),
+  `${afterCard.replace(/\s+/g, ' ').trim().slice(0, 70)} — on Spotlight it would interrupt the feed instead of ending it`);
 
 if (failures) {
   console.error(`\ncheck:quiz — ${failures} failure(s).\n`);

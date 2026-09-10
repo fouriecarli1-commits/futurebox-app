@@ -2560,12 +2560,6 @@ export default function FutureBoxHome() {
               ))}
             </div>
 
-            {/* Right at the bottom, which is where she asked for it and is
-                also the only place it belongs: somebody came here to make
-                music, and a question that interrupts that is a question in
-                the way. At the end of the scroll it is an aside they can
-                take or leave. */}
-            <MusicQuiz />
           </section>
         )}
 
@@ -2696,6 +2690,23 @@ export default function FutureBoxHome() {
             </div>
           </section>
         )}
+
+        {/* ── The music question ───────────────────────────────────────
+ 
+            Last on the page, on purpose and on the second attempt.
+ 
+            It first went at the end of the creations SECTION, which is
+            the bottom of the creative page and is what she asked for —
+            "heel onder aan die creative page". But that section is also
+            part of the Spotlight scroll, where the radar comes after it,
+            so on the tab most people land on it sat in the middle and
+            interrupted the feed rather than ending it.
+ 
+            Out here it is the last thing on whichever tab is open,
+            including the creative page. Somebody came to make music; a
+            question in the middle is a question in the way, and the same
+            question at the end is an aside they can take or leave. */}
+        <MusicQuiz />
 
       </main>
 
