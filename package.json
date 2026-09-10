@@ -113,6 +113,7 @@
     "check:asdata": "tsx scripts/check-asdata.mts",
     "check:firsthour": "node audit/firsthour.mjs",
     "check:launch": "tsx scripts/check-launch.mts",
+    "checks": "tsx scripts/run-source-checks.mts",
     "check:everycheck": "tsx scripts/check-everycheck.mts",
     "check:songwindow": "node audit/songwindow.mjs",
     "check:boothwalk": "node audit/boothwalk.mjs",

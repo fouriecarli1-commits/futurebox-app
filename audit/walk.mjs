@@ -10,7 +10,7 @@ import { enter, studio } from './enter.mjs';
 import { shot } from './where.mjs';
 
 const ROOMS = [
-  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard',
+  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Sound trainer',
   'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast',
   'Adverts', 'Collab Radar',
 ];

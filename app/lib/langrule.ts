@@ -57,23 +57,61 @@
  * sign-in cannot reach anybody the first application missed. All it can do is
  * change the language of a page somebody is already looking at.
  *
- * So it does not. Signing in now either confirms a choice made in this
- * browser and writes it up, or does nothing at all. The account never
- * overrules what is on the screen, because by then it is somebody's screen.
+ * So for a while it did not: signing in either confirmed a choice made in
+ * this browser and wrote it up, or did nothing at all.
  *
- * ── The race this also removes ───────────────────────────────────────────
+ * ── And that was over-correcting, which took another three reports ───────
  *
- * The tempting alternative — write whatever is on screen up to the account —
- * looks better and is worse. On a phone whose locale is English, arrival
- * shows English, asks the account, and applies the Afrikaans it finds. If
- * sign-in fires before that answer lands it would write English up and
- * destroy the choice it was meant to protect. Doing nothing has no such
- * ordering to get right.
+ * The claim above — "rule 2 already fires on arrival, so applying it again
+ * at sign-in cannot reach anybody the first application missed" — is wrong,
+ * and it is wrong in a way that is easy to miss and easy to check.
  *
- * `switched` stays in the answer and is now always null. It is the notice
- * `LanguageSwitched` draws, and there is nothing left to announce — kept
- * rather than deleted so the shape does not change under callers, and so a
- * future rule that does swap has somewhere to say so.
+ * The arrival effect asks the account **at mount**. At mount nobody has
+ * signed in yet, so `accountLanguage()` answers nothing and the rule falls
+ * through to the device's locale. For somebody arriving already signed in,
+ * that is fine. For somebody arriving signed *out* — which is everybody who
+ * has just been handed a fresh browsing context — the account never got a
+ * say at all, and sign-in was the first moment it could have had one.
+ *
+ * Carli's `/taal` screenshot on 10 September 2026 is that state exactly:
+ * nothing carried in the address, nothing in storage, nothing in the cookie,
+ * the account **not asked**, and an `en-ZA` phone deciding. She had chosen
+ * Afrikaans; the only place that remembers across contexts is the account,
+ * and it was never consulted.
+ *
+ * Her own case — the one that caused the removal — was a *stored* choice
+ * being overruled, and rule 1 handles that and always did: `onSignIn`
+ * returns on its first branch and never reaches the account. Removing the
+ * whole mechanism to fix a case the first branch already covered left
+ * exactly the person it was for.
+ *
+ * ── So the rule now, in full ─────────────────────────────────────────────
+ *
+ * A choice stored in this browser wins and is written up to the account.
+ * With nothing stored, the account answers — and it can only ever be
+ * replacing the device's own guess, because "nothing stored" is what makes
+ * the screen a guess. Rule 3 has said from the first version of this file
+ * that a guess must not outrank somebody who told us once somewhere else.
+ *
+ * It is announced. `switched` carries what was replaced, `LanguageSwitched`
+ * turns it into a sentence and a way back, and taking that way back is a
+ * choice like any other — stored, written up, and never asked again here.
+ *
+ * ── The race, and why it no longer decides anything ──────────────────────
+ *
+ * The old worry: `showing` could be a stale reading of the screen, and a
+ * stale reading that happened to match the account silenced the notice.
+ *
+ * With nothing stored, `showing` is a pure function of the device's locale —
+ * the caller recomputes it from the same two inputs `onArrival` uses, at the
+ * moment it decides. The locale does not change between two readings, so a
+ * stale one and a fresh one cannot differ. And the language chosen does not
+ * depend on it at all: only the sentence naming what was replaced does.
+ *
+ * The other half of the old worry — writing whatever is on screen up to the
+ * account and destroying the choice it holds — is still avoided, and
+ * deliberately: this branch never sets `keepOnAccount`. Only a real choice
+ * is written up.
  */
 
 export type Lang = 'en' | 'af';
@@ -132,10 +170,57 @@ export function onSignIn(
     return { lang: chosen, keepOnAccount: chosen, store: null, switched: null };
   }
 
-  /* Nothing stored, so nothing to confirm — and nothing to overrule.
+  /* ── Nothing stored, and the screen is showing a guess ────────────────
 
-     The account is not consulted here at all any more; see the note above.
-     Whatever is on the screen stays on the screen, and the arrival effect has
-     already had its say with the account before anybody was reading. */
-  return { lang: showing, keepOnAccount: null, store: null, switched: null };
+     The comment that used to stand here said the account is not consulted at
+     sign-in any more, because "the arrival effect has already had its say
+     with the account before anybody was reading".
+
+     **It had not.** The arrival effect asks the account at mount, and at
+     mount nobody is signed in — so `accountLanguage()` answers nothing and
+     the rule falls through to the device's locale. Signing in is the *first*
+     moment the account can answer at all, and this line refused to ask.
+
+     Carli's screenshot of `/taal`, 10 September 2026, is that exactly:
+
+         1. Carried through the sign-in   empty
+         2. Stored in this browser        empty
+         3. The cookie                    empty
+         4. The account                   not asked yet
+         The phone's own setting          en-ZA
+         What decided it                  the phone's own language setting
+
+     Four empties and a guess. She had chosen Afrikaans — somewhere else, in
+     a browsing context this one cannot see — and the one place that
+     remembers across contexts is the account, which was never asked.
+
+     ── Why removing this was over-correcting ────────────────────────────
+
+     It was taken out because signing in kept swapping the language under
+     her. But her case was a *stored choice* being overruled, and rule 1
+     above already covers that and always did — it returns before reaching
+     here. Taking out the whole mechanism to fix a case the first branch
+     handles left the one person it was for: somebody with nothing on this
+     device at all.
+
+     ── The guard, which is the whole of the difference ──────────────────
+
+     `showing` is what the device would work out on its own from the same two
+     inputs `onArrival` uses. With nothing stored, that is by definition a
+     *guess* — the phone's locale. So this can only ever replace a guess, and
+     rule 3 has said from the beginning that a guess must not outrank
+     somebody who told us once somewhere else.
+
+     It is announced rather than done quietly (`switched`), because a page
+     that changes language under a reader with no explanation is the fault
+     that was reported in the first place. `LanguageSwitched` turns it into a
+     sentence and a way back, and taking that way back is a choice, so it is
+     stored and never asked again on this device. */
+  const said = asLang(account);
+  if (!said || said === showing) {
+    /* No answer, or the same answer. Nothing to do either way, and nothing
+       to announce: a page already in the account's language did not change. */
+    return { lang: showing, keepOnAccount: null, store: null, switched: null };
+  }
+  return { lang: said, keepOnAccount: null, store: said, switched: showing };
 }

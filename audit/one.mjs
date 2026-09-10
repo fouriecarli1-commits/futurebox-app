@@ -4,7 +4,7 @@ const { browser, page, problems } = await enter();
 const room = await studio(page);
 await room.locator('button').filter({ hasText: new RegExp(`^${name}`, 'i') }).first().click();
 await page.waitForTimeout(1500);
-const RAIL = ['Make a song','Studio','The Booth','Your voice','Soundboard','Video desk','Hooks','Channel','Live','Podcast','Adverts','Collab Radar'];
+const RAIL = ['Make a song','Studio','The Booth','Your voice','Sound trainer','Video desk','Hooks','Channel','Live','Podcast','Adverts','Collab Radar'];
 const seen = [];
 for (const b of await room.locator('button:visible').all()) {
   const first = (await b.innerText().catch(()=>'')).split('\n')[0].trim();

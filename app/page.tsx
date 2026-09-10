@@ -487,7 +487,7 @@ export default function FutureBoxHome() {
   }, [selectedMedia]);
   const [selectedBlueprint, setSelectedBlueprint] = useState<Blueprint | null>(null);
 
-  // Creator Studio Sub-Tabs & Soundboard
+  // Creator Studio sub-tabs and the Sound trainer
   const [handoff, setHandoff] = useState<{ title: string; lyrics: string; style: string } | null>(null);
   /**
    * The studio's screens.

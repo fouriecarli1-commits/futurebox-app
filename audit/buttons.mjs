@@ -15,7 +15,7 @@
  */
 import { enter, studio } from './enter.mjs';
 
-const ROOMS_ALL = ['Make a song', 'Studio', 'The Booth', 'Your voice', 'Soundboard',   'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar'];
+const ROOMS_ALL = ['Make a song', 'Studio', 'The Booth', 'Your voice', 'Sound trainer',   'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar'];
 const ROOMS = process.argv[2] ? [process.argv[2]] : ROOMS_ALL;
 
 const SKIP = /^(delete|sign out|back to futurebox|upgrade|choose |buy|pay)/i;

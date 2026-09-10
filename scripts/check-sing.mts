@@ -224,8 +224,21 @@ ok(
    itself. */
 ok(
   'the room is told which engines exist before it draws itself',
-  /singing: (await )?singing\(\)/.test(state),
+  /singing: (await )?singing\([^)]*\)/.test(state),
+  'the room finds out which engines exist after it has drawn itself, and redraws',
 );
+/* The argument is the member, and it is not optional decoration.
+
+   `singing()` took nothing when this line was written. It takes an owner now,
+   because the Kits cap is five minutes *each* — so the answer to "can this
+   person sing" depends on which person is asking, and a room told the
+   account-wide answer would offer the button to somebody who has no minutes
+   left. This assertion accepted no argument at all and went red the day the
+   per-member cap landed, which is a check calling an improvement a
+   regression. It asks for the shape now and this asks for the meaning. */
+ok('and told it about the member asking, because the cap is five minutes each',
+  /singing\(caller\?\.id \?\? null\)/.test(state),
+  'a room told the account-wide answer offers the button to somebody with no minutes left');
 
 /* ── 5. Make a song, the other half of "in Pro Booth en in Make a song" ── */
 

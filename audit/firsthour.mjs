@@ -220,6 +220,22 @@ try {
   const toLive = p.locator('button').filter({ hasText: /Post to Live/ }).first();
   check('the song can go straight to the room from here', (await toLive.count()) === 1);
   await toLive.click();
+
+  /* It asks first now, and that is the app being right rather than the probe
+     being wrong. Posting a song to the room decides whether other people may
+     build on it, and that is a permission somebody gives rather than one the
+     app assumes — so the press opens a question with two answers and nothing
+     is sent until one of them is pressed.
+
+     This probe pressed the button and waited for a POST that was never coming,
+     and reported "nothing arrived" for three assertions. `check:buildon`
+     covers the question itself; what matters here is that the first hour
+     still ends with a song in the room, which means answering it. */
+  const mayBuildOn = p.locator('button').filter({ hasText: /Yes, others may|Ja, ander mag/ }).first();
+  await mayBuildOn.waitFor({ state: 'visible', timeout: 10000 });
+  check('posting asks whether other people may build on it', true);
+  await mayBuildOn.click();
+
   for (let waited = 0; waited < 30 && inTheRoom.length === 0; waited += 1) await p.waitForTimeout(300);
   check('pressing it puts the song in the room', inTheRoom.length === 1,
     inTheRoom[0]?.title ?? 'nothing arrived');

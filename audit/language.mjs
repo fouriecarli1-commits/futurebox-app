@@ -316,16 +316,25 @@ async function chooseAfrikaans(p) {
     'en' === (await p.evaluate(() => document.documentElement.lang)),
     await p.evaluate(() => document.documentElement.lang));
 
-  /* And nothing is announced, because nothing was swapped.
+  /* And it says so, because something WAS swapped.
 
-     The notice and its way back are still in the app — `LanguageSwitched`
-     draws them, and the provider still has somewhere to say so if a future
-     rule does swap. What must not happen is a notice about a change that did
-     not occur, which reads as the app being confused about its own state. */
+     This scene used to assert the opposite, from the months when signing in
+     did not consult the account at all. That rule left somebody arriving
+     signed out — a fresh browsing context, which is what a phone hands you —
+     with the account never asked and the locale deciding. Carli's `/taal`
+     screenshot is that state: four empties and a guess.
+
+     The account answers again now, and it can only ever be replacing a
+     guess. Replacing a guess in silence is the fault that started all of
+     this, so it is announced and there is a way back. */
   const said = (await p.locator('body').innerText()).replace(/\s+/g, ' ');
-  check('and there is no notice, because nothing was taken away',
-    !/Your account is set to this language|Jou rekening is op hierdie taal gestel/.test(said),
+  check('and it says the account decided it, rather than changing in silence',
+    /Your account is set to this language|Jou rekening is op hierdie taal gestel/.test(said),
     said.slice(0, 140));
+  const back = p.locator('button').filter({ hasText: /Keep English|Hou Engels|Keep Afrikaans|Hou Afrikaans/ }).first();
+  check('and offers the way back, so the notice is not just an apology',
+    (await back.count()) > 0,
+    'a notice with no way back is worse than no notice');
   await context.close();
 }
 
@@ -425,8 +434,8 @@ async function chooseAfrikaans(p) {
      reproduce her report, has never run once. A probe that dies halfway
      reports nothing about the half it never reached. */
   const onScreen = (await p.locator('body').innerText()).replace(/\s+/g, ' ');
-  check('and nothing apologises for a change that did not happen',
-    !/Your account is set to this language|Jou rekening is op hierdie taal gestel/.test(onScreen),
+  check('and it says so on a phone too, rather than swapping in silence',
+    /Your account is set to this language|Jou rekening is op hierdie taal gestel/.test(onScreen),
     onScreen.slice(0, 140));
 
   /* A reload is a different question, and the honest answer is "English".

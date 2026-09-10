@@ -76,26 +76,54 @@ ok(
 
 console.log('\nsigning in');
 
-/* Her case, and the rule that changed because of it.
+/* Her case, twice — and the second time is the one this file got wrong.
 
-   Three reports over one day, the last after two separate fixes that were
-   both real and neither of which stopped it: "wanneer ek op my mobile app van
-   afrikaans af inlog, spring hy nogsteeds engels toe."
+   Three reports over one day: "wanneer ek op my mobile app van afrikaans af
+   inlog, spring hy nogsteeds engels toe." The account was winning over a
+   choice she had made, so the account was stopped from winning at sign-in at
+   all, and these assertions were written to hold that.
 
-   The account used to win here. It no longer does — not because the account
-   is wrong, but because it already had its say on arrival, before anything
-   was on the screen, and applying it a second time can only take a page away
-   from somebody reading it. See `langrule.ts`.
+   That was over-correcting, and it took another three reports to see it. Her
+   case was a *stored choice* being overruled, and rule 1 covers that and
+   always did — `onSignIn` returns before it ever reaches this branch. Taking
+   the whole mechanism out to fix a case the first branch handles left exactly
+   one person unserved: somebody with nothing stored on this device at all.
 
-   These four assert the new rule in the shape of the old one's failure, so
-   that a change back would be loud rather than quiet. */
+   Her screenshot of `/taal`, 10 September 2026:
+
+       1. Carried through the sign-in   empty
+       2. Stored in this browser        empty
+       3. The cookie                    empty
+       4. The account                   not asked yet
+       The phone's own setting          en-ZA
+
+   Four empties and a guess. The arrival effect *does* ask the account — but
+   at mount, when nobody is signed in yet, so it answered nothing. Signing in
+   is the first moment it can answer, and this branch refused to ask.
+
+   So the account answers again, under one guard: only where nothing is
+   stored, which means what is on screen is the device's own guess. A guess
+   must not outrank somebody who told us once somewhere else — rule 3, from
+   the first version of this file. */
 const hers = onSignIn(null, 'af', 'en');
-ok('her case: what is on the screen stays on the screen', hers.lang === 'en',
-  'signing in must never change the language of a page somebody is reading');
-ok('and nothing is written to this browser', hers.store === null);
-ok('and nothing is announced, because nothing was swapped', hers.switched === null);
-ok('and the account is not written over either', hers.keepOnAccount === null,
+ok('with nothing on this device, the account answers rather than the phone’s locale',
+  hers.lang === 'af',
+  'she chose Afrikaans on another device, and the only place that remembers was never asked');
+ok('and it is written down, so the next load does not need asking again',
+  hers.store === 'af');
+ok('and it is announced, because the page did change under her',
+  hers.switched === 'en',
+  'a page that changes language with no explanation is the fault that started all this');
+ok('and the account is not written over with the guess', hers.keepOnAccount === null,
   'writing the guess up would destroy the very choice the account is holding');
+
+/* The half that must not come back. A choice stored here outranks everything,
+   and that is checked immediately below — but assert the shape of the old
+   failure too, so a change that reintroduces it is loud. */
+const guarded = onSignIn('af', 'en', 'af');
+ok('and a stored choice is still never overruled by the account',
+  guarded.lang === 'af' && guarded.switched === null,
+  'this is the original fault and it must stay fixed');
 
 const chose = onSignIn('en', 'af', 'en');
 ok('a choice made here is never overruled', chose.lang === 'en');
@@ -119,11 +147,13 @@ ok(
 const nonsense = onSignIn(null, 'français', 'en');
 ok('and neither does an answer that is not a language', nonsense.switched === null);
 
-/* The other direction, which is the one somebody would forget. An English
-   account no longer takes an Afrikaans page away either — the rule is about
-   not moving the screen, not about which language wins. */
+/* The other direction, which is the one somebody would forget. An Afrikaans
+   phone, nothing stored, and an account that says English: the account wins
+   there too. The rule is not "Afrikaans wins" — it is that a guess yields to
+   somebody who told us once, whichever way round that lands. */
 const other = onSignIn(null, 'en', 'af');
-ok('it works the other way round too', other.lang === 'af' && other.switched === null);
+ok('it works the other way round too', other.lang === 'en' && other.switched === 'af',
+  'an English account must take an Afrikaans guess as readily as the reverse');
 
 /* And the reason this is safe: the account is still asked, earlier, where
    there is no reader to disturb. A check that only asserted the removal would
@@ -164,30 +194,42 @@ const provider = read('app/lib/i18n.tsx');
  * English against English matches, so nothing is announced — and the Afrikaans
  * that was about to paint is replaced without a word.
  *
- * That race was real and the fix for it was real. What it could not do was
- * stop the swap, and she reported the swap a third time. The rule changed:
- * signing in no longer consults the account at all.
+ * That race was real and the fix for it was real. For a while the rule went
+ * further and stopped consulting the account at sign-in at all, which made
+ * the race unreachable — and left the one person it was for with nothing.
+ * See the note on `hers` above and on `onSignIn` in `langrule.ts`.
  *
- * Which makes the race **unreachable** rather than merely fixed, and that is
- * a stronger thing to be able to assert. These two put both readings of "what
- * this device shows" through the rule and require the same answer from each —
- * if the outcome cannot depend on that value, it cannot depend on whether the
- * value was stale. */
+ * So the race is worth asserting about again, and the honest statement is a
+ * different one: with nothing stored, `showing` is a pure function of the
+ * device's locale, which does not change between one reading and the next.
+ * A stale reading and a fresh one cannot differ, and the **language chosen**
+ * does not depend on it either way — only the sentence naming what was
+ * replaced does. */
 {
   const stale = onSignIn(null, 'en', 'en');
   const fresh = onSignIn(null, 'en', 'af');
 
-  ok('a stale reading of the screen changes nothing',
-    stale.switched === null && stale.store === null && stale.keepOnAccount === null,
+  ok('the account decides, whichever reading of the screen it is given',
+    stale.lang === 'en' && fresh.lang === 'en',
+    `${JSON.stringify(stale)} / ${JSON.stringify(fresh)}`);
+  ok('a reading that matches the account announces nothing',
+    stale.switched === null && stale.store === null,
     JSON.stringify(stale));
-  ok('and a fresh one changes nothing either',
-    fresh.switched === null && fresh.store === null && fresh.keepOnAccount === null,
+  ok('and one that differs says what it replaced, so it can be undone',
+    fresh.switched === 'af' && fresh.store === 'en',
     JSON.stringify(fresh));
-  ok('so the race that silenced the notice cannot be reached at all',
-    stale.store === fresh.store && stale.switched === fresh.switched,
-    'if the outcome cannot depend on that reading, it cannot depend on it being stale');
-  ok('and each keeps its own screen', stale.lang === 'en' && fresh.lang === 'af',
-    'the page somebody is reading is the page they keep');
+  ok('neither writes the guess up to the account',
+    stale.keepOnAccount === null && fresh.keepOnAccount === null,
+    'that would destroy the very choice the account is holding');
+  /* And the thing the race could actually break: whether the notice appears.
+     A stale reading that happens to match the account silences it. That is
+     no longer a silent swap — because with nothing stored the reading is the
+     locale, and the locale is the same value both times, so the two cannot
+     disagree in practice. Asserted as the property rather than the outcome:
+     the reading given is the reading named. */
+  ok('and what it says was replaced is the reading it was given',
+    stale.switched === null && fresh.switched === 'af',
+    'the notice must name the page that was actually taken away');
 }
 
 /* And the provider must not be able to ask the stale question again. The ref

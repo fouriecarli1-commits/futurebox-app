@@ -103,10 +103,28 @@ for (const room of ['RoomScreen', 'SongScreen', 'Channel']) {
 const route = readFileSync('app/api/live/route.ts', 'utf8');
 ok('the room counts plays on the song, not the post', /\.eq\('kind', 'play'\)/.test(route) && /in\('ref', songs\)/.test(route));
 const channel = readFileSync('app/components/LiveChannel.tsx', 'utf8');
-ok('and the row shows the number', /\{post\.plays\}/.test(channel));
+/* `{post.plays ?? '–'}`, not `{post.plays}`.
+
+   This assertion was written against the second and went red the day the
+   first shipped — because `/api/live` learned to answer null for a count it
+   could not read, and the row learned to draw a dash for it. The app got more
+   honest and the check called it a regression.
+
+   So it asks for the honest form now. A count that could not be read must not
+   render as a nought: an empty room and a broken query look identical at
+   zero, and that fault class has been found seven times in this codebase.
+   `check:couldnotask` is the rule; this is the one screen where it is
+   visible. */
+const DASHED = (field: string) =>
+  new RegExp(`\\{post\\.${field}\\s*\\?\\?\\s*'[–-]'\\}`);
+ok('and the row shows the number', DASHED('plays').test(channel),
+  'the plays are not drawn at all');
+ok('and a count that could not be read is a dash, not a nought',
+  DASHED('plays').test(channel) && !/\{post\.plays \?\? 0\}/.test(channel),
+  'a broken read and an unplayed song must not look the same');
 /* Hearts are people and plays are times. Showing one of them twice under two
    icons is the kind of number that ends up in a pitch deck. */
-ok('beside the hearts, not instead of them', /\{post\.hearts\}/.test(channel));
+ok('beside the hearts, not instead of them', DASHED('hearts').test(channel));
 
 console.log(
   failures

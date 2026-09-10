@@ -879,11 +879,11 @@ grant execute on function public.kits_seconds_this_month() to service_role;
 -- sit vir kits se stemkloning. Dus iets soos 5min per persoon. Dan stop ons die
 -- funksie wanneer dit opgebruik word deur 'n maand."
 --
--- `kits_seconds_this_month()` in kits.sql tel die hele werkskerm. Dit is die
--- dak wat Kits self stel, en dit keer dat die rekening opraak — maar dit sê
--- niks oor wié dit opgebruik het nie. Een lid wat vyftig minute omskakel, laat
--- die ander nege-en-sewentig met niks, en die eerste wat hulle daarvan weet is
--- 'n weiering.
+-- `kits_seconds_this_month()` hierbo tel die hele werkskerm. Dit is die dak wat
+-- Kits self stel, en dit keer dat die rekening opraak — maar dit sê niks oor
+-- wié dit opgebruik het nie. Een lid wat vyftig minute omskakel, laat die ander
+-- nege-en-sewentig met niks, en die eerste wat hulle daarvan weet is 'n
+-- weiering.
 --
 -- Hierdie een tel dieselfde ding vir één eienaar. Dieselfde kalendermaand in
 -- UTC, dieselfde tabel, dieselfde rede — dit is die per-lid helfte van 'n
@@ -892,6 +892,14 @@ grant execute on function public.kits_seconds_this_month() to service_role;
 -- Let op: die per-lid dop voeg geen kapasiteit by nie. 400 minute gedeel deur
 -- 5 is 80 lede, en dit bly 80. Wat dit verander is wié die 400 kry: eerlik
 -- verdeel eerder as eerste-kom.
+--
+-- ── Hoekom dit hier staan en nie net in ALMAL.sql nie ───────────────────────
+--
+-- Dit is op 9 September met die hand in `ALMAL.sql` ingeskryf en nooit hier
+-- nie. `ALMAL.sql` word gegenereer: die volgende `npm run sql:bundle` het dit
+-- doodeenvoudig uitgevee, want die bron het dit nooit gehad nie.
+-- `check:sqlbundle` het die hele tyd rooi gestaan en dít was hoekom.
+-- Wat gegenereer word, word nie geredigeer nie.
 
 create or replace function public.kits_seconds_this_month_for(p_owner uuid)
 returns bigint
