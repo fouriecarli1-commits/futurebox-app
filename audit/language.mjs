@@ -694,6 +694,21 @@ async function chooseAfrikaans(p) {
   await p.goto(`http://localhost:${PORT}/taal`, { waitUntil: 'networkidle' });
   await p.waitForTimeout(1200);
 
+  /* The row that ends the loop. `sources.account` says whether the app
+     *consulted* the account, and the rule is that it only does so when the
+     device has nothing stored — so the moment anything is stored, which is
+     the moment after signing in, it reads "not asked yet" forever and the one
+     fact that would settle this reads as an absence.
+
+     Two questions had been collapsed into one row: did the app ask, and what
+     would it have been told. This page asks outright. */
+  check('the page says what the account itself holds, not only whether it was asked',
+    /What your account remembers|Wat jou rekening onthou/.test(await p.locator('body').innerText()),
+    'the one fact nobody could see is still invisible');
+  check('and says plainly when nobody is signed in here',
+    /not signed in here|nie hier ingeteken nie/.test(await p.locator('body').innerText()),
+    'a language chosen while signed out has nowhere to be written, and that must be said');
+
   check('the page says pressing a language is remembered',
     /remembered on this device|op hierdie toestel onthou/.test(await p.locator('body').innerText()),
     'two buttons that change what the page reports, with nothing saying so');

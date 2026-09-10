@@ -32,7 +32,7 @@
  * token, no key.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { forgetLanguage, LANGUAGES, useLang } from '../lib/i18n';
 
@@ -62,9 +62,50 @@ function Row({
   );
 }
 
+/**
+ * What the account holds, asked outright.
+ *
+ * ── Why this is separate from `sources.account` ──────────────────────────
+ *
+ * `sources.account` reports whether the app *consulted* the account on this
+ * load, and the rule is that it only does so when the device has nothing
+ * stored. So the moment anything is stored — which is the moment after
+ * signing in — that row reads "not asked yet" forever, and the one fact that
+ * would end this reads as an absence.
+ *
+ * Two questions were collapsed into one row: "did the app ask?" and "what
+ * would it have been told?". The first is about the rule. The second is about
+ * her account, and it is the one nobody could see.
+ *
+ * This page is a report, so it asks. It changes nothing: reading the account
+ * is a read.
+ */
+type Held = 'asking' | 'af' | 'en' | 'nothing' | 'signedout' | 'noaccounts' | 'failed';
+
 export default function TaalPage(): React.ReactElement {
   const { lang, setLang, sources } = useLang();
   const af = lang === 'af';
+  const [held, setHeld] = useState<Held>('asking');
+
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      try {
+        const cloud = await import('../lib/cloud');
+        if (!live) return;
+        if (!cloud.configured()) { setHeld('noaccounts'); return; }
+        const who = await cloud.currentAccount();
+        if (!live) return;
+        if (!who) { setHeld('signedout'); return; }
+        const said = await cloud.accountLanguage();
+        if (!live) return;
+        setHeld(said ?? 'nothing');
+      } catch {
+        if (live) setHeld('failed');
+      }
+    })();
+    return () => { live = false; };
+  }, []);
 
   /* Written out rather than printed as a code, because the person reading this
      is holding a phone and not a debugger. "leeg" and "geblokkeer" are two
@@ -189,6 +230,38 @@ export default function TaalPage(): React.ReactElement {
             af
               ? 'Word net gevra as hierdie toestel niks te sê het nie. ’n Keuse wat jy hier gemaak het, word nooit deur die rekening oorheers nie.'
               : 'Asked only when this device has nothing to say. A choice made here is never overruled by the account.'
+          }
+        />
+        <Row
+          label={af ? 'Wat jou rekening onthou' : 'What your account remembers'}
+          value={
+            held === 'asking'
+              ? (af ? 'besig om te vra…' : 'asking…')
+              : held === 'signedout'
+                ? (af ? 'jy is nie hier ingeteken nie' : 'you are not signed in here')
+                : held === 'noaccounts'
+                  ? (af ? 'rekeninge is nie aangeskakel nie' : 'accounts are not switched on')
+                  : held === 'nothing'
+                    ? (af ? 'nog niks' : 'nothing yet')
+                    : held === 'failed'
+                      ? (af ? 'kon nie vra nie' : 'could not ask')
+                      : held
+          }
+          loud
+          note={
+            held === 'signedout'
+              ? (af
+                  ? 'Dít is die belangrike een. ’n Taal wat jy kies terwyl jy uitgeteken is, kan nêrens heen geskryf word nie — dit bly net op hierdie toestel. Teken eers in, druk dan die taal, en dan onthou die rekening dit vir elke ander toestel.'
+                  : 'This is the one that matters. A language you choose while signed out has nowhere to be written — it stays on this device only. Sign in first, then press the language, and the account remembers it for every other device.')
+              : held === 'nothing'
+                ? (af
+                    ? 'Jou rekening het nog geen taal nie, dus kan dit niks antwoord nie. Druk die taal hieronder terwyl jy ingeteken is, en dit word dadelik daarheen geskryf.'
+                    : 'Your account has no language yet, so it has nothing to answer with. Press the language below while signed in and it is written there straight away.')
+                : held === 'en' || held === 'af'
+                  ? (af
+                      ? 'Dít is wat elke nuwe toestel gaan kry as niks daar gestoor is nie. Druk die ander taal hieronder terwyl jy ingeteken is om dit te verander.'
+                      : 'This is what every new device will be given when nothing is stored there. Press the other language below while signed in to change it.')
+                  : undefined
           }
         />
         <Row

@@ -360,6 +360,33 @@ for (const script of named) {
   );
 }
 
+/* ── And a browser probe never sits in the job that has no build ────────
+
+   `check:storyboard` was wired into CI's `check` job as well as into the
+   `rooms` group. That job installs no Chromium and — the half that actually
+   bit — runs its Build step *after* all the checks, so `serve()` had nothing
+   for `next start` to serve. It waited sixty seconds and failed, every run.
+
+   It passed on any machine with a `.next` lying around, which is every
+   machine anybody develops on, so `npm run checks` could not see it either.
+   The only place it showed was CI, where it had been red for a day.
+
+   The rule is structural rather than a list: a check whose script runs an
+   `audit/*.mjs` file belongs in a job that builds first. */
+{
+  const workflow = readFileSync(join(ROOT, '.github/workflows/ci.yml'), 'utf8');
+  const start = workflow.indexOf('\n  check:\n');
+  const after = workflow.indexOf('\n  screens:', start);
+  const sourceJob = start < 0 ? '' : workflow.slice(start, after < 0 ? undefined : after);
+  const inSource = [...sourceJob.matchAll(/run:\s*npm run (check:[A-Za-z0-9:_-]+)/g)].map((one) => one[1]);
+  const browserish = inSource.filter((one) => /audit\/[A-Za-z0-9_-]+\.mjs/.test(scripts[one] ?? ''));
+  ok(
+    'no browser probe is wired into the job that has no build',
+    browserish.length === 0,
+    `${browserish.join(', ')} — each starts a server against a build that job has not made yet`,
+  );
+}
+
 const enter = code(readFileSync(join(ROOT, 'audit/enter.mjs'), 'utf8'));
 ok('enter() can be pointed at a port of its own', /\bat = 'http:\/\/localhost:3000'/.test(enter));
 ok(

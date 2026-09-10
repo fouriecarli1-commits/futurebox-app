@@ -363,11 +363,12 @@ jobs:
       - name: Nothing useful is hidden and nothing dead looks pressable
         run: npm run check:reachable
 
-      # `write_scenes` replaces the shot list. A shot already generated has been
-      # paid for, and replacing it with a sentence is spending somebody's money
-      # and then throwing away what it bought.
-      - name: The copilot never rewrites a shot that was paid for
-        run: npm run check:storyboard
+      # check:storyboard was here and is a browser probe: it starts its own
+      # server, and this job has no build for `next start` to serve. It failed
+      # here for sixty seconds every run while passing on any machine that
+      # happens to have a build lying around. It runs in the `rooms` group
+      # below, which builds first, and check:probes now refuses to let an
+      # audit/*.mjs check sit in this job at all.
 
       # The bar pads itself away from the home indicator, so its real height is
       # not its constant. Reserving the constant hid a text field behind it on
@@ -397,10 +398,11 @@ jobs:
       - name: Every advert link is traceable
         run: npm run check:adrun
 
-      # The report is what a client re-buys, so a number out by a factor of a
-      # hundred is worse than no number — it gets repeated to an accountant.
-      - name: Every export reads back at the amount it says
-        run: npm run check:adreport
+      # check:adreport was here too, for the same reason and with the same
+      # result: a browser probe in a job with no build. It runs in the `rooms`
+      # group below. The report is what a client re-buys, so a number out by a
+      # factor of a hundred is worse than no number — which is exactly why it
+      # needs to be somewhere it can actually run.
 
       # A card's label is on the screen, so a mistake in it is found the
       # first time somebody looks. Its instruction goes to the model and is
