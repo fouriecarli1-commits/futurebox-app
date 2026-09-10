@@ -11,7 +11,7 @@
  */
 
 import { accessToken } from './cloud';
-import { PACKS, type Pack } from './credits';
+import { type Pack } from './credits';
 
 export interface Wallet {
   /** False when the app has no accounts configured; nothing is counted then. */
@@ -44,7 +44,12 @@ export const NO_WALLET: Wallet = {
   balance: 0,
   monthly: 0,
   cap: 0,
-  packs: PACKS,
+  /* Empty, not the shelf.
+     Nobody may buy credits without a paid plan — `mayTopUp` in `credits.ts`
+     — and this is the state before anything is known about who is asking.
+     Defaulting to the full list here meant a free member saw the shop for as
+     long as the first request took. */
+  packs: [],
 };
 
 const COULD_NOT_ASK: Wallet = { ...NO_WALLET, metered: true, failed: true, ready: false };
@@ -66,7 +71,13 @@ export async function loadWallet(): Promise<Wallet> {
     ready: data.ready !== false,
     monthly: typeof data.monthly === 'number' ? data.monthly : 0,
     cap: typeof data.cap === 'number' ? data.cap : 0,
-    packs: data.packs?.length ? data.packs : PACKS,
+    /* Exactly what the server said, including nothing.
+       This read `data.packs?.length ? data.packs : PACKS` — a fallback to the
+       full shelf whenever the answer was empty, which is precisely the answer
+       the server now gives a free member. The gate would have been defeated by
+       the client the moment it was added, and it would have looked like it
+       worked in every test that did not use a free account. */
+    packs: Array.isArray(data.packs) ? data.packs : [],
   };
 }
 

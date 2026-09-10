@@ -34,11 +34,23 @@ export default function OutOfCredits({
   short,
   packs,
   onClose,
+  onPlans,
 }: {
   /** Null when nothing is short, which is when this renders nothing at all. */
   short: Short | null;
+  /**
+   * What is for sale to this person, which is nothing at all unless they are
+   * already on a plan.
+   *
+   * Carli: "iemand kan nie krediete koop sonder 'n subscribed plan nie. Daai
+   * opsie moet glad nie sigbaar wees voordat iemand 'n betaalde plan aangekoop
+   * het nie." `/api/credits` sends an empty list to a free member, and the
+   * client no longer falls back to the full shelf when it arrives empty.
+   */
   packs: readonly Pack[];
   onClose: () => void;
+  /** Open the plans. Where a free member goes instead of the shop. */
+  onPlans?: () => void;
 }): React.ReactElement | null {
   const { t } = useLang();
   const [busy, setBusy] = useState<string | null>(null);
@@ -121,6 +133,37 @@ export default function OutOfCredits({
           </button>
         </div>
 
+        {/* ── Nothing to sell this person ──────────────────────────────
+
+            A free member has no credits at all — the free tier generates no
+            music — so they meet this panel on the first thing they try. What
+            they must not meet is a shop.
+
+            R100 of credits and nothing else is the thinnest possible version
+            of this app: no video engine, no cloned voice, no channels. Selling
+            it to somebody who has never paid takes their money and gives them
+            the part that disappoints. The answer to "you have none" here is
+            the plans, which include credits every month and everything the
+            credits are for. */}
+        {packs.length === 0 ? (
+          <div className="space-y-3">
+            <p className="text-sm text-zinc-300 leading-relaxed">
+              {t(
+                'credits.needPlan',
+                'Extra credits are for members on a plan. A plan includes credits every month, and the engine they are spent on — the video desk, your own cloned voice, and posting to your channels.',
+              )}
+            </p>
+            {onPlans && (
+              <button
+                type="button"
+                onClick={onPlans}
+                className="w-full min-h-[44px] rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 px-4 py-3 font-bold text-onAccent"
+              >
+                {t('credits.seePlans', 'See the plans')}
+              </button>
+            )}
+          </div>
+        ) : (
         <div className="space-y-2">
           {packs.map((pack) => {
             const answers = enough !== null && pack.id === enough.id;
@@ -150,15 +193,18 @@ export default function OutOfCredits({
             );
           })}
         </div>
+        )}
 
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
 
         {/* Said plainly, because it is true and because a pack that quietly
             undercut the plans would make the plans pointless. */}
-        <Note className="text-xs text-zinc-500 leading-snug">{t(
-            'credits.subNote',
-            'A pack costs more per credit than any monthly plan — it is for the month you needed more than usual. If you need more every month, a plan is the cheaper way.',
-          )}</Note>
+        {packs.length > 0 && (
+          <Note className="text-xs text-zinc-500 leading-snug">{t(
+              'credits.subNote',
+              'A pack costs more per credit than any monthly plan — it is for the month you needed more than usual. If you need more every month, moving up a plan is the cheaper way.',
+            )}</Note>
+        )}
       </div>
     </div>
   );

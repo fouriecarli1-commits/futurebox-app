@@ -1493,6 +1493,8 @@ export const STRINGS: Dict = {
   },
   "credits.close": { en: "Close", af: "Maak toe" },
   "credits.balanceTitle": { en: "What you have left to spend", af: "Wat jy oor het om te spandeer" },
+  "credits.needPlan": { en: "Extra credits are for members on a plan. A plan includes credits every month, and the engine they are spent on — the video desk, your own cloned voice, and posting to your channels.", af: "Ekstra krediete is vir lede op ’n plan. ’n Plan sluit elke maand krediete in, en die enjin waarop hulle bestee word — die videolessenaar, jou eie gekloonde stem, en plasing na jou kanale." },
+  "credits.seePlans": { en: "See the plans", af: "Sien die planne" },
   "credits.subNote": {
     en: "A pack costs more per credit than any monthly plan \u2014 it is for the month you needed more than usual. If you need more every month, a plan is the cheaper way.",
     af: "\u2019n Pakket kos meer per krediet as enige maandplan \u2014 dit is vir die maand toe jy meer as gewoonlik nodig gehad het. Het jy elke maand meer nodig, is \u2019n plan die goedkoper pad.",

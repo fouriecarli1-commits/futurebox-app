@@ -259,6 +259,13 @@ jobs:
       - name: ElevenLabs own model numbers are read, not assumed
         run: npm run check:elevenmodels
 
+      # A top-up that undercuts a plan is a reason not to subscribe. The rule
+      # was written in a comment and the guard it named (`capacity.test`) did
+      # not exist, so every pack had drifted under every plan. Measured now,
+      # against the plans and against the step between them.
+      - name: A top-up never undercuts a plan
+        run: npm run check:topups
+
       # #115: fifteen routes pin Afrikaans in the writing and nothing pinned
       # it in the speaking. The model that reads a script is now the one
       # ElevenLabs' own list says knows the language — and a list that cannot

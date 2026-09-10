@@ -2853,7 +2853,18 @@ export default function FutureBoxHome() {
       )}
 
       {/* The packs, at the only moment they are ever shown. */}
-      <OutOfCredits short={short} packs={packs} onClose={() => setShort(null)} />
+      <OutOfCredits
+        short={short}
+        packs={packs}
+        onClose={() => setShort(null)}
+        /* Where a free member goes instead of the shop: `/api/credits` sends
+           them no packs at all, and the panel offers the plans in their place.
+           See `mayTopUp` in `lib/credits.ts`. */
+        onPlans={() => {
+          setShort(null);
+          setPricingModalOpen(true);
+        }}
+      />
 
       {/* 🚀 CREATOR STUDIO & AI MUSIC HUB (WITH MASTER GENRE SOUNDBOARD, VOICE STUDIO & DIRECTOR) */}
       {/* ── The welcome, as its own page ──────────────────────────────────

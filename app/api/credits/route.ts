@@ -8,7 +8,7 @@
 
 import { callerFrom, metered } from '@/app/lib/server/account';
 import { settle } from '@/app/lib/server/credits';
-import { capFor, PACKS, TIER_CREDITS } from '@/app/lib/credits';
+import { capFor, mayTopUp, PACKS, TIER_CREDITS } from '@/app/lib/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,11 +16,15 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request): Promise<Response> {
   // Without accounts nothing is metered, and the app has always behaved as
   // though everything were available. Saying so plainly beats reporting zero.
-  if (!metered()) return Response.json({ metered: false, balance: 0, packs: PACKS });
+  /* No packs to anybody without a paid plan — and that includes these two
+     answers, which used to hand the shelf to a signed-out visitor. See
+     `mayTopUp`. An empty list is the honest shape: there is nothing to sell
+     this person, rather than a shop they are not allowed into. */
+  if (!metered()) return Response.json({ metered: false, balance: 0, packs: [] });
 
   const caller = await callerFrom(request);
   if (!caller) {
-    return Response.json({ metered: true, signedIn: false, balance: 0, packs: PACKS });
+    return Response.json({ metered: true, signedIn: false, balance: 0, packs: [] });
   }
 
   const balance = await settle(caller);
@@ -34,6 +38,9 @@ export async function GET(request: Request): Promise<Response> {
     tier: caller.tier,
     monthly: TIER_CREDITS[caller.tier],
     cap: capFor(caller.tier),
-    packs: PACKS,
+    /* The shelf, only for somebody who is already paying. A free member who
+       runs out is shown the plans instead — see `mayTopUp` for why selling
+       them the engine without the plan is the wrong trade for both sides. */
+    packs: mayTopUp(caller.tier) ? PACKS : [],
   });
 }

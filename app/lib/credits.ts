@@ -393,37 +393,111 @@ export interface Pack {
 }
 
 /**
+ * What one top-up credit costs, and the only number that sets it.
+ *
+ * ── What was wrong ───────────────────────────────────────────────────────
+ *
+ * Carli, 10 September 2026: "Ek sien om verdere krediete aan te koop baie
+ * goedkoper is as die planne wat 'n mens uit neem."
+ *
+ * She is right, and the comment that used to stand here claimed the opposite.
+ * It said the packs sit above "the dearest plan (Maker, at R1.24 a credit)"
+ * and that `capacity.test` refuses to pass if one slips under. Three things
+ * were wrong with that sentence at once:
+ *
+ *   · Maker is R149 for 90 credits — **R1.656**, not R1.24. The old figure
+ *     was from when Maker held 120 credits and was never updated.
+ *   · Maker is the **cheapest** plan per credit, not the dearest. Bigger
+ *     plans here sell features, so their credits cost more, not less.
+ *   · **`capacity.test` does not exist in this repository.** The rule was
+ *     written down, a guard was claimed for it, and neither was there.
+ *
+ * Measured, the old packs were R1.650, R1.593 and R1.498 a credit against
+ * Maker's R1.656 — every one of them cheaper than the cheapest plan, the
+ * biggest by nine and a half percent.
+ *
+ * ── The comparison that actually binds ───────────────────────────────────
+ *
+ * "Cheaper than a plan" is the weak version. The real question a paying
+ * member asks is *should I top up or move up*, so a pack has to be dearer
+ * than the **marginal** cost of the next plan:
+ *
+ *   Maker → Studio   +R250 for +130 credits = R1.92 a credit
+ *   Studio → Label   +R500 for +220 credits = R2.27 a credit
+ *
+ * Anything at or under R2.27 and a Studio member tops up forever instead of
+ * becoming a Label member. R2.50 clears every plan rate (R1.66–R2.04) and
+ * every upgrade step, with room to move.
+ *
+ * **This number is hers.** It is one constant and everything else is derived
+ * from it, so changing the business does not mean editing a table and hoping
+ * the three rows still agree.
+ */
+export const RAND_PER_TOPUP_CREDIT = 2.5;
+
+/**
  * Top-ups, shown when somebody runs out and nowhere else.
  *
- * ── The rule these have to obey ──────────────────────────────────────────
+ * ── Two rules, and the second one is hers ────────────────────────────────
  *
- * **Every pack must cost more per credit than every plan.** Not most of them,
- * and not on average: every one against every one. A pack that undercuts a
- * subscription is a reason not to subscribe, and a subscription business whose
+ * **Every pack costs more per credit than every plan, and than every step
+ * between plans.** See `RAND_PER_TOPUP_CREDIT`. A subscription business whose
  * own shop sells the same thing cheaper has no subscribers.
  *
- * The first version of this got it exactly backwards — the packs were 47% to
- * 60% *cheaper* per credit than the dearest plan, because they were designed
- * to reward a heavy user. A heavy user rewarded with a better rate than the
- * plan is a heavy user who cancels the plan.
- *
- * So the rate here sits above the dearest plan (Maker, at R1.24 a credit),
- * and `capacity.test` refuses to pass if a pack ever slips under it.
- *
- * A volume discount *between the packs* is still fine, and still true here —
- * it is the comparison against the plans that has to hold.
+ * **And the credits shrink with the money, exactly.** Carli: "dit is sinvol
+ * om kleiner bedrae te verkoop vir top up's maar dan moet die krediete krimp
+ * saam met die bedrae." The comment here used to say a volume discount
+ * between the packs was fine. It is not: a discount for buying more is the
+ * same reason not to upgrade, one rung down. Every pack is the same rate, and
+ * the credits are derived from the price rather than typed beside it, so the
+ * three rows cannot drift apart.
  *
  * Nothing under R99: the gateway takes R2 flat on every charge, which is 13%
- * of a R20 pack and 6% of a R99 one. A cheap pack is a donation to Paystack.
+ * of a R20 pack and 2% of a R100 one. A cheap pack is a donation to Paystack.
  */
-export const PACKS: readonly Pack[] = [
-  { id: 'small', credits: 60, rand: 99 },
-  { id: 'mid', credits: 150, rand: 239 },
-  { id: 'large', credits: 400, rand: 599 },
-];
+const TOPUP_RAND = [100, 250, 500] as const;
+
+export const PACKS: readonly Pack[] = TOPUP_RAND.map((rand, i) => ({
+  id: (['small', 'mid', 'large'] as const)[i],
+  rand,
+  credits: Math.round(rand / RAND_PER_TOPUP_CREDIT),
+}));
 
 export function packById(id: string): Pack | null {
   return PACKS.find((one) => one.id === id) ?? null;
+}
+
+/**
+ * Whether this member may buy credits at all.
+ *
+ * ── Carli, 10 September 2026 ─────────────────────────────────────────────
+ *
+ * "Dit moet ook nie die standaard wees van die begin af nie, iemand kan nie
+ * krediete koop sonder 'n subscribed plan nie. Daai opsie moet glad nie
+ * sigbaar wees voordat iemand 'n betaalde plan aangekoop het nie."
+ *
+ * Two separate things, and both were wrong here. `/api/credits` handed the
+ * pack list to everybody — signed out, free, anybody — so the shelf was one
+ * refusal away from a member who had never paid for anything.
+ *
+ * ── Why this is the right rule and not only her preference ───────────────
+ *
+ * The free tier generates no music at all (`TIER_CREDITS.free` is nought), so
+ * a free member is short of every generation there is. Offering them a pack
+ * at that moment sells the *engine* without the plan: R100 buys forty credits
+ * and nothing else — no video engine, no cloned voice, no channels — and
+ * somebody who bought that has paid us and been given the thinnest possible
+ * version of the app. They do not come back.
+ *
+ * The answer to "you have no credits" on free is not a shop. It is the plans.
+ *
+ * ── Enforced in two places, deliberately ─────────────────────────────────
+ *
+ * Here, and again in `/api/checkout` — a hidden button is not a closed door,
+ * and the pack id is a string somebody can post. `check:topups` holds both.
+ */
+export function mayTopUp(tier: Tier | null | undefined): boolean {
+  return tier === 'maker' || tier === 'studio' || tier === 'label';
 }
 
 /* ──────────────────────────────────────────────────────────── in words ─ */

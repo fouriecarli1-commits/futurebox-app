@@ -21,7 +21,7 @@
 import { TIER_SPECS, type Tier } from '@/app/lib/plans';
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { addonPlanCode, planCode } from '@/app/lib/server/paystack';
-import { packById } from '@/app/lib/credits';
+import { mayTopUp, packById } from '@/app/lib/credits';
 import { addonById } from '@/app/lib/addons';
 
 export const runtime = 'nodejs';
@@ -83,6 +83,28 @@ export async function POST(request: Request): Promise<Response> {
     want = (await request.json()) as Want;
   } catch {
     return Response.json({ error: 'bad_request', message: 'Could not read that.' }, { status: 400 });
+  }
+
+  /* ── Credits are for members who already pay ──────────────────────────
+
+     Carli: "iemand kan nie krediete koop sonder 'n subscribed plan nie."
+
+     `/api/credits` hides the shelf from a free member, and a hidden button is
+     not a closed door: `pack` is a string in a body anybody can post. The
+     same rule, enforced where the money actually moves.
+
+     Said as a refusal with a reason rather than "unknown item", because it is
+     not unknown — it is not for sale to them yet, and the next thing they
+     need is the plans. */
+  if (want.kind === 'credits' && !mayTopUp(caller.tier)) {
+    return Response.json(
+      {
+        error: 'needs_plan',
+        message: 'Extra credits are for members on a plan. Take a plan first — it includes credits every month.',
+        needsPlan: true,
+      },
+      { status: 403 },
+    );
   }
 
   const price = await priceOf(want);
