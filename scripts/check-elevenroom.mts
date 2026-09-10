@@ -83,6 +83,19 @@ ok('and does not close the till either',
   unreadSell.go,
   'a read that did not happen is not a reading of zero and not a reading of a hundred');
 
+/* The other road to the same outage. bill() has no timeout of its own and
+   does not need one anywhere else — it is read on pages somebody chose to
+   open. Here it sits in front of a member pressing "Make my song", so a hung
+   request upstream would stop generations that would otherwise have gone
+   ahead. That is braking closed, arriving by a different route. */
+const room = readFileSync('app/lib/server/elevenroom.ts', 'utf8');
+ok('and the read in front of every generation has a deadline on it',
+  /AbortSignal\.timeout\(/.test(code(room)),
+  'a hung supplier would stop songs that had nothing wrong with them');
+ok('  which is caught and read as "could not ask", not as "no room"',
+  /catch \{[\s\S]{0,200}percent = null;/.test(code(room)),
+  'a timeout that throws past the brake takes the generation down with it');
+
 // ── Every route that spends it, checks it ────────────────────────────────
 
 const ROUTES: { path: string; weight: string }[] = [
@@ -129,9 +142,8 @@ ok('  and a top-up from a paying member is never refused this way',
 /* Nothing anywhere may brake the free tier. It generates nothing —
    TIER_CREDITS.free is 0 — so it costs the supplier nothing, and closing it
    during a squeeze loses the audience and saves nought. */
-const room = code(readFileSync('app/lib/server/elevenroom.ts', 'utf8'));
 ok('and nothing in the brake reaches the free tier',
-  !/free/i.test(room.replace(/free tier/gi, '')),
+  !/free/i.test(code(room).replace(/free tier/gi, '')),
   'the free tier costs the supplier nothing and is the shape of a launch');
 
 // ── What a refused member is told ────────────────────────────────────────

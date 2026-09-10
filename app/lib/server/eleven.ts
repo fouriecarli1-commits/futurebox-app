@@ -97,11 +97,20 @@ function text(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
 
-export async function bill(): Promise<{ ok: true; bill: Bill } | Upstream> {
+/**
+ * @param signal Optional, and it exists for one caller: the allowance brake,
+ *   which asks this before every generation. Nothing else here has a
+ *   deadline, but a read sitting in front of a member pressing "Make my song"
+ *   does — see `elevenroom.ts`. Without it, one hung request upstream stops
+ *   generations that would otherwise have gone ahead, which is the brake
+ *   causing the outage it exists to prevent.
+ */
+export async function bill(signal?: AbortSignal): Promise<{ ok: true; bill: Bill } | Upstream> {
   const response = await fetch(`${BASE}/user/subscription`, {
     headers: { 'xi-api-key': key() },
     /* Their number now, not one from the last deploy. This is money. */
     cache: 'no-store',
+    ...(signal ? { signal } : {}),
   });
   if (!response.ok) return complain(response);
   const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;

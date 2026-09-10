@@ -2364,3 +2364,56 @@ with FREE members, unlike ElevenLabs. Ten thousand free accounts will test
 both, and their limits cannot be checked from this machine. Worth reading
 their pricing pages before the doors open — those are the lines that move when
 the free tier grows, and nothing in this brake touches them.
+
+## Two faults in this morning's own work, found by reading it back
+
+Both were introduced today, hours apart, and neither would have shown up in
+any test — they are the kind that only appear on a bad day upstream.
+
+**1. The brake put an un-timed network call in front of every generation.**
+`bill()` has no timeout and does not need one anywhere else: it is read on
+pages somebody chose to open. The allowance brake reads it before every song.
+So a hung request at ElevenLabs would have stopped generations that had
+nothing wrong with them — **the brake causing the outage it exists to
+prevent**, arriving by a different road than braking closed but ending in the
+same place. `bill()` now takes an optional `AbortSignal`, the brake passes a
+three-second deadline, and a timeout lands as "could not read", which brakes
+nothing. Verified by removing the deadline: one assertion fails.
+
+**2. The dictionary setup page made a second dictionary if opened twice.**
+Without `ELEVEN_DICT_ID` set it created one. The ordinary sequence breaks it:
+open it, do not paste the ids straight away, open it again tomorrow — two
+dictionaries with the same name on the account, one reachable, and no way to
+tell from here which id was eventually pasted. It lists first now and updates
+one already carrying the name. A setup page that is safe to open once and not
+twice is a setup page that **will** be opened twice.
+
+A listing that fails is not "there is no dictionary". It falls through to
+creating one and says which path it took, so a second "made a new dictionary"
+in the answer is visible rather than silent.
+
+## Three suppliers this machine cannot reach, tried and blocked
+
+Recorded so it stops reading as "worth looking up someday". All three were
+attempted on 10 September 2026 and returned `EGRESS_BLOCKED` from the proxy:
+
+- **supabase.com/pricing** — Pro plan's MAU ceiling, database size, storage,
+  egress, realtime connections, and which of those are hard caps versus
+  billed overages.
+- **vercel.com/docs/limits** — Pro's included data transfer, function
+  invocations, GB-hours and edge requests, and the overage prices.
+- **tone3000.com/docs** — whether there is a public API at all, and the terms
+  on redistributing models inside another application.
+
+**Why the first two matter more now than they did yesterday.** The ElevenLabs
+brake deliberately leaves the free tier wide open, because the free tier
+generates nothing and so costs ElevenLabs nothing. But it is not free of
+Supabase and Vercel — those two scale with **free** members, and ten thousand
+free accounts is the launch shape. So the brake removes one cliff and makes
+the other one more visible, and nothing in it touches the second.
+
+**What she needs to read, and the one number that decides it:** Supabase Pro's
+**monthly active user** allowance. If the free tier is capped at some number
+of MAU before overage, that number is the real ceiling on a free-tier launch,
+and it is not a percentage of anything — it is a count, and it is the count a
+launch is measured in.

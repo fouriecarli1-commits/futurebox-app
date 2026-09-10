@@ -84,7 +84,48 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const rules = asRules();
-  const existing = process.env.ELEVEN_DICT_ID;
+
+  /* ── Which dictionary, and why this is not just the env var ───────────
+ 
+     With ELEVEN_DICT_ID set this replaces the rules in it. Without one it
+     makes a new dictionary — and the first version of this route stopped
+     there, which had a hole in it worth a paragraph.
+ 
+     The sequence that breaks it is the ordinary one: she opens this page,
+     it makes a dictionary, she does not paste the ids straight away, she
+     opens it again the next day. Two dictionaries on the account with the
+     same name, one of them reachable and one of them not, and no way to
+     tell from here which id she eventually pasted. A setup page that is
+     safe to open once and not twice is a setup page that will be opened
+     twice.
+ 
+     So it looks first. A dictionary already carrying this name is the one
+     to update, whatever the env var says or does not say. */
+  let existing = process.env.ELEVEN_DICT_ID;
+  if (!existing) {
+    try {
+      const listed = await fetch(`${BASE}/pronunciation-dictionaries?page_size=100`, {
+        headers: { 'xi-api-key': apiKey },
+        cache: 'no-store',
+      });
+      if (listed.ok) {
+        const body = (await listed.json().catch(() => null)) as
+          | { pronunciation_dictionaries?: { id?: unknown; name?: unknown }[] }
+          | null;
+        const mine = body?.pronunciation_dictionaries?.find(
+          (one) => typeof one?.name === 'string' && one.name === NAME,
+        );
+        if (mine && typeof mine.id === 'string') existing = mine.id;
+      }
+      /* A listing that fails is not "there is no dictionary" — it is a
+         listing that failed. Making a second one on the strength of a
+         question that was never answered is exactly the mistake this
+         paragraph is about, so the answer below says which path it took
+         and she can check the account if it says "made a new" twice. */
+    } catch {
+      /* Same: unknown, not empty. Falls through to creating one, and says so. */
+    }
+  }
 
   /* Two paths, because they are different endpoints and confusing them is how
      a second dictionary appears on the account. With an id set we REPLACE the

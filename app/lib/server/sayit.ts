@@ -59,14 +59,30 @@ export interface SayRule {
 }
 
 /**
- * The suffix rules. Both confirmed by her.
+ * The suffix rules. Both approved by her; both interpreted by me.
  *
- * `-tjie` came from her directly on 10 September 2026. `-djie` was my
- * inference the same day — the same diminutive after a d, liedjie said
- * "liekie" — and it shipped marked MINE rather than hers, because an
- * inference sitting unmarked next to a heard observation is how a dictionary
- * built by ear stops being one. She confirmed it within the hour, so the mark
- * comes off and the record of where each came from stays.
+ * Worth separating, because they are different things and a dictionary built
+ * by ear is only worth what its provenance is worth.
+ *
+ * **What she heard**, 10 September 2026: the -tjie ending comes back as an
+ * English "ch", and it should be "kie" — voëltjie said as voëlkie. That is
+ * an observation about a sound, and it is entirely hers.
+ *
+ * **What I interpreted**: that the fix takes the form of an ALIAS RULE — a
+ * respelling ElevenLabs substitutes before reading — rather than a phoneme
+ * rule in IPA, and that the respelling is the literal letters "kie". She
+ * approved that reading the same day, in those words: "ek het jou
+ * interpretasie van tjie as kie goedgekeur."
+ *
+ * **What I inferred and she then approved**: -djie, the same diminutive
+ * after a d. liedjie said "liekie". It shipped marked MINE and unheard,
+ * because an inference sitting unmarked beside an observation is how this
+ * list stops being a record of anything; she confirmed it within the hour.
+ *
+ * The distinction earns its keep the day one of these turns out wrong. An
+ * observation being wrong means her ear was misled. An interpretation being
+ * wrong means the alias form is the wrong tool and a phoneme rule is needed,
+ * which is a different fix in a different place.
  */
 const SUFFIXES: readonly SayRule[] = [
   {

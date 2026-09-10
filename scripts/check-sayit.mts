@@ -152,6 +152,13 @@ ok('and it never reports success without both ids to paste',
   /if \(!id \|\| !version\)/.test(route),
   'saying "done" while she pastes nothing is how a dictionary sits unused');
 
+/* A setup page that is safe to open once and not twice will be opened
+   twice. Without this it made a second dictionary with the same name every
+   time she opened it before pasting the ids. */
+ok('and opening it a second time updates the dictionary rather than making another',
+  /pronunciation-dictionaries\?page_size/.test(route) && /one\.name === NAME/.test(route),
+  'two dictionaries with one name, one reachable, and no way to tell which she pasted');
+
 if (failures) {
   console.error(`\ncheck:sayit — ${failures} failure(s).\n`);
   process.exit(1);

@@ -119,8 +119,26 @@ export async function spentPercent(): Promise<number | null> {
   const now = Date.now();
   if (held && now - held.at < HOLD_MS) return held.percent;
 
-  const answer = await bill();
-  const percent = answer.ok ? answer.bill.percent : null;
+  /* ── A deadline, because this sits in front of a member ───────────────
+ 
+     `bill()` has no timeout of its own and does not need one: everywhere
+     else it is read on a page somebody chose to open. Here it is read before
+     every generation, so a hung request upstream would stop songs that would
+     otherwise have gone ahead — the brake causing the outage it exists to
+     prevent, which is the same failure as braking closed, arriving by a
+     different road.
+ 
+     Three seconds. A read that takes longer than that is not going to make
+     anybody's song safer, and a timeout lands in the `catch` below as
+     "could not read", which brakes nothing. */
+  let percent: number | null = null;
+  try {
+    const answer = await bill(AbortSignal.timeout(3_000));
+    percent = answer.ok ? answer.bill.percent : null;
+  } catch {
+    /* Aborted, or the network refused. Not zero, not a hundred: unknown. */
+    percent = null;
+  }
   /* A failed read is cached too, and on purpose. Without it, a supplier that
      is down turns into one extra failing request per generation, at the
      moment the app can least afford them. */
