@@ -2248,3 +2248,57 @@ Vercel, redeploy, and listen. Then: is `-djie` right, and what else is wrong?
 The test read at `/api/eleven/pronounce` is forty items and exists for exactly
 this. #115 stays open until the dictionary is live and a second round of
 listening has happened.
+
+## The terms promised members a licence nobody granted them (corrected, 10 Sep)
+
+`app/terms/page.tsx` said, in as many words: *"You may sell what you make. The
+music engine behind FutureBox grants a commercial licence on the paid plan
+this app runs on, and it covers songs made through the app."*
+
+That sentence was written on the morning of 9 September on the strength of
+ElevenLabs' answer about **the account holder's** commercial use. Their second
+answer, the same day, was about **members**:
+
+> "the scenario you're describing — where your end users receive and
+> commercially sell AI-generated output produced under your API key — is a
+> platform/B2B2C arrangement that is not explicitly covered by ElevenLabs'
+> self-serve plan terms."
+
+So a live legal page promised a licence the supplier had declined, in writing,
+to stand behind — and the register had this filed under "hers to decide",
+which was the wrong shelf. Softening it *would* have been her decision; making
+the page stop saying something untrue is not.
+
+**Fixed now rather than at launch, for a reason with a date on it.** Nobody
+has relied on it: she confirmed on 10 September that there are no paying
+members. The terms promise notice before a change that affects somebody, so
+today this costs nothing and after launch it costs an email to everybody.
+
+**What replaced it is neither "you may sell" nor "you may not".** It says
+where the licence actually stands — FutureBox's plan carries one, whether it
+reaches through to a member is "not explicitly covered", an agreement is being
+negotiated, and in the meantime what you make is yours and you should ask
+before releasing commercially. That is the true statement, and it forecloses
+nothing: the day an Enterprise agreement is signed, the page changes back and
+says more.
+
+### And `check:musiclicence` was defending the error
+
+The check **required** the string "You may sell what you make", on pain of a
+red build. Its reasoning was sound — naming the film/TV carve-out without
+naming the permission reads as a blanket ban — and its fact was wrong. It even
+closed by warning against softening the wording "without a newer answer from
+them in writing", while the newer answer was already in the same inbox.
+
+**The lesson generalises past music licensing:** a check that asserts a
+**claim** inherits everything that was wrong with the claim, and then defends
+it with a red build. A check should assert a **constraint**. It now asserts
+that the page must not promise a licence nobody granted, must say where things
+actually stand, and must still say the maker owns their work — three
+constraints, none of which goes stale when the licence changes.
+
+Verified by putting the old sentence back: one assertion fails.
+
+`handbook.generated.ts` regenerated, so the help assistant answers the same
+way the page reads. That path was the reason to check: the old promise was
+being repeated to members in support conversations too.

@@ -69,15 +69,57 @@ for (const place of ['film', 'television', 'radio', 'game']) {
   );
 }
 
+/* ── The half of this check that was itself wrong ────────────────────────
+
+   This asserted that the page must say "You may sell what you make", in as
+   many words, so that naming the film/TV limit could not read as a blanket
+   ban. Sound reasoning, wrong fact: it was written on the morning of
+   9 September 2026 on the strength of ElevenLabs' answer about the ACCOUNT
+   HOLDER's commercial use, hours before their second answer arrived about
+   members:
+
+     "the scenario you're describing — where your end users receive and
+      commercially sell AI-generated output produced under your API key — is
+      a platform/B2B2C arrangement that is not explicitly covered by
+      ElevenLabs' self-serve plan terms."
+
+   So a check meant to keep the terms honest was requiring, on pain of a red
+   build, a sentence the supplier had declined to stand behind. This file even
+   closed by saying not to soften the wording "without a newer answer from
+   them in writing" — and the newer answer was already in the same inbox.
+
+   The lesson is not about music licensing. A check that asserts a CLAIM
+   rather than a CONSTRAINT inherits everything that was wrong with the claim,
+   and then defends it. What is asserted below is the constraint: the page
+   must not promise members a licence nobody has granted them, and must not
+   leave them thinking they own nothing either. */
+
 check(
-  'ordinary commercial release is still allowed in as many words',
-  /You may sell what you make/i.test(terms),
-  `${TERMS} states the limit without stating the permission, which reads as a ban`,
+  'the page does not promise members a resale licence the engine has not granted',
+  !/You may sell what you make/i.test(terms),
+  `${TERMS} says "You may sell what you make". ElevenLabs said in writing on ` +
+    '9 September 2026 that a platform\'s end users selling output made under the ' +
+    'platform\'s key is not covered by the self-serve terms. Do not put it back ' +
+    'without an agreement that actually covers members.',
+);
+
+check(
+  'and it says outright where the licence does stand',
+  /not explicitly covered/i.test(terms) && /negotiating/i.test(terms),
+  `${TERMS} no longer explains where resale rights stand — silence reads as ` +
+    'permission to somebody about to release a record',
+);
+
+check(
+  'and that what they make is still theirs',
+  /what you make is yours/i.test(terms),
+  `${TERMS} states the licence limit without stating ownership, which reads as ` +
+    'a claim on their songs',
 );
 
 check(
   'and no credit to the engine is required',
-  /No credit to the engine is required/i.test(terms),
+  /no credit to the engine required|No credit to the engine is required/i.test(terms),
   `${TERMS} no longer says attribution is unnecessary — it is not, on a paid plan`,
 );
 
@@ -85,13 +127,17 @@ if (problems.length) {
   console.error(`\ncheck:musiclicence — ${problems.length} wrong:\n`);
   for (const one of problems) console.error(`  ${one}`);
   console.error(
-    '\nElevenLabs confirmed this in writing on 9 September 2026. Do not soften or\n' +
-      'remove it without a newer answer from them in writing.\n',
+    '\nElevenLabs answered this in writing on 9 September 2026, twice, and the two\n' +
+      'answers say different things: the account holder may sell, a member of a\n' +
+      'platform selling under the platform\'s key is not explicitly covered. Do not\n' +
+      'change either direction without a newer answer from them in writing —\n' +
+      'docs/ELEVENLABS-SALES.md is the letter asking for one.\n',
   );
   process.exit(1);
 }
 
 console.log(
-  '\ncheck:musiclicence — the terms say a song may be sold with no credit to the engine,\n' +
-    '  and name film, television, radio and studio games as needing a separate agreement.',
+  '\ncheck:musiclicence — the terms say where a member\'s resale rights actually\n' +
+    '  stand, keep ownership with the maker, and name film, television, radio and\n' +
+    '  studio games as needing a separate agreement.',
 );

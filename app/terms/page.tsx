@@ -27,9 +27,29 @@ export const metadata = {
 
 /* Moved on 9 September 2026, when ElevenLabs confirmed in writing that film,
    television, radio and studio games sit outside the commercial licence this
-   app's plan carries. The document itself says the date changes when the terms
-   change in a way that affects somebody, so it does. */
-const UPDATED = '9 September 2026';
+   app's plan carries.
+
+   Moved again on 10 September, and this one is a correction rather than an
+   addition. On 9 September this page was rewritten to say "You may sell what
+   you make", on the strength of ElevenLabs' answer about the ACCOUNT HOLDER's
+   commercial use. Their second answer, the same day, was about members:
+
+     "the scenario you're describing — where your end users receive and
+      commercially sell AI-generated output produced under your API key — is
+      a platform/B2B2C arrangement that is not explicitly covered by
+      ElevenLabs' self-serve plan terms."
+
+   So the sentence promised members a licence the supplier has said in writing
+   is not theirs to rely on. Nobody has relied on it — there are no paying
+   members, confirmed by Carli on 10 September — and that is exactly why it is
+   fixed now rather than after launch, when changing it would owe everybody
+   notice.
+
+   What replaced it is neither "you may sell" nor "you may not". It is what is
+   actually settled, which is less than the first and more than the second.
+   The Enterprise agreement that would settle it properly is being asked for;
+   docs/ELEVENLABS-SALES.md is that letter. */
+const UPDATED = '10 September 2026';
 
 /* Contact is a page, not an address.
 
@@ -78,8 +98,12 @@ export default function Terms(): React.ReactElement {
         <Section title="What you make is yours">
           <p>The songs, recordings, videos and shows you make here belong to you. FutureBox does not take ownership of them and does not license them to anybody else.</p>
           <p>A song made with your free credits is a finished song. It is not marked, not degraded and not on loan; it is yours the same way a song made on a plan is. What a plan adds is more of them, the video engine, voice cloning and the rest — not the removal of something done to the free one.</p>
-          <p>You may sell what you make. The music engine behind FutureBox grants a commercial licence on the paid plan this app runs on, and it covers songs made through the app. <strong className="text-white">No credit to the engine is required</strong> &mdash; a song made here goes out under your name and nobody else&apos;s, on streaming platforms, in your own videos, at a gig, on a record you sell.</p>
-          <p>Two limits worth knowing, because they are real and not fine print:</p>
+          {/* Rewritten 10 September 2026. This paragraph used to open "You may
+              sell what you make", which was true of FutureBox's own account and
+              not of yours. Saying less here is the correction, not caution. */}
+          <p><strong className="text-white">Selling what you make: where this actually stands.</strong> The music engine behind FutureBox runs on FutureBox&apos;s own paid plan, and that plan carries a commercial licence over what is generated on it, with <strong className="text-white">no credit to the engine required</strong>. What is <em>not</em> settled is whether that licence reaches through to you. The engine&apos;s owner told us in writing on 9 September 2026 that a member of a platform selling what they made under the platform&apos;s account is &ldquo;not explicitly covered&rdquo; by the terms of the plan we are on.</p>
+          <p>So we will not tell you that you may sell it, because we would be telling you something the engine&apos;s owner has declined to confirm. We are negotiating an agreement that covers you properly, and this page changes the day it is signed. Until then: <strong className="text-white">what you make is yours and nobody else takes ownership of it</strong>, and if you intend to release something commercially, ask us first and we will tell you exactly where it stands rather than guess.</p>
+          <p>Two further limits worth knowing, because they are real and not fine print:</p>
           <ul className="space-y-1.5 pl-5 list-disc marker:text-emerald-500">
             <li><strong className="text-white">Generated music is not guaranteed to be unique.</strong> An AI model can produce something close to what it produced for somebody else. FutureBox cannot promise originality and does not warrant that anything generated here is free of somebody else&apos;s rights.</li>
             {/* Confirmed by ElevenLabs support on 9 September 2026, in writing,
@@ -89,7 +113,7 @@ export default function Terms(): React.ReactElement {
                 that is actually carved out. See elevenlabs.io/music-terms. */}
             <li><strong className="text-white">Film, television, radio and studio games are outside that licence.</strong> Selling the song, streaming it, and putting it in your own videos are all covered. Placing generated music in a film, a television or radio broadcast, or a studio-published game is not, and needs a separate agreement with the engine&apos;s owner. If that is where a song of yours is going, tell us before you sign anything and we will point you at the right licence.</li>
           </ul>
-          <p>Beyond those two, satisfy yourself before you release anything commercially. That is your call to make and it is not one this app can make for you.</p>
+          <p>Beyond those, satisfy yourself before you release anything commercially. That is your call to make and it is not one this app can make for you.</p>
         </Section>
 
         <Section title="What you may not do here">
