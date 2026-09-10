@@ -415,16 +415,12 @@ export const SONG_SECTIONS = [
   { tag: 'Outro', hint: 'How it lets go. Fade, cut, or one last line.' },
 ] as const;
 
-export const VOCAL_CHOICES = [
-  { id: 'female-pop', label: 'Female pop vocal' },
-  { id: 'male-rock', label: 'Male rock vocal' },
-  { id: 'female-folk', label: 'Female folk vocal, close-miked' },
-  { id: 'male-soul', label: 'Male soul vocal' },
-  { id: 'duet', label: 'Duet, trading lines' },
-  { id: 'choir', label: 'Choir / group vocal' },
-  { id: 'vocoder', label: 'Vocoder / robotic' },
-  { id: 'none', label: 'Instrumental — no vocal' },
-] as const;
+/* VOCAL_CHOICES was here: eight labels, exported, imported by nothing.
+
+   A second voice list that never reached a screen, let alone the engine. It
+   went out with the picker on the song screen on 10 September 2026 — the same
+   promise, one step further from being kept. The words that were worth
+   keeping live in SINGERS in app/data/sound.ts, which the copilot reads. */
 
 export const MOOD_TAGS = [
   'warm', 'melancholy', 'euphoric', 'hopeful', 'menacing', 'nostalgic',

@@ -456,6 +456,11 @@ jobs:
       - name: A song is built with a shape
         run: npm run check:makesong
 
+      # She picked a man's voice, a woman's voice, and got whatever the model
+      # felt like. The bars were wired; the words were thrown away by position.
+      - name: The singer is asked for in words, and survives the whole song
+        run: npm run check:singer
+
       # The one page whose whole job is to be true, months after this was
       # written, filled in by somebody who will never open the check.
       - name: The legal page is right the first time

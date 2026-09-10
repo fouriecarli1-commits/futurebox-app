@@ -832,7 +832,6 @@ export const STRINGS: Dict = {
   "make.clear": { en: "Clear", af: "Maak skoon" },
   "make.soundPlaceholder": { en: "afro house, log drum bassline, warm pads, 122 bpm \u2014 or paste something the copilot wrote", af: "afro house, log drum bass, warm pads, 122 bpm \u2014 of plak iets wat die copilot geskryf het" },
   "make.soundNote": { en: "Write it however you like. Six or seven directions work better than two \u2014 the more specific, the closer it lands.", af: "Skryf dit soos jy wil. Ses of sewe aanwysings werk beter as twee \u2014 hoe spesifieker, hoe nader kom dit." },
-  "make.voice": { en: "The voice", af: "Die stem" },
   "make.sound": { en: "What should it sound like?", af: "Hoe moet dit klink?" },
   "make.speed": { en: "Speed", af: "Spoed" },
   "make.bpm": { en: "beats a minute", af: "slae per minuut" },
@@ -1841,10 +1840,6 @@ export const STRINGS: Dict = {
   "booth.holdStave": {
     en: "Hold the words on the stave to stop them, or drag them to where you actually sing them. It works while you record and it does not touch the take.",
     af: "Hou die woorde op die notebalk vas om hulle te stop, of sleep hulle na waar jy hulle werklik sing. Dit werk terwyl jy opneem en dit raak nie aan die opname nie.",
-  },
-  "make.voiceNote": {
-    en: "A direction, not a switch: the engine has no voice setting, so this goes to it in words. It usually follows, and now and then it does not.",
-    af: "\u2019n Aanwysing, nie \u2019n skakelaar nie: die enjin het geen steminstelling nie, so dit gaan in woorde daarheen. Dit volg meestal, en so nou en dan nie.",
   },
   "booth.readWords": { en: "Read the words off the song", af: "Lees die woorde van die liedjie af" },
   "booth.reading": { en: "Listening to the song\u2026", af: "Luister na die liedjie\u2026" },

@@ -38,7 +38,7 @@ import StyleFinder from './StyleFinder';
 import LyricHelp from './LyricHelp';
 import Note from './Note';
 import Hint from './Hint';
-import { STARTERS, VOICES, LENGTH_CHOICES } from '../data/sound';
+import { STARTERS, LENGTH_CHOICES } from '../data/sound';
 import { songCost } from '../lib/credits';
 import { check, record, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import { useLang } from '../lib/i18n';
@@ -220,7 +220,6 @@ export default function MakeMusic({
   const [bpm, setBpm] = useState(112);
   const [songKey, setSongKey] = useState('A Minor');
   const [seconds, setSeconds] = useState(60);
-  const [voice, setVoice] = useState(VOICES[1]);
   /**
    * A sound of your own, trained in the channel on your own songs.
    *
@@ -271,14 +270,13 @@ export default function MakeMusic({
    */
   const changedFromDefault = useMemo(() => {
     const said: string[] = [];
-    if (voice.id !== VOICES[1].id) said.push(voice.name);
     if (bpm !== 112) said.push(`${bpm} ${t('make.bpm')}`);
     if (songKey !== 'A Minor') said.push(songKey);
     if (seconds !== 60) said.push(`${seconds}s`);
     if (singItYourself) said.push(t('make.singSelf'));
     if (ownSound) said.push(t('make.useOwnSound', 'Make it in a sound of my own'));
     return said;
-  }, [voice, bpm, songKey, seconds, singItYourself, ownSound, t]);
+  }, [bpm, songKey, seconds, singItYourself, ownSound, t]);
   const [busy, setBusy] = useState(false);
 
   /**
@@ -399,7 +397,6 @@ export default function MakeMusic({
   const styleText = (() => {
     const written = canvas.style.trim();
     const parts = written ? written.split(',').map((p) => p.trim()).filter(Boolean) : [];
-    if (voice.words) voice.words.split(',').forEach((w) => parts.push(w.trim()));
     /* Before the padding, so a style with seven words of its own does not
        crowd out the one direction that decides what language it comes back
        in. There is no language parameter in the Music API; this is the same
@@ -509,7 +506,7 @@ export default function MakeMusic({
             seconds,
             // "No vocal" has to mean no vocal. Leaving the style words empty
             // asked for nothing in particular and the engine sang anyway.
-            instrumental: singItYourself || voice.id === 'none',
+            instrumental: singItYourself,
             finetuneId: ownSound || undefined,
             onStage: setStage,
           });
@@ -606,7 +603,7 @@ export default function MakeMusic({
         setStage(null);
       }
     },
-    [bpm, canvas.style, lyrics, onMade, ownSound, seconds, singItYourself, songKey, sounds.mine, styleText, t, title, tracks, userPlan, voice.id],
+    [bpm, canvas.style, lyrics, onMade, ownSound, seconds, singItYourself, songKey, sounds.mine, styleText, t, title, tracks, userPlan],
   );
 
   const toggle = async (track: Track) => {
@@ -895,7 +892,7 @@ export default function MakeMusic({
               "Asked for" is the honest verb: there is no language parameter in
               the Music API, so this goes into the style directions and the
               model reads it like the rest. */}
-          {!wordless && !singItYourself && voice.id !== 'none' && (
+          {!wordless && !singItYourself && (
             <div className="flex flex-wrap items-center gap-2 pt-2">
               <span className="text-sm text-zinc-400">{t('make.singIn', 'Sung in')}</span>
               {(['af', 'en', 'auto'] as const).map((one) => (
@@ -1090,31 +1087,25 @@ export default function MakeMusic({
             </span>
           </label>
 
-          <div className={singItYourself ? 'opacity-40 pointer-events-none' : undefined}>
-            <label className="text-sm text-zinc-400">{t('make.voice')}</label>
-            <p className="text-sm text-zinc-600 leading-snug pt-0.5">
-              {t('make.voiceNote', 'A direction, not a switch: the engine has no voice setting, so this goes to it in words. It usually follows, and now and then it does not.')}
-            </p>
-            <div className="grid sm:grid-cols-3 gap-2 mt-1.5">
-              {VOICES.map((choice) => (
-                <button
-                  key={choice.id}
-                  type="button"
-                  onClick={() => setVoice(choice)}
-                  className={`min-h-[44px] text-left px-3 py-2.5 rounded-xl border transition-all ${
-                    voice.id === choice.id
-                      ? 'bg-emerald-500/15 border-emerald-500'
-                      : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
-                  }`}
-                >
-                  <span className={`block text-sm font-semibold ${voice.id === choice.id ? 'text-emerald-300' : 'text-zinc-200'}`}>
-                    {choice.name}
-                  </span>
-                  <span className="block text-sm text-zinc-500 leading-snug pt-0.5">{choice.sounds}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* The voice picker was here, and it was a promise nothing could keep.
+
+              Six bars — woman warm, man low, a group — that wrote their words
+              into the style list. It was wired: `voice.words` reached
+              `styleText`, which reached `body.style`. Two things then threw it
+              away. `toStyles` caps the list at twelve, and the picker appended
+              its words AFTER whatever the person had written, so a long style
+              dropped the singer outright. Worse, `buildRequest` gives the first
+              chunk the full list and every chunk after it `leading.slice(0, 6)`
+              — so on a song with six words of its own, the singer was asked for
+              in the intro and nowhere else. A song is mostly "chunks after the
+              first". Carli: "as ek daar 'n man of 'n vrou stem kies tel hy dit
+              nie op nie, want hy generate net wat hy wil."
+
+              Her instruction was to take it out rather than to keep tuning it:
+              "As iets fisies nie werk nie moet jy dit weg vat." The choice
+              lives in the copilot now, where it becomes words the person asked
+              for, at the front of their own style line, and where the copilot
+              offers it to somebody who did not know to ask. */}
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
@@ -1282,7 +1273,7 @@ export default function MakeMusic({
             a fair thing to be handed without being told. */}
         {wordless && (
           <p className="text-sm text-amber-300/90 leading-snug rounded-xl border border-amber-500/30 bg-amber-500/[0.06] px-3.5 py-2.5">
-            {singItYourself || voice.id === 'none'
+            {singItYourself
               ? t('make.noWordsOnPurpose', 'No words and no voice — this comes back as a backing track to sing over.')
               : t('make.noWords', 'The words box is empty, so this comes back as music with nobody singing. Put the words in first if you want it sung.')}
           </p>

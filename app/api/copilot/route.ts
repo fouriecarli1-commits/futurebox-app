@@ -26,6 +26,7 @@ import { screen } from '@/app/lib/moderation';
 import { SURFACES, describeOps, isSurfaceId, surfaceDirectory, type SurfaceId } from '@/app/lib/surfaces';
 import { tooMany } from '@/app/lib/server/brake';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
+import { SINGERS } from '@/app/data/sound';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -99,6 +100,22 @@ const SYSTEM = [
   '- You can act, not just advise. Answer with one action the studio applies.',
   '- set_lyrics takes a complete lyric sheet with [Section] tags on their own lines.',
   '- set_style takes a short comma-separated list of musical directions, in English, because that is what the music model reads. Everything you say to the person stays in their language.',
+  /* Who sings is now yours to ask for, because it stopped being a control.
+     A row of buttons on the song screen wrote the same words into the same
+     list and they were thrown away by position — the request keeps the first
+     twelve directions and reminds the model of only the first six after the
+     opening chunk, so a singer named last was named in the intro and nowhere
+     else. Written here, by you, it is the person's own words at the front of
+     their own line, which is the strongest form the ask has.
+
+     Suggesting it matters as much as accepting it: somebody who does not know
+     the model has an opinion about the singer will never think to say so, and
+     will get whatever it feels like. That is the fault Carli reported. */
+  '- Who sings is part of the style, not a setting. There is no voice control on any screen and no voice parameter in the music engine — the only way to ask is in words, inside set_style.',
+  `- Put the singer FIRST in the list, before the genre, because the engine weights what comes first. Phrases that work: ${SINGERS.map((one) => one.words).join('; ')}.`,
+  '- If they have asked for a song and said nothing about who sings it, offer one. Say what you would pick and why in half a sentence, and set it. Do not ask them an open question about it — a suggestion they can change beats a form they have to fill in.',
+  '- If they name a singer, use their words, not yours. "n Diep manstem" becomes a low male vocal, not your favourite phrasing of one.',
+  '- Say plainly that it is a direction the engine usually follows and sometimes does not, the first time you set one. Never promise it.',
   '- generate makes the song from what is on the canvas. Only choose it when there is enough to work with.',
   '- go moves them to another screen. Use it when what they want lives elsewhere. Only the screens listed in the context exist.',
   '- generate makes a song, and moves them to the song screen to do it. Only choose it when they have actually asked for a song, not as a way of answering a question about the room they are in.',
@@ -118,6 +135,17 @@ const SYSTEM = [
   '- Never claim the song is finished, released, or published. It is theirs, on their screen.',
   '- You never spend their money. The studio asks before anything that costs.',
 ].join('\n');
+
+/**
+ * Does the style line already name a singer?
+ *
+ * Deliberately generous: a false positive costs a suggestion nobody needed, a
+ * false negative costs the copilot talking over a choice the person already
+ * made. The second is the rude one.
+ */
+function namesASinger(style: string): boolean {
+  return /\b(male|female|man|woman|men|women|boy|girl|choir|chorus|duet|vocal|vocals|voice|singer|soprano|alto|tenor|baritone|bass vocal|rapper|instrumental)\b/i.test(style);
+}
 
 function contextFor(body: Body): string {
   // An unknown or missing room falls back to the song screen rather than to
@@ -149,6 +177,13 @@ function contextFor(body: Body): string {
     'The song canvas travels with them everywhere, and is only the subject on the song screens:',
     body.title ? `Title: ${body.title}` : 'No title yet.',
     body.style ? `Style: ${body.style}` : 'No style chosen yet.',
+    /* Said outright rather than left to be read out of the style line, because
+       "does this mention a singer" is exactly the inference that goes quiet.
+       A model that has to notice an absence will sometimes not notice it, and
+       the whole point of this is to offer when nobody asked. */
+    namesASinger(body.style ?? '')
+      ? 'Their style already says who sings. Leave it alone unless they ask.'
+      : 'Their style does not say who sings. If they are heading for a song, suggest one and set it.',
     body.lyrics ? `Lyrics so far:\n${body.lyrics}` : 'No lyrics yet.',
     `Songs they have already made: ${body.trackCount ?? 0}`,
     /* What they keep coming back to, where the account has enough to say it.

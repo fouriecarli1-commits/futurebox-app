@@ -124,7 +124,7 @@ export const STARTERS: readonly Starter[] = [
  * they sound too clean. Asking for the imperfection is the only control there
  * is over it, and it works better than asking for "realistic".
  */
-export interface VoiceChoice {
+export interface SingerWords {
   readonly id: string;
   readonly name: string;
   readonly sounds: string;
@@ -132,13 +132,23 @@ export interface VoiceChoice {
 }
 
 /**
- * Named for who is singing, because that is what people come here to choose.
+ * How to ask for a singer, in words the music model reads.
  *
- * These used to be called "Higher, warm" and "Lower, rough" — an attempt not
- * to put a man or a woman on a list, which had the effect of hiding the choice
- * from the person making it. The style words underneath always did say male
- * and female; only the labels were coy about it. Somebody who wants a woman's
- * voice on their song should be able to see that they can have one.
+ * This was a row of buttons on the song screen until 10 September 2026, and it
+ * did not work: the words went into the style list last, where the twelve-item
+ * cap and `buildRequest`'s six-item reminder threw them away on every chunk
+ * after the intro. Carli asked for a man or a woman and got whatever the model
+ * felt like, and her instruction was to take the control out rather than keep
+ * tuning it.
+ *
+ * The words themselves were never the problem, so they are kept. The copilot
+ * reads this list, suggests a singer to somebody who has not named one, and
+ * writes the direction into the style line as the person's own words — at the
+ * front, where the model weights it, rather than appended behind everything.
+ *
+ * There is no voice parameter in the Music API. This is a direction, and it is
+ * the only kind of ask that exists. Saying it once, early and in the person's
+ * own style line is the strongest version of it that can be built.
  */
 /*
  * Three words each, not six.
@@ -155,13 +165,7 @@ export interface VoiceChoice {
  * go — that is what the padding did too, and it was removed for the same
  * reason.
  */
-export const VOICES: readonly VoiceChoice[] = [
-  {
-    id: 'none',
-    name: 'No vocal',
-    sounds: 'Instrumental. Your words are kept with the track but nothing is sung.',
-    words: '',
-  },
+export const SINGERS: readonly SingerWords[] = [
   {
     id: 'female-warm',
     name: 'Woman, warm',

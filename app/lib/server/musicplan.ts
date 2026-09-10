@@ -140,7 +140,7 @@ export function buildRequest(body: Body): Record<string, unknown> {
           // The first chunk's styles set the whole song, so it carries the full
           // list and later chunks carry a shorter one. That is the SDK's own
           // advice, and it is why these are not simply the same array copied.
-          positive_styles: index === 0 ? enough(leading) : leading.slice(0, 6),
+          positive_styles: index === 0 ? enough(leading) : reminder(leading),
           /* On every chunk, not only the first.
 
              "No muddy mix, no distortion, no off-key vocal" is a thing to
@@ -160,6 +160,34 @@ export function buildRequest(body: Body): Record<string, unknown> {
     music_length_ms: clamp((body.seconds || 60) * 1000, MIN_MS, MAX_MS),
     force_instrumental: Boolean(body.instrumental),
   };
+}
+
+/**
+ * What every chunk after the first is reminded of.
+ *
+ * The SDK's advice is that the opening chunk sets the song and later chunks
+ * carry a shorter list, and this took that literally: the first six, by
+ * position. Which quietly decided that a direction written seventh applies to
+ * the intro and to nothing else.
+ *
+ * That is the bug behind Carli's report of 10 September — she chose a man's
+ * or a woman's voice and "hy generate net wat hy wil". The voice picker
+ * appended its words after whatever she had written, so on any style with six
+ * words of its own the singer reached the first twenty seconds and was
+ * dropped from the rest of the song.
+ *
+ * Who sings is not a detail that lapses after the intro. If the first six do
+ * not name a singer and something later does, that one is brought forward. It
+ * costs one slot out of six and it is the slot most worth spending.
+ */
+const SINGER = /\b(male|female|man|woman|men|women|boy|girl|choir|chorus|duet|vocal|vocals|voice|singer|soprano|alto|tenor|baritone|rapper|a cappella|instrumental|no vocals)\b/i;
+
+function reminder(styles: string[]): string[] {
+  const short = styles.slice(0, 6);
+  if (short.some((one) => SINGER.test(one))) return short;
+  const singer = styles.slice(6).find((one) => SINGER.test(one));
+  if (!singer) return short;
+  return [singer].concat(short.slice(0, 5));
 }
 
 /**

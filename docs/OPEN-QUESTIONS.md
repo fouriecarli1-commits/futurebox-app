@@ -2114,3 +2114,86 @@ Video quickstart):
 - **The GitHub MCP question is answered** and the entry above it is stale: CI
   runs can be read from here now, and that is how the eight red pushes were
   found. It is no longer a second opinion nobody can read.
+
+## Nobody pays yet — answered, 10 September 2026
+
+Her words: "Ons het nog nie betalende kliente nie. Ek sal jou sê wanneer ons
+launch. Ons is nog 'n rukkie van dit af."
+
+This closes a question that has been sitting under three others.
+
+- **The Paystack plan codes can be swapped, not migrated.** No subscription
+  exists against the current codes, so #121 (the middle plan at R349) is a
+  price change and nothing more. This must be re-checked at launch: the same
+  change after the first paying member is a migration.
+- **The terms change of 9 September owes nobody an email.** The document
+  promises notice before a change takes effect. With no paying members there
+  is nobody to notify, and the promise starts applying at launch.
+- **The over-promise in `app/terms/page.tsx` has not been relied on.** It says
+  "You may sell what you make", which ElevenLabs' 9 September answer does not
+  support for members. Still hers to decide — soften it, or close the gap with
+  an Enterprise agreement — but it is a decision with runway rather than an
+  exposure.
+
+**What changes at launch, and must be done before it:** she has said she will
+say when. Until then this answer is true; the day it stops being true it
+silently invalidates all three points above.
+
+## The voice picker came out (her decision, 10 September)
+
+She reported it as a wiring fault: "wanneer ek 'n liedjie generate is daar
+bars wat sê ek moet 'n stem kies, as ek daar 'n man of 'n vrou stem kies tel
+hy dit nie op nie, want hy generate net wat hy wil."
+
+**It was wired.** `voice.words` reached `styleText`, `styleText` reached
+`body.style`, `buildRequest` turned it into `positive_styles`. Nothing was
+disconnected. It was thrown away by **position**, twice:
+
+1. The picker appended its words *after* whatever the person had written, and
+   `toStyles` keeps the first twelve. A long style dropped the singer before
+   the request left the server.
+2. The one that actually bit: `buildRequest` gave the first chunk the full
+   list and every chunk after it `leading.slice(0, 6)`. On a style with six
+   words of its own, the singer was asked for in the intro and in no other
+   part of the song. **A song is mostly "chunks after the first."**
+
+So the model was told once, late, and then reminded of everything except the
+one thing she had chosen. "Hy generate net wat hy wil" is an accurate
+description of that request, not an exaggeration.
+
+**Her instruction settled the design rather than the bug:** "As iets fisies
+nie werk nie moet jy dit weg vat. Ek dink dit is beter om stemkeuses deur
+Copilot te prompt en Co pilot moet daai suggestion ook maak."
+
+- The six bars are gone, and so is `VOCAL_CHOICES` in `app/data/studio.ts` —
+  a second voice list, exported, imported by nothing. The same promise, one
+  step further from being kept.
+- **"No singing" stays**, because that one is real: `force_instrumental` is an
+  actual parameter. A description is not a switch; that one is.
+- The words that worked are kept as `SINGERS` and the copilot reads them. It
+  is told to put the singer **first**, where the engine weights it, to use the
+  person's own phrasing when they name one, and never to promise the engine
+  will obey.
+- **It suggests.** The context now says outright whether the style names a
+  singer, rather than leaving the copilot to notice an absence — an inference
+  that must spot a missing thing is an inference that sometimes will not.
+  Accepting an ask nobody knows to make is the same silence in a politer form.
+- The position fault is **fixed, not moved**: `reminder()` brings a singer
+  direction forward into the short list when the first six do not name one.
+  Without it the copilot's suggestion would land in exactly the same hole.
+
+`check:singer` holds all fourteen of those, and it was verified by putting the
+old `slice(0, 6)` back — it fails on the assertion that names her report.
+
+**One thing this turned up that is hers to decide.** `audit/simplemode.mjs`
+measured "Simple is genuinely shorter" as a pixel ratio, `simple < everything
+* 0.7`. Taking the picker out of Everything moved that to 2142px against
+2445px — 88% — without a single thing about Simple changing. A proxy that
+moves because the other side of the comparison shrank is a proxy reporting on
+itself, so it is measured directly now: Everything must offer strictly more
+controls (7 against 10) and Simple must still be the shorter.
+
+But the underlying observation stands and is not a threshold to tune:
+**Simple now puts away three controls out of a long screen.** The switch earns
+less than it did. Whether that means moving more behind it, or dropping it, is
+a design call and it is hers.

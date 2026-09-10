@@ -168,7 +168,8 @@
     "check:photoscreen": "node audit/photo.mjs 3011",
     "check:cast": "node audit/cast.mjs 3015",
     "check:kitseach": "tsx scripts/check-kitseach.mts",
-    "check:videowire": "tsx scripts/check-videowire.mts"
+    "check:videowire": "tsx scripts/check-videowire.mts",
+    "check:singer": "tsx scripts/check-singer.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

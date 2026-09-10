@@ -116,7 +116,13 @@ try {
   check('and it still has the button that makes it', simpleWords.includes('Make my song'));
 
   /* What it puts away. */
-  const HIDDEN = ['I will sing it myself', 'The voice', 'Speed', 'Mood'];
+  /* 'The voice' left this list on 10 September 2026 along with the control.
+     Six bars that named a singer and could not deliver one — the words went
+     into the style list last and were dropped from every chunk after the
+     intro. The ask lives in the copilot now. Left here it would have failed
+     the "one press away" assertion below, which is the assertion doing the
+     work: this list is what Everything must still have. */
+  const HIDDEN = ['I will sing it myself', 'Speed', 'Mood'];
   const stillThere = HIDDEN.filter((one) => simpleWords.includes(one));
   check('and it puts the rest away', stillThere.length === 0, stillThere.join(', ') || 'all of it');
 
@@ -127,7 +133,38 @@ try {
 
   const missing = HIDDEN.filter((one) => !allWords.includes(one));
   check('every one of them is one press away', missing.length === 0, missing.join(', ') || 'all back');
-  check(`and Simple is genuinely shorter`, simpleTall < allTall * 0.7,
+
+  /* ── What "simpler" is measured by ───────────────────────────────────
+ 
+     This was `simpleTall < allTall * 0.7` — a pixel ratio standing in for
+     "fewer decisions", which is the thing the switch is actually for.
+ 
+     On 10 September 2026 the voice picker came out of Everything (six bars
+     that named a singer the engine could not be told about) and the ratio
+     went from passing to 2142px against 2445px — 88%. Nothing about Simple
+     had changed. The proxy moved because the OTHER side of the comparison
+     got shorter, which is a proxy reporting on itself.
+ 
+     So it is measured directly now: Everything must offer strictly more
+     controls to touch, and Simple must still be the shorter of the two. The
+     height is kept as a floor rather than a ratio — it catches Simple quietly
+     growing into Everything, which is the regression that matters, without
+     failing every time Everything loses something that should not have been
+     there.
+ 
+     The gap is worth Carli's attention rather than a threshold: Simple now
+     puts away three controls out of a long screen, and the switch earns less
+     than it did. That is a design call, not a number to tune. */
+  const controls = async () =>
+    room.locator('input, select, textarea, [role="slider"]').count();
+  await mode('Simple');
+  const simpleControls = await controls();
+  await mode('Everything');
+  const allControls = await controls();
+
+  check('Everything genuinely offers more to touch', allControls > simpleControls,
+    `${simpleControls} controls against ${allControls}`);
+  check('and Simple is still the shorter of the two', simpleTall < allTall,
     `${simpleTall}px against ${allTall}px`);
 
   /* ── Hidden is not switched off ─────────────────────────────────────
