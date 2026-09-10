@@ -9,7 +9,7 @@ they can be reviewed in one place instead of remembered.
 not be checked, it says so and it says how to check it. Entries move to
 **Settled** with a date and a commit rather than being deleted.
 
-Last updated: 2026-09-05.
+Last updated: 2026-09-10.
 
 ---
 
@@ -1951,3 +1951,166 @@ here (the live site is unreachable), and the first thing worth ruling out.
 3. **#112 and #114**, both ElevenLabs cleanups: take the read's timings from
    their response instead of paying to transcribe them back, and move off the
    dubbing path they have labelled legacy.
+
+## CI was red on `main` for eight pushes while I reported green (10 September)
+
+The worst fault of the session, and it is a fault of method rather than of
+code. `check:played` had gone stale — it looked for `{post.plays}` in a file
+that now writes `{post.plays ?? '–'}` — and nothing on this side ran the whole
+set. I ran the checks I had touched, they passed, I said the sweep was green,
+and pushed. Nine runs in a row went red on `main` while I said otherwise.
+
+**What fixed it is not the one check.** `npm run checks` now runs every check
+in CI's source job, and it reads the list **out of `.github/workflows/ci.yml`**
+rather than keeping its own copy, so the two cannot drift. It does not stop at
+the first failure. Its first run found four more faults behind the one I knew
+about. Runs 454 and 455 are `success`, which ends the streak.
+
+**The rule this leaves behind:** "the checks I changed pass" is not a green
+sweep, and saying so when CI can be read from here is a false report, not an
+optimistic one. `npm run checks` before every push, and read the run.
+
+Two related things it turned up:
+
+- **Two browser probes were wired into the buildless `check` job**
+  (`check:storyboard`, `check:adreport`). They passed on any machine with a
+  stale `.next` lying around and failed in CI, which builds nothing in that
+  job. `check:probes` now holds the structural rule, and found the second one
+  immediately.
+- **`npm run sql:bundle` deleted a function.** `kits_seconds_this_month_for`
+  had been hand-written into the *generated* `ALMAL.sql`, so the next bundle
+  overwrote it. It lives in `supabase/kits.sql` now, which is a source file.
+
+## The language logged in wrong, seven times (#51 follow-on, now settled)
+
+She reported it seven times. I guessed three times and was wrong three times.
+What settled it was `/taal`, a page that reports the four inputs, which one
+won, **who wrote the stored value and when**, and what the account itself
+holds — asked outright rather than inferred.
+
+**Two causes, both real.**
+
+1. A stale `en` choice was pinned in that browsing context, written by
+   something that could not say what. There was no record of the writer, so
+   six reports could not distinguish "the app chose wrong" from "something
+   wrote this once and it never expired".
+2. `onSignIn` refused to ask the account when the device had nothing stored.
+   A fresh phone therefore kept whatever the browser's locale suggested, and
+   the account's own answer was never read.
+
+Fixed in `app/lib/langrule.ts` (the no-stored branch now takes the account's
+answer), `app/lib/i18n.tsx` (a writer record under
+`futurebox.lang.why.v1`, and `forgetLanguage()`), and `/taal` itself, which
+also carries a "Forget what is stored here" button. She confirmed: "Ok dit
+werk nou reg."
+
+**My own page caused the fault it diagnosed, once.** The first version offered
+language buttons directly under the state report with nothing saying a press is
+permanent — so reading the diagnosis could pin the wrong answer. It now says so
+in a sentence before the buttons.
+
+**The lesson worth keeping:** a value that cannot say where it came from is how
+six reports become seven. This is the same class as "could not ask" rendered as
+"none" (section above), and it is the session's dominant fault.
+
+**Her Android observation, answered.** She found no permission sliders for
+camera, microphone, photos, contacts or location in the app's settings, plus
+"Manage app if unused", appear-on-top and picture-in-picture. That is a
+**browser tab**, not an installed app: a PWA that has not been installed shows
+the browser's own permission set, not its own. `/taal` says outright whether it
+is running as an installed app, which is why the screenshot settled it. It was
+not the cause of the language fault, but it was worth ruling out and could not
+have been ruled out before.
+
+## Top-ups undercut every plan (her catch, 10 September)
+
+She read the pricing and found it: buying credits as a top-up was cheaper per
+credit than subscribing. A top-up that undercuts a plan is a reason not to
+subscribe, so the plans were being sold against themselves.
+
+**What changed.**
+
+- Top-ups are priced from one rate, `RAND_PER_TOPUP_CREDIT = 2.5`, and the
+  packs are R100 / R250 / R500 with the credits computed from the rand rather
+  than set by hand. Smaller amounts, as she asked, and the credits shrink with
+  them.
+- **Nobody without a paid plan can buy credits.** `mayTopUp()` gates it in
+  three places, because one was not enough: `/api/credits` returns `packs: []`
+  when the caller is on the free plan, `/api/checkout` refuses a credit
+  purchase with `needs_plan` and a 403, and `app/lib/wallet.ts` no longer
+  falls back to the full pack list when the server sends an empty one — the
+  old `data.packs?.length ? data.packs : PACKS` would have defeated the gate
+  from the client side alone.
+- On the free plan the option is **not visible at all**, which is what she
+  asked for. `OutOfCredits` renders "you need a plan" and a button to the
+  plans instead of a price list.
+- `check:topups` measures every pack against every plan and against the step
+  between plans, so the drift cannot come back quietly.
+
+**The margins, since she asked.** Worst-case cost per credit R0.552. Top-ups
+run 72.4% / 73.6% / 74.0%; the plans 61.8% / 65.6% / 69.3%. Top-ups are now
+the *better* margin, which is the right way round — they are the convenience
+purchase, not the cheap one. She approved: "As jy die bedrae goed uitgewerk
+het, dan is dit reg vir nou."
+
+**One thing found while reading that code.** `AddOn.tsx` put the price and the
+buy button *outside* the chevron that collapsed the description. A R249/month
+subscription could be bought from a panel whose entire explanation was hidden.
+Both are behind the same chevron now.
+
+## Seedance is not sold to a Pro plan (ElevenLabs, 10 September)
+
+Their support, in writing: "Seedance models are available via API for
+Enterprise customers… it won't be available for your subscription tier (Pro).
+My advice is to use a different video model (such as Veo, as you said)."
+
+This settles a question that had been open as "set the flag, make one clip,
+and unset it again if the request comes back refused". That instruction now
+costs money for a **certain** `model_access_denied`, so it is gone from
+`.env.example`, from `docs/SWITCH-ON.md` and from the header of
+`app/lib/server/video/eleven.ts`, replaced by the answer and its date. The
+flag stays and stays off, so a Pro workspace cannot reach the model by
+accident.
+
+**Their documentation, checked rather than assumed** (she pasted the Image &
+Video quickstart):
+
+- **Polling has a floor: ten seconds for video, two for images.** The
+  presenter was asking every four. It now starts at ten and doubles to sixty
+  under the same eight-minute deadline. `engines.ts` was already correct.
+- **`content_url` is signed and expires in about an hour.** Already handled —
+  `app/api/video/route.ts` downloads the file into Supabase storage the moment
+  the job completes.
+- **Failed generations are not charged**, and **unknown fields are rejected
+  rather than ignored** — so a hopeful extra parameter fails the whole call.
+- Veo 3.1's real values are `duration_secs` 4/6/8, aspect 16:9 or 9:16,
+  resolution 720p/1080p/4K. What we declare already matched.
+
+`check:videowire` holds all eleven of those facts, wired into CI.
+
+## Two things she asked for, built
+
+- **The phone number is off the legal page.** `entity()` refused to publish a
+  disclosure without a telephone number, which cost her either her private
+  number or a page saying "being registered" months after CIPC had registered
+  it. ECTA s43(1) asks for a physical address *and* a telephone number in (b),
+  and a web address *and* an e-mail address in (c) — so the floor is now "at
+  least one contact", with an `Email` row added and the `Telephone` row
+  speaking for itself when empty. `FUTUREBOX_LEGAL_EMAIL` is hers to set.
+- **"Film yourself to it" on every song**, in the Library and in her channel —
+  a dedicated button on each card, not a mode hidden behind the words button,
+  and the camera is asked for once on mount.
+
+## Still hers, after this session
+
+- **The address decision on the legal page (#36)** — publish the home address
+  or move the registered address to a business-address service first. Her
+  privacy, not a technical question, and still the last thing between the
+  legal page and complete.
+- `FUTUREBOX_LEGAL_EMAIL` in Vercel, then check `futurebox.studio/legal`.
+- Re-run `supabase/ALMAL.sql`; open `/api/allowance?key=…` and
+  `/api/kits/setup?as=text&key=…`.
+- The Music.ai and ElevenLabs sales emails.
+- **The GitHub MCP question is answered** and the entry above it is stale: CI
+  runs can be read from here now, and that is how the eight red pushes were
+  found. It is no longer a second opinion nobody can read.
