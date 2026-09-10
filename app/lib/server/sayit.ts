@@ -59,13 +59,14 @@ export interface SayRule {
 }
 
 /**
- * The suffix rules.
+ * The suffix rules. Both confirmed by her.
  *
- * `-tjie` is hers, word for word. `-djie` is NOT: it is my inference that the
- * same diminutive takes the same sound after a d — liedjie is said "liekie",
- * and "liedjie" is a word this app uses on almost every screen. It is marked
- * so because an inference sitting unmarked next to a confirmed observation is
- * how a dictionary built by ear stops being one.
+ * `-tjie` came from her directly on 10 September 2026. `-djie` was my
+ * inference the same day — the same diminutive after a d, liedjie said
+ * "liekie" — and it shipped marked MINE rather than hers, because an
+ * inference sitting unmarked next to a heard observation is how a dictionary
+ * built by ear stops being one. She confirmed it within the hour, so the mark
+ * comes off and the record of where each came from stays.
  */
 const SUFFIXES: readonly SayRule[] = [
   {
@@ -78,7 +79,7 @@ const SUFFIXES: readonly SayRule[] = [
     string_to_replace: 'djie',
     type: 'alias',
     alias: 'kie',
-    why: 'MINE, not hers — the same diminutive after a d. liedjie → liekie. Wants her ear.',
+    why: 'Hers, 10 September 2026, confirming my inference from the -tjie rule. liedjie → liekie.',
   },
 ];
 

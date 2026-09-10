@@ -65,6 +65,7 @@ import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 import { noteCost } from '@/app/lib/server/eleven';
+import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -150,6 +151,16 @@ export async function POST(request: Request): Promise<Response> {
   let record: (() => Promise<void>) | null = null;
   if (metered()) {
     const caller = await callerFrom(request);
+    /* 'light', same as transcribing: this replaces that call and is charged
+       as if it were one. */
+    const room = await roomFor('light');
+    if (!room.go) {
+      return Response.json(
+        { error: 'supplier_full', message: refusal('light', langOf(request)) },
+        { status: 503 },
+      );
+    }
+
     const allowance = await allowanceFor(caller, request);
     if (!allowance.allowed) {
       return Response.json(

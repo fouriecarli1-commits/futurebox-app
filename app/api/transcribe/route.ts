@@ -27,6 +27,7 @@ import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
+import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -168,6 +169,17 @@ export async function POST(request: Request): Promise<Response> {
   let record: (() => Promise<void>) | null = null;
   if (metered()) {
     const caller = await callerFrom(request);
+    /* 'light': two credits a minute. It stops last, and only just before the
+       plan is actually empty — a transcript is how somebody rescues work that
+       already exists, so cutting it early costs more than it saves. */
+    const room = await roomFor('light');
+    if (!room.go) {
+      return Response.json(
+        { error: 'supplier_full', message: refusal('light', langOf(request)) },
+        { status: 503 },
+      );
+    }
+
     const allowance = await allowanceFor(caller, request);
     if (!allowance.allowed) {
       return Response.json(

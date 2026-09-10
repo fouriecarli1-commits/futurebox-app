@@ -26,6 +26,7 @@ import { linesFromWords, wordsFromAlignment } from '@/app/lib/spokenwords';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { readCost } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
+import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -111,6 +112,16 @@ export async function POST(request: Request): Promise<Response> {
      `GENERATION` explains what these numbers are chosen against: not a
      person, but how fast one address could eat the month's allowance
      before the warning at half of it has time to arrive. */
+  /* The supplier's ceiling, at the 'medium' rung: a read is a credit or two,
+     so it keeps running long after music has had to stop. */
+  const room = await roomFor('medium');
+  if (!room.go) {
+    return Response.json(
+      { error: 'supplier_full', message: refusal('medium', langOf(request)) },
+      { status: 503 },
+    );
+  }
+
   const flood = refuseIfTooMany('voice-speak', request, GENERATION);
   if (flood) return flood;
 

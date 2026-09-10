@@ -30,6 +30,7 @@ import { buildRequest, forPreview, type Body } from '@/app/lib/server/musicplan'
 import { songCost } from '@/app/lib/credits';
 import { charge } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
+import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -150,6 +151,18 @@ export async function POST(request: Request): Promise<Response> {
               .maybeSingle()
           : null;
       if (!mine?.data) body = { ...body, finetuneId: undefined };
+    }
+
+    /* The supplier's own ceiling, before the caller's. Their order matters:
+       a member refused for OUR shortage must not have their own allowance
+       counted against them for it, and must not be charged. See
+       elevenroom.ts for why this fails open when it cannot read. */
+    const room = await roomFor('heavy');
+    if (!room.go) {
+      return Response.json(
+        { error: 'supplier_full', message: refusal('heavy', langOf(request)) },
+        { status: 503 },
+      );
     }
 
     // The request goes with it: the address it came from is one of the three

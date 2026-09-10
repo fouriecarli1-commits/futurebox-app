@@ -466,6 +466,12 @@ jobs:
       - name: Afrikaans is said the way she says it
         run: npm run check:sayit
 
+      # can_extend_character_limit is false, so running past the ElevenLabs
+      # allowance does not cost money — it stops the app, for everybody, at
+      # once, in the third week. Nothing checked it before 10 September.
+      - name: The supplier's month has a brake on it
+        run: npm run check:elevenroom
+
       # The one page whose whole job is to be true, months after this was
       # written, filled in by somebody who will never open the check.
       - name: The legal page is right the first time

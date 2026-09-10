@@ -51,10 +51,19 @@ ok('and it is attributed to her, not left as somebody\'s guess',
   /hers/i.test(tjie?.why ?? ''),
   'a dictionary built by ear stops being one the moment a guess sits unmarked beside an observation');
 
+/* This asserted the opposite for about an hour: that -djie must be marked
+   MINE, because it was my inference from her -tjie rule and had not been
+   heard. She confirmed it the same afternoon. The assertion flips rather than
+   disappears — what it guards is not which of us was right, it is that every
+   rule in a dictionary built by ear can say who heard it. */
 const djie = SAY_RULES.find((rule) => rule.string_to_replace === 'djie');
-ok('the -djie rule I inferred is marked as mine, and not as hers',
-  Boolean(djie) && /mine/i.test(djie?.why ?? '') && !/^hers/i.test(djie?.why ?? ''),
-  'liedjie is on nearly every screen and she has not confirmed this one');
+ok('the -djie rule is in, and confirmed by her rather than inferred',
+  Boolean(djie) && /hers/i.test(djie?.why ?? '') && !/\bMINE\b/.test(djie?.why ?? ''),
+  'liedjie is on nearly every screen — this rule earns its keep only if somebody heard it');
+
+ok('and every rule says where it came from',
+  SAY_RULES.every((rule) => rule.why.trim().length > 20),
+  'a rule with no provenance is a rule nobody can check against an ear');
 
 ok('liedjie is covered by name, because the app says it constantly',
   SAY_RULES.some((rule) => rule.string_to_replace === 'liedjie'),

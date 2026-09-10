@@ -170,7 +170,8 @@
     "check:kitseach": "tsx scripts/check-kitseach.mts",
     "check:videowire": "tsx scripts/check-videowire.mts",
     "check:singer": "tsx scripts/check-singer.mts",
-    "check:sayit": "tsx scripts/check-sayit.mts"
+    "check:sayit": "tsx scripts/check-sayit.mts",
+    "check:elevenroom": "tsx scripts/check-elevenroom.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

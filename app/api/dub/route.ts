@@ -41,6 +41,7 @@ import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { configured, dub, dubState, dubSubtitles, dubTranscript, dubbed } from '@/app/lib/server/eleven';
 import { dubCost } from '@/app/lib/credits';
 import { charge, refund } from '@/app/lib/server/credits';
+import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -137,6 +138,13 @@ export async function POST(request: Request): Promise<Response> {
   if (client) {
     const { error } = await client.from('dubs').select('id').limit(1);
     if (error) return Response.json(NOT_SET_UP, { status: 503 });
+  }
+
+  /* Before the charge, not after. Dubbing is 162 credits a minute — the most
+     expensive call in the app — so it is the first thing to stop. */
+  const room = await roomFor('heavy');
+  if (!room.go) {
+    return Response.json({ message: refusal('heavy', langOf(request)), supplierFull: true }, { status: 503 });
   }
 
   const cost = dubCost(seconds);

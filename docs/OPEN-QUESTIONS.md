@@ -2302,3 +2302,65 @@ Verified by putting the old sentence back: one assertion fails.
 `handbook.generated.ts` regenerated, so the help assistant answers the same
 way the page reads. That path was the reason to check: the old promise was
 being repeated to members in support conversations too.
+
+## The ElevenLabs allowance now has a brake (her go-ahead, 10 September)
+
+Held since 8 September on the reasoning that thresholds derive from whatever
+plan she ends on, so building first meant building twice.
+
+**That reasoning had a hole in it.** The thresholds are *percentages of
+whatever plan is live*, read from ElevenLabs' own `/v1/user/subscription`.
+Pro, Scale, Business or a custom plan — the same numbers mean the same thing.
+Their answer decides which plan to be ON. It never decided where the brake
+sits. The block was real for a day and then outlived its reason.
+
+**The gap it closes.** Two places read the allowance — the 07:00 email and the
+owner-only money page — and **no generation route did**. Every route checked
+the caller's own credits and the rate limiter, and nothing asked whether the
+supplier had anything left. `can_extend_character_limit` is **false**, so
+running past the allowance is not a surprise invoice: the work fails. All of
+it, for everyone, at the same moment, in the third week, after they have paid.
+
+**The ladder, in `app/lib/server/elevenroom.ts`:**
+
+| At | What stops | Why there |
+|---|---|---|
+| 85% | New **paid** signups | Selling a plan that will fail inside a fortnight |
+| 92% | Music, dubbing | 162 credits a minute for a dub; the first to go |
+| 96% | Reads, cloning | A credit or two at a time |
+| 99% | Transcription, alignment | Two credits a minute; the last to go |
+
+One cutoff would have been wrong by a factor of eighty — that is the spread in
+cost per credit across what this app does.
+
+**Two rules that are easy to get backwards, and are asserted:**
+
+- **The free tier is never braked.** It generates nothing, so it costs the
+  supplier nothing. Closing it during a squeeze loses the audience and saves
+  nought. Ten thousand free accounts are safe and are the right shape for a
+  launch.
+- **Members already paying are never cut off.** They are inside the number the
+  ceiling was reckoned against. Refusing them mid-month *is* the failure this
+  exists to prevent, not a defence against it. Only a **new** paid signup meets
+  the waiting list.
+
+**It fails OPEN, and that is the uncomfortable choice.** If the allowance
+cannot be read, nothing is braked. Failing closed would turn one bad minute at
+ElevenLabs into a total outage — the brake causing the event it exists to
+prevent. Failing open means the call goes ahead and, if the allowance really
+is gone, fails upstream with a refund, which is today's behaviour.
+
+A read that did not happen is not a reading of zero and not a reading of a
+hundred. Same class as "could not ask" rendered as "none", and the tempting
+shortcut here — treat an unreadable allowance as full — is that mistake in a
+different hat.
+
+`check:elevenroom` holds twenty-one assertions and both of the ones that
+matter were verified by breaking them: made to fail closed, one fails; moved
+after the charge, another fails.
+
+**Still open, and not ElevenLabs.** Supabase Pro and Vercel Pro both scale
+with FREE members, unlike ElevenLabs. Ten thousand free accounts will test
+both, and their limits cannot be checked from this machine. Worth reading
+their pricing pages before the doors open — those are the lines that move when
+the free tier grows, and nothing in this brake touches them.
