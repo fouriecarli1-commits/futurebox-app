@@ -2466,3 +2466,35 @@ white card reads fine to whoever wrote it and not at all to somebody outside.
 The card's own probe now measures every text node on it against the same AA
 rule and the same maths — but the gap in `contrast.mjs` is real and still
 there for everything else on that page.
+
+## The contrast probe was reading a third of the app (closed, 10 September)
+
+Found while shipping the music quiz, and worth its own entry because the gap
+was not in the code being written — it was in the thing meant to be watching.
+
+`audit/contrast.mjs` walked **six studio rooms** and stopped. Those are rooms
+somebody opens to do a job. The **five tabs at the bottom** are where members
+live between jobs, and the creative page is the longest scroll in the app. So
+a palette fault on the screen everybody sees on every visit was covered by
+nothing at all — and the quiz card had just been added to it.
+
+Widened to the four tabs plus the creative page, reached by its own chip in
+either language, because "the Spotlight tab" and "the creative page" are not
+the same screen and only one of them was ever going to be looked at. Make is
+already covered: it opens the studio, which the room pass walks.
+
+**570 text nodes before, 1,003 now.** All clear, lowest 4.65:1 against the
+4.5 AA needs. So this found no fault — but the reason to record it is that it
+could not have found one, and a probe that reports a clean run over a third
+of the app reads exactly like a probe that reports a clean run over all of it.
+
+**Verified by breaking it**: a `#e8e8e8` sub-line on the quiz card, rebuilt,
+and the run exits 1 with `creative page — 1 below AA` and names the sentence
+at 1.17:1. It caught the same string twice, once per tab, which is also how
+this confirmed the quiz card renders on both the Spotlight scroll and the
+creative page — it is at the bottom of that section in both, which is where
+she asked for it and is not a second copy.
+
+**The lesson, which is the same one as the `check:musiclicence` entry above,
+from the other end:** a check can be wrong by asserting a claim, and it can
+be wrong by measuring a subset and reporting a verdict. Both come back green.

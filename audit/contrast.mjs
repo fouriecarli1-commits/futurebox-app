@@ -44,7 +44,75 @@ for (const name of ROOMS) {
     continue;
   }
 
-  const result = await page.evaluate(() => {
+  const result = await measure(page);
+  score(name, result);
+}
+
+/* ── The five tabs, which is where members actually are ─────────────────
+ 
+   Added 10 September 2026, after the music quiz went onto the creative page
+   and nothing was measuring whether a word on it could be read.
+ 
+   This probe walked six STUDIO rooms and stopped. Those are rooms somebody
+   opens to do a job; the five tabs at the bottom are where they live between
+   jobs, and the creative page is the longest scroll in the app. A palette
+   fault there is seen by everybody, every visit, and was covered by nothing.
+ 
+   The Spotlight tab carries its own row of chips — Kollig, FutureBox,
+   Masterclasses, Kreatiewe AI-musiek en -video, Radar — and the quiz sits at
+   the bottom of the fourth. So the chips are walked as well as the tabs,
+   because "the Spotlight tab" and "the creative page" are not the same
+   screen and only one of them was ever going to be looked at. */
+const TABS = ['Spotlight', 'Live', 'Library', 'You'];
+const CHIPS = ['Music & video', 'Musiek en video'];
+
+for (const name of TABS) {
+  try {
+    const bar = page.locator('nav[aria-label]').first();
+    await bar.locator('button').filter({ hasText: new RegExp(`^${name}$`) }).first().click();
+    await page.waitForTimeout(1200);
+  } catch (why) {
+    unreachable.push(`tab ${name}: ${String(why).slice(0, 80)}`);
+    continue;
+  }
+  score(`tab ${name}`, await measure(page));
+
+  if (name === 'Spotlight') {
+    /* The chip, by either language. A run in Afrikaans must reach the same
+       screen — this probe has no business caring which language it is in,
+       and a name matched in one language only is a silent skip in the other. */
+    let opened = false;
+    for (const chip of CHIPS) {
+      const found = page.locator('button').filter({ hasText: chip }).first();
+      if (await found.count()) {
+        await found.click();
+        await page.waitForTimeout(1200);
+        opened = true;
+        break;
+      }
+    }
+    if (!opened) unreachable.push('the creative page: no chip matched');
+    else score('creative page', await measure(page));
+  }
+}
+
+console.log(`\n${checked} text nodes checked, ${failures} below AA. Lowest: ${worst.ratio}:1 — ${worst.what}`);
+await browser.close();
+server.stop();
+
+if (unreachable.length) {
+  console.error(`\ncould not reach ${unreachable.length} screen(s):\n  ${unreachable.join('\n  ')}`);
+}
+if (!checked) console.error('\nno text was read at all — this run proves nothing.');
+if (failures || unreachable.length || !checked) process.exit(1);
+
+/* ── The two halves, out of the loop so both passes share them ──────────
+ 
+   They were inline in the room loop. Lifting them is what let the tabs be
+   walked at all: a second copy of the colour maths would have been a second
+   place for the AA rule to drift, in the file whose whole job is that rule. */
+async function measure(target) {
+  return target.evaluate(() => {
     const lum = (c) => {
       const [r, g, b] = c.map((v) => {
         const s = v / 255;
@@ -86,25 +154,17 @@ for (const name of ROOMS) {
     }
     return out;
   });
+}
 
+function score(name, result) {
   const bad = result.filter((one) => one.ratio < one.need);
   checked += result.length;
   failures += bad.length;
   for (const one of result) {
     if (one.ratio < worst.ratio) worst = { ratio: one.ratio, what: `${name}: "${one.text}"` };
   }
-  console.log(`${name.padEnd(14)} ${result.length} text nodes, ${bad.length} below AA`);
-  for (const one of bad.slice(0, 3)) {
+  console.log(`${name.padEnd(16)} ${result.length} text nodes, ${bad.length} below AA`);
+  for (const one of bad.slice(0, 4)) {
     console.log(`    ${one.ratio}:1 (needs ${one.need}) — "${one.text}"`);
   }
 }
-console.log(`\n${checked} text nodes checked, ${failures} below AA. Lowest: ${worst.ratio}:1 — ${worst.what}`);
-await browser.close();
-server.stop();
-
-/* Nothing checked is not a clean run. */
-if (unreachable.length) {
-  console.error(`\ncould not reach ${unreachable.length} room(s):\n  ${unreachable.join('\n  ')}`);
-}
-if (!checked) console.error('\nno text was read at all — this run proves nothing.');
-if (failures || unreachable.length || !checked) process.exit(1);
