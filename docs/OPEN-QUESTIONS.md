@@ -13,6 +13,51 @@ Last updated: 2026-09-10.
 
 ---
 
+## Lees dit eerste — waar dinge staan, 10 September 2026
+
+*Hierdie register is 2 600 reëls lank en groei elke sessie. Niemand lees dit
+van voor af nie, en 'n register wat niemand lees nie, is nie 'n register nie.
+Hierdie blok is die voordeur: wat op jou wag, wat vassit, en waarop. Die res
+van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
+
+### Wat op jou wag, en niemand anders kan doen nie
+
+| Wat | Hoekom dit joune is |
+|---|---|
+| **Die adresbesluit op die regsbladsy** | Die geregistreerde adres op die CIPC-sertifikaat is jou huis. ECTA vra 'n fisiese adres. Publiseer dit, óf skuif die geregistreerde adres na 'n besigheidsadres-diens en publiseer dáái. Dit is 'n privaatheidsbesluit, nie 'n tegniese een nie, en dit is die laaste ding tussen die regsbladsy en klaar. |
+| **Maak `/api/eleven/dictionary?key=…` een keer oop** | Dit bou die uitspraakwoordeboek op jou rekening uit die reëls in die kode. Plak albei ids by Vercel in, redeploy, en **luister**. Sonder daardie twee waardes word niks toegepas nie en niks sê so nie. |
+| **Stuur die ElevenLabs-verkoopse-pos** | `docs/ELEVENLABS-SALES.md`. Dit is die ding wat die terme-bladsy weer laat verander — die lisensie wat deur na lede loop, is nie op die self-diens plan nie. |
+| **Lees Supabase Pro en Vercel Pro se limiete** | Albei skaal met **gratis** lede, anders as ElevenLabs. Tienduisend gratis rekeninge is die launch-vorm. Hierdie masjien kan nie by hulle bladsye kom nie (geblokkeer). Die een getal wat besluit: Supabase se **maandelikse aktiewe gebruikers**. |
+
+### Twee ontwerpbesluite wat op jou wag
+
+1. **Die Eenvoudig/Alles-skakelaar** sit nou net drie kontroles weg. Meer daaragter, of heeltemal weg? My raad is los dit vir eers.
+2. **Is `-djie → kie` reg?** Jy het dit goedgekeur; dit wag nog op jou oor teen 'n regte voorlesing.
+
+### Wat oop is en waarop dit vassit
+
+| Wat | Waarop |
+|---|---|
+| Die oorklankingsmigrasie (die projek-oppervlak) | 'n Kostestrik — 'n projek wat geskep en laat staan word, faktureer steeds — en ek kan die API nie van hier af toets nie. Die duur helfte (die webhaak) is klaar. |
+| TONE3000 | tone3000.com is geblokkeer van hierdie masjien af. |
+| 'n ElevenLabs-stemagent vir die hulptoonbank | Wag op Enterprise. |
+| Betaal iemand al? | **Nee** — bevestig 10 September. Dit maak die R349-verandering 'n omruil en nie 'n migrasie nie, en dit beteken die terme-verandering skuld niemand 'n e-pos nie. **Albei hou net solank dit waar bly.** |
+
+### Die een ding om te onthou uit 10 September
+
+'n Kontrole kan groen wees en niks bewys nie. Vier vorms het op een dag
+voorgekom, en elkeen het 'n regte fout weggesteek:
+
+- dit maak 'n **bewering** vas in plaas van 'n beperking — die regsbladsy het
+  iets belowe wat die verskaffer geweier het;
+- dit meet 'n **deel** en lewer 'n uitspraak oor die geheel — die kontrasproef
+  het 'n derde van die app gelees en 'n onleesbare knoppie gemis;
+- dit noem 'n **eienskap wat dit nooit gemeet het nie** — "dit sit heel onder"
+  het net bewys die naam kom in die lêer voor;
+- dit tref sy **eie prosa** — drie keer op een dag.
+
+---
+
 ## A. Voices, singing, and using your own voice
 
 ### A1. Can Music.ai give us "record your voice → improve it → use it in AI songs"?

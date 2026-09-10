@@ -482,6 +482,11 @@ jobs:
       - name: Every platform says its format in both languages
         run: npm run check:socialformats
 
+      # 2,600 lines and eleven sections appended in one day. She reads the
+      # top of it; a summary of last week is worse than no summary.
+      - name: The register's front door is as new as the register
+        run: npm run check:frontdoor
+
       # The one page whose whole job is to be true, months after this was
       # written, filled in by somebody who will never open the check.
       - name: The legal page is right the first time

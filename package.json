@@ -174,6 +174,7 @@
     "check:elevenroom": "tsx scripts/check-elevenroom.mts",
     "check:quiz": "tsx scripts/check-quiz.mts",
     "check:socialformats": "tsx scripts/check-socialformats.mts",
+    "check:frontdoor": "tsx scripts/check-frontdoor.mts",
     "check:quizroom": "node audit/quiz.mjs 3112"
   },
   "dependencies": {
