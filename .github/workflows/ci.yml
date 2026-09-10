@@ -461,6 +461,11 @@ jobs:
       - name: The singer is asked for in words, and survives the whole song
         run: npm run check:singer
 
+      # The written Afrikaans has been guarded for a while; the spoken kind
+      # was not guarded at all. Three of the four ways this breaks are silent.
+      - name: Afrikaans is said the way she says it
+        run: npm run check:sayit
+
       # The one page whose whole job is to be true, months after this was
       # written, filled in by somebody who will never open the check.
       - name: The legal page is right the first time

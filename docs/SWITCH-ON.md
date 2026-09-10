@@ -595,6 +595,36 @@ it and this page could not name it — a spending control nobody could tune
 because nobody had been told it was there. `npm run check:envdoc` refuses that
 pattern now.
 
+### `ELEVEN_DICT_ID` en `ELEVEN_DICT_VERSION` — hoe Afrikaans klink
+
+Albei of nie een nie. 'n Woordeboek word by ElevenLabs met 'n **id én 'n
+weergawe** aangespreek, en 'n halwe adres is 'n 422 op elke voorlesing — wat
+'n erger fout is as die uitspraak wat dit moes regmaak. Daarom word niks
+gestuur as net een gestel is nie.
+
+**Wat dit doen.** ElevenLabs se stemmodel lees `-tjie` as die Engelse "ch".
+Carli, 10 September 2026: *"elke woord tjie, soos voëltjie word verkeerd
+uitgespreek as chi. tjie moet uitgespreek word as kie dan is dit byvoorbeeld
+voëlkie."* Die reëls staan in `app/lib/server/sayit.ts` — as bronkode, sodat
+'n verandering aan hoe Afrikaans klink in 'n diff sigbaar is — en gaan op elke
+voorlesing saam.
+
+**Hoe om dit aan te sit.**
+
+1. Maak `https://futurebox.studio/api/eleven/dictionary?key=<POST_SECRET>` oop.
+   Dit bou die woordeboek op jou rekening uit die reëls in die kode.
+2. Dit gee twee waardes terug. Plak albei by Vercel in en **redeploy**.
+3. Verander die reëls ooit? Maak dieselfde bladsy weer oop — dit vervang die
+   reëls en gee 'n **nuwe weergawe-id** terug. Plak dié ook in, anders bly die
+   ou uitspraak loop en niks sê so nie.
+
+**Wat nog nie geverifieer is nie.** Of ElevenLabs 'n reël binne 'n langer woord
+laat vuur, of net op 'n hele woord, staan nêrens op hulle bladsye nie en hierdie
+masjien kan nie by hulle API kom nie. Daarom stuur `sayit.ts` altwee vorme: die
+agtervoegsel *en* die woorde self. As die agtervoegsel werk, is die woorde
+oortollig en klink presies dieselfde; as dit nie werk nie, dra die woordelys die
+werk. Jou oor besleg dit.
+
 ### `ELEVEN_WEBHOOK_SECRET` — optional, and it saves money
 
 Unset is the state today and everything works. Setting it makes dubbing

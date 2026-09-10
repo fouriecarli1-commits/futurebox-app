@@ -169,7 +169,8 @@
     "check:cast": "node audit/cast.mjs 3015",
     "check:kitseach": "tsx scripts/check-kitseach.mts",
     "check:videowire": "tsx scripts/check-videowire.mts",
-    "check:singer": "tsx scripts/check-singer.mts"
+    "check:singer": "tsx scripts/check-singer.mts",
+    "check:sayit": "tsx scripts/check-sayit.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

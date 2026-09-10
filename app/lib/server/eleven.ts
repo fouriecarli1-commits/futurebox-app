@@ -18,6 +18,7 @@ import { batches, type Turn } from '../dialogue.ts';
 import { noteSpend } from './elevencost.ts';
 import { watchEleven } from './spendwatch';
 import { joinPcm } from '../pcmwav.ts';
+import { sayItRight } from './sayit';
 
 const BASE = 'https://api.elevenlabs.io/v1';
 
@@ -469,6 +470,12 @@ export async function speak(
         text,
         model_id: modelId,
         ...(voiceSettings ? { voice_settings: voiceSettings } : {}),
+        /* How Afrikaans is said, when a dictionary has been built and its
+           locator set. Sends nothing when it has not — see sayit.ts. It goes
+           on every read rather than only the Afrikaans ones: the rules are
+           Afrikaans spellings and an English script contains none of them, so
+           gating it on language would be a branch that changes no output. */
+        ...sayItRight(),
       }),
     },
   );
@@ -539,6 +546,12 @@ export async function speakTimed(
         text,
         model_id: modelId,
         ...(voiceSettings ? { voice_settings: voiceSettings } : {}),
+        /* How Afrikaans is said, when a dictionary has been built and its
+           locator set. Sends nothing when it has not — see sayit.ts. It goes
+           on every read rather than only the Afrikaans ones: the rules are
+           Afrikaans spellings and an English script contains none of them, so
+           gating it on language would be a branch that changes no output. */
+        ...sayItRight(),
       }),
     },
   );
@@ -621,6 +634,12 @@ export async function speakStream(
         text,
         model_id: modelId,
         ...(voiceSettings ? { voice_settings: voiceSettings } : {}),
+        /* How Afrikaans is said, when a dictionary has been built and its
+           locator set. Sends nothing when it has not — see sayit.ts. It goes
+           on every read rather than only the Afrikaans ones: the rules are
+           Afrikaans spellings and an English script contains none of them, so
+           gating it on language would be a branch that changes no output. */
+        ...sayItRight(),
       }),
     },
   );

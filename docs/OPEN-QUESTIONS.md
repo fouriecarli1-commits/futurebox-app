@@ -2197,3 +2197,54 @@ But the underlying observation stands and is not a threshold to tune:
 **Simple now puts away three controls out of a long screen.** The switch earns
 less than it did. Whether that means moving more behind it, or dropping it, is
 a design call and it is hers.
+
+## Afrikaans in the speaking: the first heard fault (#115, half-open)
+
+Her report, 10 September 2026: *"elke woord tjie, soos voëltjie word verkeerd
+uitgespreek as chi. tjie moet uitgespreek word as kie dan is dit byvoorbeeld
+voëlkie."*
+
+This is the datum #115 was waiting for. `app/api/eleven/pronounce/route.ts`
+had already guessed the `-tjie` group was the likeliest thing to come out
+wrong — "Afrikaans has no Dutch equivalent for this sound" — and she has now
+confirmed it by ear. A guess and a confirmation are different things, and only
+one of them belongs in a dictionary.
+
+**What is built.**
+
+- `app/lib/server/sayit.ts` — the rules, as source, so a change to how
+  Afrikaans sounds shows up in a diff instead of being typed into a web
+  console and lost. Her `-tjie → kie` is attributed to her. `-djie → kie`
+  (liedjie → liekie) is marked **MINE**, an inference from her rule, because
+  an unmarked guess sitting next to a heard observation is how a dictionary
+  built by ear stops being one.
+- `/api/eleven/dictionary?key=<POST_SECRET>` — builds the dictionary on her
+  account **from those rules**, and hands back the two ids. Uses `set-rules`,
+  not `add-rules`: a rule deleted from the file has to disappear from the
+  account too.
+- `speak`, `speakTimed` and `speakStream` all spread `sayItRight()`.
+- `ELEVEN_DICT_ID` and `ELEVEN_DICT_VERSION`, documented, both-or-neither.
+
+**Three of the four failure modes are silent**, which is the argument for
+`check:sayit`. A mispronunciation that comes back sounds exactly like a
+dictionary that was never applied, so nothing about the sound says which
+broke: a rule written and never sent; a dictionary built and never passed on
+the read; an empty locator array sent where no field should go. The fourth —
+half a locator, an id with no version — is a 422 on every read, and is loud;
+sending nothing when either is missing is therefore correct and is asserted.
+Verified by removing `sayItRight()` from `speakStream`: two assertions fail.
+
+**Unverified, and it is a real fork, not a detail.** Whether ElevenLabs
+matches a rule INSIDE a longer word or only as a whole word is not stated on
+the pages she sent, and this machine cannot reach their API. If it matches
+inside words, one rule fixes every diminutive in the language; if it matches
+whole words only, that rule fires on nothing and the dictionary is silently
+useless. So both shapes ship — the suffixes and a word list. If the suffixes
+work the words are redundant and sound identical, so carrying both is never
+worse than carrying one.
+
+**Still hers.** Run `/api/eleven/dictionary?key=…` once, paste both ids into
+Vercel, redeploy, and listen. Then: is `-djie` right, and what else is wrong?
+The test read at `/api/eleven/pronounce` is forty items and exists for exactly
+this. #115 stays open until the dictionary is live and a second round of
+listening has happened.
