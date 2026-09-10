@@ -10,8 +10,8 @@
  * "nothing changed on screen" result means anything.
  */
 import { dismissDoor, enter, studio } from './enter.mjs';
+import { ROOMS as ROOMS_ALL } from './rooms.mjs';
 
-const ROOMS_ALL = ['Make a song', 'Studio', 'The Booth', 'Your voice', 'Sound trainer',   'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar'];
 const name = process.argv[2];
 const SKIP = /^(delete|sign out|back to futurebox|upgrade|choose |buy|pay)/i;
 const nameOf = (t) => (t ?? '').split('\n')[0].trim().replace(/\s+/g, ' ').slice(0, 50);

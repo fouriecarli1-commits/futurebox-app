@@ -26,6 +26,7 @@ import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { dismissDoor } from './enter.mjs';
 import { launchOptions } from './where.mjs';
+import { ROOMS } from './rooms.mjs';
 
 const PORT = process.argv[2] || '3181';
 /**
@@ -56,9 +57,6 @@ const NEEDS = {
   Podcast: 'a show set up, which needs the podcast tables',
 };
 
-const ROOMS = [
-  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Sound trainer', 'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
-];
 
 const problems = [];
 const check = (label, ok, detail = '') => {

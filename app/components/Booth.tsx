@@ -256,7 +256,14 @@ export default function Booth({
           <button
             type="button"
             onClick={onGoToMake}
-            className="min-h-[44px] px-4 py-2 rounded-xl text-sm bg-emerald-500 text-zinc-950 font-semibold hover:bg-emerald-400 inline-flex items-center gap-2"
+            /* `text-onAccent`, not `text-zinc-950`. The theme remaps zinc-950
+               to near-white in the light palette, so this button rendered
+               white on light green — 1.91:1, against the 4.5 AA asks for, on
+               the only way out of an empty Booth. `onAccent` is the token
+               that means "whatever reads on the accent colour" and stays
+               near-black in both. Found the day contrast.mjs stopped
+               measuring six rooms out of twelve. */
+            className="min-h-[44px] px-4 py-2 rounded-xl text-sm bg-emerald-500 text-onAccent font-semibold hover:bg-emerald-400 inline-flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4" />
             {t('booth.room.goMake', 'Make a song')}

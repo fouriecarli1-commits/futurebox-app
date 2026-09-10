@@ -7,8 +7,8 @@
  * "button" and tells somebody nothing about what they are about to press.
  */
 import { enter, studio } from './enter.mjs';
+import { ROOMS } from './rooms.mjs';
 
-const ROOMS = ['Make a song','Studio','The Booth','Your voice','Sound trainer',  'Video desk','Hooks','Channel','Live','Podcast','Adverts','Collab Radar'];
 const { browser, page } = await enter();
 const room = await studio(page);
 let total = 0;

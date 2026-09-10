@@ -11,8 +11,8 @@
  * — a boxed word in the middle of a paragraph is worse than an unboxed one.
  */
 import { enter, studio } from './enter.mjs';
+import { ROOMS } from './rooms.mjs';
 
-const ROOMS = ['Make a song','Studio','The Booth','Your voice','Sound trainer',  'Video desk','Hooks','Channel','Live','Podcast','Adverts','Collab Radar'];
 const { browser, page } = await enter();
 const room = await studio(page);
 let total = 0;

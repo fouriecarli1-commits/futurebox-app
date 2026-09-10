@@ -36,14 +36,11 @@
 import { chromium } from 'playwright';
 import { enter, studio, toRoom } from './enter.mjs';
 import { serve, shot } from './where.mjs';
+import { ROOMS } from './rooms.mjs';
 
 const PORT = process.argv[2] || '3061';
 
 /** The twelve on the door, by the first line of their own button. */
-const ROOMS = [
-  'Make a song', 'Studio', 'The Booth', 'Video desk', 'Hooks', 'Channel',
-  'Collab Radar', 'Live', 'Your voice', 'Podcast', 'Sound trainer', 'Adverts',
-];
 
 const problems = [];
 const check = (label, ok, detail = '') => {

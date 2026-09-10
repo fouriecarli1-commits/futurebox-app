@@ -9,7 +9,10 @@
 import { enter, studio, toRoom } from './enter.mjs';
 import { serve } from './where.mjs';
 
-const ROOMS = ['Make a song', 'Video desk', 'Adverts', 'Your voice', 'Collab Radar', 'Podcast'];
+/* Six of the twelve, and that was the fault this file had while reporting
+   "0 below AA" — see rooms.mjs. All of them now, from the one list, so a
+   thirteenth room is measured the day it exists. */
+import { ROOMS, TABS as ALL_TABS } from './rooms.mjs';
 const PORT = process.argv[2] || '3074';
 
 /* Its own server, like every other probe.
@@ -63,7 +66,10 @@ for (const name of ROOMS) {
    the bottom of the fourth. So the chips are walked as well as the tabs,
    because "the Spotlight tab" and "the creative page" are not the same
    screen and only one of them was ever going to be looked at. */
-const TABS = ['Spotlight', 'Live', 'Library', 'You'];
+/* Make is left out on purpose: it opens the studio, and the room pass above
+   has already walked every room in it. Everything else is where somebody is
+   when they are not in a room. */
+const TABS = ALL_TABS.filter((one) => one !== 'Make');
 const CHIPS = ['Music & video', 'Musiek en video'];
 
 for (const name of TABS) {

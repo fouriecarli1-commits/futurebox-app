@@ -40,6 +40,7 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions } from './where.mjs';
+import { ROOMS } from './rooms.mjs';
 
 const PORT = process.argv[2] || '3170';
 /**
@@ -59,9 +60,6 @@ const CEILING = Number(process.argv[3] || 700);
 /** Longer than this is prose rather than a label. */
 const PROSE = 60;
 
-const ROOMS = [
-  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Sound trainer', 'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
-];
 
 const problems = [];
 let server = null;

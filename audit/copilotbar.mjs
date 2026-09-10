@@ -15,8 +15,11 @@
  */
 import { enter, studio, toRoom } from './enter.mjs';
 import { serve, shot } from './where.mjs';
+import { ROOMS } from './rooms.mjs';
 
-const ROOMS = ['Make a song', 'Video desk', 'Adverts', 'Your voice', 'Podcast', 'The Booth'];
+/* Six of the twelve until 10 September 2026. The copilot bar is in every
+   room, so a probe that checked half of them was answering a question
+   nobody asked. See rooms.mjs. */
 const PORT = process.argv[2] || '3081';
 
 const problems = [];

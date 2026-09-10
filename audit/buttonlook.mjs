@@ -28,9 +28,12 @@
  */
 import { enter, studio, toRoom } from './enter.mjs';
 import { serve, shot } from './where.mjs';
+import { ROOMS } from './rooms.mjs';
 
 const PORT = process.argv[2] || '3091';
-const ROOMS = ['Make a song', 'Video desk', 'The Booth', 'Channel', 'Adverts', 'Podcast'];
+/* Six of the twelve until 10 September 2026, and reporting on all of them.
+   Widening `contrast.mjs` the same day found a real fault in the seventh
+   room it reached, so this one is widened too rather than trusted. */
 
 /** The smallest thing a thumb can be asked to hit. */
 const THUMB = 40;

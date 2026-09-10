@@ -32,10 +32,11 @@
  * The probes CI runs are parsed out of the workflow, so a probe added to the
  * job is checked from the moment it is added.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { SURFACES } from '../app/lib/surfaces';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -386,6 +387,58 @@ for (const script of named) {
     `${browserish.join(', ')} — each starts a server against a build that job has not made yet`,
   );
 }
+
+/* ── One list of rooms, and it matches the app ─────────────────────────
+ 
+   This same list of twelve was typed into ten probe files, identical in
+   every one. So the day a thirteenth room is added it is walked by none of
+   them, and every one still prints a verdict in the confident present
+   tense over a set that no longer matches the product.
+ 
+   That is the fault class that bit twice on 10 September 2026:
+   `contrast.mjs` measured six rooms out of twelve and none of the five
+   tabs, and reported "0 below AA" about a third of the app;
+   `check:musiclicence` asserted a claim rather than a constraint and then
+   defended it with a red build. Both came back green. A check can be wrong
+   by measuring a subset as easily as by measuring the wrong thing, and the
+   subset version is harder to see because nothing about the output looks
+   partial.
+ 
+   Widening contrast to all twelve found a real fault on the first run: the
+   only button out of an empty Booth was rendering white on light green at
+   1.91:1, because it said `text-zinc-950` where the theme has a token for
+   exactly that job. Six rooms had never included the Booth. */
+const roomsFile = readFileSync(join(ROOT, 'audit/rooms.mjs'), 'utf8');
+const doors = [...roomsFile.matchAll(/^ {2}([a-z_]+): '/gm)].map((one) => one[1]);
+const surfaceIds = Object.keys(SURFACES);
+const undoored = surfaceIds.filter((one) => !doors.includes(one));
+ok(
+  `every room the app declares has a door a probe can knock on — ${surfaceIds.length}`,
+  undoored.length === 0,
+  `${undoored.join(', ')} — add it to DOORS in audit/rooms.mjs, or ten probes walk past it in silence`,
+);
+const phantom = doors.filter((one) => !surfaceIds.includes(one));
+ok(
+  'and no door leads to a room that no longer exists',
+  phantom.length === 0,
+  `${phantom.join(', ')} — a probe waiting for a door that was taken off its hinges`,
+);
+
+/* Nobody keeps their own copy. The point of the shared list is that adding a
+   room reaches every probe at once, and one file with a private list is one
+   room the next person forgets. */
+const ownLists: string[] = [];
+for (const file of readdirSync(join(ROOT, 'audit')).filter((one) => one.endsWith('.mjs'))) {
+  if (file === 'rooms.mjs') continue;
+  const body = code(readFileSync(join(ROOT, 'audit', file), 'utf8'));
+  const own = /const ROOMS(?:_ALL)? = \[[^\]]*'(?:Make a song|Studio|The Booth)'/.test(body);
+  if (own) ownLists.push(file);
+}
+ok(
+  'and no probe keeps a private list of rooms',
+  ownLists.length === 0,
+  `${ownLists.join(', ')} — import ROOMS from ./rooms.mjs so a new room reaches every probe at once`,
+);
 
 const enter = code(readFileSync(join(ROOT, 'audit/enter.mjs'), 'utf8'));
 ok('enter() can be pointed at a port of its own', /\bat = 'http:\/\/localhost:3000'/.test(enter));

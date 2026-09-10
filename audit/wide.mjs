@@ -27,15 +27,13 @@ import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { dismissDoor } from './enter.mjs';
 import { launchOptions } from './where.mjs';
+import { ROOMS } from './rooms.mjs';
 
 const PORT = process.argv[2] || '3091';
 const WIDTH = Number(process.argv[3] || 390);
 /** A pixel of slack for sub-pixel rounding, which is not a layout fault. */
 const SLACK = 2;
 
-const ROOMS = [
-  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Sound trainer',   'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
-];
 
 const problems = [];
 let server = null;

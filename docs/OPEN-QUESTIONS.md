@@ -2498,3 +2498,65 @@ she asked for it and is not a second copy.
 **The lesson, which is the same one as the `check:musiclicence` entry above,
 from the other end:** a check can be wrong by asserting a claim, and it can
 be wrong by measuring a subset and reporting a verdict. Both come back green.
+
+## Twelve probes were measuring a subset and reporting a verdict
+
+Chased on purpose after the contrast gap, because the same fault had now
+appeared twice in one day from two different directions and that is a class
+rather than a coincidence.
+
+**The same list of twelve rooms was typed into ten probe files** — a11y,
+boxes, buttons, cards, deep, shots, underbar, walk, wide, writing. Identical
+in all ten, checked character by character. So a thirteenth room added
+tomorrow is walked by none of them, and every one of them still prints its
+verdict in the confident present tense over a set that no longer matches the
+product.
+
+**Three more were walking six of the twelve**: `contrast` (fixed earlier
+today), `buttonlook`, and `copilotbar`.
+
+### What was done
+
+`audit/rooms.mjs` holds the list once, plus a map from each surface id in
+`app/lib/surfaces.ts` to the name on its door. Ten probes import it. The
+three subsets were widened to all twelve. `check:probes` now holds three
+rules:
+
+- every room the app declares has a door a probe can knock on — **a new
+  surface with no entry fails the build, by name**, rather than going unwalked;
+- no door leads to a room that no longer exists;
+- no probe keeps a private list of rooms.
+
+The third rule found `buttonlook` and `copilotbar` immediately, which is the
+argument for writing it rather than fixing the two by hand.
+
+### And widening found a real fault on the first run
+
+`contrast` at twelve rooms instead of six: **the only button out of an empty
+Booth was rendering white on light green at 1.91:1**, against the 4.5 AA
+needs. The cause is worth knowing because it is invisible in the source —
+the button said `text-zinc-950`, and the light theme **remaps zinc-950 to
+near-white**. Reading the class name tells you it is near-black. Reading the
+rendered pixel tells you it is not. `text-onAccent` is the token that means
+"whatever reads on the accent colour", and the button beside it already used
+it.
+
+**570 text nodes measured this morning. 1,285 now.** The extra 715 are twelve
+rooms instead of six, plus four tabs and the creative page, and one of them
+was unreadable.
+
+### The class, stated once
+
+A check can be wrong three ways and all three come back green:
+
+1. **It asserts a claim rather than a constraint** — `check:musiclicence`
+   required a sentence the supplier had declined to stand behind, and
+   defended it with a red build.
+2. **It measures a subset and reports a verdict** — the twelve above.
+3. **It matches its own prose** — three times today, most recently a check
+   searching for `/score/` and hitting the paragraph explaining why there is
+   no score.
+
+The third is embarrassing and cheap. The first two are the expensive ones,
+because the output of a check that measures a third of the app is
+indistinguishable from the output of one that measures all of it.
