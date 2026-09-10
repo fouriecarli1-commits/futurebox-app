@@ -302,8 +302,20 @@ export function readCost(characters: number): number {
  *
  * At 200/600/1600 they held 96, and break-even was 136: the two numbers never
  * met, and a full month would have run the music engine dry before the
- * business worked. At these numbers they hold 155 against a break-even of 109.
- * There is air between them now.
+ * business worked. At 90/220/440 they held 203 against a break-even of 111.
+ *
+ * Studio's move to R349/190 on 10 September moved both, in the same direction
+ * and by different amounts, which is the part worth writing down. The margin
+ * PERCENTAGE held — that was the instruction — but the rand per member did
+ * not: R50 came off the price and only R16.56 off the credits, so break-even
+ * went 111 → 117 members, worst case. The ceiling rose further, 203 → 215,
+ * because a Studio member now burns fewer credits.
+ *
+ * So there is MORE air than there was — 98 members between break-even and the
+ * ceiling, against 92 — while break-even itself sits six members further out.
+ * A margin held as a ratio is not a margin held in rand, and the two answer
+ * different questions. `docs/KOSTE-EN-WINS.md` is generated from these numbers
+ * by `npm run costs:eleven` and carries the whole table.
  */
 export const TIER_CREDITS: Record<Tier, number> = {
   /**
@@ -358,7 +370,10 @@ export const TIER_CREDITS: Record<Tier, number> = {
 
      Sien `docs/OPSIE-E.md` vir die hele som. */
   maker: 90,
-  studio: 220,
+  /* 220 → 190 with the price, 10 September 2026. See TIER_SPECS.studio
+     in plans.ts for the arithmetic; the short version is that R349 holds the
+     same margin at 190 and buys a whole number of songs. */
+  studio: 190,
   label: 440,
 };
 
@@ -422,12 +437,18 @@ export interface Pack {
  * member asks is *should I top up or move up*, so a pack has to be dearer
  * than the **marginal** cost of the next plan:
  *
- *   Maker → Studio   +R250 for +130 credits = R1.92 a credit
- *   Studio → Label   +R500 for +220 credits = R2.27 a credit
+ *   Maker → Studio   +R200 for +100 credits = R2.00 a credit
+ *   Studio → Label   +R550 for +250 credits = R2.20 a credit
  *
- * Anything at or under R2.27 and a Studio member tops up forever instead of
+ * Anything at or under R2.20 and a Studio member tops up forever instead of
  * becoming a Label member. R2.50 clears every plan rate (R1.66–R2.04) and
  * every upgrade step, with room to move.
+ *
+ * Those two steps moved on 10 September when Studio went from R399/220 to
+ * R349/190 — the marginal credit got DEARER on the way up (R1.92 → R2.00) and
+ * cheaper on the way to Label (R2.27 → R2.20). R2.50 still clears both, but
+ * the second one has less room than it had, and it is the one to watch if the
+ * Label price ever moves.
  *
  * **This number is hers.** It is one constant and everything else is derived
  * from it, so changing the business does not mean editing a table and hoping

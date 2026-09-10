@@ -145,13 +145,33 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
   },
   studio: {
     id: 'studio',
+    /* R399 → R349 on 10 September 2026, at her instruction: "Ek dink ons moet
+       die middelste pakket van ons subscription R349 maak, die marge moet
+       dieselfde bly, en dus net die krediete afbring."
+
+       So the credits came down to hold the margin, rather than the margin
+       being allowed to fall out of a rounder price. Worst case a credit costs
+       R0.552 (a ten-credit song costs R5.52 to make), and the gateway takes
+       3.5% plus R2:
+
+           R399, 220 credits → R399 − R121.44 − R15.97 = 65.56%
+           R349 needs 191.98 credits to hold that exactly.
+
+       190, because credits buy songs in tens and 192 sells two that cannot
+       become one. It lands at 65.88% — a third of a point ABOVE where it was,
+       so the instruction is met in the direction that is safe to be wrong in.
+
+       The step up still works, which is the constraint that is easy to miss:
+       Maker → Studio is now R2.00 a credit and Studio → Label R2.20, both
+       still under the R2.50 top-up rate. A top-up that undercuts a step is a
+       reason never to move up, and `check:topups` measures it. */
     name: 'Studio',
-    rand: 399,
-    songs: 22,
-    videos: 7,
+    rand: 349,
+    songs: 19,
+    videos: 6,
     who: 'Releasing regularly, and pitching for collabs.',
     includes: [
-      '220 credits a month — 22 full songs, or 7 music videos',
+      '190 credits a month — 19 full songs, or 6 music videos',
       'Train a sound of your own on your own songs',
       'Everything in Maker, and three cloned voices',
       'Ask FutureBox to boost a collab',

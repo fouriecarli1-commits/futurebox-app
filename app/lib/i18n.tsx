@@ -2212,7 +2212,7 @@ export const STRINGS: Dict = {
   "plan.maker.inc.3": { en: "The copilot, uncapped", af: "Die copilot, sonder perk" },
   "plan.maker.inc.4": { en: "Post to your own channels", af: "Plaas op jou eie kanale" },
   "plan.maker.inc.5": { en: "Every workshop", af: "Elke werkswinkel" },
-  "plan.studio.inc.0": { en: "220 credits a month — 22 full songs, or 7 music videos", af: "220 krediete ’n maand — 22 volle liedjies, of 7 musiekvideo’s" },
+  "plan.studio.inc.0": { en: "190 credits a month — 19 full songs, or 6 music videos", af: "190 krediete ’n maand — 19 volle liedjies, of 6 musiekvideo’s" },
   "plan.studio.inc.1": { en: "Train a sound of your own on your own songs", af: "Leer ’n eie klank af op jou eie liedjies" },
   "plan.studio.inc.2": { en: "Everything in Maker, and three cloned voices", af: "Alles in Maker, en drie gekloonde stemme" },
   "plan.studio.inc.3": { en: "Ask FutureBox to boost a collab", af: "Vra FutureBox om ’n collab te help stoot" },

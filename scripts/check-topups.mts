@@ -32,7 +32,7 @@
  * a change to either is measured rather than assumed.
  */
 import { readFileSync } from 'node:fs';
-import { PACKS, RAND_PER_TOPUP_CREDIT, mayTopUp } from '../app/lib/credits';
+import { PACKS, RAND_PER_TOPUP_CREDIT, TIER_CREDITS, mayTopUp } from '../app/lib/credits';
 import { TIER_SPECS, TIERS, type Tier } from '../app/lib/plans';
 
 /**
@@ -54,8 +54,19 @@ const ok = (label: string, good: boolean, detail = ''): void => {
 };
 const rands = (n: number): string => `R${n.toFixed(3)}`;
 
-/** Credits a month, off the card each plan prints. */
-const CREDITS: Record<Tier, number> = { free: 0, maker: 90, studio: 220, label: 440 };
+/* Credits a month, imported rather than restated.
+
+   This was `{ free: 0, maker: 90, studio: 220, label: 440 }`, typed out here.
+   On 10 September 2026 Studio moved to R349/190 and this check failed on
+   three assertions with a number nobody had changed — a guard against drift
+   that had itself drifted, in the same file that exists because a rule was
+   written down and never measured. The card assertion below caught it, which
+   is the only reason this was one wrong answer rather than four.
+
+   So it reads the source. `TIER_CREDITS` is what the app actually grants; the
+   card check below still proves the printed line agrees with it, which is the
+   comparison worth making. */
+const CREDITS = TIER_CREDITS;
 
 /* The card and the number must agree, or every rate below is about a plan
    nobody is being sold. Read out of the `includes` line rather than trusted:

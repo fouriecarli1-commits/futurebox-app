@@ -16,7 +16,7 @@ R3 543,74, geen werkswinkels, geen masterclass-inkomste.
 |---|---|---|---|---|---|---|
 | Gratis | R0 | R0 | 0 | 0 | — | — |
 | **Maker** | R149 | **R149** | 120 | **90** | 9 | 3 |
-| **Studio** | R349 | **R399** | 350 | **220** | 22 | 7 |
+| **Studio** | R349 | **R399** | 350 | **220** | 22 | 7 |  ← sien die byvoegsel onder
 | **Label** | R749 | **R899** | 800 | **440** | 44 | 14 |
 
 **Maker se prys beweeg nie.** Die instapprys is die een wat 'n mens verloor as
@@ -132,7 +132,7 @@ Paystack se planne dra hul eie bedrag, en 'n bestaande plan se bedrag kan nie
 verander word nie. Vir Studio en Label moet daar dus **nuwe planne** wees:
 
 1. Paystack → **Plans** → **Create Plan**
-   * Naam: `FutureBox Studio` · Bedrag **R399** · Interval **Monthly**
+   * Naam: `FutureBox Studio` · Bedrag **R349** · Interval **Monthly** (sien byvoegsel)
 2. Nog een:
    * Naam: `FutureBox Label` · Bedrag **R899** · Interval **Monthly**
 3. Kopieer elke nuwe plan se **plan code** (dit lyk soos `PLN_xxxxxxxxxxxx`).
@@ -149,7 +149,7 @@ Vercel → die FutureBox-projek → **Settings** → **Environment Variables**:
 | Veranderlike | Wat om te doen |
 |---|---|
 | `PAYSTACK_PLAN_MAKER` | **niks** — R149 het nie verander nie |
-| `PAYSTACK_PLAN_STUDIO` | vervang met die nuwe R399-plan se kode |
+| `PAYSTACK_PLAN_STUDIO` | vervang met die nuwe **R349**-plan se kode (sien byvoegsel) |
 | `PAYSTACK_PLAN_LABEL` | vervang met die nuwe R899-plan se kode |
 
 Dan **Deployments → jongste → Redeploy**, anders bly die ou kodes loop.
@@ -198,3 +198,47 @@ Sy moet sê watter een geld. Tot dan is die kodes nie verander nie.
 *Elke syfer kom uit `docs/KOSTE-EN-WINS.md`, wat `scripts/costs-eleven.mts`
 genereer uit `plans.ts` en `credits.ts` self — verander 'n prys daar en hierdie
 somme verander saam. `check:koste` en `check:kredietkoste` hou dit vas.*
+
+
+---
+
+## Byvoegsel — Studio gaan terug na R349, 10 September 2026
+
+Haar opdrag: *"Ek dink ons moet die middelste pakket van ons subscription R349
+maak, die marge moet dieselfde bly, en dus net die krediete afbring."*
+
+Só is dit gedoen. Die prys sak, die marge bly, en die krediete dra die verskil:
+
+| | Prys | Krediete | Per krediet | Marge |
+|---|---|---|---|---|
+| Studio, was | R399 | 220 | R1,814 | 65,56% |
+| **Studio, nou** | **R349** | **190** | **R1,837** | **65,88%** |
+
+Die som: 'n krediet kos ons in die slegste geval R0,552 (10 krediete is een
+liedjie en dit kos R5,52 om te maak), en die poort vat 3,5% plus R2. R349 het
+**191,98** krediete nodig om die marge presies te hou. Dit is **190** geword,
+want krediete koop liedjies in tiene en 192 verkoop twee wat nooit 'n liedjie
+kan word nie. 190 land op 65,88% — 'n derde van 'n punt **bo** waar dit was,
+dus is die opdrag nagekom in die rigting waarin dit veilig is om verkeerd te
+wees.
+
+**Wat maklik is om mis te kyk: die trap.** 'n Top-up mag nooit goedkoper wees
+as om op te skuif nie, anders koop 'n Studio-lid vir altyd krediete in plaas
+daarvan om Label te word.
+
+| Trap | Was | Nou |
+|---|---|---|
+| Maker → Studio | R1,92 | **R2,00** |
+| Studio → Label | R2,27 | **R2,20** |
+
+Top-ups is R2,50, so albei is steeds gedek — maar die tweede een het minder
+lug as vroeër, en dit is die een om dop te hou as Label se prys ooit beweeg.
+`check:topups` meet dit, en die kontrole lees nou die getalle uit die kode in
+plaas daarvan om hulle oor te tik. (Dit het self gedryf: dit het 220 vasgetik
+gehad en op drie stellings gefaal met 'n getal wat niemand verander het nie.)
+
+**Paystack: dit is 'n omruil, nie 'n migrasie nie.** Sy het op 10 September
+bevestig: *"Ons het nog nie betalende kliente nie."* Niemand hang aan die ou
+kodes nie, so §6 se waarskuwing om die ou planne te hou geld nie hier nie.
+Dieselfde verandering ná die eerste betalende lid is 'n migrasie — dit moet
+weer nagegaan word by launch.
