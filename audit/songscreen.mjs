@@ -79,9 +79,23 @@ try {
   /* ── Every song has the button, not only the ones with a plan ───────── */
   const cards = p.locator('article');
   check('both songs are in the channel', (await cards.count()) === 2, `${await cards.count()}`);
-  const lyricButtons = p.locator('button').filter({ hasText: /^Lyrics$/ });
+  /* The words button. A song with no plan gets one too — it says "Get the
+     words" rather than "Lyrics", because opening a blank sheet under a label
+     promising words is a button that lies about what is behind it. */
+  const wordButtons = p.locator('button').filter({ hasText: /^(Lyrics|Get the words)$/ });
   check('every song carries the words button — including the one with no plan',
-    (await lyricButtons.count()) === 2, `${await lyricButtons.count()} of 2`);
+    (await wordButtons.count()) === 2, `${await wordButtons.count()} of 2`);
+
+  /* And the camera has its own, on every song.
+
+     Carli, 10 September 2026: "elke liedjie [moet] ook die opsie en button het
+     om ’n film yourself to it". It was reachable on every song already —
+     through the words button, which says "Lyrics" whenever the song has words,
+     and nearly all of them do. Not gated any more, and still hidden: behind a
+     name rather than behind a condition. */
+  const filmButtons = p.locator('button').filter({ hasText: /^Film yourself to it$/ });
+  check('and every song carries its own camera button, not one shared with the words',
+    (await filmButtons.count()) === 2, `${await filmButtons.count()} of 2`);
 
   /* ── And you can take the song out of the app ───────────────────────
  

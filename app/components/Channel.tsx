@@ -393,7 +393,9 @@ export default function Channel({
    * which is why the words ran too fast on some songs and fine on others.
    * `timeFor` listens to the file once and remembers what it found.
    */
-  const [lyricsFor, setLyricsFor] = useState<{ track: Track; lines: readonly TimedLine[] } | null>(null);
+  const [lyricsFor, setLyricsFor] = useState<
+    { track: Track; lines: readonly TimedLine[]; filming: boolean } | null
+  >(null);
   /** Which song is open full screen, by id, or null for the grid. */
   const [fullFor, setFullFor] = useState<string | null>(null);
   /* The words of a song, on the clock.
@@ -837,27 +839,65 @@ export default function Channel({
                          the song has been heard: waiting for a decode before
                          anything appears is a button that does nothing for a
                          second, which reads as broken. */
-                      setLyricsFor({ track, lines: timedFor(track) });
+                      setLyricsFor({ track, lines: timedFor(track), filming: false });
                       void readAudio(track.id)
                         .then((blob) => timeFor(track, blob))
                         .then((found) => {
                           setLyricsFor((was) =>
-                            was && was.track.id === track.id ? { track, lines: found.lines } : was,
+                            was && was.track.id === track.id
+                              ? { track, lines: found.lines, filming: was.filming }
+                              : was,
                           );
                         });
                     }}
                     className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[40px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
                   >
-                    {timedFor(track).length > 0 ? (
-                      <MessageSquareQuote className="w-4 h-4 flex-shrink-0" />
-                    ) : (
-                      <Video className="w-4 h-4 flex-shrink-0" />
-                    )}
+                    <MessageSquareQuote className="w-4 h-4 flex-shrink-0" />
                     {timedFor(track).length > 0
                       ? t('chan.lyrics', 'Lyrics')
-                      : t('chan.filmIt', 'Film yourself to it')}
+                      : t('chan.getWords', 'Get the words')}
                   </button>
                 )}
+
+                {/* ── Filming yourself to it, on every song ────────────────
+
+                    Carli: "elke liedjie [moet] ook die opsie en button het om
+                    ’n film yourself to it".
+
+                    It was already possible on every song — behind the button
+                    above, which says **Lyrics** whenever the song has words,
+                    and nearly all of them do. The camera was reachable only by
+                    opening a screen named after the other thing it does and
+                    finding a toggle inside it.
+
+                    A door named after one of the two rooms behind it is a door
+                    nobody opens for the other. So the camera has its own
+                    button, on every song, and it goes straight in with the
+                    camera on rather than making somebody hunt for the toggle.
+
+                    The song starts playing on the same press, because a
+                    teleprompter over a silent song is a screen that never
+                    moves — the same reason the words button starts it. */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (playing !== track.id) void play(track.id);
+                    setLyricsFor({ track, lines: timedFor(track), filming: true });
+                    void readAudio(track.id)
+                      .then((blob) => timeFor(track, blob))
+                      .then((found) => {
+                        setLyricsFor((was) =>
+                          was && was.track.id === track.id
+                            ? { track, lines: found.lines, filming: was.filming }
+                            : was,
+                        );
+                      });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 min-h-[40px] rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 transition-colors"
+                >
+                  <Video className="w-4 h-4 flex-shrink-0" />
+                  {t('chan.filmIt', 'Film yourself to it')}
+                </button>
 
                 <ShareRow
                   title={track.title}
@@ -1047,6 +1087,7 @@ export default function Channel({
 
       {lyricsFor && (
         <FollowWords
+          openFilming={lyricsFor.filming}
           lines={lyricsFor.lines}
           audio={audioRef.current}
           title={lyricsFor.track.title}

@@ -68,6 +68,7 @@ export default function FollowWords({
   askWords,
   wordCost,
   songFile,
+  openFilming = false,
 }: {
   lines: readonly TimedLine[];
   /** The element that is actually playing, so the words follow the sound. */
@@ -90,6 +91,27 @@ export default function FollowWords({
    * not an answer: the first version of this posted without a token, the route
    * refused it, and the button spun and then did nothing at all.
    */
+  /**
+   * Open with the camera already asked for.
+   *
+   * ── Why this is a prop and not a second screen ───────────────────────
+   *
+   * Carli: "elke liedjie [moet] ook die opsie en button het om 'n film
+   * yourself to it". The screen she is describing is this one, and it has
+   * been here since #6 — behind a button labelled **Lyrics** on every song
+   * that has words, which is nearly all of them. A door named after one of
+   * the two things behind it is a door nobody opens for the other.
+   *
+   * So the card has its own camera button now, and it comes straight here
+   * with the camera on rather than making somebody find the toggle inside.
+   *
+   * If the browser refuses the permission — some ask only on a direct press,
+   * and an effect a tick after the click can fall outside that — nothing is
+   * lost: `problem` says what happened and the camera button inside is still
+   * there to press. Failing back to the screen she asked for is a worse day
+   * than she wanted, not a broken one.
+   */
+  openFilming?: boolean;
   askWords?: () => Promise<string | null>;
   /** What that costs, so the press is informed. */
   wordCost?: number;
@@ -236,6 +258,23 @@ export default function FollowWords({
       );
     }
   };
+
+  /* Opened straight into the camera, when the card asked for that.
+
+     Once, on mount, and only where it was asked for — a dependency on
+     `filming` here would re-ask the moment somebody put the camera away,
+     which is a permission prompt fighting a person who just said no.
+
+     `void`, not awaited: a failure is already reported by `startCamera` into
+     `problem`, and there is nothing this effect could do with a rejection
+     that the screen is not already doing. */
+  const askedToFilm = useRef(false);
+  useEffect(() => {
+    if (!openFilming || askedToFilm.current) return;
+    askedToFilm.current = true;
+    void startCamera();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openFilming]);
 
   const startRecording = async (): Promise<void> => {
     const camera = stream.current;

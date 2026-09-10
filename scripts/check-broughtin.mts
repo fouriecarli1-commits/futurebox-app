@@ -89,14 +89,52 @@ const cameraButton = channel.slice(
  */
 const opensButton = channel.indexOf('{(\n                  <button');
 ok(
-  'the camera button draws for every song, gated on nothing',
-  opensButton !== -1 && channel.indexOf('chan.filmIt', opensButton) !== -1,
-  'something now stands in front of the words/selfie button',
+  'the words button draws for every song, gated on nothing',
+  opensButton !== -1,
+  'something now stands in front of the words button',
+);
+
+/* ── And the camera has its own button now ─────────────────────────────
+
+   Carli, 10 September 2026: "elke liedjie [moet] ook die opsie en button het
+   om ’n film yourself to it".
+
+   It was already reachable on every song — through the button above, which
+   says **Lyrics** whenever the song has words, and nearly all of them do. The
+   gate this file was written about had been removed and the camera was still
+   effectively hidden: not behind a condition this time, behind a *name*.
+
+   A door named after one of the two rooms behind it is a door nobody opens
+   for the other. So the assertions moved from "the shared button is not
+   gated" to "the camera has a button of its own, on every card, and it opens
+   the screen already filming". */
+const filmAt = channel.indexOf("chan.filmIt");
+ok(
+  'the camera has a button of its own',
+  filmAt !== -1,
+  'the camera is only reachable through a button named after the words again',
+);
+const filmButton = channel.slice(Math.max(0, filmAt - 2000), filmAt + 300);
+ok(
+  'and it is not gated on the song having words, or on where the song came from',
+  !/timedFor\(track\)\.length[^]{0,200}chan\.filmIt/.test(filmButton) &&
+    !/source[^]{0,120}&&[^]{0,120}chan\.filmIt/.test(filmButton),
+  'a condition stands in front of the camera again — the camera has nothing to do with either',
 );
 ok(
-  'and it sets the words screen for any song',
-  /setLyricsFor\(\{ track, lines: timedFor\(track\) \}\)/.test(cameraButton),
-  'the button no longer opens the words screen',
+  'it opens the words screen for any song',
+  /setLyricsFor\(\{ track, lines: timedFor\(track\), filming: true \}\)/.test(filmButton),
+  'the camera button no longer opens the screen',
+);
+ok(
+  'with the camera already on, rather than a toggle to hunt for inside',
+  /filming: true/.test(filmButton) && /openFilming=\{lyricsFor\.filming\}/.test(channel),
+  'it opens the screen and leaves her to find the camera herself',
+);
+ok(
+  'and the words button says what it does when there are no words to show',
+  /chan\.getWords/.test(channel),
+  'pressing "Lyrics" on a song with none is a button that opens a blank',
 );
 
 /* ── Narrow ────────────────────────────────────────────────────────────── */

@@ -1221,6 +1221,7 @@ export const STRINGS: Dict = {
   "feed.howTo": { en: "How it is built", af: "Hoe dit gebou word" },
   "feed.visitSite": { en: "Their site", af: "Hul webwerf" },
   "feed.close": { en: "Close", af: "Maak toe" },
+  "chan.getWords": { en: "Get the words", af: "Kry die woorde" },
   "chan.lyrics": { en: "Lyrics", af: "Lirieke" },
   "song.open": { en: "Open", af: "Maak oop" },
   "song.close": { en: "Close", af: "Maak toe" },
