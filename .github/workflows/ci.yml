@@ -477,6 +477,11 @@ jobs:
       - name: The music quiz is four options, two languages, and teaches
         run: npm run check:quiz
 
+      # Ten platforms, six translations. t() falls back to English, so four
+      # of them printed English to an Afrikaans member and nothing threw.
+      - name: Every platform says its format in both languages
+        run: npm run check:socialformats
+
       # The one page whose whole job is to be true, months after this was
       # written, filled in by somebody who will never open the check.
       - name: The legal page is right the first time

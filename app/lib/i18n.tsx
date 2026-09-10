@@ -2401,6 +2401,20 @@ export const STRINGS: Dict = {
   "social.format.x": { en: "Native video, under 2:20", af: "Video wat daar self speel, onder 2:20" },
   "social.format.suno": { en: "The track itself", af: "Die liedjie self" },
   "social.format.spotify": { en: "Released track", af: "Vrygestelde liedjie" },
+  /* The four that were missing until 10 September 2026.
+
+     `PLATFORMS` has ten entries and this family had six keys, so Facebook,
+     Vimeo, Apple Music and SoundCloud printed their raw English `bestFormat`
+     to somebody reading the app in Afrikaans. Nothing threw — `t()` falls
+     back to the string it was handed, which is the right behaviour and is
+     also why four missing keys were invisible for as long as they were.
+
+     `check:socialformats` counts the family against PLATFORMS now, so an
+     eleventh platform cannot ship with a fifth silent fallback. */
+  "social.format.facebook": { en: "9:16 Reels, or 1:1 in feed", af: "9:16 Reels, of 1:1 in die stroom" },
+  "social.format.vimeo": { en: "16:9, any length", af: "16:9, enige lengte" },
+  "social.format.applemusic": { en: "Released track", af: "Vrygestelde liedjie" },
+  "social.format.soundcloud": { en: "The track itself", af: "Die liedjie self" },
 };
 
 const STORAGE_KEY = 'futurebox.lang.v1';

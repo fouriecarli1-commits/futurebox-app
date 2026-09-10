@@ -53,8 +53,24 @@ import { dismissDoor } from './enter.mjs';
 import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3082';
-/** What the app is allowed to carry, and may only ever lower. */
-const CEILING = Number(process.argv[3] ?? 24);
+/**
+ * What the app is allowed to carry, and may only ever lower.
+ *
+ * 24 → 18 on 10 September 2026, and the reason is the point of a ratchet.
+ * It had been sitting AT 24 of 24 — one more untranslated line and the build
+ * would have gone red for a cause nobody had written down. What was in those
+ * last three was not content: "16:9, any length", "Released track", "The
+ * track itself" are UI labels, and two of the three already HAD Afrikaans in
+ * `i18n.tsx` that nothing was using. `PLATFORMS` has ten entries and the
+ * `social.format.*` family had six keys, so four platforms printed their raw
+ * English through `t()`'s fallback — which is the correct fallback and is
+ * also exactly why it was invisible.
+ *
+ * `check:socialformats` counts those two lists against each other now, so
+ * that class cannot come back. This number came down because the fault it
+ * was tolerating was fixed, which is the only reason it ever should.
+ */
+const CEILING = Number(process.argv[3] ?? 18);
 
 const problems = [];
 const check = (label, ok, detail = '') => {

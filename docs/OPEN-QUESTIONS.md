@@ -2560,3 +2560,39 @@ A check can be wrong three ways and all three come back green:
 The third is embarrassing and cheap. The first two are the expensive ones,
 because the output of a check that measures a third of the app is
 indistinguishable from the output of one that measures all of it.
+
+## Four platforms printed English to an Afrikaans member (10 September)
+
+Found by running `check:afrikaansscreen` after the room-list work, and worth
+recording because of *how* it hid rather than what it was.
+
+`audit/afrikaans.mjs` was **passing at exactly 24 untranslated lines against
+a ceiling of 24**. One more and the build would have gone red for a cause
+nobody had written down. Three of those last lines were not content at all —
+"16:9, any length", "Released track", "The track itself" are UI labels — and
+**two of the three already had Afrikaans in `i18n.tsx` that nothing was
+using**.
+
+`PLATFORMS` in `app/data/social.ts` has ten entries. The `social.format.*`
+family had **six keys**. Facebook, Vimeo, Apple Music and SoundCloud fell
+through to `t(key, fallback)`'s English fallback.
+
+**That fallback is correct behaviour and is exactly why this was invisible.**
+A missing translation degrading to English is right — better than a blank or
+a raw key on somebody's screen. It also means a missing key looks identical
+to a deliberate English word, forever, unless something counts the two lists.
+
+`check:socialformats` counts them now: every platform has a key, no key
+survives its platform, the Afrikaans half is filled in, and it is not the
+English copied across. Verified by deleting Vimeo's: one assertion fails,
+naming the id and the string.
+
+**One thing my own check got wrong first.** It flagged Instagram, whose
+Afrikaans is legitimately identical — "9:16 Reels, 15–30s", because Reels is
+Instagram's product name and not a word. Product names come out before it
+asks whether anything translatable is left. **A rule that flags a correct
+answer is a rule somebody learns to ignore**, which is worse than no rule.
+
+**The ceiling came down 24 → 18**, and only for the right reason: the fault
+it was tolerating is fixed. A ratchet that moves because somebody wanted a
+green build is not a ratchet.
