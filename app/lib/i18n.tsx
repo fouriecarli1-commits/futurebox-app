@@ -2486,6 +2486,15 @@ export interface LangSources {
   readonly won: 'address' | 'storage' | 'cookie' | 'account' | 'locale';
   /** Running as an installed app rather than in a browser tab. */
   readonly installed: boolean;
+  /**
+   * Who wrote the stored choice, and when — null where nothing is stored, or
+   * where it was written before this was recorded.
+   *
+   * The row that ends the guessing. `en` in storage and `en` in the cookie
+   * are only ever written together by a press, and there was no way to tell
+   * which press. Now the page says so.
+   */
+  readonly writer: { why: LangWriter; at: number } | null;
 }
 
 const NOTHING_YET: LangSources = {
@@ -2496,6 +2505,7 @@ const NOTHING_YET: LangSources = {
   account: 'unasked',
   won: 'locale',
   installed: false,
+  writer: null,
 };
 
 const Context = createContext<LangContext>({
@@ -2551,6 +2561,75 @@ function inCookie(): Lang | null {
     return asLang(found ? decodeURIComponent(found.slice(COOKIE.length + 1)) : null);
   } catch {
     return null;
+  }
+}
+
+/**
+ * Who wrote the language down, and when.
+ *
+ * ── Why a second key ─────────────────────────────────────────────────────
+ *
+ * Carli, six reports in: `/taal` showed `en` in storage and `en` in the
+ * cookie on a phone where she had never knowingly chosen English. Both of
+ * those are only ever written together by a *press* — `setLang` or
+ * `undoSwitch` — so something had been pressed, and there was no way to find
+ * out what. Another round of theories about somebody else's device.
+ *
+ * A value that cannot say where it came from is how six reports become seven.
+ * This records the writer beside the value, and `/taal` prints it.
+ *
+ * Kept apart from the value rather than wrapped around it: the stored
+ * language is a bare `'en'` or `'af'` and several places read it directly.
+ * Changing its shape to carry a reason would be a migration, and a migration
+ * on the one value this app has already got wrong six times is not a trade
+ * worth making. A key that is missing simply means "written before this
+ * existed", which is a true and useful answer.
+ */
+const WHY_KEY = 'futurebox.lang.why.v1';
+
+export type LangWriter = 'pressed' | 'kept' | 'signin' | 'account';
+
+function noteWriter(why: LangWriter): void {
+  try {
+    window.localStorage.setItem(WHY_KEY, JSON.stringify({ why, at: Date.now() }));
+  } catch {
+    /* Storage refused. The value it would have explained was refused too, so
+       there is nothing left unexplained. */
+  }
+}
+
+function whoWrote(): { why: LangWriter; at: number } | null {
+  try {
+    const said = JSON.parse(window.localStorage.getItem(WHY_KEY) ?? 'null') as unknown;
+    if (!said || typeof said !== 'object') return null;
+    const one = said as { why?: unknown; at?: unknown };
+    const why = one.why;
+    if (why !== 'pressed' && why !== 'kept' && why !== 'signin' && why !== 'account') return null;
+    return { why, at: typeof one.at === 'number' ? one.at : 0 };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Everything this device remembers about the language, forgotten.
+ *
+ * `/taal` offers it, and it is the only way out of a context that has the
+ * wrong answer written into it. Pressing a language on that page is a choice
+ * and choices are permanent by design — which is right, and left somebody who
+ * pressed one by accident with no way back except clearing the whole site.
+ */
+export function forgetLanguage(): void {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(WHY_KEY);
+  } catch {
+    // Nothing was stored to remove.
+  }
+  try {
+    document.cookie = `${COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+  } catch {
+    // Same.
   }
 }
 
@@ -2715,6 +2794,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       if (carried) {
         chose.current = carried;
         bakeCookie(carried);
+        noteWriter('signin');
         try {
           window.localStorage.setItem(STORAGE_KEY, carried);
         } catch {
@@ -2757,6 +2837,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
               ? 'cookie'
               : 'locale',
         installed,
+        writer: whoWrote(),
       });
       setLangState(arrived.lang);
       /* A choice ends it here. A guess does not: the account below may still
@@ -2867,6 +2948,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
                  all over again — and on a slow connection that is a visible
                  flip from English to Afrikaans on every load. */
               window.localStorage.setItem(STORAGE_KEY, next.store);
+              noteWriter('account');
             } catch {
               // Then it is applied for this page and asked again next time.
             }
@@ -2895,6 +2977,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         // A press, like any other. Same reason as `setLang`.
         chose.current = was;
         bakeCookie(was);
+        noteWriter('kept');
         setLangState(was);
         try {
           window.localStorage.setItem(STORAGE_KEY, was);
@@ -2915,6 +2998,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     /* Written before anything that can fail, and synchronously, so a browser
        that refuses to store still knows what was pressed. See `chose`. */
     chose.current = next;
+    /* Recorded as a press, beside the value. `/taal` prints it, and it is the
+       row that would have answered her seventh report in one screenshot
+       instead of another round of theories. */
+    noteWriter('pressed');
     /* Before storage, because storage is the one that throws. A cookie
        written first is a choice that survives the reload signing in causes,
        whatever localStorage does about it. */

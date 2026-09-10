@@ -34,7 +34,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { LANGUAGES, useLang } from '../lib/i18n';
+import { forgetLanguage, LANGUAGES, useLang } from '../lib/i18n';
 
 function Row({
   label,
@@ -77,6 +77,45 @@ export default function TaalPage(): React.ReactElement {
     if (value === 'none') return af ? 'niks gestoor nie' : 'nothing stored';
     if (value === 'failed') return af ? 'kon nie vra nie' : 'could not ask';
     return value;
+  };
+
+  /* Who wrote the stored choice, in words.
+
+     This is the row that ends the guessing. `en` in storage and `en` in the
+     cookie are only ever written together by a press — and there was no way
+     to tell which press, so it became another round of theories about
+     somebody else's phone. */
+  const WRITER: Record<string, { en: string; af: string }> = {
+    pressed: {
+      en: 'you pressed a language button',
+      af: 'jy het ’n taalknoppie gedruk',
+    },
+    kept: {
+      en: 'you pressed "keep this language" on the notice',
+      af: 'jy het "hou hierdie taal" op die kennisgewing gedruk',
+    },
+    signin: {
+      en: 'it was carried through a sign-in',
+      af: 'dit is deur ’n intekening saamgedra',
+    },
+    account: {
+      en: 'your account answered, because nothing was stored here',
+      af: 'jou rekening het geantwoord, want niks was hier gestoor nie',
+    },
+  };
+
+  const wroteIt = (): string | undefined => {
+    if (sources.storage === null || sources.storage === 'blocked') return undefined;
+    if (!sources.writer) {
+      return af
+        ? 'Iets het dit gestoor voordat hierdie bladsy begin het om by te hou wie skryf. Druk "Vergeet wat hier gestoor is" hieronder en doen dit weer, dan sal dit sê.'
+        : 'Something stored it before this page began recording who writes. Press “Forget what is stored here” below and do it again, and it will say.';
+    }
+    const said = af ? WRITER[sources.writer.why].af : WRITER[sources.writer.why].en;
+    const when = sources.writer.at
+      ? new Date(sources.writer.at).toLocaleString(af ? 'af-ZA' : 'en-ZA')
+      : '';
+    return when ? `${said} — ${when}` : said;
   };
 
   const WON: Record<string, { en: string; af: string }> = {
@@ -138,9 +177,8 @@ export default function TaalPage(): React.ReactElement {
               ? af
                 ? 'Hierdie blaaier weier om iets te stoor. Dít is waarskynlik jou hele probleem — en dis presies hoekom die koekie en die adres ook gebruik word.'
                 : 'This browser refuses to store anything. That is likely the whole problem — and it is exactly why the cookie and the address are used as well.'
-              : af
-                ? 'Word geskryf sodra jy ’n taal kies.'
-                : 'Written the moment you choose a language.'
+              : (wroteIt() ??
+                (af ? 'Word geskryf sodra jy ’n taal kies.' : 'Written the moment you choose a language.'))
           }
         />
         <Row label={af ? '3. Die koekie' : '3. The cookie'} value={say(sources.cookie)} />
@@ -175,7 +213,45 @@ export default function TaalPage(): React.ReactElement {
         />
       </section>
 
-      <div className="mt-8 flex flex-wrap items-center gap-2">
+      {/* ── The way out ──────────────────────────────────────────────────
+
+          Pressing a language is a choice, and a choice is permanent on this
+          device by design — that is the whole of rule 1 and it is right.
+
+          What was wrong is that this page put two language buttons directly
+          under a report of what is stored, with nothing saying that pressing
+          one *is* the thing being reported. Somebody testing the page presses
+          English while reading it in English, and pins English in this
+          browser for good with no way back short of clearing the whole site.
+          That is this page causing the fault it was built to diagnose.
+
+          So: the way out first, and the buttons under a sentence that says
+          what they do. */}
+      <div className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+        <p className="text-sm leading-relaxed text-amber-200">
+          {af
+            ? 'As hierdie bladsy ’n taal wys wat jy nooit gekies het nie, vergeet wat hier gestoor is. Dan kan jou rekening weer antwoord die volgende keer as jy inteken.'
+            : 'If this page shows a language you never chose, forget what is stored here. Your account can then answer again the next time you sign in.'}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            forgetLanguage();
+            window.location.reload();
+          }}
+          className="mt-3 min-h-[44px] rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-2 text-sm font-bold text-amber-100"
+        >
+          {af ? 'Vergeet wat hier gestoor is' : 'Forget what is stored here'}
+        </button>
+      </div>
+
+      <p className="mt-8 text-sm leading-relaxed text-zinc-400">
+        {af
+          ? 'Om een van hierdie te druk is ’n keuse, en dit word op hierdie toestel onthou totdat jy dit hierbo vergeet.'
+          : 'Pressing one of these is a choice, and it is remembered on this device until you forget it above.'}
+      </p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         {LANGUAGES.map((entry) => (
           <button
             key={entry.code}

@@ -668,6 +668,71 @@ async function chooseAfrikaans(p) {
   await context.close();
 }
 
+/* ── Eight: the value says where it came from, and can be forgotten ───────
+
+   Her seventh report: `/taal` showed `en` in storage and `en` in the cookie
+   on a phone where she had never knowingly chosen English. Both are only ever
+   written together by a press — and there was no way to find out which press,
+   so it became another round of theories about a device nobody here can see.
+
+   The most likely press was the English button on `/taal` itself: a page that
+   reported what was stored and, directly underneath, offered two buttons that
+   permanently changed it with nothing saying so. The page causing the fault
+   it was built to diagnose.
+
+   Two things fix that, and both are checked here: the value records who wrote
+   it, and there is a way to forget it. */
+{
+  const context = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, locale: 'en-ZA' });
+  const p = await context.newPage();
+  p.on('pageerror', (e) => problems.push(String(e).slice(0, 140)));
+  await p.route('**/auth/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
+  await p.route('**/rest/v1/**', async (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+
+  await p.goto(`http://localhost:${PORT}/taal`, { waitUntil: 'networkidle' });
+  await p.waitForTimeout(1200);
+
+  check('the page says pressing a language is remembered',
+    /remembered on this device|op hierdie toestel onthou/.test(await p.locator('body').innerText()),
+    'two buttons that change what the page reports, with nothing saying so');
+
+  await p.locator('button').filter({ hasText: /^Afrikaans$/ }).first().click();
+  await p.waitForTimeout(900);
+
+  const written = await p.evaluate(() => ({
+    lang: window.localStorage.getItem('futurebox.lang.v1'),
+    why: window.localStorage.getItem('futurebox.lang.why.v1'),
+    cookie: document.cookie.includes('futurebox.lang=af'),
+  }));
+  check('a press writes the choice to all three places', written.lang === 'af' && written.cookie,
+    JSON.stringify(written));
+  check('and records that it was a press, so the next screenshot names it',
+    /"why":"pressed"/.test(written.why ?? ''), written.why ?? 'nothing recorded');
+
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.waitForTimeout(1200);
+  check('and the page says so in words',
+    /you pressed a language button|jy het ’n taalknoppie gedruk/.test(await p.locator('body').innerText()),
+    'the row still cannot say where the value came from');
+
+  /* The way out. Without it, somebody who pressed the wrong one has to clear
+     the whole site to undo it. */
+  await p.locator('button').filter({ hasText: /Forget what is stored here|Vergeet wat hier gestoor is/ }).first().click();
+  await p.waitForTimeout(1800);
+  const after = await p.evaluate(() => ({
+    lang: window.localStorage.getItem('futurebox.lang.v1'),
+    why: window.localStorage.getItem('futurebox.lang.why.v1'),
+    cookie: /futurebox\.lang=(af|en)/.test(document.cookie),
+  }));
+  check('forgetting it clears the store, the cookie and the record together',
+    after.lang === null && after.why === null && after.cookie === false,
+    JSON.stringify(after));
+
+  await context.close();
+}
+
 console.log('problems:', problems.join(' ;; ') || 'none');
 await b.close();
 server.stop();
