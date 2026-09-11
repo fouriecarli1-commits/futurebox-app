@@ -1696,7 +1696,7 @@ export const STRINGS: Dict = {
   "welcome.offer6": { en: "Collaboration", af: "Samewerking" },
   "welcome.offer6n": { en: "Find another maker and work in the same room", af: "Vra \u2019n ander maker, en werk saam in \u2019n kamer" },
   "welcome.sub": {
-    en: "FutureBox takes what is in your head and finishes it. Write it with AI, sing it yourself, clone your voice for the show, and put a video to it.",
+    en: "FutureBox takes what is in your head and creates it. Write it with AI, sing it yourself, clone your voice for the show, and put a video to it.",
     af: "FutureBox vat wat jy in jou kop het en maak dit klaar. Skryf dit met KI, sing dit self, kloon jou stem vir die program, en sit \u2019n video daarby.",
   },
   "welcome.tag1": { en: "Songs you sing on", af: "Liedjies waarop jy sing" },
