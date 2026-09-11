@@ -224,6 +224,12 @@ jobs:
       - name: The shot the copilot is asked for is one the desk understands
         run: npm run check:shotwords
 
+      # The advert desk now recommends what to MAKE, not only what to say.
+      # That is worth more than an article only while every recommendation
+      # opens a room that exists with an operation that room takes.
+      - name: Every format the advert desk recommends can be made here
+        run: npm run check:adformats
+
       # The price on the button and the price that is charged come from one
       # function, and have twice disagreed anyway — once by pricing a clip
       # flat whatever its length, once by clamping the length after pricing it.

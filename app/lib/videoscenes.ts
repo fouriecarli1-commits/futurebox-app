@@ -426,6 +426,34 @@ export function spokenLines(prompt: string): string[] {
 }
 
 /**
+ * A shot and the line said over it, joined the way this desk reads them.
+ *
+ * The advert desk keeps them apart, and rightly: its own `shot` field says
+ * "never use quotation marks here" because the line lives in `spoken` beside
+ * it. Then "Film this one" handed over the shot alone, and the video desk —
+ * which knows a spoken line only by its quotation marks — got a prompt with
+ * no line in it. The switch that has the engine say it never drew, the
+ * subtitle defaulted to nothing, and the clip came back with somebody
+ * mouthing silence.
+ *
+ * Carli, 11 September 2026: "die description staan toe reeds in die shot
+ * window. Maar wat dit nie in het nie, daar is nie aanhalings vir spoken
+ * words nie."
+ *
+ * Here rather than in the button, next to `spokenLines`, because the two have
+ * to agree about what a quoted line looks like and the only way to be sure of
+ * that is to put them where somebody changing one sees the other.
+ */
+export function withSpoken(shot: string, spoken: string): string {
+  const said = (spoken ?? '').trim().replace(/^["“]|["”]$/g, '').trim();
+  const seen = (shot ?? '').trim();
+  if (!said) return seen;
+  // Already carrying a line: leave it alone rather than adding a second one.
+  if (spokenLines(seen).length > 0) return seen;
+  return `${seen}${seen.endsWith('.') || !seen ? '' : '.'} The voice says “${said}”.`.trim();
+}
+
+/**
  * Whether a prompt looks like it is trying to speak without saying so.
  *
  * A prompt with `says`, `sings` or `shouts` and no quotation marks anywhere is

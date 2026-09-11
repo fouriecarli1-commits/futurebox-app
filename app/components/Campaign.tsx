@@ -40,6 +40,7 @@ import { refusalText } from '../lib/apierror';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import { PLATFORMS } from '../data/social';
+import { withSpoken } from '../lib/videoscenes';
 import { loadHandles, type Handles } from '../lib/social';
 import ShareRow from './ShareRow';
 import AdRuns from './AdRuns';
@@ -47,6 +48,7 @@ import AdReport from './AdReport';
 import Queue from './Queue';
 import MarketPlan from './MarketPlan';
 import AddOn from './AddOn';
+import AdFormats from './AdFormats';
 import { MARKETING } from '../lib/addons';
 import { NOTHING_UNLOCKED, owns, unlocked, type Unlocked } from '../lib/unlocked';
 import Steps, { type Step } from './Steps';
@@ -116,12 +118,15 @@ export default function Campaign({
   onGoTo,
   onUseShot,
   onUseScript,
+  onSetUp,
 }: {
   onGoTo: (surface: SurfaceId) => void;
   /** Put a shot on the video desk. */
   onUseShot: (shot: string) => void;
   /** Put a line in the voice studio. */
   onUseScript: (line: string) => void;
+  /** Put something in a room on the way into it. See `AdFormats`. */
+  onSetUp: (room: SurfaceId, op: string, value: string) => void;
 }): React.ReactElement {
   const { t, lang } = useLang();
 
@@ -287,6 +292,18 @@ export default function Campaign({
       {/* Where it is going, before it is written rather than after.
           The platforms decide the shape, the length and the hook window, and a
           shape decided after the copy is a rewrite. */}
+      {/* ── What should this even be? ────────────────────────────────────
+
+          Above the platform row and the brief's own fields, because it is
+          the question that comes before both: the platform follows from the
+          format, and half the formats this studio can make are not adverts
+          at all. See `AdFormats.tsx`. */}
+      <AdFormats
+        brief={{ what, who, offer, tone, market, place: PLACEMENTS.find((one) => one.id === placement)?.en }}
+        onGoTo={onGoTo}
+        onSetUp={onSetUp}
+      />
+
       <Card title={t('ads.whereTitle', 'Where is it going?')}>
         <Note className="text-xs text-zinc-500 leading-relaxed">{t('ads.whereNote', 'This decides the shape, the length and how fast the hook has to land — so it is asked before the writing, not after.')}</Note>
         <div className="flex flex-wrap gap-2">
@@ -510,7 +527,12 @@ export default function Campaign({
             <button
               type="button"
               onClick={() => {
-                onUseShot(ad.shot);
+                /* The line goes with the shot. This handed over `ad.shot`
+                   alone, and the video desk knows a spoken line only by its
+                   quotation marks — so the switch that has the engine say it
+                   never drew and the subtitle came out empty. See
+                   `withSpoken` in lib/videoscenes.ts. */
+                onUseShot(withSpoken(ad.shot, ad.spoken));
                 onGoTo('canvas');
               }}
               className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"

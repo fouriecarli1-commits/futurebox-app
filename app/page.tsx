@@ -3361,6 +3361,9 @@ export default function FutureBoxHome() {
                    is not mounted yet at the moment the button is pressed. */
                 onUseShot={(shot) => copilotBus.handoff('canvas', 'set_prompt', shot)}
                 onUseScript={(line) => copilotBus.handoff('voice_studio', 'set_script', line)}
+                /* Deliver-or-wait, because the room being recommended is by
+                   definition one she is not standing in yet. */
+                onSetUp={(room, op, value) => copilotBus.handoff(room, op, value)}
               />
             )}
 

@@ -47,6 +47,7 @@
     "check:planpaper": "tsx scripts/check-planpaper.mts",
     "check:jsonshape": "tsx scripts/check-jsonshape.mts",
     "check:shotwords": "tsx scripts/check-shotwords.mts",
+    "check:adformats": "tsx scripts/check-adformats.mts",
     "check:prices": "tsx scripts/check-prices.mts",
     "check:afrikaans": "tsx scripts/check-afrikaans.mts",
     "check:afrikaansrule": "tsx scripts/check-afrikaansrule.mts",
