@@ -24,7 +24,7 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 
 | Wat | Hoekom dit joune is |
 |---|---|
-| **Die besigheidsadres by CIPC** | **Sy het op 11 September besluit:** skuif die CIPC-rekord na 'n besigheidsadres, en publiseer niks van haar eie nie. Sodra daardie adres op die rekord is, stel `FUTUREBOX_LEGAL_ADDRESS` daarna en die bladsy is volledig. Tot dan publiseer die bladsy alles behalwe die adres en sê dit kom op aanvraag — dit is eerlik en bruikbaar, net nie volledig nie. |
+| **'n Besigheidsadres om te publiseer** | Sy kan die CIPC-rekord **nie** verander nie (11 September) — haar huisadres bly daarop, en daardie register is deursoekbaar. Dít is nie 'n rede om dit ook op haar eie webwerf te sit nie: op `/legal` word dit deur Google teen haar besigheidsnaam geïndekseer en deur skrapers gevat; op CIPC moet iemand die nommer al hê. **Hou `FUTUREBOX_LEGAL_ADDRESS` leeg.** Die oop vraag is of 'n besigheidsadres-diens se adres as die *gepubliseerde* adres kan dien sonder om die CIPC-rekord te raak — sien die inskrywing hieronder. |
 | **Maak `/api/eleven/dictionary?key=…` een keer oop** | Dit bou die uitspraakwoordeboek op jou rekening uit die reëls in die kode. Plak albei ids by Vercel in, redeploy, en **luister**. Sonder daardie twee waardes word niks toegepas nie en niks sê so nie. |
 | **Stuur die ElevenLabs-verkoopse-pos** | `docs/ELEVENLABS-SALES.md`. Dit is die ding wat die terme-bladsy weer laat verander — die lisensie wat deur na lede loop, is nie op die self-diens plan nie. |
 | **Lees Supabase Pro en Vercel Pro se limiete** | Albei skaal met **gratis** lede, anders as ElevenLabs. Tienduisend gratis rekeninge is die launch-vorm. Hierdie masjien kan nie by hulle bladsye kom nie (geblokkeer). Die een getal wat besluit: Supabase se **maandelikse aktiewe gebruikers**. |
@@ -2813,3 +2813,59 @@ somebody debugging a red build will read it, rather than only here.
 Two of the five were mine, written the same day they failed. That is not a
 reason to write fewer checks — it is the reason to verify each one by
 breaking it, which is what caught three of these.
+
+## The home address on the legal page, and what changed twice in a day
+
+**What happened.** On 11 September she set `FUTUREBOX_LEGAL_ADDRESS` to her
+home address and deployed it, having understood an earlier assurance to mean
+it would be kept private. She had said twice that she did not want it
+published. It was live for a few hours and she took it down.
+
+**The assurance was real and it was about something else.** Nothing from the
+CIPC certificate is written into the **repository** — that is why these are
+environment variables rather than lines of code, so they never enter git
+history. *Out of the repository* and *private* are not the same thing, and
+the gap between them is a home address on a public page.
+
+`.env.example` said only "The registered office". `docs/SWITCH-ON.md` said
+only what to type. **Neither said the value is printed in full on a page
+anybody can open**, which is the single most important thing about it. Both
+now open with that warning, in the language of the reader, and
+`check:entity` keeps it there — matched on meaning rather than on a
+sentence, so a reword passes and a deletion does not. Verified by deleting
+it: one assertion fails.
+
+### And then the constraint hardened
+
+*"Ek kan nie die adres van cipc af haal nie. Dit moet so bly."*
+
+So the plan of moving the registered office is off. Her home address stays
+on the CIPC record, and that register is searchable by registration number.
+
+**That is not a reason to publish it as well, and the difference is not
+small.** On `/legal` it is indexed by search engines against her business
+name, appears in results, and is scraped by anybody harvesting business
+directories. On the CIPC register somebody has to know to look, and know the
+number. One is a listing; the other is a front door. Keeping it off the page
+is still worth doing.
+
+### The open question, and it is a real one
+
+ECTA s43(1)(b) asks a supplier to publish a physical address. Without one
+the page is incomplete, and a payments reviewer may ask.
+
+**But the published address and the CIPC registered office do not obviously
+have to be the same thing.** A business-address service could supply the
+address that appears on `/legal` while the CIPC record stays as it is —
+which would give compliance without the exposure, and without touching the
+thing she cannot change.
+
+**Unverified, and worth one question to somebody who knows:** whether a
+trading or service address satisfies s43(1)(b) where the registered office
+differs. That is a question for the address service or an attorney, not for
+this file — it is the difference between a page that is complete and one
+that is one row short, and it is cheap to ask.
+
+Until then the page publishes the name, the registration number, the status
+and the mailbox, and says the address is on the CIPC record and comes on
+request. Honest, usable, one row short.

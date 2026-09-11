@@ -21,6 +21,7 @@
  * private company is not, and that was the default for anybody who filled in
  * four fields and left the number out.
  */
+import { readFileSync } from 'node:fs';
 import { CIPC_NUMBER, entity } from '../app/lib/server/entity';
 
 let failures = 0;
@@ -227,6 +228,45 @@ const padded = only({
 check('a value pasted with spaces around it is trimmed',
   padded?.name === 'FutureBox Studio (Pty) Ltd' && padded?.address[1] === 'Cape Town',
   `${padded?.name} / ${(padded?.address ?? []).join(' / ')}`);
+
+/* ── Both documents must say these values are PUBLISHED ────────────────
+ 
+   On 11 September 2026 Carli put her home address in
+   FUTUREBOX_LEGAL_ADDRESS and deployed it, having understood an earlier
+   assurance to mean it would be kept private. The assurance was real and
+   was about something else: nothing from the CIPC certificate is written
+   into the REPOSITORY, which is why these are environment variables rather
+   than lines of code.
+ 
+   "Out of the repository" and "private" are not the same thing, and the gap
+   between them was a home address on a public page for a few hours. She had
+   said twice she did not want it published.
+ 
+   `.env.example` said only "The registered office". `docs/SWITCH-ON.md` said
+   only what to type. Neither said the value is printed in full on a page
+   anybody can open — which is the single most important thing about them.
+ 
+   Both carry that warning now, and this keeps it there. Matched on meaning
+   rather than on a sentence: any of several words will do, so a reword
+   passes and a deletion does not. Today's own lesson, applied — a check that
+   pins one phrasing is a check somebody routes around. */
+const SAYS_PUBLIC = /public (web )?page|printed on a public|openbare bladsy|gedruk, in volle|billboard|advertensiebord/i;
+
+for (const [what, where] of [
+  ['.env.example', '.env.example'],
+  ['the switch-on page', 'docs/SWITCH-ON.md'],
+] as const) {
+  const page = readFileSync(where, 'utf8');
+  const at = page.indexOf('FUTUREBOX_LEGAL_ADDRESS');
+  /* Near the variable, not merely somewhere in a long file — a warning three
+     hundred lines away is a warning nobody reads at the moment of typing. */
+  const near = at === -1 ? '' : page.slice(Math.max(0, at - 3000), at + 600);
+  check(`${what} warns that the legal values are published in full`,
+    at !== -1 && SAYS_PUBLIC.test(near),
+    at === -1
+      ? 'the variable is not named there at all'
+      : 'it says what to type and not that it goes on a page anybody can open');
+}
 
 if (failures) {
   console.error(`\ncheck:entity — ${failures} failure(s).\n`);

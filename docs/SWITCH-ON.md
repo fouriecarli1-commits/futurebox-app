@@ -367,13 +367,36 @@ name `futureboxstudio`. The `/07` suffix is a private company, so the page's
 default status — "Private company registered in the Republic of South Africa"
 — is the right one and does not need setting.
 
+> ### ⚠ Alles hieronder word op 'n openbare bladsy gedruk
+>
+> Nie "in die app gehou" nie. Nie "uit die kode gehou" nie. **Gedruk**, in
+> volle, op `futurebox.studio/legal`, waar enigiemand dit sonder om in te
+> teken kan lees. Dít is hierdie veranderlikes se hele doel: artikel 43 van
+> die ECT-wet sê 'n verskaffer wat oor die internet verkoop moet publiseer
+> wie dit is.
+>
+> **Die verwarring wat hierdie waarskuwing keer.** Op 11 September 2026 het
+> Carli haar huisadres in `FUTUREBOX_LEGAL_ADDRESS` gesit en ontplooi, omdat
+> sy 'n vroeëre versekering verstaan het as "dit bly privaat". Daardie
+> versekering was eg en het oor iets anders gegaan: dat **niks uit die
+> CIPC-sertifikaat in die bewaarplek geskryf word nie** — daarom is dit
+> omgewingsveranderlikes en nie reëls kode nie, sodat hulle nooit in git se
+> geskiedenis beland nie.
+>
+> **"Uit die bewaarplek" en "privaat" is nie dieselfde ding nie**, en die
+> gaping tussen hulle is 'n huisadres op 'n openbare bladsy. Dit was 'n paar
+> uur lank op en is afgehaal.
+>
+> As jy 'n waarde nie op 'n advertensiebord sou sit nie, sit dit nie in 'n
+> `FUTUREBOX_LEGAL_*`-veranderlike nie.
+
 Variables in Vercel, then redeploy:
 
 | Variable | What to put | Have it? |
 |---|---|---|
 | `FUTUREBOX_LEGAL_REGISTRATION` | `2026/714071/07` | yes |
 | `FUTUREBOX_LEGAL_NAME` | `FUTUREBOXSTUDIO (Pty) Ltd` — **one word**, exactly as the certificate prints it | yes |
-| `FUTUREBOX_LEGAL_ADDRESS` | The registered office, one line per line, pipe-separated: `12 Example Street\|Bellville\|Cape Town\|7530` | yes |
+| `FUTUREBOX_LEGAL_ADDRESS` | The registered office, pipe-separated: `12 Example Street\|Bellville\|Cape Town\|7530`. **Published in full.** Leave it empty and the page says the address comes on request — honest, and one row short of complete | **leave empty until the CIPC record carries a business address** |
 | `FUTUREBOX_LEGAL_EMAIL` | An address a person can write to, on the domain rather than a personal one | **set this** |
 | `FUTUREBOX_LEGAL_PHONE` | A number a person can actually ring — **not necessarily your own** | when you have a business line |
 
