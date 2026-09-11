@@ -496,4 +496,498 @@ export const QUIZ: readonly QuizQuestion[] = [
       af: 'Sibilansie. Dit word erger hoe meer jy ’n sangstem verhelder of komprimeer, en dít is hoekom dit gewoonlik laat in ’n mengsel opduik eerder as in die rou opname. ’n De-esser draai net daardie band af, net wanneer dit gebeur.',
     },
   },
+
+  /* ── Thirty-two more, 11 September 2026 ──────────────────────────────
+ 
+     Thirty was a month of daily visits and then a repeat. She asked for a
+     new question every time somebody comes back, so the bank has to outlast
+     the habit rather than exactly meet it.
+ 
+     These lean further into two things the first thirty only touched: the
+     BUSINESS of a song — who owns what, what a split sheet is, what
+     "royalty-free" does not mean — and the CRAFT of writing one, which is
+     where somebody using this app actually gets better. A member who learns
+     that a recording and a composition are two separate copyrights has
+     learnt something that changes what they sign. */
+
+  {
+    id: 'stems-limit',
+    ask: { en: 'You split a finished song into stems. What can the split NOT do?', af: 'Jy split ’n klaar liedjie in stems. Wat kan die splitsing NIE doen nie?' },
+    options: [
+      { en: 'Remove the drums', af: 'Die tromme uithaal' },
+      { en: 'Lower the vocal', af: 'Die sang sagter maak' },
+      { en: 'Give you back the original separate recordings', af: 'Die oorspronklike aparte opnames vir jou teruggee' },
+      { en: 'Work on a song you did not make', af: 'Werk op ’n liedjie wat jy nie gemaak het nie' },
+    ],
+    answer: 2,
+    why: {
+      en: 'Separation is an estimate, not a reversal. Once parts are mixed together they are one signal, and a model guesses what each was — good enough to lower a vocal, never the original take. That is why you keep your own stems when you make something.',
+      af: 'Skeiding is ’n skatting, nie ’n omkering nie. Sodra dele saamgemeng is, is hulle een sein, en ’n model raai wat elkeen was — goed genoeg om ’n sang sagter te maak, nooit die oorspronklike opname nie. Dít is hoekom jy jou eie stems hou wanneer jy iets maak.',
+    },
+  },
+  {
+    id: 'publishing-master',
+    ask: { en: 'A song has two separate copyrights. What are they?', af: '’n Liedjie het twee aparte kopieregte. Wat is hulle?' },
+    options: [
+      { en: 'The lyrics and the melody', af: 'Die woorde en die melodie' },
+      { en: 'The demo and the master', af: 'Die demo en die meester' },
+      { en: 'The title and the artwork', af: 'Die titel en die kunswerk' },
+      { en: 'The composition and the recording', af: 'Die komposisie en die opname' },
+    ],
+    answer: 3,
+    why: {
+      en: 'The composition — the song as written — and the master, which is one particular recording of it. They can belong to different people, which is why a cover version pays the writer and not the original singer. Know which one you are selling.',
+      af: 'Die komposisie — die liedjie soos geskryf — en die meester, wat een spesifieke opname daarvan is. Hulle kan aan verskillende mense behoort, en dít is hoekom ’n oorgesangweergawe die skrywer betaal en nie die oorspronklike sanger nie. Weet watter een jy verkoop.',
+    },
+  },
+  {
+    id: 'split-sheet',
+    ask: { en: 'Two people write a song together. What should they do before it goes out?', af: 'Twee mense skryf saam ’n liedjie. Wat moet hulle doen voor dit uitgaan?' },
+    options: [
+      { en: 'Sign a split sheet saying who owns what percentage', af: '’n Verdelingsblad teken wat sê wie hoeveel persent besit' },
+      { en: 'Nothing, it sorts itself out', af: 'Niks, dit sorteer homself uit' },
+      { en: 'Register the title', af: 'Die titel registreer' },
+      { en: 'Agree on a release date', af: 'Op ’n vrystellingsdatum ooreenkom' },
+    ],
+    answer: 0,
+    why: {
+      en: 'A split sheet: names, what each contributed, and the percentages, signed while everyone still agrees. Almost every ugly music dispute is two people remembering the same afternoon differently, two years later, once there is money.',
+      af: '’n Verdelingsblad: name, wat elkeen bygedra het, en die persentasies, geteken terwyl almal nog saamstem. Byna elke lelike musiekgeskil is twee mense wat dieselfde middag anders onthou, twee jaar later, sodra daar geld is.',
+    },
+  },
+  {
+    id: 'royalty-free',
+    ask: { en: 'A sound pack says "royalty-free". What does that mean?', af: '’n Klankpakket sê “royalty-free”. Wat beteken dit?' },
+    options: [
+      { en: 'It is free to download', af: 'Dit is gratis om af te laai' },
+      { en: 'You pay once and owe no ongoing royalties', af: 'Jy betaal een keer en skuld geen deurlopende tantieme nie' },
+      { en: 'You may use it any way at all', af: 'Jy mag dit op enige manier gebruik' },
+      { en: 'Nobody owns it', af: 'Niemand besit dit nie' },
+    ],
+    answer: 1,
+    why: {
+      en: 'You pay once instead of a share of every sale. It is still licensed, the licence still has terms, and "free" is not one of them. Read what the licence allows before a track goes anywhere near a release.',
+      af: 'Jy betaal een keer in plaas van ’n deel van elke verkoop. Dit is steeds gelisensieer, die lisensie het steeds voorwaardes, en “gratis” is nie een daarvan nie. Lees wat die lisensie toelaat voor ’n snit naby ’n vrystelling kom.',
+    },
+  },
+  {
+    id: 'pop-filter',
+    ask: { en: 'Why is there a mesh screen in front of a studio microphone?', af: 'Hoekom is daar ’n gaasskerm voor ’n ateljeemikrofoon?' },
+    options: [
+      { en: 'To keep dust off it', af: 'Om stof daarvan af te hou' },
+      { en: 'To make the voice warmer', af: 'Om die stem warmer te maak' },
+      { en: 'To stop the puff of air on p and b sounds', af: 'Om die stoot lug op p- en b-klanke te keer' },
+      { en: 'To hold the microphone still', af: 'Om die mikrofoon stil te hou' },
+    ],
+    answer: 2,
+    why: {
+      en: 'A pop filter. Saying "p" fires a small gust at the capsule and the recording thumps. You can hear it on any phone recording of somebody close to the mic, and no amount of mixing takes it out afterwards.',
+      af: '’n Plofklankfilter. Om “p” te sê skiet ’n klein rukwind teen die kapsule en die opname bons. Jy hoor dit op enige foonopname van iemand naby die mikrofoon, en geen hoeveelheid menging haal dit agterna uit nie.',
+    },
+  },
+  {
+    id: 'loud-mixing',
+    ask: { en: 'Why should you not mix a song at full volume?', af: 'Hoekom moet jy nie ’n liedjie op vol volume meng nie?' },
+    options: [
+      { en: 'It damages the speakers', af: 'Dit beskadig die luidsprekers' },
+      { en: 'The file gets bigger', af: 'Die lêer word groter' },
+      { en: 'It uses more power', af: 'Dit gebruik meer krag' },
+      { en: 'Loud flatters everything, so the choices do not hold at normal volume', af: 'Hard vlei alles, so die keuses hou nie op normale volume nie' },
+    ],
+    answer: 3,
+    why: {
+      en: 'Our ears hear more bass and treble as things get louder, so a loud mix sounds full even when it is not. Decide at a conversational level and check loud — not the other way round. Your ears also tire, and a tired ear reaches for more of everything.',
+      af: 'Ons ore hoor meer bas en meer hoë kant hoe harder dit word, so ’n harde mengsel klink vol al is dit nie. Besluit op gespreksvlak en kyk dan hard — nie andersom nie. Jou ore word ook moeg, en ’n moeë oor gryp na meer van alles.',
+    },
+  },
+  {
+    id: 'panning',
+    ask: { en: 'What does panning do?', af: 'Wat doen panorering?' },
+    options: [
+      { en: 'Places a sound left or right between the speakers', af: 'Plaas ’n klank links of regs tussen die luidsprekers' },
+      { en: 'Speeds it up', af: 'Maak dit vinniger' },
+      { en: 'Changes the pitch', af: 'Verander die toonhoogte' },
+      { en: 'Adds echo', af: 'Voeg eggo by' },
+    ],
+    answer: 0,
+    why: {
+      en: 'It puts each part somewhere across the width. Two guitars fighting in the middle stop fighting the moment one goes left and one goes right — it is the cheapest way to make a crowded mix breathe, and it costs nothing.',
+      af: 'Dit sit elke deel êrens oor die breedte. Twee kitare wat in die middel baklei, hou op baklei sodra een links gaan en een regs — dit is die goedkoopste manier om ’n vol mengsel te laat asemhaal, en dit kos niks.',
+    },
+  },
+  {
+    id: 'dry-wet',
+    ask: { en: 'An effect has a "dry/wet" control. What is it setting?', af: '’n Effek het ’n “dry/wet”-knop. Wat stel dit?' },
+    options: [
+      { en: 'The brightness', af: 'Die helderheid' },
+      { en: 'How much of the sound goes through the effect', af: 'Hoeveel van die klank deur die effek gaan' },
+      { en: 'The tempo', af: 'Die tempo' },
+      { en: 'How loud it is', af: 'Hoe hard dit is' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Dry is untouched, wet is fully processed, and the knob mixes the two. It is why "a bit of reverb" is a real instruction and "reverb on" is not — almost every good effect setting is somewhere well short of all the way.',
+      af: 'Dry is onaangeraak, wet is heeltemal verwerk, en die knop meng die twee. Dít is hoekom “’n bietjie reverb” ’n regte aanwysing is en “reverb aan” nie — byna elke goeie effekinstelling is êrens ver voor die einde.',
+    },
+  },
+  {
+    id: 'top-line',
+    ask: { en: 'Somebody writes a "top line". What have they written?', af: 'Iemand skryf ’n “top line”. Wat het hulle geskryf?' },
+    options: [
+      { en: 'The first verse', af: 'Die eerste vers' },
+      { en: 'The drum pattern', af: 'Die trompatroon' },
+      { en: 'The melody and words over an existing backing', af: 'Die melodie en woorde oor ’n bestaande begeleiding' },
+      { en: 'The chords', af: 'Die akkoorde' },
+    ],
+    answer: 2,
+    why: {
+      en: 'The sung part written on top of a track somebody else made. Half the pop charts are made this way: one person builds the instrumental, another writes the melody and lyric over it. It is also exactly what you do when you sing on a track made here.',
+      af: 'Die gesonge deel wat bo-op ’n snit geskryf word wat iemand anders gemaak het. Die helfte van die poptreffers word so gemaak: een persoon bou die instrumentale deel, ’n ander skryf die melodie en liriek daaroor. Dit is presies wat jy doen wanneer jy op ’n snit sing wat hier gemaak is.',
+    },
+  },
+  {
+    id: 'call-response',
+    ask: { en: 'What is call and response?', af: 'Wat is roep en antwoord?' },
+    options: [
+      { en: 'Two songs on one track', af: 'Twee liedjies op een snit' },
+      { en: 'A question in the lyrics', af: '’n Vraag in die woorde' },
+      { en: 'Singing in a round', af: 'In ’n rondte sing' },
+      { en: 'One phrase answered by another', af: 'Een frase wat deur ’n ander beantwoord word' },
+    ],
+    answer: 3,
+    why: {
+      en: 'A line, then an answer to it — often a lead voice answered by a group. It is the backbone of gospel and of most African music, and it is the easiest way to make one voice sound like a room full of people.',
+      af: '’n Reël, dan ’n antwoord daarop — dikwels ’n voorsanger wat deur ’n groep beantwoord word. Dit is die ruggraat van gospel en van die meeste Afrika-musiek, en dit is die maklikste manier om een stem soos ’n vol vertrek te laat klink.',
+    },
+  },
+  {
+    id: 'vamp',
+    ask: { en: 'In gospel, what is a vamp?', af: 'Wat is ’n vamp in gospel?' },
+    options: [
+      { en: 'A short section repeated and built on at the end', af: '’n Kort deel wat aan die einde herhaal en opgebou word' },
+      { en: 'A wrong note', af: '’n Verkeerde noot' },
+      { en: 'The opening', af: 'Die inleiding' },
+      { en: 'The choir director', af: 'Die koorleier' },
+    ],
+    answer: 0,
+    why: {
+      en: 'A short phrase repeated over and over at the end, rising each time. It is where a gospel song does its real work, and it is why the last two minutes are often the whole point rather than an outro.',
+      af: '’n Kort frase wat aan die einde oor en oor herhaal word en elke keer styg. Dit is waar ’n gospel-liedjie sy regte werk doen, en dít is hoekom die laaste twee minute dikwels die hele punt is eerder as ’n uittro.',
+    },
+  },
+  {
+    id: 'turnaround',
+    ask: { en: 'What is a turnaround?', af: 'Wat is ’n turnaround?' },
+    options: [
+      { en: 'Changing the key', af: 'Om die toonsoort te verander' },
+      { en: 'A short passage that leads back to the start of a section', af: '’n Kort deurgang wat terug lei na die begin van ’n deel' },
+      { en: 'Restarting the recording', af: 'Om die opname te herbegin' },
+      { en: 'Playing the song backwards', af: 'Om die liedjie agterstevoor te speel' },
+    ],
+    answer: 1,
+    why: {
+      en: 'The couple of bars at the end of a section that push you back into the next one. Without it a verse just stops and the next one starts; with it the song keeps moving. It is the difference between a loop and a song.',
+      af: 'Die paar mate aan die einde van ’n deel wat jou terugstoot in die volgende een. Daarsonder hou ’n vers net op en die volgende begin; daarmee hou die liedjie aan beweeg. Dit is die verskil tussen ’n lus en ’n liedjie.',
+    },
+  },
+  {
+    id: 'prosody',
+    ask: { en: 'A line sings badly even though it reads well. What is most likely wrong?', af: '’n Reël sing sleg al lees dit goed. Wat is waarskynlik verkeerd?' },
+    options: [
+      { en: 'Too many words', af: 'Te veel woorde' },
+      { en: 'The wrong key', af: 'Die verkeerde toonsoort' },
+      { en: 'The word stress does not match the musical stress', af: 'Die woordklem pas nie by die musikale klem nie' },
+      { en: 'The tempo', af: 'Die tempo' },
+    ],
+    answer: 2,
+    why: {
+      en: 'Prosody. If the strong beat lands on the second half of a word, the singer has to mispronounce it to fit — and listeners hear it as wrong without knowing why. Say the line out loud against the beat before you keep it.',
+      af: 'Prosodie. As die sterk slag op die tweede helfte van ’n woord land, moet die sanger dit verkeerd uitspreek om te pas — en luisteraars hoor dit as verkeerd sonder om te weet hoekom. Sê die reël hardop teen die slag voor jy dit hou.',
+    },
+  },
+  {
+    id: 'slant-rhyme',
+    ask: { en: '"Home" and "alone" — what kind of rhyme is that?', af: '“Huis” en “buis” teenoor “huis” en “tuin” — watter soort rym is die tweede paar?' },
+    options: [
+      { en: 'Not a rhyme at all', af: 'Glad nie ’n rym nie' },
+      { en: 'An internal rhyme', af: '’n Binnerym' },
+      { en: 'A perfect rhyme', af: '’n Volmaakte rym' },
+      { en: 'A slant rhyme — close, not exact', af: '’n Skuins rym — naby, nie presies nie' },
+    ],
+    answer: 3,
+    why: {
+      en: 'A slant rhyme. Songs use them constantly because a perfect rhyme forces the line to land somewhere you may not want, and a near-rhyme keeps the sound without taking the meaning hostage.',
+      af: '’n Skuins rym. Liedjies gebruik hulle heeltyd, want ’n volmaakte rym dwing die reël om êrens te land waar jy dalk nie wil wees nie, en ’n byna-rym hou die klank sonder om die betekenis te gyselaar.',
+    },
+  },
+  {
+    id: 'title-chorus',
+    ask: { en: 'Where does the title of a song usually go?', af: 'Waar sit die titel van ’n liedjie gewoonlik?' },
+    options: [
+      { en: 'In the chorus', af: 'In die koor' },
+      { en: 'In the bridge', af: 'In die brug' },
+      { en: 'In the first line of the verse', af: 'In die eerste reël van die vers' },
+      { en: 'Nowhere in the lyrics', af: 'Nêrens in die woorde nie' },
+    ],
+    answer: 0,
+    why: {
+      en: 'In the chorus, usually on the strongest line. It is how somebody finds your song again after hearing it once — they search the words they remember, and the words they remember are the ones that repeated.',
+      af: 'In die koor, gewoonlik op die sterkste reël. Dit is hoe iemand jou liedjie weer kry nadat hulle dit een keer gehoor het — hulle soek die woorde wat hulle onthou, en die woorde wat hulle onthou is dié wat herhaal het.',
+    },
+  },
+  {
+    id: 'vowels',
+    ask: { en: 'Why do singers hold long notes on vowels rather than consonants?', af: 'Hoekom hou sangers lang note op vokale eerder as konsonante?' },
+    options: [
+      { en: 'Vowels are louder', af: 'Vokale is harder' },
+      { en: 'A vowel is an open sound that can be sustained', af: '’n Vokaal is ’n oop klank wat volgehou kan word' },
+      { en: 'It is a rule of music', af: 'Dit is ’n reël van musiek' },
+      { en: 'Consonants are harder to spell', af: 'Konsonante is moeiliker om te spel' },
+    ],
+    answer: 1,
+    why: {
+      en: 'You can hold "aah" for eight beats; you cannot hold "t". Consonants are the edges of a word and vowels are the middle, so a lyric with the wrong vowel on the big note fights the singer. Try the line before you commit to it.',
+      af: 'Jy kan “aah” agt slae hou; jy kan nie “t” hou nie. Konsonante is die rande van ’n woord en vokale die middel, so ’n liriek met die verkeerde vokaal op die groot noot baklei met die sanger. Probeer die reël voor jy daaraan vashou.',
+    },
+  },
+  {
+    id: 'sample-rate',
+    ask: { en: 'Audio is usually recorded at 44.1 kHz. What does that number count?', af: 'Klank word gewoonlik teen 44,1 kHz opgeneem. Wat tel daardie getal?' },
+    options: [
+      { en: 'How loud it can go', af: 'Hoe hard dit kan gaan' },
+      { en: 'The highest note it can hold', af: 'Die hoogste noot wat dit kan hou' },
+      { en: 'Snapshots of the sound taken every second', af: 'Kiekies van die klank wat elke sekonde geneem word' },
+      { en: 'The size of the file in kilobytes', af: 'Die grootte van die lêer in kilogrepe' },
+    ],
+    answer: 2,
+    why: {
+      en: 'Forty-four thousand one hundred measurements a second. It is set at roughly twice the highest pitch a person can hear, because that is the minimum needed to describe a wave rather than guess at it. Higher rates exist; they mostly help while editing, not on the way out.',
+      af: 'Vier-en-veertig duisend een honderd metings ’n sekonde. Dit is op omtrent twee keer die hoogste toon gestel wat ’n mens kan hoor, want dít is die minimum om ’n golf te beskryf eerder as te raai. Hoër tempo’s bestaan; hulle help meestal tydens redigering, nie op pad uit nie.',
+    },
+  },
+  {
+    id: 'in-the-red',
+    ask: { en: 'The meter on your recording goes into the red. What does that mean?', af: 'Die meter op jou opname gaan in die rooi in. Wat beteken dit?' },
+    options: [
+      { en: 'The take is good', af: 'Die opname is goed' },
+      { en: 'The recording is loud enough', af: 'Die opname is hard genoeg' },
+      { en: 'The microphone is on', af: 'Die mikrofoon is aan' },
+      { en: 'The signal is past the ceiling and is being chopped off', af: 'Die sein is bo die plafon en word afgekap' },
+    ],
+    answer: 3,
+    why: {
+      en: 'Past the ceiling. Analogue tape went gently into distortion and people learnt to like it; digital does not — it simply cuts the top off the wave. Aim for the meter to sit well below the top and leave the loudness for mastering.',
+      af: 'Bo die plafon. Analoog band het saggies in distorsie ingegaan en mense het daarvan leer hou; digitaal doen dit nie — dit kap net die bokant van die golf af. Mik dat die meter goed onder die bokant sit en los die hardheid vir mastering.',
+    },
+  },
+  {
+    id: 'riff',
+    ask: { en: 'What is a riff?', af: 'Wat is ’n riff?' },
+    options: [
+      { en: 'A short figure that repeats', af: '’n Kort figuur wat herhaal' },
+      { en: 'A mistake left in on purpose', af: '’n Fout wat doelbewus gelos is' },
+      { en: 'The end of a song', af: 'Die einde van ’n liedjie' },
+      { en: 'A type of microphone', af: '’n Soort mikrofoon' },
+    ],
+    answer: 0,
+    why: {
+      en: 'A short musical phrase, usually instrumental, that comes back. Plenty of songs are built entirely on one. If somebody can hum your song without singing a word, you have a riff and it is doing the work of a hook.',
+      af: '’n Kort musikale frase, gewoonlik instrumentaal, wat terugkom. Baie liedjies is heeltemal op een gebou. As iemand jou liedjie kan neurie sonder om ’n woord te sing, het jy ’n riff en dit doen die werk van ’n hook.',
+    },
+  },
+  {
+    id: 'acapella',
+    ask: { en: 'What is an a cappella?', af: 'Wat is ’n a cappella?' },
+    options: [
+      { en: 'A slow song', af: '’n Stadige liedjie' },
+      { en: 'Voices with no instruments', af: 'Stemme sonder instrumente' },
+      { en: 'A song with no words', af: '’n Liedjie sonder woorde' },
+      { en: 'A live recording', af: '’n Lewendige opname' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Voices alone. It is also what a remixer asks for — the isolated vocal, so they can build something new underneath it. Keeping one when you make a song is what lets it be remixed later.',
+      af: 'Stemme alleen. Dit is ook wat ’n remixer vra — die geïsoleerde sang, sodat hulle iets nuuts daaronder kan bou. Om een te hou wanneer jy ’n liedjie maak, is wat dit later laat remix word.',
+    },
+  },
+  {
+    id: 'bar-vs-verse',
+    ask: { en: 'What is the difference between a bar and a verse?', af: 'Wat is die verskil tussen ’n maat en ’n vers?' },
+    options: [
+      { en: 'They are the same thing', af: 'Hulle is dieselfde ding' },
+      { en: 'A bar is a line of lyrics', af: '’n Maat is ’n reël woorde' },
+      { en: 'A bar is a unit of time; a verse is a section made of many bars', af: '’n Maat is ’n tydseenheid; ’n vers is ’n deel wat uit baie mate bestaan' },
+      { en: 'A verse is shorter', af: '’n Vers is korter' },
+    ],
+    answer: 2,
+    why: {
+      en: 'A bar is four beats in most music. A verse is usually sixteen of them. Rappers say "bars" meaning lines, which is a different use of the same word and is where the confusion comes from.',
+      af: '’n Maat is vier slae in die meeste musiek. ’n Vers is gewoonlik sestien daarvan. Rappers sê “bars” en bedoel reëls, wat ’n ander gebruik van dieselfde woord is en waar die verwarring vandaan kom.',
+    },
+  },
+  {
+    id: 'drop',
+    ask: { en: 'In dance music, what is the drop?', af: 'Wat is die drop in dansmusiek?' },
+    options: [
+      { en: 'The end of the song', af: 'Die einde van die liedjie' },
+      { en: 'A quiet section', af: '’n Stil deel' },
+      { en: 'A missing beat', af: '’n Ontbrekende slag' },
+      { en: 'The moment the beat and bass come back after a build', af: 'Die oomblik wanneer die slag en bas terugkom ná ’n opbou' },
+    ],
+    answer: 3,
+    why: {
+      en: 'The payoff. Everything before it is a build, taking things away and raising tension, so that when the bottom returns it lands. A drop with no build in front of it is just a loud part.',
+      af: 'Die uitbetaling. Alles voor dit is ’n opbou wat dinge wegvat en spanning verhoog, sodat wanneer die onderkant terugkom dit land. ’n Drop sonder ’n opbou voor dit is net ’n harde deel.',
+    },
+  },
+  {
+    id: 'fade-out',
+    ask: { en: 'Why did so many older songs fade out at the end?', af: 'Hoekom het so baie ouer liedjies aan die einde uitgedoof?' },
+    options: [
+      { en: 'It was easier than composing an ending', af: 'Dit was makliker as om ’n einde te komponeer' },
+      { en: 'The tape ran out', af: 'Die band het opgeraak' },
+      { en: 'Radio required it', af: 'Radio het dit vereis' },
+      { en: 'To save space', af: 'Om ruimte te spaar' },
+    ],
+    answer: 0,
+    why: {
+      en: 'A fade is an ending you do not have to write. It suited radio, where the next song came in over it. On streaming it reads as unfinished, and a written ending is worth the trouble.',
+      af: '’n Uitdowing is ’n einde wat jy nie hoef te skryf nie. Dit het radio gepas, waar die volgende liedjie daaroor ingekom het. Op stroming lees dit as onvoltooid, en ’n geskrewe einde is die moeite werd.',
+    },
+  },
+  {
+    id: 'capo',
+    ask: { en: 'A guitarist clamps a bar across the neck. What does it do?', af: '’n Kitaarspeler klem ’n balkie oor die nek. Wat doen dit?' },
+    options: [
+      { en: 'Makes the strings quieter', af: 'Maak die snare sagter' },
+      { en: 'Raises the key while keeping the same chord shapes', af: 'Lig die toonsoort terwyl dieselfde akkoordvorms behou word' },
+      { en: 'Tunes the guitar', af: 'Stem die kitaar' },
+      { en: 'Holds the strings down for a solo', af: 'Hou die snare vas vir ’n solo' },
+    ],
+    answer: 1,
+    why: {
+      en: 'A capo. It moves the whole guitar up so the player keeps the shapes they know while the song sits where the singer needs it. Same idea as transposing, done with a clamp instead of arithmetic.',
+      af: '’n Capo. Dit skuif die hele kitaar op sodat die speler die vorms hou wat hulle ken terwyl die liedjie sit waar die sanger dit nodig het. Dieselfde idee as transponering, met ’n klem in plaas van rekenkunde.',
+    },
+  },
+  {
+    id: 'voice-ranges',
+    ask: { en: 'From highest to lowest, what order are these voices?', af: 'Van hoogste na laagste, in watter volgorde is hierdie stemme?' },
+    options: [
+      { en: 'Alto, soprano, bass, tenor', af: 'Alt, sopraan, bas, tenoor' },
+      { en: 'Soprano, tenor, alto, bass', af: 'Sopraan, tenoor, alt, bas' },
+      { en: 'Soprano, alto, tenor, bass', af: 'Sopraan, alt, tenoor, bas' },
+      { en: 'Tenor, bass, soprano, alto', af: 'Tenoor, bas, sopraan, alt' },
+    ],
+    answer: 2,
+    why: {
+      en: 'Soprano, alto, tenor, bass — highest to lowest, and the four parts a choir is written in. Knowing where your own voice sits tells you which key a song should be in before you waste a take finding out.',
+      af: 'Sopraan, alt, tenoor, bas — hoogste na laagste, en die vier partye waarin ’n koor geskryf word. Om te weet waar jou eie stem sit, sê vir jou in watter toonsoort ’n liedjie moet wees voor jy ’n opname mors om uit te vind.',
+    },
+  },
+  {
+    id: 'chorus-count',
+    ask: { en: 'How many times does a chorus usually appear in a pop song?', af: 'Hoeveel keer verskyn ’n koor gewoonlik in ’n poplied?' },
+    options: [
+      { en: 'Once', af: 'Een keer' },
+      { en: 'Twice', af: 'Twee keer' },
+      { en: 'As many as it takes', af: 'So veel soos nodig' },
+      { en: 'Three or four times', af: 'Drie of vier keer' },
+    ],
+    answer: 3,
+    why: {
+      en: 'Three or four. Repetition is not laziness — it is how a stranger learns your song inside one listen. Fewer than three and most people never get a second chance at the line you most wanted them to keep.',
+      af: 'Drie of vier. Herhaling is nie luiheid nie — dit is hoe ’n vreemdeling jou liedjie binne een luister leer. Minder as drie en die meeste mense kry nooit ’n tweede kans op die reël wat jy die graagste wou hê hulle moet hou nie.',
+    },
+  },
+  {
+    id: 'ballad-tempo',
+    ask: { en: 'Roughly how fast is a ballad?', af: 'Hoe vinnig is ’n ballade omtrent?' },
+    options: [
+      { en: 'Around 60 to 80 BPM', af: 'Om en by 60 tot 80 BPM' },
+      { en: 'About 160 BPM', af: 'Omtrent 160 BPM' },
+      { en: 'About 120 BPM', af: 'Omtrent 120 BPM' },
+      { en: 'There is no usual speed', af: 'Daar is geen gewone spoed nie' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Sixty to eighty — near a resting heartbeat, which is part of why it feels calm. Setting the speed slider there is a faster way to ask for a ballad than any adjective, because tempo is a number the engine cannot misread.',
+      af: 'Sestig tot tagtig — naby ’n rustende hartklop, en dít is deels hoekom dit kalm voel. Om die spoedskuiwer dáár te stel, vra vinniger vir ’n ballade as enige byvoeglike naamwoord, want tempo is ’n getal wat die enjin nie verkeerd kan lees nie.',
+    },
+  },
+  {
+    id: 'metronome-feel',
+    ask: { en: 'A click track feels stiff and wrong the first few times. Why keep using it?', af: '’n Click track voel die eerste paar keer styf en verkeerd. Hoekom dit bly gebruik?' },
+    options: [
+      { en: 'It makes the recording louder', af: 'Dit maak die opname harder' },
+      { en: 'Without it, parts recorded on different days will not line up', af: 'Daarsonder sal dele wat op verskillende dae opgeneem is nie inpas nie' },
+      { en: 'It hides mistakes', af: 'Dit steek foute weg' },
+      { en: 'It is required by the software', af: 'Die sagteware vereis dit' },
+    ],
+    answer: 1,
+    why: {
+      en: 'It feels stiff because you are hearing your own drift for the first time. That drift is real, and it is what makes a second take impossible to lay against the first. Playing with a click is a skill, and a week of it changes your timing for good.',
+      af: 'Dit voel styf omdat jy vir die eerste keer jou eie afdrywing hoor. Daardie afdrywing is regtig, en dit is wat ’n tweede opname onmoontlik maak om teen die eerste te lê. Om met ’n click te speel is ’n vaardigheid, en ’n week daarvan verander jou tydsberekening vir goed.',
+    },
+  },
+  {
+    id: 'sampling',
+    ask: { en: 'You want to use four seconds of somebody else’s record. What do you need?', af: 'Jy wil vier sekondes van iemand anders se plaat gebruik. Wat het jy nodig?' },
+    options: [
+      { en: 'Nothing under ten seconds', af: 'Niks onder tien sekondes nie' },
+      { en: 'Just credit them', af: 'Net erkenning gee' },
+      { en: 'Permission for both the recording and the song', af: 'Toestemming vir sowel die opname as die liedjie' },
+      { en: 'Only the record label’s permission', af: 'Net die platemaatskappy se toestemming' },
+    ],
+    answer: 2,
+    why: {
+      en: 'Two clearances, because there are two copyrights: the master and the composition. The "a few seconds is fine" rule does not exist anywhere in law — it is a thing people repeat. One bar has ended careers.',
+      af: 'Twee klarings, want daar is twee kopieregte: die meester en die komposisie. Die “’n paar sekondes is reg”-reël bestaan nêrens in die wet nie — dit is iets wat mense herhaal. Een maat het al loopbane beëindig.',
+    },
+  },
+  {
+    id: 'demo',
+    ask: { en: 'What is a demo for?', af: 'Waarvoor is ’n demo?' },
+    options: [
+      { en: 'To sell to the public', af: 'Om aan die publiek te verkoop' },
+      { en: 'To practise singing', af: 'Om sang te oefen' },
+      { en: 'To test the microphone', af: 'Om die mikrofoon te toets' },
+      { en: 'To show somebody the song before it is properly made', af: 'Om iemand die liedjie te wys voor dit behoorlik gemaak is' },
+    ],
+    answer: 3,
+    why: {
+      en: 'It carries the song, not the production. A demo that sounds unfinished is doing its job; one polished for six weeks is a finished record with a modest name, and the six weeks went into something nobody asked for yet.',
+      af: 'Dit dra die liedjie, nie die produksie nie. ’n Demo wat onvoltooid klink, doen sy werk; een wat ses weke lank opgepoets is, is ’n klaar plaat met ’n beskeie naam, en die ses weke het in iets gegaan wat niemand nog gevra het nie.',
+    },
+  },
+  {
+    id: 'mono-bass',
+    ask: { en: 'Why is the bass usually kept in the centre rather than panned?', af: 'Hoekom word die bas gewoonlik in die middel gehou eerder as gepanoreer?' },
+    options: [
+      { en: 'Low frequencies carry the most energy and a club system sums them anyway', af: 'Lae frekwensies dra die meeste energie en ’n klubstelsel voeg hulle in elk geval saam' },
+      { en: 'Tradition', af: 'Tradisie' },
+      { en: 'Nothing else uses the middle', af: 'Niks anders gebruik die middel nie' },
+      { en: 'It sounds louder there', af: 'Dit klink daar harder' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Bass takes most of the power in a mix, so splitting it across the sides wastes headroom and can cancel when the two sides are summed — which is what a club rig, a phone and most radio do. Keep the bottom in the middle and spread the rest.',
+      af: 'Bas vat die meeste van die krag in ’n mengsel, so om dit oor die kante te verdeel mors headroom en kan uitkanselleer wanneer die twee kante saamgevoeg word — wat ’n klubstelsel, ’n foon en die meeste radio doen. Hou die onderkant in die middel en sprei die res.',
+    },
+  },
+  {
+    id: 'hook-placement',
+    ask: { en: 'Two songs are identical except one puts the hook at 0:08 and the other at 0:50. Which usually does better on streaming?', af: 'Twee liedjies is identies behalwe dat een die hook op 0:08 sit en die ander op 0:50. Watter een vaar gewoonlik beter op stroming?' },
+    options: [
+      { en: 'The one at 0:50', af: 'Dié een op 0:50' },
+      { en: 'The one at 0:08', af: 'Dié een op 0:08' },
+      { en: 'No difference', af: 'Geen verskil nie' },
+      { en: 'It depends on the genre only', af: 'Dit hang net van die genre af' },
+    ],
+    answer: 1,
+    why: {
+      en: 'The early one. Most skips happen in the first half minute, and a platform counts a play only past a threshold — so a hook that arrives after the decision has been made arrives for nobody. Start near the best part.',
+      af: 'Die vroeë een. Die meeste oorslaan gebeur in die eerste halfminuut, en ’n platform tel ’n speel eers verby ’n drempel — so ’n hook wat aankom nadat die besluit geneem is, kom vir niemand aan nie. Begin naby die beste deel.',
+    },
+  },
 ];

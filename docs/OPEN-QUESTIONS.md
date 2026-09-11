@@ -24,7 +24,7 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 
 | Wat | Hoekom dit joune is |
 |---|---|
-| **Die adresbesluit op die regsbladsy** | Die geregistreerde adres op die CIPC-sertifikaat is jou huis. ECTA vra 'n fisiese adres. Publiseer dit, óf skuif die geregistreerde adres na 'n besigheidsadres-diens en publiseer dáái. Privaatheidsbesluit, nie 'n tegniese een nie. **Sedert 11 September is dit nie meer dringend nie:** die bladsy publiseer alles behalwe die adres en sê die adres kom op aanvraag. Dit staan nou tussen die bladsy en *volledig*, nie tussen die bladsy en *bruikbaar* nie. |
+| **Die besigheidsadres by CIPC** | **Sy het op 11 September besluit:** skuif die CIPC-rekord na 'n besigheidsadres, en publiseer niks van haar eie nie. Sodra daardie adres op die rekord is, stel `FUTUREBOX_LEGAL_ADDRESS` daarna en die bladsy is volledig. Tot dan publiseer die bladsy alles behalwe die adres en sê dit kom op aanvraag — dit is eerlik en bruikbaar, net nie volledig nie. |
 | **Maak `/api/eleven/dictionary?key=…` een keer oop** | Dit bou die uitspraakwoordeboek op jou rekening uit die reëls in die kode. Plak albei ids by Vercel in, redeploy, en **luister**. Sonder daardie twee waardes word niks toegepas nie en niks sê so nie. |
 | **Stuur die ElevenLabs-verkoopse-pos** | `docs/ELEVENLABS-SALES.md`. Dit is die ding wat die terme-bladsy weer laat verander — die lisensie wat deur na lede loop, is nie op die self-diens plan nie. |
 | **Lees Supabase Pro en Vercel Pro se limiete** | Albei skaal met **gratis** lede, anders as ElevenLabs. Tienduisend gratis rekeninge is die launch-vorm. Hierdie masjien kan nie by hulle bladsye kom nie (geblokkeer). Die een getal wat besluit: Supabase se **maandelikse aktiewe gebruikers**. |
@@ -2728,3 +2728,35 @@ statement about a legal person on a live page and held it there.
 **Still hers, and now much less urgent:** the address decision. The page is
 honest and useful without it. It is no longer the thing standing between the
 legal page and being usable — it is the thing between it and being complete.
+
+## Her decision on the address: move the CIPC record (11 September)
+
+*"Ek dink ook die CIPC rekord kan aangevra word wat 'n besigheidsadres op het.
+Ek wil niks online publiseer nie."*
+
+So: change the registered address at CIPC to a business-address service, and
+publish nothing of her own. That settles the question that had been open
+since the certificate arrived on 5 September.
+
+**The order matters and it is the cheap way round.** Change the CIPC record
+first, then set `FUTUREBOX_LEGAL_ADDRESS` to that address. The page is
+complete the moment the variable is set, and nothing of hers ever appears.
+
+**One fact she should weigh, because it changes what "not published" buys
+her.** A company's registered office address is part of the CIPC record, and
+the CIPC register is searchable by anybody — so while the record says her
+house, that address is already reachable by anyone who looks up
+`2026/714071/07`, whether or not this app prints it. Withholding it here does
+not withhold it. Moving the record is what actually removes it, and it
+removes it everywhere at once.
+
+That is the strongest argument for her plan, and it means the plan is worth
+doing for its own sake rather than only to unblock a page.
+
+*(Not verified against CIPC's current disclosure rules from this machine —
+their site is not reachable here. Worth one question to CIPC or to the
+address service about exactly what a standard search returns.)*
+
+**Until the record changes**, nothing is blocked: `/legal` publishes the
+name, the registration number, the status and the mailbox, and says the
+address is on the CIPC record and will be sent on request.

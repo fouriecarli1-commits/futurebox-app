@@ -166,7 +166,7 @@ try {
       await another.click();
       await p.waitForTimeout(600);
       check('which is a different question', (await asked()) !== first,
-        'thirty in the bank and the same one twice in a row');
+        'sixty-odd in the bank and the same one twice in a row');
     }
   }
 } finally {
