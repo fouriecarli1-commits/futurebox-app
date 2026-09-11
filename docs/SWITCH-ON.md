@@ -62,6 +62,7 @@ be. In this order:
 | File | What is dead without it |
 |---|---|
 | `supabase/addons.sql` | The marketing add-on cannot be bought or granted |
+| `supabase/afrikaans.sql` | Nobody can report a word that came out wrong, and the room says so rather than failing |
 | `supabase/posting.sql` | The posting queue answers "not set up" |
 | `supabase/dubs.sql` | Dubbing answers "not set up" |
 | `supabase/invites.sql` | The invite link in a collab email answers "not set up" |

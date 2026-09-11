@@ -178,6 +178,7 @@
     "check:videowire": "tsx scripts/check-videowire.mts",
     "check:singer": "tsx scripts/check-singer.mts",
     "check:sayit": "tsx scripts/check-sayit.mts",
+    "check:sayitwrong": "tsx scripts/check-sayitwrong.mts",
     "check:elevenroom": "tsx scripts/check-elevenroom.mts",
     "check:quiz": "tsx scripts/check-quiz.mts",
     "check:socialformats": "tsx scripts/check-socialformats.mts",

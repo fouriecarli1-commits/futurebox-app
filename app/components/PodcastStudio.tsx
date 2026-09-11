@@ -31,6 +31,7 @@ import Card from './Card';
 import { episodeAudioUrl } from '../lib/episodeaudio';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
+import SayItWrong from './SayItWrong';
 import { CREDITS } from '../lib/credits';
 import { DUB_LANGUAGES } from '../data/dublanguages';
 import { useLang } from '../lib/i18n';
@@ -654,6 +655,13 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
           </div>
         )}
       </Card>
+
+      {/* ── When a word does not come out right ───────────────────────────
+
+          The second place Afrikaans is read aloud, and the one where a
+          mispronunciation is heard by a stranger in a podcast app rather
+          than by the person who made it. See `SayItWrong.tsx`. */}
+      <SayItWrong surface="podcast" spoken />
     </div>
   );
 }

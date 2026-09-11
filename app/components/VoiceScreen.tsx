@@ -31,6 +31,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ArrowUpRight, Mic, Music, Radio } from 'lucide-react';
 import VoiceLab, { type VoiceState } from './VoiceLab';
+import SayItWrong from './SayItWrong';
 import { accessToken } from '../lib/cloud';
 import { downloadBlob } from '../lib/library';
 import { useLang } from '../lib/i18n';
@@ -88,6 +89,20 @@ export default function VoiceScreen({
         onAudio={(audio) => downloadBlob(audio, 'reading.mp3')}
         onUpgrade={onUpgrade}
       />
+
+      {/* ── When a word does not come out right ───────────────────────────
+
+          Here because this is where Afrikaans is READ ALOUD, which is where
+          the pronunciation dictionary applies and therefore the only place a
+          report can be acted on. `sayit.ts` says what it cannot do alone:
+          what belongs in an alias dictionary has to come from listening, and
+          a list invented at a desk is a list of words a model says fine.
+
+          One line, shut, in Afrikaans only. See `SayItWrong.tsx`. */}
+      {/* No `said`: `underScript` here is a node, not the script's text, and
+          passing a rendered element as "the line it was in" would put markup
+          into the report. The word on its own is what a rule is built from. */}
+      <SayItWrong surface="voice_studio" spoken />
 
       {/* Where the other rooms are, said plainly instead of duplicated here.
           Both of these used to be one panel giving directions to a button

@@ -244,6 +244,13 @@ jobs:
       - name: The adviser's reply shape is one the API will take
         run: npm run check:adschema
 
+      # Members can report a word that came out wrong. The obvious next step
+      # is the dangerous one: applying the reports would put whatever anybody
+      # typed into the voice that reads other people's podcasts. A report is
+      # a candidate; the rules stay source somebody committed.
+      - name: A reported word cannot become a rule without anybody reading it
+        run: npm run check:sayitwrong
+
       # The price on the button and the price that is charged come from one
       # function, and have twice disagreed anyway — once by pricing a clip
       # flat whatever its length, once by clamping the length after pricing it.

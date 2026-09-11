@@ -89,6 +89,11 @@ const SAME_IN_BOTH = new Set([
      does not exist — the same rule as not translating a podcast's title. */
   'TikTok', 'Instagram Reels', 'YouTube Shorts', 'TikTok, Reels, Shorts',
   '9:16 Reels, 15\u201330s',
+  /* An Afrikaans word used as an example OF Afrikaans. The placeholder in
+     "which word came out wrong" is the word Carli reported hearing said as
+     "voëlchie" — translating it would leave the English reader an example
+     of nothing, and the control only draws in Afrikaans anyway. */
+  'vo\u00ebltjie',
 ]);
 const copied: string[] = [];
 for (const [i, match] of starts.entries()) {
