@@ -199,6 +199,12 @@ jobs:
       - name: Copilot operations are described
         run: npm run check:ops
 
+      # The copilot could only ever do one thing per reply, so the adverts
+      # brief — five fields — came back as a paragraph about the five fields.
+      # Every other link in that chain was correct and check:ops was green.
+      - name: The copilot may act on several fields at once
+        run: npm run check:copilotplan
+
       # The price on the button and the price that is charged come from one
       # function, and have twice disagreed anyway — once by pricing a clip
       # flat whatever its length, once by clamping the length after pricing it.

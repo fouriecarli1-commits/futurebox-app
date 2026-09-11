@@ -39,8 +39,15 @@ export type CopilotAction =
 interface Turn {
   role: 'user' | 'assistant';
   text: string;
-  /** Held back until you approve it. */
-  pending?: CopilotAction;
+  /**
+   * Held back until you approve it.
+   *
+   * A list since 11 September, because a reply may now carry several — the
+   * adverts brief has five fields and the copilot could set one. What waits
+   * is still only the part that costs money: everything free is applied the
+   * moment the reply lands, and the paid one sits here on its own.
+   */
+  pending?: CopilotAction[];
 }
 
 export interface CopilotContext {
@@ -130,18 +137,25 @@ export default function Copilot({
         return;
       }
 
-      const data = (await response.json()) as { reply: string; action: CopilotAction };
-      const action = data.action ?? { kind: 'none', value: '' };
+      const data = (await response.json()) as { reply: string; actions?: CopilotAction[] };
+      const actions = Array.isArray(data.actions) ? data.actions : [];
 
-      // A paid generation waits for a yes. Everything else is reversible, so it
-      // happens straight away and the canvas shows the result.
-      if (costOf(action, context.engineReady) === 'paid') {
-        setTurns([...asked, { role: 'assistant', text: data.reply, pending: action }]);
-        return;
-      }
+      /* The money still waits for a yes, and only the money.
+ 
+         Splitting the list rather than holding all of it is the point: a
+         reply that fills in four fields and offers to generate should fill
+         the four in immediately — they are reversible and she can see them —
+         and ask about the fifth. Holding the lot behind one button would
+         make every helpful reply feel like a purchase. */
+      const free = actions.filter((one) => costOf(one, context.engineReady) !== 'paid');
+      const paid = actions.filter((one) => costOf(one, context.engineReady) === 'paid');
 
-      setTurns([...asked, { role: 'assistant', text: data.reply }]);
-      if (action.kind !== 'none') await onAction(action);
+      setTurns([...asked, {
+        role: 'assistant',
+        text: data.reply,
+        ...(paid.length ? { pending: paid } : {}),
+      }]);
+      for (const one of free) if (one.kind !== 'none') await onAction(one);
     } catch {
       setTurns([...asked, { role: 'assistant', text: t('copilot.failed') }]);
     } finally {
@@ -151,10 +165,10 @@ export default function Copilot({
 
   const approve = async (index: number) => {
     const turn = turns[index];
-    if (!turn?.pending) return;
-    const action = turn.pending;
+    if (!turn?.pending?.length) return;
+    const waiting = turn.pending;
     setTurns(turns.map((item, i) => (i === index ? { ...item, pending: undefined } : item)));
-    await onAction(action);
+    for (const one of waiting) await onAction(one);
   };
 
   const decline = (index: number) => {

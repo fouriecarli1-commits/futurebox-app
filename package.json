@@ -43,6 +43,7 @@
     "check:theme": "tsx scripts/check-theme-css.mts",
     "check:scrim": "tsx scripts/check-scrim.mts",
     "check:ops": "tsx scripts/check-copilot-ops.mts",
+    "check:copilotplan": "tsx scripts/check-copilotplan.mts",
     "check:prices": "tsx scripts/check-prices.mts",
     "check:afrikaans": "tsx scripts/check-afrikaans.mts",
     "check:afrikaansrule": "tsx scripts/check-afrikaansrule.mts",

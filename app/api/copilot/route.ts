@@ -27,6 +27,7 @@ import { SURFACES, describeOps, isSurfaceId, surfaceDirectory, type SurfaceId } 
 import { tooMany } from '@/app/lib/server/brake';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { SINGERS } from '@/app/data/sound';
+import { planActions } from '@/app/lib/copilotplan';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -43,25 +44,51 @@ const ReplySchema = z.object({
   reply: z
     .string()
     .describe('What you say back. Two or three sentences at most, in the language they wrote in.'),
-  action: z
-    .object({
-      kind: z
-        .enum(['none', 'set_title', 'set_style', 'set_lyrics', 'generate', 'go', 'surface_op'])
-        .describe(
-          'What the studio should do. Use none when talking is enough. Use surface_op to change something in the room they are in, and only for an operation the context lists.',
-        ),
-      op: z
-        .string()
-        .describe(
-          'For surface_op only, the operation name exactly as the context lists it. Empty string for every other kind.',
-        ),
-      value: z
-        .string()
-        .describe(
-          'The title, the style, or the full lyric sheet. For go, one of: make, studio, booth, video, canvas, hooks_feed, channels, collab, live, voice_studio, podcast. Empty for none and generate.',
-        ),
-    })
-    .describe('One action, or none. Never more than one.'),
+  /* ── Several, not one ────────────────────────────────────────────────
+ 
+     This was a single action, described as "One action, or none. Never
+     more than one." Which made the thing the adverts desk exists for
+     impossible by construction: a brief has five fields — what, who, the
+     offer, the tone, the market — and the copilot could set exactly one
+     of them per turn.
+ 
+     Carli, 11 September 2026: "copilot het mooi geskryf, maar dit het
+     niks van die hele platform se bars help invul nie." Of course not.
+     It wrote about the brief because filling it was not on offer.
+ 
+     Nothing was disconnected — `useCopilotOps` registers all five in
+     Campaign.tsx and `surfaces.ts` describes all five. The wiring was
+     whole and the schema was one field wide. That is the same shape as
+     the voice picker: reachable, correct, and unable to do the job.
+ 
+     `actions` is applied in order. The rules below keep the old safety:
+     the money still waits for a yes, and a move still happens last. */
+  actions: z
+    .array(
+      z.object({
+        kind: z
+          .enum(['none', 'set_title', 'set_style', 'set_lyrics', 'generate', 'go', 'surface_op'])
+          .describe(
+            'What the studio should do. Use surface_op to change something in the room they are in, and only for an operation the context lists.',
+          ),
+        op: z
+          .string()
+          .describe(
+            'For surface_op only, the operation name exactly as the context lists it. Empty string for every other kind.',
+          ),
+        value: z
+          .string()
+          .describe(
+            'The title, the style, or the full lyric sheet. For go, one of: make, studio, booth, video, canvas, hooks_feed, channels, collab, live, voice_studio, podcast. Empty for none and generate.',
+          ),
+      }),
+    )
+    .describe(
+      'Everything the studio should do, in order — an empty list when talking is enough. '
+      + 'Fill in as many fields as the person has actually told you: a brief with five blanks '
+      + 'and one answer helps nobody. NEVER invent a value to fill a box — leave one out rather '
+      + 'than make it up. At most one generate and at most one go, and either goes last.',
+    ),
 });
 
 interface Body {
@@ -121,6 +148,12 @@ const SYSTEM = [
   '- generate makes a song, and moves them to the song screen to do it. Only choose it when they have actually asked for a song, not as a way of answering a question about the room they are in.',
   '- surface_op changes something in the room they are standing in. Only the operations listed in the context exist; there is never a general-purpose one. If what they want is not in that list, say what you would do and let them do it.',
   '- none is right most of the time. Answer the question and stop.',
+  /* The whole reason `actions` is a list. Said here as well as in the schema
+     because a model reads the instruction and the shape differently, and this
+     is the behaviour the adverts desk was built for and never got. */
+  '- You may do SEVERAL things in one reply. If somebody describes what they are selling and who it is for, set both — filling one box out of five and writing a paragraph about the rest is the least useful thing you can do.',
+  '- But never invent a value to fill a box. Leave it out and say what you would need. An offer nobody mentioned, put in their advert, is a promise they did not make.',
+  '- At most one generate and at most one go per reply, and it goes last.',
   '',
   'How you talk:',
   '- Short. Two or three sentences. You are beside them while they work, not writing them a guide.',
@@ -285,7 +318,7 @@ export async function POST(request: Request): Promise<Response> {
 
     if (response.stop_reason === 'refusal') {
       return Response.json(
-        { reply: 'I cannot help with that one.', action: { kind: 'none', value: '' } },
+        { reply: 'I cannot help with that one.', actions: [] },
         { status: 200 },
       );
     }
@@ -295,7 +328,11 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: 'unparsed', message: 'That reply came back mangled.' }, { status: 502 });
     }
 
-    return Response.json(parsed);
+    /* The schema asks the model for the ordering rules and a model is not
+       a contract, so they are applied here. `planActions` holds them on
+       their own so they can be tested without an API key — see
+       `app/lib/copilotplan.ts` and `scripts/check-copilotplan.mts`. */
+    return Response.json({ reply: parsed.reply, actions: planActions(parsed.actions ?? []) });
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) {
       return Response.json({ error: 'bad_key', message: 'The configured key was rejected.' }, { status: 502 });
