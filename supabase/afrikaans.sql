@@ -82,5 +82,25 @@ create policy "read your own reports" on public.afrikaans_reports
 -- mens per woord per dag. Iemand wat dieselfde woord tien keer aanmeld, is
 -- nie tien stemme nie, en 'n lys waarin een woord tien keer staan, laat 'n
 -- egte patroon soos ruis lyk.
+--
+-- ── Waarom die tydsone hier uitgeskryf staan ────────────────────────────
+--
+-- Dit was `(created_at::date)`, en Postgres weier dit botweg:
+--
+--   ERROR: functions in index expression must be marked IMMUTABLE
+--
+-- 'n `timestamptz` na 'n `date` hang af van die sessie se TimeZone, so die
+-- uitdrukking kan môre 'n ander antwoord gee as vandag — en 'n indeks moet
+-- vandag en môre dieselfde antwoord kry. Met die sone uitgeskryf, is dit
+-- immutable en word dit aanvaar.
+--
+-- Dit is nie 'n truuk om die fout stil te maak nie; dit maak die reël ook
+-- reg. "Een per dag" moet die lid se dag beteken, en ons lede is hier.
+-- Suid-Afrika het geen somertyd nie, so die dag begin om middernag en bly
+-- daar.
 create unique index if not exists afrikaans_reports_one_a_day
-  on public.afrikaans_reports (owner, lower(btrim(word)), (created_at::date));
+  on public.afrikaans_reports (
+    owner,
+    lower(btrim(word)),
+    ((created_at at time zone 'Africa/Johannesburg')::date)
+  );

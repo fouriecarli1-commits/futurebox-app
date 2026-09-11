@@ -46,7 +46,18 @@ declare
   who   uuid;
   until timestamptz;
 begin
-  if the_email = 'PUT-THE-EMAIL-ADDRESS-HERE' then
+  -- ── The guard, by shape rather than by the placeholder's spelling ──────
+  --
+  -- This used to be `if the_email = 'PUT-THE-EMAIL-ADDRESS-HERE'`, and that
+  -- is a trap: the obvious way to fill this in is to find-and-replace the
+  -- placeholder, which replaces it HERE too — so the test becomes "is the
+  -- address the address", it raises, and the message says nobody has been
+  -- named at the exact moment somebody has. Found by `check:sqlruns`, which
+  -- filled the file in the way a person would.
+  --
+  -- An address has an @ in it and a placeholder does not, so the shape is
+  -- the honest test. It catches a typo that is not an address at all, too.
+  if position('@' in the_email) = 0 then
     raise exception
       'Nobody has been named. Put the account''s email address in the_email first.';
   end if;

@@ -93,12 +93,38 @@ check(
  
    A rule in the table cannot be missed by a route. The same reasoning as
    live_hearts' composite key, and it is the difference between one person
-   being one voice and one person being ten. */
+   being one voice and one person being ten.
+
+   ── Why this no longer looks for `created_at::date` ──────────────────
+
+   Because it did, and that is the sixth time this session a check has
+   matched the WORDING rather than the thing. The index had to be rewritten
+   — `created_at::date` depends on the session's TimeZone, so Postgres
+   refuses it outright in an index expression, and the file had never been
+   run by anything that would say so. The rewrite spells the zone out.
+
+   So this asks for the three columns the rule is actually made of, and
+   leaves the spelling of the day alone. `check:sqlruns` is what proves the
+   statement is one Postgres will take; this proves it says the right
+   thing. */
 const sql = readFileSync('supabase/afrikaans.sql', 'utf8');
+const brake = (sql.match(/create unique index[\s\S]*?;/i) ?? [''])[0];
 check(
   'one report per person per word per day is enforced by the table',
-  /create unique index[\s\S]*afrikaans_reports[\s\S]*owner[\s\S]*created_at::date/i.test(sql),
+  /afrikaans_reports/i.test(brake)
+    && /\bowner\b/.test(brake)
+    && /lower\(btrim\(word\)\)/.test(brake)
+    && /created_at/.test(brake)
+    && /::date/.test(brake),
   'a route can forget; a unique index cannot',
+);
+/* And that the day is a fixed one. A bare `created_at::date` reads as the
+   same rule and is not: it is whatever the session's timezone says today
+   is, which is why Postgres will not index it at all. */
+check(
+  '  and the day it means is a named one, not the session\'s',
+  /at time zone '[A-Za-z]+\/[A-Za-z_]+'/.test(brake) || /at time zone 'UTC'/.test(brake),
+  'an unqualified cast is refused by Postgres and means a different day per connection',
 );
 check(
   'and a member can read only their own',

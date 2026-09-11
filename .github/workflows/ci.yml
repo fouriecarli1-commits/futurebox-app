@@ -30,6 +30,33 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # A real Postgres, because the schema files were never run by anything.
+    #
+    # `check:sqlbundle` proved the one-paste bundle matched the files it was
+    # made from, and both were equally unrunnable: `supabase/afrikaans.sql`
+    # ended in an index expression Postgres refuses outright, and nothing in
+    # this repository could have said so. It was written, reviewed, committed
+    # and handed over to be pasted into the SQL editor.
+    #
+    # `check:sqlruns` skips loudly without one rather than passing quietly, so
+    # this service is what makes it a check rather than a note.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        # Steps start before the container is ready without this, and the
+        # check then reports SKIPPED — a green tick for a check that did not
+        # run, which is the one thing it exists to prevent.
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     # A ceiling, because there was none and it cost twenty minutes.
     #
     # `npm ci` wedged on a runner — the same lockfile that had installed in
@@ -457,6 +484,15 @@ jobs:
       # switched on, weeks later, with a green Run behind them.
       - name: The one-paste SQL still says what the five files say
         run: npm run check:sqlbundle
+
+      # And that it runs at all, which is a different question and the one
+      # nothing here had ever asked. Matching the files is consistency;
+      # Postgres accepting them is correctness, and consistency reads like
+      # correctness right up to the moment somebody pastes it in.
+      - name: Every SQL file actually runs on a Postgres
+        run: npm run check:sqlruns
+        env:
+          PGURL: postgresql://postgres:postgres@localhost:5432/postgres
 
       # The click-through job below was written, merged, and did not work:
       # three faults, each of which made whole groups of probes report the app

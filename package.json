@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "sql:bundle": "tsx scripts/sql-bundle.mts",
     "check:sqlbundle": "tsx scripts/check-sqlbundle.mts",
+    "check:sqlruns": "tsx scripts/check-sqlruns.mts",
     "costs:eleven": "tsx scripts/costs-eleven.mts",
     "check:probes": "tsx scripts/check-probes.mts",
     "check:signed": "tsx scripts/check-signed.mts",
