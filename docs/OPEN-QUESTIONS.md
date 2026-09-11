@@ -2760,3 +2760,56 @@ address service about exactly what a standard search returns.)*
 **Until the record changes**, nothing is blocked: `/legal` publishes the
 name, the registration number, the status and the mailbox, and says the
 address is on the CIPC record and will be sent on request.
+
+## Hunting the "check pins a claim" fault, and finding it bounded
+
+After the legal page — the fifth instance in two days — every check that
+encodes a supplier's fact was read looking for more. **There are no more**,
+and the reason is worth recording, because "I looked and found nothing" is
+only useful if it says what was looked for.
+
+The supplier checks come in two shapes and only one is a trap.
+
+**Safe — "our constant must equal their published number."**
+
+```
+ok('pitch is clamped to their -24..24', …)          check:voicedesk
+ok("the plan figure is ElevenLabs' own", 600_000)   check:elevenceiling
+```
+
+If the supplier moves, the build goes red and the only way out is to update
+the number to the new truth. **The red build is the feature.** It is a
+tripwire on a fact, and a conscious update is exactly what it asks for.
+Seven checks are this shape and all seven are fine.
+
+**A trap — "the app must TELL A MEMBER this about the supplier."**
+
+```
+ok('…', /You may sell what you make/.test(terms))   ← check:musiclicence was
+```
+
+If the supplier moves, the way out of the red build is to **keep telling
+members the old thing**. The check does not ask for an update; it asks for
+the lie to stay.
+
+**The rule that separates them:** a check may pin what WE HOLD, and must only
+ever pin a CONSTRAINT on what we SAY. "This number equals theirs" is the
+first. "This page says X about them" is the second, and should be written as
+"this page says nothing untrue about them" instead.
+
+That is now at the top of `check-musiclicence.mts` — at the scene, where
+somebody debugging a red build will read it, rather than only here.
+
+### The five instances, for the record
+
+| Where | What it pinned | What it hid |
+|---|---|---|
+| `check:musiclicence` | "You may sell what you make" | A licence the supplier declined, promised to members |
+| `check:entity` | A disclosure must carry an address | A live page calling a registered company unregistered |
+| `audit/legalpage.mjs` | The words "being registered" | The same, from the other side |
+| `audit/contrast.mjs` | Six rooms out of twelve | An unreadable button in the Booth |
+| `check:quiz` | "It sits at the bottom" | A card sitting in the middle |
+
+Two of the five were mine, written the same day they failed. That is not a
+reason to write fewer checks — it is the reason to verify each one by
+breaking it, which is what caught three of these.

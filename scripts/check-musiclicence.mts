@@ -29,6 +29,35 @@
  * `check:handbook` already holds to these pages — so getting this right here
  * gets it right in the support conversation too.
  */
+/* ── The distinction this file exists to teach ────────────────────────────
+ 
+   On 11 September every check that pins a supplier's fact was read, looking
+   for more of what went wrong here. There are none, and the reason is worth
+   writing down at the scene rather than in a register nobody opens: the
+   supplier checks come in two shapes and only one of them is a trap.
+ 
+   SAFE — "our constant must equal their published number."
+ 
+       ok('pitch is clamped to their -24..24', ...)        check:voicedesk
+       ok("the plan figure is ElevenLabs' own", 600_000)   check:elevenceiling
+ 
+   If the supplier moves, this goes red and the only way out is to update the
+   number to the new truth. The red build is the feature. It is a tripwire on
+   a fact, and a conscious update is exactly what it is asking for.
+ 
+   A TRAP — "the app must TELL A MEMBER this about the supplier."
+ 
+       ok('...', /You may sell what you make/.test(terms))   ← what this was
+ 
+   If the supplier moves, the way out of the red build is to keep telling
+   members the old thing. The check does not ask for an update; it asks for
+   the lie to stay. That is how this file spent a day requiring a sentence
+   ElevenLabs had declined in writing to stand behind.
+ 
+   The rule that separates them: a check may pin what WE hold, and must only
+   ever pin a CONSTRAINT on what we SAY. "This number equals theirs" is the
+   first. "This page says X about them" is the second, and belongs written as
+   "this page says nothing untrue about them" instead. */
 import { readFileSync } from 'node:fs';
 
 const TERMS = 'app/terms/page.tsx';
