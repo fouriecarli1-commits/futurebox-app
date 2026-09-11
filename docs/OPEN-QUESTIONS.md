@@ -28,6 +28,7 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 | **Maak `/api/eleven/dictionary?key=…` een keer oop** | Dit bou die uitspraakwoordeboek op jou rekening uit die reëls in die kode. Plak albei ids by Vercel in, redeploy, en **luister**. Sonder daardie twee waardes word niks toegepas nie en niks sê so nie. |
 | **Stuur die ElevenLabs-verkoopse-pos** | `docs/ELEVENLABS-SALES.md`. Dit is die ding wat die terme-bladsy weer laat verander — die lisensie wat deur na lede loop, is nie op die self-diens plan nie. |
 | **Lees Supabase Pro en Vercel Pro se limiete** | Albei skaal met **gratis** lede, anders as ElevenLabs. Tienduisend gratis rekeninge is die launch-vorm. Hierdie masjien kan nie by hulle bladsye kom nie (geblokkeer). Die een getal wat besluit: Supabase se **maandelikse aktiewe gebruikers**. |
+| **Stuur drie advertensies wat jou laat stop het** | Die stylkatalogus (`app/lib/adstyles.ts`) is **my mening, vandag gedateer** — ek kon nie by Pinterest, Canva of enige tendens-bladsy uitkom nie (geblokkeer), en ek verkoop nie in hierdie mark nie. Elke inskrywing is geskryf om teëgepraat te word. Stuur drie wat jou laat stop het — 'n skermskoot, 'n skakel, of net 'n beskrywing — en ek sit die patroon daaragter in die lys met vandag se datum. Drie egtes is meer werd as enigiets wat ek kan raai. |
 | **Toets die bemarkingslessenaar** | Die R199-byvoegsel is op jou rekening (11 September, `supabase/TOETSTOEGANG.sql`). Die plan het nog **nooit gewerk nie** — sien hieronder — dit is nou reg en nog nooit met 'n regte sleutel geloop nie. Jy is die eerste mens wat dit gaan sien werk. |
 | **Kyk of Copilot se shots nou goed genoeg is** | Die beskrywing vra nou die onderwerp, die lig, wat die kamera doen, en aanhalings om gesproke woorde. Wat dit werklik skryf, kan ek nie van hier af sien nie — dit het 'n lewende sleutel nodig. |
 
@@ -74,6 +75,15 @@ Dieselfde les, twee vlakke dieper. Drie nuwe vorms, almal op een dag:
 - **'n Toets kan 'n eienskap presies vashou en die verkeerde een vashou.**
   "Niks op die bladsy kom ná die vasvra nie" was waar, en het die kaart op
   Spotlight gesit. Die punt was nooit hoe ver af nie — dit was die kamer.
+- **Konsekwentheid lees soos korrektheid.** `check:sqlbundle` het bewys die
+  een-plak-bundel pas presies by die lêers waaruit dit gemaak is. Dit was
+  waar, en albei kon nie loop nie: `supabase/afrikaans.sql` eindig in 'n
+  indeks wat Postgres botweg weier. Niks in hierdie repo het ooit 'n enkele
+  SQL-stelling aan 'n Postgres gegee nie. Die lêer is geskryf, nagegaan,
+  vasgelê, gebundel, en aan haar gegee om in te plak — waar sy 'n fout sou
+  gelees het en geen tabel sou gehad het nie. **Reggemaak deur dit te loop:
+  `check:sqlruns` loop nou al 33 lêers en die bundel teen 'n regte Postgres,
+  elkeen twee keer.**
 
 ---
 
@@ -3010,3 +3020,113 @@ that moves; the screen prints that rather than hiding it.
 4. **The Vercel plan is undocumented and fourteen routes declare 300-second
    functions.** Deploys succeed, so the plan allows it — but nothing in the
    repo says which plan, and a downgrade would fail every deploy at once.
+
+---
+
+## The schema had never been run by anything (11 September, evening)
+
+Carli asked for help running `supabase/afrikaans.sql`. It does not run.
+
+```
+ERROR:  functions in index expression must be marked IMMUTABLE
+```
+
+The one-a-day brake ended in `(created_at::date)`. A `timestamptz` cast to a
+`date` depends on the session's TimeZone, so it can answer differently
+tomorrow than today, and an index must answer the same. Postgres refuses it
+outright. She would have pasted it in, read an error and had no table.
+
+**Verified:** Postgres 16, the real file, before and after. Once the zone is
+written out — `at time zone 'Africa/Johannesburg'` — it is immutable and
+accepted. The rule is also now right: "one per day" means the member's day,
+and there is no daylight saving here. Tested: the same word twice in a day is
+refused; a different word is fine; the same word yesterday is fine; a blank
+word fails its check constraint; deleting the member deletes their reports.
+She ran it on the live project the same evening and the shape came back
+1 table / 4 indexes / 2 policies.
+
+### Why nothing caught it
+
+`check:sqlbundle` asks whether the one-paste bundle still says what the files
+say. It does. Both were equally unrunnable. That is the **seventh** shape of
+the same lesson: consistency reads exactly like correctness until somebody
+runs it.
+
+`check:sqlruns` now runs all 33 schema files plus the generated bundle
+against a real Postgres, twice each — twice because every one of those files
+says at the top that it is safe to run again, and somebody will. The order is
+found by fixpoint rather than hard-coded: they genuinely depend on each other
+(`hearts.sql` needs `live_posts`; `avatars.sql` says out loud to run
+`radar.sql` first), and a file left over when it settles is one that cannot
+run in **any** order, which is the real fault.
+
+`scripts/sql-stubs.sql` holds what Supabase provides and a bare Postgres does
+not: the three roles, `auth.users`, the four `auth.*` functions, `storage`
+and its path helpers. Deliberately minimal — a stub that does more than the
+real thing hides faults and one that does less invents them. **It is not a
+model of Supabase's security**: `auth.uid()` reading a session setting is
+enough for a policy to compile, not enough to prove it keeps anybody out.
+That is what the routes and `check:security` are for.
+
+Without a Postgres it **SKIPS loudly** rather than passing quietly. CI runs a
+`postgres:16` service with a health gate, because a green tick for a check
+that did not run is the thing it exists to prevent.
+
+### The second fault, found because the check filled the file in like a person
+
+`supabase/TOETSTOEGANG.sql` carried its placeholder **twice** — once in the
+declaration and once in the guard that tests for it. Find-and-replace is the
+obvious way to fill it in, and it replaces both, so the guard becomes "is the
+address the address", it raises, and the message says nobody has been named
+at the exact moment somebody has.
+
+The guard now tests the **shape**: an address has an `@` in it. That cannot
+be broken by a replace, and it catches a typo that is not an address at all.
+
+### And a sixth "matched the word, not the thing"
+
+`check:sayitwrong` asserted the brake by looking for the literal
+`created_at::date`, so fixing the bug broke the check. It now asks for the
+three columns the rule is made of, and separately that the day is a **named**
+zone rather than the session's — which is both the correctness point and the
+reason Postgres refused it.
+
+**Still unverified:** everything above is about the statements being
+acceptable and doing what they say. It says nothing about whether the RLS
+policies keep a real member out of another member's rows — the stubs cannot
+answer that, and the note in `sql-stubs.sql` says so.
+
+---
+
+## Two of hers, landed the same evening
+
+**The web as somewhere to post.** "Ek wil ook vra dat ons die web ook 'n
+opsie moet maak waar advertensies gepost gaan word. Dit moet ook daar wees om
+te kan tick."
+
+A new `DESTINATIONS` list in `app/data/social.ts`, ticked in the same row as
+the accounts in the advert room — not an eleventh entry in `PLATFORMS`,
+because six other screens read that list (Connections, the posting queue, ad
+runs, the campaign row, the share sheet, platformlink) and a website has no
+handle, nothing to connect and nothing the queue can schedule to. Putting it
+there would have drawn a Connect button for a thing that cannot be connected,
+in five places.
+
+The detail worth keeping: a landing page takes **no** hashtags, and the fit
+line says "no hashtags — they are noise there" rather than "at most 0
+hashtags", which a model reads as an instruction to count.
+
+`audit/webdest.mjs` reads the **body of the request** the browser posts to
+`/api/campaign`, because a tick box that does not change what leaves the
+browser is decoration — and this app shipped a marketing plan that rendered
+nothing for a fortnight for exactly that reason.
+
+**The quiz, fourth placement.** "Hoekom kan die music quiz nie op die home
+page onder wees van die creative studio nie?" No reason at all, and better
+than where it was. The studio's door **is** the creative studio's home page —
+every signed-in session lands on it, whichever room they are heading for — so
+the question now reaches everybody who opens the app, rather than only
+somebody who had already chosen to write a song.
+
+The probe measures the geometry rather than the source order: the card starts
+at 1389 and the last room button ends at 1223.
