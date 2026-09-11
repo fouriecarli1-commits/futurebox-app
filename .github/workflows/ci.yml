@@ -251,6 +251,14 @@ jobs:
       - name: A reported word cannot become a rule without anybody reading it
         run: npm run check:sayitwrong
 
+      # The looks the advert desk recommends are dated opinion and have to
+      # behave like it: a real date on every entry, the age on the screen,
+      # and every look a way of doing a format that exists. It does NOT fail
+      # when one gets old — a build that breaks because time passed breaks
+      # for something that is not a defect.
+      - name: The advert looks are dated, and say so on the screen
+        run: npm run check:adstyles
+
       # The price on the button and the price that is charged come from one
       # function, and have twice disagreed anyway — once by pricing a clip
       # flat whatever its length, once by clamping the length after pricing it.

@@ -55,6 +55,7 @@ import { screen } from '@/app/lib/moderation';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { tooMany } from '@/app/lib/server/brake';
 import { FORMAT_IDS, describeFormats, formatById } from '@/app/lib/adformats';
+import { RANGES, STYLE_IDS, describeStyles, styleById } from '@/app/lib/adstyles';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -93,6 +94,21 @@ const PickSchema = z.object({
           .string()
           .describe(
             'The specific way this goes wrong for THIS business. Every format has one; say theirs.',
+          ),
+        /* The look, as well as the thing.
+
+           A format is what to make; a style is how it should look and sound.
+           Asked in the same reply rather than in a second panel, because two
+           panels advising on the same business with no line between them is
+           two half-answers — which is the fault the week's plan panel had. */
+        style: z
+          .enum(STYLE_IDS as [string, ...string[]])
+          .describe('The look to make it in, from the styles listed. Never anything else.'),
+        styleWhy: z
+          .string()
+          .describe(
+            'Why THAT look for THIS business, in one sentence. Say what it proves about them that ' +
+            'another look would not.',
           ),
       }),
     )
@@ -142,6 +158,7 @@ const SYSTEM = [
   '- You cannot see this week. You have a training cutoff and no way to look anything up, so never say "this is what is working right now" or name a trend as current. Reason from craft that does not move fast: these are watched with the sound off, the first second decides whether there is a second, a real thing filmed badly beats a fake thing rendered well for a local business.',
   '- Where your reasoning does rest on something that moves, say so in `moves`. A reader who knows which line to distrust can check it; one who does not, cannot.',
   '- Where you are given their own numbers, those are the only current evidence in the room. Use them and say you are.',
+  '- The looks you are given each say what makes them look DONE. That line is the useful half: pick the look whose failure this business will not fall into, not the one that sounds best.',
   '',
   'How you write:',
   '- Concrete. "The first clip is the stitching on a finished bag, in daylight, no words" beats "showcase your craftsmanship".',
@@ -172,6 +189,12 @@ function briefFor(body: Body): string {
     '',
     'Everything this studio can make:',
     describeFormats(),
+    '',
+    'And the looks each one can be made in. Pick one per recommendation, and pick it for what it ' +
+    'proves about this particular business rather than for how it sounds:',
+    describeStyles(),
+    '',
+    `The ranges a style is written against, if it helps you place them: ${RANGES.join(', ')}.`,
   ].filter((one) => one !== '');
   return lines.join('\n');
 }
@@ -241,6 +264,11 @@ export async function POST(request: Request): Promise<Response> {
     const seen = new Set<string>();
     const picks = parsed.picks
       .filter((one) => formatById(one.id) !== null)
+      /* Same reason as the format id, and the same evidence: `z.enum` is a
+         description rather than a constraint — see `check:adschema`. A style
+         the catalogue does not have would draw a card with an empty look on
+         it. */
+      .filter((one) => styleById(one.style) !== null)
       .filter((one) => (seen.has(one.id) ? false : (seen.add(one.id), true)))
       .slice(0, 3);
 

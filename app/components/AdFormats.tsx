@@ -37,10 +37,11 @@
  */
 
 import React, { useState } from 'react';
-import { Compass, Loader2, ArrowRight, TriangleAlert, Clock } from 'lucide-react';
+import { Compass, Loader2, ArrowRight, TriangleAlert, Clock, Palette } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { AD_FORMATS, formatById } from '../lib/adformats';
+import { daysSince, oldestReview, styleById } from '../lib/adstyles';
 import { saveChosen } from '../lib/chosenformat';
 import type { SurfaceId } from '../lib/surfaces';
 import Card from './Card';
@@ -51,6 +52,9 @@ interface Pick {
   readonly why: string;
   readonly first: string;
   readonly watchOut: string;
+  /** The look, from `lib/adstyles.ts`. */
+  readonly style?: string;
+  readonly styleWhy?: string;
 }
 
 export interface FormatBrief {
@@ -191,6 +195,44 @@ export default function AdFormats({
                   <span className="font-semibold">{t('shape.firstThing', 'First thing to make')}:</span>{' '}
                   {pick.first}
                 </p>
+                {/* ── The look ──────────────────────────────────────────
+
+                    Under the format rather than beside it, because it is a
+                    way of doing that format and not a second decision. The
+                    "looks done when" line is carried onto the screen: it is
+                    the half that dates, and the half somebody needs before
+                    they spend a day making the thing. */}
+                {(() => {
+                  const style = styleById(pick.style ?? '');
+                  if (!style) return null;
+                  const old = daysSince(style.reviewed);
+                  return (
+                    <div className="rounded-lg border border-zinc-800 bg-black/30 px-3 py-2.5 space-y-1">
+                      <p className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
+                        <Palette className="w-3.5 h-3.5 text-emerald-400" />
+                        {lang === 'af' ? style.af : style.en}
+                      </p>
+                      <p className="text-sm text-zinc-400 leading-snug">{style.looks}</p>
+                      {pick.styleWhy && (
+                        <p className="text-sm text-zinc-300 leading-relaxed">{pick.styleWhy}</p>
+                      )}
+                      <p className="text-xs text-zinc-500 leading-snug">
+                        <span className="font-semibold">{t('shape.tired', 'Dit lyk klaar wanneer')}:</span>{' '}
+                        {style.tired}
+                      </p>
+                      {/* How old this opinion is, on the screen, next to it.
+                          A dated view that says its age beats an undated one
+                          that reads as current for ever. */}
+                      <p className="text-xs text-zinc-600">
+                        {t('shape.looked', 'Laas nagegaan')}{' '}
+                        {old === 0
+                          ? t('shape.today', 'vandag')
+                          : `${old} ${t('shape.daysAgo', 'dae gelede')}`}
+                      </p>
+                    </div>
+                  );
+                })()}
+
                 <p className="text-xs text-amber-400/90 leading-snug">
                   <TriangleAlert className="inline w-3 h-3 mr-1" />
                   {pick.watchOut}
@@ -240,6 +282,15 @@ export default function AdFormats({
                   'shape.noMoves',
                   'This reasons from craft rather than from this week — it cannot see the internet. Where it disagrees with what you have actually seen your customers do, you are right.',
                 )}
+          </p>
+          {/* The age of the looks, said with a number rather than implied.
+              The oldest rather than the average: an average hides the entry
+              nobody has looked at since it was written, which is the entry
+              most likely to be wrong. */}
+          <p className="text-xs text-zinc-600 leading-relaxed">
+            {t('shape.styleAge', 'Die style is menslik nagegaan, nie van ’n neigingsblad af gelees nie.')}{' '}
+            {t('shape.oldest', 'Die oudste inskrywing is')} {oldestReview()}{' '}
+            {t('shape.daysOld', 'dae oud.')}
           </p>
         </div>
       )}

@@ -44,6 +44,7 @@ import { readFileSync } from 'node:fs';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { AD_FORMATS, FORMAT_IDS } from '../app/lib/adformats';
+import { STYLE_IDS } from '../app/lib/adstyles';
 
 const problems: string[] = [];
 const check = (what: string, ok: boolean, saw = '') => {
@@ -70,6 +71,8 @@ try {
           why: z.string().describe('Why this one for this business.'),
           first: z.string().describe('The first thing to make.'),
           watchOut: z.string().describe('How it goes wrong for them.'),
+          style: z.enum(STYLE_IDS as [string, ...string[]]).describe('The look to make it in.'),
+          styleWhy: z.string().describe('Why that look for this business.'),
         }),
       )
       .describe('Two or three formats, best first.'),
@@ -90,9 +93,9 @@ if (built) {
      helper writes them into a description with the quotes escaped — which
      is what the first version of this assertion got wrong, reporting all
      eight as missing when all eight were there. */
-  const missing = FORMAT_IDS.filter((one) => !json.includes(one));
+  const missing = [...FORMAT_IDS, ...STYLE_IDS].filter((one) => !json.includes(one));
   check(
-    'every format in the catalogue is offered to the model',
+    'every format and every look in the catalogue is offered to the model',
     missing.length === 0,
     `missing: ${missing.join(', ')}`,
   );
@@ -102,8 +105,8 @@ if (built) {
      check:adformats where it reads as a nicety. */
   const route = readFileSync('app/api/adformats/route.ts', 'utf8');
   check(
-    'the route drops an id the catalogue does not have — the API will not do it for us',
-    /formatById\(one\.id\) !== null/.test(route),
+    'the route drops an id or a look the catalogue does not have — the API will not do it for us',
+    /formatById\(one\.id\) !== null/.test(route) && /styleById\(one\.style\) !== null/.test(route),
     'the enum is advisory; without this filter an invented id becomes a card that opens nothing',
   );
 
@@ -113,7 +116,8 @@ if (built) {
   const listed = [...json.matchAll(/\{enum:\s*\[([^\]]*)\]\}/g)]
     .flatMap((one) => [...one[1].matchAll(/\\?"([^"\\]+)\\?"/g)].map((two) => two[1]));
   check('the ids are listed for the model, not merely described', listed.length > 0, json.slice(0, 160));
-  const strangers = listed.filter((one) => !FORMAT_IDS.includes(one));
+  const known = new Set<string>([...FORMAT_IDS, ...STYLE_IDS]);
+  const strangers = listed.filter((one) => !known.has(one));
   check('and nothing the catalogue does not have', strangers.length === 0, strangers.join(', '));
 
   /* The API rejects an unknown or malformed shape rather than ignoring it,
@@ -148,6 +152,6 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `check:adschema — the reply shape builds, lists all ${FORMAT_IDS.length} formats and nothing else, ` +
+  `check:adschema — the reply shape builds, lists all ${FORMAT_IDS.length} formats and ${STYLE_IDS.length} looks and nothing else, ` +
     'the route filters because the list is advisory, and every room id is one the studio can resolve.',
 );
