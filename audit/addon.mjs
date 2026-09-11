@@ -61,7 +61,9 @@ process.on('exit', () => {
 
 const server = await serve(PORT, { env: STUB });
 const b = await chromium.launch(launchOptions());
-const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
+/* acceptDownloads, because the plan leaves this app as a file and a probe
+   that cannot receive one can only ever check that a button exists. */
+const p = await b.newPage({ viewport: { width: 1280, height: 950 }, acceptDownloads: true });
 const problems = [];
 const check = (label, ok, detail = '') => {
   console.log(`${label}: ${ok}`);
@@ -240,6 +242,57 @@ check('and says whether it was built on their own report or on the category',
   'a plan built on nothing is presented as if built on their numbers');
 check('the calendar file is offered once there is a week',
   af ? /Sit die week in my kalender/.test(planned) : /Put the week in my calendar/.test(planned));
+
+/* ── The whole plan, out of the app ──────────────────────────────────────
+ 
+   The calendar file carries the week and drops the other six parts. This
+   is the document that carries all of it, and the only way to know it
+   does is to press the button and read what comes out — the function can
+   be correct and the button wired to nothing, which is most of what this
+   file has ever caught.
+ 
+   The download is a blob the page makes itself, so the browser's own
+   download event is what proves a file actually left. */
+const wants = af ? /Laai die hele plan af/ : /Download the whole plan/;
+check('the whole plan can be downloaded, not only the week', 
+  (await room.locator('button').filter({ hasText: wants }).count()) > 0,
+  'the week leaves and the market read, the buyers and the numbers stay behind');
+
+if ((await room.locator('button').filter({ hasText: wants }).count()) > 0) {
+  const [file] = await Promise.all([
+    p.waitForEvent('download', { timeout: 8000 }).catch(() => null),
+    room.locator('button').filter({ hasText: wants }).first().click(),
+  ]);
+  check('pressing it actually produces a file', Boolean(file), 'the button is wired to nothing');
+  if (file) {
+    const paper = await file.createReadStream().then(async (stream) => {
+      let out = '';
+      for await (const chunk of stream) out += chunk;
+      return out;
+    });
+    /* One assertion per part of the plan, named, because "the document is
+       not empty" is the assertion that let the week-only export read as a
+       whole plan for months. */
+    const has = (what, text) => check(`the file carries ${what}`, paper.includes(text), text);
+    has('the category', 'Handmade leather goods');
+    has('the buyers', 'Someone replacing a bag that fell apart');
+    has('what stops them', 'Whether it really will');
+    has('the angles', 'Show the stitching');
+    has('what the angle is up against', 'Every leather account opens on a close-up');
+    has('the platforms', 'One object, one hand, daylight');
+    has('the week', 'The stitching, close');
+    has('the reason under a slot', 'Evening is when they browse');
+    has('what is not a feed', 'local craft marketplace');
+    has('the numbers to watch', 'Saves per post');
+    has('the brief it was built from', 'leather workshop in Paarl');
+    check('and it is a document that can be opened on its own',
+      /^<!doctype html>/i.test(paper.trim()) && /@media print/.test(paper),
+      paper.slice(0, 60));
+    check('and it is written in the language the room is in',
+      new RegExp(`<html lang="${af ? 'af' : 'en'}"`).test(paper),
+      (paper.match(/<html lang="\w+"/) || ['no lang'])[0]);
+  }
+}
 
 await p.screenshot({ path: shot(`addon-open-${af ? 'af' : 'en'}.png`), fullPage: true });
 console.log('problems:', problems.join(' ;; ') || 'none');

@@ -166,6 +166,36 @@ for (const { route, reads, screens } of PAIRS) {
   }
 }
 
+/* ── And the probes must stub the shape the route actually sends ────────
+ 
+   audit/addon.mjs stubbed `/api/plan` as `{ plan: … }` and asserted the
+   week rendered. It passed, for months, while the real route returned the
+   plan bare and the screen showed nothing — because a probe that stubs one
+   side proves the other side and calls it the system. It is a third copy
+   of a contract that already had two, and the one nobody thinks to check.
+ 
+   So a stub for a route in the list must carry the same key. */
+const probes = readdirSync('audit').filter((name) => name.endsWith('.mjs'));
+for (const { route, reads } of PAIRS) {
+  const name = route.replace(/^app\/api\//, '').replace(/\/route\.ts$/, '');
+  for (const probe of probes) {
+    const source = readFileSync(join('audit', probe), 'utf8');
+    const stub = new RegExp(`route\\(\\s*['"\`][^'"\`]*\\/api\\/${name}[^'"\`]*['"\`][\\s\\S]{0,2400}?\\)\\);`).exec(source);
+    if (!stub) continue;
+    const carries = reads === null
+      // A bare reply: the stub must not invent a wrapper.
+      ? !new RegExp(`body:\\s*JSON\\.stringify\\(\\s*\\{\\s*(plan|ads|lines)\\s*:`).test(stub[0])
+      : new RegExp(`\\b${reads}\\s*:`).test(stub[0]);
+    if (!carries) {
+      problems.push(
+        `  audit/${probe} stubs /api/${name} in a shape the route does not send.\n` +
+          `      The route ${reads ? `puts its reply under "${reads}"` : 'sends its reply with no key in front of it'}, ` +
+          'so this probe is testing a contract that does not exist.',
+      );
+    }
+  }
+}
+
 if (problems.length > 0) {
   console.error(`check:jsonshape — a screen and its route disagree about the reply:\n${problems.join('\n')}`);
   process.exit(1);
