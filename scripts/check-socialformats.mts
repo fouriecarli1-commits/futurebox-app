@@ -25,7 +25,7 @@
  * somebody walks the right room in the right language.
  */
 import { readFileSync } from 'node:fs';
-import { PLATFORMS } from '../app/data/social';
+import { DESTINATIONS, PLATFORMS } from '../app/data/social';
 
 let failures = 0;
 const ok = (label: string, good: boolean, detail = ''): void => {
@@ -72,8 +72,83 @@ ok('and the Afrikaans half is filled in', thin.length === 0, thin.join(', '));
 ok('  and is not the English copied across where there were words to translate',
   copied.length === 0, copied.join(', '));
 
+/* ── The places that are not an account ─────────────────────────────────
+ *
+ * Carli, 11 September 2026: "Ek wil ook vra dat ons die web ook 'n opsie
+ * moet maak waar advertensies gepost gaan word. Dit moet ook daar wees om te
+ * kan tick."
+ *
+ * A website is ticked in the same row as the platforms and is not one. It
+ * has no handle, nothing to connect and nothing the posting queue can
+ * schedule to, so it lives in `DESTINATIONS` rather than in `PLATFORMS` —
+ * which six other screens read and none of which could do anything sensible
+ * with it.
+ *
+ * Two rules, and the second is the one with teeth. Both lists are ticked
+ * into the same `going` array of ids in Campaign.tsx, so an id in both
+ * lists would draw two buttons that switch each other on and send the same
+ * place to the writer twice. Nothing would throw; it would just be wrong on
+ * screen, which is the shape of fault this file exists for.
+ */
+const destKeys = new Set(
+  [...i18n.matchAll(/"dest\.format\.([a-z0-9]+)":/g)].map((one) => one[1]),
+);
+
+const destMissing = DESTINATIONS.filter((one) => !destKeys.has(one.id));
+ok(`every destination's format line is translated — ${DESTINATIONS.length}`,
+  destMissing.length === 0,
+  `${destMissing.map((one) => `${one.id} ("${one.bestFormat}")`).join(', ')} — t() falls back to English, so this is silent`);
+
+const destOrphans = [...destKeys].filter((id) => !DESTINATIONS.some((one) => one.id === id));
+ok('  and no line is left behind for a destination that is gone',
+  destOrphans.length === 0, destOrphans.join(', '));
+
+const destThin: string[] = [];
+const destCopied: string[] = [];
+for (const one of DESTINATIONS) {
+  const line = i18n.match(new RegExp(`"dest\\.format\\.${one.id}": \\{ en: "([^"]*)", af: "([^"]*)" \\}`));
+  if (!line) continue;
+  if (!line[2].trim()) destThin.push(one.id);
+  else if (line[1] === line[2] && /[a-z]{4,}/.test(BRANDS.reduce((rest, name) => rest.replaceAll(name, ''), line[1]))) destCopied.push(one.id);
+}
+ok('  and its Afrikaans half is filled in', destThin.length === 0, destThin.join(', '));
+ok('  and is not the English copied across', destCopied.length === 0, destCopied.join(', '));
+
+/* Each destination also names itself in both languages — `en`/`af` on the
+   entry itself, because the button's title is not translated through i18n
+   the way a platform's brand name never needs to be. */
+const unnamed = DESTINATIONS.filter((one) => !one.en.trim() || !one.af.trim() || one.en === one.af);
+ok('  and says its own name in both languages',
+  unnamed.length === 0, unnamed.map((one) => one.id).join(', '));
+
+const clash = DESTINATIONS.filter((one) => PLATFORMS.some((other) => other.id === one.id));
+ok('and no destination shares an id with a platform',
+  clash.length === 0,
+  `${clash.map((one) => one.id).join(', ')} — both lists tick into one array of ids, so the two buttons would switch each other off`);
+
+/* And it is actually offered. A list nobody renders is a list that passes
+   every rule above while the tick box she asked for does not exist. */
+const campaign = readFileSync('app/components/Campaign.tsx', 'utf8');
+ok('  and Campaign.tsx draws them beside the platforms',
+  /DESTINATIONS\.map\(/.test(campaign) && /DESTINATIONS\.filter\(/.test(campaign),
+  'DESTINATIONS is imported but never ticked or sent');
+
+/* Sent to the writer, not only drawn. The `fit` line is what makes the copy
+   come out the right length; a destination ticked but left out of it is a
+   tick box that changes nothing. */
+ok('  and sends what it needs to the writer',
+  /fit: \[\.\.\.chosen, \.\.\.places\]/.test(campaign),
+  'the fit line is built from the platforms alone');
+
+/* A website takes no hashtags, and `maxHashtags: 0` reaching a template that
+   assumes a number prints "at most 0 hashtags" — which reads as an
+   instruction to a model rather than as none. */
+ok('  and says none rather than zero where none are wanted',
+  !DESTINATIONS.some((one) => one.maxHashtags === 0) || /no hashtags/.test(campaign),
+  'a destination takes no hashtags and the fit line would say "at most 0"');
+
 if (failures) {
   console.error(`\ncheck:socialformats — ${failures} failure(s).\n`);
   process.exit(1);
 }
-console.log(`\ncheck:socialformats — all ${PLATFORMS.length} platforms say their format in both languages.`);
+console.log(`\ncheck:socialformats — ${PLATFORMS.length} platforms and ${DESTINATIONS.length} other destination(s) say their format in both languages.`);

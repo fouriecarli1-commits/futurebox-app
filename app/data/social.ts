@@ -171,3 +171,59 @@ export const FUTUREBOX_CHANNELS: readonly FutureboxChannel[] = [
 ];
 
 export const FUTUREBOX_TAG = '@futurebox';
+
+/**
+ * Places an advert goes that are not somebody's social account.
+ *
+ * ── Why this is not in PLATFORMS ─────────────────────────────────────────
+ *
+ * Carli, 11 September 2026: "Ek wil ook vra dat ons die web ook 'n opsie moet
+ * maak waar advertensies gepost gaan word. Dit moet ook daar wees om te kan
+ * tick."
+ *
+ * She is right that it belongs on the tick list. It does not belong in
+ * `PLATFORMS`, and the difference is not tidiness — that list is read by six
+ * other screens. Adding a row to it would put "the web" in the connect panel
+ * asking for a handle it cannot have, in the posting queue as somewhere a
+ * clip can be scheduled to, and in the campaign tracker as a step to tick
+ * off. Three places quietly made wrong to save a file.
+ *
+ * What the advert desk actually needs from a destination is narrow: a name,
+ * and what the writing has to fit. So that is what a destination is.
+ *
+ * ── Why the guidance is genuinely different ──────────────────────────────
+ *
+ * This is the reason it is worth having at all rather than being a tick that
+ * changes nothing. A web page is not a feed: it autoplays muted if it plays
+ * at all, the reader arrived on purpose rather than by scrolling, nothing
+ * competes for the next swipe, and a hashtag on a website is noise. Copy
+ * written for TikTok and pasted onto a landing page reads as an advert that
+ * wandered in.
+ */
+export interface Destination {
+  readonly id: string;
+  readonly name: string;
+  /** The shape and length that works there. */
+  readonly bestFormat: string;
+  /** How long there is before somebody leaves. */
+  readonly hookWindow: string;
+  /** Hashtags, where they mean anything. Zero is an answer. */
+  readonly maxHashtags: number;
+  /** One line on the tick, so nobody has to guess what they are choosing. */
+  readonly en: string;
+  readonly af: string;
+}
+
+export const DESTINATIONS: readonly Destination[] = [
+  {
+    id: 'web',
+    name: 'Your own website',
+    bestFormat: '16:9 or square, muted autoplay, any length the page earns',
+    hookWindow: 'the first line of text, before anybody scrolls past it',
+    /* Zero, and stated rather than left out. A hashtag on a landing page is
+       a link to somebody else's feed on the one page you own. */
+    maxHashtags: 0,
+    en: 'Your own website or landing page',
+    af: 'Jou eie webwerf of bestemmingsblad',
+  },
+];

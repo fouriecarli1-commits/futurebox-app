@@ -152,6 +152,7 @@
     "check:help": "node audit/help.mjs",
     "check:elevenprices": "tsx scripts/check-elevenprices.mts",
     "check:adruns": "node audit/adruns.mjs",
+    "check:webdest": "node audit/webdest.mjs 3118",
     "check:videodesk": "node audit/videodesk.mjs",
     "check:lanes": "node audit/lanes.mjs",
     "check:studioroute": "node audit/studioroute.mjs",

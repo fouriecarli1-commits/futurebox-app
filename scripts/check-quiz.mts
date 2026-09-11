@@ -119,47 +119,55 @@ ok('the card is on the page at all',
   /<MusicQuiz \/>/.test(page),
   'she asked for it "heel onder aan die creative page"');
 
-/* IN THE MAKE ROOM, and only there.
+/* ON THE STUDIO'S HOME PAGE, and only there.
 
-   Three placements, and the constraint changed twice because I kept
-   answering the words rather than the point.
+   Four placements. The constraint changed three times because I kept
+   answering the words rather than the point, and she corrected me each
+   time — which is the record worth keeping, not the final answer.
 
-   First: the end of the creations SECTION — the bottom of the creative
-   page, which is what she asked for. That section is also part of the
-   Spotlight scroll, so the card sat in the middle of the feed.
+   First: the end of the creations SECTION, which is the bottom of the
+   creative page and is what she asked for. That section is also part of
+   the Spotlight scroll, so the card sat in the middle of a feed.
 
    Second: the end of `<main>`, last on whichever tab was open. The
    assertion here then read "nothing on the page comes after it", which
-   was true and was the wrong property. It put the card on Spotlight, and
-   she found it there: "Dit gaan nie sin maak in spotlight nie, dit moet
-   binne die creative plek wees, daar binne make."
+   was true and was the wrong property — it put the card on Spotlight.
+   "Dit gaan nie sin maak in spotlight nie."
 
-   The point was never the bottom. It was the room. A question about how
-   songs are made teaches something to somebody about to make one, and
-   nothing at all to somebody reading other people's work.
+   Third: inside the Make room. Better, and still narrow: only somebody
+   who had already chosen to write a song ever saw it, which is the
+   smallest possible audience for a thing meant to teach.
 
-   So the constraint is where it renders, not how far down. Matched on the
-   guard that decides it, because "the string is in the file" is what the
-   first version proved while the card sat in the wrong half of the app. */
-const guarded = /\{studioTab === 'make' && <MusicQuiz \/>\}/.test(page);
-ok('  and it renders in the Make room', guarded,
+   Fourth, hers: "Hoekom kan die music quiz nie op die home page onder
+   wees van die creative studio nie?" No reason at all. The door IS the
+   creative studio's home page — see the note on `restored` in page.tsx:
+   a session, however it got here, lands on it. Everybody who opens the
+   app signed in passes this screen, including the person heading for the
+   video desk.
+
+   So the constraint is that it renders on the door, once, and last on
+   it. Matched on the guard rather than on the string being present,
+   because "the string is in the file" is what the first version proved
+   while the card sat in the wrong half of the app. */
+const atDoor = page.indexOf('{atDoor && (');
+const quizAt = page.indexOf('<MusicQuiz />');
+const doorEnds = page.indexOf('<Account', atDoor);
+ok('  and it renders on the studio\'s home page', atDoor !== -1 && quizAt > atDoor && quizAt < doorEnds,
   'the card is somewhere in page.tsx, which is not the same as being where she asked for it');
 
-/* Once. A second mount somewhere else is how it got onto Spotlight, and
-   it is invisible in a diff that only adds a line. */
+/* Once. A second mount is how it got onto Spotlight, and it is invisible
+   in a diff that only adds a line. */
 ok('  and nowhere else in the app',
   (page.match(/<MusicQuiz \/>/g) ?? []).length === 1,
   `${(page.match(/<MusicQuiz \/>/g) ?? []).length} mounts`);
 
-/* And last within that room, which IS the part of "heel onder" that
-   survived: it ends the room rather than delaying the button people came
-   to press. Measured from the guard to the end of the room's block. */
-const roomAt = page.indexOf("{studioTab === 'make' && <MusicQuiz />}");
-const nextRoom = page.indexOf("{studioTab === '", roomAt + 10);
-const between = page.slice(roomAt, nextRoom === -1 ? page.length : nextRoom);
-ok('  and nothing in that room comes after it',
-  !/<[A-Z][A-Za-z]*[\s/>]/.test(between.slice('{studioTab === \'make\' && <MusicQuiz />}'.length)),
-  between.replace(/\s+/g, ' ').trim().slice(0, 80));
+/* And last on that page, which IS the part of "heel onder" that survived
+   every move: it ends the page rather than delaying the rooms people came
+   to press. */
+const afterQuiz = page.slice(quizAt + '<MusicQuiz />'.length, doorEnds);
+ok('  and nothing on that page comes after it',
+  !/<[A-Z][A-Za-z]*[\s/>]/.test(afterQuiz),
+  afterQuiz.replace(/\s+/g, ' ').trim().slice(0, 80));
 
 if (failures) {
   console.error(`\ncheck:quiz — ${failures} failure(s).\n`);

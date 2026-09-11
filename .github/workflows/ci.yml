@@ -678,7 +678,7 @@ jobs:
           - group: rooms
             probes: check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:videocover check:podlanguage
           - group: whole
-            probes: check:firsthour check:writing check:wide check:afrikaansscreen check:spotlight check:photosong check:singview check:buttonlook check:subscription check:playbutton check:signinwith check:help check:quizroom
+            probes: check:firsthour check:writing check:wide check:afrikaansscreen check:spotlight check:photosong check:singview check:buttonlook check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
           # Both need a real browser for what they measure rather than for
           # what they click: `selfie` films a take against Chromium's fake
           # camera, and `contrast` reads the computed colour of every piece of

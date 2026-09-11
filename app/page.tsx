@@ -2940,6 +2940,30 @@ export default function FutureBoxHome() {
               }}
               onClose={() => setAtDoor(false)}
             />
+
+            {/* ── The music question ─────────────────────────────────────
+
+                Fourth placement, and hers again. "Hoekom kan die music quiz
+                nie op die home page onder wees van die creative studio nie?"
+
+                No reason at all, and it is better than where I had put it.
+                This page IS the creative studio's home — the note on
+                `restored` above says so: a session, however it got here,
+                lands on the door, which is Make with every room on it. So
+                everybody who opens the app signed in passes this screen,
+                including the person going to the video desk or the booth,
+                and a question about how music is made is for all of them.
+
+                Inside Make it was only seen by somebody who had already
+                chosen to write a song, which is the smallest possible
+                audience for a thing meant to teach.
+
+                Under the rooms, so it ends the page rather than delaying
+                the button people came to press — that part of "heel onder"
+                was always right. */}
+            <div className="w-full max-w-3xl pt-2">
+              <MusicQuiz />
+            </div>
           </div>
         </div>
       )}
@@ -3299,32 +3323,6 @@ export default function FutureBoxHome() {
               />
             )}
 
-            {/* ── The music question ───────────────────────────────────────
-
-                Third placement, and this one is hers rather than my reading
-                of hers.
-
-                It started at the end of the creations SECTION, which is the
-                bottom of the creative page — what she asked for — but that
-                section is also part of the Spotlight scroll, so on the tab
-                most people land on it interrupted the feed instead of
-                ending it.
-
-                So I moved it out to the end of `<main>`, where it is last on
-                whichever tab is open. Which put it on Spotlight, where she
-                found it: "Dit gaan nie sin maak in spotlight nie, dit moet
-                binne die creative plek wees, daar binne make."
-
-                She is right and I had over-read "the bottom of the page".
-                The point was never the bottom; it was the room. Somebody in
-                Spotlight is reading other people's work and a music question
-                there is a quiz on a magazine page. Somebody in Make is about
-                to write a song, and one thing about how songs are made is
-                the one place it teaches anything.
-
-                Under the room's own content, so it ends the room rather than
-                delaying it. */}
-            {studioTab === 'make' && <MusicQuiz />}
 
             {studioTab === 'channels' && (
               <Channel

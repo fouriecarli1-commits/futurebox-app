@@ -633,6 +633,7 @@ export const STRINGS: Dict = {
   "shape.styleAge": { en: "The looks are reviewed by a person, not read off a trends page.", af: "Die style is menslik nagegaan, nie van ’n neigingsblad af gelees nie." },
   "shape.oldest": { en: "The oldest entry is", af: "Die oudste inskrywing is" },
   "shape.daysOld": { en: "days old.", af: "dae oud." },
+  "dest.format.web": { en: "16:9 or square, muted autoplay, no hashtags", af: "16:9 of vierkantig, gedempte outospeel, geen hutsmerke" },
   "plan.slow": { en: "This one thinks for a while — up to a minute or two. It is a document, not a sentence.", af: "Hierdie een dink ’n ruk — tot ’n minuut of twee. Dit is ’n dokument, nie ’n sin nie." },
   "plan.needWhat": { en: "Say what you are selling in the brief above first.", af: "Sê eers in die opdrag hierbo wat jy verkoop." },
   "plan.failed": { en: "That could not be worked out just now.", af: "Dit kon nie nou uitgewerk word nie." },

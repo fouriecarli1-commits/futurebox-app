@@ -8,7 +8,7 @@
  * disabled. It cannot prove any of the things that actually decide whether
  * this feature exists for somebody:
  *
- *   · that the card renders at all at the bottom of the Make room,
+ *   · that the card renders at all at the bottom of the studio's home page,
  *   · that four lettered boxes appear,
  *   · that the answer is genuinely unreachable before one is ticked,
  *   · that ticking then revealing shows the EXPLANATION and not just a mark,
@@ -66,39 +66,93 @@ try {
   await dismissDoor(p);
   await p.waitForTimeout(900);
 
-  /* Into the studio, and into Make.
+  /* Into the studio, which opens on its front door.
 
-     This probe used to look for the card on the landing page, because the
-     card used to be the last thing in `<main>` and therefore on every tab.
-     Carli, 11 September 2026: "Dit gaan nie sin maak in spotlight nie, dit
-     moet binne die creative plek wees, daar binne make."
+     Third home for this card, and hers each time. It was on the landing
+     page; she said it made no sense in Spotlight and asked for it inside
+     Make; then, 11 September 2026: "hoekom kan die music quiz nie op die
+     home page onder wees van die creative studio nie?"
 
-     She is right, and the probe following it here is the point: a question
-     about how songs are made belongs where somebody is about to make one.
-     Anywhere else it is a quiz on a magazine page. */
+     No reason at all, and it is better than where I had put it. This door
+     IS the creative studio's home page — every signed-in session lands on
+     it, whichever room the person is heading for — so the question is now
+     put to everybody who opens the app, rather than only to somebody who
+     had already chosen to write a song, which is the smallest possible
+     audience for a thing meant to teach.
+
+     Signing in above shuts the door behind it, so pressing Studio in the
+     header is what brings it back. That is also what a person does. */
   await studio(p);
-  await p.waitForTimeout(1000);
-  await toRoom(p, 'Make a song');
-  await p.waitForTimeout(1400);
+  await p.waitForTimeout(1200);
+
+  const door = p.locator('div.fixed.inset-0.z-\\[55\\]').first();
+  await door.waitFor({ state: 'visible', timeout: 20000 }).catch(() => {});
+  check('the studio opens on its home page', await door.isVisible().catch(() => false),
+    'no door — every check below would be measuring the wrong screen');
+
+  /** Back out of a room to the door, the way the app offers it. */
+  const toDoor = async () => {
+    const back = p.locator('button').filter({ hasText: /All rooms|Alle kamers/ }).first();
+    if (await back.count()) {
+      await back.click();
+      await door.locator('button').first().waitFor({ state: 'visible', timeout: 8000 }).catch(() => {});
+      await p.waitForTimeout(600);
+    }
+  };
 
   /* The card is a radiogroup, which is the one thing on the screen that is
      one — so it is found by what it IS rather than by a class name that a
-     restyle would break. */
-  const group = p.locator('[role="radiogroup"]').first();
+     restyle would break. Scoped to the door rather than to the page,
+     because "somewhere on screen" is the assertion that passed happily
+     while the card was in the wrong room. */
+  const group = door.locator('[role="radiogroup"]').first();
   await group.waitFor({ state: 'attached', timeout: 20000 }).catch(() => {});
-  check('the quiz renders in the Make room', (await group.count()) > 0,
+  check('the quiz renders on the studio home page', (await group.count()) > 0,
     'the card picks its question in an effect — one that throws renders nothing at all');
 
-  /* And ONLY there. The version before this one was on Spotlight too, which
-     is what she reported. A card that renders everywhere passes every
-     assertion below and is still in the wrong place. */
-  await toRoom(p, 'Channel');
-  await p.waitForTimeout(1200);
-  check('and nowhere else — not in the rooms that are for reading, not making',
-    (await p.locator('[role="radiogroup"]').count()) === 0,
-    `${await p.locator('[role="radiogroup"]').count()} found in the channel`);
+  /* "Heel onder" was the ask, both times she asked for it. Measured rather
+     than read off the source: `check:quiz` proves nothing is written after
+     it in page.tsx, which is a different claim from nothing being drawn
+     below it. A quiz sitting between the greeting and the room buttons
+     satisfies the source check and still delays the button people came to
+     press. */
+  if ((await group.count()) > 0) {
+    const where = await door.evaluate((root) => {
+      const card = root.querySelector('[role="radiogroup"]');
+      /* Up to the card's own slot on the page, so the reveal and the
+         "another question" button — siblings of the radiogroup, not
+         children of it — are not counted as things drawn below it. */
+      let wrap = card;
+      while (wrap.parentElement && wrap.parentElement !== root.firstElementChild) wrap = wrap.parentElement;
+      let lowest = 0;
+      for (const b of Array.from(root.querySelectorAll('button'))) {
+        if (wrap.contains(b)) continue;
+        lowest = Math.max(lowest, b.getBoundingClientRect().bottom);
+      }
+      return { top: card.getBoundingClientRect().top, lowest };
+    });
+    check('  under the rooms rather than above them', where.top >= where.lowest - 4,
+      `the card starts at ${Math.round(where.top)} and the last room button ends at ${Math.round(where.lowest)}`);
+  }
+
+  /* And ONLY there. Every earlier version of this card was in one place too
+     many — on Spotlight, then in a room — and a card that renders in two
+     places passes every assertion below while being exactly the fault she
+     reported. */
   await toRoom(p, 'Make a song');
   await p.waitForTimeout(1400);
+  check('and not inside the rooms, where it used to be',
+    (await p.locator('[role="radiogroup"]').count()) === 0,
+    `${await p.locator('[role="radiogroup"]').count()} found in Make`);
+
+  await toRoom(p, 'Channel');
+  await p.waitForTimeout(1200);
+  check('  nor in the rooms that are for reading rather than making',
+    (await p.locator('[role="radiogroup"]').count()) === 0,
+    `${await p.locator('[role="radiogroup"]').count()} found in the channel`);
+
+  await toDoor();
+  await p.waitForTimeout(600);
 
   if ((await group.count()) > 0) {
     await group.scrollIntoViewIfNeeded();
@@ -114,7 +168,7 @@ try {
     /* The whole design rests on this one. Reading the answer without having
        guessed is the version that teaches nothing, and a button that can be
        pressed is a button that gets pressed. */
-    const reveal = p.locator('button').filter({ hasText: /Show me the answer|Tick an answer first|Wys my die antwoord|Merk eers/ }).first();
+    const reveal = door.locator('button').filter({ hasText: /Show me the answer|Tick an answer first|Wys my die antwoord|Merk eers/ }).first();
     check('and the answer cannot be reached before ticking',
       await reveal.isDisabled(), 'the reveal is live with nothing chosen');
 
@@ -129,7 +183,7 @@ try {
 
     /* An explanation, not a mark. This is the feature; the tick boxes are
        only how somebody is made to commit before reading it. */
-    const card = p.locator('[role="radiogroup"]').first().locator('xpath=..');
+    const card = door.locator('[role="radiogroup"]').first().locator('xpath=..');
     const said = (await card.innerText()).replace(/\s+/g, ' ');
     check('the answer comes out at the end', /That is it\.|Not that one\.|Dis dit\.|Nie daai een nie\./.test(said),
       said.slice(0, 90));
@@ -186,7 +240,7 @@ try {
 
     const asked = () => card.locator('p.font-semibold').first().innerText();
     const first = await asked();
-    const another = p.locator('button').filter({ hasText: /Another question|Nog ’n vraag/ }).first();
+    const another = door.locator('button').filter({ hasText: /Another question|Nog ’n vraag/ }).first();
     check('  and there is a way to another question', (await another.count()) > 0, '');
     if (await another.count()) {
       await another.click();
@@ -204,4 +258,4 @@ if (problems.length) {
   console.error(`\n${problems.length} problem(s):\n  ${problems.join('\n  ')}\n`);
   process.exit(1);
 }
-console.log('\nFour lettered boxes, the answer locked until one is ticked, and an explanation when it opens.');
+console.log('\nOn the studio home page, under the rooms: four lettered boxes, the answer locked until one is ticked, and an explanation when it opens.');

@@ -39,7 +39,7 @@ import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
-import { PLATFORMS } from '../data/social';
+import { DESTINATIONS, PLATFORMS } from '../data/social';
 import { withSpoken } from '../lib/videoscenes';
 import { loadHandles, type Handles } from '../lib/social';
 import ShareRow from './ShareRow';
@@ -167,6 +167,10 @@ export default function Campaign({
   const [going, setGoing] = useState<string[]>(['tiktok', 'instagram']);
   useEffect(() => setHandles(loadHandles()), []);
   const chosen = PLATFORMS.filter((one) => going.indexOf(one.id) !== -1);
+  /* Ticked the same way and kept apart, because a destination is not an
+     account: it has no handle to show, nothing to connect, and nothing the
+     posting queue can schedule to. See `DESTINATIONS` in data/social.ts. */
+  const places = DESTINATIONS.filter((one) => going.indexOf(one.id) !== -1);
 
   const [ads, setAds] = useState<Ad[]>([]);
   const [busy, setBusy] = useState(false);
@@ -207,8 +211,10 @@ export default function Campaign({
           // The platforms' own requirements, from `data/social.ts`. Sent so the
           // copy is written to the length and the hook window that actually
           // exist, rather than written and then found not to fit.
-          fit: chosen
-            .map((one) => `${one.name}: ${one.bestFormat}, hook in ${one.hookWindow}, at most ${one.maxHashtags} hashtags`)
+          fit: [...chosen, ...places]
+            .map((one) =>
+              `${one.name}: ${one.bestFormat}, hook in ${one.hookWindow}, ` +
+              (one.maxHashtags > 0 ? `at most ${one.maxHashtags} hashtags` : 'no hashtags — they are noise there'))
             .join('; '),
           // Who it is for, when they have said. An empty kit sends nothing
           // rather than an empty sentence for the writer to work around.
@@ -326,6 +332,37 @@ export default function Campaign({
                   {known && <span className="text-xs font-normal text-zinc-500"> · @{handles[one.id]}</span>}
                 </span>
                 <span className="block text-xs text-zinc-500">{t(`social.format.${one.id}`, one.bestFormat)}</span>
+              </button>
+            );
+          })}
+
+          {/* ── And the places that are not an account ──────────────────
+
+              Ticked in the same row, because from where somebody is
+              standing "where is this going" has one answer and it may
+              include their own site. Kept as a separate list underneath in
+              the code for the reason `DESTINATIONS` states: six other
+              screens read PLATFORMS, and none of them can do anything
+              sensible with a website. */}
+          {DESTINATIONS.map((one) => {
+            const on = going.indexOf(one.id) !== -1;
+            return (
+              <button
+                key={one.id}
+                type="button"
+                onClick={() => setGoing(on ? going.filter((id) => id !== one.id) : [...going, one.id])}
+                aria-pressed={on}
+                title={t(`dest.format.${one.id}`, one.bestFormat)}
+                className={`min-h-[44px] text-left rounded-xl border px-3 py-2 transition-all ${
+                  on ? 'bg-emerald-500/10 border-emerald-500' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                }`}
+              >
+                <span className={`block text-sm font-semibold ${on ? 'text-emerald-300' : 'text-zinc-300'}`}>
+                  {lang === 'af' ? one.af : one.en}
+                </span>
+                <span className="block text-xs text-zinc-500">
+                  {t(`dest.format.${one.id}`, one.bestFormat)}
+                </span>
               </button>
             );
           })}
