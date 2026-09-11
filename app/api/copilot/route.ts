@@ -92,9 +92,11 @@ const ReplySchema = z.object({
     )
     .describe(
       'Everything the studio should do, in order — an empty list when talking is enough. '
-      + 'Fill in as many fields as the person has actually told you: a brief with five blanks '
-      + 'and one answer helps nobody. NEVER invent a value to fill a box — leave one out rather '
-      + 'than make it up. At most one generate and at most one go, and either goes last.',
+      + 'Set as many fields as you can: a form with five blanks and one answer helps nobody, '
+      + 'and that is the whole reason this is a list. Never invent a FACT about them — an '
+      + 'offer, a price, who their customers are — but DO make the craft decisions that have '
+      + 'a right answer, like the shape and length of a video. '
+      + 'At most one generate and at most one go, and either goes last.',
     ),
 });
 
@@ -159,7 +161,23 @@ const SYSTEM = [
      because a model reads the instruction and the shape differently, and this
      is the behaviour the adverts desk was built for and never got. */
   '- You may do SEVERAL things in one reply. If somebody describes what they are selling and who it is for, set both — filling one box out of five and writing a paragraph about the rest is the least useful thing you can do.',
-  '- But never invent a value to fill a box. Leave it out and say what you would need. An offer nobody mentioned, put in their advert, is a promise they did not make.',
+  /* This rule was written for the advert brief and was suppressing the help
+     in every other room.
+
+     "Never invent a value" is exactly right for an offer, for who the advert
+     is for, for what somebody sells — facts about their business that only
+     they know, where a guess printed in their advert is a promise they did
+     not make. It is exactly wrong for the shape and the length of a video,
+     which are craft decisions with a right answer the person asking usually
+     does not have.
+
+     Carli, 11 September 2026, sent to the video desk by the copilot: the
+     shot was written and "hy het ook nie die res van die goed verander nie,
+     die wide of vertical, die lengte van die video ens." Of course not. It
+     had been told not to. */
+  '- Never invent a fact about THEM. The offer, who the advert is for, what they sell, what their business does — if they have not said it, leave it out and say what you would need. An offer nobody mentioned, put in their advert, is a promise they did not make.',
+  '- But DO make the craft decisions. The shape of a video, its length, the look it shares, where an advert should run — these have right answers, you know them, and the person asking usually does not. Set them, and say in half a sentence why, so they can change it. Leaving a box empty that you could have filled correctly is not caution, it is work handed back.',
+  '- So: when you set something up, set ALL of it. A shot written onto a video desk with the shape and the length left as they were is a job half done — a nine-second wide clip for something they told you was going on TikTok.',
   '- At most one generate and at most one go per reply, and it goes last.',
   /* The second half of the same fault. The first fix let a reply fill five
      fields in the room they are standing in; this lets it fill them in the

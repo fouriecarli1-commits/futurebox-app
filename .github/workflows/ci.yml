@@ -218,6 +218,12 @@ jobs:
       - name: A screen and its route agree about the reply
         run: npm run check:jsonshape
 
+      # The desk treats a quoted line as the thing being said — four
+      # behaviours hang off that convention and nothing told the copilot,
+      # so it wrote adverts with people talking and no quotes in them.
+      - name: The shot the copilot is asked for is one the desk understands
+        run: npm run check:shotwords
+
       # The price on the button and the price that is charged come from one
       # function, and have twice disagreed anyway — once by pricing a clip
       # flat whatever its length, once by clamping the length after pricing it.

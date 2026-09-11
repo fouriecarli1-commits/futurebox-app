@@ -29,7 +29,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Video as VideoIcon, Loader2, Download, Languages, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap } from 'lucide-react';
+import { Video as VideoIcon, Loader2, Download, Languages, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap, Type } from 'lucide-react';
 import {
   SCENES, spokenLines, looksUnquoted, LENGTHS, GENRES, type Scene, type Genre,
 } from '../lib/videoscenes';
@@ -51,6 +51,7 @@ import { readAudio } from '../lib/trackaudio';
 import { canStitch, stitch } from '../lib/stitch';
 import DubFilm from './DubFilm';
 import Note from './Note';
+import Subtitles, { NO_SUBTITLES, translated, type SubtitleChoice } from './Subtitles';
 import Card from './Card';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
@@ -125,20 +126,28 @@ async function withSong(
   cut: SongCut | null,
   aspect: Aspect,
   seconds: number,
+  /* The words printed into the picture, already in the language they are to
+     be read in. Added 11 September 2026: the same pass that lays a song under
+     a clip is the one that burns a caption into it, so doing them separately
+     would re-encode the file twice for no reason and give two chances to
+     lose it. `stitch` has taken a caption per scene since the storyboard was
+     built; a single clip is simply one scene. */
+  caption?: string,
 ): Promise<Blob> {
-  if (!cut || !canStitch()) return clip;
+  const wanted = (caption ?? '').trim();
+  if ((!cut && !wanted) || !canStitch()) return clip;
   try {
-    const audio = await readAudio(cut.songId);
-    if (!audio) return clip;
+    const audio = cut ? await readAudio(cut.songId) : null;
+    // A song that has gone missing must not take the subtitles with it.
+    if (cut && !audio && !wanted) return clip;
     const size = aspect === '9:16'
       ? { width: 720, height: 1280 }
       : aspect === '1:1'
         ? { width: 1080, height: 1080 }
         : { width: 1280, height: 720 };
     const made = await stitch({
-      scenes: [{ clip, name: 'clip', to: seconds }],
-      audio,
-      audioFrom: cut.from,
+      scenes: [{ clip, name: 'clip', to: seconds, ...(wanted ? { caption: wanted } : {}) }],
+      ...(audio ? { audio, audioFrom: cut?.from } : {}),
       ...size,
       background: 'blur',
     });
@@ -177,6 +186,26 @@ export default function VideoCanvas({
   const [seconds, setSeconds] = useState<number>(5);
   /** The song under a music video, and the window of it this clip uses. */
   const [songCut, setSongCut] = useState<SongCut | null>(null);
+  /**
+   * The words printed into the picture, and which language they are in.
+   *
+   * This desk had none. The whole control lived inside the storyboard below
+   * it — the form for cutting many shots into one film — so somebody making
+   * a single advert could not put a word on screen. See `Subtitles.tsx`.
+   */
+  const [subtitles, setSubtitles] = useState<SubtitleChoice>(NO_SUBTITLES);
+  /**
+   * The words themselves, when they are not the line already in the prompt.
+   *
+   * `undefined` rather than empty means "use the quoted line", which is the
+   * same default the storyboard has: somebody who wrote a woman at a window
+   * saying “ek gaan nie terug nie” has already typed the subtitle,
+   * and asking them to type it a second time is the kind of small insult
+   * that makes a switch not worth turning on.
+   */
+  const [caption, setCaption] = useState<string | undefined>(undefined);
+  /** Said when the translation failed and the clip did not. */
+  const [captionProblem, setCaptionProblem] = useState('');
 
   /* What the copilot may change here.
 
@@ -356,6 +385,10 @@ export default function VideoCanvas({
    */
   const willSpeak = speak && spoken.length > 0;
   const unquoted = useMemo(() => looksUnquoted(prompt), [prompt]);
+  /* The words that would go on screen: whatever was typed, or the line the
+     prompt already has in quotation marks. The same rule as the storyboard's
+     `captionOf`, so the two halves of this desk caption a shot identically. */
+  const wantedCaption = (caption ?? spoken[0] ?? '').trim();
 
   const pick = (chosen: Scene) => {
     // Pressing the same tile again walks to its next scaffold rather than
@@ -422,7 +455,27 @@ export default function VideoCanvas({
       /* The song goes under it before anything else sees the file, so what is
          played back, what is kept and what is downloaded are one blob rather
          than three that could drift apart. */
-      const clip = await withSong(result.blob, scene?.id === 'music' ? songCut : null, aspect, seconds);
+      /* Whatever the template. The condition here used to be
+         `scene?.id === 'music' ? songCut : null`, which meant a song chosen
+         on any other template was picked, shown, and silently dropped —
+         worse than not offering it. */
+      /* The words, in the language that was asked for, before they are burnt
+         in. A failure here loses the translation and not the clip — it is
+         cut with the words as they were typed and the room says so, which is
+         what the storyboard does and for the same reason: the generation has
+         already been paid for. */
+      setCaptionProblem('');
+      let words = subtitles.on ? wantedCaption : '';
+      if (words && subtitles.lang) {
+        const written = await translated([words], subtitles.lang);
+        words = written.lines[0] ?? words;
+        if (written.failed) {
+          setCaptionProblem(
+            t('canvas.noTranslate', 'The subtitle could not be written in that language; the clip was cut with the words as they are.'),
+          );
+        }
+      }
+      const clip = await withSong(result.blob, songCut, aspect, seconds, words);
       const url = URL.createObjectURL(clip);
       setMade((held) => [{ blob: clip, url, prompt: said, aspect, spoken: willSpeak, seconds }, ...held]);
       signal('video', { category: scene?.id ?? 'canvas' });
@@ -652,8 +705,36 @@ export default function VideoCanvas({
           answers. See `withSong` below for why that is a second pass rather
           than something the engine is asked for: no video engine on the shelf
           takes an audio file. */}
-      {scene?.id === 'music' && (
+      {scene?.id === 'music' ? (
         <SongWindow seconds={seconds} value={songCut} onChange={setSongCut} />
+      ) : (
+        /* ── And a song under anything else ────────────────────────────
+
+            The picker was behind `scene?.id === 'music'`, and so was the
+            pass that lays the audio under the clip. So somebody making an
+            advert could not put music under their advert — the control was
+            on this desk, working, three lines away, and invisible unless
+            they had pressed a tile they had no reason to press.
+
+            Carli, 11 September 2026: "Die video kamer benodig ook 'n
+            oplaai button as mens 'n liedjie binne 'n video wou gebruik, of
+            selfs een uit jou channel wil gebruik." Both of those are in
+            this component already — `SongWindow` lists the channel's songs
+            and takes an upload.
+
+            Shut by default here and open under Music video, which is the
+            one difference that is real: on a music video the song is the
+            subject, and everywhere else it is a bed under a shot that is
+            about something else. */
+        <Card title={t('canvas.songUnder', 'A song under this clip')} startShut>
+          <Note className="text-sm text-zinc-500 leading-relaxed">
+            {t(
+              'canvas.songUnderNote',
+              'One of your own, or a file from this device. You choose which part of it plays — the clip is laid against that, not against the intro.',
+            )}
+          </Note>
+          <SongWindow seconds={seconds} value={songCut} onChange={setSongCut} />
+        </Card>
       )}
 
       {/* ── The box ───────────────────────────────────────────────────── */}
@@ -823,6 +904,38 @@ export default function VideoCanvas({
             })}
           </div>
         </div>
+
+        {/* ── Words on screen ────────────────────────────────────────────
+
+            Beside the switch that has the engine SAY the line, because the
+            two are the same decision asked twice: most people watch these
+            with the sound off, so a line worth saying is a line worth
+            printing, and a line worth printing usually does not need
+            saying at the dearer grade.
+
+            This desk had no subtitles at all — the whole control was inside
+            the storyboard below, the form for cutting many shots into one
+            film, which somebody making one advert never opens. It is one
+            component now, mounted in both. See `Subtitles.tsx`. */}
+        <Subtitles
+          value={subtitles}
+          onChange={setSubtitles}
+          problem={captionProblem}
+        >
+          <div className="flex items-center gap-2">
+            <Type className="w-4 h-4 text-zinc-600 shrink-0" />
+            <label className="sr-only" htmlFor="canvas-caption">
+              {t('board.caption', 'Words on screen')}
+            </label>
+            <input
+              id="canvas-caption"
+              value={caption ?? spoken[0] ?? ''}
+              onChange={(event) => setCaption(event.target.value)}
+              placeholder={t('canvas.captionHint', 'Taken from the line in quotation marks, or type your own')}
+              className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+            />
+          </div>
+        </Subtitles>
 
         {/* The engine speaking is a deliberate, dearer choice — see `speak`. */}
         {spoken.length > 0 && (

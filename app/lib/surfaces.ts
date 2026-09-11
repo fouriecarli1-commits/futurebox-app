@@ -239,8 +239,33 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "set the length and shape",
     ],
     ops: {
+      /* Two things this had to say and did not.
+
+         The length of it. "As you would tell a camera operator" was meant
+         to convey detail and conveys none: a model reads it as a register,
+         writes one clause, and a video engine given one clause invents the
+         other ninety per cent. Carli, 11 September 2026, testing the advert
+         desk: "CoPilot moet net baie meer descriptive wees wanneer video
+         shots geskryf word."
+
+         And the quotation marks. This desk already treats a quoted line as
+         the thing being said — `spokenLines` pulls it out, the switch that
+         has the engine speak it only appears when there is one, the room
+         warns when a line reads as speech with none, and the subtitle
+         defaults to it. Four behaviours hanging off one convention that
+         nothing ever told the copilot about, so it wrote adverts with
+         people talking and no quotes, and every one of the four stayed
+         switched off. */
       set_prompt:
-        "the value is the full description of the shot, as you would tell a camera operator",
+        "the value is the whole shot, written for a video engine, not a summary of it. " +
+        "Name the subject and what they are doing, the setting, the light and time of day, " +
+        "what the camera does (a slow push in, a static wide, a handheld follow), the lens " +
+        "or framing, and the mood. Three or four sentences, not one clause \u2014 everything " +
+        "you leave out, the engine invents. " +
+        "ANY words that are spoken or sung in the shot go in double quotation marks, exactly " +
+        "as they should be said: a woman at a window says \u201cek gaan nie terug nie\u201d. " +
+        "That is how the desk knows there is a line at all \u2014 unquoted, it is drawn at " +
+        "rather than said, and the subtitle comes out empty",
       set_aspect: "the value is exactly one of 16:9, 9:16 or 1:1",
       set_seconds:
         "the value is a whole number of seconds, and one the desk offers",
