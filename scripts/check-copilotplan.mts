@@ -194,7 +194,6 @@ check(
 /* The route's own action list, read from the source, must contain no kind
    this check has not been told about — so adding one forces a decision here
    rather than defaulting it to free. */
-const { readFileSync } = await import('node:fs');
 const route = readFileSync('app/api/copilot/route.ts', 'utf8');
 const enumMatch = route.match(/z\s*\.enum\(\[([^\]]+)\]\)/);
 if (!enumMatch) {

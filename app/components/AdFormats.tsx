@@ -41,6 +41,7 @@ import { Compass, Loader2, ArrowRight, TriangleAlert, Clock } from 'lucide-react
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { AD_FORMATS, formatById } from '../lib/adformats';
+import { saveChosen } from '../lib/chosenformat';
 import type { SurfaceId } from '../lib/surfaces';
 import Card from './Card';
 import Note from './Note';
@@ -118,6 +119,10 @@ export default function AdFormats({
       setPicks(said.picks);
       setInstead(said.instead ?? '');
       setMoves(said.moves ?? '');
+      /* Written down for the week below, which otherwise plans slots with
+         nothing in them while the panel above has just named the one thing
+         worth making. See `lib/chosenformat.ts`. */
+      saveChosen(said.picks.map((one) => ({ id: one.id, first: one.first })));
     } catch {
       setProblem(t('shape.failed', 'That could not be worked out just now.'));
     } finally {

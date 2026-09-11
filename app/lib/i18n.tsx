@@ -589,6 +589,8 @@ export const STRINGS: Dict = {
   "plan.paper.healthy": { en: "Healthy looks like", af: "Gesond lyk so" },
   "plan.paper.made": { en: "Worked out on", af: "Uitgewerk op" },
   "plan.paper.quiet": { en: "Nothing is planned for these days", af: "Niks is vir hierdie dae beplan nie" },
+  "plan.paper.making": { en: "What you decided to make", af: "Wat jy besluit het om te maak" },
+  "plan.paper.firstOne": { en: "First one", af: "Eerste een" },
   "canvas.songUnder": { en: "A song under this clip", af: "’n Liedjie onder hierdie video" },
   "canvas.songUnderNote": { en: "One of your own, or a file from this device. You choose which part of it plays — the clip is laid against that, not against the intro.", af: "Een van jou eie, of ’n lêer van hierdie toestel af. Jy kies watter deel daarvan speel — die video word daarteen gelê, nie teen die intro nie." },
   "canvas.captionHint": { en: "Taken from the line in quotation marks, or type your own", af: "Geneem uit die lyn tussen aanhalingstekens, of tik jou eie" },

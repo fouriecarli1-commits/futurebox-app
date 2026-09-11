@@ -62,8 +62,19 @@ check('a company with a number is published', company !== null);
 check('and its number is on it', company?.registration === '2026/123456/07', company?.registration ?? '(none)');
 check('the status defaults only where a number justifies it',
   company?.status === 'Private company registered in the Republic of South Africa', company?.status);
+/* `?.` on the address too, not only on the company.
+
+   `address` became optional on 11 September 2026 — one unset variable used
+   to throw away the whole disclosure and put "the company is being
+   registered" on a live page about a company registered six days earlier.
+   This line kept reading `company?.address.length`, which is only safe
+   while a company always has one. It never failed, because scripts/ was
+   outside the typecheck: tsconfig's include patterns miss it, since
+   every check here is
+   a .mts, and the include pattern only reaches plain .ts. Sixty-odd
+   checks, none of them ever read by tsc. */
 check('and the address is one line per line, split on the pipe',
-  company?.address.length === 4 && company?.address[0] === '12 Example Street',
+  company?.address?.length === 4 && company?.address?.[0] === '12 Example Street',
   (company?.address ?? []).join(' / '));
 check('with no VAT number invented', company?.vat === undefined);
 
@@ -226,7 +237,7 @@ const padded = only({
   FUTUREBOX_LEGAL_PHONE: ' +27 21 000 0000 ',
 });
 check('a value pasted with spaces around it is trimmed',
-  padded?.name === 'FutureBox Studio (Pty) Ltd' && padded?.address[1] === 'Cape Town',
+  padded?.name === 'FutureBox Studio (Pty) Ltd' && padded?.address?.[1] === 'Cape Town',
   `${padded?.name} / ${(padded?.address ?? []).join(' / ')}`);
 
 /* ── Both documents must say these values are PUBLISHED ────────────────

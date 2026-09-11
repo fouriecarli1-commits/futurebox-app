@@ -79,6 +79,10 @@ export interface Words {
   /** Where the week's days came from — the account's own report, or the category. */
   readonly source: string;
   readonly made: string;
+  /** "What you decided to make", above the week that is a week of it. */
+  readonly making: string;
+  /** "First one", before the concrete thing to start with. */
+  readonly firstOne: string;
 }
 
 export interface PaperOptions {
@@ -91,6 +95,15 @@ export interface PaperOptions {
    * reader says every word in an English accent.
    */
   readonly lang: 'en' | 'af';
+  /**
+   * What they decided to make, from the adviser above the plan.
+   *
+   * Carried into the document because the week below it is a week of these
+   * and a reader a month later has no other way to know that. A schedule
+   * whose reasoning has been left in the app is a schedule nobody can argue
+   * with — the same fault the per-slot "why" was added to fix.
+   */
+  readonly making?: readonly { format: string; first: string }[];
   /** Passed in rather than read here, so the same plan makes the same file. */
   readonly at?: Date;
 }
@@ -191,6 +204,20 @@ export function paperOf(plan: Plan, brief: PaperBrief, options: PaperOptions): s
     .map(([label, value]) => `<dt>${safe(label)}</dt><dd>${safe(String(value))}</dd>`)
     .join('');
   section(words.brief, briefRows ? `<dl>${briefRows}</dl>` : '');
+
+  /* Before the market read, because it is the decision everything below
+     rests on: the category explains the week, and this explains the shape
+     of every slot in it. */
+  section(
+    words.making,
+    (options.making ?? [])
+      .map(
+        (one) =>
+          `<div class="item"><p class="name">${safe(one.format)}</p>` +
+          `<p class="sub">${safe(words.firstOne)}: ${safe(one.first)}</p></div>`,
+      )
+      .join(''),
+  );
 
   section(
     words.category,

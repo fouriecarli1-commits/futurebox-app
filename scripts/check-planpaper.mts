@@ -80,11 +80,20 @@ const words: Words = {
   days: Object.fromEntries(DAY_IDS.map((day) => [day, `WORD-day-${day}`])) as Words['days'],
   argue: 'WORD-argue',
   quiet: 'WORD-quiet',
+  making: 'WORD-making',
+  firstOne: 'WORD-firstOne',
   source: 'WORD-source',
   made: 'WORD-made',
 };
 
-const page = paperOf(plan, brief, { words, lang: 'en', at: new Date(2026, 8, 11) });
+/* What they decided to make. Markers like everything else: the document
+   carries it because the week below is a week of these, and a reader a
+   month later has no other way to know that. */
+const making = [
+  { format: 'MARK-making-format', first: 'MARK-making-first' },
+  { format: 'MARK-making2-format', first: 'MARK-making2-first' },
+];
+const page = paperOf(plan, brief, { words, lang: 'en', making, at: new Date(2026, 8, 11) });
 
 /** Every string anywhere in a value, however deeply nested. */
 function strings(value: unknown, out: string[] = []): string[] {
@@ -95,7 +104,9 @@ function strings(value: unknown, out: string[] = []): string[] {
 }
 
 /* ── Every part of the plan is on the page ───────────────────────────── */
-const missing = [...strings(plan), ...strings(brief)].filter((one) => !page.includes(one));
+const missing = [...strings(plan), ...strings(brief), ...strings(making)].filter(
+  (one) => !page.includes(one),
+);
 if (missing.length > 0) {
   problems.push(
     `  ${missing.length} value(s) in the plan never reach the page: ${missing.join(', ')}\n` +
@@ -110,6 +121,14 @@ if (unusedWords.length > 0) {
     `  ${unusedWords.length} heading(s) are asked for and never used: ${unusedWords.join(', ')}\n` +
       '      A word in Words that paperOf does not print is one the dictionary translates for nothing.',
   );
+}
+
+/* A plan with no decision above it still prints, and prints no empty
+   heading for one. The adviser is a separate panel and somebody may never
+   open it. */
+const undecided = paperOf(plan, brief, { words, lang: 'en', at: new Date(2026, 8, 11) });
+if (undecided.includes('WORD-making')) {
+  problems.push('  a plan with nothing decided still prints the "what you decided to make" heading');
 }
 
 /* ── The week is in week order, not the order it came back in ────────── */
@@ -130,7 +149,7 @@ if (unnamed.length > 0) {
 }
 
 /* ── A brief with holes in it prints no empty rows ───────────────────── */
-const thin = paperOf(plan, { what: 'MARK-brief-what' }, { words, lang: 'en', at: new Date(2026, 8, 11) });
+const thin = paperOf(plan, { what: 'MARK-brief-what' }, { words, lang: 'en', making, at: new Date(2026, 8, 11) });
 for (const heading of ['WORD-offer', 'WORD-tone', 'WORD-market', 'WORD-place', 'WORD-who']) {
   if (thin.includes(heading)) {
     problems.push(`  a brief with no ${heading} still prints the row, which reads as an answer of nothing`);
@@ -146,7 +165,7 @@ if (!/@media print/.test(page)) problems.push('  the page has no print rules, so
 
 /* An Afrikaans plan must say so, or a browser offers to translate it into
    English and a screen reader reads it in an English accent. */
-const afrikaans = paperOf(plan, brief, { words, lang: 'af', at: new Date(2026, 8, 11) });
+const afrikaans = paperOf(plan, brief, { words, lang: 'af', making, at: new Date(2026, 8, 11) });
 if (!/<html lang="af"/.test(afrikaans)) problems.push('  an Afrikaans plan is not tagged as Afrikaans');
 if (!/<html lang="en"/.test(page)) problems.push('  an English plan is not tagged as English');
 
@@ -154,7 +173,7 @@ if (!/<html lang="en"/.test(page)) problems.push('  an English plan is not tagge
 const nasty = paperOf(
   { ...plan, category: 'Tom & Jerry\'s <script>alert(1)</script> "quotes"' },
   brief,
-  { words, lang: 'en', at: new Date(2026, 8, 11) },
+  { words, lang: 'en', making, at: new Date(2026, 8, 11) },
 );
 if (nasty.includes('<script>')) problems.push('  text from the plan is written into the page unescaped');
 if (!nasty.includes('Tom &amp; Jerry')) problems.push('  an ampersand in the plan is not escaped, which breaks the text after it');

@@ -40,6 +40,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "**/*.mts",
+    "audit/*.mjs",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],

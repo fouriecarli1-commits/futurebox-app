@@ -43,7 +43,12 @@ export function shot(name) {
  */
 import { existsSync } from 'node:fs';
 
-/** Where a browser might be, best guess first. */
+/**
+ * Where a browser might be, best guess first.
+ *
+ * @param {Record<string, string | undefined>} [env]
+ * @returns {string[]}
+ */
 export function candidates(env = process.env) {
   return [
     env.PLAYWRIGHT_CHROMIUM,
@@ -70,6 +75,19 @@ export function candidates(env = process.env) {
  * and let Playwright use the one it installed — is by definition the one that
  * never happens on the machine where this was written, and it is the one the
  * whole change is for.
+ *
+ * Typed in JSDoc rather than left to inference, because inference reads the
+ * DEFAULTS as the contract: `look = existsSync` means a checker demands
+ * node's `PathLike` where the real contract is a path string, and
+ * `env = process.env` demands a full `ProcessEnv` where the real contract is
+ * a plain map. `check:launch` passes exactly those two, and could not be
+ * typechecked until this said what it actually takes — which nobody noticed
+ * for as long as scripts/ was outside the typecheck.
+ *
+ * @param {{ args?: string[] } & Record<string, unknown>} [extra]
+ * @param {(path: string) => boolean} [look]
+ * @param {Record<string, string | undefined>} [env]
+ * @returns {{ executablePath?: string, args?: string[] } & Record<string, unknown>}
  */
 export function launchOptions(extra = {}, look = existsSync, env = process.env) {
   const found = candidates(env).find((one) => look(one));

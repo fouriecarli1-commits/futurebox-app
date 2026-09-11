@@ -31,6 +31,7 @@ import {
 } from '../lib/marketplan';
 import { paperOf, type Words } from '../lib/planpaper';
 import { loadReport } from '../lib/adreport';
+import { loadChosen } from '../lib/chosenformat';
 import { byWeekday, standoutDays } from '../lib/adweek';
 import Note from './Note';
 
@@ -120,6 +121,7 @@ export default function MarketPlan({ brief }: { readonly brief: Brief }): React.
     }
     setBusy(true);
     const own = ownNumbers();
+    const chosen = loadChosen();
     try {
       const token = await accessToken();
       const response = await fetch('/api/plan', {
@@ -133,6 +135,16 @@ export default function MarketPlan({ brief }: { readonly brief: Brief }): React.
           betterDays: own?.better ?? [],
           worseDays: own?.worse ?? [],
           measure: own?.measure,
+          /* What the panel above decided to make. Without it the week is a
+             timetable of empty slots: "Tuesday 18:00, TikTok" and nothing
+             about what goes in it, a scroll below a recommendation that had
+             just named the answer. */
+          making: chosen.map((one) => ({
+            format: one.format.en,
+            what: one.format.whatEn,
+            first: one.first,
+            effort: one.format.effort,
+          })),
         }),
       });
       const said = (await response.json().catch(() => ({}))) as { plan?: Plan; message?: string; error?: string };
@@ -209,8 +221,22 @@ export default function MarketPlan({ brief }: { readonly brief: Brief }): React.
         ? t('plan.fromOwn', 'The days are built around your own imported report, not around what the category generally does.')
         : t('plan.fromCategory', 'You have no report imported yet, so these days and times are a starting guess for this category. Import an export above and work it out again to build it on your own numbers instead.'),
       made: t('plan.paper.made', 'Worked out on'),
+      making: t('plan.paper.making', 'What you decided to make'),
+      firstOne: t('plan.paper.firstOne', 'First one'),
     };
-    save(paperOf(plan, brief, { words, lang }), 'text/html;charset=utf-8', 'futurebox-marketing-plan.html');
+    const chosen = loadChosen();
+    save(
+      paperOf(plan, brief, {
+        words,
+        lang,
+        making: chosen.map((one) => ({
+          format: lang === 'af' ? one.format.af : one.format.en,
+          first: one.first,
+        })),
+      }),
+      'text/html;charset=utf-8',
+      'futurebox-marketing-plan.html',
+    );
   };
 
   const week = plan ? sortedWeek(plan.week) : [];

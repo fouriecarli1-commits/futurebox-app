@@ -157,6 +157,16 @@ interface Body {
   worseDays?: string[];
   /** Which number those days were judged on, so the prompt can say it out loud. */
   measure?: 'cpr' | 'ctr';
+  /**
+   * What they decided to make, from the panel above this one.
+   *
+   * Added 11 September 2026. Without it the week was a timetable of empty
+   * slots — "Tuesday 18:00, TikTok" and nothing about what goes in it — a
+   * scroll below a recommendation that had just named the one thing worth
+   * making. Two panels giving good advice about the same business with no
+   * line between them is two half-answers.
+   */
+  making?: { format: string; what: string; first: string; effort: string }[];
 }
 
 const SYSTEM = [
@@ -191,6 +201,25 @@ function briefFor(body: Body): string {
      plainly rather than mixed in with the brief, and the model is told to
      treat it as evidence that outranks anything it believes about the
      category. */
+  /* What they have decided to make. Named before the numbers, because it
+     changes the shape of every slot in the week: eight slots of short clips
+     and eight slots of podcast episodes are different amounts of a person's
+     life, and a plan that ignores which one they chose is a plan for a
+     business that does not exist. */
+  if (body.making?.length) {
+    lines.push(
+      '',
+      'WHAT THEY HAVE ALREADY DECIDED TO MAKE, in order, from the adviser above this plan:',
+      ...body.making.map(
+        (one) =>
+          `- ${one.format} (${one.what}) — their own effort: ${one.effort}. First one: ${one.first}`,
+      ),
+      '',
+      'The week must be a week of THESE things. Do not plan slots for formats they did not choose, and do not quietly replace one with something easier. Where a format takes real commitment, plan fewer of them rather than pretending it takes none — a plan abandoned in week two is worse than no plan, and the fastest way to get there is a week that costs more than the person has.',
+      'Each slot\'s "what" should name which of these it is and what specifically goes in it, so somebody can make it on the day without deciding anything else.',
+    );
+  }
+
   if (body.betterDays?.length || body.worseDays?.length) {
     const measure =
       body.measure === 'ctr' ? 'click-through rate' : 'cost per result';
