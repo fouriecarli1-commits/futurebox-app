@@ -23,7 +23,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
-import { SURFACES, describeOps, isSurfaceId, surfaceDirectory, type SurfaceId } from '@/app/lib/surfaces';
+import { SURFACES, describeOps, describeOtherRoomOps, isSurfaceId, surfaceDirectory, type SurfaceId } from '@/app/lib/surfaces';
 import { tooMany } from '@/app/lib/server/brake';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { SINGERS } from '@/app/data/sound';
@@ -80,6 +80,13 @@ const ReplySchema = z.object({
           .string()
           .describe(
             'The title, the style, or the full lyric sheet. For go, one of: make, studio, booth, video, canvas, hooks_feed, channels, collab, live, voice_studio, podcast. Empty for none and generate.',
+          ),
+        room: z
+          .string()
+          .describe(
+            'For surface_op only. Empty for the screen they are on, which is the usual case. '
+            + 'Put the screen name here ONLY when this same reply also has a go to that screen — '
+            + 'that is how you set a room up before they arrive in it. Empty string for every other kind.',
           ),
       }),
     )
@@ -154,6 +161,12 @@ const SYSTEM = [
   '- You may do SEVERAL things in one reply. If somebody describes what they are selling and who it is for, set both — filling one box out of five and writing a paragraph about the rest is the least useful thing you can do.',
   '- But never invent a value to fill a box. Leave it out and say what you would need. An offer nobody mentioned, put in their advert, is a promise they did not make.',
   '- At most one generate and at most one go per reply, and it goes last.',
+  /* The second half of the same fault. The first fix let a reply fill five
+     fields in the room they are standing in; this lets it fill them in the
+     room it is sending them to, which is what somebody asking for help with
+     their marketing from the song screen actually needs. */
+  '- When you send somebody to another screen, SET IT UP for them in the same reply. Put the screen name in the action\'s room field and it is waiting for them when they arrive. Sending somebody to five empty boxes, a sentence after they told you what goes in them, is not help.',
+  '- Only the screen you are sending them to. An operation aimed at a room this reply is not opening is thrown away, because it would otherwise change something under them days later with nothing on screen to explain it.',
   '',
   'How you talk:',
   '- Short. Two or three sentences. You are beside them while they work, not writing them a guide.',
@@ -206,6 +219,14 @@ function contextFor(body: Body): string {
       : ['This room takes no operations right now, so advise rather than act.', '']),
     'The other screens, so you know where else they could go:',
     surfaceDirectory(),
+    '',
+    /* Read from the registry rather than from live registrations, because a
+       room they have not walked into has registered nothing. Safe because
+       `check:ops` fails the build when the registry and the components
+       disagree — without that this would be a list of operations we believe
+       exist, which is a worse thing to hand a model than no list. */
+    'What each of those screens can be set up with, if you send them there in this reply:',
+    describeOtherRoomOps(here),
     '',
     'The song canvas travels with them everywhere, and is only the subject on the song screens:',
     body.title ? `Title: ${body.title}` : 'No title yet.',
@@ -332,7 +353,7 @@ export async function POST(request: Request): Promise<Response> {
        a contract, so they are applied here. `planActions` holds them on
        their own so they can be tested without an API key — see
        `app/lib/copilotplan.ts` and `scripts/check-copilotplan.mts`. */
-    return Response.json({ reply: parsed.reply, actions: planActions(parsed.actions ?? []) });
+    return Response.json({ reply: parsed.reply, actions: planActions(parsed.actions ?? [], body.surface) });
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) {
       return Response.json({ error: 'bad_key', message: 'The configured key was rejected.' }, { status: 502 });

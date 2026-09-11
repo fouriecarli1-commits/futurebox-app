@@ -1336,11 +1336,25 @@ export default function FutureBoxHome() {
     }}
     onAction={(action: CopilotAction) => {
       if (action.kind === 'surface_op') {
-        // The room takes it, or nothing happens. There is
-        // deliberately no fallback: silently doing something else
-        // is worse than doing nothing, because the reply already
-        // said what it was going to do.
-        copilotBus.dispatch(studioTab, action.op, action.value);
+        /* Two different deliveries, and the difference matters.
+
+           For the room they are standing in: dispatch. It takes it, or
+           nothing happens. There is deliberately no fallback and no
+           queueing — silently doing something else, or doing the right
+           thing an hour later, is worse than doing nothing, because the
+           reply on screen already said what it was going to do.
+
+           For a room this same reply is opening: handoff, which delivers
+           if the room is there and waits if it is not. That is the whole
+           point of the hand-off — at the moment the copilot sends somebody
+           to the adverts desk, the adverts desk does not exist yet, and
+           arriving at five empty boxes a sentence after describing what
+           goes in them is the fault this fixes. `planActions` on the
+           server is what guarantees `room` is only ever set to somewhere
+           this reply is actually taking them. */
+        const where = action.room ?? studioTab;
+        if (where === studioTab) copilotBus.dispatch(studioTab, action.op, action.value);
+        else copilotBus.handoff(where, action.op, action.value);
         return;
       }
       if (action.kind === 'set_title') setCanvas({ ...canvas, title: action.value });

@@ -20,7 +20,7 @@
  * Two reasons, and the second is the one that matters.
  *
  * These belong to a legal person rather than to a codebase. The company is
- * registered — CIPC issued 2026/714071/07 on 6 September 2026 — and the
+ * registered — CIPC issued 2026/714071/07 on 5 September 2026 — and the
  * number goes into the deployment rather than into this file, along with the
  * registered address, which nobody should have to open a pull request to
  * change. Inventing a plausible one would have been worse than having none: a

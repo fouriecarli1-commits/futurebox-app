@@ -567,6 +567,33 @@ export function standaloneSurfaces(): SurfaceId[] {
 }
 
 /**
+ * Every room that takes operations, and what each one does.
+ *
+ * `describeOps` above answers "what can I do HERE", filtered by what the
+ * mounted room has actually registered. This answers "what could I set up
+ * THERE" — read from the registry alone, because a room you have not walked
+ * into yet has registered nothing.
+ *
+ * Trusting the registry for that is safe only because `check:ops` fails the
+ * build when a component and the registry disagree. Without that check this
+ * would be a list of operations we believe exist, which is a different and
+ * much worse thing to tell a model.
+ *
+ * The current room is left out: it is described in full, with its live
+ * registrations, in the block above this one in the prompt.
+ */
+export function describeOtherRoomOps(except: SurfaceId): string {
+  const out: string[] = [];
+  for (const id of SURFACE_IDS) {
+    if (id === except) continue;
+    const ops = SURFACES[id].ops;
+    if (!ops) continue;
+    out.push(`- ${id}: ${Object.entries(ops).map(([op, what]) => `${op} (${what})`).join("; ")}`);
+  }
+  return out.join("\n");
+}
+
+/**
  * The operations a room will accept right now, described for the model.
  *
  * `available` is what the panel reports as actually registered. A name with no

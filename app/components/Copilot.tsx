@@ -28,8 +28,15 @@ import { useCopilotBusContext } from '../lib/copilotactions';
 
 export type CopilotAction =
   | { kind: 'none'; value: string }
-  /** Change something in the room they are standing in. See `lib/copilotactions.ts`. */
-  | { kind: 'surface_op'; op: string; value: string }
+  /**
+   * Change something in a room. See `lib/copilotactions.ts`.
+   *
+   * `room` is the surface it is for, decided on the server by `planActions`.
+   * Usually the room they are standing in. It is another room only when the
+   * same reply is moving them there — the studio then puts it in that room
+   * ahead of them rather than dispatching it into the one they are leaving.
+   */
+  | { kind: 'surface_op'; op: string; value: string; room?: SurfaceId }
   | { kind: 'set_title'; value: string }
   | { kind: 'set_style'; value: string }
   | { kind: 'set_lyrics'; value: string }

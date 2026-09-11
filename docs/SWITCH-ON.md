@@ -362,7 +362,7 @@ request comes back refused.
 
 ### 13. CIPC — registered, and what to type where
 
-**Done: CIPC issued `2026/714071/07` on 6 September 2026**, for the enterprise
+**Done: CIPC issued `2026/714071/07` on 5 September 2026**, for the enterprise
 name `futureboxstudio`. The `/07` suffix is a private company, so the page's
 default status — "Private company registered in the Republic of South Africa"
 — is the right one and does not need setting.

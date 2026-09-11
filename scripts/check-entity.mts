@@ -69,7 +69,7 @@ check('with no VAT number invented', company?.vat === undefined);
 
 /* ── The real number, and the shapes a typo takes ───────────────────────
  
-   CIPC issued 2026/714071/07 on 6 September 2026. It is typed once, by hand,
+   CIPC issued 2026/714071/07 on 5 September 2026. It is typed once, by hand,
    into a settings page, by somebody who will never see it rendered.
 
    What this shape can and cannot catch is worth being exact about. It catches
