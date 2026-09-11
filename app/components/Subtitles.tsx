@@ -70,11 +70,22 @@ export function useSubtitleLanguages(): readonly { code: string; name: string }[
 }
 
 export default function Subtitles({
+  id,
   value,
   onChange,
   problem,
   children,
 }: {
+  /**
+   * A stable name for the tick, so nothing has to find it by position.
+   *
+   * Added the day this control appeared on a second screen and broke two
+   * probes that took "the first checkbox in the room". A control found by
+   * where it sits is a control that moves the day something is added above
+   * it, and the probe then ticks the wrong thing and reports on the wrong
+   * feature — which is worse than failing, because it passes.
+   */
+  readonly id: string;
   readonly value: SubtitleChoice;
   readonly onChange: (next: SubtitleChoice) => void;
   /** Said when the translation failed and the film did not. */
@@ -96,6 +107,7 @@ export default function Subtitles({
           one state and you can see it from across the room. */}
       <label className="flex min-h-[44px] items-center gap-2.5 cursor-pointer">
         <input
+          id={id}
           type="checkbox"
           checked={value.on}
           onChange={(event) => onChange({ ...value, on: event.target.checked })}

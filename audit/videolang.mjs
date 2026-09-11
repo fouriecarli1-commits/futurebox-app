@@ -199,7 +199,11 @@ try {
     await p.waitForTimeout(400);
     /* The switch only draws while the prompt has a quoted line in it — which
        is the whole reason `willSpeak` is derived rather than trusted. */
-    const say = room.locator('input[type="checkbox"]').first();
+    /* By name, not by position. This was `input[type="checkbox"]` `.first()`,
+       and the day a subtitles tick was added above it the probe ticked that
+       instead — then reported that the engine had not been asked to speak,
+       which was true and was not the fault it looked like. */
+    const say = room.locator('#canvas-speak');
     if (speaking) {
       await say.waitFor({ state: 'visible', timeout: 5000 });
       await say.setChecked(true);

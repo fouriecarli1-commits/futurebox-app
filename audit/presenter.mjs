@@ -248,7 +248,9 @@ const go = room.locator('button').filter({ hasText: af ? /^Maak die video/ : /^M
 check('the make button appears once there is a reading', (await go.count()) > 0);
 check('and is refused until the confirmation is ticked', await go.isDisabled());
 
-await room.locator('input[type="checkbox"]').first().check();
+/* By name. `.first()` over the room's checkboxes found the subtitles tick
+   the day one was added to the desk above this panel. */
+await room.locator('#pres-consent').check();
 await p.waitForTimeout(300);
 check('ticking it lets the video be made', !(await go.isDisabled()));
 

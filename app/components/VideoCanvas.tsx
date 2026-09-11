@@ -918,6 +918,7 @@ export default function VideoCanvas({
             film, which somebody making one advert never opens. It is one
             component now, mounted in both. See `Subtitles.tsx`. */}
         <Subtitles
+          id="canvas-subtitles"
           value={subtitles}
           onChange={setSubtitles}
           problem={captionProblem}
@@ -941,6 +942,7 @@ export default function VideoCanvas({
         {spoken.length > 0 && (
           <label className="flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 cursor-pointer">
             <input
+              id="canvas-speak"
               type="checkbox"
               checked={speak}
               disabled={!engine?.sound}

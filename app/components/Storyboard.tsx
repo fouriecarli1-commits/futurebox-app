@@ -724,6 +724,7 @@ export default function Storyboard({
               only here, so the single-clip composer above had no subtitles
               at all — see `Subtitles.tsx` for the whole of that story. */}
           <Subtitles
+            id="board-subtitles"
             value={{ on: board.captions ?? false, lang: board.subtitleLang ?? '' }}
             onChange={(next) =>
               setBoard((was) => ({ ...was, captions: next.on, subtitleLang: next.lang }))

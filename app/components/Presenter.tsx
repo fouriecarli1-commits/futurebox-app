@@ -616,6 +616,7 @@ export default function Presenter({
             <>
               <label className="flex items-start gap-2.5 text-sm text-zinc-300 leading-relaxed cursor-pointer">
                 <input
+                  id="pres-consent"
                   type="checkbox"
                   checked={consent}
                   onChange={(event) => setConsent(event.target.checked)}
