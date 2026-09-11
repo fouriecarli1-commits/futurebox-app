@@ -96,7 +96,7 @@ for (const [wrong, how] of [
 
 /* ── A sole proprietor ─────────────────────────────────────────────────── */
 const sole = only({
-  FUTUREBOX_LEGAL_NAME: 'Anré Fourie',
+  FUTUREBOX_LEGAL_NAME: 'A. Example',
   FUTUREBOX_LEGAL_STATUS: 'Sole proprietor trading as FutureBox Studio',
   FUTUREBOX_LEGAL_ADDRESS: '12 Example Street|Cape Town|8001',
   FUTUREBOX_LEGAL_PHONE: '+27 21 000 0000',
@@ -109,7 +109,7 @@ check('and is described as what they are',
 
 /* ── The refusal that matters ──────────────────────────────────────────── */
 const unstated = only({
-  FUTUREBOX_LEGAL_NAME: 'Anré Fourie',
+  FUTUREBOX_LEGAL_NAME: 'A. Example',
   FUTUREBOX_LEGAL_ADDRESS: '12 Example Street|Cape Town|8001',
   FUTUREBOX_LEGAL_PHONE: '+27 21 000 0000',
 });
@@ -212,11 +212,11 @@ const full = only({
   FUTUREBOX_LEGAL_PHONE: '+27 21 000 0000',
   FUTUREBOX_LEGAL_EMAIL: 'legal@example.com',
   FUTUREBOX_LEGAL_VAT: '4123456789',
-  FUTUREBOX_LEGAL_INFORMATION_OFFICER: 'Anré Fourie',
+  FUTUREBOX_LEGAL_INFORMATION_OFFICER: 'A. Example',
 });
 check('a VAT number appears once there is one', full?.vat === '4123456789');
 check('and the POPIA information officer with it',
-  full?.informationOfficer === 'Anré Fourie', full?.informationOfficer ?? '(none)');
+  full?.informationOfficer === 'A. Example', full?.informationOfficer ?? '(none)');
 
 /* Whitespace, because a value pasted out of a document carries it. */
 const padded = only({

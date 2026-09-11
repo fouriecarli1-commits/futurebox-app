@@ -175,12 +175,41 @@ export default function Legal(): React.ReactElement {
                 </Link>
                 . It reaches one person, with your own address as the reply-to.
               </Row>
-              {who.informationOfficer && (
-                <Row label="Information Officer">
-                  {who.informationOfficer}, for anything under POPIA. Registered with the Information
-                  Regulator of South Africa.
-                </Row>
-              )}
+              {/* The row always shows, named or not.
+ 
+                  POPIA requires a responsible party to appoint an Information
+                  Officer and register them WITH THE REGULATOR. It does not
+                  require the name on a web page — so a reader needs to know
+                  the role exists and how to reach it, which is a different
+                  thing from knowing whose name is in the post.
+ 
+                  Carli asked for her name off this row on 11 September. It
+                  was never a legal requirement that it be here; it was a
+                  variable somebody could set, and setting it was the only way
+                  to make the row appear at all. Now the row appears either
+                  way and the unnamed version sends people somewhere that
+                  answers, which is what a reader actually wanted. */}
+              <Row label="Information Officer">
+                {who.informationOfficer ? (
+                  <>
+                    {who.informationOfficer}, for anything under POPIA. Registered with the
+                    Information Regulator of South Africa.
+                  </>
+                ) : (
+                  <>
+                    Appointed and registered with the Information Regulator of South Africa, as
+                    POPIA requires. For anything under POPIA — a copy of what is held about you, a
+                    correction, a deletion, or a complaint —{' '}
+                    <Link
+                      href={CONTACT_PAGE}
+                      className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
+                    >
+                      enquire on the help page
+                    </Link>{' '}
+                    and it reaches them.
+                  </>
+                )}
+              </Row>
             </dl>
           ) : (
             <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5 space-y-3">
