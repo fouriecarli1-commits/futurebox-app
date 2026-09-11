@@ -154,6 +154,68 @@ for (const [file, room] of [
   );
 }
 
+/* ── Every read carries the dictionary, not most of them ───────────────
+ 
+   ── What this found the day it was written ──────────────────────────
+ 
+   `/v1/text-to-dialogue` — the podcast path — did not send it. `speak`,
+   `speakTimed` and `speakStream` all did, each with the same comment
+   explaining why, and the fourth was simply never touched. It is the
+   LONGEST Afrikaans speech this app produces: a whole episode read aloud,
+   every `-tjie` in it coming back as an English "ch" while the one-line
+   reads were being fixed. That is this task's own title happening inside
+   one file — right in the writing, left alone in the speaking.
+ 
+   Nothing would have shown it. A missing field is not an error; it is a
+   read that sounds slightly wrong, in the one room where nobody is
+   comparing it to anything.
+ 
+   ── Why it is counted rather than named ─────────────────────────────
+ 
+   Because a list of "the four read functions" goes stale the moment there
+   are five, and the fifth is written by somebody copying the fourth —
+   which is exactly how this one was missed. So the endpoints are found in
+   the source and each is asked, rather than checked off a list.
+ 
+   `speech-to-speech` is excluded on purpose and by shape: it converts
+   recorded audio and is given no text at all, so there is nothing for a
+   spelling rule to match. */
+const wire = readFileSync('app/lib/server/eleven.ts', 'utf8');
+
+/** The fetch call an index sits inside, by matching brackets from its own
+ *  `fetch(`. Crude slicing would take the next `);`, and every one of these
+ *  bodies has a `}),` inside it that would end the slice early — which is
+ *  how a check comes to read half a call and pass. */
+function callAt(source: string, index: number): string {
+  const opens = source.lastIndexOf('fetch(', index);
+  if (opens === -1) return '';
+  let depth = 0;
+  for (let at = opens + 'fetch'.length; at < source.length; at += 1) {
+    if (source[at] === '(') depth += 1;
+    else if (source[at] === ')') {
+      depth -= 1;
+      if (depth === 0) return source.slice(opens, at + 1);
+    }
+  }
+  return '';
+}
+
+const reads: string[] = [];
+const silent: string[] = [];
+for (const found of wire.matchAll(/\$\{BASE\}\/text-to-([a-z-]+)/g)) {
+  const call = callAt(wire, found.index ?? 0);
+  const name = `text-to-${found[1]}`;
+  reads.push(name);
+  if (!/sayItRight\(\)/.test(call)) silent.push(name);
+}
+
+check('every read endpoint is found', reads.length >= 4, `${reads.length}: ${reads.join(', ')}`);
+check(
+  'and every one of them carries the pronunciation dictionary',
+  silent.length === 0,
+  `${[...new Set(silent)].join(', ')} sends none — the rules would be applied to some reads and not others, which nothing on any screen would show`,
+);
+
 if (problems.length > 0) {
   console.error(`check:sayitwrong — a reported word could become a rule without anybody reading it:\n${problems.join('\n')}`);
   process.exit(1);

@@ -18,7 +18,7 @@ import { batches, type Turn } from '../dialogue.ts';
 import { noteSpend } from './elevencost.ts';
 import { watchEleven } from './spendwatch';
 import { joinPcm } from '../pcmwav.ts';
-import { sayItRight } from './sayit';
+import { locators, sayItRight } from './sayit';
 
 const BASE = 'https://api.elevenlabs.io/v1';
 
@@ -733,10 +733,28 @@ export interface Spoken {
   readonly model: string;
 }
 
+/**
+ * Did ElevenLabs refuse because of the pronunciation field itself?
+ *
+ * Read off a clone, because `complain()` below reads the body too and a body
+ * can only be read once — peeking at the original would leave the caller
+ * with an empty complaint, which is a worse fault than the one being
+ * diagnosed.
+ */
+async function refusedTheDictionary(response: Response): Promise<boolean> {
+  if (response.status !== 400 && response.status !== 422) return false;
+  try {
+    return /pronunciation_dictionary_locators/i.test(await response.clone().text());
+  } catch {
+    return false;
+  }
+}
+
 async function sayTurns(
   turns: readonly Turn[],
   modelId: string,
   languageCode?: string,
+  dictionary = true,
 ): Promise<Response> {
   return fetch(`${BASE}/text-to-dialogue?output_format=pcm_${DIALOGUE_RATE}`, {
     method: 'POST',
@@ -746,6 +764,13 @@ async function sayTurns(
       model_id: modelId,
       ...(languageCode ? { language_code: languageCode } : {}),
       apply_text_normalization: 'auto',
+      /* How Afrikaans is said — the same field every other read carries.
+         This path did not have it, and it is the LONGEST Afrikaans speech
+         this app produces: a whole episode, read aloud, with every `-tjie`
+         in it coming back as an English "ch" while the one-line reads were
+         being fixed. "Reg in die skryf, uitgelos in die praat", exactly.
+         Sends nothing when no dictionary is set — see sayit.ts. */
+      ...(dictionary ? sayItRight() : {}),
     }),
   });
 }
@@ -761,14 +786,38 @@ export async function converse(
 
   const pieces: Uint8Array[] = [];
   let model = DIALOGUE_MODELS[0];
+  /* Whether this endpoint takes a pronunciation dictionary at all.
+ 
+     Unverified, and it cannot be verified from here: elevenlabs.io is
+     unreachable from this machine, and their docs are the only place that
+     would say. `/v1/text-to-speech` takes the field; whether
+     `/v1/text-to-dialogue` does is a guess either way.
+ 
+     So it is sent and dropped if refused, rather than guessed at. Guessing
+     yes and being wrong breaks every podcast the moment she sets the two
+     ids in Vercel — a fault that appears hours after the change that caused
+     it, on a path nobody would look at. Guessing no leaves the longest
+     Afrikaans read in the app unfixed forever, silently.
+ 
+     Costs one extra request per episode, once, and only when a dictionary
+     exists to send. Starts false when there is none, so today it does
+     nothing at all. */
+  let dictionary = locators().length > 0;
   for (let at = 0; at < parts.length; at += 1) {
-    let response = await sayTurns(parts[at], model, languageCode);
+    let response = await sayTurns(parts[at], model, languageCode, dictionary);
+    /* Dropped for the whole episode rather than per part: a field is either
+       accepted by an endpoint or it is not, and re-offering it on every
+       batch would pay the same refusal ten times for a long show. */
+    if (!response.ok && dictionary && (await refusedTheDictionary(response))) {
+      dictionary = false;
+      response = await sayTurns(parts[at], model, languageCode, dictionary);
+    }
     // Only the first request tries the fallback. Once one has been accepted,
     // a later refusal is about the words in it, not about the model — and
     // switching models mid-episode would change the voices halfway through.
     if (!response.ok && at === 0 && model === DIALOGUE_MODELS[0]) {
       model = DIALOGUE_MODELS[1];
-      response = await sayTurns(parts[at], model, languageCode);
+      response = await sayTurns(parts[at], model, languageCode, dictionary);
     }
     if (!response.ok) return complain(response);
     pieces.push(new Uint8Array(await response.arrayBuffer()));

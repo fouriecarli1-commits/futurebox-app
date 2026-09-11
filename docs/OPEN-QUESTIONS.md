@@ -3130,3 +3130,47 @@ somebody who had already chosen to write a song.
 
 The probe measures the geometry rather than the source order: the card starts
 at 1389 and the last room button ends at 1223.
+
+---
+
+## The podcast was the one read left alone (11 September, evening)
+
+Task #115 is called "Afrikaans is fixed in the writing and left alone in the
+speaking". It turns out that was literally true inside one file.
+
+`app/lib/server/eleven.ts` has four endpoints that turn text into speech.
+Three of them — `speak`, `speakTimed`, `speakStream` — spread `sayItRight()`
+into the body, each with the same comment explaining why. The fourth,
+`/v1/text-to-dialogue`, did not. It is the **podcast**: the longest Afrikaans
+speech this app produces. A whole episode read aloud, every `-tjie` in it
+coming back as an English "ch", while the one-line reads were being fixed.
+
+Nothing would have shown it. A missing field is not an error — it is a read
+that sounds slightly wrong, in the one room where nobody is comparing it to
+anything. It was never a decision; the fourth function was written by
+somebody copying the third and the field did not come along.
+
+**Unverified, and it cannot be verified from here.** Whether
+`/v1/text-to-dialogue` accepts `pronunciation_dictionary_locators` at all is
+not something this machine can find out: elevenlabs.io is blocked, and their
+docs are the only place that would say. `/v1/text-to-speech` takes it;
+the dialogue endpoint is a guess either way.
+
+So it is **sent and dropped if refused**, rather than guessed at. Guessing
+yes and being wrong would break every podcast the moment she sets the two ids
+in Vercel — a fault appearing hours after the change that caused it, on a
+path nobody would look at. Guessing no leaves the longest Afrikaans read in
+the app unfixed forever, silently. The retry costs one extra request per
+episode, once, and only when a dictionary exists to send; with the ids unset
+it does nothing at all, which is today.
+
+**The durable half.** `check:sayitwrong` now finds every `${BASE}/text-to-…`
+in that file and asks each one whether it carries the dictionary — counted
+rather than named, because a list of "the four read functions" goes stale the
+moment there are five, and the fifth is written by somebody copying the
+fourth, which is exactly how this one was missed. `speech-to-speech` is
+excluded by shape: it converts recorded audio and is given no text, so there
+is nothing for a spelling rule to match.
+
+Verified by breaking it both ways: removing the field from the dialogue path
+names `text-to-dialogue`; removing it from `speak` names `text-to-speech`.
