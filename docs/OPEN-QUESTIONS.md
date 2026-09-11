@@ -2990,6 +2990,23 @@ that moves; the screen prints that rather than hiding it.
    in a const that nothing iterates, and a name is not a plan. Fifth time
    this week that the answer was to measure the output rather than the word
    for it.
-3. **The Vercel plan is undocumented and fourteen routes declare 300-second
+3. **`z.enum` is not a constraint, and I only found that by building one.**
+   `zodOutputFormat` cannot express an enum in the schema subset this API
+   takes, so it degrades it into the field's *description* — the values
+   arrive as `{enum: ["short_vertical", …]}` inside a sentence. The model is
+   told; nothing enforces it.
+
+   `/api/adformats` filters, so it is safe. `/api/plan` uses `z.enum` for
+   the weekday and for `effort` and does **not** — checked by hand, and it
+   degrades rather than breaks: an unknown day sorts to the end of the week
+   and is dropped from the calendar file, an unknown effort renders
+   unstyled. Worth knowing, not worth a change today.
+
+   The general point is the one to keep: a `z.enum` in a route reads like a
+   guarantee and is a strongly worded request. `check:adschema` builds the
+   real shape and prints what comes out, because that is the only way to
+   know.
+
+4. **The Vercel plan is undocumented and fourteen routes declare 300-second
    functions.** Deploys succeed, so the plan allows it — but nothing in the
    repo says which plan, and a downgrade would fail every deploy at once.

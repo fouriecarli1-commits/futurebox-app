@@ -48,6 +48,7 @@
     "check:jsonshape": "tsx scripts/check-jsonshape.mts",
     "check:shotwords": "tsx scripts/check-shotwords.mts",
     "check:adformats": "tsx scripts/check-adformats.mts",
+    "check:adschema": "tsx scripts/check-adschema.mts",
     "check:paystackplans": "tsx scripts/check-paystackplans.mts",
     "check:prices": "tsx scripts/check-prices.mts",
     "check:afrikaans": "tsx scripts/check-afrikaans.mts",

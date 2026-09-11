@@ -237,6 +237,13 @@ jobs:
       - name: Every plan code the app reads is one the setup script creates
         run: npm run check:paystackplans
 
+      # The adviser's reply shape had never been constructed — only the
+      # screen was ever exercised, against a stub. Building it showed that
+      # z.enum does not survive as an enum: the helper degrades it into the
+      # description, so the route's own filter is the only real constraint.
+      - name: The adviser's reply shape is one the API will take
+        run: npm run check:adschema
+
       # The price on the button and the price that is charged come from one
       # function, and have twice disagreed anyway — once by pricing a clip
       # flat whatever its length, once by clamping the length after pricing it.

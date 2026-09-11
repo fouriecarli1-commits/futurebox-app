@@ -224,11 +224,17 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: 'unparsed', message: 'That came back mangled.' }, { status: 502 });
     }
 
-    /* Dropped rather than trusted.
+    /* Dropped rather than trusted, and this is load-bearing.
 
-       The schema restricts the id to the catalogue and a schema is not a
-       contract — and the cost of a bad one here is not a validation error,
-       it is a card on screen offering to open a room that does not exist.
+       `z.enum` above reads like a guarantee. It is not one. `zodOutputFormat`
+       cannot express an enum in the schema subset this API takes, so it
+       degrades it into the field's description — the ids arrive as
+       `{enum: ["short_vertical", …]}` inside a sentence. The model is told;
+       nothing enforces it. Measured, not assumed: see `check:adschema`,
+       which builds this exact shape and prints what comes out.
+
+       So this filter is the only thing between an invented id and a card on
+       screen offering to open a room that does not exist.
        Deduplicated too: the same format recommended twice with two reasons
        is a model that has run out of answers, and showing both makes a list
        of three read as a list of two. */
