@@ -34,7 +34,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2 } from 'lucide-react';
+import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { useCopilotOps } from '../lib/copilotactions';
@@ -42,6 +42,12 @@ import type { SurfaceId } from '../lib/surfaces';
 import { DESTINATIONS, PLATFORMS } from '../data/social';
 import { filmThisAd, readThisAd } from '../lib/adhandover';
 import { NOTHING_KEPT, forgetBrief, loadBrief, saveBrief } from '../lib/adbrief';
+import { clearPicks, loadPicks, putPicks } from '../lib/chosenformat';
+import { loadPlan, savePlan } from '../lib/marketplan';
+import {
+  EMPTY_SHELF, dropWork, keepWork, loadShelf, nameOf, newWorkId, openWork, workById,
+  type Shelf,
+} from '../lib/adwork';
 import { loadChosen } from '../lib/chosenformat';
 import { loadHandles, type Handles } from '../lib/social';
 import ShareRow from './ShareRow';
@@ -151,7 +157,29 @@ export default function Campaign({
      Read once, synchronously, as the initial value. An effect that fills
      the boxes after the first paint is a room somebody has already started
      typing into when their old brief lands on top of it. */
-  const [before] = useState(() => (typeof window === 'undefined' ? NOTHING_KEPT : loadBrief()));
+  /* ── Which piece of work is open ────────────────────────────────────
+ 
+     There used to be one of everything — one brief, one set of
+     recommendations, one plan — so a second campaign replaced the first
+     silently, with no list and nothing to press. `lib/adwork.ts` holds them
+     all; this is the one on screen. */
+  const [shelf, setShelf] = useState<Shelf>(() =>
+    typeof window === 'undefined' ? EMPTY_SHELF : loadShelf());
+  const [workId, setWorkId] = useState<string>(() => shelf.open ?? newWorkId());
+  /* Bumped when a saved campaign is opened, to remount the two panels below
+     so they re-read the stores this has just rewritten. They already read
+     their own stores, which is the seam; lifting three panels' state into
+     here to do the same job would be a far larger change. */
+  const [openedAt, setOpenedAt] = useState(0);
+
+  const [before] = useState(() => {
+    if (typeof window === 'undefined') return NOTHING_KEPT;
+    /* The open piece of work wins over the loose brief: the loose one is
+       what `adbrief.ts` keeps for the current visit, and the shelf is what
+       survives choosing a different campaign. */
+    const open = workById(shelf.open);
+    return open ? open.brief : loadBrief();
+  });
   const [what, setWhat] = useState(before.what);
   const [who, setWho] = useState(before.who);
   const [offer, setOffer] = useState(before.offer);
@@ -210,10 +238,73 @@ export default function Campaign({
      browser is not going to run this either way. */
   useEffect(() => {
     const soon = window.setTimeout(() => {
-      saveBrief({ what, who, offer, tone, market, placement, going, ads });
+      const brief = { what, who, offer, tone, market, placement, going, ads };
+      saveBrief(brief);
+      /* On the shelf too, from the moment there is something in the first
+         box — "the ones that I have worked on", not the ones somebody
+         remembered to press Save on. A Save button is a thing to forget,
+         and what it loses is the work done before anybody knew it existed.
+ 
+         The recommendations and the plan are read out of their own stores
+         rather than held here: those two panels own them, they write them
+         as they arrive, and reading them at this moment is what makes the
+         saved campaign whole rather than a brief with two gaps in it. */
+      if (!what.trim()) return;
+      const said = loadPicks();
+      setShelf(keepWork({
+        id: workId,
+        savedAt: new Date().toISOString(),
+        brief,
+        picks: said.picks,
+        instead: said.instead,
+        plan: loadPlan(),
+      }));
     }, 400);
     return () => window.clearTimeout(soon);
-  }, [what, who, offer, tone, market, placement, going, ads]);
+  }, [what, who, offer, tone, market, placement, going, ads, workId]);
+
+  /** Open a saved campaign: put all of it back, then let the panels re-read. */
+  const openSaved = useCallback((id: string) => {
+    const work = workById(id);
+    if (!work) return;
+    setWhat(work.brief.what);
+    setWho(work.brief.who);
+    setOffer(work.brief.offer);
+    setTone(work.brief.tone);
+    setMarket(work.brief.market || 'English');
+    setPlacement(work.brief.placement || 'feed');
+    setGoing([...work.brief.going]);
+    setAds(work.brief.ads.map((one) => ({ ...one, hashtags: [...one.hashtags] })));
+    setProblem(null);
+    /* The two stores the panels below read, written before they remount.
+       The other order would have them read the previous campaign's
+       recommendations for one paint, which is the wrong advert on screen. */
+    putPicks(work.picks, work.instead);
+    savePlan(work.plan);
+    saveBrief(work.brief);
+    setWorkId(work.id);
+    setShelf(openWork(work.id));
+    setOpenedAt((was) => was + 1);
+  }, []);
+
+  /** A new one, beside the others rather than on top of them. */
+  const startNew = useCallback(() => {
+    setWhat('');
+    setWho('');
+    setOffer('');
+    setTone('');
+    setAds([]);
+    setProblem(null);
+    /* Cleared rather than carried over: a new campaign that opens with the
+       last one's recommendations still on screen is the fault this whole
+       change is about, inverted. */
+    clearPicks();
+    savePlan(null);
+    forgetBrief();
+    setWorkId(newWorkId());
+    setShelf(openWork(null));
+    setOpenedAt((was) => was + 1);
+  }, []);
   /* ── The look the adviser above recommended ────────────────────────
  
      It lived in `AdFormats`'s own state and nowhere else, so the cards down
@@ -362,6 +453,7 @@ export default function Campaign({
           format, and half the formats this studio can make are not adverts
           at all. See `AdFormats.tsx`. */}
       <AdFormats
+        key={`shape-${openedAt}`}
         brief={{
           what,
           who,
@@ -460,26 +552,86 @@ export default function Campaign({
             device. There is no account behind it, and somebody who opens
             the app on their phone and finds an empty desk should have
             been told rather than left to guess. */}
-        {(what || who || offer || tone || ads.length > 0) && (
-          <div className="flex items-center justify-between gap-3 pb-1">
-            <p className="text-xs text-zinc-500 leading-snug">
-              {t('ads.keptHere', 'This brief is kept in this browser, so it is still here when you come back from another room. It is not on your other devices.')}
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setWhat('');
-                setWho('');
-                setOffer('');
-                setTone('');
-                setAds([]);
-                setProblem(null);
-                forgetBrief();
-              }}
-              className="min-h-[44px] flex-shrink-0 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-300 hover:border-zinc-600 hover:text-white"
-            >
-              {t('ads.startOver', 'Start a new brief')}
-            </button>
+        {/* ── The ones you have worked on ────────────────────────────
+ 
+            "The ones that I have worked on should be able to be a button
+            to push on and then everything opens as it was."
+ 
+            One press puts the brief, the recommendations with their
+            reasons, the written adverts and the week all back. Saved
+            without being asked for, from the moment there is something in
+            the first box — a Save button is a thing to forget, and what it
+            loses is the work somebody did before they knew it was there.
+ 
+            Said out loud that it is this browser: there is no account
+            behind it, and finding an empty shelf on your phone is worse
+            than being told. */}
+        {(shelf.works.length > 0 || what || ads.length > 0) && (
+          <div className="space-y-2 pb-1">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-zinc-500 leading-snug">
+                {t('ads.keptHere', 'These are kept in this browser, so they are still here when you come back from another room. They are not on your other devices.')}
+              </p>
+              <button
+                type="button"
+                onClick={startNew}
+                className="min-h-[44px] flex-shrink-0 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-300 hover:border-zinc-600 hover:text-white"
+              >
+                {t('ads.startOver', 'Start a new one')}
+              </button>
+            </div>
+            {shelf.works.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {shelf.works.map((one) => {
+                  const here = one.id === workId;
+                  const name = nameOf(one);
+                  if (!name) return null;
+                  return (
+                    <div
+                      key={one.id}
+                      className={`flex items-stretch rounded-xl border overflow-hidden ${
+                        here ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => openSaved(one.id)}
+                        aria-current={here ? 'true' : undefined}
+                        className="min-h-[44px] max-w-[15rem] text-left px-3 py-2"
+                      >
+                        <span className={`block truncate text-sm font-semibold ${here ? 'text-emerald-300' : 'text-zinc-300'}`}>
+                          {name}
+                        </span>
+                        <span className="block text-xs text-zinc-500">
+                          {/* What is in it, so a row is recognisable before
+                              it is opened rather than after. */}
+                          {[
+                            one.picks.length
+                              ? `${one.picks.length} ${t('ads.savedPicks', 'recommended')}`
+                              : '',
+                            one.brief.ads.length
+                              ? `${one.brief.ads.length} ${t('ads.savedAds', 'written')}`
+                              : '',
+                            one.plan ? t('ads.savedPlan', 'a plan') : '',
+                          ].filter(Boolean).join(' \u00b7 ') || t('ads.savedBrief', 'just the brief')}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShelf(dropWork(one.id));
+                          if (here) startNew();
+                        }}
+                        aria-label={`${t('ads.forget', 'Forget')} ${name}`}
+                        className="min-h-[44px] px-2.5 border-l border-zinc-800 text-zinc-500 hover:text-rose-300 hover:bg-rose-500/10"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
         <div className="space-y-1.5">
@@ -746,6 +898,7 @@ export default function Campaign({
       {owns(paid, MARKETING) ? (
         <>
           <MarketPlan
+            key={`plan-${openedAt}`}
             brief={{ what, who, offer, tone, market }}
             onGoTo={onGoTo}
             onSetUp={onSetUp}

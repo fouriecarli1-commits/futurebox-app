@@ -3399,3 +3399,66 @@ turns all four assertions red.
 rule "every part of the brief is kept" allowed `ads: []` — which contains
 the word `ads`, saves nothing, and passed. It reads the call's argument list
 and requires shorthand now.
+
+---
+
+## The adverts you have worked on, each one a button (11 September, night)
+
+> "The advert also has to be able to resume a previous session. It should
+> still be open when moving between rooms. And the ones that I have worked
+> on should be able to be a button to push on and then everything opens as
+> it was. Currently I cannot go back to our previous ad generation and find
+> it as it was."
+
+**Three faults, and only the first had been fixed an hour earlier.**
+
+1. The brief did not survive leaving the room. Fixed in `adbrief.ts` — but
+   that keeps ONE brief, the current one.
+2. **The recommendation cards did not survive either.** `AdFormats` wrote
+   its picks down for the week below and never read them back into itself,
+   so the reasons, the thing to watch out for and the format named as the
+   wrong answer were written, shown once, and dropped on unmount. That line
+   naming the wrong answer is the most useful thing on the screen and the
+   only place in the app that says it.
+3. **There had only ever been ONE of everything.** One brief, one set of
+   recommendations, one plan. A second campaign did not sit beside the
+   first; it replaced it, silently, with no list and nothing to press.
+
+`app/lib/adwork.ts` holds up to twelve pieces of work, each carrying the
+brief, the ticked destinations, the written adverts, the recommendations
+**with their reasons**, and the week. Saved without being asked for, from
+the moment there is something in the first box — "the ones that I have
+worked on", not the ones somebody remembered to press Save on.
+
+`chosenformat.ts` keeps the whole card now, not `{id, first, style}`. The
+reasons **are** the recommendation; an id and a sentence is a note about
+one.
+
+**Why the panels were not rewritten to take props.** All three already read
+three separate stores, and that is the seam: switching writes those stores
+and bumps a key so the panels remount and re-read. Lifting three panels'
+state into their parent to achieve the same thing would be a far larger
+change — and the larger change is the one that breaks the video hand-off
+fixed an hour before.
+
+### Two things the browser proved and the source could not
+
+The probe walks out to the video desk, out to Make a song, back in, reloads,
+starts a second campaign, and switches back to the first.
+
+**The walk failing was the feature working.** An earlier version re-typed
+the brief and pressed "Work out what to make" on the way back — and timed
+out, because the cards had come back and that button now reads "Think
+again". The probe asserts the brief and the cards are waiting instead.
+
+**And the probe was measuring nothing.** Both campaigns were stubbed with
+the *same* two recommendations, so opening the first while showing the
+second's advice passed every assertion. Removing the line that restores the
+advice did not turn it red. The two stubs answer differently now, keyed on
+the brief, and removing that line turns two assertions red.
+
+That last one is worth keeping in mind: **a negative test that does not go
+red is a finding about the test.** Twice tonight a mutation appeared not to
+be caught, and once it was the probe's fault and once it was mine — a
+shell-quoted `python3 -c` that never applied the edit at all. Verify the
+mutation landed before drawing a conclusion from a green run.

@@ -357,7 +357,7 @@ ok('  and a platform nobody recognises still gives a usable shape',
    have made the room worse, not better. */
 const desk = readFileSync('app/components/Campaign.tsx', 'utf8');
 
-ok('the advert brief is written down', /saveBrief\(\{/.test(desk),
+ok('the advert brief is written down', /saveBrief\(/.test(desk),
   'leaving the room throws away everything somebody typed');
 ok('  and read back when the room opens', /loadBrief\(\)/.test(desk),
   'it is saved and never restored, which is the same thing with extra steps');
@@ -376,9 +376,24 @@ ok('  as the boxes\' first value, not dropped in after the first paint',
    allowed `ads: []`, which contains the word `ads`, saves nothing, and
    passed. Sixth time this week that the answer was to match the thing
    rather than the word for it. */
-const call = /saveBrief\(\{([^}]*)\}\)/.exec(desk);
+/* The argument, whether it is written inline or named first.
+ 
+   It was `saveBrief({ what, who, … })` and became `const brief = { … };
+   saveBrief(brief)` when the shelf needed the same object twice. The
+   property did not change and this rule went red, which is the rule
+   matching the spelling rather than the thing — twice now in one file. So
+   it follows an identifier back to its declaration. */
+function objectPassedTo(call: string, source: string): string {
+  const inline = new RegExp(`${call}\\(\\s*\\{([^}]*)\\}`).exec(source);
+  if (inline) return inline[1];
+  const named = new RegExp(`${call}\\(\\s*([A-Za-z_$][\\w$]*)\\s*\\)`).exec(source);
+  if (!named) return '';
+  const declared = new RegExp(`const ${named[1]} = \\{([^}]*)\\}`).exec(source);
+  return declared ? declared[1] : '';
+}
+
 const passed = new Set(
-  (call?.[1] ?? '')
+  objectPassedTo('saveBrief', desk)
     .split(',')
     .map((one) => one.trim())
     .filter((one) => one && !one.includes(':')),
@@ -400,6 +415,60 @@ const words = readFileSync('app/lib/i18n.tsx', 'utf8');
 ok('  and the room says it is this browser only, in both languages',
   /"ads\.keptHere": \{ en: "[^"]{40,}", af: "[^"]{40,}" \}/.test(words),
   'kept per device and never mentioned, which is how somebody discovers it on their phone');
+
+/* ── More than one, each a button ───────────────────────────────────
+ 
+   Carli, 11 September 2026: "The ones that I have worked on should be able
+   to be a button to push on and then everything opens as it was. Currently
+   I cannot go back to our previous ad generation and find it as it was."
+ 
+   Three things were wrong and only the first had been fixed. The brief did
+   not survive leaving the room — fixed. The recommendation cards did not
+   survive either: the reasons, the thing to watch out for and the format
+   named as the wrong answer were written, shown once, and dropped. And
+   there had only ever been ONE of everything, so a second campaign
+   replaced the first silently, with no list and nothing to press. */
+const shelf = readFileSync('app/lib/adwork.ts', 'utf8');
+const shape = readFileSync('app/components/AdFormats.tsx', 'utf8');
+
+ok('the recommendation cards come back when the room reopens',
+  /loadPicks\(\)/.test(shape),
+  'the panel writes its cards down and never reads them, so every exit loses the advice');
+
+/* The reasons, not only the ids. `loadChosen` answers the week's narrower
+   question — which formats, and the first thing to make — and a card
+   rebuilt from that alone is a heading with no advice under it. */
+const store = readFileSync('app/lib/chosenformat.ts', 'utf8');
+for (const part of ['why', 'watchOut', 'styleWhy']) {
+  ok(`  including its ${part}`, new RegExp(`readonly ${part}\\?:`).test(store),
+    'the card comes back as a heading with the advice missing');
+}
+ok('  and the format it named as the wrong answer',
+  /INSTEAD_KEY/.test(store) && /instead/.test(shape),
+  'the most useful line on the screen is the one that does not come back');
+
+/* A campaign is all of it, not a brief with two gaps. */
+for (const part of ['brief', 'picks', 'instead', 'plan']) {
+  ok(`a saved campaign carries its ${part}`, new RegExp(`readonly ${part}:`).test(shelf),
+    'it opens as a brief with the work missing');
+}
+
+ok('there can be more than one', /MOST_WORKS/.test(shelf) && /works: readonly Work\[\]/.test(shelf),
+  'a second campaign replaces the first, silently');
+ok('  and they are saved without being asked for',
+  /keepWork\(\{/.test(desk) && !/Save this one|Save campaign/.test(desk),
+  'a Save button is a thing to forget, and what it loses is the work done before anybody knew it was there');
+ok('  and opening one puts the cards and the week back too',
+  /putPicks\(work\.picks, work\.instead\)/.test(desk) && /savePlan\(work\.plan\)/.test(desk),
+  'the brief comes back and the advice does not, which is half an answer');
+ok('  before the panels are told to read again',
+  desk.indexOf('putPicks(work.picks') < desk.indexOf('setOpenedAt((was) => was + 1)'),
+  'the panels remount first and read the previous campaign for one paint');
+ok('  and a new one clears them rather than inheriting them',
+  /clearPicks\(\)/.test(desk) && /savePlan\(null\)/.test(desk),
+  'a new campaign opens with the last one\'s recommendations on screen');
+ok('and one that is finished can be forgotten', /dropWork\(/.test(desk),
+  'twelve campaigns and no way to remove one');
 
 if (failures) {
   console.error(`\ncheck:adhandover — ${failures} failure(s).\n`);

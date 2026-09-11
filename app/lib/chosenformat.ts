@@ -28,10 +28,33 @@ import { AD_FORMATS, formatById, type AdFormat } from './adformats';
 
 const KEY = 'futurebox.adformats.v1';
 
+/**
+ * A recommendation, whole.
+ *
+ * ── Why the reasons are kept and not only the ids ───────────────────
+ *
+ * This held `{ id, first, style }` — enough for the week below to know
+ * what was recommended, and not enough to draw the card again. So the
+ * adviser's panel lost its cards the moment somebody left the room: the
+ * reasons, the thing to watch out for and the line naming the wrong
+ * answer were all written, shown once, and dropped.
+ *
+ * Carli, 11 September 2026: "Currently I cannot go back to our previous
+ * ad generation and find it as it was."
+ *
+ * The reasons ARE the recommendation. An id and a sentence is a note
+ * about one; the card is the product.
+ */
 export interface Chosen {
   readonly id: string;
   /** The first thing to make, as the adviser wrote it for this business. */
   readonly first: string;
+  /** Why this one, for this business. The body of the card. */
+  readonly why?: string;
+  /** What makes it go wrong. The line nobody else writes. */
+  readonly watchOut?: string;
+  /** Why that look, in their terms. */
+  readonly styleWhy?: string;
   /**
    * The look it recommended, by id from `adstyles.ts`.
    *
@@ -44,9 +67,13 @@ export interface Chosen {
   readonly style?: string;
 }
 
-export function saveChosen(chosen: readonly Chosen[]): void {
+/** What the adviser said, beside the picks: the format NOT to spend a month on. */
+const INSTEAD_KEY = 'futurebox.adformats.instead.v1';
+
+export function saveChosen(chosen: readonly Chosen[], instead?: string): void {
   try {
     window.localStorage.setItem(KEY, JSON.stringify(chosen));
+    if (instead !== undefined) window.localStorage.setItem(INSTEAD_KEY, instead);
   } catch {
     // Storage blocked. The panel still shows it for this session.
   }
@@ -80,5 +107,51 @@ export function loadChosen(): { format: AdFormat; first: string; style?: string 
       .slice(0, AD_FORMATS.length);
   } catch {
     return [];
+  }
+}
+
+/**
+ * The recommendations exactly as they were shown, for the panel to draw again.
+ *
+ * `loadChosen` above answers the week's question — "which formats, and what
+ * was the first thing to make" — and deliberately drops anything the
+ * catalogue no longer has. This answers the panel's question, which is "put
+ * the cards back", and so it keeps the words.
+ */
+export function loadPicks(): { picks: Chosen[]; instead: string } {
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    const said = raw ? (JSON.parse(raw) as Chosen[]) : [];
+    const picks = Array.isArray(said)
+      ? said
+          .filter((one) => one && typeof one.id === 'string' && formatById(one.id))
+          .slice(0, AD_FORMATS.length)
+          .map((one) => ({
+            id: String(one.id),
+            first: String(one.first ?? ''),
+            why: one.why ? String(one.why) : undefined,
+            watchOut: one.watchOut ? String(one.watchOut) : undefined,
+            style: one.style ? String(one.style) : undefined,
+            styleWhy: one.styleWhy ? String(one.styleWhy) : undefined,
+          }))
+      : [];
+    return { picks, instead: window.localStorage.getItem(INSTEAD_KEY) ?? '' };
+  } catch {
+    return { picks: [], instead: '' };
+  }
+}
+
+/** Put a saved campaign's recommendations back where the panel reads them. */
+export function putPicks(picks: readonly Chosen[], instead: string): void {
+  saveChosen(picks, instead);
+}
+
+/** Nothing recommended. Used when a new campaign is started. */
+export function clearPicks(): void {
+  try {
+    window.localStorage.removeItem(KEY);
+    window.localStorage.removeItem(INSTEAD_KEY);
+  } catch {
+    /* Storage off; the screen is cleared either way. */
   }
 }

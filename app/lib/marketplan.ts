@@ -255,3 +255,34 @@ export function icsOf(week: readonly Slot[], options: IcsOptions = {}): string {
   // enforce.
   return lines.map(folded).join('\r\n') + '\r\n';
 }
+
+
+/* ── Where the open plan lives ─────────────────────────────────────────
+ 
+   Moved out of `MarketPlan.tsx`, which held it privately. That was right
+   while there was one plan. A saved campaign carries its own, so the
+   switcher needs to read and write the same slot the panel reads, and two
+   copies of these two functions is one to get wrong.
+ 
+   One plan is a month of work, so it survives a reload. */
+const PLAN_KEY = 'futurebox.marketplan.v1';
+
+export function loadPlan(): Plan | null {
+  try {
+    const raw = window.localStorage.getItem(PLAN_KEY);
+    if (!raw) return null;
+    const said = JSON.parse(raw) as Plan;
+    return Array.isArray(said?.week) ? said : null;
+  } catch {
+    return null;
+  }
+}
+
+export function savePlan(plan: Plan | null): void {
+  try {
+    if (plan) window.localStorage.setItem(PLAN_KEY, JSON.stringify(plan));
+    else window.localStorage.removeItem(PLAN_KEY);
+  } catch {
+    /* Storage blocked. It is on the screen for this session. */
+  }
+}

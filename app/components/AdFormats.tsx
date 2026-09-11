@@ -42,7 +42,7 @@ import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { AD_FORMATS, formatById } from '../lib/adformats';
 import { daysSince, oldestReview, styleById } from '../lib/adstyles';
-import { saveChosen } from '../lib/chosenformat';
+import { loadPicks, saveChosen } from '../lib/chosenformat';
 import { handoverFor, type HandoverAd } from '../lib/adhandover';
 import type { SurfaceId } from '../lib/surfaces';
 import Card from './Card';
@@ -106,8 +106,25 @@ export default function AdFormats({
   readonly onSetUp: (room: SurfaceId, op: string, value: string) => void;
 }): React.ReactElement {
   const { t, lang } = useLang();
-  const [picks, setPicks] = useState<Pick[] | null>(null);
-  const [instead, setInstead] = useState('');
+  /* ── The cards, put back ────────────────────────────────────────────
+ 
+     These lived in this component's state and nowhere else, so the whole
+     recommendation — the reasons, the thing to watch out for, the format
+     named as the wrong answer — was written once and lost the moment
+     somebody left the room. Every button on this card is a way of leaving
+     the room.
+ 
+     Carli, 11 September 2026: "Currently I cannot go back to our previous
+     ad generation and find it as it was."
+ 
+     Read synchronously as the first value rather than in an effect: an
+     effect drops the old cards on top of a panel somebody may already have
+     asked again. */
+  const restored = useState(() => (typeof window === 'undefined' ? null : loadPicks()))[0];
+  const [picks, setPicks] = useState<Pick[] | null>(
+    restored && restored.picks.length ? (restored.picks as Pick[]) : null,
+  );
+  const [instead, setInstead] = useState(restored?.instead ?? '');
   const [moves, setMoves] = useState('');
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
@@ -142,7 +159,19 @@ export default function AdFormats({
       /* Written down for the week below, which otherwise plans slots with
          nothing in them while the panel above has just named the one thing
          worth making. See `lib/chosenformat.ts`. */
-      saveChosen(said.picks.map((one) => ({ id: one.id, first: one.first, style: one.style })));
+      /* The whole card, not only what the week needs. `loadChosen` still
+         answers the week's narrower question from the same rows. */
+      saveChosen(
+        said.picks.map((one) => ({
+          id: one.id,
+          first: one.first,
+          why: one.why,
+          watchOut: one.watchOut,
+          style: one.style,
+          styleWhy: one.styleWhy,
+        })),
+        said.instead ?? '',
+      );
     } catch {
       setProblem(t('shape.failed', 'That could not be worked out just now.'));
     } finally {

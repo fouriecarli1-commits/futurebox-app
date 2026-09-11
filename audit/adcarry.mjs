@@ -70,8 +70,47 @@ const PICKS = {
   instead: 'Do not spend a month on a two-minute explainer nobody asked for.',
   moves: [],
 };
-await p.route('**/api/adformats', (route) =>
-  route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(PICKS) }));
+/**
+ * A different answer for a different brief.
+ *
+ * Not decoration. Switching between two saved campaigns can only be tested
+ * if the two are told apart, and an earlier version of this file answered
+ * both with the same two cards — so opening the first while showing the
+ * second's advice passed every assertion below. Removing the line that
+ * restores the advice did not turn it red, which is a probe measuring
+ * nothing and reporting a pass.
+ */
+const COFFEE = {
+  picks: [
+    {
+      id: 'short_vertical',
+      why: 'A queue at a market stall is the whole argument, and it is visible.',
+      first: 'Steam off the machine at seven in the morning, the market still setting up',
+      watchOut: 'Do not film an empty stall.',
+      style: 'the_place',
+      styleWhy: 'The market is the reason people came.',
+    },
+    {
+      id: 'spoken_read',
+      why: 'Where the cart will be this weekend is a fact, and facts are read, not sung.',
+      first: 'Twenty seconds: where the cart is this Saturday, and what is on',
+      watchOut: 'A song cannot say an address.',
+      style: 'own_voice_unscripted',
+      styleWhy: 'A real voice beats a polished one at a market.',
+    },
+  ],
+  instead: 'Do not spend a month on a jingle for a cart that moves every weekend.',
+  moves: [],
+};
+await p.route('**/api/adformats', async (route) => {
+  const asked = route.request().postDataJSON();
+  const coffee = /coffee|cart|market/i.test(String(asked?.what ?? ''));
+  await route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify(coffee ? COFFEE : PICKS),
+  });
+});
 /* The rooms this walk passes through must not reach out. */
 await p.route('**/api/taste*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"taste":[],"ready":true}' }));
 
@@ -179,12 +218,22 @@ try {
 
   /* ── Two: a song. The room that used to open completely empty. ─── */
   await toRoom(p, 'Adverts');
-  await p.waitForTimeout(1400);
+  await p.waitForTimeout(1600);
   const back = p.locator('div.fixed.inset-0.z-50').first();
-  await back.locator('#ads-what').fill(WHAT);
-  await back.locator('button').filter({ hasText: /Work out what to make|Werk uit wat om te maak/i }).first().click();
-  await p.waitForTimeout(1500);
-  await back.locator('button').filter({ hasText: /Open the room and start it|Maak die kamer oop/i }).nth(1).click();
+
+  /* Nothing is re-typed and nothing is re-asked here, and that IS the
+     assertion: the brief and the cards are both supposed to be waiting.
+     An earlier version of this probe filled the box and pressed "Work out
+     what to make" again, and then timed out looking for that button —
+     because the cards had come back and the button now reads "Think
+     again". The walk failing was the feature working. */
+  const kept = (await back.locator('#ads-what').inputValue().catch(() => '')) ?? '';
+  check('walking back in, the brief is waiting', kept.trim() === WHAT, `"${kept}"`);
+  const cards = back.locator('button').filter({ hasText: /Open the room and start it|Maak die kamer oop/i });
+  check('  and so are the cards, without asking again', (await cards.count()) >= 2,
+    `${await cards.count()} — the advice was written, shown once and dropped`);
+
+  await cards.nth(1).click();
   await p.waitForTimeout(2200);
   await p.screenshot({ path: shot('adcarry-make.png') });
 
@@ -225,18 +274,67 @@ try {
     .inputValue().catch(() => '')) ?? '';
   check('  and after a reload', afterLoad.trim() === WHAT, `"${afterLoad}"`);
 
-  /* One press puts it back to empty, or a second campaign is six boxes
-     cleared by hand. */
-  const over = p.locator('div.fixed.inset-0.z-50 button')
-    .filter({ hasText: /Start a new brief|Begin .{0,3}n nuwe opdrag/i }).first();
-  check('  and there is one press that clears it', (await over.count()) > 0,
-    'kept for ever, with no way to start again');
-  if (await over.count()) {
-    await over.click();
-    await p.waitForTimeout(600);
-    const emptied = (await p.locator('div.fixed.inset-0.z-50').first().locator('#ads-what')
-      .inputValue().catch(() => 'x')) ?? 'x';
-    check('    which actually empties it', emptied.trim() === '', `"${emptied}"`);
+  /* Starting a fresh one, and what happens to the old one, is section four
+     below: it is the same press and this used to check it against the
+     label it had before the shelf existed. One assertion, in the place
+     where the interesting half of it lives. */
+  /* ── Four: two campaigns, each a button ─────────────────────────
+ 
+     "The ones that I have worked on should be able to be a button to push
+     on and then everything opens as it was."
+ 
+     Source cannot show this. It can show a shelf that is written and a
+     switcher that reads it, and still have the panels draw the previous
+     campaign because they were remounted a paint too early, or the cards
+     come back without their reasons. So: make a second campaign, switch
+     back to the first, and read what is on the screen. */
+  const desk = () => p.locator('div.fixed.inset-0.z-50').first();
+  const SECOND = 'a mobile coffee cart at weekend markets';
+
+  const fresh = desk().locator('button').filter({ hasText: /Start a new one|Begin .{0,3}n nuwe een/i }).first();
+  check('there is a way to start a second one beside the first', (await fresh.count()) > 0,
+    'a new campaign can only replace the one before it');
+  if ((await fresh.count()) > 0) {
+    await fresh.click();
+    await p.waitForTimeout(700);
+    const cleared = (await desk().locator('#ads-what').inputValue().catch(() => 'x')) ?? 'x';
+    check('  which opens empty rather than inheriting the last one', cleared.trim() === '', `"${cleared}"`);
+
+    await desk().locator('#ads-what').fill(SECOND);
+    await p.waitForTimeout(900);
+    await desk().locator('button').filter({ hasText: /Work out what to make|Werk uit wat om te maak/i }).first().click();
+    await p.waitForTimeout(1600);
+
+    /* Both on the shelf now, named by their own first line. */
+    const first = desk().locator('button[aria-current], button').filter({ hasText: /handmade leather bags/i }).first();
+    check('  and the earlier one is still there to press', (await first.count()) > 0,
+      'the second campaign replaced the first rather than sitting beside it');
+
+    if ((await first.count()) > 0) {
+      await first.click();
+      await p.waitForTimeout(1200);
+      const back = (await desk().locator('#ads-what').inputValue().catch(() => '')) ?? '';
+      check('pressing it brings the first brief back', back.trim() === WHAT, `"${back}"`);
+
+      /* And the advice with it — the part that was written, shown once and
+         dropped. Read as words on the screen, because a card rebuilt from
+         ids alone is a heading with nothing under it. */
+      const said = (await desk().innerText()).replace(/\s+/g, ' ');
+      check('  with the recommendation cards on it', /Open the room and start it|Maak die kamer oop/i.test(said),
+        said.slice(0, 140));
+      /* THIS campaign's words, not the other one's. The two stubs answer
+         differently on purpose: with one answer for both, a switcher that
+         restores nothing shows the second campaign's cards and passes. */
+      check('  and their reasons, not just their names',
+        /scrolling|buy a bag|plays twice|play it twice/i.test(said),
+        'the cards came back as headings with the advice missing');
+      check('  and they belong to this campaign, not the one before it',
+        !/market still setting up|cart that moves|queue at a market/i.test(said),
+        'the first brief came back under the second campaign\u2019s advice');
+      check('  and the one it said not to spend a month on',
+        /two-minute explainer|What not to spend a month on|Waaraan om nie/i.test(said),
+        'the most useful line on the screen is the one that did not come back');
+    }
   }
 } finally {
   await b.close();

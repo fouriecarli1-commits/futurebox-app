@@ -27,7 +27,7 @@ import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { accessToken } from '../lib/cloud';
 import {
-  DAY_IDS, icsOf, loadPerDay, sortedWeek, type DayId, type Plan,
+  DAY_IDS, icsOf, loadPerDay, loadPlan, savePlan, sortedWeek, type DayId, type Plan,
 } from '../lib/marketplan';
 import { paperOf, type Words } from '../lib/planpaper';
 import { loadReport } from '../lib/adreport';
@@ -38,28 +38,12 @@ import type { SurfaceId } from '../lib/surfaces';
 import { byWeekday, standoutDays } from '../lib/adweek';
 import Note from './Note';
 
-const KEY = 'futurebox.marketplan.v1';
-
-/** The last plan, so it survives a reload. One plan is a month of work. */
-function loadPlan(): Plan | null {
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return null;
-    const said = JSON.parse(raw) as Plan;
-    return Array.isArray(said?.week) ? said : null;
-  } catch {
-    return null;
-  }
-}
-
-function savePlan(plan: Plan | null): void {
-  try {
-    if (plan) window.localStorage.setItem(KEY, JSON.stringify(plan));
-    else window.localStorage.removeItem(KEY);
-  } catch {
-    // Storage blocked. It is on the screen for this session.
-  }
-}
+/* The plan's own store moved to `lib/marketplan.ts`.
+ 
+   It lived here, private, which was right while there was one plan. A
+   saved campaign carries its plan with it, so the switcher has to be able
+   to read and write the slot this panel reads — and a second copy of
+   these two functions is a second copy to get wrong. */
 
 /**
  * The weekdays this account's own report says did better and worse.
