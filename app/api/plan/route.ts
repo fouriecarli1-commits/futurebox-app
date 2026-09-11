@@ -309,7 +309,24 @@ export async function POST(request: Request): Promise<Response> {
     if (!parsed) {
       return Response.json({ error: 'unparsed', message: 'That came back mangled.' }, { status: 502 });
     }
-    return Response.json(parsed);
+    /* Wrapped, and it has to be.
+
+       This returned `parsed` — the plan at the top level — and the screen
+       reads `said.plan`. So every "Work out the plan" spent two minutes and
+       a high-effort call and then said "That could not be worked out just
+       now", because the one key it looks for was never there. The marketing
+       desk's centrepiece has never once rendered.
+
+       Nothing was broken. The route worked, the model answered, the schema
+       validated, the screen handled its failure case politely. Two files
+       disagreed about one word and each was internally consistent — which is
+       why it survived a build, a typecheck and eighty-odd checks.
+
+       The wrapper is the right side to keep: `{ error, message }` comes back
+       on every failure path above, so a bare plan would make a plan with a
+       field called `error` indistinguishable from a refusal. See
+       `check:jsonshape`. */
+    return Response.json({ plan: parsed });
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) {
       return Response.json({ error: 'bad_key', message: 'The configured key was rejected.' }, { status: 502 });
