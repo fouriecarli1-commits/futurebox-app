@@ -9,11 +9,11 @@ they can be reviewed in one place instead of remembered.
 not be checked, it says so and it says how to check it. Entries move to
 **Settled** with a date and a commit rather than being deleted.
 
-Last updated: 2026-09-10.
+Last updated: 2026-09-11.
 
 ---
 
-## Lees dit eerste — waar dinge staan, 10 September 2026
+## Lees dit eerste — waar dinge staan, 11 September 2026
 
 *Hierdie register is 2 600 reëls lank en groei elke sessie. Niemand lees dit
 van voor af nie, en 'n register wat niemand lees nie, is nie 'n register nie.
@@ -28,6 +28,8 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 | **Maak `/api/eleven/dictionary?key=…` een keer oop** | Dit bou die uitspraakwoordeboek op jou rekening uit die reëls in die kode. Plak albei ids by Vercel in, redeploy, en **luister**. Sonder daardie twee waardes word niks toegepas nie en niks sê so nie. |
 | **Stuur die ElevenLabs-verkoopse-pos** | `docs/ELEVENLABS-SALES.md`. Dit is die ding wat die terme-bladsy weer laat verander — die lisensie wat deur na lede loop, is nie op die self-diens plan nie. |
 | **Lees Supabase Pro en Vercel Pro se limiete** | Albei skaal met **gratis** lede, anders as ElevenLabs. Tienduisend gratis rekeninge is die launch-vorm. Hierdie masjien kan nie by hulle bladsye kom nie (geblokkeer). Die een getal wat besluit: Supabase se **maandelikse aktiewe gebruikers**. |
+| **Toets die bemarkingslessenaar** | Die R199-byvoegsel is op jou rekening (11 September, `supabase/TOETSTOEGANG.sql`). Die plan het nog **nooit gewerk nie** — sien hieronder — dit is nou reg en nog nooit met 'n regte sleutel geloop nie. Jy is die eerste mens wat dit gaan sien werk. |
+| **Kyk of Copilot se shots nou goed genoeg is** | Die beskrywing vra nou die onderwerp, die lig, wat die kamera doen, en aanhalings om gesproke woorde. Wat dit werklik skryf, kan ek nie van hier af sien nie — dit het 'n lewende sleutel nodig. |
 
 ### Twee ontwerpbesluite wat op jou wag
 
@@ -55,6 +57,23 @@ voorgekom, en elkeen het 'n regte fout weggesteek:
 - dit noem 'n **eienskap wat dit nooit gemeet het nie** — "dit sit heel onder"
   het net bewys die naam kom in die lêer voor;
 - dit tref sy **eie prosa** — drie keer op een dag.
+
+### En die een ding om te onthou uit 11 September
+
+Dieselfde les, twee vlakke dieper. Drie nuwe vorms, almal op een dag:
+
+- **'n Proef wat een kant vervals, toets die ander kant.** `audit/addon.mjs`
+  het `/api/plan` as `{ plan: … }` vervals en bevestig die skerm werk.
+  Negentien groen toetse, maande lank, oor 'n roete wat iets anders gestuur
+  het. Die vervalsing is 'n **derde kopie** van 'n kontrak wat reeds twee
+  gehad het — en die een waaraan niemand dink nie, want dit woon in die toets.
+- **Die toetse self was nooit getipe-kontroleer nie.** `tsconfig` sluit
+  `**/*.ts` in; elke toets is 'n `.mts`. Al 106 lêers in `scripts/` en elke
+  proef in `audit/` was buite die ding wat die kode kontroleer. Sestien foute
+  het gewag; een was lewend.
+- **'n Toets kan 'n eienskap presies vashou en die verkeerde een vashou.**
+  "Niks op die bladsy kom ná die vasvra nie" was waar, en het die kaart op
+  Spotlight gesit. Die punt was nooit hoe ver af nie — dit was die kamer.
 
 ---
 
@@ -2869,3 +2888,89 @@ that is one row short, and it is cheap to ask.
 Until then the page publishes the name, the registration number, the status
 and the mailbox, and says the address is on the CIPC record and comes on
 request. Honest, usable, one row short.
+
+---
+
+# 11 September 2026 — the advert platform, and four faults of the same shape
+
+A day spent inside one room, because she was testing it. Everything below
+came out of her using the thing rather than out of a plan.
+
+## The marketing plan had never once rendered
+
+She unlocked the R199 desk to test what it delivers. Its centrepiece could
+not have worked.
+
+`/api/plan` returned the plan at the top level. `MarketPlan.tsx` reads
+`said.plan`. So every "Work out the plan" spent up to two minutes and a
+high-effort Opus call, got a good plan back, and showed *"That could not be
+worked out just now."* Every time, since the room was built.
+
+**Nothing was broken.** The route worked, the model answered, the schema
+validated, the screen handled its failure politely. Two files disagreed
+about one word and each was internally consistent — invisible to a build, a
+typecheck and eighty-six checks, because the route is typed against its
+schema, the screen against its own declaration, and nothing in TypeScript
+joins them across a `fetch`.
+
+Found while writing a download button for a plan that could not exist.
+
+`check:jsonshape` now pins the six routes that hand back a model's reply
+against the seven screens that read them, **and the probes that stub them**.
+
+## The four faults, in the order they were found
+
+| What | Why every check missed it |
+|---|---|
+| The copilot could fill **one** field of a five-field brief | The wiring was whole. `check:ops` walks the wiring. |
+| It could set up the room it was standing in, **not** the one it was sending you to | The other rooms' operations were never described to it. |
+| Subtitles and the song picker existed **only in the other half** of the video desk | Both worked, in the form somebody opens second. |
+| "Film this one" dropped the spoken line | The advert desk keeps shot and line apart on purpose; the video desk knows a line only by its quotation marks. |
+
+Each one: built, correct, and unable to do the job. A check that walks the
+wiring cannot see any of them.
+
+## What the advert desk is now
+
+It asked *how to say it* and never *what to make*. For a lot of the people
+it is for, an advert is the wrong answer — a one-person workshop is better
+served by her own voice over her own photographs, a church group wants a
+song, a consultancy wants an episode.
+
+`app/lib/adformats.ts` is the catalogue: eight things this studio can
+actually make, each naming the room, the operation that sets it up, when it
+is right, and **what makes it wrong**. `/api/adformats` recommends two or
+three by id — it recommends, it does not invent — names the first thing to
+make, and names one format as the wrong answer. Every card opens the room,
+set up.
+
+**What it does not claim.** She asked for suggestions that had looked at
+what is working in marketing videos now. Nothing here reads the internet, so
+"this is what is working right now" would be a claim nobody checked. It is
+told today's date and asked to say which of its own lines rest on something
+that moves; the screen prints that rather than hiding it.
+
+## Open, and worth a decision
+
+- **Does anybody pay yet?** Still no, as of 11 September. The R199 on her own
+  account is a database row with a `test-` reference, not a payment — run
+  the query at the foot of `supabase/TOETSTOEGANG.sql` before launch to see
+  what was given away rather than bought.
+- **Is the format catalogue the right eight?** It is my list, built from what
+  the studio can make. Her trade knowledge beats mine; entries are cheap to
+  add and each one costs a room and an operation.
+- **#115 is entirely hers now.** The rules are in the repo, the route that
+  uploads them is written, `sayItRight()` is on all three speech paths, and
+  none of it does anything until `/api/eleven/dictionary?key=…` is opened
+  once and two ids are pasted into Vercel.
+
+## What I would do next
+
+1. **Wait for her to test the desk.** Everything above is unverified against
+   a live key. The next real fault comes from her using it, as all four of
+   today's did.
+2. **`docs/SWITCH-ON.md` has no entry for the marketing add-on.** The R199
+   room needs `addons.sql` run and Paystack wired; only the first is done.
+3. **The Vercel plan is undocumented and fourteen routes declare 300-second
+   functions.** Deploys succeed, so the plan allows it — but nothing in the
+   repo says which plan, and a downgrade would fail every deploy at once.
