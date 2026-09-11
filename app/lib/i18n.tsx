@@ -2389,6 +2389,8 @@ export const STRINGS: Dict = {
   "chart.music": { en: "Top 10 AI music in South Africa", af: "Top 10 AI-musiek in Suid-Afrika" },
   "sec.whichSong": { en: "Which song?", af: "Watter liedjie?" },
   "sec.remakeTitle": { en: "Make it again", af: "Maak dit weer" },
+  "ads.keptHere": { en: "This brief is kept in this browser, so it is still here when you come back from another room. It is not on your other devices.", af: "Hierdie opdrag word in hierdie blaaier gehou, so dit is nog hier wanneer jy van \u2019n ander kamer af terugkom. Dit is nie op jou ander toestelle nie." },
+  "ads.startOver": { en: "Start a new brief", af: "Begin \u2019n nuwe opdrag" },
   "ads.aboutTitle": { en: "What the advert is about", af: "Waaroor die advertensie gaan" },
   "hooks.fromTitle": { en: "What are we cutting from?", af: "Waaruit sny ons?" },
   "hooks.clipLengthWhy": { en: "The first fifteen seconds decide whether anybody watches the rest, so shorter is usually better.", af: "Die eerste vyftien sekondes besluit of iemand die res kyk, so korter is gewoonlik beter." },

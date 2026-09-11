@@ -200,6 +200,44 @@ try {
   check('  with the section markers the engine reads',
     /\[Chorus\]|\[Hook\]/.test(words), words.slice(0, 80));
   check('  and her own subject in them', /bag|leather|workshop/i.test(words), words.slice(0, 120));
+  /* ── Three: the brief is still there when you come back ────────
+ 
+     Everything this desk produces was already remembered and the brief was
+     not, so every trip out of the room emptied it — and every button added
+     here is a trip out of the room. Walking back in is the only way to see
+     it: the source can show a `saveBrief` that is never reached, and a
+     restore that an effect overwrites a moment later. */
+  await toRoom(p, 'Adverts');
+  await p.waitForTimeout(1600);
+  const again = p.locator('div.fixed.inset-0.z-50').first();
+  const still = (await again.locator('#ads-what').inputValue().catch(() => '')) ?? '';
+  check('the brief is still there after two trips out of the room', still.trim() === WHAT,
+    `"${still}" — it was "${WHAT}" before the first button was pressed`);
+
+  /* And a reload, which is the other way somebody comes back. */
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.waitForTimeout(1200);
+  await dismissDoor(p);
+  await studio(p);
+  await toRoom(p, 'Adverts');
+  await p.waitForTimeout(1600);
+  const afterLoad = (await p.locator('div.fixed.inset-0.z-50').first().locator('#ads-what')
+    .inputValue().catch(() => '')) ?? '';
+  check('  and after a reload', afterLoad.trim() === WHAT, `"${afterLoad}"`);
+
+  /* One press puts it back to empty, or a second campaign is six boxes
+     cleared by hand. */
+  const over = p.locator('div.fixed.inset-0.z-50 button')
+    .filter({ hasText: /Start a new brief|Begin .{0,3}n nuwe opdrag/i }).first();
+  check('  and there is one press that clears it', (await over.count()) > 0,
+    'kept for ever, with no way to start again');
+  if (await over.count()) {
+    await over.click();
+    await p.waitForTimeout(600);
+    const emptied = (await p.locator('div.fixed.inset-0.z-50').first().locator('#ads-what')
+      .inputValue().catch(() => 'x')) ?? 'x';
+    check('    which actually empties it', emptied.trim() === '', `"${emptied}"`);
+  }
 } finally {
   await b.close();
   server.stop();
@@ -209,4 +247,4 @@ if (problems.length) {
   console.error(`\n${problems.length} problem(s):\n  ${problems.join('\n  ')}\n`);
   process.exit(1);
 }
-console.log('\nPressed in the advert room and read in the next one: the shot with her brief and the recommended look on it, and the words with their section markers.');
+console.log('\nPressed in the advert room and read in the next one: the shot with her brief and the recommended look on it, the words with their section markers, and a brief still there after two trips out and a reload.');

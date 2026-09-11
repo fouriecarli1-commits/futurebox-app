@@ -41,6 +41,7 @@ import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import { DESTINATIONS, PLATFORMS } from '../data/social';
 import { filmThisAd, readThisAd } from '../lib/adhandover';
+import { NOTHING_KEPT, forgetBrief, loadBrief, saveBrief } from '../lib/adbrief';
 import { loadChosen } from '../lib/chosenformat';
 import { loadHandles, type Handles } from '../lib/social';
 import ShareRow from './ShareRow';
@@ -134,12 +135,29 @@ export default function Campaign({
 }): React.ReactElement {
   const { t, lang } = useLang();
 
-  const [what, setWhat] = useState('');
-  const [who, setWho] = useState('');
-  const [offer, setOffer] = useState('');
-  const [tone, setTone] = useState('');
-  const [market, setMarket] = useState<string>('English');
-  const [placement, setPlacement] = useState<string>('feed');
+  /* ── The brief, restored rather than re-typed ──────────────────────
+ 
+     Everything this desk PRODUCES was already remembered — the recommended
+     formats, the weekly plan, the imported report. The brief that produced
+     all three lived in component state and nowhere else, and rooms unmount
+     when you leave them.
+ 
+     So: five boxes, three adverts, press "Film this one", come back — and
+     the desk is empty, with the plan still sitting above it describing a
+     business the screen no longer knows anything about. Survivable while
+     the only way out was a link; not survivable now that the whole point
+     of this room is that it sends you to five others.
+ 
+     Read once, synchronously, as the initial value. An effect that fills
+     the boxes after the first paint is a room somebody has already started
+     typing into when their old brief lands on top of it. */
+  const [before] = useState(() => (typeof window === 'undefined' ? NOTHING_KEPT : loadBrief()));
+  const [what, setWhat] = useState(before.what);
+  const [who, setWho] = useState(before.who);
+  const [offer, setOffer] = useState(before.offer);
+  const [tone, setTone] = useState(before.tone);
+  const [market, setMarket] = useState<string>(before.market || 'English');
+  const [placement, setPlacement] = useState<string>(before.placement || 'feed');
 
   /* Which platforms this is going to. The handles come from the same store the
      share row reads, so a platform you have already set up here is already set
@@ -168,15 +186,34 @@ export default function Campaign({
    * one, which is the whole thing the kit exists to stop.
    */
   const [kit, setKit] = useState<Kit>(EMPTY_KIT);
-  const [going, setGoing] = useState<string[]>(['tiktok', 'instagram']);
+  const [going, setGoing] = useState<string[]>(
+    before.going.length ? [...before.going] : ['tiktok', 'instagram'],
+  );
   useEffect(() => setHandles(loadHandles()), []);
+
   const chosen = PLATFORMS.filter((one) => going.indexOf(one.id) !== -1);
   /* Ticked the same way and kept apart, because a destination is not an
      account: it has no handle to show, nothing to connect, and nothing the
      posting queue can schedule to. See `DESTINATIONS` in data/social.ts. */
   const places = DESTINATIONS.filter((one) => going.indexOf(one.id) !== -1);
 
-  const [ads, setAds] = useState<Ad[]>([]);
+  const [ads, setAds] = useState<Ad[]>(() => before.ads.map((one) => ({ ...one, hashtags: [...one.hashtags] })));
+  /* ── And written down again whenever it changes ──────────────────────
+ 
+     Every field, not only the ones with a button under them: somebody who
+     types a tone and then leaves has typed a tone.
+ 
+     Held for a moment rather than written on every keystroke. A write per
+     character is a JSON serialise and a storage write per character, and
+     the only visit that could lose anything is one that ends inside half a
+     second of the last letter — which is a page being closed, where the
+     browser is not going to run this either way. */
+  useEffect(() => {
+    const soon = window.setTimeout(() => {
+      saveBrief({ what, who, offer, tone, market, placement, going, ads });
+    }, 400);
+    return () => window.clearTimeout(soon);
+  }, [what, who, offer, tone, market, placement, going, ads]);
   /* ── The look the adviser above recommended ────────────────────────
  
      It lived in `AdFormats`'s own state and nowhere else, so the cards down
@@ -411,6 +448,40 @@ export default function Campaign({
           it is a real one, and making somebody fill five boxes before they see
           anything is how a room gets abandoned. */}
       <Card title={t('ads.aboutTitle', 'What the advert is about')}>
+        {/* ── Kept, and a way to stop keeping it ──────────────────────
+ 
+            The brief comes back when you come back, which is the whole
+            point — this room sends you to five others and every trip used
+            to empty it. But a brief that is kept for ever is a second
+            campaign spent clearing six boxes by hand, so there is one
+            press that forgets it.
+ 
+            Said out loud, and said as what it is: this browser, this
+            device. There is no account behind it, and somebody who opens
+            the app on their phone and finds an empty desk should have
+            been told rather than left to guess. */}
+        {(what || who || offer || tone || ads.length > 0) && (
+          <div className="flex items-center justify-between gap-3 pb-1">
+            <p className="text-xs text-zinc-500 leading-snug">
+              {t('ads.keptHere', 'This brief is kept in this browser, so it is still here when you come back from another room. It is not on your other devices.')}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setWhat('');
+                setWho('');
+                setOffer('');
+                setTone('');
+                setAds([]);
+                setProblem(null);
+                forgetBrief();
+              }}
+              className="min-h-[44px] flex-shrink-0 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-300 hover:border-zinc-600 hover:text-white"
+            >
+              {t('ads.startOver', 'Start a new brief')}
+            </button>
+          </div>
+        )}
         <div className="space-y-1.5">
           <label className="text-sm text-zinc-400" htmlFor="ads-what">
             {t('ads.whatLabel', 'What are you advertising?')}

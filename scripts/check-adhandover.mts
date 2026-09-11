@@ -343,6 +343,64 @@ ok('  and a platform nobody recognises still gives a usable shape',
   ['9:16', '16:9', '1:1'].includes(shapeForNamed('a shop window')),
   shapeForNamed('a shop window'));
 
+/* ── The brief survives leaving the room ────────────────────────────
+ 
+   Everything this desk PRODUCES was already remembered — the recommended
+   formats, the weekly plan, the imported report. The brief that produced
+   all three lived in component state, and rooms unmount when you leave
+   them. So five boxes, three adverts, "Film this one", come back, and the
+   desk is empty with the plan still sitting above it describing a business
+   the screen no longer knows anything about.
+ 
+   That was survivable while the only way out was a link. Every button
+   added tonight is a way out, so making the exits work without this would
+   have made the room worse, not better. */
+const desk = readFileSync('app/components/Campaign.tsx', 'utf8');
+
+ok('the advert brief is written down', /saveBrief\(\{/.test(desk),
+  'leaving the room throws away everything somebody typed');
+ok('  and read back when the room opens', /loadBrief\(\)/.test(desk),
+  'it is saved and never restored, which is the same thing with extra steps');
+
+/* Read as the initial value, not filled in by an effect afterwards. An
+   effect that sets six boxes after the first paint lands on top of whatever
+   somebody has already started typing. */
+ok('  as the boxes\' first value, not dropped in after the first paint',
+  /useState\(before\.what\)/.test(desk),
+  'an effect filling the boxes lands on top of what somebody is already typing');
+
+/* Everything typed, not only the first box.
+ 
+   Read out of the call and matched as SHORTHAND — `{ what, who, … ads }` —
+   rather than as the word appearing nearby. The first version of this rule
+   allowed `ads: []`, which contains the word `ads`, saves nothing, and
+   passed. Sixth time this week that the answer was to match the thing
+   rather than the word for it. */
+const call = /saveBrief\(\{([^}]*)\}\)/.exec(desk);
+const passed = new Set(
+  (call?.[1] ?? '')
+    .split(',')
+    .map((one) => one.trim())
+    .filter((one) => one && !one.includes(':')),
+);
+const fields = ['what', 'who', 'offer', 'tone', 'market', 'placement', 'going', 'ads'];
+const dropped = fields.filter((one) => !passed.has(one));
+ok('  and every part of it, not only the boxes with a button under them',
+  dropped.length === 0,
+  `${dropped.join(', ')} is typed and not kept — a literal in its place saves nothing and reads like it does`);
+
+/* And a way to stop. A brief kept for ever is a second campaign spent
+   clearing six boxes by hand. */
+ok('  with one press that forgets it again', /forgetBrief\(\)/.test(desk),
+  'the only way to start a second campaign is to clear every box by hand');
+
+/* Said out loud. The house rule for everything kept per device: the room
+   says so rather than letting somebody find out on their other phone. */
+const words = readFileSync('app/lib/i18n.tsx', 'utf8');
+ok('  and the room says it is this browser only, in both languages',
+  /"ads\.keptHere": \{ en: "[^"]{40,}", af: "[^"]{40,}" \}/.test(words),
+  'kept per device and never mentioned, which is how somebody discovers it on their phone');
+
 if (failures) {
   console.error(`\ncheck:adhandover — ${failures} failure(s).\n`);
   process.exit(1);

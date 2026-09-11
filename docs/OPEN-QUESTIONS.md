@@ -3354,3 +3354,48 @@ and `check:jsonshape` reads the wrapper key by shape — an object literal
 hid it, and the check reported the route as handing back a bare plan. That
 check exists *because this exact route returned the plan bare for a
 fortnight*. Naming the value first is better code and keeps it visible.
+
+---
+
+## The desk remembered everything except the brief (11 September, night)
+
+Found by finishing the work above rather than by a report, and it would
+have made tonight's changes a net loss if it had shipped without this.
+
+Everything the advert desk **produces** was already remembered: the
+recommended formats in `chosenformat.ts`, the weekly plan in
+`marketplan.ts`, the imported report in `adreport.ts`. The brief that
+produced all three lived in component state and nowhere else, and rooms
+unmount when you leave them.
+
+So: fill in five boxes, write three adverts, press "Film this one", land on
+the video desk, come back — and the desk is empty. The plan and the
+recommendations are still sitting there, describing a business the screen
+no longer knows anything about.
+
+That was survivable while the only way out of the room was a link. **The
+whole point of tonight's work is that the desk now sends you to five other
+rooms**, so every new button was a new way to throw the brief away. Making
+the exits work without this would have made the room worse.
+
+`app/lib/adbrief.ts` keeps the brief, the ticked destinations and the three
+adverts. Read synchronously as the boxes' first value, not filled in by an
+effect — an effect that sets six boxes after the first paint lands on top of
+whatever somebody has already started typing. Written 400ms after the last
+keystroke rather than on every one.
+
+And a way to stop: one press that forgets it. A brief kept for ever is a
+second campaign spent clearing six boxes by hand. The room says out loud
+that it is this browser only, in both languages, which is the house rule for
+everything kept per device.
+
+**Verified in a browser**, which is the only way to see it: the source can
+show a `saveBrief` that is never reached, or a restore an effect overwrites
+a moment later. The probe walks out to the video desk, out to Make a song,
+back in, reloads the page, and reads the box each time. Removing the save
+turns all four assertions red.
+
+**And a sixth "matched the word, not the thing" in the check for it.** The
+rule "every part of the brief is kept" allowed `ads: []` — which contains
+the word `ads`, saves nothing, and passed. It reads the call's argument list
+and requires shorthand now.
