@@ -141,8 +141,21 @@ async function look(state) {
       `found in ${inBundle} (${scripts.length} scripts checked)`);
   } else {
     check('with nothing configured it says so plainly', /not published yet/.test(words));
+    /* This required the words "being registered" until 11 September 2026 —
+       the exact sentence that turned out to be false. The company was
+       registered on 5 September; one unset variable sent the page down this
+       path and it kept printing "the company is being registered" for six
+       days, with a probe demanding it.
+ 
+       A fallback cannot know whether the company is registered. It only
+       knows nothing is configured. So the rule is the constraint rather than
+       the claim: it must admit the gap, and it must NOT assert anything
+       about the state of the company either way. */
     check('and says why, rather than showing an empty list',
-      /being registered/.test(words) && /false statement/.test(words));
+      /false statement/.test(words) && /admitted gap/.test(words));
+    check('and claims nothing about whether the company exists',
+      !/being registered|not yet registered|no registration number yet/i.test(words),
+      'a fallback that guesses at the world will eventually be caught lying');
     check('and still points at a way to reach a person',
       /reaches a person and is answered/.test(words));
     check('it invents no registration number', !/\d{4}\/\d{6}\/\d{2}/.test(words), 'one appeared');

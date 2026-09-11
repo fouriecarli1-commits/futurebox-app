@@ -56,7 +56,23 @@ export interface Entity {
    */
   readonly registration?: string;
   /** The registered office, as one line per line. */
-  readonly address: readonly string[];
+  /**
+   * Optional since 11 September 2026, and the reason matters.
+   *
+   * It was required, and one unset variable then threw away the WHOLE
+   * disclosure — name, registration number, status, everything — and the
+   * page fell back to "The company behind FutureBox is being registered."
+   * The company was registered on 5 September. So a missing address made a
+   * live legal page state the opposite of the truth about a legal person,
+   * which is precisely the harm the required-ness was written to prevent.
+   *
+   * ECTA s43(1)(b) does ask for a physical address, and a disclosure without
+   * one is not complete. But "incomplete and honest" and "complete-looking
+   * and false" are not the same failure, and only one of them can be fixed
+   * by a reader writing in. The page says the address is available on
+   * request and names how — see `app/legal/page.tsx`.
+   */
+  readonly address?: readonly string[];
   /**
    * A number a person can actually ring.
    *
@@ -147,9 +163,14 @@ function lines(value: string | undefined): string[] {
  * exactly what this file exists to avoid — and it would have been the default
  * for anybody who filled in the other four and left the number out.
  *
- * Name, status, address, and at least one way to reach a person — a telephone
- * number, an address to write to, or both. Never a page with no contact on it,
- * and never a person described as a company.
+ * Name, status, and at least one way to reach a person — a telephone number,
+ * an address to write to, or both. Never a page with no contact on it, and
+ * never a person described as a company.
+ *
+ * The physical address is published when it is set and said to be available
+ * on request when it is not. It is NOT a condition of publishing the rest:
+ * that cost this app a fortnight of a live page claiming the company was
+ * still being registered when it had been registered for six days.
  */
 export function entity(): Entity | null {
   const name = (process.env.FUTUREBOX_LEGAL_NAME ?? '').trim();
@@ -158,7 +179,10 @@ export function entity(): Entity | null {
   const phone = (process.env.FUTUREBOX_LEGAL_PHONE ?? '').trim();
   const email = (process.env.FUTUREBOX_LEGAL_EMAIL ?? '').trim();
   const address = lines(process.env.FUTUREBOX_LEGAL_ADDRESS);
-  if (!name || !address.length) return null;
+  /* The name is the floor, not the address. See the comment on `address`
+     above: requiring it meant one unset variable silently replaced a real
+     registered company with a sentence saying it was not one yet. */
+  if (!name) return null;
 
   /* One way to reach a person, at the very least.
      
@@ -180,7 +204,7 @@ export function entity(): Entity | null {
     name,
     status: status || 'Private company registered in the Republic of South Africa',
     ...(registration ? { registration } : {}),
-    address,
+    ...(address.length ? { address } : {}),
     ...(phone ? { phone } : {}),
     ...(email ? { email } : {}),
     ...(process.env.FUTUREBOX_LEGAL_VAT?.trim()

@@ -24,7 +24,7 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 
 | Wat | Hoekom dit joune is |
 |---|---|
-| **Die adresbesluit op die regsbladsy** | Die geregistreerde adres op die CIPC-sertifikaat is jou huis. ECTA vra 'n fisiese adres. Publiseer dit, óf skuif die geregistreerde adres na 'n besigheidsadres-diens en publiseer dáái. Dit is 'n privaatheidsbesluit, nie 'n tegniese een nie, en dit is die laaste ding tussen die regsbladsy en klaar. |
+| **Die adresbesluit op die regsbladsy** | Die geregistreerde adres op die CIPC-sertifikaat is jou huis. ECTA vra 'n fisiese adres. Publiseer dit, óf skuif die geregistreerde adres na 'n besigheidsadres-diens en publiseer dáái. Privaatheidsbesluit, nie 'n tegniese een nie. **Sedert 11 September is dit nie meer dringend nie:** die bladsy publiseer alles behalwe die adres en sê die adres kom op aanvraag. Dit staan nou tussen die bladsy en *volledig*, nie tussen die bladsy en *bruikbaar* nie. |
 | **Maak `/api/eleven/dictionary?key=…` een keer oop** | Dit bou die uitspraakwoordeboek op jou rekening uit die reëls in die kode. Plak albei ids by Vercel in, redeploy, en **luister**. Sonder daardie twee waardes word niks toegepas nie en niks sê so nie. |
 | **Stuur die ElevenLabs-verkoopse-pos** | `docs/ELEVENLABS-SALES.md`. Dit is die ding wat die terme-bladsy weer laat verander — die lisensie wat deur na lede loop, is nie op die self-diens plan nie. |
 | **Lees Supabase Pro en Vercel Pro se limiete** | Albei skaal met **gratis** lede, anders as ElevenLabs. Tienduisend gratis rekeninge is die launch-vorm. Hierdie masjien kan nie by hulle bladsye kom nie (geblokkeer). Die een getal wat besluit: Supabase se **maandelikse aktiewe gebruikers**. |
@@ -2671,3 +2671,60 @@ Three shapes of the same fault are now on record from one day:
 - a check that **names a property it never measured**.
 
 All three pass. All three read exactly like a check that works.
+
+## One unset variable had the legal page calling the company unregistered
+
+Carli sent a screenshot of `futurebox.studio/legal` on 11 September. It said,
+in a yellow box: *"The company behind FutureBox is being registered."*
+
+**CIPC registered it on 5 September.** The sentence had been false for six
+days, on the one page in this app whose entire job is to be true, and on the
+page a Paystack reviewer opens first.
+
+### The cause is one line
+
+```ts
+if (!name || !address.length) return null;
+```
+
+`entity()` required the physical address. She had set the name, the
+registration number, the status and the mailbox — and the **address is the
+one decision that is hers and is still open** (publish her home address, or
+move the registered address to a business-address service first). So one
+unset variable threw away the whole disclosure and sent the page down a
+fallback that then guessed, wrongly, at the state of the company.
+
+### What changed
+
+- **The address is optional.** A name plus a contact publishes. The address
+  row says the address is on the CIPC record and will be sent on request,
+  and names where to ask.
+- **The fallback claims nothing about the company.** It cannot know whether
+  the company is registered — it only knows nothing is configured — so it
+  now says only that, and that a placeholder would be worse than an admitted
+  gap.
+
+Section 43(1)(b) does ask for a physical address, and this page is not
+complete without one. But **"incomplete and honest" and "complete-looking
+and false" are different failures**, and only the first can be fixed by a
+reader writing in. A reviewer who sees a registered name, a CIPC number and
+"address on request" is looking at a real company; one who sees "being
+registered" is looking at a reason to decline.
+
+### And two checks were defending it
+
+`check:entity` asserted *"nor a name with no address"* — it **required**
+`null`. `audit/legalpage.mjs` required the literal words *"being
+registered"*. Both have been flipped to the constraint underneath: a name
+with a contact publishes, the address may be absent but never invented, and
+the fallback must not assert anything about the company's existence either
+way.
+
+That is the fourth and fifth instance in two days of a check pinning a
+**claim** instead of a **constraint**, and the most expensive: the other
+three hid a button, four labels and a mid-page card. This one put a false
+statement about a legal person on a live page and held it there.
+
+**Still hers, and now much less urgent:** the address decision. The page is
+honest and useful without it. It is no longer the thing standing between the
+legal page and being usable — it is the thing between it and being complete.

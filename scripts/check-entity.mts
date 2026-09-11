@@ -122,12 +122,40 @@ check('a name with no way at all to reach anybody is not enough',
     FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
     FUTUREBOX_LEGAL_ADDRESS: '12 Example Street|Cape Town',
   }) === null);
-check('nor a name with no address',
+/* ── This assertion used to say the opposite, and it caused the fault ──
+ 
+   It read "nor a name with no address" and required null. So an unset
+   FUTUREBOX_LEGAL_ADDRESS threw away the entire disclosure — the registered
+   name, the CIPC number, the status, the mailbox — and `/legal` fell back to
+   "The company behind FutureBox is being registered."
+ 
+   The company was registered on 5 September 2026. Carli sent a screenshot on
+   the 11th with that sentence still on the live page. One unset variable had
+   a legal page stating the opposite of the truth about a legal person for six
+   days, which is exactly the harm this rule was written to prevent.
+ 
+   Section 43(1)(b) does ask for a physical address and a disclosure without
+   one is not complete. But "incomplete and honest" and "complete-looking and
+   false" are different failures, and only the first can be fixed by a reader
+   writing in. So a name with a contact publishes, the address row says it is
+   available on request, and what is withheld is one row rather than the
+   company's existence.
+ 
+   The lesson is the day's lesson again from a third angle: this check
+   asserted a CLAIM — "a disclosure must carry an address" — rather than the
+   constraint underneath it, which is that nothing on the page may be untrue. */
+check('a name and a contact publish even with no address yet',
   only({
     FUTUREBOX_LEGAL_NAME: 'FutureBox Studio (Pty) Ltd',
     FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
     FUTUREBOX_LEGAL_PHONE: '+27 21 000 0000',
-  }) === null);
+  })?.name === 'FutureBox Studio (Pty) Ltd');
+check('  and the address is simply absent rather than invented',
+  only({
+    FUTUREBOX_LEGAL_NAME: 'FutureBox Studio (Pty) Ltd',
+    FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
+    FUTUREBOX_LEGAL_PHONE: '+27 21 000 0000',
+  })?.address === undefined);
 check('nor an address with no name',
   only({
     FUTUREBOX_LEGAL_ADDRESS: '12 Example Street|Cape Town',

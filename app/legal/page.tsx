@@ -111,12 +111,36 @@ export default function Legal(): React.ReactElement {
               {who.registration && (
                 <Row label="Registration number">{who.registration}</Row>
               )}
+              {/* The address, or an honest sentence where it is not set yet.
+ 
+                  It used to be a condition of printing ANY of this: one unset
+                  variable and the whole disclosure vanished behind "the
+                  company is being registered", six days after CIPC registered
+                  it. Section 43(1)(b) does ask for a physical address and this
+                  page is not complete without one — but a row that admits the
+                  gap and says how to close it is a reader being told the
+                  truth, and a page that says the company does not exist yet is
+                  not. */}
               <Row label="Registered address">
-                {who.address.map((line) => (
-                  <span key={line} className="block">
-                    {line}
-                  </span>
-                ))}
+                {who.address ? (
+                  who.address.map((line) => (
+                    <span key={line} className="block">
+                      {line}
+                    </span>
+                  ))
+                ) : (
+                  <>
+                    Not published on this page yet. The company is registered and its
+                    registered address is on the CIPC record;{' '}
+                    <Link
+                      href={CONTACT_PAGE}
+                      className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
+                    >
+                      ask on the help page
+                    </Link>{' '}
+                    and it will be sent to you, before you buy anything.
+                  </>
+                )}
               </Row>
               {/* The Act asks for a telephone number and an e-mail address —
                   section 43(1)(b) and (c) — so both rows are here, and the one
@@ -163,11 +187,19 @@ export default function Legal(): React.ReactElement {
               <p className="text-base font-bold text-amber-300">
                 These details are not published yet, and that is deliberate.
               </p>
+              {/* Reworded 11 September 2026. It used to say the company "is
+                  being registered", which stopped being true on 5 September
+                  and then kept being printed because a single unset variable
+                  sent the page down this path. It now says only what is true
+                  whatever is set: nothing is being claimed here, and a person
+                  who asks is answered. A fallback that guesses at the state of
+                  the world is a fallback that will eventually be caught
+                  lying. */}
               <p>
-                The company behind FutureBox is being registered. Until it has a registration number
-                and a registered address, there is nothing true to put here — and a placeholder
-                registration number on a legal page would be a false statement about a legal person,
-                which is worse than an admitted gap.
+                Nothing about the supplier is being stated on this page at the moment. A
+                placeholder name or registration number on a legal page would be a false
+                statement about a legal person, which is worse than an admitted gap — so
+                there is a gap, and it is admitted.
               </p>
               <p>
                 Until then:{' '}
