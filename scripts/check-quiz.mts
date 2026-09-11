@@ -119,21 +119,47 @@ ok('the card is on the page at all',
   /<MusicQuiz \/>/.test(page),
   'she asked for it "heel onder aan die creative page"');
 
-/* LAST, not merely present — which is the property she asked for and the
-   one the first version got wrong.
- 
-   It went at the end of the creations SECTION, which is the bottom of the
-   creative page. That section is also part of the Spotlight scroll, and the
-   radar comes after it, so on the tab most people land on the card sat in
-   the middle and interrupted the feed. The assertion said "it sits at the
-   bottom" and proved only that the string existed — a check describing a
-   property it never measured, which is the same fault as measuring a subset,
-   one step earlier. */
-const inMain = page.slice(0, page.indexOf('</main>'));
-const afterCard = inMain.slice(inMain.lastIndexOf('<MusicQuiz />') + '<MusicQuiz />'.length);
-ok('  and nothing on the page comes after it',
-  !/<[A-Z][A-Za-z]*[\s/>]|<section/.test(afterCard),
-  `${afterCard.replace(/\s+/g, ' ').trim().slice(0, 70)} — on Spotlight it would interrupt the feed instead of ending it`);
+/* IN THE MAKE ROOM, and only there.
+
+   Three placements, and the constraint changed twice because I kept
+   answering the words rather than the point.
+
+   First: the end of the creations SECTION — the bottom of the creative
+   page, which is what she asked for. That section is also part of the
+   Spotlight scroll, so the card sat in the middle of the feed.
+
+   Second: the end of `<main>`, last on whichever tab was open. The
+   assertion here then read "nothing on the page comes after it", which
+   was true and was the wrong property. It put the card on Spotlight, and
+   she found it there: "Dit gaan nie sin maak in spotlight nie, dit moet
+   binne die creative plek wees, daar binne make."
+
+   The point was never the bottom. It was the room. A question about how
+   songs are made teaches something to somebody about to make one, and
+   nothing at all to somebody reading other people's work.
+
+   So the constraint is where it renders, not how far down. Matched on the
+   guard that decides it, because "the string is in the file" is what the
+   first version proved while the card sat in the wrong half of the app. */
+const guarded = /\{studioTab === 'make' && <MusicQuiz \/>\}/.test(page);
+ok('  and it renders in the Make room', guarded,
+  'the card is somewhere in page.tsx, which is not the same as being where she asked for it');
+
+/* Once. A second mount somewhere else is how it got onto Spotlight, and
+   it is invisible in a diff that only adds a line. */
+ok('  and nowhere else in the app',
+  (page.match(/<MusicQuiz \/>/g) ?? []).length === 1,
+  `${(page.match(/<MusicQuiz \/>/g) ?? []).length} mounts`);
+
+/* And last within that room, which IS the part of "heel onder" that
+   survived: it ends the room rather than delaying the button people came
+   to press. Measured from the guard to the end of the room's block. */
+const roomAt = page.indexOf("{studioTab === 'make' && <MusicQuiz />}");
+const nextRoom = page.indexOf("{studioTab === '", roomAt + 10);
+const between = page.slice(roomAt, nextRoom === -1 ? page.length : nextRoom);
+ok('  and nothing in that room comes after it',
+  !/<[A-Z][A-Za-z]*[\s/>]/.test(between.slice('{studioTab === \'make\' && <MusicQuiz />}'.length)),
+  between.replace(/\s+/g, ' ').trim().slice(0, 80));
 
 if (failures) {
   console.error(`\ncheck:quiz — ${failures} failure(s).\n`);

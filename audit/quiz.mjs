@@ -8,7 +8,7 @@
  * disabled. It cannot prove any of the things that actually decide whether
  * this feature exists for somebody:
  *
- *   · that the card renders at all at the bottom of the creative page,
+ *   · that the card renders at all at the bottom of the Make room,
  *   · that four lettered boxes appear,
  *   · that the answer is genuinely unreachable before one is ticked,
  *   · that ticking then revealing shows the EXPLANATION and not just a mark,
@@ -21,7 +21,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor } from './enter.mjs';
+import { dismissDoor, studio, toRoom } from './enter.mjs';
 import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3112';
@@ -66,13 +66,39 @@ try {
   await dismissDoor(p);
   await p.waitForTimeout(900);
 
-  /* The card is a radiogroup, which is the one thing on the page that is
+  /* Into the studio, and into Make.
+
+     This probe used to look for the card on the landing page, because the
+     card used to be the last thing in `<main>` and therefore on every tab.
+     Carli, 11 September 2026: "Dit gaan nie sin maak in spotlight nie, dit
+     moet binne die creative plek wees, daar binne make."
+
+     She is right, and the probe following it here is the point: a question
+     about how songs are made belongs where somebody is about to make one.
+     Anywhere else it is a quiz on a magazine page. */
+  await studio(p);
+  await p.waitForTimeout(1000);
+  await toRoom(p, 'Make a song');
+  await p.waitForTimeout(1400);
+
+  /* The card is a radiogroup, which is the one thing on the screen that is
      one — so it is found by what it IS rather than by a class name that a
      restyle would break. */
   const group = p.locator('[role="radiogroup"]').first();
   await group.waitFor({ state: 'attached', timeout: 20000 }).catch(() => {});
-  check('the quiz renders on the creative page', (await group.count()) > 0,
+  check('the quiz renders in the Make room', (await group.count()) > 0,
     'the card picks its question in an effect — one that throws renders nothing at all');
+
+  /* And ONLY there. The version before this one was on Spotlight too, which
+     is what she reported. A card that renders everywhere passes every
+     assertion below and is still in the wrong place. */
+  await toRoom(p, 'Channel');
+  await p.waitForTimeout(1200);
+  check('and nowhere else — not in the rooms that are for reading, not making',
+    (await p.locator('[role="radiogroup"]').count()) === 0,
+    `${await p.locator('[role="radiogroup"]').count()} found in the channel`);
+  await toRoom(p, 'Make a song');
+  await p.waitForTimeout(1400);
 
   if ((await group.count()) > 0) {
     await group.scrollIntoViewIfNeeded();

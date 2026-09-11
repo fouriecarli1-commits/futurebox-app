@@ -2705,22 +2705,6 @@ export default function FutureBoxHome() {
           </section>
         )}
 
-        {/* ── The music question ───────────────────────────────────────
- 
-            Last on the page, on purpose and on the second attempt.
- 
-            It first went at the end of the creations SECTION, which is
-            the bottom of the creative page and is what she asked for —
-            "heel onder aan die creative page". But that section is also
-            part of the Spotlight scroll, where the radar comes after it,
-            so on the tab most people land on it sat in the middle and
-            interrupted the feed rather than ending it.
- 
-            Out here it is the last thing on whichever tab is open,
-            including the creative page. Somebody came to make music; a
-            question in the middle is a question in the way, and the same
-            question at the end is an aside they can take or leave. */}
-        <MusicQuiz />
 
       </main>
 
@@ -3314,6 +3298,33 @@ export default function FutureBoxHome() {
                 onGoToSound={() => goToRoom('sound')}
               />
             )}
+
+            {/* ── The music question ───────────────────────────────────────
+
+                Third placement, and this one is hers rather than my reading
+                of hers.
+
+                It started at the end of the creations SECTION, which is the
+                bottom of the creative page — what she asked for — but that
+                section is also part of the Spotlight scroll, so on the tab
+                most people land on it interrupted the feed instead of
+                ending it.
+
+                So I moved it out to the end of `<main>`, where it is last on
+                whichever tab is open. Which put it on Spotlight, where she
+                found it: "Dit gaan nie sin maak in spotlight nie, dit moet
+                binne die creative plek wees, daar binne make."
+
+                She is right and I had over-read "the bottom of the page".
+                The point was never the bottom; it was the room. Somebody in
+                Spotlight is reading other people's work and a music question
+                there is a quiz on a magazine page. Somebody in Make is about
+                to write a song, and one thing about how songs are made is
+                the one place it teaches anything.
+
+                Under the room's own content, so it ends the room rather than
+                delaying it. */}
+            {studioTab === 'make' && <MusicQuiz />}
 
             {studioTab === 'channels' && (
               <Channel
