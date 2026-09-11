@@ -3174,3 +3174,60 @@ is nothing for a spelling rule to match.
 
 Verified by breaking it both ways: removing the field from the dialogue path
 names `text-to-dialogue`; removing it from `speak` names `text-to-speech`.
+
+---
+
+## No screen in the app showed a real cover (11 September, evening)
+
+Carli, testing: "As iemand op die live post… en dan verander jy eers later
+die cover page van die liedjie, verander die cover page dan op die live
+channel ook?"
+
+**Nothing is copied into a live post.** `live_posts` has no cover column —
+it carries the song's id and nothing else — so there was never a stale
+picture to go wrong. Her worry was the right worry and the answer to it was
+fine.
+
+The real answer was worse. **No screen showed a real cover at all**, except
+the one card in the channel whose button had just been pressed, in that
+session. Four screens drew the generated pattern from `Cover.tsx`: the
+channel grid, the live room, the live full-screen player, and the
+full-screen player for your own songs. A cover cost two credits and was
+visible until the tab was closed.
+
+It was not an oversight in any one of them. `Sleeve.tsx` is the **maker** —
+spinner, credits, a remake button — and mounting it on every tile would put
+a generate button on every song on screen, which is why the channel mounts
+exactly one and its comment says "the button below is the asking". The
+asking and the showing were the same thing, so the showing inherited the
+asking's cost, so nothing asked.
+
+**Fixed.** `Cover` takes a `photo`; `/api/cover?tracks=a,b,c` answers for a
+screenful in one call; the live route signs each post's sleeve in one call
+beside the audio it already signs. So the answer to her question is now yes:
+change the cover and every room shows the new one next time it is opened,
+because nothing is stored — it is read each time.
+
+**Two things the change itself introduced, and what holds them:**
+
+1. *Two routes now derive one storage path.* The cover route writes
+   `<owner>/<trackId>.cover.png` and the live route reads it. Drift would
+   leave the picture existing and unfindable, with nothing throwing.
+   `check:sleeves` compares the two derivations.
+2. *Signed links expire in an hour.* A room left open over lunch has stale
+   addresses. `Cover` falls back to its drawing on a load failure, and
+   clears that failure when the address changes — without the clearing, one
+   expired link would blank every song after it in a scroller.
+
+**And a pre-existing guard caught the new code.** `check:couldnotask` —
+written after this exact fault appeared six times in one day — flagged both
+new reads for taking `data` and dropping `error`: storage failing to answer
+would have rendered as "nobody has a sleeve". Its ratchet refuses to let the
+count rise, so an exemption was not available and both were fixed. The
+cover route answers `asked: false` and the hook keeps what it already had
+rather than clearing; the live route records the failure and still opens the
+room, because a drawing is a real picture and a room that refuses to load
+over a missing photograph is the worse fault.
+
+`audit/liveroom.mjs` run after the change: the room still plays one at a
+time, full screen, with its hearts and counts intact.

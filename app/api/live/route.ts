@@ -86,6 +86,12 @@ interface PostRow {
 /** Where a track's audio sits, which is the shape `pushTrack` writes. */
 const trackPath = (owner: string, trackId: string) => `${owner}/${trackId}.wav`;
 
+/** And its sleeve, beside it. Derived rather than stored — the same rule
+ *  `app/api/cover/route.ts` states, and it must stay the same rule: two
+ *  places deriving one path differently is a picture that exists and cannot
+ *  be found. */
+const coverPath = (owner: string, trackId: string) => `${owner}/${trackId}.cover.png`;
+
 export async function GET(request: Request): Promise<Response> {
   const client = admin();
   if (!client) {
@@ -213,6 +219,52 @@ export async function GET(request: Request): Promise<Response> {
     for (const one of files ?? []) episodePaths.set(one.id as string, one.audio_path as string);
   }
 
+  /* ── The sleeves, in one call rather than forty ──────────────────────
+ 
+     Carli, 11 September 2026, testing: "As iemand op die live post… en dan
+     verander jy eers later die cover page van die liedjie, verander die
+     cover page dan op die live channel ook?"
+ 
+     Nothing is copied into a post — it carries the song's id and nothing
+     else — so there was never a stale picture to go wrong. The real answer
+     was worse: this room had never shown a real cover at all. It drew the
+     generated pattern from `Cover.tsx` for every post, so a sleeve somebody
+     paid two credits for was invisible here, and would have stayed
+     invisible however many times they remade it.
+ 
+     Read at render rather than stored on the post, so the answer to her
+     question is now yes: change the cover and the room shows the new one
+     the next time it is opened.
+ 
+     `createSignedUrls` takes the whole list and reports per path, so a song
+     with no sleeve yet is one `error` in the reply rather than a failed
+     call — which matters, because most songs have no sleeve and that is
+     the ordinary case, not a fault. Forty posts cost one request. */
+  const coverFor = new Map<string, string>();
+  const wanted = [...new Set(
+    ((posts ?? []) as PostRow[])
+      .filter((one) => one.kind === 'track' && one.source_id)
+      .map((one) => coverPath(one.owner, one.source_id)),
+  )];
+  if (wanted.length) {
+    const { data: sleeves, error: unread } = await client.storage
+      .from('tracks')
+      .createSignedUrls(wanted, LINK_SECONDS);
+    /* A per-path `error` means that song has no sleeve, which is most of
+       them. An error on the CALL means storage did not answer, and the two
+       must not come out the same: every panel would draw its pattern and
+       the room would look exactly as it did before anybody made a cover.
+       Recorded rather than swallowed — the room still opens, because a
+       drawing is a real picture and a room that refuses to load over a
+       missing photograph would be the worse fault. */
+    if (unread) {
+      console.error(`live: the sleeves could not be read — ${unread.message}`);
+    }
+    for (const row of sleeves ?? []) {
+      if (!row.error && row.path && row.signedUrl) coverFor.set(row.path, row.signedUrl);
+    }
+  }
+
   // The signing. Only for posts that exist, and only for as long as a listen.
   const listed = await Promise.all(
     ((posts ?? []) as PostRow[]).map(async (post) => {
@@ -242,6 +294,11 @@ export async function GET(request: Request): Promise<Response> {
         by: names.get(post.owner) || 'someone',
         mine: caller ? post.owner === caller.id : false,
         audio,
+        /* The real sleeve, when the owner has made one. Null is the ordinary
+           case and the room draws its generated picture instead. */
+        cover: post.kind === 'track' && post.source_id
+          ? coverFor.get(coverPath(post.owner, post.source_id)) ?? null
+          : null,
         /* The song behind the post, on a track post only.
  
            The charts on Spotlight are keyed on the song, not on the post, so

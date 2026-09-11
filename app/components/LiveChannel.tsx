@@ -67,6 +67,9 @@ interface Post {
   audio: string | null;
   /** The song behind a track post, so a play is counted against the song. */
   sourceId?: string;
+  /** The sleeve its owner made, when there is one. Signed by the server and
+   *  good for an hour; `Cover` falls back to the drawing when it expires. */
+  cover?: string | null;
   /** How many people have hearted it, everybody included. Null where the
    *  server could not read the count — which is not nought. */
   hearts: number | null;
@@ -188,7 +191,12 @@ function RoomPanel({
             song, in the library and in the channel. One song, one picture,
             everywhere. An `elsewhere` post has no song behind it and keeps its
             own id. */}
-        <Cover seed={post.sourceId || post.id} label={post.title} className="h-full w-full" />
+        <Cover
+          seed={post.sourceId || post.id}
+          label={post.title}
+          photo={post.cover}
+          className="h-full w-full"
+        />
       </button>
 
       {/* Over the picture, bottom left, out of the thumb's way on the right. */}

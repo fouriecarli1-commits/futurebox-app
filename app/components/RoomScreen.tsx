@@ -66,6 +66,8 @@ export interface RoomPost {
    * somewhere else, which has no song behind it to count.
    */
   readonly sourceId?: string;
+  /** The sleeve the owner made, when there is one. */
+  readonly cover?: string | null;
   /**
    * How many people have hearted it, and whether this reader is one of them.
    *
@@ -267,6 +269,7 @@ export default function RoomScreen({
             <Cover
               seed={one.sourceId || one.id}
               label={one.title}
+              photo={one.cover}
               className="absolute inset-0 h-full w-full"
             />
             {/* Strong in the middle as well as at the ends, like `SongScreen`:

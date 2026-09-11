@@ -7,9 +7,10 @@
  * but quick is not instant, and a route that waits is a route that times out
  * on somebody's slow afternoon.
  *
- *   POST /api/cover          start one for a track; answers with an id
- *   GET  /api/cover?id=…     how is it going; the picture when it is done
- *   GET  /api/cover?track=…  is there already one for this track
+ *   POST /api/cover           start one for a track; answers with an id
+ *   GET  /api/cover?id=…      how is it going; the picture when it is done
+ *   GET  /api/cover?track=…   is there already one for this track
+ *   GET  /api/cover?tracks=…  the sleeves for a screenful of songs, at once
  *
  * The file goes beside the audio at `<owner>/<trackId>.cover.png`, which is
  * why there is no migration here: the bucket already exists, the path is
@@ -51,8 +52,9 @@ export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const id = url.searchParams.get('id');
   const trackId = url.searchParams.get('track');
+  const many = url.searchParams.get('tracks');
 
-  if (!id && !trackId) return Response.json({ available: configured() });
+  if (!id && !trackId && !many) return Response.json({ available: configured() });
 
   /* Both of these end up in a storage path, and the one below is an *upload*
      made with the service-role key — the key that does not consult the bucket
@@ -69,6 +71,58 @@ export async function GET(request: Request): Promise<Response> {
 
   const client = admin();
   if (!client) return Response.json({ message: 'Storage is not configured.' }, { status: 503 });
+
+  /* ── A screenful of songs, in one call ─────────────────────────────
+ 
+     Carli, 11 September 2026, testing: does a sleeve she changes later show
+     up in the live room? It did not, and the reason ran wider than the live
+     room — a sleeve appeared only on the ONE card whose button had been
+     pressed, in that session, and was gone again on the next load. Two
+     credits for a picture that is visible until you close the tab.
+ 
+     The single-track question above is the reason: asking it per card would
+     be twenty requests to draw one grid, so the grid did not ask, so it
+     never knew. This asks once for the lot.
+ 
+     `createSignedUrls` reports per path, so a song with no sleeve is one
+     `error` in the reply rather than a failed call — and most songs have no
+     sleeve, which is the ordinary case and not a fault. */
+  if (many && !id && !trackId) {
+    const ids = [...new Set(many.split(',').map((one) => one.trim()).filter(Boolean))].slice(0, 60);
+    /* The same rule as every other id here, and for the same reason: these
+       become storage paths read with the service-role key, so the folder in
+       the path is the only thing keeping one account out of another's. One
+       bad id refuses the whole request rather than being dropped quietly —
+       a silently shortened answer is a screen that looks correct. */
+    if (ids.some((one) => !storageId(one))) {
+      return Response.json({ message: 'Which songs?' }, { status: 400 });
+    }
+    if (ids.length === 0) return Response.json({ covers: {} });
+
+    const { data: signed, error: unread } = await client.storage
+      .from(BUCKET)
+      .createSignedUrls(ids.map((one) => coverPath(caller.id, one)), LINK_SECONDS);
+
+    /* ── "We could not ask" is not "there are none" ──────────────────
+ 
+       A per-path `error` in the reply means that one song has no sleeve,
+       which is the ordinary case. An error on the CALL means storage did
+       not answer, and turning that into an empty map would tell somebody
+       who had just paid two credits that their cover does not exist.
+ 
+       `asked: false` rather than a 5xx, because the grid must still draw:
+       the fallback is a real picture, not a hole. The hook keeps whatever
+       it already had instead of clearing it — see `app/lib/sleeves.ts`. */
+    if (unread) return Response.json({ covers: {}, asked: false });
+
+    const covers: Record<string, string> = {};
+    for (const row of signed ?? []) {
+      if (row.error || !row.path || !row.signedUrl) continue;
+      const found = ids.find((one) => row.path === coverPath(caller.id, one));
+      if (found) covers[found] = row.signedUrl;
+    }
+    return Response.json({ covers, asked: true });
+  }
 
   // Asking about a track: is there one already, without generating anything.
   if (trackId && !id) {

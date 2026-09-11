@@ -482,6 +482,14 @@ jobs:
       # it succeeds, and it builds last month's tables. Nothing about that
       # looks like a failure — the rooms behave as though they were never
       # switched on, weeks later, with a green Run behind them.
+      # A cover cost two credits and was visible on one card until the tab
+      # was closed: four screens drew the generated pattern and none of them
+      # ever asked whether a real sleeve existed. The sharp rule here is the
+      # last one — two routes derive the same storage path, and drift would
+      # leave the picture existing and unfindable with nothing throwing.
+      - name: A sleeve shows wherever the song shows
+        run: npm run check:sleeves
+
       - name: The one-paste SQL still says what the five files say
         run: npm run check:sqlbundle
 

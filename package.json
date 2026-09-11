@@ -184,6 +184,7 @@
     "check:sayitwrong": "tsx scripts/check-sayitwrong.mts",
     "check:elevenroom": "tsx scripts/check-elevenroom.mts",
     "check:quiz": "tsx scripts/check-quiz.mts",
+    "check:sleeves": "tsx scripts/check-sleeves.mts",
     "check:socialformats": "tsx scripts/check-socialformats.mts",
     "check:frontdoor": "tsx scripts/check-frontdoor.mts",
     "check:quizroom": "node audit/quiz.mjs 3112"

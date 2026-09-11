@@ -14,13 +14,15 @@
  *     predictable address for every video, and it is a picture *of the actual
  *     lecture* — accurate by construction.
  *
+ *   · If somebody has MADE a sleeve for the song, that — see `photo` below.
+ *
  *   · Otherwise, artwork generated from the item's own title. Deterministic, so
  *     a card looks the same every time you come back and becomes recognisable;
  *     obviously drawn rather than photographed, so nobody mistakes it for a
  *     depiction of anything. It costs no request and cannot 404.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 /** The video id out of any of the shapes a YouTube link comes in. */
 export function youtubeId(url: string | undefined): string | null {
@@ -137,6 +139,7 @@ export default function Cover({
   seed,
   label,
   url,
+  photo,
   className = '',
 }: {
   /** What the artwork is derived from — an id, or the title. */
@@ -145,16 +148,56 @@ export default function Cover({
   label: string;
   /** Where the thing lives. A real video's own thumbnail wins over artwork. */
   url?: string;
+  /**
+   * A sleeve somebody actually made for this song, if there is one.
+   *
+   * ── Why it is a prop here rather than a second component ────────────
+   *
+   * `Sleeve.tsx` is the thing that MAKES one: it asks the server, shows a
+   * spinner, spends credits and offers a remake. That belongs on the one
+   * card somebody is working on. Everywhere else — the live room, the
+   * full-screen player, the grid — the question is only "is there a
+   * picture", and mounting the maker to answer it would put a generate
+   * button on every tile in the app.
+   *
+   * So the picture comes down with the data that already had to be
+   * fetched, and this draws it. Nothing here asks for anything.
+   *
+   * ── Why it falls back rather than trusting the address ──────────────
+   *
+   * These are signed links that expire in an hour. A room left open over
+   * lunch has stale addresses in it, and a broken-image icon on every
+   * panel is worse than the drawing was. So a sleeve that will not load
+   * falls back to the generated artwork, exactly as a missing YouTube
+   * thumbnail does — one mechanism, not two.
+   */
+  photo?: string | null;
   className?: string;
 }): React.ReactElement {
   const video = youtubeId(url);
   // A thumbnail can be missing even when the id is right — an unlisted video,
   // a deleted one — and a broken image icon is worse than no photograph at all.
   const [failed, setFailed] = useState(false);
+  const [noSleeve, setNoSleeve] = useState(false);
+
+  /* A different song, or a remade sleeve, is a different address. Without
+     this, one expired link would leave `noSleeve` true for whatever the
+     panel showed next — which on a scrolling room is every song after the
+     first one that failed. */
+  const shown = photo && !noSleeve ? photo : null;
+  useEffect(() => setNoSleeve(false), [photo]);
 
   return (
     <div className={`relative overflow-hidden bg-zinc-950 ${className}`}>
-      {video && !failed ? (
+      {shown ? (
+        <img
+          src={shown}
+          alt={label}
+          loading="lazy"
+          onError={() => setNoSleeve(true)}
+          className="w-full h-full object-cover"
+        />
+      ) : video && !failed ? (
         <img
           src={`https://img.youtube.com/vi/${video}/hqdefault.jpg`}
           alt={label}

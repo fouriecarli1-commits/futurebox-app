@@ -33,6 +33,7 @@ import {
 } from '../lib/playlists';
 import { fetchCreator, type Creator } from '../lib/radar';
 import Cover from './Cover';
+import { useSleeves } from '../lib/sleeves';
 import Subscription from './Subscription';
 import ProfilePhoto from './ProfilePhoto';
 import { publicUrl as avatarUrl } from '../lib/avatar';
@@ -107,6 +108,19 @@ export default function Channel({
   const [keepFailed, setKeepFailed] = useState<string | null>(null);
   /** Which song has been asked for a real cover, if any. */
   const [sleeveFor, setSleeveFor] = useState<string | null>(null);
+  /* ── The sleeves that already exist, for the whole grid ─────────────
+ 
+     Carli, 11 September 2026, testing the live room, which led here.
+ 
+     A cover cost two credits and was visible on ONE card — the one whose
+     button had been pressed — until the tab was closed. `Sleeve` is
+     mounted for that card alone, on purpose: it is the thing that MAKES
+     one, and twenty of it would be twenty generate buttons on one screen.
+     But nothing else ever asked, so a made cover simply disappeared on the
+     next load, and the comment below said the asking WAS the button.
+ 
+     One request for the lot. It generates nothing and spends nothing. */
+  const sleeves = useSleeves(tracks.map((one) => one.id));
   /** A file being taken in, and what was wrong with it if it was refused. */
   const [taking, setTaking] = useState(false);
   const [tookBadly, setTookBadly] = useState<string | null>(null);
@@ -712,13 +726,14 @@ export default function Channel({
           {shown.map((track) => (
             <article key={track.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden">
               <div className="relative">
-                {/* The real cover if somebody asked for one, and the drawn
-                    placeholder until they do.
+                {/* `Sleeve` is the MAKER — spinner, credits, a remake
+                    button — and is mounted only for the card whose button
+                    was pressed. Everywhere else the question is just "is
+                    there a picture", and `useSleeves` above answered it for
+                    the whole grid in one request.
 
-                    Not mounted on every card: each sleeve asks the server
-                    whether a cover exists already, and twenty songs on a
-                    screen should not be twenty questions nobody asked. The
-                    button below is the asking. */}
+                    Before that it did not get answered at all, and a cover
+                    somebody had paid for vanished on reload. */}
                 {sleeveFor === track.id ? (
                   <Sleeve
                     trackId={track.id}
@@ -727,7 +742,12 @@ export default function Channel({
                     style={track.style ?? ''}
                   />
                 ) : (
-                  <Cover seed={track.id} label={track.title} className="aspect-video" />
+                  <Cover
+                    seed={track.id}
+                    label={track.title}
+                    photo={sleeves[track.id]}
+                    className="aspect-video"
+                  />
                 )}
                 {/* Tapping the picture opens the song full screen, the way a
                     phone expects. The play button beside it still just plays

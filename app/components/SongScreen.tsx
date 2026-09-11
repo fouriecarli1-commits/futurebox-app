@@ -61,6 +61,7 @@ import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import type { Track } from '../lib/library';
 import { countWhenPlayed } from '../lib/played';
+import { useSleeves } from '../lib/sleeves';
 
 /**
  * Literal colours, not the theme's.
@@ -113,6 +114,9 @@ export default function SongScreen({
   const watching = useRef<null | (() => void)>(null);
 
   const opening = Math.max(0, tracks.findIndex((one) => one.id === startAt));
+  /* The sleeves for everything in the scroller, asked once. A song with none
+     falls back to its drawing, which is the ordinary case. */
+  const sleeves = useSleeves(tracks.map((one) => one.id));
   const [at, setAt] = useState(opening);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -274,9 +278,15 @@ export default function SongScreen({
               data-at={index}
               className="relative h-full w-full snap-start snap-always overflow-hidden"
             >
-              {/* The picture. A cover drawn from the song's own id, so it is
-                  the same picture the channel showed a moment ago. */}
-              <Cover seed={one.id} label={one.title} className="absolute inset-0 h-full w-full" />
+              {/* The picture: the sleeve if one was made, and the drawing
+                  from the song's own id until then — the same picture the
+                  channel showed a moment ago, either way. */}
+              <Cover
+                seed={one.id}
+                label={one.title}
+                photo={sleeves[one.id]}
+                className="absolute inset-0 h-full w-full"
+              />
               {/* Strong in the middle as well as at the ends: the words sit there, and
                   a scrim that fades out behind them is a scrim that does nothing
                   where it is needed. */}
