@@ -41,6 +41,7 @@ import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { tooMany } from '@/app/lib/server/brake';
 import { hasAddon } from '@/app/lib/server/addons';
 import { MARKETING } from '@/app/lib/addons';
+import { FORMAT_IDS, formatById } from '@/app/lib/adformats';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -109,6 +110,12 @@ const PlanSchema = z.object({
         platform: z.string().describe('One of the platforms above.'),
         what: z.string().describe('What goes in this slot. Specific enough to make on the day.'),
         why: z.string().describe('Why this slot, in one line. Says what the guess rests on so it can be argued with.'),
+        format: z
+          .enum(FORMAT_IDS as [string, ...string[]])
+          .describe(
+            'Which of the studio\u2019s formats this slot is, so the row can open the room that makes it. ' +
+            'One of the listed ids and never anything else.',
+          ),
       }),
     )
     .describe(
@@ -355,7 +362,28 @@ export async function POST(request: Request): Promise<Response> {
        on every failure path above, so a bare plan would make a plan with a
        field called `error` indistinguishable from a refusal. See
        `check:jsonshape`. */
-    return Response.json({ plan: parsed });
+    /* ── The format on each slot, filtered rather than trusted ──────
+ 
+       `z.enum` is a description here, not a constraint: `zodOutputFormat`
+       cannot express an enum in the schema subset this API takes, so it
+       degrades into the field's own description — see `check:adschema`.
+       The model is told; nothing enforces it.
+ 
+       An id the catalogue does not have would draw a "Make it" button that
+       opens nothing, which is worse than the read-only row it replaced. So
+       an unknown one is dropped and that row keeps its words and loses its
+       button. `/api/adformats` filters for exactly this reason. */
+    const week = parsed.week.map((slot) =>
+      slot.format && formatById(slot.format) ? slot : { ...slot, format: undefined },
+    );
+    /* Named rather than built inside the call, so the reply is
+       `Response.json({ plan })` — the shape `check:jsonshape` reads to pair
+       a route with the key its screen looks for. An object literal in there
+       hides the key from it, and that check exists because this exact route
+       returned the plan bare for a fortnight. */
+    const plan = { ...parsed, week };
+
+    return Response.json({ plan });
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) {
       return Response.json({ error: 'bad_key', message: 'The configured key was rejected.' }, { status: 502 });

@@ -34,7 +34,7 @@ import { readFileSync } from 'node:fs';
 import { AD_FORMATS } from '../app/lib/adformats';
 import { SURFACES } from '../app/lib/surfaces';
 import { LENGTHS } from '../app/lib/videoscenes';
-import { filmThisAd, handoverFor, readThisAd, shapeFor } from '../app/lib/adhandover';
+import { filmThisAd, handoverFor, readThisAd, shapeFor, shapeForNamed } from '../app/lib/adhandover';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -289,6 +289,59 @@ ok('the song form takes what the advert desk sends it',
     && /set_sound:/.test(form)
     && /set_song_title:/.test(form),
   'the room the two song recommendations open has nothing to receive them');
+
+/* ── The week is seven buttons, not seven sentences ─────────────────
+ 
+   The plan panel said "Tuesday 18:00 · TikTok" and described what to post,
+   and there was nothing to press. Seven specific instructions and a walk
+   back up the page to start over — the same fault as the format cards, one
+   panel further down, on the panel she asked for by name.
+ 
+   A slot carries a format id now. The three things that can go wrong with
+   that are each checked: the model naming something that does not exist
+   (dropped by the route), the shape coming from the campaign's tick boxes
+   rather than from the slot's own platform, and the slot's sentence not
+   actually reaching the room. */
+const planRoute = readFileSync('app/api/plan/route.ts', 'utf8');
+ok('the plan asks which format each slot is', /format: z\n?\s*\.enum\(FORMAT_IDS/.test(planRoute),
+  'a week row has nothing to open, so it stays a sentence');
+ok('  and drops an id the catalogue does not have',
+  /slot\.format && formatById\(slot\.format\)/.test(planRoute),
+  '`z.enum` is a description and not a constraint here — see check:adschema — so an invented id would draw a button that opens nothing');
+
+const planPanel = readFileSync('app/components/MarketPlan.tsx', 'utf8');
+ok('  and the week row opens the room that makes it',
+  /handoverFor\(\{/.test(planPanel) && /formatId: makes\.id/.test(planPanel),
+  'the panel has the format and still does not use it');
+ok('  taking its shape from the slot\'s own platform, not the campaign\'s tick boxes',
+  /shapeForNamed\(slot\.platform\)/.test(planPanel),
+  'Tuesday is one platform; the tick boxes are about the whole campaign');
+
+/* The slot's own sentence is the thing to make. It is written to be
+   "specific enough to make on the day" — the same job `pick.first` does on
+   a format card — so it has to be what lands in the room. */
+const fromSlot = handoverFor({
+  formatId: 'short_vertical',
+  brief: { what: 'handmade leather bags' },
+  pick: { first: 'The winter range on the bench, one shot, no words' },
+  going: [],
+});
+ok('  and the slot\'s own sentence is what lands in the room',
+  fromSlot.some((one) => one.op === 'set_prompt' && /winter range/i.test(one.value)),
+  fromSlot.find((one) => one.op === 'set_prompt')?.value.slice(0, 90) ?? 'no prompt at all');
+
+/* A platform named in words, from a plan a model wrote — there is no id on
+   a slot, and the name arrives in whatever case and language it likes. */
+ok('a slot for TikTok is vertical', shapeForNamed('TikTok') === '9:16', shapeForNamed('TikTok'));
+ok('  a slot for their own website is wide',
+  shapeForNamed('Your own website or landing page') === '16:9',
+  shapeForNamed('Your own website or landing page'));
+ok('  and an Afrikaans plan says the same thing',
+  shapeForNamed('Jou eie webwerf of bestemmingsblad') === '16:9',
+  shapeForNamed('Jou eie webwerf of bestemmingsblad'));
+ok('  and a platform nobody recognises still gives a usable shape',
+  ['9:16', '16:9', '1:1'].includes(shapeForNamed('a shop window')),
+  shapeForNamed('a shop window'));
 
 if (failures) {
   console.error(`\ncheck:adhandover — ${failures} failure(s).\n`);

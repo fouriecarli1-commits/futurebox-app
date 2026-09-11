@@ -22,7 +22,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { CalendarDays, Loader2, Download, FileDown, Target, Users, Compass, Radar, Gauge } from 'lucide-react';
+import { ArrowRight, CalendarDays, Loader2, Download, FileDown, Target, Users, Compass, Radar, Gauge } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { accessToken } from '../lib/cloud';
@@ -32,6 +32,9 @@ import {
 import { paperOf, type Words } from '../lib/planpaper';
 import { loadReport } from '../lib/adreport';
 import { loadChosen } from '../lib/chosenformat';
+import { formatById } from '../lib/adformats';
+import { handoverFor, shapeForNamed } from '../lib/adhandover';
+import type { SurfaceId } from '../lib/surfaces';
 import { byWeekday, standoutDays } from '../lib/adweek';
 import Note from './Note';
 
@@ -97,7 +100,24 @@ export interface Brief {
   readonly place?: string;
 }
 
-export default function MarketPlan({ brief }: { readonly brief: Brief }): React.ReactElement {
+export default function MarketPlan({
+  brief,
+  onGoTo,
+  onSetUp,
+}: {
+  readonly brief: Brief;
+  /** Open the room a slot is planning. */
+  readonly onGoTo: (surface: SurfaceId) => void;
+  /**
+   * Put the slot's own instruction in that room on the way into it.
+   *
+   * The week is seven specific things to make and it had no buttons: the
+   * plan told somebody exactly what to post on Tuesday and they had to
+   * scroll back up and start again. Same fault as the format cards, one
+   * panel further down, on the panel she asked for by name.
+   */
+  readonly onSetUp: (room: SurfaceId, op: string, value: string) => void;
+}): React.ReactElement {
   const { t, lang } = useLang();
   const [plan, setPlan] = useState<Plan | null>(null);
   const [busy, setBusy] = useState(false);
@@ -384,16 +404,65 @@ export default function MarketPlan({ brief }: { readonly brief: Brief }): React.
               ))}
             </div>
 
-            {week.map((slot, at) => (
-              <div key={at} className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2.5">
-                <p className="text-sm text-zinc-200 tabular-nums">
-                  <span className="font-semibold">{dayName(slot.day)}</span> {slot.at} ·{' '}
-                  <span className="text-emerald-400">{slot.platform}</span>
-                </p>
-                <p className="text-sm text-zinc-300 leading-snug">{slot.what}</p>
-                <p className="text-xs text-zinc-500 leading-snug pt-1">{slot.why}</p>
-              </div>
-            ))}
+            {week.map((slot, at) => {
+              /* The room this slot is planning, when the model named a
+                 format the catalogue has. A slot with none keeps its words
+                 and has no button — a row that still reads correctly is a
+                 better failure than a button that opens the wrong room. */
+              const makes = slot.format ? formatById(slot.format) : null;
+              return (
+                <div key={at} className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2.5">
+                  <p className="text-sm text-zinc-200 tabular-nums">
+                    <span className="font-semibold">{dayName(slot.day)}</span> {slot.at} ·{' '}
+                    <span className="text-emerald-400">{slot.platform}</span>
+                  </p>
+                  <p className="text-sm text-zinc-300 leading-snug">{slot.what}</p>
+                  <p className="text-xs text-zinc-500 leading-snug pt-1">{slot.why}</p>
+                  {makes && makes.room !== 'campaign' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        /* The slot's own sentence IS the first thing to
+                           make — it is written to be specific enough to
+                           make on the day, which is the same job
+                           `pick.first` does on a format card. So the same
+                           hand-off carries it, and the shape comes from the
+                           platform this slot is for rather than from the
+                           tick boxes, which are about the campaign and not
+                           about Tuesday. */
+                        for (const wire of handoverFor({
+                          formatId: makes.id,
+                          brief: {
+                            what: brief.what,
+                            who: brief.who,
+                            offer: brief.offer,
+                            tone: brief.tone,
+                            market: brief.market,
+                            place: slot.platform,
+                          },
+                          pick: { first: slot.what },
+                          going: [],
+                        })) {
+                          onSetUp(
+                            wire.room,
+                            wire.op,
+                            /* The one value the campaign's tick boxes should
+                               not decide: this slot is for one platform, and
+                               it says which. */
+                            wire.op === 'set_aspect' ? shapeForNamed(slot.platform) : wire.value,
+                          );
+                        }
+                        onGoTo(makes.room);
+                      }}
+                      className="mt-2 min-h-[44px] inline-flex items-center gap-2 rounded-xl border border-emerald-500/50 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-200 hover:bg-emerald-500/20"
+                    >
+                      {t('plan.make', 'Make this one')}
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
 
             {/* Where the times came from. The difference between a plan built
                 on this account's own report and one built on how the category

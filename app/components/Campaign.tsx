@@ -674,7 +674,11 @@ export default function Campaign({
           the sales screen says where it is. */}
       {owns(paid, MARKETING) ? (
         <>
-          <MarketPlan brief={{ what, who, offer, tone, market }} />
+          <MarketPlan
+            brief={{ what, who, offer, tone, market }}
+            onGoTo={onGoTo}
+            onSetUp={onSetUp}
+          />
 
           {/* The plan says Tuesday at six; this is what makes Tuesday at six
               happen rather than being read once and forgotten. It reminds

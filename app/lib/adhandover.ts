@@ -55,6 +55,7 @@ import type { SurfaceId } from './surfaces';
 import { formatById } from './adformats';
 import { styleById } from './adstyles';
 import { withSpoken } from './videoscenes';
+import { DESTINATIONS, PLATFORMS } from '../data/social';
 
 /** One thing to put in one room. */
 export interface Wire {
@@ -142,6 +143,33 @@ export function shapeFor(going: readonly string[] = []): '9:16' | '16:9' | '1:1'
   if (going.some((one) => TALL.includes(one))) return '9:16';
   if (going.some((one) => WIDE.includes(one))) return '16:9';
   return '9:16';
+}
+
+/**
+ * The shape, from a platform's NAME rather than its id.
+ *
+ * The weekly plan is written by a model and says "TikTok" or "Your own
+ * website" in whatever case it likes — there is no id on a slot, and adding
+ * one would be a second thing for the model to get right. So the name is
+ * matched against the two catalogues and falls through to the same default
+ * as `shapeFor` when it matches neither.
+ *
+ * Matched on the id, the English name and the Afrikaans one, because a plan
+ * written in Afrikaans says "Jou eie webwerf".
+ */
+export function shapeForNamed(platform: string): '9:16' | '16:9' | '1:1' {
+  const said = (platform ?? '').trim().toLowerCase();
+  if (!said) return shapeFor([]);
+  for (const one of PLATFORMS) {
+    if (said.includes(one.id.toLowerCase()) || said.includes(one.name.toLowerCase())) {
+      return shapeFor([one.id]);
+    }
+  }
+  for (const one of DESTINATIONS) {
+    const names = [one.id, one.name, one.en, one.af].map((each) => each.toLowerCase());
+    if (names.some((each) => each.length > 2 && said.includes(each))) return shapeFor([one.id]);
+  }
+  return shapeFor([]);
 }
 
 /**

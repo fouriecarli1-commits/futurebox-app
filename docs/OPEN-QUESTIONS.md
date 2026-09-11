@@ -3314,3 +3314,43 @@ engine key there is nothing on screen to read. The probe says so and does
 not count it as a pass — `check:adhandover` proves the right values are
 sent, and nothing here proves they are shown. **That is the one thing left
 for her to confirm on the live site.**
+
+---
+
+## The week was seven sentences and no buttons (11 September, night)
+
+The same fault as the format cards, one panel further down — and on the
+panel she asked for by name ("'n downloadable schedule met 'n volle
+marketing-plan uitleg").
+
+`MarketPlan` builds a week: "Tuesday 18:00 · TikTok", then what to post and
+why. Every row is specific enough to make on the day, which is what the
+route asks the model for. **None of them could be pressed.** Seven exact
+instructions, and the only way to act on one was to scroll back up to the
+brief and start over.
+
+**Fixed.** A slot now carries the format it is planning, so each row has a
+"Make this one" that opens the room with the slot's own sentence in it.
+
+Three things could go wrong with that, and each is checked:
+
+1. **The id is the model's answer, and `z.enum` is not a constraint here** —
+   `zodOutputFormat` degrades it into the field's description, which is the
+   thing `check:adschema` exists to demonstrate. So the route drops an id
+   the catalogue does not have, and that row keeps its words and loses its
+   button. A row that still reads correctly is a better failure than a
+   button that opens nothing.
+2. **The shape comes from the slot's own platform**, through
+   `shapeForNamed`, not from the campaign's tick boxes: Tuesday is one
+   platform, and the tick boxes are about the whole campaign. Matched on the
+   id, the English name and the Afrikaans one, because a plan written in
+   Afrikaans says "Jou eie webwerf".
+3. **The slot's sentence is what lands in the room** — it does the same job
+   `pick.first` does on a format card, so it travels the same way.
+
+**And the route's reply nearly broke the check that guards it.** Building
+the filtered plan inline made the return `Response.json({ plan: {...} })`,
+and `check:jsonshape` reads the wrapper key by shape — an object literal
+hid it, and the check reported the route as handing back a bare plan. That
+check exists *because this exact route returned the plan bare for a
+fortnight*. Naming the value first is better code and keeps it visible.

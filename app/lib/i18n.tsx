@@ -642,6 +642,7 @@ export const STRINGS: Dict = {
   "plan.doubt": { en: "What stops them", af: "Wat hulle keer" },
   "plan.angles": { en: "Angles, and what they are up against", af: "Hoeke, en waarteen hulle te staan kom" },
   "plan.platforms": { en: "Where, best first", af: "Waar, beste eerste" },
+  "plan.make": { en: "Make this one", af: "Maak hierdie een" },
   "plan.week": { en: "The week", af: "Die week" },
   "plan.beyond": { en: "Where the buyers are that is not a feed", af: "Waar die kopers is buite die strome" },
   "plan.watch": { en: "The numbers worth watching", af: "Die syfers wat die moeite werd is om dop te hou" },

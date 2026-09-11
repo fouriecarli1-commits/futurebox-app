@@ -38,6 +38,23 @@ export interface Slot {
   readonly platform: string;
   readonly what: string;
   readonly why: string;
+  /**
+   * Which of this studio's formats this slot is, by id from `adformats.ts`.
+   *
+   * ── Why it is here ──────────────────────────────────────────────────
+   *
+   * The week said "Tuesday 18:00, TikTok" and described what to post, and
+   * there was no way to press any of it. Seven specific instructions and a
+   * walk back up the page to start over — the same fault the format cards
+   * had, one panel further down, and on the panel she asked for by name.
+   *
+   * Optional, because it is the model's answer and the model can omit it or
+   * name something that does not exist. The route drops an id the catalogue
+   * does not have, and a slot without one simply has no button — a row that
+   * still reads correctly is a better failure than a button that opens the
+   * wrong room.
+   */
+  readonly format?: string;
 }
 
 export interface Plan {
