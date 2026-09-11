@@ -28,12 +28,34 @@ import { SURFACES, isSurfaceId } from '../app/lib/surfaces';
 const DIR = 'app/components';
 const CALL = /useCopilotOps\(\s*'([a-z_]+)'\s*,\s*\{/g;
 
+/**
+ * The code, without the prose about the code.
+ *
+ * Handler names are found as `name:` at the top level of the block, and a
+ * comment inside that block is at the top level too. So a note reading
+ * "the spread of a captured object: these three arrive in a row" registered
+ * an operation called `object`, and this file reported the room and the
+ * registry as disagreeing when they agreed perfectly.
+ *
+ * `check:probes` learned the same lesson and has the same helper. A rule a
+ * correct file cannot pass is worse than no rule: the next person rewrites
+ * the comment to suit the scanner.
+ *
+ * Replaced with spaces of the same length rather than removed, so every
+ * index into the source still lines up.
+ */
+function withoutProse(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, (had) => had.replace(/[^\n]/g, ' '))
+    .replace(/(^|[^:])\/\/[^\n]*/g, (had, before) => before + ' '.repeat(had.length - before.length));
+}
+
 const problems: string[] = [];
 let found = 0;
 
 for (const file of readdirSync(DIR).filter((name) => name.endsWith('.tsx'))) {
   const path = join(DIR, file);
-  const source = readFileSync(path, 'utf8');
+  const source = withoutProse(readFileSync(path, 'utf8'));
 
   for (const call of source.matchAll(CALL)) {
     found += 1;

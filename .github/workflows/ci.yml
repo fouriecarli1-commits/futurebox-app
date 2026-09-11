@@ -254,6 +254,13 @@ jobs:
       # The advert desk now recommends what to MAKE, not only what to say.
       # That is worth more than an article only while every recommendation
       # opens a room that exists with an operation that room takes.
+      # The desk is a product she sells, and it sent one field: "the text and
+      # shots, and scripts don't carry over to the next room". Two of the
+      # eight formats sent nothing at all, because the song form registered
+      # no operations for anything to arrive in.
+      - name: Every recommendation arrives in the next room with the brief in it
+        run: npm run check:adhandover
+
       - name: Every format the advert desk recommends can be made here
         run: npm run check:adformats
 
@@ -720,7 +727,7 @@ jobs:
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes
           - group: rooms
-            probes: check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:videocover check:podlanguage
+            probes: check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:videocover check:podlanguage
           - group: whole
             probes: check:firsthour check:writing check:wide check:afrikaansscreen check:spotlight check:photosong check:singview check:buttonlook check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
           # Both need a real browser for what they measure rather than for

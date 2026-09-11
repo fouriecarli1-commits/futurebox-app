@@ -1016,6 +1016,7 @@ export default function VideoCanvas({
                   key={one.id}
                   type="button"
                   onClick={() => setAspect(one.id)}
+                  aria-pressed={aspect === one.id}
                   title={one.note}
                   className={`min-h-[44px] flex-1 px-2 py-2 rounded-xl text-sm border transition-all ${
                     aspect === one.id
@@ -1045,6 +1046,11 @@ export default function VideoCanvas({
                   key={one.seconds}
                   type="button"
                   onClick={() => setSeconds(one.seconds)}
+                  /* Which one is chosen, said rather than only coloured.
+                     It was colour alone, so a screen reader could not tell
+                     the eight lengths apart — and neither could a probe
+                     checking that the advert desk had set one. */
+                  aria-pressed={seconds === one.seconds}
                   title={t(`canvas.len.${one.seconds}`, one.note)}
                   className={`min-h-[44px] px-3 py-2 rounded-xl text-sm border transition-all ${
                     seconds === one.seconds

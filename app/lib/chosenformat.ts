@@ -32,6 +32,16 @@ export interface Chosen {
   readonly id: string;
   /** The first thing to make, as the adviser wrote it for this business. */
   readonly first: string;
+  /**
+   * The look it recommended, by id from `adstyles.ts`.
+   *
+   * Kept because the advert cards below the adviser hand a shot to the video
+   * desk, and the look is the one part of the recommendation they could not
+   * see: it lived in the adviser's own state and nowhere else, so "film this
+   * one" sent a shot with no look on it while the card two inches above said
+   * exactly how it should look.
+   */
+  readonly style?: string;
 }
 
 export function saveChosen(chosen: readonly Chosen[]): void {
@@ -50,18 +60,23 @@ export function saveChosen(chosen: readonly Chosen[]): void {
  * the week is planned — and a plan built around a room that no longer exists
  * is worse than one built around nothing.
  */
-export function loadChosen(): { format: AdFormat; first: string }[] {
+export function loadChosen(): { format: AdFormat; first: string; style?: string }[] {
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return [];
     const said = JSON.parse(raw) as Chosen[];
     if (!Array.isArray(said)) return [];
     return said
-      .map((one) => {
+      .map((one): { format: AdFormat; first: string; style?: string } | null => {
         const format = formatById(one?.id ?? '');
-        return format ? { format, first: String(one.first ?? '') } : null;
+        if (!format) return null;
+        return {
+          format,
+          first: String(one.first ?? ''),
+          ...(one?.style ? { style: String(one.style) } : {}),
+        };
       })
-      .filter((one): one is { format: AdFormat; first: string } => one !== null)
+      .filter((one): one is { format: AdFormat; first: string; style?: string } => one !== null)
       .slice(0, AD_FORMATS.length);
   } catch {
     return [];

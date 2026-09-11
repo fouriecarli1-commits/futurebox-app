@@ -49,6 +49,7 @@ import { noteTaste } from '../lib/taste';
 import { looksAfrikaans, singDirection, type SingIn } from '../lib/lyriclang';
 import { refusalText } from '../lib/apierror';
 import StyleFrom from './StyleFrom';
+import { useCopilotOps } from '../lib/copilotactions';
 import Card from './Card';
 import SongStarts from './SongStarts';
 import PromptCards from './PromptCards';
@@ -82,7 +83,25 @@ export default function MakeMusic({
   incoming?: { title: string; lyrics: string; style: string } | null;
   /** Held by the studio, because the copilot writes to it too. */
   canvas: Canvas;
-  setCanvas: (next: Canvas) => void;
+  /**
+   * The song canvas, as a real React setter.
+   *
+   * It was `(next: Canvas) => void`, which only allows the whole-object
+   * form — and this file already carries a note, at `PromptCards` below,
+   * that "two setCanvas calls built from the same captured object put the
+   * first one's change back, and that cost the title once".
+   *
+   * It then cost it again: the three operations below arrive one after the
+   * other from the advert desk, each spread the same captured `canvas`, and
+   * only the last survived — so a song recommendation set the sound and
+   * silently dropped the title and the words. Found by `audit/adcarry.mjs`
+   * pressing the button; `check:adhandover` passed the whole time, because
+   * what leaves the desk was right and what arrived was not.
+   *
+   * Allowing the updater form is the fix rather than a third warning: with
+   * it, each write sees the previous one.
+   */
+  setCanvas: React.Dispatch<React.SetStateAction<Canvas>>;
   /** Bumped by the copilot to press the button from over there. */
   makeSignal: number;
   /** Fires when a track lands, so the studio can offer a video. */
@@ -105,6 +124,32 @@ export default function MakeMusic({
   const wordless = splitSections(lyrics).length === 0;
   const setTitle = (value: string) => setCanvas({ ...canvas, title: value });
   const setLyrics = (value: string) => setCanvas({ ...canvas, lyrics: value });
+
+  /* ── What can be put in this room from somewhere else ────────────────
+ 
+     Carli, 11 September 2026: "the text and shots, and scripts don't carry
+     over to the next room… It is supposed to copy and paste the information
+     to the next page."
+ 
+     Two of the advert desk's eight recommendations are songs — "a song,
+     over one photograph" and "a jingle" — and both opened this room
+     completely empty. Not because the hand-off forgot them: because there
+     was nothing here to hand anything to. Every other room registers what
+     it can be asked to do; the song form never did, so `adformats.ts` had
+     no operation to name and left the field blank, which read like a
+     decision and was a gap.
+ 
+     The song canvas is the studio's state rather than this component's,
+     which is why the copilot could already write to it through the page.
+     That path is a different one — whole actions, not room operations —
+     and it cannot be reached from another room. This can. */
+  useCopilotOps('make', {
+    /* Updater form, not the spread of a captured object: these three
+       arrive in a row, and each has to see the one before it. */
+    set_song_title: (value) => setCanvas((was) => ({ ...was, title: value.trim() })),
+    set_words: (value) => setCanvas((was) => ({ ...was, lyrics: value })),
+    set_sound: (value) => setCanvas((was) => ({ ...was, style: value.trim() })),
+  });
 
   /**
    * The wand: one press that fills a card in.

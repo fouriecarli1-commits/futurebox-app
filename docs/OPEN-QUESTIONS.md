@@ -3231,3 +3231,86 @@ over a missing photograph is the worse fault.
 
 `audit/liveroom.mjs` run after the change: the room still plays one at a
 time, full screen, with its hearts and counts intact.
+
+---
+
+## The advert desk sent one field to every room (11 September, night)
+
+Carli, on the desk as a product she is selling:
+
+> "When you push the buttons to take you to podcast, to video, to music
+> making, the text and shots, and scripts don't carry over to the next room.
+> That is a real problem… It is supposed to copy and paste the information
+> to the next page."
+
+She is right, and the code said so in one line. `AdFormats.tsx`:
+
+```
+if (format.op) onSetUp(format.room, format.op, pick.first);
+onGoTo(format.room);
+```
+
+One operation, one value. The brief stayed behind — what they sell, who it
+is for, the offer, the tone, the town, the shape the tick boxes had already
+decided. So did the three adverts the desk had just written and the look it
+had just recommended. **Two of the eight formats sent nothing at all**: "a
+song, over one photograph" and "a jingle" opened Make a song completely
+empty, because the song form registered no operations for anything to
+arrive in. Somebody is told exactly what to make and then put in an empty
+room and asked to type it in again.
+
+### What it is now
+
+`app/lib/adhandover.ts` — one pure function per destination, answering what
+should travel. A video desk wants a shot description, a shape and a length;
+the voice studio wants a script somebody can read out loud, not a note
+describing one; the podcast wants a title **and** notes; the song form wants
+words with section markers and a sound. Pure and data-only, so
+`check:adhandover` can ask what actually comes out for all eight formats.
+
+The rule it is written against: **never invent a fact about them.** The
+offer, the price, the deadline — only what they typed. The craft is ours:
+framing, length, shape, where the chorus goes. A brief with no offer in it
+produces no offer, and that is checked.
+
+Also fixed on the way: the three buttons out of the room now share one path,
+`set_look` travels through `chosenformat.ts` so the two panels agree, and
+"Read this line" became "Read this one" and carries the whole advert rather
+than the single spoken line — a spoken advert is the hook, the reason and
+the call.
+
+### Three faults found by the work rather than by the report
+
+1. **A stale closure ate two of every three hand-offs.** The song
+   recommendation sends a title, words and a sound one after the other, and
+   each handler spread the same captured `canvas` — so only the last
+   survived. `MakeMusic.tsx` already carried a note about exactly this
+   ("that cost the title once") and I walked straight into it. Fixed by
+   widening the prop to a real React setter so the updater form is available,
+   rather than adding a third warning. **`check:adhandover` passed the whole
+   time**: what left the desk was right and what arrived was not. Only
+   `audit/adcarry.mjs`, pressing the button, found it.
+2. **The video desk's length and shape buttons said which was chosen only in
+   colour.** No `aria-pressed`, so a screen reader could not tell the eight
+   lengths apart. Now they do.
+3. **`check:ops` tripped on its own prose.** Handler names are `name:` at the
+   top level of the block, and so is a comment — a note reading "the spread
+   of a captured object: these three arrive in a row" registered an
+   operation called `object`. The scanner strips comments now, the way
+   `check:probes` already learned to. Verified it still catches a genuinely
+   undescribed operation.
+
+### What is verified and what is not
+
+Verified in a browser, on this machine: the shot arrives on the video desk
+with her own words and the recommended look in it; the words arrive in Make
+a song with their section markers. Verified by breaking it: reverting to the
+one-field hand-off, removing the song form's operations, sending a length
+the desk does not offer, and restoring the stale closure all go red.
+
+**Not verified:** the shape and the length arriving. The video desk asks the
+server what the engine can do and draws only those buttons, so with no
+engine key there is nothing on screen to read. The probe says so and does
+not count it as a pass — `check:adhandover` proves the right values are
+sent, and nothing here proves they are shown. **That is the one thing left
+for her to confirm on the live site.**

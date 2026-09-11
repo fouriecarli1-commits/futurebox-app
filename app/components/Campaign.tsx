@@ -40,7 +40,8 @@ import { refusalText } from '../lib/apierror';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import { DESTINATIONS, PLATFORMS } from '../data/social';
-import { withSpoken } from '../lib/videoscenes';
+import { filmThisAd, readThisAd } from '../lib/adhandover';
+import { loadChosen } from '../lib/chosenformat';
 import { loadHandles, type Handles } from '../lib/social';
 import ShareRow from './ShareRow';
 import AdRuns from './AdRuns';
@@ -116,16 +117,19 @@ const PLACEMENTS = [
 
 export default function Campaign({
   onGoTo,
-  onUseShot,
-  onUseScript,
   onSetUp,
 }: {
   onGoTo: (surface: SurfaceId) => void;
-  /** Put a shot on the video desk. */
-  onUseShot: (shot: string) => void;
-  /** Put a line in the voice studio. */
-  onUseScript: (line: string) => void;
-  /** Put something in a room on the way into it. See `AdFormats`. */
+  /**
+   * Put something in a room on the way into it.
+   *
+   * The only way out of this room now. There used to be an `onUseShot` and
+   * an `onUseScript` beside it, one string each, and that pair WAS the
+   * fault: a button that can hand over one field hands over one field, and
+   * nobody notices the other six are missing because there was never a
+   * place to put them. Everything goes through `lib/adhandover.ts`, which
+   * answers "what should travel" per destination and can be checked.
+   */
   onSetUp: (room: SurfaceId, op: string, value: string) => void;
 }): React.ReactElement {
   const { t, lang } = useLang();
@@ -173,6 +177,22 @@ export default function Campaign({
   const places = DESTINATIONS.filter((one) => going.indexOf(one.id) !== -1);
 
   const [ads, setAds] = useState<Ad[]>([]);
+  /* ── The look the adviser above recommended ────────────────────────
+ 
+     It lived in `AdFormats`'s own state and nowhere else, so the cards down
+     here handed a shot to the video desk with no look on it while the panel
+     two inches above said exactly how it should look. `chosenformat.ts`
+     already exists to join these two panels — this is the third thing it
+     carries. Re-read whenever the adviser runs, because it writes on the
+     way out. */
+  const [looks, setLooks] = useState<readonly { id: string; style?: string }[]>([]);
+  const readLooks = useCallback(() => {
+    setLooks(loadChosen().map((one) => ({ id: one.format.id, style: one.style })));
+  }, []);
+  useEffect(() => readLooks(), [readLooks]);
+  /** The look for a video, when the adviser recommended a filmed format. */
+  const lookFor = (_ad: Ad): string | undefined =>
+    looks.find((one) => one.style && (one.id === 'short_vertical' || one.id === 'explainer_film'))?.style;
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
@@ -305,7 +325,24 @@ export default function Campaign({
           format, and half the formats this studio can make are not adverts
           at all. See `AdFormats.tsx`. */}
       <AdFormats
-        brief={{ what, who, offer, tone, market, place: PLACEMENTS.find((one) => one.id === placement)?.en }}
+        brief={{
+          what,
+          who,
+          offer,
+          tone,
+          market,
+          place: PLACEMENTS.find((one) => one.id === placement)?.en,
+          /* Who they are, when they have said. The one part of a brief that
+             is the same on every advert, which is why it lives in the kit
+             rather than in the boxes. */
+          brand: brandLine(kit) || undefined,
+        }}
+        /* The first advert, once there are any, so a shot can quote a real
+           line instead of describing one. Not a choice made here — the
+           three cards below each have their own buttons; this is the
+           adviser at the top of the room, and it carries what exists. */
+        ad={ads[0] ?? null}
+        going={going}
         onGoTo={onGoTo}
         onSetUp={onSetUp}
       />
@@ -564,12 +601,19 @@ export default function Campaign({
             <button
               type="button"
               onClick={() => {
-                /* The line goes with the shot. This handed over `ad.shot`
-                   alone, and the video desk knows a spoken line only by its
-                   quotation marks — so the switch that has the engine say it
-                   never drew and the subtitle came out empty. See
-                   `withSpoken` in lib/videoscenes.ts. */
-                onUseShot(withSpoken(ad.shot, ad.spoken));
+                /* Everything the video desk can take.
+ 
+                   The spoken line still goes INTO the shot rather than
+                   beside it — the desk knows a line is said only by its
+                   quotation marks, and `filmThisAd` keeps that with
+                   `withSpoken`. What is new is the rest: the shape, the
+                   length and the look. This sent the prompt alone, so the
+                   desk decided an advert was vertical and fifteen seconds
+                   and then opened a room set to whatever it had last been
+                   left on. */
+                for (const wire of filmThisAd({ ad, going, style: lookFor(ad) })) {
+                  onSetUp(wire.room, wire.op, wire.value);
+                }
                 onGoTo('canvas');
               }}
               className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
@@ -581,13 +625,20 @@ export default function Campaign({
               <button
                 type="button"
                 onClick={() => {
-                  onUseScript(ad.spoken);
+                  /* The whole advert, not the one line. A spoken advert is
+                     the hook, the reason and the call; `ad.spoken` is what
+                     the CLIP says, which is a different job — and this
+                     button lands in the room whose entire purpose is
+                     reading a script out loud. */
+                  for (const wire of readThisAd({ ad })) {
+                    onSetUp(wire.room, wire.op, wire.value);
+                  }
                   onGoTo('voice_studio');
                 }}
                 className="min-h-[44px] flex items-center gap-2 text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3.5 py-2 transition-colors"
               >
                 <Mic2 className="w-3.5 h-3.5 text-emerald-400" />
-                {t('ads.read', 'Read this line')}
+                {t('ads.read', 'Read this one')}
               </button>
             )}
           </div>

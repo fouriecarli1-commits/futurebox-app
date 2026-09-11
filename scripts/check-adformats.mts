@@ -96,13 +96,23 @@ check(
 /* ── And the screen opens the room the catalogue names ──────────────────── */
 const screen = readFileSync('app/components/AdFormats.tsx', 'utf8');
 check(
-  'the screen reads the room and the operation off the catalogue entry',
-  /formatById\(pick\.id\)/.test(screen) && /format\.room/.test(screen) && /format\.op/.test(screen),
+  'the screen reads the room off the catalogue entry',
+  /formatById\(pick\.id\)/.test(screen) && /format\.room/.test(screen),
   'the screen has its own idea of where a format is made',
+);
+/* The operation is no longer read here, and that is the fix rather than a
+   regression. The screen used to send `format.op` with one value; what
+   travels is now a question per destination, answered in one place by
+   `lib/adhandover.ts` and checked by `check:adhandover`. What this holds is
+   that the screen still asks that module rather than inventing its own. */
+check(
+  'and asks the shared hand-off what to send, rather than making it up',
+  /handoverFor\(\{/.test(screen) && /formatId: format\.id/.test(screen),
+  'a second answer to "what should travel" is a second answer that drifts',
 );
 check(
   'and sets the room up before moving to it, not after',
-  screen.indexOf('onSetUp(format.room') < screen.indexOf('onGoTo(format.room'),
+  screen.indexOf('onSetUp(wire.room') < screen.indexOf('onGoTo(format.room'),
   'setting up after the move puts the value in the room being left',
 );
 

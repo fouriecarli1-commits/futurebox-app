@@ -43,6 +43,7 @@ import { refusalText } from '../lib/apierror';
 import { AD_FORMATS, formatById } from '../lib/adformats';
 import { daysSince, oldestReview, styleById } from '../lib/adstyles';
 import { saveChosen } from '../lib/chosenformat';
+import { handoverFor, type HandoverAd } from '../lib/adhandover';
 import type { SurfaceId } from '../lib/surfaces';
 import Card from './Card';
 import Note from './Note';
@@ -64,6 +65,8 @@ export interface FormatBrief {
   readonly tone?: string;
   readonly market?: string;
   readonly place?: string;
+  /** Their brand kit as one line, when they have filled one in. */
+  readonly brand?: string;
 }
 
 const EFFORT_TONE: Record<'low' | 'medium' | 'high', string> = {
@@ -74,10 +77,23 @@ const EFFORT_TONE: Record<'low' | 'medium' | 'high', string> = {
 
 export default function AdFormats({
   brief,
+  ad,
+  going,
   onGoTo,
   onSetUp,
 }: {
   readonly brief: FormatBrief;
+  /**
+   * The advert the desk has written, when it has written any.
+   *
+   * Carried so the hook becomes the spoken line in a shot and the whole
+   * thing becomes the script in the voice studio. Without it the hand-off
+   * still works off the brief — somebody who presses a format before
+   * writing the copy gets the brief, which is what they have.
+   */
+  readonly ad?: HandoverAd | null;
+  /** The ticked destinations, which decide 9:16 against 16:9. */
+  readonly going?: readonly string[];
   readonly onGoTo: (surface: SurfaceId) => void;
   /**
    * Put the first thing to make into the room that makes it, on the way in.
@@ -126,7 +142,7 @@ export default function AdFormats({
       /* Written down for the week below, which otherwise plans slots with
          nothing in them while the panel above has just named the one thing
          worth making. See `lib/chosenformat.ts`. */
-      saveChosen(said.picks.map((one) => ({ id: one.id, first: one.first })));
+      saveChosen(said.picks.map((one) => ({ id: one.id, first: one.first, style: one.style })));
     } catch {
       setProblem(t('shape.failed', 'That could not be worked out just now.'));
     } finally {
@@ -244,7 +260,18 @@ export default function AdFormats({
                        that has not mounted and fires when it does; doing it
                        the other way round puts the value into the room being
                        left. See lib/copilotactions.ts. */
-                    if (format.op) onSetUp(format.room, format.op, pick.first);
+                    /* Everything the destination can take, not the one
+                       field it used to be. `lib/adhandover.ts` decides
+                       what that is per room, and says why. */
+                    for (const wire of handoverFor({
+                      formatId: format.id,
+                      brief,
+                      pick: { first: pick.first, watchOut: pick.watchOut, style: pick.style },
+                      ad,
+                      going,
+                    })) {
+                      onSetUp(wire.room, wire.op, wire.value);
+                    }
                     onGoTo(format.room);
                   }}
                   className="min-h-[44px] inline-flex items-center gap-2 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-2 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/20"

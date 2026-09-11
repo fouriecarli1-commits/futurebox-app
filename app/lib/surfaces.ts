@@ -127,6 +127,17 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
        clip while the storyboard, the look and the words on screen lived next
        door; that room is gone and the desk has all of it. */
     ops: {
+      /* The song itself. These were missing, and the gap was invisible
+         because the copilot could already write the song canvas through a
+         different path — whole actions handled by the page. That path
+         cannot be reached from another room, so the advert desk's two song
+         recommendations opened this room empty. */
+      set_song_title: "the value is the song's title, and nothing else",
+      set_words:
+        "the value is the words of the song, with [Verse], [Chorus] and [Bridge] markers on their own lines. Send all of them, not a description of them",
+      set_sound:
+        "the value is how it should sound, in a few words: the feel, the instruments, the pace. Never a picture - this is music, so a window or a colour means nothing here",
+      /* The video panel that opens on a finished song. */
       set_shot:
         "the value is the full description of what is on screen: subject, what it is doing, the shot, the light, the mood. Never put anything in quotation marks here - quoted text is spoken aloud, and a voice over a song is two things fighting",
       set_look:
