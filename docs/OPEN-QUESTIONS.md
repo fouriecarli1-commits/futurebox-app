@@ -2969,8 +2969,27 @@ that moves; the screen prints that rather than hiding it.
 1. **Wait for her to test the desk.** Everything above is unverified against
    a live key. The next real fault comes from her using it, as all four of
    today's did.
-2. **`docs/SWITCH-ON.md` has no entry for the marketing add-on.** The R199
-   room needs `addons.sql` run and Paystack wired; only the first is done.
+2. ~~**`docs/SWITCH-ON.md` has no entry for the marketing add-on.**~~
+   **Wrong, and corrected the same afternoon.** It has two: line 64 for
+   `addons.sql`, §8 for `PAYSTACK_PLAN_MARKETING`. I wrote that from memory
+   instead of looking, in a file whose first rule is that "I think" is not an
+   answer.
+
+   Looking found something worse. §8 said all four plan codes are created
+   "once with `node scripts/paystack-plans.mjs`" — and that script created
+   **three**. She would have run it, pasted three codes, left the fourth
+   empty, and the R199 desk would have been unbuyable by anybody with
+   nothing on any screen or in any log saying why. A document and a script
+   disagreeing about a number, each internally consistent.
+
+   The script creates it now, at the price `addons.ts` states.
+   `check:paystackplans` compares what the server READS against what the
+   script ACTUALLY PRINTS — via a new `--dry-run` — because its own first
+   version read the names out of the script's source and did not catch this
+   very fault: deleting the line that builds the list left the name sitting
+   in a const that nothing iterates, and a name is not a plan. Fifth time
+   this week that the answer was to measure the output rather than the word
+   for it.
 3. **The Vercel plan is undocumented and fourteen routes declare 300-second
    functions.** Deploys succeed, so the plan allows it — but nothing in the
    repo says which plan, and a downgrade would fail every deploy at once.

@@ -230,6 +230,13 @@ jobs:
       - name: Every format the advert desk recommends can be made here
         run: npm run check:adformats
 
+      # SWITCH-ON told her four plan codes come out of a script that made
+      # three, so the R199 desk would have been unbuyable with nothing
+      # saying why. Compares what the server reads against what the script
+      # actually prints, not against the names written in it.
+      - name: Every plan code the app reads is one the setup script creates
+        run: npm run check:paystackplans
+
       # The price on the button and the price that is charged come from one
       # function, and have twice disagreed anyway — once by pricing a clip
       # flat whatever its length, once by clamping the length after pricing it.
