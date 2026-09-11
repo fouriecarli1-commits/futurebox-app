@@ -205,6 +205,12 @@ jobs:
       - name: The copilot may act on several fields at once
         run: npm run check:copilotplan
 
+      # The calendar export carried the week and quietly dropped the other six
+      # parts of the plan. This walks the plan and fails if any of it is
+      # missing from the page, so a part added later cannot be left out.
+      - name: The downloaded plan is the whole plan
+        run: npm run check:planpaper
+
       # The price on the button and the price that is charged come from one
       # function, and have twice disagreed anyway — once by pricing a clip
       # flat whatever its length, once by clamping the length after pricing it.

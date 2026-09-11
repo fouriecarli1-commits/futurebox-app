@@ -22,13 +22,14 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { CalendarDays, Loader2, Download, Target, Users, Compass, Radar, Gauge } from 'lucide-react';
+import { CalendarDays, Loader2, Download, FileDown, Target, Users, Compass, Radar, Gauge } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { accessToken } from '../lib/cloud';
 import {
   DAY_IDS, icsOf, loadPerDay, sortedWeek, type DayId, type Plan,
 } from '../lib/marketplan';
+import { paperOf, type Words } from '../lib/planpaper';
 import { loadReport } from '../lib/adreport';
 import { byWeekday, standoutDays } from '../lib/adweek';
 import Note from './Note';
@@ -149,18 +150,67 @@ export default function MarketPlan({ brief }: { readonly brief: Brief }): React.
     }
   };
 
+  const save = (text: string, type: string, name: string) => {
+    const blob = new Blob([text], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   /* The week as a calendar file. A plan somebody has to remember to look at is
      a plan they stop looking at; one that arrives in their diary is a plan. */
   const toCalendar = () => {
     if (!plan) return;
-    const text = icsOf(plan.week, { label: 'FutureBox' });
-    const blob = new Blob([text], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'futurebox-week.ics';
-    link.click();
-    URL.revokeObjectURL(url);
+    save(icsOf(plan.week, { label: 'FutureBox' }), 'text/calendar;charset=utf-8', 'futurebox-week.ics');
+  };
+
+  /* The whole thing, as a page that can be printed or sent to somebody.
+     The calendar file carries the week and drops the other six parts — the
+     category, the buyers, the angles, the platforms, what is not a feed, and
+     the numbers to watch. All of that was on the screen and could not leave.
+
+     Every word comes out of the dictionary here rather than out of the
+     document, so it prints in the language the room is in. */
+  const toPaper = () => {
+    if (!plan) return;
+    const words: Words = {
+      title: t('plan.paper.title', 'Marketing plan'),
+      brief: t('plan.paper.brief', 'The brief'),
+      what: t('plan.paper.what', 'What is being sold'),
+      who: t('plan.paper.who', 'Who it is for'),
+      offer: t('plan.paper.offer', 'The offer'),
+      tone: t('plan.paper.tone', 'Tone'),
+      market: t('plan.paper.market', 'Written in'),
+      place: t('plan.paper.place', 'Where it runs'),
+      category: t('plan.category', 'The category'),
+      buyers: t('plan.buyers', 'Who buys it'),
+      wants: t('plan.paper.wants', 'What they want'),
+      doubt: t('plan.doubt', 'What stops them'),
+      angles: t('plan.angles', 'Angles, and what they are up against'),
+      against: t('plan.paper.against', 'Up against'),
+      platforms: t('plan.platforms', 'Where, best first'),
+      effortLow: t('plan.effort.low', 'low'),
+      effortMedium: t('plan.effort.medium', 'medium'),
+      effortHigh: t('plan.effort.high', 'high'),
+      week: t('plan.week', 'The week'),
+      beyond: t('plan.beyond', 'Where the buyers are that is not a feed'),
+      watch: t('plan.watch', 'The numbers worth watching'),
+      healthy: t('plan.paper.healthy', 'Healthy looks like'),
+      days: Object.fromEntries(DAY_IDS.map((day) => [day, dayName(day)])) as Words['days'],
+      quiet: t('plan.paper.quiet', 'Nothing is planned for these days'),
+      argue: t(
+        'plan.argue',
+        'Every line here is a starting point, not a finding. You know your customers; where this disagrees with what you have seen, you are right and it is wrong.',
+      ),
+      source: fromOwn
+        ? t('plan.fromOwn', 'The days are built around your own imported report, not around what the category generally does.')
+        : t('plan.fromCategory', 'You have no report imported yet, so these days and times are a starting guess for this category. Import an export above and work it out again to build it on your own numbers instead.'),
+      made: t('plan.paper.made', 'Worked out on'),
+    };
+    save(paperOf(plan, brief, { words, lang }), 'text/html;charset=utf-8', 'futurebox-marketing-plan.html');
   };
 
   const week = plan ? sortedWeek(plan.week) : [];
@@ -202,7 +252,22 @@ export default function MarketPlan({ brief }: { readonly brief: Brief }): React.
             {t('plan.calendar', 'Put the week in my calendar')}
           </button>
         )}
+        {plan && (
+          <button
+            type="button"
+            onClick={toPaper}
+            className="min-h-[44px] px-4 py-2.5 rounded-xl border border-zinc-800 bg-zinc-950 text-sm font-semibold text-zinc-300 hover:text-white inline-flex items-center gap-2"
+          >
+            <FileDown className="w-4 h-4" />
+            {t('plan.paper.get', 'Download the whole plan')}
+          </button>
+        )}
       </div>
+      {plan && (
+        <p className="text-xs text-zinc-500 leading-relaxed">
+          {t('plan.paper.note', 'One page with everything on it — the market read, the buyers, the angles, the week and the numbers. Open it in a browser, or print it to PDF.')}
+        </p>
+      )}
       {busy && (
         <p className="text-xs text-zinc-500">
           {t('plan.slow', 'This one thinks for a while — up to a minute or two. It is a document, not a sentence.')}
