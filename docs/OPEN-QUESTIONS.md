@@ -3524,3 +3524,21 @@ language.
 
 That is the ninth shape of the same fault this repo keeps finding: **the
 selector matched the attribute rather than the thing.**
+
+### The one card that opens, counted rather than trusted
+
+`History` takes `startOpen`, and `Channel` passes it for "Your videos".
+`check:folded` forbade `startShut`, `defaultOpen` and `alwaysOpen` and had
+never heard of this one — an exception that exists and is not counted, which
+is exactly how the rule goes back to "every card starts shut except the ones
+that do not".
+
+It stays, because it is not the thing she asked to be changed: the `Card`
+around it is shut like every other, so nothing is on the screen until
+somebody asks. The prop only decides whether the list inside needs a second
+press once they have, and "ek het nou net 'n video gegenerate … en nou kry
+ek dit nie in my channel nie" is the reason it should not.
+
+So the check now pins it: the default is false, exactly one call site asks
+otherwise, and that call site is inside a `Card`. All three go red when
+broken. A second one fails on the day it is written.

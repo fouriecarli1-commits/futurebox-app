@@ -52,6 +52,37 @@ ok('  and nothing can ask it to start open', !/startShut/.test(card.replace(/\/\
 const forced = files.filter((one) => /startShut|defaultOpen|alwaysOpen/.test(read(one).replace(/\/\*[\s\S]*?\*\//g, ' ')));
 ok('  and no panel asks', forced.length === 0, forced.join(', '));
 
+/* ── The one fold that opens, and the reason it is allowed to ──────────
+ 
+   `History` takes `startOpen`, and `Channel` passes it for "Your videos".
+   That is not a room showing everything at once: the `Card` around it is
+   shut like every other, so nothing is on the screen until somebody asks
+   for it — the prop only decides whether the list inside needs a SECOND
+   press once they have. "Ek het nou net 'n video gegenerate … en nou kry
+   ek dit nie in my channel nie" is the reason it is not two presses.
+ 
+   Bounded rather than trusted. An exception nobody counts is how the rule
+   goes back to "every card starts shut except the ones that do not" — so
+   this pins it to one call site, inside a Card, with the default the other
+   way. A second one fails here on the day it is written. */
+const strip = (source: string): string => source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+ok('the list card opens shut unless it is asked',
+  /startOpen = false/.test(read('History.tsx')),
+  'History now opens by default, so every room that shows one does too');
+const opens = files
+  .filter((one) => one !== 'History.tsx')
+  .flatMap((one) => [...strip(read(one)).matchAll(/startOpen/g)].map(() => one));
+ok('  and exactly one panel asks it to, inside a shut card',
+  opens.length === 1 && opens[0] === 'Channel.tsx',
+  opens.length === 0 ? 'nobody asks — the prop is dead, take it out' : `${[...new Set(opens)].join(', ')}`);
+if (opens.length === 1 && opens[0] === 'Channel.tsx') {
+  const source = strip(read('Channel.tsx'));
+  const at = source.indexOf('startOpen');
+  ok('  and the card around it is a Card, which starts shut',
+    /<Card\b/.test(source.slice(Math.max(0, at - 900), at)),
+    'the list is open on arrival with nothing folded over it');
+}
+
 /* ── A panel is a fold, not a heading ──────────────────────────────────
  
    The shape every one of these had: a rounded section, an emerald icon, an
