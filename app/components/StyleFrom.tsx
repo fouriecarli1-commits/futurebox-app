@@ -211,11 +211,23 @@ export default function StyleFrom({
     }
   };
 
-  const button = 'flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-100 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-60';
+  /* A basis, so the pair stacks rather than clipping its own labels.
+ 
+     Side by side at 390 pixels each button had 111 for a label that wants
+     117, so "From a photo" read "From a phot…" — six pixels, on the shorter
+     of the two languages; "Uit ’n foto" and "Uit ’n liedjie" are longer
+     still. Trimming the padding would have bought exactly the six and lost
+     them again on the first phone with the system text scaled up.
+ 
+     Twelve rem is wider than the pair can be until there is real room for
+     both, so below that they take a line each and the label has the whole
+     width. The same fix as `Card`'s header and the channel's name: let the
+     row break before the word does. */
+  const button = 'flex min-h-[44px] flex-1 basis-[12rem] items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-100 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-60';
 
   return (
     <div className="space-y-2 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5">
-      <div className="flex gap-2 [&>*]:min-w-0">
+      <div className="flex flex-wrap gap-2 [&>*]:min-w-0">
         <button type="button" onClick={() => soundInput.current?.click()} disabled={busy !== null} className={button}>
           {busy === 'sound' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ear className="h-4 w-4" />}
           <span className="truncate">{t('from.song', 'From a song')}</span>

@@ -3635,3 +3635,52 @@ reservation into a custom property would have taken it out of the check's
 sight on the day it was made — which is the shape of the fault that check
 exists to stop. It reads `--bar-clear` too now, and it fails if the variable
 is set and never applied. Both new assertions were made to go red.
+
+### And a name that was being cut off, which nothing measured
+
+The same look at the screenshots found the channel header calling itself
+**"Your chan…"** at 390 pixels. Five pixels short — on the shortest name the
+app can show. A real one loses considerably more, and the one thing on that
+card that must not be guessed at is whose channel it is.
+
+`Card` already carries a comment about exactly this fault in its own header
+("A card whose name has been truncated to one letter is a card with no
+name"). It was fixed there by hand and never turned into a rule, so it came
+back somewhere else. Both are the same fix: give the name a flex *basis*, so
+the row breaks before the word does — `flex-1` alone means the name shrinks
+rather than the button moving to the next line.
+
+Two more, found by scanning: "From a song" and "From a photo" in Make a song,
+clipped by 2 and 6 pixels as a side-by-side pair. Trimming their padding
+would have bought exactly those pixels and lost them again on the first phone
+with the system text scaled up, or in Afrikaans, where both strings are
+longer. They stack now below the width where both genuinely fit.
+
+**`audit/notcut.mjs` is the rule.** Nothing was measuring this:
+`audit/phone.mjs` asks whether the PAGE spills sideways, which a `truncate`
+never does — it eats the word instead and the layout stays perfect.
+
+The interesting part is where the line goes. Most clipped text in this app is
+deliberate: every room's explanations sit behind a question mark and what is
+left on the line is a teaser that is *supposed* to end in an ellipsis. There
+are about forty of those, and every one is `text-xs` at weight 400. So the
+rule is drawn where the app itself draws it — **semibold or heavier, at 14
+pixels or more, is a name and must fit; lighter or smaller is prose and may
+be trimmed** — and it is read off the rendered element rather than off a
+class name, because a rule that reads a class passes a class that has been
+renamed and stopped working.
+
+It walks both languages, and that earned its keep immediately: with the fix
+reverted, the English name failed and the Afrikaans one passed, because "Jou
+kanaal" is shorter than "Your channel". A probe in her language alone would
+have called this clean. `audit/rooms.mjs` gained `ROOMS_AF` for it, keyed by
+the English name so a room that gains an entry in one and not the other is a
+missing key rather than a silently shorter list.
+
+### One flake, and it was the probe's
+
+`check:probooth` failed once in the eighty-one-probe sweep and passed twice
+on its own. It pressed a hint and read for the panel 300 milliseconds later,
+and 300 milliseconds is long enough on an idle machine and not on one running
+eighty probes back to back. It waits for the panel now. `buildon` already
+carried the same note; this is the second place it was true.

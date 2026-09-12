@@ -59,6 +59,33 @@ export const ROOMS = [
 ];
 
 /**
+ * The same twelve, as they are written on the door in Afrikaans.
+ *
+ * Keyed by the English name rather than listed in parallel, so a room that
+ * gains an entry here and not there is a missing key and not a silently
+ * shorter list — which is the whole reason this file exists.
+ *
+ * Read off the door rather than translated: what a probe clicks is the
+ * string on the button, and `app/lib/i18n.tsx` has more than one plausible
+ * candidate for several of these. `audit/notcut.mjs` asserts every one of
+ * them is actually found, so a rename here fails rather than skipping a room.
+ */
+export const ROOMS_AF = {
+  'Make a song': 'Maak ’n liedjie',
+  Studio: 'Studio',
+  'The Booth': 'Die opnamekamer',
+  'Your voice': 'Jou stem',
+  'Sound trainer': 'Klankafrigter',
+  'Video desk': 'Videolessenaar',
+  Hooks: 'Hooks',
+  Channel: 'Kanaal',
+  Live: 'Live',
+  Podcast: 'Potgooi',
+  Adverts: 'Advertensies',
+  'Collab Radar': 'Collab Radar',
+};
+
+/**
  * The five at the bottom of the screen.
  *
  * Not rooms — rooms are opened to do a job, these are where somebody lives

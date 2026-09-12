@@ -512,7 +512,18 @@ try {
       if (low) {
         await marks.last().scrollIntoViewIfNeeded();
         await marks.last().click();
-        await p.waitForTimeout(300);
+        /* Waited for, not slept through.
+ 
+           This was `waitForTimeout(300)`, and 300ms is long enough on an idle
+           machine and not on a busy one: run back to back with eighty other
+           probes it reported "no panel" once and passed twice on its own. A
+           fixed sleep that is long enough here is the thing that makes a
+           probe flake somewhere else — `buildon` has the same note. If the
+           panel really never opens this still fails, and now for the reason
+           it says. */
+        await p.locator('[role="tooltip"]').first()
+          .waitFor({ state: 'visible', timeout: 8000 })
+          .catch(() => undefined);
         const panel = await p.evaluate(() => {
           const tip = document.querySelector('[role="tooltip"]');
           const bar = document.querySelector('nav.fixed.bottom-0');

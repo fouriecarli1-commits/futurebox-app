@@ -454,7 +454,21 @@ export default function Channel({
               <Cover seed={handle || 'futurebox'} label={creator?.name ?? 'Channel'} className="w-full h-full" />
             )}
           </div>
-          <div className="min-w-0 flex-1">
+          {/* A basis, so the row breaks before the name does.
+ 
+              The row already wrapped, and it never did: `flex-1` on this
+              block means it SHRINKS rather than moves, so at 390 pixels the
+              name had 145 and wanted 150 and the channel was called "Your
+              chan…". Five pixels, on the default name — a real one loses
+              considerably more, and the one thing on this card that must not
+              be guessed at is whose channel it is.
+ 
+              Eleven rem is wide enough that the Share button cannot fit
+              beside it on a phone, so Share is what drops to the second
+              line, and the name then grows into the whole width. Exactly the
+              fix `Card` carries for the same fault in its own header, for
+              the same reason. */}
+          <div className="min-w-0 flex-1 basis-[11rem]">
             <p className="text-2xl font-black text-white leading-tight truncate">
               {creator?.name || t('chan.yours', 'Your channel')}
             </p>
