@@ -511,7 +511,23 @@ try {
       const low = await marks.count();
       if (low) {
         await marks.last().scrollIntoViewIfNeeded();
-        await marks.last().click();
+        /* Pressed through the DOM, because a real pointer press is a
+           different question and is asked elsewhere.
+ 
+           `scrollIntoViewIfNeeded` stops as soon as the mark is inside the
+           viewport and knows nothing about a bar painted over the bottom of
+           it — so where the mark lands varies by about fifty pixels between
+           runs, with the page's height depending on how far the lanes have
+           drawn. Idle it lands around 600 and the press works; under a sweep
+           of eighty probes it landed on the bar and nothing opened, and the
+           probe reported "no panel" for a room that is fine.
+ 
+           What this assertion is FOR is where the panel opens once it is
+           open — up, and above the bar. Whether a thumb can reach the mark
+           is `audit/underbar.mjs` and `audit/touch.mjs`, which measure it
+           properly. The line below prints both rectangles either way. */
+        const mark = await marks.last().elementHandle();
+        await mark?.evaluate((el) => el.click());
         /* Waited for, not slept through.
  
            This was `waitForTimeout(300)`, and 300ms is long enough on an idle
@@ -524,6 +540,15 @@ try {
         await p.locator('[role="tooltip"]').first()
           .waitFor({ state: 'visible', timeout: 8000 })
           .catch(() => undefined);
+        const where = await marks.last().boundingBox().catch(() => null);
+        const barAt = await p.evaluate(() => {
+          const bar = document.querySelector('nav.fixed.bottom-0');
+          return bar ? Math.round(bar.getBoundingClientRect().top) : null;
+        });
+        /* Printed whether it passes or not. When this failed in a sweep the
+           first question was "where was the mark", and the answer was not in
+           the output — so the next two hours went on reproducing it. */
+        console.log(`       mark at ${where ? Math.round(where.y) : '?'}..${where ? Math.round(where.y + where.height) : '?'}, bar top ${barAt}`);
         const panel = await p.evaluate(() => {
           const tip = document.querySelector('[role="tooltip"]');
           const bar = document.querySelector('nav.fixed.bottom-0');

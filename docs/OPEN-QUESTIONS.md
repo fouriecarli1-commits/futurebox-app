@@ -3684,3 +3684,37 @@ on its own. It pressed a hint and read for the panel 300 milliseconds later,
 and 300 milliseconds is long enough on an idle machine and not on one running
 eighty probes back to back. It waits for the panel now. `buildon` already
 carried the same note; this is the second place it was true.
+
+### The Pro Booth flake, and what it actually was
+
+`check:probooth` failed in two consecutive eighty-probe sweeps and passed
+every time on its own — which is exactly the shape a report should not be
+written about until it is understood.
+
+The first guess was timing: it read for the hint's panel 300 milliseconds
+after pressing it. That was worth fixing regardless and it is fixed, but it
+was not the cause; an eight-second wait failed the same way.
+
+Printing the rectangles gave it away. `scrollIntoViewIfNeeded` stops the
+moment the mark is inside the viewport and knows nothing about a bar painted
+over the bottom of it, and where the mark lands varies by about fifty pixels
+run to run, with the page's height depending on how far the lanes have drawn.
+Idle it lands around 600 against a bar at 842; under a sweep it landed on the
+bar, the press went to the bar, and nothing opened. (The other candidate is a
+Playwright click retry, which lands a second `pointerdown` outside the panel
+and closes it — under load, retries are far more likely. The fix covers both.)
+
+It presses through the DOM now, like `unfold` does, because what this
+assertion is FOR is where the panel opens once it is open. Whether a thumb
+can reach the mark is `audit/underbar.mjs` and `audit/touch.mjs`, which
+measure it properly. Verified green three times idle and once under six
+spinners on a four-core box, and the rectangles are printed on every run,
+pass or fail — not having them in the output is what turned a two-minute
+diagnosis into a long one.
+
+**And a note to myself about the sweep.** Two probes in sweep three failed on
+`npx next build`, and both were my fault: I ran a probe by hand while the
+sweep was running, and probes that build their own page copy a `.probe.tsx`
+into `app/` and delete it afterwards. Two of those at once is a build against
+a file that has just been removed. Nothing to fix in the app — but a result
+from a contended tree is not a result.
