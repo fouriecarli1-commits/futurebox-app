@@ -3542,3 +3542,47 @@ ek dit nie in my channel nie" is the reason it should not.
 So the check now pins it: the default is false, exactly one call site asks
 otherwise, and that call site is inside a `Card`. All three go red when
 broken. A second one fails on the day it is written.
+
+### The sweep: twelve of eighty-one probes, and one real fault
+
+Every browser probe was run against the folded rooms. Twelve went red, and
+they fall into three kinds.
+
+**Nine were reading a table of contents.** `greeting`, `studioroute`,
+`buildon`, `collabbooth`, `invite`, `hookfile`, `firsthour`, `photosong` and
+half of `addonroom` walk into a room by hand rather than through `toRoom`,
+so nothing unfolded for them and the control they went looking for was not
+in the document. One `unfold(page)` each, placed where the room is actually
+open.
+
+`buildon` needed a second one, and it is the interesting case: its result
+arrives as a NEW card, and a new card arrives folded. It had been waiting
+thirty seconds on a button inside that card — which does not exist until the
+heading is pressed — and then swallowing the timeout in a `.catch`. It waits
+on the card's heading now.
+
+**Two were measuring the scaffolding.** `roomtop`'s whole subject is where
+the page is scrolled the moment a room opens, and unfolding scrolls — it has
+to bring each heading into view to press it. It enters `folded: true` now and
+makes its own height afterwards. `addonroom`'s first two assertions are about
+what the add-on panel looks like BEFORE anybody opens it, and the walk in had
+already pressed it open.
+
+**One was inverted by the new default.** `cards` pressed a heading and
+asserted the card folded away. It asserts the other order now — shut on
+arrival, opens on a press, folds back on a second — which is a better test,
+because the first half of it is her requirement stated in a browser rather
+than in a `useState`.
+
+**And one was a real fault the folding exposed.** `buttonlook` found 64 flat
+buttons where it had found none: "Use this style", once per style on the
+shelf in Make a song, an underline-on-hover with no box and no height. It is
+on a shelf that was folded away, and `buttonlook` only measures what is on
+the screen — so the rule "every button must look like a button" had never
+been applied to it. It has a box now.
+
+That last one is worth its own line, because it is the *opposite* of the
+lesson this file usually records: **a check measuring a subset can be
+enlarged by an unrelated change, and then it finds what it always should
+have.** Nothing about the folding broke that button. The folding is what
+made it visible to the thing that was already looking.

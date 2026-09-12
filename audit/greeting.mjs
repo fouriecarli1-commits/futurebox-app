@@ -40,6 +40,7 @@
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
+import { unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3253';
 const af = process.argv[3] === 'af';
@@ -283,6 +284,19 @@ words = await p.locator('body').innerText();
 check('pressing it lands in the room, and the room stays',
   !/Hello, Carli!|Hallo, Carli!/.test(words),
   'the greeting came back over the room');
+
+/* Which room it is, is now behind a fold.
+ 
+   Every card starts shut, so a room's body text is its list of headings and
+   nothing else — and the two phrases that identify Make a song live inside
+   `StyleFinder`, which is inside one of them. The room was opening correctly
+   the whole time; the probe was reading a table of contents.
+ 
+   Below the "the room stays" assertion on purpose: that one is about the
+   door coming back over the room a second later, and it has to read the
+   screen as somebody arriving actually finds it. */
+await unfold(p);
+words = await p.locator('body').innerText();
 check('and the room is the one that was offered',
   af ? /Hoor hoe ’n styl klink|Skryf vir my ’n styl/.test(words) : /Hear what a style sounds like|Write me a style/.test(words),
   words.split('\n').slice(0, 10).join(' / '));

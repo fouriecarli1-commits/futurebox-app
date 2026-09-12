@@ -221,28 +221,39 @@ try {
     unexplained.length === 0,
     unexplained.map((one) => one.room).join(', ') || 'all four accounted for');
 
-  /* ── And that a card actually folds ─────────────────────────────────
+  /* ── And that a card starts shut and really folds ───────────────────
  
      Counting headings would pass on a chevron that does nothing. So one is
      pressed in the room with the most of them, and what is inside it has to
-     leave the screen and come back. */
+     arrive off the screen, come on, and go back off.
+ 
+     Shut first, and that order is the point. Carli, 12 September 2026:
+     "Make sure every rooms drop down menu is closed from the beginning and
+     the user can open it." `check:folded` says so of the source; this says
+     so of a room somebody has actually walked into, which is the half a
+     `useState` cannot prove — a card could be rendered open by whatever
+     wraps it. `intoRoom` here is hand-rolled and does NOT unfold, unlike
+     `toRoom`, so what it finds is what she finds. */
   const busiest = withCards.slice().sort((a, b) => b.count - a.count)[0];
   if (busiest) {
     check('there is a room to press one in', await intoRoom(busiest.room));
     const room = p.locator('div.fixed.inset-0.z-50').first();
     const card = room.locator('section:has(> div > button[aria-expanded])').first();
-    const before = ((await card.innerText()) ?? '').replace(/\s+/g, ' ');
+    const shut = ((await card.innerText()) ?? '').replace(/\s+/g, ' ');
+    check(`a card in ${busiest.room} is shut when the room opens`,
+      /Folded away|Toegevou/.test(shut),
+      `${shut.length} characters on arrival — the room shows everything at once again`);
     await card.locator('button[aria-expanded]').first().click();
     await p.waitForTimeout(500);
-    const shut = ((await card.innerText()) ?? '').replace(/\s+/g, ' ');
-    check(`pressing a heading in ${busiest.room} folds the card away`,
-      shut.length < before.length && /Folded away|Toegevou/.test(shut),
-      `${before.length} → ${shut.length} characters`);
+    const open = ((await card.innerText()) ?? '').replace(/\s+/g, ' ');
+    check('pressing its heading opens it',
+      open.length > shut.length && !/Folded away|Toegevou/.test(open),
+      `${shut.length} → ${open.length} characters`);
     await card.locator('button[aria-expanded]').first().click();
     await p.waitForTimeout(500);
     const again = ((await card.innerText()) ?? '').replace(/\s+/g, ' ');
-    check('and pressing it again brings it back', again.length === before.length,
-      `${shut.length} → ${again.length}`);
+    check('and pressing it again folds it back', again.length === shut.length,
+      `${open.length} → ${again.length}`);
   }
 } finally {
   if (browser) await browser.close();

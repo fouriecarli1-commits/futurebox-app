@@ -36,7 +36,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor } from './enter.mjs';
+import { dismissDoor, unfold } from './enter.mjs';
 import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3099';
@@ -172,8 +172,12 @@ try {
   };
 
   await intoRoom('Collab Radar');
+  /* Every card starts shut now, and the rooms are inside one. This walk in
+     is hand-rolled rather than `toRoom`, so nothing opened them for it. */
+  await unfold(p);
   const room = p.locator('div.fixed.inset-0.z-50').first();
   await room.locator('button').filter({ hasText: THEM }).first().click().catch(() => undefined);
+  await unfold(p);
   await p.waitForTimeout(1400);
 
   const sing = room.locator('button').filter({ hasText: /Sing on it in my booth/ });

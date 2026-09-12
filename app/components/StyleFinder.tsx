@@ -313,7 +313,14 @@ export default function StyleFinder({
                       onStyle(sample.promptSnippet, 'append');
                       onBpm(bpmOf(sample.bpm));
                     }}
-                    className="text-sm font-semibold text-emerald-300 hover:underline flex-shrink-0 pt-1"
+                    /* A box and a thumb's worth of height, like every other
+                       button in the app. This was an underline-on-hover and
+                       nothing else — the one flat control left, and there are
+                       sixty-four of it, one per style on the shelf. It went
+                       uncaught for as long as it did because the shelf it is
+                       on was folded away, and `audit/buttonlook.mjs` only
+                       measures what is on the screen. */
+                    className="min-h-[44px] flex-shrink-0 rounded-xl border border-emerald-500/50 bg-emerald-500/15 px-3 py-1.5 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/25"
                   >
                     {t('style.use')}
                   </button>

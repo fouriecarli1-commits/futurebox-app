@@ -28,7 +28,7 @@
  */
 import { rmSync } from 'node:fs';
 import { serve, shot } from './where.mjs';
-import { enter, studio, toRoom } from './enter.mjs';
+import { enter, studio, toRoom, unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3098';
 
@@ -79,8 +79,18 @@ try {
 
     await studio(page);
 
-    /* A room with more in it than fits, so there is something to scroll. */
-    await toRoom(page, 'Video desk');
+    /* Walked in folded, then opened by hand.
+ 
+       `toRoom` unfolds on the way in now, and unfolding scrolls — it has to
+       bring each heading into view to press it. That is harmless in every
+       probe except this one, whose entire subject is where the page is
+       scrolled to the moment a room opens. Measuring after the scaffolding
+       has scrolled the page is measuring the scaffolding.
+ 
+       So every arrival here is `folded: true`, and the height this first
+       assertion needs is made afterwards, deliberately, by `unfold`. */
+    await toRoom(page, 'Video desk', { folded: true });
+    await unfold(page);
     await page.waitForTimeout(1200);
 
     const pushed = await page.evaluate((find) => {
@@ -96,7 +106,7 @@ try {
     check(`${size.name} · a room has something to scroll`, pushed > 50, `${Math.round(pushed)}px down`);
 
     /* Now the thing she described: a different room, from there. */
-    await toRoom(page, 'Channel');
+    await toRoom(page, 'Channel', { folded: true });
     await page.waitForTimeout(1200);
 
     const after = await page.evaluate((find) => {
@@ -109,11 +119,12 @@ try {
     /* And out through the door, which is the other way in and does not change
        which room is chosen — so it is the path a fix in `goToRoom` alone would
        miss. */
+    await unfold(page);
     await page.evaluate((find) => {
       const scrollers = new Function(`return (${find})()`)();
       for (const one of scrollers ?? []) one.scrollTop = one.scrollHeight;
     }, SCROLLERS.toString());
-    await toRoom(page, 'Video desk');
+    await toRoom(page, 'Video desk', { folded: true });
     await page.waitForTimeout(1200);
     const backAgain = await page.evaluate((find) => {
       const scrollers = new Function(`return (${find})()`)();

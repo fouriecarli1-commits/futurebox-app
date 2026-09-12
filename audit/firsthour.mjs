@@ -33,6 +33,7 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, shot } from './where.mjs';
+import { unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3245';
 
@@ -179,6 +180,9 @@ try {
   }
   check('the studio has a door into making a song', opened);
   await p.waitForTimeout(1600);
+  /* Every card starts shut now, and the words box is inside one. This walk
+     in is hand-rolled rather than `toRoom`, so nothing opened it. */
+  await unfold(p);
   const room = p.locator('div.fixed.inset-0.z-50').first();
 
   await room.locator('textarea[placeholder*="Verse 1"]').fill(WORDS);

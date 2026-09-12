@@ -27,7 +27,7 @@
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
-import { dismissDoor, toRoom } from './enter.mjs';
+import { dismissDoor, toRoom, unfold } from './enter.mjs';
 
 const PORT = Number(process.argv[2] || 3049);
 const af = process.argv[3] === 'af';
@@ -118,7 +118,14 @@ const room = p.locator('div.fixed.inset-0.z-50').first();
    into a room has changed twice — a dropdown, then a rail, then the studio's
    own front door — and every probe that spelled it out itself broke silently
    each time by finding no button and passing anyway. */
-await toRoom(p, af ? 'Advertensies' : 'Adverts');
+/* Folded, because the first thing this file asks is what the add-on panel
+   looks like BEFORE anybody opens it — a name, a price and a chevron, and
+   no way to start a recurring charge from a panel that has not yet said
+   what the money buys. `toRoom` opens every fold in the room now, and that
+   includes this one, so the shut state it is here to check had already been
+   pressed away by the walk in. The room is opened by hand below, once the
+   two assertions about the shut state have been made. */
+await toRoom(p, af ? 'Advertensies' : 'Adverts', { folded: true });
 await p.waitForTimeout(1400);
 
 // ── Not bought ───────────────────────────────────────────────────────────
@@ -139,6 +146,10 @@ await room.locator('button[aria-expanded="false"]')
   .first()
   .click();
 await p.waitForTimeout(700);
+/* And the rest of the room with it, now that the shut state has been read.
+   Everything below is about what the sales screen says and whether the free
+   half still works, and both of those are inside cards. */
+await unfold(p);
 const shut = await room.innerText();
 check('the sales screen is there when it is not bought',
   af ? /Die bemarkingslessenaar/.test(shut) : /The marketing desk/.test(shut),

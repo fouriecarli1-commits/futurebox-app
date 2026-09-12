@@ -13,7 +13,7 @@
  */
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
-import { studio, toRoom } from './enter.mjs';
+import { studio, toRoom, unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3020';
 const af = process.argv[3] === 'af';
@@ -182,6 +182,15 @@ const titles = await cards.locator('p.font-bold, p.text-base').allInnerTexts().c
 const which = (await cards.count()) > 1 ? 1 : 0;
 await cards.nth(which).locator('button').filter({ hasText: af ? /Maak dit in die studio oop/ : /Open it in the studio/ }).first().click();
 await p.waitForTimeout(1800);
+
+/* Opened, because this arrival is not through `toRoom`.
+ 
+   The press above is the channel's own "Open it in the studio", which is
+   the path a person takes and which nothing unfolds for. Every card starts
+   shut now, so the song picker this last assertion reads was simply not on
+   the screen — `inputValue()` threw, the catch turned it into an empty
+   string, and an empty string is not one of the two song ids. */
+await unfold(p);
 
 const onTimeline = await room.locator('input.font-bold').evaluateAll((nodes) =>
   nodes.map((node) => node.value),

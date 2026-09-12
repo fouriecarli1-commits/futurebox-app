@@ -28,6 +28,7 @@ import { cpSync, rmSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
+import { unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3141';
 const PROBE = 'app/buildon/page.probe.tsx';
@@ -214,6 +215,11 @@ try {
     posted().length === 2
       && JSON.stringify({ ...posted()[0], buildOn: null }) === JSON.stringify({ ...posted()[1], buildOn: null }));
   /* ── The far end: Hooks ───────────────────────────────────────────── */
+  /* Opened first. This probe renders its own page rather than walking in
+     through the studio, and every card starts shut, so the list of songs to
+     cut from was behind "What are we cutting from?" and the probe was
+     reading the heading. */
+  await unfold(page);
   const sources = page.locator('[data-probe="hooks"] button');
   const names = (await sources.allTextContents()).join(' | ');
   check('a song somebody opened up is offered to cut from', /Bergwind/.test(names), names.slice(0, 120));
@@ -226,11 +232,19 @@ try {
   await sources.filter({ hasText: /Bergwind/ }).first().click();
   /* Fetched, decoded and searched — three awaits deep, and a fixed sleep that
      is long enough on this machine is the thing that makes a probe flake on a
-     slower one. Wait for the room to say it found something instead. */
+     slower one. Wait for the room to say it found something instead.
+ 
+     Waited on the card's HEADING rather than on anything inside it. The
+     result arrives as a new card, and a new card arrives folded — so the
+     button this used to wait for is not in the document at all until the
+     heading is pressed, and thirty seconds went by before the catch swallowed
+     it and the three assertions below read an empty room. */
   await page.locator('[data-probe="hooks"]')
-    .getByText(/Make a song from this/)
+    .getByText(/One moment worth cutting|Een oomblik werd om te sny/)
+    .first()
     .waitFor({ timeout: 30000 })
     .catch(() => {});
+  await unfold(page);
   const hooksText = await page.locator('[data-probe="hooks"]').innerText();
   check('picking it finds a moment to cut', /\d+:\d\d/.test(hooksText), hooksText.replace(/\n+/g, ' · '));
   check('the style is shown before anything is pressed', /slow kwaito/.test(hooksText));

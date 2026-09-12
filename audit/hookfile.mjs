@@ -31,7 +31,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor } from './enter.mjs';
+import { dismissDoor, unfold } from './enter.mjs';
 import { launchOptions } from './where.mjs';
 
 const PORT = process.argv[2] || '3097';
@@ -132,6 +132,10 @@ try {
     if (/^Hooks/i.test(first)) { await door.nth(i).click(); break; }
   }
   await p.waitForTimeout(1800);
+  /* Every card starts shut now, and this walk in is hand-rolled rather than
+     `toRoom`, so nothing opened them. Without this the room's text is its
+     list of headings and every assertion below reads an empty room. */
+  await unfold(p);
 
   const room = p.locator('div.fixed.inset-0.z-50').first();
   const says = async () => ((await room.innerText()) ?? '').replace(/\s+/g, ' ');

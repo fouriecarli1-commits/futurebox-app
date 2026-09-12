@@ -26,7 +26,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor } from './enter.mjs';
+import { dismissDoor, unfold } from './enter.mjs';
 import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3103';
@@ -152,6 +152,9 @@ try {
     if (/^Collab Radar/i.test(first)) { await door.nth(i).click(); break; }
   }
   await p.waitForTimeout(2200);
+  /* Every card starts shut now, and this walk in is hand-rolled rather than
+     `toRoom`, so nothing opened them. The invite box is inside one. */
+  await unfold(p);
 
   const room = p.locator('div.fixed.inset-0.z-50').first();
   const why = room.locator('#invite-why');

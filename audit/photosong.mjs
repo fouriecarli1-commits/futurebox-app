@@ -21,6 +21,7 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, shot } from './where.mjs';
+import { unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3144';
 
@@ -93,6 +94,9 @@ async function run(browser, hasModel) {
   }
   const room = p.locator('div.fixed.inset-0.z-50').first();
   await room.waitFor({ state: 'visible', timeout: 20000 });
+  /* Every card starts shut now, and the camera is inside one. This walk in
+     is hand-rolled rather than `toRoom`, so nothing opened it. */
+  await unfold(p);
   const says = async () => ((await room.innerText()) ?? '').replace(/\s+/g, ' ');
 
   /* The picture, through the file input the camera button opens. Waited for
