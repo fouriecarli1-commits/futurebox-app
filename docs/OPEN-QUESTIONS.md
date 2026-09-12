@@ -3695,22 +3695,28 @@ The first guess was timing: it read for the hint's panel 300 milliseconds
 after pressing it. That was worth fixing regardless and it is fixed, but it
 was not the cause; an eight-second wait failed the same way.
 
-Printing the rectangles gave it away. `scrollIntoViewIfNeeded` stops the
-moment the mark is inside the viewport and knows nothing about a bar painted
-over the bottom of it, and where the mark lands varies by about fifty pixels
-run to run, with the page's height depending on how far the lanes have drawn.
-Idle it lands around 600 against a bar at 842; under a sweep it landed on the
-bar, the press went to the bar, and nothing opened. (The other candidate is a
-Playwright click retry, which lands a second `pointerdown` outside the panel
-and closes it — under load, retries are far more likely. The fix covers both.)
+Printing the rectangles is what settled it, and it settled it against my own
+first answer. The guess was that the mark had drifted under the bar:
+`scrollIntoViewIfNeeded` stops the moment an element is inside the viewport
+and knows nothing about a bar painted over the bottom of it. The next clean
+sweep printed the mark at **exactly the same two positions it prints when
+idle** — 637 and 585, against a bar at 842. Nowhere near it. So that was not
+the cause, and the paragraph that said it was has been replaced by this one.
+
+What is left, and what fits: **Playwright retries a click it considers
+unstable**, and a retry lands a second `pointerdown` — which `Hint` listens
+for, and closes on. Under a sweep of eighty probes a retry is far more likely
+than on an idle machine. The first click opened the panel and the retry shut
+it, so the probe read "no panel" about a room that was working.
 
 It presses through the DOM now, like `unfold` does, because what this
 assertion is FOR is where the panel opens once it is open. Whether a thumb
 can reach the mark is `audit/underbar.mjs` and `audit/touch.mjs`, which
-measure it properly. Verified green three times idle and once under six
-spinners on a four-core box, and the rectangles are printed on every run,
-pass or fail — not having them in the output is what turned a two-minute
-diagnosis into a long one.
+measure it properly. Verified green three times idle, once under six
+spinners on a four-core box, and once in a full eighty-two-probe sweep — the
+condition it actually failed under. The rectangles print on every run, pass
+or fail; not having them is what let a wrong explanation sound right for an
+hour.
 
 **And a note to myself about the sweep.** Two probes in sweep three failed on
 `npx next build`, and both were my fault: I ran a probe by hand while the

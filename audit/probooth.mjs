@@ -514,13 +514,17 @@ try {
         /* Pressed through the DOM, because a real pointer press is a
            different question and is asked elsewhere.
  
-           `scrollIntoViewIfNeeded` stops as soon as the mark is inside the
-           viewport and knows nothing about a bar painted over the bottom of
-           it — so where the mark lands varies by about fifty pixels between
-           runs, with the page's height depending on how far the lanes have
-           drawn. Idle it lands around 600 and the press works; under a sweep
-           of eighty probes it landed on the bar and nothing opened, and the
-           probe reported "no panel" for a room that is fine.
+           This reported "no panel" in two consecutive eighty-probe sweeps
+           and passed every time on its own. Playwright retries a click it
+           considers unstable, and a retry lands a second `pointerdown` —
+           which `Hint` listens for and closes on. The first press opened the
+           panel and the retry shut it. Under a sweep, retries are far more
+           likely than on an idle machine.
+ 
+           (The first explanation was that the mark had drifted under the
+           bar. The next sweep printed it at the same position it prints
+           idle, nowhere near the bar, which is the only reason that answer
+           did not survive into the docs as the truth.)
  
            What this assertion is FOR is where the panel opens once it is
            open — up, and above the bar. Whether a thumb can reach the mark
