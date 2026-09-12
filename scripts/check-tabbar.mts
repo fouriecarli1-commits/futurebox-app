@@ -43,8 +43,24 @@ ok(
    constant alone: the file that defines the bar is allowed to use its own
    number, and so is anything measuring rather than reserving. */
 const page = readFileSync(join(ROOT, 'app/page.tsx'), 'utf8');
-const reserved = [...page.matchAll(/paddingBottom:\s*([^,}]+)/g)].map((m) => m[1].trim());
+/* `--bar-clear` counts as a reservation too.
+ 
+   The copilot pane needs the clearance at desk width and not at phone width
+   — on the Make tab the whole room sits under it — and an inline style
+   cannot hold a media query. So its value goes into a custom property and
+   two utilities decide where it applies. Read only `paddingBottom` and that
+   reservation would have left this check's sight on the day it was made,
+   which is the shape of every fault this file exists to stop. */
+const reserved = [
+  ...[...page.matchAll(/paddingBottom:\s*([^,}]+)/g)].map((m) => m[1].trim()),
+  ...[...page.matchAll(/'--bar-clear[^']*'[^:]*\]:\s*([^,}]+)/g)].map((m) => m[1].trim()),
+];
 ok('the studio reserves room under itself', reserved.length > 0, `${reserved.length} found`);
+/* And a variable nobody applies reserves nothing. */
+const usesVar = /pb-\[var\(--bar-clear\)\]/.test(page);
+const setsVar = /'--bar-clear/.test(page);
+ok('  and the clearance it puts in a variable is applied somewhere',
+  setsVar === usesVar, setsVar ? 'set and never used' : 'used and never set');
 for (const one of reserved) {
   ok(
     `"${one}" leaves room for the inset too`,

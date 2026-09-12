@@ -51,6 +51,18 @@
  * that gets used, and then the rule is "every card starts shut except the
  * ones that do not", which is not a rule. `check:folded` holds this.
  *
+ * ── And a shut card says nothing ─────────────────────────────────────────
+ *
+ * It used to carry "Folded away — press the heading to open it." underneath,
+ * which was right when a folded card was the exception: one grey sentence on
+ * the one card somebody had chosen to fold. It is the rule now, and the
+ * Adverts desk was printing that same sentence five times on one screen —
+ * a wall of identical writing, in a room that had just been changed so it
+ * would not be one. The chevron is the affordance, `aria-expanded` carries
+ * it for a screen reader, and there are now ten of them on a page teaching
+ * each other. This is the same rule as `docs` §"Strip the writing out of
+ * every room", applied to the writing this component adds itself.
+ *
  * ── The two slots that were added when the rooms were converted ──────────
  *
  * `icon` and `aside`. Both exist because thirteen panels were already using
@@ -66,7 +78,6 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, Sparkles } from 'lucide-react';
-import { useLang } from '../lib/i18n';
 
 export default function Card({
   title,
@@ -98,7 +109,6 @@ export default function Card({
   readonly tools?: React.ReactNode;
   readonly children: React.ReactNode;
 }): React.ReactElement {
-  const { t } = useLang();
   const [open, setOpen] = useState(false);
 
   return (
@@ -152,12 +162,6 @@ export default function Card({
               of options nobody knows about. */}
           {tools && <div className="flex flex-wrap items-center gap-1.5 pt-0.5">{tools}</div>}
         </div>
-      )}
-
-      {!open && (
-        <p className="px-3.5 pb-2.5 text-xs text-zinc-600">
-          {t('card.shut', 'Folded away — press the heading to open it.')}
-        </p>
       )}
     </section>
   );

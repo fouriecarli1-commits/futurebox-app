@@ -239,15 +239,25 @@ try {
     check('there is a room to press one in', await intoRoom(busiest.room));
     const room = p.locator('div.fixed.inset-0.z-50').first();
     const card = room.locator('section:has(> div > button[aria-expanded])').first();
+    const heading = card.locator('button[aria-expanded]').first();
     const shut = ((await card.innerText()) ?? '').replace(/\s+/g, ' ');
+    /* Asked of the heading, not of a sentence underneath it.
+ 
+       A shut card used to print "Folded away — press the heading to open
+       it." That was one grey line on the one card somebody had folded; it
+       is every card in every room now, and a desk that prints it five times
+       is not the cleaner desk she asked for. The line is gone, so what says
+       "shut" is `aria-expanded` — which is the thing a screen reader was
+       reading all along, and the thing that cannot be got right by
+       accident. */
     check(`a card in ${busiest.room} is shut when the room opens`,
-      /Folded away|Toegevou/.test(shut),
+      (await heading.getAttribute('aria-expanded')) === 'false',
       `${shut.length} characters on arrival — the room shows everything at once again`);
-    await card.locator('button[aria-expanded]').first().click();
+    await heading.click();
     await p.waitForTimeout(500);
     const open = ((await card.innerText()) ?? '').replace(/\s+/g, ' ');
     check('pressing its heading opens it',
-      open.length > shut.length && !/Folded away|Toegevou/.test(open),
+      open.length > shut.length && (await heading.getAttribute('aria-expanded')) === 'true',
       `${shut.length} → ${open.length} characters`);
     await card.locator('button[aria-expanded]').first().click();
     await p.waitForTimeout(500);

@@ -247,8 +247,17 @@ try {
   await wordsCard.click();
   await p.waitForTimeout(500);
   check('pressing the heading folds it away', (await wordsBox.count()) === 0);
-  check('and says so rather than leaving an empty card',
-    (await says()).includes('Folded away'));
+  /* Said on the heading rather than in a sentence under it.
+ 
+     A shut card used to print "Folded away — press the heading to open it."
+     underneath. That was right while a folded card was the exception; it is
+     every card in every room now, and the Adverts desk was printing that one
+     sentence five times on a screen. What carries the state is
+     `aria-expanded`, which is what a screen reader was reading anyway. */
+  check('and the heading says it is shut, for anything that cannot see a chevron',
+    (await room.locator('button[aria-expanded]')
+      .filter({ hasText: /^The words|^Die woorde/ }).first()
+      .getAttribute('aria-expanded')) === 'false');
   /* Folded, the card no longer contains the box, so the locator above no
      longer finds it. Pressed by its own NAME — not by being the first shut
      thing in the room, which is a mark beside a heading somewhere further

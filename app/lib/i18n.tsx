@@ -2431,7 +2431,6 @@ export const STRINGS: Dict = {
   "video.alsoEn": { en: "and English under it", af: "en Engels daaronder" },
   "video.alsoAf": { en: "and Afrikaans under it", af: "en Afrikaans daaronder" },
   "video.noTranslate": { en: "The second line could not be written; the film was made without it.", af: "Die tweede reël kon nie geskryf word nie; die film is daarsonder gemaak." },
-  "card.shut": { en: "Folded away — press the heading to open it.", af: "Toegevou — druk die opskrif om dit oop te maak." },
   "wand.words": { en: "Write the next part for me", af: "Skryf die volgende deel vir my" },
   "cards.what": { en: "Press one, pick a photograph, and it comes back as a title, a style and the words \u2014 ready to make. The picture is sent once and is not kept.", af: "Druk een, kies \u2019n foto, en dit kom terug as \u2019n titel, \u2019n styl en die woorde \u2014 gereed om te maak. Die foto word een keer gestuur en word nie gehou nie." },
   "cards.talkWhat": { en: "Press one and talk. It listens for up to {seconds} seconds, writes down what you said, and turns it into a song. Costs {credits} credits, because reading it is a paid service. The recording is sent once and is not kept.", af: "Druk een en praat. Dit luister tot {seconds} sekondes, skryf neer wat jy ges\u00ea het, en maak daar \u2019n liedjie van. Kos {credits} krediete, want om dit te lees is \u2019n betaalde diens. Die opname word een keer gestuur en word nie gehou nie." },

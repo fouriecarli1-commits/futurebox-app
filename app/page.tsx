@@ -3492,8 +3492,28 @@ export default function FutureBoxHome() {
                    page's padding and says nothing about whether anybody can
                    reach the thing they type into. */
                 <aside
-                  className={`${copilotFirst ? 'order-2 md:order-none' : ''} flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}
-                  style={{ paddingBottom: barClearance(12) }}
+                  className={`${copilotFirst ? 'order-2 md:order-none pb-0 md:pb-[var(--bar-clear)]' : 'pb-[var(--bar-clear)]'} flex-shrink-0 w-full md:w-80 lg:w-96 md:min-h-0 md:h-auto min-h-[22rem]`}
+                  /* Reserved through a variable rather than straight onto
+                     `paddingBottom`, because the answer is different at the
+                     two widths and an inline style cannot hold a media query.
+
+                     On a desk the pane is the right-hand column of a fixed,
+                     full-height layer: measured at 1280x900 its container
+                     ends 38 pixels BEHIND the bar, so without this the box
+                     she types into goes under it. Load-bearing, and it stays.
+
+                     On a phone in the Make tab the pane is `order-2` — the
+                     whole room is underneath it — so the clearance was 76
+                     pixels of dead air in the middle of the page, with the
+                     input sitting 266 pixels clear of the bar. `pb-0` below
+                     `md` closes it. Every other tab leaves the pane last, so
+                     there the reservation applies at both widths.
+
+                     `check:tabbar` reads this file for what reserves room
+                     under the bar; it knows about `--bar-clear` too, so
+                     moving the value off `paddingBottom` did not move it out
+                     of the check's sight. */
+                  style={{ ['--bar-clear' as string]: barClearance(12) } as React.CSSProperties}
                 >
                   {copilotPane}
                 </aside>

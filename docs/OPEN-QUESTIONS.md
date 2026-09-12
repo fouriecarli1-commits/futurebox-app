@@ -3586,3 +3586,52 @@ lesson this file usually records: **a check measuring a subset can be
 enlarged by an unrelated change, and then it finds what it always should
 have.** Nothing about the folding broke that button. The folding is what
 made it visible to the thing that was already looking.
+
+## Looking at the rooms, rather than at the checks (12 September)
+
+Every check was green and every probe passed, so I opened the eight busiest
+rooms at 390 pixels and looked at the screenshots. Two things were wrong that
+nothing was measuring.
+
+### A shut card was printing a sentence, once per card
+
+"Folded away — press the heading to open it." was written on 6 September,
+when a folded card was the exception: one grey line on the one card somebody
+had chosen to fold. It is the rule now, and the Adverts desk was printing that
+same sentence five times on one screen — a wall of identical writing, in a
+room that had just been changed so it would not be one. That is the same fault
+as "Strip the writing out of every room", applied to writing the component
+adds itself.
+
+It is gone. The chevron is the affordance, and `aria-expanded` is what a
+screen reader was reading anyway. `audit/cards.mjs` and `audit/makesong.mjs`
+both asserted on the sentence and now assert on `aria-expanded` — which is
+the better anchor regardless, because a sentence can be right while the state
+behind it is wrong.
+
+### Seventy-six pixels of nothing under the Copilot
+
+The Copilot pane reserves clearance for the tab bar, which is fixed at every
+width. In every room except Make a song the pane is the last thing on a phone,
+so the reservation is exactly right. On the Make tab the pane is `order-2` and
+the whole room is underneath it — so the clearance was dead air in the middle
+of the page, with the box she types into sitting 266 pixels clear of the bar.
+
+It is load-bearing at desk width, and that is worth writing down rather than
+assuming: measured at 1280x900, the pane's container ends 38 pixels BEHIND the
+bar, so without the reservation the input goes under it. Two different answers
+at two widths, and an inline style cannot hold a media query — so the value
+goes into `--bar-clear` and two utilities decide where it applies.
+
+Measured before and after, at both widths:
+
+    phone · Make a song   pad 76 → 0    input 266px clear of the bar, both ways
+    phone · Video desk    pad 76 → 76   (the pane is last there)
+    desk  · both          pad 76 → 76
+
+**And the check had to be taught, not dodged.** `check:tabbar` reads this file
+for `paddingBottom:` and asserts every one uses `barClearance()`. Moving a
+reservation into a custom property would have taken it out of the check's
+sight on the day it was made — which is the shape of the fault that check
+exists to stop. It reads `--bar-clear` too now, and it fails if the variable
+is set and never applied. Both new assertions were made to go red.
