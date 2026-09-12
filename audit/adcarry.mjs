@@ -33,7 +33,7 @@
  */
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
-import { dismissDoor, studio, toRoom } from './enter.mjs';
+import { dismissDoor, studio, toRoom, unfold } from './enter.mjs';
 
 const PORT = Number(process.argv[2] || 3131);
 
@@ -133,9 +133,49 @@ try {
   await dismissDoor(p);
 
   await studio(p);
-  await toRoom(p, 'Adverts');
+  /* Left folded on purpose: the assertion below is about how the room
+     opens, and the helper's own unfolding would answer it. */
+  await toRoom(p, 'Adverts', { folded: true });
   await p.waitForTimeout(1400);
   const room = p.locator('div.fixed.inset-0.z-50').first();
+
+  /* ── The room opens folded ──────────────────────────────────────
+ 
+     Carli, 12 September 2026: "Make sure every rooms drop down menu is
+     closed from the beginning and the user can open it."
+ 
+     Asserted HERE, before anything is pressed, because `toRoom` unfolds on
+     the way in for every other probe and this is the one place the folded
+     state can still be seen. `check:folded` holds the same rule in the
+     source; this is the half the source cannot show — that a real room,
+     opened by a real press, draws shut.
+ 
+     `aria-expanded` is on the fold's own button, so this counts folds and
+     nothing else. */
+  const folds = room.locator('button[aria-expanded]');
+  const anyOpen = await room.locator('button[aria-expanded="true"]').count();
+  check('the advert room opens with every panel folded',
+    (await folds.count()) > 0 && anyOpen === 0,
+    `${await folds.count()} panels, ${anyOpen} of them already open`);
+
+  /* And a fold folds, tested on a card this room is named for rather than
+     on whichever one happens to be first — the first is a mark beside a
+     heading up in the copilot bar, and reaching for it by position is the
+     match-by-position fault this file has already been caught by twice. */
+  await unfold(p);
+  const brief = room.locator('button[aria-expanded]')
+    .filter({ hasText: /What the advert is about|Waaroor die advertensie gaan/ }).first();
+  if ((await brief.count()) > 0) {
+    await brief.scrollIntoViewIfNeeded().catch(() => undefined);
+    check('  and unfolding one opens it', (await brief.getAttribute('aria-expanded')) === 'true');
+    await brief.click({ timeout: 8000 }).catch(() => undefined);
+    await p.waitForTimeout(400);
+    check('  and pressing it again folds it away',
+      (await brief.getAttribute('aria-expanded')) === 'false',
+      'a fold that will not fold is a heading');
+    await brief.click({ timeout: 8000 }).catch(() => undefined);
+    await p.waitForTimeout(400);
+  }
 
   /* The brief, as somebody fills it in. Only the first box is required by
      the room, and only the first box is filled here on purpose: the
@@ -161,6 +201,10 @@ try {
   /* ── One: a clip. The room is the video desk. ──────────────────── */
   await open.first().click();
   await p.waitForTimeout(2200);
+  /* The room a card opens is reached by switching the studio's tab rather
+     than through `toRoom`, so nothing has unfolded it. Every box below is
+     inside a card. */
+  await unfold(p);
   await p.screenshot({ path: shot('adcarry-canvas.png') });
 
   /* Read by what it IS rather than by an id: this is the only long text box
@@ -235,6 +279,7 @@ try {
 
   await cards.nth(1).click();
   await p.waitForTimeout(2200);
+  await unfold(p);
   await p.screenshot({ path: shot('adcarry-make.png') });
 
   const boxes = p.locator('div.fixed.inset-0.z-50 textarea');
@@ -302,6 +347,9 @@ try {
 
     await desk().locator('#ads-what').fill(SECOND);
     await p.waitForTimeout(900);
+    /* Starting a new one remounts the adviser panel, and a remount is a
+       fresh fold. */
+    await unfold(p);
     await desk().locator('button').filter({ hasText: /Work out what to make|Werk uit wat om te maak/i }).first().click();
     await p.waitForTimeout(1600);
 
@@ -313,6 +361,9 @@ try {
     if ((await first.count()) > 0) {
       await first.click();
       await p.waitForTimeout(1200);
+      /* Opening a saved campaign remounts both panels, on purpose — that is
+         how they re-read the stores it just wrote. Folded again, therefore. */
+      await unfold(p);
       const back = (await desk().locator('#ads-what').inputValue().catch(() => '')) ?? '';
       check('pressing it brings the first brief back', back.trim() === WHAT, `"${back}"`);
 

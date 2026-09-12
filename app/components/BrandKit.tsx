@@ -39,9 +39,15 @@ export default function BrandKit({
     setKit(read);
     setAssets(loadAssets());
     onChange(read);
-    // Open on a first visit, closed once there is something in it: an empty
-    // panel nobody opens is the same as no panel.
-    setOpen(!hasBrandKit(read));
+    /* Shut, like every other fold in every room.
+ 
+       This opened itself on a first visit — "an empty panel nobody opens is
+       the same as no panel" — and that was a fair argument when it was the
+       only panel behaving that way. Carli, 12 September 2026: "Make sure
+       every rooms drop down menu is closed from the beginning and the user
+       can open it." One panel that decides for itself is the exception that
+       makes the rule unreadable, and a room where one thing is open and
+       nine are shut looks like a mistake rather than a choice. */
   }, [onChange]);
 
   const put = (patch: Partial<Kit>) => {

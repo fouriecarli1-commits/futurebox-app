@@ -482,6 +482,13 @@ jobs:
       # every phone with an indicator — invisible on a desktop, invisible in a
       # screenshot without an inset, and invisible to anybody who does not
       # already know the bar pads itself.
+      # A room opens as its own table of contents: every heading visible,
+      # nothing unfolded. The half that rots is the second one — a panel
+      # written next week as a plain section with an h3 is not a fold,
+      # nothing fails, and the room quietly shows everything at once again.
+      - name: Every panel in every room starts folded
+        run: npm run check:folded
+
       - name: Nothing is hidden behind the bottom bar
         run: npm run check:tabbar
 

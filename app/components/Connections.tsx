@@ -69,7 +69,6 @@ export default function Connections(): React.ReactElement {
           </span>
         ) : null
       }
-      startShut={joined > 0}
     >
       <Note>
         {t(

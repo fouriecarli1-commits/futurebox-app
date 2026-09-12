@@ -61,6 +61,7 @@ import {
 } from '../lib/storyboard';
 import { useCopilotOps } from '../lib/copilotactions';
 import { useLang } from '../lib/i18n';
+import Card from './Card';
 import Note from './Note';
 import Subtitles, { translated } from './Subtitles';
 
@@ -396,20 +397,17 @@ export default function Storyboard({
     }
   }, [board, cutting, song, aspect, t]);
 
+  /* A fold, like every other panel in the app. It was a plain section with
+     its heading always open, so a room showed several long panels at once
+     before anybody had chosen one. A JSX comment cannot sit above the root
+     element — that is two expressions and neither compiles — so it lives
+     here, outside the return. */
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4">
-      <div className="flex items-start gap-2.5">
-        <Clapperboard className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-        <div className="min-w-0">
-          <h3 className="text-base font-black text-white tracking-tight">
-            {t('board.title', 'Build a long one')}
-          </h3>
-          <Note className="text-sm text-zinc-500 leading-relaxed">{t(
+    <Card title={t('board.title', 'Build a long one')} icon={<Clapperboard className="w-4 h-4" />}>
+      <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'board.what',
               'No engine makes more than half a minute in one go, so a long video is short ones cut together. Write the shots, make them one at a time, and cut them into one file with a song under it.',
             )}</Note>
-        </div>
-      </div>
 
       {/* ── The look, once, above all of them ──────────────────────────
 
@@ -836,7 +834,7 @@ export default function Storyboard({
       )}
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
-    </section>
+    </Card>
   );
 }
 

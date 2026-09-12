@@ -159,7 +159,7 @@ export async function studio(page) {
  * On a desk the rail is right there and the door is not in the way, so the
  * rail is used when it is visible.
  */
-export async function toRoom(page, name) {
+export async function toRoom(page, name, { folded = false } = {}) {
   /** The one button among these whose FIRST LINE is the room's name.
    *
    *  The hint under each one holds room names too — "Podcast" appears in the
@@ -198,6 +198,15 @@ export async function toRoom(page, name) {
     if (rail && (await rail.isVisible().catch(() => false))) {
       await rail.click();
       await page.waitForTimeout(900);
+      /* The same unfolding as the door path below.
+ 
+         This returned here, and on a desk-width viewport the rail is the
+         path taken — so the FIRST visit (through the door) came in
+         unfolded and every visit after it did not. `adcarry` walked out to
+         the video desk, walked back in, and reported a brief it had typed
+         two minutes earlier as empty: the box was behind a fold this
+         helper had skipped on the way past. */
+      if (!folded) await unfold(page);
       return;
     }
     const back = page.locator('button').filter({ hasText: /All rooms|Alle kamers/ }).first();
@@ -214,4 +223,119 @@ export async function toRoom(page, name) {
   if (!button) throw new Error(`no way into ${name}`);
   await button.click();
   await page.waitForTimeout(1100);
+  /* Opened on the way in, because every panel starts folded now and forty
+     probes were written against rooms that did not.
+ 
+     `folded: true` leaves it alone, for the one probe whose subject IS the
+     folding. Without that escape the assertion "the room opens shut" was
+     being made about a room this helper had just opened — a test defeated
+     by its own scaffolding, which reads as the feature being broken. */
+  if (!folded) await unfold(page);
+}
+
+/**
+ * Open every folded panel in the room you are standing in.
+ *
+ * ── Why this exists ──────────────────────────────────────────────────────
+ *
+ * Carli, 12 September 2026: "Make sure every rooms drop down menu is closed
+ * from the beginning and the user can open it." So `Card` starts shut, and
+ * a room now opens as its own table of contents.
+ *
+ * That is right for a person and wrong for every probe written before it:
+ * three of them went looking for a control that was behind a fold and
+ * reported the room as broken. A probe that cannot reach the room reports
+ * nothing, which is worse than one that fails.
+ *
+ * So `toRoom` unfolds on the way in, and every probe measures what it was
+ * written to measure. The folded state itself is not left untested — it is
+ * `check:folded` in the source and `adcarry`'s own assertion in a browser,
+ * both of which look at a room BEFORE this runs.
+ *
+ * Only panels that are shut, found by `aria-expanded="false"`. Clicking
+ * everything would close whatever a probe had just opened for itself.
+ *
+ * Repeated, because opening one panel can reveal another inside it — the
+ * video desk's song picker lives inside a card. Bounded, because a pair of
+ * panels that toggle each other would otherwise spin here for ever.
+ */
+export async function unfold(page) {
+  /* Inside the studio when it is open, and on the page when it is not.
+ 
+     Not `page` unconditionally: the landing page behind the overlay has
+     folds of its own, Playwright calls them visible because visibility does
+     not account for being covered, and every click on one is intercepted by
+     the studio and times out. The first version did exactly that — it spent
+     its whole budget on a button nobody can reach and never touched the
+     room, so the probes it was written to fix failed the same way and it
+     looked as though folding had broken them. */
+  const overlay = page.locator('div.fixed.inset-0.z-50');
+  const where = (await overlay.count()) > 0 && (await overlay.first().isVisible().catch(() => false))
+    ? overlay.first()
+    : page;
+
+  /* Folds have a name on them. Icon-only buttons are something else.
+ 
+     `aria-expanded` is not the property "I am a fold" — it is the property
+     "I disclose something", and `Hint` uses it too, for the little question
+     mark beside half the headings in this app. So this helper was opening
+     every explanation in the room along with every card, and each one is an
+     absolutely-positioned tooltip that then sits over whatever is under the
+     heading. `collabroom` spent thirty seconds being told its room button
+     was "visible, enabled and stable" while a tooltip belonging to the
+     heading above it swallowed the press.
+ 
+     A card's fold carries its title; a hint carries an `aria-label` and an
+     svg. Requiring a non-blank text is the structural difference, and it
+     holds for the wand as well, which is the other icon-only button on a
+     card header. Matching on the label's wording would not survive the
+     second language. */
+  const shutNow = () =>
+    where.locator('button[aria-expanded="false"]:visible').filter({ hasText: /\S/ });
+
+  /* Press the first one that is still shut; if pressing it changed nothing,
+     step past it and try the next.
+ 
+     The version before this one gave UP at that point — it treated "this
+     button did not open" as "nothing here opens" and returned. A room whose
+     first foldable thing is a stubborn little icon toggle therefore had
+     none of its real cards opened, and `check:makeroom` reported the words
+     box as missing. Skipping is the difference between a helper that opens
+     a room and one that opens whatever happens to be first in it.
+ 
+     Bounded rather than "until none are shut": two panels that toggle each
+     other would otherwise spin here for ever. Twenty-four presses is far
+     more than any room has. */
+  let skip = 0;
+  for (let press = 0; press < 24; press += 1) {
+    if (skip >= (await shutNow().count())) return;
+    const one = shutNow().nth(skip);
+    await one.scrollIntoViewIfNeeded().catch(() => undefined);
+    /* Asked of the BUTTON afterwards, not of the room's total.
+ 
+       Counting how many folds remain is too blunt: a card whose contents
+       take longer to draw than the wait looks like "nothing happened", gets
+       skipped, and its box is then missing for the rest of the probe. That
+       is how `adcarry` came to report a brief it had just typed as empty.
+       `aria-expanded` on the thing that was pressed is the direct answer. */
+    const handle = await one.elementHandle().catch(() => null);
+    if (!handle) { skip += 1; continue; }
+    /* Pressed through the DOM rather than by a real pointer.
+ 
+       A room that opens as a list of headings is a tall room with a sticky
+       bar at the top of it, and a scrolled-to heading lands underneath that
+       bar — so Playwright's click hit the bar, nothing opened, and this
+       helper walked past all eight folds achieving nothing while reporting
+       no error. Eight four-second timeouts, and a probe that then said the
+       brief it had just typed was empty.
+ 
+       Whether a person can actually reach these is a real question and it
+       is asked elsewhere: `check:buttonlook`, `audit/touch.mjs` and
+       `audit/underbar.mjs` exist for it. This is scaffolding to get at the
+       contents, so it goes straight at the element. */
+    await handle.evaluate((el) => el.click()).catch(() => undefined);
+    await page.waitForTimeout(220);
+    const opened = (await handle.getAttribute('aria-expanded').catch(() => null)) === 'true';
+    if (!opened) skip += 1;
+  }
 }

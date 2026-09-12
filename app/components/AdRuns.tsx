@@ -43,6 +43,7 @@ import {
   type Run, type Standing,
 } from '../lib/adrun';
 import { useLang } from '../lib/i18n';
+import Card from './Card';
 import Note from './Note';
 
 const TONE: Record<Standing, string> = {
@@ -133,20 +134,17 @@ export default function AdRuns({
     setTimeout(() => setCopied((was) => (was === key ? null : was)), 1500);
   };
 
+  /* A fold, like every other panel in the app. It was a plain section with
+     its heading always open, so a room showed several long panels at once
+     before anybody had chosen one. A JSX comment cannot sit above the root
+     element — that is two expressions and neither compiles — so it lives
+     here, outside the return. */
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-      <div className="flex items-start gap-2.5">
-        <CalendarClock className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-        <div className="min-w-0">
-          <h3 className="text-base font-black text-white tracking-tight">
-            {t('run.title', 'When it goes out, and where')}
-          </h3>
-          <Note className="text-sm text-zinc-500 leading-relaxed">{t(
+    <Card title={t('run.title', 'When it goes out, and where')} icon={<CalendarClock className="w-4 h-4" />}>
+      <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'run.what',
               'A day, a list of platforms, and a link per platform that says which one the click came from. Tick each off as you post it.',
             )}</Note>
-        </div>
-      </div>
 
       <Note className="text-xs text-zinc-500 leading-relaxed">{t(
           'run.whyTags',
@@ -296,6 +294,6 @@ export default function AdRuns({
           'Nothing is sent from here — this is a list you check, not a reminder. It is kept on this device.',
         )}
       </Note>
-    </section>
+    </Card>
   );
 }

@@ -36,6 +36,7 @@ import { formatById } from '../lib/adformats';
 import { handoverFor, shapeForNamed } from '../lib/adhandover';
 import type { SurfaceId } from '../lib/surfaces';
 import { byWeekday, standoutDays } from '../lib/adweek';
+import Card from './Card';
 import Note from './Note';
 
 /* The plan's own store moved to `lib/marketplan.ts`.
@@ -247,20 +248,17 @@ export default function MarketPlan({
   const perDay = plan ? loadPerDay(plan.week) : [];
   const busiest = perDay.length ? Math.max(...perDay) : 0;
 
+  /* A fold, like every other panel in the app. It was a plain section with
+     its heading always open, so a room showed several long panels at once
+     before anybody had chosen one. A JSX comment cannot sit above the root
+     element — that is two expressions and neither compiles — so it lives
+     here, outside the return. */
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4">
-      <div className="flex items-start gap-2.5">
-        <Target className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-        <div className="min-w-0">
-          <h3 className="text-base font-black text-white tracking-tight">
-            {t('plan.title', 'The market, and the week')}
-          </h3>
-          <Note className="text-sm text-zinc-500 leading-relaxed">{t(
+    <Card title={t('plan.title', 'The market, and the week')} icon={<Target className="w-4 h-4" />}>
+      <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'plan.what',
               'What you are actually selling, who buys it, what they are deciding between — and a week of posting with days, times and platforms.',
             )}</Note>
-        </div>
-      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <button
@@ -501,6 +499,6 @@ export default function MarketPlan({
           </p>
         </div>
       )}
-    </section>
+    </Card>
   );
 }

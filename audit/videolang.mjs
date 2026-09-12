@@ -29,7 +29,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor } from './enter.mjs';
+import { dismissDoor, unfold } from './enter.mjs';
 import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3073';
@@ -190,6 +190,9 @@ try {
   }
   if (!wentIn) throw new Error('no way into the video desk');
   await p.waitForTimeout(2200);
+  /* Every panel starts folded now, and these probes reach their room
+     without `toRoom`, which is where the unfolding lives. See enter.mjs. */
+  await unfold(p);
 
   const box = room.locator('textarea').first();
 
@@ -240,6 +243,9 @@ try {
   await p.waitForTimeout(700);
   const panel = room.locator('text=Put this film in another language').first();
   check('and the panel opens', (await panel.count()) === 1);
+  /* The language list lives in a card inside that panel, and it is folded
+     like every other. Opening the panel reveals the heading, not the list. */
+  await unfold(p);
 
   const codes = await room.locator('[role="radiogroup"] [role="radio"]').allInnerTexts();
   check('with a real list of languages, not two', codes.length > 20, `${codes.length} offered`);

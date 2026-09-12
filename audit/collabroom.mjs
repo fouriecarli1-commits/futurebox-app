@@ -16,6 +16,7 @@ import { spawn, execSync } from 'node:child_process';
 import { cpSync, rmSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { launchOptions, shot } from './where.mjs';
+import { unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3186';
 const PROBE = 'app/collabroom/page.probe.tsx';
@@ -93,6 +94,18 @@ try {
   await p.goto(`http://localhost:${PORT}/collabroom`, { waitUntil: 'networkidle' });
   await p.waitForTimeout(1800);
 
+  /* Opened once, here, rather than on every read.
+ 
+     This probe opens its own page rather than walking in through the
+     studio, so nothing else unfolds the room — and every panel starts
+     folded now, which puts the names inside one.
+ 
+     Once, because unfolding inside `says()` re-rendered the page on every
+     single read and the next click then waited thirty seconds for an
+     element to be "visible, enabled and stable". A helper that keeps
+     touching the page is a page that never settles. */
+  await unfold(p);
+
   const says = async () => ((await p.locator('body').innerText()) ?? '').replace(/\s+/g, ' ');
 
   check('a request somebody sent you is waiting', (await says()).includes('Lerato Dube'));
@@ -100,7 +113,17 @@ try {
     (await says()).includes('would like to make something with somebody'));
   check('and a room that is already open', (await says()).includes('Riaan Vermaak'));
 
-  /* Open the room and look inside it. */
+  /* Open the room and look inside it.
+ 
+     This was the press that found the real bug in `unfold`: it timed out
+     here for half an hour, and the reason was not this probe at all. The
+     helper pressed everything with `aria-expanded="false"` on it, and the
+     question mark beside a heading is one of those — so it had opened the
+     explanation belonging to "Working together", and that tooltip is
+     absolutely positioned directly over the row of rooms underneath it.
+     Playwright kept reporting the button as "visible, enabled and stable"
+     because it was; something else was catching the press. `unfold` now
+     only presses folds that carry a name. */
   await p.locator('button').filter({ hasText: 'Riaan Vermaak' }).first().click();
   await p.waitForTimeout(1400);
   const inside = await says();

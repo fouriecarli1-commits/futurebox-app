@@ -26,7 +26,7 @@ import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
-import { dismissDoor } from './enter.mjs';
+import { dismissDoor, unfold } from './enter.mjs';
 import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3071';
@@ -146,6 +146,9 @@ try {
 
   const channelBefore = await p.evaluate(() =>
     JSON.parse(window.localStorage.getItem('futurebox.tracks.v1') || '[]').length);
+  /* Every panel starts folded now, and these probes reach their room
+     without `toRoom`, which is where the unfolding lives. See enter.mjs. */
+  await unfold(p);
   const bring = room.locator('button').filter({ hasText: /Bring a song in/ }).first();
   check('the button is there before any song exists', (await bring.count()) === 1,
     `${channelBefore} song(s) in the channel`);
@@ -222,6 +225,9 @@ try {
     await atDoor.waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
   }
   await intoRoom('Video desk');
+  /* Back in after the reload, and every panel is folded again — the reload
+     is a fresh mount and folding is the default, not a remembered state. */
+  await unfold(p);
 
   const addShot = room.locator('button').filter({ hasText: /^Add a shot/ }).first();
   await addShot.click();

@@ -48,6 +48,7 @@ import { presenterCost } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import type { VoiceState } from './VoiceLab';
 import Cost from './Cost';
+import Card from './Card';
 import Note from './Note';
 
 /** How long the reading is, read off the file rather than guessed from words. */
@@ -418,14 +419,12 @@ export default function Presenter({
 
   const price = reading ? presenterCost(Math.round(reading.seconds)) : 0;
 
+  /* A fold, like every other panel. The sixth one written as a plain
+     section with an always-open heading, and the one `check:folded`
+     found rather than me: the five in her message were the ones she had
+     looked at, not the ones there were. */
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4">
-      <div className="flex items-start gap-2.5">
-        <UserRound className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-        <div className="min-w-0">
-          <h3 className="text-base font-black text-white tracking-tight">
-            {t('pres.title', 'A presenter who says your script')}
-          </h3>
+    <Card title={t('pres.title', 'A presenter who says your script')} icon={<UserRound className="w-4 h-4" />}>
           <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'pres.what',
               'Somebody from your cast, reading words in a voice you choose, with their mouth moving to it. It speaks whatever language you write in — Afrikaans included — because it is handed the reading rather than the words.',
@@ -442,8 +441,6 @@ export default function Presenter({
               'pres.notSinging',
               'It is built for a spoken script. Whether it holds up on singing has never been tested \u2014 one clip would answer it, and until somebody makes that clip this is a presenter and not a music video.',
             )}</Note>
-        </div>
-      </div>
 
       {cast.length === 0 ? (
         <p className="text-sm text-amber-400 leading-relaxed flex items-start gap-2">
@@ -664,6 +661,6 @@ export default function Presenter({
           {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
         </>
       )}
-    </section>
+    </Card>
   );
 }

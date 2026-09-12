@@ -637,7 +637,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
           for what is in it, and somebody who came to listen should not have
           to scroll past two forms to reach it. */}
       {room.signedIn && (
-        <Card title={t('live.askSongs', 'Do you want to put one of your own songs in?')} startShut>
+        <Card title={t('live.askSongs', 'Do you want to put one of your own songs in?')}>
           <Note>{t('live.public')}</Note>
 
           {tracks.length === 0 ? (
@@ -710,7 +710,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
       )}
 
       {room.signedIn && (
-        <Card title={t('live.askElsewhere', 'Do you want to put something else in the room?')} startShut>
+        <Card title={t('live.askElsewhere', 'Do you want to put something else in the room?')}>
           <button
             type="button"
             onClick={() => setShowElsewhere(!showElsewhere)}

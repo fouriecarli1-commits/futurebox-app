@@ -41,6 +41,7 @@
     "check:reachable": "tsx scripts/check-reachable.mts",
     "check:storyboard": "node audit/storyboard.mjs",
     "check:tabbar": "tsx scripts/check-tabbar.mts",
+    "check:folded": "tsx scripts/check-folded.mts",
     "check:theme": "tsx scripts/check-theme-css.mts",
     "check:scrim": "tsx scripts/check-scrim.mts",
     "check:ops": "tsx scripts/check-copilot-ops.mts",

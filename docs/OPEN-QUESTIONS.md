@@ -3462,3 +3462,65 @@ red is a finding about the test.** Twice tonight a mutation appeared not to
 be caught, and once it was the probe's fault and once it was mine — a
 shell-quoted `python3 -c` that never applied the edit at all. Verify the
 mutation landed before drawing a conclusion from a green run.
+
+## Every card starts shut (12 September)
+
+Carli, after looking at the video desk:
+
+> "The video desk looks good. You did a nice thing there every long action is
+> a drop down menu. … And when I open the video desk, can all the drop down
+> menus be closed, and not open, then the user can open it. Then that desk
+> would also look cleaner. **Make sure every rooms drop down menu is closed
+> from the beginning and the user can open it.** Look in the Advert bar:
+> 'When it goes out'; 'What the money did'; 'the market, and the week' …
+> these aren't drop down menu's, please make it drop down menu's and make
+> sure they are also closed from the beginning."
+
+Two things, and the second is the bigger one.
+
+**The panels that were not folds are folds now.** Six of them —
+`Storyboard`, `AdReport`, `MarketPlan`, `Queue`, `AdRuns`, `Presenter` —
+were hand-written `<section>`s with an icon and an `<h3>` on top. Each is a
+`Card` now, with its explanation as the first thing inside the fold. They
+were written before `Card` existed and nobody went back.
+
+**`Card` starts shut, and there is no way to ask for otherwise.** The
+`startShut` prop is gone rather than inverted. A prop for it is a prop that
+gets used, and then the rule is "every card starts shut except the ones that
+do not", which is not a rule. `check:folded` holds the line: `useState(false)`
+in `Card`, no `startShut`/`defaultOpen`/`alwaysOpen` anywhere, no panel left
+as a bare `<h3>` outside a `.map` or a portal, and the six named panels are
+Cards. Negative-tested three ways.
+
+The old default had an argument, and it was not a bad one: the box a room is
+FOR should not be a control somebody has to find. What decided it is that she
+has now said three times, in three different words, that these rooms show too
+much at once.
+
+### What this broke, and the bug underneath it
+
+Forty probes were written against rooms that opened. `audit/enter.mjs` gained
+an exported `unfold(page)`, and `toRoom` calls it on the way in — on **both**
+paths, which is its own small lesson: the desktop rail path returned before
+unfolding, so the first visit to a room came in open and every visit after it
+did not. That is what made `adcarry` report a brief it had typed two minutes
+earlier as empty.
+
+`unfold` went through five wrong versions. The last one is the one worth
+writing down.
+
+**`aria-expanded` is not the property "I am a fold".** It is the property "I
+disclose something" — and `Hint`, the little question mark beside half the
+headings in this app, uses it too. So `unfold` was opening every explanation
+in the room along with every card, and each of those is an absolutely
+positioned tooltip that then sits on top of whatever is under that heading.
+`collabroom` spent its whole budget being told its room button was "visible,
+enabled and stable", which it was; something else was catching the press.
+
+A card's fold carries its title. A hint carries an `aria-label` and an svg.
+Requiring non-blank text is the structural difference, and it holds for the
+wand too. Matching on the label's wording would not survive the second
+language.
+
+That is the ninth shape of the same fault this repo keeps finding: **the
+selector matched the attribute rather than the thing.**

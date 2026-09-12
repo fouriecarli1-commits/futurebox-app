@@ -726,7 +726,7 @@ export default function VideoCanvas({
             one difference that is real: on a music video the song is the
             subject, and everywhere else it is a bed under a shot that is
             about something else. */
-        <Card title={t('canvas.songUnder', 'A song under this clip')} startShut>
+        <Card title={t('canvas.songUnder', 'A song under this clip')}>
           <Note className="text-sm text-zinc-500 leading-relaxed">
             {t(
               'canvas.songUnderNote',

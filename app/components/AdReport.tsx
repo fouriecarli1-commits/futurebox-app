@@ -45,6 +45,7 @@ import {
   loadReport, rates, read, saveReport, totals, type Report, type Result,
 } from '../lib/adreport';
 import { useLang } from '../lib/i18n';
+import Card from './Card';
 import Note from './Note';
 
 /**
@@ -138,20 +139,17 @@ export default function AdReport(): React.ReactElement {
     }
   }
 
+  /* A fold, like every other panel in the app. It was a plain section with
+     its heading always open, so a room showed several long panels at once
+     before anybody had chosen one. A JSX comment cannot sit above the root
+     element — that is two expressions and neither compiles — so it lives
+     here, outside the return. */
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-      <div className="flex items-start gap-2.5">
-        <BarChart3 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-        <div className="min-w-0">
-          <h3 className="text-base font-black text-white tracking-tight">
-            {t('report.title', 'What the money did')}
-          </h3>
-          <Note className="text-sm text-zinc-500 leading-relaxed">{t(
+    <Card title={t('report.title', 'What the money did')} icon={<BarChart3 className="w-4 h-4" />}>
+      <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'report.what',
               'Export the report from your Ads Manager and drop the file here. It reads the columns whatever they are called, works out cost per click and cost per result, and puts each campaign next to the run that sent it out.',
             )}</Note>
-        </div>
-      </div>
 
       <Note className="text-xs text-zinc-500 leading-relaxed">{t(
           'report.whyFile',
@@ -299,6 +297,6 @@ export default function AdReport(): React.ReactElement {
       )}
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
-    </section>
+    </Card>
   );
 }

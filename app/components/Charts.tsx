@@ -10,8 +10,8 @@
  *
  * A bar you press, which opens into things you can press. That is the `Card`
  * shape this app already has — a heading you can fold, one box, small buttons
- * underneath — used shut rather than open, which is the one case the component
- * was given `startShut` for.
+ * underneath. These four asked to start shut when that was the exception;
+ * every card in the app starts shut now, so they simply say nothing.
  *
  * ── The thing that makes this honest rather than decorative ──────────────
  *
@@ -149,7 +149,6 @@ export default function Charts({
       <Card
         title={t('chart.music', 'Top 10 AI music in South Africa')}
         icon={<Music2 className="h-4 w-4" />}
-        startShut
       >
         {charts.music.length === 0 ? (
           <Note>
@@ -177,7 +176,6 @@ export default function Charts({
       <Card
         title={t('chart.pods', 'Top 10 podcasts')}
         icon={<Headphones className="h-4 w-4" />}
-        startShut
       >
         {charts.podcasts.length === 0 ? (
           <Note>
@@ -198,7 +196,6 @@ export default function Charts({
         <Card
           title={t('chart.spotify', 'What South Africa is playing on Spotify')}
           icon={<TrendingUp className="h-4 w-4" />}
-          startShut
         >
           <Note>
             {t(
@@ -224,7 +221,7 @@ export default function Charts({
       )}
 
       {/* ── And the radar, which is a whole page rather than a list ──── */}
-      <Card title={t('chart.radar', 'The AI trends radar')} icon={<Radar className="h-4 w-4" />} startShut>
+      <Card title={t('chart.radar', 'The AI trends radar')} icon={<Radar className="h-4 w-4" />}>
         <Note>
           {t(
             'chart.radarWhat',

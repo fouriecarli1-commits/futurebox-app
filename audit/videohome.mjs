@@ -24,7 +24,7 @@
  * not "there is a videos card", which is markup, but the title of the thing
  * she made.
  */
-import { enter, studio, toRoom } from './enter.mjs';
+import { enter, studio, toRoom, unfold } from './enter.mjs';
 import { serve, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3089';
@@ -96,7 +96,21 @@ try {
   await page.waitForTimeout(2500);
 
   const room = page.locator('div.fixed.inset-0.z-50').first();
-  let says = ((await room.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ');
+  /* ── Read the room, with its panels open ─────────────────────────
+ 
+     Every card starts folded now, so the title of a video is inside a
+     fold and `innerText` does not see it. Unfolded immediately before
+     each read rather than once on the way in: the channel's own panels
+     draw after its data arrives, so an unfold a second earlier opens the
+     ones that were there and none of the ones that matter.
+ 
+     `unfold` is cheap when nothing is shut — one count — so calling it
+     at each read costs nothing and removes a whole class of timing. */
+  const reads = async () => {
+    await unfold(page);
+    return ((await room.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ');
+  };
+  let says = await reads();
   if (!/Your videos|Jou video/.test(says)) {
     /* The Library tab opens the channel; if this build lands somewhere else,
        walk in the long way rather than reporting a room that was never
@@ -104,7 +118,7 @@ try {
     await studio(page);
     await toRoom(page, 'Channel');
     await page.waitForTimeout(2000);
-    says = ((await room.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ');
+    says = await reads();
   }
 
   check('the channel has a place for videos',
@@ -113,7 +127,7 @@ try {
      question she asked. */
   check('and the video she made is named on it',
     says.includes(TITLE), says.slice(0, 220));
-  says = ((await room.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ');
+  says = await reads();
   check('with what it cost still on it, so the history is a receipt',
     /15 credits|15 krediete/.test(says), (says.match(/\d+ (credits|krediete)/) ?? ['nothing'])[0]);
 

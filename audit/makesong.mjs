@@ -20,7 +20,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor } from './enter.mjs';
+import { dismissDoor, unfold } from './enter.mjs';
 import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3093';
@@ -201,11 +201,19 @@ try {
     }
   }
   await p.waitForTimeout(1600);
+  /* Every panel starts folded now, and these probes reach their room
+     without `toRoom`, which is where the unfolding lives. See enter.mjs. */
+  await unfold(p);
   const room = p.locator('div.fixed.inset-0.z-50').first();
 
   /* Simple, which is where somebody starts and where she was looking. */
   await room.locator('button').filter({ hasText: /^Simple$/ }).first().click();
   await p.waitForTimeout(700);
+  /* Again, after the mode: choosing Simple re-renders the room and the
+     cards it draws are new ones, folded like every other. Unfolding only
+     on the way in would have opened the panels that were there before the
+     choice and none of the ones the choice made. */
+  await unfold(p);
   const says = async () => ((await room.innerText()) ?? '').replace(/\s+/g, ' ');
 
   /* ── The card shape ─────────────────────────────────────────────────
@@ -222,13 +230,31 @@ try {
      style box instead — so the check for "it is gone" found a different box,
      still visible, and failed while the feature worked. */
   const wordsBox = room.locator('textarea[placeholder*="Verse 1"]');
+  /* The words card by what is INSIDE it, not by being first in the room.
+ 
+     It was `cards.first()`, which was the words card until every panel
+     started folded and the room's order stopped meaning what it did. A
+     probe that folds "the first heading" and then asserts about the words
+     box is two different cards in one sentence — the same
+     matched-the-position fault this repo keeps finding in its own tests. */
+  const wordsCard = room
+    .locator('section')
+    .filter({ has: p.locator('textarea[placeholder*="Verse 1"]') })
+    .locator('button[aria-expanded]')
+    .first();
+
   check('and the box inside one is open to start with', (await wordsBox.count()) === 1);
-  await cards.first().click();
+  await wordsCard.click();
   await p.waitForTimeout(500);
   check('pressing the heading folds it away', (await wordsBox.count()) === 0);
   check('and says so rather than leaving an empty card',
     (await says()).includes('Folded away'));
-  await cards.first().click();
+  /* Folded, the card no longer contains the box, so the locator above no
+     longer finds it. Pressed by its own NAME — not by being the first shut
+     thing in the room, which is a mark beside a heading somewhere further
+     up and the same match-by-position fault one line later. */
+  await room.locator('button[aria-expanded]')
+    .filter({ hasText: /^The words|^Die woorde/ }).first().click();
   await p.waitForTimeout(500);
   check('and pressing it again brings the box back', (await wordsBox.count()) === 1);
 
@@ -360,6 +386,11 @@ try {
   check('and the reader’s language, so the words come back in it',
     /name="lang"/.test(photographed ?? ''));
   await p.waitForTimeout(900);
+  /* The photo card's answer re-renders the room, and the cards it draws
+     are folded like every other. Opened again so the boxes it filled in
+     can be read — which is the assertion, not whether they are on screen
+     by default. */
+  await unfold(p);
   check('what comes back fills the room in — the title',
     (await room.locator('input:visible').first().inputValue()) === 'Ouma se kombuis');
   check('the words',

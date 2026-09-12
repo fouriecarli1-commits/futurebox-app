@@ -25,12 +25,31 @@
  * write it the fourteenth way. The same reasoning as `Note`, which replaced
  * sixty-six hand-written paragraphs with one.
  *
- * ── What it does not do ──────────────────────────────────────────────────
+ * ── Every card starts shut ───────────────────────────────────────────────
  *
- * It does not decide what is inside it, and it does not hide anything by
- * default unless it is told to. A card that opens shut is a control somebody
- * has to find; that is right for a sales panel and wrong for the box a room
- * is for. `open` is the caller's decision and the default is open.
+ * This used to open, and `startShut` was the exception a few panels asked
+ * for. Carli, 12 September 2026:
+ *
+ *   "when I open the video desk, can all the drop down menus be closed, and
+ *    not open, then the user can open it. Then that desk would also look
+ *    cleaner. Make sure every rooms drop down menu is closed from the
+ *    beginning and the user can open it."
+ *
+ * So the default is the other way round. A room now opens as its own table
+ * of contents: every heading visible, nothing unfolded, and the person
+ * decides what they are here for. That is the same argument that took the
+ * writing out of the rooms and put it behind a mark — a screen with
+ * everything on it has told you nothing about where to start.
+ *
+ * The old default had an argument too, and it was not wrong: the box a room
+ * is FOR should not be a control somebody has to find. What decided it is
+ * that she has said three times, in three different words, that these rooms
+ * show too much at once — and a fold is one press, where a wall of controls
+ * is a room somebody closes.
+ *
+ * There is deliberately no way to force one open. A prop for it is a prop
+ * that gets used, and then the rule is "every card starts shut except the
+ * ones that do not", which is not a rule. `check:folded` holds this.
  *
  * ── The two slots that were added when the rooms were converted ──────────
  *
@@ -56,7 +75,6 @@ export default function Card({
   wand,
   tools,
   children,
-  startShut = false,
 }: {
   readonly title: string;
   /** The small mark beside the heading, where a room already had one. */
@@ -79,10 +97,9 @@ export default function Card({
   /** The small buttons along the bottom. Whatever the card's options are. */
   readonly tools?: React.ReactNode;
   readonly children: React.ReactNode;
-  readonly startShut?: boolean;
 }): React.ReactElement {
   const { t } = useLang();
-  const [open, setOpen] = useState(!startShut);
+  const [open, setOpen] = useState(false);
 
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60">

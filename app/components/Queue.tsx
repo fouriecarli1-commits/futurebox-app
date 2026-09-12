@@ -35,6 +35,7 @@ import { PLATFORMS } from '../data/social';
 import {
   cancel, instantOf, loadQueue, schedule, today, NO_QUEUE, type Queue as Waiting,
 } from '../lib/queue';
+import Card from './Card';
 import Note from './Note';
 
 /** The platform's own name. The row held the id, and `tiktok` next to a date
@@ -104,20 +105,17 @@ export default function Queue({
   const waiting = queue.posts.filter((one) => one.state === 'due' || one.state === 'sending');
   const gone = queue.posts.filter((one) => one.state === 'sent' || one.state === 'failed');
 
+  /* A fold, like every other panel in the app. It was a plain section with
+     its heading always open, so a room showed several long panels at once
+     before anybody had chosen one. A JSX comment cannot sit above the root
+     element — that is two expressions and neither compiles — so it lives
+     here, outside the return. */
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-4">
-      <div className="flex items-start gap-2.5">
-        <CalendarClock className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-        <div className="min-w-0">
-          <h3 className="text-base font-black text-white tracking-tight">
-            {t('queue.title', 'When it goes out')}
-          </h3>
-          <Note className="text-sm text-zinc-500 leading-relaxed">{t(
+    <Card title={t('queue.title', 'When it goes out')} icon={<CalendarClock className="w-4 h-4" />}>
+      <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'queue.what',
               'Plan a post and this reminds you at the moment you chose, with the words in front of you. It cannot post for you: every platform wants its own approved developer app first. What each one asks for is listed below.',
             )}</Note>
-        </div>
-      </div>
 
       {/* ── When the reminding cannot happen ───────────────────────────
           The only handler is `remind` and reminding is email. With no mail
@@ -272,6 +270,6 @@ export default function Queue({
           )}
         </p>
       </details>
-    </section>
+    </Card>
   );
 }
