@@ -50,7 +50,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Camera, CameraOff, Circle, Download, Ear, Headphones, Loader2, Speaker, Square, X } from 'lucide-react';
+import { Camera, CameraOff, Circle, Download, Ear, Headphones, Loader2, Pause, Play, Speaker, Square, X } from 'lucide-react';
 import { lineAt, type TimedLine } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
@@ -156,7 +156,12 @@ export default function FollowWords({
   // not have to hunt for a small X with a phone in their other hand.
   useEffect(() => {
     const key = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') onClose();
+      /* Not while a take is running — see the X above. `recorder` is read
+         rather than the `recording` state so this effect does not have to be
+         torn down and rebuilt every time a take starts. */
+      if (event.key !== 'Escape') return;
+      if (recorder.current?.state === 'recording' || recorder.current?.state === 'paused') return;
+      onClose();
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
@@ -169,6 +174,20 @@ export default function FollowWords({
   const chunks = useRef<Blob[]>([]);
   const [filming, setFilming] = useState(false);
   const [recording, setRecording] = useState(false);
+  /**
+   * A take held where it is, rather than ended.
+   *
+   * Carli, 13 September 2026: "Jy kan nie pause nie." There was Record and
+   * Stop and nothing between them, so the only way to break off — a knock at
+   * the door, a line gone wrong — was to end the take and start again.
+   *
+   * Three things have to stop together or the take comes back out of step:
+   * the recorder, the song on the mix's own audio graph, and the shared
+   * element the words are read from. `currentTime` is what moves the
+   * teleprompter, so pausing the element freezes the words as well, which is
+   * what a pause should look like.
+   */
+  const [paused, setPaused] = useState(false);
   const [take, setTake] = useState<Blob | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const mix = useRef<Mix | null>(null);
@@ -332,6 +351,22 @@ export default function FollowWords({
     recorder.current?.stop();
     endMix();
     setRecording(false);
+    setPaused(false);
+  };
+
+  /* Hold everything, or carry everything on. Both halves in one place so the
+     three things that must move together cannot drift apart in a later edit. */
+  const holdTake = (): void => {
+    try { recorder.current?.pause(); } catch { /* already paused, or ended */ }
+    mix.current?.hold();
+    audio?.pause();
+    setPaused(true);
+  };
+  const carryOnTake = (): void => {
+    try { recorder.current?.resume(); } catch { /* not paused */ }
+    mix.current?.carryOn();
+    void audio?.play().catch(() => undefined);
+    setPaused(false);
   };
 
   /* Nothing to portal into until the browser has one. */
@@ -355,7 +390,23 @@ export default function FollowWords({
        able to leave by pressing a tab. Not here: this is a teleprompter you
        film yourself against, and a navigation bar in the shot is in the shot.
        The X is the way out. */
-    <div className="fixed inset-0 z-[100] bg-scrim flex flex-col">
+    /* `overscroll-contain`, and nothing panning at all while a take runs.
+ 
+       Carli, 13 September 2026: "Jy kan na 'n volgende liedjie scroll terwyl
+       jy film. Dit recording van jouself moet vas wees binne in een liedjie."
+ 
+       The page behind is locked already, but the STUDIO's own scroll
+       container is not the page — it is a div with `overflow-y-auto`, and a
+       flick that runs past the end of anything scrollable in here chains
+       outward into it. `overscroll-contain` stops the chaining; `touch-none`
+       while recording stops the gesture existing at all, which is the part
+       she actually asked for. Taps are unaffected: `touch-action` governs
+       panning and zooming, not pressing. */
+    <div
+      className={`fixed inset-0 z-[100] bg-scrim flex flex-col overscroll-contain ${
+        recording ? 'touch-none' : ''
+      }`}
+    >
       {/* Mirrored for the person looking at it. The file that comes out is
           not, because mirrored footage reads as wrong to everybody else. */}
       <video
@@ -387,8 +438,13 @@ export default function FollowWords({
       <div className="relative flex items-start gap-4 p-5">
         <button
           type="button"
-          onClick={onClose}
-          aria-label={t('play.close', 'Close')}
+          /* Mid-take this stops the take instead of leaving. Two presses to
+             get out, which is the right number when the first one would
+             otherwise throw away what she is in the middle of filming — and
+             it is the other half of "vas binne een liedjie": there is no
+             single press that ends a take by leaving the song. */
+          onClick={recording ? stopRecording : onClose}
+          aria-label={recording ? t('sing.stop', 'Stop') : t('play.close', 'Close')}
           /* `hover:text-white` here would have hidden the way out under the
              pointer, for the same reason as the line above. */
           className="flex-shrink-0 opacity-75 hover:opacity-100"
@@ -556,6 +612,18 @@ export default function FollowWords({
                 >
                   {ears === 'phones' ? <Headphones className="w-4 h-4" /> : <Speaker className="w-4 h-4" />}
                   {ears === 'phones' ? t('sing.phones', 'Headphones') : t('sing.aloudShort', 'Out loud')}
+                </button>
+              )}
+              {/* Pause, between Record and Stop, and only while a take is
+                  running. "Jy kan nie pause nie." */}
+              {recording && (
+                <button
+                  type="button"
+                  onClick={paused ? carryOnTake : holdTake}
+                  className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-2"
+                >
+                  {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                  {paused ? t('sing.carryOn', 'Carry on') : t('sing.hold', 'Pause')}
                 </button>
               )}
               <button

@@ -1081,6 +1081,8 @@ export const STRINGS: Dict = {
   "collab.whatPrivate": { en: "Nothing is shared until you send it, and neither of you can read a word of the thread until you have both agreed — that is enforced in the database, not by a screen.", af: "Niks word gedeel voor jy dit stuur nie, en nie een van julle kan \u2019n woord van die draad lees voor julle albei ingestem het nie \u2014 dit word in die databasis afgedwing, nie deur \u2019n skerm nie." },
   "sing.film": { en: "Film yourself", af: "Neem jouself op" },
   "sing.record": { en: "Record", af: "Neem op" },
+  "sing.hold": { en: "Pause", af: "Wag" },
+  "sing.carryOn": { en: "Carry on", af: "Gaan aan" },
   "sing.stop": { en: "Stop", af: "Stop" },
   "sing.cameraOff": { en: "Camera off", af: "Kamera af" },
   "sing.save": { en: "Save the take", af: "Stoor die opname" },

@@ -3877,3 +3877,57 @@ And one ordinary bug in the probe on the way: it closed the panel by pressing
 the Desk toggle again, which is underneath the open panel, so the press was
 swallowed, the panel stayed open over the record button, and the whole walk
 timed out. It closes by the panel's own ✕ now.
+
+## Filming yourself: a pause, and a take you cannot walk away from (13 September)
+
+Carli, on the channel's "Film yourself to it":
+
+> "1. Jy kan nie pause nie. 2. Jy kan na 'n volgende liedjie scroll terwyl jy
+> film. Dit recording van jouself moet vas wees binne in een liedjie."
+
+Both confirmed in a browser. The overlay's controls were, in order: Close,
+the headphones question, **Record**, Camera off. Record and Stop and nothing
+between them, so the only way to break off — a knock at the door, a line gone
+wrong — was to end the take and start again.
+
+### The pause is three things, not one
+
+The recorder, the song on the mix's **own** audio graph, and the shared audio
+element the words are read from. Miss any one and the take comes back out of
+step with itself.
+
+The mix was the part with no answer: it plays the song through an
+`AudioBufferSourceNode`, and a buffer source can only be started once — stop
+it and the song cannot be carried on, only begun again somewhere else. So
+`Mix` gained `hold()` and `carryOn()`, which suspend and resume the context
+instead. The shared element is paused too, and because `currentTime` is what
+moves the teleprompter, that freezes the words as well, which is what a pause
+should look like.
+
+### Locked inside one song
+
+The page behind was already locked — but the STUDIO's scroll container is not
+the page, it is a div with `overflow-y-auto`, and a flick that runs past the
+end of anything scrollable chains outward into it. `overscroll-contain` stops
+the chaining and `touch-none` while recording stops the gesture existing at
+all. The X, mid-take, stops the take instead of leaving: two presses to get
+out, which is the right number when the first one would otherwise throw away
+what she is filming. Escape follows the same rule.
+
+**What I could not reproduce, and said so rather than quietly fixing past it.**
+A wheel gesture over the overlay at 390×844 did *not* move the room behind —
+I tried, and it stayed at 2011. Setting `scrollTop` by hand did move it, which
+only proves the scroller is live, not that a finger can reach it. The likeliest
+path is a real touch flick running off the end of the lyric list, which in the
+probe was too short to scroll at all. So the fix is aimed at the mechanism
+rather than at a reproduction: with `touch-none` there is no pan to chain from,
+whatever the gesture.
+
+### The probe had to be able to tell a real pause from a label
+
+A Pause button that swaps to "Carry on" and does nothing to the recorder looks
+identical from outside to one that works. `audit/selfie.mjs` wraps
+`MediaRecorder` already, so it now records the recorder's own `state` on every
+call — and asserts it reads `paused` after the press and `recording` after the
+next. All three halves were made to go red: the pause not reaching the
+recorder, the lock removed, and the X leaving mid-take.

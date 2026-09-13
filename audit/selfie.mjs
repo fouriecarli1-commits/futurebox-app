@@ -68,6 +68,18 @@ const WATCH = () => {
       window.__seen.recorded.push(
         source.getTracks().map((one) => ({ kind: one.kind, id: one.id })),
       );
+      /* The recorder's own state, kept where the probe can read it.
+ 
+         A Pause button that changes to "Carry on" and does nothing to the
+         recorder looks exactly like one that works — this is the difference,
+         and it is the only thing that can tell them apart from outside. */
+      window.__rec = this;
+      const mark = () => { window.__recState = this.state; };
+      mark();
+      for (const name of ['start', 'pause', 'resume', 'stop']) {
+        const was = this[name].bind(this);
+        this[name] = (...args) => { const out = was(...args); mark(); return out; };
+      }
     }
   }
   Watched.isTypeSupported = (type) => RealRecorder.isTypeSupported(type);
@@ -182,8 +194,58 @@ try {
   await page.screenshot({ path: shot('selfie-ready.png'), fullPage: false });
 
   await record.click();
-  await page.waitForTimeout(1500);
-  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await page.waitForTimeout(1200);
+
+  /* ── A take can be held, and cannot be walked away from ──────────────
+ 
+     Carli, 13 September 2026, on the channel's "Film yourself to it":
+     "1. Jy kan nie pause nie. 2. Jy kan na 'n volgende liedjie scroll
+     terwyl jy film. Dit recording van jouself moet vas wees binne in een
+     liedjie."
+ 
+     Three things have to hold together or the take comes back out of step —
+     the recorder, the song on the mix's own audio graph, and the shared
+     element the words are read from — so the recorder's own state is what
+     is asked here rather than the button's label. */
+  const hold = page.getByRole('button', { name: 'Pause', exact: true });
+  check('a take can be paused', await hold.isVisible().catch(() => false));
+  if (await hold.isVisible().catch(() => false)) {
+    await hold.click();
+    await page.waitForTimeout(400);
+    check('  and the recorder really is holding, not just the button',
+      (await page.evaluate(() => window.__recState ?? null)) === 'paused',
+      String(await page.evaluate(() => window.__recState ?? 'unknown')));
+    const on = page.getByRole('button', { name: 'Carry on', exact: true });
+    check('  and it can carry on', await on.isVisible().catch(() => false));
+    await on.click();
+    await page.waitForTimeout(400);
+    check('  which puts the recorder back to work',
+      (await page.evaluate(() => window.__recState ?? null)) === 'recording',
+      String(await page.evaluate(() => window.__recState ?? 'unknown')));
+  }
+
+  /* Locked to this song while it runs: no gesture can reach what is behind,
+     and the way out stops the take rather than leaving with it half made. */
+  const locked = await page.evaluate(() => {
+    const o = document.querySelector('div.fixed.inset-0.z-\\[100\\]');
+    if (!o) return null;
+    const style = getComputedStyle(o);
+    return { touch: style.touchAction, chain: style.overscrollBehaviorY };
+  });
+  check('nothing can be panned past while a take runs',
+    locked?.touch === 'none' && locked?.chain === 'contain',
+    JSON.stringify(locked));
+
+  const stillThere = await page.evaluate(() => {
+    const o = document.querySelector('div.fixed.inset-0.z-\\[100\\]');
+    o?.querySelector('button')?.click();
+    return !!document.querySelector('div.fixed.inset-0.z-\\[100\\]');
+  });
+  check('and the way out stops the take rather than leaving mid-film', stillThere);
+  await page.waitForTimeout(400);
+
+  const stop = page.getByRole('button', { name: 'Stop', exact: true });
+  if (await stop.isVisible().catch(() => false)) await stop.click();
 
   /* The take came back as a file. `Save the take` only draws when the
      recorder handed a blob to `onstop`. */

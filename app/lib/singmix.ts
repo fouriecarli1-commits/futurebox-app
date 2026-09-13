@@ -63,6 +63,16 @@ export interface Mix {
   start(): void;
   /** Give back the audio context and stop the song. Safe to call twice. */
   stop(): void;
+  /**
+   * Hold the song where it is, for a take that has been paused.
+   *
+   * Suspending the context rather than stopping the source, because a buffer
+   * source can only be started once — stop it and the song cannot be carried
+   * on, only begun again somewhere else.
+   */
+  hold(): void;
+  /** Carry on from exactly where `hold()` left it. */
+  carryOn(): void;
   /** Whether a clean copy of the song is actually on the stream. */
   readonly withSong: boolean;
 }
@@ -93,7 +103,14 @@ export async function mixFor(
   song: Blob | null,
   from: number,
 ): Promise<Mix> {
-  const plain: Mix = { stream: camera, start: () => undefined, stop: () => undefined, withSong: false };
+  const plain: Mix = {
+    stream: camera,
+    start: () => undefined,
+    stop: () => undefined,
+    hold: () => undefined,
+    carryOn: () => undefined,
+    withSong: false,
+  };
 
   const Ctx = contextClass();
   if (!Ctx || typeof MediaStream === 'undefined') return plain;
@@ -158,6 +175,14 @@ export async function mixFor(
       } catch {
         /* Already started, or a start past the end of the song. */
       }
+    },
+    hold: () => {
+      if (stopped) return;
+      void context.suspend().catch(() => undefined);
+    },
+    carryOn: () => {
+      if (stopped) return;
+      void context.resume().catch(() => undefined);
     },
     stop: () => {
       if (stopped) return;
