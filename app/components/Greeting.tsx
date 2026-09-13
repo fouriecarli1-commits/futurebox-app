@@ -248,7 +248,17 @@ export default function Greeting({
           <Icon className="h-[18px] w-[18px] text-emerald-400" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-bold leading-tight text-white">
+          {/* Wraps. It was `truncate`, and two rooms out of eleven had names
+              longer than half a 390-pixel screen: Carli's photograph shows
+              "Sound trai…" and "Make a so…" on a door whose whole job is to
+              say what each room is.
+
+              The line under it already wraps to four lines, so a name on two
+              is no surprise to the card's shape. `check:notcut` did not see
+              this because it walks the ROOMS and the door is not one — the
+              same subset fault this repo keeps finding, and the check is
+              wider now. */}
+          <span className="block text-sm font-bold leading-tight text-white">
             {roomName(id)}
           </span>
           <span className="mt-0.5 block min-h-[2rem] text-xs leading-snug text-zinc-500">

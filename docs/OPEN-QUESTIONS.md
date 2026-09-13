@@ -3978,3 +3978,57 @@ has always opened — her channel, her name, her songs. The id stays `library`,
 because it is written into saved state and into the deep links, and renaming a
 key to match a label is how yesterday's saved tab becomes tomorrow's blank
 screen.
+
+## The Studio says what it is, and the rooms go green (13 September)
+
+### A regeneration room, said at the top
+
+Carli: *"As die liedjie nie oor gedoen kan word nie, moet die studio dit
+verklaar en sê dat hierdie 'n regeneration spasie is, dat as iemand die
+produk wil hou die enigste opsie recording is in die booth."*
+
+The "Make it again" card already said the technical half — the service builds
+a whole song from a whole plan and cannot replace one section inside a
+finished file. Two things were wrong with leaving it there. It sat near the
+foot of a long room, after every control, so it read as a caveat on one button
+rather than as what the room IS. And it never said the part that costs
+somebody a take they loved: **the style, tempo, key and shape carry over
+exactly, and the performance does not.** `/v1/music` takes no audio in and has
+no seed, so there is no way to ask for the same one twice.
+
+It is a standing notice at the top now, in both the full room and the empty
+one — an empty Studio is exactly where somebody should learn this, before
+there is a take worth keeping. The way to keep a performance is to record it,
+and that is a room rather than a sentence, so the way there is a button.
+
+### Green, from one rule
+
+*"Omtrent nog elke kamer se buttons moet verkleur word na groen en moet
+uitstaan."* — with five photographs of rooms full of white boxes.
+
+The same place as the shadows: `globals.css`, one rule. The colour comes from
+`--fb-primary-500`, so it follows whichever theme is chosen rather than being
+a green typed into a stylesheet — on the default theme that is the green she
+asked for, and on the purple one her phone is set to, the buttons are purple
+and still read as one set.
+
+What it leaves alone is the part that matters: a button keeps its own colour
+whenever it already declares an intent — the solid `bg-emerald` of a room's
+one main action, a gradient, `bg-rose`/`bg-red` for stop and delete,
+`bg-amber` for a warning. Turning a Stop button green is a lie, and turning
+the main action pale would flatten the room to one tone. `:not()` chains
+rather than a class to opt into: a rule you have to remember is a rule the
+next button forgets.
+
+### And a name cut in half, that my own new check could not see
+
+Carli's photograph of the door: **"Sound trai…"** and **"Make a so…"**.
+
+`check:notcut` was written yesterday for exactly this fault and passed
+happily, because it walks the ROOMS — and the studio's front door is not a
+room. Eleven rooms, and the one screen whose whole job is to name them was the
+one screen the check did not read. The same subset fault `rooms.mjs` warns
+about in its own header, committed by the check written to catch its cousin.
+
+The name wraps now instead of truncating, and `notcut` reads the door and the
+tab bar as well as the rooms.

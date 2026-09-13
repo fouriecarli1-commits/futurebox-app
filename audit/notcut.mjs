@@ -44,9 +44,24 @@ const check = (label, ok, detail = '') => {
 };
 
 /** Clipped, and big and bold enough that being clipped is a fault. */
+/**
+ * Where to look.
+ *
+ * The room, the studio's front DOOR, and the tab bar — because the first
+ * version of this scanned only the room, and Carli photographed the door with
+ * "Sound trai…" and "Make a so…" on it. Eleven rooms, and the one screen whose
+ * whole job is to name them was the one screen this did not read.
+ *
+ * The same shape as `rooms.mjs`'s own warning: a check can be wrong by
+ * measuring a subset as easily as by measuring the wrong thing, and the subset
+ * version is harder to see because nothing about the output looks partial.
+ */
+const WHERE = 'div.fixed.inset-0.z-50, div.fixed.inset-0.z-\\[55\\], nav[aria-label]';
+
 const CUT = () => {
   const out = [];
-  const root = document.querySelector('div.fixed.inset-0.z-50') ?? document.body;
+  const roots = [...document.querySelectorAll('div.fixed.inset-0.z-50, div.fixed.inset-0.z-\\[55\\], nav[aria-label]')];
+  const root = roots.length ? { querySelectorAll: (sel) => roots.flatMap((r) => [...r.querySelectorAll(sel)]) } : document.body;
   for (const el of root.querySelectorAll('*')) {
     const cs = getComputedStyle(el);
     if (cs.textOverflow !== 'ellipsis') continue;

@@ -3387,6 +3387,10 @@ export default function FutureBoxHome() {
               <SongSections
                 reloadKey={trackCount}
                 open={editSong}
+                /* No song is carried over: the Booth keeps its own list and
+                   picking there is one press. Passing an id it has no prop
+                   for would be a promise the room cannot keep. */
+                onBooth={() => goToRoom('booth')}
                 onRemake={(next) => {
                   setHandoff(next);
                   setCanvas(next);

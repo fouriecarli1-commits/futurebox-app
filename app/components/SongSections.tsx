@@ -43,7 +43,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronUp, Copy, Loader2, Music4, Pause, Play, Plus, SlidersHorizontal, Sparkles, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Loader2, Mic, Music4, Pause, Play, Plus, SlidersHorizontal, Sparkles, Trash2 } from 'lucide-react';
 import { loadTracks } from '../lib/library';
 import { splitSections } from '../lib/engines';
 import { readAudio } from '../lib/trackaudio';
@@ -117,6 +117,7 @@ export default function SongSections({
   reloadKey,
   onRemake,
   open,
+  onBooth,
 }: {
   /** Bumped when a song is made, so the list here picks it up. */
   reloadKey: number;
@@ -130,6 +131,12 @@ export default function SongSections({
    * value, so choosing a different song here is not undone on the next render.
    */
   open?: string | null;
+  /**
+   * The way to the Booth, for somebody who wants to keep a performance rather
+   * than roll for a new one. A prop and not a `goToRoom` call, because
+   * navigation belongs to `page.tsx` — the same shape `onRemake` already has.
+   */
+  onBooth?: () => void;
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -376,12 +383,78 @@ export default function SongSections({
     onRemake({ title: track.title, lyrics: sheet, style: track.style });
   }, [onRemake, parts, track]);
 
+  /* Rendered in both the empty room and the full one.
+
+     Somebody arriving at a Studio with nothing in it yet is exactly who this
+     is for: the moment to learn that a take cannot be kept here is before
+     there is one worth keeping, not after. */
+  /* ── What this room cannot do, at the top and not in a footnote ────────
+
+     Carli, 13 September 2026: "As die liedjie nie oor gedoen kan word nie,
+     moet die studio dit verklaar en sê dat hierdie 'n regeneration spasie is,
+     dat as iemand die produk wil hou die enigste opsie recording is in die
+     booth."
+
+     The "Make it again" card already said the technical half — that the
+     service builds a whole song from a whole plan and cannot replace one
+     section inside a finished file. Two things were wrong with leaving it
+     there. It sat near the foot of a long room, after every control, so it
+     read as a caveat on one button rather than as what the room IS. And it
+     never said the part that costs somebody a take they loved: the style,
+     tempo, key and shape carry over exactly and the PERFORMANCE does not —
+     `/v1/music` takes no audio in and has no seed, so there is no way to ask
+     for the same one twice.
+
+     The way to keep a performance is to record it, and that is a room, not a
+     sentence, so the way there is a button.
+
+     Rendered in both the empty room and the full one. Somebody arriving at a
+     Studio with nothing in it yet is exactly who this is for: the moment to
+     learn that a take cannot be kept here is before there is one worth
+     keeping, not after. */
+  const regenerationNotice = (
+    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.07] p-3.5 space-y-2.5">
+      <p className="text-sm leading-relaxed text-amber-200/90">
+        {t(
+          'sec.newEveryTime',
+          'Nothing here edits the file you already have. The style, the tempo, the key and the shape carry over exactly \u2014 the performance does not. Even with nothing changed, a new take sings it differently: the engine takes no recording in and works from no seed, so there is no way to ask for the same one twice.',
+        )}
+      </p>
+      <p className="text-sm leading-relaxed text-amber-200/90">
+        {t(
+          'sec.keepIt',
+          'Want to keep exactly what you are hearing? Record it in the Booth. That is the only way a performance stays yours.',
+        )}
+      </p>
+      {onBooth && (
+        <button
+          type="button"
+          onClick={onBooth}
+          className="min-h-[44px] px-3.5 py-2.5 rounded-xl border border-amber-500/50 bg-amber-500/15 text-sm font-semibold text-amber-100 hover:bg-amber-500/25 flex items-center gap-2"
+        >
+          <Mic className="w-4 h-4" />
+          {t('sec.toBooth', 'Take it to the Booth')}
+        </button>
+      )}
+    </div>
+  );
+
   if (!usable.length) {
     return (
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-6 text-center space-y-2">
         <Music4 className="w-6 h-6 text-emerald-400 mx-auto" />
         <p className="text-base font-bold text-white">{t('sec.none', 'No song to lay out yet')}</p>
         <Note>{t('sec.noneNote', 'Make a song with words in it and it appears here, in its own sections.')}</Note>
+        {/* What the room is, said here too. An empty Studio is still a
+            Studio, and somebody standing in it deserves the same sentence as
+            somebody with eleven songs in it. */}
+        <p className="text-sm text-zinc-400 leading-relaxed">
+          {t(
+            'sec.whatFor',
+            'This is a regeneration room. Move a song\u2019s sections, repeat one, take one out \u2014 then send the plan back and a new take is made from it, from the start.',
+          )}
+        </p>
+        <div className="pt-2 text-left">{regenerationNotice}</div>
       </div>
     );
   }
@@ -398,9 +471,11 @@ export default function SongSections({
       <p className="text-sm text-zinc-400 leading-relaxed">
         {t(
           'sec.whatFor',
-          'This is where a song is edited and made again: move its sections, repeat one, take one out, then send it back to be regenerated with the changes in it.',
+          'This is a regeneration room. Move a song\u2019s sections, repeat one, take one out \u2014 then send the plan back and a new take is made from it, from the start.',
         )}
       </p>
+
+      {regenerationNotice}
 
       <Card title={t('sec.whichSong', 'Which song?')}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
