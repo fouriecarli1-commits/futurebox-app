@@ -1634,7 +1634,18 @@ export default function VocalBooth({
           in the mix that gets kept, one changes what you hear while you sing,
           and one changes the speed you sing at. Nothing here is decoration. */}
       {deskOpen && (
-        <div className="absolute right-5 bottom-24 w-[23rem] max-w-[calc(100vw-2.5rem)] max-h-[70vh] overflow-y-auto rounded-2xl border border-zinc-700 bg-zinc-900 shadow-2xl p-4 space-y-3">
+        /* `z-30`, because a panel that floats over the room has to be told
+           to. This had no z-index at all, so it sat in the ordinary flow of
+           its stacking context and every element written after it in the JSX
+           painted straight over the top — the bar of buttons below it most
+           of all. Carli's photograph: "Keep this take" printed across the
+           Timing fader's explanation, through a panel with a solid
+           background and a shadow.
+ 
+           A shadow and an opaque fill look like a layer and are not one.
+           Thirty is above everything inside this room, which has no other
+           z-index in it, and far below the tab bar at 95. */
+        <div className="absolute right-5 bottom-24 z-30 w-[23rem] max-w-[calc(100vw-2.5rem)] max-h-[70vh] overflow-y-auto rounded-2xl border border-zinc-700 bg-zinc-900 shadow-2xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-sm font-bold text-white flex items-center gap-1.5">
               <Sliders className="w-4 h-4 text-emerald-400" />

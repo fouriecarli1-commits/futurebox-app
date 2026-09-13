@@ -188,6 +188,64 @@ try {
     (await back.count()) > 0,
     (await back.count()) > 0 ? (await back.first().innerText()).replace(/\s+/g, ' ') : 'no button says back');
 
+  /* ── The desk is a layer, not just a shadow ──────────────────────────
+
+     Carli's photograph, 13 September 2026: the Desk open, and "Keep this
+     take" printed straight across the Timing fader's explanation — through a
+     panel with a solid fill and a `shadow-2xl` on it.
+
+     The panel had no `z-index`. What makes that bite is the button: it is
+     `disabled:opacity-40`, and **an element with opacity below 1 creates a
+     stacking context**. Disabled, it is painted in the same pass as the
+     positioned panel and later in tree order, so it wins. Enabled, its
+     opacity is 1, it is an ordinary in-flow box, and it is painted *under*
+     every positioned element — the panel included.
+
+     So the bug only exists before there is a take, and this is checked here,
+     above the recording, for that reason. The first version of this sat
+     after it: the button was alive, the panel won on its own, and removing
+     the fix did not turn the check red. A negative test that stays green is
+     a finding about the test.
+
+     Asked by asking the browser what is painted, not by comparing
+     rectangles. Overlap is not the fault — a panel is SUPPOSED to cover what
+     is under it — losing that overlap is. */
+  const desk = room.locator('button').filter({ hasText: /^Desk$|^Lessenaar$/ }).first();
+  if (await desk.count()) {
+    await desk.click();
+    await page.waitForTimeout(500);
+    const painted = await page.evaluate(() => {
+      const panel = document.querySelector('div.absolute.right-5.bottom-24');
+      if (!panel) return ['the desk did not open'];
+      const r = panel.getBoundingClientRect();
+      const out = [];
+      /* Down the middle and inside the left edge, away from the panel's own
+         scrollbar on the right, which would answer for it. */
+      for (const at of [0.15, 0.35, 0.55, 0.75, 0.92]) {
+        for (const x of [r.left + 24, r.left + r.width * 0.4]) {
+          const y = r.top + r.height * at;
+          if (y < 0 || y > window.innerHeight) continue;
+          const hit = document.elementFromPoint(x, y);
+          if (!hit || panel.contains(hit) || hit === panel) continue;
+          const said = (hit.innerText || hit.getAttribute('aria-label') || '')
+            .replace(/\s+/g, ' ').trim().slice(0, 28);
+          out.push(`${hit.tagName.toLowerCase()}${said ? ` "${said}"` : ''} at ${Math.round(at * 100)}%`);
+        }
+      }
+      return [...new Set(out)];
+    });
+    check('nothing is painted over the open desk', painted.length === 0,
+      painted.slice(0, 4).join(' · '));
+    /* Shut by its own ✕, not by pressing Desk again.
+ 
+       The toggle is underneath the open panel, so the second press lands on
+       the panel, the `catch` swallows it, and the panel stays open over the
+       record button — which then times out and takes the whole walk with it.
+       The ✕ is inside the panel and always reachable. */
+    await room.locator('div.absolute.right-5.bottom-24 button').first().click();
+    await page.waitForTimeout(300);
+  }
+
   /* ── And a take actually comes out ───────────────────────────────────── */
   if (got.ok) {
     await record.click();

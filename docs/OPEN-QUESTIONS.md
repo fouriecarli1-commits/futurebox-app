@@ -3825,3 +3825,55 @@ a `.probe.tsx` into `app/` and delete it afterwards. Tonight I started a
 sweep and then spent half an hour editing `i18n.tsx` underneath it. The sweep
 was stopped and rerun rather than read. Writing a lesson down is not the same
 as having learned it.
+
+## The Desk panel was painted over by a button behind it (13 September)
+
+Carli's photograph: the Booth's Desk open, and **"Keep this take" printed
+straight across the Timing fader's explanation** — through a panel with a
+solid fill and a `shadow-2xl` on it.
+
+The panel had no `z-index` at all. It is `absolute`, which makes it
+positioned, and a positioned element with `z-index: auto` is painted in the
+same pass as everything else in that pass, in tree order. It had been winning
+that on tree order alone, which is not a layer; it is a coincidence.
+
+**What makes it bite is the button, and this is the part worth writing down.**
+`Keep this take` is `disabled:opacity-40`. An element with opacity below 1
+**creates a stacking context**, and is therefore painted in the same late pass
+as positioned elements rather than with ordinary in-flow content. Disabled, it
+joins the panel's pass, sits later in tree order, and wins. Enabled, its
+opacity is 1, it is an ordinary in-flow box, and it paints *underneath* every
+positioned element — the panel included.
+
+So the fault exists **only before there is a take**, which is exactly when
+somebody opens the Desk to set their levels.
+
+`z-30` on the panel. Above everything in the room, which has no other
+z-index; far below the tab bar at 95.
+
+### The check that did not check anything, twice
+
+`audit/boothwalk.mjs` asks the browser what is *painted* — `elementFromPoint`
+at points inside the panel, and if the answer is not the panel or something
+inside it, somebody is over the top. Overlap is not the fault; a panel is
+supposed to cover what is under it. Losing the overlap is.
+
+It took three goes to make that assertion able to fail.
+
+1. Written after the recording step. The take existed, the button was
+   enabled, the panel won on its own, and removing the fix left it green.
+2. Moved, and the room scrolled first, on a theory about where the toolbar
+   sits. Still green — the theory was wrong.
+3. Moved *above* the recording. Red immediately, naming
+   `button "Keep this take"`, which is the thing in the photograph.
+
+Two wrong explanations before the right one, and the only reason either was
+caught is the rule this file keeps restating: **a negative test that stays
+green is a finding about the test.** The measurement that ended it was
+printing the two rectangles and the computed `z-index` and looking at them,
+rather than reasoning about what they probably were.
+
+And one ordinary bug in the probe on the way: it closed the panel by pressing
+the Desk toggle again, which is underneath the open panel, so the press was
+swallowed, the panel stayed open over the record button, and the whole walk
+timed out. It closes by the panel's own ✕ now.
