@@ -3777,3 +3777,51 @@ Together those say: the design intended "a guess, labelled, and changeable",
 and two of the three are missing. A currency picker on the pricing screen
 with the basis line under it is maybe an hour's work — but it is a change to
 how the app sells, so it waits for you.
+
+### And the hats on the letters
+
+The same screenshots. The box the copilot is typed into — the most-seen input
+in the app, in every room — said:
+
+    Se my wat jy wil he
+
+for **Sê my wat jy wil hê**. The buttons directly above it spell `sê`
+correctly, so it was not a font, an encoding, or a theory about diacritics.
+Three strings out of 2101, typed without them:
+
+    copilot.placeholder   Se my wat jy wil he      → Sê my wat jy wil hê
+    copilot.intro         Se my wat jy wil maak…   → Sê my wat jy wil maak…
+    video.suggest         …vir hierdie een he?     → …vir hierdie een hê?
+
+Nothing could have found these. `check:afrikaans` asserts every key has an
+Afrikaans line — it has one. `audit/afrikaans.mjs` asserts the Afrikaans
+differs from the English — it differs. Neither has any opinion about whether
+the Afrikaans is *spelled* right, and no check can have one in general; that
+needs a speaker.
+
+What a check can have an opinion about is a short list of bare forms that are
+not words in Afrikaans at all. `he` is not a word, `hê` is. `Se` opening a
+sentence is not a word, `Sê` is — and lowercase `se`, the possessive, is left
+alone. `check:kappies` is that list, and it is deliberately short: every
+entry has to be a form that is never right, or it becomes a check that argues
+with the language.
+
+**The false positives are the part worth keeping.** The first run flagged
+five, and two of them were correct as they stood: "Genoeg vir ’n reel op sy
+eie" and "’n Hook, vir ’n reel". `reël` is Afrikaans for a line or a rule —
+but the English beside them reads "enough for a reel" and "a hook, for a
+reel", and that is the Instagram format, which is called a reel in both
+languages. I nearly committed the correction.
+
+So the check reads the English too: a word that appears on the English side
+is one the Afrikaans is allowed to borrow. Both directions of that guard were
+made to go red and to stay quiet.
+
+### I did it again
+
+Last night's entry ends with a note that running a probe by hand while a
+sweep is running corrupts both, because probes that build their own page copy
+a `.probe.tsx` into `app/` and delete it afterwards. Tonight I started a
+sweep and then spent half an hour editing `i18n.tsx` underneath it. The sweep
+was stopped and rerun rather than read. Writing a lesson down is not the same
+as having learned it.

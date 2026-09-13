@@ -466,6 +466,13 @@ jobs:
       - name: The currency follows the clock, then the language
         run: npm run check:region
 
+      # The most-seen box in the app said "Se my wat jy wil he" for "Sê my
+      # wat jy wil hê". No check has an opinion about whether Afrikaans is
+      # spelled right — but a short list of forms that are not words at all
+      # is checkable, and that is where those three lived.
+      - name: The Afrikaans lines keep their hats
+        run: npm run check:kappies
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept
