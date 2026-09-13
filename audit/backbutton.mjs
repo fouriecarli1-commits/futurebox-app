@@ -126,7 +126,7 @@ try {
 
   /* ── Deep, then all the way out ─────────────────────────────────────── */
   await press('Make');
-  await press('Library');
+  await press('Channel');
   await press('You');
   await back();
   const oneOut = await where();

@@ -1056,7 +1056,7 @@ export const STRINGS: Dict = {
   "tab.live": { en: "Live", af: "Live" },
   "tab.search": { en: "Search", af: "Soek" },
   "tab.make": { en: "Make", af: "Maak" },
-  "tab.library": { en: "Library", af: "Biblioteek" },
+  "tab.library": { en: "Channel", af: "Kanaal" },
   "tab.you": { en: "You", af: "Jy" },
   "rail.canvas": { en: "Video desk", af: "Videolessenaar" },
   "rail.canvas.hint": { en: "Adverts, podcasts, social", af: "Advertensies, potgooie, sosiaal" },

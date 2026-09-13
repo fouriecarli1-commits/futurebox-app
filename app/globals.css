@@ -306,3 +306,96 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ── A button that looks like one ──────────────────────────────────────────
+
+   Carli, 13 September 2026:
+
+     "Kyk na al die huidige buttons. Dit moet definition hê, dit moet uitstaan
+      en lyk soos 'n knoppie wat jy kan druk, maar netjies met baie klas."
+
+   `check:buttonlook` already holds the floor — every button with words on it
+   has a box and a thumb's worth of height. A box is not the same as looking
+   pressable: a one-pixel hairline on a flat fill reads as a panel with a
+   border, and the room full of them reads as a form.
+
+   ── Why this is here and not in a hundred className strings ──────────────
+
+   Because there are a hundred of them, and a look defined in a hundred places
+   is a look that drifts in a hundred places. One rule, one file, one place to
+   tune it when she says it is too much or too little.
+
+   ── What gives it definition ─────────────────────────────────────────────
+
+   Three shadows, none of them loud:
+
+     · an inset hairline of light along the top edge — the thing that makes a
+       surface read as facing upward rather than lying flat,
+     · a tight dark shadow directly under it, which is contact,
+     · a wider, softer one, which is lift.
+
+   Black rather than a theme colour: a shadow is dark on a light page and dark
+   on a dark one, which is the one thing about shadows that does not change.
+
+   ── And it has to move ───────────────────────────────────────────────────
+
+   A button that does not move when pressed is a picture of a button. On press
+   it drops one pixel and loses the lift, so the finger is met by something.
+
+   ── Which buttons ────────────────────────────────────────────────────────
+
+   The ones that already declare a box. This codebase says "boxed button" by
+   putting a `border` or a filled `bg-emerald-…` utility in the class list, so
+   that is what is matched — the app's own convention, read literally. A bare
+   text button (a card's fold heading, a link in a sentence) is deliberately
+   left flat: giving those a raised surface is how an interface starts
+   shouting, which is the opposite of what she asked for. */
+button[class*="border"],
+button[class*="bg-emerald-5"],
+button[class*="bg-emerald-4"],
+button[class*="bg-gradient-to-r"],
+label[class*="border"][class*="cursor-pointer"] {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.07),
+    0 1px 2px rgb(0 0 0 / 0.22),
+    0 4px 10px -4px rgb(0 0 0 / 0.28);
+  transition:
+    box-shadow 140ms ease,
+    transform 110ms ease,
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+/* Lift on the way to being pressed. Only where there is a pointer to hover
+   with — on a touchscreen `:hover` sticks after a tap and leaves one button
+   looking permanently raised. */
+@media (hover: hover) and (pointer: fine) {
+  button[class*="border"]:hover:not(:disabled),
+  button[class*="bg-emerald-5"]:hover:not(:disabled),
+  button[class*="bg-emerald-4"]:hover:not(:disabled),
+  button[class*="bg-gradient-to-r"]:hover:not(:disabled) {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.1),
+      0 2px 4px rgb(0 0 0 / 0.24),
+      0 8px 18px -6px rgb(0 0 0 / 0.32);
+  }
+}
+
+button[class*="border"]:active:not(:disabled),
+button[class*="bg-emerald-5"]:active:not(:disabled),
+button[class*="bg-emerald-4"]:active:not(:disabled),
+button[class*="bg-gradient-to-r"]:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 2px rgb(0 0 0 / 0.2),
+    0 1px 1px rgb(0 0 0 / 0.18);
+}
+
+/* Nothing raised is also nothing pressable. A disabled button keeps its box
+   and loses the lift, which is a quieter way of saying "not now" than the
+   opacity alone. */
+button:disabled {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+  transform: none;
+}

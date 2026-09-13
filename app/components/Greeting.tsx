@@ -229,7 +229,20 @@ export default function Greeting({
       <button
         type="button"
         onClick={() => onGo(id)}
-        className="group min-h-[44px] w-full rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-3.5 text-left transition-colors hover:border-emerald-500/60 hover:bg-zinc-900 focus-visible:border-emerald-500 flex items-start gap-3"
+        /* Light, transparent green, with a real edge on it. Carli, 13
+           September 2026: "Die buttons daar soos make a song, booth ens. moet
+           'n ligte transparent groen button he, maar weereens met definition,
+           en classy so dat dit lyk soos 'n knoppie."
+
+           A seventh of the accent, not a fill: on the dark theme it reads as
+           tinted glass and on the light one as the faintest wash, and the
+           words on top keep the contrast they were measured at. The edge does
+           the work — a quarter-strength emerald line is visible on both pages
+           where `zinc-800` disappeared into the light one entirely.
+
+           The raised surface comes from `globals.css`, which gives it to every
+           boxed button in the app rather than to this one. */
+        className="group min-h-[44px] w-full rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.07] px-4 py-3.5 text-left transition-colors hover:border-emerald-500/60 hover:bg-emerald-500/[0.13] focus-visible:border-emerald-500 flex items-start gap-3"
       >
         <span className="mt-0.5 grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl border border-emerald-500/25 bg-emerald-500/10 transition-colors group-hover:border-emerald-500/50 group-hover:bg-emerald-500/15">
           <Icon className="h-[18px] w-[18px] text-emerald-400" />

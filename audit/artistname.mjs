@@ -176,7 +176,7 @@ try {
     after.includes(`@${CLEANED}`) && !after.includes('@anrefourie'), after.slice(0, 80));
 
   /* ── It is the same field in the channel ────────────────────────────── */
-  await bar.locator('button').filter({ hasText: 'Library' }).first().click();
+  await bar.locator('button').filter({ hasText: 'Channel' }).first().click();
   await p.waitForTimeout(1800);
   const inChannel = p.locator('input[id^="recording-name"]');
   await inChannel.first().waitFor({ state: 'visible', timeout: 8000 }).catch(() => undefined);

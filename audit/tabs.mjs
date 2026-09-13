@@ -97,8 +97,8 @@ try {
   const names = (await bar.locator('button').allInnerTexts()).map((one) => one.trim());
   check('with five tabs and no more', names.length === 5, names.join(' · '));
   for (const want of af
-    ? ['Kollig', 'Live', 'Maak', 'Biblioteek', 'Jy']
-    : ['Spotlight', 'Live', 'Make', 'Library', 'You']) {
+    ? ['Kollig', 'Live', 'Maak', 'Kanaal', 'Jy']
+    : ['Spotlight', 'Live', 'Make', 'Channel', 'You']) {
     check(`${want} is one of them`, names.includes(want));
   }
   /* The door is where you land now — Make, with every room on it. Somebody
@@ -134,8 +134,8 @@ try {
     `${await doorButtons.count()} buttons`);
 
   /* ── The other three ────────────────────────────────────────────────── */
-  await press(af ? 'Biblioteek' : 'Library');
-  check('Library lands in the channel', (await tabOn()) === (af ? 'Biblioteek' : 'Library'), await tabOn());
+  await press(af ? 'Kanaal' : 'Channel');
+  check('Channel lands in the channel', (await tabOn()) === (af ? 'Kanaal' : 'Channel'), await tabOn());
   check('with the bar on it', await bar.isVisible());
 
   await press(af ? 'Jy' : 'You');
@@ -190,8 +190,8 @@ try {
      at all**. Carli found it by using the app. A walk proves a walk; a matrix
      proves the bar. */
   const TABS = af
-    ? ['Kollig', 'Live', 'Maak', 'Biblioteek', 'Jy']
-    : ['Spotlight', 'Live', 'Make', 'Library', 'You'];
+    ? ['Kollig', 'Live', 'Maak', 'Kanaal', 'Jy']
+    : ['Spotlight', 'Live', 'Make', 'Channel', 'You'];
   const missed = [];
   for (const from of TABS) {
     for (const to of TABS) {

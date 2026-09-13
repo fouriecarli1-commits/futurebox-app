@@ -3168,9 +3168,15 @@ export default function FutureBoxHome() {
                       onClick={() => setAtDoor(true)}
                       title={t('hello.home', 'Home')}
                       aria-current={atDoor ? 'page' : undefined}
-                      className={`min-h-[44px] flex-shrink-0 text-left rounded-xl flex items-center gap-3 transition-all ${
+                      /* The rail wears the same light green as the door —
+                         see `Greeting.tsx`. It had no border and no fill at
+                         all, so eleven rooms read as a list of links down the
+                         side rather than eleven things to press. */
+                      className={`min-h-[44px] flex-shrink-0 text-left rounded-xl border flex items-center gap-3 transition-all ${
                         theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
-                      } ${atDoor ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+                      } ${atDoor
+                        ? 'border-emerald-500/50 bg-emerald-500/[0.16] text-white'
+                        : 'border-emerald-500/20 bg-emerald-500/[0.06] text-zinc-400 hover:border-emerald-500/45 hover:bg-emerald-500/[0.12] hover:text-white'}`}
                     >
                       <Cpu className={`w-[18px] h-[18px] flex-shrink-0 ${atDoor ? 'text-emerald-400' : ''}`} />
                       <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>
@@ -3202,9 +3208,11 @@ export default function FutureBoxHome() {
                         }}
                         title={`${meta.label} — ${meta.hint}`}
                         aria-current={isActive ? 'page' : undefined}
-                        className={`min-h-[44px] flex-shrink-0 text-left rounded-xl flex items-center gap-3 transition-all ${
+                        className={`min-h-[44px] flex-shrink-0 text-left rounded-xl border flex items-center gap-3 transition-all ${
                           theme.layout === 'focus' ? 'md:w-full md:justify-center px-3 py-2.5' : 'md:w-full px-3.5 py-2.5'
-                        } ${isActive ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'}`}
+                        } ${isActive
+                          ? 'border-emerald-500/50 bg-emerald-500/[0.16] text-white'
+                          : 'border-emerald-500/20 bg-emerald-500/[0.06] text-zinc-400 hover:border-emerald-500/45 hover:bg-emerald-500/[0.12] hover:text-white'}`}
                       >
                         <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-emerald-400' : ''}`} />
                         <span className={theme.layout === 'focus' ? 'md:hidden min-w-0' : 'min-w-0'}>

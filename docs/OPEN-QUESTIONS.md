@@ -3931,3 +3931,50 @@ identical from outside to one that works. `audit/selfie.mjs` wraps
 call — and asserts it reads `paused` after the press and `recording` after the
 next. All three halves were made to go red: the pause not reaching the
 recorder, the lock removed, and the X leaving mid-take.
+
+## Buttons that look like buttons, and the rooms in green (13 September)
+
+Carli:
+
+> "Kyk na al die huidige buttons. Dit moet definition hê, dit moet uitstaan en
+> lyk soos 'n knoppie wat jy kan druk, maar netjies met baie klas. Dieselfde
+> met die creative studio. Die buttons daar soos make a song, booth ens. moet
+> 'n ligte transparent groen button he … doen dit dan ook so op elke page."
+
+`check:buttonlook` already held the floor — every button with words on it has
+a box and a thumb's worth of height. A box is not the same as looking
+pressable: a one-pixel hairline on a flat fill reads as a panel with a border,
+and a room full of them reads as a form.
+
+**One rule, in `globals.css`, not a hundred className strings.** A look defined
+in a hundred places drifts in a hundred places, and when she says it is too
+much or too little there has to be one number to turn. Three shadows, none of
+them loud: an inset hairline of light along the top edge, which is what makes
+a surface read as facing upward; a tight dark shadow under it, which is
+contact; a wider soft one, which is lift. Black rather than a theme colour —
+a shadow is dark on a light page and on a dark one, which is the one thing
+about shadows that does not change. On press it drops a pixel and loses the
+lift, because a button that does not move when pressed is a picture of one.
+
+**Which buttons.** The ones that already declare a box: this codebase says
+"boxed button" by putting a `border` or a filled `bg-emerald-…` utility in the
+class list, so that is what the selector matches — the app's own convention,
+read literally. Bare text buttons (a card's fold heading, a link in a
+sentence) stay flat on purpose. Raising those is how an interface starts
+shouting, which is the opposite of what she asked for.
+
+`:hover` is behind `(hover: hover)`. On a touchscreen a `:hover` sticks after
+a tap and leaves one button looking permanently raised.
+
+**The rooms.** The door's cards and the side rail both wear
+`border-emerald-500/25` over `bg-emerald-500/[0.07]`. The rail had no border
+and no fill at all, so eleven rooms read as a list of links down the side. A
+seventh of the accent is tinted glass on the dark theme and the faintest wash
+on the light one, and the words keep the contrast they were measured at —
+`check:contrast` and `check:buttonlook` both still pass.
+
+Also, at her word: the **Library** tab is the **Channel** tab. It is what it
+has always opened — her channel, her name, her songs. The id stays `library`,
+because it is written into saved state and into the deep links, and renaming a
+key to match a label is how yesterday's saved tab becomes tomorrow's blank
+screen.

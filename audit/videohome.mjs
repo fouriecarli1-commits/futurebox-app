@@ -90,8 +90,8 @@ try {
   check('the video this walk needs is on the device', seeded === 1, `${seeded} kept`);
 
   /* In through the Library tab, which is how she got there. */
-  const library = page.locator('nav[aria-label] button', { hasText: /Library|Biblioteek/ }).first();
-  check('the Library tab is on the bar', (await library.count()) > 0);
+  const library = page.locator('nav[aria-label] button', { hasText: /Channel|Kanaal/ }).first();
+  check('the Channel tab is on the bar', (await library.count()) > 0);
   await library.click();
   await page.waitForTimeout(2500);
 

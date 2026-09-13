@@ -106,7 +106,16 @@ const TABS: readonly {
      place it left. */
   { id: 'live', icon: Radio, key: 'tab.live', fallback: 'Live' },
   { id: 'make', icon: Sparkles, key: 'tab.make', fallback: 'Make' },
-  { id: 'library', icon: Library, key: 'tab.library', fallback: 'Library' },
+  /* "Channel", not "Library". Carli, 13 September 2026: "Verander ook
+     library se naam na channel."
+
+     It is what the tab has always opened — her channel, with her recording
+     name, her handle and her songs on it. `Library` was a word about storage
+     and this is a word about a place people visit. The id stays `library`:
+     it is written into saved state and into the deep links, and renaming a
+     key to match a label is how yesterday's saved tab becomes tomorrow's
+     blank screen. */
+  { id: 'library', icon: Library, key: 'tab.library', fallback: 'Channel' },
   { id: 'you', icon: UserRound, key: 'tab.you', fallback: 'You' },
 ];
 

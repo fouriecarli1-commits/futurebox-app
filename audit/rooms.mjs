@@ -93,4 +93,4 @@ export const ROOMS_AF = {
  * them because the creative page is the longest scroll in the app and was
  * being measured by nothing at all.
  */
-export const TABS = ['Spotlight', 'Live', 'Make', 'Library', 'You'];
+export const TABS = ['Spotlight', 'Live', 'Make', 'Channel', 'You'];
