@@ -226,8 +226,8 @@ try {
 
     const bar = p.locator('nav[aria-label]').first();
     const TABS = lang === 'af'
-      ? { make: 'Maak', library: 'Biblioteek', you: 'Jy', live: 'Live', spotlight: 'Kollig' }
-      : { make: 'Make', library: 'Library', you: 'You', live: 'Live', spotlight: 'Spotlight' };
+      ? { make: 'Maak', library: 'Kanaal', you: 'Jy', live: 'Live', spotlight: 'Kollig' }
+      : { make: 'Make', library: 'Channel', you: 'You', live: 'Live', spotlight: 'Spotlight' };
     const press = async (name) => {
       await bar.locator('button').filter({ hasText: name }).first().click();
       await p.waitForTimeout(1200);

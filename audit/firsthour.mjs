@@ -204,7 +204,7 @@ try {
   await room.locator('button[aria-label="Close"], button[aria-label="Back"]').first()
     .click().catch(() => undefined);
   await p.waitForTimeout(600);
-  await bar.locator('button').filter({ hasText: 'Library' }).first().click();
+  await bar.locator('button').filter({ hasText: 'Channel' }).first().click();
   await p.waitForTimeout(1800);
   const library = async () => ((await p.locator('body').innerText()) ?? '').replace(/\s+/g, ' ');
   check('and it is in the library, on the other side of the app',
