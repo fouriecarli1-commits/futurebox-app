@@ -3843,8 +3843,22 @@ export default function FutureBoxHome() {
       {/* The search, in the corner, on the same terms as the bar: on every
           screen or on none, and out of the way of a real modal. Hidden while
           the search itself is open, where it would sit on top of the panel it
-          just opened. */}
-      {!(authModalOpen || pricingModalOpen || themeOpen || searchOpen || selectedMedia !== null || selectedBlueprint !== null) && (
+          just opened.
+
+          And hidden inside the studio, which carries its own. That header
+          button says the word "Search" and shows ⌘K; this one is a circle
+          with an icon. Two controls for one job, and they were not merely
+          both present — they overlapped, at every width measured:
+
+              1440   pill 1295–1420, circle 1384–1428   36px over it
+               390   pill  334–378,  circle 338–382     stacked
+
+          On a phone the header button collapses to just its icon, so what
+          was on the screen was the same little magnifying glass twice, four
+          pixels apart. `uploadModalOpen` is the studio's own flag — an old
+          name for it, and the same one the asks counter uses to mean "the
+          studio is open". */}
+      {!(uploadModalOpen || authModalOpen || pricingModalOpen || themeOpen || searchOpen || selectedMedia !== null || selectedBlueprint !== null) && (
         <SearchCorner onOpen={() => setSearchOpen(true)} />
       )}
 
