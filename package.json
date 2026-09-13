@@ -17,6 +17,7 @@
     "check:singmix": "tsx scripts/check-singmix.mts",
     "check:envdoc": "tsx scripts/check-envdoc.mts",
     "check:language": "tsx scripts/check-language.mts",
+    "check:region": "tsx scripts/check-region.mts",
     "check:langtrip": "node audit/language.mjs 3018",
     "check:elevenceiling": "tsx scripts/check-elevenceiling.mts",
     "check:spendwatch": "tsx scripts/check-spendwatch.mts",

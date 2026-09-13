@@ -34,14 +34,14 @@ export default function Landing({
   /** Sign in with a Google account. Returns a reason when it cannot. */
   onGoogle: () => void;
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [region, setRegion] = useState<Region>(REGIONS[0]);
 
   // Guessed after mount, never during render: the server has no idea where the
   // visitor is, and a price that changes on hydration is a price nobody trusts.
   useEffect(() => {
-    setRegion(guessRegion().region);
-  }, []);
+    setRegion(guessRegion(lang).region);
+  }, [lang]);
 
   const toPricing = () => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
 

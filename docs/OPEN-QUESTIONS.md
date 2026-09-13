@@ -3724,3 +3724,56 @@ sweep was running, and probes that build their own page copy a `.probe.tsx`
 into `app/` and delete it afterwards. Two of those at once is a build against
 a file that has just been removed. Nothing to fix in the app — but a result
 from a contended tree is not a result.
+
+## A South African product quoted a South African reader in dollars (13 September)
+
+Same method as the night before — open the app and look at it — this time the
+five tabs, in Afrikaans, on a phone. The You tab:
+
+    Jou plan — Label · $119.00 per maand
+
+Nothing was broken, which is why nothing caught it. `guessRegion()` tries the
+device timezone first against `TZ_TO_REGION`, a list written by hand; a zone
+that is not on it falls through to `navigator.language`, which was `en-US`.
+So the app took a device default over **the language the person had chosen
+inside the app** — and Afrikaans is spoken, in any number worth pricing for,
+in one country.
+
+It reads the app's language now, between the timezone and the browser's. That
+ordering is the whole change and it is the part that needed care.
+
+**Scale it honestly.** The device I saw this on was a test container with no
+timezone (`Etc/Unknown`). A real phone in Johannesburg has always said
+`Africa/Johannesburg` and has always been priced in rand. So the case fixed
+here is narrow: an Afrikaans reader whose clock says nothing, or says
+somewhere in Africa the list does not name — Namibia, for one. It is worth
+having and it is not a fire.
+
+**`check:region` caught my own fix being too greedy, and that is the reason
+it runs the function rather than reading the file.** The first version fired
+whenever the timezone was missing from the map. There are *no American zones
+in that map at all* — the United States is the fall-through — so it quietly
+moved every Afrikaans reader in New York onto rand. A regex asserting that
+the source mentions `af` would have passed that happily: the fault was an
+ORDER among three branches, and an order is not something a pattern can see.
+The branch is now limited to a zone that says nothing or says Africa, and
+there is a case for New York that goes red without it.
+
+### Two things beside it that I have not changed
+
+Both are decisions about money and they are yours, not mine.
+
+1. **`regionBasis` is computed on every mount and rendered nowhere.** The
+   pricing module was written around being honest that the number is a guess
+   — every branch returns a `basis` string saying which signal answered. That
+   string reaches a `useState` in `app/page.tsx` and stops. Nobody is ever
+   told why they are seeing a currency.
+
+2. **There is no way to correct the guess.** `REGIONS` is imported in two
+   files and used only for `REGIONS[0]`. If the guess is wrong for a real
+   buyer, they cannot change it; they find out at checkout.
+
+Together those say: the design intended "a guess, labelled, and changeable",
+and two of the three are missing. A currency picker on the pricing screen
+with the basis line under it is maybe an hour's work — but it is a change to
+how the app sells, so it waits for you.

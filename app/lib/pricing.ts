@@ -106,8 +106,13 @@ export interface RegionGuess {
   readonly confident: boolean;
 }
 
-/** A guess, labelled as one. Never call this a verification. */
-export function guessRegion(): RegionGuess {
+/**
+ * A guess, labelled as one. Never call this a verification.
+ *
+ * @param appLang the language the person chose INSIDE this app, if the caller
+ *   knows it. See the Afrikaans branch below for why it is worth passing.
+ */
+export function guessRegion(appLang?: string): RegionGuess {
   if (typeof window === 'undefined') {
     return { region: DEFAULT_REGION, basis: 'Server render — no browser to ask', confident: false };
   }
@@ -116,6 +121,39 @@ export function guessRegion(): RegionGuess {
     const byTz = TZ_TO_REGION[tz];
     if (byTz) {
       return { region: regionByCode(byTz), basis: `Device timezone (${tz})`, confident: true };
+    }
+    /* Afrikaans, chosen in this app, before the browser's own idea of a
+       country.
+ 
+       Found by opening the You tab in Afrikaans on a phone: "Jou plan —
+       Label · $119.00 per maand". The timezone list below is written by hand
+       and did not have that device's zone, so the guess fell through to
+       `navigator.language`, which was `en-US`, and a South African product
+       quoted a South African reader in dollars.
+ 
+       The ordering is the argument. A timezone is a stronger signal and
+       still wins. But `navigator.language` is a device default somebody may
+       never have touched, while the app's language is a choice they made in
+       here — and Afrikaans is spoken, in any number worth pricing for, in
+       one country. As a guess it is better than falling through to the
+       United States.
+ 
+       Narrowed to a zone that says nothing (`UTC`, `Etc/*`, none at all) or
+       says Africa, and `check:region` is why. The first version of this
+       fired whenever the zone was missing from the map — and there are no
+       American zones in that map at all, because the United States is the
+       fall-through. So it quietly moved every Afrikaans reader in New York
+       onto rand. The map being short is an implementation detail, not
+       evidence that somebody is not where their clock says they are.
+ 
+       It is only ever a guess: this whole module renders a number, and what
+       a person is actually charged is bound to the country of their payment
+       method, which the provider tells us and their bank enforces. An
+       Afrikaans speaker abroad sees rand for a moment and is charged
+       correctly, which is the failure mode this file was built around. */
+    const nowhereInParticular = !tz || tz === 'UTC' || tz.startsWith('Etc/');
+    if (appLang === 'af' && (nowhereInParticular || tz.startsWith('Africa/'))) {
+      return { region: regionByCode('ZA'), basis: 'App language is Afrikaans', confident: false };
     }
     const locale = navigator.language ?? '';
     const country = locale.split('-')[1]?.toUpperCase();

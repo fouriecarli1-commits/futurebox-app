@@ -268,10 +268,10 @@ export default function FutureBoxHome() {
   const [region, setRegion] = useState<Region>(REGIONS[0]);
   const [regionBasis, setRegionBasis] = useState('Working it out…');
   useEffect(() => {
-    const guess = guessRegion();
+    const guess = guessRegion(lang);
     setRegion(guess.region);
     setRegionBasis(guess.basis);
-  }, []);
+  }, [lang]);
   // The header and the locked cards advertise the cheapest paid tier, since
   // that is the smallest step someone is actually being asked to take.
   const entryPrice = tierPrice('maker', region);

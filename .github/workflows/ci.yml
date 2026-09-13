@@ -459,6 +459,13 @@ jobs:
       - name: A choice wins, the account answers, a guess does neither
         run: npm run check:language
 
+      # A South African product quoted a South African reader in dollars.
+      # The fault was an ORDER between three guesses, which no pattern over
+      # the source can see, so this one stubs a browser and asks the real
+      # function.
+      - name: The currency follows the clock, then the language
+        run: npm run check:region
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept
