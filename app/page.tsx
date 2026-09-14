@@ -72,6 +72,7 @@ import {
   surfacesInStage,
   type SurfaceId,
 } from './lib/surfaces';
+import { errandBelongs, type Errand } from './lib/errands';
 import Spotlight from './components/Spotlight';
 import HereNow from './components/HereNow';
 import LanguagePicker from './components/LanguagePicker';
@@ -713,8 +714,21 @@ export default function FutureBoxHome() {
     }
   }, []);
 
-  const goToRoom = useCallback((id: SurfaceId) => {
+  /* Why somebody walked in, when a door knew.
+
+     Held here rather than in the room because the copilot is held here: it
+     is one panel the page hands wherever it belongs, so the sentence above
+     its starters has to be decided at the same level.
+
+     Cleared by `goToRoom`, which every way into a room runs through. That
+     is the whole of its lifetime — an errand is why you walked in, not a
+     mode you are in, and a copilot still answering yesterday's reason is
+     worse than one answering the room's. */
+  const [errand, setErrand] = useState<Errand | null>(null);
+
+  const goToRoom = useCallback((id: SurfaceId, why: Errand | null = null) => {
     setStudioTab(id);
+    setErrand(why);
     setAtDoor(false);
     /* Now, and again after the new room has drawn. Now, so nothing is ever
        painted at the old offset; again in the effect below, because a room
@@ -1327,6 +1341,10 @@ export default function FutureBoxHome() {
   <Copilot
     context={{
       surface: studioTab,
+      /* Only in the room it was carried into. An errand that leaked into
+         another room would be the copilot answering about a podcast in the
+         Booth, which is exactly the fault `surfaces.ts` was written to end. */
+      errand: errandBelongs(errand, studioTab) ? errand : null,
       ...taste,
       title: canvas.title,
       style: canvas.style,
@@ -3382,7 +3400,22 @@ export default function FutureBoxHome() {
 
             {studioTab === 'live' && <LiveChannel onGoToMake={() => goToRoom('make')} />}
 
-            {studioTab === 'podcast' && <PodcastStudio onUpgrade={() => setPricingModalOpen(true)} />}
+            {studioTab === 'podcast' && (
+              <PodcastStudio
+                onUpgrade={() => setPricingModalOpen(true)}
+                /* Three things, in one press, because she asked for all
+                   three: the video desk, the long-form board opened and
+                   scrolled to, and a copilot whose first line is about
+                   this episode rather than about video.
+
+                   `handoff` rather than `dispatch`: at the moment this
+                   fires, the video desk does not exist yet. */
+                onToVideo={(episodeTitle) => {
+                  goToRoom('canvas', { id: 'podcast_video', subject: episodeTitle });
+                  copilotBus.handoff('canvas', 'open_board', '');
+                }}
+              />
+            )}
 
             {studioTab === 'sound' && (
               <SoundTrainer

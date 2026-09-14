@@ -24,6 +24,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, Send, Loader2, Check, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { type SurfaceId, seedsFor, helpsWith } from '../lib/surfaces';
+import { errandHelps, errandSeeds, type Errand } from '../lib/errands';
 import { useCopilotBusContext } from '../lib/copilotactions';
 
 export type CopilotAction =
@@ -67,6 +68,15 @@ export interface CopilotContext {
   lyrics: string;
   trackCount: number;
   engineReady: boolean;
+  /**
+   * Why they walked in, when a door knew — see `lib/errands.ts`.
+   *
+   * The room is unchanged: the same operations, the same `can`. What this
+   * replaces is the two things written for whoever walks in commonest — the
+   * line above the starters, and the starters. The studio only ever sets it
+   * for the room the errand belongs to.
+   */
+  errand?: Errand | null;
   /** What this account keeps making, where there is enough of it to say. */
   genre?: string;
   room?: string;
@@ -201,10 +211,15 @@ export default function Copilot({
                 above them was not, so the panel opened by describing somewhere
                 else and then offering the right three things. */}
             <p className="text-sm text-zinc-400 leading-relaxed">
-              {helpsWith(context.surface, lang === 'af' ? 'af' : 'en')}
+              {context.errand
+                ? errandHelps(context.errand, lang === 'af' ? 'af' : 'en')
+                : helpsWith(context.surface, lang === 'af' ? 'af' : 'en')}
             </p>
             <div className="flex flex-col gap-1.5">
-              {seedsFor(context.surface, lang === 'af' ? 'af' : 'en').map((example) => (
+              {(context.errand
+                ? errandSeeds(context.errand, lang === 'af' ? 'af' : 'en')
+                : seedsFor(context.surface, lang === 'af' ? 'af' : 'en')
+              ).map((example) => (
                 <button
                   key={example}
                   type="button"

@@ -18,7 +18,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Check, Copy, FileText, Globe, Languages, Link2, Loader2, Mic, Radio, Rss, Sparkles, Square,
+  Check, Clapperboard, Copy, FileText, Globe, Languages, Link2, Loader2, Mic, Radio, Rss, Sparkles, Square,
   Trash2, Upload,
 } from 'lucide-react';
 import VoiceLab, { type VoiceState } from './VoiceLab';
@@ -66,7 +66,22 @@ const MADE_LABEL: Record<Episode['made'], string> = {
   spoken: 'Read by a cloned voice',
 };
 
-export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }): React.ReactElement {
+export default function PodcastStudio({
+  onUpgrade,
+  onToVideo,
+}: {
+  onUpgrade: () => void;
+  /**
+   * The door to the video desk, carrying what the episode is called.
+   *
+   * The studio owns it because only the studio can change rooms, and it
+   * takes the title rather than the episode because that is all the far
+   * side can use: the copilot needs to know what the film is of, and the
+   * board needs nothing. The audio deliberately does not travel — see the
+   * note on the button.
+   */
+  onToVideo?: (episodeTitle: string) => void;
+}): React.ReactElement {
   const { t } = useLang();
 
   const [voices, setVoices] = useState<VoiceState>({ configured: false, mine: [], stock: [] });
@@ -603,6 +618,36 @@ export default function PodcastStudio({ onUpgrade }: { onUpgrade: () => void }):
                       <FileText className="w-3.5 h-3.5" />
                       {t('script.button', 'What was said')}
                     </button>
+                    {/* ── Put it on a video ────────────────────────────
+
+                        Carli: "Podcast na aanbieder deur moet mens na long
+                        shot toe vat en copilot se assistence dadelik
+                        verander na dit wat die kamer vir die podcast moet
+                        doen."
+
+                        It takes the title and nothing else. Not the audio:
+                        an episode runs twenty minutes or more, a generated
+                        shot runs five seconds, and the lipsync model takes
+                        its input inline under a 25MB cap — so handing the
+                        whole episode across would be handing across the one
+                        thing that cannot be used. What travels is what the
+                        far side can act on: the name of the show, so the
+                        copilot's first suggestion is about this episode
+                        rather than about video in general.
+
+                        Which minute of the episode becomes the film is a
+                        decision, and the errand's first starter is exactly
+                        that question. */}
+                    {onToVideo && (
+                      <button
+                        type="button"
+                        onClick={() => onToVideo(episode.title)}
+                        className="min-h-[44px] inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
+                      >
+                        <Clapperboard className="w-3.5 h-3.5" />
+                        {t('pod.toVideo', 'Put it on a video')}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={async () => {

@@ -24,6 +24,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { SURFACES, describeOps, describeOtherRoomOps, isSurfaceId, surfaceDirectory, type SurfaceId } from '@/app/lib/surfaces';
+import { ERRANDS, briefFor, isErrandId } from '@/app/lib/errands';
 import { tooMany } from '@/app/lib/server/brake';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { SINGERS } from '@/app/data/sound';
@@ -127,7 +128,19 @@ interface Body {
    */
   genre?: string;
   room?: string;
+  /**
+   * Why they walked into this room, when a door knew — `lib/errands.ts`.
+   *
+   * Checked here rather than trusted: the id has to be one this build knows,
+   * the errand has to belong to the room they say they are in, and the
+   * subject is a title somebody typed, so it is trimmed to a title's length
+   * before it goes anywhere near a prompt.
+   */
+  errand?: { id?: string; subject?: string } | null;
 }
+
+/** The longest an episode title may be when it is quoted into the prompt. */
+const SUBJECT_MAX = 120;
 
 const SYSTEM = [
   'You are the copilot inside FutureBox, a studio where people make songs and music videos.',
@@ -227,10 +240,28 @@ function contextFor(body: Body): string {
     : body.lang === 'en' ? 'They are using the app in English.'
     : '';
 
+  /* An errand is only an errand in the room it was carried into. The client
+     already narrows it, and this narrows it again — a body is a body, and a
+     claim that arrives over the wire is checked where it is used. */
+  const asked = body.errand;
+  const errand =
+    asked && isErrandId(asked.id) && ERRANDS[asked.id].surface === here
+      ? {
+          id: asked.id,
+          subject:
+            typeof asked.subject === 'string' && asked.subject.trim()
+              ? asked.subject.trim().slice(0, SUBJECT_MAX)
+              : undefined,
+        }
+      : null;
+
   const lines = [
     ...(speaking ? [speaking, ''] : []),
     `They are on the ${here} screen: ${room.purpose}`,
     `Here you can: ${room.can.join(', ')}.`,
+    /* After the room and before everything else: it is why they are here,
+       and a model that reads it last has already decided what to say. */
+    ...(errand ? ['', 'Why they came here just now:', ...briefFor(errand)] : []),
     '',
     ...(ops.length > 0
       ? ['Operations this room will take right now, as surface_op:', ...ops.map((line) => `- ${line}`), '']

@@ -121,10 +121,40 @@ const NAMED: readonly { file: string; key: string; what: string }[] = [
 ];
 for (const one of NAMED) {
   const source = read(one.file);
+  /* `\\s+` rather than one space: the board's tag went multi-line when it
+     gained `openOn`, and a check that reads "this panel is a Card" should
+     not be answering a question about line breaks. Still tight enough that
+     nothing but whitespace may sit between the tag and its title. */
   ok(`"${one.what}" folds`,
-    new RegExp(`<Card title=\\{t\\('${one.key.replace('.', '\\.')}'`).test(source),
+    new RegExp(`<Card\\s+title=\\{t\\('${one.key.replace('.', '\\.')}'`).test(source),
     'still a heading with everything under it always open');
 }
+
+/* ── The open signal stays rare ───────────────────────────────────────────
+
+   `Card` takes an `openOn` counter: a card opens when it goes up. That is
+   not `startOpen` and the difference is the point — undefined or unchanged
+   on mount is shut, always, so a room still opens as its own table of
+   contents. It only ever moves in answer to a press somewhere else, which
+   today is the podcast room's "Put it on a video" asking to be taken to the
+   long form rather than merely to the room the long form is in.
+
+   It is still the loophole shape, so it is counted. Raise OPENABLE here,
+   with the card named, having read why the rule is what it is. */
+const OPENABLE = 2;
+const openers: string[] = [];
+for (const file of files) {
+  if (!file.endsWith('.tsx') || file === 'Card.tsx') continue;
+  const source = read(file);
+  for (const _ of source.matchAll(/<Card\b[^]*?openOn=/g)) openers.push(file);
+}
+ok('a card opens on a signal only where one was asked for',
+  openers.length <= OPENABLE,
+  `${openers.length}: ${openers.join(', ')}`);
+ok('and the signal never survives a mount',
+  /const arrivedWith = useRef\(openOn\)/.test(read('Card.tsx'))
+    && /openOn === arrivedWith\.current/.test(read('Card.tsx')),
+  'Card must compare against what it mounted with, or openOn becomes startOpen');
 
 if (failures) {
   console.error(`\ncheck:folded — ${failures} failure(s).\n`);

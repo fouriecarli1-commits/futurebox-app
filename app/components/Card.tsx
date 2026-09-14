@@ -76,7 +76,7 @@
  * a button inside a button is not a thing a browser will render.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Sparkles } from 'lucide-react';
 
 export default function Card({
@@ -86,6 +86,7 @@ export default function Card({
   wand,
   tools,
   tone,
+  openOn,
   children,
 }: {
   readonly title: string;
@@ -125,9 +126,40 @@ export default function Card({
    * be counted, and `check:cardtone` counts it.
    */
   readonly tone?: 'amber';
+  /**
+   * A counter that opens this card when it goes up.
+   *
+   * Not `startOpen`, and the difference is the whole argument. `startOpen`
+   * is a claim about how a room looks when you walk into it, and the rule
+   * is that every room opens as its own table of contents. This is a claim
+   * about an action somebody just took: they pressed "Put it on a video" in
+   * the podcast room and asked to be taken to the long form. Landing in the
+   * right room with the right card shut, indistinguishable from its
+   * neighbours, is not being taken anywhere.
+   *
+   * So: undefined or unchanged on mount means shut, always. It only ever
+   * opens in response to a press that happened somewhere else, and it never
+   * shuts a card the person has opened themselves.
+   *
+   * `check:folded` counts the cards that take one, for the same reason
+   * `check:cardtone` counts the warm ones: the second and third use should
+   * be a decision, not a habit.
+   */
+  readonly openOn?: number;
   readonly children: React.ReactNode;
 }): React.ReactElement {
   const [open, setOpen] = useState(false);
+
+  /* Opened by a signal from elsewhere, and only ever opened — never shut.
+     The first render is skipped deliberately: a card whose `openOn` happens
+     to be a number on mount is still shut, because mounting is not a press.
+     Somebody arriving is compared against what they arrived with. */
+  const arrivedWith = useRef(openOn);
+  useEffect(() => {
+    if (openOn === undefined || openOn === arrivedWith.current) return;
+    arrivedWith.current = openOn;
+    setOpen(true);
+  }, [openOn]);
 
   const warm = tone === 'amber';
 

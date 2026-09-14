@@ -191,7 +191,26 @@ export default function Storyboard({
      them deleting the first set by hand, which is the retyping again in a
      different direction. What it never touches is a shot that has already
      been paid for — see the guard. */
+  /* Opened from somewhere else.
+
+     The podcast room's "Put it on a video" asks to be taken to the long
+     form, not merely to the room the long form is in. Two things have to
+     happen for that to be true: this card opens, and the page scrolls to
+     it. The scroll is here rather than at the door because the door cannot
+     know where this card lands, and because on a phone the difference
+     between "opened" and "opened below the fold" is the whole of it. */
+  const [openOn, setOpenOn] = useState(0);
+  const mine = useRef<HTMLDivElement | null>(null);
+  const openBoard = useCallback(() => {
+    setOpenOn((n) => n + 1);
+    /* After the fold has painted, or it scrolls to where the shut card was. */
+    requestAnimationFrame(() =>
+      mine.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
+  }, []);
+
   useCopilotOps('canvas', {
+    open_board: openBoard,
     set_look: (value) => setBoard((was) => ({ ...was, look: value.trim() })),
     write_scenes: (value) => {
       setBoard((was) => {
@@ -403,7 +422,12 @@ export default function Storyboard({
      element — that is two expressions and neither compiles — so it lives
      here, outside the return. */
   return (
-    <Card title={t('board.title', 'Build a long one')} icon={<Clapperboard className="w-4 h-4" />}>
+    <div ref={mine} className="scroll-mt-4">
+    <Card
+      title={t('board.title', 'Build a long one')}
+      icon={<Clapperboard className="w-4 h-4" />}
+      openOn={openOn}
+    >
       <Note className="text-sm text-zinc-500 leading-relaxed">{t(
               'board.what',
               'No engine makes more than half a minute in one go, so a long video is short ones cut together. Write the shots, make them one at a time, and cut them into one file with a song under it.',
@@ -835,6 +859,7 @@ export default function Storyboard({
 
       {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
     </Card>
+    </div>
   );
 }
 

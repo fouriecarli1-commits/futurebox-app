@@ -284,6 +284,12 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         "the value is the whole shot list, one shot per line, in the order they should play \u2014 use this rather than describing the scenes in the chat, because the person cannot type them onto the board from a message",
       set_look:
         "the value is the look the whole video shares, in a few words \u2014 the film stock, the light, the palette \u2014 and not what happens in any one shot",
+      /* The board is a fold, like every panel in the app, and a shut fold
+         is a heading in a row of headings. Somebody who has just been told
+         "I will write the shot list onto the board" should not then have to
+         find the board. The value is ignored. */
+      open_board:
+        "opens the long-form board and scrolls to it. Use it in the same reply as write_scenes, so what you wrote is on screen rather than behind a heading. The value is ignored \u2014 send an empty string",
     },
     seeds: [
       {

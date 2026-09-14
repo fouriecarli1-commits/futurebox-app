@@ -1356,6 +1356,7 @@ export const STRINGS: Dict = {
   "pod.clean": { en: "Take the room out", af: "Haal die kamer uit" },
   "pod.epTitle": { en: "Episode title", af: "Aflewering se titel" },
   "pod.epNotes": { en: "What is in it", af: "Wat daarin is" },
+  "pod.toVideo": { en: "Put it on a video", af: "Sit dit op ’n video" },
   "pod.publicWarning": { en: "Publishing is public. The audio goes to an address anybody can open, and podcast apps will keep fetching it.", af: "Publiseer is publiek. Die klank gaan na \u2019n adres wat enigiemand kan oopmaak, en potgooi-toeps hou aan om dit af te laai." },
   "pod.publish": { en: "Publish it", af: "Publiseer dit" },
 
