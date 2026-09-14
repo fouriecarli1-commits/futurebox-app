@@ -65,6 +65,22 @@ export interface Track {
    * accident, and this one is not.
    */
   readonly givenBy?: string;
+  /**
+   * Who the song is by, where that is not the person holding the account.
+   *
+   * Only brought-in songs carry it. Everything made here is by whoever made
+   * it, and that name is on the `creators` row — one place, read by the live
+   * room, the radar and every release, which is what `RecordingName` exists
+   * to keep true. Copying it onto every track would be a second copy that
+   * goes stale the day somebody renames themselves.
+   *
+   * A file dragged in is the case that breaks that, and it breaks it in the
+   * ordinary direction: it may well not be theirs. Carli, 13 September 2026:
+   * "Kan die liedjie gerename word, en die artist name in gesit word." So
+   * the name is asked for rather than assumed, and a brought-in song with
+   * nobody named stays unattributed instead of quietly becoming yours.
+   */
+  readonly by?: string;
 }
 
 const META_KEY = 'futurebox.tracks.v1';

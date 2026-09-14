@@ -22,6 +22,7 @@
     "check:sideborder": "tsx scripts/check-sideborder.mts",
     "check:cardtone": "tsx scripts/check-cardtone.mts",
     "check:podvideo": "node audit/podvideo.mjs",
+    "check:nameupload": "node audit/nameupload.mjs",
     "check:langtrip": "node audit/language.mjs 3018",
     "check:elevenceiling": "tsx scripts/check-elevenceiling.mts",
     "check:spendwatch": "tsx scripts/check-spendwatch.mts",

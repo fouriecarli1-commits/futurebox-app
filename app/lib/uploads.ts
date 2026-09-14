@@ -115,6 +115,55 @@ export async function keepGiven(
 }
 
 /** Take one back out, audio and all. */
+/**
+ * Rename a brought-in song, name its artist, or keep the words that were
+ * heard in it.
+ *
+ * ── Why an edit and not a re-add ─────────────────────────────────────────
+ *
+ * The title starts as the file's name with the extension taken off, which is
+ * right for a first guess and wrong about as often as filenames are —
+ * `WhatsApp Audio 2026-09-13 at 05.12.44` is not what a song is called. The
+ * artist has never been asked at all.
+ *
+ * ── And the words ────────────────────────────────────────────────────────
+ *
+ * A brought-in song has no lyric sheet, so the words screen listens to it and
+ * writes them out. That answer was kept only as timings, under the song's id
+ * in `lyrictime`'s own store — which is enough to light a line while it plays
+ * and not enough for the card outside to stop offering "Get the words" for
+ * something already paid for. Writing them onto the row fixes both: the card
+ * reads `lyrics` like it does for every other song, and a second press costs
+ * nothing because `exactFor` finds them.
+ *
+ * Returns the new list, so a caller re-renders from what was written rather
+ * than from what it hoped was written.
+ */
+export function editUpload(
+  id: string,
+  changes: { readonly title?: string; readonly by?: string; readonly lyrics?: string },
+): Track[] {
+  const list = loadUploads();
+  const next = list.map((one) => {
+    if (one.id !== id) return one;
+    const title = changes.title?.trim();
+    const by = changes.by?.trim();
+    const lyrics = changes.lyrics?.trim();
+    return {
+      ...one,
+      /* An empty title is not a rename, it is a typo somebody is halfway
+         through. The old one stays rather than the card losing its name. */
+      ...(title ? { title: title.slice(0, 80) } : {}),
+      /* An emptied artist IS a change: clearing it is how somebody takes
+         their name off a song they decided is not theirs to claim. */
+      ...(changes.by === undefined ? {} : { by: by ? by.slice(0, 80) : undefined }),
+      ...(lyrics ? { lyrics } : {}),
+    };
+  });
+  saveUploads(next);
+  return next;
+}
+
 export async function removeUpload(id: string): Promise<void> {
   saveUploads(loadUploads().filter((one) => one.id !== id));
   await deleteAudio(id).catch(() => undefined);

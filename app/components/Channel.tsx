@@ -20,13 +20,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Check, Copy, Download, Headphones, Image as ImageIcon, ListMusic, Loader2, MessageSquareQuote, Pause, Play, Plus, Share2, SkipForward, SlidersHorizontal, Trash2, Video, X,
-  Film,
+  Film, Pencil,
 } from 'lucide-react';
 import { CREDITS, perMinute } from '../lib/credits';
 import { accessToken } from '../lib/cloud';
 import { downloadBlob, loadTracks, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
-import { addUpload, loadUploads, removeUpload } from '../lib/uploads';
+import { addUpload, editUpload, loadUploads, removeUpload } from '../lib/uploads';
 import { levelOf, loadOwned, NOTHING, type Owned } from '../lib/purchases';
 import {
   loadPlaylists, moved, newPlaylist, savePlaylists, withTrack, withoutTrack, type Playlist,
@@ -254,6 +254,22 @@ export default function Channel({
       }
     },
     [reload, t],
+  );
+
+  /* Which brought-in song is being named, and what is in the two boxes.
+
+     One at a time: the panel opens under the song it belongs to, and two
+     open at once would be two sets of boxes with no way to tell which save
+     writes where. */
+  const [naming, setNaming] = useState<string | null>(null);
+  const [named, setNamed] = useState<{ title: string; by: string }>({ title: '', by: '' });
+
+  const saveName = useCallback(
+    (id: string) => {
+      setTracks([...loadTracks(), ...editUpload(id, { title: named.title, by: named.by })]);
+      setNaming(null);
+    },
+    [named],
   );
 
   const dropUpload = useCallback(
@@ -817,6 +833,15 @@ export default function Channel({
 
               <div className="p-3 space-y-1.5">
                 <p className="text-sm font-bold text-white leading-snug truncate">{track.title}</p>
+                {/* Who it is by, on a brought-in song that has been told.
+
+                    Only there when somebody typed it. A card that prints the
+                    account's own name under a file dragged in from a phone is
+                    the grid taking credit, which is the same fault the
+                    "Brought in" badge above was added to stop. */}
+                {track.by && (
+                  <p className="truncate text-sm font-semibold text-emerald-300/90">{track.by}</p>
+                )}
                 <p className="text-sm text-zinc-500">
                   {track.genre} · {clock(track.seconds)}
                 </p>
@@ -1032,6 +1057,37 @@ export default function Channel({
                         songs are in. It used to be reachable only from a list
                         inside Live that showed the first six. */}
                     {track.source !== 'upload' && <PostToLive track={track} />}
+                    {/* ── Naming a song somebody brought in ─────────────
+
+                        Carli: "Kan die liedjie gerename word, en die artist
+                        name in gesit word."
+
+                        Both, in one panel, because they are one question.
+                        The title starts as the file's name with the
+                        extension taken off — right as a first guess and
+                        wrong about as often as filenames are — and the
+                        artist has never been asked at all, so a brought-in
+                        song sat in the grid anonymous beside songs that
+                        carry a maker.
+
+                        Only on a brought-in song. Everything made here is
+                        by whoever made it, and that name lives on the
+                        `creators` row where one edit changes every release.
+                        A second copy per track is a copy that goes stale. */}
+                    {track.source === 'upload' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNaming((open) => (open === track.id ? null : track.id));
+                          setNamed({ title: track.title, by: track.by ?? '' });
+                        }}
+                        aria-expanded={naming === track.id}
+                        className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        {t('chan.nameIt', 'Name it')}
+                      </button>
+                    )}
                     {track.source === 'upload' && (
                       <button
                         type="button"
@@ -1053,6 +1109,57 @@ export default function Channel({
                       </button>
                     )}
                   </div>
+
+                  {/* ── The two boxes, under the song they belong to ───────
+
+                      Not a dialog. A song's name is edited where the song
+                      is, beside the cover it goes under, so what is being
+                      renamed is never in question — the same reasoning as
+                      the playlist panel two controls along.
+
+                      The title is seeded from what is there rather than
+                      left blank: renaming is usually fixing a word in it,
+                      and an empty box means retyping the whole thing. */}
+                  {naming === track.id && (
+                    <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
+                      <label className="block text-sm text-zinc-400" htmlFor={`name-${track.id}`}>
+                        {t('chan.itsName', 'What it is called')}
+                      </label>
+                      <input
+                        id={`name-${track.id}`}
+                        value={named.title}
+                        onChange={(event) => setNamed((was) => ({ ...was, title: event.target.value }))}
+                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                      />
+                      <label className="block text-sm text-zinc-400" htmlFor={`by-${track.id}`}>
+                        {t('chan.whoBy', 'Who it is by')}
+                      </label>
+                      <input
+                        id={`by-${track.id}`}
+                        value={named.by}
+                        onChange={(event) => setNamed((was) => ({ ...was, by: event.target.value }))}
+                        placeholder={t('chan.whoByHint', 'Leave it empty if you do not know')}
+                        className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+                      />
+                      {/* Said plainly, because the box invites the wrong
+                          answer. Somebody naming a song they brought in is
+                          as likely to type their own name as the artist's,
+                          and a file off a phone is often not theirs. */}
+                      <Note>
+                        {t(
+                          'chan.whoByNote',
+                          'The artist this recording is actually by \u2014 not your own name, unless it is yours.',
+                        )}
+                      </Note>
+                      <button
+                        type="button"
+                        onClick={() => saveName(track.id)}
+                        className="min-h-[44px] px-3.5 py-2 rounded-xl border border-emerald-500 bg-emerald-500/15 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/25"
+                      >
+                        {t('chan.saveName', 'Save it')}
+                      </button>
+                    </div>
+                  )}
                   </>
                 )}
 
@@ -1151,6 +1258,23 @@ export default function Channel({
             setLyricsFor((was) =>
               was && was.track.id === lyricsFor.track.id ? { ...was, lines: heard.lines } : was,
             );
+            /* ── And keep them on a brought-in song ────────────────────
+
+               `exactFor` remembers the timings under the song's id, which
+               is enough to light a line while it plays and nothing else.
+               The card outside reads `lyrics`, so it went on offering
+               "Get the words" for a song already paid for, and `SongForm`
+               drew no strip because there were no parts.
+
+               A song made here already has its words on the row, so this
+               is only ever the brought-in case \u2014 and it is exactly the
+               "sodat dit doen wat die ander liedjies doen" half of what
+               she asked for. Written after the screen has the lines, so
+               a storage failure loses the saving and not the words. */
+            if (lyricsFor.track.source === 'upload') {
+              const written = heard.lines.map((one) => one.text).join('\n').trim();
+              if (written) setTracks([...loadTracks(), ...editUpload(lyricsFor.track.id, { lyrics: written })]);
+            }
             return null;
           }}
         />
