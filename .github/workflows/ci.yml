@@ -487,6 +487,13 @@ jobs:
       - name: The warm card stays rare
         run: npm run check:cardtone
 
+      # ElevenLabs deprecated GET /v1/dubbing/{id}/transcript/{lang}?format_type=
+      # in favour of a plural path with the format in it. Both callers were on
+      # the old one. The deprecated path may survive only as the single
+      # fallback inside dubTranscriptIn, and only for a 404 or 405.
+      - name: The dub transcript is on the live endpoint
+        run: npm run check:dubpath
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

@@ -945,11 +945,16 @@ export async function dubbed(
  *
  * ── What we were leaving on the table ────────────────────────────────────
  *
- *   GET /v1/dubbing/{id}/transcript/{language}?format_type=json|srt|webvtt
+ *   GET /v1/dubbing/{id}/transcripts/{language}/format/{json|srt|webvtt}
  *
  * `json` gives utterances with a speaker and a start and end, and inside each
  * one the **words** with their own start and end. `srt` and `webvtt` give a
  * finished subtitle file.
+ *
+ * (That URL is the current one. It was written here as
+ * `.../transcript/{language}?format_type=…`, which is the shape their SDK now
+ * marks deprecated — see `dubTranscriptIn` below for what moved and why the
+ * old one is still tried once behind it.)
  *
  * Nothing in this app has ever asked for it. `dubbed()` above fetches the
  * audio and that is all — so every dub anybody has made has had word-level
@@ -1012,14 +1017,78 @@ function wordsIn(utterance: WireUtterance): DubWord[] {
   return out;
 }
 
+/**
+ * A dub's transcript, from the endpoint that is not deprecated.
+ *
+ * ── What changed on their side ───────────────────────────────────────────
+ *
+ * This app has been calling
+ *
+ *     GET /v1/dubbing/{id}/transcript/{lang}?format_type=…
+ *
+ * which is marked `@deprecated` in `@elevenlabs/elevenlabs-js` 2.65.0. What
+ * replaces it is the same answer at a different shape: the resource is
+ * **plural**, and the format moves out of the query string into the path.
+ *
+ *     GET /v1/dubbing/{id}/transcripts/{lang}/format/{srt|webvtt|json}
+ *
+ * Read off the SDK's own client rather than a docs page — `transcripts`
+ * carries no deprecation marker and `transcript` does, and the URLs above are
+ * the literal ones each builds. That is how this repository has established
+ * every other wire format it could not reach to test.
+ *
+ * Worth naming what is NOT deprecated, because "our dubbing path is legacy"
+ * was the larger fear: `POST /v1/dubbing` itself is not. Neither is
+ * `GET /v1/dubbing/{id}`, nor the delete. What carries the marker is this
+ * transcript call and the Dubbing Studio speaker/segment editing surface,
+ * which this app has never touched. The migration is this function.
+ *
+ * ── The fallback, and when to take it out ────────────────────────────────
+ *
+ * This machine cannot reach api.elevenlabs.io, so the new path has never
+ * returned anything here. The old one is tried once if the new one answers
+ * 404 or 405 — the two shapes a route that is not there gives — which is the
+ * same pattern `/api/transcribe` already uses for `scribe_v2` with
+ * `scribe_v1` behind it.
+ *
+ * It costs nothing to be wrong in this direction: the dub is billed at POST
+ * and this GET is free, so the worst a bad guess does is cost one extra
+ * round trip. Being wrong the other way — switching outright on a reading I
+ * could not test — would mean a dub she has already paid for coming back
+ * with no subtitles.
+ *
+ * **Delete the fallback after the first dub whose subtitles arrive.** A
+ * fallback to a deprecated endpoint is how a migration never finishes, and
+ * this one is written down so it is a decision rather than a habit.
+ *
+ * One caveat their own SDK states and this cannot check: *"The 'json' format
+ * is not yet supported for Dubbing Studio."* This app's dubs are made with
+ * `POST /v1/dubbing` and are not Studio projects, so json should be theirs to
+ * give — but if `dubTranscript` comes back refused while subtitles work,
+ * that sentence is the reason.
+ */
+async function dubTranscriptIn(
+  id: string,
+  language: string,
+  format: 'json' | 'srt' | 'webvtt',
+): Promise<Response> {
+  const headers = { 'xi-api-key': key() };
+  const now = await fetch(
+    `${BASE}/dubbing/${encodeURIComponent(id)}/transcripts/${encodeURIComponent(language)}/format/${format}`,
+    { headers },
+  );
+  if (now.status !== 404 && now.status !== 405) return now;
+  return fetch(
+    `${BASE}/dubbing/${encodeURIComponent(id)}/transcript/${encodeURIComponent(language)}?format_type=${format}`,
+    { headers },
+  );
+}
+
 export async function dubTranscript(
   id: string,
   language: string,
 ): Promise<{ ok: true; words: DubWord[] } | Upstream> {
-  const response = await fetch(
-    `${BASE}/dubbing/${encodeURIComponent(id)}/transcript/${encodeURIComponent(language)}?format_type=json`,
-    { headers: { 'xi-api-key': key() } },
-  );
+  const response = await dubTranscriptIn(id, language, 'json');
   if (!response.ok) return complain(response);
   const body = (await response.json().catch(() => null)) as unknown;
   /* Two shapes are plausible and neither is confirmed: a bare list of
@@ -1058,10 +1127,7 @@ export async function dubSubtitles(
   language: string,
   format: 'srt' | 'webvtt' = 'srt',
 ): Promise<{ ok: true; text: string } | Upstream> {
-  const response = await fetch(
-    `${BASE}/dubbing/${encodeURIComponent(id)}/transcript/${encodeURIComponent(language)}?format_type=${format}`,
-    { headers: { 'xi-api-key': key() } },
-  );
+  const response = await dubTranscriptIn(id, language, format);
   if (!response.ok) return complain(response);
   const said = await response.text().catch(() => '');
   if (!said.trim()) {
