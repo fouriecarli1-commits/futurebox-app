@@ -175,6 +175,98 @@ try {
     readable ? `sung ${readable.ratio} against ${readable.others.join(', ')}` : 'no line found',
   );
 
+  /* ── And can she read the CONTROLS, which is the half nobody measured ──
+   
+     The block above has measured the sung line since #76 and stopped there.
+     It looks at `p` elements, so every button on the screen was outside it —
+     and the buttons were still written in the palette, which is the exact
+     thing #76 proved you cannot do on this screen.
+   
+     `bg-scrim` is dark in every theme by design. `zinc` is remapped onto the
+     surface family, and a light surface family inverts the ramp, so the low
+     zinc numbers — the dark-theme spelling of "bright label" — come out
+     near-black. On 14 September 2026 Carli photographed both buttons of the
+     no-words screen: boxed, green-washed, pressable, and their words almost
+     gone.
+   
+     Composited, not just read. `getComputedStyle().backgroundColor` on these
+     buttons is `rgb(… / 0.09)` — the wash `globals.css` paints on anything
+     bordered — and taking that colour at face value measures a solid green
+     nothing is painted in. Each layer is blended onto the one behind it up
+     the tree, which is what an eye sees. */
+  const CONTRAST = () => {
+    const chan = (v) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+    const parse = (colour) => {
+      const bits = (colour.match(/[\d.]+/g) || []).map(Number);
+      return { r: bits[0] ?? 0, g: bits[1] ?? 0, b: bits[2] ?? 0, a: bits[3] ?? 1 };
+    };
+    const over = (top, under) => ({
+      r: top.r * top.a + under.r * (1 - top.a),
+      g: top.g * top.a + under.g * (1 - top.a),
+      b: top.b * top.a + under.b * (1 - top.a),
+      a: 1,
+    });
+    const lum = (c) => 0.2126 * chan(c.r) + 0.7152 * chan(c.g) + 0.0722 * chan(c.b);
+    /* Every background from the element up to the root, blended bottom-up. */
+    const behind = (el) => {
+      const stack = [];
+      for (let at = el; at; at = at.parentElement) {
+        const c = parse(getComputedStyle(at).backgroundColor);
+        if (c.a > 0) stack.push(c);
+      }
+      let out = { r: 255, g: 255, b: 255, a: 1 };
+      for (let i = stack.length - 1; i >= 0; i -= 1) out = over(stack[i], out);
+      return out;
+    };
+    const worst = [];
+    for (const el of document.querySelectorAll('button, p, span')) {
+      const said = (el.innerText || '').trim();
+      /* Its own words, not its children's, so a button is not counted twice
+         through the span inside it. */
+      if (!said || el.getBoundingClientRect().width === 0) continue;
+      const style = getComputedStyle(el);
+      if (style.visibility === 'hidden' || style.opacity === '0') continue;
+      const ink = parse(style.color);
+      const bg = behind(el);
+      const a = lum(over(ink, bg));
+      const b = lum(bg);
+      worst.push({
+        text: said.replace(/\s+/g, ' ').slice(0, 34),
+        ratio: Math.round(((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)) * 100) / 100,
+      });
+    }
+    return worst.sort((one, two) => one.ratio - two.ratio);
+  };
+
+  const controls = await page.evaluate(CONTRAST);
+  const faint = controls.filter((one) => one.ratio < 4.5);
+  check(
+    'every word on the screen clears AA against what is behind it',
+    faint.length === 0,
+    faint.length
+      ? faint.map((one) => `${one.ratio} on "${one.text}"`).join(' · ')
+      : `${controls.length} measured, worst ${controls[0]?.ratio}`,
+  );
+
+  /* The screen she actually photographed: a song with no words written down,
+     which is its own panel with its own button and is not reachable from the
+     one above. */
+  await page.goto(`${server.url}/singcheck?words=none`, { waitUntil: 'networkidle' });
+  await page.waitForSelector('#mounted[data-ready="yes"]', { state: 'attached' });
+  await page.getByRole('button', { name: /write the words out/ }).waitFor();
+  const bare = (await page.evaluate(CONTRAST)).filter((one) => one.ratio < 4.5);
+  check(
+    'including on a song with no words, where the two buttons are all there is',
+    bare.length === 0,
+    bare.length ? bare.map((one) => `${one.ratio} on "${one.text}"`).join(' · ') : 'all clear',
+  );
+  await page.screenshot({ path: shot('selfie-nowords.png'), fullPage: false });
+  await page.goto(`${server.url}/singcheck`, { waitUntil: 'networkidle' });
+  await page.waitForSelector('#mounted[data-ready="yes"]', { state: 'attached' });
+
   const film = page.getByRole('button', { name: 'Film yourself' });
   await film.click();
 

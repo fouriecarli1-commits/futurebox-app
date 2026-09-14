@@ -528,6 +528,12 @@ jobs:
       - name: A refresh leaves the song playing
         run: npm run check:keepplaying
 
+      # `isTypeSupported('video/mp4')` answers yes to the bare container and
+      # says nothing about what goes in it, so the browser may put Opus in an
+      # MP4 — a legal file that a phone refuses: "audio codec not supported".
+      - name: A take is filmed upright, in a file other players can open
+        run: npm run check:takefile
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

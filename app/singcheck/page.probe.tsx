@@ -55,9 +55,22 @@ function fakeSong(): Blob {
 export default function SingCheck() {
   const audio = useRef<HTMLAudioElement | null>(null);
   const [ready, setReady] = useState(false);
+  /**
+   * `?words=none` mounts the branch a song with no lyrics shows.
+   *
+   * It is a different panel, not the same one emptied — its own paragraph and
+   * its own button — and it is the one Carli photographed on 14 September
+   * 2026 with both labels nearly invisible. A probe that can only reach the
+   * screen with words on it cannot measure the screen she was looking at.
+   *
+   * Read off the URL rather than passed in, because the probe drives this
+   * page by navigating to it.
+   */
+  const [bare, setBare] = useState(false);
 
   useEffect(() => {
     audio.current = new Audio();
+    setBare(new URLSearchParams(window.location.search).get('words') === 'none');
     setReady(true);
   }, []);
 
@@ -65,10 +78,12 @@ export default function SingCheck() {
     <div id="mounted" data-ready={ready ? 'yes' : 'no'}>
       {ready && (
         <FollowWords
-          lines={LINES}
+          lines={bare ? [] : LINES}
           audio={audio.current}
           title="A test song"
           onClose={() => {}}
+          askWords={bare ? async () => null : undefined}
+          wordCost={bare ? 4 : undefined}
           songFile={async () => fakeSong()}
         />
       )}

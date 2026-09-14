@@ -58,6 +58,38 @@ import { downloadBlob, safeFilename } from '../lib/library';
 import { mixFor, type Mix } from '../lib/singmix';
 
 /** Where the headphones answer is kept. Hers, not this song's. */
+/**
+ * Text on this screen is written in literal light, not in the palette.
+ *
+ * ── Why, and it is not a preference ──────────────────────────────────────
+ *
+ * This overlay is `bg-scrim`, which is dark in EVERY theme on purpose — the
+ * whole point of a scrim is that the page behind it goes away. The palette
+ * underneath it is not: `zinc` is remapped onto the surface family, and a
+ * light surface family inverts the ramp, so `text-zinc-100` — the dark-theme
+ * way of writing "bright label" — resolves to near-black.
+ *
+ * In the light theme the app actually ships, that put near-black button
+ * labels on a near-black sheet. Carli, 14 September 2026, with a photograph
+ * of it: *"Kyk hoe dof is die buttons in die lyrics opsie."* Both buttons on
+ * the no-words screen were there, boxed, green-washed and pressable, with
+ * their words very nearly invisible.
+ *
+ * It is the same fault as the sung line (#76), one layer out. That one was
+ * `text-white` on the scrim and was fixed where it stood; the buttons around
+ * it were left in the palette, so the screen went on failing in exactly the
+ * direction nobody looks — the low zinc numbers, which read as "bright" to
+ * anyone writing dark-theme markup.
+ *
+ * The rule for anything sitting directly on the scrim, with no card of its
+ * own between it and the sheet: light is a constant here, so write it as one.
+ * A control that carries its own themed surface is a different case and keeps
+ * the palette.
+ */
+const INK = 'text-[#ffffff]';
+const INK_SOFT = 'text-[rgba(255,255,255,0.78)]';
+const INK_DIM = 'text-[rgba(255,255,255,0.62)]';
+
 const EARS_KEY = 'futurebox.sing.ears.v1';
 
 export default function FollowWords({
@@ -248,9 +280,25 @@ export default function FollowWords({
       // broken this on most desktops while looking like a permission problem.
       // Same for the size — a camera that cannot do 1080×1920 should give what
       // it has rather than nothing.
+      /* ── Upright, because that is what the takes are for ──────────────
+
+         Carli, 14 September 2026: "Die film myself terwyl mens 'n liedjie
+         luister neem in wide screen in plaas van in 'n long screen vir
+         tick tok. Meeste mense gaan opneem vir tiktok takes."
+
+         The two numbers below already said 1080 by 1920, and `ideal` is a
+         preference: a camera that cannot give exactly that is free to hand
+         back its native landscape frame, and phone sensors are landscape.
+         So the size was asked for and the SHAPE was not.
+
+         `aspectRatio` asks for the shape on its own, which a camera can
+         satisfy by cropping when it cannot satisfy the exact pixels. 0.5625
+         is 9:16 written the way the constraint wants it — width over
+         height — and writing it as the division keeps it readable. */
       const got = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: 'user' },
+          aspectRatio: { ideal: 9 / 16 },
           width: { ideal: 1080 },
           height: { ideal: 1920 },
         },
@@ -298,14 +346,55 @@ export default function FollowWords({
   const startRecording = async (): Promise<void> => {
     const camera = stream.current;
     if (!camera || typeof MediaRecorder === 'undefined') return;
-    const type = ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find((one) =>
-      MediaRecorder.isTypeSupported(one),
-    );
+    /* ── Ask for the codecs, not just the container ────────────────────
+
+       Carli: "Die afgelaaide video kan nie die klank speel nie, dit sê
+       audio codec not supported."
+
+       This asked for `video/mp4` with no codecs named, and that is the
+       whole fault. `isTypeSupported('video/mp4')` answers yes and then the
+       browser picks what goes inside — and an MP4 containing **Opus**
+       audio is a perfectly legal MP4 that Android's own player cannot
+       play. It opens the file, finds the audio track, and says exactly
+       what she read.
+
+       Measured rather than assumed: in a Chromium here,
+       `isTypeSupported('video/mp4')` is true while every specific mp4
+       codec string is false — so the one thing the old list checked is
+       the one thing that says nothing about what comes out.
+
+       H.264 baseline with AAC-LC first, because that is the pair that
+       plays on a phone's gallery, in a desktop player, and uploads to
+       TikTok — which is what the whole feature is for. The bare
+       container stays in the list, below the explicit ones, because on a
+       browser that only answers the short form it is still better than
+       WebM. WebM last, and when it is what we get, the screen says so. */
+    const type = [
+      'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+      'video/mp4;codecs=avc1,mp4a.40.2',
+      'video/mp4;codecs=h264,aac',
+      'video/mp4',
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+    ].find((one) => MediaRecorder.isTypeSupported(one));
     if (!type) {
       setProblem(t('sing.noRecord', 'This browser cannot record video.'));
       return;
     }
-    setProblem(null);
+    /* Said before the take rather than discovered after it. A WebM plays in
+       the browser that made it and is refused by most phone galleries and
+       by TikTok, so somebody about to film three minutes deserves to know
+       which they are getting. Not a refusal: a WebM take is still a take,
+       and on a browser that offers nothing else it is this or nothing. */
+    setProblem(
+      type.startsWith('video/webm')
+        ? t(
+            'sing.webmOnly',
+            'This browser can only record in a format some phone players and TikTok will not open. The take will work here; it may not open elsewhere.',
+          )
+        : null,
+    );
 
     /* The song onto the file, when she has said she is on headphones.
 
@@ -427,7 +516,11 @@ export default function FollowWords({
           filming ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       />
-      {filming && <div className="absolute inset-0 bg-black/45" />}
+      {/* A literal dark, not `bg-black/45`. `black` is remapped onto
+          `--fb-void`, "the deepest surface", which in the light theme is
+          222 220 216 — so the wash meant to sink the camera behind the words
+          was painting a 45% PALE grey over it and lifting it instead. */}
+      {filming && <div className="absolute inset-0 bg-[rgba(0,0,0,0.45)]" />}
 
       {/* The close first, on the left.
 
@@ -479,7 +572,7 @@ export default function FollowWords({
             being broken. */}
         {lines.length === 0 ? (
           <div className="max-w-sm space-y-3">
-            <p className="text-xl text-zinc-500 leading-snug">
+            <p className={`text-xl leading-snug ${INK_SOFT}`}>
               {t('play.noWords', 'This song has no words written down. The camera still works — film yourself to it.')}
             </p>
             {askWords && (
@@ -494,20 +587,20 @@ export default function FollowWords({
                       .then((why) => setWordProblem(why))
                       .finally(() => setAsking(false));
                   }}
-                  className="mx-auto flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-100 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-50"
+                  className={`mx-auto flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-50 ${INK}`}
                 >
                   {asking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ear className="h-4 w-4" />}
                   {asking
                     ? t('play.listening', 'Listening to it…')
                     : t('play.writeWords', 'Listen to it and write the words out')}
                   {typeof wordCost === 'number' && !asking && (
-                    <span className="text-zinc-500">· {wordCost}</span>
+                    <span className={INK_DIM}>· {wordCost}</span>
                   )}
                 </button>
                 {wordProblem && (
                   <p className="text-sm text-amber-300 leading-snug">{wordProblem}</p>
                 )}
-                <p className="text-sm text-zinc-600 leading-snug">
+                <p className={`text-sm leading-snug ${INK_DIM}`}>
                   {t(
                     'play.writeWordsWhy',
                     'It is a transcriber built for speech, and singing over a band is the hardest thing you can give it. Expect a draft you tidy up, not a lyric sheet.',
@@ -517,7 +610,7 @@ export default function FollowWords({
             )}
           </div>
         ) : current < 0 ? (
-          <p className="text-2xl text-zinc-600">{t('play.waiting', 'Waiting for the first line…')}</p>
+          <p className={`text-2xl ${INK_DIM}`}>{t('play.waiting', 'Waiting for the first line…')}</p>
         ) : (
           window_.map((index) => {
             const line = lines[index];
@@ -566,7 +659,7 @@ export default function FollowWords({
             <button
               type="button"
               onClick={() => void startCamera()}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-2"
+              className={`min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 hover:border-emerald-500 flex items-center gap-2 ${INK}`}
             >
               <Camera className="w-4 h-4" />
               {t('sing.film', 'Film yourself')}
@@ -596,7 +689,7 @@ export default function FollowWords({
                   <button
                     type="button"
                     onClick={() => chooseEars('aloud')}
-                    className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-2"
+                    className={`min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 hover:border-emerald-500 flex items-center gap-2 ${INK}`}
                   >
                     <Speaker className="w-4 h-4" />
                     {t('sing.onSpeaker', 'It is playing out loud')}
@@ -608,7 +701,7 @@ export default function FollowWords({
                   onClick={() => chooseEars(ears === 'phones' ? 'aloud' : 'phones')}
                   disabled={recording}
                   aria-label={t('sing.switchEars', 'Change how you are listening')}
-                  className="min-h-[44px] px-3 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-400 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-50 flex items-center gap-2"
+                  className={`min-h-[44px] px-3 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-50 flex items-center gap-2 ${INK_SOFT}`}
                 >
                   {ears === 'phones' ? <Headphones className="w-4 h-4" /> : <Speaker className="w-4 h-4" />}
                   {ears === 'phones' ? t('sing.phones', 'Headphones') : t('sing.aloudShort', 'Out loud')}
@@ -620,7 +713,7 @@ export default function FollowWords({
                 <button
                   type="button"
                   onClick={paused ? carryOnTake : holdTake}
-                  className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-2"
+                  className={`min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold bg-zinc-900 border border-zinc-700 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-2 ${INK}`}
                 >
                   {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                   {paused ? t('sing.carryOn', 'Carry on') : t('sing.hold', 'Pause')}
@@ -632,7 +725,7 @@ export default function FollowWords({
                 onClick={recording ? stopRecording : () => void startRecording()}
                 className={`min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-40 ${
                   recording
-                    ? 'bg-rose-500 text-white'
+                    ? 'bg-rose-500 text-onAccent'
                     : 'bg-emerald-500 text-onAccent hover:bg-emerald-400'
                 }`}
               >
@@ -642,7 +735,7 @@ export default function FollowWords({
               <button
                 type="button"
                 onClick={stopCamera}
-                className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-zinc-500 flex items-center gap-2"
+                className={`min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-zinc-900 border border-zinc-700 hover:border-zinc-500 flex items-center gap-2 ${INK_SOFT}`}
               >
                 <CameraOff className="w-4 h-4" />
                 {t('sing.cameraOff', 'Camera off')}
@@ -684,10 +777,7 @@ export default function FollowWords({
           </p>
         )}
 
-        <p
-          className="text-sm text-center leading-snug"
-          style={{ color: 'rgba(255,255,255,0.62)' }}
-        >
+        <p className={`text-sm text-center leading-snug ${INK_DIM}`}>
           {t(
             'play.followNote',
             'The sections are timed from the plan the app wrote. Inside a section the lines are spread evenly, so one can land a second or two out.',

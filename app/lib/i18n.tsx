@@ -1097,6 +1097,7 @@ export const STRINGS: Dict = {
   "sing.noCamera": { en: "The camera was not allowed. Check the permission in your browser and try again.", af: "Die kamera is nie toegelaat nie. Kyk die toestemming in jou blaaier en probeer weer." },
   "sing.noDevice": { en: "No camera was found on this device.", af: "Geen kamera is op hierdie toestel gevind nie." },
   "sing.noRecord": { en: "This browser cannot record video.", af: "Hierdie blaaier kan nie video opneem nie." },
+  "sing.webmOnly": { en: "This browser can only record in a format some phone players and TikTok will not open. The take will work here; it may not open elsewhere.", af: "Hierdie blaaier kan net in ’n formaat opneem wat sommige foonspelers en TikTok nie sal oopmaak nie. Die opname werk hier; dit gaan dalk nie elders oopmaak nie." },
   "sing.aloud": { en: "The take is whatever the microphone hears, so play the song out loud. On headphones it would come back with only your voice on it.", af: "Die opname is wat die mikrofoon hoor, so speel die liedjie hardop. Met oorfone sou dit terugkom met net jou stem op." },
   "sing.onPhones": { en: "I have headphones in", af: "Ek het oorfone in" },
   "sing.onSpeaker": { en: "It is playing out loud", af: "Dit speel hardop" },
