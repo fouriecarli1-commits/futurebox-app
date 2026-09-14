@@ -1715,30 +1715,13 @@ export const STRINGS: Dict = {
   "hero.yourVoice": { en: "Your voice.", af: "Jou stem." },
   "hero.yourSongs": { en: "Your songs.", af: "Jou liedjies." },
   "hero.yourShow": { en: "Your show.", af: "Jou program." },
-  "hero.lead": {
-    en: "Write a song with AI and then sing on it yourself. Clone your voice and let it read a whole podcast. Put a video to it. One app, from the first line to the finished release.",
-    af: "Skryf \u2019n liedjie met KI en sing dan self daarop. Kloon jou stem en laat dit \u2019n hele podsending lees. Sit \u2019n video daarby. Een toep, van die eerste re\u00ebl tot die klaar vrystelling.",
-  },
-  "hero.p1": { en: "You are on the record", af: "Jy is op die plaat" },
-  "hero.p1b": {
-    en: "Other apps hand you a song a model sang. Here you get the backing track and a booth that shows you the notes and the words as they come, holds your timing, and tunes the take.",
-    af: "Ander toeps gee jou \u2019n liedjie wat \u2019n model gesing het. Hier kry jy die begeleiding en \u2019n opnamekamer wat die note en die woorde wys soos hulle kom, jou tydsberekening vashou, en die opname stem.",
-  },
-  "hero.p2": { en: "A sound of your own", af: "\u2019n Klank van jou eie" },
-  "hero.p2b": {
-    en: "Train on the songs you have already made and the next ones come out sounding like them \u2014 like you, not like everybody else\u2019s prompt.",
-    af: "Leer dit op die liedjies wat jy klaar gemaak het, dan klink die volgendes soos hulle \u2014 soos jy, nie soos almal anders se prompt nie.",
-  },
-  "hero.p3": { en: "Podcasts in your own voice", af: "Podsendings in jou eie stem" },
-  "hero.p3b": {
-    en: "Clone your voice once, then have it read a script, say a recording again in somebody else\u2019s voice, and publish a feed Apple and Spotify will take.",
-    af: "Kloon jou stem een keer, laat dit dan \u2019n skrif lees, s\u00ea \u2019n opname weer in iemand anders se stem, en publiseer \u2019n voer wat Apple en Spotify sal vat.",
-  },
-  "hero.p4": { en: "Nothing here pretends", af: "Niks hier maak asof nie" },
-  "hero.p4b": {
-    en: "Everything made here says what made it, printed on the release. And you choose how the whole app looks.",
-    af: "Alles wat hier gemaak word, s\u00ea wat dit gemaak het, op die vrystelling gedruk. En jy kies hoe die hele toep lyk.",
-  },
+  "hero.f1": { en: "The Booth, for professional musicians", af: "Die opnamekamer, vir professionele musikante" },
+  "hero.f2": { en: "Advert planning, for marketers", af: "Advertensiebeplanning, vir bemarkers" },
+  "hero.f3": { en: "Clone your voice", af: "Kloon jou stem" },
+  "hero.f4": { en: "Train your own unique sound", af: "Rig jou eie unieke klank af" },
+  "hero.f5": { en: "A live music room", af: "’n Regstreekse musiekkamer" },
+  "hero.f6": { en: "Collab Radar, to create with like-minded artists", af: "Collab Radar, om saam met eendersdenkende kunstenaars te skep" },
+  "hero.f7": { en: "Video generation", af: "Video’s word gegenereer" },
   "hero.podcast": { en: "Start a podcast", af: "Begin \u2019n podsending" },
 
   "welcome.line1": { en: "Your voice. Your songs.", af: "Jou\u00a0stem. Jou\u00a0liedjies." },

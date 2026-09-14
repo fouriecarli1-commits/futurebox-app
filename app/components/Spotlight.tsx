@@ -18,6 +18,7 @@
  */
 
 import React from 'react';
+import { Check } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import HereNow from './HereNow';
 import Charts from './Charts';
@@ -48,54 +49,47 @@ export default function Spotlight({
             <span className="text-emerald-400">{t('hero.yourSongs', 'Your songs.')}</span>{' '}
             {t('hero.yourShow', 'Your show.')}
           </h2>
-          <p className="text-lg md:text-xl text-zinc-300 leading-relaxed max-w-2xl">
-            {t(
-              'hero.lead',
-              'Write a song with AI and then sing on it yourself. Clone your voice and let it read a whole podcast. Put a video to it. One app, from the first line to the finished release.',
-            )}
-          </p>
+          {/* ── Seven ticks, where four paragraphs used to be ──────────────
 
-          {/* The four things that are actually different, not a feature list. */}
-          <div className="grid sm:grid-cols-2 gap-3 pt-1">
+              What was here: a lead paragraph of four sentences, then four
+              boxes with a heading and three or four lines of body each.
+              Roughly two phone screens of prose before the first button,
+              and Carli photographed all of it scrolling past.
+
+              "Take it out and the description. You can keep the headings
+               etc, just take out this explenations and boxes. Replace the
+               explenation with ticked unique features."
+
+              A paragraph argues; a tick claims. Somebody deciding in the
+              first second whether this app does the thing they came for is
+              scanning for their own word — "adverts", "collab", "video" —
+              and a box whose heading is "Nothing here pretends" hides that
+              word inside the body where scanning will not find it. Seven
+              short lines put every one of them on the surface.
+
+              These are also the seven that no other app in this space has
+              all of, which is the only reason to lead with them. Every one
+              is built and reachable from the bar below: the Booth and the
+              Pro Booth, the adverts desk, voice cloning, the Sound
+              trainer, the live room, the Collab Radar, and the video desk.
+              A landing page that promises a feature is a landing page that
+              gets found out on the second click, and this is the first. */}
+          <ul className="grid gap-x-6 gap-y-2.5 pt-1 sm:grid-cols-2">
             {[
-              {
-                head: t('hero.p1', 'You are on the record'),
-                body: t(
-                  'hero.p1b',
-                  'Other apps hand you a song a model sang. Here you get the backing track and a booth that shows you the notes and the words as they come, holds your timing, and tunes the take.',
-                ),
-              },
-              {
-                head: t('hero.p2', 'A sound of your own'),
-                body: t(
-                  'hero.p2b',
-                  'Train on the songs you have already made and the next ones come out sounding like them — like you, not like everybody else’s prompt.',
-                ),
-              },
-              {
-                head: t('hero.p3', 'Podcasts in your own voice'),
-                body: t(
-                  'hero.p3b',
-                  'Clone your voice once, then have it read a script, say a recording again in somebody else’s voice, and publish a feed Apple and Spotify will take.',
-                ),
-              },
-              {
-                head: t('hero.p4', 'Nothing here pretends'),
-                body: t(
-                  'hero.p4b',
-                  'Everything made here says what made it, printed on the release. And you choose how the whole app looks.',
-                ),
-              },
-            ].map((point) => (
-              <div
-                key={point.head}
-                className="rounded-2xl border border-zinc-800 bg-zinc-950/50 px-4 py-3.5"
-              >
-                <p className="text-sm font-extrabold text-white">{point.head}</p>
-                <p className="text-sm text-zinc-400 leading-snug pt-1">{point.body}</p>
-              </div>
+              t('hero.f1', 'The Booth, for professional musicians'),
+              t('hero.f2', 'Advert planning, for marketers'),
+              t('hero.f3', 'Clone your voice'),
+              t('hero.f4', 'Train your own unique sound'),
+              t('hero.f5', 'A live music room'),
+              t('hero.f6', 'Collab Radar, to create with like-minded artists'),
+              t('hero.f7', 'Video generation'),
+            ].map((one) => (
+              <li key={one} className="flex items-start gap-2.5">
+                <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />
+                <span className="text-base leading-snug text-zinc-200">{one}</span>
+              </li>
             ))}
-          </div>
+          </ul>
 
           <p className="text-base text-zinc-400 leading-relaxed">
             {t('hero.style', 'This is the app that lets you choose your own style.')}{' '}
