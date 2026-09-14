@@ -4,6 +4,7 @@ import { BAR_COLOUR } from './lib/brand';
 import { LanguageProvider } from './lib/i18n';
 import { SiteFooter } from './components/SiteFooter';
 import Watchdog from './components/Watchdog';
+import Blankscreen from './components/Blankscreen';
 import { SITE_URL } from './lib/brand';
 
 export const metadata: Metadata = {
@@ -65,6 +66,8 @@ export default function RootLayout({
               this catches the two failures no error boundary can, and writes
               them to the device so `/oops` can read them back. */}
           <Watchdog />
+          {/* The one thing the watchdog cannot do: be seen. */}
+          <Blankscreen />
           {children}
           <SiteFooter />
         </LanguageProvider>
