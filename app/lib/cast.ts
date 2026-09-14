@@ -103,6 +103,45 @@ export type Added =
  * member on every device, while a file with no row is forty kilobytes nobody
  * ever sees.
  */
+/**
+ * Put somebody in the cast from a picture this device already has.
+ *
+ * ── Why there are two doors ──────────────────────────────────────────────
+ *
+ * The other one opens the operating system's file picker, and for Carli, on
+ * her phone, that press leaves a white screen: the page comes back empty,
+ * nothing is saved, and a reload cures it. Three explanations have been ruled
+ * out — memory, an in-app browser, and any error the page could throw — and
+ * it has not been reproduced from this side, because the video desk's picture
+ * section does not draw without a live key.
+ *
+ * What is certain is that the file picker is on the path, and that the
+ * pictures already on the device got there without it: `Pictures` had one in
+ * it while the cast had none. So this is the door that does not go past the
+ * thing that breaks.
+ *
+ * It is worth having whether or not that bug is ever found. Two shelves of
+ * pictures sitting side by side with no way to move one to the other was a
+ * gap on its own — somebody who tried a photo out on the scratch pad and then
+ * wanted the same person in three clips had to go and find the file again.
+ *
+ * ── A data URL, not a file ───────────────────────────────────────────────
+ *
+ * Which is what the device shelf keeps. It is turned back into a blob here
+ * rather than at the caller, so both doors hand `fit` the same kind of thing
+ * and there is one place that knows the shelf's shape.
+ */
+export async function addToCastFromKept(dataUrl: string, name: string): Promise<Added> {
+  const answer = await fetch(dataUrl).catch(() => null);
+  const blob = answer ? await answer.blob().catch(() => null) : null;
+  if (!blob || !blob.type.startsWith('image/')) return { ok: false, why: 'not_an_image' };
+  /* Named after the shelf entry, with a type the rest of the path can read.
+     `File` rather than `Blob` because that is what `addToCast` takes, and
+     giving it a second signature to save one line here is how a function
+     ends up with two ways to be called and one of them untested. */
+  return addToCast(new File([blob], `${name || 'cast'}.png`, { type: blob.type }), name);
+}
+
 export async function addToCast(file: File, name: string): Promise<Added> {
   if (!configured()) return { ok: false, why: 'signed_out' };
 

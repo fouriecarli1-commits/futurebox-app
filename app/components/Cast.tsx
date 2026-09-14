@@ -34,10 +34,12 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, Loader2, Trash2, UserPlus, Users } from 'lucide-react';
+import { Check, Image as ImageIcon, Loader2, Trash2, UserPlus, Users } from 'lucide-react';
 import {
-  ACCEPTS, CAST_LIMIT, addToCast, editCast, loadCast, pictureOf, removeFromCast, type Member,
+  ACCEPTS, CAST_LIMIT, addToCast, addToCastFromKept, editCast, loadCast, pictureOf,
+  removeFromCast, type Member,
 } from '../lib/cast';
+import { assetDataUrl, loadAssets, type Asset } from '../lib/assets';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
 
@@ -59,6 +61,13 @@ export default function Cast({
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [naming, setNaming] = useState<string | null>(null);
+  /**
+   * The device's own picture shelf, when somebody asks for it.
+   *
+   * Loaded on the press rather than on mount: most people will use the other
+   * door, and reading a shelf nobody opened is work for nothing.
+   */
+  const [kept, setKept] = useState<Asset[] | null>(null);
 
   useEffect(() => {
     void loadCast().then(setCast);
@@ -127,6 +136,45 @@ export default function Cast({
       } finally {
         setBusy(false);
         if (picker.current) picker.current.value = '';
+      }
+    },
+    [busy, t],
+  );
+
+  /**
+   * Take one off the device's shelf instead of opening the file picker.
+   *
+   * The same `add` in every respect once it has bytes — the naming, the
+   * limit, the message on a refusal — so the two doors cannot drift into
+   * behaving differently.
+   */
+  const addKept = useCallback(
+    async (asset: Asset) => {
+      if (busy) return;
+      setBusy(true);
+      setProblem(null);
+      try {
+        const dataUrl = await assetDataUrl(asset.id);
+        if (!dataUrl) {
+          setProblem(t('cast.keptGone', 'That picture is no longer on this device.'));
+          return;
+        }
+        const made = await addToCastFromKept(dataUrl, asset.name || 'Cast');
+        if (!made.ok) {
+          setProblem(
+            made.why === 'full'
+              ? `${t('cast.full', 'A cast holds')} ${CAST_LIMIT}. ${t('cast.fullTake', 'Take somebody out first.')}`
+              : made.why === 'signed_out'
+                ? t('cast.signedOut', 'Sign in first, so the cast is on your account rather than this device.')
+                : t('cast.failed', 'That did not save. Try again in a moment.'),
+          );
+          return;
+        }
+        setCast((was) => [made.member, ...(was ?? [])]);
+        setKept(null);
+        setNaming(made.member.id);
+      } finally {
+        setBusy(false);
       }
     },
     [busy, t],
@@ -279,6 +327,60 @@ export default function Cast({
         {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
         {t('cast.add', 'Add somebody to the cast')}
       </label>
+
+      {/* ── The second door ─────────────────────────────────────────────
+
+          The one above opens the operating system's file picker, and on
+          Carli's phone that press leaves a white screen: the page comes
+          back empty, nothing is saved, and a reload cures it. Memory, the
+          in-app browser and every error the page could throw have all been
+          ruled out, and it cannot be reproduced from here — the video
+          desk's picture section does not draw without a live key.
+
+          What is certain is that the picker is on the path, and that the
+          pictures already on the device got there without it. So this door
+          does not go past the thing that breaks.
+
+          It earns its place either way. Two shelves of pictures sat side by
+          side with no way to move one to the other: somebody who tried a
+          photo on the scratch pad and then wanted that person in three
+          clips had to go and find the file again. */}
+      {(kept?.length ?? 0) > 0 || kept === null ? (
+        <button
+          type="button"
+          onClick={() => setKept(kept === null ? loadAssets() : null)}
+          aria-expanded={kept !== null}
+          disabled={disabled || busy || cast.length >= CAST_LIMIT}
+          className="ml-2 inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:border-zinc-600 hover:text-white disabled:opacity-50"
+        >
+          <ImageIcon className="h-4 w-4" />
+          {t('cast.fromKept', 'Use a picture you already have')}
+        </button>
+      ) : null}
+
+      {kept !== null && (
+        kept.length === 0 ? (
+          <p className="text-sm text-zinc-500 leading-snug">
+            {t('cast.noKept', 'There are no pictures on this device yet. The strip under this one is where they land.')}
+          </p>
+        ) : (
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {kept.map((one) => (
+              <button
+                key={one.id}
+                type="button"
+                onClick={() => void addKept(one)}
+                disabled={busy}
+                title={one.name}
+                className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 border-zinc-800 hover:border-emerald-500 disabled:opacity-50"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={one.thumb} alt={one.name} className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )
+      )}
 
       <p className="text-xs text-zinc-600">
         {cast.length}/{CAST_LIMIT} · {t('cast.account', 'on your account, on every device')}
