@@ -136,6 +136,21 @@ export default function Oops(): React.ReactElement {
                 <p style={{ margin: '0.375rem 0 0', fontWeight: 700, lineHeight: 1.4 }}>
                   {one.name}: {one.message}
                 </p>
+                {/* The one entry that is not a fault, said plainly where it
+                    appears. Somebody reading "discarded" in a list called
+                    "what went wrong" would reasonably think something in the
+                    app broke, and nothing did. */}
+                {(one.how === 'discarded' || one.how === 'frozen') && (
+                  <p style={{ margin: '0.5rem 0 0', fontSize: '0.8125rem', lineHeight: 1.5, color: DIM }}>
+                    Dis nie 'n fout in die app nie. Die foon het die blad se geheue gevat vir iets
+                    anders — gewoonlik die lêerkieser of die kamera — en 'n leë een teruggesit.
+                    <br />
+                    <span style={{ color: FAINT }}>
+                      Not an app fault. The phone took the page's memory for something else — usually
+                      the file picker or the camera — and put an empty one back.
+                    </span>
+                  </p>
+                )}
                 {one.digest && (
                   <p style={{ margin: '0.375rem 0 0', fontSize: '0.75rem', color: FAINT }}>{one.digest}</p>
                 )}

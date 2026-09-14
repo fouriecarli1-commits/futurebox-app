@@ -35,11 +35,37 @@ export default function Watchdog(): null {
     const rejected = (event: PromiseRejectionEvent): void => {
       noteProblem('promise', event.reason);
     };
+    /* ── And the white screen that is not an error ──────────────────────
+
+       Carli's, most likely. A page that throws nothing, rejects nothing,
+       comes back blank and recovers on a reload has not failed: Android
+       has thrown the tab away to give its memory to something else — a
+       file picker or a camera app is the commonest reason — and put an
+       empty shell back when she returned.
+
+       `document.wasDiscarded` is true on the load that follows exactly
+       that, and it is the one thing that separates it from every other
+       blank screen. It is read once, on mount, because that is when it is
+       true. There is nothing to fix in this app if it is; what changes is
+       what we do about it, and that cannot be decided while it is a
+       guess. */
+    if ((document as Document & { wasDiscarded?: boolean }).wasDiscarded) {
+      noteProblem('discarded', 'The browser threw this page away and put it back.');
+    }
+
+    /* The step before that, when the browser catches it. Chrome freezes a
+       backgrounded page before discarding it, and says so — so a `freeze`
+       with no `resume` after it is the tab being taken, watched from the
+       inside. Not every discard is announced, which is why both are here. */
+    const froze = (): void => noteProblem('frozen', 'The browser froze this page in the background.');
+
     window.addEventListener('error', thrown);
     window.addEventListener('unhandledrejection', rejected);
+    document.addEventListener('freeze', froze);
     return () => {
       window.removeEventListener('error', thrown);
       window.removeEventListener('unhandledrejection', rejected);
+      document.removeEventListener('freeze', froze);
     };
   }, []);
 

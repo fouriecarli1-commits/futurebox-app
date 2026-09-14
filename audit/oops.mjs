@@ -60,6 +60,24 @@ check('and the rejected promise as a promise',
 check('each says which page it happened on', written.every((one) => typeof one.page === 'string'));
 check('and when', written.every((one) => !Number.isNaN(Date.parse(one.at))));
 
+/* ── Three: the page thrown away and put back ────────────────────────────
+
+   The likeliest cause of Carli's white screen, and the one that leaves NO
+   error behind — which is exactly why it has to be detected rather than
+   inferred from an empty list. `document.wasDiscarded` is true on the load
+   that follows a discard, so it is set before the page loads, the way the
+   browser sets it. */
+await p.addInitScript(() => {
+  Object.defineProperty(document, 'wasDiscarded', { value: true, configurable: true });
+});
+await p.reload({ waitUntil: 'domcontentloaded' });
+await p.waitForTimeout(1500);
+const withDiscard = await p.evaluate(() =>
+  JSON.parse(window.localStorage.getItem('futurebox.problems.v1') || '[]'));
+check('a page the browser threw away says so',
+  withDiscard.some((one) => one.how === 'discarded'),
+  JSON.stringify(withDiscard.map((o) => o.how)));
+
 /* ── And /oops reads back what was written ──────────────────────────────── */
 await p.goto(`${server.url}/oops`, { waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(1200);
@@ -68,6 +86,10 @@ check('/oops shows the thrown one', /a handler went wrong/.test(shown), shown.sl
 check('and the rejected one', /nobody awaited this/.test(shown), shown.slice(0, 200));
 check('and says plainly that nothing is sent anywhere',
   /never sent|nêrgens gestuur/i.test(shown), shown.slice(0, 200));
+/* The one entry that is not a fault has to say so where it is read, or it
+   sends somebody hunting a bug that does not exist. */
+check('and explains that a thrown-away page is not an app fault',
+  /Not an app fault|nie 'n fout in die app nie/i.test(shown), shown.slice(0, 300));
 
 /* Clearing is real, not just a repaint: somebody who clears it and comes back
    must not find it again. */

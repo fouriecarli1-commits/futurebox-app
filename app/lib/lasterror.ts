@@ -48,8 +48,22 @@ const KEY = 'futurebox.problems.v1';
 const MOST = 10;
 
 export interface Problem {
-  /** Which way it broke, which is most of what narrows a hunt. */
-  readonly how: 'render' | 'thrown' | 'promise';
+  /**
+   * Which way it broke, which is most of what narrows a hunt.
+   *
+   * `discarded` is not a break at all and is the reason this list exists in
+   * its second form. A page that throws nothing, rejects nothing, comes back
+   * blank and recovers on a reload has not failed — it has been thrown away
+   * and put back by the operating system, which happens on Android when a
+   * file picker or a camera needs the memory the browser was holding.
+   *
+   * `document.wasDiscarded` says so in one boolean, and it is the only thing
+   * that separates that from every other white screen. Nothing else in this
+   * file needs an explanation; this one does, because a reader will wonder
+   * why a non-error is in a list of errors. It is here because it is the
+   * answer to the question the list was made to ask.
+   */
+  readonly how: 'render' | 'thrown' | 'promise' | 'discarded' | 'frozen';
   readonly name: string;
   readonly message: string;
   /** The first few frames. A phone screen holds about this much. */
