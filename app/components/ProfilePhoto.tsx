@@ -78,9 +78,15 @@ export default function ProfilePhoto({
           setProblem(
             made.why === 'too_big'
               ? t('photo.tooBig', 'That picture is very large. Try one under 12MB.')
-              : made.why === 'not_an_image'
-                ? t('photo.notImage', 'That is not a picture.')
-                : t('photo.unreadable', 'That picture could not be read. A JPEG or a PNG will work.'),
+              /* A different answer from `too_big`: this one is about the
+                 camera mode rather than the file, and telling somebody to
+                 find a smaller file when they are holding an 800KB photo
+                 that is 200 megapixels is a dead end. */
+              : made.why === 'too_many_pixels'
+                ? t('photo.tooManyPixels', 'That photo is too big for a phone browser to open \u2014 it is one of the very high-megapixel camera modes. Take one on the normal setting, or use a screenshot of it.')
+                : made.why === 'not_an_image'
+                  ? t('photo.notImage', 'That is not a picture.')
+                  : t('photo.unreadable', 'That picture could not be read. A JPEG or a PNG will work.'),
           );
           return;
         }

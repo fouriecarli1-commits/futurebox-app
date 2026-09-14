@@ -22,6 +22,7 @@
     "check:sideborder": "tsx scripts/check-sideborder.mts",
     "check:cardtone": "tsx scripts/check-cardtone.mts",
     "check:dubpath": "tsx scripts/check-dubpath.mts",
+    "check:pixelguard": "tsx scripts/check-pixelguard.mts",
     "check:podvideo": "node audit/podvideo.mjs",
     "check:nameupload": "node audit/nameupload.mjs",
     "check:langtrip": "node audit/language.mjs 3018",

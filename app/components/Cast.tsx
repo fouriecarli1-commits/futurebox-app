@@ -104,9 +104,18 @@ export default function Cast({
                 ? t('cast.signedOut', 'Sign in first, so the cast is on your account rather than this device.')
                 : made.why === 'too_big'
                   ? t('cast.tooBig', 'That picture is very large. Try one under 12MB.')
-                  : made.why === 'not_an_image'
-                    ? t('cast.notImage', 'That is not a picture.')
-                    : t('cast.failed', 'That did not save. Try again in a moment.'),
+                  /* Named separately from `too_big`, because the two have
+                     different answers. A file that is too many bytes wants a
+                     smaller file; a file that is too many pixels is usually a
+                     phone set to its biggest camera mode, and the answer is
+                     the mode, not the file. Saying "try a smaller one" to
+                     somebody holding a 12MB photo they cannot make smaller is
+                     a dead end. */
+                  : made.why === 'too_many_pixels'
+                    ? t('cast.tooManyPixels', 'That photo is too big for a phone browser to open \u2014 it is one of the very high-megapixel camera modes. Take one on the normal setting, or use a screenshot of it.')
+                    : made.why === 'not_an_image'
+                      ? t('cast.notImage', 'That is not a picture.')
+                      : t('cast.failed', 'That did not save. Try again in a moment.'),
           );
           return;
         }

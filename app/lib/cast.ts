@@ -92,7 +92,7 @@ export async function loadCast(): Promise<Member[]> {
 
 export type Added =
   | { readonly ok: true; readonly member: Member }
-  | { readonly ok: false; readonly why: 'too_big' | 'not_an_image' | 'unreadable' | 'signed_out' | 'full' | 'failed' };
+  | { readonly ok: false; readonly why: 'too_big' | 'too_many_pixels' | 'not_an_image' | 'unreadable' | 'signed_out' | 'full' | 'failed' };
 
 /**
  * Put somebody in the cast.

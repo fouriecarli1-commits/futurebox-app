@@ -39,7 +39,7 @@ export const ACCEPTS = IMAGE_ACCEPTS;
 
 export type Chosen =
   | { readonly ok: true; readonly blob: Blob; readonly preview: string }
-  | { readonly ok: false; readonly why: 'too_big' | 'not_an_image' | 'unreadable' };
+  | { readonly ok: false; readonly why: 'too_big' | 'too_many_pixels' | 'not_an_image' | 'unreadable' };
 
 /** Read the file the person picked, square it, shrink it, re-encode it. */
 export async function squared(file: File): Promise<Chosen> {

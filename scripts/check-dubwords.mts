@@ -40,10 +40,23 @@ const eleven = readFileSync('app/lib/server/eleven.ts', 'utf8');
 const route = readFileSync('app/api/dub/route.ts', 'utf8');
 
 /* ── It is asked for at all ────────────────────────────────────────────── */
-ok('the transcript endpoint is called', /dubbing\/\$\{encodeURIComponent\(id\)\}\/transcript\//.test(eleven));
-ok('as json, for the word timings', /format_type=json/.test(eleven));
+
+/* These three used to name the URL shape directly — `/transcript/` and
+   `format_type=json`. That was right when both callers built their own URL,
+   and it went red the day ElevenLabs deprecated that path: the format moved
+   into the path, the resource went plural, and both callers moved behind one
+   function. See `check:dubpath`, which is where the URL now lives as a claim.
+
+   What this check is FOR is not the URL. It is that a dub's own transcript is
+   asked for at all, in both shapes, rather than the app paying to transcribe
+   audio it has already had written out. So it asks about the two formats,
+   which is the thing that would actually be lost, and leaves the endpoint to
+   the check whose subject it is. A check that names something twice is two
+   checks to update and one of them gets missed. */
+ok('the transcript endpoint is called', /dubTranscriptIn\(/.test(eleven));
+ok('as json, for the word timings', /dubTranscriptIn\(id, language, 'json'\)/.test(eleven));
 ok('and as srt, for a file somebody can upload with their episode',
-  /format_type=\$\{format\}/.test(eleven) && /'srt' \| 'webvtt'/.test(eleven));
+  /dubTranscriptIn\(id, language, format\)/.test(eleven) && /'srt' \| 'webvtt'/.test(eleven));
 
 /* ── A shape it cannot read is not an empty episode ────────────────────── */
 ok('an unreadable transcript says so rather than answering with no words',

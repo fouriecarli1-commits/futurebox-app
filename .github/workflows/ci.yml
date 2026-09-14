@@ -494,6 +494,14 @@ jobs:
       - name: The dub transcript is on the live endpoint
         run: npm run check:dubpath
 
+      # The ceiling on a chosen picture measured file size while its own
+      # comment said it existed to stop a phone browser running out of memory.
+      # A 200MP photo is 12MB on disk and 800MB open: it passed, and killed the
+      # tab with no error in it. The reader behind the new ceiling is checked
+      # against real file headers, including a JPEG behind 40KB of EXIF.
+      - name: The picture ceiling is in pixels, and reads real headers
+        run: npm run check:pixelguard
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept
