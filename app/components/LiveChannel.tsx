@@ -57,6 +57,15 @@ interface Post {
   kind: 'track' | 'episode' | 'elsewhere';
   title: string;
   note: string;
+  /**
+   * What kind of song it is.
+   *
+   * Empty on every post made before the column existed, and on episodes and
+   * links, which have no genre to have. The screen shows it when there is one
+   * and says nothing when there is not — an empty chip reading "—" is worse
+   * than a line that is simply not there.
+   */
+  genre: string;
   seconds: number;
   platform: string;
   link: string;
@@ -218,6 +227,41 @@ function RoomPanel({
               ? ` · ${clock(post.seconds)}`
               : ''}
         </p>
+        {/* ── The genre, as a chip rather than as more of the line above ──
+
+            Carli: "wys die liedjie se naam op die liedjie window, die artist
+            name, en die genre van die liedjie. Dit gaan dit makliker maak vir
+            ander users om by mekaar te leer en te hoor watter genre regtig
+            werk en mooi klink."
+
+            The name and the maker were already here. The genre was not, and
+            it is the one of the three nobody else can look up: a song's genre
+            is on its maker's own row, on their own device, and everybody in
+            this room is somebody else.
+
+            A chip and not another clause on the line above, because of what
+            she wants it FOR. Somebody scrolling a room to learn which genre
+            works is scanning, and a word appended after a duration is a word
+            that is read last or not at all. It sits on its own, at a size
+            that survives a glance.
+
+            Absent rather than empty when there is none — every post made
+            before the column existed, and every episode and link, which have
+            no genre to have. A chip reading "—" is worse than no chip. */}
+        {post.kind === 'track' && post.genre && (
+          <p className="pt-1.5">
+            <span
+              className="inline-block rounded-full px-2.5 py-1 text-xs font-bold"
+              style={{
+                background: 'rgba(255,255,255,0.16)',
+                color: '#ffffff',
+                textShadow: '0 1px 6px rgba(0,0,0,0.6)',
+              }}
+            >
+              {post.genre}
+            </span>
+          </p>
+        )}
         {post.note && (
           <p className="line-clamp-2 pt-1 text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.78)' }}>
             {post.note}

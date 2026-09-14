@@ -1223,7 +1223,14 @@ export default function Channel({
       {/* The words, over everything, following the song that is playing. */}
       {/* One song, the whole screen, and the next one a swipe away. */}
       {fullFor && (
-        <SongScreen tracks={tracks} startAt={fullFor} onClose={() => setFullFor(null)} />
+        <SongScreen
+          tracks={tracks}
+          startAt={fullFor}
+          /* The name on the creators row, which is the one place it lives.
+             A brought-in or handed-over song overrides it inside. */
+          artist={creator?.name?.trim() || undefined}
+          onClose={() => setFullFor(null)}
+        />
       )}
 
       {lyricsFor && (

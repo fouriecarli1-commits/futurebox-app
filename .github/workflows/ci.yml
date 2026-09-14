@@ -516,6 +516,12 @@ jobs:
       - name: A song's words are paid for once
         run: npm run check:paidonce
 
+      # A song window shows its name, its maker and its genre, on both the
+      # live room and the channel. The genre needs a column, a sender, a store
+      # and a reader — any one missing looks exactly like all four missing.
+      - name: Both song windows say what, who and what kind
+        run: npm run check:songcaption
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

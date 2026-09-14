@@ -66,6 +66,15 @@ interface PostRow {
   source_id: string;
   title: string;
   note: string;
+  /**
+   * What kind of song it is, carried on the post rather than looked up.
+   *
+   * It cannot be looked up: a song's genre is on its maker's own row, on
+   * their own device, and the whole point of the live room is that everybody
+   * else is reading it. Empty on every post made before the column existed,
+   * and on every episode and link, which have no genre to have.
+   */
+  genre: string;
   seconds: number;
   platform: string;
   link: string;
@@ -286,6 +295,7 @@ export async function GET(request: Request): Promise<Response> {
         kind: post.kind,
         title: post.title,
         note: post.note,
+        genre: post.genre ?? '',
         seconds: post.seconds,
         platform: post.platform,
         link: post.link,
@@ -380,6 +390,14 @@ export async function POST(request: Request): Promise<Response> {
     kind?: 'track' | 'episode';
     sourceId?: string;
     title?: string;
+    /**
+     * What kind of song it is, sent because nobody else can look it up.
+     *
+     * A song's genre lives on its maker's own row. Everybody in the live
+     * room is somebody else, so the post has to carry it or the room cannot
+     * say what it is listening to.
+     */
+    genre?: string;
     note?: string;
     seconds?: number;
     platform?: string;
@@ -591,6 +609,10 @@ export async function POST(request: Request): Promise<Response> {
     source_id: sourceId,
     title,
     note,
+    /* Trimmed and bounded like every other string that arrives over the wire
+       and is shown to strangers. A genre is two or three words; anything
+       longer is somebody using the field for something else. */
+    genre: String(body.genre ?? '').trim().slice(0, 60),
     seconds: Math.max(0, Math.round(Number(body.seconds) || 0)),
     /* Asked at the moment of posting and stored with the post, never inferred
        and never defaulted to true. `=== true` rather than a truthy read: a

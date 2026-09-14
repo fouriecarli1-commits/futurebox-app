@@ -100,6 +100,11 @@ export default function PostToLive({
           kind: 'track',
           sourceId: track.id,
           title: track.title,
+          /* Sent because nobody in the room can look it up: a song's genre is
+             on its maker's own row, and everybody reading the room is
+             somebody else. It is the one of the three things on a song window
+             that cannot be derived from what is already public. */
+          genre: track.genre,
           seconds: track.seconds,
           buildOn,
           /* Sent whichever answer was given, because the room stores it

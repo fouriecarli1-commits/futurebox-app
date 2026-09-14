@@ -96,11 +96,23 @@ export function wordsFor(track: Track): { lines: readonly TimedLine[]; real: boo
 export default function SongScreen({
   tracks,
   startAt,
+  artist,
   onClose,
 }: {
   readonly tracks: readonly Track[];
   /** The song that was tapped, so it opens on that one rather than the first. */
   readonly startAt: string;
+  /**
+   * Whose songs these are, for the caption.
+   *
+   * Passed in rather than read here, because it is not a property of a song:
+   * it is the name on the `creators` row, which one edit changes everywhere.
+   * A track that came from somewhere else says so on its own — `by` on a
+   * brought-in song, `givenBy` on one a collaborator handed over — and those
+   * beat this, because a file somebody else made must not take the reader's
+   * name just because it is sitting in their channel.
+   */
+  readonly artist?: string;
   readonly onClose: () => void;
 }): React.ReactElement {
   const { t } = useLang();
@@ -340,8 +352,56 @@ export default function SongScreen({
                   thumb's way on the right. */}
               <div className="absolute inset-x-0 bottom-0 p-5 pb-28">
                 <p className={`text-lg font-black leading-tight ${INK} drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]`}>{one.title}</p>
-                <p className={`pt-0.5 text-sm ${INK_SOFT}`}>
-                  {[one.genre, one.bpm ? `${one.bpm} BPM` : '', one.key].filter(Boolean).join(' · ')}
+
+                {/* ── Whose it is ──────────────────────────────────────────
+
+                    Carli: "wys die liedjie se naam op die liedjie window, die
+                    artist name, en die genre van die liedjie."
+
+                    The name was here and the genre was here, folded into a
+                    line with the tempo and the key. The maker was not, on the
+                    one screen where somebody is actually listening.
+
+                    The order is what a file somebody else made says about
+                    itself first: `by` is the artist named on a brought-in
+                    song, `givenBy` is whoever handed one over in a collab
+                    room, and only then the account's own name. A song sitting
+                    in your channel is not therefore yours. */}
+                {(one.by || one.givenBy || artist) && (
+                  <p className={`truncate pt-0.5 text-sm font-semibold ${INK}`}>
+                    {one.by || one.givenBy || artist}
+                  </p>
+                )}
+
+                {/* ── The genre, big enough to scan ────────────────────────
+
+                    It was third in a line reading "pop · 120 BPM · C", at the
+                    size of the smallest thing on the screen. That is fine as
+                    a fact and wrong for what she wants it for: somebody
+                    learning which genre works is scanning a scroller, and the
+                    third clause of a small grey line is read last or never.
+
+                    The same chip as the live room, on purpose. The two are
+                    the same question asked in two places. */}
+                {one.genre && (
+                  <p className="pt-1.5">
+                    {/* `GLASS` and `INK`, not `bg-white/20 text-white`.
+
+                        This app remaps Tailwind's white onto a theme
+                        variable, so `bg-white/20` paints near-black on the
+                        light theme and the chip would read as a dark blob
+                        with dark words on it. The literals at the top of this
+                        file exist for exactly that, and `check:theme` caught
+                        me using the class version — which is the check doing
+                        its job on the day it was most useful. */}
+                    <span className={`inline-block rounded-full ${GLASS} px-2.5 py-1 text-xs font-bold ${INK} drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]`}>
+                      {one.genre}
+                    </span>
+                  </p>
+                )}
+
+                <p className={`pt-1 text-sm ${INK_SOFT}`}>
+                  {[one.bpm ? `${one.bpm} BPM` : '', one.key].filter(Boolean).join(' · ')}
                 </p>
                 {/* How the words were timed, in the reader's own words.
 
