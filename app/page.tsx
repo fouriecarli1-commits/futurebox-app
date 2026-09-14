@@ -2019,9 +2019,30 @@ export default function FutureBoxHome() {
                   <p className="text-[10px] text-emerald-400">{artistHandle || user.handle}</p>
                 </div>
               </button>
+              {/* ── Sign out is a button, not a divider ──────────────────
+
+                  It used to be bare text with `border-l border-zinc-800`
+                  drawing a hairline between it and the name. That reads as
+                  a divider in a dark theme and as something else entirely
+                  in a light one: the green rule in `globals.css` matches
+                  `button[class*="border"]`, `border-l` contains "border",
+                  and a button with a background but no radius and no box
+                  is a green rectangle with one sharp edge stuck inside a
+                  rounded pill. Carli photographed exactly that.
+
+                  The lesson is the selector's, not this button's — a rule
+                  that colours buttons was written to match the word
+                  "border" and matched a divider. Two buttons in the app
+                  were built this way and both are fixed here; `check:sideborder`
+                  holds the third from being written.
+
+                  So: a real box, a real radius, and the weight she asked
+                  for. `font-bold` rather than a grey whisper, because a
+                  control that signs you out of your own account should not
+                  be the faintest thing in the bar. */}
               <button
                 onClick={handleSignOut}
-                className="text-[11px] text-zinc-500 hover:text-white border-l border-zinc-800 pl-2"
+                className="min-h-[36px] rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 py-1 text-[11px] font-bold text-zinc-300 hover:border-emerald-500 hover:text-emerald-200"
               >
                 {t('auth.signOut')}
               </button>
@@ -2100,7 +2121,7 @@ export default function FutureBoxHome() {
             <div className="relative">
               <button
                 onClick={() => { setPodcasterDropdownOpen(!podcasterDropdownOpen); setCategoryDropdownOpen(false); }}
-                className="min-h-[44px] flex items-center space-x-2 bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 px-3.5 py-1.5 rounded-xl text-zinc-200 transition-colors"
+                className="min-h-[44px] flex items-center space-x-2 bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 px-3.5 py-1.5 rounded-xl font-bold text-zinc-200 transition-colors"
               >
                 <Headphones className="w-3.5 h-3.5 text-emerald-400" />
                 <span>
@@ -2135,7 +2156,7 @@ export default function FutureBoxHome() {
             <div className="relative">
               <button
                 onClick={() => { setCategoryDropdownOpen(!categoryDropdownOpen); setPodcasterDropdownOpen(false); }}
-                className="min-h-[44px] flex items-center space-x-2 bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 px-3.5 py-1.5 rounded-xl text-zinc-200 transition-colors"
+                className="min-h-[44px] flex items-center space-x-2 bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 px-3.5 py-1.5 rounded-xl font-bold text-zinc-200 transition-colors"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400" />
                 <span>{selectedCategoryFilter || t('feed.allCats', 'Explore All Categories')}</span>

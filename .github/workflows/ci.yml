@@ -473,6 +473,13 @@ jobs:
       - name: The Afrikaans lines keep their hats
         run: npm run check:kappies
 
+      # The green rule in globals.css finds buttons with [class*="border"],
+      # and `border-l` contains "border". A hairline divider between two
+      # controls came out as a filled, unrounded rectangle — which is what
+      # the sign-out button looked like in Carli's photograph of the header.
+      - name: No button is bordered on one side only
+        run: npm run check:sideborder
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept
