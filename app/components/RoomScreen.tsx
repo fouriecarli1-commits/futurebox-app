@@ -69,6 +69,20 @@ export interface RoomPost {
   /** The sleeve the owner made, when there is one. */
   readonly cover?: string | null;
   /**
+   * What kind of song it is, where the maker wrote one down.
+   *
+   * Carli, 14 September 2026: *"Die oomblik wanneer hy binne die play in gaan
+   * dan wys dit nie daar binne ook die genre van die liedjie nie, net buite
+   * die play room."* The list outside is the directory of the room; this is
+   * the room, and the reason she wanted a genre on a song at all was so
+   * somebody listening could learn which ones work — which happens in here.
+   *
+   * Nobody in the room can look it up: a song's genre lives on its maker's
+   * own row, and everybody reading is somebody else. Empty for an episode or
+   * a link, which have no genre to have.
+   */
+  readonly genre?: string;
+  /**
    * How many people have hearted it, and whether this reader is one of them.
    *
    * Carli, seeing them on the list and not in here: "dit moet binne die play
@@ -107,6 +121,8 @@ export default function RoomScreen({
   useBackLayer(true, onClose);
   const scroller = useRef<HTMLDivElement | null>(null);
   const audio = useRef<HTMLAudioElement | null>(null);
+  /** Which post the element is currently on, for the recovery below. */
+  const nowPlaying = useRef<string | null>(null);
 
   /* Only what can actually be played. A panel you swipe to and that does
      nothing is worse than one that is not there — and a post whose signed URL
@@ -121,6 +137,17 @@ export default function RoomScreen({
   useEffect(() => setMounted(true), []);
 
   const post = playable[at];
+
+  /**
+   * The freshest copy of the list, without anything depending on it.
+   *
+   * The room refreshes on a timer and hands down a whole new array each
+   * time. Everything below reads the post it needs THROUGH this, so a
+   * refresh cannot re-run an effect — see the note on the play effect, which
+   * is the fault this exists for.
+   */
+  const latest = useRef(playable);
+  latest.current = playable;
 
   /* One element for the whole screen, made once. A second element per panel is
      how a feed ends up playing two songs at the same time. */
@@ -150,6 +177,25 @@ export default function RoomScreen({
        `playing` when it recovers. */
     element.addEventListener('waiting', () => setLoading(true));
     element.addEventListener('playing', () => setLoading(false));
+    /* ── When the link really has gone stale ───────────────────────────
+
+       The play effect no longer follows the signed url, which is what
+       stopped the room restarting every song every few seconds. The url
+       it stopped following did have one honest job: these links expire,
+       and a refresh used to hand over a fresh one by accident.
+
+       So do it on purpose, and only when it is needed. A 403 on an
+       expired link surfaces here as a media error; the freshest url for
+       the same post is a lookup away, and if it is the one already
+       loaded then the fault is the file and not the signature, and
+       reloading it would be a loop. */
+    element.addEventListener('error', () => {
+      if (!element.src) return;
+      const fresh = latest.current.find((each) => each.id === nowPlaying.current);
+      if (!fresh?.audio || fresh.audio === element.src) return;
+      element.src = fresh.audio;
+      void element.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+    });
     audio.current = element;
     return () => {
       element.pause();
@@ -209,6 +255,7 @@ export default function RoomScreen({
        future refactor of the other one cannot bring it back. */
     if (element.src === one.audio && !element.paused) return;
     setLoading(true);
+    nowPlaying.current = one.id;
     element.src = one.audio;
     try {
       await element.play();
@@ -240,17 +287,40 @@ export default function RoomScreen({
      The room hands down a fresh array on every refresh — see the note in
      `start` — so an effect that depends on the object runs again every few
      seconds, and its cleanup pauses the song on the way. */
+  /* ── On WHICH post, and on nothing else ────────────────────────────
+
+     Carli, 14 September 2026, after the first fix shipped: *"Al die
+     liedjies binne live room is hakkerig."* — all of them, not the one.
+
+     The first fix keyed this on the post's id AND on its audio url, on
+     the reasoning that a file moving is a real reason to reload. The url
+     is a SIGNED url. `/api/live` mints it with `createSignedUrl` on every
+     single request, and a Supabase signature carries the moment it was
+     issued — so the same file on the same row comes back under a
+     different url every few seconds, for ever.
+
+     So the dependency that was added to be careful was the one that
+     changed constantly: every refresh re-ran this, the cleanup paused the
+     song, and `start` saw a url it had never seen and threw the buffer
+     away. The guard inside `start` never got a chance, because by the
+     time it ran the url really had changed. That is why it was every
+     song, and why the first fix made no difference to her.
+
+     The id is the identity. A post with the same id is the same song, and
+     an element already playing it needs nothing done to it. The url is
+     read through `latest` at the moment it is needed, so this still gets
+     the freshest one without depending on it. */
   const playingId = post?.id;
-  const playingSrc = post?.audio ?? null;
   useEffect(() => {
-    if (!post) return;
-    void start(post);
+    if (!playingId) return;
+    const one = latest.current.find((each) => each.id === playingId);
+    if (one) void start(one);
     return () => {
       audio.current?.pause();
       setPlaying(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playingId, playingSrc, start]);
+  }, [playingId, start]);
 
   /**
    * The next one down, fetched while this one plays.
@@ -265,8 +335,14 @@ export default function RoomScreen({
    * half-finished downloads competing with the one being listened to.
    */
   const ahead = useRef<HTMLAudioElement | null>(null);
+  /* Keyed on which post is next, for the same reason as the effect above:
+     `playable` is a new array on every refresh, so depending on it tore this
+     down and started the next song's download again every few seconds —
+     competing for the bandwidth of the one being listened to, which is the
+     opposite of what warming it is for. */
+  const nextId = playable[at + 1]?.id;
   useEffect(() => {
-    const next = playable[at + 1];
+    const next = latest.current.find((each) => each.id === nextId);
     if (!next?.audio) return;
     const warm = new Audio();
     warm.preload = 'auto';
@@ -276,7 +352,7 @@ export default function RoomScreen({
       warm.src = '';
       if (ahead.current === warm) ahead.current = null;
     };
-  }, [at, playable]);
+  }, [nextId]);
 
   const toggle = () => {
     const element = audio.current;
@@ -457,6 +533,20 @@ export default function RoomScreen({
                   {one.by}
                 </p>
               </div>
+              {/* The genre, beside the name rather than under the note.
+
+                  Drawn as a chip for the same reason as on the list: it is a
+                  fact about the song, not more of the sentence about who made
+                  it. Absent where there is none — a chip reading "—" is worse
+                  than no chip. */}
+              {one.genre && (
+                <span
+                  className="ml-auto flex-shrink-0 rounded-full px-3 py-1 text-xs font-bold"
+                  style={{ background: GLASS, color: INK_SOFT }}
+                >
+                  {one.genre}
+                </span>
+              )}
             </div>
 
             {one.note && (

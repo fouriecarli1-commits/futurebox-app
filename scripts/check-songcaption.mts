@@ -55,6 +55,20 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
   if (!passed) failures += 1;
 };
 
+/* Matched on several spellings, because the three files solve the same theme
+   problem differently and all three are right: the live room writes its
+   colours inline, `SongScreen` keeps literals at the top of the file
+   (`GLASS`, `INK`), and `RoomScreen` keeps its own set — this app remaps
+   Tailwind's white onto a theme variable, so `bg-white/20` paints near-black
+   on the light theme. */
+function chipsIn(source: string): boolean {
+  return (
+    /rounded-full[^"`]*text-xs font-bold/.test(source) ||
+    /rounded-full[^"`]*\$\{GLASS\}/.test(source) ||
+    /rounded-full[^"`]*text-xs font-bold[\s\S]{0,120}background: GLASS/.test(source)
+  );
+}
+
 const live = readFileSync('app/components/LiveChannel.tsx', 'utf8');
 const song = readFileSync('app/components/SongScreen.tsx', 'utf8');
 const channel = readFileSync('app/components/Channel.tsx', 'utf8');
@@ -81,6 +95,38 @@ ok('  and hands it back', /genre: post\.genre \?\? ''/.test(route));
    is then shown to strangers. */
 ok('  and bounds what it stores', /\.trim\(\)\.slice\(0, 60\)/.test(route));
 
+/* ── The third song window, which is the one she opens to LISTEN ───────
+
+   Carli, 14 September 2026: *"Die oomblik wanneer hy binne die play in gaan
+   dan wys dit nie daar binne ook die genre van die liedjie nie, net buite die
+   play room."*
+
+   `LiveChannel` is the directory of the room and `RoomScreen` is the room,
+   and the whole reason she asked for a genre on a song was so somebody
+   listening could learn which ones work — which happens in here, not on the
+   list. The field was stored, returned, and shown outside; the map that hands
+   posts to the full-screen panel simply did not copy it across.
+
+   The cover is the same shape of miss and was found looking for this one:
+   `RoomScreen` has drawn `one.cover` since it was written, and no cover was
+   ever passed to it, so every sleeve somebody made vanished the moment the
+   song was opened. Both are held here, because one map line drops either. */
+const room = readFileSync('app/components/RoomScreen.tsx', 'utf8');
+ok('the play room shows the name', /\{one\.title\}/.test(room));
+ok('  and who made it', /\{one\.by\}/.test(room));
+ok('  and what kind of song it is', /\{one\.genre\}/.test(room));
+ok('  as a chip, like the two windows outside it', chipsIn(room));
+ok(
+  '  and the room actually hands it down',
+  /genre: one\.genre,/.test(live),
+  'a panel reading a field nobody passes shows nothing, silently',
+);
+ok(
+  'the sleeve travels in with it',
+  /photo=\{one\.cover\}/.test(room) && /cover: one\.cover,/.test(live),
+  'RoomScreen has drawn the cover since it was written and was never given one',
+);
+
 /* ── The channel's window: the same three ─────────────────────────────── */
 ok('the channel window shows the name', /\{one\.title\}/.test(song));
 ok('  and what kind of song it is', /\{one\.genre\}/.test(song));
@@ -100,10 +146,8 @@ ok(
    colours inline, and `SongScreen` keeps literals at the top of the file
    (`GLASS`, `INK`) because this app remaps Tailwind's white onto a theme
    variable — `bg-white/20` paints near-black on the light theme. */
-const chips = (source: string): boolean =>
-  /rounded-full[^"`]*text-xs font-bold/.test(source) || /rounded-full[^"`]*\$\{GLASS\}/.test(source);
-ok('the genre is a chip in the live room, not a clause', chips(live));
-ok('  and a chip in the channel too', chips(song));
+ok('the genre is a chip in the live room, not a clause', chipsIn(live));
+ok('  and a chip in the channel too', chipsIn(song));
 
 /* ── And the style stays where it was ─────────────────────────────────── */
 ok(

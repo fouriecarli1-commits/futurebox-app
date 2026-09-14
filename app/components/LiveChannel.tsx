@@ -943,6 +943,18 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             seconds: one.seconds,
             audio: one.audio,
             sourceId: one.sourceId,
+            /* Both of these were read by the panel and never sent to it.
+
+               `RoomScreen` has drawn `one.cover` since it was written and
+               this map did not include it, so every song in the room fell
+               back to the seeded pattern — the sleeve somebody made showed
+               on the list outside and vanished the moment they opened it.
+               The genre is the same shape of miss, one she reported herself:
+               *"Die oomblik wanneer hy binne die play in gaan dan wys dit
+               nie daar binne ook die genre van die liedjie nie, net buite
+               die play room."* */
+            cover: one.cover,
+            genre: one.genre,
             hearts: one.hearts,
             hearted: one.hearted,
             plays: one.plays,
