@@ -41,6 +41,7 @@ import { Headphones, Heart, Loader2, Pause, Play, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import { countWhenPlayed } from '../lib/played';
+import { lineAt, timelineOf, type Part } from '../lib/timeline';
 import Cover from './Cover';
 
 /** Literal, because the theme remaps `white` and `black` onto its own tokens. */
@@ -82,6 +83,22 @@ export interface RoomPost {
    * a link, which have no genre to have.
    */
   readonly genre?: string;
+  /**
+   * The song's plan — its `[Section]` blocks, their lines and their lengths.
+   *
+   * Carli, 14 September 2026: *"Die play room moet die liedjie se woorde
+   * speel."*
+   *
+   * Carried on the post because nothing in here can look them up: a song's
+   * words are on its maker's own row and on its maker's own device, and
+   * everybody reading the room is somebody else. The same reason as the
+   * genre, and the reason this screen has been silent since it was written.
+   *
+   * The PLAN and not finished timings, so the room spreads it over whatever
+   * the file actually plays and a song a second longer than its row says
+   * stays in step. Null for an episode, a link, or a song with no words.
+   */
+  readonly words?: readonly Part[] | null;
   /**
    * How many people have hearted it, and whether this reader is one of them.
    *
@@ -132,6 +149,8 @@ export default function RoomScreen({
 
   const [at, setAt] = useState(opening);
   const [playing, setPlaying] = useState(false);
+  /** How far into the song it is, in seconds. Only the words read this. */
+  const [along, setAlong] = useState(0);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -177,6 +196,10 @@ export default function RoomScreen({
        `playing` when it recovers. */
     element.addEventListener('waiting', () => setLoading(true));
     element.addEventListener('playing', () => setLoading(false));
+    /* Where the song is, so the words can follow it. `timeupdate` fires about
+       four times a second, which is the granularity a sung line needs and far
+       less work than a frame loop. */
+    element.addEventListener('timeupdate', () => setAlong(element.currentTime));
     /* ── When the link really has gone stale ───────────────────────────
 
        The play effect no longer follows the signed url, which is what
@@ -323,6 +346,21 @@ export default function RoomScreen({
   }, [playingId, start]);
 
   /**
+   * The words, spread over the length, for the panel being listened to.
+   *
+   * Keyed on which post for the same reason as everything else in here: the
+   * plan arrives on a new array object every refresh, and a timeline rebuilt
+   * every few seconds would be a new array under the renderer for no reason.
+   */
+  const timed = useMemo(() => {
+    const one = latest.current.find((each) => each.id === playingId);
+    const plan = one?.words ?? [];
+    return plan.length ? timelineOf(plan, one?.seconds || 0) : [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playingId]);
+  const sung = timed.length ? lineAt(timed, along) : -1;
+
+  /**
    * The next one down, fetched while this one plays.
    *
    * A scroller's worst moment is the scroll itself: the panel arrives, the
@@ -429,6 +467,49 @@ export default function RoomScreen({
                 the words sit there, and a scrim that fades out behind them is
                 a scrim that does nothing where it is needed. */}
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.55),rgba(0,0,0,0.45)_45%,rgba(0,0,0,0.88))]" />
+
+            {/* ── The words, following the song ──────────────────────────
+
+                Carli, 14 September 2026: *"Die play room moet die liedjie se
+                woorde speel."*
+
+                Above the play control rather than inside the caption: this
+                is the middle of the panel, where a lyric belongs and where
+                nothing else is, and the caption at the foot is about the
+                song rather than in it.
+
+                `pointer-events-none`, because the whole panel is the pause
+                button and a lyric that swallows a tap is a lyric that stops
+                the song. Three lines at a time — the one being sung and its
+                neighbours — because more than that on a phone is a wall, and
+                one alone gives no sense of where the song is.
+
+                Literal colours, like everything else on this screen: the app
+                remaps Tailwind's white onto a theme variable, so `text-white`
+                over a picture renders near-black in the light theme. */}
+            {index === at && sung >= 0 && (
+              <div className="pointer-events-none absolute inset-x-6 top-1/2 z-10 -translate-y-1/2 space-y-2 text-center">
+                {[sung - 1, sung, sung + 1].map((which) => {
+                  const line = timed[which];
+                  if (!line) return <span key={which} className="block h-6" />;
+                  const now = which === sung;
+                  return (
+                    <p
+                      key={`${which}-${line.start}`}
+                      className={`leading-tight transition-all duration-300 ${
+                        now ? 'text-2xl font-black' : 'text-base'
+                      }`}
+                      style={{
+                        color: now ? INK : INK_DIM,
+                        textShadow: now ? '0 2px 12px rgba(0,0,0,0.9)' : undefined,
+                      }}
+                    >
+                      {line.text}
+                    </p>
+                  );
+                })}
+              </div>
+            )}
 
             {/* The whole panel is the play control, which is what a thumb
                 expects on a screen like this. The button below is for anybody

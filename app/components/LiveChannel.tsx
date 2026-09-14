@@ -42,6 +42,7 @@ import { visitorId } from '../lib/signal';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import RoomScreen from './RoomScreen';
+import type { Part } from '../lib/timeline';
 import Cover from './Cover';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
@@ -66,6 +67,15 @@ interface Post {
    * than a line that is simply not there.
    */
   genre: string;
+  /**
+   * The song's plan, for the full-screen panel to follow.
+   *
+   * Carried on the post because nobody in the room can look it up — the same
+   * reason as the genre. Read by `RoomScreen` and by nothing on the list:
+   * the list is the directory of the room, and words belong where somebody
+   * is listening.
+   */
+  words?: readonly Part[] | null;
   seconds: number;
   platform: string;
   link: string;
@@ -955,6 +965,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                die play room."* */
             cover: one.cover,
             genre: one.genre,
+            words: one.words,
             hearts: one.hearts,
             hearted: one.hearted,
             plays: one.plays,

@@ -75,6 +75,15 @@ interface PostRow {
    * and on every episode and link, which have no genre to have.
    */
   genre: string;
+  /**
+   * The song's plan, for whoever opens the post full screen.
+   *
+   * Null on every post made before the column existed, and on an episode or
+   * a link, which have no words to have. `unknown` because it is a `jsonb`
+   * column: what comes back is whatever was written, so the read below
+   * checks it is an array before it is handed on.
+   */
+  words?: unknown;
   seconds: number;
   platform: string;
   link: string;
@@ -296,6 +305,7 @@ export async function GET(request: Request): Promise<Response> {
         title: post.title,
         note: post.note,
         genre: post.genre ?? '',
+        words: Array.isArray(post.words) ? post.words : null,
         seconds: post.seconds,
         platform: post.platform,
         link: post.link,
@@ -398,6 +408,15 @@ export async function POST(request: Request): Promise<Response> {
      * say what it is listening to.
      */
     genre?: string;
+    /**
+     * The song's plan — `[Section]` blocks, their lines and their lengths.
+     *
+     * Sent for the same reason as the genre: a song's words are on its
+     * maker's own row and on its maker's own device, and everybody reading
+     * the room is somebody else. The plan rather than finished timings, so
+     * the room can spread it over whatever the file actually plays.
+     */
+    words?: unknown;
     note?: string;
     seconds?: number;
     platform?: string;
@@ -521,7 +540,38 @@ export async function POST(request: Request): Promise<Response> {
   if (!title) return Response.json({ message: 'Give it a name.' }, { status: 400 });
   const note = String(body.note ?? '').trim().slice(0, 500);
 
-  const allowed = await guard(request, `${title}\n${note}`, 'room', caller);
+  /* ── The words, rebuilt field by field rather than trusted ─────────────
+
+     This arrives as JSON from a browser and goes into a `jsonb` column that
+     is read back out to every stranger in the room, so nothing of the shape
+     that was sent is kept: each section is rebuilt from the three fields the
+     room uses, with everything else dropped on the floor.
+
+     Bounded in all three directions — how many sections, how many lines in
+     one, and how long a line is. A lyric sheet is a few kilobytes; anything
+     past these is somebody using the column for storage. */
+  const words = (Array.isArray(body.words) ? body.words : [])
+    .slice(0, 40)
+    .map((part) => {
+      const one = (part ?? {}) as { name?: unknown; lines?: unknown; seconds?: unknown };
+      return {
+        name: String(one.name ?? '').trim().slice(0, 60),
+        lines: (Array.isArray(one.lines) ? one.lines : [])
+          .slice(0, 60)
+          .map((line) => String(line ?? '').trim().slice(0, 300))
+          .filter(Boolean),
+        seconds: Math.max(0, Math.min(1800, Math.round(Number(one.seconds) || 0))),
+      };
+    })
+    .filter((part) => part.lines.length > 0);
+
+  /* Through the same gate as the rest of it, and this is the point the gate
+     was widened for: a title and a note are a line each, and a lyric sheet is
+     the longest piece of somebody else's writing the room shows to
+     strangers. It went through no gate at all until the room started
+     carrying it. */
+  const sung = words.flatMap((part) => part.lines).join('\n');
+  const allowed = await guard(request, `${title}\n${note}\n${sung}`, 'room', caller);
   if (!allowed.ok) return allowed.response;
 
   if (body.what === 'elsewhere') {
@@ -613,6 +663,10 @@ export async function POST(request: Request): Promise<Response> {
        and is shown to strangers. A genre is two or three words; anything
        longer is somebody using the field for something else. */
     genre: String(body.genre ?? '').trim().slice(0, 60),
+    /* Null rather than an empty array where there are none, so a reader can
+       tell "this song has no words written down" from "this post was made
+       before the room carried them". */
+    words: words.length ? words : null,
     seconds: Math.max(0, Math.round(Number(body.seconds) || 0)),
     /* Asked at the moment of posting and stored with the post, never inferred
        and never defaulted to true. `=== true` rather than a truthy read: a

@@ -522,6 +522,12 @@ jobs:
       - name: Both song windows say what, who and what kind
         run: npm run check:songcaption
 
+      # A song's words are on its maker's own row and own device, and
+      # everybody reading the live room is somebody else — so the post has to
+      # carry them, and what it carries is rebuilt, bounded and moderated.
+      - name: The words travel into the room with the song
+        run: npm run check:roomwords
+
       # The live room refreshes on a timer and rebuilds its post list each
       # time. A player keyed on the post object restarts the song on every
       # refresh — heard as stuttering, and not a bandwidth problem.

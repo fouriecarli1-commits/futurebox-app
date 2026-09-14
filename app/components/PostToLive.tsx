@@ -60,6 +60,25 @@ import { refusalText } from '../lib/apierror';
 import { useBackLayer } from '../lib/backstack';
 import { useLang } from '../lib/i18n';
 import type { Track } from '../lib/library';
+import { partsOf, type Part } from '../lib/timeline';
+
+/**
+ * The song's plan, as the room will need it.
+ *
+ * The plan the song was made from where there is one, and the written sheet
+ * split on its `[Section]` tags where there is not — which is every song made
+ * before plans were kept, and anything typed straight into the words box.
+ * `evenly()` in `lyrictime.ts` resolves the two the same way; this is that
+ * decision made once, on the way out.
+ *
+ * The PLAN rather than finished timings: the room spreads it over whatever
+ * length the file actually plays, so a song a second longer than the row says
+ * stays in step, and the row stays small.
+ */
+function planFor(track: Track): readonly Part[] {
+  const stored = (track.parts ?? []) as readonly Part[];
+  return stored.length ? stored : partsOf(track.lyrics ?? '');
+}
 
 export default function PostToLive({
   track,
@@ -105,6 +124,13 @@ export default function PostToLive({
              somebody else. It is the one of the three things on a song window
              that cannot be derived from what is already public. */
           genre: track.genre,
+          /* Sent for the same reason as the genre, and it is the reason the
+             full-screen panel could not show them: a song's words live on
+             its maker's own row and on its maker's own device, and everybody
+             reading the room is somebody else.
+
+             Carli: *"Die play room moet die liedjie se woorde speel."* */
+          words: planFor(track),
           seconds: track.seconds,
           buildOn,
           /* Sent whichever answer was given, because the room stores it

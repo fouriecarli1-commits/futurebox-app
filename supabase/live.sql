@@ -161,3 +161,25 @@ grant execute on function public.live_hello(text, uuid, text) to service_role;
 -- keer kan loop.
 alter table public.live_posts
   add column if not exists genre text not null default '';
+
+-- ── Die woorde van die liedjie, sodat die play room hulle kan wys ─────────
+--
+-- Carli, 14 September 2026: *"Die play room moet die liedjie se woorde
+-- speel."*
+--
+-- Niemand in die kamer kan hulle gaan haal nie. 'n Liedjie se woorde lê op sy
+-- maker se eie ry en op sy eie toestel; almal wat die kamer lees is iemand
+-- anders. Dieselfde rede as die genre.
+--
+-- Gestoor as die plan (die [Afdeling]-blokke met hulle reëls en sekondes),
+-- nie as afgewerkte tydstempels nie. Die kamer versprei dit self oor die
+-- lengte, so 'n liedjie wat 'n sekonde langer speel as wat die ry sê bly in
+-- pas — en die ry bly klein, want 'n plan is 'n paar kilogrepe en 'n volle
+-- stel tydstempels is baie meer.
+--
+-- Leeg waar daar niks is nie: 'n episode, 'n skakel, of 'n liedjie sonder
+-- woorde. Die skerm wys dan die kamer soos hy altyd was.
+--
+-- `if not exists`, want hierdie lêer moet twee keer kan loop.
+alter table public.live_posts
+  add column if not exists words jsonb;
