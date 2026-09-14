@@ -4276,6 +4276,93 @@ and nobody to sue.
 It waits on one real clip either way. Three things are unknown until then, and
 twenty faces built before that may be twenty faces for nothing.
 
+## What the Pro Booth does not have, of what she asked for (15 September)
+
+*"Ek is bekommerd dat helfte van die funksies wat ek voorgestel het nie daar
+is nie? Hoekom nie? Lys presies wat jy uitgelaat het, met 'n rede. As daar
+programme is wat ek moet betaal doen ek dit."*
+
+She is right that things are missing. It is not half, and the ones that are
+missing are missing for one of two reasons: three need a kind of signal
+processing a browser cannot do in the graph this room is built on, and four
+are small and were simply not done. The four are tasks, not questions.
+
+Counted against the list she wrote on 14 September, item for item.
+
+### What is there
+
+**Track controls** — mute, solo, record, sing-with-the-words, bring audio in,
+left/right, cut, tempo, key, time signature, count-in, snap, decibels, click
+with its own level, subdivision.
+
+**Mix and master** — the song key (on Track controls), match the loudness,
+measure the mix, decibels, take the room off (on the lane, paid).
+
+**Audio effects** — compressor, limiter, EQ, utility, visualiser, amp
+modeller, bit crusher, saturator, wave folder, chorus, tremolo, delay,
+reverb. Thirteen of the sixteen she named, and every one of them draws what
+it is doing to the sound rather than only naming it.
+
+**Stems** — generate a part, split a lane, and every part that comes back is
+a lane with its own fader and its own left-to-right.
+
+**Voice** — sing a lane in somebody else's voice. **Copilot** — say what is
+wrong with the mix in your own words and it moves the faders.
+
+### The three that need something we do not have
+
+**Gate.** A gate turns a lane down when it is quieter than a threshold —
+between the words, where the room noise lives. Every other effect in the rack
+is a Web Audio node: a compressor node, a filter node, a delay node. There is
+no gate node, because a gate has to look at the signal sample by sample and
+decide. Two honest ways to build one:
+
+  1. *On the buffer*, the way the amp modeller already works: run the gate
+     over the recorded audio once and keep the result. Deterministic,
+     identical in the ears and in the file, no new dependency. About a day.
+  2. *An AudioWorklet*, a real-time processor on the audio thread. More work,
+     and it has to be written twice — once live and once for the render — or
+     the file will not match what was approved.
+
+Number 1 is the right one and it is buildable. Nothing to buy.
+
+**Voice tuner.** Pitch correction. This needs pitch detection and resampling
+per frame, and a bad one sounds worse than none — this is the one place where
+"we built something" is worse than "we did not". Buying is the sensible
+answer, and the honest note is that the app's existing singing path (kits.ai)
+already changes *whose* voice it is; a tuner changes *what note* it is, which
+is a different product.
+
+**Vocoder.** A bank of band filters on a carrier and a modulator, each with
+an envelope follower — the same sample-by-sample problem as the gate, sixteen
+times over. Buildable on the buffer like the gate, and bigger. It is the one
+on this list with the least musical return for the work.
+
+### The four that are small and were simply left out
+
+  1. **Take off rumble** — a high-pass on the master. An hour.
+  2. **Take off hiss** — a gentle shelf. An hour, and it has to be named
+     honestly: it is not a de-noiser.
+  3. **Moderato** — the Italian tempo name beside the beats-a-minute. Half an
+     hour, and it is the kind of thing that makes a room feel like it was
+     built by somebody who plays.
+  4. **Capo** — reading only: say what key the song sounds in with a capo on
+     fret *n*. Actually transposing the audio is pitch-shifting, which is the
+     voice tuner's problem again.
+
+There is also no control *called* the **AI leveler**. The copilot does that
+job — it reads every lane's level and moves the faders — but somebody looking
+for the words she wrote will not find them.
+
+### What she would have to pay for
+
+Nothing on this list needs a paid service except the voice tuner, and that
+one is a real decision rather than a purchase: it changes what the app claims
+to do. Everything else is time.
+
+---
+
+
 ## Still hers
 
 - `ELEVEN_AURORA_READY=1` in Vercel, a redeploy, and one short clip. The check

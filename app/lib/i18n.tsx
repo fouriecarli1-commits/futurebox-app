@@ -1882,6 +1882,10 @@ export const STRINGS: Dict = {
   "pro.title": { en: "The booth \u2014 pro", af: "Die opnamekamer \u2014 pro" },
   "pro.lane": { en: "lane", af: "baan" },
   "pro.laneCard": { en: "The open lane", af: "Die oop baan" },
+  "pro.toPhone": { en: "Save to my phone", af: "Stoor op my foon" },
+  "pro.toPhoneWhat": { en: "Renders the same mix as \"Make one song\" and hands it to your phone as a WAV — every lane, its levels, its cuts and its effects, in one file. It costs nothing, nothing leaves the device, and the room stays open.", af: "Maak dieselfde mengsel as \"Maak een liedjie\" en gee dit vir jou foon as ’n WAV — elke baan, sy vlakke, waar hy gesny is en sy effekte, in een lêer. Dit kos niks, niks verlaat die toestel nie, en die kamer bly oop." },
+  "pro.toChannelWhat": { en: "To put it in your channel: press \"Make one song\". It lands in your Library under this song’s name, and the post button there sends it to Live. It goes that way rather than straight from here so that what people hear in the room is the same file your Library holds.", af: "Om dit in jou kanaal te sit: druk \"Maak een liedjie\". Dit land in jou Biblioteek onder hierdie liedjie se naam, en die plaas-knoppie daar stuur dit na Live. Dit gaan daardie pad eerder as reguit hiervandaan sodat wat mense in die kamer hoor dieselfde lêer is as wat jou Biblioteek hou." },
+  "pro.untitled": { en: "song", af: "liedjie" },
   "pro.wordsWhereShort": { en: "The words and the AI voice are in The Booth. Your lanes are saved.", af: "Die woorde en die KI-stem is in Die Kamer. Jou bane is gestoor." },
   "pro.keepWhatShort": { en: "Every lane you can hear becomes one song, in your Library.", af: "Elke baan wat jy kan hoor word een liedjie, in jou Biblioteek." },
   "pro.whichLane": { en: "Which lane", af: "Watter baan" },
@@ -1941,6 +1945,26 @@ export const STRINGS: Dict = {
   "pro.cleanUp": { en: "Take off", af: "Haal af" },
   "pro.rumble": { en: "Rumble", af: "Gedreun" },
   "pro.hiss": { en: "Hiss", af: "Gesis" },
+  "pro.noRumble": { en: "Take the rumble off", af: "Haal die gedreun af" },
+  "pro.noTop": { en: "Take the top off", af: "Haal die bokant af" },
+  "pro.rumbleWhat": { en: "Cuts everything under the note you set. A phone picks up traffic, a knock on the table and the singer’s own breath as energy nobody hears — and every limiter ducks the whole song for it. 60 is safe on anything with a voice; go to 100 only if there is no bass.", af: "Sny alles onder die noot wat jy stel. ’n Foon tel verkeer, ’n klop op die tafel en die sanger se eie asem op as energie wat niemand hoor nie — en elke begrenser druk die hele liedjie daarvoor af. 60 is veilig op enigiets met ’n stem; gaan na 100 net as daar geen bas is nie." },
+  "pro.hissWhat": { en: "Pulls the very top down, above 9 kHz. It makes a hissy phone recording easier to listen to — but it is a shelf and not a de-noiser: it cannot tell hiss from a cymbal, so far down it takes the air out of the song with the hiss.", af: "Trek die heel bokant af, bo 9 kHz. Dit maak ’n sissende foonopname makliker om na te luister — maar dit is ’n rak en nie ’n ruisverwyderaar nie: dit kan nie gesis van ’n simbaal onderskei nie, so ver af haal dit die lug saam met die gesis uit die liedjie." },
+  /* The tempo's Italian name. Computed keys — `pro.pace.${paceOf(bpm)}` —
+     so `check:afrikaans` cannot see them by reading the code, which is
+     exactly the blind spot that hid a dark feature once before. Named here
+     in full so a missing one is visible in this file rather than only on a
+     screen. Italian in both languages, because these are the words
+     themselves and not a translation of them. */
+  "pro.pace.grave": { en: "grave", af: "grave" },
+  "pro.pace.largo": { en: "largo", af: "largo" },
+  "pro.pace.larghetto": { en: "larghetto", af: "larghetto" },
+  "pro.pace.adagio": { en: "adagio", af: "adagio" },
+  "pro.pace.andante": { en: "andante", af: "andante" },
+  "pro.pace.moderato": { en: "moderato", af: "moderato" },
+  "pro.pace.allegro": { en: "allegro", af: "allegro" },
+  "pro.pace.vivace": { en: "vivace", af: "vivace" },
+  "pro.pace.presto": { en: "presto", af: "presto" },
+  "pro.pace.prestissimo": { en: "prestissimo", af: "prestissimo" },
   "pro.cleanWhat": { en: "Rumble is a high pass at 80 Hz — desk knocks, footsteps, and the low end a phone microphone invents. Hiss is a low pass at 12 kHz, which takes the fizz off a small microphone without dulling a voice. Both run before the tone stack, because driving a take that still has rumble in it drives the rumble too. Neither costs anything: they happen on this device.", af: "Gedreun is ’n hoëdeurlaat op 80 Hz — tafelklop, voetstappe, en die lae kant wat ’n foon se mikrofoon uitdink. Gesis is ’n laedeurlaat op 12 kHz, wat die bruis van ’n klein mikrofoon afhaal sonder om ’n stem dof te maak. Albei loop voor die toonrak, want om ’n opname te dryf wat nog gedreun in het, dryf die gedreun ook. Nie een kos iets nie: hulle gebeur op hierdie toestel." },
   "pro.deRoom": { en: "Take the room off", af: "Haal die vertrek af" },
   "pro.deRoomFailed": { en: "The room could not be taken off that lane.", af: "Die vertrek kon nie van daardie baan afgehaal word nie." },

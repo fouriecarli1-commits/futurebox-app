@@ -111,9 +111,85 @@ export interface Master {
   readonly ceilingDb: number;
   /** Bring the mix up towards the level streaming services play things at. */
   readonly matchLoudness: boolean;
+  /**
+   * Take the rumble off: everything below this many hertz, in dB per octave
+   * of roll-off that a single biquad gives. 0 is off.
+   *
+   * Carli asked for "take off rumble" on the mastering list. It is a
+   * high-pass and nothing cleverer: a phone microphone picks up traffic, a
+   * table being knocked and the singer's own breath as energy under 60 Hz
+   * that nobody hears and every limiter ducks for.
+   */
+  readonly rumbleHz?: number;
+  /**
+   * Take the hiss off: a shelf that pulls the very top down. 0 is off.
+   *
+   * Named for what it is rather than what she asked for. "Hiss" suggests a
+   * de-noiser, which listens to the noise and subtracts it; this is a gentle
+   * shelf above 9 kHz, which makes a hissy phone recording easier to listen
+   * to and cannot tell hiss from a cymbal. The panel says so.
+   */
+  readonly hissDb?: number;
 }
 
 export const FLAT_MASTER: Master = { gain: 1, ceilingDb: -1, matchLoudness: false };
+
+/**
+ * The master bus, built once and used in both places.
+ *
+ * ── Why this function exists ─────────────────────────────────────────────
+ *
+ * The note above this file's `Master` is about one rule: what somebody hears
+ * and what comes out of the render have to be the same thing. It held while
+ * the master was one multiplication, because a multiplication is a
+ * multiplication wherever it happens.
+ *
+ * The moment the master grew a filter, it stopped holding by itself. The
+ * preview builds its bus in `ProBooth`; the render builds its own in
+ * `mixSession`. Two places to add a filter to is one place to forget, and a
+ * mix that is bright in the ears and dull in the file is exactly the fault
+ * nobody can point at.
+ *
+ * So there is one builder. Both call it, and neither knows what is in it.
+ *
+ * @param level what the fader multiplies by — the preview folds the trim
+ *   into it, the render applies the trim to the rendered buffer afterwards,
+ *   and that difference is the one thing the two do not share.
+ * @returns the node lanes connect INTO. Its far end is already connected to
+ *   the context's destination.
+ */
+export function wireMaster(ctx: BaseAudioContext, master: Master, level: number): AudioNode {
+  const fader = ctx.createGain();
+  fader.gain.value = level;
+  fader.connect(ctx.destination);
+
+  let head: AudioNode = fader;
+
+  /* Built back to front, so each filter is put in FRONT of what is already
+     there. The order the sound travels is therefore: rumble, hiss, fader —
+     tone before level, which is the order a desk is laid out in. */
+  if (master.hissDb && master.hissDb < 0) {
+    const shelf = ctx.createBiquadFilter();
+    shelf.type = 'highshelf';
+    shelf.frequency.value = 9000;
+    shelf.gain.value = master.hissDb;
+    shelf.connect(head);
+    head = shelf;
+  }
+  if (master.rumbleHz && master.rumbleHz > 0) {
+    const cut = ctx.createBiquadFilter();
+    cut.type = 'highpass';
+    cut.frequency.value = master.rumbleHz;
+    /* 0.707 is the flattest a single biquad gets — no bump at the corner.
+       Anything higher rings, and a resonant peak at 60 Hz is the opposite of
+       taking the rumble off. */
+    cut.Q.value = 0.707;
+    cut.connect(head);
+    head = cut;
+  }
+
+  return head;
+}
 
 /**
  * What "as loud as everything else" is aimed at, as RMS.
@@ -378,9 +454,8 @@ export async function mixSession(
   if (!(seconds > 0)) return null;
   const offline = new Ctx(2, Math.ceil(seconds * rate), rate);
 
-  const bus = offline.createGain();
-  bus.gain.value = master.gain;
-  bus.connect(offline.destination);
+  /* The same builder the preview uses. See `wireMaster`. */
+  const bus = wireMaster(offline, master, master.gain);
 
   heard.forEach((lane) => {
     startLane(wireLane(offline, lane, bus), lane);

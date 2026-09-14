@@ -42,6 +42,37 @@ export const DEFAULT_METER: Meter = { bpm: 120, beats: 4, unit: 4, key: 'C' };
 export const SLOWEST = 20;
 export const FASTEST = 300;
 
+/**
+ * What a musician calls this speed.
+ *
+ * Carli's list for the track controls had "moderato" on it, between the
+ * count-in and the capo. It is not decoration: somebody asked for a tempo
+ * answers in these words, and a room that only counts beats a minute is a
+ * room built by somebody who does not play.
+ *
+ * Read from the number rather than set beside it. The number is the truth —
+ * it is what the click counts and what the grid is drawn from — and a name
+ * somebody could set independently of it would be a second answer to the
+ * same question.
+ *
+ * The boundaries are the conventional ones and they are not universal;
+ * sources differ by a few beats either way. They are here so that 60 reads
+ * "larghetto" and 120 reads "allegro", which is what a musician expects.
+ */
+export function paceOf(bpm: number): string {
+  if (!(bpm > 0)) return 'moderato';
+  if (bpm < 40) return 'grave';
+  if (bpm < 60) return 'largo';
+  if (bpm < 66) return 'larghetto';
+  if (bpm < 76) return 'adagio';
+  if (bpm < 108) return 'andante';
+  if (bpm < 120) return 'moderato';
+  if (bpm < 156) return 'allegro';
+  if (bpm < 176) return 'vivace';
+  if (bpm < 200) return 'presto';
+  return 'prestissimo';
+}
+
 export function sane(meter: Meter): Meter {
   return {
     bpm: Math.min(FASTEST, Math.max(SLOWEST, Math.round(meter.bpm) || DEFAULT_METER.bpm)),

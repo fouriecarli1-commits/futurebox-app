@@ -19,10 +19,10 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowDownToLine, ArrowLeft, Bot, Check, Circle, Clock, Gauge, Grid3x3, KeyRound, Layers, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Timer, Trash2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
+import { Activity, ArrowDownToLine, ArrowLeft, Bot, Check, Circle, Clock, Download, Gauge, Grid3x3, KeyRound, Layers, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Timer, Trash2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, dbOf, lengthOf, mixSession, monoOf, pieceOf, readInto, readSession,
-  span, startLane, windowOf, wireLane,
+  span, startLane, windowOf, wireLane, wireMaster,
   type Lane, type Master, type Reading,
 } from '../lib/session';
 import { failed, separate, separateParts } from '../lib/stems';
@@ -39,7 +39,7 @@ import { encodeWav } from '../lib/wav';
 import { knownLatency } from '../lib/mixdown';
 import {
   COUNT_INS, DEFAULT_METER, DIVISIONS, FASTEST, SLOWEST, barSeconds, countInSeconds,
-  displayOf, placeAt, sane, sayPlace, snapped,
+  displayOf, paceOf, placeAt, sane, sayPlace, snapped,
   type CountIn, type DivisionId, type Meter, type Snap,
 } from '../lib/tempo';
 import { Metronome } from '../lib/metronome';
@@ -47,7 +47,7 @@ import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Hint from './Hint';
 import { Card, Row } from './BoothCard';
-import { INK_DIM } from '../lib/boothlook';
+import { INK_DIM, LIT } from '../lib/boothlook';
 import BoothTimeline from './BoothTimeline';
 import BoothDock, { type Desk } from './BoothDock';
 import BoothFx from './BoothFx';
@@ -425,9 +425,7 @@ export default function ProBooth({
          it. The click is deliberately not on this bus: a metronome that got
          quieter when the master came down would be a metronome you stop being
          able to hear exactly when you need it. */
-      const bus = ctx.createGain();
-      bus.gain.value = master.gain * trim;
-      bus.connect(ctx.destination);
+      const bus = wireMaster(ctx, master, master.gain * trim);
 
       audible(lanes).forEach((lane) => {
         const source = wireLane(ctx, lane, bus);
@@ -455,7 +453,7 @@ export default function ProBooth({
 
       setPlaying(true);
     },
-    [clickDb, clicker, clicking, context, division, hush, lanes, master.gain, meter, trim],
+    [clickDb, clicker, clicking, context, division, hush, lanes, master, meter, trim],
   );
 
   const stopPlaying = useCallback(() => {
@@ -1145,6 +1143,55 @@ export default function ProBooth({
 
   const heard = useMemo(() => audible(lanes), [lanes]);
 
+  /* ── Out of the room, as a file ─────────────────────────────────
+
+     Carli, 15 September 2026: *"Onthou die volledige mixing moet uiteindelik
+     'n export knoppie hê, mens moet dit kan save op 'n manier na channel en
+     foon."*
+
+     Two destinations and they are not the same journey. The channel already
+     has one: "Make one song" renders the mix, puts it in the Library under
+     this song's name, and the Library posts to Live — so the work there is
+     to say so, not to build a second path that could disagree with the
+     first about what a song is.
+
+     The phone had none. A mix that only exists inside this app is a mix
+     nobody can send to a bandmate, put on a memory stick, or upload
+     anywhere this app does not reach, and that is a real limit on something
+     somebody spent an evening on.
+
+     The same `mixSession` and the same trim as "Make one song", so the file
+     that lands in the phone is the file that lands in the Library and the
+     file the mixer approved. A second render with its own numbers would be
+     a silently different song. */
+  const [saving, setSaving] = useState(false);
+  const toPhone = useCallback(async () => {
+    setSaving(true);
+    setProblem(null);
+    try {
+      const mixed = await mixSession(lanes, rate, master, trim);
+      if (!mixed) {
+        setProblem(t('pro.mixFailed', 'The mix could not be made.'));
+        return;
+      }
+      const blob = encodeWav(mixed);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      /* The song's own name, so a phone's downloads folder is readable.
+         Anything a file system might refuse becomes a dash, and a song with
+         no name at all still gets a file rather than an error. */
+      const safe = (title || t('pro.untitled', 'song')).replace(/[^\p{L}\p{N} _-]/gu, '-').trim();
+      link.download = `${safe || 'song'}.wav`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setProblem(t('pro.mixFailed', 'The mix could not be made.'));
+    } finally {
+      setSaving(false);
+    }
+  }, [lanes, master, rate, t, title, trim]);
+
   /* ── The desks ────────────────────────────────────────────────────
 
      Carli, 14 September 2026: *"Bo op die 4 buttons heel onder is 'n tweede
@@ -1249,6 +1296,16 @@ export default function ProBooth({
               is on every desk rather than only this one — a desk covers the
               timeline, and the transport under it still plays. */}
           <span className="text-xs" style={{ color: INK_DIM }}>{t('pro.bpmUnit', 'bpm')}</span>
+          {/* The Italian name for the speed, beside the number.
+
+              On her list as "moderato", between the count-in and the capo,
+              and it is not decoration: a musician asked for a tempo answers
+              in these words, and a room that only counts beats a minute is
+              a room built by somebody who does not. It is read from the
+              number rather than set, because the number is the truth. */}
+          <span className="ml-auto text-xs italic" style={{ color: LIT }}>
+            {t(`pro.pace.${paceOf(meter.bpm)}`, paceOf(meter.bpm))}
+          </span>
         </Row>
       </Card>
 
@@ -1569,6 +1626,62 @@ export default function ProBooth({
             {t('pro.stale', 'Something changed — measure it again.')}
           </p>
         )}
+      </Card>
+
+      {/* ── Taking things off the mix ─────────────────────────────
+
+          Carli's mastering list had "Take off, rumble, hiss" on it and this
+          desk had neither. Both are one filter and both run on the shared
+          master bus, so what she hears is what the file gets — see
+          `wireMaster`. */}
+      <Card
+        icon={<ArrowDownToLine className="h-4 w-4" />}
+        title={t('pro.noRumble', 'Take the rumble off')}
+        what={t(
+          'pro.rumbleWhat',
+          'Cuts everything under the note you set. A phone picks up traffic, a knock on the table and the singer\u2019s own breath as energy nobody hears — and every limiter ducks the whole song for it. 60 is safe on anything with a voice; go to 100 only if there is no bass.',
+        )}
+      >
+        <select
+          value={master.rumbleHz ?? 0}
+          onChange={(event) => {
+            setMaster((was) => ({ ...was, rumbleHz: Number(event.target.value) }));
+            setStale(true);
+          }}
+          className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100"
+          aria-label={t('pro.noRumble', 'Take the rumble off')}
+        >
+          {[0, 40, 60, 80, 100].map((hz) => (
+            <option key={hz} value={hz}>
+              {hz === 0 ? t('pro.off', 'off') : `${hz} Hz`}
+            </option>
+          ))}
+        </select>
+      </Card>
+
+      <Card
+        icon={<Waves className="h-4 w-4" />}
+        title={t('pro.noTop', 'Take the top off')}
+        what={t(
+          'pro.hissWhat',
+          'Pulls the very top down, above 9 kHz. It makes a hissy phone recording easier to listen to — but it is a shelf and not a de-noiser: it cannot tell hiss from a cymbal, so far down it takes the air out of the song with the hiss.',
+        )}
+      >
+        <select
+          value={master.hissDb ?? 0}
+          onChange={(event) => {
+            setMaster((was) => ({ ...was, hissDb: Number(event.target.value) }));
+            setStale(true);
+          }}
+          className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100"
+          aria-label={t('pro.noTop', 'Take the top off')}
+        >
+          {[0, -2, -4, -6, -9].map((db) => (
+            <option key={db} value={db}>
+              {db === 0 ? t('pro.off', 'off') : `${db} dB`}
+            </option>
+          ))}
+        </select>
       </Card>
 
       <Card
@@ -2277,6 +2390,30 @@ export default function ProBooth({
               that assumes the answer. The button now says what it makes. */}
           {t('pro.keep', 'Make one song')}
         </button>
+
+        {/* Beside it, because it is the same decision one step later: the
+            song is made, and now it has to go somewhere. */}
+        <button
+          type="button"
+          onClick={() => void toPhone()}
+          disabled={busy || saving || recording || !heard.length}
+          className="min-h-[44px] px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-950 text-sm font-bold text-zinc-200 flex items-center gap-2 disabled:opacity-40"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          {t('pro.toPhone', 'Save to my phone')}
+        </button>
+        <Hint>
+          {t(
+            'pro.toPhoneWhat',
+            'Renders the same mix as "Make one song" and hands it to your phone as a WAV — every lane, its levels, its cuts and its effects, in one file. It costs nothing, nothing leaves the device, and the room stays open.',
+          )}
+        </Hint>
+        <Hint>
+          {t(
+            'pro.toChannelWhat',
+            'To put it in your channel: press "Make one song". It lands in your Library under this song\u2019s name, and the post button there sends it to Live. It goes that way rather than straight from here so that what people hear in the room is the same file your Library holds.',
+          )}
+        </Hint>
         {/* ── What is in the other room, said once ──────────────────────
 
             The button above is the way there; this is what is there, because

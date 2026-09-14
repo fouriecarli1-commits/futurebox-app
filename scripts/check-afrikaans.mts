@@ -100,6 +100,13 @@ const SAME_IN_BOTH = new Set([
      no translation: it is a transcription of a sound, and the sound does not
      change language. The control only draws in Afrikaans anyway. */
   'foeltsjie',
+  /* The Italian names for a tempo. Afrikaans, English and Italian all use
+     the Italian word, because it IS the word — a musician told "matig"
+     instead of "moderato" has been given a translation of a term rather
+     than the term, and would have to translate it back to talk to anybody.
+     The same argument as the instrument above, ten times over. */
+  'grave', 'largo', 'larghetto', 'adagio', 'andante', 'moderato',
+  'allegro', 'vivace', 'presto', 'prestissimo',
 ]);
 const copied: string[] = [];
 for (const [i, match] of starts.entries()) {
