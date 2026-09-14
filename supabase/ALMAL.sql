@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- FutureBox — die vyf lêers wat nog nooit geloop het nie, in een plak.
+-- FutureBox — die 12 lêers wat nog nooit geloop het nie, in een plak.
 -- ═══════════════════════════════════════════════════════════════════════════
 --
 -- Supabase → SQL Editor → plak alles → Run. Veilig om weer te loop: elke stuk
@@ -7,21 +7,31 @@
 --
 -- Wat dit aanskakel:
 --
---   charts.sql    Spotlight se Top 10 — sonder dit bly daardie bars vir altyd
---                 leeg, want niks skryf ooit neer dat iemand 'n liedjie
---                 gespeel het nie.
+--   charts.sql    Spotlight se Top 10 — sonder dit bly daardie bars vir
+--                 altyd leeg, want niks skryf ooit neer dat iemand ’n
+--                 liedjie gespeel het nie.
 --   addons.sql    Die bemarkings-byvoegsel kan gekoop of toegeken word.
 --   posting.sql   Die plaas-tou. Sonder dit antwoord dit "nie opgestel nie".
 --   dubs.sql      Oorklanking. Dieselfde antwoord sonder dit.
---   invites.sql   Die uitnodigingsskakel in 'n saamwerk-e-pos.
---   listens.sql   Hoeveel kere 'n liedjie geluister is, per liedjie, vir die
+--   invites.sql   Die uitnodigingsskakel in ’n saamwerk-e-pos.
+--   listens.sql   Hoeveel kere ’n liedjie geluister is, per liedjie, vir die
 --                 maker. Moet ná charts.sql loop.
 --   kits.sql      Die Kits.AI minuut-teller. Sonder dit weet die rem nie
---                 hoeveel van die 400 aflaaiminute oor is nie, en dan is daar
---                 geen rem nie.
+--                 hoeveel van die 400 aflaaiminute oor is nie, en dan is
+--                 daar geen rem nie.
 --   eleven.sql    Wat ElevenLabs per oproep gehef het, langs wat ons gevat
---                 het. Sonder dit is die eerste plek waar 'n verkeerde prys
+--                 het. Sonder dit is die eerste plek waar ’n verkeerde prys
 --                 wys die faktuur.
+--   hearts.sql    Harte op ’n plasing in die kamer, een per mens per
+--                 liedjie.
+--   buildon.sql   Mag iemand anders op hierdie liedjie voortbou — ’n greep
+--                 daaruit sny, of by sy styl begin. Bring ook die styl self
+--                 saam met die plasing.
+--   elevenrem.sql Die rem op die ElevenLabs-toelae. Sonder dit is daar ’n
+--                 waarskuwing per e-pos en niks wat keer nie.
+--   roomwords.sql Die woorde van ’n liedjie, saam met die plasing. Sonder
+--                 dit speel die kamer die liedjie en wys niks om by saam te
+--                 lees nie.
 --
 -- ── Twee dinge moet reeds daar wees ────────────────────────────────────────
 --
@@ -37,9 +47,9 @@
 --
 -- ── Moenie hierdie lêer regmaak nie ────────────────────────────────────────
 --
--- Dit word geskryf deur `npm run sql:bundle` uit die vyf lêers self. Verander
--- hulle en loop die skrip weer; `npm run check:sqlbundle` keer dat die kopie
--- stilweg van sy oorsprong af wegdryf.
+-- Dit word geskryf deur `npm run sql:bundle` uit die 12 lêers self.
+-- Verander hulle en loop die skrip weer; `npm run check:sqlbundle` keer dat
+-- die kopie stilweg van sy oorsprong af wegdryf.
 
 do $$
 begin
@@ -1165,3 +1175,39 @@ $$;
 
 revoke all on function public.eleven_credits_this_month() from public, anon, authenticated;
 grant execute on function public.eleven_credits_this_month() to service_role;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/roomwords.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- FutureBox — die woorde van 'n liedjie, saam met die plasing in die kamer.
+--
+-- Loop dit ná live.sql, in dieselfde projek. Veilig om weer te loop.
+--
+-- ── Wat dit regmaak ──────────────────────────────────────────────────────
+--
+-- Carli, 14 September 2026: *"Die play room moet die liedjie se woorde
+-- speel."*
+--
+-- Die speelkamer het die woorde nie gehad nie, en dit was nie 'n skerm wat
+-- vergeet het om hulle te wys nie — hulle was nooit daar nie. 'n Plasing dra
+-- die klank, die omslag, die titel en die genre, en die woorde het by die
+-- maker se eie liedjie agtergebly. Iemand wat 'n liedjie in die kamer oopmaak
+-- kon hom hoor en nie saamlees nie.
+--
+-- ── Waarom jsonb en nie teks nie ─────────────────────────────────────────
+--
+-- Omdat die kamer die woorde *speel* en nie net wys nie. 'n Reël wat oplig
+-- wanneer sy beurt kom het 'n tyd nodig, nie net 'n string nie, en dit is
+-- presies die vorm waarin die opname se woorde reeds hier rondgaan: 'n lys
+-- van reëls, elk met sy eie begin. Teks sou beteken die tydsberekening word
+-- elke keer weer geraai, en 'n geraaide tydsberekening is presies wat 'n
+-- mens sien wanneer die woorde agter die sang aansleep.
+--
+-- Leeg toegelaat, want elke plasing wat reeds in die kamer is, is geplaas
+-- voordat hierdie kolom bestaan het. Sonder woorde wys die kamer die
+-- liedjie soos hy was; met woorde lees hy saam.
+
+alter table public.live_posts
+  add column if not exists words jsonb;

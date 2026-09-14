@@ -44,14 +44,72 @@ export const ORDER = [
   'hearts',
   'buildon',
   'elevenrem',
+  'roomwords',
 ] as const;
 
 export const BUNDLE = join(ROOT, 'supabase/ALMAL.sql');
 
 const RULE = '-- ═══════════════════════════════════════════════════════════════════════════';
 
+/**
+ * What each file switches on, in one line, for the person about to paste it.
+ *
+ * Keyed by `ORDER` and rendered into the header below, because the header
+ * used to be a hand-written paragraph and it drifted: it said "die vyf lêers"
+ * over eleven of them, and named eight. Somebody reading it to decide whether
+ * to run this was reading a list that had been wrong for four files. A
+ * sentence about a file now lives next to the file's name, and a file added
+ * to `ORDER` without one does not build.
+ */
+const WHAT: Record<(typeof ORDER)[number], string> = {
+  charts:
+    'Spotlight se Top 10 \u2014 sonder dit bly daardie bars vir altyd leeg, want niks skryf ooit neer dat iemand \u2019n liedjie gespeel het nie.',
+  addons: 'Die bemarkings-byvoegsel kan gekoop of toegeken word.',
+  posting: 'Die plaas-tou. Sonder dit antwoord dit "nie opgestel nie".',
+  dubs: 'Oorklanking. Dieselfde antwoord sonder dit.',
+  invites: 'Die uitnodigingsskakel in \u2019n saamwerk-e-pos.',
+  listens:
+    'Hoeveel kere \u2019n liedjie geluister is, per liedjie, vir die maker. Moet n\u00e1 charts.sql loop.',
+  kits:
+    'Die Kits.AI minuut-teller. Sonder dit weet die rem nie hoeveel van die 400 aflaaiminute oor is nie, en dan is daar geen rem nie.',
+  eleven:
+    'Wat ElevenLabs per oproep gehef het, langs wat ons gevat het. Sonder dit is die eerste plek waar \u2019n verkeerde prys wys die faktuur.',
+  hearts: 'Harte op \u2019n plasing in die kamer, een per mens per liedjie.',
+  buildon:
+    'Mag iemand anders op hierdie liedjie voortbou \u2014 \u2019n greep daaruit sny, of by sy styl begin. Bring ook die styl self saam met die plasing.',
+  elevenrem:
+    'Die rem op die ElevenLabs-toelae. Sonder dit is daar \u2019n waarskuwing per e-pos en niks wat keer nie.',
+  roomwords:
+    'Die woorde van \u2019n liedjie, saam met die plasing. Sonder dit speel die kamer die liedjie en wys niks om by saam te lees nie.',
+};
+
+/**
+ * `  name.sql    what it does`, wrapped under itself.
+ *
+ * Wrapped here rather than written pre-wrapped, because a sentence somebody
+ * has to break by hand is a sentence that goes off the right edge the first
+ * time it is edited — and this file is read in a SQL editor where a long
+ * comment line is a horizontal scroll bar.
+ */
+function says(name: (typeof ORDER)[number]): string {
+  const head = `${name}.sql`.padEnd(13);
+  const gap = ' '.repeat(head.length);
+  const lines: string[] = [];
+  let line = '';
+  for (const word of WHAT[name].split(' ')) {
+    if (line && `${line} ${word}`.length > 58) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = line ? `${line} ${word}` : word;
+    }
+  }
+  if (line) lines.push(line);
+  return lines.map((one, n) => `--   ${n === 0 ? head : gap} ${one}`).join('\n');
+}
+
 const HEAD = `${RULE}
--- FutureBox — die vyf lêers wat nog nooit geloop het nie, in een plak.
+-- FutureBox — die ${ORDER.length} lêers wat nog nooit geloop het nie, in een plak.
 ${RULE}
 --
 -- Supabase → SQL Editor → plak alles → Run. Veilig om weer te loop: elke stuk
@@ -59,21 +117,7 @@ ${RULE}
 --
 -- Wat dit aanskakel:
 --
---   charts.sql    Spotlight se Top 10 — sonder dit bly daardie bars vir altyd
---                 leeg, want niks skryf ooit neer dat iemand 'n liedjie
---                 gespeel het nie.
---   addons.sql    Die bemarkings-byvoegsel kan gekoop of toegeken word.
---   posting.sql   Die plaas-tou. Sonder dit antwoord dit "nie opgestel nie".
---   dubs.sql      Oorklanking. Dieselfde antwoord sonder dit.
---   invites.sql   Die uitnodigingsskakel in 'n saamwerk-e-pos.
---   listens.sql   Hoeveel kere 'n liedjie geluister is, per liedjie, vir die
---                 maker. Moet ná charts.sql loop.
---   kits.sql      Die Kits.AI minuut-teller. Sonder dit weet die rem nie
---                 hoeveel van die 400 aflaaiminute oor is nie, en dan is daar
---                 geen rem nie.
---   eleven.sql    Wat ElevenLabs per oproep gehef het, langs wat ons gevat
---                 het. Sonder dit is die eerste plek waar 'n verkeerde prys
---                 wys die faktuur.
+${ORDER.map(says).join('\n')}
 --
 -- ── Twee dinge moet reeds daar wees ────────────────────────────────────────
 --
@@ -84,14 +128,14 @@ ${RULE}
 --   public.tracks    uit supabase/schema.sql   — listens.sql tel net jou eie
 --
 -- Die blok hieronder kyk daarvoor en sê in gewone woorde wat om eerste te
--- loop as een van hulle kort. Dit is met opset 'n sin eerder as 'n Postgres-
+-- loop as een van hulle kort. Dit is met opset \'n sin eerder as \'n Postgres-
 -- fout op reël 200 van iets wat jy pas geplak het.
 --
 -- ── Moenie hierdie lêer regmaak nie ────────────────────────────────────────
 --
--- Dit word geskryf deur \`npm run sql:bundle\` uit die vyf lêers self. Verander
--- hulle en loop die skrip weer; \`npm run check:sqlbundle\` keer dat die kopie
--- stilweg van sy oorsprong af wegdryf.
+-- Dit word geskryf deur \`npm run sql:bundle\` uit die ${ORDER.length} lêers self.
+-- Verander hulle en loop die skrip weer; \`npm run check:sqlbundle\` keer dat
+-- die kopie stilweg van sy oorsprong af wegdryf.
 
 do $$
 begin
