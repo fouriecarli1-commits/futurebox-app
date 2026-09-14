@@ -559,6 +559,12 @@ jobs:
       - name: The effect rack is in the file, not only in the ear
         run: npm run check:boothfx
 
+      # A model asked for a fader between 0 and 1.5 will mostly answer inside
+      # that range, and "mostly" is not a property you can build a fader on.
+      # The rules live in a lib so they run here without an API key.
+      - name: What the copilot may do to a mix
+        run: npm run check:mixplan
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

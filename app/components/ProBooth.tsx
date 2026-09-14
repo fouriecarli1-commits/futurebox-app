@@ -49,6 +49,8 @@ import Hint from './Hint';
 import BoothTimeline from './BoothTimeline';
 import BoothDock, { type Desk } from './BoothDock';
 import BoothFx from './BoothFx';
+import BoothAsk from './BoothAsk';
+import { applyMove, type LaneNow, type Move } from '../lib/mixplan';
 import { NO_FX, type Fx } from '../lib/fx';
 import { useOwnScreen } from '../lib/fullroom';
 import VoiceMixer, { DEFAULT_SETTINGS, settingsToForm, type VoiceSettings } from './VoiceMixer';
@@ -1748,6 +1750,51 @@ export default function ProBooth({
     </>
   );
 
+  /* ── The copilot's desk ────────────────────────────────────────────
+
+     Carli: *"Copilot pop op en vra dat persoon 'n mixing voorstel en copilot
+     kan die mixing verander volgens die vraag en voorstel."*
+
+     What it is told is the desk — every lane's name, fader, place and which
+     effects are on, and the master's measurement where there is one. NOT the
+     audio: sending a mix to a model to listen to is a different and far more
+     expensive product, and confident advice about a cymbal nobody heard is
+     worse than no advice. The panel says as much before the box.
+
+     What comes back is proposals, applied only when she presses the button.
+     A mix is somebody's taste, and eight faders moving while they listen
+     would be indistinguishable from a bug. */
+  const deskNow: LaneNow[] = lanes.map((one) => ({
+    id: one.id,
+    name: one.name,
+    gain: one.gain,
+    pan: one.pan ?? 0,
+    muted: one.muted,
+    fx: Object.keys(one.fx ?? {}),
+  }));
+  const askDesk = (
+    <BoothAsk
+      lanes={deskNow}
+      reading={
+        reading
+          ? `peak ${dbOf(reading.peak).toFixed(1)} dB, average ${dbOf(reading.rms).toFixed(1)} dB`
+          : undefined
+      }
+      onApply={(moves: readonly Move[]) => {
+        /* One `setLanes`, not one per move: a loop of state updates would
+           make the room re-render between faders and the session's
+           two-second save would write a half-applied mix if anything threw
+           in the middle. */
+        setLanes((was) =>
+          was.map((lane) => {
+            const move = moves.find((one) => one.laneId === lane.id);
+            return move ? { ...lane, ...applyMove(move, lane) } : lane;
+          }),
+        );
+      }}
+    />
+  );
+
   /* The transport strip: record, the way to the words, and mixing down.
 
      It keeps its own place at the foot of the effects panel rather than
@@ -2168,14 +2215,7 @@ export default function ProBooth({
             )}
           </p>
         )}
-        {deskOpen === 'ai' && (
-          <p className="px-4 py-6 text-sm leading-snug" style={{ color: 'rgba(238,242,255,0.5)' }}>
-            {t(
-              'dock.aiSoon',
-              'Copilot will read the mix and suggest what to change here, and make the change if you agree. Not built yet.',
-            )}
-          </p>
-        )}
+        {deskOpen === 'ai' && askDesk}
       </BoothDock>
     </div>
   );
