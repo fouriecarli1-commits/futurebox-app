@@ -440,3 +440,58 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
     border-color: rgb(var(--fb-primary-500) / 0.55);
   }
 }
+
+/* ── The booth is its own room, and does not follow the theme ────────────
+ *
+ * Carli, 14 September 2026: *"die booth se swart met die blou musieklyn sal
+ * 'n unieke take wees vir die booth, dat dit heeltemal anders lyk as die res
+ * van die app."*
+ *
+ * This is the one place in the app where not following the theme is the
+ * requirement rather than a bug. The booth is meant to read as a piece of
+ * studio equipment sitting inside the app — black, blue-lit, the same on
+ * every theme somebody picks — and a mixing desk that turns cream when the
+ * app is set to Paper is not that.
+ *
+ * It also fixes something she has been looking at without saying so. The
+ * booth's markup was written against a dark theme: `bg-zinc-950` for the
+ * room, `text-zinc-200` for its words. `zinc` is remapped onto the surface
+ * family, and the theme the app ships is LIGHT and inverts the ramp — so
+ * `bg-zinc-950` was resolving to 250 250 249, near-white. The pro booth has
+ * been a white room this whole time.
+ *
+ * Done by overriding the variables on the root rather than by rewriting two
+ * thousand lines of class names: Tailwind's colours already point at these,
+ * so one block re-skins the whole room and every panel inside it, and the
+ * markup goes on saying what it means.
+ *
+ * The numbers are the app's own DARK_L ramp at hue 225, saturation 18 — the
+ * same curve `app/lib/theme.ts` generates for its dark families, so the booth
+ * is a theme this app could have shipped rather than a pile of hand-picked
+ * greys. Only the hue is the booth's.
+ *
+ * Accents are deliberately left alone: the emerald a record button is painted
+ * in is bright on any surface, and a member who chose a violet accent should
+ * still see it in here.
+ */
+[data-booth] {
+  --fb-surface-50: 243 244 247;
+  --fb-surface-100: 228 230 236;
+  --fb-surface-200: 204 208 219;
+  --fb-surface-300: 168 174 194;
+  --fb-surface-400: 129 138 167;
+  --fb-surface-500: 96 107 138;
+  --fb-surface-600: 75 84 108;
+  --fb-surface-700: 59 65 84;
+  --fb-surface-800: 42 46 60;
+  --fb-surface-900: 27 30 39;
+  --fb-surface-950: 15 16 21;
+
+  --fb-page: 15 16 21;
+  --fb-ink: 230 231 234;
+  /* `bg-black/40` in here means a real inset, because the room really is dark. */
+  --fb-void: 8 9 12;
+  --fb-scrim: 5 6 10;
+
+  color: rgb(var(--fb-ink));
+}

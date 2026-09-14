@@ -67,16 +67,35 @@ ok('a meter of zeroes still counts somewhere', /^\d+\.\d+$/.test(at(5, silly)), 
 import { readFileSync } from 'node:fs';
 const booth = readFileSync('app/components/ProBooth.tsx', 'utf8');
 ok('the transport shows the bar', /sayPlace\(placeAt\(/.test(booth));
-/* The lines are drawn inside the lane's own canvas, where seconds are already
-   mapped to pixels by the waveform. The first version was a ruler across the
-   room, which lined up with nothing: every lane's wave starts after the name
-   column and stops before the controls, so bar 2 on the ruler sat nowhere
-   near bar 2 in the audio. This asserts the mapping is the shared one. */
-const canvas = booth.slice(booth.indexOf('const head = (at / total) * width') - 1400,
-  booth.indexOf('const head = (at / total) * width'));
-ok('the bar lines are drawn against the same clock as the wave',
-  /barSeconds\(meter\)/.test(canvas) && /\/ total\) \* width/.test(canvas));
-ok('and the lane is given the meter to draw them from', /meter: Meter;/.test(booth));
+/* ── Where the lines are drawn, and why that moved ─────────────────────
+ 
+   This used to assert the bar lines were inside each lane's own canvas, and
+   that was right for the layout of the time. A ruler across the room lined up
+   with nothing: every lane's wave started after that row's name column and
+   stopped before that row's buttons, so each row had its own
+   pixels-per-second and bar 2 on the ruler sat nowhere near bar 2 in the
+   audio. Drawing the lines inside the wave was the only way to make them
+   agree with it.
+ 
+   Carli, 14 September 2026: *"Die timeline van die verskillende layers moet
+   reg by en teen mekaar wees."* The layout is the thing that changed. One CSS
+   grid with a fixed gutter and one `1fr` column puts the ruler and every lane
+   in the SAME column, so there is now a single mapping from seconds to pixels
+   for the whole room — and the lines belong on it, once, rather than
+   re-derived inside each waveform.
+ 
+   So this asserts the same property against the new shape: the lines, the
+   clips and the playhead are all placed as a percentage of one `total`. If
+   they ever stop sharing it, they stop agreeing, which is the fault this
+   check has always been about. */
+const line = readFileSync('app/components/BoothTimeline.tsx', 'utf8');
+ok('the bar lines are spaced by the meter', /const bar = barSeconds\(meter\);/.test(line));
+ok('  and placed on the same axis as the clips and the playhead',
+  /\{bars\.map\(\(second\) => \(/.test(line) && /left: `\$\{percent\(second\)\}%`/.test(line),
+  'a second measured one way for the grid and another for the sound is the old fault back');
+ok('  from the one function that turns a second into a place on it',
+  /const percent = \(seconds: number\): number =>/.test(line));
+ok('and the timeline is given the meter to draw them from', /readonly meter: Meter;/.test(line));
 
 console.log(
   failures

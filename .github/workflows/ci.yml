@@ -540,6 +540,13 @@ jobs:
       - name: A take is filmed upright, in a file other players can open
         run: npm run check:takefile
 
+      # Every lane drew its own waveform between its own name column and its
+      # own buttons, so no two rows agreed where a second was and a ruler
+      # across the top was useless. One grid column now carries all of them.
+      # The booth is also the one room that must not follow the theme.
+      - name: The booth's lanes share one axis, and the room stays black
+        run: npm run check:boothline
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

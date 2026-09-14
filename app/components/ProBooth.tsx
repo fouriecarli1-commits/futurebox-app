@@ -47,6 +47,7 @@ import { Metronome } from '../lib/metronome';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Hint from './Hint';
+import BoothTimeline from './BoothTimeline';
 import VoiceMixer, { DEFAULT_SETTINGS, settingsToForm, type VoiceSettings } from './VoiceMixer';
 import Cost from './Cost';
 import HowToTrain from './HowToTrain';
@@ -124,6 +125,16 @@ export default function ProBooth({
   const [clickDb, setClickDb] = useState(-6);
   const [countBars, setCountBars] = useState<CountIn>(0);
   const [snap, setSnap] = useState<Snap>('smart');
+  /**
+   * Which lane's controls are open under the timeline.
+   *
+   * One at a time, and chosen by tapping its name. Every lane's full set of
+   * controls stacked down the room was the old shape, and on a phone it meant
+   * the timeline — the thing the room is about — was a strip at the top of a
+   * very long page. A lane is picked, its controls are there, and the
+   * timeline keeps the screen.
+   */
+  const [picked, setPicked] = useState<string | null>(null);
   const metronomeRef = useRef<Metronome | null>(null);
 
   /* ── Singing a lane in somebody else's voice ────────────────────────────
@@ -424,6 +435,32 @@ export default function ProBooth({
     hush();
     setPlaying(false);
   }, [hush]);
+
+  /**
+   * Put the playhead somewhere, by hand.
+   *
+   * There was no way to do this at all: `at` only ever moved because
+   * something was playing, so the only way to hear the middle of a song was
+   * to play it from the top. Carli: *"Die lyn wat deur die timeline beweeg
+   * moet langer wees sodat 'n vinger hom kan vang en die klank plek kan
+   * drag."* — a line you can catch is only worth catching if letting go of it
+   * moves the sound.
+   *
+   * While something is playing it starts again from where the thumb left it,
+   * which is what a transport does; stopped, it just moves the mark.
+   */
+  const seek = useCallback(
+    (seconds: number) => {
+      const where = Math.max(0, Math.min(total, seconds));
+      setAt(where);
+      if (playing) {
+        hush();
+        play(where);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [total, playing, hush, play],
+  );
 
   // The clock, while anything is running.
   useEffect(() => {
@@ -1110,7 +1147,12 @@ export default function ProBooth({
        full-screen overlays sit below that bar, and The Booth had two controls
        under it as well. `check:belowtabs` requires every one of them to carry
        the rule. */
-    <div className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col overflow-y-auto sm:overflow-hidden"
+    /* `data-booth`: the room's own fixed dark palette, which does not follow
+       the theme. See the block at the foot of `globals.css` for why that is
+       the requirement in here and a bug everywhere else — and for the fault
+       it repairs, which is that `bg-zinc-950` resolves to near-WHITE in the
+       light theme the app ships, so this room has been a white one. */
+    <div data-booth className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col overflow-y-auto sm:overflow-hidden"
       style={{ paddingBottom: barClearance(0) }}>
       <div className="flex items-center gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
         {/* Out of the room, and it says so.
@@ -1339,9 +1381,40 @@ export default function ProBooth({
         )}
       </div>
 
-      {/* ── The lanes ────────────────────────────────────────────────────── */}
-      <div className="sm:flex-1 sm:min-h-0 sm:overflow-y-auto px-4 py-3 space-y-2">
-        {lanes.map((lane) => (
+      {/* ── The timeline ───────────────────────────────────────────────
+
+          Carli, 14 September 2026: *"Die timeline van die verskillende layers
+          moet reg by en teen mekaar wees."*
+
+          One shared axis for the ruler and every lane, so alignment is a
+          property of the layout rather than something each row has to get
+          right — see the long note at the top of `BoothTimeline`. The clips
+          are dragged, cut and dragged again with a thumb, and the playhead
+          has a head big enough to catch. */}
+      <BoothTimeline
+        lanes={lanes}
+        total={total}
+        at={at}
+        meter={meter}
+        snap={snap}
+        /* The sections, from whichever lane has been read — in practice the
+           song, which is the only lane that has sections to have. */
+        spans={Object.values(known).flatMap((one) => one.spans ?? [])}
+        onSeek={seek}
+        onChange={(id, how) => change(id, how)}
+        onPick={(id) => setPicked((was) => (was === id ? null : id))}
+        picked={picked}
+      />
+
+      {/* ── The picked lane's controls ─────────────────────────────────
+
+          One lane at a time, under the timeline, opened by tapping its name
+          in the gutter. Every lane's full set of controls stacked down the
+          room was the old shape and it cost the timeline the screen: on a
+          phone the thing this room is about was a strip above a very long
+          page of faders. */}
+      <div className="flex-shrink-0 max-h-[46vh] overflow-y-auto px-4 py-3 space-y-2" style={{ background: '#0b0d14' }}>
+        {lanes.filter((one) => one.id === picked).map((lane) => (
           <LaneRow
             key={lane.id}
             lane={lane}
@@ -1365,9 +1438,11 @@ export default function ProBooth({
           />
         ))}
 
-        {lanes.length <= 1 && (
-          <p className="text-sm text-zinc-600 leading-snug px-1 pt-2">
-            {t('pro.empty', 'Record a take or bring a file in, and it lands here as a lane of its own. Every lane keeps its own level, its own place in time and its own mute — and what you hear is what gets mixed.')}
+        {!picked && (
+          <p className="text-sm leading-snug px-1" style={{ color: 'rgba(238,242,255,0.45)' }}>
+            {lanes.length <= 1
+              ? t('pro.empty', 'Record a take or bring a file in, and it lands here as a lane of its own. Every lane keeps its own level, its own place in time and its own mute — and what you hear is what gets mixed.')
+              : t('pro.pickLane', 'Tap a lane’s name on the left to open its controls. Drag its block along the song to move it, or drag either end of the block to cut it.')}
           </p>
         )}
       </div>
@@ -2020,7 +2095,6 @@ function LaneRow({
   busy: boolean;
 }): React.ReactElement {
   const { t } = useLang();
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const quiet = audible(lanes).indexOf(lane) < 0;
   const [open, setOpen] = useState(false);
   const tone: Tone = lane.tone ?? CLEAN;
@@ -2038,93 +2112,16 @@ function LaneRow({
   const [amping, setAmping] = useState(false);
   const [ampFailed, setAmpFailed] = useState('');
 
-  /* ── Cutting the lane ────────────────────────────────────────────────────
+  /* What of the lane plays, and whether it has been cut at all.
 
-     Pointer events with the pointer captured, so an edge dragged with a thumb
-     that slides off the strip keeps dragging rather than dropping where it
-     left. `touch-none` on the strip stops the page scrolling underneath, which
-     is the difference between trimming a lane and scrolling past one. */
-  const stripRef = useRef<HTMLDivElement | null>(null);
-  const dragging = useRef<'from' | 'to' | null>(null);
-  /**
-   * The same thing as `dragging`, in state, so the readout can be drawn.
-   *
-   * The ref stays because the pointer handlers read it synchronously between
-   * renders and a state read there would be one frame stale. Keeping both is
-   * deliberate: one drives the drag, one draws it.
-   *
-   * Carli: "moet daar nie 'n getal verskuif soos wat die bar getrek word nie."
-   * There was none. The edges moved, the waveform dimmed behind them, and
-   * nothing anywhere said what the cut had been set to — so a trim was a thing
-   * you did by eye and could not repeat.
-   */
-  const [held, setHeld] = useState<'from' | 'to' | null>(null);
-  /** And which edge has the keyboard, so arrow keys get the same readout. */
-  const [focused, setFocused] = useState<'from' | 'to' | null>(null);
+     The cutting itself — the pointer drags, the edge handles and the readout
+     that moved with them — is on the timeline above now, on the one axis
+     every lane shares. These numbers stay because the rest of this row reads
+     them: the length it prints, and whether to say the lane is cut. */
   const window_ = windowOf(lane);
   const played = lengthOf(lane);
   const whole = (lane.amped?.audio ?? lane.audio).duration;
   const cut = window_.from > 0.01 || window_.to < whole - 0.01;
-
-  /** Where on the session's clock a pointer is. */
-  const clockAt = (clientX: number): number => {
-    const strip = stripRef.current;
-    if (!strip || !(total > 0)) return 0;
-    const box = strip.getBoundingClientRect();
-    if (box.width <= 0) return 0;
-    return ((clientX - box.left) / box.width) * total;
-  };
-
-  /**
-   * An edge moved to a moment on the session's clock.
-   *
-   * The front and the back are not symmetrical. Cutting the head moves `at` by
-   * the same amount as `from`, which is what keeps the audio still: a note on
-   * beat three stays on beat three. Cutting the tail only moves `to`.
-   *
-   * A tenth of a second is the floor. Zero would be a lane that is in the
-   * session and cannot be heard, which reads as a lane that has vanished.
-   */
-  const moveEdge = (edge: 'from' | 'to', to: number) => {
-    const origin = lane.at - window_.from; // where sample zero sits on the clock
-    const wanted = Math.max(0, to - origin); // seconds into the lane's own audio
-    if (edge === 'from') {
-      const from = Math.min(Math.max(0, wanted), window_.to - 0.1);
-      onChange({ from, to: window_.to, at: origin + from });
-    } else {
-      const end = Math.min(Math.max(window_.from + 0.1, wanted), whole);
-      onChange({ from: window_.from, to: end });
-    }
-  };
-
-  const startDrag = (edge: 'from' | 'to') => (event: React.PointerEvent) => {
-    event.preventDefault();
-    (event.target as Element).setPointerCapture?.(event.pointerId);
-    dragging.current = edge;
-    setHeld(edge);
-  };
-  const onDragMove = (event: React.PointerEvent) => {
-    if (!dragging.current) return;
-    moveEdge(dragging.current, clockAt(event.clientX));
-  };
-  const endDrag = () => {
-    dragging.current = null;
-    setHeld(null);
-  };
-
-  /* Arrow keys as well, a tenth of a second at a time — the same floor the
-     drag clamps to, so the two ways of moving an edge agree. */
-  const onEdgeKey = (edge: 'from' | 'to') => (event: React.KeyboardEvent) => {
-    const step = event.shiftKey ? 1 : 0.1;
-    const now = edge === 'from' ? lane.at : lane.at + played;
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      moveEdge(edge, now - step);
-    } else if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      moveEdge(edge, now + step);
-    }
-  };
 
   const bringAmp = async (file: File) => {
     setAmping(true);
@@ -2143,80 +2140,10 @@ function LaneRow({
     }
   };
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ratio = window.devicePixelRatio || 1;
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    canvas.width = Math.floor(width * ratio);
-    canvas.height = Math.floor(height * ratio);
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    context.clearRect(0, 0, width, height);
-
-    /* Where this lane sits on the session's clock, not on its own — and what
-       of it plays.
-
-       The whole recording is drawn, cut parts included, because a cut you
-       cannot see is a cut you cannot undo by eye: dragging an edge back out
-       needs the shape of what is out there to aim at. The trimmed parts are
-       drawn faint, and the part that plays is drawn at full strength. */
-    /* Not called `window`: that shadows the global one, and the next line
-       down asks it for `devicePixelRatio`. */
-    const played_ = windowOf(lane);
-    const whole_ = (lane.amped?.audio ?? lane.audio).duration;
-    /* The head that was cut sits before `lane.at`, because trimming the front
-       keeps the audio still on the clock rather than sliding it. */
-    const originAt = lane.at - played_.from;
-    const left = (originAt / total) * width;
-    const wide = (whole_ / total) * width;
-    const columns = Math.max(8, Math.floor(wide / 2));
-    const shape = shapeOf(lane.amped?.audio ?? lane.audio, columns);
-    const playing = quiet
-      ? 'rgba(113,113,122,0.35)'
-      : lane.backing
-        ? 'rgba(148,163,184,0.55)'
-        : 'rgba(16,185,129,0.75)';
-    const trimmed = 'rgba(113,113,122,0.18)';
-    for (let i = 0; i < columns; i += 1) {
-      const second = (i / columns) * whole_;
-      const x = left + (i / columns) * wide;
-      const size = Math.max(1, shape[i] * (height - 6));
-      context.fillStyle = second >= played_.from && second < played_.to ? playing : trimmed;
-      context.fillRect(x, height / 2 - size / 2, Math.max(1, wide / columns - 0.5), size);
-    }
-
-    /* ── The bars, behind the sound ───────────────────────────────────
-
-       `docs/MUSIEKDENKE.md` §3.6. Drawn here rather than as a ruler above
-       the lanes, and the first version was that ruler: a strip across the
-       full width of the room, while every lane's waveform starts after the
-       lane-name column and ends before the controls. Bar 2 on the ruler sat
-       nowhere near bar 2 in the audio. A ruler that does not line up with
-       what it rules is worse than none, because it is read.
-
-       In here the mapping from seconds to pixels is the one the waveform is
-       already drawn with, so the grid is aligned by construction and cannot
-       drift. Every fourth line is brighter, which is how a bar count is
-       read at a glance — in fours, not one at a time.
-
-       Behind the sound, and faint: this is a thing to notice, not a thing to
-       look at. */
-    const bar = barSeconds(meter);
-    if (bar > 0 && total > 0 && total / bar <= 400) {
-      for (let n = 1; n * bar < total; n += 1) {
-        const x = ((n * bar) / total) * width;
-        context.fillStyle = n % 4 === 0 ? 'rgba(161,161,170,0.45)' : 'rgba(113,113,122,0.22)';
-        context.fillRect(x, 0, 1, height);
-      }
-    }
-
-    const head = (at / total) * width;
-    context.fillStyle = '#fff';
-    context.fillRect(head - 1, 0, 2, height);
-  }, [at, lane, meter, quiet, total]);
+  /* The waveform was painted here, by an effect that also drew the bar
+     lines inside it and the playhead over them. All three are on the shared
+     timeline now — one axis every lane uses, which is what makes a ruler
+     above them honest. See the note where the strip used to be. */
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
@@ -2268,97 +2195,22 @@ function LaneRow({
         </div>
       </div>
 
-      {/* ── The lane, and the two edges that cut it ───────────────────────
+      {/* ── Where the waveform used to be ─────────────────────────────
 
-          "Ek dink maar net of klanke gecut kan word? Dat verskillende klank
-           bane onder mekaar kan sit en uit eindelik geedit kan word?"
+          The lane's own strip — its canvas and the two edges that cut it —
+          lived here, and is now the clip on the shared timeline above.
 
-          The lanes sat under each other already; this is the editing. Drag the
-          left edge and the head of the take is cut; drag the right and the
-          tail is. Nothing is destroyed — `from` and `to` are two numbers on the
-          lane and the recording underneath is untouched, so it drags back out
-          again and the amp and stems do not have to be redone.
+          It had to move rather than be duplicated. This strip sat between
+          this row's name column and this row's buttons, so its
+          pixels-per-second was its own; the bar lines were drawn *inside* the
+          waveform with a note saying a ruler across the top could not be
+          trusted, because "bar 2 on the ruler sat nowhere near bar 2 in the
+          audio". That note was right about this layout and is the reason
+          there is a different one. Carli: *"Die timeline van die verskillende
+          layers moet reg by en teen mekaar wees."*
 
-          Trimming the front keeps the audio still on the session's clock: the
-          lane's start moves by the same amount as the cut, so a note that was
-          on beat three stays on beat three. Sliding it instead would mean
-          every trim needed a nudge afterwards to put it back. */}
-      <div
-        ref={stripRef}
-        className="relative flex-1 min-w-[180px] touch-none"
-        onPointerMove={onDragMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-      >
-        <canvas
-          ref={canvasRef}
-          className="w-full rounded-lg bg-zinc-950/70"
-          style={{ height: LANE_H }}
-        />
-        {(['from', 'to'] as const).map((edge) => {
-          const seconds = edge === 'from' ? lane.at : lane.at + played;
-          return (
-            <div
-              key={edge}
-              data-lane-edge={edge}
-              role="slider"
-              tabIndex={0}
-              aria-label={
-                edge === 'from'
-                  ? t('pro.cutFrom', 'Where this lane starts')
-                  : t('pro.cutTo', 'Where this lane ends')
-              }
-              aria-valuemin={0}
-              aria-valuemax={Math.round(total)}
-              aria-valuenow={Math.round(seconds)}
-              aria-valuetext={clock(seconds)}
-              onPointerDown={startDrag(edge)}
-              onKeyDown={onEdgeKey(edge)}
-              onFocus={() => setFocused(edge)}
-              onBlur={() => setFocused((was) => (was === edge ? null : was))}
-              className="absolute inset-y-0 w-8 cursor-ew-resize focus:outline-none"
-              /* Held inside the strip.
- 
-                 The handle is 32 pixels wide and centred on the edge it moves,
-                 so at the very end it hung 16 pixels past the waveform — half
-                 a handle outside the lane, which on a phone is half a handle
-                 nobody can grab. Clamped rather than clipped: `overflow-hidden`
-                 would hide the half instead of moving it. */
-              style={{
-                left: `max(0px, min(calc(${total > 0 ? (seconds / total) * 100 : 0}% - 16px), calc(100% - 32px)))`,
-              }}
-            >
-              <span
-                className="pointer-events-none absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full"
-                style={{ background: cut ? 'rgb(52 211 153)' : 'rgba(82,82,91,0.7)' }}
-              />
-              {/* ── The number, while the edge is being moved ────────────
- 
-                  Two of them, because one is not enough to work with: where
-                  the edge now sits on the session's clock, and how long the
-                  lane plays for once it is cut. The first is what you are
-                  aiming at; the second is what you are actually deciding.
- 
-                  `bg-scrim` rather than a black at any opacity — every colour
-                  in this app is a theme variable and `black` resolves to a
-                  pale grey in the shipped light theme, so a label written on
-                  `bg-black/70` is white on white. `check:scrim` holds the rule.
- 
-                  Shown on keyboard focus too. The edges take arrow keys, and a
-                  readout only a mouse can summon is not a readout. */}
-              {(held === edge || focused === edge) && (
-                <span className="pointer-events-none absolute -top-1 left-1/2 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md bg-scrim px-1.5 py-1 text-[11px] font-bold tabular-nums text-white shadow-lg">
-                  {clock(seconds)}
-                  <span className="pl-1 font-semibold text-zinc-400">
-                    {clock(Math.max(0, window_.to - window_.from))}
-                  </span>
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
+          Two places to cut the same lane would also be two places to
+          disagree about where the cut is. */}
       <button
         type="button"
         onClick={() => setOpen((was) => !was)}

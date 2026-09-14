@@ -174,6 +174,26 @@ try {
   check('and the "not measured yet" line is gone',
     !(af ? /doen die meester niks nie/ : /the master does nothing at all/).test(measured));
 
+  /* ── Open a lane before reaching for its controls ──────────────────
+
+     Until 14 September the room stacked every lane's full set of controls
+     down the page. It does not any more: the timeline holds the screen, and
+     a lane's controls come out when its name is tapped in the gutter —
+     Carli's rebuild, and the direction the rest of it is going in (four
+     icons at the foot, everything behind them).
+
+     So this probe has to do what a person does. It failed here first, with
+     a thirty-second wait for a pan slider that was not on the screen because
+     nobody had asked for it — which is the right failure: a control reachable
+     only by knowing it is there is a control nobody reaches. Tapping the
+     first non-backing lane's name is that knowledge, made explicit. */
+  const gutter = p.locator('div[style*="grid-template-columns"] > button');
+  await gutter.nth(Math.min(1, (await gutter.count()) - 1)).click();
+  await p.waitForTimeout(300);
+  check('tapping a lane in the timeline opens its controls',
+    (await p.locator(`input[aria-label="${af ? 'Waar dit sit, links na regs' : 'Where it sits, left to right'}"]`).count()) > 0,
+    'the gutter name is the only way in now, so it has to be the way in');
+
   // Now move something, and the reading has to admit it is stale.
   const pan = p.locator(`input[aria-label="${af ? 'Waar dit sit, links na regs' : 'Where it sits, left to right'}"]`).first();
   await pan.fill('40');
@@ -215,12 +235,19 @@ try {
     const after = await p.locator('canvas').count();
     check('splitting into named parts adds a lane per part', after >= before + 2,
       `${before} → ${after}`);
-    /* Read off the name fields, not off the page text. A lane's name is an
-       input's value and `innerText` does not include it — the first version
-       of this check looked at the page and reported a working split as
-       nameless. */
-    const names = await p.locator(`input[aria-label="${af ? 'Baan se naam' : 'Lane name'}"]`)
-      .evaluateAll((nodes) => nodes.map((node) => node.value));
+    /* Read the names off the timeline's gutter.
+
+       They used to be read off the name INPUTS, with a note explaining that
+       `innerText` does not include an input's value — true, and it stopped
+       being the right place on 14 September: only the picked lane has its
+       controls on screen now, so there is exactly one name input and this
+       read back "A test song", the lane that happened to be open.
+
+       The gutter is where every lane's name is, which is also where a person
+       reads them. Same property, asked of the screen it is now on. */
+    const names = await p
+      .locator('div[style*="grid-template-columns"] > button')
+      .evaluateAll((nodes) => nodes.map((node) => node.innerText));
     check('and each lane carries the part’s own name',
       names.some((one) => /drums/.test(one)) && names.some((one) => /bass/.test(one)),
       names.join(' | '));
@@ -358,13 +385,27 @@ try {
        Only checked on the phone. A mouse is precise and a desk that copies the
        phone's padding is a desk with half the density it should have. */
     if (width <= 390) {
-      /* One page, not four strips around a sliver.
+      /* ── This rule was retired on purpose, and what replaced it ─────
 
-         The room is built as a desk: header and clock nailed to the top,
-         master and transport to the foot, lanes scrolling between them. On a
-         390-pixel screen those four strips are most of the height, which
-         leaves the lanes a few lines and makes the whole room look like it is
-         sitting behind itself. Below sm it is one column that scrolls. */
+         It read: "One page, not four strips around a sliver." The room was
+         built as a desk — header and clock nailed to the top, master and
+         transport to the foot, lanes scrolling between them — and on a
+         390-pixel screen those four strips were most of the height, leaving
+         the lanes a few lines. So below `sm` it became one column that
+         scrolled, and this asserted nothing inside it scrolled on its own.
+
+         Carli, 14 September 2026, with four pictures of what she wants
+         instead: *"Die booth moet heeltemal verander."* The timeline is the
+         room now — it holds the screen and scrolls its own lanes, and the
+         controls come out from behind icons rather than standing in strips
+         around it. A rule that forbids anything inside the room from
+         scrolling forbids exactly that.
+
+         Retired rather than deleted, because the fault it was written for is
+         real and has not gone away: the room must not end up as strips of
+         chrome around a sliver of work. What is asserted now is that
+         property directly — the timeline gets the bulk of the height — which
+         is what the old rule was a proxy for under the old layout. */
       const shape = await p.evaluate(() => {
         const room = document.querySelector('div.fixed.inset-0.z-\\[70\\]');
         if (!room) return null;
@@ -378,9 +419,23 @@ try {
           height: room.scrollHeight,
         };
       });
-      check('at 390px the room is one page that scrolls', !!shape?.roomScrolls, `${shape?.height}px tall`);
-      check('and nothing inside it scrolls on its own', shape?.innerScrollers === 0,
-        `${shape?.innerScrollers} inner scroller(s)`);
+      const room390 = await p.evaluate(() => {
+        const room = document.querySelector('div.fixed.inset-0.z-\\[70\\]');
+        const grid = document.querySelector('[style*="grid-template-columns"]');
+        if (!room || !grid) return null;
+        return {
+          room: room.clientHeight,
+          /* The timeline's own scroller, which is the box between the readout
+             and the lane controls. */
+          line: (grid.closest('[class*="overflow-y-auto"]') ?? grid).clientHeight,
+        };
+      });
+      check(
+        'at 390px the timeline gets the room, not a sliver between strips of chrome',
+        !!room390 && room390.line >= room390.room * 0.3,
+        room390 ? `${room390.line}px of ${room390.room}px` : 'no timeline found',
+      );
+      void shape;
     }
 
     if (width <= 390) {
@@ -608,13 +663,23 @@ try {
      The phone is the point. A row that stays one line on a 390 px screen has
      not fitted, it has crushed every control in it to something nobody can
      hit. Taller on a phone than on a desktop is the shape of having wrapped. */
+  /* Found from the name input rather than from a canvas.
+
+     It used to climb out of the lane's own waveform canvas to the row around
+     it. The waveform moved to the shared timeline on 14 September, so the
+     first canvas on the page is now a clip on the timeline and there is no
+     control row above it — the row is under the timeline, opened by tapping
+     a lane. The name field is inside that row and only inside that row. */
   const heightAt = async (width) => {
     await p.setViewportSize({ width, height: 900 });
     await p.waitForTimeout(400);
-    return p.locator('canvas').first().evaluate((node) => {
-      const row = node.closest('div.flex-wrap');
-      return row ? row.getBoundingClientRect().height : 0;
-    });
+    return p
+      .locator('input[aria-label="Lane name"], input[aria-label="Baan se naam"]')
+      .first()
+      .evaluate((node) => {
+        const row = node.closest('div.flex-wrap');
+        return row ? row.getBoundingClientRect().height : 0;
+      });
   };
   const onDesktop = await heightAt(1280);
   const onPhone = await heightAt(390);
@@ -663,9 +728,19 @@ try {
      on. The wait is for the debounce: the room writes two seconds after the
      last change, so reloading sooner would prove nothing but the timer. */
   await p.waitForTimeout(3000);
+  /* Read off the timeline's gutter, which is where every lane's name is.
+
+     This read the name INPUTS, and they moved: only the picked lane has its
+     controls on screen now, so before the reload there was one input (the
+     lane that happened to be open) and after it there were none, because a
+     fresh room has nothing picked. It reported a working restore as a lost
+     session — the exact failure this check exists to catch, produced by the
+     check rather than by the room. The gutter lists every lane whether or
+     not its controls are open, which is also what a person looks at. */
   const laneNames = async () =>
-    p.locator('input[aria-label="Lane name"], input[aria-label="Baan se naam"]')
-      .evaluateAll((nodes) => nodes.map((node) => node.value).sort());
+    p
+      .locator('div[style*="grid-template-columns"] > button')
+      .evaluateAll((nodes) => nodes.map((node) => (node.innerText || '').split('\n')[0].trim()).sort());
   const wasNamed = await laneNames();
   await p.reload({ waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(4000);
