@@ -9,11 +9,11 @@ they can be reviewed in one place instead of remembered.
 not be checked, it says so and it says how to check it. Entries move to
 **Settled** with a date and a commit rather than being deleted.
 
-Last updated: 2026-09-11.
+Last updated: 2026-09-14.
 
 ---
 
-## Lees dit eerste — waar dinge staan, 11 September 2026
+## Lees dit eerste — waar dinge staan, 14 September 2026
 
 *Hierdie register is 2 600 reëls lank en groei elke sessie. Niemand lees dit
 van voor af nie, en 'n register wat niemand lees nie, is nie 'n register nie.
@@ -24,6 +24,8 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 
 | Wat | Hoekom dit joune is |
 |---|---|
+| **Sit `ELEVEN_AURORA_READY=1` aan en maak een clip** | Die pratende aanbieder is gebou en donker. Die vlag is een aan/af-skakelaar in Vercel — géén foto gaan daarin nie. Herontplooi, kyk of `/api/presenter` `{"available":true}` sê (dit kos niks), en maak dan **een kort clip**. Daai een clip beantwoord al drie onbekendes: of jou plan `creatify-aurora` dra, wat dit kos, en hoe lank 'n clip mag wees. Die prys in die app is tot dan 'n doelbewuste plekhouer. |
+| **Besluit oor die kopieregtoets op opgelaaide liedjies** | Deur jou gebank, 13 September. Die opsies en die twee vrae wat eerste beantwoord moet word, staan in `docs/SWITCH-ON.md`. |
 | **'n Besigheidsadres om te publiseer** | Sy kan die CIPC-rekord **nie** verander nie (11 September) — haar huisadres bly daarop, en daardie register is deursoekbaar. Dít is nie 'n rede om dit ook op haar eie webwerf te sit nie: op `/legal` word dit deur Google teen haar besigheidsnaam geïndekseer en deur skrapers gevat; op CIPC moet iemand die nommer al hê. **Hou `FUTUREBOX_LEGAL_ADDRESS` leeg.** Die oop vraag is of 'n besigheidsadres-diens se adres as die *gepubliseerde* adres kan dien sonder om die CIPC-rekord te raak — sien die inskrywing hieronder. |
 | **Maak `/api/eleven/dictionary?key=…` een keer oop** | Dit bou die uitspraakwoordeboek op jou rekening uit die reëls in die kode. Plak albei ids by Vercel in, redeploy, en **luister**. Sonder daardie twee waardes word niks toegepas nie en niks sê so nie. |
 | **Stuur die ElevenLabs-verkoopse-pos** | `docs/ELEVENLABS-SALES.md`. Dit is die ding wat die terme-bladsy weer laat verander — die lisensie wat deur na lede loop, is nie op die self-diens plan nie. |
@@ -84,6 +86,34 @@ Dieselfde les, twee vlakke dieper. Drie nuwe vorms, almal op een dag:
   gelees het en geen tabel sou gehad het nie. **Reggemaak deur dit te loop:
   `check:sqlruns` loop nou al 33 lêers en die bundel teen 'n regte Postgres,
   elkeen twee keer.**
+
+### En die een ding om te onthou uit 13–14 September
+
+Dieselfde les, drie vorms verder — en die derde een het my 'n regmaak gekos
+wat vir niks was.
+
+- **Die kieser het die eienskap gevang, nie die ding nie.** Die groen reël in
+  `globals.css` soek knoppies met `button[class*="border"]`. `border-l` bevat
+  die woord "border" en is 'n haarlyn, nie 'n boks nie — so Sign out het 'n
+  agtergrond en 'n randkleur gekry sonder ronde hoeke, en uitgekom as 'n groen
+  reghoek binne-in 'n ronde pil. Sy het dit gefotografeer.
+- **'n Toets wat 'n deel meet, kan deur 'n onverwante verandering vergroot
+  word.** Vier kontroles in die kanaal het glad nie 'n boks gehad nie, dus het
+  die groen reël hulle oorgeslaan — en `check:buttonlook` kon hulle nie sien
+  nie, want die proef se kanaal het geen liedjies in nie.
+- **Die regmaak wat vir niks was.** Terwyl ek `check:sideborder` geskryf het,
+  het ek ook die advertensie-rak se X 'n rooi wassing gegee om dit uit te
+  sluit. Toe die negatiewe toets nie rooi word met die wassing weg nie, was
+  die rede dat `hover:bg-rose-500/10` dit al die hele tyd uitgesluit het —
+  `:not([class*="bg-rose"])` is 'n substring-passing oor die hele
+  klasattribuut, variante ingesluit. Daai knoppie was nog nooit groen nie.
+  Die regmaak is teruggerol. **Die enigste rede waarom ek geweet het, is dat
+  ek die regmaak weggevat en gekyk het.**
+- **Twee proewe het toegemaak wat hulle kom meet het.** `check:podvideo` en
+  `check:nameupload` het albei op hul eerste lopie 'n knoppie as vermis
+  aangemeld terwyl dit op die skerm was: `toRoom` vou 'n kamer oop op pad in,
+  en die proef se druk het dit weer toegemaak. Die reël staan nou in albei
+  lêers: **ná `unfold`, druk net oop wat toe is.**
 
 ---
 
@@ -4032,3 +4062,223 @@ about in its own header, committed by the check written to catch its cousin.
 
 The name wraps now instead of truncating, and `notcut` reads the door and the
 tab bar as well as the rooms.
+
+---
+
+# 14 September 2026 — the rooms she photographed, and two doors
+
+Six commits, three new checks, and one honest correction. The night's shape
+was hers: she walked the app on her phone and sent photographs, and almost
+everything below started as one sentence under a picture.
+
+## The green rule found the two buttons it was never meant to colour
+
+`globals.css` finds buttons to colour with `button[class*="border"]`, and the
+reasoning was sound — a button that declares a border is a button somebody
+meant to look like one. It is true of `border`. It is not true of `border-l`,
+which is a hairline down one edge between two controls that sit flush.
+
+Two things fell out of that, and she found both without knowing they were the
+same fault.
+
+**Four controls in the Channel had no box at all** — *Add to a playlist*,
+*Cover art*, *Download*, *Open it in the studio* — so the rule skipped them.
+*Post to Live* sat in the same row with a box, which is why one button was
+green and the rest grey. Her words: *"Daar is al die buttons verkleur. Maar
+in die channel is al die buttons nie verkleur nie."*
+
+**Sign out had `border-l` and nothing else**, so the rule matched it, gave it
+a background and a border-colour, and it rendered as a filled square-cornered
+rectangle inside a rounded pill. She photographed it: a green block with the
+words barely readable on it.
+
+`check:sideborder` now refuses any button bordered on one side only, unless it
+already declares a background the green rule excludes.
+
+### The negative test that took a fix away from me
+
+Writing that check I also gave the Adverts shelf's X a rose wash to exempt it.
+Then the negative test would not go red with the wash removed — because
+`hover:bg-rose-500/10` had been exempting it all along. `:not([class*="bg-rose"])`
+is a substring match on the whole class attribute, variants included. That
+button had never rendered green.
+
+The fix was reverted. The check mirrors the substring rule deliberately rather
+than being stricter, because a check that disagrees with the stylesheet sends
+you to fix something that is not broken — which is exactly what it had just
+done to me. The only reason I knew is that I took the fix away and watched.
+
+## Writing that was true and in the way
+
+Three of hers, one shape.
+
+**The fine print in Make a song.** Six lines explaining what the habit counter
+counts, that it follows the account rather than the device, and that it can be
+cleared. All true. It sat under the doors on the one screen that is supposed
+to be a set of choices, and it read as terms. *"Haal daai fyn skrif uit."*
+Both strings stay in `i18n.tsx` — the disclosure is worth keeping and this is
+an argument about where it is printed. The account screen is where the
+counting is cleared.
+
+**The studio's yellow explainer.** Two paragraphs and a button printed open
+above the song picker: roughly a phone screen of prose before the room's first
+control. *"Can you make this yellow explainer a drop down menu in the studio
+room?"* It is a `Card` now, shut like every other panel.
+
+The heading has to carry the point on its own, because a fold nobody opens
+must still have said the true thing. **"A new take, not an edit"** is the whole
+warning in five words.
+
+**Spotlight's four boxes.** A four-sentence lead and four boxes of three or
+four lines each — two phone screens between the headline and the first button.
+*"Take it out and the description… Replace the explenation with ticked unique
+features."*
+
+Seven ticks, then eight. A paragraph argues; a tick claims. Somebody deciding
+in the first second whether this app does the thing they came for is scanning
+for their own word — adverts, collab, video — and a box headed "Nothing here
+pretends" buries that word in the body.
+
+The eighth is the one hardest to copy and the last to be said out loud:
+**everything in Afrikaans — music, videos, podcasts.** All three were checked
+before the line was printed. It is in the English list too, because a
+differentiator hidden behind the language switch is one the person it would
+have won over never reads.
+
+## Folding cost the notice its colour, so the fold got the colour
+
+*"Maak daai a new take boksie lig geel sodat mense dit wel oop maak."*
+
+This is the cost of a fold, stated exactly: a shut card is a heading in a row
+of identical headings, and the reader decides from the wording alone whether
+it is worth a press. Where what is inside is a caution rather than a control,
+the card should look like one before it is opened.
+
+`Card` takes a `tone` now. It is a literal union with one value — not a colour
+and not a `className` — because this is precisely the prop that eats an app.
+The green sweep the day before went from "the studio doors should be green" to
+sixty-four buttons in one change, and it was right to; but a colour that means
+*look here* is worth nothing once everything has it.
+
+`check:cardtone` counts the warm cards: one of three allowed. The ceiling is
+not a law about taste. It is a line somebody has to come and raise on purpose,
+having read why it is there.
+
+## Errands: why you walked into a room
+
+*"Podcast na aanbieder deur moet mens na long shot toe vat en copilot se
+assistence dadelik verander na dit wat die kamer vir die podcast moet doen."*
+
+`surfaces.ts` says what a room is FOR, and that is fixed — the video desk is
+the video desk whoever walks in. But a room can be entered for more than one
+reason, and its opening line is written for the commonest. Arriving from the
+podcast room, *"I can write the whole shot list onto the board"* is not wrong
+so much as useless: the job is not a video, it is a video of this episode, and
+the first thing worth saying is that the whole episode is not the video.
+
+So an errand: a sentence for the model and a set of starters for the person,
+carried by a door and cleared the moment the room changes. Not a new surface —
+that would need its own `can`, its own ops and its own directory entry, every
+one a copy of the video desk's that drifts from it. The room really is the
+same room.
+
+### Opening a fold from outside it
+
+Every card starts shut, deliberately, and there is no `startOpen`. But landing
+in the right room with the right card folded and indistinguishable from its
+neighbours is landing in a room, not at the long form.
+
+`Card` takes an `openOn` counter compared against what it mounted with.
+Undefined or unchanged on mount is shut, always; it only moves in answer to a
+press that happened somewhere else. `check:folded` counts the cards that take
+one and asserts `Card` keeps comparing against its mount value — without that
+comparison `openOn` quietly becomes `startOpen`.
+
+### What deliberately does not travel
+
+The audio. An episode runs twenty minutes, a generated shot runs five seconds,
+and the lipsync model takes its input inline under a 25MB cap — handing the
+whole episode across would be handing across the one thing that cannot be
+used. The title travels, so the first suggestion is about this episode. Which
+minute becomes the film is a decision, and it is the errand's first starter.
+
+## A brought-in song does what a made one does
+
+*"Kan daar opsies wees om na die liedjie se woorde te luister? … Kan die
+liedjie gerename word, en die artist name in gesit word."*
+
+Three things. Two were missing, one already worked, and reading the source is
+not what settled which was which.
+
+**Name it.** The title starts as the filename with the extension taken off —
+right as a first guess and wrong about as often as filenames are. The probe's
+fixture is called `WhatsApp Audio 2026-09-13 at 05.12.44.wav` for that reason.
+
+**Who it is by.** A new `by`, and only on a brought-in song. Everything made
+here is by whoever made it, and that name lives on the `creators` row where
+one edit changes every release; a copy per track goes stale. A file dragged in
+is the case that breaks that rule, and it breaks it in the ordinary direction:
+it may well not be theirs. So the name is asked for rather than assumed, and
+a song with nobody named stays unattributed instead of quietly becoming yours.
+
+**The words.** Already worked, and could not be trusted to. `exactFor` falls
+through to transcription when a song has no lyric sheet — but `evenly()`
+returns nothing for a song with no parts and no lyrics, so the card says "Get
+the words" and the screen opens empty, and whether the offer to listen then
+appears is a question about a screen.
+
+What was missing is that the answer went nowhere: the timings were kept under
+the song's id, which lights a line while it plays and nothing else. The card
+went on offering "Get the words" for a song already paid for. The words are
+written onto the row now, so the second press costs nothing.
+
+## The same probe mistake, twice in one night
+
+`check:podvideo` first reported *"the podcast room has a door to a video — 0"*
+with the door on screen. `check:nameupload` first reported the naming panel
+missing, with the panel open.
+
+Both the same cause. `toRoom` unfolds a room on the way in — that is what it
+is for, and it is why every other probe can find a control that lives behind a
+heading. Both probes then pressed the heading to "open" it, and shut it.
+
+The rule is written into both files rather than fixed quietly: **after
+`unfold`, press to open only what is shut.** `check:podvideo` also read
+`body`, which hands back the feed sitting behind the studio overlay; it reads
+the overlay only now.
+
+Everything that mattered was then made to fail before it was kept — the
+`open_board` hand-off removed (board folded), the errand removed (both copilot
+assertions red, including the one that checks the desk's everyday line is
+GONE, which is the failure that otherwise looks identical to success), and
+`editUpload` stopped from writing `by` (storage and card both red).
+
+## Answered rather than built
+
+**Avatars in the video, and whether she must supply them.** She asked whether
+she, as admin, has to provide avatars because clients cannot upload their own,
+and whether twenty photographs would go into Vercel as twenty environment
+variables.
+
+No, on every count. Cast members are per-account rows with files in a private
+bucket; members already upload their own. Environment variables are short text
+settings, not files — `ELEVEN_AURORA_READY=1` is one on/off switch for the
+whole feature and contains no picture.
+
+A house set of faces IS a sensible feature and is filed as its own task, with
+the constraint that is the real content of it: a presenter clip makes a face
+say whatever the user types, which is why the panel carries a consent tick. A
+house set of real people's photographs makes her the one asserting that
+consent, for every user, forever — and standard stock licences generally
+forbid manipulating a model's likeness. AI-generated faces have nobody to ask
+and nobody to sue.
+
+It waits on one real clip either way. Three things are unknown until then, and
+twenty faces built before that may be twenty faces for nothing.
+
+## Still hers
+
+- `ELEVEN_AURORA_READY=1` in Vercel, a redeploy, and one short clip. The check
+  that costs nothing is `/api/presenter`, which answers `{"available":true}`.
+- The copyright test on an uploaded song, banked in `docs/SWITCH-ON.md`.
+- The dictionary ids, pasted into Vercel.
