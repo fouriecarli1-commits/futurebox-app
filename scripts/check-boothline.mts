@@ -114,7 +114,13 @@ ok('  and which section of the song it is in', /\{here\.label\}/.test(line));
 /* ── The room's own palette ───────────────────────────────────────────── */
 ok(
   'the booth carries its own palette flag',
-  /<div data-booth /.test(booth),
+  /* Matched wherever the attribute sits on the tag. It used to be
+     `<div data-booth ` with the class on the same line; the room's root
+     className became a template literal when the sideways layout gave it a
+     direction, which put every attribute on a line of its own and made this
+     read as the palette flag having been removed. The property is that the
+     room's root carries the flag, not how prettier laid the tag out. */
+  /<div\s+data-booth\b/.test(booth),
   'without it the room follows the theme, and the shipped theme is light',
 );
 ok(

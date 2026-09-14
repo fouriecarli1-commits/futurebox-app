@@ -51,6 +51,7 @@ import {
   Bot, Layers, Mic2, Pause, Play, SkipBack, SkipForward, Sliders, Waves, Wand2,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { useSideways } from '../lib/sideways';
 
 /** Which panel is out. `null` is all of them shut. */
 export type Desk = 'tracks' | 'mix' | 'effects' | 'stems' | 'voice' | 'ai' | null;
@@ -101,11 +102,14 @@ function DeskButton({
   open,
   onOpen,
   t,
+  tall = false,
 }: {
   readonly spec: DeskSpec;
   readonly open: Desk;
   readonly onOpen: (which: Desk) => void;
   readonly t: (key: string, fallback: string) => string;
+  /** In the side rail rather than the bottom bars: full width, stacked. */
+  readonly tall?: boolean;
 }): React.ReactElement {
   const on = open === spec.id;
   const label = t(spec.label[0], spec.label[1]);
@@ -123,7 +127,9 @@ function DeskButton({
          eye. The price warning is part of it for the same reason. */
       aria-label={spec.paid ? `${label}. ${what} ${t('dock.paidSays', 'Some of this costs credits.')}` : `${label}. ${what}`}
       title={what}
-      className="relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5"
+      className={`relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 ${
+        tall ? 'w-full' : 'flex-1'
+      }`}
       style={{
         background: on ? 'rgba(56,189,248,0.16)' : 'transparent',
         color: on ? LIT : INK_DIM,
@@ -225,6 +231,40 @@ export default function BoothDock({
   /** The open desk's own row, for the sentence above its controls. */
   const here = [...UPPER, ...LOWER].find((spec) => spec.id === open);
 
+  /* Held sideways, the two bars become a rail on the edge. See the note by
+     the rail below, and `app/lib/sideways.ts` for why the test is how the
+     device is held rather than how wide it is. */
+  const sideways = useSideways();
+
+  /**
+   * What this desk is, and what it costs — drawn above whatever it holds.
+   *
+   * Carli: *"Maak ook seker dat knoppies pop-ups het wat sê wat 'n funksie
+   * is, en maak seker betaalde funksies word uitgewys."*
+   *
+   * Drawn rather than hovered: nothing hovers on a phone, and this room was
+   * rebuilt for a phone. One copy rather than one per layout, because two
+   * copies is how the rail and the bars come to say different things.
+   */
+  const sheetHead = here ? (
+    <div className="px-4 pb-1 pt-3">
+      <p className="text-xs font-black uppercase tracking-wide" style={{ color: LIT }}>
+        {t(here.label[0], here.label[1])}
+      </p>
+      <p className="pt-0.5 text-xs leading-snug" style={{ color: INK_DIM }}>
+        {t(here.what[0], here.what[1])}
+      </p>
+      {here.paid && (
+        <p className="pt-1 text-xs font-bold leading-snug" style={{ color: '#fde047' }}>
+          {t(
+            'dock.paidHere',
+            'Some of what is in here spends credits. Every control that does says what it costs before it runs.',
+          )}
+        </p>
+      )}
+    </div>
+  ) : null;
+
   /* Escape shuts the open panel before it shuts the room. Somebody with a
      keyboard reaching for the way out of a sheet should not lose the take. */
   useEffect(() => {
@@ -239,8 +279,117 @@ export default function BoothDock({
     return () => window.removeEventListener('keydown', key, true);
   }, [open, onOpen]);
 
+  /* ── Sideways, the controls go to the edge ─────────────────────────
+
+     Carli, 14 September 2026: *"Die booth moet asb op die dwars draai
+     funksie van 'n foon en tablet getoets word. Want baie mense gaan die
+     dwarsdraai wil gebruik, en dan gaan die buttons weer beter werk aan die
+     kant van die skerm en nie onder nie."*
+
+     A phone turned sideways is about 390 pixels tall. These two rows are
+     130 of them and the header and readout another 110, which would leave
+     the timeline — the thing the room is for — about 150 pixels for every
+     lane it has. Sideways there is width to spare and no height at all, so
+     the controls belong on the edge, where there is room and where the
+     thumbs already are.
+
+     Same buttons, same panels, same rules. Only the direction changes, and
+     `useSideways` decides it by how the device is held rather than by a
+     width somebody picked. */
+  const rail = (
+    <div
+      className="flex h-full flex-shrink-0 flex-row"
+      style={{ background: PANEL, borderLeft: `1px solid ${EDGE}` }}
+    >
+      {/* The panel, to the LEFT of the rail — between the timeline and the
+          buttons rather than over either. A sheet that covered the lanes
+          would hide the thing every one of these controls is about. */}
+      {open && (
+        <div
+          className="w-[min(60vw,380px)] overflow-y-auto overscroll-contain"
+          style={{ borderRight: `1px solid ${EDGE}` }}
+        >
+          {sheetHead}
+          {children}
+        </div>
+      )}
+
+      {/* Two columns of icons, not one.
+
+          A phone held sideways is about 290 CSS pixels tall. One column
+          costs 52 of them per icon, so six icons and a transport need 450 —
+          and the first version of this rail put three on the screen and the
+          other three below the fold of an 84-pixel-wide column nothing says
+          scrolls. Stems, Voice and Copilot were simply gone. Two columns of
+          three fit the six in 164 pixels, and the transport laid out across
+          instead of down costs 48 rather than 110.
+
+          The tablet has the height to spare and gets the same shape anyway:
+          the rail is a grid of six either way, and a layout that rearranges
+          itself between two devices somebody owns both of is a layout they
+          have to learn twice. */}
+      <div
+        /* Named for `audit/probooth.mjs`, which has to answer "are the
+           controls down the side or across the bottom" and was climbing
+           from the play button to the nearest `flex-shrink-0` — which the
+           transport row below is one of, so it measured a 144×48 strip and
+           called the rail a bar. Both shapes carry the attribute, so the
+           probe measures the same thing in each. */
+        data-dock=""
+        className="flex w-[156px] flex-shrink-0 flex-col items-center gap-1 overflow-y-auto px-1.5 py-2"
+        style={{ paddingRight: 'max(6px, env(safe-area-inset-right))' }}
+      >
+        {/* The transport at the top of the rail, where a thumb reaching
+            round the corner of a held phone lands first. */}
+        <div className="flex w-full flex-shrink-0 items-center justify-center gap-1">
+          <button
+            type="button"
+            onClick={() => onSkip(-5)}
+            aria-label={t('dock.back', 'Back five seconds')}
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full"
+            style={{ color: INK }}
+          >
+            <SkipBack className="h-5 w-5" fill="currentColor" />
+          </button>
+          <button
+            type="button"
+            onClick={onPlay}
+            aria-label={playing ? t('dock.pause', 'Pause') : t('dock.play', 'Play')}
+            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"
+            style={{ background: INK, color: '#05060a' }}
+          >
+            {playing ? (
+              <Pause className="h-5 w-5" fill="currentColor" />
+            ) : (
+              <Play className="h-5 w-5 translate-x-0.5" fill="currentColor" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => onSkip(5)}
+            aria-label={t('dock.forward', 'Forward five seconds')}
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full"
+            style={{ color: INK }}
+          >
+            <SkipForward className="h-5 w-5" fill="currentColor" />
+          </button>
+        </div>
+
+        <span className="my-1 h-px w-full flex-shrink-0" style={{ background: EDGE }} />
+
+        <div className="grid w-full grid-cols-2 gap-1">
+          {[...UPPER, ...LOWER].map((spec) => (
+            <DeskButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} tall />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (sideways) return rail;
+
   return (
-    <div className="flex-shrink-0" style={{ background: PANEL, borderTop: `1px solid ${EDGE}` }}>
+    <div data-dock="" className="flex-shrink-0" style={{ background: PANEL, borderTop: `1px solid ${EDGE}` }}>
       {/* ── The panel ─────────────────────────────────────────────────
 
           Above the bars rather than over the room, so the timeline stays
@@ -255,33 +404,7 @@ export default function BoothDock({
           className="max-h-[52vh] overflow-y-auto overscroll-contain"
           style={{ borderBottom: `1px solid ${EDGE}` }}
         >
-          {/* ── What this desk is, said before the controls ────────────
-
-              Carli: *"Maak ook seker dat knoppies pop-ups het wat sê wat 'n
-              funksie is, en maak seker betaalde funksies word uitgewys."*
-
-              Drawn rather than hovered: nothing hovers on a phone, and this
-              room was rebuilt for a phone. One sentence and, where anything
-              behind the icon spends credits, a line saying so — before the
-              controls, not after somebody has pressed one. */}
-          {here && (
-            <div className="px-4 pb-1 pt-3">
-              <p className="text-xs font-black uppercase tracking-wide" style={{ color: LIT }}>
-                {t(here.label[0], here.label[1])}
-              </p>
-              <p className="pt-0.5 text-xs leading-snug" style={{ color: INK_DIM }}>
-                {t(here.what[0], here.what[1])}
-              </p>
-              {here.paid && (
-                <p className="pt-1 text-xs font-bold leading-snug" style={{ color: '#fde047' }}>
-                  {t(
-                    'dock.paidHere',
-                    'Some of what is in here spends credits. Every control that does says what it costs before it runs.',
-                  )}
-                </p>
-              )}
-            </div>
-          )}
+          {sheetHead}
           {children}
         </div>
       )}

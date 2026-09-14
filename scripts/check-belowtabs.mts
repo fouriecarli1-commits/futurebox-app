@@ -158,8 +158,16 @@ for (const [path, { why, holds }] of Object.entries(OTHERWISE)) {
 
 /* And the two rooms that a browser does check, so this file cannot be read as
    the whole story. */
+/* The Pro Booth's question changed shape rather than going away. It used to
+   keep controls under the app's bar and the probe asked whether any of them
+   were covered; since the rebuild the room takes the screen and the bar
+   stands down entirely, so what a browser has to confirm is that it really
+   did stand down AND that the room still has a way out — a bar that
+   disappears from a room with no back button is worse than the bar. */
 ok('a probe asks what is painted at the Pro Booth’s controls',
-  /the tab bar covers nothing the room offers/.test(readFileSync('audit/probooth.mjs', 'utf8')));
+  /the app’s bar has stood down, and the room still has a way out/.test(
+    readFileSync('audit/probooth.mjs', 'utf8'),
+  ));
 ok('and at The Booth’s',
   /stranded under the tab bar/.test(readFileSync('audit/boothwalk.mjs', 'utf8')));
 

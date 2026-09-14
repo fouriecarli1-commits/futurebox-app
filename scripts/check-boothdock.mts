@@ -53,10 +53,44 @@ const room = readFileSync('app/lib/fullroom.ts', 'utf8');
 ok('the transport has play, back and forward', /onSkip\(-5\)/.test(dock) && /onSkip\(5\)/.test(dock) && /onClick=\{onPlay\}/.test(dock));
 ok('  with track controls to the left of it', /spec=\{UPPER\[0\]\}/.test(dock) && /id: 'tracks'/.test(dock));
 ok('  and mix and master to the right', /spec=\{UPPER\[1\]\}/.test(dock) && /id: 'mix'/.test(dock));
+/* Read from the upright bar alone.
+
+   There are two layouts in this file now — the rail for a device held
+   sideways comes first, the bottom bars after `if (sideways) return rail;`
+   — and `indexOf` finds the first occurrence in the whole file. The rail's
+   own transport was then being compared with the bottom bar's desk buttons,
+   which is two different bars measured as one and said the order was wrong
+   while it was right in both. Split at the line that separates them. */
+const upright = dock.slice(dock.indexOf('if (sideways) return rail;'));
+const railOnly = dock.slice(0, dock.indexOf('if (sideways) return rail;'));
+
 ok(
   '  in that order, which is the order she drew',
-  dock.indexOf('spec={UPPER[0]}') < dock.indexOf('onSkip(-5)') &&
-    dock.indexOf('onSkip(5)') < dock.indexOf('spec={UPPER[1]}'),
+  upright.indexOf('spec={UPPER[0]}') < upright.indexOf('onSkip(-5)') &&
+    upright.indexOf('onSkip(5)') < upright.indexOf('spec={UPPER[1]}'),
+);
+
+/* ── Turned sideways ───────────────────────────────────────────
+
+   Carli: *"die booth moet asb op die dwars draai funksie van 'n foon en
+   tablet getoets word … dan gaan die buttons weer beter werk aan die kant
+   van die skerm en nie onder nie."*
+
+   `audit/probooth.mjs` measures the result in a real phone and tablet
+   profile. What is held here is the shape that makes it possible: one rail
+   carrying all six desks, in a grid rather than a column — a single column
+   fits three of them on a phone held sideways and hides the other three
+   below a fold. */
+ok('  and sideways they move to a rail down the side', /if \(sideways\) return rail;/.test(dock));
+ok('    carrying every desk, not the four', /\[\.\.\.UPPER, \.\.\.LOWER\]\.map/.test(railOnly));
+ok(
+  '    laid out in a grid, because one column hides half of them on a phone',
+  /grid w-full grid-cols-2/.test(railOnly),
+  'six 52px buttons down one column need 450px; a phone held sideways is about 290',
+);
+ok(
+  '  and both shapes name themselves, so a probe measures the same thing in each',
+  (dock.match(/data-dock=""/g) ?? []).length === 2,
 );
 
 /* ── The lower four ───────────────────────────────────────────────────── */

@@ -30,6 +30,7 @@
 
 import React, { useEffect, useState } from 'react';
 import ProBooth from '../components/ProBooth';
+import { useOwnedScreen } from '../lib/fullroom';
 import TabBar from '../components/TabBar';
 
 const RATE = 48_000;
@@ -54,6 +55,8 @@ export default function ProBoothProbe(): React.ReactElement {
     setBacking(buffer);
   }, []);
 
+  const ownsScreen = useOwnedScreen();
+
   return (
     <main>
       <p data-probe="kept">{kept}</p>
@@ -65,8 +68,20 @@ export default function ProBoothProbe(): React.ReactElement {
           onClose={() => undefined}
         />
       )}
-      {/* Over the room, as it is in the app. */}
-      <TabBar active="make" onGo={() => undefined} />
+      {/* ── The bar, on the same terms the app gives it ────────────────
+
+          It used to be drawn unconditionally, with the note "Over the room,
+          as it is in the app" — true when it was written, and the whole
+          point: a probe that renders the room alone cannot find the button
+          the bar is covering, which is how "Mix it down" came to sit
+          underneath it on a phone.
+
+          Since 14 September the booth claims the screen and `app/page.tsx`
+          stops drawing the bar while it is open. So this honours the claim
+          too. A probe that keeps painting a bar the app has taken away is
+          measuring a screen nobody sees — the same fault as before, pointed
+          the other way. */}
+      {!ownsScreen && <TabBar active="make" onGo={() => undefined} />}
     </main>
   );
 }

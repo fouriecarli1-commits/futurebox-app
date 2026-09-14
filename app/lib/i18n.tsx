@@ -876,6 +876,7 @@ export const STRINGS: Dict = {
   "pro.useTempo": { en: "Set the session to this", af: "Stel die sessie hierop" },
   "pro.readUnknown": { en: "It read the song, but nothing in the answer was a tempo, a key or a list of chords. That is a workflow that returns something else.", af: "Dit het die liedjie gelees, maar niks in die antwoord was ’n tempo, ’n toonsoort of ’n lys akkoorde nie. Dit is ’n werkvloei wat iets anders teruggee." },
   "pro.parts": { en: "Split into named parts", af: "Verdeel in benoemde dele" },
+  "pro.stemsWhere": { en: "Eight bars of something, in this song\u2019s key and tempo. To take a lane you already have apart instead, open it under Track controls \u2014 the scissors lift the voice off it, and the layers split it into named parts.", af: "Agt mate van iets, in hierdie liedjie se toonaard en tempo. Om \u2019n baan wat jy reeds het uitmekaar te haal, maak hom eerder oop onder Baankontroles \u2014 die skêr haal die stem daarvan af, en die lae verdeel hom in benoemde dele." },
   "pro.noParts": { en: "That workflow returned no audio to split into.", af: "Daardie werkvloei het geen klank teruggegee om in te verdeel nie." },
   "pro.partsUnreadable": { en: "The parts came back in a form the browser could not read.", af: "Die dele het teruggekom in ’n vorm wat die blaaier nie kon lees nie." },
   "pro.partsFailed": { en: "That lane could not be split into parts.", af: "Daardie baan kon nie in dele verdeel word nie." },

@@ -53,6 +53,7 @@ import BoothAsk from './BoothAsk';
 import { applyMove, type LaneNow, type Move } from '../lib/mixplan';
 import { NO_FX, type Fx } from '../lib/fx';
 import { useOwnScreen } from '../lib/fullroom';
+import { useSideways } from '../lib/sideways';
 import VoiceMixer, { DEFAULT_SETTINGS, settingsToForm, type VoiceSettings } from './VoiceMixer';
 import Cost from './Cost';
 import HowToTrain from './HowToTrain';
@@ -153,6 +154,12 @@ export default function ProBooth({
      vervang die harde buttons van die hele app, dan val daai hele bar van die
      app in die booth weg."* */
   useOwnScreen(true);
+
+  /* Held sideways, the room lays out across rather than down: the timeline
+     and the lane controls in a column on the left, the dock as a rail on
+     the right. Carli: *"dan gaan die buttons weer beter werk aan die kant
+     van die skerm en nie onder nie."* See `app/lib/sideways.ts`. */
+  const sideways = useSideways();
   const metronomeRef = useRef<Metronome | null>(null);
 
   /* ── Singing a lane in somebody else's voice ────────────────────────────
@@ -1440,7 +1447,21 @@ export default function ProBooth({
     </>
   );
 
-  const stemDesk = (
+  /* ── The two overlays ───────────────────────────────────────────────
+
+     Both of these are `fixed inset-0` sheets over the whole room, and both
+     are opened from somewhere else: "Generate a part" from the Stems desk
+     below, "Sing this in another voice" from the lane's own row of icons on
+     the Track-controls desk.
+
+     They were inside the Stems desk when the room was rebuilt around the six
+     icons, which meant each one rendered only while that desk happened to be
+     open — so the voice button on a lane set a flag and drew nothing, and the
+     Voice desk's own line told people to press it. An overlay over the whole
+     room cannot be scoped to one panel of it; they are mounted at the room's
+     level and gated on their own state, which is what they were always gated
+     on. */
+  const boothOverlays = (
     <>
       {/* ── Picking a voice for a lane ──────────────────────────────────
           Over the room rather than beside it: choosing among forty voices is
@@ -1750,6 +1771,41 @@ export default function ProBooth({
     </>
   );
 
+  /* ── The Stems desk ────────────────────────────────────
+
+     One sound becoming more than one — which is either taking a lane apart
+     or asking for a part that was never played.
+
+     Asking for one used to sit in the strip at the foot of the effects desk,
+     beside recording and mixing down, because that strip was once the whole
+     room's bottom bar. Behind an icon it was in the wrong drawer: nothing
+     about generating a bass line is an effect, and the sheet it opened
+     belonged to this desk, so pressing it there set a flag and drew nothing.
+
+     Taking a lane apart stays on the lane's own row, where its level, its
+     place and its bin already are — it is a thing done to one lane, and the
+     row is where a lane's own actions live. Said here, because a desk called
+     Stems that did not mention splitting would send people looking. */
+  const stemDesk = (
+    <div className="space-y-3 px-4 py-4">
+      <button
+        type="button"
+        onClick={() => setPartOpen(true)}
+        disabled={busy || recording || making}
+        className="w-full min-h-[44px] rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-2.5 text-sm font-semibold text-zinc-200 inline-flex items-center justify-center gap-2 disabled:opacity-50"
+      >
+        <Music2 className="w-4 h-4" />
+        {t('part.title', 'Generate a part')}
+      </button>
+      <Note className="text-sm leading-relaxed text-zinc-500">
+        {t(
+          'pro.stemsWhere',
+          'Eight bars of something, in this song\u2019s key and tempo. To take a lane you already have apart instead, open it under Track controls \u2014 the scissors lift the voice off it, and the layers split it into named parts.',
+        )}
+      </Note>
+    </div>
+  );
+
   /* ── The copilot's desk ────────────────────────────────────────────
 
      Carli: *"Copilot pop op en vra dat persoon 'n mixing voorstel en copilot
@@ -1931,18 +1987,11 @@ export default function ProBooth({
           {t('pro.bringIn', 'Bring audio in')}
         </button>
 
-        {/* Beside bringing a file in, because it is the same decision — this
-            session needs a part it does not have — and the room should not
-            make somebody leave to answer it. */}
-        <button
-          type="button"
-          onClick={() => setPartOpen(true)}
-          disabled={busy || recording || making}
-          className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
-        >
-          <Music2 className="w-4 h-4" />
-          {t('part.title', 'Generate a part')}
-        </button>
+        {/* Asking for a part that was never played is on the Stems desk, with
+            the sheet it opens — not here. It sat beside bringing a file in
+            while this strip was the room's whole bottom bar; once the room
+            went behind six icons, it was a button on one desk opening a sheet
+            that belonged to another, which drew nothing at all. */}
         <input
           ref={fileRef}
           type="file"
@@ -2082,7 +2131,19 @@ export default function ProBooth({
        nothing at the foot to clear; and the room is a column that fills the
        screen exactly — header, the timeline taking what is left, and the two
        bars pinned under it. Whatever needs to scroll scrolls inside itself. */
-    <div data-booth className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col overflow-hidden">
+    <div
+      data-booth
+      className={`fixed inset-0 z-[70] bg-zinc-950 flex overflow-hidden ${
+        sideways ? 'flex-row' : 'flex-col'
+      }`}
+    >
+      {/* Everything but the dock, in a column of its own. In portrait that
+          column is the room; sideways it is the left of it, and the rail
+          takes the right. One wrapper rather than two layouts: the header,
+          the timeline and the lane controls do not care which way the
+          device is held, and giving them a second copy that does is how the
+          two come to disagree about something. */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
       <div className="flex items-center gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
         {/* Out of the room, and it says so.
 
@@ -2191,6 +2252,8 @@ export default function ProBooth({
 
       {problem && <p className="text-sm text-amber-400 leading-snug px-5 pb-2">{problem}</p>}
 
+      </div>
+
       {/* ── The two bars, and whatever is out from behind them ────────
 
           The app's own tab bar is gone while this room is open — see
@@ -2217,6 +2280,10 @@ export default function ProBooth({
         )}
         {deskOpen === 'ai' && askDesk}
       </BoothDock>
+
+      {/* Over the whole room, and so mounted at the room's level rather than
+          inside any one desk — see `boothOverlays`. */}
+      {boothOverlays}
     </div>
   );
 }

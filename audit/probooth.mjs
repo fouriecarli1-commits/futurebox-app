@@ -11,7 +11,7 @@
  */
 import { cpSync, rmSync, existsSync } from 'node:fs';
 import { execSync, spawn } from 'node:child_process';
-import { chromium } from 'playwright';
+import { chromium, devices } from 'playwright';
 import { launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3057';
@@ -120,10 +120,74 @@ try {
     /A test song/.test(await words()), (await words()).slice(0, 120).replace(/\n/g, ' / '));
 
   /* ── The clock reads in bars ─────────────────────────────────────────
+
      Not seconds. A musician setting up a take reads bars, and the whole
-     tempo strip is pointless if the transport does not. */
-  check('the transport reads in bars and beats', /001 01/.test(await words()),
-    (await words()).match(/\d{3} \d{2}/)?.[0] ?? 'no bar reading');
+     tempo strip is pointless if the transport does not.
+
+     It moved on 14 September and this caught it, which is the check doing
+     its job rather than a rule that expired. The rebuild put the tempo strip
+     behind the Track-controls icon, so `displayOf`'s "001 01" is no longer
+     on the screen when the room opens — and a reading a musician has to
+     press an icon to see is not a transport reading.
+
+     What replaced it is the timeline's own readout, right above the lanes
+     and always there: the time, the length, and `sayPlace` — "1.1", bar and
+     beat, in the notation the rest of the room already uses for a position.
+     Same property, asked of where it now lives. Both spellings are accepted
+     so the check does not have to change again if the strip comes back. */
+  const clockNow = await words();
+  check(
+    'the transport reads in bars and beats, without pressing anything',
+    /\b\d+\.\d+\b/.test(clockNow) || /001 01/.test(clockNow),
+    clockNow.match(/\d{3} \d{2}|\b\d+\.\d+\b/)?.[0] ?? 'no bar reading',
+  );
+
+  /* ── Open the desk the clock is on ──────────────────────────────────
+
+     The tempo, the time signature, the key, the click, the count-in and the
+     grid were a strip across the top of the room. Since the rebuild they are
+     behind the Track-controls icon on the lower bar, with everything else
+     that sets up a take.
+
+     So the probe presses it, because a person does. It failed here first
+     with a thirty-second wait for a tempo field that was not on the screen,
+     which is the right failure to get: a control reachable only by knowing
+     it is there is a control nobody reaches, and pressing the icon is that
+     knowledge written down. */
+  /**
+   * Open one of the six desks, the way a person does.
+   *
+   * Since the rebuild the room is a timeline with two bars of icons under
+   * it, and every panel that used to be a strip down the page is behind one
+   * of them. A probe that reaches straight for a control inside a closed
+   * panel is not testing the room somebody uses — and it fails with a
+   * thirty-second wait rather than a sentence, which is how this section
+   * announced itself.
+   *
+   * Opens if shut, and does nothing if it is already open — which is the
+   * whole point. Pressing the icon of the desk that is out SHUTS it, by
+   * design ("as jy weer op buttons druk pop dit terug"), so a helper that
+   * always pressed would close the panel for any caller whose group follows
+   * another on the same desk. It did, and the run died waiting thirty
+   * seconds for a button inside a panel it had just shut.
+   *
+   * `aria-pressed` is what the icon already publishes for a screen reader,
+   * so this asks the same question a screen reader does rather than
+   * inventing a second way to know.
+   */
+  const openDesk = async (en, afr) => {
+    const icon = p.getByRole('button', { name: new RegExp(af ? afr : en) }).first();
+    if ((await icon.getAttribute('aria-pressed')) === 'true') return;
+    await icon.click();
+    await p.waitForTimeout(300);
+  };
+
+  await openDesk('Track controls', 'Baankontroles');
+  check(
+    'the track-controls icon opens the clock',
+    (await p.locator('input[type="number"]').count()) > 0,
+    'the tempo strip is behind this icon now, so the icon has to be the way in',
+  );
 
   // ── Tempo and time signature are there and settable ─────────────────
   const bpm = p.locator('input[type="number"]').first();
@@ -162,7 +226,13 @@ try {
     await p.locator(`select[aria-label="${af ? 'Hoe dikwels dit klik' : 'How often it clicks'}"]`).isVisible());
 
   /* ── The master says when its reading is out of date ─────────────────
-     A measurement about a mix that no longer exists is worse than none. */
+
+     A measurement about a mix that no longer exists is worse than none.
+
+     On its own desk since the rebuild — Mix & master, to the right of the
+     transport — so the icon is pressed first. Track controls closes as this
+     opens, which is the room's own rule and not something to work around. */
+  await openDesk('Mix & master', 'Meng & meester');
   check('before it is measured the master says it is doing nothing',
     af ? /doen die meester niks nie/.test(await words()) : /the master does nothing at all/.test(await words()));
 
@@ -187,6 +257,10 @@ try {
      nobody had asked for it — which is the right failure: a control reachable
      only by knowing it is there is a control nobody reaches. Tapping the
      first non-backing lane's name is that knowledge, made explicit. */
+  /* Back to Track controls, which is the desk a lane's own faders are on.
+     The gutter tap below picks WHICH lane; the desk decides whether its
+     controls are drawn at all. */
+  await openDesk('Track controls', 'Baankontroles');
   const gutter = p.locator('div[style*="grid-template-columns"] > button');
   await gutter.nth(Math.min(1, (await gutter.count()) - 1)).click();
   await p.waitForTimeout(300);
@@ -198,13 +272,19 @@ try {
   const pan = p.locator(`input[aria-label="${af ? 'Waar dit sit, links na regs' : 'Where it sits, left to right'}"]`).first();
   await pan.fill('40');
   await p.waitForTimeout(500);
+  /* The staleness line is on the master's own desk, so look at it there. */
+  await openDesk('Mix & master', 'Meng & meester');
   check('changing a lane marks the reading out of date',
     af ? /meet dit weer/.test(await words()) : /measure it again/.test(await words()),
     'a stale number is left on screen as though it were current');
 
   /* ── Reading a lane ──────────────────────────────────────────────────
      The payoff of the whole integration: a service says what the song is,
-     and the session can be set to match in one press. */
+     and the session can be set to match in one press.
+
+     Back on the lane's own desk: the read button belongs to a lane, and
+     opening the master's desk closed it. */
+  await openDesk('Track controls', 'Baankontroles');
   await p.locator(`button[aria-label="${af ? 'Lees die akkoorde, toonsoort en tempo' : 'Read the chords, key and tempo'}"]`).first().click();
   await p.waitForTimeout(3500);
   const readOut = await words();
@@ -223,6 +303,8 @@ try {
   check('the session was not moved without being asked', before === '120', before);
   check('and saying yes sets the tempo to what was read', after === '96', `${before} → ${after}`);
   check('the transport follows it', /001 01/.test(await words()));
+
+  await openDesk('Track controls', 'Baankontroles');
 
   /* ── Splitting into named parts ──────────────────────────────────────
      The half of the integration that produces audio rather than an answer.
@@ -278,7 +360,13 @@ try {
      for a living: a part asked for the way a session player is asked for one.
      `check:parts` proves the arithmetic and the words that reach the engine;
      what only a browser settles is whether the room actually says the four
-     things a musician says, in the reader's own language, before the press. */
+     things a musician says, in the reader's own language, before the press.
+
+     On the Stems desk since the rebuild. It used to sit in the strip at the
+     foot of the effects desk, which put the button on one desk and the sheet
+     it opens on another — so it drew nothing, and this probe is what found
+     that. Taking an existing lane apart stays on the lane's own row. */
+  await openDesk('Stems', 'Stamme');
   const openPart = p.locator('button').filter({ hasText: af ? /Genereer ’n party/ : /Generate a part/ }).first();
   check('the room can generate a part', (await openPart.count()) > 0);
   await openPart.click();
@@ -469,9 +557,22 @@ try {
       });
       await p.waitForTimeout(300);
 
+      /* ── The bar is not there at all any more ──────────────────────
+
+         This used to look for controls painted over by the tab bar, and it
+         found a real one: "Mix it down", the button that produces the file,
+         sat underneath it on a phone with nothing to say so, and Carli
+         found that by using the app.
+
+         The booth now claims the screen and the bar stands down while it is
+         open — Carli: *"dan val daai hele bar van die app in die booth
+         weg."* So the question changes from "does the bar cover anything"
+         to "is the bar gone, and is there still a way out". Both halves,
+         because the bar gone with no back button is a room a phone cannot
+         leave. */
       const covered = await p.evaluate(() => {
         const bar = document.querySelector('nav.fixed.bottom-0');
-        if (!bar) return ['no tab bar in the probe at all'];
+        if (!bar) return [];
         const over = bar.getBoundingClientRect();
         const out = [];
         for (const el of Array.from(document.querySelectorAll('button, input, select'))) {
@@ -488,8 +589,16 @@ try {
         }
         return out;
       });
-      check('at 390px the tab bar covers nothing the room offers', covered.length === 0,
-        covered.slice(0, 6).join(', '));
+      const wayOut = await p.evaluate(() =>
+        Array.from(document.querySelectorAll('button')).some((el) =>
+          /^(Back|Terug)$/.test((el.innerText || '').trim()),
+        ),
+      );
+      check(
+        'at 390px the app’s bar has stood down, and the room still has a way out',
+        covered.length === 0 && wayOut,
+        covered.length ? `covered: ${covered.slice(0, 4).join(', ')}` : 'no back button in the room',
+      );
 
       /* ── Nothing is hidden sideways ────────────────────────────────
 
@@ -670,6 +779,10 @@ try {
      first canvas on the page is now a clip on the timeline and there is no
      control row above it — the row is under the timeline, opened by tapping
      a lane. The name field is inside that row and only inside that row. */
+  /* And the row is only mounted while the Track-controls desk is open with a
+     lane picked — the sweep above left the Stems desk open. */
+  await openDesk('Track controls', 'Baankontroles');
+
   const heightAt = async (width) => {
     await p.setViewportSize({ width, height: 900 });
     await p.waitForTimeout(400);
@@ -688,6 +801,141 @@ try {
 
   await p.setViewportSize({ width: 1280, height: 900 });
 
+  /* ── Turned sideways ─────────────────────────────────────────────────
+
+     Carli, 14 September 2026: *"Die booth moet asb op die dwars draai
+     funksie van 'n foon en tablet getoets word. Want baie mense gaan die
+     dwarsdraai wil gebruik, en dan gaan die buttons weer beter werk aan die
+     kant van die skerm en nie onder nie."*
+
+     Two questions, and only the second is about taste. The first is
+     arithmetic: a phone turned sideways is 390 pixels tall, and two rows of
+     controls plus a header plus a readout is 240 of them. Whatever is left
+     is the timeline, which is the room. So the rail has to move to the edge
+     or the work has nowhere to be.
+
+     Real device profiles rather than `setViewportSize`, and that is the
+     whole reason this section is here rather than folded into the width
+     sweep above. `useSideways` asks for `(orientation: landscape) and
+     (pointer: coarse)` — a resized desktop window is landscape and has a
+     mouse, so it would answer no, and a sweep that resizes a desktop page
+     would prove the rail never appears while reporting that it does. A
+     device profile brings the coarse pointer with it. */
+  for (const [what, profile, turned] of [
+    ['a phone upright', devices['Pixel 5'], false],
+    ['a phone sideways', devices['Pixel 5 landscape'], true],
+    ['a tablet upright', devices['iPad Mini'], false],
+    ['a tablet sideways', devices['iPad Mini landscape'], true],
+  ]) {
+    if (!profile) {
+      check(`${what}: the device profile exists in this Playwright`, false, 'renamed between versions');
+      continue;
+    }
+    const held = await b.newPage({ ...profile });
+    try {
+      await held.goto(`http://localhost:${PORT}/proboothprobe`, { waitUntil: 'networkidle' });
+      /* Waited for by the one control that is in the room at both
+         orientations — the play button — because it is also the thing the
+         measurement below finds the dock by. `networkidle` is the page
+         having loaded, not the room having drawn itself.
+
+         Then a pause on top of it: `useSideways` answers no on the first
+         paint by design (see the note in `app/lib/sideways.ts`), so a
+         measurement taken the instant the dock appears measures the upright
+         dock on a sideways phone — which is exactly the false pass this
+         section exists to rule out. */
+      await held.waitForSelector('[aria-label="Play"], [aria-label="Speel"], [aria-label="Pause"]');
+      await held.waitForTimeout(1200);
+
+      const shape = await held.evaluate(() => {
+        const room = document.querySelector('div.fixed.inset-0.z-\\[70\\]');
+        /* The timeline's own root, not the grid inside its scroller: that
+           grid is content-sized, so it measured the same 98 pixels on a
+           phone and on a tablet and would never have noticed the timeline
+           being squeezed to nothing. */
+        const line = document.querySelector('[data-timeline]');
+        /* The dock names itself. It used to be found by climbing from the
+           play button to the nearest `flex-shrink-0`, and when the rail's
+           transport became a row of its own that climb stopped at the row:
+           144×48, which is a bar, so the rail failed its own assertion
+           while being exactly right on the screen. */
+        const play =
+          document.querySelector('[aria-label="Play"]') ||
+          document.querySelector('[aria-label="Speel"]') ||
+          document.querySelector('[aria-label="Pause"]');
+        const dock = play?.closest('[data-dock]');
+        if (!room || !dock) return null;
+        const r = room.getBoundingClientRect();
+        const d = dock.getBoundingClientRect();
+        const l = line?.getBoundingClientRect();
+        return {
+          room: { w: Math.round(r.width), h: Math.round(r.height) },
+          dock: { x: Math.round(d.x), y: Math.round(d.y), w: Math.round(d.width), h: Math.round(d.height) },
+          lineH: l ? Math.round(l.height) : 0,
+          wide: Math.round(document.documentElement.scrollWidth - document.documentElement.clientWidth),
+          small: Array.from(document.querySelectorAll('button')).filter((el) => {
+            const box = el.getBoundingClientRect();
+            return box.width > 0 && (box.width < 40 || box.height < 40);
+          }).length,
+          /* The six desks, and how many of them a person can see without
+             finding a scroll in a narrow column. Counted by `aria-pressed`,
+             which only the desk buttons carry. */
+          desks: Array.from(dock.querySelectorAll('button[aria-pressed]')).length,
+          desksSeen: Array.from(dock.querySelectorAll('button[aria-pressed]')).filter((el) => {
+            const box = el.getBoundingClientRect();
+            return box.top >= -1 && box.bottom <= window.innerHeight + 1;
+          }).length,
+        };
+      });
+
+      check(`${what}: the room and its controls are on the screen`, Boolean(shape), 'nothing found');
+      if (!shape) continue;
+
+      if (turned) {
+        /* Beside the work, not under it. Both halves are asserted: a rail
+           that is tall but at the left of the screen is still in the way of
+           a right thumb, and one at the right that is short is a bar that
+           happens to be floating. */
+        check(
+          `${what}: the controls are down the side, not across the bottom`,
+          shape.dock.h > shape.dock.w && shape.dock.x > shape.room.w / 2,
+          `${shape.dock.w}×${shape.dock.h} at x=${shape.dock.x} of ${shape.room.w}`,
+        );
+        check(
+          `${what}: and the timeline gets the height that frees up`,
+          shape.lineH >= shape.room.h * 0.35,
+          `${shape.lineH}px of ${shape.room.h}px`,
+        );
+      } else {
+        check(
+          `${what}: the controls are across the bottom`,
+          shape.dock.w > shape.dock.h && shape.dock.y > shape.room.h / 2,
+          `${shape.dock.w}×${shape.dock.h} at y=${shape.dock.y} of ${shape.room.h}`,
+        );
+      }
+
+      /* Every desk on the screen, not merely in the DOM.
+
+         The rail's first version was one column 84 pixels wide, and on a
+         phone held sideways it showed Track controls, Mix & master and
+         Audio effects — with Stems, Voice and Copilot under the fold of a
+         column nothing marks as scrolling. It scrolled, so nothing was
+         unreachable and every assertion here passed; three of the six
+         functions were invisible anyway. Reachable is not the bar. */
+      check(
+        `${what}: all six desks are on the screen at once`,
+        shape.desks === 6 && shape.desksSeen === 6,
+        `${shape.desksSeen} of ${shape.desks} in view`,
+      );
+
+      check(`${what}: nothing runs off the side`, shape.wide <= 1, `${shape.wide}px over`);
+      check(`${what}: every button is big enough for a thumb`, shape.small === 0, `${shape.small} too small`);
+      await held.screenshot({ path: shot(`booth-${what.replace(/\s+/g, '-')}.png`) });
+    } finally {
+      await held.close();
+    }
+  }
+
   /* ── The way to the words is in the room that has none ───────────────
 
      "wanneer mens record moet daar op 'n manier 'n baie meer duidelike
@@ -699,6 +947,12 @@ try {
      where either was — so somebody who came here to sing was in the wrong
      room with no way to find that out. */
   {
+    /* The record strip — the way to the words, the guide voice, and "Mix it
+       down" — is at the foot of the Audio effects desk. It kept its place
+       there rather than becoming a seventh icon, because the one thing in
+       it that is not a control is the button this whole room exists to
+       press. */
+    await openDesk('Audio effects', 'Klankeffekte');
     const said = (await p.locator('body').innerText()).replace(/\s+/g, ' ');
     check('the room offers the way to the words',
       await p.locator('button', { hasText: /Sing with the words|Sing saam met die woorde/ }).count() > 0);

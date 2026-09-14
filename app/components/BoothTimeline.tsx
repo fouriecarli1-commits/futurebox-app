@@ -260,6 +260,14 @@ export default function BoothTimeline({
          of 900 pixels. The room does not scroll any more, so `flex-1` works
          on every width — the floor stays as a guard against the same shape
          of mistake coming back somewhere above it. */
+      /* A handle for the probe, and only for the probe. `audit/probooth.mjs`
+         has to measure how much of the screen the work gets, and it was
+         finding the grid inside the scroller — which is content-sized, so it
+         read the same 98 pixels on a phone and on a tablet and would have
+         gone on reading it however much room the timeline was actually
+         given. Named rather than climbed to by shape, so restyling the
+         column does not quietly move the measurement. */
+      data-timeline=""
       className="flex min-h-[40vh] flex-1 flex-col"
       style={{ background: VOID }}
       onPointerMove={onMove}
