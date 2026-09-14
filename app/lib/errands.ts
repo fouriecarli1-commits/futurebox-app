@@ -99,9 +99,23 @@ export function isErrandId(value: unknown): value is ErrandId {
   return typeof value === 'string' && (ERRAND_IDS as readonly string[]).includes(value);
 }
 
-/** True when this errand belongs in this room. It is ignored anywhere else. */
-export function errandBelongs(errand: Errand | null, surface: SurfaceId): boolean {
-  return Boolean(errand && ERRANDS[errand.id].surface === surface);
+/**
+ * True when this errand belongs in this room. It is ignored anywhere else.
+ *
+ * Written through `isErrandId` rather than indexing `ERRANDS` directly. The
+ * short version — `ERRANDS[errand.id].surface === surface` — reads fine and
+ * throws on anything whose `id` is not one of ours: `ERRANDS[undefined]` is
+ * `undefined`, and `.surface` on that is a TypeError.
+ *
+ * TypeScript makes that unreachable from the studio, which is the only caller
+ * today. It is still the wrong shape for a function whose answer is read
+ * during render: a throw here does not fail an errand, it takes the screen
+ * down. Nothing that only decides whether to show a different sentence should
+ * be able to do that.
+ */
+export function errandBelongs(errand: Errand | null | undefined, surface: SurfaceId): boolean {
+  if (!errand || !isErrandId(errand.id)) return false;
+  return ERRANDS[errand.id].surface === surface;
 }
 
 /**
