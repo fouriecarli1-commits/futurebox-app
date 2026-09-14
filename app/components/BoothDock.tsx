@@ -52,6 +52,7 @@ import {
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { useSideways } from '../lib/sideways';
+import DeskSheet from './BoothCard';
 
 /** Which panel is out. `null` is all of them shut. */
 export type Desk = 'tracks' | 'mix' | 'effects' | 'stems' | 'voice' | 'ai' | null;
@@ -216,6 +217,7 @@ export default function BoothDock({
   playing,
   onPlay,
   onSkip,
+  place,
   children,
 }: {
   readonly open: Desk;
@@ -224,6 +226,8 @@ export default function BoothDock({
   readonly onPlay: () => void;
   /** Seconds to move by. Negative is back. */
   readonly onSkip: (by: number) => void;
+  /** Where the playhead is, in bars and beats, for the open desk's header. */
+  readonly place?: string;
   /** The open panel's contents. Nothing when nothing is open. */
   readonly children?: React.ReactNode;
 }): React.ReactElement {
@@ -237,32 +241,39 @@ export default function BoothDock({
   const sideways = useSideways();
 
   /**
-   * What this desk is, and what it costs — drawn above whatever it holds.
+   * The open desk, framed.
    *
-   * Carli: *"Maak ook seker dat knoppies pop-ups het wat sê wat 'n funksie
-   * is, en maak seker betaalde funksies word uitgewys."*
+   * Carli: *"Maak ook seker dat knoppies pop-ups het wat sê wat ’n funksie
+   * is, en maak seker betaalde funksies word uitgewys."* — the name, the
+   * coin and the sentence are all in `DeskSheet`'s header now.
    *
-   * Drawn rather than hovered: nothing hovers on a phone, and this room was
-   * rebuilt for a phone. One copy rather than one per layout, because two
-   * copies is how the rail and the bars come to say different things.
+   * The sentence is behind the mark rather than printed. It used to be
+   * printed, along with the name and two lines of yellow warning, which on
+   * the Audio-effects desk was nine lines of prose above the first button in
+   * a panel 378 pixels tall. The app has had a rule against that since the
+   * rooms were stripped down: the explanation goes behind a mark, and the
+   * control goes on the screen.
+   *
+   * One copy rather than one per layout, because two copies is how the rail
+   * and the bars come to say different things.
    */
-  const sheetHead = here ? (
-    <div className="px-4 pb-1 pt-3">
-      <p className="text-xs font-black uppercase tracking-wide" style={{ color: LIT }}>
-        {t(here.label[0], here.label[1])}
-      </p>
-      <p className="pt-0.5 text-xs leading-snug" style={{ color: INK_DIM }}>
-        {t(here.what[0], here.what[1])}
-      </p>
-      {here.paid && (
-        <p className="pt-1 text-xs font-bold leading-snug" style={{ color: '#fde047' }}>
-          {t(
-            'dock.paidHere',
-            'Some of what is in here spends credits. Every control that does says what it costs before it runs.',
-          )}
-        </p>
+  const sheet = here ? (
+    <DeskSheet
+      icon={here.icon}
+      title={t(here.label[0], here.label[1])}
+      what={t(here.what[0], here.what[1])}
+      paid={here.paid}
+      paidSays={t('dock.paidSays', 'Some of this costs credits.')}
+      paidLine={t(
+        'dock.paidHere',
+        'Some of what is in here spends credits. Every control that does says what it costs before it runs.',
       )}
-    </div>
+      closeSays={t('dock.shut', 'Close this desk')}
+      place={place}
+      onClose={() => onOpen(null)}
+    >
+      {children}
+    </DeskSheet>
   ) : null;
 
   /* Escape shuts the open panel before it shuts the room. Somebody with a
@@ -297,23 +308,23 @@ export default function BoothDock({
      `useSideways` decides it by how the device is held rather than by a
      width somebody picked. */
   const rail = (
+    <>
+      {/* The desk, to the LEFT of the rail and taking everything the room
+          gives it.
+
+          It was `w-[min(60vw,380px)]` beside a timeline that stayed visible,
+          which sounds generous and is not: 60vw of a phone held sideways is
+          480 pixels wide and 290 tall, and a desk 290 pixels tall is the
+          same scrolling slot this rebuild exists to remove. The room hides
+          the timeline while a desk is open (see `ProBooth`), so the desk
+          gets the width as well — and the rail beside it still switches
+          desks and plays, so nothing has been taken away. */}
+      {sheet}
+
     <div
       className="flex h-full flex-shrink-0 flex-row"
       style={{ background: PANEL, borderLeft: `1px solid ${EDGE}` }}
     >
-      {/* The panel, to the LEFT of the rail — between the timeline and the
-          buttons rather than over either. A sheet that covered the lanes
-          would hide the thing every one of these controls is about. */}
-      {open && (
-        <div
-          className="w-[min(60vw,380px)] overflow-y-auto overscroll-contain"
-          style={{ borderRight: `1px solid ${EDGE}` }}
-        >
-          {sheetHead}
-          {children}
-        </div>
-      )}
-
       {/* Two columns of icons, not one.
 
           A phone held sideways is about 290 CSS pixels tall. One column
@@ -384,30 +395,36 @@ export default function BoothDock({
         </div>
       </div>
     </div>
+    </>
   );
 
   if (sideways) return rail;
 
   return (
-    <div data-dock="" className="flex-shrink-0" style={{ background: PANEL, borderTop: `1px solid ${EDGE}` }}>
-      {/* ── The panel ─────────────────────────────────────────────────
+    <>
+      {/* ── The desk ───────────────────────────────────
 
-          Above the bars rather than over the room, so the timeline stays
-          visible while a control is being set: every one of these changes
-          what the next take sounds like or where it lands, and a panel that
-          hides the thing it is about makes you close it to see the effect.
+          Above the bars, and taking everything above them.
 
-          Capped and scrollable — the tone drawer alone is taller than a
-          phone. */}
-      {open && (
-        <div
-          className="max-h-[52vh] overflow-y-auto overscroll-contain"
-          style={{ borderBottom: `1px solid ${EDGE}` }}
-        >
-          {sheetHead}
-          {children}
-        </div>
-      )}
+          It was `max-h-[52vh]` with the timeline still drawn behind it, on
+          the reasoning that a panel which hides the thing it is about makes
+          you close it to see the effect. The reasoning is sound; the
+          measurement was not. On a Pixel 5 the desks drew between 192 and
+          378 pixels of a 727-pixel screen, while the timeline above held 350
+          of them to show one lane — and Audio effects had 164 pixels of its
+          own content below the fold.
+
+          So the room hides the timeline while a desk is open (see
+          `ProBooth`) and the desk gets the screen. The bars stay under it:
+          the transport plays and the six icons switch desks without closing
+          anything, so hearing the change is still one press. */}
+      {sheet}
+
+      <div
+        data-dock=""
+        className="flex-shrink-0"
+        style={{ background: PANEL, borderTop: `1px solid ${EDGE}` }}
+      >
 
       {/* ── The transport, with a desk either side ────────────────────── */}
       <div className="flex items-center justify-center gap-1 px-2 pt-2">
@@ -456,7 +473,8 @@ export default function BoothDock({
         {LOWER.map((spec) => (
           <DeskButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} />
         ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

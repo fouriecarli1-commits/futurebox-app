@@ -83,9 +83,23 @@ function hueFor(index: number, count: number): number {
 }
 
 /** The gutter, in pixels. Wide enough for a name, narrow enough on a phone. */
-const GUTTER = 96;
+/**
+ * The gutter, and how tall a lane is.
+ *
+ * Both grew when M and S became buttons instead of lights. They were 28 by
+ * 18, which this app's own rule — 44 pixels under a coarse pointer — forbids
+ * and which no thumb can hit: Carli found it by trying. Two 44-wide buttons
+ * and a gap need 92 of the gutter, and a 44-tall button under a name needs
+ * 88 of the row.
+ *
+ * The cost is real and worth naming: a lane is 26 pixels taller, so a session
+ * of eight stems is 208 pixels longer to scroll. The list scrolls either way;
+ * a control nobody can press does not become pressable by being closer to
+ * the next one.
+ */
+const GUTTER = 100;
 /** A lane is drawn this tall. */
-const ROW = 62;
+const ROW = 88;
 
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
@@ -404,10 +418,26 @@ export default function BoothTimeline({
             const on = picked === lane.id;
             return (
               <React.Fragment key={lane.id}>
-                <button
-                  type="button"
-                  onClick={() => onPick(lane.id)}
-                  className="flex flex-col items-start justify-center gap-1 px-2 text-left"
+                {/* ── The gutter: the lane's name, and its M and S ───────
+
+                    Carli, 15 September 2026: *"Die m en s langs klankbaan
+                    kan ook nie gedruk word nie."*
+
+                    They could not. They were two `<span>`s inside the
+                    button that picks the lane — lights that showed mute and
+                    solo and did nothing when pressed, which is the fault of
+                    "every button must look like a button" running the other
+                    way: a thing that looks like a button and is not. And a
+                    button cannot be nested inside a button, so the fix is
+                    the cell rather than the spans: the name is one button,
+                    and M and S are two of their own.
+
+                    Solo is not exclusive, and that is `audible()`'s rule
+                    rather than a shortcut here: any lane soloed silences
+                    everything that is not, so two soloed lanes are a submix
+                    of those two. That is what a desk does. */}
+                <div
+                  className="relative"
                   style={{
                     gridColumn: 1,
                     gridRow: index + 2,
@@ -417,30 +447,70 @@ export default function BoothTimeline({
                     borderRight: `1px solid ${EDGE}`,
                   }}
                 >
-                  <span className="w-full truncate text-xs font-bold" style={{ color: INK }}>
-                    {lane.name}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span
-                      className="rounded px-1 text-[10px] font-black"
+                  <button
+                    type="button"
+                    /* Named, because the probe reaches for "a lane in the
+                       gutter" and used to find it as the grid's own direct
+                       child. The gutter is a cell with three buttons in it
+                       now — the name, M and S — so a selector that means
+                       "the lane" has to say so rather than describe where
+                       it happened to sit. */
+                    data-lanename=""
+                    onClick={() => onPick(lane.id)}
+                    aria-pressed={on}
+                    title={t('pro.openLane', 'Open this lane\u2019s controls')}
+                    /* The whole cell, with the name drawn at the top of
+                       it and M and S sitting on top at the foot. A lane
+                       header in any desk works this way, and it is what
+                       lets all three be 44 pixels without the gutter
+                       swallowing the timeline: the name gets the space
+                       between and behind them rather than a strip of its
+                       own. */
+                    className="absolute inset-0 px-1.5 pt-1.5 text-left"
+                  >
+                    <span className="block w-full truncate text-xs font-bold" style={{ color: INK }}>
+                      {lane.name}
+                    </span>
+                  </button>
+
+                  {/* Side by side at the foot, 44 by 44 each, which is what
+                      the gutter and the row were widened for. */}
+                  {/* The strip itself lets presses through; only the two
+                      buttons in it take them. Without that, a full-width
+                      box at the foot of the cell swallows every press aimed
+                      at the middle of the name behind it — which is where
+                      a finger aiming at the lane lands. */}
+                  <span className="pointer-events-none absolute inset-x-1 bottom-0.5 flex items-center justify-between [&>button]:pointer-events-auto">
+                    <button
+                      type="button"
+                      onClick={() => onChange(lane.id, { muted: !lane.muted })}
+                      aria-pressed={lane.muted}
+                      aria-label={t('pro.mute', 'Mute')}
+                      title={t('pro.muteWhat', 'Silence this lane. It stays in the session and comes back when you press it again.')}
+                      className="h-11 w-11 rounded-lg text-[11px] font-black leading-none"
                       style={{
                         background: lane.muted ? 'rgba(248,113,113,0.25)' : 'rgba(255,255,255,0.06)',
                         color: lane.muted ? '#fca5a5' : INK_DIM,
                       }}
                     >
                       M
-                    </span>
-                    <span
-                      className="rounded px-1 text-[10px] font-black"
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onChange(lane.id, { soloed: !lane.soloed })}
+                      aria-pressed={lane.soloed}
+                      aria-label={t('pro.solo', 'Solo')}
+                      title={t('pro.soloWhat', 'Hear only this lane. Solo another one as well and you hear those two; press it again to get everything back.')}
+                      className="h-11 w-11 rounded-lg text-[11px] font-black leading-none"
                       style={{
                         background: lane.soloed ? 'rgba(250,204,21,0.25)' : 'rgba(255,255,255,0.06)',
                         color: lane.soloed ? '#fde047' : INK_DIM,
                       }}
                     >
                       S
-                    </span>
+                    </button>
                   </span>
-                </button>
+                </div>
 
                 <div
                   className="relative touch-none"
@@ -511,6 +581,20 @@ export default function BoothTimeline({
                     }}
                   >
                     <Wave lane={lane} />
+                    {/* The lane's name, on the clip.
+
+                        A block of colour with a wave in it says which lane
+                        it is only if you read the gutter at the same time,
+                        and on a phone the gutter truncates at about twelve
+                        characters. It is also what is left when the wave
+                        cannot draw — which is how Carli found the canvas
+                        fault above, looking at a clip that said nothing. */}
+                    <span
+                      className="pointer-events-none absolute left-1.5 top-1 max-w-[calc(100%-1rem)] truncate text-[10px] font-bold"
+                      style={{ color: 'rgba(5,6,10,0.75)' }}
+                    >
+                      {lane.name}
+                    </span>
                     {/* The two ends. Wide enough for a thumb, drawn narrow. */}
                     {(['from', 'to'] as const).map((edge) => (
                       <span
@@ -630,7 +714,19 @@ function Wave({ lane }: { readonly lane: Lane }): React.ReactElement {
     const cut = windowOf(lane);
     const whole = sound.duration || 1;
     const columns = Math.max(8, Math.floor(width));
-    const shape = shapeOf(sound, Math.max(8, Math.floor((whole / Math.max(0.001, cut.to - cut.from)) * columns)));
+    /* Enough detail that the visible window gets about one column per pixel,
+       and never more than the shape can give.
+
+       The floor under the divisor is the repair for the white rectangle in
+       Carli's photograph of 15 September: with `Math.max(0.001, …)` under it
+       instead, a clip whose window had collapsed asked for a hundred and
+       twenty-six million columns on a three-minute song, the allocation
+       failed on the phone, and Chrome drew the dead canvas as a broken
+       image. A tenth of a second is the shortest window this room can make
+       — the cut handles stop there — so it is the honest floor, and
+       `shapeOf` clamps what it is handed as well. */
+    const seen = Math.max(0.1, cut.to - cut.from);
+    const shape = shapeOf(sound, Math.max(8, Math.floor((whole / seen) * columns)));
     const first = Math.floor((cut.from / whole) * shape.length);
     const last = Math.max(first + 1, Math.floor((cut.to / whole) * shape.length));
 

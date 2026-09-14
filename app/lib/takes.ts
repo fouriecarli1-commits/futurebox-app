@@ -98,13 +98,46 @@ export async function decodeAt(blob: Blob, rate: number): Promise<AudioBuffer | 
   }
 }
 
-/** A buffer's shape, for drawing. One value per column, 0–1. */
+/**
+ * The most columns anybody can ask for.
+ *
+ * A screen is two or three thousand pixels across at the very widest, so a
+ * shape with more values than this has more detail than any drawing of it can
+ * use. The ceiling is not a nicety: the caller works its count out from a
+ * ratio, and a ratio with a very small number underneath it asks for
+ * something no machine can allocate.
+ */
+const MOST = 20_000;
+
+/**
+ * A buffer's shape, for drawing. One value per column, 0–1.
+ *
+ * ── Why the count is clamped ─────────────────────────────────────────────
+ *
+ * Carli, 15 September 2026, with a photograph: the clip on her timeline was
+ * a white rectangle with a broken-image glyph in it, which is exactly how
+ * Chrome on Android draws a `<canvas>` whose backing store it has had to
+ * throw away.
+ *
+ * `BoothTimeline`'s `Wave` asked for enough columns that the *visible window*
+ * of a clip got one per pixel — `(whole / (cut.to - cut.from)) * width`.
+ * That is the right idea and it has no floor under the divisor: a clip whose
+ * window has collapsed makes the divisor 0.001, and on a three-minute song
+ * that is a hundred and twenty-six million columns. `new Float32Array` of
+ * that is half a gigabyte, the allocation fails on a phone, and the canvas
+ * dies with it.
+ *
+ * Clamped here rather than only at the call site, because this function is
+ * the one that allocates and a rule that lives next to the allocation is one
+ * a second caller cannot forget.
+ */
 export function shapeOf(buffer: AudioBuffer, columns: number): Float32Array {
   const data = buffer.getChannelData(0);
-  const per = Math.max(1, Math.floor(data.length / columns));
-  const out = new Float32Array(columns);
+  const want = Math.min(MOST, Math.max(8, Math.floor(columns) || 8));
+  const per = Math.max(1, Math.floor(data.length / want));
+  const out = new Float32Array(want);
   let loudest = 0;
-  for (let column = 0; column < columns; column += 1) {
+  for (let column = 0; column < want; column += 1) {
     let peak = 0;
     const from = column * per;
     const to = Math.min(data.length, from + per);
@@ -115,6 +148,6 @@ export function shapeOf(buffer: AudioBuffer, columns: number): Float32Array {
     out[column] = peak;
     if (peak > loudest) loudest = peak;
   }
-  if (loudest > 0) for (let i = 0; i < columns; i += 1) out[i] /= loudest;
+  if (loudest > 0) for (let i = 0; i < want; i += 1) out[i] /= loudest;
   return out;
 }

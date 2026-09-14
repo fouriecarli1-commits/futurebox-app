@@ -175,6 +175,17 @@ try {
    * so this asks the same question a screen reader does rather than
    * inventing a second way to know.
    */
+  /** Shuts whichever desk is open, and does nothing if none is. */
+  const shutDesk = async () => {
+    /* Inside the dock. `aria-pressed` is on the lane's name button and on
+       M and S as well now, and shutting a desk by pressing a lane's mute
+       would be a very confusing way to fail. */
+    const open = p.locator('[data-dock] button[aria-pressed="true"]').first();
+    if ((await open.count()) === 0) return;
+    await open.click();
+    await p.waitForTimeout(300);
+  };
+
   const openDesk = async (en, afr) => {
     const icon = p.getByRole('button', { name: new RegExp(af ? afr : en) }).first();
     if ((await icon.getAttribute('aria-pressed')) === 'true') return;
@@ -218,7 +229,11 @@ try {
     'somebody gets two bars of silence and no explanation');
 
   // Switching the click on takes the warning away and offers the division.
-  await p.locator(`button:has-text("${af ? 'Klik' : 'Click'}")`).first().click();
+  /* By its accessible name, not its visible text. The toggle says what it
+     is doing — "Clicking" or "Silent" — since a toggle that reads the same
+     whichever way it is set tells nobody anything; its name stayed "Click",
+     which is what a person looking for the metronome is looking for. */
+  await p.locator(`button[aria-label="${af ? 'Klik' : 'Click'}"]`).first().click();
   await p.waitForTimeout(400);
   check('switching the click on clears the warning',
     !(af ? /niks om mee te tel/ : /nothing to count with/).test(await words()));
@@ -260,10 +275,17 @@ try {
   /* Back to Track controls, which is the desk a lane's own faders are on.
      The gutter tap below picks WHICH lane; the desk decides whether its
      controls are drawn at all. */
-  await openDesk('Track controls', 'Baankontroles');
-  const gutter = p.locator('div[style*="grid-template-columns"] > button');
+  /* The gutter is on the timeline, and a desk covers the timeline now — so
+     shut whatever is open, tap the lane, then open the desk its faders are
+     on. That is the order a person does it in, and the reason the desks
+     that act on a lane grew a lane list of their own: three steps to change
+     which lane a fader belongs to is two too many. With one lane there is
+     no list, because one lane is picked for you. */
+  await shutDesk();
+  const gutter = p.locator('[data-lanename]');
   await gutter.nth(Math.min(1, (await gutter.count()) - 1)).click();
   await p.waitForTimeout(300);
+  await openDesk('Track controls', 'Baankontroles');
   check('tapping a lane in the timeline opens its controls',
     (await p.locator(`input[aria-label="${af ? 'Waar dit sit, links na regs' : 'Where it sits, left to right'}"]`).count()) > 0,
     'the gutter name is the only way in now, so it has to be the way in');
@@ -328,7 +350,7 @@ try {
        The gutter is where every lane's name is, which is also where a person
        reads them. Same property, asked of the screen it is now on. */
     const names = await p
-      .locator('div[style*="grid-template-columns"] > button')
+      .locator('[data-lanename]')
       .evaluateAll((nodes) => nodes.map((node) => node.innerText));
     check('and each lane carries the part’s own name',
       names.some((one) => /drums/.test(one)) && names.some((one) => /bass/.test(one)),
@@ -956,13 +978,17 @@ try {
     const said = (await p.locator('body').innerText()).replace(/\s+/g, ' ');
     check('the room offers the way to the words',
       await p.locator('button', { hasText: /Sing with the words|Sing saam met die woorde/ }).count() > 0);
+    /* The short form, which is the one that is printed. The long one is
+       behind the mark beside it, and a sentence behind a mark is a sentence
+       nobody reads before pressing — which is exactly what this assertion
+       is for, so it looks at what is on the screen. */
     check('and says the AI voice is there too',
-      /AI voice in your ear|AI-stem in jou oor/.test(said), said.slice(0, 160));
+      /AI voice are in The Booth|KI-stem is in Die Kamer/.test(said), said.slice(0, 160));
     /* Nobody presses a button that leaves a room holding four takes unless
        they are told the takes survive it. Since they now do, saying so is
        what makes the button usable rather than frightening. */
     check('and that the lanes are kept if you go',
-      /lanes here are saved|bane hier is gestoor/i.test(said));
+      /lanes are saved|bane is gestoor/i.test(said));
   }
 
   /* ── The session is still there after the room is closed ─────────────
@@ -993,7 +1019,7 @@ try {
      not its controls are open, which is also what a person looks at. */
   const laneNames = async () =>
     p
-      .locator('div[style*="grid-template-columns"] > button')
+      .locator('[data-lanename]')
       .evaluateAll((nodes) => nodes.map((node) => (node.innerText || '').split('\n')[0].trim()).sort());
   const wasNamed = await laneNames();
   await p.reload({ waitUntil: 'domcontentloaded' });

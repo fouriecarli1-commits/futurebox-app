@@ -19,7 +19,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Check, Circle, Gauge, Layers, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { Activity, ArrowDownToLine, ArrowLeft, Bot, Check, Circle, Clock, Gauge, Grid3x3, KeyRound, Layers, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Timer, Trash2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, dbOf, lengthOf, mixSession, monoOf, pieceOf, readInto, readSession,
   span, startLane, windowOf, wireLane,
@@ -46,6 +46,8 @@ import { Metronome } from '../lib/metronome';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Hint from './Hint';
+import { Card, Row } from './BoothCard';
+import { INK_DIM } from '../lib/boothlook';
 import BoothTimeline from './BoothTimeline';
 import BoothDock, { type Desk } from './BoothDock';
 import BoothFx from './BoothFx';
@@ -1153,164 +1155,289 @@ export default function ProBooth({
      Cut into a variable rather than moved, so the JSX is unchanged and the
      only thing this commit decides is WHERE it is drawn — which is the whole
      point of the rebuild. */
-  const trackDesk = (
-    <div className="space-y-2 pb-2">
-      {/* ── The clock: tempo, time signature, key, click and grid ───────
-          One strip rather than a panel behind a menu. Everything on it changes
-          what the next take will sound like or land on, and a control that
-          changes a recording is a control that has to be visible while the
-          recording is being set up. */}
-      <div className="flex-shrink-0 bg-zinc-950 px-4 py-2 border-b border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="text-lg font-black text-white tabular-nums tracking-tight">
-          {displayOf(at, sane(meter))}
-        </span>
+  /* One lane means that lane.
 
-        <label className="flex items-center gap-1.5 text-sm text-zinc-400">
-          <span className="sr-only">{t('pro.bpm', 'Tempo')}</span>
+     Nobody picks the only sound in the room, and until they did, every desk
+     that acts on a lane opened saying "no lane is open" to somebody looking
+     at exactly one. It follows the lanes rather than being set once: a
+     session that drops back to a single lane picks it, and one that grows
+     past a single lane leaves the choice alone. */
+  useEffect(() => {
+    if (lanes.length === 1 && picked !== lanes[0].id) setPicked(lanes[0].id);
+  }, [lanes, picked]);
+
+  /* ── Picking a lane, from inside the desk ───────────────────────
+
+     Three of the six desks act on one lane: Track controls, Audio effects
+     and Voice. A lane used to be picked by tapping its name in the
+     timeline's gutter, which was fine while the desk was a strip under a
+     timeline you could still see.
+
+     A desk that takes the screen cannot borrow the timeline's gutter. Found
+     by the probe, which tried to tap a lane with the desk open and waited
+     thirty seconds for something that was not on the screen — and the same
+     wait a person would have had, except they would have had to work out
+     that the answer was to close the desk, tap, and open it again. Three
+     actions to change which lane a fader belongs to.
+
+     So the desks that need a lane carry the list themselves. It is the same
+     `picked` either way, so tapping the gutter still works and the two
+     never disagree. */
+  const lanePick = lanes.length > 1 && (
+    <Card
+      wide
+      icon={<Layers className="h-4 w-4" />}
+      title={t('pro.whichLane', 'Which lane')}
+      what={t(
+        'pro.whichLaneWhat',
+        'Everything on this desk that belongs to one sound belongs to the one picked here. It is the same choice as tapping a lane\u2019s name on the timeline — whichever you use, the other follows.',
+      )}
+    >
+      <div className="flex flex-wrap gap-1.5">
+        {lanes.map((one) => (
+          <button
+            key={one.id}
+            type="button"
+            onClick={() => setPicked(one.id)}
+            aria-pressed={picked === one.id}
+            className={`min-h-[44px] max-w-full truncate rounded-xl border px-3 text-sm font-semibold ${
+              picked === one.id
+                ? 'border-sky-400 bg-sky-400/15 text-white'
+                : 'border-zinc-700 bg-zinc-950 text-zinc-300'
+            }`}
+          >
+            {one.name}
+          </button>
+        ))}
+      </div>
+    </Card>
+  );
+
+  /* ── Track controls ──────────────────────────────────────
+
+     The clock — tempo, time signature, key, click, count-in, grid — and the
+     controls of whichever lane is open.
+
+     Every one of these changes what the next take will sound like or land
+     on, which is why they are one press from the timeline rather than two
+     menus deep. They were one strip of eleven controls wrapping across a
+     phone; a card each means the name of the thing is next to the thing,
+     which a strip cannot do without a label per control and twice the
+     width. */
+  const trackDesk = (
+    <>
+      {lanePick}
+      <Card
+        icon={<Timer className="h-4 w-4" />}
+        title={t('pro.bpm', 'Tempo')}
+        what={t(
+          'pro.bpmWhat',
+          'Beats a minute. It sets the bar lines on the timeline, what the click counts, and where a clip lands when it snaps — so it is worth setting before the first take rather than after.',
+        )}
+      >
+        <Row>
           <input
             type="number"
             min={SLOWEST}
             max={FASTEST}
             value={meter.bpm}
             onChange={(event) => setMeter((was) => sane({ ...was, bpm: Number(event.target.value) }))}
-            className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100 tabular-nums"
+            className="min-h-[44px] w-20 rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm tabular-nums text-zinc-100"
             aria-label={t('pro.bpm', 'Tempo')}
           />
-          <span className="text-xs text-zinc-500">{t('pro.bpmUnit', 'bpm')}</span>
-        </label>
+          {/* The bars-and-beats readout moved to the desk's header, where it
+              is on every desk rather than only this one — a desk covers the
+              timeline, and the transport under it still plays. */}
+          <span className="text-xs" style={{ color: INK_DIM }}>{t('pro.bpmUnit', 'bpm')}</span>
+        </Row>
+      </Card>
 
-        <span className="flex items-center gap-1 text-sm text-zinc-400">
+      <Card
+        icon={<Grid3x3 className="h-4 w-4" />}
+        title={t('pro.timeSig', 'Time signature')}
+        what={t(
+          'pro.timeSigWhat',
+          'How many beats make a bar, and what counts as a beat. Four over four is four quarter-notes; six over eight is six eighths. It decides where the bar lines fall and how the transport reads.',
+        )}
+      >
+        <Row>
           <select
             value={meter.beats}
             onChange={(event) => setMeter((was) => sane({ ...was, beats: Number(event.target.value) }))}
-            className="bg-zinc-950 border border-zinc-700 rounded-lg px-1.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
+            className="min-h-[44px] flex-1 rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100"
             aria-label={t('pro.beats', 'Beats in a bar')}
           >
             {[2, 3, 4, 5, 6, 7, 9, 12].map((one) => (
               <option key={one} value={one}>{one}</option>
             ))}
           </select>
-          <span className="text-zinc-600">/</span>
+          <span style={{ color: INK_DIM }}>/</span>
           <select
             value={meter.unit}
             onChange={(event) => setMeter((was) => sane({ ...was, unit: Number(event.target.value) }))}
-            className="bg-zinc-950 border border-zinc-700 rounded-lg px-1.5 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
+            className="min-h-[44px] flex-1 rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100"
             aria-label={t('pro.unit', 'What counts as a beat')}
           >
             {[2, 4, 8, 16].map((one) => (
               <option key={one} value={one}>{one}</option>
             ))}
           </select>
-        </span>
+        </Row>
+      </Card>
 
+      <Card
+        icon={<KeyRound className="h-4 w-4" />}
+        title={t('pro.key', 'Key')}
+        what={t(
+          'pro.keyWhat',
+          'What the song is in. Nothing here re-tunes anything — it is what a generated part is asked for in, and what the copilot is told, so a bass line comes back in the same key as the rest.',
+        )}
+      >
         <select
           value={meter.key}
           onChange={(event) => setMeter((was) => sane({ ...was, key: event.target.value }))}
-          className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
+          className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100"
           aria-label={t('pro.key', 'Key')}
         >
           {KEYS.map((one) => (
             <option key={one} value={one}>{one}</option>
           ))}
         </select>
+      </Card>
 
-        {/* ── The click ─────────────────────────────────────────────── */}
+      <Card
+        icon={<Music2 className="h-4 w-4" />}
+        title={t('pro.click', 'Click')}
+        what={t(
+          'pro.clickWhat',
+          'The metronome you record against. How often it clicks and how loud it is are here too — a click you cannot hear over the song is a click that is not doing its job.',
+        )}
+      >
         <button
           type="button"
           onClick={() => setClicking((was) => !was)}
           aria-pressed={clicking}
-          className={`min-h-[36px] px-2.5 py-1 rounded-lg border text-sm font-semibold flex items-center gap-1.5 ${
+          /* The visible word is the state — "Clicking" or "Silent" — because
+             a toggle that reads the same whichever way it is set tells you
+             nothing. The accessible name stays "Click": a screen reader
+             pairs it with the pressed state itself and "Silent, not pressed"
+             is a sentence with two negatives in it. */
+          aria-label={t('pro.click', 'Click')}
+          className={`flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border px-3 text-sm font-semibold ${
             clicking
-              ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
-              : 'bg-zinc-950 border-zinc-700 text-zinc-500'
+              ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+              : 'border-zinc-700 bg-zinc-950 text-zinc-500'
           }`}
         >
-          <Music2 className="w-4 h-4" />
-          {t('pro.click', 'Click')}
+          <Music2 className="h-4 w-4" />
+          {clicking ? t('pro.clickOn', 'Clicking') : t('pro.clickOff', 'Silent')}
         </button>
-
         {clicking && (
           <>
-            <select
-              value={division}
-              onChange={(event) => setDivision(event.target.value as DivisionId)}
-              className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
-              aria-label={t('pro.division', 'How often it clicks')}
-            >
-              {DIVISIONS.map((one) => (
-                <option key={one.id} value={one.id}>{one.id}</option>
-              ))}
-            </select>
-            <label className="flex items-center gap-1.5 w-full sm:w-auto">
-              <span className="sr-only">{t('pro.clickLevel', 'Click level')}</span>
+            <Row label={t('pro.division', 'How often it clicks')}>
+              <select
+                value={division}
+                onChange={(event) => setDivision(event.target.value as DivisionId)}
+                className="min-h-[44px] flex-1 rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100"
+                aria-label={t('pro.division', 'How often it clicks')}
+              >
+                {DIVISIONS.map((one) => (
+                  <option key={one.id} value={one.id}>{one.id}</option>
+                ))}
+              </select>
+            </Row>
+            <Row label={t('pro.clickLevel', 'Click level')}>
               <input
                 type="range"
                 min={-40}
                 max={0}
                 value={clickDb}
                 onChange={(event) => setClickDb(Number(event.target.value))}
-                className="w-20 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
+                className="h-9 min-w-0 flex-1 accent-emerald-500 touch-manipulation"
                 aria-label={t('pro.clickLevel', 'Click level')}
               />
-              <span className="text-xs text-zinc-500 tabular-nums w-12 text-right">
+              <span className="w-12 text-right text-xs tabular-nums" style={{ color: INK_DIM }}>
                 {clickDb <= -40 ? t('pro.off', 'off') : `${clickDb} dB`}
               </span>
-            </label>
+            </Row>
           </>
         )}
+      </Card>
 
-        {/* ── Counting in ───────────────────────────────────────────── */}
-        <label className="flex items-center gap-1.5 text-sm text-zinc-400">
-          <span className="text-xs text-zinc-500">{t('pro.countIn', 'Count in')}</span>
-          <select
-            value={countBars}
-            onChange={(event) => setCountBars(Number(event.target.value) as CountIn)}
-            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
-            aria-label={t('pro.countIn', 'Count in')}
-          >
-            {COUNT_INS.map((one) => (
-              <option key={one} value={one}>
-                {one === 0
-                  ? t('pro.off', 'off')
-                  : `${one} ${one === 1 ? t('pro.bar', 'bar') : t('pro.bars', 'bars')}`}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {/* ── The grid ──────────────────────────────────────────────── */}
-        <label className="flex items-center gap-1.5 text-sm text-zinc-400">
-          <span className="text-xs text-zinc-500">{t('pro.snap', 'Snap')}</span>
-          <select
-            value={snap}
-            onChange={(event) => setSnap(event.target.value as Snap)}
-            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100"
-            aria-label={t('pro.snap', 'Snap')}
-          >
-            {SNAPS.map((one) => (
-              <option key={one} value={one}>{t(`pro.snap.${one}`, one)}</option>
-            ))}
-          </select>
-        </label>
-
+      <Card
+        icon={<Clock className="h-4 w-4" />}
+        title={t('pro.countIn', 'Count in')}
+        what={t(
+          'pro.countInWhat',
+          'How many bars of click before the recording starts, so you come in on the beat instead of on the button. It needs the click switched on to count with.',
+        )}
+      >
+        <select
+          value={countBars}
+          onChange={(event) => setCountBars(Number(event.target.value) as CountIn)}
+          className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100"
+          aria-label={t('pro.countIn', 'Count in')}
+        >
+          {COUNT_INS.map((one) => (
+            <option key={one} value={one}>
+              {one === 0
+                ? t('pro.off', 'off')
+                : `${one} ${one === 1 ? t('pro.bar', 'bar') : t('pro.bars', 'bars')}`}
+            </option>
+          ))}
+        </select>
         {countBars > 0 && !clicking && (
           /* A count-in with the click switched off is four bars of silence and
              then a recording that has already started — which reads as the
              button not working. Said here rather than discovered. */
-          <span className="text-xs text-amber-400 leading-snug">
+          <p className="text-sm leading-snug text-amber-400">
             {t('pro.silentCount', 'The count-in has nothing to count with — switch the click on.')}
-          </span>
+          </p>
         )}
-      </div>
+      </Card>
 
-      {/* ── The picked lane's controls ─────────────────────────────────
+      <Card
+        icon={<Sliders className="h-4 w-4" />}
+        title={t('pro.snap', 'Snap')}
+        what={t(
+          'pro.snapWhat',
+          'What a dragged clip lands on. Smart picks a sensible division from the tempo; a named one holds you to it; off lets a clip sit anywhere, which is what you want for a sound that is meant to be slightly late.',
+        )}
+      >
+        <select
+          value={snap}
+          onChange={(event) => setSnap(event.target.value as Snap)}
+          className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-100"
+          aria-label={t('pro.snap', 'Snap')}
+        >
+          {SNAPS.map((one) => (
+            <option key={one} value={one}>{t(`pro.snap.${one}`, one)}</option>
+          ))}
+        </select>
+      </Card>
 
-          One lane at a time, under the timeline, opened by tapping its name
-          in the gutter. Every lane's full set of controls stacked down the
-          room was the old shape and it cost the timeline the screen: on a
-          phone the thing this room is about was a strip above a very long
-          page of faders. */}
-      <div className="flex-shrink-0 max-h-[46vh] overflow-y-auto px-4 py-3 space-y-2" style={{ background: '#0b0d14' }}>
+      {/* ── The picked lane ──────────────────────────────────
+
+          One lane at a time, opened by tapping its name in the timeline's
+          gutter. Every lane's full set of controls stacked down the room was
+          the old shape and it cost the timeline the screen.
+
+          Wide, because a lane row is a name, a fader, a pan slider, a start
+          time and five actions, and half a phone is not enough for any two
+          of those side by side. */}
+      <Card
+        wide
+        icon={<Waves className="h-4 w-4" />}
+        /* The lane's own name when one is open, so the card says which
+           lane these controls belong to. `pro.lane` is the word "lane"
+           lower-case, used mid-sentence elsewhere; a card heading needs its
+           own string rather than a borrowed one. */
+        title={lanes.find((one) => one.id === picked)?.name ?? t('pro.laneCard', 'The open lane')}
+        what={t(
+          'pro.laneWhat',
+          'The controls of whichever lane you have open: its name, how loud it is, where it sits left to right, when it starts, its mute and its solo — and the five actions that cost credits, each of which says what it costs.',
+        )}
+      >
         {lanes.filter((one) => one.id === picked).map((lane) => (
           <LaneRow
             key={lane.id}
@@ -1336,33 +1463,34 @@ export default function ProBooth({
         ))}
 
         {!picked && (
-          <p className="text-sm leading-snug px-1" style={{ color: 'rgba(238,242,255,0.45)' }}>
+          <p className="text-sm leading-snug" style={{ color: INK_DIM }}>
             {lanes.length <= 1
               ? t('pro.empty', 'Record a take or bring a file in, and it lands here as a lane of its own. Every lane keeps its own level, its own place in time and its own mute — and what you hear is what gets mixed.')
-              : t('pro.pickLane', 'Tap a lane’s name on the left to open its controls. Drag its block along the song to move it, or drag either end of the block to cut it.')}
+              : t('pro.pickLane', 'Tap a lane\u2019s name on the left to open its controls. Drag its block along the song to move it, or drag either end of the block to cut it.')}
           </p>
         )}
-      </div>
-
-    </div>
+      </Card>
+    </>
   );
 
+  /* ── Mix and master ──────────────────────────────────────
+
+     Three controls and a reading. Not a chain of processors: what is here is
+     one multiplication, worked out from a measurement of the actual mix and
+     applied identically to what you hear and to what comes out. Drawing a
+     compressor that only ran in one of those two places would make the file
+     differ from the approval, invisibly. */
   const mixDesk = (
     <>
-      {/* ── Mix and master ──────────────────────────────────────────────
-          Three controls and a reading. Not a chain of processors: what is here
-          is one multiplication, worked out from a measurement of the actual
-          mix and applied identically to what you hear and to what comes out.
-          Drawing a compressor that only ran in one of those two places would
-          make the file differ from the approval, invisibly. */}
-      <div className="flex-shrink-0 bg-zinc-950 px-4 py-2 border-t border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="text-xs uppercase tracking-wider text-zinc-600 font-bold flex items-center gap-1.5">
-          <Gauge className="w-3.5 h-3.5" />
-          {t('pro.master', 'Master')}
-        </span>
-
-        <label className="flex items-center gap-1.5 w-full sm:w-auto">
-          <span className="text-xs text-zinc-500">{t('pro.masterLevel', 'Level')}</span>
+      <Card
+        icon={<Gauge className="h-4 w-4" />}
+        title={t('pro.masterLevel', 'Level')}
+        what={t(
+          'pro.masterLevelWhat',
+          'How loud the finished song is, before the ceiling. 100 is the mix as your faders left it; above that you are asking for more than the lanes give, and the ceiling below will hold it back.',
+        )}
+      >
+        <Row>
           <input
             type="range"
             min={0}
@@ -1372,31 +1500,85 @@ export default function ProBooth({
               setMaster((was) => ({ ...was, gain: Number(event.target.value) / 100 }));
               setStale(true);
             }}
-            className="w-24 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
+            className="h-9 min-w-0 flex-1 accent-emerald-500 touch-manipulation"
             aria-label={t('pro.masterLevel', 'Level')}
           />
-          <span className="text-xs text-zinc-500 tabular-nums w-10 text-right">
+          <span className="w-10 text-right text-sm tabular-nums" style={{ color: INK_DIM }}>
             {Math.round(master.gain * 100)}
           </span>
-        </label>
+        </Row>
+      </Card>
 
-        <label className="flex items-center gap-1.5">
-          <span className="text-xs text-zinc-500">{t('pro.ceiling', 'Ceiling')}</span>
-          <select
-            value={master.ceilingDb}
-            onChange={(event) => {
-              setMaster((was) => ({ ...was, ceilingDb: Number(event.target.value) }));
-              setStale(true);
-            }}
-            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100 tabular-nums"
-            aria-label={t('pro.ceiling', 'Ceiling')}
-          >
-            {[-0.1, -0.3, -1, -2, -3].map((one) => (
-              <option key={one} value={one}>{one} dB</option>
-            ))}
-          </select>
-        </label>
+      <Card
+        icon={<ArrowDownToLine className="h-4 w-4" />}
+        title={t('pro.ceiling', 'Ceiling')}
+        what={t(
+          'pro.ceilingWhat',
+          'The loudest the file is allowed to get. Nothing goes above it, so nothing clips — and a shade under zero is the convention, because some players add a little of their own on the way out.',
+        )}
+      >
+        <select
+          value={master.ceilingDb}
+          onChange={(event) => {
+            setMaster((was) => ({ ...was, ceilingDb: Number(event.target.value) }));
+            setStale(true);
+          }}
+          className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm tabular-nums text-zinc-100"
+          aria-label={t('pro.ceiling', 'Ceiling')}
+        >
+          {[-0.1, -0.3, -1, -2, -3].map((one) => (
+            <option key={one} value={one}>{one} dB</option>
+          ))}
+        </select>
+      </Card>
 
+      <Card
+        icon={<Activity className="h-4 w-4" />}
+        title={t('pro.measure', 'Measure the mix')}
+        what={t(
+          'pro.measureWhat',
+          'Plays the whole song through silently and reads its peak and its average. Everything else on this desk is worked out from that reading, which is why the master does nothing until it has one.',
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => void measure()}
+          disabled={busy || recording || !heard.length}
+          className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 text-sm font-semibold text-zinc-200 disabled:opacity-40"
+        >
+          {t('pro.measure', 'Measure the mix')}
+        </button>
+        {reading ? (
+          <p className={`text-sm tabular-nums ${stale ? 'text-zinc-600' : 'text-zinc-400'}`}>
+            {t('pro.peak', 'Peak')} {dbOf(reading.peak).toFixed(1)} dB ·{' '}
+            {t('pro.average', 'Average')} {dbOf(reading.rms).toFixed(1)} dB ·{' '}
+            {t('pro.trim', 'Master')} {dbOf(reading.trim) >= 0 ? '+' : ''}
+            {dbOf(reading.trim).toFixed(1)} dB
+          </p>
+        ) : (
+          /* Not behind a mark: this one is the state of the desk, not an
+             explanation of it. A master that is doing nothing has to say so
+             where the eye already is. */
+          <p className="text-sm leading-snug text-zinc-500">
+            {t('pro.unmeasured', 'Until it is measured, the master does nothing at all — what you hear is the lanes as they are.')}
+          </p>
+        )}
+        {/* A reading about a mix that no longer exists is worse than none. */}
+        {reading && stale && (
+          <p className="text-sm text-amber-400">
+            {t('pro.stale', 'Something changed — measure it again.')}
+          </p>
+        )}
+      </Card>
+
+      <Card
+        icon={<Volume2 className="h-4 w-4" />}
+        title={t('pro.matchLoudness', 'Match the loudness')}
+        what={t(
+          'pro.matchWhat',
+          'Brings the finished song to the loudness streaming services play everything at, so yours is not the quiet one in somebody\u2019s playlist. It needs a measurement first.',
+        )}
+      >
         <button
           type="button"
           onClick={() => {
@@ -1404,46 +1586,16 @@ export default function ProBooth({
             setStale(true);
           }}
           aria-pressed={master.matchLoudness}
-          className={`min-h-[36px] px-2.5 py-1 rounded-lg border text-sm font-semibold ${
+          aria-label={t('pro.matchLoudness', 'Match the loudness')}
+          className={`min-h-[44px] w-full rounded-xl border px-3 text-sm font-semibold ${
             master.matchLoudness
-              ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
-              : 'bg-zinc-950 border-zinc-700 text-zinc-500'
+              ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+              : 'border-zinc-700 bg-zinc-950 text-zinc-500'
           }`}
         >
-          {t('pro.matchLoudness', 'Match the loudness')}
+          {master.matchLoudness ? t('pro.matchOn', 'Matching') : t('pro.matchOff', 'Not matching')}
         </button>
-
-        <button
-          type="button"
-          onClick={() => void measure()}
-          disabled={busy || recording || !heard.length}
-          className="min-h-[36px] px-2.5 py-1 rounded-lg border border-zinc-700 bg-zinc-950 text-sm font-semibold text-zinc-300 hover:text-white disabled:opacity-40"
-        >
-          {t('pro.measure', 'Measure the mix')}
-        </button>
-
-        {reading && (
-          <span className={`text-xs tabular-nums ${stale ? 'text-zinc-600' : 'text-zinc-400'}`}>
-            {t('pro.peak', 'Peak')} {dbOf(reading.peak).toFixed(1)} dB ·{' '}
-            {t('pro.average', 'Average')} {dbOf(reading.rms).toFixed(1)} dB ·{' '}
-            {t('pro.trim', 'Master')} {dbOf(reading.trim) >= 0 ? '+' : ''}
-            {dbOf(reading.trim).toFixed(1)} dB
-          </span>
-        )}
-
-        {/* A reading about a mix that no longer exists is worse than none. */}
-        {reading && stale && (
-          <span className="text-xs text-amber-400">
-            {t('pro.stale', 'Something changed — measure it again.')}
-          </span>
-        )}
-        {!reading && (
-          <span className="text-xs text-zinc-600 leading-snug">
-            {t('pro.unmeasured', 'Until it is measured, the master does nothing at all — what you hear is the lanes as they are.')}
-          </span>
-        )}
-      </div>
-
+      </Card>
     </>
   );
 
@@ -1461,6 +1613,65 @@ export default function ProBooth({
      room cannot be scoped to one panel of it; they are mounted at the room's
      level and gated on their own state, which is what they were always gated
      on. */
+  /* ── The Voice desk ─────────────────────────────────────
+
+     It was a line of text telling you to go and press a button somewhere
+     else — and, until the overlays were moved out of the Stems desk, a
+     button that could not answer. A desk whose whole content is directions
+     to another desk is not a desk.
+
+     It opens the sheet itself now, for the lane that is open. With no lane
+     open there is nothing to sing again, and it says which lane it would
+     act on rather than making somebody find out by pressing. */
+  const voiceLane = lanes.find((one) => one.id === picked);
+  const voiceDesk = (
+    <>
+      {lanePick}
+      <Card
+      wide
+      icon={<Mic2 className="h-4 w-4" />}
+      title={t('pro.sing', 'Sing this in another voice')}
+      paid
+      paidSays={t('dock.paidSays', 'Some of this costs credits.')}
+      what={t(
+        'pro.voiceDeskWhat',
+        'Keeps your timing and your phrasing and changes whose voice it is. It works on one lane at a time — the one you have open — and the sheet says what it costs and which engine it will use before anything runs.',
+      )}
+    >
+      {voiceLane ? (
+        <>
+          <p className="text-sm" style={{ color: INK_DIM }}>
+            {t('pro.voiceOn', 'The lane that is open')}: <span className="font-bold text-white">{voiceLane.name}</span>
+          </p>
+          <button
+            type="button"
+            onClick={() => setChanging(voiceLane)}
+            disabled={busy}
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-200 disabled:opacity-50"
+          >
+            <Mic2 className="h-4 w-4" />
+            {t('pro.singPick', 'Pick a voice for it')}
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="text-sm leading-snug" style={{ color: INK_DIM }}>
+            {t('pro.voiceNoLane', 'No lane is open. Singing again is done to one lane, so open the one you mean first.')}
+          </p>
+          <button
+            type="button"
+            onClick={() => setDeskOpen('tracks')}
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm font-semibold text-zinc-300"
+          >
+            <Sliders className="h-4 w-4" />
+            {t('pro.pickOne', 'Pick a lane first')}
+          </button>
+        </>
+      )}
+      </Card>
+    </>
+  );
+
   const boothOverlays = (
     <>
       {/* ── Picking a voice for a lane ──────────────────────────────────
@@ -1787,23 +1998,50 @@ export default function ProBooth({
      row is where a lane's own actions live. Said here, because a desk called
      Stems that did not mention splitting would send people looking. */
   const stemDesk = (
-    <div className="space-y-3 px-4 py-4">
-      <button
-        type="button"
-        onClick={() => setPartOpen(true)}
-        disabled={busy || recording || making}
-        className="w-full min-h-[44px] rounded-xl bg-zinc-900 border border-zinc-700 px-4 py-2.5 text-sm font-semibold text-zinc-200 inline-flex items-center justify-center gap-2 disabled:opacity-50"
-      >
-        <Music2 className="w-4 h-4" />
-        {t('part.title', 'Generate a part')}
-      </button>
-      <Note className="text-sm leading-relaxed text-zinc-500">
-        {t(
-          'pro.stemsWhere',
-          'Eight bars of something, in this song\u2019s key and tempo. To take a lane you already have apart instead, open it under Track controls \u2014 the scissors lift the voice off it, and the layers split it into named parts.',
+    <>
+      <Card
+        icon={<Music2 className="h-4 w-4" />}
+        title={t('part.title', 'Generate a part')}
+        paid
+        paidSays={t('dock.paidSays', 'Some of this costs credits.')}
+        what={t(
+          'pro.partWhat',
+          'Eight bars of something this song does not have \u2014 a bass line, a pad, a shaker \u2014 asked for in the key and tempo the clock is set to, and landing as a lane of its own.',
         )}
-      </Note>
-    </div>
+      >
+        <button
+          type="button"
+          onClick={() => setPartOpen(true)}
+          disabled={busy || recording || making}
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-200 disabled:opacity-50"
+        >
+          <Music2 className="h-4 w-4" />
+          {t('part.title', 'Generate a part')}
+        </button>
+      </Card>
+
+      <Card
+        icon={<Scissors className="h-4 w-4" />}
+        title={t('pro.takeApart', 'Take a lane apart')}
+        paid
+        paidSays={t('dock.paidSays', 'Some of this costs credits.')}
+        what={t(
+          'pro.takeApartWhat',
+          'Splitting belongs to one lane, so it lives on that lane\u2019s own row: open it under Track controls. The scissors lift the voice off it \u2014 singing and music become two lanes \u2014 and the layers split it into named parts: drums, bass, and the rest.',
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => setDeskOpen('tracks')}
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm font-semibold text-zinc-300"
+        >
+          <Sliders className="h-4 w-4" />
+          {picked
+            ? t('pro.toLane', 'Open the lane\u2019s controls')
+            : t('pro.pickOne', 'Pick a lane first')}
+        </button>
+      </Card>
+    </>
   );
 
   /* ── The copilot's desk ────────────────────────────────────────────
@@ -1829,6 +2067,15 @@ export default function ProBooth({
     fx: Object.keys(one.fx ?? {}),
   }));
   const askDesk = (
+    <Card
+      wide
+      icon={<Bot className="h-4 w-4" />}
+      title={t('dock.ai', 'Copilot')}
+      what={t(
+        'pro.askWhat',
+        'Say what is wrong with the mix in your own words — "die stem is te sag", "die dromme oorheers" — and it moves the faders. It is shown every lane’s name, level and place, and the master’s reading if you have taken one, and it says what it is about to change before it changes it.',
+      )}
+    >
     <BoothAsk
       lanes={deskNow}
       reading={
@@ -1849,6 +2096,7 @@ export default function ProBooth({
         );
       }}
     />
+    </Card>
   );
 
   /* The transport strip: record, the way to the words, and mixing down.
@@ -1865,7 +2113,11 @@ export default function ProBooth({
           content is a bar you can read the lanes through — which on a phone,
           where the list is long and the strip is close, looks like the
           controls have collided. */}
-      <div className="flex-shrink-0 bg-zinc-950 px-5 pt-2 pb-3 border-t border-zinc-800 flex flex-wrap items-center gap-2">
+      {/* No background, no border, no padding of its own: it is inside a
+          card now, and a card inside a card is a box somebody has to look
+          through. It kept the room's chrome from when it was a pinned strip
+          at the foot of the screen. */}
+      <div className="flex flex-wrap items-center gap-2">
         {recording ? (
           <button
             type="button"
@@ -2036,23 +2288,41 @@ export default function ProBooth({
             told they can come back — which they now can, since the session is
             written down. A true sentence here is what makes the button
             usable. */}
-        <p className="w-full text-[11px] leading-snug text-zinc-500">
+        {/* ── One line printed, the rest behind the mark ─────────────
+
+            These were two full paragraphs under the buttons. I put both
+            behind marks when this desk was rebuilt and that was one step
+            too far: they are not explanations of a control, they are the
+            two things somebody needs to know *before* pressing a button
+            that leaves the room — that the AI voice is where they are
+            going, and that four takes will still be here when they come
+            back. A sentence nobody reads before pressing is a sentence
+            that was not there.
+
+            So the short form is printed and the long form is behind the
+            mark, which is the shape the rest of the app uses: enough on
+            the screen to decide with, the rest for whoever wants it. */}
+        <p className="w-full text-[11px] leading-snug" style={{ color: INK_DIM }}>
+          {t('pro.wordsWhereShort', 'The words and the AI voice are in The Booth. Your lanes are saved.')}
+          <Hint className="ml-1">
           {t(
             'pro.wordsWhere',
             'The words on screen, and the AI voice in your ear to sing next to, are in The Booth — the room this one opened from. Your lanes here are saved, so you can go and come back.',
           )}
+          </Hint>
         </p>
-
-        {/* And the sentence, because a button alone still leaves "and then
-            what?" — the room closes and the song is in the Library, and both
-            halves of that are worth knowing before it is pressed. */}
-        <p className="w-full text-[11px] leading-snug text-zinc-500">
+        <p className="w-full text-[11px] leading-snug" style={{ color: INK_DIM }}>
+          {heard.length
+            ? t('pro.keepWhatShort', 'Every lane you can hear becomes one song, in your Library.')
+            : t('pro.keepNone', 'Record a take or bring audio in, and this makes one song out of all of it.')}
+          <Hint className="ml-1">
           {heard.length
             ? t(
                 'pro.keepWhat',
                 'Every lane you can hear becomes one song, with its levels, cuts and tone baked in. It lands in your Library and this room closes.',
               )
             : t('pro.keepNone', 'Record a take or bring audio in, and this makes one song out of all of it.')}
+          </Hint>
         </p>
       </div>
     </>
@@ -2067,27 +2337,66 @@ export default function ProBooth({
      Nothing to rack when no lane is picked, and that is said rather than
      shown as an empty panel — a rack with no lane under it looks broken. */
   const fxLane = lanes.find((one) => one.id === picked);
-  const fxDesk = fxLane ? (
+  const fxDesk = (
     <>
-      <p className="px-4 pt-1 text-xs font-bold" style={{ color: '#7dd3fc' }}>
-        {fxLane.name}
-      </p>
-      <BoothFx
-        fx={fxLane.fx ?? NO_FX}
-        onChange={(next: Fx) => change(fxLane.id, { fx: next })}
-      />
-      {makeDeskTail}
-    </>
-  ) : (
-    <div className="px-4 py-6">
-      <p className="text-sm leading-snug" style={{ color: 'rgba(238,242,255,0.5)' }}>
-        {t(
-          'fx.pickFirst',
-          'Tap a lane’s name on the timeline first. An effect belongs to a sound, not to the room — a compressor the whole session shared would squash the guitar because the voice needed it.',
+      {lanePick}
+      {/* ── Recording, and mixing down ───────────────────────────
+
+          First card on the desk, and wide, because "Mix it down" is the
+          button this whole room exists to press. It was at the foot of a
+          panel you had to scroll to reach. */}
+      <Card
+        wide
+        icon={<Circle className="h-4 w-4" />}
+        title={t('pro.takeAndMix', 'Record, and mix it down')}
+        what={t(
+          'pro.takeAndMixWhat',
+          'A take records against whatever the click and the count-in are set to, and lands as a lane of its own. Mixing down renders every lane through everything on this desk — what you hear is what comes out.',
         )}
-      </p>
-      {makeDeskTail}
-    </div>
+      >
+        {makeDeskTail}
+      </Card>
+
+      {fxLane ? (
+        <Card
+          wide
+          icon={<Wand2 className="h-4 w-4" />}
+          title={fxLane.name}
+          what={t(
+            'fx.rackWhat',
+            'The rack for this lane. Everything in it runs in your ears and in the file alike, and each one draws what it is doing to the sound rather than only naming it.',
+          )}
+        >
+          <BoothFx
+            fx={fxLane.fx ?? NO_FX}
+            onChange={(next: Fx) => change(fxLane.id, { fx: next })}
+          />
+        </Card>
+      ) : (
+        <Card
+          wide
+          icon={<Wand2 className="h-4 w-4" />}
+          title={t('fx.rack', 'The effects rack')}
+        >
+          {/* Not behind a mark: with no lane open this is the state of the
+              desk, and the one thing somebody has to do next. */}
+          <p className="text-sm leading-snug" style={{ color: INK_DIM }}>
+            {t(
+              'fx.pickFirst',
+              'Tap a lane\u2019s name on the timeline first. An effect belongs to a sound, not to the room \u2014 a compressor the whole session shared would squash the guitar because the voice needed it.',
+            )}
+          </p>
+          <button
+            type="button"
+            onClick={() => setDeskOpen(null)}
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm font-semibold text-zinc-300"
+          >
+            <Waves className="h-4 w-4" />
+            {t('fx.toTimeline', 'Back to the timeline')}
+          </button>
+        </Card>
+      )}
+    </>
   );
 
 
@@ -2143,7 +2452,15 @@ export default function ProBooth({
           the timeline and the lane controls do not care which way the
           device is held, and giving them a second copy that does is how the
           two come to disagree about something. */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      {/* Hidden while a desk is open, so the desk gets the screen.
+
+          `hidden` and not unmounted: the timeline holds a scroll position, a
+          picked lane and a drag in progress, and unmounting it would throw
+          all three away every time somebody opened a control to change what
+          they were looking at. This is the one place in the room where the
+          difference is visible, so it is written down rather than left to
+          whoever next reads the line. */}
+      <div className={`min-w-0 flex-1 flex-col overflow-hidden ${deskOpen ? 'hidden' : 'flex'}`}>
       <div className="flex items-center gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
         {/* Out of the room, and it says so.
 
@@ -2265,19 +2582,13 @@ export default function ProBooth({
         playing={playing}
         onPlay={() => (playing ? stopPlaying() : play(at))}
         onSkip={(by) => seek(at + by)}
+        place={displayOf(at, sane(meter))}
       >
         {deskOpen === 'tracks' && trackDesk}
         {deskOpen === 'mix' && mixDesk}
         {deskOpen === 'stems' && stemDesk}
         {deskOpen === 'effects' && fxDesk}
-        {deskOpen === 'voice' && (
-          <p className="px-4 py-6 text-sm leading-snug" style={{ color: 'rgba(238,242,255,0.5)' }}>
-            {t(
-              'dock.voiceSoon',
-              'Open a lane’s controls under Track controls and press the voice button on it. A room of its own is coming here.',
-            )}
-          </p>
-        )}
+        {deskOpen === 'voice' && voiceDesk}
         {deskOpen === 'ai' && askDesk}
       </BoothDock>
 

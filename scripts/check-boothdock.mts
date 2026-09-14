@@ -45,6 +45,7 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 };
 
 const dock = readFileSync('app/components/BoothDock.tsx', 'utf8');
+const card = readFileSync('app/components/BoothCard.tsx', 'utf8');
 const booth = readFileSync('app/components/ProBooth.tsx', 'utf8');
 const page = readFileSync('app/page.tsx', 'utf8');
 const room = readFileSync('app/lib/fullroom.ts', 'utf8');
@@ -146,9 +147,14 @@ ok(
   /\{spec\.paid && \(/.test(dock),
   'a price found only after opening the panel is a price found too late',
 );
+/* Read from the sheet as well as the dock. The frame moved into
+   `BoothCard.tsx` when the desks stopped being a strip above two bars, and
+   the warning moved with it — the dock passes the words, the sheet prints
+   them. The property is unchanged: a desk that can spend money says so in
+   words, on the screen, not behind a mark and not only in a coin's title. */
 ok(
   '  and said again in words when the panel opens',
-  /\{here\.paid && \(/.test(dock) && /dock\.paidHere/.test(dock),
+  /paidLine=\{t\(/.test(dock) && /dock\.paidHere/.test(dock) && /\{paid && paidLine && \(/.test(card),
 );
 ok(
   '  without claiming everything in there is free or everything costs',
