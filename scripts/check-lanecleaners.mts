@@ -58,11 +58,19 @@ ok('and the render goes through the same function',
   /mixSession[\s\S]*?startLane\(wireLane\(offline, lane, bus\), lane\)/.test(session));
 
 /* ── 4. Clean first, then shape ────────────────────────────────────────── */
+/* `afterTone` rather than `level`, since 14 September: the effect rack sits
+   between the tone stack and the fader, so the thing a cleaner falls through
+   to when there is no tone stack is now the rack. The property this guards is
+   unchanged and is the reason the names are read rather than the order
+   assumed — clean first, always. */
 ok('the cleaner is in front of the tone stack',
-  /if \(cleaned\) cleaned\.output\.connect\(shaped \? shaped\.input : level\);/.test(session),
+  /if \(cleaned\) cleaned\.output\.connect\(shaped \? shaped\.input : afterTone\);/.test(session),
   'driving a take that still has rumble in it drives the rumble too');
 ok('and the head of the chain is the cleaner when there is one',
-  /const head: AudioNode = cleaned \? cleaned\.input : shaped \? shaped\.input : level;/.test(session));
+  /const head: AudioNode = cleaned \? cleaned\.input : shaped \? shaped\.input : afterTone;/.test(session));
+ok('and nothing was quietly inserted before it',
+  session.indexOf('const cleaned =') < session.indexOf('const rack = anyFx'),
+  'a rack in front of the cleaner would drive the rumble, which is the whole point of the order');
 
 /* ── 5. The half a filter cannot do says what it costs ─────────────────── */
 const booth = readFileSync('app/components/ProBooth.tsx', 'utf8');

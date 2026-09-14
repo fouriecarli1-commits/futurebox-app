@@ -1,6 +1,7 @@
 'use client';
 
 import { isClean, isUncleaned, wireClean, wireTone, type Clean, type Tone } from './tone';
+import { anyFx, wireFx, type Fx } from './fx';
 
 /**
  * A session: several pieces of audio on one clock.
@@ -52,6 +53,19 @@ export interface Lane {
   readonly pan?: number;
   /** Drive, colour and a speaker. Absent means untouched. */
   readonly tone?: Tone;
+  /**
+   * The effect rack — EQ, compressor, delay, reverb and the rest.
+   *
+   * Absent, or empty, means no rack at all and the graph this lane had
+   * before racks existed. That is deliberately not the same as a rack with
+   * everything set to nothing: an effect switched on and turned down still
+   * costs a node and still rounds the sound.
+   *
+   * It goes in `wireLane` with everything else, which is the whole point —
+   * see the note there. A rack that only moved the preview would be
+   * indistinguishable from one that works until somebody exports.
+   */
+  readonly fx?: Fx;
   /**
    * What to take *off* before any of that.
    *
@@ -280,6 +294,18 @@ export function wireLane(
      be cleaned without being shaped, which is the common case. */
   const cleaned = lane.clean && !isUncleaned(lane.clean) ? wireClean(ctx, lane.clean) : null;
 
+  /* ── The rack ──────────────────────────────────────────────────────
+ 
+     After the amp and the tone stack, before the fader, for the same reason
+     the tone stack is before the fader: a compressor after the fader would
+     be driven harder as the lane was turned up, so the volume control would
+     change the character of the sound. Nobody expects that.
+ 
+     Built here and nowhere else. Both the live context and the offline one
+     the mixdown renders into come through this function, so there is no
+     second code path for the effects to drift along. */
+  const rack = anyFx(lane.fx) ? wireFx(ctx, lane.fx) : null;
+
   const level = ctx.createGain();
   level.gain.value = lane.gain;
   /* Equal power, which is what a `StereoPannerNode` does and what every desk
@@ -291,10 +317,18 @@ export function wireLane(
      `audit/mixdown.mjs` pins the law, because swapping this for a linear
      panner would change every mix in the app and nothing would say so. */
   const place = typeof ctx.createStereoPanner === 'function' ? ctx.createStereoPanner() : null;
-  /* clean → tone → level → pan. Whichever of the first two exist. */
-  const head: AudioNode = cleaned ? cleaned.input : shaped ? shaped.input : level;
-  if (cleaned) cleaned.output.connect(shaped ? shaped.input : level);
-  if (shaped) shaped.output.connect(level);
+  /* clean → tone → rack → level → pan. Whichever of the first three exist. */
+  const afterTone: AudioNode = rack ? rack.input : level;
+  const head: AudioNode = cleaned ? cleaned.input : shaped ? shaped.input : afterTone;
+  if (cleaned) cleaned.output.connect(shaped ? shaped.input : afterTone);
+  if (shaped) shaped.output.connect(afterTone);
+  if (rack) rack.output.connect(level);
+  /* The oscillators a tremolo or a chorus needs. Started here rather than
+     inside `wireFx` so the one function that builds the graph is also the
+     one that starts everything in it — an oscillator nobody starts is an
+     effect that silently does nothing, and in an offline render there is no
+     sound to notice it by. */
+  for (const source of rack?.running ?? []) source.start(0);
 
   if (place) {
     place.pan.value = Math.max(-1, Math.min(1, lane.pan ?? 0));

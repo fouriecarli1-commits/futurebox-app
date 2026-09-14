@@ -553,6 +553,12 @@ jobs:
       - name: The booth's two bars, and a way out of the room
         run: npm run check:boothdock
 
+      # An effect rack is the easiest place to break the booth's promise that
+      # what you hear is what gets exported: a knob that only moves the
+      # preview looks identical to one that works, until somebody exports.
+      - name: The effect rack is in the file, not only in the ear
+        run: npm run check:boothfx
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

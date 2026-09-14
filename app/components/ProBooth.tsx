@@ -48,6 +48,8 @@ import { useBackLayer } from '../lib/backstack';
 import Hint from './Hint';
 import BoothTimeline from './BoothTimeline';
 import BoothDock, { type Desk } from './BoothDock';
+import BoothFx from './BoothFx';
+import { NO_FX, type Fx } from '../lib/fx';
 import { useOwnScreen } from '../lib/fullroom';
 import VoiceMixer, { DEFAULT_SETTINGS, settingsToForm, type VoiceSettings } from './VoiceMixer';
 import Cost from './Cost';
@@ -1752,7 +1754,7 @@ export default function ProBooth({
      becoming a seventh button, because the one thing in it that is not a
      control — "Mix it down", the button this whole room exists to press —
      must not end up behind an icon. */
-  const makeDesk = (
+  const makeDeskTail = (
     <>
       {/* ── The transport ───────────────────────────────────────────────── */}
       {/* Both bottom strips carry their own background. They are pinned while
@@ -1960,6 +1962,39 @@ export default function ProBooth({
     </>
   );
 
+  /* ── The rack, for the lane that is open ────────────────────────────
+
+     Per lane, not per session. An effect is a property of a sound: a
+     compressor that belongs to the room would squash the guitar because the
+     voice needed it, which is the opposite of having lanes at all.
+
+     Nothing to rack when no lane is picked, and that is said rather than
+     shown as an empty panel — a rack with no lane under it looks broken. */
+  const fxLane = lanes.find((one) => one.id === picked);
+  const fxDesk = fxLane ? (
+    <>
+      <p className="px-4 pt-1 text-xs font-bold" style={{ color: '#7dd3fc' }}>
+        {fxLane.name}
+      </p>
+      <BoothFx
+        fx={fxLane.fx ?? NO_FX}
+        onChange={(next: Fx) => change(fxLane.id, { fx: next })}
+      />
+      {makeDeskTail}
+    </>
+  ) : (
+    <div className="px-4 py-6">
+      <p className="text-sm leading-snug" style={{ color: 'rgba(238,242,255,0.5)' }}>
+        {t(
+          'fx.pickFirst',
+          'Tap a lane’s name on the timeline first. An effect belongs to a sound, not to the room — a compressor the whole session shared would squash the guitar because the voice needed it.',
+        )}
+      </p>
+      {makeDeskTail}
+    </div>
+  );
+
+
   return (
     /* One page on a phone, four pinned strips on a desk.
 
@@ -2124,7 +2159,7 @@ export default function ProBooth({
         {deskOpen === 'tracks' && trackDesk}
         {deskOpen === 'mix' && mixDesk}
         {deskOpen === 'stems' && stemDesk}
-        {deskOpen === 'effects' && makeDesk}
+        {deskOpen === 'effects' && fxDesk}
         {deskOpen === 'voice' && (
           <p className="px-4 py-6 text-sm leading-snug" style={{ color: 'rgba(238,242,255,0.5)' }}>
             {t(
