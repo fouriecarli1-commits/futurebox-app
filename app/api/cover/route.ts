@@ -210,3 +210,46 @@ export async function POST(request: Request): Promise<Response> {
 
   return Response.json({ id: started.id, track: trackId, state: 'running' });
 }
+
+/**
+ * Take the sleeve off a song.
+ *
+ * ── Why there was no way to ──────────────────────────────────────────────
+ *
+ * Carli, 14 September 2026: *"daar is nerens 'n keep knoppie nie… en dalk 'n
+ * remove button."* A cover could be made and it could be replaced, and those
+ * were the only two things that had ever been possible. A picture you cannot
+ * take off is a picture you have to live with, and the one place that hurts
+ * is the one this feature is for: a song about to be posted.
+ *
+ * ── The path is derived, which is what makes this safe ───────────────────
+ *
+ * `coverPath` is a function of the caller and the song, so there is no id
+ * from the request that names a file. Somebody asking to delete a song that
+ * is not theirs deletes nothing, because the path this builds is inside their
+ * own folder and the file is not in it. `storageId` still guards the track id
+ * for the same reason the other two handlers do: it is going into a path.
+ *
+ * Storage, and nothing else. There is no row to clear — the cover was never
+ * stored as a field on a track, it is a file at a place the code can work
+ * out, which is why a song with no cover needs no record saying so.
+ */
+export async function DELETE(request: Request): Promise<Response> {
+  const trackId = new URL(request.url).searchParams.get('track') ?? '';
+  if (!trackId || !storageId(trackId)) {
+    return Response.json({ message: 'Which song?' }, { status: 400 });
+  }
+
+  if (!metered()) return Response.json({ message: 'Accounts are not configured.' }, { status: 503 });
+  const caller = await callerFrom(request);
+  if (!caller) return Response.json({ message: 'Sign in first.' }, { status: 401 });
+
+  const client = admin();
+  if (!client) return Response.json({ message: 'Accounts are not configured.' }, { status: 503 });
+
+  /* Not an error when there was nothing there. Somebody pressing this twice,
+     or on a song whose cover another device already removed, has got what
+     they asked for either way. */
+  await client.storage.from(BUCKET).remove([coverPath(caller.id, trackId)]);
+  return Response.json({ ok: true });
+}

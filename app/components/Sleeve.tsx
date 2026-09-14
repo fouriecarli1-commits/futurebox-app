@@ -26,13 +26,38 @@
  * Seconds rather than minutes, but not instant. Nothing here pretends to know
  * how far along it is: the engine does not report that, and a bar creeping to
  * ninety would be an invention.
+ *
+ * ── There is no "keep" button, and that was the fault ────────────────────
+ *
+ * Carli, 14 September 2026: *"daar is nerens 'n keep knoppie nie wat jou help
+ * om te sê dat jy die image kies en save as cover art, die anther button gaan
+ * lê ook agter daai cover art image… en dalk 'n remove button."*
+ *
+ * Three things, and the first one is not the one it looks like. A cover IS
+ * kept the moment it is drawn — the route writes it to storage under the
+ * song, and the next page that opens finds it. Nothing was ever unsaved. What
+ * was missing is any sentence saying so, and a screen that saves silently
+ * looks exactly like a screen that did nothing. The button she went looking
+ * for is really a line of text, and that is what this now has.
+ *
+ * The second is plain: "Another" was laid on top of the artwork, which is the
+ * one part of this screen worth looking at. The controls sit under it now.
+ *
+ * The third had no answer at all. A cover could be made and replaced, never
+ * taken off — and the place that hurts is a song about to be posted. `DELETE
+ * /api/cover` is new for it.
+ *
+ * And "Another" says what it costs and that it replaces what is there. It
+ * always did both and said neither: the price was only on the first press,
+ * and nothing warned that the picture on screen would be gone.
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Image as ImageIcon, Loader2, RefreshCw } from 'lucide-react';
+import { Check, Image as ImageIcon, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
+import Note from './Note';
 
 export default function Sleeve({
   trackId,
@@ -84,6 +109,26 @@ export default function Sleeve({
       alive = false;
     };
   }, [trackId, headers]);
+
+  const takeOff = async (): Promise<void> => {
+    setBusy(true);
+    setProblem(null);
+    try {
+      const gone = await fetch(`/api/cover?track=${encodeURIComponent(trackId)}`, {
+        method: 'DELETE',
+        headers: await headers(),
+      });
+      if (!gone.ok) {
+        setProblem(t('cover.notOff', 'That could not be taken off. Try again in a moment.'));
+        return;
+      }
+      setUrl(null);
+    } catch {
+      setProblem(t('cover.notOff', 'That could not be taken off. Try again in a moment.'));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const make = async (): Promise<void> => {
     setBusy(true);
@@ -139,23 +184,51 @@ export default function Sleeve({
   return (
     <div className="space-y-2">
       {url ? (
-        <div className="relative group">
+        <>
+          {/* Nothing over the artwork. It is the one thing on this panel
+              worth looking at, and a button parked in the corner of it
+              covers whatever the picture put there. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={url}
             alt={t('cover.alt', 'Cover art for this song')}
             className="w-full aspect-square object-cover rounded-xl border border-zinc-800 bg-zinc-950"
           />
-          <button
-            type="button"
-            onClick={() => void make()}
-            disabled={busy}
-            className="min-h-[44px] absolute bottom-2 right-2 px-2.5 py-1.5 rounded-lg text-xs bg-black/80 border border-zinc-700 text-zinc-200 hover:border-emerald-500 flex items-center gap-1.5 disabled:opacity-60"
-          >
-            {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-            {t('cover.again', 'Another')}
-          </button>
-        </div>
+
+          {/* The sentence that replaces the button she went looking for.
+              It was always saved; nothing ever said so. */}
+          <p className="flex items-start gap-1.5 text-sm leading-snug text-emerald-300/90">
+            <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+            {t('cover.kept', 'This is the song\u2019s cover now. It is saved and it goes wherever the song goes.')}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void make()}
+              disabled={busy}
+              className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-60"
+            >
+              {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              {`${t('cover.again', 'Another')} \u2014 ${CREDITS.cover} ${t('video.credits', 'credits')}`}
+            </button>
+            {/* `bg-rose` both says what it does and keeps the green rule in
+                globals.css off it — see check:sideborder. */}
+            <button
+              type="button"
+              onClick={() => void takeOff()}
+              disabled={busy}
+              className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-rose-500/[0.06] border border-rose-500/25 text-zinc-400 hover:border-rose-500/50 hover:text-rose-300 flex items-center gap-1.5 disabled:opacity-60"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {t('cover.takeOff', 'Take it off')}
+            </button>
+          </div>
+          {/* Said before the press, not discovered after it. There is one
+              cover per song and a new one overwrites it — there is no way
+              back to the picture on screen once another is drawn. */}
+          <Note>{t('cover.againWarns', 'Another draws a new one and replaces this. There is no way back to this picture.')}</Note>
+        </>
       ) : (
         <button
           type="button"

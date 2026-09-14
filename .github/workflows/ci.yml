@@ -502,6 +502,13 @@ jobs:
       - name: The picture ceiling is in pixels, and reads real headers
         run: npm run check:pixelguard
 
+      # A cover is saved the moment it is drawn, so the screen has to say so —
+      # one that saves in silence looks like one that did nothing. And nothing
+      # may sit over the artwork, there must be a way to take it off, and a
+      # press that destroys the picture on screen must say so first.
+      - name: The cover maker says it is kept, and can take it off
+        run: npm run check:covermaker
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

@@ -23,6 +23,7 @@
     "check:cardtone": "tsx scripts/check-cardtone.mts",
     "check:dubpath": "tsx scripts/check-dubpath.mts",
     "check:pixelguard": "tsx scripts/check-pixelguard.mts",
+    "check:covermaker": "tsx scripts/check-covermaker.mts",
     "check:podvideo": "node audit/podvideo.mjs",
     "check:nameupload": "node audit/nameupload.mjs",
     "check:oops": "node audit/oops.mjs",
