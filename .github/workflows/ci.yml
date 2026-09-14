@@ -522,6 +522,12 @@ jobs:
       - name: Both song windows say what, who and what kind
         run: npm run check:songcaption
 
+      # The live room refreshes on a timer and rebuilds its post list each
+      # time. A player keyed on the post object restarts the song on every
+      # refresh — heard as stuttering, and not a bandwidth problem.
+      - name: A refresh leaves the song playing
+        run: npm run check:keepplaying
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

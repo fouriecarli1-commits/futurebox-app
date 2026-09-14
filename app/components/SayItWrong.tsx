@@ -51,6 +51,7 @@ export default function SayItWrong({
   const { t, lang } = useLang();
   const [open, setOpen] = useState(false);
   const [word, setWord] = useState('');
+  const [heard, setHeard] = useState('');
   const [should, setShould] = useState('');
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
@@ -130,7 +131,7 @@ export default function SayItWrong({
           'Help ons om suiwer Afrikaans te maak. Sê watter woord verkeerd uitgekom het, en — as jy kan — hoe dit behoort te klink.',
         )}
       </p>
-      <div className="grid sm:grid-cols-2 gap-2">
+      <div className="grid gap-2 sm:grid-cols-3">
         <div className="space-y-1">
           <label htmlFor="sayit-word" className="block text-xs text-zinc-500">
             {t('sayit.word', 'Die woord')}
@@ -143,9 +144,32 @@ export default function SayItWrong({
             className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
           />
         </div>
+        {/* ── What it actually sounded like ─────────────────────────────
+
+            Carli: "vra: hoe klink dit? Hoe moet dit foneties klink?"
+
+            Two questions, and this was the missing one. The form asked the
+            WORD and how it SHOULD sound, and the piece in between — what
+            the engine really said — is the most useful of the three. Given
+            "voëltjie" and "voëlkie" you know the right answer. Given
+            "voëltjie", "foeltsjie" and "voëlkie" you also know what goes
+            wrong, and a pronunciation rule is written against the mistake,
+            not against the wish. */}
+        <div className="space-y-1">
+          <label htmlFor="sayit-heard" className="block text-xs text-zinc-500">
+            {t('sayit.heard', 'Hoe dit geklink het')}
+          </label>
+          <input
+            id="sayit-heard"
+            value={heard}
+            onChange={(event) => setHeard(event.target.value)}
+            placeholder={t('sayit.heardHint', 'foeltsjie')}
+            className="w-full min-h-[44px] rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
+          />
+        </div>
         <div className="space-y-1">
           <label htmlFor="sayit-should" className="block text-xs text-zinc-500">
-            {t('sayit.should', 'Hoe dit moet klink')}
+            {t('sayit.should', 'Hoe dit foneties moet klink')}
           </label>
           <input
             id="sayit-should"

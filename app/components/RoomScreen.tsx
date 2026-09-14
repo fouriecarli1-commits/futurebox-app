@@ -188,6 +188,26 @@ export default function RoomScreen({
   const start = useCallback(async (one: RoomPost) => {
     const element = audio.current;
     if (!element || !one.audio) return;
+    /* ── Already playing this one? Then leave it alone ──────────────────
+
+       Carli, 14 September 2026: *"Die een liedjie wat ek in die live room
+       gepost het is hakkerig."* — of a GENERATED song, which is a few
+       megabytes of mp3 and not the 31MB WAV a Booth mixdown is. So it was
+       never bandwidth, and that is what made this findable.
+
+       The live room refreshes on an interval. Every refresh rebuilds the
+       post list with `.map()`, which makes new objects out of identical
+       data, so the panel on screen is a new object every few seconds —
+       and the effect below, keyed on that object, re-ran, paused the
+       audio and set `src` again. Setting `src` to the SAME url still
+       makes the browser throw the buffer away and start over.
+
+       So the song restarted every refresh interval, for ever, and it
+       sounded exactly like stuttering.
+
+       Two guards, because either alone would do and both together mean a
+       future refactor of the other one cannot bring it back. */
+    if (element.src === one.audio && !element.paused) return;
     setLoading(true);
     element.src = one.audio;
     try {
@@ -214,7 +234,14 @@ export default function RoomScreen({
     }
   }, []);
 
-  /* Whatever is on screen is what plays. */
+  /* Whatever is on screen is what plays.
+
+     Keyed on WHICH post and WHERE its file is, never on the post object.
+     The room hands down a fresh array on every refresh — see the note in
+     `start` — so an effect that depends on the object runs again every few
+     seconds, and its cleanup pauses the song on the way. */
+  const playingId = post?.id;
+  const playingSrc = post?.audio ?? null;
   useEffect(() => {
     if (!post) return;
     void start(post);
@@ -222,7 +249,8 @@ export default function RoomScreen({
       audio.current?.pause();
       setPlaying(false);
     };
-  }, [post, start]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playingId, playingSrc, start]);
 
   /**
    * The next one down, fetched while this one plays.

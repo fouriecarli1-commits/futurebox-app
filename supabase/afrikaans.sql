@@ -104,3 +104,20 @@ create unique index if not exists afrikaans_reports_one_a_day
     lower(btrim(word)),
     ((created_at at time zone 'Africa/Johannesburg')::date)
   );
+
+-- ─────────────────────────────────────── wat dit werklik geklink het ────
+--
+-- Carli, 14 September 2026: "Daar moet ook 'n pop out wees wat verduidelik
+-- waarvoor hierdie feedback bar is en vra: hoe klink dit? Hoe moet dit
+-- foneties klink?"
+--
+-- Twee vrae, en die eerste een het ontbreek. Die vorm het die WOORD gevra en
+-- hoe dit MOET klink — en die stuk tussenin, wat die enjin werklik gesê het,
+-- is die nuttigste van die drie. "voëltjie" plus "voëlkie" sê vir jou wat die
+-- regte antwoord is; "voëltjie", "foeltsjie", "voëlkie" sê vir jou ook wat
+-- verkeerd loop, en dít is wat 'n uitspraakreël moet vang.
+--
+-- Mag leeg wees, soos `should`. Iemand wat hoor dis verkeerd maar dit nie kan
+-- oorskryf nie, is steeds die nuttigste ding wat ons kon gehoor het.
+alter table public.afrikaans_reports
+  add column if not exists heard text not null default '' check (length(heard) <= 120);

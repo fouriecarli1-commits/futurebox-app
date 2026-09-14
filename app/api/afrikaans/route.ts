@@ -44,7 +44,16 @@ export const dynamic = 'force-dynamic';
 interface Body {
   /** The word that came out wrong. */
   word?: string;
-  /** How it should sound, in ordinary letters. May be empty. */
+  /**
+   * What it actually sounded like, written as it was heard. May be empty.
+   *
+   * The most useful of the three and the last to be asked for. The word says
+   * what was being said; `should` says what the right answer is; this says
+   * what the engine did — and a pronunciation rule is written against what
+   * went wrong, not against what was wanted.
+   */
+  heard?: string;
+  /** How it should sound, spelled the way it is said. May be empty. */
   should?: string;
   /** Which room it happened in. */
   surface?: string;
@@ -96,6 +105,7 @@ export async function POST(request: Request): Promise<Response> {
        "how should it sound" has still told us something, and throwing it
        away over a length would be throwing away the only part that makes a
        report actionable. */
+    heard: (body.heard ?? '').trim().slice(0, 120),
     should: (body.should ?? '').trim().slice(0, 120),
     surface: (body.surface ?? '').trim().slice(0, 40),
     spoken: body.spoken !== false,

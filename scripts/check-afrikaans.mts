@@ -94,6 +94,12 @@ const SAME_IN_BOTH = new Set([
      "voëlchie" — translating it would leave the English reader an example
      of nothing, and the control only draws in Afrikaans anyway. */
   'vo\u00ebltjie',
+  /* And the same argument one field along. "How did it sound" is answered by
+     writing down what came out of the speaker, so its placeholder is a
+     phonetic spelling of a mis-said Afrikaans word. A phonetic spelling has
+     no translation: it is a transcription of a sound, and the sound does not
+     change language. The control only draws in Afrikaans anyway. */
+  'foeltsjie',
 ]);
 const copied: string[] = [];
 for (const [i, match] of starts.entries()) {
