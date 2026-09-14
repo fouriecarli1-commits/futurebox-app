@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { BAR_COLOUR } from './lib/brand';
 import { LanguageProvider } from './lib/i18n';
 import { SiteFooter } from './components/SiteFooter';
+import Watchdog from './components/Watchdog';
 import { SITE_URL } from './lib/brand';
 
 export const metadata: Metadata = {
@@ -60,6 +61,10 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen antialiased selection:bg-emerald-500 selection:text-onAccent">
         <LanguageProvider>
+          {/* Listening before any room draws. See the note in the component:
+              this catches the two failures no error boundary can, and writes
+              them to the device so `/oops` can read them back. */}
+          <Watchdog />
           {children}
           <SiteFooter />
         </LanguageProvider>

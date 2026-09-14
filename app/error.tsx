@@ -28,6 +28,7 @@
  */
 
 import React, { useEffect } from 'react';
+import { noteProblem } from './lib/lasterror';
 
 /** A piece of the app that is no longer on the server, which a reload cures. */
 function isStale(error: Error): boolean {
@@ -48,6 +49,9 @@ export default function Problem({
     // Left in the console for the one case where somebody is looking at it.
     // Not sent anywhere: an error report is a thing somebody has to consent to.
     console.error('FutureBox stopped drawing:', error);
+    /* And written down, because nobody on a phone has a console. `/oops`
+       reads it back. Same posture: on the device, never sent. */
+    noteProblem('render', error, error.digest);
   }, [error]);
 
   return (
