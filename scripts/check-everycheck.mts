@@ -130,9 +130,14 @@ const audits = readdirSync('audit')
   .filter((one) => !['enter', 'where'].includes(one));
 
 /** No assertions in them: they walk, they print, a person reads it. */
+/* `devices` was in here and should not have been: it exits non-zero on a page
+   that runs off the side, a control under 44 pixels or a sign-in that will
+   not open, which is a check and not a walk. It was filed as a tool because
+   it went to port 3000 and assumed a server, so it could not be wired. It
+   starts its own now, and it is `check:devices`. */
 const TOOLS = new Set([
   'a11y', 'ads-af', 'ads-af-fail', 'ads-en-fail', 'badge', 'blurshot', 'boxes',
-  'buttons', 'copilotplace', 'deep', 'devices', 'errors', 'frame', 'home',
+  'buttons', 'copilotplace', 'deep', 'errors', 'frame', 'home',
   'home2', 'homelength', 'land', 'landing', 'net', 'newui', 'newui2', 'one',
   'phone', 'phoneshots', 'price', 'probe', 'radarcards', 'rooms', 'shots',
   'slogan', 'small', 'thin', 'touch', 'transcript', 'voices', 'walk',

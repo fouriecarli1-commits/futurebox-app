@@ -16,9 +16,22 @@
  * open.
  */
 import { chromium, devices } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { launchOptions, serve, shot } from './where.mjs';
 
-const PORT = process.argv[2] || '3000';
+/* ── It starts its own server ─────────────────────────────────────────────
+
+   This file went to `http://localhost:3000` and assumed somebody had put a
+   server there. On the machine it was written on somebody always had, which
+   is why it sat unwired: `check:probes` forbids a probe that cannot stand
+   alone in a group, and the honest way to meet that is to start one rather
+   than to be left out of the run. A port of its own, so it does not answer
+   to a build another probe made.
+
+   A port can still be passed as the first argument, for running it by hand
+   against a server that is already up. */
+const OWN = 3076;
+const PORT = process.argv[2] || String(OWN);
+const mine = !process.argv[2] ? await serve(PORT) : null;
 /**
  * Phones and tablets, Apple and Android, and tablets both ways up.
  *
@@ -27,11 +40,20 @@ const PORT = process.argv[2] || '3000';
  * a third narrower than the one it was designed against — and it is the one
  * size where turning the device changes which layout runs. Landscape is a
  * separate run rather than an afterthought for that reason.
+ *
+ * And phones sideways, which this swept twelve profiles without once doing.
+ * Carli, 14 September 2026: *"baie mense gaan die dwarsdraai wil gebruik."*
+ * A phone turned sideways is the hardest screen this app has — about 290
+ * pixels tall, less than a third of what the upright one gives — so it is
+ * where a header, a bar and a panel run out of room first. Every tablet was
+ * swept both ways up and no phone was swept either way but upright.
  */
 const WANTED = [
   ['iPhone 13', devices['iPhone 13']],
+  ['iPhone 13 land.', devices['iPhone 13 landscape']],
   ['iPhone SE', devices['iPhone SE']],
   ['Pixel 5', devices['Pixel 5']],
+  ['Pixel 5 land.', devices['Pixel 5 landscape']],
   ['Galaxy S9+', devices['Galaxy S9+']],
   ['iPad (gen 7)', devices['iPad (gen 7)']],
   ['iPad landscape', devices['iPad (gen 7) landscape']],
@@ -118,6 +140,11 @@ for (const [name, device] of WANTED) {
   await p.close();
 }
 
-console.log('problems:', problems.join(' ;; ') || 'none');
+console.log(
+  problems.length
+    ? `\ncheck:devices — ${problems.length} problem(s):\n  · ${problems.join('\n  · ')}`
+    : `\ncheck:devices — ${WANTED.length} real devices, upright and sideways: nothing runs off the side, every control is a thumb wide, and the way in opens.`,
+);
 await b.close();
+mine?.stop();
 process.exit(problems.length ? 1 : 0);

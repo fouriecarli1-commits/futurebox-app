@@ -101,6 +101,7 @@
     "check:singview": "node audit/singview.mjs",
     "check:selfie": "node audit/selfie.mjs",
     "check:contrast": "node audit/contrast.mjs",
+    "check:devices": "node audit/devices.mjs",
     "check:copilotbar": "node audit/copilotbar.mjs",
     "check:signup": "node audit/signupcode.mjs",
     "check:firstscreen": "node audit/firstscreen.mjs",
