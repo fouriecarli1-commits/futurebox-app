@@ -509,6 +509,13 @@ jobs:
       - name: The cover maker says it is kept, and can take it off
         run: npm run check:covermaker
 
+      # A song whose words have been measured once must never be measured
+      # again. Both rungs cache their own answer and neither recognises the
+      # other's, so writing an upload's heard words onto its row sent the
+      # second press to the alignment endpoint to pay for timings it had.
+      - name: A song's words are paid for once
+        run: npm run check:paidonce
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

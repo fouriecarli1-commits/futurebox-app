@@ -367,12 +367,50 @@ export async function alignedFor(
  */
 export async function exactFor(track: Track, audio: Blob | null): Promise<Timed> {
   if (!audio) return { lines: [], how: 'none' };
+
+  /* ── Anything already paid for, before anything is spent ──────────────
+
+     Both rungs below check the store, and each only recognises its OWN
+     answer: `alignedFor` returns a remembered `aligned` and `heardFor` a
+     remembered `heard`. That is right inside each of them and wrong here,
+     because which rung a song takes can CHANGE.
+
+     It changed the day a brought-in song's heard words were written onto
+     its row. Before that an upload had no lyrics, so the second press went
+     to `heardFor` and got the transcription back for nothing. After it, the
+     upload has lyrics, so the second press goes to `alignedFor` — which
+     looks for an `aligned` answer, does not find the `heard` one sitting
+     right there, and pays to align words it already has the timings for.
+
+     Carli: "As hy een keer geluister het moet hy die woorde stoor op die
+     liedjie en dit hou. Mens kan nie oor en oor met krediete betaal nie."
+
+     So the question asked first is the one she is actually asking: has this
+     song already been listened to, by any route? `exactFor` is the only
+     place that can ask it, because it is the only place that knows both
+     rungs exist. */
+  const already = remembered(track.id);
+  if (already) return already;
+
   const words = (track.lyrics ?? '').trim();
   if (words) {
     const lined = await alignedFor(track, audio, words);
     if (lined.lines.length) return lined;
   }
   return heardFor(track, audio);
+}
+
+/**
+ * A measured answer for this song, whichever rung produced it.
+ *
+ * `spread` is excluded on purpose: it is not a measurement, it is the even
+ * fallback, and returning it here would mean a song that once failed to be
+ * heard could never be heard again.
+ */
+export function remembered(trackId: string): Timed | null {
+  const one = kept()[trackId];
+  if (!one?.lines?.length || one.how === 'spread' || one.how === 'none') return null;
+  return { lines: one.lines, how: one.how };
 }
 
 export async function heardFor(
