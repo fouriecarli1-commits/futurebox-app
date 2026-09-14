@@ -126,7 +126,30 @@ export default function RoomScreen({
      how a feed ends up playing two songs at the same time. */
   useEffect(() => {
     const element = new Audio();
+    /* ── Fetch ahead, rather than starting on the first few kilobytes ──
+
+       Carli, 14 September 2026: *"Die een liedjie wat ek in die live room
+       gepost het is hakkerig."*
+
+       This set `src` and called `play()`, which starts as soon as the
+       browser has enough to begin — and then runs out. On the device that
+       made the song there is nothing to run out of, because the channel
+       plays it from IndexedDB; the live room is the only place the file
+       comes over a network, which is why this is the only place it
+       stutters.
+
+       `preload = 'auto'` tells the browser to keep fetching rather than
+       stopping at metadata. It is not a promise of a gapless play — a
+       weak signal is a weak signal — but "start immediately and stall"
+       becomes "start a beat later and run", which is the whole of what
+       she is describing. */
+    element.preload = 'auto';
     element.addEventListener('ended', () => setPlaying(false));
+    /* The browser says when it has run dry, so the screen can say so too
+       rather than looking broken. `waiting` fires on a stall mid-play,
+       `playing` when it recovers. */
+    element.addEventListener('waiting', () => setLoading(true));
+    element.addEventListener('playing', () => setLoading(false));
     audio.current = element;
     return () => {
       element.pause();
@@ -200,6 +223,32 @@ export default function RoomScreen({
       setPlaying(false);
     };
   }, [post, start]);
+
+  /**
+   * The next one down, fetched while this one plays.
+   *
+   * A scroller's worst moment is the scroll itself: the panel arrives, the
+   * file has not been asked for yet, and the first seconds are silence or
+   * stutter. One ahead and no further — the element is never played, it only
+   * warms the browser's cache, and every panel preloaded would be a room
+   * that downloads twenty songs to play one.
+   *
+   * Torn down on every move, so scrolling fast does not leave a trail of
+   * half-finished downloads competing with the one being listened to.
+   */
+  const ahead = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    const next = playable[at + 1];
+    if (!next?.audio) return;
+    const warm = new Audio();
+    warm.preload = 'auto';
+    warm.src = next.audio;
+    ahead.current = warm;
+    return () => {
+      warm.src = '';
+      if (ahead.current === warm) ahead.current = null;
+    };
+  }, [at, playable]);
 
   const toggle = () => {
     const element = audio.current;
