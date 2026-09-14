@@ -398,20 +398,23 @@ export default function Greeting({
       )}
 
 
-      {/* ── How it knew ──────────────────────────────────────────────────── */}
-      {habit?.returning && (
-        <p className="text-xs text-zinc-600 leading-relaxed">
-          {habit.source === 'account'
-            ? t(
-                'hello.basisAccount',
-                'This is read off what you have made here — how often, and what kind, kept against your account so it follows you to another device. Not a record of when you work: a count per kind, and nothing else. You can clear it on your account screen.',
-              )
-            : t(
-                'hello.basis',
-                'What is suggested here is read off the songs in your own library and what you have made before, both of which are already on this device. Nothing extra is recorded and nothing about it is sent anywhere.',
-              )}
-        </p>
-      )}
+      {/* ── What used to be printed here ──────────────────────────────────
+
+          A paragraph explaining where the suggestion came from: what is
+          counted, that it follows the account rather than the device, and
+          that it can be cleared. All of it true, and none of it wanted on
+          this screen.
+
+          Carli, 14 September 2026, with a photograph of it: "Haal daai fyn
+          skrif uit op die make a song room." It sat under the doors as six
+          lines of grey type on the one screen that is supposed to be a set
+          of choices, and it read as terms rather than as an answer.
+
+          The strings stay in `i18n.tsx` — `hello.basis` and
+          `hello.basisAccount` — because the disclosure itself is worth
+          keeping and this is an argument about where it is printed, not
+          about whether it is true. The account screen is where the counting
+          is cleared, and that is where it belongs. */}
     </div>
   );
 }

@@ -978,7 +978,7 @@ export default function Channel({
                     <button
                       type="button"
                       onClick={() => setAdding(track.id)}
-                      className="text-sm text-zinc-400 hover:text-emerald-300 flex items-center gap-1.5"
+                      className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       {t('chan.addTo', 'Add to a playlist')}
@@ -1001,7 +1001,7 @@ export default function Channel({
                         type="button"
                         onClick={() => setSleeveFor((open) => (open === track.id ? null : track.id))}
                         aria-expanded={sleeveFor === track.id}
-                        className="text-sm text-zinc-400 hover:text-emerald-300 flex items-center gap-1.5"
+                        className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                       >
                         <ImageIcon className="w-3.5 h-3.5" />
                         {t('make.cover', 'Cover art')}
@@ -1017,7 +1017,7 @@ export default function Channel({
                       type="button"
                       onClick={() => void keep(track)}
                       disabled={keeping === track.id}
-                      className="text-sm text-zinc-400 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-60"
+                      className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-60"
                     >
                       {keeping === track.id ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1036,7 +1036,7 @@ export default function Channel({
                       <button
                         type="button"
                         onClick={() => void dropUpload(track.id)}
-                        className="text-sm text-zinc-500 hover:text-red-400 flex items-center gap-1.5"
+                        className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-rose-500/[0.06] border border-rose-500/25 text-zinc-400 hover:border-rose-500/50 hover:text-rose-300 flex items-center gap-1.5"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         {t('chan.dropBrought', 'Take it out again')}
@@ -1046,7 +1046,7 @@ export default function Channel({
                       <button
                         type="button"
                         onClick={() => onEdit(track.id)}
-                        className="text-sm text-zinc-400 hover:text-emerald-300 flex items-center gap-1.5"
+                        className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5"
                       >
                         <SlidersHorizontal className="w-3.5 h-3.5" />
                         {t('chan.edit', 'Open it in the studio')}

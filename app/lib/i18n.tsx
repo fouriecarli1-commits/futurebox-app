@@ -2400,6 +2400,7 @@ export const STRINGS: Dict = {
     af: "Wil jy presies hou wat jy nou hoor? Neem dit op in die opnamekamer. Dit is die enigste manier waarop \u2019n vertolking joune bly.",
   },
   "sec.toBooth": { en: "Take it to the Booth", af: "Vat dit na die opnamekamer" },
+  "sec.noticeTitle": { en: "A new take, not an edit", af: "’n Nuwe opname, nie ’n wysiging nie" },
   "ads.keptHere": { en: "These are kept in this browser, so they are still here when you come back from another room. They are not on your other devices.", af: "Hierdie word in hierdie blaaier gehou, so hulle is nog hier wanneer jy van \u2019n ander kamer af terugkom. Hulle is nie op jou ander toestelle nie." },
   "ads.savedPicks": { en: "recommended", af: "aanbeveel" },
   "ads.savedAds": { en: "written", af: "geskryf" },

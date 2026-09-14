@@ -714,6 +714,46 @@ spends about 1 000 characters of the ElevenLabs plan, once, and stores nothing.
 
 ---
 
+## Banked: checking an upload for somebody else's copyright
+
+**Your decision, not a switch.** Carli, 13 September 2026: *"Ons app moet ook
+luister vir original copywrited fraud in sulke liedjies."* Then, the same
+evening: *"Ok kom ons bank die kopiereg toets vir nou. Hou dit asb as iets wat
+ek nog moet doen."*
+
+Written down here so it is not lost, with what it would actually take.
+
+**It cannot be built from nothing.** Deciding whether an uploaded file is
+somebody else's recording means fingerprinting the audio against a licensed
+commercial catalogue. That is a paid service:
+
+| Who | What they are | Roughly |
+|---|---|---|
+| ACRCloud | The usual choice for a small platform. Music recognition by API. | Per-scan, cheapest of the three |
+| Audible Magic | What the large platforms use. Heavier to integrate. | Enterprise contract |
+| Pex | Built for rights and attribution rather than identification alone. | Enterprise contract |
+
+**Why a home-made one is worse than none.** A check that compares waveforms,
+or asks a model whether a song "sounds like" something, produces confident
+answers with no catalogue behind them. Every false clear tells you that you
+are covered when you are not, and the whole reason to have this is that you
+are not covered. If it is not a licensed fingerprint against a real catalogue,
+it should not be on the screen.
+
+**Two questions to answer before any of it is worth wiring:**
+
+1. What does a match DO? Refuse the upload, hold it for review, or let it
+   through and mark it? Each is a different product and a different risk.
+2. Who pays for the scan? At a per-upload cost it belongs in the credit model,
+   and nothing in `credits.ts` has a line for it yet.
+
+**What is there in the meantime.** The upload screen says the work must be
+yours, and the account that uploaded it is recorded. That is the position most
+small platforms actually stand on: notice, takedown, and a named uploader. It
+is not the same as knowing, and the app does not claim it is.
+
+---
+
 ## And before the first stranger pays
 
 From `docs/GOING_LIVE.md` §1, unchanged:

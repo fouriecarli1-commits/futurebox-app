@@ -412,31 +412,52 @@ export default function SongSections({
      Studio with nothing in it yet is exactly who this is for: the moment to
      learn that a take cannot be kept here is before there is one worth
      keeping, not after. */
+  /* ── The regeneration notice, behind a fold ───────────────────────────
+
+     It was an amber panel printed open, above the song picker: two
+     paragraphs and a button, roughly a phone screen of writing before the
+     room's first control.
+
+     Carli, 14 September 2026, with a photograph of it: "Can you make this
+     yellow explainer a drop down menu in the studio room?" — which is the
+     rule the whole app already follows. `Card` exists because she said
+     three times that the rooms show too much at once, and this was the one
+     panel exempting itself from that on the grounds of being important.
+     Important is what the heading is for.
+
+     The heading has to carry the point on its own, because a fold nobody
+     opens must still have said the true thing: "A new take, not an edit" is
+     the whole warning in five words. The amber stays on the inside, where
+     it still marks the paragraphs as a caution rather than as instructions,
+     and the Booth button stays with them — it is the answer to the warning,
+     so it belongs where the warning is read. */
   const regenerationNotice = (
-    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.07] p-3.5 space-y-2.5">
-      <p className="text-sm leading-relaxed text-amber-200/90">
-        {t(
-          'sec.newEveryTime',
-          'Nothing here edits the file you already have. The style, the tempo, the key and the shape carry over exactly \u2014 the performance does not. Even with nothing changed, a new take sings it differently: the engine takes no recording in and works from no seed, so there is no way to ask for the same one twice.',
+    <Card title={t('sec.noticeTitle', 'A new take, not an edit')}>
+      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.07] p-3.5 space-y-2.5">
+        <p className="text-sm leading-relaxed text-amber-200/90">
+          {t(
+            'sec.newEveryTime',
+            'Nothing here edits the file you already have. The style, the tempo, the key and the shape carry over exactly \u2014 the performance does not. Even with nothing changed, a new take sings it differently: the engine takes no recording in and works from no seed, so there is no way to ask for the same one twice.',
+          )}
+        </p>
+        <p className="text-sm leading-relaxed text-amber-200/90">
+          {t(
+            'sec.keepIt',
+            'Want to keep exactly what you are hearing? Record it in the Booth. That is the only way a performance stays yours.',
+          )}
+        </p>
+        {onBooth && (
+          <button
+            type="button"
+            onClick={onBooth}
+            className="min-h-[44px] px-3.5 py-2.5 rounded-xl border border-amber-500/50 bg-amber-500/15 text-sm font-semibold text-amber-100 hover:bg-amber-500/25 flex items-center gap-2"
+          >
+            <Mic className="w-4 h-4" />
+            {t('sec.toBooth', 'Take it to the Booth')}
+          </button>
         )}
-      </p>
-      <p className="text-sm leading-relaxed text-amber-200/90">
-        {t(
-          'sec.keepIt',
-          'Want to keep exactly what you are hearing? Record it in the Booth. That is the only way a performance stays yours.',
-        )}
-      </p>
-      {onBooth && (
-        <button
-          type="button"
-          onClick={onBooth}
-          className="min-h-[44px] px-3.5 py-2.5 rounded-xl border border-amber-500/50 bg-amber-500/15 text-sm font-semibold text-amber-100 hover:bg-amber-500/25 flex items-center gap-2"
-        >
-          <Mic className="w-4 h-4" />
-          {t('sec.toBooth', 'Take it to the Booth')}
-        </button>
-      )}
-    </div>
+      </div>
+    </Card>
   );
 
   if (!usable.length) {
