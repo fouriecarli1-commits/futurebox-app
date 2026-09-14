@@ -67,13 +67,28 @@ export default function Spotlight({
               word inside the body where scanning will not find it. Seven
               short lines put every one of them on the surface.
 
-              These are also the seven that no other app in this space has
-              all of, which is the only reason to lead with them. Every one
-              is built and reachable from the bar below: the Booth and the
-              Pro Booth, the adverts desk, voice cloning, the Sound
+              These are also the eight that no other app in this space
+              has all of, which is the only reason to lead with them. Every
+              one is built and reachable from the bar below: the Booth and
+              the Pro Booth, the adverts desk, voice cloning, the Sound
               trainer, the live room, the Collab Radar, and the video desk.
               A landing page that promises a feature is a landing page that
-              gets found out on the second click, and this is the first. */}
+              gets found out on the second click, and this is the first.
+
+              The eighth is the one that is hardest to copy and was the
+              last to be said out loud. Carli: "Maak alles in Afrikaans,
+              musiek, videos, podcasts." It is true of all three and each
+              was checked before it was printed — the song routes write
+              Afrikaans and are warned off Dutch, the podcast channel takes
+              `af` from the same language list the dubbing uses, and a
+              video speaks Afrikaans because the app lays an Afrikaans
+              reading over the footage rather than asking the video model
+              for words it has no Afrikaans for.
+
+              It is in the English list too, not only the Afrikaans one. A
+              differentiator hidden behind the language switch is a
+              differentiator the person it would have won over never
+              reads. */}
           <ul className="grid gap-x-6 gap-y-2.5 pt-1 sm:grid-cols-2">
             {[
               t('hero.f1', 'The Booth, for professional musicians'),
@@ -83,6 +98,7 @@ export default function Spotlight({
               t('hero.f5', 'A live music room'),
               t('hero.f6', 'Collab Radar, to create with like-minded artists'),
               t('hero.f7', 'Video generation'),
+              t('hero.f8', 'Everything in Afrikaans \u2014 music, videos, podcasts'),
             ].map((one) => (
               <li key={one} className="flex items-start gap-2.5">
                 <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-400" />

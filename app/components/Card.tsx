@@ -85,6 +85,7 @@ export default function Card({
   aside,
   wand,
   tools,
+  tone,
   children,
 }: {
   readonly title: string;
@@ -107,12 +108,37 @@ export default function Card({
   readonly wand?: { readonly label: string; readonly onPress: () => void; readonly busy?: boolean };
   /** The small buttons along the bottom. Whatever the card's options are. */
   readonly tools?: React.ReactNode;
+  /**
+   * A warm card, for a fold whose whole job is to be opened.
+   *
+   * Carli, 14 September 2026, of the studio's regeneration notice: "Maak
+   * daai a new take boksie lig geel sodat mense dit wel oop maak." She is
+   * right, and the reason is the one thing a fold costs you — a shut card
+   * is a heading in a row of identical headings, and the reader decides
+   * from the wording alone whether it is worth a press. Where the writing
+   * inside is a caution rather than a control, the card should look like
+   * one before it is opened.
+   *
+   * It is a literal union with one value rather than a colour or a
+   * className, on purpose. A `className` prop on a shared card is how a
+   * component stops having a shape; one named tone is a decision that can
+   * be counted, and `check:cardtone` counts it.
+   */
+  readonly tone?: 'amber';
   readonly children: React.ReactNode;
 }): React.ReactElement {
   const [open, setOpen] = useState(false);
 
+  const warm = tone === 'amber';
+
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60">
+    <section
+      className={
+        warm
+          ? 'rounded-2xl border border-amber-500/35 bg-amber-500/[0.08]'
+          : 'rounded-2xl border border-zinc-800 bg-zinc-900/60'
+      }
+    >
       {/* Wrapping, and the title gets first claim on the width.
 
           It did not wrap, and the aside — usually a price and a balance,
@@ -132,10 +158,12 @@ export default function Card({
           className="flex min-w-0 flex-1 basis-[11rem] items-center gap-2 text-left"
         >
           <ChevronDown
-            className={`h-4 w-4 flex-shrink-0 text-zinc-500 transition-transform ${open ? '' : '-rotate-90'}`}
+            className={`h-4 w-4 flex-shrink-0 transition-transform ${warm ? 'text-amber-300' : 'text-zinc-500'} ${open ? '' : '-rotate-90'}`}
           />
           {icon && <span className="flex-shrink-0 text-emerald-400">{icon}</span>}
-          <span className="truncate text-sm font-semibold text-zinc-200">{title}</span>
+          <span className={`truncate text-sm font-semibold ${warm ? 'text-amber-100' : 'text-zinc-200'}`}>
+            {title}
+          </span>
         </button>
 
         {wand && (

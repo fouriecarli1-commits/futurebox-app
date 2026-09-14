@@ -1722,6 +1722,7 @@ export const STRINGS: Dict = {
   "hero.f5": { en: "A live music room", af: "’n Regstreekse musiekkamer" },
   "hero.f6": { en: "Collab Radar, to create with like-minded artists", af: "Collab Radar, om saam met eendersdenkende kunstenaars te skep" },
   "hero.f7": { en: "Video generation", af: "Video’s word gegenereer" },
+  "hero.f8": { en: "Everything in Afrikaans — music, videos, podcasts", af: "Alles in Afrikaans — musiek, video’s, podsendings" },
   "hero.podcast": { en: "Start a podcast", af: "Begin \u2019n podsending" },
 
   "welcome.line1": { en: "Your voice. Your songs.", af: "Jou\u00a0stem. Jou\u00a0liedjies." },

@@ -480,6 +480,13 @@ jobs:
       - name: No button is bordered on one side only
         run: npm run check:sideborder
 
+      # Card gained a `tone` so the studio's regeneration notice could be
+      # yellow while shut — a fold's one cost is that a shut card looks like
+      # every other shut card. A colour meaning "look here" is worth nothing
+      # once everything has it, so the warm cards are counted.
+      - name: The warm card stays rare
+        run: npm run check:cardtone
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

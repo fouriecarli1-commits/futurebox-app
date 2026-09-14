@@ -427,13 +427,21 @@ export default function SongSections({
 
      The heading has to carry the point on its own, because a fold nobody
      opens must still have said the true thing: "A new take, not an edit" is
-     the whole warning in five words. The amber stays on the inside, where
-     it still marks the paragraphs as a caution rather than as instructions,
-     and the Booth button stays with them — it is the answer to the warning,
-     so it belongs where the warning is read. */
+     the whole warning in five words.
+
+     And the card itself is yellow. "Maak daai a new take boksie lig geel
+     sodat mense dit wel oop maak." Folding it cost the one thing the open
+     panel had: colour. Shut, in a row of grey headings, it was the second
+     of two identical boxes and read as another setting. The tone is what
+     a fold cannot otherwise say — that what is inside is a caution and
+     not a control — and it says it before anybody presses.
+
+     The inner box is gone with it. Two ambers, one inside the other, is a
+     border drawn twice. The Booth button keeps its own, because it is the
+     answer to the warning and belongs where the warning is read. */
   const regenerationNotice = (
-    <Card title={t('sec.noticeTitle', 'A new take, not an edit')}>
-      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.07] p-3.5 space-y-2.5">
+    <Card title={t('sec.noticeTitle', 'A new take, not an edit')} tone="amber">
+      <div className="space-y-2.5">
         <p className="text-sm leading-relaxed text-amber-200/90">
           {t(
             'sec.newEveryTime',
