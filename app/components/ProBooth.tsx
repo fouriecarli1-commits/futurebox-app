@@ -19,7 +19,6 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { barClearance } from './TabBar';
 import { ArrowLeft, Check, Circle, Gauge, Layers, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, dbOf, lengthOf, mixSession, monoOf, pieceOf, readInto, readSession,
@@ -48,6 +47,8 @@ import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Hint from './Hint';
 import BoothTimeline from './BoothTimeline';
+import BoothDock, { type Desk } from './BoothDock';
+import { useOwnScreen } from '../lib/fullroom';
 import VoiceMixer, { DEFAULT_SETTINGS, settingsToForm, type VoiceSettings } from './VoiceMixer';
 import Cost from './Cost';
 import HowToTrain from './HowToTrain';
@@ -135,6 +136,19 @@ export default function ProBooth({
    * timeline keeps the screen.
    */
   const [picked, setPicked] = useState<string | null>(null);
+  /**
+   * Which desk is out from behind the bars, if any.
+   *
+   * Starts shut. The room opens on the timeline, which is the thing it is
+   * about; every control in the app was on screen at once before, and the
+   * result was a room where the work was a strip at the top.
+   */
+  const [deskOpen, setDeskOpen] = useState<Desk>(null);
+
+  /* The app's own tab bar goes while this room is open. Carli: *"daai buttons
+     vervang die harde buttons van die hele app, dan val daai hele bar van die
+     app in die booth weg."* */
+  useOwnScreen(true);
   const metronomeRef = useRef<Metronome | null>(null);
 
   /* ── Singing a lane in somebody else's voice ────────────────────────────
@@ -1118,121 +1132,18 @@ export default function ProBooth({
 
   const heard = useMemo(() => audible(lanes), [lanes]);
 
-  return (
-    /* One page on a phone, four pinned strips on a desk.
+  /* ── The desks ────────────────────────────────────────────────────
 
-       The room is a desk: a header and a clock nailed to the top, the master
-       and the transport nailed to the foot, and the lanes scrolling in what is
-       left between them. On a 1280-pixel screen that is right — the transport
-       is what you reach for most and it should never move.
+     Carli, 14 September 2026: *"Bo op die 4 buttons heel onder is 'n tweede
+     button bar … en links en regs van dit is Track control icon en
+     mix/master icon, en daaruit pop al die netjiese funksies op."*
 
-       On a 390-pixel one the four strips are most of the height, the lanes get
-       a sliver, and everything appears to sit behind everything else. So below
-       sm the whole room is one column that scrolls, every section laid out in
-       full, nothing pinned. */
-    /* The room stops where the tab bar starts.
-
-       `TabBar` is `fixed bottom-0 z-[95]` and this room is `z-[70]`, so the
-       bar is painted over the foot of the room at every width. The transport
-       lives there — and so did "Mix it down", the button that produces the
-       file this whole room exists to make. On a phone it was underneath the
-       bar with nothing to say so, and every probe had rendered the room
-       without the bar, so nothing had ever noticed.
-
-       Carli, 9 September 2026: "hoe export mens of bring alles by mekaar?
-       Iets soos 'n mix together knoppie?" It was there. It was covered.
-
-       The number lives in one place now — the `below-tabs` rule in
-       `globals.css` — because this is not one room's problem: eleven
-       full-screen overlays sit below that bar, and The Booth had two controls
-       under it as well. `check:belowtabs` requires every one of them to carry
-       the rule. */
-    /* `data-booth`: the room's own fixed dark palette, which does not follow
-       the theme. See the block at the foot of `globals.css` for why that is
-       the requirement in here and a bug everywhere else — and for the fault
-       it repairs, which is that `bg-zinc-950` resolves to near-WHITE in the
-       light theme the app ships, so this room has been a white one. */
-    <div data-booth className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col overflow-y-auto sm:overflow-hidden"
-      style={{ paddingBottom: barClearance(0) }}>
-      <div className="flex items-center gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
-        {/* Out of the room, and it says so.
-
-            Carli: "the booth en the pro booth het nie 'n back knoppie nie."
-            There was a way out — a bare grey cross in the top right — and it
-            was not a button by this app's own rule: no box, no word, the
-            lightest grey on the screen, in the corner a thumb reaches last.
-            On a phone the only reliable way back was the hardware key.
-
-            Left, boxed, with the word on it, and the cross is gone: two
-            controls that do the same thing is how you get somebody wondering
-            which one loses their take. */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t('booth.back', 'Back')}
-        </button>
-        <div className="min-w-0">
-          <p className="text-base font-bold text-white truncate">{t('pro.title', 'The booth — pro')}</p>
-          <p className="text-sm text-zinc-500 truncate">
-            {title} · {lanes.length} {lanes.length === 1 ? t('pro.lane', 'lane') : t('pro.lanes', 'lanes')} ·{' '}
-            {clock(total)}
-          </p>
-          {/* Every lane, every take and the mix are made on the device. This is
-              the room with the most controls and the fewest of them cost
-              anything, which is exactly the room where somebody assumes they
-              all do. */}
-          <Cost credits={0} className="pt-0.5" />
-        </div>
-      </div>
-
-      {/* ── That the work is being kept, and that it was picked back up ────
-
-          Carli lost a whole session to a back gesture: "toe ek terug swipe of
-          back druk, dan gooi hy mens heeltemal uit na die home screen toe en
-          jy verloor jou hele projek."
-
-          It is written down now, on the device, two seconds after every
-          change. This strip is the part of that she can see — because storage
-          that works silently and storage that has quietly stopped look exactly
-          the same from a chair, and the difference is a night's takes. */}
-      {(cameBack || savedAt !== null || saveFailed) && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-zinc-800 bg-zinc-950 px-5 py-2 text-xs">
-          {saveFailed ? (
-            <span className="font-semibold text-amber-300">
-              {saveFailed === 'full'
-                ? t('pro.keptFull', 'This device has no room left, so the session is not being saved. Mix it down, or free some space.')
-                : t('pro.keptNo', 'This browser will not keep the session, so leaving the room will lose it. Mix it down before you go.')}
-            </span>
-          ) : (
-            <span className="text-zinc-500">
-              {cameBack
-                ? t('pro.keptBack', 'Carried on from where you left off.')
-                : t('pro.kept', 'Saved on this device. Leaving the room will not lose it.')}
-            </span>
-          )}
-          {cameBack && !saveFailed && (
-            /* The one thing a resume has to offer: not resuming. Somebody who
-               opened the room to start something new must not have to work out
-               how to get rid of last night's takes. */
-            <button
-              type="button"
-              onClick={() => {
-                void forgetSession();
-                setLanes((was) => was.filter((lane) => lane.backing));
-                setCameBack(false);
-                setSavedAt(null);
-              }}
-              className="min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 font-semibold text-zinc-300 hover:border-emerald-500 hover:text-white"
-            >
-              {t('pro.startFresh', 'Start fresh')}
-            </button>
-          )}
-        </div>
-      )}
-
+     Each of these is a panel that already existed as a strip down the page.
+     Cut into a variable rather than moved, so the JSX is unchanged and the
+     only thing this commit decides is WHERE it is drawn — which is the whole
+     point of the rebuild. */
+  const trackDesk = (
+    <div className="space-y-2 pb-2">
       {/* ── The clock: tempo, time signature, key, click and grid ───────
           One strip rather than a panel behind a menu. Everything on it changes
           what the next take will sound like or land on, and a control that
@@ -1381,31 +1292,6 @@ export default function ProBooth({
         )}
       </div>
 
-      {/* ── The timeline ───────────────────────────────────────────────
-
-          Carli, 14 September 2026: *"Die timeline van die verskillende layers
-          moet reg by en teen mekaar wees."*
-
-          One shared axis for the ruler and every lane, so alignment is a
-          property of the layout rather than something each row has to get
-          right — see the long note at the top of `BoothTimeline`. The clips
-          are dragged, cut and dragged again with a thumb, and the playhead
-          has a head big enough to catch. */}
-      <BoothTimeline
-        lanes={lanes}
-        total={total}
-        at={at}
-        meter={meter}
-        snap={snap}
-        /* The sections, from whichever lane has been read — in practice the
-           song, which is the only lane that has sections to have. */
-        spans={Object.values(known).flatMap((one) => one.spans ?? [])}
-        onSeek={seek}
-        onChange={(id, how) => change(id, how)}
-        onPick={(id) => setPicked((was) => (was === id ? null : id))}
-        picked={picked}
-      />
-
       {/* ── The picked lane's controls ─────────────────────────────────
 
           One lane at a time, under the timeline, opened by tapping its name
@@ -1447,8 +1333,111 @@ export default function ProBooth({
         )}
       </div>
 
-      {problem && <p className="text-sm text-amber-400 leading-snug px-5 pb-2">{problem}</p>}
+    </div>
+  );
 
+  const mixDesk = (
+    <>
+      {/* ── Mix and master ──────────────────────────────────────────────
+          Three controls and a reading. Not a chain of processors: what is here
+          is one multiplication, worked out from a measurement of the actual
+          mix and applied identically to what you hear and to what comes out.
+          Drawing a compressor that only ran in one of those two places would
+          make the file differ from the approval, invisibly. */}
+      <div className="flex-shrink-0 bg-zinc-950 px-4 py-2 border-t border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="text-xs uppercase tracking-wider text-zinc-600 font-bold flex items-center gap-1.5">
+          <Gauge className="w-3.5 h-3.5" />
+          {t('pro.master', 'Master')}
+        </span>
+
+        <label className="flex items-center gap-1.5 w-full sm:w-auto">
+          <span className="text-xs text-zinc-500">{t('pro.masterLevel', 'Level')}</span>
+          <input
+            type="range"
+            min={0}
+            max={200}
+            value={Math.round(master.gain * 100)}
+            onChange={(event) => {
+              setMaster((was) => ({ ...was, gain: Number(event.target.value) / 100 }));
+              setStale(true);
+            }}
+            className="w-24 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
+            aria-label={t('pro.masterLevel', 'Level')}
+          />
+          <span className="text-xs text-zinc-500 tabular-nums w-10 text-right">
+            {Math.round(master.gain * 100)}
+          </span>
+        </label>
+
+        <label className="flex items-center gap-1.5">
+          <span className="text-xs text-zinc-500">{t('pro.ceiling', 'Ceiling')}</span>
+          <select
+            value={master.ceilingDb}
+            onChange={(event) => {
+              setMaster((was) => ({ ...was, ceilingDb: Number(event.target.value) }));
+              setStale(true);
+            }}
+            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100 tabular-nums"
+            aria-label={t('pro.ceiling', 'Ceiling')}
+          >
+            {[-0.1, -0.3, -1, -2, -3].map((one) => (
+              <option key={one} value={one}>{one} dB</option>
+            ))}
+          </select>
+        </label>
+
+        <button
+          type="button"
+          onClick={() => {
+            setMaster((was) => ({ ...was, matchLoudness: !was.matchLoudness }));
+            setStale(true);
+          }}
+          aria-pressed={master.matchLoudness}
+          className={`min-h-[36px] px-2.5 py-1 rounded-lg border text-sm font-semibold ${
+            master.matchLoudness
+              ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
+              : 'bg-zinc-950 border-zinc-700 text-zinc-500'
+          }`}
+        >
+          {t('pro.matchLoudness', 'Match the loudness')}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void measure()}
+          disabled={busy || recording || !heard.length}
+          className="min-h-[36px] px-2.5 py-1 rounded-lg border border-zinc-700 bg-zinc-950 text-sm font-semibold text-zinc-300 hover:text-white disabled:opacity-40"
+        >
+          {t('pro.measure', 'Measure the mix')}
+        </button>
+
+        {reading && (
+          <span className={`text-xs tabular-nums ${stale ? 'text-zinc-600' : 'text-zinc-400'}`}>
+            {t('pro.peak', 'Peak')} {dbOf(reading.peak).toFixed(1)} dB ·{' '}
+            {t('pro.average', 'Average')} {dbOf(reading.rms).toFixed(1)} dB ·{' '}
+            {t('pro.trim', 'Master')} {dbOf(reading.trim) >= 0 ? '+' : ''}
+            {dbOf(reading.trim).toFixed(1)} dB
+          </span>
+        )}
+
+        {/* A reading about a mix that no longer exists is worse than none. */}
+        {reading && stale && (
+          <span className="text-xs text-amber-400">
+            {t('pro.stale', 'Something changed — measure it again.')}
+          </span>
+        )}
+        {!reading && (
+          <span className="text-xs text-zinc-600 leading-snug">
+            {t('pro.unmeasured', 'Until it is measured, the master does nothing at all — what you hear is the lanes as they are.')}
+          </span>
+        )}
+      </div>
+
+    </>
+  );
+
+  const stemDesk = (
+    <>
       {/* ── Picking a voice for a lane ──────────────────────────────────
           Over the room rather than beside it: choosing among forty voices is
           the only thing being done while it is open, and it is a paid one. */}
@@ -1754,101 +1743,17 @@ export default function ProBooth({
         </div>
       )}
 
-      {/* ── Mix and master ──────────────────────────────────────────────
-          Three controls and a reading. Not a chain of processors: what is here
-          is one multiplication, worked out from a measurement of the actual
-          mix and applied identically to what you hear and to what comes out.
-          Drawing a compressor that only ran in one of those two places would
-          make the file differ from the approval, invisibly. */}
-      <div className="flex-shrink-0 bg-zinc-950 px-4 py-2 border-t border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="text-xs uppercase tracking-wider text-zinc-600 font-bold flex items-center gap-1.5">
-          <Gauge className="w-3.5 h-3.5" />
-          {t('pro.master', 'Master')}
-        </span>
+    </>
+  );
 
-        <label className="flex items-center gap-1.5 w-full sm:w-auto">
-          <span className="text-xs text-zinc-500">{t('pro.masterLevel', 'Level')}</span>
-          <input
-            type="range"
-            min={0}
-            max={200}
-            value={Math.round(master.gain * 100)}
-            onChange={(event) => {
-              setMaster((was) => ({ ...was, gain: Number(event.target.value) / 100 }));
-              setStale(true);
-            }}
-            className="w-24 accent-emerald-500 h-9 sm:h-auto touch-manipulation"
-            aria-label={t('pro.masterLevel', 'Level')}
-          />
-          <span className="text-xs text-zinc-500 tabular-nums w-10 text-right">
-            {Math.round(master.gain * 100)}
-          </span>
-        </label>
+  /* The transport strip: record, the way to the words, and mixing down.
 
-        <label className="flex items-center gap-1.5">
-          <span className="text-xs text-zinc-500">{t('pro.ceiling', 'Ceiling')}</span>
-          <select
-            value={master.ceilingDb}
-            onChange={(event) => {
-              setMaster((was) => ({ ...was, ceilingDb: Number(event.target.value) }));
-              setStale(true);
-            }}
-            className="bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-2 sm:py-1 min-h-[38px] sm:min-h-0 text-sm text-zinc-100 tabular-nums"
-            aria-label={t('pro.ceiling', 'Ceiling')}
-          >
-            {[-0.1, -0.3, -1, -2, -3].map((one) => (
-              <option key={one} value={one}>{one} dB</option>
-            ))}
-          </select>
-        </label>
-
-        <button
-          type="button"
-          onClick={() => {
-            setMaster((was) => ({ ...was, matchLoudness: !was.matchLoudness }));
-            setStale(true);
-          }}
-          aria-pressed={master.matchLoudness}
-          className={`min-h-[36px] px-2.5 py-1 rounded-lg border text-sm font-semibold ${
-            master.matchLoudness
-              ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
-              : 'bg-zinc-950 border-zinc-700 text-zinc-500'
-          }`}
-        >
-          {t('pro.matchLoudness', 'Match the loudness')}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => void measure()}
-          disabled={busy || recording || !heard.length}
-          className="min-h-[36px] px-2.5 py-1 rounded-lg border border-zinc-700 bg-zinc-950 text-sm font-semibold text-zinc-300 hover:text-white disabled:opacity-40"
-        >
-          {t('pro.measure', 'Measure the mix')}
-        </button>
-
-        {reading && (
-          <span className={`text-xs tabular-nums ${stale ? 'text-zinc-600' : 'text-zinc-400'}`}>
-            {t('pro.peak', 'Peak')} {dbOf(reading.peak).toFixed(1)} dB ·{' '}
-            {t('pro.average', 'Average')} {dbOf(reading.rms).toFixed(1)} dB ·{' '}
-            {t('pro.trim', 'Master')} {dbOf(reading.trim) >= 0 ? '+' : ''}
-            {dbOf(reading.trim).toFixed(1)} dB
-          </span>
-        )}
-
-        {/* A reading about a mix that no longer exists is worse than none. */}
-        {reading && stale && (
-          <span className="text-xs text-amber-400">
-            {t('pro.stale', 'Something changed — measure it again.')}
-          </span>
-        )}
-        {!reading && (
-          <span className="text-xs text-zinc-600 leading-snug">
-            {t('pro.unmeasured', 'Until it is measured, the master does nothing at all — what you hear is the lanes as they are.')}
-          </span>
-        )}
-      </div>
-
+     It keeps its own place at the foot of the effects panel rather than
+     becoming a seventh button, because the one thing in it that is not a
+     control — "Mix it down", the button this whole room exists to press —
+     must not end up behind an icon. */
+  const makeDesk = (
+    <>
       {/* ── The transport ───────────────────────────────────────────────── */}
       {/* Both bottom strips carry their own background. They are pinned while
           the lane list scrolls underneath, and a transparent bar over moving
@@ -2052,6 +1957,191 @@ export default function ProBooth({
             : t('pro.keepNone', 'Record a take or bring audio in, and this makes one song out of all of it.')}
         </p>
       </div>
+    </>
+  );
+
+  return (
+    /* One page on a phone, four pinned strips on a desk.
+
+       The room is a desk: a header and a clock nailed to the top, the master
+       and the transport nailed to the foot, and the lanes scrolling in what is
+       left between them. On a 1280-pixel screen that is right — the transport
+       is what you reach for most and it should never move.
+
+       On a 390-pixel one the four strips are most of the height, the lanes get
+       a sliver, and everything appears to sit behind everything else. So below
+       sm the whole room is one column that scrolls, every section laid out in
+       full, nothing pinned. */
+    /* The room stops where the tab bar starts.
+
+       `TabBar` is `fixed bottom-0 z-[95]` and this room is `z-[70]`, so the
+       bar is painted over the foot of the room at every width. The transport
+       lives there — and so did "Mix it down", the button that produces the
+       file this whole room exists to make. On a phone it was underneath the
+       bar with nothing to say so, and every probe had rendered the room
+       without the bar, so nothing had ever noticed.
+
+       Carli, 9 September 2026: "hoe export mens of bring alles by mekaar?
+       Iets soos 'n mix together knoppie?" It was there. It was covered.
+
+       The number lives in one place now — the `below-tabs` rule in
+       `globals.css` — because this is not one room's problem: eleven
+       full-screen overlays sit below that bar, and The Booth had two controls
+       under it as well. `check:belowtabs` requires every one of them to carry
+       the rule. */
+    /* `data-booth`: the room's own fixed dark palette, which does not follow
+       the theme. See the block at the foot of `globals.css` for why that is
+       the requirement in here and a bug everywhere else — and for the fault
+       it repairs, which is that `bg-zinc-950` resolves to near-WHITE in the
+       light theme the app ships, so this room has been a white one.
+
+       No `barClearance` any more, and the room does not scroll. The app's
+       own tab bar is hidden while this is open (`useOwnScreen`), so there is
+       nothing at the foot to clear; and the room is a column that fills the
+       screen exactly — header, the timeline taking what is left, and the two
+       bars pinned under it. Whatever needs to scroll scrolls inside itself. */
+    <div data-booth className="fixed inset-0 z-[70] bg-zinc-950 flex flex-col overflow-hidden">
+      <div className="flex items-center gap-3 bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
+        {/* Out of the room, and it says so.
+
+            Carli: "the booth en the pro booth het nie 'n back knoppie nie."
+            There was a way out — a bare grey cross in the top right — and it
+            was not a button by this app's own rule: no box, no word, the
+            lightest grey on the screen, in the corner a thumb reaches last.
+            On a phone the only reliable way back was the hardware key.
+
+            Left, boxed, with the word on it, and the cross is gone: two
+            controls that do the same thing is how you get somebody wondering
+            which one loses their take. */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex min-h-[44px] flex-shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t('booth.back', 'Back')}
+        </button>
+        <div className="min-w-0">
+          <p className="text-base font-bold text-white truncate">{t('pro.title', 'The booth — pro')}</p>
+          <p className="text-sm text-zinc-500 truncate">
+            {title} · {lanes.length} {lanes.length === 1 ? t('pro.lane', 'lane') : t('pro.lanes', 'lanes')} ·{' '}
+            {clock(total)}
+          </p>
+          {/* Every lane, every take and the mix are made on the device. This is
+              the room with the most controls and the fewest of them cost
+              anything, which is exactly the room where somebody assumes they
+              all do. */}
+          <Cost credits={0} className="pt-0.5" />
+        </div>
+      </div>
+
+      {/* ── That the work is being kept, and that it was picked back up ────
+
+          Carli lost a whole session to a back gesture: "toe ek terug swipe of
+          back druk, dan gooi hy mens heeltemal uit na die home screen toe en
+          jy verloor jou hele projek."
+
+          It is written down now, on the device, two seconds after every
+          change. This strip is the part of that she can see — because storage
+          that works silently and storage that has quietly stopped look exactly
+          the same from a chair, and the difference is a night's takes. */}
+      {(cameBack || savedAt !== null || saveFailed) && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-zinc-800 bg-zinc-950 px-5 py-2 text-xs">
+          {saveFailed ? (
+            <span className="font-semibold text-amber-300">
+              {saveFailed === 'full'
+                ? t('pro.keptFull', 'This device has no room left, so the session is not being saved. Mix it down, or free some space.')
+                : t('pro.keptNo', 'This browser will not keep the session, so leaving the room will lose it. Mix it down before you go.')}
+            </span>
+          ) : (
+            <span className="text-zinc-500">
+              {cameBack
+                ? t('pro.keptBack', 'Carried on from where you left off.')
+                : t('pro.kept', 'Saved on this device. Leaving the room will not lose it.')}
+            </span>
+          )}
+          {cameBack && !saveFailed && (
+            /* The one thing a resume has to offer: not resuming. Somebody who
+               opened the room to start something new must not have to work out
+               how to get rid of last night's takes. */
+            <button
+              type="button"
+              onClick={() => {
+                void forgetSession();
+                setLanes((was) => was.filter((lane) => lane.backing));
+                setCameBack(false);
+                setSavedAt(null);
+              }}
+              className="min-h-[44px] rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 font-semibold text-zinc-300 hover:border-emerald-500 hover:text-white"
+            >
+              {t('pro.startFresh', 'Start fresh')}
+            </button>
+          )}
+        </div>
+      )}
+
+
+      {/* ── The timeline ───────────────────────────────────────────────
+
+          Carli, 14 September 2026: *"Die timeline van die verskillende layers
+          moet reg by en teen mekaar wees."*
+
+          One shared axis for the ruler and every lane, so alignment is a
+          property of the layout rather than something each row has to get
+          right — see the long note at the top of `BoothTimeline`. The clips
+          are dragged, cut and dragged again with a thumb, and the playhead
+          has a head big enough to catch. */}
+      <BoothTimeline
+        lanes={lanes}
+        total={total}
+        at={at}
+        meter={meter}
+        snap={snap}
+        /* The sections, from whichever lane has been read — in practice the
+           song, which is the only lane that has sections to have. */
+        spans={Object.values(known).flatMap((one) => one.spans ?? [])}
+        onSeek={seek}
+        onChange={(id, how) => change(id, how)}
+        onPick={(id) => setPicked((was) => (was === id ? null : id))}
+        picked={picked}
+      />
+
+
+      {problem && <p className="text-sm text-amber-400 leading-snug px-5 pb-2">{problem}</p>}
+
+      {/* ── The two bars, and whatever is out from behind them ────────
+
+          The app's own tab bar is gone while this room is open — see
+          `useOwnScreen` above and `app/lib/fullroom.ts`. The way out is the
+          back button at the top left, which was already there. */}
+      <BoothDock
+        open={deskOpen}
+        onOpen={setDeskOpen}
+        playing={playing}
+        onPlay={() => (playing ? stopPlaying() : play(at))}
+        onSkip={(by) => seek(at + by)}
+      >
+        {deskOpen === 'tracks' && trackDesk}
+        {deskOpen === 'mix' && mixDesk}
+        {deskOpen === 'stems' && stemDesk}
+        {deskOpen === 'effects' && makeDesk}
+        {deskOpen === 'voice' && (
+          <p className="px-4 py-6 text-sm leading-snug" style={{ color: 'rgba(238,242,255,0.5)' }}>
+            {t(
+              'dock.voiceSoon',
+              'Open a lane’s controls under Track controls and press the voice button on it. A room of its own is coming here.',
+            )}
+          </p>
+        )}
+        {deskOpen === 'ai' && (
+          <p className="px-4 py-6 text-sm leading-snug" style={{ color: 'rgba(238,242,255,0.5)' }}>
+            {t(
+              'dock.aiSoon',
+              'Copilot will read the mix and suggest what to change here, and make the change if you agree. Not built yet.',
+            )}
+          </p>
+        )}
+      </BoothDock>
     </div>
   );
 }

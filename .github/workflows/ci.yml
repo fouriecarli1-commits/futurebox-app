@@ -547,6 +547,12 @@ jobs:
       - name: The booth's lanes share one axis, and the room stays black
         run: npm run check:boothline
 
+      # The booth carries its own two rows of controls, so the app's tab bar
+      # stands down while it is open. That is only safe while the back button
+      # at the top left is there, which is why the two are one assertion.
+      - name: The booth's two bars, and a way out of the room
+        run: npm run check:boothdock
+
       # Transcription costs credits per minute, so paying twice for one answer
       # is a bug nobody reports — they just stop pressing it.
       - name: A song's words are written out once and kept

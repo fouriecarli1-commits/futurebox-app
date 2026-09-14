@@ -249,16 +249,18 @@ export default function BoothTimeline({
 
   return (
     <div
-      /* `min-h-[58vh]` is not decoration.
+      /* The room is a column that fills the screen and does not scroll, so
+         this takes everything the header and the two bars do not — which is
+         the point of the rebuild: the timeline is the room.
 
-         Below `sm` the room itself is a scrolling column, and a `flex-1`
-         child of a column that sizes to its content has no height to take a
-         fraction of — it collapses to whatever is in it. On a phone that made
-         the timeline a sliver: measured at 0 of 900 pixels. A floor in
-         viewport units gives it a height that does not depend on the parent
-         having one, and `sm:flex-1` lets it go back to taking the room on a
-         screen where the room has a height to give. */
-      className="flex min-h-[58vh] flex-col sm:min-h-0 sm:flex-1"
+         `min-h-[40vh]` is a floor rather than a layout. It was 58vh and
+         load-bearing for a while, because the room below `sm` was itself a
+         scrolling column and a `flex-1` child of a content-sized column has
+         no height to take a fraction of; on a phone the timeline measured 0
+         of 900 pixels. The room does not scroll any more, so `flex-1` works
+         on every width — the floor stays as a guard against the same shape
+         of mistake coming back somewhere above it. */
+      className="flex min-h-[40vh] flex-1 flex-col"
       style={{ background: VOID }}
       onPointerMove={onMove}
       onPointerUp={endDrag}

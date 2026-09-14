@@ -50,6 +50,7 @@ import Campaign from './components/Campaign';
 import Greeting from './components/Greeting';
 import Account from './components/Account';
 import TabBar, { barClearance, type TabId } from './components/TabBar';
+import { useOwnedScreen } from './lib/fullroom';
 import SearchCorner from './components/SearchCorner';
 import { fetchCreator, type Creator } from './lib/radar';
 import { useBackStack, useInnerLayers } from './lib/backstack';
@@ -1581,6 +1582,12 @@ export default function FutureBoxHome() {
      channel already is the library — your songs, your playlists, your videos.
      It gets its own tab because that is where a phone user looks for it, not
      because it is a new place. */
+  /**
+   * Whether a room has claimed the whole screen, in which case the app's own
+   * bar gets out of the way. Today that is the pro booth and nothing else.
+   */
+  const roomOwnsScreen = useOwnedScreen();
+
   const bottomTab: TabId = accountOpen
     ? 'you'
     : atDoor
@@ -3928,7 +3935,17 @@ export default function FutureBoxHome() {
         <SearchCorner onOpen={() => setSearchOpen(true)} />
       )}
 
-      {!(authModalOpen || pricingModalOpen || themeOpen || selectedMedia !== null || selectedBlueprint !== null) && (
+      {/* `roomOwnsScreen`: a room that has claimed the whole screen.
+
+          Carli, 14 September 2026, on the booth's new bars: *"daai buttons
+          vervang die harde buttons van die hele app, dan val daai hele bar
+          van die app in die booth weg."* The booth now carries its own two
+          rows of controls, and a third row belonging to a different
+          application underneath them is two rows too many — on a phone it is
+          also most of a thumb's reach spent on navigation nobody wants while
+          they are mixing. The way out is the back button at the top left of
+          the room. See `app/lib/fullroom.ts`. */}
+      {!(authModalOpen || pricingModalOpen || themeOpen || selectedMedia !== null || selectedBlueprint !== null || roomOwnsScreen) && (
         <TabBar active={bottomTab} onGo={goTab} />
       )}
 

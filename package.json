@@ -30,6 +30,7 @@
     "check:keepplaying": "tsx scripts/check-keepplaying.mts",
     "check:takefile": "tsx scripts/check-takefile.mts",
     "check:boothline": "tsx scripts/check-boothline.mts",
+    "check:boothdock": "tsx scripts/check-boothdock.mts",
     "check:podvideo": "node audit/podvideo.mjs",
     "check:nameupload": "node audit/nameupload.mjs",
     "check:oops": "node audit/oops.mjs",

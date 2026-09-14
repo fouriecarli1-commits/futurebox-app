@@ -81,6 +81,26 @@ const OTHERWISE: Record<string, { why: string; holds: (source: string) => boolea
      they need one — belongs on the controls and not here.
      **Not yet proven in a browser.** Neither has a probe that asks what is
      painted at its controls, and that is written down rather than assumed. */
+  /* The pro booth does not clear the bar because the bar is not there.
+ 
+     Carli, 14 September 2026: *"daai buttons vervang die harde buttons van
+     die hele app, dan val daai hele bar van die app in die booth weg."* The
+     room carries its own two rows of controls, so it claims the screen and
+     `app/page.tsx` stops drawing the tab bar for as long as it is open.
+ 
+     This is the one exemption in the table that could go wrong silently and
+     leave a room with no way out of it at all, so it is the one whose
+     `holds` does real work: the room must claim the screen, the page must
+     honour the claim, and the room must keep its back button. Reserving a
+     strip for a bar that is not painted would just be dead screen at the
+     foot, which on a phone is the height of a control. */
+  'app/components/ProBooth.tsx': {
+    why: 'the bar is hidden while this room is open, and the room keeps its own way out',
+    holds: (s) =>
+      /useOwnScreen\(true\)/.test(s) &&
+      /<ArrowLeft className="h-4 w-4" \/>/.test(s) &&
+      /\|\| roomOwnsScreen\)/.test(readFileSync('app/page.tsx', 'utf8')),
+  },
   'app/components/SongScreen.tsx': {
     why: 'full-bleed video; padding would letterbox it — controls unverified, see the note',
     holds: () => true,
