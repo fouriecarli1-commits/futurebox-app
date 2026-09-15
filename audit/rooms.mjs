@@ -35,7 +35,7 @@
 export const DOORS = {
   make: 'Make a song',
   studio: 'Studio',
-  booth: 'The Booth',
+  booth: 'ProBooth',
   voice_studio: 'Your voice',
   sound: 'Sound trainer',
   canvas: 'Video desk',
@@ -54,7 +54,7 @@ export const DOORS = {
  * reads as a changed result when nothing changed.
  */
 export const ROOMS = [
-  'Make a song', 'Studio', 'The Booth', 'Your voice', 'Sound trainer', 'Video desk',
+  'Make a song', 'Studio', 'ProBooth', 'Your voice', 'Sound trainer', 'Video desk',
   'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
 ];
 
@@ -73,7 +73,7 @@ export const ROOMS = [
 export const ROOMS_AF = {
   'Make a song': 'Maak ’n liedjie',
   Studio: 'Studio',
-  'The Booth': 'Die opnamekamer',
+  'ProBooth': 'ProBooth',
   'Your voice': 'Jou stem',
   'Sound trainer': 'Klankafrigter',
   'Video desk': 'Videolessenaar',

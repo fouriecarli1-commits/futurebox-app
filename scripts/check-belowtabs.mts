@@ -168,7 +168,7 @@ ok('a probe asks what is painted at the Pro Booth’s controls',
   /the app’s bar has stood down, and the room still has a way out/.test(
     readFileSync('audit/probooth.mjs', 'utf8'),
   ));
-ok('and at The Booth’s',
+ok('and at the singing room’s',
   /stranded under the tab bar/.test(readFileSync('audit/boothwalk.mjs', 'utf8')));
 
 console.log(

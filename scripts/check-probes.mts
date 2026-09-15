@@ -431,7 +431,7 @@ const ownLists: string[] = [];
 for (const file of readdirSync(join(ROOT, 'audit')).filter((one) => one.endsWith('.mjs'))) {
   if (file === 'rooms.mjs') continue;
   const body = code(readFileSync(join(ROOT, 'audit', file), 'utf8'));
-  const own = /const ROOMS(?:_ALL)? = \[[^\]]*'(?:Make a song|Studio|The Booth)'/.test(body);
+  const own = /const ROOMS(?:_ALL)? = \[[^\]]*'(?:Make a song|Studio|ProBooth)'/.test(body);
   if (own) ownLists.push(file);
 }
 ok(

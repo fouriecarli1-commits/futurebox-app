@@ -442,8 +442,12 @@ try {
      button with the tools in it actually appears, and that pressing one of
      them changes the session. `check:boothline` proves the shape of the
      code; this proves the gesture. */
-  await p.setViewportSize({ width: 390, height: 900 });
-  await p.waitForTimeout(400);
+  /* At whatever width the page already has, deliberately. Resizing to a
+     phone here would be a phone-sized window with a MOUSE in it — `pointer:
+     coarse` off, which is the false-phone `check:probes` refuses and which
+     the device-profile section further down exists to avoid. Nothing about
+     marking a piece depends on the width; the thumb-sized-control sweeps
+     below measure the marker's own button at 390 and 360. */
   const ruler = p.locator('[data-axis]').first();
   const marker = p.locator('[data-mark]').first();
   check('the ruler has a marker to arm', (await marker.count()) > 0);
@@ -1089,7 +1093,7 @@ try {
        nobody reads before pressing — which is exactly what this assertion
        is for, so it looks at what is on the screen. */
     check('and says the AI voice is there too',
-      /AI voice are in The Booth|KI-stem is in Die Kamer/.test(said), said.slice(0, 160));
+      /AI voice are in ProBooth|KI-stem is in ProBooth/.test(said), said.slice(0, 160));
     /* Nobody presses a button that leaves a room holding four takes unless
        they are told the takes survive it. Since they now do, saying so is
        what makes the button usable rather than frightening. */

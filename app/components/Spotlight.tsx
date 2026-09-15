@@ -91,7 +91,7 @@ export default function Spotlight({
               reads. */}
           <ul className="grid gap-x-6 gap-y-2.5 pt-1 sm:grid-cols-2">
             {[
-              t('hero.f1', 'The Booth, for professional musicians'),
+              t('hero.f1', 'ProBooth, for professional musicians'),
               t('hero.f2', 'Advert planning, for marketers'),
               t('hero.f3', 'Clone your voice'),
               t('hero.f4', 'Train your own unique sound'),

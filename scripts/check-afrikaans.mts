@@ -82,6 +82,12 @@ const SAME_IN_BOTH = new Set([
   'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',
   'Collab Radar', 'Radar', 'Arena', 'Pro', 'S', 'handle', 'Tempo', 'min',
   'Later', 'Warm', 'Afrikaans',
+  /* The room's own name. Carli, 15 September 2026: "Kan ons ook nie maar The
+     booth se naam verander na ProBooth nie?" — one name, and a name is not
+     translated. It had three in English ("The Booth", "The booth", "The booth
+     — pro") and two in Afrikaans, which is how somebody ends up asking where
+     the other room went. */
+  'ProBooth',
   /* An instrument whose name is the same word in both. Afrikaans borrows the
      Cuban name whole, the way English does. */
   'Congas',

@@ -983,6 +983,19 @@ export default function VocalBooth({
 
   const busyOrLive = phase === 'recording' || phase === 'counting';
 
+  /**
+   * One control, drawn the same way every time.
+   *
+   * The full width of whatever column it is in, 52 tall, a border and a
+   * highlight along the top edge so it has a rim rather than being a patch of
+   * flat colour. Carli asked for buttons that "definisie hê en lyk soos 'n
+   * button wat uit staan"; a class rather than five sets of padding is how
+   * that stays true of the sixth one somebody adds.
+   */
+  const BAR =
+    'flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 ' +
+    'text-sm font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.45)]';
+
   if (proOpen) {
     return (
       <ProBooth
@@ -999,7 +1012,20 @@ export default function VocalBooth({
        See the rule in `globals.css`. Without it the voices panel and "Take the
        room off it" are underneath it on a phone — which is where they were
        until `check:boothwalk` was taught to ask. */
-    <div className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col"
+    /* ── Black with a blue line, like the room it belongs to ───────────
+
+       Carli, 15 September 2026: *"Dan moet die volgende page ook donker wees
+       en 'n netjies uitleg wees van die recording."*
+
+       It was written as a dark room and it was not one. Every surface in here
+       is a `zinc` class, those point at CSS variables, and the theme this app
+       ships is LIGHT and inverts the surface ramp — so `bg-zinc-950` resolved
+       to near-white and the singing room was a white room with white panels
+       on it. `data-booth` gives this whole overlay the fixed dark ramp the
+       timeline already carries, so every `zinc` in the file below means what
+       it says, on whatever theme somebody picks. Same flag, same file, one
+       decision: see `check:boothline` and `lib/boothlook.ts`. */
+    <div data-booth className="fixed inset-0 z-[60] bg-zinc-950 flex flex-col"
       style={{ paddingBottom: barClearance(0) }}>
       <div className="flex items-center gap-3 px-5 py-3 border-b border-zinc-800 flex-shrink-0">
         {/* Out of the room, and it says so.
@@ -1022,7 +1048,7 @@ export default function VocalBooth({
           {t('booth.back', 'Back')}
         </button>
         <div className="min-w-0">
-          <p className="text-base font-bold text-white truncate">{t('booth.title', 'The booth')}</p>
+          <p className="text-base font-bold text-white truncate">{t('booth.title', 'ProBooth')}</p>
           <p className="text-sm text-zinc-500 truncate">{track.title}</p>
         </div>
       </div>
@@ -1716,12 +1742,32 @@ export default function VocalBooth({
             nothing at all and said nothing at all — which is exactly what she
             reported. */}
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* ── The controls, every one of them the same bar ─────────────
+
+            Carli, 15 September 2026: *"die buttons daarin moet meer reguit,
+            horisontaal, dieselfde size op mekaar gestack wees. Dit moet
+            definisie hê en lyk soos 'n button wat uit staan."*
+
+            They were a wrapping row, each sized by its own words — so "Play
+            it and follow the words" was three times the width of "Desk", the
+            row broke onto two lines at one length of label and three at
+            another, and which button looked important depended on how long
+            its sentence happened to be. On a phone that reads as a heap
+            rather than as a set of controls.
+
+            One class, `BAR`, used by all five: the full width of the room,
+            52 tall, a border and an inset highlight so each one has an edge
+            to be seen by. Stacked on a phone and two abreast from `sm` up,
+            where the room is wide enough that a stack would waste it. The
+            two that matter — starting a take and keeping it — carry colour;
+            the three in between are the same bar in grey, which is the point
+            of them all being the same bar. */}
+        <div className="grid gap-2 sm:grid-cols-2">
           {busyOrLive ? (
             <button
               type="button"
               onClick={() => void stop()}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-red-500/20 border border-red-500 text-red-300 text-sm font-bold flex items-center gap-2"
+              className={`${BAR} sm:col-span-2 bg-red-500/20 border-red-500 text-red-300`}
             >
               <Square className="w-4 h-4 fill-current" />
               {t('take.stop', 'Stop')}
@@ -1731,7 +1777,7 @@ export default function VocalBooth({
               type="button"
               onClick={() => void start(region ? Math.max(0, region.from - PRE_ROLL) : 0)}
               disabled={busy || !backing}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-50"
+              className={`${BAR} sm:col-span-2 bg-emerald-500 border-emerald-400 text-onAccent disabled:opacity-50`}
             >
               {region ? <Scissors className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
               {region ? t('booth.punch', 'Sing just this part') : t('booth.record', 'Record from the top')}
@@ -1742,7 +1788,7 @@ export default function VocalBooth({
             type="button"
             onClick={play}
             disabled={busyOrLive || !backing}
-            className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+            className={`${BAR} bg-zinc-900 border-zinc-700 text-zinc-200 disabled:opacity-50`}
           >
             {phase === 'playing' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             {/* Before there is a take this button is a rehearsal: the song
@@ -1767,7 +1813,7 @@ export default function VocalBooth({
             type="button"
             onClick={() => setProOpen(true)}
             title={t('booth.proWhat', 'Many lanes, cutting, tone and mixing. The words are not on screen there — this room is where you sing along with them.')}
-            className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5"
+            className={`${BAR} bg-zinc-900 border-zinc-700 text-zinc-200`}
           >
             <Layers className="w-4 h-4" />
             {t('booth.pro', 'Lanes and mixing')}
@@ -1776,7 +1822,7 @@ export default function VocalBooth({
           <button
             type="button"
             onClick={() => setDeskOpen((open) => !open)}
-            className={`min-h-[44px] px-3.5 py-2.5 rounded-xl border text-sm font-semibold flex items-center gap-1.5 ${
+            className={`${BAR} sm:col-span-2 ${
               deskOpen ? 'bg-zinc-800 border-zinc-600 text-white' : 'bg-zinc-900 border-zinc-700 text-zinc-200'
             }`}
           >
@@ -1784,13 +1830,11 @@ export default function VocalBooth({
             {t('booth.desk', 'Desk')}
           </button>
 
-          <span className="flex-1" />
-
           <button
             type="button"
             onClick={() => void keep()}
             disabled={!take || busy}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500 text-onAccent text-sm font-bold flex items-center gap-2 disabled:opacity-40"
+            className={`${BAR} sm:col-span-2 bg-emerald-500 border-emerald-400 text-onAccent disabled:opacity-40`}
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
             {t('take.keep', 'Keep this take')}

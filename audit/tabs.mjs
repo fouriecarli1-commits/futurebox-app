@@ -119,7 +119,7 @@ try {
   const many = await doorButtons.count();
   for (let i = 0; i < many; i += 1) {
     const first = ((await doorButtons.nth(i).innerText().catch(() => '')) ?? '').split('\n')[0].trim();
-    if (/^(The Booth|Die Ateljee|Die Opnamekamer|Booth)/i.test(first)) {
+    if (/^(ProBooth|The Booth|Die Ateljee|Die Opnamekamer|Booth)/i.test(first)) {
       await doorButtons.nth(i).click();
       break;
     }

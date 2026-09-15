@@ -121,7 +121,7 @@ try {
   await page.waitForTimeout(1200);
 
   await studio(page);
-  await toRoom(page, 'The Booth');
+  await toRoom(page, 'ProBooth');
   await page.waitForTimeout(1200);
 
   const room = page.locator('div.fixed.inset-0.z-50').first();
@@ -153,19 +153,29 @@ try {
   check('the song this walk needs is on the device',
     seeded.count === 1, JSON.stringify(seeded));
 
-  /* The song's name is a heading and the button under it says "Open the
-     booth", so the first version of this looked for a button carrying the
-     title and found none — and reported a room that lists the song perfectly
-     well as a room that does not list it. Both are checked now: the name is
-     on the screen, and the button that opens it is pressed. */
-  const named = (await room.innerText()).replace(/\s+/g, ' ');
-  check('the song on this device is offered in the room',
-    /Karoo pad/.test(named), named.slice(0, 160));
+  /* The door is a dropdown now, not a card per song.
 
-  const open = room.locator('button').filter({ hasText: /Open the booth|Maak die hokkie oop/ }).first();
-  check('and there is a button to open it', (await open.count()) > 0);
-  if ((await open.count()) > 0) {
-    await open.click();
+     Carli, 15 September 2026: "Die liedjies wat jy wil verander moet nie so
+     lank uitgelê word nie, daar moet eerder net 2 buttons wees. Een wat sê
+     Choose a song en dit het 'n drop down. Twee Bring a song in." So the song
+     is an option rather than a heading with a button under it, and choosing
+     it opens the room — there is no third press to agree with the second. */
+  const picker = room.locator('[data-pickasong]').first();
+  check('the room offers a song to choose', (await picker.count()) > 0,
+    (await room.innerText()).replace(/\s+/g, ' ').slice(0, 160));
+
+  const offered = (await picker.innerText().catch(() => '')).replace(/\s+/g, ' ');
+  check('the song on this device is offered in the room',
+    /Karoo pad/.test(offered), offered.slice(0, 160));
+
+  /* And a way to bring one in from a file, which the room never had: the
+     only songs it would sing over were the ones this app wrote. */
+  check('and a song can be brought in from a file',
+    (await room.locator('button').filter({ hasText: /Bring a song in|Bring ’n liedjie in/ }).count()) > 0);
+
+  if ((await picker.count()) > 0) {
+    const id = await picker.locator('option').nth(1).getAttribute('value');
+    await picker.selectOption(id);
     await page.waitForTimeout(4000);
   }
 

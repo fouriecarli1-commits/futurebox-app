@@ -51,7 +51,7 @@ const PORT = process.argv[2] || '3181';
  * next to it stops being true and somebody reading the output will see it.
  */
 const NEEDS = {
-  'The Booth': 'a recording — "the voices in this song" only exists once you have sung',
+  'ProBooth': 'a recording — "the voices in this song" only exists once you have sung',
   'Sound trainer': 'accounts configured; a trained sound belongs to one',
   Live: 'the live tables; without them the room says so instead of drawing',
   Podcast: 'a show set up, which needs the podcast tables',

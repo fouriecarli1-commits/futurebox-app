@@ -97,7 +97,7 @@ try {
   const many = await door.count();
   for (let i = 0; i < many; i += 1) {
     const first = ((await door.nth(i).innerText().catch(() => '')) ?? '').split('\n')[0].trim();
-    if (/^The Booth/i.test(first)) {
+    if (/^(ProBooth|The Booth)/i.test(first)) {
       await door.nth(i).click();
       break;
     }

@@ -47,14 +47,14 @@ names.forEach((n) => console.log('   · ' + n));
    all lived in the Video desk beside it. Removing the room is what this list
    is for — it failed the moment the room did, which is the whole point of
    naming the doors rather than counting them. */
-for (const room of ['Make a song', 'Studio', 'The Booth', 'Your voice', 'Sound trainer',
+for (const room of ['Make a song', 'Studio', 'ProBooth', 'Your voice', 'Sound trainer',
                     'Video desk', 'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar']) {
   check(`${room} has a button of its own`, names.some((n) => n.toLowerCase().startsWith(room.toLowerCase())));
 }
 await page.screenshot({ path: shot('studio-door.png'), fullPage: false });
 
 /* Into a room, and back out of it, on a phone. */
-const into = page.locator(`${DOOR} button`).filter({ hasText: 'The Booth' }).first();
+const into = page.locator(`${DOOR} button`).filter({ hasText: 'ProBooth' }).first();
 await into.click();
 await page.waitForTimeout(1200);
 check('pressing a room leaves the door', (await page.locator(`${DOOR} button`).count()) === 0);

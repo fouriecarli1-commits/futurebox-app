@@ -551,7 +551,7 @@ export async function canCreateVoices(): Promise<{
           : 'unclear';
   const note =
     answer === 'yes'
-      ? 'The address takes a POST and refused this body on its contents. A voice CAN be created over the API, so voice training belongs inside The Booth.'
+      ? 'The address takes a POST and refused this body on its contents. A voice CAN be created over the API, so voice training belongs inside ProBooth.'
       : answer === 'no'
         ? 'There is no POST here. Voice models are read-only over the API — the link to kits.ai stays, and that is the honest answer.'
         : answer === 'not-allowed'

@@ -2962,11 +2962,11 @@ export default function ProBooth({
             mark, which is the shape the rest of the app uses: enough on
             the screen to decide with, the rest for whoever wants it. */}
         <p className="w-full text-[11px] leading-snug" style={{ color: INK_DIM }}>
-          {t('pro.wordsWhereShort', 'The words and the AI voice are in The Booth. Your lanes are saved.')}
+          {t('pro.wordsWhereShort', 'The words and the AI voice are in ProBooth. Your lanes are saved.')}
           <Hint className="ml-1">
           {t(
             'pro.wordsWhere',
-            'The words on screen, and the AI voice in your ear to sing next to, are in The Booth — the room this one opened from. Your lanes here are saved, so you can go and come back.',
+            'The words on screen, and the AI voice in your ear to sing next to, are in ProBooth — the room this one opened from. Your lanes here are saved, so you can go and come back.',
           )}
           </Hint>
         </p>
@@ -3141,7 +3141,7 @@ export default function ProBooth({
           {t('booth.back', 'Back')}
         </button>
         <div className="min-w-0">
-          <p className="text-base font-bold text-white truncate">{t('pro.title', 'The booth — pro')}</p>
+          <p className="text-base font-bold text-white truncate">{t('pro.title', 'ProBooth — lanes')}</p>
           <p className="text-sm text-zinc-500 truncate">
             {title} · {lanes.length} {lanes.length === 1 ? t('pro.lane', 'lane') : t('pro.lanes', 'lanes')} ·{' '}
             {clock(total)}
