@@ -34,7 +34,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Eye, Headphones, Heart, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users,
+  Eye, Headphones, Heart, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users, Video,
 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { loadTracks, type Track } from '../lib/library';
@@ -43,6 +43,7 @@ import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import RoomScreen from './RoomScreen';
 import { planOf, type Part } from '../lib/timeline';
+import { myVideos, type MyVideo } from '../lib/filmed';
 import Cover from './Cover';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
@@ -55,7 +56,7 @@ const REFRESH_EVERY = 8_000;
 
 interface Post {
   id: string;
-  kind: 'track' | 'episode' | 'elsewhere';
+  kind: 'track' | 'episode' | 'elsewhere' | 'video';
   title: string;
   note: string;
   /**
@@ -84,6 +85,9 @@ interface Post {
   by: string;
   mine: boolean;
   audio: string | null;
+  /** A moving picture with its own sound, on a video post. Signed like the
+   *  audio and good for about as long as watching it takes. */
+  video?: string | null;
   /** The song behind a track post, so a play is counted against the song. */
   sourceId?: string;
   /** The sleeve its owner made, when there is one. Signed by the server and
@@ -417,6 +421,15 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
   const { t, lang } = useLang();
   const [room, setRoom] = useState<Room>(EMPTY);
   const [tracks, setTracks] = useState<Track[]>([]);
+  /**
+   * Your videos, from the account rather than from this device.
+   *
+   * Songs are read off the device — the channel is local first and syncs —
+   * but a video only exists once it is in the bucket with a row behind it, so
+   * there is nothing local to read and the server is the only answer. Empty
+   * while signed out, and the card is not drawn at all when it is empty.
+   */
+  const [films, setFilms] = useState<MyVideo[]>([]);
   const [draft, setDraft] = useState('');
 
   /* Write what you are about to say. Deliberately only the box: sending puts
@@ -560,6 +573,12 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
    */
   useEffect(() => {
     setTracks(loadTracks());
+    /* Once, on the way in, and not on the refresh interval with the room:
+       a list of your own videos does not change while you are standing in
+       Live, and asking the server for it every few seconds would be a
+       request per interval for an answer nobody's actions can change from
+       in here. */
+    void myVideos().then(setFilms);
     let beat = 0;
     const stop = () => {
       if (beat) window.clearInterval(beat);
@@ -779,6 +798,67 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
         </Card>
       )}
 
+      {/* ── A video in the room ──────────────────────────────────────────
+
+          Carli: *"Music videos en music shorts moet ook na live toe kan post.
+          Ek sien huidiglik dat my videos nie 'n opsie het om na live toe te
+          kan post nie."*
+
+          She was right and the reason was in the schema rather than in the
+          screen: `live_posts.kind` was checked against three values and none
+          of them was a video, so there was nothing for a button to do. With
+          `supabase/livevideo.sql` run there is, and this is it.
+
+          Its own card rather than a second list inside the songs one: a
+          video is a different thing to put in the room, it plays differently
+          when somebody opens it, and a mixed list of songs and films under
+          one heading is a list where you have to read every row to find out
+          which is which.
+
+          Only drawn where there is something to post. An empty card asking
+          "do you want to put a video in" of somebody who has never made one
+          is a room advertising a feature at them. */}
+      {room.signedIn && films.length > 0 && (
+        <Card title={t('live.askVideos', 'Do you want to put one of your videos in?')}>
+          <Note>{t('live.public')}</Note>
+          <div className="max-h-72 space-y-1.5 overflow-y-auto">
+            {films.map((film) => (
+              <div
+                key={film.id}
+                className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2"
+              >
+                <Video className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
+                <span className="min-w-0 flex-1 truncate text-sm text-zinc-300">{film.title}</span>
+                {/* Filmed or generated, said on the row. They are the same
+                    kind of post and they are not the same thing to a person
+                    scrolling past: one is somebody's face, the other is a
+                    picture an engine drew. */}
+                <span className="flex-shrink-0 text-xs text-zinc-600">
+                  {film.filmed ? t('live.filmed', 'filmed') : t('live.generated', 'generated')}
+                </span>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void send({
+                      what: 'post',
+                      kind: 'video',
+                      sourceId: film.id,
+                      title: film.title,
+                      seconds: film.seconds,
+                    })
+                  }
+                  className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  {t('live.post', 'Post it')}
+                </button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {room.signedIn && (
         <Card title={t('live.askElsewhere', 'Do you want to put something else in the room?')}>
           <button
@@ -968,6 +1048,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             note: one.note,
             seconds: one.seconds,
             audio: one.audio,
+            video: one.video,
             sourceId: one.sourceId,
             /* Both of these were read by the panel and never sent to it.
 

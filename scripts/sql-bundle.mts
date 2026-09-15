@@ -45,6 +45,7 @@ export const ORDER = [
   'buildon',
   'elevenrem',
   'roomwords',
+  'livevideo',
 ] as const;
 
 export const BUNDLE = join(ROOT, 'supabase/ALMAL.sql');
@@ -81,6 +82,8 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Die rem op die ElevenLabs-toelae. Sonder dit is daar \u2019n waarskuwing per e-pos en niks wat keer nie.',
   roomwords:
     'Die woorde van \u2019n liedjie, saam met die plasing. Sonder dit speel die kamer die liedjie en wys niks om by saam te lees nie.',
+  livevideo:
+    'Video\u2019s in die speelkamer, en \u2019n opname wat jy self gefilm het wat in jou kanaal bly. Sonder dit is daar geen knoppie om \u2019n video te plaas nie.',
 };
 
 /**

@@ -59,6 +59,17 @@ export interface RoomPost {
   /** A signed URL, or null once it has expired or the file is gone. */
   readonly audio: string | null;
   /**
+   * A moving picture with its own sound, where the post is a video.
+   *
+   * Carli: *"Music videos en music shorts moet ook na live toe kan post."*
+   *
+   * Its own field rather than `audio`, and that is not tidiness: a panel that
+   * found a url in `audio` would draw a still with a player under it and play
+   * the sound of a video nobody could see. Two shapes in one scroller, and
+   * which one a panel is has to be answerable before anything is drawn.
+   */
+  readonly video?: string | null;
+  /**
    * The song this post is of, where it is one of somebody's own.
    *
    * Not the post's id: the charts on Spotlight are keyed on the song, and a
@@ -144,7 +155,37 @@ export default function RoomScreen({
   /* Only what can actually be played. A panel you swipe to and that does
      nothing is worse than one that is not there — and a post whose signed URL
      has expired is exactly that. */
-  const playable = useMemo(() => posts.filter((one) => Boolean(one.audio)), [posts]);
+  const playable = useMemo(
+    () => posts.filter((one) => Boolean(one.audio || one.video)),
+    [posts],
+  );
+
+  /**
+   * The video elements on screen, by post.
+   *
+   * A song is played through one shared `<audio>` — there is only ever one
+   * song playing, and reusing the element is what lets the buffer survive a
+   * refresh (see the long note in `start`). A video cannot work that way: it
+   * has to be drawn where the panel is, so each video panel owns its own
+   * element and registers it here for the transport to find.
+   */
+  const videos = useRef(new Map<string, HTMLVideoElement>());
+
+  /**
+   * Whichever element this post plays through.
+   *
+   * Every path that starts, stops or toggles goes through this rather than
+   * reaching for `audio.current`, because reaching for `audio.current` on a
+   * video post is how a room ends up with a picture that does not move and a
+   * play button that does nothing.
+   */
+  const mediaFor = useCallback(
+    (one: RoomPost | undefined | null): HTMLMediaElement | null => {
+      if (!one) return null;
+      return one.video ? videos.current.get(one.id) ?? null : audio.current;
+    },
+    [],
+  );
   const opening = Math.max(0, playable.findIndex((one) => one.id === startAt));
 
   const [at, setAt] = useState(opening);
@@ -255,8 +296,8 @@ export default function RoomScreen({
   useEffect(() => () => watching.current?.(), []);
 
   const start = useCallback(async (one: RoomPost) => {
-    const element = audio.current;
-    if (!element || !one.audio) return;
+    const element = mediaFor(one);
+    if (!element || !(one.audio || one.video)) return;
     /* ── Already playing this one? Then leave it alone ──────────────────
 
        Carli, 14 September 2026: *"Die een liedjie wat ek in die live room
@@ -276,10 +317,14 @@ export default function RoomScreen({
 
        Two guards, because either alone would do and both together mean a
        future refactor of the other one cannot bring it back. */
-    if (element.src === one.audio && !element.paused) return;
+    if (one.audio && element.src === one.audio && !element.paused) return;
+    /* A video panel's element already has its own `src` in the markup, and
+       setting it again is the same buffer-throwing-away that made every song
+       in this room stutter. Nothing to do but press play. */
+    if (one.video && !element.paused) return;
     setLoading(true);
     nowPlaying.current = one.id;
-    element.src = one.audio;
+    if (one.audio) element.src = one.audio;
     try {
       await element.play();
       setPlaying(true);
@@ -339,6 +384,10 @@ export default function RoomScreen({
     const one = latest.current.find((each) => each.id === playingId);
     if (one) void start(one);
     return () => {
+      /* Both, because a scroll from a video panel to a song panel leaves the
+         video's own element behind: pausing only the shared audio would let a
+         filmed take go on talking under the next song. */
+      mediaFor(one)?.pause();
       audio.current?.pause();
       setPlaying(false);
     };
@@ -381,6 +430,10 @@ export default function RoomScreen({
   const nextId = playable[at + 1]?.id;
   useEffect(() => {
     const next = latest.current.find((each) => each.id === nextId);
+    /* Songs only. A video warmed one panel ahead is tens of megabytes
+       downloaded to be looked at for a second, on a phone, over whatever
+       signal is going — and unlike a song it is drawn by its own element
+       when it arrives rather than needing the cache. */
     if (!next?.audio) return;
     const warm = new Audio();
     warm.preload = 'auto';
@@ -393,7 +446,7 @@ export default function RoomScreen({
   }, [nextId]);
 
   const toggle = () => {
-    const element = audio.current;
+    const element = mediaFor(post);
     if (!element || !post) return;
     if (playing) {
       element.pause();
@@ -457,12 +510,41 @@ export default function RoomScreen({
                 it in the room. One song, one picture, in Make a song, in the
                 channel, in the library and here. An `elsewhere` post has no
                 song behind it, so it falls back to its own id. */}
-            <Cover
-              seed={one.sourceId || one.id}
-              label={one.title}
-              photo={one.cover}
-              className="absolute inset-0 h-full w-full"
-            />
+            {/* ── A moving picture, or a still ──────────────────────────
+
+                A video post is the one panel in this room that is not a
+                sleeve with a song under it. It fills the same space, and it
+                brings its own sound — so it is drawn instead of `Cover`
+                rather than on top of it, and the transport above knows to
+                press play on this element rather than on the shared one.
+
+                `object-contain` and not `cover`: a take filmed on a phone is
+                9:16 and so is this panel, but a video made at the desk is
+                16:9, and cropping the sides off somebody's music video to
+                fill a phone is worse than the bars. `playsInline` because
+                iOS otherwise takes it full screen out of the scroller the
+                moment it plays, and the room is the scroller. */}
+            {one.video ? (
+              <video
+                ref={(element) => {
+                  if (element) videos.current.set(one.id, element);
+                  else videos.current.delete(one.id);
+                }}
+                src={one.video}
+                data-roomvideo=""
+                playsInline
+                loop
+                preload="metadata"
+                className="absolute inset-0 h-full w-full bg-black object-contain"
+              />
+            ) : (
+              <Cover
+                seed={one.sourceId || one.id}
+                label={one.title}
+                photo={one.cover}
+                className="absolute inset-0 h-full w-full"
+              />
+            )}
             {/* Strong in the middle as well as at the ends, like `SongScreen`:
                 the words sit there, and a scrim that fades out behind them is
                 a scrim that does nothing where it is needed. */}

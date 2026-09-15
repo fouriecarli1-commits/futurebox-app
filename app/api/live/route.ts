@@ -62,7 +62,7 @@ const NOT_SET_UP = {
 interface PostRow {
   id: string;
   owner: string;
-  kind: 'track' | 'episode' | 'elsewhere';
+  kind: 'track' | 'episode' | 'elsewhere' | 'video';
   source_id: string;
   title: string;
   note: string;
@@ -237,6 +237,37 @@ export async function GET(request: Request): Promise<Response> {
     for (const one of files ?? []) episodePaths.set(one.id as string, one.audio_path as string);
   }
 
+  /* ── A video post's file ─────────────────────────────────────────────
+
+     Carli: *"Music videos en music shorts moet ook na live toe kan post."*
+
+     Same shape as the episodes above and for the same reason: a video post
+     carries the `videos` row's id, the file lives at a path on that row, and
+     the column is not made to mean two things depending on `kind`.
+
+     The bucket is private and stays private. What goes to the room is a
+     signed link that lasts as long as a listen — the same deal a song gets —
+     rather than the file being made public because somebody posted it once. */
+  const videoIds = ((posts ?? []) as PostRow[])
+    .filter((post) => post.kind === 'video')
+    .map((post) => post.source_id);
+  const videoPaths = new Map<string, string>();
+  if (videoIds.length) {
+    const { data: files, error: unread } = await client
+      .from('videos')
+      .select('id, path')
+      .in('id', videoIds);
+    /* Said out loud rather than swallowed. A failed read here and a video
+       that has been deleted look identical from the room — a post with no
+       player — and only one of them is somebody's fault to fix. The room
+       still opens either way: a post that cannot find its file says so,
+       which is better than the room refusing to load over one video. */
+    if (unread) console.error(`live: the videos could not be read — ${unread.message}`);
+    for (const one of files ?? []) {
+      if (one.path) videoPaths.set(one.id as string, one.path as string);
+    }
+  }
+
   /* ── The sleeves, in one call rather than forty ──────────────────────
  
      Carli, 11 September 2026, testing: "As iemand op die live post… en dan
@@ -287,7 +318,19 @@ export async function GET(request: Request): Promise<Response> {
   const listed = await Promise.all(
     ((posts ?? []) as PostRow[]).map(async (post) => {
       let audio: string | null = null;
-      if (post.kind === 'episode') {
+      /* A moving picture with its own sound, which is a different shape from
+         everything else in this room — a still with audio under it. It is
+         carried as its own field rather than through `audio`, so a reader
+         that does not know about video draws nothing instead of a player
+         with no picture. */
+      let video: string | null = null;
+      if (post.kind === 'video') {
+        const path = videoPaths.get(post.source_id);
+        if (path) {
+          const { data } = await client.storage.from('videos').createSignedUrl(path, LINK_SECONDS);
+          video = data?.signedUrl ?? null;
+        }
+      } else if (post.kind === 'episode') {
         const path = episodePaths.get(post.source_id);
         // Deleted since it was posted. Null rather than an address that 404s,
         // so the room can say the episode is gone instead of drawing a player
@@ -314,6 +357,7 @@ export async function GET(request: Request): Promise<Response> {
         by: names.get(post.owner) || 'someone',
         mine: caller ? post.owner === caller.id : false,
         audio,
+        video,
         /* The real sleeve, when the owner has made one. Null is the ordinary
            case and the room draws its generated picture instead. */
         cover: post.kind === 'track' && post.source_id
@@ -397,7 +441,7 @@ export async function POST(request: Request): Promise<Response> {
     buildOn?: boolean;
     /** The style words the song was made from, for whoever builds on it. */
     style?: string;
-    kind?: 'track' | 'episode';
+    kind?: 'track' | 'episode' | 'video';
     sourceId?: string;
     title?: string;
     /**
@@ -621,21 +665,42 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ ok: true });
   }
 
-  // ── A song, or an episode ──────────────────────────────────────────────
-  const kind = body.kind === 'episode' ? 'episode' : 'track';
+  // ── A song, an episode, or a video ─────────────────────────────────────
+  const kind =
+    body.kind === 'episode' ? 'episode' : body.kind === 'video' ? 'video' : 'track';
   const sourceId = String(body.sourceId ?? '').trim().slice(0, 200);
-  if (!sourceId) return Response.json({ message: 'Which song?' }, { status: 400 });
+  /* Named for what the caller actually sent. "Which song?" over a video post
+     is the kind of message that sends somebody looking in the wrong room. */
+  const missing = kind === 'video' ? 'Which video?' : 'Which song?';
+  if (!sourceId) return Response.json({ message: missing }, { status: 400 });
   /* This id is stored on the post and read back into a storage path when
      somebody plays it, so it is checked where it enters rather than where it
      is used — a bad shape saved now is a bad path built later, by code that
      has no idea the value came from a browser. */
-  if (!storageId(sourceId)) return Response.json({ message: 'Which song?' }, { status: 400 });
+  if (!storageId(sourceId)) return Response.json({ message: missing }, { status: 400 });
 
   // It has to be theirs, and it has to actually be there. Posting an id that
   // is not yours would have the server sign a path under your own folder that
   // does not exist — a post nobody can play, and a listener who thinks the
   // channel is broken.
-  if (kind === 'track') {
+  if (kind === 'video') {
+    /* Theirs, finished, and with a file behind it. All three, because a post
+       that fails any of them is a panel in the room that plays nothing — and
+       the third is the one that cannot be inferred: a row can be `done` and
+       have lost its file, and the room would sign a path to nowhere. */
+    const { data } = await client
+      .from('videos')
+      .select('id, path, status')
+      .eq('owner', caller.id)
+      .eq('id', sourceId)
+      .maybeSingle();
+    if (!data || data.status !== 'done' || !data.path) {
+      return Response.json(
+        { message: 'That video is not finished, or it is not yours.' },
+        { status: 404 },
+      );
+    }
+  } else if (kind === 'track') {
     const { data } = await client.from('tracks').select('id').eq('owner', caller.id).eq('id', sourceId).maybeSingle();
     if (!data) {
       return Response.json(

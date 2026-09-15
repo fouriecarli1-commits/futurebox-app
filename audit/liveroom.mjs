@@ -86,6 +86,38 @@ const POSTS = [
   plays: [41, 5, null, 88][i],
 }));
 
+/* ── And one that is not a song ──────────────────────────────────────────
+
+   Carli: *"Music videos en music shorts moet ook na live toe kan post."*
+
+   The room holds two shapes now — a sleeve with a song under it, and a moving
+   picture with its own sound — and they are drawn by different elements and
+   played through different ones. A stub that only ever sent songs would have
+   proved the half that already worked.
+
+   `video` rather than `audio`, deliberately: a post that carried its film in
+   the audio field would draw a still with a player under it and play the
+   sound of something nobody could see, which is the fault this field exists
+   to make impossible. */
+POSTS.push({
+  id: 'post-film',
+  kind: 'video',
+  title: 'A filmed take',
+  note: 'Sang it into the phone.',
+  seconds: 2,
+  platform: '',
+  link: '',
+  startsAt: null,
+  at: new Date().toISOString(),
+  by: 'Anré',
+  mine: false,
+  audio: null,
+  video: '/probe-room-film.webm',
+  hearts: 2,
+  hearted: false,
+  plays: 0,
+});
+
 let server = null;
 let browser = null;
 try {
@@ -154,6 +186,53 @@ try {
     route.fulfill({ status: 200, contentType: 'audio/wav', body: wav() }));
 
   await p.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
+
+  /* ── A clip the browser made for itself ───────────────────────────────
+
+     There is no sample video in this repository and no encoder on the build
+     machine that can make one — so the page makes it: a canvas, a stream off
+     it, and `MediaRecorder`, which is the same path `FollowWords` takes when
+     somebody films a take. Whatever this browser can record, it can play, so
+     the file is guaranteed decodable by the one thing that has to decode it.
+
+     Bytes rather than a blob URL. A blob URL belongs to the page that minted
+     it and the room reloads between here and there; the route hands the same
+     bytes to whoever asks for the film's address. */
+  const film = await p.evaluate(async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 180;
+    canvas.height = 320;
+    const paint = canvas.getContext('2d');
+    let turn = 0;
+    const tick = setInterval(() => {
+      turn += 24;
+      paint.fillStyle = `hsl(${turn % 360} 80% 50%)`;
+      paint.fillRect(0, 0, 180, 320);
+    }, 60);
+    const type = ['video/webm;codecs=vp8', 'video/webm'].find((one) =>
+      MediaRecorder.isTypeSupported(one));
+    if (!type) return null;
+    const chunks = [];
+    const recorder = new MediaRecorder(canvas.captureStream(15), { mimeType: type });
+    recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+    const stopped = new Promise((done) => { recorder.onstop = done; });
+    recorder.start();
+    await new Promise((done) => setTimeout(done, 1400));
+    recorder.stop();
+    await stopped;
+    clearInterval(tick);
+    const bytes = new Uint8Array(await new Blob(chunks, { type }).arrayBuffer());
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+    return { type, base64: btoa(binary) };
+  });
+  check('the probe could make a clip for the room to play', Boolean(film?.base64));
+  await p.route('**/probe-room-film.webm', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: film?.type ?? 'video/webm',
+      body: Buffer.from(film?.base64 ?? '', 'base64'),
+    }));
   const cta = p.locator('button, a').filter({ hasText: /start free|begin|sign up/i }).first();
   await cta.waitFor({ state: 'visible', timeout: 60000 });
   await cta.click();
@@ -349,7 +428,8 @@ try {
   const first = await showing();
   check('opening on the first song in the room',
     first.at === 0 && first.text.includes('Karoo Wind'), `panel ${first.at}: ${first.text.slice(0, 46)}`);
-  check('and saying where you are in it', /1 \/ 4/.test(first.text), first.text.slice(0, 46));
+  check('and saying where you are in it',
+    new RegExp(`1 / ${POSTS.length}`).test(first.text), first.text.slice(0, 46));
   await p.screenshot({ path: shot('liveroom.png') });
 
   /* A thumb, which is the whole point of the shape. */
@@ -358,7 +438,8 @@ try {
   await p.waitForTimeout(1500);
   const next = await showing();
   check('scrolling moves to the next one',
-    next.at === 1 && next.text.includes('Second Song') && /2 \/ 4/.test(next.text),
+    next.at === 1 && next.text.includes('Second Song')
+      && new RegExp(`2 / ${POSTS.length}`).test(next.text),
     `panel ${next.at}: ${next.text.slice(0, 46)}`);
 
   /* ── The heart and the listens, inside the full-screen room ─────────
@@ -484,6 +565,58 @@ try {
     [(exitBox?.x ?? 0) + (exitBox?.width ?? 0) / 2, (exitBox?.y ?? 0) + (exitBox?.height ?? 0) / 2],
   );
   check('nothing is sitting on top of the way out', onTop === 'Close', String(onTop));
+
+  /* ── The other shape in the scroller ─────────────────────────────────
+
+     Carli: *"Music videos en music shorts moet ook na live toe kan post. Ek
+     sien huidiglik dat my videos nie 'n opsie het om na live toe te kan post
+     nie."*
+
+     Scrolled to rather than opened at, because the thing worth proving is
+     that the two shapes live in one scroller: a song, a song, a song, a song,
+     and then a film, with the transport following whichever is on screen.
+
+     Three questions. Is it drawn as a video at all — a post whose film ended
+     up in the audio field would draw a still here. Is it the whole panel
+     rather than a thumbnail in the corner. And does it actually play, which
+     is the one the element switch is for: the room's play button reaches for
+     a shared `<audio>`, and on this panel that element has nothing in it. */
+  const filmScroller = screen.locator('div.h-full.w-full.overflow-y-auto').first();
+  await filmScroller.evaluate((el) => { el.scrollTop = el.scrollHeight; });
+  await p.waitForTimeout(2500);
+
+  const clip = screen.locator('[data-roomvideo]').first();
+  check('a filmed take is a panel in the same scroller', (await clip.count()) > 0,
+    ((await screen.innerText()) ?? '').replace(/\s+/g, ' ').slice(-120));
+
+  if ((await clip.count()) > 0) {
+    const clipBox = await clip.boundingBox();
+    check('  and it fills the panel rather than sitting in a corner',
+      (clipBox?.height ?? 0) > 700 && (clipBox?.width ?? 0) > 380,
+      JSON.stringify(clipBox));
+
+    /* Pressed rather than waited for: a browser refuses autoplay with sound
+       until somebody has touched the page, which is a real rule and not a
+       fault — and the press is what a person does. */
+    const press = screen.locator('button[aria-label]').filter({ hasText: '' });
+    await clip.click({ position: { x: 20, y: 400 } }).catch(() => undefined);
+    await p.waitForTimeout(1200);
+    const rolling = await clip.evaluate((el) => ({
+      paused: el.paused,
+      time: el.currentTime,
+      ready: el.readyState,
+      src: (el.getAttribute('src') ?? '').slice(-20),
+    }));
+    check('  and the film itself plays, not the empty song element',
+      rolling.ready > 0 && (!rolling.paused || rolling.time > 0),
+      JSON.stringify(rolling));
+    void press;
+  }
+
+  /* Back to the top, so the close below is pressed on the panel it was
+     measured against. */
+  await filmScroller.evaluate((el) => { el.scrollTop = 0; });
+  await p.waitForTimeout(800);
 
   await exit.click();
   await p.waitForTimeout(800);

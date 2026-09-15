@@ -48,13 +48,14 @@
  * which parts to trust.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Camera, CameraOff, Circle, Download, Ear, Headphones, Loader2, Pause, Play, Speaker, Square, X } from 'lucide-react';
+import { Camera, CameraOff, Check, Circle, Download, Ear, Headphones, Loader2, Pause, Play, Radio, Speaker, Square, X } from 'lucide-react';
 import { lineAt, type TimedLine } from '../lib/timeline';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import { downloadBlob, safeFilename } from '../lib/library';
+import { keepFilmed } from '../lib/filmed';
 import { mixFor, type Mix } from '../lib/singmix';
 
 /** Where the headphones answer is kept. Hers, not this song's. */
@@ -221,6 +222,44 @@ export default function FollowWords({
    */
   const [paused, setPaused] = useState(false);
   const [take, setTake] = useState<Blob | null>(null);
+  /** Wall-clock marks, so the take's length is measured and not guessed. */
+  const began = useRef(0);
+  const held = useRef(0);
+  const heldAt = useRef(0);
+  const ran = useRef(0);
+
+  /** The take is in the channel. One press; the button becomes a receipt. */
+  const [kept, setKept] = useState(false);
+  const [keeping, setKeeping] = useState(false);
+
+  /**
+   * Keep the take where the channel and the live room can reach it.
+   *
+   * The file goes straight into the bucket and the row is written on the
+   * server — see `lib/filmed.ts` for the platform wall that shapes it. What
+   * belongs here is what somebody sees: one button, a spinner while it goes,
+   * and a line saying where it went, because "kept" with no destination is
+   * the kind of confirmation that makes people press twice.
+   */
+  const keep = useCallback(async () => {
+    if (!take || keeping) return;
+    setKeeping(true);
+    setProblem(null);
+    try {
+      const done = await keepFilmed(take, title, Math.round(ran.current));
+      if (!done.ok) {
+        setProblem(
+          done.why === 'signed_out'
+            ? t('sing.keepSignedOut', 'Sign in first, so the take is saved to your account.')
+            : t('sing.keepFailed', 'That take did not go up. Check the signal and try again.'),
+        );
+        return;
+      }
+      setKept(true);
+    } finally {
+      setKeeping(false);
+    }
+  }, [keeping, t, take, title]);
   const [problem, setProblem] = useState<string | null>(null);
   const mix = useRef<Mix | null>(null);
 
@@ -418,11 +457,23 @@ export default function FollowWords({
     made.ondataavailable = (event) => {
       if (event.data.size) chunks.current.push(event.data);
     };
-    made.onstop = () => setTake(new Blob(chunks.current, { type }));
+    made.onstop = () => {
+      /* Minus whatever was paused. A held take has a shorter recording than
+         it has wall clock, and the number that matters is the one somebody
+         will watch. */
+      ran.current = Math.max(0, (performance.now() - began.current - held.current) / 1000);
+      setTake(new Blob(chunks.current, { type }));
+    };
     recorder.current = made;
     made.start();
     built?.start();
     setTake(null);
+    setKept(false);
+    /* When it started, so the length of the take is a measurement rather
+       than a guess. The channel stores it and the room shows it, and a
+       number nobody measured is a number somebody later trusts. */
+    began.current = performance.now();
+    held.current = 0;
     setRecording(true);
   };
 
@@ -449,12 +500,15 @@ export default function FollowWords({
     try { recorder.current?.pause(); } catch { /* already paused, or ended */ }
     mix.current?.hold();
     audio?.pause();
+    heldAt.current = performance.now();
     setPaused(true);
   };
   const carryOnTake = (): void => {
     try { recorder.current?.resume(); } catch { /* not paused */ }
     mix.current?.carryOn();
     void audio?.play().catch(() => undefined);
+    if (heldAt.current) held.current += performance.now() - heldAt.current;
+    heldAt.current = 0;
     setPaused(false);
   };
 
@@ -751,6 +805,34 @@ export default function FollowWords({
               <Download className="w-4 h-4" />
               {t('sing.save', 'Save the take')}
             </button>
+          )}
+          {/* ── And into the channel ──────────────────────────────────────
+
+              Carli, 14 September 2026: *"die video nie in die channel save
+              nie, sodat dit later in die live channel gedeel kan word nie."*
+
+              Download was the only thing offered, and a downloaded take is
+              out of this app's knowledge: the room cannot post it, the
+              channel cannot show it, and a second device has never heard of
+              it. Both, not one instead of the other — a file you keep is not
+              the same thing as a take your channel can post, and somebody
+              filming for TikTok wants the first. */}
+          {take && !kept && (
+            <button
+              type="button"
+              onClick={() => void keep()}
+              disabled={keeping}
+              className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-emerald-500 text-onAccent font-semibold flex items-center gap-2 disabled:opacity-50"
+            >
+              {keeping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Radio className="w-4 h-4" />}
+              {keeping ? t('sing.keeping', 'Keeping it\u2026') : t('sing.keepIt', 'Keep it in my channel')}
+            </button>
+          )}
+          {kept && (
+            <span className="min-h-[44px] px-4 py-2.5 rounded-xl text-sm bg-emerald-500/15 border border-emerald-600 text-emerald-300 flex items-center gap-2">
+              <Check className="w-4 h-4" />
+              {t('sing.keptIt', 'In your channel. You can post it in Live.')}
+            </span>
           )}
         </div>
 

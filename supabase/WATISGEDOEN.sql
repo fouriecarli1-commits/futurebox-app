@@ -40,6 +40,8 @@ from (values
   ('elevenrem.sql (die rem op ElevenLabs)',      exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                                                     where n.nspname = 'public' and p.proname = 'eleven_credits_this_month')),
   ('roomwords.sql (woorde in die speelkamer)',   exists (select 1 from information_schema.columns
-                                                    where table_schema = 'public' and table_name = 'live_posts' and column_name = 'words'))
+                                                    where table_schema = 'public' and table_name = 'live_posts' and column_name = 'words')),
+  ('livevideo.sql (video''s in die kamer)',      exists (select 1 from information_schema.columns
+                                                    where table_schema = 'public' and table_name = 'videos' and column_name = 'source'))
 ) as t(naam, daar)
 order by daar, naam;

@@ -113,8 +113,24 @@ ok(
 );
 ok(
   'setting the same source twice is refused',
-  /if \(element\.src === one\.audio && !element\.paused\) return;/.test(screen),
+  /element\.src === one\.audio && !element\.paused\) return;/.test(screen),
   'assigning src, even the same src, throws the buffer away and starts over',
+);
+/* ── And a video panel never has its src set at all ──────────────────────
+
+   The room holds two shapes now: a song through one shared `<audio>`, and a
+   video through its own element with the url already in the markup. The rule
+   above is about not throwing a buffer away, and on a video the way to throw
+   one away is to assign `src` a second time — so the guard has a second half,
+   and the assignment is conditional on there being audio to assign. */
+ok(
+  '  and a video already playing is left alone',
+  /if \(one\.video && !element\.paused\) return;/.test(screen),
+);
+ok(
+  '  and only a song ever has its source assigned',
+  /if \(one\.audio\) element\.src = one\.audio;/.test(screen),
+  'a video element whose src is set again reloads the film mid-watch',
 );
 
 /* And the thing that made it worse rather than caused it. A player that
