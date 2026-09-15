@@ -524,6 +524,100 @@ export async function probe(path: string): Promise<{
  * the answer changes if Kits ever ships the endpoint — at which point the
  * room becomes buildable and `HowToTrain` has a different last paragraph.
  */
+/**
+ * Are the instrument models a real thing this API will hand over?
+ *
+ * ── The question, and why it is asked here rather than read ─────────────
+ *
+ * Carli, 15 September 2026: *"In pick a voice is daar instrumente ook."*
+ *
+ * Right — Kits' catalogue holds instrument models beside the voices, a sung
+ * line turned into a saxophone. The picker shows them mixed in with the
+ * voices under a heading that says voices, because the confirmed record
+ * carries no field saying which a model is: `id, title, isUsable, tags,
+ * twitterLink, instagramLink, tiktokLink, spotifyLink, youtubeLink,
+ * imageUrl, demoUrl`, and not one of them is a type.
+ *
+ * `listModels` has carried a comment since it was written saying
+ * `instruments=true` filters to them. That comment is an INFERENCE. It is not
+ * in `docs/KITS-KAART.md`, which is the file that records what was confirmed
+ * against the live account, and `docs.kits.ai` cannot be reached from the
+ * machine this app is built on. Building a picker on it would be building on
+ * a guess, and this project has paid for that before.
+ *
+ * So it is asked rather than assumed, and asked the same way the rest of
+ * `docs/KITS-KAART.md` was settled: against her real account, through the
+ * report page, once. Two lists and a comparison — if the filtered one is
+ * shorter and its members are not all in the unfiltered one, the parameter is
+ * real and the picker can have two groups. If it comes back identical, the
+ * parameter is ignored and the answer is that they cannot be told apart over
+ * this API, which is worth knowing just as much.
+ */
+export async function instrumentsExist(): Promise<{
+  answer: 'yes' | 'ignored' | 'empty' | 'unclear';
+  all: number;
+  filtered: number;
+  examples: string[];
+  note: string;
+}> {
+  if (!configured()) {
+    return { answer: 'unclear', all: 0, filtered: 0, examples: [], note: 'no key on this deployment' };
+  }
+  const ask = async (query: string): Promise<{ ok: boolean; titles: string[] }> => {
+    try {
+      const response = await fetch(`${BASE}/voice-models?${query}`, {
+        headers: { Authorization: `Bearer ${key()}` },
+        cache: 'no-store',
+      });
+      if (!response.ok) return { ok: false, titles: [] };
+      const body = (await response.json()) as unknown;
+      const rows = Array.isArray(body)
+        ? body
+        : Array.isArray((body as { data?: unknown }).data)
+          ? ((body as { data: unknown[] }).data)
+          : [];
+      return {
+        ok: true,
+        titles: rows
+          .map((one) => String((one as { title?: unknown }).title ?? ''))
+          .filter(Boolean),
+      };
+    } catch {
+      return { ok: false, titles: [] };
+    }
+  };
+
+  const plain = await ask('perPage=100');
+  const only = await ask('perPage=100&instruments=true');
+  if (!plain.ok || !only.ok) {
+    return { answer: 'unclear', all: 0, filtered: 0, examples: [], note: 'one of the two lists could not be read' };
+  }
+
+  const same =
+    plain.titles.length === only.titles.length &&
+    plain.titles.every((one, at) => one === only.titles[at]);
+
+  const answer = only.titles.length === 0 ? 'empty' : same ? 'ignored' : 'yes';
+  const note =
+    answer === 'yes'
+      ? 'The parameter is real: the filtered list is a different set. The voice picker can show instruments as their own group.'
+      : answer === 'ignored'
+        ? 'The parameter is ignored — both lists are identical. Instruments cannot be told from voices over this API, so the picker cannot separate them and should say nothing about it.'
+        : answer === 'empty'
+          ? 'The parameter is accepted and matches nothing on this account. Not the same as ignored: it means there are no instrument models to show.'
+          : 'unclear';
+
+  return {
+    answer,
+    all: plain.titles.length,
+    filtered: only.titles.length,
+    /* Names, so the answer can be judged rather than taken on trust. A list
+       of six that reads "Saxophone, Trumpet, …" settles it at a glance. */
+    examples: only.titles.slice(0, 6),
+    note,
+  };
+}
+
 export async function canCreateVoices(): Promise<{
   status: number;
   answer: 'yes' | 'no' | 'not-allowed' | 'unclear';

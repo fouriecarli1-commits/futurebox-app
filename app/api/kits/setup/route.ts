@@ -28,7 +28,8 @@
 
 import crypto from 'node:crypto';
 import {
-  CANDIDATES, blenderNeeds, blenderShape, canCreateVoices, configured, listModels, namedModels, probe,
+  CANDIDATES, blenderNeeds, blenderShape, canCreateVoices, configured, instrumentsExist, listModels,
+  namedModels, probe,
 } from '@/app/lib/server/kits';
 import { leftSeconds, monthlyMinutes, usedSeconds } from '@/app/lib/server/kitsminutes';
 
@@ -116,6 +117,13 @@ export async function GET(request: Request): Promise<Response> {
      one is refused and nothing is created. */
   const hunt = blender.answer === 'asks' && blender.fields.length === 0 ? await blenderShape() : null;
   const canMake = await canCreateVoices();
+  /* Carli, 15 September: "In pick a voice is daar instrumente ook." The
+     picker shows them mixed in with the voices because the record carries no
+     field saying which a model is. Whether they can be asked for separately
+     is a question about her live account, not about a docs page this machine
+     cannot reach — so it is asked here, where every other Kits question was
+     settled. See `instrumentsExist`. */
+  const instruments = await instrumentsExist();
   const voiceNames = (await listModels()).map((one) => one.name);
   const spent = {
     ceiling: monthlyMinutes(),
@@ -161,12 +169,21 @@ export async function GET(request: Request): Promise<Response> {
       `antwoord: ${canMake.answer}`,
       `nota: ${canMake.note}`,
       '',
+      '── 3. IS DIE INSTRUMENTE ’N APARTE LYS ──',
+      `antwoord: ${instruments.answer}`,
+      `stemme sonder die filter: ${instruments.all}`,
+      `met instruments=true: ${instruments.filtered}`,
+      instruments.examples.length
+        ? `eerste paar: ${instruments.examples.join(', ')}`
+        : 'eerste paar: geen',
+      `nota: ${instruments.note}`,
+      '',
       '── DIE REKENING ────────────────────────────────────',
       `adresse wat regtig bestaan: ${real.length ? real.join(', ') : 'geen'}`,
       `stemme op die rekening: ${voiceNames.length ? voiceNames.join(', ') : 'geen'}`,
       `minute: ${spent.usedMinutes} van ${spent.ceiling} gebruik, ${spent.leftMinutes} oor`,
       '',
-      'Stuur die hele bladsy terug — die twee genommerde blokke is die wat saak maak.',
+      'Stuur die hele bladsy terug — die drie genommerde blokke is die wat saak maak.',
     ];
     return new Response(lines.join('\n'), {
       headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
@@ -194,6 +211,11 @@ export async function GET(request: Request): Promise<Response> {
        cannot become a voice model, so nothing is created whatever the answer.
        See `canCreateVoices` for what each status means. */
     kanStemmeSkep: canMake,
+    /* Whether the catalogue's instrument models can be asked for on their
+       own. The confirmed record carries no field saying which a model is, so
+       this is the only way to find out — and `listModels`' comment about
+       `instruments=true` is an inference until this answers. */
+    instrumente: instruments,
     /* And what the Voice Blender wants, asked the same safe way.
 
        `/voice-blender` is one of the five real addresses and nothing in this
