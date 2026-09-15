@@ -77,6 +77,27 @@ nie nagekom is nie. §3(A) vereis 'n merkblokkie met 'n *"affirmative click"* en
 vier spesifieke klousules in ons ooreenkoms met 'n lid. Al vyf is nou gebou en
 `check:musiclicence` hou hulle vas. Sien `docs/ELEVENLABS-TERME.md`.
 
+### En een getal wat reggemaak is, en een wat nie klop nie
+
+Jou diens-vir-diens tabelle was die eerste keer dat hierdie getalle van
+ElevenLabs se eie bladsye af kom eerder as afgelei word, en **vier reëls in
+`docs/ELEVENLABS-PRYSE.md` was verkeerd**. Die ou lys het elke prys uitgewerk
+deur die plan se prys deur 'n aanvaarde toelaag te deel; die regte anker is
+**krediete**. Stem-verwisselaar en -afsonderaar is 38% duurder as wat gestaan
+het, teks-na-spraak 65% duurder, klankeffekte 73% goedkoper.
+
+**Die winssomme is nie geraak nie.** `costs-eleven.mts` reken alles in
+krediete uit, en die enigste dollar-prys per eenheid wat dit gebruik is
+musiek se $0,15, wat klop. Dit is presies waarvoor die model in krediete
+geskryf is.
+
+**Een getal klop steeds nie.** Spraak-na-teks gee *"Extra hour, API: $0,22"*
+langs 'n toelaag van 303 uur op Business — wat $3,27 per uur impliseer. 'n
+Vyftienvoudige gaping, en elke ander produk klop presies. Ons transkribeer
+elke opgelaaide liedjie, so dit skuif ons eenheidskoste met 'n ordegrootte.
+Dit is nou 'n vraag in die verkoopse-pos, en die dokument sê uitdruklik:
+moenie 'n besluit hierop bou nie.
+
 ### Die een ding om te onthou uit 10 September
 
 'n Kontrole kan groen wees en niks bewys nie. Vier vorms het op een dag
