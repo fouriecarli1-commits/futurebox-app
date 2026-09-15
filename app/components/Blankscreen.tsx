@@ -43,8 +43,11 @@
 
 import React, { useEffect, useState } from 'react';
 
-/** How long to wait before an empty page counts as a blank one. */
+/** How long a page has to stay empty before it counts as a blank one. */
 const PATIENCE = 6000;
+
+/** How often to look. See the note on watching rather than checking once. */
+const EVERY = 1500;
 
 const PANEL = 'rgb(9 9 11)';
 const INK = 'rgb(228 228 231)';
@@ -61,8 +64,18 @@ function drewSomething(): boolean {
   const words = (body.innerText || '').trim();
   if (words.length > 0) return true;
   /* And a page that is all picture is not blank either — the full-screen
-     song scroller is a video and a couple of icons. */
-  return body.querySelector('img, video, canvas, svg') !== null;
+     song scroller is a video and a couple of icons.
+
+     Big pictures only. Every screen in this app carries a bottom bar of
+     five icons, and an `svg` anywhere used to be enough to call the page
+     drawn — so a room that rendered nothing under a tab bar read as fine.
+     Sixty-four pixels is larger than any icon here and smaller than any
+     photograph, a cover or a video. */
+  for (const one of Array.from(body.querySelectorAll('img, video, canvas'))) {
+    const box = one.getBoundingClientRect();
+    if (box.width >= 64 && box.height >= 64) return true;
+  }
+  return false;
 }
 
 export default function Blankscreen(): React.ReactElement | null {
@@ -79,10 +92,47 @@ export default function Blankscreen(): React.ReactElement | null {
       return undefined;
     }
 
-    const look = window.setTimeout(() => {
-      if (!drewSomething()) setShow('blank');
-    }, PATIENCE);
-    return () => window.clearTimeout(look);
+    /* ── Watched, not checked once ──────────────────────────────────────
+
+       Carli, 15 September 2026: *"Ek sien die wit blad met die avatar oplaai
+       werk nie. Dit is nogsteeds net wit."*
+
+       The first build looked once, six seconds after the page loaded, and
+       that is the wrong moment for the fault she keeps hitting. Her white
+       screen arrives *after* the gallery has been in front of the app — the
+       page loaded fine, drew fine, was checked and passed, and went blank
+       ten seconds later when the tab came back from having its memory taken.
+       One look at six seconds cannot see that, so the panel written to
+       explain a white screen was silent through the white screen.
+
+       So it watches for the life of the page: blank for six continuous
+       seconds, whenever those six seconds happen. And it looks again the
+       moment the tab is shown, because coming back from the camera or the
+       gallery is when this happens and waiting out the interval there is
+       another second and a half of somebody staring at nothing. */
+    let blankSince = 0;
+    const look = (): void => {
+      if (drewSomething()) {
+        blankSince = 0;
+        return;
+      }
+      const now = Date.now();
+      if (!blankSince) {
+        blankSince = now;
+        return;
+      }
+      if (now - blankSince >= PATIENCE) setShow('blank');
+    };
+
+    const ticking = window.setInterval(look, EVERY);
+    const onShown = (): void => {
+      if (document.visibilityState === 'visible') look();
+    };
+    document.addEventListener('visibilitychange', onShown);
+    return () => {
+      window.clearInterval(ticking);
+      document.removeEventListener('visibilitychange', onShown);
+    };
   }, []);
 
   if (!show) return null;

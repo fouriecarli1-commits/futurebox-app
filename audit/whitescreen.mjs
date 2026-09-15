@@ -117,6 +117,57 @@ try {
      and cannot help when the root layout is what threw. */
   check('there is a boundary for the layout itself as well',
     (await import('node:fs')).existsSync('app/global-error.tsx'));
+
+  /* ── The white screen that nothing threw ─────────────────────────────
+
+     Carli, 15 September 2026: *"Ek sien die wit blad met die avatar oplaai
+     werk nie. Dit is nogsteeds net wit."*
+
+     This is the other half and it is the half she keeps hitting. Nothing
+     throws, no boundary fires, the page simply stops having anything on it —
+     which is what a tab looks like after Android has taken its memory while
+     the gallery was in front of the app. `Blankscreen` is meant to catch
+     exactly that, it was written the day before, and nothing checked it: it
+     looked once at six seconds and her page went blank at twenty.
+
+     Wiped by hand here rather than waited for. A probe cannot make Android
+     discard a tab, and it does not need to — what is being asked is whether
+     a page that has nothing on it says so, and an empty body is an empty
+     body however it got that way. */
+  {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+    page.on('pageerror', () => undefined);
+    await page.goto(`${server.url}/`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1500);
+
+    const before = ((await page.locator('body').innerText()) ?? '').trim();
+    check('the app draws something to begin with', before.length > 0, before.slice(0, 60));
+
+    /* Hidden rather than removed, and that distinction is the probe.
+
+       Removing the app's nodes makes React throw on its next render, the
+       error boundary fires, and a panel appears — a panel, and not this one.
+       The first version of this did exactly that and passed on the wrong
+       thing. `display: none` leaves the tree whole and takes the page off
+       the screen, which is what a blank page IS: `innerText` skips hidden
+       text, so the watcher sees what a person sees. */
+    await page.evaluate(() => {
+      for (const child of Array.from(document.body.children)) {
+        if (!child.getAttribute('role')) child.style.display = 'none';
+      }
+    });
+
+    /* Six seconds of blank plus a look. The watcher's patience is the number
+       being tested, so it is waited out rather than guessed under. */
+    await page.waitForTimeout(9000);
+    const after = ((await page.locator('body').innerText()) ?? '').replace(/\s+/g, ' ').trim();
+    check('a page that goes blank later still says so',
+      /geteken|drew nothing/i.test(after), after.slice(0, 120) || '(still nothing)');
+    check('  in Afrikaans as well as English', /Laai weer/i.test(after), after.slice(0, 120));
+    check('  and offers the record of what went wrong',
+      (await page.locator('a[href="/oops"]').count()) > 0);
+    await page.close();
+  }
 } catch (problem) {
   fell = true;
   console.error(`  FAIL the probe itself fell over — ${String(problem).slice(0, 300)}`);
