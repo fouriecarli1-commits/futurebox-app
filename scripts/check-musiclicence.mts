@@ -152,6 +152,67 @@ check(
   `${TERMS} no longer says attribution is unnecessary — it is not, on a paid plan`,
 );
 
+/* The four clauses the OEM Terms require, added 15 September 2026.
+
+   These are a different kind of assertion from the ones above. Those keep the
+   page from over-promising; these keep four sentences ON it that somebody
+   else's contract requires to be there. ElevenLabs' OEM Terms §3(A) -- the
+   document that lets FutureBox pass their service through to its own members
+   at all -- says every member "must have executed an End User Agreement that
+   includes the following terms", and lists them. Their prohibited use policy
+   §9(n) says the same from the other side: our terms may not be "less
+   restrictive or more permissive" than theirs.
+
+   So a tidy-up that deletes one of these is not a wording change, it is a
+   breach of the licence the product runs on, and it would be invisible in a
+   diff of a 300-line page. Each is matched on its substance rather than its
+   exact sentence, so the page can be rewritten freely as long as it still
+   says the thing. See docs/ELEVENLABS-TERME.md §3. */
+check(
+  'the engines section passes their rules through to the member',
+  /prohibited use policy/i.test(terms) && /stricter/i.test(terms),
+  `${TERMS} no longer passes the engine's own use policy through to members. ` +
+    'OEM Terms 3(A)(a) requires restrictions "at least as restrictive" as ' +
+    'theirs, and their use policy 9(n) forbids offering it on more permissive ' +
+    'terms. This clause is a condition of the licence, not a courtesy.',
+);
+
+check(
+  'and says nobody here is their agent or partner',
+  /not\s+ElevenLabs[^.]{0,60}(agent|partner)/i.test(terms),
+  `${TERMS} no longer says FutureBox and its members are not ElevenLabs' ` +
+    'agent, partner or joint venturer. OEM Terms 3(A)(b) requires it.',
+);
+
+check(
+  'and names ElevenLabs as a third-party beneficiary',
+  /third-party beneficiary/i.test(terms),
+  `${TERMS} no longer names ElevenLabs as a third-party beneficiary of the ` +
+    'agreement with the member. OEM Terms 3(A)(c) requires it, and it is the ' +
+    'clause that lets them enforce the other three.',
+);
+
+check(
+  'and grants them the right to process what the member sends',
+  /affiliates and (its )?subcontractors|affiliates and subcontractors/i.test(terms) &&
+    /non-exclusive right to process/i.test(terms),
+  `${TERMS} no longer grants ElevenLabs, its affiliates and its subcontractors ` +
+    'a non-exclusive right to process the member\'s data. OEM Terms 3(A)(d) ' +
+    'requires it, and the DPA 2.2 makes giving that notice our duty.',
+);
+
+/* And the one the privacy policy is stricter about than the use policy.
+   Privacy Policy 11: no Voice Data from anybody under 18, with no
+   parental-consent carve-out. For a singing app that is a product rule, not
+   a footnote, so it is pinned on the page that states it. */
+check(
+  'and says no voice under 18 goes to the engine',
+  /under 18/i.test(terms) && /voice features are (switched )?off/i.test(terms),
+  `${TERMS} no longer says the voice features are off for anybody under 18. ` +
+    'ElevenLabs\' privacy policy 11 prohibits sending them a child\'s voice ' +
+    'outright, with no parental-consent exception.',
+);
+
 if (problems.length) {
   console.error(`\ncheck:musiclicence — ${problems.length} wrong:\n`);
   for (const one of problems) console.error(`  ${one}`);

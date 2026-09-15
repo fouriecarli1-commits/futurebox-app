@@ -71,9 +71,24 @@ const NAME: Record<Provider, string> = {
 
 export default function SignInWith({
   onProblem,
+  needsAgreement = false,
+  onAgreed,
 }: {
   /** Said in the modal that owns this, beside whatever the form said. */
   readonly onProblem: (message: string) => void;
+  /**
+   * True while this is a sign-up and the terms box below is still unticked.
+   *
+   * Signing in with Google creates an account for somebody who does not have
+   * one, and an account created without an affirmative click is the thing
+   * ElevenLabs' OEM Terms §3(A) forbids us to have — so the redirect does not
+   * go out. The buttons stay visible and disabled rather than disappearing:
+   * a row of buttons that vanishes when you tick a box reads as a bug, and
+   * the whole point is that the box is seen to be in the way.
+   */
+  readonly needsAgreement?: boolean;
+  /** Parks the acceptance before the browser leaves for the provider. */
+  readonly onAgreed?: () => void;
 }): React.ReactElement | null {
   const { lang, t } = useLang();
   const [on, setOn] = useState<Provider[] | null>(null);
@@ -104,9 +119,13 @@ export default function SignInWith({
         <button
           key={provider}
           type="button"
-          disabled={going !== null}
+          disabled={going !== null || needsAgreement}
           onClick={() => {
+            if (needsAgreement) return;
             setGoing(provider);
+            /* Written down before the page is left, because after the
+               redirect there is no component here to remember it. */
+            onAgreed?.();
             /* The language goes with them. Signing in this way is a
                navigation away from this app and back, and on a phone that
                round trip can land somewhere that cannot see what this page

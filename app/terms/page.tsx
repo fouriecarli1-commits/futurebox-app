@@ -48,8 +48,35 @@ export const metadata = {
    What replaced it is neither "you may sell" nor "you may not". It is what is
    actually settled, which is less than the first and more than the second.
    The Enterprise agreement that would settle it properly is being asked for;
-   docs/ELEVENLABS-SALES.md is that letter. */
-const UPDATED = '10 September 2026';
+   docs/ELEVENLABS-SALES.md is that letter.
+
+   Moved a third time on 15 September 2026, after reading the whole ElevenLabs
+   terms stack -- fourteen documents, written up in docs/ELEVENLABS-TERME.md.
+   Two things came out of it and both are on this page.
+
+   The first is the OEM Terms, which nobody had read because the public site
+   is unreachable from the machine this app is built on. They are the document
+   that governs "bundling, making available and sublicensing" the Services,
+   and their 2(B)(f) draws the line along the plan: Free, Starter, Creator and
+   Pro are expressly prohibited from it, and 1(D) puts Business on the
+   permitted side. FutureBox moved to Business. So the licence probably does
+   reach a member after all.
+
+   PROBABLY is the operative word, and it is why the paragraph below still
+   does not say "you may sell". That reading is ours, not ElevenLabs'. Their
+   support said in writing that this shape is "not explicitly covered", and a
+   terms page is the wrong place to bet on our own reading of somebody else's
+   contract. The letter asking them to confirm it is sent; this page changes
+   the day it comes back. Under-promising costs nothing. The other way round
+   is what had to be corrected on 10 September.
+
+   The second is that the OEM Terms require four specific things to be in this
+   document -- their 3(A) -- and none of them was. They are in the section
+   called "The engines behind this, and what they require of you". A member
+   does not need to enjoy reading it, but it has to be here and it has to be
+   plain, because the alternative is a clause somebody agreed to without being
+   told. */
+const UPDATED = '15 September 2026';
 
 /* Contact is a page, not an address.
 
@@ -102,7 +129,8 @@ export default function Terms(): React.ReactElement {
               sell what you make", which was true of FutureBox's own account and
               not of yours. Saying less here is the correction, not caution. */}
           <p><strong className="text-white">Selling what you make: where this actually stands.</strong> The music engine behind FutureBox runs on FutureBox&apos;s own paid plan, and that plan carries a commercial licence over what is generated on it, with <strong className="text-white">no credit to the engine required</strong>. What is <em>not</em> settled is whether that licence reaches through to you. The engine&apos;s owner told us in writing on 9 September 2026 that a member of a platform selling what they made under the platform&apos;s account is &ldquo;not explicitly covered&rdquo; by the terms of the plan we are on.</p>
-          <p>So we will not tell you that you may sell it, because we would be telling you something the engine&apos;s owner has declined to confirm. We are negotiating an agreement that covers you properly, and this page changes the day it is signed. Until then: <strong className="text-white">what you make is yours and nobody else takes ownership of it</strong>, and if you intend to release something commercially, ask us first and we will tell you exactly where it stands rather than guess.</p>
+          <p><strong className="text-white">Where that stands as of {UPDATED}:</strong> better than it did. The engine&apos;s owner publishes a separate agreement covering exactly this &mdash; a platform bundling their service into its own and passing it on to its members &mdash; and that agreement permits it from the plan FutureBox is now on, and forbids it on the plans below. We read that as covering you. We have asked them to confirm it in writing and they have not yet answered.</p>
+          <p>So we are still not going to put it flatly, because that would be us betting on our own reading of somebody else&apos;s contract and you would be the one carrying the bet. We are negotiating the written confirmation now. What we will tell you meanwhile is this: <strong className="text-white">what you make is yours, nobody else takes ownership of it</strong>, we believe the commercial licence does reach you, and the day that is in writing this page says so plainly. If you intend to release something commercially before then, ask us and we will tell you exactly where it stands rather than guess.</p>
           <p>Two further limits worth knowing, because they are real and not fine print:</p>
           <ul className="space-y-1.5 pl-5 list-disc marker:text-emerald-500">
             <li><strong className="text-white">Generated music is not guaranteed to be unique.</strong> An AI model can produce something close to what it produced for somebody else. FutureBox cannot promise originality and does not warrant that anything generated here is free of somebody else&apos;s rights.</li>
@@ -111,7 +139,13 @@ export default function Terms(): React.ReactElement {
                 left to "satisfy yourself that you are entitled to", because a
                 general warning to check does not tell somebody the one thing
                 that is actually carved out. See elevenlabs.io/music-terms. */}
-            <li><strong className="text-white">Film, television, radio and studio games are outside that licence.</strong> Selling the song, streaming it, and putting it in your own videos are all covered. Placing generated music in a film, a television or radio broadcast, or a studio-published game is not, and needs a separate agreement with the engine&apos;s owner. If that is where a song of yours is going, tell us before you sign anything and we will point you at the right licence.</li>
+            <li><strong className="text-white">Film, television, radio and studio games are outside that licence.</strong> Selling the song, streaming it, and putting it in your own videos are all covered. Placing generated music in a film, a television or radio broadcast, or a studio-published game is not, and needs a separate agreement with the engine&apos;s owner. If that is where a song of yours is going, tell us before you sign anything and we will point you at the right licence.<br />
+            {/* Added 15 September 2026, from the Dubbing v2 model terms, which
+                carve the creator platforms out of the same restriction by
+                name. It is worth saying out loud because the bullet above it
+                reads more frighteningly than it is: the places a member
+                actually publishes are the places that are fine. */}
+            <span className="text-zinc-400">YouTube, TikTok, Instagram and the platforms like them are <strong className="text-white">not</strong> caught by this. They are named as being outside the restriction. It is the broadcast and cinema end that needs the separate licence, not your channel.</span></li>
           </ul>
           <p>Beyond those, satisfy yourself before you release anything commercially. That is your call to make and it is not one this app can make for you.</p>
         </Section>
@@ -139,6 +173,44 @@ export default function Terms(): React.ReactElement {
             <li>For video, for cloning a voice, and for training a sound, a request does not go ahead at all while the check cannot be run. Those three are refused rather than waved through.</li>
           </ul>
           <p>No screen catches everything. This one will sometimes refuse something ordinary and will sometimes miss something it should have caught. When it refuses something it should not have, write and say so &mdash; that is how the rules get better rather than merely stricter.</p>
+        </Section>
+
+        {/* Added 15 September 2026. Required, not optional.
+
+            The OEM Terms 3(A) -- the agreement that lets a platform pass an
+            ElevenLabs service through to its own members -- says every End
+            User "must have executed an End User Agreement that includes the
+            following terms", and then lists four. This section is those four.
+            Their prohibited use policy 9(n) says the same thing from the
+            other side: we may not offer the service "on terms that are less
+            restrictive or more permissive" than theirs.
+
+            The temptation is to bury this in a paragraph of defined terms,
+            which is what every other platform does. It is written plainly
+            instead, because the whole point of a clause somebody has to agree
+            to is that they could have understood it. The fourth one in
+            particular -- a licence to a company the member has never heard of
+            -- is the sort of thing that belongs in daylight. */}
+        <Section title="The engines behind this, and what they require of you">
+          <p>FutureBox does not make music or voices itself. It is built on other people&apos;s engines &mdash; <strong className="text-white">ElevenLabs</strong> for music, voices, cloning and transcription, <strong className="text-white">Anthropic</strong> for the copilot. When you generate something, what you typed or recorded goes to them, and their rules travel with it.</p>
+          <p>Four things follow. They are not fine print: they are conditions of FutureBox being allowed to offer any of this, and they are written here because we are required to put them in front of you rather than merely comply with them ourselves.</p>
+          <ul className="space-y-2.5 pl-5 list-decimal marker:text-emerald-500">
+            <li><strong className="text-white">Their rules bind you the way they bind us.</strong> ElevenLabs&apos; terms of service and prohibited use policy govern what may be made here, and nothing on this page may be more permissive than they are. Where the list above and their policy differ, the stricter one is what is in force. Their policy is published at <span className="text-zinc-400">elevenlabs.io/use-policy</span> and it changes from time to time; the version in force is the current one.</li>
+            <li><strong className="text-white">Nobody here is anybody&apos;s partner.</strong> FutureBox is not ElevenLabs&apos; agent, partner, reseller or joint venturer, and neither are you. Do not describe yourself as working with them, endorsed by them, or acting for them.</li>
+            <li><strong className="text-white">ElevenLabs can enforce this agreement directly.</strong> They are a third-party beneficiary of the agreement between you and FutureBox. In plain terms: the parts of this document that protect them, they may act on themselves, without going through us.</li>
+            <li><strong className="text-white">They may process what you send them.</strong> By using the parts of FutureBox that reach an engine, you grant ElevenLabs, its affiliates and its subcontractors a non-exclusive right to process and use what you send, in order to provide and support the service. What that means in practice &mdash; including that a person may listen to a recording of you, and that the licence over a cloned voice outlives our copy of it &mdash; is set out in the <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">privacy policy</Link>. Read it before you clone your voice, not after.</li>
+          </ul>
+          {/* Privacy Policy section 11, 20 May 2026: "all users are strictly
+              prohibited from uploading, transmitting, emailing, or otherwise
+              making Voice Data from children under the age of 18 available to
+              us or other users or using them for any of our Services."
+
+              Three documents from the same company give three different ages
+              -- their use policy says 13 with a parent, their reading app says
+              16, this says 18 with no carve-out at all. The strictest is the
+              one to build to, and for a singing app it is not a footnote: a
+              child singing into the booth is exactly the case it catches. */}
+          <p><strong className="text-white">Nobody under 18&apos;s voice, at all.</strong> The voice engine&apos;s own rules prohibit sending it a recording of anybody under 18 &mdash; outright, with no parental-permission exception. So on an account a parent holds for somebody younger, <strong className="text-white">the voice features are switched off</strong>: no cloning, no singing conversion, no reading in your own voice. The rest of the studio &mdash; writing, generating music, videos, the channel &mdash; works normally. This is not us being careful; it is a rule we are not allowed to waive.</p>
         </Section>
 
         <Section title="If somebody has used your voice, your face or your name">
@@ -175,6 +247,27 @@ export default function Terms(): React.ReactElement {
         <Section title="Deleting your account">
           <p>You can delete your account from inside the app. It removes your songs, videos and episodes and every file behind them, any cloned voice — from the voice service as well as from here — any trained sound, your credits, your collaborations and your profile.</p>
           <p>It cannot be undone. There is no grace period on purpose: keeping recordings of your voice for a month after you asked us to stop would be the opposite of what you asked for. If you are on a plan it is cancelled first, and if that cancellation fails nothing is deleted.</p>
+          {/* Added 15 September 2026, and this is the correction that could
+              embarrass us if somebody else found it first.
+
+              Everything above is true of the voice MODEL and of OUR copies,
+              and it is what the delete button actually does -- the clone is
+              deleted from ElevenLabs, not merely hidden here. What it is not
+              true of is the licence ElevenLabs already holds over the
+              recordings that made it. Terms of service 4(d): "perpetual and
+              irrevocable ... sub-licensable, through multiple tiers", over a
+              member's voice by name. 4(i): a training opt-out "does not
+              affect any uses of ... your Content prior to that date". DPA
+              9.2.2: for a self-serve customer they reserve a right, "but
+              [have] no obligation", to delete content after 180 days of
+              inactivity -- the 30-day deletion commitment is enterprise-only.
+              Privacy Policy 6: voice data kept up to three years after the
+              last interaction.
+
+              A member reading the two paragraphs above would reasonably
+              conclude deletion is complete. It is not, and saying so costs us
+              nothing we were entitled to keep. */}
+          <p><strong className="text-white">What deletion does not reach.</strong> The clone is deleted, and that is real. What outlives it is a licence the voice engine already holds over the recordings you gave it: by their terms it is perpetual and cannot be withdrawn, and their own retention limit for data generated about a voice is three years after your last contact with them, not the moment you press the button. We can delete what is ours and we can tell them to delete the model, and we do both. We cannot unwind a licence somebody else already has, and we are not going to imply otherwise on this page. If that is not acceptable to you, the answer is to not clone your voice &mdash; everything else here works without it.</p>
         </Section>
 
         <Section title="What FutureBox does not promise">

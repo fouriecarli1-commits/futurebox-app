@@ -243,10 +243,35 @@ export async function accessToken(): Promise<string | null> {
 
 export type AuthResult = { ok: true; account: Account | null } | { ok: false; message: string };
 
-export async function signUp(email: string, password: string): Promise<AuthResult> {
+/**
+ * What a new account agreed to, and when.
+ *
+ * `agreed` is not optional and is not defaulted, because the whole value of
+ * the record is that it cannot be produced by anything except somebody
+ * ticking the box. A `signUp` that stamped acceptance on its own would write
+ * the same row whether or not a box existed, which is the kind of record that
+ * fails the moment anybody looks at it -- and looking at it is exactly the
+ * right ElevenLabs' OEM Terms 3(C) reserves, for the term plus three years.
+ */
+export type Agreed = { version: string; at: string };
+
+export async function signUp(
+  email: string,
+  password: string,
+  agreed: Agreed,
+): Promise<AuthResult> {
   const supabase = getClient();
   if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    /* Onto the user itself rather than a table of our own. A row in a table
+       can be orphaned by a deletion or missed by a restore; this travels with
+       the account, survives an email change, and is readable from the
+       dashboard by somebody who is not a developer -- which is the person who
+       will actually be asked to produce it. */
+    options: { data: { terms_version: agreed.version, terms_at: agreed.at } },
+  });
   if (error) return { ok: false, message: error.message };
   // With email confirmation on, Supabase still returns a user — but no session.
   // The session is what every later request is authorised by, so it, not the
@@ -357,8 +382,69 @@ export const ARRIVED = 'welcome';
  * none of them costs anything. What this adds is the one case none of them
  * covers — a sign-in that comes back somewhere else entirely.
  */
-export { CHOSE_LANG } from './cloudnames';
-import { CHOSE_LANG } from './cloudnames';
+export { CHOSE_LANG, TERMS_VERSION, TERMS_PENDING } from './cloudnames';
+import { CHOSE_LANG, TERMS_VERSION, TERMS_PENDING } from './cloudnames';
+
+/**
+ * The acceptance, parked for the trip to Google and back.
+ *
+ * Signing in with a provider leaves the page, so at the moment the box is
+ * ticked there is no session to write onto. `markAgreed` writes the version
+ * and the time to this browser; `settleAgreed` runs on the return leg, finds
+ * it, and puts it on the account.
+ *
+ * Two deliberate choices. It is only ever written by a tick, so a return leg
+ * with nothing parked records nothing -- somebody signing back in to an
+ * account they already have does not re-accept anything. And it is cleared
+ * whether or not the write succeeded, because a mark that survives its trip
+ * would attach an old acceptance to the next person to use this browser.
+ */
+export function markAgreed(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      TERMS_PENDING,
+      JSON.stringify({ version: TERMS_VERSION, at: new Date().toISOString() }),
+    );
+  } catch {
+    /* Storage off. The acceptance still happened and the sign-in still works;
+       what is lost is the record of it, and the alternative -- refusing to
+       sign somebody in because their browser will not store anything -- is
+       worse than a gap we can see in the dashboard. */
+  }
+}
+
+export async function settleAgreed(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  let parked: string | null = null;
+  try {
+    parked = window.localStorage.getItem(TERMS_PENDING);
+    window.localStorage.removeItem(TERMS_PENDING);
+  } catch {
+    return;
+  }
+  if (!parked) return;
+  let agreed: Agreed;
+  try {
+    const read = JSON.parse(parked) as Partial<Agreed>;
+    if (typeof read.version !== 'string' || typeof read.at !== 'string') return;
+    agreed = { version: read.version, at: read.at };
+  } catch {
+    return;
+  }
+  const supabase = getClient();
+  if (!supabase) return;
+  /* Only if it is not already there. A second write would move the date
+     forward to whenever this browser last came back from Google, and the
+     date is the only part of the record anybody would ever want. */
+  const { data } = await supabase.auth.getUser();
+  const already = data.user?.user_metadata?.terms_version;
+  if (typeof already === 'string' && already) return;
+  const { error } = await supabase.auth.updateUser({
+    data: { terms_version: agreed.version, terms_at: agreed.at },
+  });
+  if (error) console.error('terms acceptance not recorded', error.message);
+}
 
 /**
  * Was this page load the return leg of a sign-in?

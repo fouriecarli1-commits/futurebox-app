@@ -21,8 +21,22 @@ export const metadata = {
   description: 'What FutureBox collects, who it is shared with, and how to have it deleted.',
 };
 
-/** Kept beside the text so the date and the text cannot drift apart. */
-const UPDATED = '31 August 2026';
+/* Kept beside the text so the date and the text cannot drift apart.
+
+   Moved to 15 September 2026 after reading the ElevenLabs privacy policy,
+   DPA and terms of service properly -- fourteen documents, written up in
+   docs/ELEVENLABS-TERME.md. Three things were on this page as reassurances
+   that the upstream documents do not support, and a fourth was simply
+   missing. They are all in the new section "What happens to a recording once
+   it leaves here", and each carries the clause it comes from.
+
+   The DPA is also the reason this page now names ElevenLabs as a processor
+   in so many words: its 2.2 makes it OUR duty to "provide notice to Data
+   Subjects about the Processing of Personal Data by ElevenLabs", and the
+   Music API terms 2(D) require a privacy policy that says how information is
+   shared "including with ElevenLabs and third parties". Naming them in a
+   list of suppliers was most of the way there; it was not all of it. */
+const UPDATED = '15 September 2026';
 
 /* Same as the terms: contact is a page, not an address. See the note there. */
 const CONTACT_PAGE = '/help';
@@ -80,6 +94,41 @@ export default function Privacy(): React.ReactElement {
           <p>Nothing is sold, and nothing is handed to an advertiser. There is no advertising on FutureBox to hand it to.</p>
         </Section>
 
+        {/* Added 15 September 2026. Four claims, each from the upstream
+            document that makes it true, because a privacy policy that is
+            kinder than the contract behind it is a promise you lose.
+
+            - Moderation: ElevenLabs privacy policy 3(d), which reserves the
+              right to moderate all Input and Output and to "share your Input
+              or Output, which may include Personal Data, with third parties
+              to support the content moderation and safety initiatives". A
+              person may listen. Nothing on this page said so.
+            - Transfer: their section 5. Hosting in the US, the Netherlands
+              and Singapore, and "regardless of your location, all Personal
+              Data will be transferred to the United States for storage".
+              POPIA 72 wants a basis for that; the standard contractual
+              clauses in DPA 11 are it, and they are deemed executed.
+            - Retention: privacy policy 6 (three years) and DPA 9.2.2, which
+              gives a self-serve customer no deletion obligation at all --
+              only a right to delete after 180 days of inactivity. The
+              30-day commitment in 9.2.1 is enterprise-only.
+            - Biometrics: their section 12 treats voice as biometric data,
+              while DPA Annex I records sensitive data transferred as "N/A".
+              Under POPIA biometrics are special personal information, so the
+              stricter reading is the one to write to and the consent row
+              this app already keeps is the right instinct. */}
+        <Section title="What happens to a recording once it leaves here">
+          <p>The voice engine is a company in its own right with its own terms, and once a recording of you reaches it, what happens next is governed by those and not only by this page. Four things are worth knowing before you clone your voice, and none of them is obvious from the outside.</p>
+          <ul className="space-y-2.5 pl-5 list-disc marker:text-emerald-500">
+            <li><strong className="text-white">A person may listen to it.</strong> The voice engine reserves the right to moderate everything sent to it and everything it produces, and to pass that material to third parties who help them do it. This is how a platform stops itself being used to fake somebody&apos;s voice, and it is the reason our own safety check is not the only one. But it does mean a recording of you is not machine-only.</li>
+            <li><strong className="text-white">It leaves South Africa.</strong> They host in the United States, the Netherlands and Singapore, and everything is stored in the United States regardless of where it was recorded. POPIA allows that where the receiving party is bound to comparable protection; they are, under the European standard contractual clauses in the data-processing agreement that applies to our account.</li>
+            <li><strong className="text-white">Deleting the clone does not delete their licence.</strong> When you delete a cloned voice, the model is deleted from their side as well as ours &mdash; that part is real and this app does it. What we cannot undo is the licence they already hold over the recordings you gave them, which by their own terms is perpetual, and their retention limit for data generated about a voice is three years from your last contact with them. Everything else on this page about deletion is accurate; this is the edge of it.</li>
+            <li><strong className="text-white">Your voice is treated here as special personal information.</strong> A voice identifies a person the way a fingerprint does, and POPIA puts that in a stricter category than an email address. That is why cloning asks you to confirm in words that the voice is your own, and why that confirmation is stored with the moment you gave it. It is also why the voice features are switched off entirely for anybody under 18 &mdash; the engine&apos;s own rules prohibit sending it a child&apos;s voice, with no parental-permission exception.</li>
+          </ul>
+          <p>If that is more than you want, you do not have to clone anything. Writing songs, generating music, making videos and running a channel all work without a recording of your voice ever leaving this app.</p>
+          <p className="text-zinc-400">The full list of companies the voice engine uses behind the scenes is published by them at <span className="text-zinc-300">compliance.elevenlabs.io</span>, and they are required to give us thirty days&apos; notice before adding one. If one of them is ever the reason something here has to change, the date at the top of this page changes with it.</p>
+        </Section>
+
         <Section title="How long">
           <p>Your songs, voices and profile stay until you delete them or delete your account. Counting rows — what was generated, what credits moved — are kept while the account exists, because an allowance that forgets is not an allowance.</p>
           <p>The tally of what kind of thing you make stays until you clear it on your account screen, or until the account goes.</p>
@@ -132,6 +181,28 @@ export default function Privacy(): React.ReactElement {
             </Link>{' '}
             and it will be removed.
           </p>
+          {/* ElevenLabs privacy policy 11: "all users are strictly prohibited
+              from uploading, transmitting, emailing, or otherwise making
+              Voice Data from children under the age of 18 available to us".
+              No parental-consent carve-out, unlike their use policy 9(r).
+              For a singing app the stricter rule is the one to build to. */}
+          <p>
+            <strong className="text-white">One rule has no exception.</strong> No recording of anybody under 18 may be sent to the voice engine &mdash; not with a parent&apos;s permission, not on a parent&apos;s account. So where an account is held by a parent for a younger person, the voice features are off: no cloning, no singing conversion, no reading in your own voice. Everything else works.
+          </p>
+        </Section>
+
+        {/* POPIA 22 requires notification to the data subject and to the
+            Information Regulator "as soon as reasonably possible" after
+            discovering a compromise. The ElevenLabs DPA 8.1 gives us their
+            side of it -- they notify us without undue delay -- and the Music
+            API terms 2(B) separately require us to notify them and the
+            affected users. Three duties, one incident. Saying out loud what
+            we will do is the cheapest half of being ready to do it. */}
+        <Section title="If something goes wrong with it">
+          <p>If personal information held here is ever accessed by somebody who should not have it, you will be told: what happened, what of yours was involved, and what to do about it. So will South Africa&apos;s Information Regulator. That is what POPIA requires and it is not conditional on the breach being our fault &mdash; if it happens at one of the suppliers named above and they tell us, we tell you.</p>
+          <p>You do not have to wait to be told. If you think something is wrong with your account, say so on the{' '}
+            <Link href={CONTACT_PAGE} className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">help page</Link>{' '}
+            and it will be looked at rather than triaged.</p>
         </Section>
 
         <Section title="Changes">

@@ -56,6 +56,7 @@ import { fetchCreator, type Creator } from './lib/radar';
 import { useBackStack, useInnerLayers } from './lib/backstack';
 import { readInvite, redeemInvite, type Redeemed } from './lib/collab';
 import SignInWith from './components/SignInWith';
+import AgreeToTerms from './components/AgreeToTerms';
 import { noteTaste, loadTaste } from './lib/taste';
 import { habitOf } from './lib/habits';
 import { loadTracks } from './lib/library';
@@ -245,6 +246,10 @@ export default function FutureBoxHome() {
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
+  /* Unticked every time the sign-up screen opens. A box that remembers it was
+     ticked is a box that accepts on somebody's behalf, which is the one thing
+     an affirmative click is for. */
+  const [agreed, setAgreed] = useState(false);
   const [userPlan, setUserPlan] = useState<Plan>('free');
   const [pricingModalOpen, setPricingModalOpen] = useState(false);
   /** Bumped when a request is sent, so the rooms above pick it up at once. */
@@ -381,6 +386,13 @@ export default function FutureBoxHome() {
        to Google and came back is a page load, and a page load looks exactly
        like coming back to a tab. */
     const cameBack = cloud.justArrived();
+    /* The acceptance, written onto the account now that there is one.
+
+       Signing in with a provider leaves the page, so the box was ticked in a
+       browser that no longer has this component mounted. `markAgreed` parked
+       it; this puts it on the user. It is a no-op when nothing was parked,
+       so somebody signing back in to an old account does not re-accept. */
+    void cloud.settleAgreed();
     cloud.currentAccount().then((account) => {
       if (!live) return;
       if (account) {
@@ -1403,6 +1415,20 @@ export default function FutureBoxHome() {
     e.preventDefault();
     setAuthError(null);
 
+    /* The gate, not a reminder.
+
+       The submit button is also disabled while this is unticked, but the
+       check lives here as well because a disabled button is a suggestion —
+       a form can be submitted with Enter, and a browser extension or an
+       autofill can press through a disabled control. The one place both
+       paths pass through is this function. */
+    if (authMode === 'signup' && !agreed) {
+      setAuthError(
+        t('auth.mustAgree', 'Tick the box to say you are 18 or older and accept the terms.'),
+      );
+      return;
+    }
+
     // Without a Supabase project behind the app there is nothing to sign in to,
     // so the account stays on this device — which the modal says out loud.
     if (!cloud.configured()) {
@@ -1430,7 +1456,10 @@ export default function FutureBoxHome() {
     const result =
       authMode === 'signin'
         ? await cloud.signIn(authEmail, authPassword)
-        : await cloud.signUp(authEmail, authPassword);
+        : await cloud.signUp(authEmail, authPassword, {
+            version: cloud.TERMS_VERSION,
+            at: new Date().toISOString(),
+          });
     setAuthBusy(false);
 
     if (!result.ok) {
@@ -1471,6 +1500,20 @@ export default function FutureBoxHome() {
       setAuthModalOpen(true);
       return;
     }
+    /* Not straight out to Google any more.
+
+       This button sits on the landing page, where the one thing it cannot
+       know is whether the person pressing it already has an account. If they
+       do not, it creates one — and an account created without the tick box
+       is exactly what ElevenLabs' OEM Terms 3(A) forbids us to have. So it
+       opens the sign-up panel instead, where the same providers are the
+       first thing on the screen and the box is underneath them. One extra
+       tap, and it is the tap the agreement is made of. */
+    if (!agreed) {
+      openAuth('signup');
+      return;
+    }
+    cloud.markAgreed();
     /* With the language they chose, so it survives the round trip through
        Google. See `CHOSE_LANG` in `lib/cloud.ts`. */
     const result = await cloud.signInWithGoogle(lang);
@@ -1509,6 +1552,7 @@ export default function FutureBoxHome() {
     setAuthMode(mode);
     setAuthError(null);
     setAuthNotice(null);
+    setAgreed(false);
     setAuthModalOpen(true);
   };
 
@@ -1833,7 +1877,15 @@ export default function FutureBoxHome() {
                 </form>
               ) : (
                 <>
-              <SignInWith onProblem={setAuthError} />
+              {/* The providers carry the same gate as the form under them.
+                  Creating an account with Google is still creating an
+                  account, and `needsAgreement` stops the redirect until the
+                  box below is ticked — see `components/SignInWith.tsx`. */}
+              <SignInWith
+                onProblem={setAuthError}
+                needsAgreement={authMode === 'signup' && !agreed}
+                onAgreed={() => cloud.markAgreed()}
+              />
               <form onSubmit={handleAuthSubmit} className="space-y-3">
                 <input
                   type="email"
@@ -1851,9 +1903,10 @@ export default function FutureBoxHome() {
                   required
                   className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
                 />
+                {authMode === 'signup' && <AgreeToTerms checked={agreed} onChange={setAgreed} />}
                 <button
                   type="submit"
-                  disabled={authBusy}
+                  disabled={authBusy || (authMode === 'signup' && !agreed)}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm disabled:opacity-60"
                 >
                   {authBusy
@@ -2793,9 +2846,11 @@ export default function FutureBoxHome() {
                 />
               </div>
 
+              {authMode === 'signup' && <AgreeToTerms checked={agreed} onChange={setAgreed} />}
+
               <button
                 type="submit"
-                disabled={authBusy}
+                disabled={authBusy || (authMode === 'signup' && !agreed)}
                 className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:opacity-60"
               >
                 {authBusy ? t('auth.working') : authMode === 'signin' ? 'Sign In' : 'Create Free Account'}
