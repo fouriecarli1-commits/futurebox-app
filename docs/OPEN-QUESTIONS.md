@@ -9,11 +9,11 @@ they can be reviewed in one place instead of remembered.
 not be checked, it says so and it says how to check it. Entries move to
 **Settled** with a date and a commit rather than being deleted.
 
-Last updated: 2026-09-14.
+Last updated: 2026-09-15.
 
 ---
 
-## Lees dit eerste — waar dinge staan, 14 September 2026
+## Lees dit eerste — waar dinge staan, 15 September 2026
 
 *Hierdie register is 2 600 reëls lank en groei elke sessie. Niemand lees dit
 van voor af nie, en 'n register wat niemand lees nie, is nie 'n register nie.
@@ -4363,9 +4363,125 @@ to do. Everything else is time.
 ---
 
 
+## The night of the fifteenth: the booth, and two shapes in the live room
+
+Nine things, and they fall into three groups. Written down because the
+pattern in the second group is the one worth remembering.
+
+### What was built
+
+**A marked piece of the song.** She asked for "ekstra dragging lines in die
+timeline wat 'n gedeelte uitsonder, dan highlight daai gedeelte met 'n button
+wat op pop met verskillende opsies binne die button". The marker arms from the
+ruler's own corner and the whole timeline then draws a region instead of
+scrubbing; a pinned bar says how long it is and which lane it acts on, and one
+button opens the tools.
+
+`carveLane` in `lib/session.ts` is the one thing under all of them: the marked
+piece cut onto its own lane, with the pieces either side still pointing at the
+same recording. Cutting it out, keeping only it, repeating it and both paid
+actions are therefore free, instant and undone by dragging an edge back. The
+fade is the exception and had to be: a fade on a gain node is in the preview
+and not in the export, and the rule this room is built on is that what she
+hears and what renders are the same samples.
+
+The AI cleanup on her list is **not** built and was not forgotten. Nothing
+wired to this room improves a marked second and a half of audio, and a button
+promising to "make it better" would have been a button that could not.
+
+**ProBooth, one name.** It had three in English and two in Afrikaans. A name
+is not translated; it is ProBooth in both now, and the multitrack room is
+ProBooth — lanes.
+
+**The door.** A list of song cards became a dropdown and a way to bring a file
+in — and bringing a song in is new here, the room would only ever sing over
+what the app itself wrote. The whole studio takes the booth's dark ramp while
+that tab is open, and the ramp now redefines the primary colour family, so
+every button in the room goes blue without one class name changing.
+
+**A video can go in the live room, and a filmed take is kept.** Both, because
+neither is any use without the other. The schema was the reason and not the
+screen: `live_posts.kind` was checked against three values and none of them
+was a video. `supabase/livevideo.sql`.
+
+### The pattern: four faults that were all "it works, where nobody looks"
+
+This is the group worth keeping.
+
+1. **The marker did nothing.** It worked — on the 44-pixel ruler strip at the
+   top. Nobody marking a piece of a song looks there; they drag across the
+   sound. A feature that was armed, working and probed read as a dead button
+   because the one surface that answered is the one a hand does not go to.
+
+2. **The words still did not play in the live room.** Reported twice. The
+   first fix was right and went into the share sheet in the Library; the
+   room's OWN composer — the card somebody standing in Live actually uses —
+   sent no words at all. The function that decides what a post's words are was
+   *private to the share sheet*, so the second caller could not have used it
+   even if whoever wrote it had thought to.
+
+3. **The blank-screen panel was silent through the blank screen.** It looked
+   once, six seconds after load. Her page loads fine, draws fine, passes that
+   check, and goes blank later — when the phone takes the tab's memory while
+   the gallery is in front of it. One look at six seconds cannot see that.
+
+4. **The play button was drawn over the cover maker.** A song card's picture
+   carries a full-size press-to-open overlay. Pressing Cover art swaps the
+   picture for the maker inside the same box and the overlay stayed: a green
+   circle across "Make a cover image", and a press aimed at the maker opened
+   the song full screen instead. `check:covermaker`'s own closing sentence
+   says "nothing may sit over the artwork" and it only ever read the Sleeve's
+   markup. The thing sitting over it was in the card.
+
+**What they have in common.** Every one of them had a check or a probe over
+it, and every one of those measured a real property adjacent to the one that
+mattered — the ruler rather than the timeline, one of two callers, the load
+rather than the life of the page, the panel rather than what is in front of
+it. That is the seventh or eighth time this file has recorded the same shape.
+The tell each time is the same: the check names one instance of a thing there
+are several of.
+
+Two of the fixes are therefore structural rather than local. `planOf` lives in
+`lib/timeline.ts` now and both posting paths call it, so they cannot drift
+apart again; the marker arms a MODE, and every surface in the timeline means
+the same thing by a drag while it is on.
+
+### What she saw, and what it cost her to see it
+
+The rest came off photographs of her own phone, and every one of them is a
+thing no check in this repository could have had an opinion about:
+
+- Five stacked buttons are right for choosing what to do and are three hundred
+  pixels of furniture in front of somebody singing. The stack is the idle
+  state now; a take gets a slim dock.
+- The pitch readout held either a 20-pixel note name or a 14-pixel sentence,
+  so the row grew and shrank several times a second and everything under it
+  jumped. She called it a flicker, which is exactly what a layout shift at
+  that rate looks like.
+- The engraving of the take was drawn at every moment and is a thing you read
+  afterwards. Behind a button.
+- The booth's dim ink was half strength, chosen when the only things wearing
+  it were a unit under a fader. The room grew out of that and nobody noticed
+  until she said "kyk hoe dof".
+
+**The one still open.** The white screen at the avatar upload is *completely
+empty* — which means this app's own code is gone with it, so no panel of ours
+can draw. The image path is already defended against causing that: a scaled
+decode, a pixel ceiling, the bitmap closed. Three answers have been guesses.
+So the page now writes down what it is about to do before it does it, and
+`/oops` prints it. The next occurrence names its own step.
+
+
 ## Still hers
 
 - `ELEVEN_AURORA_READY=1` in Vercel, a redeploy, and one short clip. The check
   that costs nothing is `/api/presenter`, which answers `{"available":true}`.
 - The copyright test on an uploaded song, banked in `docs/SWITCH-ON.md`.
 - The dictionary ids, pasted into Vercel.
+- `supabase/livevideo.sql`, run — and then the chain end to end: film a take,
+  keep it in the channel, post it in Live, open it. It is the first thing in
+  this app whose three halves were built in one sitting and have never been
+  pressed by a person.
+- What `/oops` says the next time the avatar page comes back white. The top
+  entry now carries a yellow "Besig met · Doing:" line, and that line is the
+  only evidence that survives a tab whose memory was taken.
