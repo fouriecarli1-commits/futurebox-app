@@ -28,7 +28,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { barClearance } from './TabBar';
-import { ArrowLeft, Check, Circle, Ear, Layers, Loader2, Mic, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, Circle, Ear, Layers, Loader2, Mic, Music2, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
 import { decode, knownLatency, mixdown } from '../lib/mixdown';
 import { encodeWav } from '../lib/wav';
 import { accessToken } from '../lib/cloud';
@@ -1029,6 +1029,9 @@ export default function VocalBooth({
 
   const busyOrLive = phase === 'recording' || phase === 'counting';
 
+  /** Whether the engraving of the take is open. Shut, always, to start. */
+  const [sangOpen, setSangOpen] = useState(false);
+
   /**
    * One control, drawn the same way every time.
    *
@@ -1321,10 +1324,44 @@ export default function VocalBooth({
           engraving it would be presenting a reading of somebody else's mix as
           a score, and `lib/pitch.ts` has said since it was written why that
           is not allowed. `Staff` draws nothing when there is nothing read, so
-          this needs no condition of its own. */}
-      <div className="flex-shrink-0 px-5">
-        <Staff notes={sung} musicKey={track.key ?? ''} bpm={track.bpm ?? 0} />
-      </div>
+          this needs no condition of its own.
+
+          ── And behind a button ─────────────────────────────────────────
+
+          Carli, 15 September 2026: *"Haal daai gedeelte uit, wat you sang.
+          Dit kan dalk iewers beskikbaar wees in 'n funksie knoppie waarop 'n
+          mens druk om dit te sien."*
+
+          It was drawn on every screen at every moment, and it is not a thing
+          anybody looks at while they are singing: it is a thing you read
+          afterwards, about the take you just did. On a phone it and its
+          explanation took most of the height that the words needed, in the
+          middle of a take.
+
+          So it is a bar you press, it is only offered once there are notes to
+          engrave, and it is never offered during a take — a fold somebody
+          opened before pressing record would put it straight back over the
+          words. */}
+      {sung.length > 0 && !busyOrLive && (
+        <div className="flex-shrink-0 px-5 pb-2 space-y-2">
+          <button
+            type="button"
+            data-sangopen={sangOpen ? 'yes' : 'no'}
+            onClick={() => setSangOpen((was) => !was)}
+            aria-expanded={sangOpen}
+            className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3.5 py-2 text-sm font-semibold text-zinc-300"
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <Music2 className="h-4 w-4 flex-shrink-0 text-zinc-500" />
+              <span className="truncate">{t('staff.title', 'What you sang')}</span>
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 flex-shrink-0 text-zinc-500 transition-transform ${sangOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {sangOpen && <Staff notes={sung} musicKey={track.key ?? ''} bpm={track.bpm ?? 0} />}
+        </div>
+      )}
 
       {/* ── The waveform ──────────────────────────────────────────────────
 

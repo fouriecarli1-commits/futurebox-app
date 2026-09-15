@@ -145,7 +145,7 @@ export default function TakeStrip({
   }, [at, guide, trail]);
 
   return (
-    <div className={`space-y-1.5 ${className}`}>
+    <div className={`space-y-2 ${className}`}>
       <canvas
         ref={canvas}
         /* Named, for the same reason the stave is. */
@@ -155,7 +155,24 @@ export default function TakeStrip({
         style={{ height: 'clamp(3rem, 9vh, 4.5rem)' }}
       />
 
-      <div className="flex items-center gap-2.5">
+      {/* ── A row that does not change height ──────────────────────────
+
+          Carli, 15 September 2026: *"daai listening bar bietjie afskuif, want
+          hy hop amper in 'n flikker elke keer wanneer die noot wat gesing
+          word wil uit kom, dus moet daar spasie gemaak word vir die
+          listening bar en die note wat op pop om gesien te word."*
+
+          Exactly right, and the cause is in this one row. It holds either a
+          20-pixel note name or a 14-pixel sentence, whichever the pitch
+          reader is confident about this frame — so every time a note came and
+          went the row grew and shrank, and everything under it jumped. On a
+          sung phrase that happens several times a second, which reads as a
+          flicker rather than as a layout shift.
+
+          A floor the size of the taller of the two, and the space is there
+          whether the note is or not. Nothing moves; the note simply appears
+          in room that was already kept for it. */}
+      <div className="flex min-h-9 items-center gap-2.5">
         {/* The note, and how far off it you are. */}
         {note ? (
           <>
@@ -183,7 +200,7 @@ export default function TakeStrip({
              Idle, the honest thing to say is what the row is for. */
           <span className="text-sm text-zinc-500 leading-snug">
             {live
-              ? t('booth.listening', 'Listening…')
+              ? t('booth.listening', 'Listening\u2026')
               : guide.length
                 ? t('booth.stripIdle', 'Press record: the song’s notes are the bars, and your voice draws on them.')
                 : guideRead

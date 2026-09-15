@@ -34,8 +34,24 @@ export const RAISED = '#141826';
 export const EDGE = 'rgba(255,255,255,0.08)';
 /** Text. */
 export const INK = '#eef2ff';
-/** Text that is not the point of the sentence. */
-export const INK_DIM = 'rgba(238,242,255,0.5)';
+/**
+ * Text that is not the point of the sentence.
+ *
+ * Carli, 15 September 2026, with a photograph of the door: *"Kyk hoe dof is
+ * die woorde daar bo, maak dit wit."*
+ *
+ * It was half strength, and that was chosen when the only things wearing it
+ * were a unit under a fader and a lane's second line — four or five words
+ * beside something brighter. The room has grown out of that: the door's own
+ * paragraph, every feature's line and the note about what costs nothing are
+ * all sentences a person reads, on near-black, on a phone held at arm's
+ * length in daylight.
+ *
+ * Nearly three quarters, which is a second voice rather than a whisper. The
+ * headings above it are full strength, so the hierarchy this was for is
+ * still there — it is the gap that was too wide, not the idea.
+ */
+export const INK_DIM = 'rgba(238,242,255,0.72)';
 /** Text that is barely there — a unit, a placeholder. */
 export const INK_FAINT = 'rgba(238,242,255,0.32)';
 /** The blue: the playhead, an open desk, the line through the song. */

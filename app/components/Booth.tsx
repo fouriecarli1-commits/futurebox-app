@@ -318,7 +318,10 @@ export default function Booth({
           <h4 className="text-2xl font-black leading-tight tracking-tight" style={{ color: INK }}>
             {t('booth.title')}
           </h4>
-          <p className="max-w-2xl pt-1 text-sm leading-snug sm:text-base" style={{ color: INK_DIM }}>
+          {/* Full strength. This is the sentence that says what the room is
+              — the first thing read and the reason to go in — and it was
+              drawn as though it were a caption under something else. */}
+          <p className="max-w-2xl pt-1 text-sm leading-snug sm:text-base" style={{ color: INK }}>
             {t(
               'booth.room.sub2',
               'A real recording room, in your phone. Put your headphones on, pick a song, and sing it yourself — the words move in time, the take lands on its own lane, and nothing leaves this device until you say keep.',
