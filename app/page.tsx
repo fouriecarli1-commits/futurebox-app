@@ -1891,14 +1891,14 @@ export default function FutureBoxHome() {
                   type="email"
                   value={authEmail}
                   onChange={(e) => setAuthEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t('auth.emailHint', 'you@example.com')}
                   required
                   className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
                 />
                 <PasswordField
                   value={authPassword}
                   onChange={setAuthPassword}
-                  placeholder="Password"
+                  placeholder={t('home.password', 'Password')}
                   autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
                   required
                   className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
@@ -2828,7 +2828,7 @@ export default function FutureBoxHome() {
                   type="email"
                   value={authEmail}
                   onChange={(e) => setAuthEmail(e.target.value)}
-                  placeholder="your.email@company.com"
+                  placeholder={t('auth.emailHint', 'you@example.com')}
                   className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
                   required
                 />

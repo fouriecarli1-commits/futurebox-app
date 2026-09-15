@@ -18,6 +18,20 @@ import { launchOptions, serve, shot } from './where.mjs';
 const PORT = process.argv[2] || '3102';
 const af = process.argv[3] === 'af';
 
+/* The divider between the provider buttons and the email form.
+
+   It was `/^\s*or\s*$/im` in both assertions below, hard-coded, in a probe
+   that takes `af` as an argument -- so the Afrikaans run had always failed
+   the first of them and always passed the second for the wrong reason, since
+   asserting the ABSENCE of an English word on an Afrikaans screen succeeds
+   whatever is drawn. `auth.or` is "of" in Afrikaans.
+
+   Found 15 September 2026, the first time this probe was run in Afrikaans.
+   It is the shape #96 was about: a probe nobody runs is a probe that is
+   wrong, and one that takes a language argument it does not honour is worse
+   than one that does not offer the choice. */
+const OR = af ? /^\s*of\s*$/im : /^\s*or\s*$/im;
+
 /* ── Its own build, and why this one cannot borrow anybody else's ─────────
 
    `providersOn()` returns an empty list the moment
@@ -103,8 +117,8 @@ async function withProviders(external) {
     !said.some((one) => /GitHub/.test(one)), said.join(' | '));
   check('Google comes first — most people are already signed into it',
     /Google/.test(said[0] ?? ''), said[0] ?? 'none');
-  check('and the "or" is there when there is something to be or-ed against',
-    /^\s*or\s*$/im.test(await p.locator('form').first().locator('..').innerText()));
+  check('and the divider is there when there is something to divide',
+    OR.test(await p.locator('form').first().locator('..').innerText()));
   await p.screenshot({ path: shot(`signinwith-${af ? 'af' : 'en'}.png`) });
   await p.close();
 }
@@ -129,9 +143,69 @@ async function withProviders(external) {
   /* And it is not sitting under a dangling "or" with an empty gap above it.
      That is what the first version did — the divider stayed behind when the
      buttons did not, which is exactly what a phone screenshot showed. */
-  check('with no providers there is no "or" left hanging above the form',
-    !/^\s*or\s*$/im.test(await modal.innerText()),
+  check('with no providers there is no divider left hanging above the form',
+    !OR.test(await modal.innerText()),
     (await modal.innerText()).split('\n').slice(0, 6).join(' / '));
+  await p.close();
+}
+
+/* ── The tick box, which is why the buttons above can be disabled ────────
+
+   Added 15 September 2026. ElevenLabs' OEM Terms §3(A) -- the agreement that
+   lets FutureBox pass their music and voice service through to its own
+   members -- requires every member to have accepted "a written contract, or
+   'clickwrap' style online agreements involving conspicuous notice to End
+   Users and an affirmative click to accept". Until that day the sign-up
+   screen had no box, no notice and not even a link.
+
+   It is tested here rather than in a probe of its own because it lives in
+   this modal and it now GATES the buttons this file already measures: a
+   provider button that redirects before the box is ticked creates an account
+   without an acceptance, which is the exact thing the clause forbids.
+
+   What is asserted is the contract, not the wording: a box that starts
+   unticked, a submit and a provider row that do not work until it is ticked,
+   and no box at all on the sign-in side, because signing back in is not a
+   new agreement. */
+{
+  const { p, modal } = await withProviders({ google: true, apple: true, facebook: true });
+  const box = modal.locator('input[type="checkbox"]');
+  const submit = modal.locator('button[type="submit"]');
+  const google = modal.locator('button').filter({ hasText: /Google/ }).first();
+
+  check('signing up puts a tick box in front of the person', (await box.count()) === 1);
+  check('and it starts unticked, because a pre-ticked box is not an affirmative click',
+    (await box.count()) === 1 && !(await box.first().isChecked()));
+
+  const words = await modal.innerText();
+  check('and it says the age and links both documents',
+    /18/.test(words) && (await modal.locator('a[href="/terms"]').count()) === 1 &&
+      (await modal.locator('a[href="/privacy"]').count()) === 1,
+    words.split('\n').filter((l) => /18|terms|voorwaardes/i.test(l)).join(' / ') || '(nothing)');
+
+  check('the create button does nothing until it is ticked',
+    await submit.first().isDisabled());
+  check('and neither does Google — signing in with a provider still makes an account',
+    await google.isDisabled());
+
+  await box.first().check();
+  await p.waitForTimeout(200);
+  check('ticking it opens the create button', !(await submit.first().isDisabled()));
+  check('and opens the provider buttons with it', !(await google.isDisabled()));
+
+  await p.screenshot({ path: shot(`agree-${af ? 'af' : 'en'}.png`) });
+  await p.close();
+}
+
+// ── And signing back in is not a new agreement ───────────────────────────
+{
+  const { p, modal } = await withProviders({ google: true });
+  await modal.locator('button').filter({ hasText: af ? /^Teken in$/ : /^Sign in$/ }).last().click();
+  await p.waitForTimeout(600);
+  const back = p.locator('form').first().locator('..');
+  check('signing in asks for no tick box', (await back.locator('input[type="checkbox"]').count()) === 0);
+  check('and its button works straight away',
+    !(await back.locator('button[type="submit"]').first().isDisabled()));
   await p.close();
 }
 
@@ -148,4 +222,4 @@ if (problems.length) {
   problems.forEach((one) => console.error(`  · ${one}`));
   process.exit(1);
 }
-console.log('\ncheck:signinwith — the sign-in row draws exactly the providers the project says are on.');
+console.log('\ncheck:signinwith — the sign-in row draws exactly the providers the project\n  says are on, and nothing creates an account before the box is ticked.');

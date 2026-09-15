@@ -164,7 +164,22 @@ for (const script of named) {
 
      The bottom bar is the signal because it is on every signed-in screen and
      no signed-out one. Only probes that sign in are asked. */
-  const signsIn = /button\[type="submit"\]/.test(source);
+  /* Clicking the submit is signing in. Merely locating it is not.
+
+     This asked whether the file mentioned `button[type="submit"]` anywhere,
+     which was true of every probe that signs in and, from 15 September 2026,
+     also true of `signinwith` — which asks whether that button is DISABLED
+     until the terms box is ticked and never presses it. A probe that never
+     submits never signs in, so it was being required to wait for a bottom bar
+     that is correctly not there.
+
+     Tightening it to a click was checked against every probe in the
+     directory: `signinwith` is the only one whose classification changes, and
+     every probe that really does sign in clicks the button on the same line
+     it locates it. If one ever splits the two across lines this goes quiet
+     rather than loud, which is the failure mode to watch — the same shape as
+     the `photosong` note below. */
+  const signsIn = /button\[type="submit"\][^\n]*\.click\(/.test(source);
   /* One probe never gets in on purpose: `signup` is about the six-digit code
      screen, which is the door rather than the room, and it would wait thirty
      seconds for a bar that is correctly not there. Recognised by what it looks

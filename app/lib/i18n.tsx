@@ -1087,6 +1087,7 @@ export const STRINGS: Dict = {
   "account.and": { en: "and the", af: "en die" },
   "account.privacy": { en: "privacy notice", af: "privaatheidskennisgewing" },
   "auth.continueWith": { en: "Continue with", af: "Gaan voort met" },
+  "auth.emailHint": { en: "you@example.com", af: "jy@voorbeeld.co.za" },
   "common.and": { en: "and", af: "en" },
   "auth.agreeAge": { en: "I am 18 or older, and I accept the", af: "Ek is 18 of ouer, en ek aanvaar die" },
   "auth.agreeTerms": { en: "terms", af: "voorwaardes" },
