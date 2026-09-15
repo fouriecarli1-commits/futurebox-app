@@ -19,10 +19,10 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowDownToLine, ArrowLeft, Bot, Check, Circle, Clock, Download, Gauge, Grid3x3, KeyRound, Layers, Loader2, Mic2, Music2, Plus, Scissors, Search, Sliders, Square, Timer, Trash2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
+import { Activity, ArrowDownToLine, ArrowLeft, Bot, Check, Circle, Clock, Download, Gauge, Grid3x3, KeyRound, Layers, Loader2, Mic2, Music2, Plus, Repeat, Scissors, Search, Sliders, Square, SquareSplitHorizontal, Timer, Trash2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, dbOf, lengthOf, mixSession, monoOf, pieceOf, readInto, readSession,
-  span, startLane, windowOf, wireLane, wireMaster,
+  repeatOf, span, startLane, windowOf, wireLane, wireMaster,
   type Lane, type Master, type Reading,
 } from '../lib/session';
 import { failed, separate, separateParts } from '../lib/stems';
@@ -47,7 +47,7 @@ import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Hint from './Hint';
 import { Card, Row } from './BoothCard';
-import { INK_DIM, LIT } from '../lib/boothlook';
+import { EDGE, INK_DIM, LIT, PANEL } from '../lib/boothlook';
 import BoothTimeline from './BoothTimeline';
 import BoothDock, { type Desk } from './BoothDock';
 import BoothFx from './BoothFx';
@@ -266,6 +266,32 @@ export default function ProBooth({
 
   const rate = backing?.sampleRate ?? 48_000;
   const total = Math.max(span(lanes), 1);
+
+  /* ── The canvas, which is longer than the song ────────────────────
+
+     Carli: *"Wil nie ver op die timeline beweeg nie."*
+
+     It would not, and the reason is circular rather than a clamp: the song's
+     length IS the end of its last lane, so dragging a clip to the right made
+     the song longer, which made the timeline redraw wider, which put the
+     clip back under the thumb. Every pixel gained was given away by the
+     rescale. A clip could be moved a little and never far.
+
+     So the drawing surface is the song plus room at the end, rounded up to a
+     whole number of four-bar blocks. Rounded, because a canvas that grew
+     smoothly would rescale on every frame for the same reason; in blocks it
+     sits still while a clip crosses it and jumps once when the song really
+     does get longer.
+
+     Only the timeline uses this. The transport still reads the song's own
+     length, and `mixSession` still renders exactly as far as the last lane
+     plays — an editor with room at the end is not a song with silence at
+     the end. */
+  const canvas = useMemo(() => {
+    const bar = barSeconds(sane(meter));
+    const block = bar > 0.05 && bar < 60 ? bar * 4 : 8;
+    return Math.max(total + block, Math.ceil((total + block / 2) / block) * block);
+  }, [total, meter]);
 
   // The song is the first lane, and it arrives once.
   useEffect(() => {
@@ -1260,6 +1286,81 @@ export default function ProBooth({
     </Card>
   );
 
+  /* ── The cut, which is a cut and costs nothing ──────────────────
+
+     Carli, 15 September: *"Die cut tool doen niks nie. Daar moet 'n
+     moontlikheid wees om die timeline te split."*
+
+     There was no cut tool. There were two pairs of scissors that meant
+     something else: "split the voice off" and "split into named parts" are
+     both AI separations that cost credits and take half a minute, and one
+     of them was drawn with a pair of scissors — which in every desk on
+     earth means "cut here". So the one thing scissors obviously does was
+     the one thing the room could not do.
+
+     This is the DAW one. One lane becomes two, both pointing at the same
+     recording with different pieces of it: nothing is rendered, nothing is
+     uploaded, nothing is spent, and it is undone by dragging an edge back.
+
+     On a repeated clip it cuts at the nearest seam rather than inside a
+     repetition, because a repetition cut in half cannot be said in this
+     model — and because a musician splitting a looped part means "at the
+     top of a bar", which is what the seam is. */
+  const cutHere = useCallback(() => {
+    const lane = lanes.find((one) => one.id === picked);
+    if (!lane) return;
+    const window = windowOf(lane);
+    const once = window.to - window.from;
+    const times = repeatOf(lane);
+    const into = at - lane.at;
+    /* A tenth of a second at each end, which is the same floor the drag
+       handles use: a cut that leaves a sliver leaves two lanes where one of
+       them is a click. */
+    if (!(into > 0.1 && into < once * times - 0.1)) {
+      setProblem(
+        t('pro.cutWhere', 'Put the line inside the lane first — the cut happens where the line is.'),
+      );
+      return;
+    }
+    setProblem(null);
+    setStale(true);
+
+    const left: Lane = { ...lane, id: `${lane.id}-a`, name: lane.name };
+    const right: Lane = { ...lane, id: `${lane.id}-b`, name: lane.name };
+    if (times > 1) {
+      const seam = Math.max(1, Math.min(times - 1, Math.round(into / once)));
+      setLanes((was) =>
+        was.flatMap((one) =>
+          one.id !== lane.id
+            ? [one]
+            : [
+                { ...left, repeat: seam },
+                { ...right, at: lane.at + seam * once, repeat: times - seam },
+              ],
+        ),
+      );
+      setPicked(`${lane.id}-a`);
+      return;
+    }
+    setLanes((was) =>
+      was.flatMap((one) =>
+        one.id !== lane.id
+          ? [one]
+          : [
+              { ...left, from: window.from, to: window.from + into, repeat: 1 },
+              {
+                ...right,
+                at: lane.at + into,
+                from: window.from + into,
+                to: window.to,
+                repeat: 1,
+              },
+            ],
+      ),
+    );
+    setPicked(`${lane.id}-a`);
+  }, [at, lanes, picked, t]);
+
   /* ── Track controls ──────────────────────────────────────
 
      The clock — tempo, time signature, key, click, count-in, grid — and the
@@ -1495,6 +1596,36 @@ export default function ProBooth({
           'The controls of whichever lane you have open: its name, how loud it is, where it sits left to right, when it starts, its mute and its solo — and the five actions that cost credits, each of which says what it costs.',
         )}
       >
+        {/* ── Cut, and how many times it goes round ────────────────
+
+            Above the row rather than in it, because it is the only free
+            thing among five paid ones and because it is the one she looked
+            for and could not find. */}
+        {picked && (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={cutHere}
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-100"
+            >
+              <Scissors className="h-4 w-4" />
+              {t('pro.cutAt', 'Cut where the line is')}
+            </button>
+            <Hint>
+              {t(
+                'pro.cutAtWhat',
+                'Splits this lane in two at the playhead, and costs nothing. Both halves point at the same recording, so nothing is lost — drag an edge back and it is whole again. Move the white line first: the cut happens where the line is.',
+              )}
+            </Hint>
+            {repeatOf(lanes.find((one) => one.id === picked) ?? lanes[0]) > 1 && (
+              <span className="inline-flex items-center gap-1 text-sm" style={{ color: INK_DIM }}>
+                <Repeat className="h-4 w-4" />
+                ×{repeatOf(lanes.find((one) => one.id === picked) ?? lanes[0])}
+              </span>
+            )}
+          </div>
+        )}
+
         {lanes.filter((one) => one.id === picked).map((lane) => (
           <LaneRow
             key={lane.id}
@@ -1530,6 +1661,64 @@ export default function ProBooth({
     </>
   );
 
+  /* ── Getting the song out of the room ─────────────────────────
+
+     Carli, 15 September: *"Dan wil ek weet hoe export 'n liedjie? Ek sien
+     nerens iets oor dit nie?"*
+
+     Both destinations existed and neither was findable. "Save to my phone"
+     was the seventh button in a wrapping row on the Audio-effects desk, and
+     the way to the channel was a sentence behind a question mark. Somebody
+     looking for how a song leaves this room had nowhere to look.
+
+     A card of its own, on Mix & master, which is the desk somebody is on
+     when a song is finished — and named with the word she used, because
+     that is the word people search a screen for.
+
+     The two are not the same journey and the card says so. The phone is a
+     render and a download, here, costing nothing. The channel goes through
+     the Library on purpose: one file, one name, one thing that can be
+     posted, rather than a second path that could disagree with the first
+     about what the song is. */
+  const exportCard = (
+    <Card
+      wide
+      icon={<Download className="h-4 w-4" />}
+      title={t('pro.export', 'Export the song')}
+      what={t(
+        'pro.exportWhat',
+        'Both give you the same mix: every lane, its level, where it sits, its cuts and its effects, rendered exactly as the room plays it. The phone is a file you keep; the Library is the copy your channel posts from.',
+      )}
+    >
+      <button
+        type="button"
+        onClick={() => void toPhone()}
+        disabled={busy || saving || recording || !heard.length}
+        className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-bold text-zinc-100 disabled:opacity-40"
+      >
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+        {t('pro.toPhone', 'Save to my phone')}
+      </button>
+      <button
+        type="button"
+        onClick={() => void keep()}
+        disabled={busy || saving || recording || !heard.length}
+        className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-onAccent disabled:opacity-40"
+      >
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+        {t('pro.toLibrary', 'Send it to my Library')}
+      </button>
+      <p className="text-sm leading-snug" style={{ color: INK_DIM }}>
+        {heard.length
+          ? t(
+              'pro.exportSays',
+              'The phone gets a WAV and the room stays open. The Library copy closes this room, and the post button there sends it to your channel.',
+            )
+          : t('pro.keepNone', 'Record a take or bring audio in, and this makes one song out of all of it.')}
+      </p>
+    </Card>
+  );
+
   /* ── Mix and master ──────────────────────────────────────
 
      Three controls and a reading. Not a chain of processors: what is here is
@@ -1539,6 +1728,7 @@ export default function ProBooth({
      differ from the approval, invisibly. */
   const mixDesk = (
     <>
+      {exportCard}
       <Card
         icon={<Gauge className="h-4 w-4" />}
         title={t('pro.masterLevel', 'Level')}
@@ -2391,29 +2581,12 @@ export default function ProBooth({
           {t('pro.keep', 'Make one song')}
         </button>
 
-        {/* Beside it, because it is the same decision one step later: the
-            song is made, and now it has to go somewhere. */}
-        <button
-          type="button"
-          onClick={() => void toPhone()}
-          disabled={busy || saving || recording || !heard.length}
-          className="min-h-[44px] px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-950 text-sm font-bold text-zinc-200 flex items-center gap-2 disabled:opacity-40"
-        >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          {t('pro.toPhone', 'Save to my phone')}
-        </button>
-        <Hint>
-          {t(
-            'pro.toPhoneWhat',
-            'Renders the same mix as "Make one song" and hands it to your phone as a WAV — every lane, its levels, its cuts and its effects, in one file. It costs nothing, nothing leaves the device, and the room stays open.',
-          )}
-        </Hint>
-        <Hint>
-          {t(
-            'pro.toChannelWhat',
-            'To put it in your channel: press "Make one song". It lands in your Library under this song\u2019s name, and the post button there sends it to Live. It goes that way rather than straight from here so that what people hear in the room is the same file your Library holds.',
-          )}
-        </Hint>
+        {/* Getting the song out of the room has a card of its own on Mix &
+            master — see `exportCard`. It was here, at the end of a wrapping
+            row of seven buttons, and Carli looked for it and did not find
+            it: *"Dan wil ek weet hoe export 'n liedjie? Ek sien nerens iets
+            oor dit nie?"* A button that exists at the bottom of a strip is
+            a button that does not exist. */}
         {/* ── What is in the other room, said once ──────────────────────
 
             The button above is the way there; this is what is there, because
@@ -2690,7 +2863,11 @@ export default function ProBooth({
           has a head big enough to catch. */}
       <BoothTimeline
         lanes={lanes}
-        total={total}
+        /* The canvas, not the song — see the note by `canvas` above. The
+           editor draws on a surface with room at the end so a clip dragged
+           right actually goes somewhere; everything else in this room reads
+           the song's own length. */
+        total={canvas}
         at={at}
         meter={meter}
         snap={snap}
@@ -2703,10 +2880,37 @@ export default function ProBooth({
         picked={picked}
       />
 
-
-      {problem && <p className="text-sm text-amber-400 leading-snug px-5 pb-2">{problem}</p>}
-
       </div>
+
+      {/* ── What went wrong, wherever you are ─────────────────────
+
+          Outside the column above, and that is the whole point of the line.
+
+          Carli, 15 September: *"Die stem generation op die ai liedjies wil
+          nie die instrumente split van die liedjies nie."*
+
+          It may well be refusing for a reason it is perfectly willing to
+          give. Every paid action in this room — splitting a lane, reading
+          it, singing it again, taking the room off it — is started from a
+          desk, and the desks cover the column this message used to live in.
+          So the room said why, into a box nobody could see, and the
+          symptom was a button that did nothing.
+
+          Mine, from the rebuild the night before. A message about a failure
+          has to draw where the failure was started.
+
+          Pinned above the bars rather than in the flow: the desk is
+          scrolled, and a sentence at the bottom of a scroll is a sentence
+          that arrives after somebody has given up. */}
+      {problem && (
+        <p
+          role="alert"
+          className="flex-shrink-0 border-t px-5 py-2 text-sm font-semibold leading-snug"
+          style={{ borderColor: EDGE, background: PANEL, color: '#fbbf24' }}
+        >
+          {problem}
+        </p>
+      )}
 
       {/* ── The two bars, and whatever is out from behind them ────────
 
@@ -2974,7 +3178,7 @@ function LaneRow({
           aria-label={t('pro.split', 'Split the voice off')}
           className="p-2 sm:p-0 text-zinc-600 hover:text-emerald-400 disabled:opacity-40"
         >
-          <Scissors className="w-4 h-4" />
+          <SquareSplitHorizontal className="w-4 h-4" />
         </button>
         <button
           type="button"
@@ -3029,7 +3233,7 @@ function LaneRow({
         <Hint className="ml-1">
           {t(
             'pro.whatRow',
-            'Scissors: split the voice off this lane, so the singing and the music become two lanes. Layers: split it into named parts — drums, bass, and the rest. Magnifier: read the chords, key and tempo. Microphone: sing this lane in another voice. Bin: remove the lane. The first four cost credits and each one says how many; the bin costs nothing.',
+            'Two halves: lift the voice off this lane, so the singing and the music become two lanes. Layers: split it into named parts — drums, bass, and the rest. Magnifier: read the chords, key and tempo. Microphone: sing this lane in another voice. Bin: remove the lane. The first four cost credits and each one says how many; the bin costs nothing. The scissors above are a plain cut and cost nothing.',
           )}
         </Hint>
       </div>

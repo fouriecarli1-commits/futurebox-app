@@ -55,7 +55,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { windowOf, type Lane } from '../lib/session';
+import { lengthOf, repeatOf, windowOf, type Lane } from '../lib/session';
 import { shapeOf } from '../lib/takes';
 import { barSeconds, sayPlace, placeAt, snapped, type Meter, type Snap } from '../lib/tempo';
 import type { Span } from '../lib/analyse';
@@ -88,18 +88,26 @@ function hueFor(index: number, count: number): number {
  *
  * Both grew when M and S became buttons instead of lights. They were 28 by
  * 18, which this app's own rule — 44 pixels under a coarse pointer — forbids
- * and which no thumb can hit: Carli found it by trying. Two 44-wide buttons
- * and a gap need 92 of the gutter, and a 44-tall button under a name needs
- * 88 of the row.
+ * and which no thumb can hit: Carli found it by trying.
  *
- * The cost is real and worth naming: a lane is 26 pixels taller, so a session
- * of eight stems is 208 pixels longer to scroll. The list scrolls either way;
- * a control nobody can press does not become pressable by being closer to
- * the next one.
+ * ── And then both came back down ─────────────────────────────────────────
+ *
+ * *"Dit voel of daai hel blokkie bietjie nouer kan wees om meer spasie te
+ * maak vir klank baan en die liedjie se naam moet bietjie boontoe skuif."*
+ *
+ * Right, and the reason is worth keeping: a 44-pixel rule is about the area
+ * a thumb has to land in, not about how big the thing looks. The buttons are
+ * still 44 by 44 — they have to be — and each now draws a small pill inside
+ * itself instead of filling its whole box with colour. Two slabs became two
+ * lights you can press, which is what they always should have looked like.
+ *
+ * 92 is exactly two 44s and the gaps, so the gutter is as narrow as a
+ * pressable M and S allow, and every pixel saved goes to the waveform. The
+ * row lost ten with the name pulled tight to the top.
  */
-const GUTTER = 100;
+const GUTTER = 96;  // two 44s, a gap between them, and a hair each side
 /** A lane is drawn this tall. */
-const ROW = 88;
+const ROW = 78;
 
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
@@ -220,10 +228,28 @@ export default function BoothTimeline({
       const into = Math.max(0, Math.min(window.to - 0.1, window.from + (wanted - lane.at)));
       onChange(lane.id, { from: into, to: window.to, at: lane.at + (into - window.from) });
     } else {
-      const played = window.to - window.from;
-      const into = Math.max(window.from + 0.1, Math.min(whole, window.from + (wanted - lane.at)));
-      onChange(lane.id, { from: window.from, to: into });
-      void played;
+      /* ── The end: a trim up to the recording, repeats past it ───────
+
+         Carli: *"Kan nie die instrument generated parts drag om groter te
+         word nie."* The end used to stop dead at `whole`, the length of the
+         recording, which is right for a trim and is not what a clip's end
+         does anywhere else: past the recording, the recording repeats.
+
+         So one gesture, two meanings, decided by where the finger is. Inside
+         the recording it cuts. Past it, the piece is left whole and the
+         count goes up — rounded, because a part that goes round two and a
+         half times is not a thing anybody asks a band for. */
+      const asked = Math.max(0.1, wanted - lane.at);
+      const most = whole - window.from;
+      if (asked <= most) {
+        onChange(lane.id, { from: window.from, to: window.from + asked, repeat: 1 });
+      } else {
+        onChange(lane.id, {
+          from: window.from,
+          to: whole,
+          repeat: Math.max(1, Math.round(asked / Math.max(0.05, most))),
+        });
+      }
     }
   };
   const endDrag = (): void => {
@@ -413,7 +439,12 @@ export default function BoothTimeline({
           {/* ── A row per lane ───────────────────────────────────────── */}
           {lanes.map((lane, index) => {
             const window = windowOf(lane);
-            const plays = window.to - window.from;
+            /* What the clip is drawn as: the piece, repeated. `lengthOf` is
+               the same number the mix uses, so the block and the song agree
+               about where this lane ends. */
+            const plays = lengthOf(lane);
+            const once = window.to - window.from;
+            const times = repeatOf(lane);
             const hue = hueFor(index, lanes.length);
             const on = picked === lane.id;
             return (
@@ -466,9 +497,14 @@ export default function BoothTimeline({
                        swallowing the timeline: the name gets the space
                        between and behind them rather than a strip of its
                        own. */
-                    className="absolute inset-0 px-1.5 pt-1.5 text-left"
+                    /* The top of the cell, not all of it. M and S own the
+                       bottom, and a name button that covered them would put
+                       its own centre under one of theirs — which is a press
+                       aimed at the lane landing on solo. 44 tall, because it
+                       is a button. */
+                    className="absolute inset-x-0 top-0 h-11 px-1.5 pt-1 text-left"
                   >
-                    <span className="block w-full truncate text-xs font-bold" style={{ color: INK }}>
+                    <span className="block w-full truncate text-[11px] font-bold leading-tight" style={{ color: INK }}>
                       {lane.name}
                     </span>
                   </button>
@@ -480,20 +516,25 @@ export default function BoothTimeline({
                       box at the foot of the cell swallows every press aimed
                       at the middle of the name behind it — which is where
                       a finger aiming at the lane lands. */}
-                  <span className="pointer-events-none absolute inset-x-1 bottom-0.5 flex items-center justify-between [&>button]:pointer-events-auto">
+                  <span className="pointer-events-none absolute inset-x-0.5 bottom-0.5 flex items-center justify-between [&>button]:pointer-events-auto">
                     <button
                       type="button"
                       onClick={() => onChange(lane.id, { muted: !lane.muted })}
                       aria-pressed={lane.muted}
                       aria-label={t('pro.mute', 'Mute')}
                       title={t('pro.muteWhat', 'Silence this lane. It stays in the session and comes back when you press it again.')}
-                      className="h-11 w-11 rounded-lg text-[11px] font-black leading-none"
-                      style={{
-                        background: lane.muted ? 'rgba(248,113,113,0.25)' : 'rgba(255,255,255,0.06)',
-                        color: lane.muted ? '#fca5a5' : INK_DIM,
-                      }}
+                      className="flex h-11 w-11 items-center justify-center"
                     >
-                      M
+                      {/* 44 by 44 to press, smaller to look at. */}
+                      <span
+                        className="flex h-6 w-8 items-center justify-center rounded text-[11px] font-black leading-none"
+                        style={{
+                          background: lane.muted ? 'rgba(248,113,113,0.3)' : 'rgba(255,255,255,0.07)',
+                          color: lane.muted ? '#fca5a5' : INK_DIM,
+                        }}
+                      >
+                        M
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -501,13 +542,17 @@ export default function BoothTimeline({
                       aria-pressed={lane.soloed}
                       aria-label={t('pro.solo', 'Solo')}
                       title={t('pro.soloWhat', 'Hear only this lane. Solo another one as well and you hear those two; press it again to get everything back.')}
-                      className="h-11 w-11 rounded-lg text-[11px] font-black leading-none"
-                      style={{
-                        background: lane.soloed ? 'rgba(250,204,21,0.25)' : 'rgba(255,255,255,0.06)',
-                        color: lane.soloed ? '#fde047' : INK_DIM,
-                      }}
+                      className="flex h-11 w-11 items-center justify-center"
                     >
-                      S
+                      <span
+                        className="flex h-6 w-8 items-center justify-center rounded text-[11px] font-black leading-none"
+                        style={{
+                          background: lane.soloed ? 'rgba(250,204,21,0.3)' : 'rgba(255,255,255,0.07)',
+                          color: lane.soloed ? '#fde047' : INK_DIM,
+                        }}
+                      >
+                        S
+                      </span>
                     </button>
                   </span>
                 </div>
@@ -581,6 +626,24 @@ export default function BoothTimeline({
                     }}
                   >
                     <Wave lane={lane} />
+                    {/* ── Where it goes round ────────────────────────
+
+                        A seam at every repeat, so a part that goes round
+                        four times looks like four and not like one long
+                        one. Without them the only difference between a
+                        repeated bar and a four-bar recording is the sound,
+                        which is a thing you have to press play to see. */}
+                    {times > 1 &&
+                      Array.from({ length: times - 1 }, (_, n) => (
+                        <span
+                          key={n}
+                          className="pointer-events-none absolute inset-y-0 w-px"
+                          style={{
+                            left: `${((n + 1) / times) * 100}%`,
+                            background: 'rgba(5,6,10,0.45)',
+                          }}
+                        />
+                      ))}
                     {/* The lane's name, on the clip.
 
                         A block of colour with a wave in it says which lane
@@ -639,7 +702,7 @@ export default function BoothTimeline({
                       style={{ background: 'rgba(0,0,0,0.8)', color: INK }}
                     >
                       {clock(Math.max(0, lane.at))} · {sayPlace(placeAt(Math.max(0, lane.at), meter))} ·{' '}
-                      {plays.toFixed(1)}s
+                      {plays.toFixed(1)}s{times > 1 ? ` · ×${times}` : ''}
                     </span>
                   )}
                 </div>
@@ -730,9 +793,19 @@ function Wave({ lane }: { readonly lane: Lane }): React.ReactElement {
     const first = Math.floor((cut.from / whole) * shape.length);
     const last = Math.max(first + 1, Math.floor((cut.to / whole) * shape.length));
 
+    /* The piece, drawn once per repeat.
+
+       The clip is as wide as the lane plays, so a part that goes round four
+       times is four times the width — and a wave stretched across all of it
+       would show one very slow version of a fast part, which is a picture of
+       something that is not happening. Each pass gets its own quarter, and
+       the seams drawn over the top line up with them. */
+    const times = repeatOf(lane);
+    const pass = width / times;
     paint.fillStyle = 'rgba(16,185,129,0.85)';
     for (let x = 0; x < width; x += 1) {
-      const which = first + Math.floor((x / width) * (last - first));
+      const inPass = pass > 0 ? (x % pass) / pass : 0;
+      const which = first + Math.floor(inPass * (last - first));
       const size = Math.max(1, (shape[which] ?? 0) * (height - 4));
       paint.fillRect(x, height / 2 - size / 2, 1, size);
     }

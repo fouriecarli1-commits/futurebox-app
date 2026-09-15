@@ -91,13 +91,30 @@ export function Card({
       className={`flex min-w-0 flex-col gap-2 rounded-2xl border p-2.5 ${wide ? 'col-span-2' : ''}`}
       style={{ borderColor: EDGE, background: PANEL }}
     >
-      <header className="flex min-w-0 items-center gap-1.5">
+      {/* ── The name wraps; it does not vanish ─────────────────────
+
+          Carli, 15 September, with a photograph: *"Kyk hoe die woorde nie
+          volledig van 'n opsie gesien kan word nie. Dit verdwyn agv plek en
+          lengte."*
+
+          "Generate a part" read "Generat…", "Measure the mix" read
+          "Measure th…", "Take the rumble off" read "Take the ru…". Two
+          columns on a 393-pixel phone is 170 per card, and an icon, a coin
+          and a question mark take sixty of them — so `truncate` had about
+          a hundred pixels to say anything in.
+
+          A card is a box and a box can be two lines tall. Truncating is for
+          a name that must sit on one line beside something else; this one
+          has a whole row to itself and no reason to be cut. `items-start`
+          so the marks stay level with the first line rather than drifting
+          to the middle of a two-line name. */}
+      <header className="flex min-w-0 items-start gap-1.5">
         {icon && (
-          <span className="flex-shrink-0" style={{ color: LIT }} aria-hidden>
+          <span className="mt-px flex-shrink-0" style={{ color: LIT }} aria-hidden>
             {icon}
           </span>
         )}
-        <h3 className="min-w-0 flex-1 truncate text-[13px] font-bold" style={{ color: INK }}>
+        <h3 className="min-w-0 flex-1 text-[13px] font-bold leading-tight" style={{ color: INK }}>
           {title}
         </h3>
         {paid && <Coin label={paidSays ?? 'Costs credits'} />}
@@ -199,7 +216,7 @@ export default function DeskSheet({
             {icon}
           </span>
         )}
-        <h2 className="min-w-0 flex-1 truncate text-base font-black" style={{ color: INK }}>
+        <h2 className="min-w-0 flex-1 text-base font-black leading-tight" style={{ color: INK }}>
           {title}
         </h2>
         {place && (

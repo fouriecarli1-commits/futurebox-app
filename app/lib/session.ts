@@ -48,6 +48,24 @@ export interface Lane {
    */
   readonly from?: number;
   readonly to?: number;
+  /**
+   * How many times the cut piece plays, end to end. Absent or 1 is once.
+   *
+   * Carli, 15 September: *"Kan nie die instrument generated parts drag om
+   * groter te word nie."*
+   *
+   * Right, and it was not a broken handle: the end of a clip stopped at the
+   * end of its recording, because you cannot reveal audio that does not
+   * exist. What she was asking for is the other thing a clip's end does in
+   * every desk there is — drag it past the recording and the recording
+   * repeats. A generated part is eight bars; a song is three minutes; the
+   * whole point of eight bars is that they go round.
+   *
+   * A count rather than a length, because a part that repeats two and a half
+   * times is not a thing anybody asks a band for. `windowOf` still owns the
+   * piece; this owns how many times it goes.
+   */
+  readonly repeat?: number;
   /** −1 hard left to 1 hard right. Absent means centre, for lanes made before
    *  there was a pan at all. */
   readonly pan?: number;
@@ -291,10 +309,23 @@ export function windowOf(lane: Lane): { readonly from: number; readonly to: numb
   return to - from < 0.01 ? { from: 0, to: length } : { from, to };
 }
 
-/** How long a lane plays for, after its cut. */
+/**
+ * How many times a lane's piece plays.
+ *
+ * Whole, at least one, and capped. The cap is not defensive tidiness: the
+ * count comes from a drag, a drag comes from a finger, and a finger on a
+ * rescaling timeline can ask for a part to repeat four thousand times —
+ * which is a session that will not render and a number nobody typed.
+ */
+export function repeatOf(lane: Lane): number {
+  const want = Math.round(lane.repeat ?? 1);
+  return Number.isFinite(want) ? Math.min(64, Math.max(1, want)) : 1;
+}
+
+/** How long a lane plays for, after its cut and its repeats. */
 export function lengthOf(lane: Lane): number {
   const window = windowOf(lane);
-  return window.to - window.from;
+  return (window.to - window.from) * repeatOf(lane);
 }
 
 /** How long the session runs: the last thing to finish. */
@@ -326,15 +357,49 @@ export function startLane(
   when = 0,
 ): void {
   const window = windowOf(lane);
-  const length = window.to - window.from;
-  if (!(length > 0)) return;
+  const once = window.to - window.from;
+  if (!(once > 0)) return;
+  const times = repeatOf(lane);
+  const length = once * times;
 
   // How far into the lane playback already is. Negative means it has not
   // started yet and is scheduled ahead.
   const into = playFrom - lane.at;
   if (into >= length) return; // Already finished before this moment.
-  if (into >= 0) source.start(when, window.from + into, length - into);
-  else source.start(when - into, window.from, length);
+
+  if (times === 1) {
+    if (into >= 0) source.start(when, window.from + into, length - into);
+    else source.start(when - into, window.from, length);
+    return;
+  }
+
+  /* ── Repeats, done by the node rather than by us ─────────────────
+
+     `loop` with a start and an end is what an `AudioBufferSourceNode` is
+     for, and it is sample-accurate in an `OfflineAudioContext` exactly as it
+     is in a live one — which is the whole requirement here, because the two
+     have to agree about what the song is.
+
+     Scheduling N separate sources instead would drift: each `start()` is
+     quantised to the render quantum, so eight repeats of a bar would land
+     eight slightly different lengths apart, and the file would differ from
+     what was approved.
+
+     Stopped by `stop()` and not by `start()`'s duration. The spec lets an
+     implementation read `duration` against the looped stream or against the
+     buffer, and browsers have historically disagreed; `stop()` at a wall
+     time has one meaning everywhere. */
+  source.loop = true;
+  source.loopStart = window.from;
+  source.loopEnd = window.to;
+  if (into >= 0) {
+    /* Part-way through: which repetition, and how far into it. */
+    source.start(when, window.from + (into % once));
+    source.stop(when + (length - into));
+  } else {
+    source.start(when - into, window.from);
+    source.stop(when - into + length);
+  }
 }
 
 /** A lane's level once solo and mute have had their say. */
