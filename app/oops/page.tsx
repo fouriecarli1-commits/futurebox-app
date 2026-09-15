@@ -44,7 +44,12 @@ export default function Oops(): React.ReactElement {
   useEffect(() => setList(problems()), []);
 
   const asText = (list ?? [])
-    .map((one) => `${one.at} · ${one.how} · ${one.page}\n${one.name}: ${one.message}\n${one.where}`)
+    .map(
+      (one) =>
+        `${one.at} · ${one.how} · ${one.page}` +
+        `${one.doing ? `\ndoing: ${one.doing}` : ''}` +
+        `\n${one.name}: ${one.message}\n${one.where}`,
+    )
     .join('\n\n');
 
   return (
@@ -136,6 +141,19 @@ export default function Oops(): React.ReactElement {
                 <p style={{ margin: '0.375rem 0 0', fontWeight: 700, lineHeight: 1.4 }}>
                   {one.name}: {one.message}
                 </p>
+                {/* What the page was in the middle of.
+
+                    The most useful line on this card and the one it did not
+                    have. `page` says which screen, which on a five-tab app
+                    narrows very little; this says which STEP, and it is
+                    written down before the step rather than after it — which
+                    is the only reason it survives a tab whose memory was
+                    taken. */}
+                {one.doing && (
+                  <p style={{ margin: '0.375rem 0 0', fontSize: '0.8125rem', color: 'rgb(250 204 21)' }}>
+                    Besig met · Doing: {one.doing}
+                  </p>
+                )}
                 {/* The one entry that is not a fault, said plainly where it
                     appears. Somebody reading "discarded" in a list called
                     "what went wrong" would reasonably think something in the

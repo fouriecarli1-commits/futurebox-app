@@ -71,8 +71,70 @@ export interface Problem {
   /** Whatever the page was showing, so a report says which screen. */
   readonly page: string;
   readonly at: string;
+  /**
+   * What the page was in the middle of doing.
+   *
+   * ── Why a record needs this ─────────────────────────────────────────
+   *
+   * Carli has reported the same white screen three times: *"die wit blad met
+   * die avatar oplaai ... Dit is nogsteeds net wit."* Every answer so far has
+   * been a guess, and the reason they stayed guesses is that `page` says
+   * which SCREEN and nothing says which STEP. The screen was the channel both
+   * times; the step is the whole question — was it opening the picker, was it
+   * reading the photo, was it the upload.
+   *
+   * `discarded` is the case this matters most for, and it is the case that
+   * can say least for itself: the phone takes the tab's memory, nothing
+   * throws, and on the load afterwards there is no stack to read. A line
+   * saying what the page had just started is the only evidence that survives
+   * it, because it was written down before the memory went.
+   */
+  readonly doing?: string;
   /** Next.js's own handle on a production error whose stack was stripped. */
   readonly digest?: string;
+}
+
+/** Where the breadcrumb lives. Its own key: it outlives the page. */
+const DOING = 'futurebox.doing.v1';
+
+/**
+ * Write down what is about to happen, before it happens.
+ *
+ * Called on the way INTO anything that can take a tab down with it — opening
+ * a file picker, decoding a photograph, opening the camera. Deliberately not
+ * cleared on success: the last thing that went well is still the best clue
+ * about what was underway when the phone stepped in, and a breadcrumb that
+ * erases itself leaves nothing behind at exactly the moment it is needed.
+ */
+export function noteDoing(what: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      DOING,
+      JSON.stringify({ what: String(what).slice(0, 120), at: new Date().toISOString() }),
+    );
+  } catch {
+    // Storage blocked. A missing breadcrumb is not worth a thrown error.
+  }
+}
+
+/** The breadcrumb, if one was left and it is recent enough to mean anything. */
+export function doing(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    const raw = window.localStorage.getItem(DOING);
+    if (!raw) return '';
+    const one = JSON.parse(raw) as { what?: unknown; at?: unknown };
+    /* Older than ten minutes is not a clue about this fault, it is a clue
+       about something that went fine an hour ago. Printing it would send
+       somebody looking in the wrong place, which is worse than printing
+       nothing. */
+    const when = Date.parse(String(one.at ?? ''));
+    if (!Number.isFinite(when) || Date.now() - when > 10 * 60 * 1000) return '';
+    return String(one.what ?? '').slice(0, 120);
+  } catch {
+    return '';
+  }
 }
 
 function readAll(): Problem[] {
@@ -105,6 +167,7 @@ export function noteProblem(how: Problem['how'], thing: unknown, digest?: string
       where: (error?.stack || '').split('\n').slice(1, 5).join('\n').slice(0, 600),
       page: `${window.location.pathname}${window.location.search}`.slice(0, 120),
       at: new Date().toISOString(),
+      ...(doing() ? { doing: doing() } : {}),
       ...(digest ? { digest } : {}),
     };
     /* Newest first, because the one being asked about is the last one. */

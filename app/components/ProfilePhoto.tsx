@@ -35,6 +35,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Camera, Loader2, Trash2 } from 'lucide-react';
 import { ACCEPTS, publicUrl, remove as removeFile, squared, upload } from '../lib/avatar';
+import { noteDoing } from '../lib/lasterror';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
 
@@ -73,6 +74,25 @@ export default function ProfilePhoto({
       setBusy(true);
       setProblem(null);
       try {
+        /* ── A breadcrumb, before the step that can take the tab down ──
+
+           Carli, three times now: *"die wit blad met die avatar oplaai ...
+           Dit is nogsteeds net wit"*, and completely empty — which means
+           this app's own code is gone too, so nothing of ours can draw a
+           panel about it. That is the phone taking the tab's memory back,
+           and it is exactly what Android does while a gallery has been open
+           in front of a browser.
+
+           Nothing here can stop that. What it can do is leave a line behind
+           on the device before the memory goes, so the next time she opens
+           /oops the record says which step she was on instead of only which
+           screen. Every answer so far has been a guess; this is what stops
+           the next one being one.
+
+           The file's own size goes in, because a picture and a camera mode
+           are different faults with different answers, and the one number
+           that separates them is not recoverable afterwards. */
+        noteDoing(`avatar: reading a photo of ${Math.round(file.size / 1024)}kB`);
         const made = await squared(file);
         if (!made.ok) {
           setProblem(
@@ -164,8 +184,13 @@ export default function ProfilePhoto({
             id="profile-photo-file"
             onChange={(event) => void choose(event.target.files?.[0])}
           />
+          {/* The breadcrumb for the step BEFORE the one above: the gallery
+              opening is itself when the phone decides the browser can spare
+              its memory, and if the tab goes there, `choose` never runs and
+              never gets to write anything down. */}
           <label
             htmlFor="profile-photo-file"
+            onClick={() => noteDoing('avatar: opening the picture picker')}
             className="inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:border-zinc-600"
           >
             <Camera className="w-4 h-4" />

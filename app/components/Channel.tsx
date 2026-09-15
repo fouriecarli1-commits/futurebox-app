@@ -781,7 +781,26 @@ export default function Channel({
                 )}
                 {/* Tapping the picture opens the song full screen, the way a
                     phone expects. The play button beside it still just plays
-                    it in place, for anybody on a desk who wants the grid. */}
+                    it in place, for anybody on a desk who wants the grid.
+
+                    ── And only over the picture ─────────────────────────
+
+                    Carli, 15 September 2026, with a photograph: *"Kyk hoe
+                    snaaks maak die liedjie wanneer ek druk op cover art."*
+
+                    Pressing Cover art swaps the picture for the maker — a
+                    spinner, a price and a button — inside the same
+                    `relative` box. This overlay stayed, `inset-0` over the
+                    whole of it, so a green play circle landed in the middle
+                    of "Make a cover image \u2014 2 credits" and cut the words
+                    in half. Worse than ugly: the overlay is on top, so a
+                    press aimed at making the cover opened the song full
+                    screen instead, and the button she had just pressed
+                    Cover art to reach could not be pressed at all.
+
+                    The overlay belongs to the picture. When the picture is
+                    not there, neither is it. */}
+                {sleeveFor !== track.id && (
                 <button
                   type="button"
                   onClick={() => {
@@ -801,6 +820,7 @@ export default function Channel({
                     )}
                   </span>
                 </button>
+                )}
                 {/* Not heard yet, on this device.
 
                     A dot rather than a word: it has to be legible at a glance
@@ -824,7 +844,7 @@ export default function Channel({
                     {t('chan.broughtIn', 'Brought in')}
                   </span>
                 )}
-                {playing === track.id && (
+                {playing === track.id && sleeveFor !== track.id && (
                   <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-emerald-500 text-onAccent text-[10px] font-bold">
                     {queue.length > 0 ? `${t('chan.playingNow', 'Playing')} · ${queue.length} ${t('chan.toGo', 'to go')}` : t('chan.playingNow', 'Playing')}
                   </span>

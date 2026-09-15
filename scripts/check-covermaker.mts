@@ -45,6 +45,7 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 const sleeve = readFileSync('app/components/Sleeve.tsx', 'utf8');
 const route = readFileSync('app/api/cover/route.ts', 'utf8');
 const words = readFileSync('app/lib/i18n.tsx', 'utf8');
+const channel = readFileSync('app/components/Channel.tsx', 'utf8');
 
 /* ── Nothing on top of the picture ─────────────────────────────────────── */
 
@@ -82,6 +83,31 @@ ok(
   'and says what it costs, not only on the first one',
   (sleeve.match(/CREDITS\.cover/g) ?? []).length >= 2,
   'the price was on the first press and not on the repeat',
+);
+
+/* ── Nothing over the maker, either ──────────────────────────────────────
+
+   Carli, 15 September 2026, with a photograph: *"Kyk hoe snaaks maak die
+   liedjie wanneer ek druk op cover art."*
+
+   The card's picture carries a full-size press-to-open overlay with a green
+   play circle in the middle of it. Pressing Cover art swaps the picture for
+   the maker inside the same box, and the overlay stayed — so the circle sat
+   across "Make a cover image", and a press aimed at the maker's own button
+   opened the song full screen instead.
+
+   This check said "nothing may sit over the artwork" in its own closing
+   sentence and only ever measured the Sleeve's own markup, which is the half
+   that was right. The thing sitting over it was in the card. */
+ok(
+  'nothing of the card is drawn over the maker',
+  /sleeveFor !== track\.id && \(\s*<button/.test(channel) ||
+    /\{sleeveFor !== track\.id && \(/.test(channel),
+  'the play overlay covers the maker, so its button cannot be pressed',
+);
+ok(
+  '  and the "playing" pill stands down with it',
+  /playing === track\.id && sleeveFor !== track\.id/.test(channel),
 );
 
 if (failures) {
