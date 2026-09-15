@@ -842,6 +842,59 @@ export async function converse(
  * recorded in Afrikaans reaches an English audience in the host's own voice,
  * and the other way round, which is not a translation feature — it is the same
  * show, twice.
+ *
+ * ── Do not migrate this to the project surface. Settled 15 September 2026 ─
+ *
+ * There was a standing job to move off `POST /v1/dubbing` onto
+ * `POST /v1/dubbing/project`, on the grounds that the transcript endpoint
+ * beside it is filed under `/LEGACY/` in ElevenLabs' own URLs. Two things
+ * have since answered it, and the answer is no.
+ *
+ * First, the fear was too broad. `POST /v1/dubbing`, `GET /v1/dubbing/{id}`
+ * and the delete carry no deprecation marker; what carries it is the
+ * transcript call — already migrated, see `dubTranscript` below — and the
+ * Dubbing Studio speaker and segment editing surface, which this app has
+ * never touched.
+ *
+ * Second, and this is the part that closes it: **the project surface is
+ * Dubbing Studio, and Dubbing Studio costs more than three times as much.**
+ * Off ElevenLabs' own per-service tables, in credits per minute of source
+ * audio:
+ *
+ *     automatic dubbing v1, watermarked      2 000
+ *     automatic dubbing v1, clean  ← us      3 000
+ *     Dubbing Studio, watermarked            5 000
+ *     Dubbing Studio, clean                 10 000
+ *     automatic dubbing v2                  13 500
+ *
+ * On Business that is 2 000 included minutes where we are against 600 on the
+ * Studio surface. Migrating would not be neutral work with a tidier API at
+ * the end of it; it would be a 3.3x rise in the marginal cost of every dub
+ * and a cut of two thirds in what the plan covers, in exchange for segment
+ * editing that is Enterprise-only anyway.
+ *
+ * The one thing the migration was actually worth — webhooks instead of
+ * polling — was taken separately and is already live in
+ * `app/api/dub/hook/route.ts`, on this surface.
+ *
+ * ── The version risk, which is real and is watched ───────────────────────
+ *
+ * We send no version, so we get whatever their default is. If that default
+ * ever moves from v1 to v2, the credit cost of a dub goes from 3 000 a minute
+ * to 13 500 — 4.5x — with no code change here and no notice from them.
+ *
+ * Nothing in this file can prevent that. What catches it is the allowance
+ * brake: a jump that size burns the month's credits four and a half times
+ * faster, and `elevenceiling.ts` stops spending before the bill does the
+ * telling. If dubbing ever looks inexplicably expensive, this is the first
+ * thing to check.
+ *
+ * ── Why `watermark: false`, given it costs more ──────────────────────────
+ *
+ * Clean is 3 000 credits a minute against 2 000 watermarked, and 2 000
+ * included minutes against 3 000. It is still right: this is the host's own
+ * show in their own voice and they are publishing it. A watermark belongs on
+ * something somebody might pass off as filmed. The 50% is bought knowingly.
  */
 export interface Dub {
   readonly id: string;
@@ -863,7 +916,8 @@ export async function dub(
   form.append('target_lang', targetLang);
   if (sourceLang) form.append('source_lang', sourceLang);
   // A watermark belongs on a video somebody might pass off as filmed. This is
-  // the host's own show in their own voice, and they are publishing it.
+  // the host's own show in their own voice, and they are publishing it. It
+  // costs 3 000 credits a minute rather than 2 000 — see the note above.
   form.append('watermark', 'false');
 
   const response = await fetch(`${BASE}/dubbing`, {

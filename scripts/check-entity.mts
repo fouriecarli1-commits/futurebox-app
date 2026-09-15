@@ -48,12 +48,27 @@ function only(values: Partial<Record<(typeof KEYS)[number], string>>) {
   return entity();
 }
 
+/* The fixtures below use the registered name, and it is one word.
+
+   CIPC issued `FUTUREBOXSTUDIO (Pty) Ltd` on 5 September 2026 — not
+   "FutureBox Studio (Pty) Ltd" with a space, which is how the product is
+   written everywhere else and is what half of this file used to say. No
+   assertion here turned on the difference, so nothing was failing; the cost
+   was that a file somebody reads to learn what the value should look like
+   was teaching the wrong one. `entity.ts` says the name must be "exactly as
+   CIPC has it", and a fixture is the nearest thing to an example anybody is
+   going to find.
+
+   The registration numbers stay deliberately fake. A real one in a test
+   fixture is a real statement about a legal person sitting in a file nobody
+   reads carefully. */
+
 /* ── Nothing set: the page says so rather than showing a blank list ────── */
 check('with nothing set there is no entity to print', only({}) === null);
 
 /* ── A company ─────────────────────────────────────────────────────────── */
 const company = only({
-  FUTUREBOX_LEGAL_NAME: 'FutureBox Studio (Pty) Ltd',
+  FUTUREBOX_LEGAL_NAME: 'FUTUREBOXSTUDIO (Pty) Ltd',
   FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
   FUTUREBOX_LEGAL_ADDRESS: '12 Example Street|Somewhere|Cape Town|8001',
   FUTUREBOX_LEGAL_PHONE: '+27 21 000 0000',
@@ -130,7 +145,7 @@ check('no number and no status publishes nothing, rather than calling a person a
 /* ── The half-filled cases ─────────────────────────────────────────────── */
 check('a name with no way at all to reach anybody is not enough',
   only({
-    FUTUREBOX_LEGAL_NAME: 'FutureBox Studio (Pty) Ltd',
+    FUTUREBOX_LEGAL_NAME: 'FUTUREBOXSTUDIO (Pty) Ltd',
     FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
     FUTUREBOX_LEGAL_ADDRESS: '12 Example Street|Cape Town',
   }) === null);
@@ -158,13 +173,13 @@ check('a name with no way at all to reach anybody is not enough',
    constraint underneath it, which is that nothing on the page may be untrue. */
 check('a name and a contact publish even with no address yet',
   only({
-    FUTUREBOX_LEGAL_NAME: 'FutureBox Studio (Pty) Ltd',
+    FUTUREBOX_LEGAL_NAME: 'FUTUREBOXSTUDIO (Pty) Ltd',
     FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
     FUTUREBOX_LEGAL_PHONE: '+27 21 000 0000',
-  })?.name === 'FutureBox Studio (Pty) Ltd');
+  })?.name === 'FUTUREBOXSTUDIO (Pty) Ltd');
 check('  and the address is simply absent rather than invented',
   only({
-    FUTUREBOX_LEGAL_NAME: 'FutureBox Studio (Pty) Ltd',
+    FUTUREBOX_LEGAL_NAME: 'FUTUREBOXSTUDIO (Pty) Ltd',
     FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
     FUTUREBOX_LEGAL_PHONE: '+27 21 000 0000',
   })?.address === undefined);
@@ -217,7 +232,7 @@ check('but neither one publishes nothing at all, rather than a page nobody can a
 
 /* ── The optional two, which appear only when set ──────────────────────── */
 const full = only({
-  FUTUREBOX_LEGAL_NAME: 'FutureBox Studio (Pty) Ltd',
+  FUTUREBOX_LEGAL_NAME: 'FUTUREBOXSTUDIO (Pty) Ltd',
   FUTUREBOX_LEGAL_REGISTRATION: '2026/123456/07',
   FUTUREBOX_LEGAL_ADDRESS: '12 Example Street|Cape Town|8001',
   FUTUREBOX_LEGAL_PHONE: '+27 21 000 0000',
@@ -231,13 +246,13 @@ check('and the POPIA information officer with it',
 
 /* Whitespace, because a value pasted out of a document carries it. */
 const padded = only({
-  FUTUREBOX_LEGAL_NAME: '  FutureBox Studio (Pty) Ltd  ',
+  FUTUREBOX_LEGAL_NAME: '  FUTUREBOXSTUDIO (Pty) Ltd  ',
   FUTUREBOX_LEGAL_REGISTRATION: ' 2026/123456/07 ',
   FUTUREBOX_LEGAL_ADDRESS: ' 12 Example Street | Cape Town ',
   FUTUREBOX_LEGAL_PHONE: ' +27 21 000 0000 ',
 });
 check('a value pasted with spaces around it is trimmed',
-  padded?.name === 'FutureBox Studio (Pty) Ltd' && padded?.address?.[1] === 'Cape Town',
+  padded?.name === 'FUTUREBOXSTUDIO (Pty) Ltd' && padded?.address?.[1] === 'Cape Town',
   `${padded?.name} / ${(padded?.address ?? []).join(' / ')}`);
 
 /* ── Both documents must say these values are PUBLISHED ────────────────
