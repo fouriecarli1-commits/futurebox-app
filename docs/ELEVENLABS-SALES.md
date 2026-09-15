@@ -167,3 +167,189 @@ Kind regards,
 Anré Fourie
 Founder, FutureBox
 futurebox.studio
+
+---
+
+# The reply, 16 September 2026
+
+ElevenLabs answered. It is a good answer: they have accepted that this is
+*"an Enterprise/platform deployment rather than simply an upgrade from Pro"*
+and they are ready to involve the commercial team. Two questions stand
+between here and that conversation.
+
+## What they are really asking, and why each question matters
+
+**Question 1 — how do we monetise it.** They offered two shapes: capabilities
+*"included as features within a broader FutureBox subscription"*, or users
+*"effectively purchasing ElevenLabs-generated usage/output through your
+platform"*.
+
+This is not curiosity. It decides which commercial box we land in. The second
+shape is **reselling**, and their Music API Terms §3(A) forbid it without an
+Authorized Reseller appointment. The first shape is the **Bundled Service**
+the OEM Terms are written for.
+
+**We are the first shape, and it is not a close call.** A member buys a
+FutureBox plan in rand and receives FutureBox credits that work across every
+room and across three different suppliers. Nobody can see, choose or buy
+"ElevenLabs minutes". That also satisfies OEM Terms §1(C) exactly —
+*"Services cannot be used independent of the Customer Solution"* — and puts
+us outside their own definition of a Reseller in Music API Terms §4(C)(iii),
+which excludes anyone adding *"substantial functionality beyond basic user
+interface changes"*.
+
+Answer it plainly and early. It is the most favourable true answer we have.
+
+**Question 2 — realistic months 1–3, and the budget.** They are
+pre-qualifying, and the line *"low thousands of USD per month and above"* is
+the bar.
+
+Here is the position they do not yet know: **FutureBox already pays $990 a
+month — $1,138.50 with VAT, about R18,200 — with zero paying members and
+before launch.** That is not a startup asking to be taken on trust. It is a
+customer already at the threshold, on self-serve, funding it out of pocket.
+
+The 5,000–10,000 figure they are querying was the twelve-month shape, not the
+launch. At the 20,000 credits per active member we quoted, Business's
+6,000,000 credits feed **exactly 300 active members** — so months 1–3 sit
+inside the plan we already hold.
+
+## The trap to avoid
+
+Their bar creates a pull towards quoting a bigger first-quarter number to
+clear it. **Do not.** An Enterprise minimum is a contractual floor that is
+paid whether or not the members arrive, and the cost model says break-even on
+Business is 99 paying members. Committing to $3,000 a month before there are
+250 paying members converts a good deal into a monthly loss with a signature
+on it.
+
+The right ask is not a smaller commitment. It is a **floor plus a ramp**: a
+committed minimum at roughly what is already being spent, with agreed step-ups
+tied to usage. That is an ordinary Enterprise structure, it reads as
+confidence rather than hesitation, and it is the honest shape of the business
+— our revenue steps up with members, so our commitment should too.
+
+| Committed spend | What it costs, incl. VAT | Paying members needed to fund it |
+|---|---|---|
+| $990 (today) | R18 216 | 99 |
+| $2 000 | R36 800 | 167 |
+| $3 000 | R55 200 | 250 |
+| $4 000 | R73 600 | 333 |
+
+*Margin of R221 per paying member, realistic case, from
+`scripts/costs-eleven.mts`.*
+
+---
+
+## The draft
+
+**Subject:** Re: FutureBox — Enterprise / platform deployment
+
+Hi,
+
+Thank you — and yes, Enterprise/platform is the right frame. Both answers
+below are straightforward.
+
+**1. How FutureBox monetises it — features within a broader subscription.**
+
+It is the first of your two shapes, clearly. Members buy a FutureBox
+subscription in South African rand (three tiers, R149 / R349 / R899 a month,
+plus an optional top-up pack). That subscription grants FutureBox credits
+which are spent across the whole product: writing lyrics with our copilot,
+generating music, cloning a voice, the multitrack recording booth, singing
+conversion, cover art, music video, subtitles, a live listening room and
+publishing to their own channel.
+
+Three things follow, and I want to state them precisely because I know they
+decide how you structure this:
+
+- **No member ever purchases ElevenLabs capacity as a line item.** They cannot
+  see, select, meter or buy "ElevenLabs minutes" or "ElevenLabs credits". Our
+  pricing page names no supplier.
+- **Our credits are not your credits.** A FutureBox credit is our own unit,
+  priced in rand, and it is spent across three different suppliers — yourselves,
+  Anthropic for the copilot, and Kits.AI for singing conversion — as well as on
+  features we run ourselves. There is no fixed exchange rate a member could
+  arbitrage.
+- **The output is not separable from the product.** Generation happens inside a
+  FutureBox room, against a member's own project, and lands in their FutureBox
+  library. There is no path by which a member reaches your API, and no
+  FutureBox surface exposes one.
+
+That is, I think, precisely the arrangement your OEM Terms §1(C) describe when
+they say the Services cannot be used independent of the Customer Solution, and
+it places us outside the Reseller definition in §4(C)(iii) of the Music API
+Terms, which excludes a platform adding substantial functionality beyond
+interface changes. We are not reselling your capacity; we are building a
+product that uses it.
+
+**2. Realistic months 1–3, and budget.**
+
+First, let me correct an impression I gave: the 5,000–10,000 figure was our
+twelve-month shape, not our launch. I should have separated the two.
+
+We are pre-launch with no paying members yet. For months 1–3 we are planning
+for the low hundreds of active members, and at the ~20,000 credits per active
+member I quoted, our current Business plan's 6,000,000 credits carry
+**approximately 300 active members** — so the first quarter sits inside the
+plan we already hold.
+
+On budget, the useful context is what we already spend rather than what we
+hope to: **we are on Business at $990 a month today, before launch, with no
+revenue.** That is funded out of pocket precisely because we wanted the
+platform right before we opened it.
+
+What I would like to structure, and I think it is the honest shape of this
+business rather than a request for a discount:
+
+- **A committed floor at roughly our current spend**, which we are already
+  paying and can therefore commit to without qualification.
+- **Agreed step-ups tied to actual usage**, so the commitment tracks adoption.
+  Our revenue arrives one member at a time, and I would rather sign something I
+  can honour every month than a number that looks impressive in September.
+
+We have modelled the tiers above that carefully — our break-even on the
+current plan is 99 paying members, and each step up the commitment maps to a
+member count we can name. I am happy to walk your commercial team through that
+model; the arithmetic is not hand-waving and I would rather they saw it.
+
+**3. For the call, briefly.**
+
+You offered to arrange a discussion on architecture, downstream usage, cloning,
+Music, data processing and the contractual points. These are the ones that
+would make the most difference to us:
+
+- **OEM Terms §1(I)** defines an End User as using the Customer Solution *"only
+  for its own internal business operations"*. Our members are individual
+  creators who may sell what they make. Your ElevenAgents Terms §4(A) carry the
+  same clause but read *"internal business operations **or personal use**"*. Is
+  the OEM omission deliberate, or a drafting gap? This is the single point that
+  most affects what we can tell our members.
+- **Speech to Text pricing.** Your comparison table gives "Extra hour, API:
+  $0.22" alongside an included allowance of 303 hours on Business — which
+  implies $3.27 an hour. Every other product on your tables reconciles exactly
+  against the credit pool, so this one stands out. We transcribe every uploaded
+  song to align lyrics, so the answer moves our unit cost by an order of
+  magnitude and therefore moves the commitment we can make.
+- **The Music Terms**, which your Music API Terms and Music Marketplace
+  Addendum both reference, including a "Prohibited Industries" list we have not
+  been able to obtain.
+- **Is `creatify-aurora` generally available or a Beta Service?** One sentence
+  settles it. Your Beta Services Addendum §3(a) forbids commercial use of a
+  Beta Service outright, so we have kept the feature dark rather than guess.
+- **A current SOC 2 Type II report** under DPA §10.1, and confirmation of how
+  deletion works on our account — §9.2.2 gives self-serve customers no deletion
+  obligation, and we have members who will ask.
+- **Concurrency and voice slots past Business.** We are at 15 concurrent
+  requests and 2,200 custom voice slots. Every member clones their own voice, so
+  we will pass 2,200; I would like to know whether that is a hard stop, an
+  overage, or a conversation.
+
+Happy to do this on a call at whatever time suits your team. I can share the
+cost model, the product walkthrough, and our POPIA position in advance if that
+is useful.
+
+Kind regards,
+Anré Fourie
+Founder, FutureBox
+futurebox.studio
