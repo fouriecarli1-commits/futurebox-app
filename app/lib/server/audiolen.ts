@@ -29,6 +29,27 @@ import { wavSeconds } from '../pcmwav.ts';
 /** Nothing is charged as less than this, so a two-second clip still costs. */
 const FLOOR = 20;
 
+/**
+ * How long it is, when that can be known — for refusing rather than charging.
+ *
+ * `billedSeconds` clamps to a ceiling and falls back to that ceiling when it
+ * has nothing to go on, which is right for a bill (the bounded loss above)
+ * and wrong for a refusal: a file whose length nobody knows would be refused
+ * as too long. So this returns `null` in that case and the caller lets it
+ * through, which is the same position we were in before the check existed.
+ *
+ * Exact for a WAV, because the header says so. Otherwise the browser's
+ * number, which can be wrong — but a client that understates its length to
+ * slip past an upstream ceiling only earns itself the upstream's own error,
+ * so there is nothing to defend here.
+ */
+export async function knownSeconds(audio: Blob, stated: number): Promise<number | null> {
+  const head = new Uint8Array(await audio.slice(0, 4096).arrayBuffer());
+  const exact = wavSeconds(head);
+  if (exact !== null && exact > 0) return exact;
+  return Number.isFinite(stated) && stated > 0 ? stated : null;
+}
+
 export async function billedSeconds(
   audio: Blob,
   stated: number,

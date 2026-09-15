@@ -397,7 +397,7 @@ top of it. So the **Speech to Text Terms** (2 April 2026) bind us.
     ever built, it is.
   - **§3** — consent records kept for **five years**.
 
-### Studio — Enterprise only, and we do not use it
+### Studio — the terms and the pricing page disagree
 
 **"Studio" here is ElevenLabs' own product** — a timeline editor with AI
 agents, plus **GenFM** for generated podcasts. It is not the FutureBox room
@@ -407,6 +407,20 @@ That is just as well, because the Studio Terms say: *"unless you are on an
 **Enterprise** plan, Studio is made available solely for your personal,
 non-commercial use."* **Business is not Enterprise.** If the podcast or
 episode work is ever tempted toward GenFM, that sentence stops it.
+
+**And the pricing page says the opposite.** The Studio column of
+ElevenLabs' own feature table reads *Commercial use: **Commercial*** for
+Starter, Creator, Pro, Scale and Business alike — only Free says "Personal
+use only". So the page that sells it says commercial from $5 a month and the
+contract that governs it says Enterprise only.
+
+The contract wins on its own terms: the Studio Terms say *"In case of any
+conflict between these Service Terms and other terms agreed upon between you
+and ElevenLabs, these Service Terms shall prevail."* A pricing table is a
+marketing page, not agreed terms. But it is a plain contradiction in their
+own material, it is worth one line in the email, and it is the single best
+reason not to build anything on ElevenLabs Studio on the strength of the
+comparison table.
 
 Two more, if it ever comes up: §4(A) forbids representing Output as
 human-generated when it is not, and §4(F) repeats the Prohibited Data rule.
@@ -767,6 +781,53 @@ if that changes — the CLI Terms §3 forbid committing any credential or secret
 to version control (already our rule), and MCP Features are **unavailable**
 in Zero Retention Mode, which is worth remembering before anyone enables
 either.
+
+---
+
+## 10b. What Business actually includes
+
+Carli sent the full per-service feature tables on 15 September. They are not
+terms, but three of them answer questions that were in the sales letter and
+one of them was a live bug.
+
+**Answered, so struck from the email:**
+
+- **Voice slots: 2,200 custom, 10 professional.** The letter asked what the
+  ceiling was and what it costs past it. At one clone per member, 2,200 is
+  not the constraint anybody thought it was — the pagination limit at 500
+  that we already worked around was the real one.
+- **Concurrency: 15** for text-to-speech, the voice changer, the isolator and
+  sound effects; **60 concurrent transcriptions**; **10 seats**. That was a
+  launch-day number and it is now known.
+- **Music: 6,667 minutes a month**, which ElevenLabs themselves put at
+  *"~1,650–3,300 tracks"*, at $0.15 for an extra minute.
+
+**A bug, now fixed:** the voice changer's row says **"Max length per
+conversion: 5 min"**, and it says it for every tier from Free to Business.
+`app/api/voice/change/route.ts` was accepting thirty minutes and charging
+before it sent. A member converting a six-minute song paid, waited, and got
+whatever upstream said about a file it was never going to take. It now
+refuses above five minutes, before the charge, where the length is known.
+
+**Other ceilings worth holding on to**, none of which a bigger plan lifts:
+
+| Service | The limit |
+|---|---|
+| Voice changer | **5 min** per conversion |
+| Voice isolator | 1 hour, 500 MB, 9 video formats — **no batch processing on any tier** |
+| Speech to text | 3 GB per file, 99 languages, 32 speaker labels |
+| Sound effects | 30 sec per clip, and *"rights survive cancellation"* |
+| Music | up to 6 stems, lossless WAV, **"Release to Spotify and Apple"** ticked |
+
+Two rows carry licence information rather than capacity, and both match the
+reading above:
+
+- **Music — "Commercial, not enterprise"** on every paid tier. That is the
+  film/television/radio carve-out, stated as a plan line rather than a clause.
+- **Speech to text — "EU and India data residency"** is available on Business.
+  Not South Africa, but it means residency is a thing they sell, which is
+  worth knowing when the POPIA transfer question in §9 comes up. HIPAA is
+  Enterprise only, which does not touch us.
 
 ---
 

@@ -18,7 +18,7 @@ import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { configured, restage, stockVoices, type Performance } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 import { CREDITS, perMinute } from '@/app/lib/credits';
-import { billedSeconds } from '@/app/lib/server/audiolen';
+import { billedSeconds, knownSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 
@@ -39,6 +39,22 @@ const MAX_BYTES = 25 * 1024 * 1024;
  * nobody's word is taken for it at all.
  */
 const MAX_SECONDS = 30 * 60;
+/**
+ * The longest ElevenLabs will actually convert in one pass.
+ *
+ * Their own feature table gives "Max length per conversion: 5 min" for the
+ * voice changer, and it is 5 min on every tier from Free to Business -- this
+ * is not something a bigger plan buys off. The route was letting thirty
+ * minutes through, taking the credits, and handing back whatever upstream
+ * said about a file it was never going to accept. The charge is refunded on
+ * a failure, so nobody lost money, but they lost the wait and got an error
+ * that explained nothing.
+ *
+ * Refused here, before the charge, and only where the length is actually
+ * known -- see `knownSeconds`. A song longer than this is a job for the
+ * booth, where it can be sung a section at a time.
+ */
+const LONGEST_UPSTREAM = 5 * 60;
 
 function within(value: unknown, low: number, high: number): number | undefined {
   return typeof value === 'number' && Number.isFinite(value)
@@ -79,6 +95,18 @@ export async function POST(request: Request): Promise<Response> {
 
   if (audio.size > MAX_BYTES) {
     return Response.json({ message: 'That recording is too long to change here.' }, { status: 413 });
+  }
+
+  const known = await knownSeconds(audio, Number(form.get('seconds')));
+  if (known !== null && known > LONGEST_UPSTREAM) {
+    return Response.json(
+      {
+        message:
+          'The voice service changes at most five minutes at a time, and this is ' +
+          `${Math.round(known / 60)} minutes. Take it a section at a time in the booth.`,
+      },
+      { status: 413 },
+    );
   }
 
   const caller = metered() ? await callerFrom(request) : null;

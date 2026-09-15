@@ -89,14 +89,17 @@ members needed to cover the cost outnumber the members the credits can feed at
 every tier below Business. We need a custom rate to make this viable, and I'd
 rather show you our numbers than argue about them.
 
-**3. Concurrency.**
-What is the concurrency group on an Enterprise agreement? How many members can
-generate at the same time is a launch-day number for us, not a curiosity.
+**3. Concurrency, past Business.**
+Business gives us 15 concurrent requests and 60 concurrent transcriptions.
+With 5,000 members that is the number that decides whether the studio feels
+alive on a Friday night. What does an Enterprise agreement move it to?
 
-**4. Voice slots.**
-Every member clones their own voice, so our voice count grows with membership.
-What is the ceiling, and what does it cost past it? (We've already hit the
-pagination limit on the voice-list endpoint at 500 and worked around it.)
+**4. Voice slots — one follow-up only.**
+Business gives 2,200 custom voice slots and 10 professional ones, which
+answers the ceiling question. Every member clones their own voice, so at
+scale we pass 2,200. What happens then — is it a hard stop, an overage, or
+a conversation? (We've already hit the pagination limit on the voice-list
+endpoint at 500 and worked around it.)
 
 **5. Music for film, TV and radio.**
 Your terms carve broadcast and film/TV/radio use out of the standard music
@@ -132,6 +135,13 @@ customer, with us as controller and ElevenLabs as processor. Three things:
 - **OEM §2(B)(e)** requires written consent before selling to a Government
   Entity. We expect interest from schools, many of them state schools.
   What's the process?
+
+**8b. Your Studio page and your Studio terms disagree.**
+The comparison table says Studio is "Commercial" on Starter and up. The
+Studio Terms say "unless you are on an Enterprise plan, Studio is made
+available solely for your personal, non-commercial use." We don't use Studio
+and this doesn't block us — but somebody is going to buy Creator off that
+table and get a surprise, and you'd probably rather hear it from us.
 
 **9. Two documents I can't reach.**
 The **Music Terms** (referenced by the Music API Terms and by the Music
