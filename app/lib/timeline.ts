@@ -66,6 +66,39 @@ export function partsOf(lyrics: string): Part[] {
  * Returns an empty list when there is nothing to follow, which the screen reads
  * as "do not offer this" rather than drawing an empty panel.
  */
+/**
+ * A song's plan, as the live room needs it.
+ *
+ * The plan the song was made from where there is one, and the written sheet
+ * split on its `[Section]` tags where there is not — which is every song made
+ * before plans were kept, and anything typed straight into the words box.
+ * `evenly()` in `lyrictime.ts` resolves the two the same way; this is that
+ * decision made once, on the way out.
+ *
+ * The PLAN rather than finished timings: the room spreads it over whatever
+ * length the file actually plays, so a song a second longer than the row says
+ * stays in step, and the row stays small.
+ *
+ * ── Why it is here and not in the share sheet ────────────────────────────
+ *
+ * It was a private function inside `PostToLive.tsx`, and the room's own
+ * composer — the "put one of your own songs in" card, which is how somebody
+ * standing in the room actually posts — did not know it existed. So a song
+ * posted from the Library carried its words and the same song posted from
+ * inside Live carried none, and the room showed nothing to read along with.
+ *
+ * Carli, 15 September 2026: *"Die woorde van die liedjies speel nogsteeds nie
+ * in die live room nie."* Twice reported, because the first fix was made in
+ * one of the two places that post.
+ */
+export function planOf(track: {
+  readonly parts?: readonly Part[];
+  readonly lyrics?: string;
+}): readonly Part[] {
+  const stored = (track.parts ?? []) as readonly Part[];
+  return stored.length ? stored : partsOf(track.lyrics ?? '');
+}
+
 export function timelineOf(parts: readonly Part[], duration: number): TimedLine[] {
   if (!parts.some((part) => part.lines.length > 0) || !(duration > 0)) return [];
 

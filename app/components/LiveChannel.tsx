@@ -42,7 +42,7 @@ import { visitorId } from '../lib/signal';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import RoomScreen from './RoomScreen';
-import type { Part } from '../lib/timeline';
+import { planOf, type Part } from '../lib/timeline';
 import Cover from './Cover';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
@@ -736,7 +736,23 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                           kind: 'track',
                           sourceId: track.id,
                           title: track.title,
+                          /* The genre and the words, which this button did
+                             not send and the share sheet in the Library did.
+
+                             Carli, 15 September 2026: *"Die woorde van die
+                             liedjies speel nogsteeds nie in die live room
+                             nie."* Reported twice, and the second time was
+                             this: a song's words and its genre live on its
+                             maker's row and on its maker's device, everybody
+                             reading the room is somebody else, so the post
+                             has to carry them — and only one of the two
+                             places that post ever did. `planOf` is now the
+                             one answer to what a post's words are, so the
+                             two cannot drift apart again. */
+                          genre: track.genre,
+                          words: planOf(track),
                           seconds: track.seconds,
+                          style: track.style,
                         })
                       }
                       className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"

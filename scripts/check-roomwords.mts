@@ -50,15 +50,31 @@ const post = readFileSync('app/components/PostToLive.tsx', 'utf8');
 const route = readFileSync('app/api/live/route.ts', 'utf8');
 const live = readFileSync('app/components/LiveChannel.tsx', 'utf8');
 const room = readFileSync('app/components/RoomScreen.tsx', 'utf8');
+const plan = readFileSync('app/lib/timeline.ts', 'utf8');
 
 /* ── All five steps, because any one of them alone is silence ─────────── */
 ok('a post has somewhere to keep the words',
   /add column if not exists words jsonb/.test(sql),
   'live_posts needs the column, and this file has to be re-runnable');
-ok('  the poster sends them', /words: planFor\(track\)/.test(post));
-ok('    resolved from the plan, or from the sheet where there is no plan',
-  /stored\.length \? stored : partsOf\(track\.lyrics \?\? ''\)/.test(post),
+/* ── BOTH places that post, not the one this check was written against ──
+
+   Carli reported the silent room twice. The first fix went into the share
+   sheet in the Library, this check was written against that file, and both
+   were right — while the room's OWN composer, the "put one of your own songs
+   in" card that somebody standing in Live actually uses, sent no words at
+   all. A check that names one of two callers proves half a feature and reads
+   as proving the whole one.
+
+   So: one function decides what a post's words are, it lives in `timeline.ts`
+   where the shape does, and every path that posts a song has to call it. */
+ok('  the plan lives in one place, not in whichever screen posts',
+  /export function planOf\(/.test(plan) &&
+    /stored\.length \? stored : partsOf\(track\.lyrics \?\? ''\)/.test(plan),
   'only songs made since plans were kept carry one; without this every older song is silent');
+ok('  the share sheet sends them', /words: planOf\(track\)/.test(post));
+ok('  and so does the room\u2019s own composer', /words: planOf\(track\)/.test(live),
+  'a song posted from inside Live carried no words at all');
+ok('    and its genre with them', /genre: track\.genre,/.test(live));
 ok('  the route stores them', /words: words\.length \? words : null/.test(route));
 ok('    as null rather than an empty array where there are none',
   /words\.length \? words : null/.test(route),
