@@ -143,6 +143,16 @@ available solely for your personal, non-commercial use." We don't use Studio
 and this doesn't block us — but somebody is going to buy Creator off that
 table and get a surprise, and you'd probably rather hear it from us.
 
+**8c. Your Speech to Text numbers don't reconcile, by 15x.**
+The same table gives "Extra hour, API: $0.22" and, on Business,
+"Transcription per month: 303 h 2 m". But 303 hours out of a $990 budget is
+$3.27 an hour. Every other product on your tables reconciles exactly against
+the credit pool — music at 900 credits a minute, the voice changer at 1,000,
+sound effects at 200 a generation — so this one stands out. Is speech to
+text over the API billed separately from the credit pool at $0.22, or does
+the 303-hour figure govern? We transcribe every uploaded song to line the
+lyrics up, so the answer changes our unit cost by an order of magnitude.
+
 **9. Two documents I can't reach.**
 The **Music Terms** (referenced by the Music API Terms and by the Music
 Marketplace Addendum, which points at a "Prohibited Industries" list in

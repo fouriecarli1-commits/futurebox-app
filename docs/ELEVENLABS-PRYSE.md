@@ -60,41 +60,121 @@ Voorheen het die kode R2,59 gesê.
 
 Randkoers **R16 = $1**, dieselfde aanname as `app/lib/plans.ts`.
 
-### Per eenheid — dieselfde op elke plan
+### Per eenheid — en waar hierdie lys op 15 September reggemaak is
 
-| Produk | Prys | In rand |
-|---|---|---|
-| **Musiek** | $0,15 per minuut | R2,40 |
-| Stem-verwisselaar (spraak na spraak) | $0,12 per minuut | R1,92 |
-| Stem-afsonderaar (haal die kamer uit) | $0,12 per minuut | R1,92 |
-| Klankeffekte | $0,12 per stuk | R1,92 |
-| Spraak-enjin (agente) | $0,08 per minuut | R1,28 |
-| Teks na spraak — v3 | $0,10 per 1 000 karakters | R1,60 |
-| Teks na spraak — v3 Conversational | $0,05 per 1 000 karakters | R0,80 |
-| Teks na spraak — v2 Multilingual | $0,10 per 1 000 karakters | R1,60 |
-| Teks na spraak — Flash / Turbo | $0,05 per 1 000 karakters | R0,80 |
-| Spraak na teks — Scribe v1/v2 | $0,22 per uur | R3,52 |
-| Spraak na teks — Scribe v2 Realtime | $0,39 per uur | R6,24 |
-| Oorklanking v1 — met watermerk | $0,33 per minuut | R5,28 |
-| Oorklanking v1 — sonder watermerk | $0,50 per minuut | R8,00 |
-| Oorklanking v2 | $2,20 per minuut | R35,20 |
+*Carli het op 15 September 2026 ElevenLabs se **volledige diens-vir-diens
+tabelle** gestuur — een blad per produk, met die ingeslote hoeveelheid en die
+ekstra-eenheid-prys op elke plan. Dit is die eerste keer dat hierdie getalle
+van hulle eie bladsy af kom eerder as afgelei word, en **vier reëls hieronder
+was verkeerd.***
 
-### Ingesluit per plan
+**Wat verkeerd was, en hoekom.** Die ou lys het elke prys afgelei deur die
+plan se prys deur 'n aanvaarde toelaag te deel. Dit werk net as die toelaag
+reg is, en vir vier produkte was dit nie. Die regte anker is **krediete**:
+Business is 6 000 000 krediete vir $990, oftewel $0,000165 elk, en elke
+produk het 'n vaste krediet-prys per eenheid.
+
+Dít is nagegaan teen **twee** plan-kolomme onafhanklik — Pro (600 000
+krediete) en Business (6 000 000) — en elke produk gee dieselfde ronde
+krediet-getal in albei. Dit is hoe 'n mens weet die model is reg en nie net
+'n som wat een keer uitgekom het nie.
+
+| Produk | Krediete per eenheid | Wat dit kos | In rand |
+|---|---|---|---|
+| **Musiek** | 900 / minuut | $0,1485 per minuut | R2,38 |
+| Teks na spraak — v3 / Multilingual | 1 / karakter | $0,165 per 1 000 karakters | R2,64 |
+| Teks na spraak — Flash / Turbo | 0,5 / karakter | $0,0825 per 1 000 karakters | R1,32 |
+| Stem-verwisselaar (spraak na spraak) | 1 000 / minuut | **$0,165** per minuut | R2,64 |
+| Stem-afsonderaar (haal die kamer uit) | 1 000 / minuut | **$0,165** per minuut | R2,64 |
+| Klankeffekte | 200 / stuk | **$0,033** per stuk | R0,53 |
+| Spraak na teks (Scribe) | 330 / minuut | $3,27 per uur — **sien die waarskuwing hieronder** | R52,32 |
+| Oorklanking v1 — met watermerk | 2 000 / minuut | $0,33 per minuut | R5,28 |
+| Oorklanking v1 — sonder watermerk | 3 000 / minuut | $0,495 per minuut | R7,92 |
+| Oorklanking v2 | 13 500 / minuut | $2,23 per minuut | R35,68 |
+| Oorklankingstudio — met watermerk | 5 000 / minuut | $0,825 per minuut | R13,20 |
+| Oorklankingstudio — sonder watermerk | 10 000 / minuut | $1,65 per minuut | R26,40 |
+| Prente | ~182 / prent | $0,030 per prent | R0,48 |
+| Video | ~170 / sekonde | $0,028 per sekonde | R0,45 |
+
+**Wat verander het teenoor die ou lys:**
+
+| Produk | Ou lys | Regte getal | Verskil |
+|---|---|---|---|
+| Stem-verwisselaar | $0,12/min | **$0,165/min** | 38% duurder |
+| Stem-afsonderaar | $0,12/min | **$0,165/min** | 38% duurder |
+| Klankeffekte | $0,12/stuk | **$0,033/stuk** | 73% goedkoper |
+| TTS v3 | $0,10/1 000 | **$0,165/1 000** | 65% duurder |
+
+### ⚠️ Transkripsie: die een getal wat nie klop nie
+
+ElevenLabs se eie Speech-to-Text-tabel gee **albei** hierdie dinge op dieselfde
+blad:
+
+- **"Extra hour, API: $0,22"** — op elke plan, Free tot Business.
+- **"Transcription per month: 303 h 2 m"** op Business.
+
+Maar 303 uur uit 'n begroting van $990 is **$3,27 per uur**. Dit is 'n
+**vyftienvoudige** gaping, en dit is nie 'n afrondingsfout nie.
+
+Die waarskynlikste verklaring is dat spraak-na-teks **oor die API** teen 'n
+aparte, goedkoper koers gefaktureer word en nie die krediet-poel op dieselfde
+manier eet nie — die ry sê immers uitdruklik *"API"*. Ons `/api/transcribe`
+loop oor die API, so as dit waar is, is $0,22 die koers wat vir ons geld.
+
+**Ek kan dit nie van hierdie masjien af nagaan nie.** Dit is nou 'n vraag in
+`docs/ELEVENLABS-SALES.md`. Tot dit beantwoord is, behandel transkripsie as
+die duur weergawe wanneer 'n som moet hou, en die goedkoop een wanneer 'n som
+moet oortuig — met ander woorde: moenie 'n besluit op hierdie getal bou nie.
+
+### Ingesluit per plan — nagegaan 15 September 2026
+
+*Elke ry is die plan se hele krediet-poel op daardie een produk spandeer. Dit
+is nie ses aparte toelaes nie; dit is ses maniere om dieselfde geld uit te gee.*
 
 | Wat | Free | Starter | Creator | Pro | Scale | Business |
 |---|---|---|---|---|---|---|
-| Musiek (minute) | 3 | 40 | 147 | 660 | 1 993 | 6 600 |
-| Stem-verwisselaar (minute) | 8,3 | 50 | 183 | 825 | 2 492 | 8 250 |
-| Stem-afsonderaar (minute) | 8,3 | 50 | 183 | 825 | 2 492 | 8 250 |
-| Klankeffekte (stuks) | 8 | 50 | 183 | 825 | 2 492 | 8 250 |
-| Spraak-enjin (minute) | 15 | 75 | 275 | 1 238 | 3 738 | 12 375 |
-| Scribe (uur) | 4,5 | 27 | 100 | 450 | 1 359 | 4 500 |
-| Scribe Realtime (uur) | 2,5 | 15 | 56 | 254 | 767 | 2 538 |
-| TTS v3 (karakters) | 10 000 | 60 000 | 220 000 | 990 000 | 2 990 000 | 9 900 000 |
-| TTS Flash/Turbo (karakters) | 20 000 | 120 000 | 440 000 | 1 980 000 | 5 980 000 | 19 800 000 |
-| Oorklanking v1, watermerk (min) | 2,53 | 18 | 67 | 300 | 906 | 3 000 |
-| Oorklanking v1, skoon (min) | — | 12 | 44 | 198 | 598 | 1 980 |
-| Oorklanking v2 (min) | 0,4 | 3 | 10 | 45 | 136 | 450 |
+| Krediete | 10 000 | 30 000 | 121 000 | 600 000 | 1 800 000 | 6 000 000 |
+| Musiek (minute) | 11 | 33 | 134 | 667 | 2 000 | 6 667 |
+| Teks na spraak (minute) | ~10 | ~30 | ~121 | ~600 | ~1 800 | ~6 000 |
+| Stem-verwisselaar (minute) | 8,3 | 30 | 121 | **600** | 1 800 | **6 000** |
+| Stem-afsonderaar (minute) | 8,3 | 30 | 121 | **600** | 1 800 | **6 000** |
+| Klankeffekte (stuks) | 8 | 150 | 605 | **3 000** | 9 000 | **30 000** |
+| Scribe | 12 min | 1 u 31 | 6 u 7 | **30 u 18** | 90 u 55 | **303 u 2** |
+| Prente | 40 | 198 | 660 | 3 300 | 11 000 | 44 000 |
+| Video (sekondes) | — | 211 | 705 | 3 525 | 11 752 | 47 008 |
+| Oorklanking v1, watermerk (min) | 2,53 | 15 | 61 | 300 | 900 | 3 000 |
+| Oorklanking v1, skoon (min) | — | — | 40 | 200 | 600 | **2 000** |
+| Oorklanking v2 (min) | 0,4 | 2 | 9 | 44 | 133 | **444** |
+| Oorklankingstudio, watermerk (min) | — | 6 | 24 | 120 | 360 | 1 200 |
+| Oorklankingstudio, skoon (min) | — | — | 12 | 60 | 180 | 600 |
+| Stem-gleuwe | 3 | 10 | 30 | 160 | 660 | **2 200** |
+| Professionele stem-gleuwe | 0 | 0 | 1 | 1 | 3 | **10** |
+| Sitplekke | 1 | 1 | 1 | 1 | 3 | **10** |
+| Gelyktydige versoeke | 2 | 3 | 5 | 10 | 15 | **15** |
+| Gelyktydige transkripsies | 8 | 12 | 20 | 40 | 60 | **60** |
+
+### Perke wat geen plan oplig nie
+
+| Diens | Die perk |
+|---|---|
+| Stem-verwisselaar | **5 minute** per omskakeling — op elke vlak, Free tot Business |
+| Stem-afsonderaar | 1 uur, 500 MB, 9 videoformate, **geen groepverwerking op enige vlak** |
+| Spraak na teks | 3 GB per lêer, 99 tale, 32 spreker-etikette |
+| Klankeffekte | 30 sekondes per stuk, en *"rights survive cancellation"* |
+| Musiek | tot 6 stamme, verliesvrye WAV, **"Release to Spotify and Apple"** aangemerk |
+
+### Wat die winssomme hiervan hoor
+
+**Niks.** Dit is die goeie nuus en dit is die moeite werd om uitdruklik te sê.
+
+`scripts/costs-eleven.mts` reken die hele bedryfsmodel in **krediete** uit —
+`TIER_CREDITS` en `CREDITS`, uit die app se eie lêers — en die enigste
+dollar-prys per eenheid wat dit gebruik, is musiek se $0,15, wat reg is. Die
+vier verkeerde reëls hierbo het net in hierdie dokument en in een verduidelikende
+opmerking in daardie skrip gestaan. `docs/KOSTE-EN-WINS.md` is nie geraak nie
+en hoef nie oorgemaak te word nie.
+
+Dit is presies hoekom die model in krediete geskryf is eerder as in dollars.
 
 ### Hoe hulle tel
 

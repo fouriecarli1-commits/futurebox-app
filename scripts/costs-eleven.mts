@@ -78,12 +78,34 @@ const randForPlan = (plan: { usd: number }): number => plan.usd * RAND_PER_USD *
  *
  *   147 x 0,15 = $22    660 x 0,15 = $99    6 600 x 0,15 = $990
  *
- * Dieselfde som werk vir elke ander produk op die bladsy: 8 250 minute
- * stem-skeiding x $0,12 = $990; 4 500 uur transkripsie x $0,22 = $990;
- * 9,9 miljoen karakters x $0,10 per 1 000 = $990.
+ * Dieselfde som werk vir elke ander produk op die bladsy.
  *
  * **'n Plan is dus 'n dollar-begroting, nie 'n stel aparte toelaes nie.** Die
  * "ingesluit"-getalle is net verskillende maniere om dieselfde geld te spandeer.
+ *
+ * ── Reggemaak, 15 September 2026 ────────────────────────────────────────
+ *
+ * Hierdie paragraaf het drie voorbeelde gehad en twee daarvan was verkeerd:
+ * "8 250 minute stem-skeiding x $0,12" en "4 500 uur transkripsie x $0,22".
+ * Albei was agteruit afgelei uit 'n aanvaarde toelaag eerder as uit 'n prys
+ * wat iemand gesien het.
+ *
+ * Carli het ElevenLabs se volledige diens-vir-diens tabelle gestuur. Die
+ * regte anker is nie dollars per eenheid nie, dit is **krediete** per
+ * eenheid: musiek 900 per minuut, stem-verwisselaar en -afsonderaar 1 000,
+ * klankeffekte 200 per stuk, oorklanking 2 000 / 3 000 / 13 500 per minuut
+ * na gelang van watermerk en weergawe. Elkeen gee dieselfde ronde getal teen
+ * Pro se 600 000 krediete en teen Business se 6 000 000, onafhanklik.
+ *
+ * Die gevolgtrekking self — 'n plan is 'n begroting — is onveranderd, en
+ * **hierdie skrip se somme is nie geraak nie**: alles hieronder reken in
+ * krediete uit `plans.ts` en `credits.ts`, en die enigste dollar-prys per
+ * eenheid wat dit gebruik is musiek se $0,15, wat klop. Dit is presies
+ * waarvoor die model in krediete geskryf is.
+ *
+ * Sien `docs/ELEVENLABS-PRYSE.md` vir die hele regstelling, insluitend die
+ * een getal wat nog nie klop nie (transkripsie: $0,22 per uur langs 'n
+ * toelaag wat $3,27 per uur impliseer).
  * Dit maak die hele som eenvoudiger en eerliker: een liedjie van twee minute
  * kos ons $0,30, oftewel R4,80, op elke plan.
  *
