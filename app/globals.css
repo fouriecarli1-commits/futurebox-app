@@ -479,13 +479,57 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
   --fb-surface-100: 228 230 236;
   --fb-surface-200: 204 208 219;
   --fb-surface-300: 168 174 194;
-  --fb-surface-400: 129 138 167;
-  --fb-surface-500: 96 107 138;
-  --fb-surface-600: 75 84 108;
+  /* ── Bright enough to read, now that the whole room uses them ──────
+
+     These three carry `text-zinc-400/500/600`, which in the rest of the app
+     is a hint under a heading on a pale page. Inside the booth they are the
+     app's own chrome — "Back to FutureBox", the shortcut, every rail hint —
+     on a near-black ground, and at the old values `audit/contrast.mjs`
+     measured nineteen of them between 3.59 and 3.94 against the 4.5 AA asks
+     for.
+
+     They were not wrong before: nothing outside the timeline used them, and
+     the timeline paints in its own literals. The room growing to fill the
+     screen is what made them body text. */
+  --fb-surface-400: 163 172 196;
+  --fb-surface-500: 142 152 180;
+  --fb-surface-600: 120 130 158;
   --fb-surface-700: 59 65 84;
   --fb-surface-800: 42 46 60;
   --fb-surface-900: 27 30 39;
   --fb-surface-950: 15 16 21;
+
+  /* ── And the accent goes blue with it ──────────────────────────────
+
+     Carli, 15 September 2026: *"Dit sal beter lyk as die hele probooth kamer
+     die swart en blou is, nie net 'n gedeelte nie."*
+
+     The surface ramp above made the room black. The accent was still the
+     app's green, so every button, every heading mark and the copilot's own
+     chips in the booth were green on black — half of the two colours she
+     asked for, in the one room that is meant to be the two.
+
+     `emerald` maps onto `--fb-primary-*` (see the note at the top of
+     `tailwind.config.js`), so redefining that ramp here turns every
+     `bg-emerald-500`, `text-emerald-400` and `border-emerald-500/60` inside
+     the booth blue without one class name changing anywhere. Same shape as
+     the ramp it replaces — dark at the ends, brightest at 500 — so the same
+     classes go on meaning the same weights.
+
+     Sky rather than the cyan the timeline draws its playhead in: the
+     playhead has to be the brightest thing on the screen, and an accent as
+     bright as it would take that away from it. */
+  --fb-primary-50: 8 30 45;
+  --fb-primary-100: 12 50 74;
+  --fb-primary-200: 15 68 100;
+  --fb-primary-300: 18 84 124;
+  --fb-primary-400: 20 97 143;
+  --fb-primary-500: 56 189 248;
+  --fb-primary-600: 38 165 224;
+  --fb-primary-700: 29 137 189;
+  --fb-primary-800: 24 111 155;
+  --fb-primary-900: 19 88 124;
+  --fb-primary-950: 13 62 89;
 
   --fb-page: 15 16 21;
   --fb-ink: 230 231 234;

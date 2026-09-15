@@ -695,16 +695,62 @@ export default function VocalBooth({
       // to move afterwards and the take has to be pulled back by the speed it
       // was recorded at, not by whatever the slider says later.
       sungAtRef.current = speed;
+      setPaused(false);
       setPhase('recording');
     },
     [hush, openMic, speed, withGuide],
   );
 
+  /* ── Holding a take, and picking it up again ─────────────────────────
+
+     Carli asked for a pause in the slim dock, and the room did not have one:
+     the take could only be finished. `FollowWords` got one in September for
+     the same reason — *"Jy kan nie pause nie."* — and this room is where
+     somebody actually sings a whole song.
+
+     `MediaRecorder.pause()` stops its own clock and the audio element stops
+     the music, so the two stay exactly as far apart as they were when the
+     offset was measured at the start. Nothing is re-measured and nothing is
+     stitched: the recording simply has the held seconds missing from both
+     sides at once, which is what a punch-out and back in IS.
+
+     Guarded on the method existing. Some browsers have shipped a
+     MediaRecorder without pause, and a button that silently does nothing
+     mid-take is worse than no button — so the dock only draws it where it
+     works. */
+  const canHold =
+    typeof MediaRecorder !== 'undefined' && typeof MediaRecorder.prototype.pause === 'function';
+  const [paused, setPaused] = useState(false);
+
+  const hold = useCallback(() => {
+    const recorder = recorderRef.current;
+    if (!recorder || recorder.state !== 'recording') return;
+    recorder.pause();
+    audioRef.current?.pause();
+    guideRef.current?.pause();
+    setPaused(true);
+  }, []);
+
+  const carryOn = useCallback(() => {
+    const recorder = recorderRef.current;
+    if (!recorder || recorder.state !== 'paused') return;
+    recorder.resume();
+    const element = audioRef.current;
+    void element?.play().catch(() => undefined);
+    if (element) withGuide(element.currentTime);
+    setPaused(false);
+  }, [withGuide]);
+
   const stop = useCallback(async () => {
     const recorder = recorderRef.current;
+    setPaused(false);
     audioRef.current?.pause();
     hush();
-    if (!recorder || recorder.state !== 'recording') {
+    /* A held take is `paused`, not `recording`, and the early exit below used
+       to read that as "there is nothing to stop" — so stopping a paused take
+       threw it away and left the room idle with no take in it. Both live
+       states count. */
+    if (!recorder || recorder.state === 'inactive') {
       setPhase('idle');
       return;
     }
@@ -1742,6 +1788,65 @@ export default function VocalBooth({
             nothing at all and said nothing at all — which is exactly what she
             reported. */}
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
+        {/* ── While the microphone is open: nothing but the words ───────
+
+            Carli, 15 September 2026, with a photograph of the room: *"Die
+            spasie is min vir recording. Die oomblik wanneer mens op record
+            druk moet daai buttons verdwyn, en dan moet dit eweskielik soos
+            binne die probooth net heel onder 'n play, pause, ProBooth button
+            wees, maar so dat die hele skerm oop is vir die woorde en
+            recording ... Die woorde moet die grootste gedeelte van die skerm
+            vat."*
+
+            She is right, and the five bars she asked for the hour before are
+            not the thing that is wrong: they are how you *choose* what to do,
+            and choosing is over the moment the count-in starts. What is
+            needed from that second is the line you are singing and whether
+            you are on it — everything else is three hundred pixels of
+            furniture in front of the one thing being used.
+
+            So the stack is the idle state and this is the take: a clock, a
+            pause and a stop, on one row, with the pitch strip above it and
+            the words taking everything that frees up.
+
+            No way through to the lanes from here, and that is deliberate
+            rather than an omission of her list. `ProBooth` replaces this
+            room, so a press on it mid-take is a take thrown away with no
+            warning. It is one press away the moment the take stops. */}
+        {busyOrLive ? (
+          <div className="flex items-center gap-2">
+            <span
+              className="flex-1 min-w-0 truncate text-xs font-bold tabular-nums text-rose-300"
+              role="status"
+            >
+              {phase === 'counting'
+                ? t('booth.countingIn', 'Counting you in\u2026')
+                : paused
+                  ? t('booth.held', 'Held \u2014 press play to carry on')
+                  : t('booth.taking', 'Recording')}
+            </span>
+            {canHold && phase === 'recording' && (
+              <button
+                type="button"
+                onClick={paused ? carryOn : hold}
+                aria-label={paused ? t('sing.carryOn', 'Carry on') : t('sing.hold', 'Pause')}
+                title={paused ? t('sing.carryOn', 'Carry on') : t('sing.hold', 'Pause')}
+                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900 text-zinc-200"
+              >
+                {paused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => void stop()}
+              className={`${BAR} w-auto flex-shrink-0 px-6 bg-red-500/20 border-red-500 text-red-300`}
+            >
+              <Square className="h-4 w-4 fill-current" />
+              {t('take.stop', 'Stop')}
+            </button>
+          </div>
+        ) : (
+        <>
         {/* ── The controls, every one of them the same bar ─────────────
 
             Carli, 15 September 2026: *"die buttons daarin moet meer reguit,
@@ -1763,26 +1868,20 @@ export default function VocalBooth({
             the three in between are the same bar in grey, which is the point
             of them all being the same bar. */}
         <div className="grid gap-2 sm:grid-cols-2">
-          {busyOrLive ? (
-            <button
-              type="button"
-              onClick={() => void stop()}
-              className={`${BAR} sm:col-span-2 bg-red-500/20 border-red-500 text-red-300`}
-            >
-              <Square className="w-4 h-4 fill-current" />
-              {t('take.stop', 'Stop')}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => void start(region ? Math.max(0, region.from - PRE_ROLL) : 0)}
-              disabled={busy || !backing}
-              className={`${BAR} sm:col-span-2 bg-emerald-500 border-emerald-400 text-onAccent disabled:opacity-50`}
-            >
-              {region ? <Scissors className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
-              {region ? t('booth.punch', 'Sing just this part') : t('booth.record', 'Record from the top')}
-            </button>
-          )}
+          {/* Only the way IN to a take. Stopping one belongs to the dock
+              above, which is the only thing on the screen while the
+              microphone is open — a second Stop down here would be a second
+              answer to the same question, drawn in a branch that can no
+              longer be reached. */}
+          <button
+            type="button"
+            onClick={() => void start(region ? Math.max(0, region.from - PRE_ROLL) : 0)}
+            disabled={busy || !backing}
+            className={`${BAR} sm:col-span-2 bg-emerald-500 border-emerald-400 text-onAccent disabled:opacity-50`}
+          >
+            {region ? <Scissors className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
+            {region ? t('booth.punch', 'Sing just this part') : t('booth.record', 'Record from the top')}
+          </button>
 
           <button
             type="button"
@@ -1840,7 +1939,13 @@ export default function VocalBooth({
             {t('take.keep', 'Keep this take')}
           </button>
         </div>
+        </>
+        )}
 
+        {/* Advice, and advice is for before. Two lines of it under a take in
+            progress is two lines the words are not getting, about a decision
+            that was made when the headphones went on. */}
+        {!busyOrLive && (
         <p className="text-sm text-zinc-600 leading-snug flex items-start gap-1.5">
           <Mic className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
           {/* Half of this line is about the note stave, which a phone no
@@ -1852,6 +1957,7 @@ export default function VocalBooth({
             {t('booth.headphones', 'Headphones, or the microphone picks up the backing as well. The note shown is what you are singing — the words and the backing say what it should be.')}
           </span>
         </p>
+        )}
       </div>
     </div>
   );

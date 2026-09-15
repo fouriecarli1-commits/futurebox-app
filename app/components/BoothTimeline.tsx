@@ -221,6 +221,35 @@ export default function BoothTimeline({
   const pointAt = (clientX: number): number =>
     snapped(Math.max(0, Math.min(total, secondsAt(clientX))), meter, snap);
 
+  /**
+   * Begin marking a piece, from wherever the finger went down.
+   *
+   * ── Why this is not the ruler's alone ────────────────────────────────
+   *
+   * Carli, 15 September 2026: *"Die mark button wat jy in die probooth gesit
+   * het doen niks nie. Die bar se ekstra lyne trek nie om 'n plek af te
+   * baken nie."*
+   *
+   * It did work, and only on the ruler — a 44-pixel strip at the very top of
+   * the timeline. Nobody marking a piece of a song looks there: they look at
+   * the sound, and they drag across the sound, which is the lane rows. So a
+   * feature that was armed, working and tested read as a button that does
+   * nothing, because the one place it answered was the one place a hand does
+   * not go.
+   *
+   * Armed, the whole timeline marks — the ruler, the rows, the clips. The
+   * clip's own drag and the cut handles stand down while the marker is on,
+   * which is the point of it being a mode: one button says what a drag
+   * means, and every surface means the same thing by it.
+   */
+  const startRegion = (event: React.PointerEvent): void => {
+    event.stopPropagation();
+    grab(event);
+    const where = pointAt(event.clientX);
+    held.current = { what: 'region', anchor: where };
+    onRegion({ from: where, to: where });
+  };
+
   const onMove = (event: React.PointerEvent): void => {
     const now = held.current;
     if (!now) return;
@@ -397,14 +426,27 @@ export default function BoothTimeline({
         <span className="text-xs font-bold tabular-nums" style={{ color: 'rgba(56,189,248,0.9)' }}>
           {sayPlace(placeAt(at, meter))}
         </span>
-        {here && (
+        {/* Armed, and nothing marked yet: say what to do, in the one row
+            that is always on the screen and always looked at.
+
+            A mode nobody can see is a mode that reads as a broken button —
+            which is how Carli found this one. The switch in the corner tints,
+            the ruler tints, and this says the sentence. */}
+        {marking && !region ? (
+          <span
+            className="ml-auto truncate rounded-full px-3 py-1 text-xs font-bold"
+            style={{ background: 'rgba(56,189,248,0.2)', color: '#7dd3fc' }}
+          >
+            {t('pro.markHow', 'Drag across the song to mark a piece')}
+          </span>
+        ) : here ? (
           <span
             className="ml-auto rounded-full px-3 py-1 text-xs font-bold"
             style={{ background: 'rgba(56,189,248,0.14)', color: '#7dd3fc' }}
           >
             {here.label}
           </span>
-        )}
+        ) : null}
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -485,7 +527,16 @@ export default function BoothTimeline({
                a label half off the right edge still reads, and nudging the
                last one in would put it on top of the one before it. */
             className="relative h-11 touch-none select-none overflow-hidden"
-            style={{ gridColumn: 2, gridRow: 1, background: PANEL, borderBottom: `1px solid ${EDGE}` }}
+            style={{
+              gridColumn: 2,
+              gridRow: 1,
+              /* Armed, the strip is blue. Not decoration: the ruler scrubs in
+                 one mode and draws in the other, and the only honest way to
+                 tell somebody which they are about to get is to make the two
+                 look different. */
+              background: marking ? 'rgba(56,189,248,0.16)' : PANEL,
+              borderBottom: `1px solid ${EDGE}`,
+            }}
             /* The whole ruler scrubs, not only the head. A thumb aiming at a
                2-pixel line on a phone misses; a thumb aiming at a strip the
                width of the room does not. */
@@ -498,9 +549,7 @@ export default function BoothTimeline({
                  person has to be able to see which one they are about to
                  get. */
               if (marking) {
-                const where = pointAt(event.clientX);
-                held.current = { what: 'region', anchor: where };
-                onRegion({ from: where, to: where });
+                startRegion(event);
                 return;
               }
               held.current = { what: 'head' };
@@ -684,6 +733,11 @@ export default function BoothTimeline({
                     height: ROW,
                     borderBottom: `1px solid ${EDGE}`,
                   }}
+                  /* The empty stretch either side of a clip. It is most of a
+                     row on a long song and it had no handler at all, so a
+                     mark drawn across the gap between two parts — which is
+                     exactly where somebody marks — landed on nothing. */
+                  onPointerDown={marking ? startRegion : undefined}
                 >
                   {/* The grid, on the shared axis. */}
                   {bars.map((second) => (
@@ -722,6 +776,14 @@ export default function BoothTimeline({
                       overflow: 'hidden',
                     }}
                     onPointerDown={(event) => {
+                      /* Marking beats moving. A drag across a clip is the
+                         most natural way to say "this piece of the song",
+                         and while the marker is armed that is what it
+                         means. */
+                      if (marking) {
+                        startRegion(event);
+                        return;
+                      }
                       grab(event);
                       held.current = {
                         what: 'move',
@@ -797,6 +859,10 @@ export default function BoothTimeline({
                           /* Before the block underneath, or every cut would
                              be read as picking the whole clip up. */
                           event.stopPropagation();
+                          if (marking) {
+                            startRegion(event);
+                            return;
+                          }
                           grab(event);
                           held.current = { what: 'cut', id: lane.id, edge };
                           setShowing(lane.id);

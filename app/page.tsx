@@ -3070,7 +3070,28 @@ export default function FutureBoxHome() {
            Nothing here is a dialogue you answer and dismiss. It is the room
            you work in, so it gets the room. */
         <CopilotBusContext.Provider value={copilotBus}>
-        <div className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden">
+        {/* ── The booth takes the whole room with it ────────────────────
+
+            Carli, 15 September 2026: *"Dit sal beter lyk as die hele probooth
+            kamer die swart en blou is, nie net 'n gedeelte nie."*
+
+            The door was a dark slab sitting on a white studio — the rail
+            above it, the copilot under it and the page behind it all in the
+            app's own light theme, so the one room that is meant to look like
+            a piece of studio equipment looked like a photograph of one glued
+            onto a form.
+
+            `data-booth` on the studio's own root rather than on the room
+            inside it: the flag is a ramp, every `zinc` under it resolves
+            dark, and that is the whole shell — header, rail, working
+            surface, copilot. It comes off the moment another tab is open,
+            because every other room in this app must follow the theme and
+            this is the one exception. See `lib/boothlook.ts` and
+            `check:boothline` for why the exception exists. */}
+        <div
+          {...(studioTab === 'booth' ? { 'data-booth': '' } : {})}
+          className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden"
+        >
           {/* One column that scrolls, on a phone. Two panes that scroll
               independently, on a desktop.
 

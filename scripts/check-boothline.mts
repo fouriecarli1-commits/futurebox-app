@@ -63,7 +63,11 @@ ok(
 ok(
   '  and every cell names its own row and column',
   /gridColumn: 1, gridRow: 1,/.test(line) &&
-    /gridColumn: 2, gridRow: 1,/.test(line) &&
+    /* The ruler's cell grew a conditional background when the marker was
+       added, so its style object is written over several lines now. The rule
+       is that the cell NAMES its row and column, not that both sit on one
+       line — matched per property, which is what was ever meant. */
+    /gridColumn: 2,\n?\s*gridRow: 1,/.test(line) &&
     /gridColumn: 1,\n\s*gridRow: index \+ 2,/.test(line) &&
     /gridColumn: 2,\n\s*gridRow: index \+ 2,/.test(line),
   'the playhead is placed explicitly, so anything left to auto-flow is pushed around it into an implicit third column',

@@ -270,6 +270,30 @@ try {
     const stop = room.locator('button').filter({ hasText: /^Stop|Hou op/ }).first();
     const keepable = room.locator('button').filter({ hasText: /Keep this take|Hou hierdie opname/ }).first();
     const seen = [];
+
+    /* ── The screen belongs to the words while the microphone is open ──
+
+       Carli, 15 September 2026, with a photograph: *"Die spasie is min vir
+       recording. Die oomblik wanneer mens op record druk moet daai buttons
+       verdwyn ... Die woorde moet die grootste gedeelte van die skerm vat."*
+
+       Measured in the first second of a take rather than described, because
+       what went wrong is exactly the kind of thing that reads fine in a diff:
+       five 52-pixel bars are correct for choosing what to do and three
+       hundred pixels of furniture in front of somebody singing. The three
+       that are about choosing have to be gone. */
+    await page.waitForTimeout(900);
+    for (const [what, text] of [
+      ['listening back', /Listen back|Play it and follow|Luister terug|Speel dit/],
+      ['the lanes', /Lanes and mixing|Bane en meng/],
+      ['the desk', /^Desk$|^Lessenaar$/],
+    ]) {
+      check(`while a take is running, ${what} is off the screen`,
+        (await room.locator('button').filter({ hasText: text }).count()) === 0);
+    }
+    check('and stopping the take is',
+      (await room.locator('button').filter({ hasText: /^Stop|Hou op/ }).count()) > 0);
+
     for (let waited = 0; waited < 40; waited += 1) {
       await page.waitForTimeout(1000);
       /* Whether the take is still running, watched rather than assumed.
