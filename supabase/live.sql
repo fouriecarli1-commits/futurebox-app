@@ -181,5 +181,18 @@ alter table public.live_posts
 -- woorde. Die skerm wys dan die kamer soos hy altyd was.
 --
 -- `if not exists`, want hierdie lêer moet twee keer kan loop.
+--
+-- ── Dieselfde kolom staan ook in supabase/roomwords.sql ─────────────
+--
+-- Dit is EEN verandering, nie twee nie, en dit is met opset op twee plekke:
+--
+--   · Hier, want hierdie lêer bou die tabel. Iemand wat 'n nuwe projek
+--     opstel loop hierdie lêer en kry 'n volledige live_posts.
+--   · In roomwords.sql, want hierdie lêer is reeds geloop op die projek wat
+--     loop. 'n Kolom wat by 'n reeds-gelope lêer bygevoeg word, is onsigbaar
+--     vir enigiemand wat net die groot plak (ALMAL.sql) loop — en ALMAL.sql
+--     is per definisie die lêers wat nog nooit geloop het nie.
+--
+-- Albei is `if not exists`, so albei loop is veilig. Loop net een.
 alter table public.live_posts
   add column if not exists words jsonb;

@@ -1209,5 +1209,16 @@ grant execute on function public.eleven_credits_this_month() to service_role;
 -- voordat hierdie kolom bestaan het. Sonder woorde wys die kamer die
 -- liedjie soos hy was; met woorde lees hy saam.
 
+-- ── Dieselfde kolom staan ook in supabase/live.sql ─────────────────
+--
+-- Carli, 15 September: *"Dit lyk of ek 2 sql's moet hardloop."*
+--
+-- Dit is EEN verandering. live.sql bou die tabel, so die kolom hoort daar
+-- vir 'n nuwe projek; hierdie lêer bestaan omdat live.sql reeds geloop het
+-- op die projek wat loop, en 'n kolom wat by 'n reeds-gelope lêer bygevoeg
+-- word, bereik niemand wat net die groot plak loop nie.
+--
+-- Albei is `if not exists`. Loop net een; albei is ook veilig.
+
 alter table public.live_posts
   add column if not exists words jsonb;
