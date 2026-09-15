@@ -28,7 +28,9 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 | **Besluit oor die kopieregtoets op opgelaaide liedjies** | Deur jou gebank, 13 September. Die opsies en die twee vrae wat eerste beantwoord moet word, staan in `docs/SWITCH-ON.md`. |
 | **'n Besigheidsadres om te publiseer** | Sy kan die CIPC-rekord **nie** verander nie (11 September) — haar huisadres bly daarop, en daardie register is deursoekbaar. Dít is nie 'n rede om dit ook op haar eie webwerf te sit nie: op `/legal` word dit deur Google teen haar besigheidsnaam geïndekseer en deur skrapers gevat; op CIPC moet iemand die nommer al hê. **Hou `FUTUREBOX_LEGAL_ADDRESS` leeg.** Die oop vraag is of 'n besigheidsadres-diens se adres as die *gepubliseerde* adres kan dien sonder om die CIPC-rekord te raak — sien die inskrywing hieronder. |
 | **Maak `/api/eleven/dictionary?key=…` een keer oop** | Dit bou die uitspraakwoordeboek op jou rekening uit die reëls in die kode. Plak albei ids by Vercel in, redeploy, en **luister**. Sonder daardie twee waardes word niks toegepas nie en niks sê so nie. |
-| **Stuur die ElevenLabs-verkoopse-pos** | `docs/ELEVENLABS-SALES.md`. Dit is die ding wat die terme-bladsy weer laat verander — die lisensie wat deur na lede loop, is nie op die self-diens plan nie. |
+| **Stuur die ElevenLabs-verkoopse-pos** | `docs/ELEVENLABS-SALES.md`, **heeltemal herskryf op 15 September**. Die OEM-terme is nou gelees en hulle laat dit toe op Business — die brief vra hulle nou om ons lesing skriftelik te bevestig, nie meer of ons mág bestaan nie. Sien `docs/ELEVENLABS-TERME.md`. |
+| **Kyk of die ElevenLabs-rekening op FUTUREBOXSTUDIO (Pty) Ltd se naam is** | Vyf minute, en die hele OEM-toestemming hang daaraan. OEM §1(D) sluit *"individual users acting in their personal capacity"* uitdruklik uit. As die rekening op jou eie naam is, is die definisie op sy gesig nie gehaal nie. |
+| **Sit die opleidings-opt-out aan** | Rekening → *Terms and Privacy* → *Data use*. Dit kos niks, dit werk nie terugwerkend nie (§4(i)), en elke dag wat dit af is, is data wat dit nie dek nie. |
 | **Lees Supabase Pro en Vercel Pro se limiete** | Albei skaal met **gratis** lede, anders as ElevenLabs. Tienduisend gratis rekeninge is die launch-vorm. Hierdie masjien kan nie by hulle bladsye kom nie (geblokkeer). Die een getal wat besluit: Supabase se **maandelikse aktiewe gebruikers**. |
 | **Stuur drie advertensies wat jou laat stop het** | Die stylkatalogus (`app/lib/adstyles.ts`) is **my mening, vandag gedateer** — ek kon nie by Pinterest, Canva of enige tendens-bladsy uitkom nie (geblokkeer), en ek verkoop nie in hierdie mark nie. Elke inskrywing is geskryf om teëgepraat te word. Stuur drie wat jou laat stop het — 'n skermskoot, 'n skakel, of net 'n beskrywing — en ek sit die patroon daaragter in die lys met vandag se datum. Drie egtes is meer werd as enigiets wat ek kan raai. |
 | **Toets die bemarkingslessenaar** | Die R199-byvoegsel is op jou rekening (11 September, `supabase/TOETSTOEGANG.sql`). Die plan het nog **nooit gewerk nie** — sien hieronder — dit is nou reg en nog nooit met 'n regte sleutel geloop nie. Jy is die eerste mens wat dit gaan sien werk. |
@@ -45,8 +47,35 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 |---|---|
 | Die oorklankingsmigrasie (die projek-oppervlak) | 'n Kostestrik — 'n projek wat geskep en laat staan word, faktureer steeds — en ek kan die API nie van hier af toets nie. Die duur helfte (die webhaak) is klaar. |
 | TONE3000 | tone3000.com is geblokkeer van hierdie masjien af. |
-| 'n ElevenLabs-stemagent vir die hulptoonbank | Wag op Enterprise. |
+| 'n ElevenLabs-stemagent vir die hulptoonbank | Wag op Enterprise. Die ElevenAgents-terme is nou gelees — sien `docs/ELEVENLABS-TERME.md` §6. |
+| Of §1(I) se *"internal business operations"* 'n skeppende lid dek | Die enigste ding in die OEM-terme wat die antwoord nog kan omdraai. Die ElevenAgents-weergawe van dieselfde klousule sê *"or personal use"*; die OEM-een nie. Dit is nou die skerpste vraag in die verkoopse-pos. |
+| Of `creatify-aurora` 'n Beta Service is | Beta-addendum §3(a) verbied kommersiële of produksie-gebruik van 'n Beta Service heeltemal, en §2 verbied dat 'n mens se stem daarheen gaan. Een sin van ondersteuning beantwoord dit. |
+| Die **Music Terms** | Nog nooit gelees nie, en die Music Marketplace-addendum §3(c) wys na 'n lys **verbode bedrywe** daarin. Daar is 'n lys bedrywe wat ons musiek nie mag bedien nie en ons het dit nog nooit gesien nie. Gevra in die verkoopse-pos. |
+| Of Kits se §1.1-uitsetlisensie deur na lede loop | Kits het niks soos die OEM-terme nie — stil, nie verbied nie. Hulle antwoord hulptoonbank-kaartjies, anders as ElevenLabs, so dit is een kort e-pos. `docs/KITS-TERME.md` §3. |
 | Betaal iemand al? | **Nee** — bevestig 10 September. Dit maak die R349-verandering 'n omruil en nie 'n migrasie nie, en dit beteken die terme-verandering skuld niemand 'n e-pos nie. **Albei hou net solank dit waar bly.** |
+
+### En die een ding om te onthou uit 15 September
+
+**Die OEM-terme was al die tyd daar, en hulle laat dit toe.**
+
+Die vraag wat sedert 9 September oop was — mag 'n lid verkoop wat hy onder
+ons sleutel maak — is beantwoord deur 'n dokument wat niemand gelees het nie,
+omdat elevenlabs.io van hierdie masjien af geblokkeer is. **OEM-terme
+§2(B)(f)** verbied dit uitdruklik op Free, Starter, Creator en Pro, en
+**§1(D)** sit Business aan die toegelate kant. Jy het na Business toe
+opgeskuif. §2(A) gee dan die reg om die *Bundled Service* aan End Users
+beskikbaar te stel, en die hoofterme sê 'n Supplemental Term wen waar dit bots
+— wat die enigste manier is om verby §5(b) se *"non-sublicensable"* te kom.
+
+Drie dinge bly oor, en hulle is klein: die rekening moet die maatskappy s'n
+wees, §1(I) se *"internal business operations"* pas nie 'n skeppende lid nie,
+en die toestemming is diens-vir-diens (Studio is Enterprise-only vir
+kommersiële gebruik, wat ook al jou plan sê).
+
+**Wat dit gekos het**, is dat die OEM-terme ook voorwaardes stel wat tot vandag
+nie nagekom is nie. §3(A) vereis 'n merkblokkie met 'n *"affirmative click"* en
+vier spesifieke klousules in ons ooreenkoms met 'n lid. Al vyf is nou gebou en
+`check:musiclicence` hou hulle vas. Sien `docs/ELEVENLABS-TERME.md`.
 
 ### Die een ding om te onthou uit 10 September
 
