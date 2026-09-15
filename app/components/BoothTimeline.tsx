@@ -47,7 +47,9 @@
  *   · drag the playhead — by its head, which is deliberately big, or by
  *     anywhere on the ruler;
  *   · drag a clip along the whole song, which moves where that sound sits;
- *   · drag either end of a clip, which cuts it without destroying anything.
+ *   · drag either end of a clip, which cuts it without destroying anything;
+ *   · arm the marker in the ruler's corner and drag out a piece of the song,
+ *     which the room above then offers to cut, fade, repeat or fill.
  *
  * All three are pointer events with the pointer captured and `touch-none` on
  * the surface, so a thumb that slides off the strip keeps dragging instead of
@@ -131,6 +133,8 @@ export default function BoothTimeline({
   onChange,
   onPick,
   picked,
+  region,
+  onRegion,
 }: {
   readonly lanes: readonly Lane[];
   /** The length of the whole session, in seconds. The axis is this wide. */
@@ -146,6 +150,17 @@ export default function BoothTimeline({
   /** Tapping a lane's name opens its controls. */
   readonly onPick: (id: string) => void;
   readonly picked?: string | null;
+  /**
+   * The piece of the song that is marked, in seconds on the session's clock.
+   *
+   * Null is the normal state: nothing marked, and the ruler scrubs. The room
+   * above owns it, because everything that can be done TO a marked piece —
+   * cutting it out, fading it, sending it away to have the voice taken off —
+   * is the room's business and not the timeline's. The timeline draws it and
+   * lets a thumb move its ends.
+   */
+  readonly region: { readonly from: number; readonly to: number } | null;
+  readonly onRegion: (region: { readonly from: number; readonly to: number } | null) => void;
 }): React.ReactElement {
   const { t } = useLang();
   /* The one element every position in here is measured against. Held rather
@@ -186,9 +201,25 @@ export default function BoothTimeline({
     | { what: 'head' }
     | { what: 'move'; id: string; grabbedAt: number; wasAt: number }
     | { what: 'cut'; id: string; edge: 'from' | 'to' }
+    | { what: 'region'; anchor: number }
+    | { what: 'regionEdge'; edge: 'from' | 'to' }
     | null
   >(null);
   const [showing, setShowing] = useState<string | null>(null);
+  /**
+   * Whether a drag on the ruler marks a piece instead of scrubbing.
+   *
+   * Armed rather than always on, and that is the whole design of it. The
+   * ruler already does the thing a thumb reaches for most — move the line —
+   * and a gesture that sometimes scrubs and sometimes draws a box, depending
+   * on how long you held it, is a gesture nobody can rely on. One button
+   * says which of the two the ruler is doing, and it says so out loud.
+   */
+  const [marking, setMarking] = useState(false);
+
+  /** A point on the ruler, clamped to the song and snapped to the grid. */
+  const pointAt = (clientX: number): number =>
+    snapped(Math.max(0, Math.min(total, secondsAt(clientX))), meter, snap);
 
   const onMove = (event: React.PointerEvent): void => {
     const now = held.current;
@@ -196,6 +227,23 @@ export default function BoothTimeline({
     event.preventDefault();
     if (now.what === 'head') {
       onSeek(Math.max(0, Math.min(total, secondsAt(event.clientX))));
+      return;
+    }
+    /* Marking a piece, and moving one of its ends. Both are the same sum:
+       one point is held and the other follows the finger, and the smaller of
+       the two is the start — so an end dragged past the other end turns the
+       region round instead of collapsing it, which is what every editor
+       does and what a hand expects. */
+    if (now.what === 'region') {
+      const where = pointAt(event.clientX);
+      onRegion({ from: Math.min(now.anchor, where), to: Math.max(now.anchor, where) });
+      return;
+    }
+    if (now.what === 'regionEdge') {
+      if (!region) return;
+      const where = pointAt(event.clientX);
+      const other = now.edge === 'from' ? region.to : region.from;
+      onRegion({ from: Math.min(other, where), to: Math.max(other, where) });
       return;
     }
     const lane = lanes.find((one) => one.id === now.id);
@@ -253,8 +301,20 @@ export default function BoothTimeline({
     }
   };
   const endDrag = (): void => {
+    const was = held.current;
     held.current = null;
     setShowing(null);
+    /* A tap with the marker armed is a tap, not a piece. Without this every
+       press on the ruler while marking would leave a region of no length
+       behind it, and the room above would put a toolbar on the screen for a
+       piece of the song that is nothing. */
+    if (
+      (was?.what === 'region' || was?.what === 'regionEdge') &&
+      region &&
+      region.to - region.from < 0.1
+    ) {
+      onRegion(null);
+    }
   };
 
   const grab = (event: React.PointerEvent): void => {
@@ -368,7 +428,54 @@ export default function BoothTimeline({
               one element drawn on top of it.
 
               Naming every cell removes the auto-placement pass entirely. */}
-          <div style={{ gridColumn: 1, gridRow: 1, background: PANEL, borderBottom: `1px solid ${EDGE}` }} />
+          {/* ── The corner, which used to be a blank square ──────────────
+
+              Carli, 15 September 2026: *"Is daar nie 'n manier om ekstra
+              dragging lines in die timeline te hê wat 'n gedeelte uitsonder,
+              dan highlight daai gedeelte met 'n button wat op pop met
+              verskillende opsies binne die button."*
+
+              This is the switch for it, and it sits here because this is the
+              one cell in the grid that belongs to the ruler rather than to a
+              lane — the marker is a mode of the ruler, so its button is the
+              ruler's own corner. 44 tall, which is what pulled the ruler up
+              to 44 with it. */}
+          <div style={{ gridColumn: 1, gridRow: 1, background: PANEL, borderBottom: `1px solid ${EDGE}`, borderRight: `1px solid ${EDGE}` }}>
+            <button
+              type="button"
+              data-mark=""
+              onClick={() => {
+                setMarking((was) => !was);
+                if (marking) onRegion(null);
+              }}
+              aria-pressed={marking}
+              title={t(
+                'pro.markWhat',
+                'Draw a piece of the song on the ruler, then choose what to do with it: cut it out, fade it, repeat it, or have a part generated for exactly that long.',
+              )}
+              className="flex h-11 w-full items-center justify-center gap-1.5 px-1"
+            >
+              <span
+                className="flex h-5 w-6 items-center justify-center rounded-sm text-[9px] font-black leading-none"
+                style={{
+                  background: marking ? 'rgba(56,189,248,0.32)' : 'rgba(255,255,255,0.07)',
+                  color: marking ? '#7dd3fc' : INK_DIM,
+                  /* Two upright bars with a gap: the shape of what the button
+                     draws, which reads at this size where a word does not. */
+                  boxShadow: marking
+                    ? 'inset 2px 0 0 #7dd3fc, inset -2px 0 0 #7dd3fc'
+                    : 'inset 2px 0 0 rgba(238,242,255,0.45), inset -2px 0 0 rgba(238,242,255,0.45)',
+                }}
+                aria-hidden
+              />
+              <span
+                className="truncate text-[10px] font-bold leading-tight"
+                style={{ color: marking ? '#7dd3fc' : INK_DIM }}
+              >
+                {t('pro.mark', 'Mark')}
+              </span>
+            </button>
+          </div>
           <div
             ref={axis}
             data-axis
@@ -377,13 +484,25 @@ export default function BoothTimeline({
                — measured at 96 wide holding 131. Clipped rather than moved:
                a label half off the right edge still reads, and nudging the
                last one in would put it on top of the one before it. */
-            className="relative h-9 touch-none select-none overflow-hidden"
+            className="relative h-11 touch-none select-none overflow-hidden"
             style={{ gridColumn: 2, gridRow: 1, background: PANEL, borderBottom: `1px solid ${EDGE}` }}
             /* The whole ruler scrubs, not only the head. A thumb aiming at a
                2-pixel line on a phone misses; a thumb aiming at a strip the
                width of the room does not. */
             onPointerDown={(event) => {
               grab(event);
+              /* Armed, the ruler draws instead of scrubbing. Nothing else
+                 about the gesture changes — same strip, same capture, same
+                 clamp — which is why the button above has to be visibly on:
+                 the only difference between the two is what happens, and a
+                 person has to be able to see which one they are about to
+                 get. */
+              if (marking) {
+                const where = pointAt(event.clientX);
+                held.current = { what: 'region', anchor: where };
+                onRegion({ from: where, to: where });
+                return;
+              }
               held.current = { what: 'head' };
               onSeek(Math.max(0, Math.min(total, secondsAt(event.clientX))));
             }}
@@ -709,6 +828,76 @@ export default function BoothTimeline({
               </React.Fragment>
             );
           })}
+
+          {/* ── The marked piece ────────────────────────────────────────
+
+              Drawn across every lane rather than inside one, because that is
+              what it is: a piece of the SONG. Which lane it acts on is the
+              lane that is open — the same "Which lane" choice every other
+              desk in this room is scoped by — so the mark itself does not
+              have to carry one, and the same mark can have the voice lifted
+              off one lane and a part generated under another without being
+              drawn again.
+
+              The body lets presses through to the clips underneath it. Only
+              the two ends take them, and only in the ruler's own band at the
+              top, so a marked piece does not put a 28-pixel dead stripe down
+              through the middle of every clip it crosses. */}
+          {region && region.to - region.from > 0.01 && (
+            <div
+              className="pointer-events-none relative"
+              style={{ gridColumn: 2, gridRow: `1 / span ${lanes.length + 1}` }}
+            >
+              <span
+                className="absolute inset-y-0"
+                style={{
+                  left: `${percent(region.from)}%`,
+                  width: `${Math.max(0.2, percent(region.to) - percent(region.from))}%`,
+                  background: 'rgba(56,189,248,0.14)',
+                  borderLeft: '2px solid #38bdf8',
+                  borderRight: '2px solid #38bdf8',
+                }}
+              />
+              {(['from', 'to'] as const).map((edge) => (
+                <span
+                  key={edge}
+                  role="slider"
+                  aria-label={
+                    edge === 'from'
+                      ? t('pro.regionFrom', 'Where the marked piece starts')
+                      : t('pro.regionTo', 'Where the marked piece ends')
+                  }
+                  aria-valuemin={0}
+                  aria-valuemax={Math.round(total)}
+                  aria-valuenow={Math.round(region[edge])}
+                  aria-valuetext={clock(region[edge])}
+                  tabIndex={0}
+                  className="pointer-events-auto absolute top-0 h-11 w-7 touch-none cursor-ew-resize"
+                  style={{ left: `${percent(region[edge])}%`, transform: 'translateX(-50%)' }}
+                  onPointerDown={(event) => {
+                    event.stopPropagation();
+                    grab(event);
+                    held.current = { what: 'regionEdge', edge };
+                  }}
+                  onKeyDown={(event) => {
+                    const jump = event.shiftKey ? 1 : 0.1;
+                    const step =
+                      event.key === 'ArrowLeft' ? -jump : event.key === 'ArrowRight' ? jump : 0;
+                    if (!step) return;
+                    event.preventDefault();
+                    const moved = Math.max(0, Math.min(total, region[edge] + step));
+                    const other = edge === 'from' ? region.to : region.from;
+                    onRegion({ from: Math.min(other, moved), to: Math.max(other, moved) });
+                  }}
+                >
+                  <span
+                    className="pointer-events-none absolute inset-y-1.5 left-1/2 w-1.5 -translate-x-1/2 rounded-full"
+                    style={{ background: '#38bdf8' }}
+                  />
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* ── The playhead, over everything, in the same column ───────
 

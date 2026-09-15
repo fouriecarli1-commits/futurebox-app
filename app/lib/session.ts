@@ -333,6 +333,107 @@ export function span(lanes: readonly Lane[]): number {
   return lanes.reduce((longest, lane) => Math.max(longest, lane.at + lengthOf(lane)), 0);
 }
 
+/** The shortest piece this room will make. A cut that leaves less is a click. */
+export const SHORTEST = 0.1;
+
+/**
+ * A lane cut in three by a region.
+ *
+ * `before` and `after` are absent where the region reaches the lane's own
+ * end — a region that starts exactly where the lane does has nothing in
+ * front of it, and a sliver left over is dropped into `inside` rather than
+ * kept as a lane nobody can see or press.
+ */
+export interface Carved {
+  readonly before: Lane | null;
+  readonly inside: Lane;
+  readonly after: Lane | null;
+}
+
+/**
+ * One lane, cut where a region begins and where it ends.
+ *
+ * Carli, 15 September 2026: *"Is daar nie 'n manier om ekstra dragging lines
+ * in die timeline te hê wat 'n gedeelte uitsonder, dan highlight daai
+ * gedeelte met 'n button wat op pop met verskillende opsies binne die
+ * button."*
+ *
+ * This is the one thing under all of those options. Cutting a piece out,
+ * silencing it, fading it, repeating it, sending only it away to have the
+ * voice taken off — every one of them is "carve the region into its own
+ * lane, then do the thing to that lane", so the carving lives here once
+ * instead of near-identically in each of them.
+ *
+ * Nothing is rendered and nothing is spent: the three lanes point at the
+ * same recording through different windows, exactly as `cutHere` does, which
+ * is what makes the whole gesture free and undoable by dragging an edge.
+ *
+ * On a repeated clip the cut lands at the nearest seam rather than inside a
+ * repetition — a repetition cut in half cannot be said in this model, and a
+ * musician marking a looped part means "from the top of that bar".
+ *
+ * Returns null where the region misses the lane, or overlaps it by less than
+ * a tenth of a second, which is the same floor the drag handles hold to.
+ */
+export function carveLane(lane: Lane, from: number, to: number): Carved | null {
+  const window = windowOf(lane);
+  const once = window.to - window.from;
+  const times = repeatOf(lane);
+  const plays = once * times;
+  if (!(once > 0 && plays > 0)) return null;
+
+  /* The region on the lane's own clock, clamped to it. */
+  const a = Math.max(0, Math.min(plays, Math.min(from, to) - lane.at));
+  const b = Math.max(0, Math.min(plays, Math.max(from, to) - lane.at));
+  if (b - a < SHORTEST) return null;
+
+  const named = (part: 1 | 2 | 3): string => `${lane.id}~${part}`;
+
+  if (times > 1) {
+    const first = Math.max(0, Math.min(times - 1, Math.round(a / once)));
+    const last = Math.max(first + 1, Math.min(times, Math.round(b / once)));
+    return {
+      before: first > 0 ? { ...lane, id: named(1), repeat: first } : null,
+      inside: { ...lane, id: named(2), at: lane.at + first * once, repeat: last - first },
+      after:
+        last < times
+          ? { ...lane, id: named(3), at: lane.at + last * once, repeat: times - last }
+          : null,
+    };
+  }
+
+  /* A sliver at either end belongs to the region rather than to a lane of
+     its own: three pixels of audio is not something anybody can press, and
+     leaving it behind would put a gap where the eye sees none. */
+  const start = a > SHORTEST ? a : 0;
+  const end = once - b > SHORTEST ? b : once;
+  return {
+    before:
+      start > 0
+        ? { ...lane, id: named(1), from: window.from, to: window.from + start, repeat: 1 }
+        : null,
+    inside: {
+      ...lane,
+      id: named(2),
+      at: lane.at + start,
+      from: window.from + start,
+      to: window.from + end,
+      repeat: 1,
+    },
+    after:
+      end < once
+        ? {
+            ...lane,
+            id: named(3),
+            at: lane.at + end,
+            from: window.from + end,
+            to: window.to,
+            repeat: 1,
+          }
+        : null,
+  };
+}
+
 /**
  * A lane started at the right moment, from the right place, for the right
  * length.
@@ -595,6 +696,60 @@ export function pieceOf(lane: Lane, ctx: BaseAudioContext): AudioBuffer {
   const out = ctx.createBuffer(source.numberOfChannels, length, rate);
   for (let channel = 0; channel < source.numberOfChannels; channel += 1) {
     out.getChannelData(channel).set(source.getChannelData(channel).subarray(from, to));
+  }
+  return out;
+}
+
+/**
+ * A lane exactly as it plays: its window, repeated as many times as it goes.
+ *
+ * `pieceOf` is the window once, which is what the paid paths want — a part
+ * that goes round eight times is one bar of audio and should be billed as
+ * one. This is the other question, and baking a fade is the case that asks
+ * it: a fade over a piece that repeats has to come down across the whole of
+ * it, not four times over.
+ */
+export function playsOf(lane: Lane, ctx: BaseAudioContext): AudioBuffer {
+  const once = pieceOf(lane, ctx);
+  const times = repeatOf(lane);
+  if (times <= 1) return once;
+  const out = ctx.createBuffer(once.numberOfChannels, once.length * times, once.sampleRate);
+  for (let channel = 0; channel < once.numberOfChannels; channel += 1) {
+    const from = once.getChannelData(channel);
+    const into = out.getChannelData(channel);
+    for (let n = 0; n < times; n += 1) into.set(from, n * once.length);
+  }
+  return out;
+}
+
+/**
+ * A copy of a buffer that comes up from nothing, or goes down to it.
+ *
+ * Baked into samples rather than set on a gain node, and that is the choice
+ * this file exists to make: a fade drawn on a region has to be in the export
+ * as well as in the preview, and the only way to be sure of that is for there
+ * to be one set of samples. The lane keeps pointing at its own recording
+ * either side of the region — it is the carved middle that gets a buffer of
+ * its own, which is a second or two of audio rather than a copy of the take.
+ *
+ * Linear on amplitude. An equal-power curve is the right one for crossing two
+ * sounds over each other; for a piece coming up out of silence, linear is
+ * what a fader does and what an ear expects.
+ */
+export function fadedCopy(
+  buffer: AudioBuffer,
+  ctx: BaseAudioContext,
+  way: 'in' | 'out',
+): AudioBuffer {
+  const out = ctx.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
+  const last = Math.max(1, buffer.length - 1);
+  for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
+    const from = buffer.getChannelData(channel);
+    const into = out.getChannelData(channel);
+    for (let i = 0; i < from.length; i += 1) {
+      const part = i / last;
+      into[i] = from[i] * (way === 'in' ? part : 1 - part);
+    }
   }
   return out;
 }

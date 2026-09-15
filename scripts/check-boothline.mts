@@ -77,9 +77,26 @@ ok(
   /h-7 w-7 touch-none/.test(line),
   'Carli asked for a line a finger can catch; a 2-pixel line is not one',
 );
+/* The ruler's press used to be four lines and this was a four-line regex.
+   It is not any more: armed, the same drag marks a piece of the song instead
+   of scrubbing, so the press has a branch in front of it. The rule being kept
+   is unchanged — a press anywhere on the ruler moves the line, because a thumb
+   aiming at a 2-pixel head misses — so the match is on the two statements
+   that carry it rather than on their exact neighbourhood. */
 ok(
   '  and the whole ruler scrubs, not only the head',
-  /onPointerDown=\{\(event\) => \{\s*grab\(event\);\s*held\.current = \{ what: 'head' \};\s*onSeek\(/.test(line),
+  /held\.current = \{ what: 'head' \};\s*onSeek\(Math\.max\(0, Math\.min\(total, secondsAt\(event\.clientX\)\)\)\);\s*\}\}/.test(line),
+);
+ok(
+  '  and armed, that same drag marks a piece instead of scrubbing',
+  /if \(marking\) \{/.test(line) && /what: 'region', anchor: where/.test(line),
+  'Carli asked for dragging lines that single a piece out; one button says which of the two the ruler is doing',
+);
+ok(
+  '  and the marked piece is drawn across every lane, not inside one',
+  /region && region\.to - region\.from > 0\.01/.test(line) &&
+    /gridColumn: 2, gridRow: `1 \/ span \$\{lanes\.length \+ 1\}`/.test(line),
+  'a piece of a song is a piece of the song; which lane it acts on is the lane that is open',
 );
 
 /* ── And only one of it ───────────────────────────────────────────────── */

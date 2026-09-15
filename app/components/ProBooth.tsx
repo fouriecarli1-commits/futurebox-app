@@ -21,9 +21,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowDownToLine, ArrowLeft, Bot, Check, Circle, Clock, Download, Gauge, Grid3x3, KeyRound, Layers, Loader2, Mic2, Music2, Plus, Repeat, Scissors, Search, Sliders, Square, SquareSplitHorizontal, Timer, Trash2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
 import {
-  FLAT_MASTER, audible, dbOf, lengthOf, mixSession, monoOf, pieceOf, readInto, readSession,
-  repeatOf, span, startLane, windowOf, wireLane, wireMaster,
-  type Lane, type Master, type Reading,
+  FLAT_MASTER, audible, carveLane, dbOf, fadedCopy, lengthOf, mixSession, monoOf, pieceOf,
+  playsOf, readInto, readSession, repeatOf, span, startLane, windowOf, wireLane, wireMaster,
+  type Carved, type Lane, type Master, type Reading,
 } from '../lib/session';
 import { failed, separate, separateParts } from '../lib/stems';
 import { done as forgetJob, keyIn, partOf, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
@@ -1361,6 +1361,207 @@ export default function ProBooth({
     setPicked(`${lane.id}-a`);
   }, [at, lanes, picked, t]);
 
+  /* ── A marked piece of the song ──────────────────────────────────────
+
+     Carli, 15 September 2026: *"Is daar nie 'n manier om ekstra dragging
+     lines in die timeline te hê wat 'n gedeelte uitsonder, dan highlight
+     daai gedeelte met 'n button wat op pop met verskillende opsies binne die
+     button, cut, dalk ai tool wat die klank verbeter, of 'n instrument
+     generate vir daai gedeelte, jy sal waarskynlik beter weet watter tools
+     nodig is."*
+
+     ── What it is, and what it is not ──────────────────────────────────
+
+     The mark is TIME. It is drawn across every lane, because a piece of a
+     song is a piece of a song. The lane it acts on is the lane that is open
+     — the same "Which lane" choice every other desk in this room is scoped
+     by, so there is one answer to "which sound is this about" rather than
+     two that can disagree.
+
+     ── Why these tools and not others ──────────────────────────────────
+
+     Every one of them is `carveLane` and then something. Nothing here
+     renders a session, nothing re-reads a take, and only the last two spend
+     anything — which is why the free ones are at the top: cutting a piece
+     out, keeping only it, repeating it and fading it are what a person does
+     to a marked piece ninety times out of a hundred, they happen the instant
+     they are pressed, and every one of them is undone by dragging an edge
+     back.
+
+     Generating a part for the mark is better than generating one without it,
+     and that is the whole reason it is on this list: the length comes from
+     the piece she drew instead of from a guess at how many bars she meant.
+
+     The one thing on her list that is NOT here is the AI cleanup. It is not
+     free, it is not instant, and there is no service wired to this room that
+     improves a marked second and a half of audio — so it is not offered.
+     Taking the room off a lane is the nearest thing that exists, it lives on
+     that lane's own card, and a button here promising to "make it better"
+     would have been a button that could not. */
+  const [region, setRegion] = useState<{ readonly from: number; readonly to: number } | null>(null);
+  const [regionOpen, setRegionOpen] = useState(false);
+  /* The phone's back button closes the tools rather than leaving the room —
+     the same rule every other overlay in here follows. */
+  useBackLayer(regionOpen, () => setRegionOpen(false));
+
+  /**
+   * The marked piece, carved out of the open lane, without committing it.
+   *
+   * Every tool below starts here, so the reasons it can fail — no lane open,
+   * the mark sitting where that lane is not — are said once in one voice
+   * rather than five times in five.
+   */
+  const carveHere = useCallback((): { lane: Lane; carved: Carved } | null => {
+    if (!region || region.to - region.from < 0.1) return null;
+    const lane = lanes.find((one) => one.id === picked);
+    if (!lane) {
+      setProblem(
+        t('pro.regionNoLane', 'Open a lane first — tap its name on the left. The marked piece works on whichever lane is open.'),
+      );
+      return null;
+    }
+    const carved = carveLane(lane, region.from, region.to);
+    if (!carved) {
+      setProblem(
+        t('pro.regionMiss', 'The marked piece does not cross that lane. Move the mark over it, or open the lane it does cross.'),
+      );
+      return null;
+    }
+    setProblem(null);
+    return { lane, carved };
+  }, [lanes, picked, region, t]);
+
+  /** The three pieces back into the session, in the order they play. */
+  const commit = useCallback((id: string, pieces: readonly (Lane | null)[]): Lane[] => {
+    const kept = pieces.filter((one): one is Lane => one !== null);
+    setLanes((was) => was.flatMap((one) => (one.id !== id ? [one] : kept)));
+    setStale(true);
+    return kept;
+  }, []);
+
+  /** Out, leaving the gap. */
+  const regionCut = useCallback(() => {
+    const got = carveHere();
+    if (!got) return;
+    const kept = commit(got.lane.id, [got.carved.before, got.carved.after]);
+    setPicked(kept[0]?.id ?? null);
+    setRegion(null);
+    setRegionOpen(false);
+  }, [carveHere, commit]);
+
+  /** Only this, and the rest of the lane gone. */
+  const regionKeep = useCallback(() => {
+    const got = carveHere();
+    if (!got) return;
+    commit(got.lane.id, [got.carved.inside]);
+    setPicked(got.carved.inside.id);
+    setRegionOpen(false);
+  }, [carveHere, commit]);
+
+  /**
+   * Round twice, and everything after it on that lane moves along.
+   *
+   * Only that lane. A repeat that pushed every other lane along would be a
+   * different operation — an insert into the arrangement — and it is not
+   * what a person marking one part of one lane is asking for.
+   */
+  const regionRepeat = useCallback(() => {
+    const got = carveHere();
+    if (!got) return;
+    const { before, inside, after } = got.carved;
+    const extra = lengthOf(inside);
+    commit(got.lane.id, [
+      before,
+      { ...inside, repeat: Math.min(64, repeatOf(inside) * 2) },
+      after ? { ...after, at: after.at + extra } : null,
+    ]);
+    setPicked(inside.id);
+    setRegionOpen(false);
+  }, [carveHere, commit]);
+
+  /**
+   * Up out of silence, or down into it, across the marked piece.
+   *
+   * The only one of these that makes new samples. It has to: a fade set on a
+   * gain node would be in the preview and not in the export, and the rule
+   * this room is built on is that what she hears and what renders are the
+   * same thing. So the carved middle gets a buffer of its own — a second or
+   * two of audio, not a copy of the take — and the lane either side goes on
+   * pointing at the recording.
+   */
+  const regionFade = useCallback(
+    (way: 'in' | 'out') => {
+      const ctx = context();
+      if (!ctx) return;
+      const got = carveHere();
+      if (!got) return;
+      const { before, inside, after } = got.carved;
+      commit(got.lane.id, [
+        before,
+        {
+          ...inside,
+          audio: fadedCopy(playsOf(inside, ctx), ctx, way),
+          /* Baked, so the window, the repeats and the amp that were folded
+             into those samples must not be applied to them a second time. */
+          amped: undefined,
+          from: undefined,
+          to: undefined,
+          repeat: 1,
+        },
+        after,
+      ]);
+      setPicked(inside.id);
+      setRegionOpen(false);
+    },
+    [carveHere, commit, context],
+  );
+
+  /**
+   * A part generated for exactly this long.
+   *
+   * The nearest whole number of bars the engine will take, at the room's own
+   * tempo — which is the improvement over the panel on its own. It opens the
+   * same panel, already filled in, with the playhead moved to the front of
+   * the mark so the part lands where she drew it.
+   */
+  const regionPart = useCallback(() => {
+    if (!region) return;
+    const kept = sane(meter);
+    const want = region.to - region.from;
+    const bars = BAR_CHOICES.reduce((best, one) =>
+      Math.abs(secondsFor(one, kept.bpm, kept.beats) - want) <
+      Math.abs(secondsFor(best, kept.bpm, kept.beats) - want)
+        ? one
+        : best,
+    );
+    setPartBars(bars);
+    seek(region.from);
+    setRegionOpen(false);
+    setPartOpen(true);
+  }, [meter, region, seek]);
+
+  /**
+   * The paid two, run on the marked piece alone.
+   *
+   * Carved first and then handed on, so what goes up the wire is the piece
+   * she drew rather than the whole lane — which is the difference between
+   * being billed for two bars and being billed for three minutes. Both of
+   * them already take a lane and send `pieceOf` it; there is nothing to
+   * change in either.
+   */
+  const regionSend = useCallback(
+    (what: 'voice' | 'parts') => {
+      const got = carveHere();
+      if (!got) return;
+      const { before, inside, after } = got.carved;
+      commit(got.lane.id, [before, inside, after]);
+      setPicked(inside.id);
+      setRegionOpen(false);
+      void (what === 'voice' ? split(inside) : intoParts(inside));
+    },
+    [carveHere, commit, intoParts, split],
+  );
+
   /* ── Track controls ──────────────────────────────────────
 
      The clock — tempo, time signature, key, click, count-in, grid — and the
@@ -2122,6 +2323,154 @@ export default function ProBooth({
         </div>
       )}
 
+      {/* ── The tools for the marked piece ────────────────────────────
+
+          Free first, paid last, with a line between them, because that is
+          the order the decision is actually made in: three of these happen
+          instantly and cost nothing, and the two at the bottom send audio
+          away and are billed by the minute. Every row says what it does
+          rather than what it is called. */}
+      {regionOpen && region && (
+        <div className="fixed inset-0 z-[80] bg-scrim/85 flex items-end sm:items-center justify-center p-0 sm:p-6">
+          <div className="flex w-full sm:max-w-lg max-h-[88vh] flex-col rounded-t-2xl sm:rounded-2xl border border-zinc-800 bg-zinc-950">
+            <div className="flex items-start justify-between gap-3 p-4 pb-2">
+              <div className="min-w-0">
+                <p className="text-base font-bold leading-tight text-white">
+                  {t('pro.regionTitle', 'The marked piece')}
+                </p>
+                <p className="pt-0.5 text-xs leading-snug text-zinc-400 tabular-nums">
+                  {clock(region.from)} – {clock(region.to)} ·{' '}
+                  {(region.to - region.from).toFixed(1)}s
+                  {' · '}
+                  <span className="text-zinc-500">
+                    {lanes.find((one) => one.id === picked)?.name
+                      ?? t('pro.regionNoLaneShort', 'no lane open')}
+                  </span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRegionOpen(false)}
+                aria-label={t('share.close', 'Close')}
+                className="p-2 -m-2 sm:p-0 sm:m-0 text-zinc-500 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4 pt-2">
+              {([
+                {
+                  id: 'cut',
+                  icon: <Scissors className="h-4 w-4" />,
+                  title: t('pro.regionCut', 'Cut this piece out'),
+                  says: t('pro.regionCutWhat', 'The piece goes, and what was either side of it stays where it is. It leaves a gap — nothing slides up to fill it.'),
+                  run: regionCut,
+                },
+                {
+                  id: 'keep',
+                  icon: <SquareSplitHorizontal className="h-4 w-4" />,
+                  title: t('pro.regionKeep', 'Keep only this piece'),
+                  says: t('pro.regionKeepWhat', 'Everything else on that lane goes, and this stays exactly where it is on the clock.'),
+                  run: regionKeep,
+                },
+                {
+                  id: 'repeat',
+                  icon: <Repeat className="h-4 w-4" />,
+                  title: t('pro.regionRepeat', 'Play it twice'),
+                  says: t('pro.regionRepeatWhat', 'The piece goes round a second time and the rest of that lane moves along to make room. Every other lane stays where it is.'),
+                  run: regionRepeat,
+                },
+                {
+                  id: 'fadein',
+                  icon: <Waves className="h-4 w-4" />,
+                  title: t('pro.regionFadeIn', 'Fade up across it'),
+                  says: t('pro.regionFadeWhat', 'Silent where the mark starts, full where it ends. It is written into the sound, so the export has it too.'),
+                  run: () => regionFade('in'),
+                },
+                {
+                  id: 'fadeout',
+                  icon: <Waves className="h-4 w-4" />,
+                  title: t('pro.regionFadeOut', 'Fade down across it'),
+                  says: t('pro.regionFadeOutWhat', 'Full where the mark starts, silent where it ends.'),
+                  run: () => regionFade('out'),
+                },
+                {
+                  id: 'part',
+                  icon: <Music2 className="h-4 w-4" />,
+                  title: t('pro.regionPart', 'Generate a part this long'),
+                  says: t('pro.regionPartWhat', 'Opens the part panel with the bars already set to the length you marked, at this room’s tempo and key. It lands at the front of the mark, on a lane of its own.'),
+                  run: regionPart,
+                },
+              ] as const).map((one) => (
+                <button
+                  key={one.id}
+                  type="button"
+                  onClick={one.run}
+                  className="flex w-full items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-left"
+                >
+                  <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300">
+                    {one.icon}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold leading-tight text-white">{one.title}</span>
+                    <span className="block pt-0.5 text-xs leading-snug text-zinc-400">{one.says}</span>
+                  </span>
+                </button>
+              ))}
+
+              {/* Everything above this line is free, instant and undone by
+                  dragging an edge back. Everything below it leaves the
+                  browser and is billed by the minute — of the marked piece,
+                  which is the point of doing it from here. */}
+              <p className="pt-2 text-xs font-bold uppercase tracking-wide text-zinc-600">
+                {t('pro.regionPaid', 'These send the piece away, and cost credits')}
+              </p>
+
+              {([
+                {
+                  id: 'voice',
+                  icon: <Mic2 className="h-4 w-4" />,
+                  title: t('pro.regionSplit', 'Lift the voice off, here only'),
+                  says: t('pro.regionSplitWhat', 'The piece is cut onto its own lane and sent. You get the voice and everything else back as two lanes, billed for the length of the mark and not of the song.'),
+                  run: () => regionSend('voice'),
+                },
+                {
+                  id: 'parts',
+                  icon: <Layers className="h-4 w-4" />,
+                  title: t('pro.regionParts', 'Split it into instruments, here only'),
+                  says: t('pro.regionPartsWhat', 'Drums, bass, voice and the rest of this piece as separate lanes. Same billing: the length of the mark.'),
+                  run: () => regionSend('parts'),
+                },
+              ] as const).map((one) => (
+                <button
+                  key={one.id}
+                  type="button"
+                  onClick={one.run}
+                  disabled={busy || looking !== null}
+                  className="flex w-full items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-left disabled:opacity-50"
+                >
+                  <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300">
+                    {one.icon}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold leading-tight text-white">{one.title}</span>
+                    <span className="block pt-0.5 text-xs leading-snug text-zinc-400">{one.says}</span>
+                  </span>
+                </button>
+              ))}
+
+              <Note className="text-xs leading-snug text-zinc-500">
+                {t(
+                  'pro.regionFree',
+                  'Nothing above the line is rendered and nothing is thrown away: the pieces still point at the same recording, so dragging an edge back undoes any of them. The fade is the one exception — it is written into the sound.',
+                )}
+              </Note>
+            </div>
+          </div>
+        </div>
+      )}
+
       {changing && (
         <div className="fixed inset-0 z-[80] bg-scrim/85 flex items-end sm:items-center justify-center p-0 sm:p-6">
           <div className="w-full sm:max-w-lg max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-zinc-800 bg-zinc-950 p-4 space-y-3">
@@ -2878,6 +3227,8 @@ export default function ProBooth({
         onChange={(id, how) => change(id, how)}
         onPick={(id) => setPicked((was) => (was === id ? null : id))}
         picked={picked}
+        region={region}
+        onRegion={setRegion}
       />
 
       </div>
@@ -2910,6 +3261,54 @@ export default function ProBooth({
         >
           {problem}
         </p>
+      )}
+
+      {/* ── The marked piece, and the button that opens its tools ──────
+
+          Carli: *"highlight daai gedeelte met 'n button wat op pop met
+          verskillende opsies binne die button."*
+
+          One button, and the options inside it. Pinned above the bars rather
+          than floating over the mark itself, and that is a phone decision:
+          a toolbar drawn on top of the piece covers the piece, and on a
+          390-pixel screen a two-second mark is forty pixels wide — there is
+          no room over it for anything. Down here it is always in the same
+          place, always reachable by the thumb that is already on the bars,
+          and it is only on the screen while something is marked. */}
+      {region && region.to - region.from > 0.01 && (
+        <div
+          className="flex flex-shrink-0 items-center gap-2 border-t px-3 py-2"
+          style={{ borderColor: EDGE, background: PANEL }}
+        >
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-black tabular-nums" style={{ color: LIT }}>
+              {clock(region.from)} – {clock(region.to)} · {(region.to - region.from).toFixed(1)}s
+            </p>
+            <p className="truncate text-[11px]" style={{ color: INK_DIM }}>
+              {lanes.find((one) => one.id === picked)?.name
+                ?? t('pro.regionNoLaneShort', 'no lane open')}
+            </p>
+          </div>
+          <button
+            type="button"
+            data-regiontools=""
+            onClick={() => setRegionOpen(true)}
+            className="min-h-[44px] rounded-xl px-4 py-2 text-sm font-bold"
+            style={{ background: 'rgba(56,189,248,0.22)', color: '#7dd3fc' }}
+          >
+            {t('pro.regionOpen', 'What to do here')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setRegion(null)}
+            aria-label={t('pro.regionClear', 'Clear the marked piece')}
+            title={t('pro.regionClear', 'Clear the marked piece')}
+            className="flex h-11 w-11 items-center justify-center rounded-xl"
+            style={{ background: 'rgba(255,255,255,0.06)', color: INK_DIM }}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       )}
 
       {/* ── The two bars, and whatever is out from behind them ────────

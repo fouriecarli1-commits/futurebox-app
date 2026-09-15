@@ -430,6 +430,112 @@ try {
   await p.locator('[aria-label="Close"], [aria-label="Maak toe"]').first().click().catch(() => {});
   await p.waitForTimeout(400);
 
+  /* ── Marking a piece of the song, and the tools inside the button ─────
+
+     Carli, 15 September 2026: *"Is daar nie 'n manier om ekstra dragging
+     lines in die timeline te hê wat 'n gedeelte uitsonder, dan highlight
+     daai gedeelte met 'n button wat op pop met verskillende opsies binne
+     die button."*
+
+     Three things only a browser can settle: that a drag on the ruler draws
+     a piece once the marker is armed (and scrubs when it is not), that the
+     button with the tools in it actually appears, and that pressing one of
+     them changes the session. `check:boothline` proves the shape of the
+     code; this proves the gesture. */
+  await p.setViewportSize({ width: 390, height: 900 });
+  await p.waitForTimeout(400);
+  const ruler = p.locator('[data-axis]').first();
+  const marker = p.locator('[data-mark]').first();
+  check('the ruler has a marker to arm', (await marker.count()) > 0);
+
+  /* The song's own lane, open, before anything is marked. The mark is time
+     and the lane it acts on is the lane that is open — so a probe that left
+     that to whatever the last desk happened to leave picked would be marking
+     a piece of the song and cutting it out of a half-second generated part.
+     `onPick` toggles, so this presses only if it is not already on. */
+  const songLane = p.locator('[data-lanename]').first();
+  if ((await songLane.getAttribute('aria-pressed')) !== 'true') {
+    await songLane.click();
+    await p.waitForTimeout(250);
+  }
+  check('a lane can be opened from the gutter',
+    (await songLane.getAttribute('aria-pressed')) === 'true',
+    'pressing a lane name did not open it');
+
+  /* Where to drag, taken from the CLIP and not from the ruler's own width.
+
+     The first version marked 30% to 60% of the ruler, which is 30% to 60% of
+     the canvas — and the canvas is the song plus room at the end to drag
+     into. On this session that put the far edge of the mark past the end of
+     the song, so the cut had nothing after it to leave behind, one piece
+     came back instead of two, and a correct cut read as a cut that did
+     nothing. The mark is measured against the thing it is cutting. */
+  const rulerBox = await ruler.boundingBox();
+  const clipBox = await p.locator('[aria-label*="Drag this sound"], [aria-label*="Sleep hierdie klank"]')
+    .first().boundingBox();
+  const at = (part) => (clipBox ? clipBox.x + clipBox.width * part : rulerBox.x + rulerBox.width * part);
+  const drag = async () => {
+    await p.mouse.move(at(0.3), rulerBox.y + rulerBox.height / 2);
+    await p.mouse.down();
+    await p.mouse.move(at(0.6), rulerBox.y + rulerBox.height / 2, { steps: 12 });
+    await p.mouse.up();
+    await p.waitForTimeout(350);
+  };
+
+  /* Unarmed first: the same drag has to move the line and leave no mark
+     behind it, or the marker would have quietly taken the ruler over. */
+  await drag();
+  check('unarmed, a drag on the ruler still only scrubs',
+    (await p.locator('[data-regiontools]').count()) === 0,
+    'a drag marked a piece without the marker being armed');
+
+  await marker.click();
+  await p.waitForTimeout(250);
+  await drag();
+  const tools = p.locator('[data-regiontools]').first();
+  check('armed, a drag marks a piece of the song', (await tools.count()) > 0,
+    'the marker is on and a drag across the ruler left nothing behind');
+
+  if ((await tools.count()) > 0) {
+    /* The mark is time, and the lane it acts on is the lane that is open —
+       so the bar has to say which that is, or a press is a guess. */
+    const bar = await tools.locator('xpath=..').innerText();
+    check('and the bar says how long it is and what it acts on',
+      /\d+\.\d\s*s/.test(bar) && !/no lane open|geen baan oop/.test(bar),
+      bar.replace(/\n/g, ' · '));
+
+    await tools.click();
+    await p.waitForTimeout(400);
+    const sheet = await p.locator('.fixed.inset-0').last().innerText().catch(() => '');
+    check('the button opens the tools for that piece',
+      af ? /Sny hierdie stuk uit/.test(sheet) : /Cut this piece out/.test(sheet),
+      sheet.replace(/\n/g, ' · ').slice(0, 300));
+    /* Case-insensitive: the heading is uppercased in CSS, so `innerText`
+       hands back the whole line in capitals and a case-sensitive test fails
+       on a sheet that is completely right. */
+    check('and the free ones are told apart from the ones that cost',
+      af ? /kos krediete/i.test(sheet) : /cost credits/i.test(sheet),
+      'a paid tool sitting in the same list as the free ones');
+    check('and a part can be generated for exactly that long',
+      af ? /Genereer ’n deel van hierdie lengte/.test(sheet) : /Generate a part this long/.test(sheet));
+
+    await p.screenshot({ path: shot(`proregion-${af ? 'af' : 'en'}.png`), fullPage: false });
+
+    /* And it does something. Cutting a piece out of the MIDDLE of a lane
+       leaves two, which is why the lane above is opened first: a cut at a
+       lane's own front edge correctly leaves one, and a probe that did not
+       say which lane it was marking could not tell those two apart. */
+    const before = await p.locator('[data-lanename]').count();
+    await p.locator('button').filter({ hasText: af ? /Sny hierdie stuk uit/ : /Cut this piece out/ }).first().click();
+    await p.waitForTimeout(500);
+    check('and cutting the piece out changes the session',
+      (await p.locator('[data-lanename]').count()) > before,
+      `lanes before ${before}, after ${await p.locator('[data-lanename]').count()}`);
+    /* The mark is spent, so the bar goes with it. */
+    check('and the mark is cleared once it has been used',
+      (await p.locator('[data-regiontools]').count()) === 0);
+  }
+
   /* ── Nothing overlaps, at either size ────────────────────────────────
      The first version of this row fitted on a desktop and had the pan
      slider sitting on top of the start-time field at 1280 px — which is
