@@ -59,6 +59,41 @@ async function readBack(response: Response): Promise<unknown> {
   }
 }
 
+/**
+ * The dictionary already on the account carrying our name, if there is one.
+ *
+ * A listing that fails is not "there is no dictionary" — it is a listing that
+ * failed, and making a second dictionary on the strength of a question that
+ * was never answered is how an account ends up with two of them, one
+ * reachable and one not. So it returns `undefined` for both "none" and
+ * "could not ask", and the caller says which path it took in the answer.
+ */
+async function byName(apiKey: string): Promise<string | undefined> {
+  try {
+    const listed = await fetch(`${BASE}/pronunciation-dictionaries?page_size=100`, {
+      headers: { 'xi-api-key': apiKey },
+      cache: 'no-store',
+    });
+    if (!listed.ok) return undefined;
+    const body = (await listed.json().catch(() => null)) as
+      | { pronunciation_dictionaries?: { id?: unknown; name?: unknown }[] }
+      | null;
+    const mine = body?.pronunciation_dictionaries?.find(
+      (one) => typeof one?.name === 'string' && one.name === NAME,
+    );
+    return mine && typeof mine.id === 'string' ? mine.id : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Their 404 for "that dictionary is not on this account". */
+function isMissing(status: number, answer: unknown): boolean {
+  if (status !== 404) return false;
+  const detail = (answer as { detail?: { status?: unknown } } | null)?.detail;
+  return typeof detail?.status === 'string' && detail.status === 'pronunciation_dictionary_not_found';
+}
+
 const idsFrom = (answer: unknown): { id?: string; version?: string } => {
   if (!answer || typeof answer !== 'object') return {};
   const o = answer as Record<string, unknown>;
@@ -102,65 +137,87 @@ export async function GET(request: Request): Promise<Response> {
      So it looks first. A dictionary already carrying this name is the one
      to update, whatever the env var says or does not say. */
   let existing = process.env.ELEVEN_DICT_ID;
-  if (!existing) {
-    try {
-      const listed = await fetch(`${BASE}/pronunciation-dictionaries?page_size=100`, {
-        headers: { 'xi-api-key': apiKey },
-        cache: 'no-store',
-      });
-      if (listed.ok) {
-        const body = (await listed.json().catch(() => null)) as
-          | { pronunciation_dictionaries?: { id?: unknown; name?: unknown }[] }
-          | null;
-        const mine = body?.pronunciation_dictionaries?.find(
-          (one) => typeof one?.name === 'string' && one.name === NAME,
-        );
-        if (mine && typeof mine.id === 'string') existing = mine.id;
-      }
-      /* A listing that fails is not "there is no dictionary" — it is a
-         listing that failed. Making a second one on the strength of a
-         question that was never answered is exactly the mistake this
-         paragraph is about, so the answer below says which path it took
-         and she can check the account if it says "made a new" twice. */
-    } catch {
-      /* Same: unknown, not empty. Falls through to creating one, and says so. */
-    }
-  }
+  let staleId: string | undefined;
+  if (!existing) existing = await byName(apiKey);
 
   /* Two paths, because they are different endpoints and confusing them is how
      a second dictionary appears on the account. With an id set we REPLACE the
      rules in it; without one we make it. `set-rules` rather than `add-rules`:
      a rule removed from the source file has to disappear from the dictionary
      too, and add-rules would leave it there for ever. */
-  const to = existing
-    ? `${BASE}/pronunciation-dictionaries/${encodeURIComponent(existing)}/set-rules`
-    : `${BASE}/pronunciation-dictionaries/add-from-rules`;
-
-  const body = existing ? { rules } : { name: NAME, rules };
-
-  let response: Response;
-  try {
-    response = await fetch(to, {
+  const ask = async (id: string | undefined) => {
+    const to = id
+      ? `${BASE}/pronunciation-dictionaries/${encodeURIComponent(id)}/set-rules`
+      : `${BASE}/pronunciation-dictionaries/add-from-rules`;
+    const response = await fetch(to, {
       method: 'POST',
       headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(id ? { rules } : { name: NAME, rules }),
     });
+    return { to, response, answer: await readBack(response) };
+  };
+
+  let got: { to: string; response: Response; answer: unknown };
+  try {
+    got = await ask(existing);
+
+    /* ── A pasted id that points at nothing ────────────────────────────────
+ 
+       Found on 16 September 2026, the first time this page was ever opened
+       against a real account. `ELEVEN_DICT_ID` was set in Vercel to a
+       dictionary that is not on the account — deleted, or made under another
+       account, or simply never finished — and `set-rules` answered 404
+       `pronunciation_dictionary_not_found`.
+ 
+       The route reported that faithfully and stopped, which is the right
+       half of the behaviour and useless as the whole of it: the env var is
+       the very thing the page exists to produce, so a stale one left her
+       with no way forward except deleting a variable she had just been told
+       to set.
+ 
+       A 404 on set-rules is the one refusal that is safe to recover from.
+       It is ElevenLabs saying that id is not here, so looking again by name
+       and then creating cannot produce a duplicate — the thing we would be
+       duplicating does not exist. Any other refusal still stops.
+ 
+       The name lookup comes first even so: the dictionary may be on the
+       account under a different id, and updating it beats making a second
+       one with the same name. */
+    if (isMissing(got.response.status, got.answer) && existing) {
+      staleId = existing;
+      const found = await byName(apiKey);
+      existing = found && found !== staleId ? found : undefined;
+      got = await ask(existing);
+    }
   } catch (problem) {
     return Response.json(
       {
         ok: false,
         why: 'The request never reached ElevenLabs.',
         what: problem instanceof Error ? problem.message : String(problem),
-        sent: { to, rules: rules.length },
+        sent: { rules: rules.length },
       },
       { status: 502 },
     );
   }
 
-  const answer = await readBack(response);
+  const { to, response, answer } = got;
   if (!response.ok) {
     return Response.json(
-      { ok: false, status: response.status, why: 'ElevenLabs refused.', answer, sent: { to } },
+      {
+        ok: false,
+        status: response.status,
+        why: 'ElevenLabs refused.',
+        answer,
+        sent: { to },
+        ...(staleId
+          ? {
+              note:
+                `ELEVEN_DICT_ID was set to ${staleId}, which is not on this account. ` +
+                'That one was skipped and this is what the retry said.',
+            }
+          : {}),
+      },
       { status: 502 },
     );
   }
@@ -180,6 +237,13 @@ export async function GET(request: Request): Promise<Response> {
   return Response.json({
     ok: true,
     did: existing ? 'replaced the rules in the dictionary you already have' : 'made a new dictionary',
+    ...(staleId
+      ? {
+          replaced:
+            `ELEVEN_DICT_ID was ${staleId}, which is not on this account any more. ` +
+            'Both values below are new — paste BOTH into Vercel, do not keep the old id.',
+        }
+      : {}),
     name: NAME,
     rules: SAY_RULES.length,
     /* Both, every time, including when only the version changed — because
