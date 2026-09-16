@@ -49,10 +49,24 @@ function extensionOf(blob: Blob): 'mp4' | 'webm' {
  * anything, so a half-finished upload comes back as a sentence rather than as
  * a broken row.
  */
+/**
+ * Where a kept video came from.
+ *
+ * `filmed` is a camera take. `made` is a clip an engine drew that this
+ * browser then stitched a song under — a music video, which never existed as
+ * a file on the server and so had no row until 16 September 2026.
+ */
+export type Made = 'filmed' | 'made';
+
 export async function keepFilmed(
   take: Blob,
   title: string,
   seconds: number,
+  /* Both default to what a camera take is, so the one existing caller —
+     `FollowWords` — needs no change and cannot be given the wrong shape by
+     an argument somebody forgot. */
+  source: Made = 'filmed',
+  aspect: '9:16' | '16:9' | '1:1' = '9:16',
 ): Promise<Kept> {
   const storage = getStorageClient();
   const account = await currentAccount();

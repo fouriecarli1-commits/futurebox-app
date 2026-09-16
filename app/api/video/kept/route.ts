@@ -51,6 +51,9 @@ export function filmedPath(value: unknown, owner: string): string | null {
 /** Long enough to watch a take through; short enough that a leaked link dies. */
 const LINK_SECONDS = 60 * 60;
 
+/** The shapes the video desk offers. Anything else is not from this app. */
+const ASPECTS = ['9:16', '16:9', '1:1'];
+
 /** Everything of yours that could go in the room. */
 export async function GET(request: Request): Promise<Response> {
   if (!metered()) return Response.json({ videos: [], signedIn: false });
@@ -85,7 +88,7 @@ export async function GET(request: Request): Promise<Response> {
 
 /** Keep a take that was just filmed. The file is already in the bucket. */
 export async function POST(request: Request): Promise<Response> {
-  let body: { path?: unknown; title?: unknown; seconds?: unknown };
+  let body: { path?: unknown; title?: unknown; seconds?: unknown; source?: unknown; aspect?: unknown };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -128,14 +131,33 @@ export async function POST(request: Request): Promise<Response> {
          read differently in a list, and empty is the true one. */
       prompt: '',
       title,
-      source: 'filmed',
+      /* ── Filmed, or made here and stitched ─────────────────────────────
+ 
+         This said `'filmed'` flat, because a camera take was the only thing
+         that ever reached this route. A music video is the other one: the
+         engine hands back a silent clip, `lib/stitch.ts` lays the song under
+         it in the browser, and what comes out is a NEW blob the server has
+         never seen. Nothing uploaded it, so no row existed, so the live
+         room's list — which reads this table — had nothing to offer.
+ 
+         Carli, 16 September: "die music video werk nie in die live nie."
+ 
+         The value matters beyond bookkeeping: the room labels a post
+         "filmed" or "generated" off this column, and a stitched clip is
+         somebody's face in neither sense. Anything that is not the literal
+         string `filmed` is treated as made. */
+      source: body.source === 'filmed' ? 'filmed' : 'made',
       status: 'done',
       path,
-      /* 9:16, because `FollowWords` asks the camera for it and that is what
-         the takes are for. Recorded rather than measured: this route never
-         sees the file, and a number it guessed would be a number somebody
-         later trusted. */
-      aspect: '9:16',
+      /* Recorded rather than measured: this route never sees the file, and a
+         number it guessed would be a number somebody later trusted.
+ 
+         It was hard-coded to 9:16 because `FollowWords` asks the camera for
+         that and takes were all this route kept. A music video is whatever
+         shape the desk was set to, and a 16:9 clip filed as 9:16 is a clip
+         the room draws in the wrong box. Checked against the three the desk
+         offers rather than taken on trust. */
+      aspect: ASPECTS.includes(String(body.aspect)) ? String(body.aspect) : '9:16',
       seconds: 0,
       seconds_real: Math.max(0, Math.min(3600, Math.round(Number(body.seconds) || 0))),
       credits: 0,

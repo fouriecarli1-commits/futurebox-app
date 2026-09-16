@@ -36,6 +36,7 @@ import {
 import { engines, probeVideoEngine, type EngineAspect, type VideoEngine } from '../lib/engines';
 import { CREDITS, readCost, videoCost, type VideoGrade } from '../lib/credits';
 import { downloadBlob, safeFilename } from '../lib/library';
+import KeepVideo from './KeepVideo';
 import { signal } from '../lib/signal';
 import Cost from './Cost';
 import Recommend from './Recommend';
@@ -1193,6 +1194,28 @@ export default function VideoCanvas({
                     <Download className="w-4 h-4" />
                     {t('video.save')}
                   </button>
+                  {/* ── Keep it, which is what puts it in the live room ──
+ 
+                      Carli, 16 September: "die music video werk nie in die
+                      live nie." It was never a playback fault. The engine
+                      hands back a silent clip, `lib/stitch.ts` lays the song
+                      under it HERE, in the browser, and what comes out is a
+                      new blob the server has never seen. The live room's
+                      list reads the `videos` table, so with nothing
+                      uploaded there was nothing to offer — the room was
+                      right and the video did not exist as far as it knew.
+ 
+                      Beside Download rather than instead of it: keeping it
+                      on the account and having a copy in your phone's files
+                      are different wants, and somebody who only wanted the
+                      file should not have to make an account's worth of
+                      decision to get it. */}
+                  <KeepVideo
+                    blob={one.blob}
+                    title={scene?.label ?? one.prompt.slice(0, 60) ?? 'Video'}
+                    seconds={one.seconds}
+                    aspect={one.aspect}
+                  />
                   <ShareRow title={scene?.label ?? 'Video'} what={one.prompt} />
                 </div>
 
