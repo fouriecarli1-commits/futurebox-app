@@ -353,3 +353,82 @@ Kind regards,
 Anré Fourie
 Founder, FutureBox
 futurebox.studio
+
+---
+
+## The ramp table — two versions, and only one of them is safe to send
+
+The table earlier in this document is the **internal** one. It carries the
+margin per paying member and the break-even count, which is exactly what a
+commercial team would price against if they saw it. **Do not send it.**
+
+Telling a supplier "each member earns me R221" is telling them how much of
+that R221 they can take. Telling them "we break even at 99 members" is telling
+them the floor below which we cannot walk away. Both are true, both are useful
+to us, and neither is theirs.
+
+What is safe — and genuinely persuasive — is the same ramp expressed in
+**their** units: dollars, credits, and the active members that capacity
+carries. It says we have done the arithmetic without saying what we earn.
+
+### The one fact to put underneath it
+
+ElevenLabs' self-serve ladder has **no volume discount whatsoever**, and it is
+provable from their own numbers:
+
+| Plan | Price | Credits | Per credit |
+|---|---|---|---|
+| Pro | $99 | 600 000 | $0.0001650 |
+| Scale | $299 | 1 800 000 | $0.0001661 |
+| Business | $990 | 6 000 000 | $0.0001650 |
+
+Pro and Business are identical to the seventh decimal. Scale is fractionally
+**worse**. Their own support confirmed on 9 September 2026 that pay-as-you-go
+top-ups are the same rate again.
+
+So upgrading from Pro to Business bought volume and nothing else — no better
+price per unit. That is the single clearest thing to want out of an Enterprise
+agreement, and it can be asked for as an observation rather than a demand:
+*your published ladder is flat, so the rate is the thing the agreement is
+for.*
+
+### The version to send
+
+| Committed tier | Credits at your published rate | Active members it carries | Music (minutes) |
+|---|---|---|---|
+| **$990 — today, on Business** | 6 000 000 | ~300 | 6 670 |
+| $2 000 | ~12 100 000 | ~600 | 13 470 |
+| $3 000 | ~18 200 000 | ~900 | 20 200 |
+| $4 000 | ~24 200 000 | ~1 200 | 26 940 |
+
+*Active members at the ~20 000 credits per active member per month quoted in
+the original submission. Credits shown at the published self-serve rate of
+$0.000165, which is what these tiers buy today — the purpose of the agreement
+is that the rate improves as the commitment does.*
+
+### How a step should fire
+
+Propose a trigger that **ElevenLabs itself can verify**, rather than one that
+depends on our member count. Consumption is metered on their side; our member
+numbers are not.
+
+> A tier steps up when consumption exceeds 85% of the committed credits for
+> two consecutive months. It does not step down automatically — we would
+> rather renegotiate at renewal than build a ratchet in either direction.
+
+Two reasons this is the right shape. It is objectively checkable by both
+sides, so neither party has to take the other's word for anything. And a
+two-month rule stops a single busy month — a launch, a campaign, a school
+term — from locking in a commitment that the next month cannot carry.
+
+### What not to agree to, whatever it is called
+
+- **A twelve-month minimum at a tier we have not reached.** The floor is paid
+  whether the members arrive or not.
+- **Automatic step-ups on a single month's usage.** One good month is not a
+  trend.
+- **A step-down that is automatic in their favour only.** If the ramp goes up
+  on usage, renewal should be able to look at usage too.
+- **Any per-credit rate worse than $0.000165.** That is the self-serve price
+  available today without signing anything. An agreement that prices above it
+  is worse than no agreement, and that is worth saying plainly if it comes up.
