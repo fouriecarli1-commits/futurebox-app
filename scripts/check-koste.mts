@@ -25,6 +25,7 @@
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { gatewayFee } from '../app/lib/plans.ts';
 
 const page = readFileSync('docs/MAANDELIKSE-KOSTE.md', 'utf8');
 /**
@@ -196,6 +197,50 @@ ok('the bill says plainly which line decides everything',
   claimed
     ? `the page says ${claimed[1]}%, the table works out to ${(share * 100).toFixed(1)}%`
     : 'the page never says what share ElevenLabs is');
+
+/* ── ElevenLabs may not be charged twice ──────────────────────────────────
+
+   Added 16 September 2026, after finding that it was.
+
+   `costs-eleven.mts` computed break-even as (fixed costs + the ElevenLabs
+   plan) divided by a per-member margin that had ALREADY had that member's
+   ElevenLabs credit consumption subtracted from it. The same rands, counted
+   on both sides of one division.
+
+   The plan is prepaid capacity. R18 216 buys 6 000 000 credits, and a member
+   spending them costs nothing further until the plan runs out — which is what
+   the capacity column measures, and where that subtraction belongs.
+
+   It cost 18 members of break-even in the realistic case, and it leaned
+   pessimistic, which is the direction a money model can be wrong in for
+   months without anybody noticing.
+
+   So the rule, asserted rather than described: the profit per paying member
+   is the subscription minus the payment gateway, and nothing else. Any
+   future edit that quietly starts deducting supplier cost from that figure
+   turns this red. */
+{
+  const MIX = { maker: 0.6, studio: 0.3, label: 0.1 } as const;
+  const RAND = { maker: 149, studio: 349, label: 899 } as const;
+  const expected = (Object.keys(MIX) as (keyof typeof MIX)[]).reduce(
+    (sum, tier) => sum + (RAND[tier] - gatewayFee(RAND[tier])) * MIX[tier],
+    0,
+  );
+  /* Every scenario row carries the same figure now, because the plan no
+     longer enters it. Reading them all and requiring agreement is what
+     catches a half-applied fix. */
+  const stated = [...sums.matchAll(/\| (?:Creator|Pro|Scale|Business) \| R([\d\s]+,\d{2}) \|/g)].map(
+    (m) => Number(m[1].replace(/\s/g, '').replace(',', '.')),
+  );
+  ok(
+    'profit per member is the subscription less the gateway, and nothing else',
+    stated.length > 0 && stated.every((one) => Math.abs(one - expected) < 0.01),
+    stated.length === 0
+      ? 'no per-member profit figures found in docs/KOSTE-EN-WINS.md'
+      : `the sums say ${[...new Set(stated)].join(' / ')}, the plans work out to ${expected.toFixed(2)} — ` +
+        'a supplier cost is being deducted from a figure the plan already pays for',
+  );
+}
 
 if (failures) {
   console.error(

@@ -253,7 +253,38 @@ function rowsFor(plan: (typeof EL_PLANS)[number], use: number): Row[] {
   });
 }
 
-/** Wat een betalende lid werklik bydra, ná die gratis stert agter hom. */
+/**
+ * Wat een betalende lid werklik bydra, ná die gratis stert agter hom.
+ *
+ * ── Die plan is vooruitbetaalde kapasiteit, nie 'n rekening per krediet nie ──
+ *
+ * REGGEMAAK 16 September 2026, en dit was 'n regte fout.
+ *
+ * `net` was `revenue - gateway - own - tail`, en daardie getal is toe gebruik
+ * as `(vaste koste + die ElevenLabs-plan) / net`. Dit trek ElevenLabs **twee
+ * keer** af: een keer as die plan se R18 216, en weer as die rand-waarde van
+ * die krediete wat die lid opgebruik. Dit is dieselfde geld.
+ *
+ * R18 216 kóóp 6 000 000 krediete. 'n Lid wat daarvan gebruik, laat geen
+ * verdere sent die rekening verlaat nie — nie tot die plan opraak nie. Bo die
+ * dak kos bykoop dieselfde koers, en dít is wat `capacity` hieronder meet.
+ *
+ * Wat dit gekos het, realisties, Business, sonder werkswinkels:
+ *
+ *     verkeerd   R223,94 per lid   gelykbreek op 98 lede
+ *     reg        R274,76 per lid   gelykbreek op 80 lede
+ *
+ * Agtien lede se verskil, en agtien lede is die helfte van 'n lanseringsmaand.
+ * Niks in hierdie lêer het die dubbeltelling as opsetlike versigtigheid
+ * verdedig nie — dit was eenvoudig 'n fout, en dit het in die rigting van te
+ * swartgallig geleun, wat die rigting is waarin 'n mens dit die langste nie
+ * agterkom nie.
+ *
+ * `own` en `tail` word steeds bereken en steeds teruggegee. Hulle hoort by
+ * `capacity` — hoeveel lede die plan se krediete kan voed — en nie by
+ * gelykbreek nie. Die twee vrae is verskillend en die fout was om hulle een
+ * getal te laat deel.
+ */
 function contribution(
   plan: (typeof EL_PLANS)[number],
   use: number,
@@ -266,7 +297,9 @@ function contribution(
   const own = rows.reduce((sum, one) => sum + one.music * MIX[one.tier], 0);
   const tail =
     FREE_PER_PAYING * elCreditsFor(freeCredits, freeUse) * randPerElCredit(plan);
-  return { revenue, gateway, own, tail, net: revenue - gateway - own - tail };
+  /* Net die poortfooi. Die plan se krediete is reeds gekoop; `own` en `tail`
+     sê hoeveel daarvan hierdie lid vat, nie hoeveel hy kos nie. */
+  return { revenue, gateway, own, tail, net: revenue - gateway };
 }
 
 /** ElevenLabs-krediete wat een betalende lid plus sy gratis stert opvreet. */
@@ -710,6 +743,110 @@ for (const plan of EL_PLANS) {
   say('bemarkings-byvoegsel. Elkeen van dié maak die prentjie beter, nie slegter');
   say("nie — hulle is net nog nie waar nie, en 'n som wat op onverdiende geld");
   say("staan is nie 'n som nie.");
+  say('');
+}
+
+/* ── Wat 'n krediet verdien, en wat 'n krediet kos ───────────────────────
+
+   Bygevoeg 16 September 2026, want Carli het dit gevra: "hoeveel maak ons
+   per krediet, en vat al my uitgawes in ag".
+
+   Die antwoord is nie een getal nie, en dít is die punt. 'n FutureBox-krediet
+   verkoop vir dieselfde prys op elke ledetal; wat verander is hoeveel vaste
+   koste elke krediet moet dra. By gelykbreek dra een krediet byna die hele
+   rekening; by die plan se dak dra dit byna niks.
+
+   Twee koste-begrippe word uitmekaar gehou omdat hulle verskillende vrae
+   beantwoord:
+
+     BINNE die plan    'n krediet kos niks ekstra nie. Die 6 000 000 is
+                       gekoop. Al wat tel is of die vaste rekening gedek is.
+     BÓ die plan       'n krediet kos die ElevenLabs-bykoopkoers, en dit is
+                       'n regte rand wat die bank verlaat.
+
+   Die tweede is die getal om aan ElevenLabs te wys. Dit is húlle prys, nie
+   ons marge nie. */
+{
+  const business = EL_PLANS[EL_PLANS.length - 1];
+  const fixedCore = Object.values(FIXED_CORE).reduce((a, b) => a + b, 0);
+  const plan = randForPlan(business);
+  const REV_PER_MEMBER = (['maker', 'studio', 'label'] as const).reduce(
+    (sum, tier) => sum + TIER_SPECS[tier].rand * MIX[tier],
+    0,
+  );
+  const creditsSold = (['maker', 'studio', 'label'] as const).reduce(
+    (sum, tier) => sum + TIER_CREDITS[tier] * MIX[tier],
+    0,
+  );
+  const revPerCredit = REV_PER_MEMBER / creditsSold;
+  /* Wat een FutureBox-krediet in ElevenLabs-krediete kos, in die duurste
+     rigting: alles as musiek. Elke ander mengsel is goedkoper. */
+  const elPerFbCredit = EL_PER_SONG / FB_PER_SONG;
+  const topUpPerCredit = elPerFbCredit * randPerElCredit(business);
+
+  say('## Wat ons per krediet maak');
+  say('');
+  say('Gevra op 16 September 2026. Die antwoord is nie een getal nie, en dit is');
+  say('die hele punt: die prys per krediet staan vas, maar hoeveel vaste koste');
+  say('elke krediet moet dra, hang aan die ledetal.');
+  say('');
+  say(`'n Betalende lid koop gemiddeld **${dec(creditsSold, 0)} krediete** vir **${rand(REV_PER_MEMBER)}**, dus`);
+  say(`**${rand(revPerCredit)} per krediet verkoop**. Dit verander nooit.`);
+  say('');
+  say('| Betalende lede | Krediete verkoop | Volle koste per krediet | Wins per krediet | Marge |');
+  say('|---|---|---|---|---|');
+  for (const members of [80, 100, 150, 200, 250, 300, 358]) {
+    const sold = members * creditsSold;
+    const costPer = (fixedCore + plan) / sold;
+    const profit = revPerCredit - costPer;
+    say(
+      `| ${members === 80 ? '**80** — gelykbreek' : members === 358 ? '**358** — die plan se dak' : String(members)} | ${count(Math.round(sold))} | ${rand(costPer)} | ${rand(profit)} | ${dec((profit / revPerCredit) * 100, 0)}% |`,
+    );
+  }
+  say('');
+  say(`*Volle koste is alles: die ElevenLabs-plan van ${rand(plan)} plus elke ander`);
+  say(`vaste reël, ${rand(fixedCore)} saam — Anthropic, Vercel, Supabase, Resend,`);
+  say('Kits.AI, Zoho, die domeine en Spaceship. Werkswinkels is uit, want dit is');
+  say("'n besluit eerder as 'n rekening.*");
+  say('');
+  say('### Wat '.concat("'n krediet kos sodra die plan op is"));
+  say('');
+  say(`Binne die plan kos 'n ekstra krediet **niks** — die ${count(business.credits)} is`);
+  say('reeds gekoop. Bo die dak kos dit ElevenLabs se bykoopkoers:');
+  say('');
+  say(`| Een FutureBox-krediet | ${count(elPerFbCredit)} ElevenLabs-krediete |`);
+  say('|---|---|');
+  say(`| Wat dit ons kos | ${rand(topUpPerCredit)} |`);
+  say(`| Wat ons daarvoor kry | ${rand(revPerCredit)} |`);
+  say(`| Wat oorbly | ${rand(revPerCredit - topUpPerCredit)} |`);
+  say('');
+  say('*Duurste rigting: alles as musiek gereken. Enige ander mengsel is goedkoper.*');
+  say('');
+  say('### Die een getal om vir ElevenLabs te wys');
+  say('');
+  const share = (plan / (fixedCore + plan)) * 100;
+  say(`**ElevenLabs is ${dec(share, 0)}% van die hele koste-basis** — ${rand(plan)} van`);
+  say(`${rand(fixedCore + plan)}. Dít is die syfer wat die koersvraag regverdig, en dit is`);
+  say('veilig om te stuur: dit sê hoe belangrik hulle is sonder om te sê wat ons');
+  say('verdien.');
+  say('');
+  say('### Twee reëls wat nog nie '.concat("'n prys het nie"));
+  say('');
+  say('Albei is deur Carli genoem en nie een kan hier geraai word:');
+  say('');
+  say('| Wat | Stand | Wat elke R1 000 per maand kos |');
+  say('|---|---|---|');
+  const perThousand = 1000 / REV_PER_MEMBER;
+  say(`| Kopieregtoets op oplaaie | nog nie gekies nie — haar besluit | ${dec(perThousand, 1)} ekstra lede om gelyk te breek |`);
+  say(`| TONE3000 vir die Pro Booth | geblokkeer, prys onbekend | ${dec(perThousand, 1)} ekstra lede |`);
+  say('');
+  say(`Elke R1 000 per maand aan nuwe vaste koste skuif gelykbreek met ${dec(perThousand, 1)} lede.`);
+  say('Dit is lineêr, so die oomblik as daar '.concat("'n regte prys is, is die som een deling."));
+  say('');
+  say('*Nog '.concat("'n gaping, klein maar eerlik: `docs/MAANDELIKSE-KOSTE.md` lys **Resend**"));
+  say('teen R64 en hierdie skrip het tot vandag **GitHub** teen R64 gelys. Dit is');
+  say('een reël van R64 wat twee name dra, of twee reëls waarvan een ontbreek.');
+  say('Een woord van Carli maak dit reg.*');
   say('');
 }
 
