@@ -137,7 +137,7 @@ const audits = readdirSync('audit')
    starts its own now, and it is `check:devices`. */
 const TOOLS = new Set([
   'a11y', 'ads-af', 'ads-af-fail', 'ads-en-fail', 'badge', 'blurshot', 'boxes',
-  'buttons', 'copilotplace', 'deep', 'errors', 'frame', 'home',
+  'bigphoto', 'buttons', 'copilotplace', 'deep', 'errors', 'frame', 'home',
   'home2', 'homelength', 'land', 'landing', 'net', 'newui', 'newui2', 'one',
   'phone', 'phoneshots', 'price', 'probe', 'radarcards', 'rooms', 'shots',
   'slogan', 'small', 'thin', 'touch', 'transcript', 'voices', 'walk',

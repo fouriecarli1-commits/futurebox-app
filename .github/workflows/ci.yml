@@ -757,6 +757,14 @@ jobs:
       - name: The monthly bill adds up, and every service is on it
         run: npm run check:koste
 
+      # A photograph off a modern phone is 200 megapixels and 12MB. A guard
+      # written in bytes waves it through and the decode kills the tab, which
+      # is a white screen with nothing in the console. Reported twice before
+      # it was found, because two components had the fault and only one had
+      # been looked at.
+      - name: Every picture off a device passes the megapixel guard
+        run: npm run check:photopath
+
       # The one number the whole business rests on, and the arithmetic that
       # says a plan is a dollar budget rather than a set of allowances.
       - name: ElevenLabs' prices are the ones on their page

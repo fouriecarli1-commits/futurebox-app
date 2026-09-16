@@ -55,11 +55,11 @@ import { promptsFor, type PromptCard } from '../data/prompts';
 import { CREDITS, perMinute } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
+import { MAX_BYTES, fit } from '../lib/imagefile';
 import { accessToken } from '../lib/cloud';
 import Note from './Note';
 
 /** The route's own ceiling. Said here too, so the refusal arrives before the upload. */
-const BIGGEST = 3 * 1024 * 1024;
 /**
  * How long a card will listen for.
  *
@@ -239,14 +239,39 @@ export default function PromptCards({
     if (!file || !card) return;
     setProblem('');
     setSaw('');
-    if (file.size > BIGGEST) {
-      setProblem(t('cards.tooBig', 'That picture is over 3 MB. A smaller one reads the same.'));
+    if (file.size > MAX_BYTES) {
+      setProblem(t('cards.tooBig', 'That picture is very large. Try one under 12MB.'));
       return;
     }
     setBusy(card.id);
+    /* ── Shrunk here rather than refused, 16 September 2026 ────────────────
+ 
+       This refused anything over three megabytes, and an ordinary photograph
+       off a modern phone is ten or twelve — so "pick a photograph" answered
+       "that picture is over 3 MB" to most of the pictures on most phones.
+ 
+       Three megabytes was not arbitrary: the platform refuses a request body
+       over about four and a half, so a bigger file could not have been posted
+       anyway. The answer is to make it smaller rather than to say no. `fit`
+       does that against the file's own header without decoding it at full
+       size, which is the same guard the cast and the shot use and the reason
+       a big photo no longer kills the tab.
+ 
+       1600 on the longest edge is plenty for a model that is being asked what
+       it can see, and lands well under the wall. */
+    const made = await fit(file, 1600);
+    if (!made.ok) {
+      setBusy(null);
+      setProblem(
+        made.why === 'too_many_pixels'
+          ? t('pic.tooManyPixels', 'That photo is too big for a phone browser to open — it is one of the very high-megapixel camera modes. Take one on the normal setting, or use a screenshot of it.')
+          : t('cards.unreadable', 'That picture could not be read.'),
+      );
+      return;
+    }
     try {
       const form = new FormData();
-      form.append('picture', file);
+      form.append('picture', made.blob, 'picture.webp');
       form.append('lang', lang);
       form.append('idea', card.idea);
       const response = await fetch('/api/photosong', { method: 'POST', body: form });

@@ -52,9 +52,10 @@ import WhatWeHeard from './WhatWeHeard';
 import { measurePicture, moodFor, wordsFor as wordsForPicture, type Seen } from '../lib/photo';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
+import { MAX_BYTES, fit } from '../lib/imagefile';
 
 const BIGGEST_SOUND = 40 * 1024 * 1024;
-const BIGGEST_PICTURE = 20 * 1024 * 1024;
+
 /** Big enough to measure, small enough to be instant on a phone. */
 const SIDE = 240;
 
@@ -169,12 +170,35 @@ export default function StyleFrom({
     /* Or the reading of the last song would sit under a picture's numbers,
        explaining a file that is no longer the subject. */
     setHeard(null);
-    if (file.size > BIGGEST_PICTURE) {
-      setProblem(t('pic.tooBig', 'That picture is over 20 MB. A smaller one measures the same.'));
+    if (file.size > MAX_BYTES) {
+      setProblem(t('pic.tooBig', 'That picture is very large. Try one under 12MB.'));
       return;
     }
     setBusy('picture');
-    const url = URL.createObjectURL(file);
+    /* ── Shrunk before it is decoded, 16 September 2026 ────────────────────
+ 
+       This was a twenty-megabyte ceiling on BYTES and then `new Image()` on
+       the original file. `app/lib/imagefile.ts` exists because that pair
+       kills a phone: a two-hundred-megapixel photo is ten or twelve
+       megabytes on disk, sails under any byte ceiling, and then asks the
+       browser for eight hundred megabytes in one allocation. The tab is not
+       thrown from, it is killed — a white screen with nothing in the
+       console, which is what Carli reported twice.
+ 
+       `fit` reads the dimensions out of the file's own header first and
+       scales during the decode. Nothing is lost for this component's
+       purpose: it draws at SIDE anyway and measures averages and edges. */
+    const made = await fit(file, SIDE * 4);
+    if (!made.ok) {
+      setBusy(null);
+      setProblem(
+        made.why === 'too_many_pixels'
+          ? t('pic.tooManyPixels', 'That photo is too big for a phone browser to open — it is one of the very high-megapixel camera modes. Take one on the normal setting, or use a screenshot of it.')
+          : t('pic.unreadable', 'That picture could not be read.'),
+      );
+      return;
+    }
+    const url = made.preview;
     try {
       const picture = await new Promise<HTMLImageElement>((good, bad) => {
         const img = new Image();
@@ -205,7 +229,7 @@ export default function StyleFrom({
     } catch {
       setProblem(t('pic.unreadable', 'This browser could not read that picture. JPEG, PNG or WebP.'));
     } finally {
-      URL.revokeObjectURL(url);
+      /* `made.preview` is a data URL, so there is nothing to revoke. */
       setBusy(null);
       if (pictureInput.current) pictureInput.current.value = '';
     }

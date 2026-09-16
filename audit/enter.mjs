@@ -82,6 +82,21 @@ export async function enter({
   await page.locator('input[type="email"]').first().fill('audit@futurebox.test');
   const pw = page.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('audit-password-1234');
+
+  /* The terms box, which is why the button is disabled until it is ticked.
+
+     Added to the app on 15 September 2026: ElevenLabs' OEM Terms §3(A)
+     require an affirmative click before an account exists, so "Create a free
+     account" now starts disabled. Every probe in this directory signs in
+     through this function, so leaving it out did not break one probe — it
+     broke all of them, and none of the source checks run a browser, so the
+     sweep stayed green while nothing could get past the front door.
+
+     Conditional rather than assumed: this same function is used against the
+     sign-IN form too, which correctly has no box. */
+  const agree = page.locator('input[type="checkbox"]');
+  if (await agree.count()) await agree.first().check();
+
   await page.locator('button[type="submit"]').first().click();
 
   /* Waited for, not slept through.
@@ -137,13 +152,31 @@ export async function dismissDoor(page) {
 
 /** The studio overlay, which is the room you work in. */
 export async function studio(page) {
-  await dismissDoor(page);
-  /* The header button was called "Creator Studio" and is now called "Studio".
+  /* The door is dismissed AFTER the header button, not before it.
+
+     It used to be the other way round, and that stopped working when the
+     arrival door became its own page over everything: pressing Studio in the
+     header now OPENS that door rather than the studio overlay, so dismissing
+     it first and pressing Studio second put it straight back. The probe then
+     had a `fixed inset-0 z-[55]` page sitting on top of the `z-50` overlay it
+     had just been handed, and every click inside came back as "subtree
+     intercepts pointer events" — which reads like a layout fault in the room
+     and is nothing of the sort.
+
+     Dismissed twice on purpose. Once for a door that was already open when we
+     arrived, once for the one the header button opens. `dismissDoor` returns
+     quietly when there is none, so the extra call costs a timeout on the way
+     in and nothing else.
+
+     The header button was called "Creator Studio" and is now called "Studio".
      Both are matched, because a probe that silently stops finding its way in
      reports every room as clean — which is what this one did until somebody
      noticed it had been passing without visiting anything. */
+  await dismissDoor(page);
   await page.locator('header button').filter({ hasText: /Studio/i }).first().click();
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(800);
+  await dismissDoor(page);
+  await page.waitForTimeout(700);
   return page.locator('div.fixed.inset-0.z-50').first();
 }
 

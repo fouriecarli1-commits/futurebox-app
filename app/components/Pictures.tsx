@@ -32,9 +32,20 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ImagePlus, Star, Trash2, X, Check } from 'lucide-react';
 import {
-  ASSET_MAX_BYTES, ASSET_TYPES, KEEP, assetDataUrl, assetId, favouriteAsset,
+  KEEP, assetDataUrl, assetId, favouriteAsset,
   forgetAsset, loadAssets, rememberAsset, renameAsset, thumbnailOf, type Asset,
 } from '../lib/assets';
+import { ACCEPTS, MAX_BYTES, fit } from '../lib/imagefile';
+
+/**
+ * The longest edge a kept picture is stored at.
+ *
+ * The same 2048 the cast uses. It is a reference frame for a shot, not a
+ * print: what leaves for the engine is smaller again, and the difference
+ * between this and the camera's own size is entirely memory a phone does not
+ * have.
+ */
+const BIGGEST = 2048;
 import { useLang } from '../lib/i18n';
 
 export default function Pictures({
@@ -64,39 +75,89 @@ export default function Pictures({
     if (!value) setChosen(null);
   }, [value]);
 
+  /**
+   * A picture off the device, through the same guard the cast uses.
+   *
+   * ── Why this was rewritten, 16 September 2026 ─────────────────────────
+   *
+   * Carli, twice: *"die laai jou eie foto op in shot werk steeds nie. Bladsy
+   * is wit."* The second report is the one that matters — the first was
+   * answered by defending the image path, and the page still went white.
+   *
+   * It was a `FileReader` straight to a data URL and then `new Image()`, with
+   * a four-megabyte guard on **bytes**. `app/lib/imagefile.ts` was written on
+   * 14 September because that exact guard does not work, and its header says
+   * why in her words: a 200-megapixel photo off a modern phone is ten or
+   * twelve megabytes on disk, sails through any byte ceiling, and then asks
+   * the browser for 800MB in one allocation. The tab is not thrown from — it
+   * is killed, which is a white screen with nothing in the console, because
+   * the thing that would have logged died with it.
+   *
+   * That fix was applied to the avatar and to the cast. This strip was never
+   * moved onto it, which is the whole of "steeds nie": two reports, two
+   * different code paths, one of them fixed.
+   *
+   * `fit` reads the dimensions out of the file's own header BEFORE any
+   * decoder is asked for anything, refuses by pixels, and hands back a WebP
+   * with its longest edge at `BIGGEST`. So what reaches storage is a picture
+   * a phone can hold, and the original is never decoded at full size.
+   *
+   * ── And the thumbnail no longer falls back to the whole picture ────────
+   *
+   * `thumbnailOf` resolves to its INPUT when the image will not decode. Fed a
+   * 4MB data URL that was a 5.4MB base64 string in `asset.thumb`, straight
+   * into localStorage, whose quota is about five megabytes for the entire
+   * origin. `write()` catches the refusal and says nothing, so the picture
+   * vanished silently. Feeding it the already-shrunk preview makes the
+   * fallback harmless: the worst case is a thumbnail the size of a 2048px
+   * WebP rather than the size of the camera roll.
+   */
   const take = useCallback(
     (file: File | undefined) => {
       setProblem(null);
       if (!file) return;
-      if (ASSET_TYPES.indexOf(file.type) === -1) {
-        setProblem(t('pics.type', 'That has to be a PNG, a JPEG or a WebP.'));
+      if (file.size > MAX_BYTES) {
+        setProblem(t('pics.big', 'That picture is very large. Try one under 12MB.'));
         return;
       }
-      if (file.size > ASSET_MAX_BYTES) {
-        setProblem(t('pics.big', 'That picture is over 4 MB. A smaller one works just as well.'));
-        return;
-      }
-      const reader = new FileReader();
-      reader.onerror = () => setProblem(t('pics.read', 'That file could not be read.'));
-      reader.onload = async () => {
-        const read = reader.result;
-        if (typeof read !== 'string') return;
+      void (async () => {
+        const made = await fit(file, BIGGEST);
+        if (!made.ok) {
+          setProblem(
+            made.why === 'too_many_pixels'
+              ? t(
+                  'pics.tooManyPixels',
+                  'That photo is too big for a phone browser to open — it is one of the very high-megapixel camera modes. Take one on the normal setting, or use a screenshot of it.',
+                )
+              : made.why === 'not_an_image'
+                ? t('pics.type', 'That has to be a PNG, a JPEG or a WebP.')
+                : t('pics.read', 'That file could not be read.'),
+          );
+          return;
+        }
         const asset: Asset = {
           id: assetId(),
           kind: 'picture',
           name: file.name.replace(/\.[^.]+$/, '').slice(0, 60) || 'Picture',
-          mime: file.type,
-          bytes: file.size,
+          mime: made.blob.type || 'image/webp',
+          bytes: made.blob.size,
           createdAt: new Date().toISOString(),
-          thumb: await thumbnailOf(read),
+          thumb: await thumbnailOf(made.preview),
           ...(from ? { from } : {}),
         };
-        await rememberAsset(asset, read);
-        setAssets(loadAssets());
-        setChosen(asset.id);
-        onChange(read);
-      };
-      reader.readAsDataURL(file);
+        /* Storing must not be what loses the picture. `rememberAsset` writes
+           to IndexedDB and can reject on a full device; the picture is still
+           perfectly usable in this room, so the failure is said rather than
+           thrown and the shot keeps the frame either way. */
+        try {
+          await rememberAsset(asset, made.preview);
+          setAssets(loadAssets());
+          setChosen(asset.id);
+        } catch {
+          setProblem(t('pics.noRoom', 'That picture is in the shot, but there was no room to keep it on this device.'));
+        }
+        onChange(made.preview);
+      })();
     },
     [from, onChange, t],
   );
@@ -125,7 +186,7 @@ export default function Pictures({
       <input
         ref={input}
         type="file"
-        accept={ASSET_TYPES.join(',')}
+        accept={ACCEPTS}
         className="hidden"
         onChange={(event) => {
           take(event.target.files?.[0]);
