@@ -35,8 +35,8 @@ reggemaak is, net in die ander rigting.
 |---|---|---|---|---|---|
 | 1 | **ElevenLabs** | musiek, stemme, stem-skeiding, video | R18 216 (Business, BTW in) | vas | **BTW ja** — teen haar eie faktuur, 8 Sept. Die $990 self kom van hulle prysbladsy |
 | 2 | **Anthropic** | die kopiloot, die liedjieskrywer, die advertensies | R1 500 | vas, skatting | **nee** — 'n skatting, nie 'n faktuur nie |
-| 3 | **Vercel** | waar dit loop | R400 (Pro) | vas | nee |
-| 4 | **Supabase** | rekeninge, liedjies, die kanaal | R320 (Pro) | vas | nee |
+| 3 | **Vercel** | waar dit loop | R320 (Pro) | vas | nee — afgelei, sien hieronder |
+| 4 | **Supabase** | rekeninge, liedjies, die kanaal | R400 (Pro) | vas | nee — afgelei, sien hieronder |
 | 5 | **Resend** | uitnodigings, wagwoorde, kennisgewings | R64 ($4) | vas | nee |
 | 6 | **Werkswinkels** | die masterclass-inhoud | R4 000 | vas, opsioneel | ja |
 | 7 | **Music.ai** | akkoorde, toonaard, tempo, benoemde stukke | per minuut klank | per gebruik | **nee** — music.ai is ook geblokkeer |
@@ -53,8 +53,8 @@ reggemaak is, net in die ander rigting.
 | | Rand |
 |---|---|
 | Anthropic | 1 500 |
-| Vercel | 400 |
-| Supabase | 320 |
+| Vercel | 320 |
+| Supabase | 400 |
 | Resend | 64 |
 | Kits.AI | 640 |
 | Zoho | 241,50 |
@@ -87,12 +87,24 @@ nie. Dit was nie 'n som wat verkeerd was nie; dit was 'n koste wat glad nie
 bestaan het op papier nie, en presies die soort wat 'n mens eers sien wanneer
 die bank dit trek.
 
-**Een reël hier is nog nie seker nie.** Die R64 staan hier as Resend en die
-generator (`scripts/costs-eleven.mts`) noem dieselfde R64 GitHub, en Vercel en
-Supabase se twee getalle is tussen die twee bladsye omgeruil. Die totaal is
-dieselfde, so niks se som is verkeerd nie — maar een van die twee bladsye noem
-'n diens op die verkeerde naam. Wanneer die eerste regte faktuur kom, is dit
-die maklikste een om reg te maak.
+**Twee reëls het teen mekaar gestaan, en albei is op 16 September 2026
+opgelos.**
+
+Die R64 het hier Resend gesê en in die generator GitHub. Carli het dit
+beantwoord: **Resend is reg, GitHub is nie op die lys nie** — GitHub kos haar
+niks. Die generator dra nou dieselfde naam.
+
+Vercel en Supabase se twee getalle was tussen die twee bladsye omgeruil. Die
+totaal was albei kante R720, so geen som was verkeerd nie, maar een bladsy het
+die verkeerde bedrag teen die verkeerde diens gehad. Hierdie bladsy is
+reggemaak om by die generator te pas, op hierdie grond: **Vercel Pro is $20 per
+maand en Supabase Pro is $25** — wat teen R16 presies R320 en R400 gee, in
+daardie volgorde.
+
+*Dit bly 'n afleiding uit hulle gepubliseerde pryse en nie 'n faktuur nie —
+hierdie masjien kan nie by hulle bladsye uitkom nie, en die kolom sê so. Die
+eerste regte staat maak dit seker; tot dan is dit die weergawe wat ten minste
+aan die regte kant van elke naam staan.*
 
 ---
 

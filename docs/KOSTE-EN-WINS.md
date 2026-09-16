@@ -368,8 +368,3 @@ Albei is deur Carli genoem en nie een kan hier geraai word:
 Elke R1 000 per maand aan nuwe vaste koste skuif gelykbreek met 3,5 lede.
 Dit is lineêr, so die oomblik as daar 'n regte prys is, is die som een deling.
 
-*Nog 'n gaping, klein maar eerlik: `docs/MAANDELIKSE-KOSTE.md` lys **Resend**
-teen R64 en hierdie skrip het tot vandag **GitHub** teen R64 gelys. Dit is
-een reël van R64 wat twee name dra, of twee reëls waarvan een ontbreek.
-Een woord van Carli maak dit reg.*
-

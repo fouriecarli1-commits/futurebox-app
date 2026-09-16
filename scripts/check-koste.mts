@@ -26,6 +26,7 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { gatewayFee } from '../app/lib/plans.ts';
+import { FIXED_CORE } from './fixedcosts.mts';
 
 const page = readFileSync('docs/MAANDELIKSE-KOSTE.md', 'utf8');
 /**
@@ -133,6 +134,36 @@ const lines = ['Anthropic', 'Vercel', 'Supabase', 'Resend', 'Kits.AI', 'Zoho', '
 const parts = lines.map(randFor);
 ok('every fixed line has a rand figure', parts.every((one) => one !== null),
   lines.filter((_, at) => parts[at] === null).join(', ') || parts.join(' + '));
+
+/* ── Every line, by name, against the generator's own list ────────────────
+
+   Added 16 September 2026, because the sum below let a real fault through.
+
+   The totals agreed while Vercel and Supabase carried each other's figures:
+   R320 and R400 add to R720 whichever way round they are, so the page named
+   the wrong amount against the wrong service and this check stayed green. A
+   sum that adds up is not the same thing as lines that are right.
+
+   So each line is now matched to `fixedcosts.mts` by name. The names differ
+   between the two — the page says "Vercel", the list says "Vercel Pro" —
+   which is why it matches on the page's label being a prefix of the list's
+   rather than on equality; tightening that to exact names would be a rename
+   in two places for no gain. */
+{
+  const byName = new Map(Object.entries(FIXED_CORE));
+  for (const [at, label] of lines.entries()) {
+    const onPage = parts[at];
+    const key = [...byName.keys()].find((one) => one.startsWith(label) || label.startsWith(one));
+    const inList = key === undefined ? undefined : byName.get(key);
+    ok(
+      `${label} is the same figure on the bill and in the sums`,
+      onPage !== null && inList !== undefined && cents(onPage) === cents(inList),
+      inList === undefined
+        ? `${label} is on the bill but in no line of fixedcosts.mts`
+        : `the bill says ${onPage}, the generator says ${inList}`,
+    );
+  }
+}
 
 const base = parts.reduce((sum: number, one) => sum + (one ?? 0), 0);
 const workshops = randFor('Werkswinkels') ?? 0;

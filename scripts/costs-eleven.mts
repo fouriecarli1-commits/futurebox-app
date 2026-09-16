@@ -27,8 +27,10 @@ import { TIER_CREDITS, CREDITS } from '../app/lib/credits.ts';
 
 /* ────────────────────────────────────────────────────────── aannames ─── */
 
-/** Rand per dollar. Dieselfde koers as `plans.ts` gebruik. */
-const RAND_PER_USD = 16;
+/* Rand per dollar en die vaste maandelikse lys kom albei uit
+   `fixedcosts.mts`, sodat `check-koste.mts` dieselfde getalle kan invoer
+   sonder om hierdie lêer te laat loop. Sien die kop van daardie lêer. */
+import { RAND_PER_USD, FIXED_CORE } from './fixedcosts.mts';
 
 /**
  * BTW op ElevenLabs se rekening. **Nagegaan, 8 September 2026.**
@@ -47,7 +49,7 @@ const RAND_PER_USD = 16;
  * NET op ElevenLabs, en op Zoho hieronder wat reeds ingesluit ingevoer word.
  * Dit is wat Carli op haar staat gesien het en bevestig het.
  *
- * Anthropic, Vercel, Supabase, GitHub en Kits.AI is ook dollarrekeninge en hef
+ * Anthropic, Vercel, Supabase, Resend en Kits.AI is ook dollarrekeninge en hef
  * dit dálk ook — maar dit is nie nagegaan nie, en 'n som wat 15% aanvaar waar
  * niemand gekyk het nie is dieselfde fout as die een wat hier reggemaak word,
  * net in die ander rigting. Hulle bly plakkerpryse totdat die staat anders sê.
@@ -177,38 +179,6 @@ const FB_PER_SONG = CREDITS.song;
  * sonder dat iets in die toep breek — en op die kleiner planne is dit die
  * verskil tussen wins en verlies.
  */
-const FIXED_CORE: Record<string, number> = {
-  'Anthropic (kopiloot)': 1500,
-  'Supabase Pro': 400,
-  'Vercel Pro': 320,
-  GitHub: 64,
-  /* Kits.AI, $40 = R640. Sangstem-omskakeling, gekies 7 September 2026. Die
-     een reël op hierdie lys wat 'n gat toemaak eerder as om iets te laat loop:
-     dit is die enigste model wat sing. Sien `docs/MAANDELIKSE-KOSTE.md`. */
-  'Kits.AI': 640,
-  /* Zoho, R241,50 — BTW reeds ingesluit, want dit is wat op die staat staan
-     eerder as 'n plakkerprys wat omgereken moet word. Bevestig deur Carli op
-     8 September 2026.
-
-     Dit was tot vandag op GEEN kostelys nie. Nie 'n som wat verkeerd was nie —
-     'n reël wat glad nie bestaan het nie, en die soort wat 'n mens eers sien
-     wanneer die bank dit trek. */
-  Zoho: 241.5,
-  /* Domeine en Spaceship, bygevoeg 8 September 2026 nadat Carli gesê het
-     "dit is nie net dit nie, dit is domains".
-
-     AANNAME, en dit staan hier omdat dit geld raak: dit is TWEE reëls, nie
-     een nie. Sy het hulle met 'n "en" tussenin genoem, wat hulle apart maak.
-     Spaceship is self 'n domeinregistrateur, so as die R168 se domeine BY
-     Spaceship staan, tel ons dit twee keer en die rekening is R210,24 te
-     hoog. Een woord van haar maak dit reg; sien `docs/MAANDELIKSE-KOSTE.md`,
-     waar dieselfde vraag staan sodat dit nie hier begrawe lê nie. */
-  Domeine: 168,
-  /* $13,14 deur dieselfde koers as al die ander dollarreëls, eerder as 'n
-     rand-bedrag hier ingetik: verander die koers en hierdie reël volg saam.
-     'n Ingetikte R210,24 sou stilweg verouder. */
-  Spaceship: 13.14 * RAND_PER_USD,
-};
 const WORKSHOPS = 4000;
 
 /** Hoeveel gratis lede agter elke betalende een staan, by 5% omskakeling. */
@@ -842,11 +812,6 @@ for (const plan of EL_PLANS) {
   say('');
   say(`Elke R1 000 per maand aan nuwe vaste koste skuif gelykbreek met ${dec(perThousand, 1)} lede.`);
   say('Dit is lineêr, so die oomblik as daar '.concat("'n regte prys is, is die som een deling."));
-  say('');
-  say('*Nog '.concat("'n gaping, klein maar eerlik: `docs/MAANDELIKSE-KOSTE.md` lys **Resend**"));
-  say('teen R64 en hierdie skrip het tot vandag **GitHub** teen R64 gelys. Dit is');
-  say('een reël van R64 wat twee name dra, of twee reëls waarvan een ontbreek.');
-  say('Een woord van Carli maak dit reg.*');
   say('');
 }
 
