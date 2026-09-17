@@ -397,7 +397,31 @@ export default function BoothTimeline({
          given. Named rather than climbed to by shape, so restyling the
          column does not quietly move the measurement. */
       data-timeline=""
-      className="flex min-h-[40vh] flex-1 flex-col"
+      /* ── And the floor comes off on a short screen ─────────────────────
+ 
+         `min-h-[40vh]` is a floor, and a floor taller than the room is a
+         floor that pushes the bottom of the timeline past the fold. On a
+         phone in landscape the viewport is about 390 tall: the header, the
+         transport and the dock take most of it, and 40vh insists on 156 more
+         than there is. The column cannot shrink to fit, so the scroller ends
+         up taller than what is left and its last lanes sit under the edge of
+         the screen with no way to reach them.
+ 
+         Under 500px of viewport height the floor is dropped and `flex-1`
+         gets exactly what is left, which is what it was for. Measured in
+         height rather than width on purpose — a tablet held upright is wide
+         and short of nothing, and a phone on its side is narrow in neither
+         sense that matters here.
+
+         Said honestly: `audit/boothsideways.mjs` does NOT demonstrate this
+         one. Putting the floor back leaves that probe green, because the
+         probe page renders the room and the tab bar and not the rest of the
+         app's chrome, so there is more height there than in the real room.
+         The touch-action fault below is the one it catches. This is kept as
+         reasoning rather than as a reproduction: a floor that can exceed the
+         space available is a hazard whether or not today's layout trips it,
+         and it costs nothing to remove on a screen that short. */
+      className="flex min-h-[40vh] flex-1 flex-col [@media(max-height:500px)]:min-h-0"
       style={{ background: VOID }}
       onPointerMove={onMove}
       onPointerUp={endDrag}
@@ -726,7 +750,31 @@ export default function BoothTimeline({
                 </div>
 
                 <div
-                  className="relative touch-none"
+                  /* ── `touch-none` only while marking ────────────────────
+ 
+                     Carli, 16 September 2026: *"die scroll op die timeline
+                     werk nie reg in die probooth wanneer mens die foon dwars
+                     swaai."*
+ 
+                     This was `touch-none` unconditionally. That is
+                     `touch-action: none`, which tells the browser this
+                     element owns every touch gesture on it — so a finger
+                     dragged up the lanes never scrolled the list. It was
+                     added for the region marker, which does need the
+                     gesture, and taken for free the rest of the time.
+ 
+                     Turning the phone sideways is what made it visible
+                     rather than what caused it. In portrait the lanes
+                     usually fit and nobody scrolls them; in landscape the
+                     viewport is about 390 tall, the lanes do not fit, and
+                     the only part of the screen big enough to put a thumb on
+                     is the part that had scrolling switched off.
+ 
+                     `touch-pan-y` rather than nothing: the browser keeps
+                     vertical scrolling, and a horizontal drag is still ours
+                     to claim — which is what the clip and the cut handles
+                     below do with their own `touch-none`. */
+                  className={marking ? 'relative touch-none' : 'relative touch-pan-y'}
                   style={{
                     gridColumn: 2,
                     gridRow: index + 2,
