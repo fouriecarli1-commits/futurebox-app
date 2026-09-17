@@ -32,6 +32,7 @@
     "check:boothline": "tsx scripts/check-boothline.mts",
     "check:magnet": "tsx scripts/check-magnet.mts",
     "check:saysdone": "tsx scripts/check-saysdone.mts",
+    "check:finepr": "tsx scripts/check-finepr.mts",
     "check:boothdock": "tsx scripts/check-boothdock.mts",
     "check:boothfx": "tsx scripts/check-boothfx.mts",
     "check:mixplan": "tsx scripts/check-mixplan.mts",

@@ -410,11 +410,19 @@ export default function Greeting({
           lines of grey type on the one screen that is supposed to be a set
           of choices, and it read as terms rather than as an answer.
 
-          The strings stay in `i18n.tsx` — `hello.basis` and
-          `hello.basisAccount` — because the disclosure itself is worth
-          keeping and this is an argument about where it is printed, not
-          about whether it is true. The account screen is where the counting
-          is cleared, and that is where it belongs. */}
+          The disclosure itself is worth keeping — this was an argument
+          about where it is printed, not about whether it is true — and the
+          account screen is where the counting is also cleared, so that is
+          where it went. It says what is counted in its own words there
+          (`account.tasteNote`), next to the button that clears it: a notice
+          you cannot act on is a notice, and one beside `Forget` is an
+          answer.
+
+          The two strings this screen used, `hello.basis` and
+          `hello.basisAccount`, are gone from the dictionary with it. They
+          sat there unused for three days, saying the same thing less well
+          than the account screen does, and a dead string is an invitation
+          to print it again somewhere. `check:finepr` holds both halves. */}
     </div>
   );
 }

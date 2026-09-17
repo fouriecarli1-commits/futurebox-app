@@ -74,8 +74,6 @@ export const STRINGS: Dict = {
   "hello.rooms": { en: "Or go straight to", af: "Of gaan reguit na" },
   "hello.rail": { en: "Every other room is inside the studio, in the list down the side.", af: "Elke ander kamer is binne die studio, in die lys langs die kant." },
   "hello.home": { en: "Home", af: "Tuis" },
-  "hello.basisAccount": { en: "This is read off what you have made here \u2014 how often, and what kind, kept against your account so it follows you to another device. Not a record of when you work: a count per kind, and nothing else. You can clear it on your account screen.", af: "Dit word gelees uit wat jy hier gemaak het \u2014 hoe dikwels, en watter soort, gehou teen jou rekening sodat dit jou na \u2019n ander toestel volg. Nie \u2019n rekord van wanneer jy werk nie: \u2019n telling per soort, en niks anders nie. Jy kan dit op jou rekeningblad uitvee." },
-  "hello.basis": { en: "What is suggested here is read off the songs in your own library and what you have made before, both of which are already on this device. Nothing extra is recorded and nothing about it is sent anywhere.", af: "Wat hier voorgestel word, word gelees uit die liedjies in jou eie biblioteek en wat jy voorheen gemaak het \u2014 albei is reeds op hierdie toestel. Niks ekstra word aangeteken nie en niks daarvan word enige plek heen gestuur nie." },
   "rail.make": { en: "Make a song", af: "Maak ’n liedjie" },
   "rail.make.hint": { en: "Press one button", af: "Een knoppie" },
   "rail.all": { en: "All rooms", af: "Alle kamers" },

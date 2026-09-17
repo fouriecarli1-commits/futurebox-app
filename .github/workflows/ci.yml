@@ -562,6 +562,12 @@ jobs:
       - name: Every button on the list says what it did
         run: npm run check:saysdone
 
+      # The paragraph she asked off the welcome screen, and the account screen
+      # it moved to. Moving a disclosure is only an improvement if it lands
+      # somewhere — beside the button that clears the thing being disclosed.
+      - name: The fine print is off the door and beside the button
+        run: npm run check:finepr
+
       # The booth carries its own two rows of controls, so the app's tab bar
       # stands down while it is open. That is only safe while the back button
       # at the top left is there, which is why the two are one assertion.

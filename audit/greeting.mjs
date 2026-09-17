@@ -253,10 +253,32 @@ check(`it offers the genre this account actually keeps making (${GENRE})`,
    while also mentioning a different one would still be wrong. */
 check('and names no other genre',
   !new RegExp(GENRE === 'dubstep' ? 'amapiano' : 'dubstep', 'i').test(words));
-check('and says where that came from',
-  af ? /reeds op hierdie toestel/.test(words) : /already on this device/.test(words));
-check('and that nothing extra is recorded',
-  af ? /Niks ekstra word aangeteken nie/.test(words) : /Nothing extra is recorded/.test(words));
+/* ── And the fine print is NOT here ──────────────────────────────────
+
+   These two used to assert the opposite: that this screen carried a
+   paragraph saying what the suggestion is read off and that nothing extra
+   is recorded. Both sentences were true and Carli asked for them gone —
+   14 September 2026, with a photograph of the screen: *"Haal daai fyn skrif
+   uit op die make a song room."* Six lines of grey type on the one screen
+   that is meant to be a set of choices, reading as terms rather than as an
+   answer.
+
+   The disclosure moved to the account screen, where the counting is also
+   cleared, and it is better there: `account.tasteNote` says what is counted
+   and `Forget` next to it does something about it. `audit/account.mjs`
+   asserts that half, which is the half worth asserting — a disclosure with
+   no way to act on it is a notice, and one beside the button that clears it
+   is an answer.
+
+   So this now holds the decision she made rather than the screen it
+   replaced: the welcome door offers choices and does not explain itself in
+   small type. Kept as an assertion rather than deleted, because a paragraph
+   somebody asked to have removed is exactly the kind of thing that comes
+   back. */
+check('the welcome door does not explain itself in fine print',
+  !/already on this device|reeds op hierdie toestel/.test(words) &&
+    !/Nothing extra is recorded|Niks ekstra word aangeteken nie/.test(words),
+  'she asked for this paragraph off this screen; it belongs on the account screen');
 
 // ── It is a door ─────────────────────────────────────────────────────────
 const quick = door.locator('button').filter({ hasText: af ? /^Maak ’n snit/ : /^Make a song/ });
