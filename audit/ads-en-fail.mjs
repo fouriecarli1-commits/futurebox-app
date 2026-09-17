@@ -1,6 +1,6 @@
 /** What an Afrikaans reader is told when the ad writer refuses. */
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
 await p.goto('http://localhost:3000', { waitUntil: 'networkidle' });
@@ -13,7 +13,7 @@ await p.waitForTimeout(700);
 await p.locator('input[type="email"]').first().fill('toets@futurebox.test');
 const pw = p.locator('input[type="password"]').first();
 if (await pw.count()) await pw.fill('toets-wagwoord-1234');
-await p.locator('button[type="submit"]').first().click();
+await agreeAndSubmit(p);
 await p.waitForTimeout(2500);
 await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
 await p.waitForTimeout(1800);

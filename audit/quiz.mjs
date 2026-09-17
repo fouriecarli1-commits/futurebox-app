@@ -21,8 +21,8 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { dismissDoor, studio, toRoom } from './enter.mjs';
-import { launchOptions, shot } from './where.mjs';
+import { dismissDoor, studioDoor, toRoom } from './enter.mjs';
+import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3112';
 
@@ -56,7 +56,7 @@ try {
   await p.locator('input[type="email"]').first().fill('quiz@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('quiz-password-1234');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   /* Waited for, not slept through. A fixed pause is how a probe reports a
      working app as broken on a machine that was busy for a second — the
      bottom bar is on every signed-in screen and no signed-out one, so it is
@@ -81,12 +81,16 @@ try {
      audience for a thing meant to teach.
 
      Signing in above shuts the door behind it, so pressing Studio in the
-     header is what brings it back. That is also what a person does. */
-  await studio(p);
-  await p.waitForTimeout(1200);
+     header is what brings it back. That is also what a person does.
 
-  const door = p.locator('div.fixed.inset-0.z-\\[55\\]').first();
-  await door.waitFor({ state: 'visible', timeout: 20000 }).catch(() => {});
+     `studioDoor` and not `studio`: the two are different destinations and
+     this one wants the door itself, because the door IS the studio's home
+     page and the quiz card is on it. `studio()` dismisses the door to get
+     at the overlay behind it — it has to, or every click back there comes
+     back as "subtree intercepts pointer events" — so calling it here was
+     waiting twenty seconds for a page that had just been shut. */
+  const door = await studioDoor(p);
+  await p.waitForTimeout(600);
   check('the studio opens on its home page', await door.isVisible().catch(() => false),
     'no door — every check below would be measuring the wrong screen');
 

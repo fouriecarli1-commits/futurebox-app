@@ -23,7 +23,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3122';
 
@@ -240,7 +240,7 @@ try {
   await p.locator('input[type="email"]').first().fill('liveroom@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('liveroom-password-1234');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   await p.waitForTimeout(2600);
 
   const bar = p.locator('nav[aria-label]').first();

@@ -30,7 +30,7 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { dismissDoor, unfold } from './enter.mjs';
-import { launchOptions, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3073';
 
@@ -152,7 +152,7 @@ try {
   await p.locator('input[type="email"]').first().fill('taal@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('taal-password-1234');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   /* Waited for, not slept through. The app is in when the bottom bar is —
      it is on every signed-in screen and no signed-out one. The flat sleep
      that was here is how long signing in took on an idle laptop; on a loaded

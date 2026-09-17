@@ -39,7 +39,7 @@
  */
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, serve, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, serve, shot } from './where.mjs';
 import { unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3253';
@@ -204,7 +204,7 @@ async function signIn() {
   await p.locator('input[type="email"]').first().waitFor({ timeout: 20_000 });
   await p.locator('input[type="email"]').first().fill(WHO.email);
   await p.locator('input[type="password"]').first().fill('hierdie-is-nie-eg-nie');
-  await p.locator('form button[type="submit"]').first().click();
+  await agreeAndSubmit(p, 'form button[type=\"submit\"]');
   await p.locator('nav[aria-label]').first().waitFor({ timeout: 40_000 });
   await p.waitForTimeout(1200);
 }

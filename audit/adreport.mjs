@@ -8,7 +8,7 @@
  * that a file with no money in it is refused rather than half-shown.
  */
 import { chromium } from 'playwright';
-import { launchOptions, serve, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, serve, shot } from './where.mjs';
 import { studio, toRoom } from './enter.mjs';
 
 const PORT = process.argv[2] || '3031';
@@ -46,7 +46,7 @@ async function intoTheDesk() {
   await p.locator('input[type="email"]').first().fill('toets@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('toets-wagwoord-1234');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   /* Waited for, not slept through.
 
      `waitForTimeout(2500)` is how long signing in takes on an idle machine.

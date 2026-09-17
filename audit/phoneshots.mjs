@@ -1,5 +1,5 @@
 import { chromium, devices } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ ...devices['iPhone 13'] });
 await p.goto('http://localhost:3000', { waitUntil: 'networkidle' });
@@ -10,7 +10,7 @@ await p.waitForTimeout(500);
 await p.locator('input[type="email"]').first().fill('audit@futurebox.test');
 const pw = p.locator('input[type="password"]').first();
 if (await pw.count()) await pw.fill('audit-password-1234');
-await p.locator('button[type="submit"]').first().click();
+await agreeAndSubmit(p);
 await p.waitForTimeout(2500);
 await p.locator('header button').filter({ hasText: /Creator Studio|Studio/i }).first().click();
 await p.waitForTimeout(1800);

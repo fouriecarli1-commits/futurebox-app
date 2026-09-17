@@ -27,7 +27,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 import { dismissDoor, unfold } from './enter.mjs';
-import { launchOptions, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3071';
 const SECONDS = 6;
@@ -90,7 +90,7 @@ try {
   await p.locator('input[type="email"]').first().fill('bring@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('bring-password-1234');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   /* Waited for, not slept through. The app is in when the bottom bar is —
      it is on every signed-in screen and no signed-out one. The flat sleep
      that was here is how long signing in took on an idle laptop; on a loaded
@@ -204,7 +204,7 @@ try {
     await p.locator('input[type="email"]').first().fill('bring@futurebox.test');
     const pw2 = p.locator('input[type="password"]').first();
     if (await pw2.count()) await pw2.fill('bring-password-1234');
-    await p.locator('button[type="submit"]').first().click();
+    await agreeAndSubmit(p);
     await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => undefined);
     await p.waitForTimeout(400);
     await dismissDoor(p);

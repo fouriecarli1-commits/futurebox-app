@@ -33,7 +33,7 @@
  */
 import { execSync, spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3061';
 const HOST = 'https://stub.supabase.co';
@@ -124,7 +124,7 @@ try {
   if (await swap.count()) await swap.click().catch(() => undefined);
   await p.locator('input[type="email"]').first().fill('new@futurebox.test');
   await p.locator('input[type="password"]').first().fill('a-long-enough-password');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   await p.waitForTimeout(1200);
 
   const codeBox = p.locator('input[autocomplete="one-time-code"]');
@@ -134,7 +134,7 @@ try {
 
   /* ── A wrong code says so ────────────────────────────────────────────── */
   await codeBox.fill('000000');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   await p.waitForTimeout(1000);
   /* Whatever Supabase called it, as long as it is on the screen.
 
@@ -148,7 +148,7 @@ try {
 
   /* ── The right one lets them in ──────────────────────────────────────── */
   await codeBox.fill('123456');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   await p.waitForTimeout(1500);
   check('the right code is accepted', asked.includes('verify:123456'));
   check('and the door closes behind them', (await p.locator('input[autocomplete="one-time-code"]').count()) === 0);
@@ -186,7 +186,7 @@ try {
     if (await across.count()) { await across.click(); await p.waitForTimeout(500); }
     await p.locator('input[type="email"]').first().fill('back@futurebox.test');
     await p.locator('input[type="password"]').first().fill('a-long-enough-password');
-    await p.locator('button[type="submit"]').first().click();
+    await agreeAndSubmit(p);
     await p.waitForTimeout(1400);
     check('signing in again never asks for a code',
       (await p.locator('input[autocomplete="one-time-code"]').count()) === 0,

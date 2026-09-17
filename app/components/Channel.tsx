@@ -41,6 +41,7 @@ import { saveCreator } from '../lib/radar';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
+import SaysDone from './SaysDone';
 import PostToLive from './PostToLive';
 import Hint from './Hint';
 import RecordingName from './RecordingName';
@@ -104,7 +105,7 @@ export default function Channel({
    * on the account and nothing local until it is asked for. So keeping one is
    * a fetch, and a button that does nothing for four seconds reads as broken.
    */
-  const [keeping, setKeeping] = useState<string | null>(null);
+
   const [keepFailed, setKeepFailed] = useState<string | null>(null);
   /** Which song has been asked for a real cover, if any. */
   const [sleeveFor, setSleeveFor] = useState<string | null>(null);
@@ -298,23 +299,27 @@ export default function Channel({
    * MPEG audio today; a file called `.mp3` that is a WAV is a file a phone
    * refuses to open, and the person is then told nothing about why.
    */
+  /* Returns whether the file actually came down, because the button says so
+     now: fetching it… → Downloaded. `SaysDone` holds the busy state, so this
+     no longer keeps one of its own — one state for one fact. The failure is
+     still `keepFailed`, which the row below the button reads: a button that
+     said "failed" and then cleared would leave somebody with no reason. */
   const keep = useCallback(
-    async (track: Track) => {
+    async (track: Track): Promise<boolean> => {
       setKeepFailed(null);
-      setKeeping(track.id);
       try {
         const blob = await readAudio(track.id);
         if (!blob) {
           setKeepFailed(track.id);
-          return;
+          return false;
         }
         const kind = (blob.type || '').toLowerCase();
         const ext = kind.includes('wav') ? 'wav' : kind.includes('ogg') ? 'ogg' : kind.includes('mp4') || kind.includes('m4a') ? 'm4a' : 'mp3';
         downloadBlob(blob, safeFilename(track.title, ext));
+        return true;
       } catch {
         setKeepFailed(track.id);
-      } finally {
-        setKeeping(null);
+        return false;
       }
     },
     [],
@@ -1058,21 +1063,21 @@ export default function Channel({
                         full-screen player: this is the room the finished
                         songs live in, and the finished ones were the only
                         work in the app you could not take out of it. */}
-                    <button
-                      type="button"
-                      onClick={() => void keep(track)}
-                      disabled={keeping === track.id}
+                    {/* `again`, unlike the post button: downloading the
+                        same song twice is a second file in the phone's
+                        folder and nothing worse, and somebody who cannot
+                        find the first one will want to press it again. Two
+                        seconds is about the floor for a word nobody was
+                        expecting to read. */}
+                    <SaysDone
+                      icon={<Download className="w-3.5 h-3.5" />}
+                      label={t('chan.keep', 'Download')}
+                      busyLabel={t('chan.keeping', 'Fetching the file\u2026')}
+                      doneLabel={t('chan.kept', 'Downloaded')}
+                      again={2400}
                       className="min-h-[44px] px-3 py-1.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-60"
-                    >
-                      {keeping === track.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Download className="w-3.5 h-3.5" />
-                      )}
-                      {keeping === track.id
-                        ? t('chan.keeping', 'Fetching the file\u2026')
-                        : t('chan.keep', 'Download')}
-                    </button>
+                      onDo={() => keep(track)}
+                    />
                     {/* And into the live room, from the room the finished
                         songs are in. It used to be reachable only from a list
                         inside Live that showed the first six. */}

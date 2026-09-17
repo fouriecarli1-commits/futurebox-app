@@ -23,6 +23,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { ArrowRight, CalendarDays, Loader2, Download, FileDown, Target, Users, Compass, Radar, Gauge } from 'lucide-react';
+import SaysDone from './SaysDone';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
 import { accessToken } from '../lib/cloud';
@@ -270,25 +271,38 @@ export default function MarketPlan({
           {busy && <Loader2 className="w-4 h-4 animate-spin" />}
           {plan ? t('plan.again', 'Work it out again') : t('plan.go', 'Work out the plan')}
         </button>
+        {/* ── Both of the two below say they did it ────────────────────
+
+            They hand a file to the browser and nothing on the screen
+            changed: on a desk the download shelf answers for them, and on a
+            phone it often does not — the file lands somewhere and the button
+            still reads as unpressed.
+
+            They are synchronous, so the busy label is a frame nobody sees,
+            and that is fine: it costs nothing and it is what happens if the
+            writing ever gets slow. `again`, because a second copy of a
+            calendar file is nothing worse than a second copy. */}
         {plan && (
-          <button
-            type="button"
-            onClick={toCalendar}
+          <SaysDone
+            icon={<Download className="w-4 h-4" />}
+            label={t('plan.calendar', 'Put the week in my calendar')}
+            busyLabel={t('plan.calendarBusy', 'Making the file\u2026')}
+            doneLabel={t('plan.calendarDone', 'In your downloads')}
+            again={2400}
             className="min-h-[44px] px-4 py-2.5 rounded-xl border border-zinc-800 bg-zinc-950 text-sm font-semibold text-zinc-300 hover:text-white inline-flex items-center gap-2"
-          >
-            <Download className="w-4 h-4" />
-            {t('plan.calendar', 'Put the week in my calendar')}
-          </button>
+            onDo={async () => { toCalendar(); }}
+          />
         )}
         {plan && (
-          <button
-            type="button"
-            onClick={toPaper}
+          <SaysDone
+            icon={<FileDown className="w-4 h-4" />}
+            label={t('plan.paper.get', 'Download the whole plan')}
+            busyLabel={t('plan.paper.busy', 'Making the file\u2026')}
+            doneLabel={t('plan.paper.done', 'In your downloads')}
+            again={2400}
             className="min-h-[44px] px-4 py-2.5 rounded-xl border border-zinc-800 bg-zinc-950 text-sm font-semibold text-zinc-300 hover:text-white inline-flex items-center gap-2"
-          >
-            <FileDown className="w-4 h-4" />
-            {t('plan.paper.get', 'Download the whole plan')}
-          </button>
+            onDo={async () => { toPaper(); }}
+          />
         )}
       </div>
       {plan && (

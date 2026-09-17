@@ -7,6 +7,7 @@
  * which would report a problem the phone does not have, or hide one it does.
  */
 import { chromium, devices } from 'playwright';
+import { agreeAndSubmit } from './where.mjs';
 
 const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ ...devices['iPhone 13'] });
@@ -19,7 +20,7 @@ await p.waitForTimeout(500);
 await p.locator('input[type="email"]').first().fill('audit@futurebox.test');
 const pw = p.locator('input[type="password"]').first();
 if (await pw.count()) await pw.fill('audit-password-1234');
-await p.locator('button[type="submit"]').first().click();
+await agreeAndSubmit(p);
 await p.waitForTimeout(3000);
 
 const report = await p.evaluate(() => {

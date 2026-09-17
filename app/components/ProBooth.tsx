@@ -47,6 +47,7 @@ import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Hint from './Hint';
 import { Card, Row } from './BoothCard';
+import SaysDone from './SaysDone';
 import { EDGE, INK_DIM, LIT, PANEL } from '../lib/boothlook';
 import BoothTimeline from './BoothTimeline';
 import BoothDock, { type Desk } from './BoothDock';
@@ -1257,7 +1258,7 @@ export default function ProBooth({
     [context, rate, t],
   );
 
-  const keep = useCallback(async () => {
+  const keep = useCallback(async (): Promise<boolean> => {
     setBusy(true);
     setProblem(null);
     try {
@@ -1267,11 +1268,13 @@ export default function ProBooth({
       const mixed = await mixSession(lanes, rate, master, trim);
       if (!mixed) {
         setProblem(t('pro.mixFailed', 'The mix could not be made.'));
-        return;
+        return false;
       }
       await onKeep(encodeWav(mixed));
+      return true;
     } catch {
       setProblem(t('pro.mixFailed', 'The mix could not be made.'));
+      return false;
     } finally {
       setBusy(false);
     }
@@ -1301,14 +1304,22 @@ export default function ProBooth({
      file the mixer approved. A second render with its own numbers would be
      a silently different song. */
   const [saving, setSaving] = useState(false);
-  const toPhone = useCallback(async () => {
+  /* Returns whether the file was written, because the button says so now:
+     save it → rendering it… → saved. The render is the slow part — a whole
+     mix, offline — so a press with no answer is a press somebody makes
+     twice, and two renders of the same session is the wait twice over.
+
+     `saving` stays: the Library button beside this one reads it to stand
+     down while a render is out, which is a different fact from this button's
+     own state and belongs to the room. */
+  const toPhone = useCallback(async (): Promise<boolean> => {
     setSaving(true);
     setProblem(null);
     try {
       const mixed = await mixSession(lanes, rate, master, trim);
       if (!mixed) {
         setProblem(t('pro.mixFailed', 'The mix could not be made.'));
-        return;
+        return false;
       }
       const blob = encodeWav(mixed);
       const url = URL.createObjectURL(blob);
@@ -1321,8 +1332,10 @@ export default function ProBooth({
       link.download = `${safe || 'song'}.wav`;
       link.click();
       URL.revokeObjectURL(url);
+      return true;
     } catch {
       setProblem(t('pro.mixFailed', 'The mix could not be made.'));
+      return false;
     } finally {
       setSaving(false);
     }
@@ -2081,24 +2094,39 @@ export default function ProBooth({
         'Both give you the same mix: every lane, its level, where it sits, its cuts and its effects, rendered exactly as the room plays it. The phone is a file you keep; the Library is the copy your channel posts from.',
       )}
     >
-      <button
-        type="button"
-        onClick={() => void toPhone()}
+      {/* `again`: a second copy in the phone's downloads folder is nothing
+          worse than a second copy, and somebody who cannot find the first
+          one will want to press it again. */}
+      <SaysDone
         disabled={busy || saving || recording || !heard.length}
+        icon={<Download className="h-4 w-4" />}
+        label={t('pro.toPhone', 'Save to my phone')}
+        busyLabel={t('pro.toPhoneBusy', 'Rendering the mix\u2026')}
+        doneLabel={t('pro.toPhoneDone', 'Saved to your phone')}
+        again={3000}
         className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-bold text-zinc-100 disabled:opacity-40"
-      >
-        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-        {t('pro.toPhone', 'Save to my phone')}
-      </button>
-      <button
-        type="button"
-        onClick={() => void keep()}
+        onDo={toPhone}
+      />
+      {/* The busy label is the one that earns its place here. This renders
+          the whole mix offline before it sends anything, and the label used
+          to stay "Send it to my Library" with a spinner beside it — so the
+          only way to know the long part had started was to notice a small
+          shape change on a button under your thumb.
+
+          The done label is honestly almost never seen: `onKeep` closes this
+          room. It is there because a room that does not close — because the
+          caller changed, or because it fails on the way out — must not be
+          left showing the word that starts the render. No `again` for the
+          same reason: there is nothing here to press twice. */}
+      <SaysDone
         disabled={busy || saving || recording || !heard.length}
+        icon={<Check className="h-4 w-4" />}
+        label={t('pro.toLibrary', 'Send it to my Library')}
+        busyLabel={t('pro.toLibraryBusy', 'Making one song of it\u2026')}
+        doneLabel={t('pro.toLibraryDone', 'It is in your Library')}
         className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 text-sm font-bold text-onAccent disabled:opacity-40"
-      >
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-        {t('pro.toLibrary', 'Send it to my Library')}
-      </button>
+        onDo={keep}
+      />
       <p className="text-sm leading-snug" style={{ color: INK_DIM }}>
         {heard.length
           ? t(

@@ -32,7 +32,7 @@
  */
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
-import { launchOptions, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 import { unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3245';
@@ -123,7 +123,7 @@ try {
   await p.locator('input[type="email"]').first().fill('firsthour@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('firsthour-password-1234');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   /* Waited for, not slept through. A `click()` auto-waits, so a flat sleep here
      survives right up to the first `count()` — and `count()` waits for
      nothing. `photosong` failed exactly there: it read a room it had not

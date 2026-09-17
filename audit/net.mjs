@@ -1,5 +1,5 @@
 import { chromium } from 'playwright';
-import { launchOptions } from './where.mjs';
+import { agreeAndSubmit, launchOptions } from './where.mjs';
 const b = await chromium.launch(launchOptions());
 const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
 p.on('response', async (r) => {
@@ -15,6 +15,6 @@ await p.waitForTimeout(500);
 await p.locator('input[type="email"]').first().fill('audit@futurebox.test');
 const pw = p.locator('input[type="password"]').first();
 if (await pw.count()) await pw.fill('audit-password-1234');
-await p.locator('button[type="submit"]').first().click();
+await agreeAndSubmit(p);
 await p.waitForTimeout(4000);
 await b.close();

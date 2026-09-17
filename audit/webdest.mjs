@@ -28,7 +28,7 @@
  * The reply is canned, because what is under test is what the browser sent.
  */
 import { chromium } from 'playwright';
-import { launchOptions, serve, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, serve, shot } from './where.mjs';
 import { dismissDoor, studio, toRoom } from './enter.mjs';
 
 const PORT = Number(process.argv[2] || 3118);
@@ -72,7 +72,7 @@ try {
   await p.locator('input[type="email"]').first().fill('webdest@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('webdest-password-1234');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   /* Waited for, not slept through — the bottom bar is on every signed-in
      screen and no signed-out one, so it is the honest signal that the app is
      there. A fixed pause is how a probe measures the signed-out page and

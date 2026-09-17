@@ -555,6 +555,13 @@ jobs:
       - name: The timeline's magnet, its interlock, and a lane that survives a reload
         run: npm run check:magnet
 
+      # A press with no answer is a press somebody makes twice. The state
+      # goes on the button because the button is where the eye already is —
+      # and on a post button the done state is the guard as well, so taking
+      # it off would put the same song in the room twice under one name.
+      - name: Every button on the list says what it did
+        run: npm run check:saysdone
+
       # The booth carries its own two rows of controls, so the app's tab bar
       # stands down while it is open. That is only safe while the back button
       # at the top left is there, which is why the two are one assertion.

@@ -45,6 +45,7 @@ import RoomScreen from './RoomScreen';
 import { planOf, type Part } from '../lib/timeline';
 import { myVideos, type MyVideo } from '../lib/filmed';
 import Cover from './Cover';
+import SaysDone from './SaysDone';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
 import Card from './Card';
@@ -746,11 +747,28 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                   <div key={track.id} className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2">
                     <Music className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
                     <span className="text-sm text-zinc-300 truncate flex-1 min-w-0">{track.title}</span>
-                    <button
-                      type="button"
+                    {/* Says what it did, on itself — see `SaysDone`.
+                        Both of this room's Post buttons went grey while the
+                        request was out and came back saying "Post it", which
+                        is a press with no answer. `send` already returns
+                        whether it went through and the room already has one
+                        message line for a refusal, so nothing else had to
+                        change: the button holds the state and the room holds
+                        the reason.
+
+                        No `again`: posting the same song twice makes two
+                        rows and the room then offers it twice under one
+                        name, which reads as a fault in the room. Done stays
+                        done, which is the state and the guard in one. */}
+                    <SaysDone
                       disabled={busy}
-                      onClick={() =>
-                        void send({
+                      icon={<Upload className="w-3.5 h-3.5" />}
+                      label={t('live.post', 'Post it')}
+                      busyLabel={t('live.posting', 'Posting…')}
+                      doneLabel={t('live.posted', 'Posted')}
+                      className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
+                      onDo={() =>
+                        send({
                           what: 'post',
                           kind: 'track',
                           sourceId: track.id,
@@ -774,11 +792,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                           style: track.style,
                         })
                       }
-                      className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
-                    >
-                      <Upload className="w-3.5 h-3.5" />
-                      {t('live.post', 'Post it')}
-                    </button>
+                    />
                   </div>
                 ))}
                 {postable.length === 0 && (
@@ -836,11 +850,15 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                 <span className="flex-shrink-0 text-xs text-zinc-600">
                   {film.filmed ? t('live.filmed', 'filmed') : t('live.generated', 'generated')}
                 </span>
-                <button
-                  type="button"
+                <SaysDone
                   disabled={busy}
-                  onClick={() =>
-                    void send({
+                  icon={<Upload className="w-3.5 h-3.5" />}
+                  label={t('live.post', 'Post it')}
+                  busyLabel={t('live.posting', 'Posting…')}
+                  doneLabel={t('live.posted', 'Posted')}
+                  className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
+                  onDo={() =>
+                    send({
                       what: 'post',
                       kind: 'video',
                       sourceId: film.id,
@@ -848,11 +866,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
                       seconds: film.seconds,
                     })
                   }
-                  className="min-h-[44px] px-2.5 py-1 rounded-lg text-sm bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 disabled:opacity-50"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  {t('live.post', 'Post it')}
-                </button>
+                />
               </div>
             ))}
           </div>

@@ -30,7 +30,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
-import { launchOptions, serve, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, serve, shot } from './where.mjs';
 import { dismissDoor, toRoom } from './enter.mjs';
 
 const PORT = Number(process.argv[2] || 3011);
@@ -181,7 +181,7 @@ await p.waitForTimeout(700);
 await p.locator('input[type="email"]').first().fill('anri.fourie@futurebox.test');
 const pw = p.locator('input[type="password"]').first();
 if (await pw.count()) await pw.fill('toets-wagwoord-1234');
-await p.locator('button[type="submit"]').first().click();
+await agreeAndSubmit(p);
 /* Waited for, not slept through. The bottom bar exists on every screen shown
    to a signed-in person and on none shown to a signed-out one, so it is the
    signal that signing in finished — a fixed 2.5 seconds on a loaded machine

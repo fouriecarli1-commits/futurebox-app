@@ -159,3 +159,46 @@ export async function serve(port, { tries = 40, every = 1500, env = {} } = {}) {
   }
   return { url, stop };
 }
+
+/**
+ * Tick the terms box, then press the sign-up button.
+ *
+ * ── The regression this exists to end ────────────────────────────────────
+ *
+ * Accepting the terms became an affirmative click on 15 September, which is
+ * the right thing and which disables "Create a free account" until the box
+ * is ticked. Forty-odd probes in this directory sign up by hand — they fill
+ * the two fields and press `button[type="submit"]` — and every one of them
+ * stopped working that day. They did not fail loudly either: Playwright
+ * waits thirty seconds for a disabled button and then reports a timeout,
+ * which reads as a slow server rather than as a form that will not submit.
+ *
+ * Worse, nothing in the source sweep noticed, because no source check runs
+ * a browser. The sweep stayed green for a day with the front door shut.
+ *
+ * So: one helper, and `check:probes` refuses a probe that presses a sign-up
+ * submit without it. The next control the sign-up form grows is then one
+ * edit here rather than forty.
+ *
+ * ── Why it is safe everywhere ────────────────────────────────────────────
+ *
+ * The box is looked up and ticked only if it is there. On the sign-IN side
+ * there is no box — signing back in is not a new agreement — and on every
+ * other form in the app there is none either, so this is exactly a click
+ * with a tick in front of it where a tick is needed.
+ *
+ * `data-agree` rather than "the first checkbox": a probe that reaches for
+ * the first checkbox on the page ticks whatever happens to come first the
+ * day a second one appears, and would then look as though it had agreed.
+ */
+export async function agreeAndSubmit(page, selector = 'button[type="submit"]') {
+  const box = page.locator('[data-agree]').first();
+  if ((await box.count()) > 0 && !(await box.isChecked())) {
+    /* `force`, because the input is inside a label with a border and padding
+       and Playwright's own hit test sometimes finds the label. The box is
+       what has to end up checked; which of the two took the press is not a
+       property worth asserting here. */
+    await box.check({ force: true });
+  }
+  await page.locator(selector).first().click();
+}

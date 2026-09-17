@@ -27,7 +27,7 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { dismissDoor, unfold } from './enter.mjs';
-import { launchOptions, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3103';
 const TOKEN = 'a'.repeat(64);
@@ -122,7 +122,7 @@ try {
   await p.locator('input[type="email"]').first().fill('invited@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('invited-password-1234');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   await p.waitForTimeout(3000);
   /* The welcome door, waited for and then gone.
      `count()` once was the fault: the door draws after two fetches settle, so

@@ -179,7 +179,21 @@ for (const script of named) {
      it locates it. If one ever splits the two across lines this goes quiet
      rather than loud, which is the failure mode to watch — the same shape as
      the `photosong` note below. */
-  const signsIn = /button\[type="submit"\][^\n]*\.click\(/.test(source);
+  /* ── And then the click moved into a helper ────────────────────────
+
+     From 17 September 2026 every probe that signs up goes through
+     `agreeAndSubmit`, which ticks the terms box and then presses the
+     submit. That is the repair for the regression below — and it silently
+     unclassified thirty-seven probes the moment it landed, because none of
+     them mentions the selector any more. Exactly the failure mode the note
+     above says to watch for, arriving the same day it was written down.
+
+     So both spellings count as signing in: the helper, or a press on the
+     submit by hand. The second is refused a few lines down, but it has to
+     be RECOGNISED here or a probe that goes back to doing it by hand would
+     lose rule 4 as well as gaining a failure. */
+  const signsIn =
+    /button\[type="submit"\][^\n]*\.click\(/.test(source) || /agreeAndSubmit\(/.test(source);
   /* One probe never gets in on purpose: `signup` is about the six-digit code
      screen, which is the door rather than the room, and it would wait thirty
      seconds for a bar that is correctly not there. Recognised by what it looks
@@ -196,6 +210,38 @@ for (const script of named) {
     ok(
       `${name} waits for the app after signing in`,
       /nav\[aria-label\][\s\S]{0,200}?waitFor/.test(source),
+    );
+
+    /* ── 4b. And it ticks the terms box on the way ───────────────────────
+
+       The box went into the app on 15 September 2026 — ElevenLabs' OEM
+       Terms §3(A) require an affirmative click before an account exists —
+       and it disables "Create a free account" until it is ticked.
+
+       Thirty-eight probes fill the two fields and press that button. All
+       thirty-eight stopped working that day, and not one of them said so:
+       Playwright waits thirty seconds for a disabled button and reports a
+       timeout, which reads as a slow server rather than as a form that will
+       not submit. `enter.mjs` was repaired the same day with a note saying
+       every probe signs in through it, and that note was wrong — which is
+       why the repair was a third of one and thirty-seven probes stayed
+       broken for a day.
+
+       Nothing in the source sweep noticed, because no source check runs a
+       browser. This is that check: the tick and the press are one function
+       now, and a probe that presses the submit by hand is refused here
+       rather than in a thirty-second timeout on a machine nobody is
+       watching.
+
+       `signinwith` is not asked, and cannot be: it is the probe that TESTS
+       the box — that the button is disabled until it is ticked — so it must
+       press and tick on its own terms. It is exempted by never clicking the
+       submit at all, which is what keeps it out of `signsIn`. */
+    ok(
+      `  and ticks the terms box, through the one helper`,
+      /agreeAndSubmit\(/.test(source) &&
+        !/(p|page)\.locator\('(form )?button\[type="submit"\]'\)[^\n]*\.click\(/.test(source),
+      'a sign-up submit pressed by hand sits in front of a disabled button for thirty seconds',
     );
   }
 

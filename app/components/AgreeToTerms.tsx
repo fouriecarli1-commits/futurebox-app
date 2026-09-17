@@ -55,6 +55,14 @@ export default function AgreeToTerms({
     <label className="flex items-start gap-3 cursor-pointer select-none rounded-xl border border-zinc-800 bg-black/40 p-3">
       <input
         type="checkbox"
+        /* Named, for the probes and for the check that keeps them honest.
+           Forty probes sign up by hand, and the first version of this box
+           broke every one of them — they press the submit, which this box
+           disables until it is ticked. The fix was a shared helper, and a
+           helper that reaches for "the first checkbox on the page" would
+           tick whatever else happened to come first the day a second one
+           appears. So the box says which box it is. */
+        data-agree=""
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
         /* 20px, not the browser default. A 13px target beside two paragraphs

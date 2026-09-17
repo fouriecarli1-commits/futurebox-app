@@ -1,6 +1,6 @@
 /** Sign in, open the studio, and report what is there. Shared by every audit. */
 import { chromium } from 'playwright';
-import { launchOptions } from './where.mjs';
+import { agreeAndSubmit, launchOptions } from './where.mjs';
 
 /** The sandbox has no route to the open internet; those are not app faults. */
 const OFFSITE = /ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|ERR_CONNECTION_REFUSED/;
@@ -83,21 +83,23 @@ export async function enter({
   const pw = page.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('audit-password-1234');
 
-  /* The terms box, which is why the button is disabled until it is ticked.
+  /* The tick, and then the press — both inside `agreeAndSubmit`.
 
-     Added to the app on 15 September 2026: ElevenLabs' OEM Terms §3(A)
-     require an affirmative click before an account exists, so "Create a free
-     account" now starts disabled. Every probe in this directory signs in
-     through this function, so leaving it out did not break one probe — it
-     broke all of them, and none of the source checks run a browser, so the
-     sweep stayed green while nothing could get past the front door.
+     The terms box went in on 15 September 2026, because ElevenLabs' OEM
+     Terms §3(A) require an affirmative click before an account exists, and
+     it disables "Create a free account" until it is ticked.
 
-     Conditional rather than assumed: this same function is used against the
-     sign-IN form too, which correctly has no box. */
-  const agree = page.locator('input[type="checkbox"]');
-  if (await agree.count()) await agree.first().check();
+     This function ticked it inline for a day, with a note saying every
+     probe in this directory signs in through here. That note was wrong, and
+     being wrong is why the repair was only a third of one: thirty-seven
+     other probes fill the two fields and press the submit themselves, and
+     every one of them was still sitting in front of a disabled button
+     waiting thirty seconds for a timeout that reads like a slow server.
 
-  await page.locator('button[type="submit"]').first().click();
+     So the tick lives with the press now, in one function in `where.mjs`,
+     and `check:probes` refuses a probe that presses a sign-up submit
+     without it. */
+  await agreeAndSubmit(page);
 
   /* Waited for, not slept through.
 
@@ -172,12 +174,46 @@ export async function studio(page) {
      Both are matched, because a probe that silently stops finding its way in
      reports every room as clean — which is what this one did until somebody
      noticed it had been passing without visiting anything. */
-  await dismissDoor(page);
-  await page.locator('header button').filter({ hasText: /Studio/i }).first().click();
-  await page.waitForTimeout(800);
+  await studioDoor(page);
   await dismissDoor(page);
   await page.waitForTimeout(700);
   return page.locator('div.fixed.inset-0.z-50').first();
+}
+
+/**
+ * The studio's front door, left standing.
+ *
+ * `studio()` above wants what is BEHIND the door — the overlay with the room
+ * rail in it — so it dismisses the door on the way through. A handful of
+ * probes want the door itself, because the door IS the studio's home page:
+ * the greeting is on it, the room buttons are on it, and so is the music
+ * quiz card, which Carli asked for "op die home page onder van die creative
+ * studio".
+ *
+ * Split out because the two are not the same destination and sharing one
+ * function made them look like it. `audit/quiz.mjs` called `studio()` and
+ * then waited for the door; the day `studio()` learned to dismiss the door
+ * after pressing the header button — which it had to, or every click behind
+ * it came back as "subtree intercepts pointer events" — the quiz probe was
+ * waiting twenty seconds for a page that had just been shut in front of it.
+ * It did not show up for another day, because the terms box was stopping
+ * that probe at the front door before it ever got this far.
+ *
+ * Returns the door, so a caller can scope its assertions to it rather than
+ * to "somewhere on screen" — which is the assertion that once passed
+ * happily while the quiz card was in the wrong room.
+ */
+export async function studioDoor(page) {
+  /* Dismissed first, then re-opened by the header button. Signing in shuts
+     the door behind it, and pressing Studio is what brings it back — which
+     is also what a person does. The first call returns quietly when there
+     is no door, so it costs one timeout and nothing else. */
+  await dismissDoor(page);
+  await page.locator('header button').filter({ hasText: /Studio/i }).first().click();
+  await page.waitForTimeout(800);
+  const door = page.locator('div.fixed.inset-0.z-\\[55\\]').first();
+  await door.waitFor({ state: 'visible', timeout: 20000 }).catch(() => {});
+  return door;
 }
 
 /**

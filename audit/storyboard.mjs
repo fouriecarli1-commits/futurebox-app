@@ -36,7 +36,7 @@
  * being run by nobody.
  */
 import { chromium } from 'playwright';
-import { launchOptions, serve, shot } from './where.mjs';
+import { agreeAndSubmit, launchOptions, serve, shot } from './where.mjs';
 import { dismissDoor, studio, toRoom } from './enter.mjs';
 
 const PORT = process.argv[2] || '3094';
@@ -104,7 +104,7 @@ async function signIn() {
   await p.locator('input[type="email"]').first().fill('toets@futurebox.test');
   const pw = p.locator('input[type="password"]').first();
   if (await pw.count()) await pw.fill('toets-wagwoord-1234');
-  await p.locator('button[type="submit"]').first().click();
+  await agreeAndSubmit(p);
   /* Waited for, not slept through.
 
      `waitForTimeout(2500)` is how long signing in takes on an idle machine.
@@ -168,6 +168,41 @@ check('a real clip was recorded for the engine to return', clipBytes.length > 20
 await signIn();
 let room = await intoTheDesk();
 
+/** Unfold the storyboard card, and say whether it was there to unfold.
+
+ *  Needed twice: once on the way in and once after the reload, because a
+ *  reload is a fresh mount and every panel in every room starts folded.
+ *  See the note below for why that was invisible for four days. */
+const unfoldBoard = async (where) => {
+  const fold = where.locator('button[aria-expanded]')
+    .filter({ hasText: af ? /Bou .n lang een/ : /Build a long one/ })
+    .first();
+  if ((await fold.count()) === 0) return false;
+  if ((await fold.getAttribute('aria-expanded')) !== 'true') {
+    await fold.click();
+    await p.waitForTimeout(500);
+  }
+  return true;
+};
+
+/* ── The card has to be unfolded before its words are read ───────────
+
+   Every panel in every room starts folded since 13 September 2026 — the
+   advert desk opened with 4,332 characters at 390px and the collab radar
+   with 3,146, so the words moved one tap away and the controls got the
+   screen. A card's TITLE is on the screen while it is shut and everything
+   under it is not, which is why the first assertion below passed and the two
+   after it did not.
+
+   Neither of those two was a fault in the room: the sentences are there and
+   correct. They were unreadable to this probe because it was reading a
+   folded card, and it had been reading a folded card since the day panels
+   learned to fold — hidden all that time behind the terms box, which stopped
+   this probe at the front door before it ever got here. Two faults of mine,
+   one on top of the other, and the one underneath only showed when the one
+   on top was lifted. */
+check('the storyboard card is on the desk to be opened', await unfoldBoard(room));
+
 const words = await room.innerText();
 check('the storyboard is on the desk',
   af ? /Bou .n lang een/.test(words) : /Build a long one/.test(words));
@@ -228,6 +263,10 @@ await p.reload({ waitUntil: 'networkidle' });
 await p.waitForTimeout(1200);
 await signIn();
 room = await intoTheDesk();
+/* Folded again, because a reload is a fresh mount. What survives a reload is
+   what is STORED, and a card that has to be opened to show it is the room
+   working as designed — so the probe opens it, the way a person does. */
+await unfoldBoard(room);
 check('the storyboard survives a reload',
   (await boxes().count()) === 3 && (await boxes().nth(0).inputValue()) === lines[1],
   `${await boxes().count()} shots`);
