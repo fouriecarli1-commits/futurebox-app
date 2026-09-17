@@ -9,13 +9,13 @@ they can be reviewed in one place instead of remembered.
 not be checked, it says so and it says how to check it. Entries move to
 **Settled** with a date and a commit rather than being deleted.
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-17.
 
 ---
 
-## Lees dit eerste — waar dinge staan, 15 September 2026
+## Lees dit eerste — waar dinge staan, 17 September 2026
 
-*Hierdie register is 2 600 reëls lank en groei elke sessie. Niemand lees dit
+*Hierdie register is 4 600 reëls lank en groei elke sessie. Niemand lees dit
 van voor af nie, en 'n register wat niemand lees nie, is nie 'n register nie.
 Hierdie blok is die voordeur: wat op jou wag, wat vassit, en waarop. Die res
 van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
@@ -35,6 +35,8 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 | **Stuur drie advertensies wat jou laat stop het** | Die stylkatalogus (`app/lib/adstyles.ts`) is **my mening, vandag gedateer** — ek kon nie by Pinterest, Canva of enige tendens-bladsy uitkom nie (geblokkeer), en ek verkoop nie in hierdie mark nie. Elke inskrywing is geskryf om teëgepraat te word. Stuur drie wat jou laat stop het — 'n skermskoot, 'n skakel, of net 'n beskrywing — en ek sit die patroon daaragter in die lys met vandag se datum. Drie egtes is meer werd as enigiets wat ek kan raai. |
 | **Toets die bemarkingslessenaar** | Die R199-byvoegsel is op jou rekening (11 September, `supabase/TOETSTOEGANG.sql`). Die plan het nog **nooit gewerk nie** — sien hieronder — dit is nou reg en nog nooit met 'n regte sleutel geloop nie. Jy is die eerste mens wat dit gaan sien werk. |
 | **Kyk of Copilot se shots nou goed genoeg is** | Die beskrywing vra nou die onderwerp, die lig, wat die kamera doen, en aanhalings om gesproke woorde. Wat dit werklik skryf, kan ek nie van hier af sien nie — dit het 'n lewende sleutel nodig. |
+| **Bevestig die twee reggemaakte foute op jou eie foon** | Die wit bladsy by *laai jou eie foto op* (drie komponente, 16 Sept) en die musiekvideo wat nie in Live gewerk het nie (16 Sept). Albei is gebou en albei is **nog nooit teen jou regte rekening of foon getoets nie** — hulle is met stompe en probes bewys, nie met jou hand nie. |
+| **Voel die tydlyn se drie nuwe dinge** | Die magneet, die interlock en die bane wat op en af skuif (17 Sept, §O hieronder). Die somme is bewys en die gebare is in 'n blaaier bewys; of dit onder 'n **duim** reg voel is die een ding wat geen probe kan sê nie. Die magneet se knoppie is die hoefyster langs *Merk* in die tydlyn se hoek — hy begin **aan**. |
 
 ### Twee ontwerpbesluite wat op jou wag
 
@@ -4535,3 +4537,91 @@ So the page now writes down what it is about to do before it does it, and
 - What `/oops` says the next time the avatar page comes back white. The top
   entry now carries a yellow "Besig met · Doing:" line, and that line is the
   only evidence that survives a tab whose memory was taken.
+
+
+## N. 'n Tikblokkie wat agt-en-dertig probes gestop het, en wat daaronder was
+
+*17 September 2026. Die grootste vonds van die sessie is nie 'n kenmerk nie —
+dit is dat die bronveeg 'n dag lank groen gebly het terwyl niks by die
+voordeur kon inkom nie.*
+
+### Wat gebeur het
+
+Die tikblokkie by aanmelding het op 15 September ingegaan, omdat ElevenLabs se
+OEM-terme §3(A) 'n bevestigende klik vereis voor 'n rekening bestaan. Dit sper
+"Create a free account" tot dit getik is.
+
+Agt-en-dertig probes vul die twee velde in en druk daardie knoppie **self**.
+Al agt-en-dertig het daardie dag opgehou werk. Nie een het dit gesê nie:
+Playwright wag dertig sekondes vir 'n gesperde knoppie en rapporteer 'n
+uitteltyd, wat lees soos 'n stadige bediener.
+
+`audit/enter.mjs` is dieselfde dag herstel, met 'n nota wat sê elke probe teken
+deur daardie funksie aan. **Daardie nota was verkeerd**, en dít is hoekom die
+herstel 'n derde van een was.
+
+### Wat dit reggemaak het
+
+- Die tik en die druk is nou **een funksie**: `agreeAndSubmit` in
+  `audit/where.mjs`.
+- `check:probes` **weier** 'n probe wat 'n aanmeld-indien met die hand druk.
+  Dertig probes word daaraan gehou, en die reël val as een van hulle terugval.
+- Die blokkie dra `data-agree`, want 'n helper wat na "die eerste blokkie op
+  die bladsy" reik, tik die dag 'n tweede een bykom die verkeerde een.
+
+### Die vyf foute wat dááronder weggesteek was
+
+Toe die deur oopgaan, kon vyf probes vir die eerste keer in dae sê wat hulle
+sien. Twee was myne, drie was ouer.
+
+| Waar | Wat | Wie se fout |
+|---|---|---|
+| `audit/quiz.mjs` | `studio()` maak sedert 16 Sept die deur toe ná die kopknoppie — en die musiekkwis leef **op** daardie deur. `studioDoor()` is nou 'n eie helper. | myne, 16 Sept |
+| `audit/storyboard.mjs` | Dit lees 'n **gevoude** kaart. Elke paneel begin gevou sedert 13 Sept; 'n kaart se titel is op die skerm en alles daaronder nie. Die sinne was altyd reg. | myne, 13 Sept |
+| `audit/photosong.mjs` | Die fikstuur het gesê "a real 2×2 PNG" en was afgekap: die IDAT se CRC pas nie en daar is geen IEND nie. `<img>` verdra dit, `createImageBitmap` nie — en die streng dekodering is juis hoekom 'n 200-megapixel foto nie meer die oortjie doodmaak nie. Die fikstuur is nou gegenereer. | ouer, ontdek |
+| `app/components/Booth.tsx` | `booth.given` — "Aan jou gestuur deur" — was in die woordeboek sedert die collab-kamer 'n liedjie kon oorgee, en **niks in die app het dit ooit geteken nie**. Nou 'n vierde groep in die keuselys plus 'n reël wat sê daar wag iets. | ouer, ontdek |
+| `audit/greeting.mjs` | Dit het beweer die welkom-skerm dra die fyn skrif wat Carli op 14 Sept laat verwyder het. Die stelling is omgedraai; die openbaarmaking word nou op die rekeningblad vasgehou deur `check:finepr`. | ouer, ontdek |
+
+### Die les, geskryf sodat dit nie herhaal nie
+
+'n Regressie wat **elke** blaaierprobe stop, is onsigbaar vir 'n bronveeg, en
+die bronveeg is wat voor elke stoot geloop word. Die verdediging kan nie 'n
+mens wees wat onthou om die probes te laat loop nie — dit moet 'n bronsein
+wees wat die **vorm** van die fout weier. `check:probes` se nuwe reël 4b is
+daardie sein.
+
+En: 'n nota wat sê "elke X doen Y" is 'n aanname tot iemand dit tel. Daardie
+een was verkeerd met 'n faktor van sewe-en-dertig.
+
+
+## O. Wat die tydlyn nou kan doen
+
+*17 September 2026, op haar versoek: "Die timeline het 'n magnet nodig, en ook
+'n interlock funksie om twee tydlyne met mekaar vas te maak. Tracks moet ook
+geswitch kan word."*
+
+- **Magneet** (`app/lib/magnet.ts`) — 'n gesleepte clip klou vas aan die
+  **dinge** op die tydlyn: elke ander clip se twee punte, die speelkop, die
+  gemerkte stuk, en die liedjie se twee ente. Die rooster (Snap) geld steeds
+  presies soos hy was; die naaste punt wen net as hy nader is. Met Snap **af**
+  is die rooster géén antwoord nie, en dít is die geval wat die eerste
+  weergawe verkeerd om gehad het. Trefafstand is twaalf **pixels**, omgeskakel
+  — 'n toleransie in sekondes is 'n ander afstand op elke liedjie en skerm.
+- **Interlock** — `Lane.link` is 'n groepnaam. Dit maak **tyd** vas en niks
+  anders nie; die hele groep skuif met **een** nommer. Twee bestaande slotte
+  wat aan mekaar vasgemaak word, smelt saam; 'n slot met een baan gaan af.
+- **Omruil** — op en af, met die buurman. Niks aan die klank hang van die orde
+  af nie; die kleure kom saam, want `hueFor` lees die posisie.
+
+**Nog nie op haar foon getoets nie.** `check:magnet` laat `lib/magnet` loop en
+`check:boothmagnet` doen die gebare in 'n blaaier — laasgenoemde meet in
+**sekondes** en nie pixels nie, want die doek herskaal in vier-maat blokke
+wanneer 'n clip verby die einde gesleep word.
+
+### En vier velde wat 'n herlaai nooit oorleef het nie
+
+`repeat`, `fx`, `clean` en `link` behoort aan 'n baan en nie een was neergeskryf
+nie. 'n Clip wat vier keer omgaan het een keer teruggekom; 'n rak met 'n EQ, 'n
+kompressor en 'n weerklank het leeg teruggekom. Die stoor het elke keer sukses
+gerapporteer, want hy het gestoor — hy het 'n baan gestoor wat die werk
+kortkom. Gevind terwyl `link` bygesit is, wat die vierde is.
