@@ -56,7 +56,8 @@
 
 import type { Master } from './session';
 import type { Meter } from './tempo';
-import type { Tone } from './tone';
+import type { Clean, Tone } from './tone';
+import type { Fx } from './fx';
 import { encodeWav } from './wav';
 
 const DB = 'futurebox.probooth';
@@ -76,6 +77,24 @@ export interface KeptLane {
   readonly backing?: boolean;
   readonly from?: number;
   readonly to?: number;
+  /**
+   * ── Four fields that were being dropped ───────────────────────────────
+   *
+   * `repeat`, `fx`, `clean` and `link` all belong to the lane and none of
+   * them was written down. A clip dragged out to go round four times came
+   * back going round once; a rack with an EQ, a compressor and a reverb set
+   * on it came back empty; two lanes locked together came back loose. The
+   * save reported success every time, because it did save — it saved a lane
+   * that was missing the work.
+   *
+   * Found while adding `link`, which is the fourth of them and the reason
+   * the other three are here: the list a lane is written down as has to be
+   * the list a lane HAS, or the next field added quietly joins them.
+   */
+  readonly repeat?: number;
+  readonly fx?: Fx;
+  readonly clean?: Clean;
+  readonly link?: string;
   readonly pan?: number;
   readonly tone?: Tone;
   /* The amp is kept as the rendered audio, the same way the lane keeps it.
@@ -148,6 +167,10 @@ export async function keepSession(
     backing?: boolean;
     from?: number;
     to?: number;
+    repeat?: number;
+    fx?: Fx;
+    clean?: Clean;
+    link?: string;
     pan?: number;
     tone?: Tone;
     amped?: { name: string; audio: AudioBuffer };
@@ -174,6 +197,14 @@ export async function keepSession(
         ...(lane.backing ? { backing: true } : {}),
         ...(lane.from === undefined ? {} : { from: lane.from }),
         ...(lane.to === undefined ? {} : { to: lane.to }),
+        ...(lane.repeat === undefined ? {} : { repeat: lane.repeat }),
+        /* Plain numbers and booleans all the way down, both of them — which
+           is why they can go straight into IndexedDB. Structured clone takes
+           those and refuses an AudioBuffer, which is the reason the audio
+           next to them is encoded to a WAV first. */
+        ...(lane.fx === undefined ? {} : { fx: lane.fx }),
+        ...(lane.clean === undefined ? {} : { clean: lane.clean }),
+        ...(lane.link === undefined ? {} : { link: lane.link }),
         ...(lane.pan === undefined ? {} : { pan: lane.pan }),
         ...(lane.tone ? { tone: lane.tone } : {}),
         ...(lane.amped

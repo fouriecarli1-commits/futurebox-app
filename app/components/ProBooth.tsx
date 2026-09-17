@@ -19,7 +19,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowDownToLine, ArrowLeft, Bot, Check, Circle, Clock, Download, Gauge, Grid3x3, KeyRound, Layers, Loader2, Mic2, Music2, Plus, Repeat, Scissors, Search, Sliders, Square, SquareSplitHorizontal, Timer, Trash2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
+import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, Circle, Clock, Download, Gauge, Grid3x3, KeyRound, Layers, Link2, Link2Off, Loader2, Mic2, Music2, Plus, Repeat, Scissors, Search, Sliders, Square, SquareSplitHorizontal, Timer, Trash2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, carveLane, dbOf, fadedCopy, lengthOf, mixSession, monoOf, pieceOf,
   playsOf, readInto, readSession, repeatOf, span, startLane, windowOf, wireLane, wireMaster,
@@ -355,6 +355,12 @@ export default function ProBooth({
           ...(lane.backing ? { backing: true } : {}),
           ...(lane.from === undefined ? {} : { from: lane.from }),
           ...(lane.to === undefined ? {} : { to: lane.to }),
+          /* The three that were written down and never read back, plus the
+             interlock. See `KeptLane` for what each one losing meant. */
+          ...(lane.repeat === undefined ? {} : { repeat: lane.repeat }),
+          ...(lane.fx === undefined ? {} : { fx: lane.fx }),
+          ...(lane.clean === undefined ? {} : { clean: lane.clean }),
+          ...(lane.link === undefined ? {} : { link: lane.link }),
           ...(lane.pan === undefined ? {} : { pan: lane.pan }),
           ...(lane.tone ? { tone: lane.tone } : {}),
           ...(amped && lane.ampedName ? { amped: { name: lane.ampedName, audio: amped } } : {}),
@@ -755,6 +761,110 @@ export default function ProBooth({
       }),
     )
   );
+
+  /**
+   * Put lanes where the timeline says, exactly.
+   *
+   * No snapping and no grid, and that is the point of it being separate from
+   * `change`. The timeline owns the magnet and it has already applied the
+   * grid — see `onSlide` on `BoothTimeline` — so a second rounding here
+   * would move a locked group's lanes by different amounts and pull the
+   * group apart, and would swallow a tenth-of-a-second nudge from the arrow
+   * keys whole.
+   *
+   * One `setLanes` for all of them, so a locked group moves in one render
+   * rather than sliding into place one lane per frame.
+   */
+  const slide = (moves: readonly { readonly id: string; readonly at: number }[]): void => {
+    if (!moves.length) return;
+    setStale(true);
+    setLanes((was) =>
+      was.map((lane) => {
+        const move = moves.find((one) => one.id === lane.id);
+        return move ? { ...lane, at: move.at } : lane;
+      }),
+    );
+  };
+
+  /**
+   * Lock two lanes together, or let one out of the lock.
+   *
+   * ── What she asked for ────────────────────────────────────────────────
+   *
+   * Carli, 16 September 2026: *"ook 'n interlock funksie om twee tydlyne met
+   * mekaar vas te maak."*
+   *
+   * ── Joining two locks, which is the case that goes wrong ──────────────
+   *
+   * Locking a lane that is already in a lock to a lane that is in a
+   * DIFFERENT lock has to merge both groups, not move two lanes out of
+   * theirs. The naive version — give these two the first lane's group —
+   * leaves whatever else was in the second group behind, and the person is
+   * looking at a lane that used to move with this one and now does not,
+   * having asked for more locking rather than less.
+   *
+   * So both old groups are absorbed: every lane carrying either string ends
+   * up carrying the surviving one.
+   *
+   * ── And a group of one is a group of none ────────────────────────────
+   *
+   * Letting a lane out can leave one lane behind holding the string. A lock
+   * of one locks nothing, and leaving the badge on it would be a lie on the
+   * screen — so the string comes off that lane too.
+   */
+  const interlock = (id: string, other: string): void => {
+    if (id === other) return;
+    setLanes((was) => {
+      const mine = was.find((one) => one.id === id);
+      const yours = was.find((one) => one.id === other);
+      if (!mine || !yours) return was;
+
+      /* Already locked to each other: this is the way out. */
+      if (mine.link && mine.link === yours.link) {
+        const group = mine.link;
+        const loose = was.map((one) => (one.id === other ? { ...one, link: undefined } : one));
+        const left = loose.filter((one) => one.link === group);
+        return left.length > 1
+          ? loose
+          : loose.map((one) => (one.link === group ? { ...one, link: undefined } : one));
+      }
+
+      const group = mine.link ?? yours.link ?? `lk${Date.now().toString(36)}`;
+      const absorbed = [mine.link, yours.link].filter((one): one is string => Boolean(one));
+      return was.map((one) =>
+        one.id === id || one.id === other || (one.link && absorbed.includes(one.link))
+          ? { ...one, link: group }
+          : one,
+      );
+    });
+  };
+
+  /**
+   * Move a lane up or down the stack, swapping it with its neighbour.
+   *
+   * Carli: *"Tracks moet ook geswitch kan word, menend op en af beweeg en
+   * omgeruil word."* A swap rather than a lift-and-insert, because that is
+   * what she described and because on a phone it is the gesture that can be
+   * done with one thumb and undone with the other button.
+   *
+   * Nothing about the sound depends on the order — the mix is a sum — so
+   * this is a change to how the room reads and not to what it renders, and
+   * it deliberately does not mark the master stale. The colours do come
+   * with it, because `hueFor` reads the position: a lane moved down the
+   * stack takes its neighbour's shade, which is the point of colouring by
+   * depth in the first place.
+   */
+  const shuffleLane = (id: string, way: -1 | 1): void => {
+    setLanes((was) => {
+      const from = was.findIndex((one) => one.id === id);
+      const to = from + way;
+      if (from < 0 || to < 0 || to >= was.length) return was;
+      const next = was.slice();
+      next[from] = was[to];
+      next[to] = was[from];
+      return next;
+    });
+  };
 
   const measure = useCallback(async () => {
     setBusy(true);
@@ -1824,6 +1934,86 @@ export default function ProBooth({
                 ×{repeatOf(lanes.find((one) => one.id === picked) ?? lanes[0])}
               </span>
             )}
+          </div>
+        )}
+
+        {/* ── Where this lane sits, and what it is locked to ────────────
+
+            Carli, 16 September 2026: *"Tracks moet ook geswitch kan word,
+            menend op en af beweeg en omgeruil word"* and *"'n interlock
+            funksie om twee tydlyne met mekaar vas te maak."*
+
+            Both of them here rather than in the timeline's gutter, and that
+            is a measurement and not a preference. The gutter is 96 pixels —
+            two 44-pixel buttons and the gaps — and it already holds the
+            name, the mute and the solo, with the name button overlapping the
+            other two by ten pixels as it is. There is no fourth or fifth
+            button's worth of room in it on a 390-pixel screen, and shrinking
+            any of them below 44 is the rule this room has already been
+            through once.
+
+            So they live on the card that is titled with the lane's own name
+            and opens when you tap that name — which is where the rest of
+            this lane's controls are, and is reachable with one thumb. */}
+        {picked && lanes.length > 1 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {([-1, 1] as const).map((way) => {
+              const index = lanes.findIndex((one) => one.id === picked);
+              const off = way === -1 ? index <= 0 : index >= lanes.length - 1;
+              return (
+                <button
+                  key={way}
+                  type="button"
+                  disabled={off}
+                  onClick={() => shuffleLane(picked, way)}
+                  title={
+                    way === -1
+                      ? t('pro.laneUpWhat', 'Swap this lane with the one above it. It changes the order the lanes are drawn in and the colour this one takes; it changes nothing about the sound, because a mix is a sum.')
+                      : t('pro.laneDownWhat', 'Swap this lane with the one below it.')
+                  }
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-100 disabled:opacity-40"
+                >
+                  {way === -1 ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+                  {way === -1 ? t('pro.laneUp', 'Move up') : t('pro.laneDown', 'Move down')}
+                </button>
+              );
+            })}
+            <Hint>
+              {t(
+                'pro.interlockWhat',
+                'Lock this lane to another one and the two move together: drag either and both slide by the same amount, so a part that sits under another part stays under it. Only time is locked — the level, the mute, the solo and the cut stay each lane\u2019s own, because those are what you lock two lanes in order to be able to set differently. Press a locked lane again to let it out.',
+              )}
+            </Hint>
+          </div>
+        )}
+
+        {picked && lanes.length > 1 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
+              {t('pro.interlock', 'Lock to')}
+            </span>
+            {lanes
+              .filter((one) => one.id !== picked)
+              .map((one) => {
+                const mine = lanes.find((two) => two.id === picked);
+                const locked = Boolean(mine?.link && mine.link === one.link);
+                return (
+                  <button
+                    key={one.id}
+                    type="button"
+                    onClick={() => interlock(picked, one.id)}
+                    aria-pressed={locked}
+                    className={`inline-flex min-h-[44px] max-w-[11rem] items-center gap-2 rounded-xl border px-3 text-sm font-semibold ${
+                      locked
+                        ? 'border-amber-400 bg-amber-400/15 text-amber-200'
+                        : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                    }`}
+                  >
+                    {locked ? <Link2Off className="h-4 w-4 flex-shrink-0" /> : <Link2 className="h-4 w-4 flex-shrink-0" />}
+                    <span className="truncate">{one.name}</span>
+                  </button>
+                );
+              })}
           </div>
         )}
 
@@ -3225,6 +3415,7 @@ export default function ProBooth({
         spans={Object.values(known).flatMap((one) => one.spans ?? [])}
         onSeek={seek}
         onChange={(id, how) => change(id, how)}
+        onSlide={slide}
         onPick={(id) => setPicked((was) => (was === id ? null : id))}
         picked={picked}
         region={region}

@@ -113,14 +113,23 @@ ok(
   '  and the cut lives on the timeline with the drag',
   /what: 'cut'/.test(line) && /what: 'move'/.test(line),
 );
+/* Both of these were written against the exact expression the move used
+   when there was one lane to move. The interlock made it a group — the
+   clamp is on the SHIFT now and not on one lane's position, and the result
+   goes through `onSlide` rather than `onChange` so it is not rounded a
+   second time per lane. The properties are the same two; the lines they
+   live on are not. Re-pinned rather than deleted, because both are things
+   she asked for and reported. */
 ok(
   'a clip can be dragged the length of the song',
-  /onChange\(lane\.id, \{ at: where \}\)/.test(line),
+  /onSlide\(now\.with\.map\(\(one\) => \(\{ id: one\.id, at: one\.at \+ shift \}\)\)\)/.test(line) &&
+    /low = Math\.max\(low, -one\.plays \+ 0\.5 - one\.at\)/.test(line),
   'Carli: the added instrument sound must be draggable over the whole song',
 );
 ok(
   '  and it lands on the grid the room is set to',
-  /snapped\(Math\.max\(-plays \+ 0\.5/.test(line),
+  /const byStart = pullTo\(wanted, grid\(wanted\), points, reach\)/.test(line) &&
+    /snap === 'off' \? null : snapped\(seconds, meter, snap\)/.test(line),
   'a clip dragged to the bar line and a take recorded at it have to agree',
 );
 

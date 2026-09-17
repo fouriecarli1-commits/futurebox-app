@@ -60,6 +60,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { lengthOf, repeatOf, windowOf, type Lane } from '../lib/session';
 import { shapeOf } from '../lib/takes';
 import { barSeconds, sayPlace, placeAt, snapped, type Meter, type Snap } from '../lib/tempo';
+import { pullTo, reachOf, REACH, type Sticky } from '../lib/magnet';
 import type { Span } from '../lib/analyse';
 import { useLang } from '../lib/i18n';
 
@@ -131,6 +132,7 @@ export default function BoothTimeline({
   spans,
   onSeek,
   onChange,
+  onSlide,
   onPick,
   picked,
   region,
@@ -147,6 +149,24 @@ export default function BoothTimeline({
   readonly spans?: readonly Span[];
   readonly onSeek: (seconds: number) => void;
   readonly onChange: (id: string, how: Partial<Lane>) => void;
+  /**
+   * Move whole lanes along the clock — one, or a locked group of them.
+   *
+   * Separate from `onChange` for two reasons, both of which bit.
+   *
+   * A locked group has to move by ONE number. `onChange` re-snaps whatever
+   * `at` it is handed, so four calls in a row would each round to the grid
+   * on their own and a group locked together would drift apart the first
+   * time it was dragged across a bar line. The timeline already did the
+   * snapping and the magnet — these positions are final, and the room
+   * writes them down as given.
+   *
+   * And a nudge has to be a nudge. The arrow keys move a clip a tenth of a
+   * second; `onChange` snapped that straight back onto the nearest bar, so
+   * with the grid on the arrows did nothing at all. That was a real fault
+   * and this is where it is fixed.
+   */
+  readonly onSlide: (moves: readonly { readonly id: string; readonly at: number }[]) => void;
   /** Tapping a lane's name opens its controls. */
   readonly onPick: (id: string) => void;
   readonly picked?: string | null;
@@ -199,7 +219,18 @@ export default function BoothTimeline({
      a ref so a move between renders reads it without a frame of lag. */
   const held = useRef<
     | { what: 'head' }
-    | { what: 'move'; id: string; grabbedAt: number; wasAt: number }
+    /* `with` is every lane this drag moves and where each one started — the
+       dragged lane first. Held rather than looked up per frame because
+       `lanes` changes under the drag: reading a start position out of the
+       current lanes after the first move would measure from where the clip
+       has already got to, and the clip would accelerate away from the
+       finger. It is also what makes the interlock a group rather than a
+       special case: a lane on its own is a group of one. */
+    | {
+        what: 'move';
+        grabbedAt: number;
+        with: readonly { readonly id: string; readonly at: number; readonly plays: number }[];
+      }
     | { what: 'cut'; id: string; edge: 'from' | 'to' }
     | { what: 'region'; anchor: number }
     | { what: 'regionEdge'; edge: 'from' | 'to' }
@@ -216,10 +247,67 @@ export default function BoothTimeline({
    * says which of the two the ruler is doing, and it says so out loud.
    */
   const [marking, setMarking] = useState(false);
+  /**
+   * The magnet, and it starts ON.
+   *
+   * Carli, 16 September 2026: *"Die timeline het 'n magnet nodig."*
+   *
+   * Off by default would be a feature nobody finds — and unlike the marker,
+   * which changes what a drag MEANS, the magnet only changes where a drag
+   * ends up by a few pixels. It is safe to have on, it is the behaviour
+   * every desk ships with on, and there is a button to turn it off for the
+   * one case that wants it off: placing something deliberately just past the
+   * thing it would otherwise stick to.
+   *
+   * `lib/magnet` has the rule it follows and why the reach is in pixels.
+   */
+  const [magnet, setMagnet] = useState(true);
+  /** What the drag in progress stuck to, for the readout. Null is the grid. */
+  const [stuck, setStuck] = useState<Sticky | null>(null);
 
-  /** A point on the ruler, clamped to the song and snapped to the grid. */
-  const pointAt = (clientX: number): number =>
-    snapped(Math.max(0, Math.min(total, secondsAt(clientX))), meter, snap);
+  /** How near a point has to be to pull, in seconds on this axis. */
+  const reach = magnet ? reachOf(REACH, total, wide) : 0;
+
+  /**
+   * The points a drag sticks to: every clip's two ends, the playhead, the
+   * marked piece's ends, and the two ends of the song.
+   *
+   * `skip` is the lanes the drag is moving. A clip cannot stick to itself —
+   * it is always exactly on its own start, so without this every drag would
+   * be pinned to where it began and nothing would move at all. The same
+   * goes for the rest of a locked group, which is moving with it.
+   */
+  const stickies = (skip: readonly string[] = [], withRegion = true): Sticky[] => {
+    const points: Sticky[] = [
+      { at: 0, what: 'song' },
+      { at: total, what: 'song' },
+      { at, what: 'head' },
+    ];
+    if (withRegion && region) {
+      points.push({ at: region.from, what: 'region' });
+      points.push({ at: region.to, what: 'region' });
+    }
+    for (const one of lanes) {
+      if (skip.includes(one.id)) continue;
+      points.push({ at: one.at, what: 'clip', name: one.name });
+      points.push({ at: one.at + lengthOf(one), what: 'clip', name: one.name });
+    }
+    return points;
+  };
+
+  /** The grid's answer, or null when there is no grid. `pullTo` needs the
+   *  difference: with Snap off the grid is not a quieter answer, it is none. */
+  const grid = (seconds: number): number | null =>
+    snap === 'off' ? null : snapped(seconds, meter, snap);
+
+  /** A point on the ruler, clamped to the song, on the grid and magnetised. */
+  const pointAt = (clientX: number): number => {
+    const raw = Math.max(0, Math.min(total, secondsAt(clientX)));
+    /* The marked piece does not stick to its own two ends: `from` sticking to
+       `to` collapses the piece to nothing, which is the one thing dragging an
+       end must not be able to do by accident. */
+    return pullTo(raw, grid(raw), stickies([], false), reach).at;
+  };
 
   /**
    * Begin marking a piece, from wherever the finger went down.
@@ -275,24 +363,71 @@ export default function BoothTimeline({
       onRegion({ from: Math.min(other, where), to: Math.max(other, where) });
       return;
     }
-    const lane = lanes.find((one) => one.id === now.id);
-    if (!lane) return;
-
     if (now.what === 'move') {
-      /* Where the clip would land if it kept the grip it was picked up by —
-         so a clip does not jump its own left edge under the thumb, which is
-         what dragging by position rather than by grip feels like. */
-      const moved = now.wasAt + (secondsAt(event.clientX) - now.grabbedAt);
-      const window = windowOf(lane);
-      const plays = window.to - window.from;
-      /* Clamped so a clip cannot be dragged entirely out of the song, and
-         snapped to the grid the room is set to — the same `snapped` the
-         recording uses, so a clip dragged to the bar line and a take
-         recorded at it land on the same number. */
-      const where = snapped(Math.max(-plays + 0.5, Math.min(total - 0.5, moved)), meter, snap);
-      onChange(lane.id, { at: where });
+      const held0 = now.with[0];
+      /* How far the finger has come, not where it is. A clip dragged by
+         position jumps its own left edge under the thumb the moment you pick
+         it up anywhere but its very start. */
+      const asked = secondsAt(event.clientX) - now.grabbedAt;
+
+      /* ── The group's own walls ────────────────────────────────────────
+
+         One shift moves every lane in a locked group, so the shift is what
+         gets clamped and not each lane's position: clamping them one by one
+         would stop the lane that hit the end of the song and let the others
+         carry on, which is the interlock coming apart at exactly the moment
+         it is meant to hold.
+
+         Each lane gives a floor and a ceiling for the shift — half a second
+         of it has to stay inside the song at either end — and the group
+         takes the tightest of each. */
+      let low = -Infinity;
+      let high = Infinity;
+      for (const one of now.with) {
+        low = Math.max(low, -one.plays + 0.5 - one.at);
+        high = Math.min(high, total - 0.5 - one.at);
+      }
+      const walled = (shift: number): number => Math.max(low, Math.min(high, shift));
+
+      const wanted = held0.at + walled(asked);
+      const mine = now.with.map((one) => one.id);
+      const points = stickies(mine);
+
+      /* ── Which end of the clip the magnet catches ─────────────────────
+
+         Both, and the nearer one wins. A part that has to come in where the
+         drums stop is its START against another clip's end; a part that has
+         to finish where the chorus begins is its END against a point. A
+         magnet that only watched the start could not do the second one, and
+         lining up the end by eye is the thing people do worst.
+
+         The grid is offered to the start alone, though, and that is
+         deliberate: Snap quantises where a lane STARTS — that is what the
+         box on the dock says and what `snapped` does for a recording — so a
+         grid that pulled the end onto a bar would be moving the clip by a
+         rule nobody asked for. The end gets the magnet and no grid. */
+      const byStart = pullTo(wanted, grid(wanted), points, reach);
+      const byEnd = pullTo(wanted + held0.plays, null, points, reach);
+      let settled = byStart.at;
+      let caught = byStart.to;
+      if (
+        byEnd.to &&
+        (!byStart.to || Math.abs(wanted + held0.plays - byEnd.at) < Math.abs(wanted - byStart.at))
+      ) {
+        settled = byEnd.at - held0.plays;
+        caught = byEnd.to;
+      }
+
+      /* Walled again: a magnet is allowed to pull a clip a few pixels, and
+         it is not allowed to pull it out of the song. */
+      const shift = walled(settled - held0.at);
+      setStuck(caught);
+      onSlide(now.with.map((one) => ({ id: one.id, at: one.at + shift })));
       return;
     }
+
+    const lane = lanes.find((one) => one.id === now.id);
+    if (!lane) return;
 
     /* Cutting. The numbers are on the lane's own clock, and trimming the
        front keeps the audio where it is on the session's clock — the lane's
@@ -300,7 +435,23 @@ export default function BoothTimeline({
        three. */
     const whole = (lane.amped?.audio ?? lane.audio).duration;
     const window = windowOf(lane);
-    const wanted = secondsAt(event.clientX);
+    /* ── The magnet on a cut, and no grid on a cut ──────────────────────
+
+       The magnet is added here; the grid is not, and the absence is on
+       purpose rather than an oversight. Trimming the head of a lane moves
+       `at` by exactly as much as it moves `from`, which is what keeps the
+       audio still on the session's clock — the room's `change` leaves `at`
+       alone whenever `from` is in the patch for that reason. Rounding one of
+       the two to a bar and not the other slides the lane by up to half a
+       beat on every drag, and the drag then fights the grid.
+
+       A point, though, is a point: sticking a lane's end to where another
+       lane starts moves both numbers by the same amount and nothing goes out
+       of step. So a cut sticks to things and not to the ruler. */
+    const askedAt = secondsAt(event.clientX);
+    const pulled = pullTo(askedAt, null, stickies([lane.id]), reach);
+    const wanted = pulled.at;
+    setStuck(pulled.to);
     if (now.edge === 'from') {
       const into = Math.max(0, Math.min(window.to - 0.1, window.from + (wanted - lane.at)));
       onChange(lane.id, { from: into, to: window.to, at: lane.at + (into - window.from) });
@@ -333,6 +484,7 @@ export default function BoothTimeline({
     const was = held.current;
     held.current = null;
     setShowing(null);
+    setStuck(null);
     /* A tap with the marker armed is a tap, not a piece. Without this every
        press on the ruler while marking would leave a region of no length
        behind it, and the room above would put a toolbar on the screen for a
@@ -371,6 +523,20 @@ export default function BoothTimeline({
   if (bar > 0) for (let second = 0, n = 0; second <= total; second += bar, n += 1) {
     if (n % barsEvery === 0) bars.push(second);
   }
+
+  /**
+   * A number per interlock group, so two locks can be told apart.
+   *
+   * The `link` string itself is a timestamp in base 36 — unguessable, which
+   * is what it is for, and unreadable, which is no good on a badge. The
+   * number is the group's position in the order the lanes sit in, so the
+   * badge reads 1 for the top-most lock and 2 for the next. It moves when a
+   * lane is reordered past another lock, and that is fine: the badge says
+   * "these ones are locked to each other", not "this is lock number two
+   * forever".
+   */
+  const locks: string[] = [];
+  for (const one of lanes) if (one.link && !locks.includes(one.link)) locks.push(one.link);
 
   const here = spans && spans.length
     ? [...spans].filter((one) => one.at <= at + 0.01).sort((a, b) => b.at - a.at)[0]
@@ -506,7 +672,22 @@ export default function BoothTimeline({
               lane — the marker is a mode of the ruler, so its button is the
               ruler's own corner. 44 tall, which is what pulled the ruler up
               to 44 with it. */}
-          <div style={{ gridColumn: 1, gridRow: 1, background: PANEL, borderBottom: `1px solid ${EDGE}`, borderRight: `1px solid ${EDGE}` }}>
+          {/* ── Two switches, not one ──────────────────────────────────
+
+              The magnet joined the marker in here, and the word "Mark" came
+              off to make room for it. That is the same trade the gutter
+              below already made: M and S are two 44-pixel buttons drawing
+              small pills in a 96-pixel cell, because 44 is about the area a
+              thumb has to land in and not about how big the thing looks. Two
+              44s and the gaps is exactly what 96 holds.
+
+              Both switches belong in this one cell for the same reason: it
+              is the only cell in the grid that is the ruler's rather than a
+              lane's, and both of them say what a DRAG is about to do. */}
+          <div
+            className="flex items-center justify-between"
+            style={{ gridColumn: 1, gridRow: 1, background: PANEL, borderBottom: `1px solid ${EDGE}`, borderRight: `1px solid ${EDGE}` }}
+          >
             <button
               type="button"
               data-mark=""
@@ -515,14 +696,15 @@ export default function BoothTimeline({
                 if (marking) onRegion(null);
               }}
               aria-pressed={marking}
+              aria-label={t('pro.mark', 'Mark')}
               title={t(
                 'pro.markWhat',
                 'Draw a piece of the song on the ruler, then choose what to do with it: cut it out, fade it, repeat it, or have a part generated for exactly that long.',
               )}
-              className="flex h-11 w-full items-center justify-center gap-1.5 px-1"
+              className="flex h-11 w-11 items-center justify-center"
             >
               <span
-                className="flex h-5 w-6 items-center justify-center rounded-sm text-[9px] font-black leading-none"
+                className="flex h-6 w-7 items-center justify-center rounded text-[9px] font-black leading-none"
                 style={{
                   background: marking ? 'rgba(56,189,248,0.32)' : 'rgba(255,255,255,0.07)',
                   color: marking ? '#7dd3fc' : INK_DIM,
@@ -534,11 +716,38 @@ export default function BoothTimeline({
                 }}
                 aria-hidden
               />
+            </button>
+            <button
+              type="button"
+              data-magnet=""
+              onClick={() => setMagnet((was) => !was)}
+              aria-pressed={magnet}
+              aria-label={t('pro.magnet', 'Magnet')}
+              title={t(
+                'pro.magnetWhat',
+                'Sticks a sound you drag to the things around it: where another sound starts or ends, the white line, the ends of a marked piece, and the start and end of the song. It only pulls when you are already close, and it does not replace Snap — the bar grid still works, and whichever of the two is nearer wins. Switch it off to place something just past the thing it keeps sticking to.',
+              )}
+              className="flex h-11 w-11 items-center justify-center"
+            >
+              {/* A horseshoe: two legs and an arch, drawn rather than
+                  spelled, because "M" is already taken by mute one row down
+                  and a word does not fit in 28 pixels. */}
               <span
-                className="truncate text-[10px] font-bold leading-tight"
-                style={{ color: marking ? '#7dd3fc' : INK_DIM }}
+                className="flex h-6 w-7 items-center justify-center rounded"
+                style={{
+                  background: magnet ? 'rgba(250,204,21,0.28)' : 'rgba(255,255,255,0.07)',
+                }}
+                aria-hidden
               >
-                {t('pro.mark', 'Mark')}
+                <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" aria-hidden>
+                  <path
+                    d="M4 13V7a4 4 0 0 1 8 0v6"
+                    stroke={magnet ? '#fde047' : INK_DIM}
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                  />
+                  <path d="M4 13h2.6M12 13H9.4" stroke={magnet ? '#fde047' : INK_DIM} strokeWidth="2.4" strokeLinecap="round" />
+                </svg>
               </span>
             </button>
           </div>
@@ -833,25 +1042,52 @@ export default function BoothTimeline({
                         return;
                       }
                       grab(event);
+                      /* The dragged lane first, then everything locked to
+                         it. First rather than merely present: every sum in
+                         the move reads `with[0]` as "the one under the
+                         finger", and the finger's own clip is the one whose
+                         grip has to be kept. */
+                      const together = lane.link
+                        ? lanes.filter((one) => one.id !== lane.id && one.link === lane.link)
+                        : [];
                       held.current = {
                         what: 'move',
-                        id: lane.id,
                         grabbedAt: secondsAt(event.clientX),
-                        wasAt: lane.at,
+                        with: [lane, ...together].map((one) => ({
+                          id: one.id,
+                          at: one.at,
+                          plays: lengthOf(one),
+                        })),
                       };
                       setShowing(lane.id);
-                      onPick(lane.id);
+                      /* Opens the lane, and never closes it.
+                         `onPick` TOGGLES — that is right for the name button
+                         in the gutter, where pressing the open lane again is
+                         how you shut its controls. On a clip it is wrong:
+                         picking a clip up off the lane whose desk is already
+                         open shut that desk, so the panel vanished from
+                         under the drag. `audit/boothmagnet.mjs` found it by
+                         dragging a clip and then looking for the button that
+                         had been on the screen a moment earlier. */
+                      if (picked !== lane.id) onPick(lane.id);
                     }}
                     onKeyDown={(event) => {
                       const jump = event.shiftKey ? 1 : 0.1;
-                      if (event.key === 'ArrowLeft') {
-                        event.preventDefault();
-                        onChange(lane.id, { at: lane.at - jump });
-                      }
-                      if (event.key === 'ArrowRight') {
-                        event.preventDefault();
-                        onChange(lane.id, { at: lane.at + jump });
-                      }
+                      const step =
+                        event.key === 'ArrowLeft' ? -jump : event.key === 'ArrowRight' ? jump : 0;
+                      if (!step) return;
+                      event.preventDefault();
+                      /* Through `onSlide`, which does not re-snap. A tenth of
+                         a second handed to a grid set to bars comes back as
+                         the bar it started on, so with Snap on these arrows
+                         used to do nothing whatever. And the group moves
+                         together here for the same reason it does under a
+                         finger: a lock that holds for one gesture and not the
+                         other is not a lock. */
+                      const moving = lane.link
+                        ? lanes.filter((one) => one.link === lane.link)
+                        : [lane];
+                      onSlide(moving.map((one) => ({ id: one.id, at: one.at + step })));
                     }}
                   >
                     <Wave lane={lane} />
@@ -887,6 +1123,30 @@ export default function BoothTimeline({
                     >
                       {lane.name}
                     </span>
+                    {/* ── That this one is locked to another ──────────────
+
+                        On the clip rather than in the gutter, and numbered.
+                        A lock you cannot see is a clip that drags something
+                        else with it for no reason you can point at — which
+                        is the most alarming thing a timeline can do. The
+                        number is the group, so two locks in one session read
+                        as two and not as "some of these move together".
+
+                        Bottom-left, because the top-left is the name and the
+                        two ends are the cut handles. */}
+                    {lane.link && (
+                      <span
+                        className="pointer-events-none absolute bottom-1 left-1.5 flex items-center gap-0.5 rounded px-1 text-[9px] font-black leading-none"
+                        style={{ background: 'rgba(5,6,10,0.55)', color: '#fde047' }}
+                      >
+                        <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none" aria-hidden>
+                          <path d="M6.5 9.5 9.5 6.5" stroke="#fde047" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M9 4.5 10.5 3a2.8 2.8 0 0 1 4 4l-1.5 1.5" stroke="#fde047" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M7 11.5 5.5 13a2.8 2.8 0 0 1-4-4L3 7.5" stroke="#fde047" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                        {locks.indexOf(lane.link) + 1}
+                      </span>
+                    )}
                     {/* The two ends. Wide enough for a thumb, drawn narrow. */}
                     {(['from', 'to'] as const).map((edge) => (
                       <span
@@ -936,6 +1196,23 @@ export default function BoothTimeline({
                     >
                       {clock(Math.max(0, lane.at))} · {sayPlace(placeAt(Math.max(0, lane.at), meter))} ·{' '}
                       {plays.toFixed(1)}s{times > 1 ? ` · ×${times}` : ''}
+                      {/* What the magnet caught, while it is caught. A clip
+                          that lands on a number by itself is a clip you
+                          cannot tell was helped — and the whole value of a
+                          magnet is knowing it took hold, so the next drag
+                          can be aimed rather than nudged. */}
+                      {stuck && (
+                        <span style={{ color: '#fde047' }}>
+                          {' · '}
+                          {stuck.what === 'clip'
+                            ? stuck.name
+                            : stuck.what === 'head'
+                              ? t('pro.stuckHead', 'the line')
+                              : stuck.what === 'region'
+                                ? t('pro.stuckMark', 'the mark')
+                                : t('pro.stuckSong', 'the song')}
+                        </span>
+                      )}
                     </span>
                   )}
                 </div>

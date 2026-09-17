@@ -66,6 +66,29 @@ export interface Lane {
    * piece; this owns how many times it goes.
    */
   readonly repeat?: number;
+  /**
+   * The interlock: lanes carrying the same string move together.
+   *
+   * Carli, 16 September 2026: *"ook 'n interlock funksie om twee tydlyne met
+   * mekaar vas te maak."*
+   *
+   * A group name rather than "linked to that one", and that is the whole
+   * design of it. A pair of ids on each lane is two places to keep one fact,
+   * and it goes wrong the first time a third lane joins or the second one is
+   * deleted — one side ends up pointing at a lane that is not there. A shared
+   * string has no second copy to disagree with: lanes with the same `link`
+   * are locked to each other, a lane leaves by dropping it, and a group of
+   * one is a group of none because nothing else carries the string.
+   *
+   * It locks TIME and nothing else. A drag on any lane of a group moves
+   * every lane in it by the same seconds, so a bass part sitting under a
+   * drum part stays under it. Cutting an end, the gain, the mute, the solo
+   * are all still that lane's own — those are the things you link two lanes
+   * in order to be able to set differently.
+   *
+   * Absent is the normal state and is every lane made before this existed.
+   */
+  readonly link?: string;
   /** −1 hard left to 1 hard right. Absent means centre, for lanes made before
    *  there was a pan at all. */
   readonly pan?: number;
