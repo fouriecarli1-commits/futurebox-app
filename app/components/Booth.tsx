@@ -267,11 +267,32 @@ export default function Booth({
     saveTracks(next);
   };
 
-  /* Three groups, because they are three different things to a person: what
-     you wrote here, what you have already sung on, and what you brought in
-     from somewhere else. A flat list of twelve names says none of that. */
+  /* ── Four groups, because a song somebody SENT you is its own thing ──
+
+     Three were: what you wrote here, what you have already sung on, and
+     what you brought in from somewhere else. A flat list of twelve names
+     says none of that.
+
+     The fourth is the one that was missing, and it was missing with the
+     words for it already written down: `booth.given` — "Sent to you by" —
+     has been in the dictionary since the collab room learned to hand a song
+     over, and nothing in the app has ever rendered it. `lib/uploads` records
+     `givenBy` on the way in, `SongScreen` credits it, and the booth — the
+     room the collab room sends you TO — listed it under "Brought in from a
+     file" as though you had dragged it off your own phone.
+
+     Which is not a cosmetic difference. A song a bandmate sent is the one
+     song in that list you did not choose the name of, so the name alone may
+     mean nothing to you; and it is the one where whose song it is matters,
+     because you are about to sing on it.
+
+     `audit/collabbooth.mjs` has been asserting this for as long as the key
+     has existed. It could not report it: the terms box was stopping that
+     probe at the front door, and before that it was one of the sixty nobody
+     ran. Found by repairing the door. */
   const sung = tracks.filter((one) => one.mixOf);
-  const brought = tracks.filter((one) => !one.mixOf && one.source === 'upload');
+  const given = tracks.filter((one) => !one.mixOf && one.source === 'upload' && one.givenBy);
+  const brought = tracks.filter((one) => !one.mixOf && one.source === 'upload' && !one.givenBy);
   const mine = tracks.filter((one) => !one.mixOf && one.source !== 'upload');
 
   /* One button, and it is the same shape every time it is drawn: a bar the
@@ -379,6 +400,19 @@ export default function Booth({
                 ))}
               </optgroup>
             )}
+            {/* The giver's name on the option itself, not only on the
+                group, because a group heading is read once and the names
+                under it are read one at a time — and two people can each
+                have sent you something. */}
+            {given.length > 0 && (
+              <optgroup label={t('booth.given', 'Sent to you by')}>
+                {given.map((one) => (
+                  <option key={one.id} value={one.id}>
+                    {one.title} — {one.givenBy}
+                  </option>
+                ))}
+              </optgroup>
+            )}
             {brought.length > 0 && (
               <optgroup label={t('booth.brought', 'Brought in from a file')}>
                 {brought.map((one) => (
@@ -391,6 +425,28 @@ export default function Booth({
             {opening !== null ? <Loader2 className="h-5 w-5 animate-spin" /> : <ChevronDown className="h-5 w-5" />}
           </span>
         </div>
+
+        {/* ── And it says so before the list is opened ──────────────────
+
+            The group heading inside the dropdown is the right place for
+            WHICH of them came from whom, and it is the wrong place for the
+            fact that any did: a `<optgroup>` label is only on the screen
+            while the list is open, and a person who does not know there is
+            something waiting for them has no reason to open it. It is not
+            even in the page's text — Chromium's `innerText` returns an
+            option's words and not its group's, which is how the probe found
+            this half of it.
+
+            So the fact is a line, and the names are on it. One when one
+            person sent something, both when two did — a list rather than a
+            count, because "2 songs were sent to you" is a sentence that
+            makes somebody open the dropdown to find out who. */}
+        {given.length > 0 && (
+          <p className="text-xs leading-snug" style={{ color: LIT }}>
+            {t('booth.given', 'Sent to you by')}{' '}
+            {[...new Set(given.map((one) => one.givenBy).filter(Boolean))].join(', ')}
+          </p>
+        )}
 
         <button
           type="button"

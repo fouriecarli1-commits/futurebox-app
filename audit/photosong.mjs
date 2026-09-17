@@ -31,10 +31,30 @@ const check = (label, ok, detail = '') => {
   if (!ok) problems.push(label);
 };
 
-/** A real 2×2 PNG, so the canvas has something to measure. */
+/**
+ * A valid 2×2 PNG, one warm orange, so the canvas has something to measure.
+ *
+ * ── The one that was here before was not valid ───────────────────────────
+ *
+ * It said "a real 2×2 PNG" and it was a truncated one: the IDAT chunk's CRC
+ * did not match its data and there was no IEND at all. `<img>` decoded it
+ * anyway — Chromium's image element ignores a bad IDAT CRC and tolerates a
+ * missing end marker — so nothing ever complained.
+ *
+ * `app/lib/imagefile.ts` decodes through `createImageBitmap`, which is
+ * strict and answers "The source image could not be decoded". That is not a
+ * regression to undo: the scaled decode is the only reason a 200-megapixel
+ * phone photo stops killing the tab, and it is `createImageBitmap` that
+ * takes the resize hints. A file with a broken checksum is a broken file and
+ * refusing it is right.
+ *
+ * So the fixture is a real PNG now, generated rather than pasted: an IHDR, a
+ * deflated scanline pair and an IEND, every chunk with its own CRC. 224/122/40
+ * across all four pixels, which reads as bright, saturated and not busy —
+ * numbers this probe can then assert on.
+ */
 const PNG = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFklEQVR4nGP8z8Dwn4GBgYGJAQkAAB' +
-    'YoAQ2mM3qXAAAAAElFTkSuQmCC',
+  'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEUlEQVR42mN4UKXxH4QZYAwAWiAKBdwEliUAAAAASUVORK5CYII=',
   'base64',
 );
 
