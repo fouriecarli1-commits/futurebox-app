@@ -1015,7 +1015,34 @@ export default function BoothTimeline({
                     role="button"
                     tabIndex={0}
                     aria-label={t('pro.dragLane', 'Drag this sound to where it belongs')}
-                    className="absolute top-1 bottom-1 cursor-grab touch-none rounded-lg active:cursor-grabbing"
+                    /* ── And the CLIP has to let a thumb scroll too ────────
+ 
+                       Carli, 17 September 2026, the second time: *"Die
+                       probooth se scroll up and down werk nie. Ek wou na
+                       ander tydlyne gaan toe werk dit nie."*
+ 
+                       Yesterday's repair put `touch-pan-y` on the lane ROW
+                       and left `touch-none` here, which fixed the part of
+                       the row with nothing in it and left the part with
+                       something in it exactly as it was. The clip is drawn
+                       at least 44 pixels wide and the full height of the
+                       row, and it is the only thing in there you can see —
+                       so it is where a thumb lands every time. A fix that
+                       only works where you would not put your finger is not
+                       a fix, and reporting it again was right.
+ 
+                       `touch-pan-y` says precisely what is true of a clip:
+                       the browser may take a vertical drag, a horizontal one
+                       is ours. A vertical pan cancels the pointer, the drag
+                       ends where it started, and the list scrolls — which is
+                       what a hand means by dragging up a column of lanes.
+ 
+                       Still `touch-none` while the marker is armed: marking
+                       draws across the clips on purpose, and the gesture
+                       belongs to the mark for as long as the mode is on. */
+                    className={`absolute top-1 bottom-1 cursor-grab rounded-lg active:cursor-grabbing ${
+                      marking ? 'touch-none' : 'touch-pan-y'
+                    }`}
                     style={{
                       left: `${percent(lane.at)}%`,
                       width: `${Math.max(1.2, (plays / Math.max(0.001, total)) * 100)}%`,
@@ -1161,7 +1188,13 @@ export default function BoothTimeline({
                         aria-valuemax={Math.round(total)}
                         aria-valuenow={Math.round(edge === 'from' ? lane.at : lane.at + plays)}
                         tabIndex={0}
-                        className="absolute inset-y-0 w-6 touch-none cursor-ew-resize"
+                        /* Same reasoning as the clip: a cut is a sideways
+                           drag, so vertical stays the browser's. These are
+                           24 pixels at each end of the clip and a thumb aimed
+                           at the lane below lands on one often. */
+                        className={`absolute inset-y-0 w-6 cursor-ew-resize ${
+                          marking ? 'touch-none' : 'touch-pan-y'
+                        }`}
                         style={{ [edge === 'from' ? 'left' : 'right']: 0 }}
                         onPointerDown={(event) => {
                           /* Before the block underneath, or every cut would

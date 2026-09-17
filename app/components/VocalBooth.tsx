@@ -1506,13 +1506,41 @@ export default function VocalBooth({
             something close to it and not the same as it — a line repeated, a
             word swapped, a phrase bent to fit the melody — and no amount of
             moving the words about in time fixes a word that is not there. */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex items-center gap-3 flex-wrap">
+        {/* ── One row, and the paragraph behind the mark ──────────────────
+
+            Carli, 17 September 2026: *"Ek dink daai read the words of the
+            song met 2 credits moet net 'n button wees en vat die
+            verduideliking weg, dan sal die recording room baie meer spasie
+            hê en alles nie so rond hop nie, die woorde gaan dan ook meer
+            spasie hê om te wys."*
+
+            She is describing two faults with one cause. The paragraph was
+            `flex-1 min-w-[240px]`, which on a 390-pixel screen means it
+            takes the whole width and wraps to four or five lines — so the
+            card was most of a phone's height for a control that is one
+            button, and the words it is about had what was left.
+
+            And it MOVED, which is the part that made the room feel unsteady:
+            the sentence is one of two, swapped when the words arrive, and
+            the two are different lengths. A block that re-wraps to a
+            different number of lines shoves everything under it down the
+            screen — mid-take, while somebody is reading the line they are
+            singing.
+
+            So: one row that cannot change height, the sentence behind the
+            mark where every other explanation in this app already lives,
+            and the price on the button rather than under it. */}
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex min-h-[64px] items-center gap-2 flex-wrap">
           <Ear className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-          <p className="text-sm text-zinc-400 leading-snug flex-1 min-w-[240px]">
+          <span className="text-sm font-semibold text-zinc-300">
+            {t('booth.heardWhat', 'The words as sung')}
+          </span>
+          <Hint>
             {heard && !preferWritten
               ? t('booth.heardOn', 'These are the words the song actually sings, read off the recording, each one timed to where it lands.')
               : t('booth.heardWhy', 'Singing something the words do not quite match? The engine does not always sing what it was given. This reads the words off the recording itself, with the time of every one.')}
-          </p>
+          </Hint>
+          <span className="flex-1" />
           {heard ? (
             <div className="flex rounded-xl border border-zinc-700 overflow-hidden flex-shrink-0">
               {[
@@ -1543,7 +1571,15 @@ export default function VocalBooth({
               </button>
             </div>
           ) : (
-            <div className="space-y-1">
+            /* One button, and the price beside it on the same line rather
+               than under it — a second line that appears and disappears is
+               the same shove down the screen the paragraph was making.
+
+               The label no longer changes length while it works: "Reading…"
+               instead of "Listening to the song…", which was four words
+               longer than what it replaced and re-wrapped the row every time
+               somebody pressed it. */
+            <span className="flex flex-shrink-0 items-center gap-2">
               <button
                 type="button"
                 onClick={() => void readWords()}
@@ -1551,10 +1587,10 @@ export default function VocalBooth({
                 className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
               >
                 {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ear className="w-4 h-4" />}
-                {reading ? t('booth.reading', 'Listening to the song…') : t('booth.readWords', 'Read the words off the song')}
+                {reading ? t('booth.readingShort', 'Reading\u2026') : t('booth.readWords', 'Read the words off the song')}
               </button>
-              <Cost rate={CREDITS.transcribe} seconds={duration || track.seconds} className="block" />
-            </div>
+              <Cost rate={CREDITS.transcribe} seconds={duration || track.seconds} />
+            </span>
           )}
         </div>
 
@@ -1562,20 +1598,34 @@ export default function VocalBooth({
             People sing better beside somebody already on the note. That is
             most of why a choir works, and it is why this is offered rather
             than left as a fader nobody finds. */}
+        {/* The same shape as the row above, for the same reason. Its
+            paragraph was `flex-1 min-w-[240px]` too — two sentences and
+            forty words, which on a phone is the whole width and five lines.
+            Two blocks like that above the words is most of a screen spent
+            explaining two buttons.
+
+            One row, a floor under it, the sentence behind the mark. The
+            working label is shortened for the same reason as the one above:
+            "Separating the voice…" is longer than "Separate the voice", so
+            pressing it re-wrapped the row. */}
         {!stems && (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex items-center gap-3 flex-wrap">
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 flex min-h-[64px] items-center gap-2 flex-wrap">
             <Users className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <p className="text-sm text-zinc-400 leading-snug flex-1 min-w-[240px]">
+            <span className="text-sm font-semibold text-zinc-300">
+              {t('booth.splitWhat', 'Sing beside the voice')}
+            </span>
+            <Hint>
               {t('booth.splitWhy', 'Sing next to the AI voice: it is taken off the song, played in your ear at whatever level you want, and left out of what you keep. It also puts the tune on the stave, which a full mix cannot.')}
-            </p>
+            </Hint>
+            <span className="flex-1" />
             <button
               type="button"
               onClick={() => void split()}
               disabled={splitting || busy || busyOrLive}
-              className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+              className="min-h-[44px] flex-shrink-0 px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
             >
               {splitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
-              {splitting ? t('booth.splitting', 'Separating the voice…') : t('booth.split', 'Separate the voice')}
+              {splitting ? t('booth.splittingShort', 'Separating…') : t('booth.split', 'Separate the voice')}
             </button>
             <Cost rate={CREDITS.stems} seconds={duration || track.seconds} className="pl-1" />
           </div>

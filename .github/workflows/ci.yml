@@ -568,6 +568,17 @@ jobs:
       - name: The fine print is off the door and beside the button
         run: npm run check:finepr
 
+      # The block above the words in the recording room may not change
+      # height: what is being read while it moves is the line somebody is
+      # singing, with their hands full and their eyes in one place.
+      - name: The recording room holds still
+        run: npm run check:recordroom
+
+      # A button with only a hover state gives a phone nothing, so a press
+      # reads as a button that does not work. One rule for the whole app.
+      - name: Every button answers a thumb
+        run: npm run check:pressed
+
       # The booth carries its own two rows of controls, so the app's tab bar
       # stands down while it is open. That is only safe while the back button
       # at the top left is there, which is why the two are one assertion.
