@@ -166,6 +166,39 @@ check(
   shape(here),
 );
 
+/* ── And the case that was missing, which was the whole bug ───────────
+
+   Carli, 17 September 2026: *"It suggested I make a jingle in the music
+   room. When I pushed the button it took me to that room, but copilot didn't
+   have the description ready. Ok I see that is the problem with every
+   room."*
+
+   The assertion above was here and this one was not, and the gap between
+   them is exactly where the fault lived: an op with no room named was
+   stamped with where she was STANDING even when the same reply was opening
+   somewhere else. So the song title went into the adverts desk she was
+   leaving, and she arrived in an empty music room. Delivered carefully, to
+   the wrong side of the door.
+
+   Every room, as she says, because it turns only on the model leaving `room`
+   out — which it does most of the time and reasonably: a reply already told
+   to open the music room has no reason to name it again on every field. */
+const carried = planActions([
+  { kind: 'surface_op', op: 'set_song_title', value: 'Leather and Light' },
+  { kind: 'surface_op', op: 'set_words', value: '[Hook]\nLeather and light' },
+  { kind: 'go', value: 'make' },
+], 'campaign');
+check(
+  'an operation with no room, on a reply that moves them, is for where it is TAKING them',
+  carried.filter((one) => one.kind === 'surface_op').every((one) => one.room === 'make'),
+  shape(carried),
+);
+check(
+  '  and not for the room they are leaving',
+  !carried.some((one) => one.kind === 'surface_op' && one.room === 'campaign'),
+  shape(carried),
+);
+
 /* A room name the model made up is not a room. Dropped rather than
    delivered to the current one: "somewhere else" and "here" are
    different intentions and guessing between them is how an advert brief

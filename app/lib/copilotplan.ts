@@ -111,7 +111,32 @@ export function planActions(asked: readonly PlannedAction[], here?: string): Pla
     }
     const named = (one.room ?? '').trim();
     if (!named) {
-      free.push({ ...one, ...(standingIn ? { room: standingIn } : {}) });
+      /* ── An op with no room belongs where the reply is TAKING them ─────
+ 
+         Carli, 17 September 2026: *"I tried the advert. It suggested I make
+         a jingle in the music room. When I pushed the button it took me to
+         that room, but copilot didn't have the description ready. Ok I see
+         that is the problem with every room."*
+ 
+         This read `standingIn` alone. So a reply that opens the music room
+         AND writes a song title into it put the title into the ADVERTS desk
+         she was standing in — the room she was about to leave — and she
+         arrived in an empty one. The value was never lost and never
+         misdelivered to nowhere: it was delivered, carefully, to the wrong
+         side of the door.
+ 
+         And it is every room, exactly as she says, because it turns only on
+         the model leaving `room` out — which it does most of the time, and
+         reasonably: a reply that has just been told to open the music room
+         has no reason to name the music room again on every field.
+ 
+         So the destination wins when there is one. `going` is only set when
+         the reply moves them EXACTLY once (see above), so there is never a
+         question of which of two doors was meant; with no move at all it
+         falls back to where they are, which is the ordinary case and was
+         always right. */
+      const to = going ?? standingIn;
+      free.push({ ...one, ...(to ? { room: to } : {}) });
       continue;
     }
     const room = resolveSurfaceId(named);
