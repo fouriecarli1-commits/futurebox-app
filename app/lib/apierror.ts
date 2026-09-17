@@ -70,6 +70,22 @@ const SAID: Record<string, { en: string; af: string }> = {
     en: 'The live room is not switched on for this app yet.',
     af: 'Die lewendige kamer is nog nie vir hierdie toep aangeskakel nie.',
   },
+  /* ── The room works for songs and not for videos ─────────────────────
+
+     Carli, three times: *"Video werk steeds nie in live nie."* Three rounds
+     of code went in and changed nothing, because the code was never it:
+     `supabase/livevideo.sql` widens `live_posts`'s `kind` check to accept
+     'video', and it has not been run. Postgres refuses the row.
+
+     Its own code for the same reason as the counting below, and for a
+     sharper one: the room was answering `live_not_set_up`, which prints
+     *"the live room is not switched on"* over a room she had songs playing
+     in. She read that, believed it, and reported what she could see. A
+     refusal that describes the wrong fault costs more than no refusal. */
+  live_video_not_migrated: {
+    en: 'The room takes songs but not videos yet — the owner needs to run supabase/livevideo.sql.',
+    af: 'Die kamer vat liedjies maar nog nie video\u2019s nie \u2014 die eienaar moet supabase/livevideo.sql laat loop.',
+  },
   /* The room works, the counting does not. Its own code because the two are
      separate faults with separate fixes, and a room that says "not switched
      on" over songs somebody is listening to is telling them the wrong thing. */

@@ -744,7 +744,38 @@ export async function POST(request: Request): Promise<Response> {
        Bounded, since it goes in a row and comes back out to everybody. */
     style: String(body.style ?? '').slice(0, 300),
   });
-  if (error) return Response.json(NOT_SET_UP, { status: 503 });
+  /* ── A video refused by the room is not the room being off ────────────
+
+     Carli, three times: *"Video werk steeds nie in live nie."* Three rounds
+     of code went into this and changed nothing, because the code was never
+     the problem: `supabase/livevideo.sql` widens `live_posts`'s `kind` check
+     to accept 'video' and it has not been run on her project. So Postgres
+     refuses the row, and this line answered `live_not_set_up` — which the
+     room prints as *"The live channel is not switched on yet"*.
+
+     That sentence is false and it is the reason this took three reports to
+     locate: the channel IS on, songs post fine, and only a video is
+     refused. She read "the channel is off", believed it, and reported the
+     symptom she could see rather than the one the server knew about.
+
+     So a video that is refused says what is missing. The kind is the only
+     thing that distinguishes the two cases from here — a project with the
+     migration run does not reach this line for a video, and a project
+     without it cannot reach it for anything else. */
+  if (error) {
+    if (kind === 'video') {
+      return Response.json(
+        {
+          ...NOT_SET_UP,
+          error: 'live_video_not_migrated',
+          message:
+            'The room takes songs but not videos yet: supabase/livevideo.sql has not been run on this project.',
+        },
+        { status: 503 },
+      );
+    }
+    return Response.json(NOT_SET_UP, { status: 503 });
+  }
   return Response.json({ ok: true });
 }
 
