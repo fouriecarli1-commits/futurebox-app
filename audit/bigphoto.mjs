@@ -92,6 +92,55 @@ const room = page.locator('div.fixed.inset-0.z-50').first();
    That is the whole reason `audit/frame.mjs` and this one first came back
    with no file input at all: the attachment is real and is simply behind a
    heading nobody had pressed. */
+/* ── First: pick a kind of video ──────────────────────────────────────
+
+   This tool has never reached the shot. It went looking for the picture
+   strip on a desk that was still asking *"Pick a kind of video to start
+   from"* — the panel with the shot in it does not exist until a template is
+   chosen, so "picture inputs: 0" was true and meant nothing about the
+   upload. That is why two days of looking at the image code found nothing:
+   the report was never reproduced, only guessed at.
+
+   Chosen by pressing the first template the desk offers rather than by name,
+   because the list has been rewritten twice and a tool that knows the names
+   goes quiet the third time. */
+/* ── And the picture only exists on a grade that reads one ────────────
+
+   This is what the tool was missing, and it is why two days of reading the
+   image code found nothing: the report was never reproduced, only guessed
+   at.
+
+   On Standard the strip is deliberately not drawn — the desk says so in
+   words: *"The engines behind this grade would ignore the picture and charge
+   you anyway, so it is not offered here. It works on Premium."* — and offers
+   a button to switch. So a tool that lands on Standard and looks for a file
+   input finds none, reports "picture inputs: 0", and that sentence is true
+   and says nothing whatever about the upload.
+
+   Pressing the desk's own way through rather than setting a grade behind its
+   back, because the button is what she pressed too. */
+const pictures = room.locator('input[data-take="shotpicture"]');
+if ((await pictures.count()) === 0) {
+  const toPremium = room.locator('button')
+    .filter({ hasText: /Switch to Premium|Skakel oor na Premium/ }).first();
+  if (await toPremium.count()) {
+    await toPremium.click().catch(() => undefined);
+    await page.waitForTimeout(1200);
+    console.log('switched to Premium → picture inputs:', await pictures.count());
+  }
+}
+/* Still nothing: try each grade the desk offers, by its own button. */
+if ((await pictures.count()) === 0) {
+  for (const label of ['Premium', 'Better', 'Beter']) {
+    const grade = room.locator('button').filter({ hasText: new RegExp(`^${label}$`) }).first();
+    if ((await grade.count()) === 0) continue;
+    await grade.click().catch(() => undefined);
+    await page.waitForTimeout(1200);
+    console.log('pressed grade:', label, '→ picture inputs:', await pictures.count());
+    if ((await pictures.count()) > 0) break;
+  }
+}
+
 const file = room.locator('input[type="file"]');
 if ((await file.count()) === 0) {
   const shotPanel = room.locator('button').filter({ hasText: /^The shot|^Die skoot/ }).first();
@@ -129,8 +178,31 @@ if ((await file.count()) === 0) {
    happened to mount first, so a run could report "nothing was stored" about
    an input that was never going to store a picture. Matched on what it
    accepts, which is the only thing that actually distinguishes them. */
-const picture = room.locator('input[type="file"][accept*="image/png"]').first();
-console.log('picture inputs:', await room.locator('input[type="file"][accept*="image/png"]').count());
+/* ── The SHOT's picture input, by name ────────────────────────────────
+
+   This was `input[type="file"][accept*="image/png"]`, with a note saying
+   what a control accepts is the only thing that tells these apart. It is
+   not: `Cast` takes a presenter's face, accepts the same five types, sits
+   in the same overlay and comes FIRST in the DOM. So this tool spent two
+   days filling the cast's input and reporting "nothing was stored" — true,
+   and nothing to do with the shot. The input carries `data-take` now. */
+const picture = room.locator('input[data-take="shotpicture"]').first();
+console.log('picture inputs:', await pictures.count());
+/* Every file input on the WHOLE page, with what it accepts and where it
+   lives. "picture inputs: 0" inside the overlay says the strip is not there;
+   it does not say why, and the difference between "not rendered" and "not in
+   this overlay" is the whole diagnosis. */
+console.log('all file inputs on the page:', JSON.stringify(await page.evaluate(() =>
+  [...document.querySelectorAll('input[type="file"]')].map((one) => ({
+    accept: one.getAttribute('accept'),
+    inOverlay: Boolean(one.closest('div.fixed.inset-0.z-50')),
+    hidden: getComputedStyle(one).display === 'none',
+  })))));
+console.log('overlays:', JSON.stringify(await page.evaluate(() =>
+  [...document.querySelectorAll('div.fixed.inset-0')].map((one) => ({
+    cls: one.className.slice(0, 60),
+    words: (one.innerText || '').replace(/\s+/g, ' ').slice(0, 120),
+  })))));
 await picture.setInputFiles('audit/fixtures/bigphoto.png');
 await page.waitForTimeout(3500);
 

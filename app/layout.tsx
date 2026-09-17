@@ -4,6 +4,7 @@ import { BAR_COLOUR } from './lib/brand';
 import { LanguageProvider } from './lib/i18n';
 import { SiteFooter } from './components/SiteFooter';
 import Watchdog from './components/Watchdog';
+import BlankGuard from './components/BlankGuard';
 import Blankscreen from './components/Blankscreen';
 import { SITE_URL } from './lib/brand';
 
@@ -66,6 +67,7 @@ export default function RootLayout({
               this catches the two failures no error boundary can, and writes
               them to the device so `/oops` can read them back. */}
           <Watchdog />
+          <BlankGuard />
           {/* The one thing the watchdog cannot do: be seen. */}
           <Blankscreen />
           {children}

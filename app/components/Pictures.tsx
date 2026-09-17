@@ -36,6 +36,7 @@ import {
   forgetAsset, loadAssets, rememberAsset, renameAsset, thumbnailOf, type Asset,
 } from '../lib/assets';
 import { ACCEPTS, MAX_BYTES, fit } from '../lib/imagefile';
+import { noteDoing } from '../lib/lasterror';
 
 /**
  * The longest edge a kept picture is stored at.
@@ -116,6 +117,12 @@ export default function Pictures({
     (file: File | undefined) => {
       setProblem(null);
       if (!file) return;
+      /* Written down before anything is attempted, because the step is the
+         only thing that survives a tab the phone throws away. `BlankGuard`
+         prints it on the empty page and `/oops` keeps it — three reports of
+         a white screen here have had nothing to read, and this is the line
+         that makes the fourth one legible. */
+      noteDoing(`a picture into the shot (${Math.round(file.size / 1024)}KB, ${file.type || 'no type'})`);
       if (file.size > MAX_BYTES) {
         setProblem(t('pics.big', 'That picture is very large. Try one under 12MB.'));
         return;
@@ -187,6 +194,20 @@ export default function Pictures({
         ref={input}
         type="file"
         accept={ACCEPTS}
+        /* ── Named, because what it accepts no longer tells it apart ──────
+ 
+           `audit/bigphoto.mjs` found this one by `accept*="image/png"`, with
+           a note saying that is "the only thing that actually distinguishes
+           them". It was true when it was written and is not any more: the
+           cast's presenter-face input accepts the same five types, sits in
+           the same overlay, and comes first in the DOM. So the tool built to
+           reproduce Carli's white page had been filling the cast's input and
+           reporting that nothing was stored — a true sentence about a
+           control that was never going to store a picture here.
+ 
+           Three reports of the same fault went unreproduced behind that, so
+           the handle is a name now rather than a guess from a shape. */
+        data-take="shotpicture"
         className="hidden"
         onChange={(event) => {
           take(event.target.files?.[0]);

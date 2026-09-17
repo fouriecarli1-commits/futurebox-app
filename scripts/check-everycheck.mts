@@ -135,9 +135,18 @@ const audits = readdirSync('audit')
    not open, which is a check and not a walk. It was filed as a tool because
    it went to port 3000 and assumed a server, so it could not be wired. It
    starts its own now, and it is `check:devices`. */
+/* `bigphoto` came out of here on 17 September, for the same reason `devices`
+   did: it was filed as a walk and it was a check that could not reach its
+   subject. It looked for the shot's picture strip on a desk still asking
+   which kind of video to make — the strip does not exist until a template is
+   chosen and a grade that reads a picture is picked — and then, once it got
+   there, filled the CAST's input, which accepts the same five image types
+   and comes first in the DOM. Three reports of a white page went
+   unreproduced behind those two mistakes. It exits non-zero now, and it is
+   `check:bigphoto`. */
 const TOOLS = new Set([
   'a11y', 'ads-af', 'ads-af-fail', 'ads-en-fail', 'badge', 'blurshot', 'boxes',
-  'bigphoto', 'buttons', 'copilotplace', 'deep', 'errors', 'frame', 'home',
+  'buttons', 'copilotplace', 'deep', 'errors', 'frame', 'home',
   'home2', 'homelength', 'land', 'landing', 'net', 'newui', 'newui2', 'one',
   'phone', 'phoneshots', 'price', 'probe', 'radarcards', 'rooms', 'shots',
   'slogan', 'small', 'thin', 'touch', 'transcript', 'voices', 'walk',

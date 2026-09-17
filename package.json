@@ -40,6 +40,8 @@
     "check:nameupload": "node audit/nameupload.mjs",
     "check:photopath": "tsx scripts/check-photopath.mts",
     "check:boothmagnet": "node audit/boothmagnet.mjs 3122",
+    "check:blankguard": "node audit/blankguard.mjs 3123",
+    "check:bigphoto": "node audit/bigphoto.mjs 3119",
     "check:boothsideways": "node audit/boothsideways.mjs 3121",
     "check:oops": "node audit/oops.mjs",
     "check:langtrip": "node audit/language.mjs 3018",
