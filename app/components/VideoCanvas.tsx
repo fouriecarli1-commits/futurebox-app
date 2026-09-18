@@ -28,7 +28,7 @@
  * mistake worth catching before the credits go.
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Video as VideoIcon, Loader2, Download, Languages, Quote, AlertTriangle, Volume2, VolumeX, Plug, PlugZap, Type } from 'lucide-react';
 import {
   SCENES, spokenLines, looksUnquoted, LENGTHS, GENRES, type Scene, type Genre,
@@ -59,8 +59,9 @@ import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import ShareRow from './ShareRow';
-import { loadBrandKit } from '../lib/brandkit';
-import { assetDataUrl } from '../lib/assets';
+import { loadBrandKit, saveBrandKit } from '../lib/brandkit';
+import { assetDataUrl, loadAssets } from '../lib/assets';
+import Pictures from './Pictures';
 import { loadMark } from '../lib/logomark';
 
 type Aspect = EngineAspect;
@@ -222,18 +223,26 @@ export default function VideoCanvas({
      existed. A logo is a nice-to-have; a lost render is not. */
   const [mark, setMark] = useState<HTMLImageElement | null>(null);
   const [brandIt, setBrandIt] = useState(true);
-  useEffect(() => {
-    let dropped = false;
-    void (async () => {
-      const id = loadBrandKit().logoAssetId;
-      if (!id) return;
-      const url = await assetDataUrl(id).catch(() => null);
-      if (!url || dropped) return;
-      const image = await loadMark(url);
-      if (!dropped) setMark(image);
-    })();
-    return () => { dropped = true; };
+  /* Read again after an upload, not only when the room opens.
+
+     Carli, 18 September 2026: *"Let ook wel dat die video studio glad nie 'n
+     image oplaai het vir iemand wat hulle logo op 'n video wou sit nie. Dit
+     het net die oplaai vir 'n cast member."* She was right, and the row
+     below is the answer — which only works if the desk can notice the logo
+     it has just been handed. */
+  const alive = useRef(true);
+  useEffect(() => () => { alive.current = false; }, []);
+  const readMark = useCallback(async () => {
+    const id = loadBrandKit().logoAssetId;
+    if (!id) {
+      if (alive.current) setMark(null);
+      return;
+    }
+    const url = await assetDataUrl(id).catch(() => null);
+    const image = url ? await loadMark(url) : null;
+    if (alive.current) setMark(image);
   }, []);
+  useEffect(() => { void readMark(); }, [readMark]);
   /**
    * The words themselves, when they are not the line already in the prompt.
    *
@@ -1003,28 +1012,69 @@ export default function VideoCanvas({
             for somebody else. Carli asked for this on filmed takes and on
             anything going to Live, which is most things — so the way OUT
             has to be as easy as the way in. */}
-        {mark && (
-          <label className="flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 cursor-pointer">
-            <input
-              id="canvas-brand"
-              type="checkbox"
-              checked={brandIt}
-              onChange={(event) => setBrandIt(event.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
-            />
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold text-zinc-200">
-                {t('canvas.brandIt', 'Put my logo in the corner')}
+        {/* ── The logo: the upload, and the one case it must not be on ───
+
+            It used to be the tick alone, and only when a logo already
+            existed. The sentence under it said "change the logo itself on
+            the Adverts desk", which is two rooms away — so somebody who
+            came here to put their logo on a video found a desk that could
+            upload a face for the cast and nothing else, and no way in.
+
+            So the upload is here, always, and it writes to the same brand
+            kit the advert desk writes to. One logo, two doors.
+
+            The tick stays conditional, because a tick that explains a
+            feature nobody has set up is a row of text pretending to be a
+            control. On by default once there is a logo: somebody who went
+            and uploaded one has said what they want. Off is one press, and
+            it needs to be — a logo belongs on your own advert and not on a
+            music video you cut for somebody else. */}
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-2.5">
+          {mark ? (
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                id="canvas-brand"
+                type="checkbox"
+                checked={brandIt}
+                onChange={(event) => setBrandIt(event.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-zinc-200">
+                  {t('canvas.brandIt', 'Put my logo in the corner')}
+                </span>
+                <span className="block text-xs text-zinc-500 leading-snug">
+                  {t(
+                    'canvas.brandItNote',
+                    'Burned into the picture, so it survives a download and goes wherever the clip goes. Placed where TikTok, Reels and Shorts all leave the frame visible.',
+                  )}
+                </span>
               </span>
-              <span className="block text-xs text-zinc-500 leading-snug">
+            </label>
+          ) : (
+            <p className="text-sm font-semibold text-zinc-200">
+              {t('canvas.brandNone', 'Your own logo, for the corner of the clip')}
+              <span className="block pt-0.5 text-xs font-normal leading-snug text-zinc-500">
                 {t(
-                  'canvas.brandItNote',
-                  'Burned into the picture, so it survives a download and goes wherever the clip goes. Placed where TikTok, Reels and Shorts all leave the frame visible. Change the logo itself on the Adverts desk.',
+                  'canvas.brandNoneNote',
+                  'Put a picture in below and it is burned into every clip you cut here, in the part of the frame TikTok, Reels and Shorts all leave visible. It is the same logo the Adverts desk uses.',
                 )}
               </span>
-            </span>
-          </label>
-        )}
+            </p>
+          )}
+          <Pictures
+            value={null}
+            onChange={() => {
+              /* `Pictures` keeps the bytes; the kit keeps a reference, so
+                 the file is stored once. The same two lines the brand-kit
+                 card uses, for the same reason. */
+              const newest = loadAssets()[0];
+              if (newest) saveBrandKit({ ...loadBrandKit(), logoAssetId: newest.id });
+              void readMark();
+            }}
+            from="videodesk"
+          />
+        </div>
 
         {/* The engine speaking is a deliberate, dearer choice — see `speak`. */}
         {spoken.length > 0 && (

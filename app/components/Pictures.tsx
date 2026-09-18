@@ -208,6 +208,12 @@ export default function Pictures({
            Three reports of the same fault went unreproduced behind that, so
            the handle is a name now rather than a guess from a shape. */
         data-take="shotpicture"
+        /* Which room's copy this is. The handle above is one name for
+           every instance, and there are several on one screen now — the
+           video desk has a logo upload of its own beside the cast's face
+           picker. A probe that wants a particular one should not have to
+           count them. */
+        data-from={from ?? ''}
         className="hidden"
         onChange={(event) => {
           take(event.target.files?.[0]);

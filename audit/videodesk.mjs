@@ -137,6 +137,29 @@ if (await toPremium.count()) {
 }
 
 const wide = await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+/* ── Her own logo, uploadable from the desk it goes out on ───────────
+
+   Carli, 18 September 2026: *"Let ook wel dat die video studio glad nie 'n
+   image oplaai het vir iemand wat hulle logo op 'n video wou sit nie. Dit
+   het net die oplaai vir 'n cast member."*
+
+   She was right. The logo reaches a clip — `lib/logomark.ts`, the stitcher
+   and the filmed take all draw it — and the only way to PUT one there was
+   the brand-kit card on the advert desk, two rooms away. What this desk
+   had was a tick that appeared once a logo already existed, with a
+   sentence telling you to go and set it up somewhere else.
+
+   Asserted as a control of its own rather than by the words around it: the
+   cast's face picker accepts the same file types and sits in the same
+   overlay, which is the confusion `audit/bigphoto.mjs` was caught by. */
+const logoUpload = room.locator('input[data-take="shotpicture"][data-from="videodesk"]');
+check('the desk can take her own logo, not only a cast member’s face',
+  (await logoUpload.count()) === 1,
+  `${await logoUpload.count()} logo inputs on the desk`);
+check('  and it is there before there is a logo, not after',
+  /Your own logo|Jou eie logo/.test(await room.innerText()),
+  'a control that only appears once the thing exists is not a way in');
+
 check('nothing overflows sideways', wide);
 
 await p.screenshot({ path: shot(`videodesk-${af ? 'af' : 'en'}.png`), fullPage: true });
