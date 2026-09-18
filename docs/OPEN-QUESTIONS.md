@@ -4885,3 +4885,90 @@ Die toets wat al vier vang, is dieselfde een: **laat dit val voor jy glo dit
 werk.** Vir 'n probe, hardloop hom teen die kode wat verander het. Vir 'n
 check, sit die régte foutvorm in en kyk of hy val. Vir 'n afwesigheid, soek
 op 'n manier wat 'n valse negatief onmoontlik maak.
+
+## T. Die nag van die agttiende: vier verslae, en een fout onder drie van hulle
+
+Carli het vier dinge in 'n uur gestuur, en drie daarvan was dieselfde fout in
+drie kamers: **die ding hét gebeur, en niemand kon dit sien nie.**
+
+### Die advertensie-oorgee — die belangrikste een
+
+*"As ek druk op open the room dan vat hy my net na die regte kamer toe, maar
+die AI vul nie die afdelings vir my in nie. Dit is 'n groot flaw en
+uiteindelik dan 'n produk wat ons nie sal kan lewer nie."*
+
+Die AI hét dit ingevul. `handoverFor` het die regte operations gegee,
+`copilotBus` het hulle gedra, elke bestemming het 'n handler geregistreer, en
+elke waarde het aangekom. `check:adhandover` het die eerste bewys en
+`audit/adcarry.mjs` die res.
+
+'n Kamer maak oop as sy eie inhoudsopgawe — elke paneel toe, soos sy dit in
+September gevra het. Die waarde het dus in 'n **toe kaart** beland, 'n paar
+opskrifte af, en die tafel het gelyk soos een waaraan niemand geraak het nie.
+
+Die ergste op presies die formaat wat sy gedruk het: 'n langer explainer se
+hele vrag is `write_scenes`, wat in die storyboard beland — onder die
+komposisiekassie wat daardie formaat doelbewus leeg los.
+
+**Een kamer het dit klaar opgelos en die oplossing vir homself gehou.**
+`Storyboard` het 'n teller, 'n ref en 'n scroll gehad, met die rede
+bo-aan: *"on a phone the difference between 'opened' and 'opened below the
+fold' is the whole of it."* Een uit dertien. En sy eie `write_scenes` het dit
+nie eens geroep nie — net 'n aparte `open_board` wat niks gestuur het nie.
+
+Dit is nou `lib/opencard.ts`, en agt kamers gebruik dit.
+
+### Waarom die probe dit nie gevang het nie
+
+`audit/adcarry.mjs` se eerste stap in die bestemmingskamer was `unfold(p)`,
+met 'n kommentaar wat sê elke kassie is binne 'n kaart. **Dit het die deur
+oopgemaak en toe gevra of die deur oop is** — en geslaag, elke nag wat sy die
+fout gerapporteer het.
+
+Dit lees nou eers en vou eers daarna oop. Sonder die regmaak val vier van sy
+assertions — dieselfde vier.
+
+### Die wit skerm: dieselfde vorm, ander kamer
+
+Haar foto wys 'n leë bladsy met die tab-balk perfek onderaan geteken.
+*Spotlight · Live · Make · Channel · You* is twee-en-dertig karakters.
+`BlankGuard` se drempel is twintig. **Die wag het die vyf woorde getel wat hy
+self daar gesit het en besluit die bladsy is reg.**
+
+Altwee instrumente was gelyktydig blind, om twee verskillende redes: `/oops`
+was leeg omdat niks gegooi het nie — en niks hét gegooi nie — en die paneel
+het nooit gekom nie omdat die balk geteken was. Nie een van die twee stiltes
+het beteken wat dit gelyk het nie, en saam het hulle die ware antwoord
+uitgesluit.
+
+Alles wat permanent is, dra nou `data-chrome` en word afgetrek. Die paneel sê
+ook watter van die twee foute dit is: niks op die bladsy nie is 'n oortjie wat
+die foon weggegooi het; die meubels wat staan met die kamer weg is óns fout.
+
+### Die hulp-paneel: 'n reël oor die verkeerde ding
+
+*"Hierdie een description is van die bladsy af."* `Hint` het links van sy
+merkie oopgemaak, of regs as die **MERKIE** verby die middel van die venster
+sit. Die ding wat van die bladsy af hang, is die **PANEEL**. Haar merkie is
+omtrent vier tiendes oor 'n 390-pixel foon — die linkerhelfte — en die paneel
+is 240 wyd. 164 plus 240 is 404.
+
+Reg aan altwee kante en verkeerd in die band tussenin. `check:hintfits` meet
+nou elke tiende van die breedte; sonder die regmaak sê hy 164–404 in 390.
+
+### Wat NIE opgelos is nie
+
+Die Pro Booth se grid. *"Die grid op die foon app gaan nie lank genoeg aan
+nie. Die tyd en grid raak weg."* Elke toestand wat ek op hierdie masjien kan
+opstel, kom groen terug — op 'n 390-pixel foon, ingezoem, en heeltemal na die
+verste ent geskuif. `audit/boothmagnet.mjs` meet dit nou, en dit is die
+moeite werd op sy eie, maar dit is nie 'n antwoord nie. Die volgende verslag
+het darem iets om te laat val.
+
+### Die les, bo-op S
+
+S was: *laat dit val voor jy glo dit werk.* T voeg by: **"dit het aangekom"
+is nie "iemand kan dit sien nie."** Drie van vier verslae vanaand was 'n
+waarde wat aangekom het in 'n plek waar sy nie kon kyk nie — 'n toe kaart, 'n
+paneel van die bladsy af, 'n leë kamer met die meubels nog daar. Elke check
+wat "die waarde is daar" meet, moet ook vra **"en is dit op die skerm?"**
