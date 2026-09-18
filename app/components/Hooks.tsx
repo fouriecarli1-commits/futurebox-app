@@ -44,7 +44,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Smartphone, Loader2, Download, Film, Plus, Scissors, Music, Trash2, Radio, Wand2 } from 'lucide-react';
+import { Smartphone, Loader2, Download, Film, Play, Plus, Scissors, Square, Music, Trash2, Radio, Wand2 } from 'lucide-react';
 import { loadTracks, downloadBlob, safeFilename, type Track } from '../lib/library';
 import { readAudio } from '../lib/trackaudio';
 import { findHooks, sectionHooks, decodeTrack, formatMoment, type Hook } from '../lib/hooks';
@@ -81,14 +81,49 @@ interface Shared {
 
 export default function Hooks({
   onBuildOn,
+  onMakeVideo,
 }: {
   /* Into Make a song, with the style, the title and whose it was. Optional so
      the room still mounts in a probe page that has no studio around it. */
   readonly onBuildOn?: (from: { title: string; by: string; style: string }) => void;
+  /**
+   * Into the video desk, with the song under it and the shape set.
+   *
+   * Carli, 18 September 2026: *"Hooks benodig ook die button wat hierdie
+   * video na die video desk toe kan vat om 'n video vir die sniplet te
+   * maak."* The room finds the moment worth posting and then can only cut a
+   * still with sound on it; making a real clip for that moment meant going
+   * to another room and choosing the song again.
+   *
+   * Only for a song that is hers. A shared song gets no ShareRow, no cover
+   * art and no studio for the reason at the top of this file, and "make a
+   * video of it" is the same claim.
+   */
+  readonly onMakeVideo?: (from: { trackId: string; seconds: number }) => void;
 } = {}) {
   const { t } = useLang();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [selected, setSelected] = useState<Track | null>(null);
+  /**
+   * Which moment is playing, if one is.
+   *
+   * Carli, 18 September 2026: *"Daar moet 'n play knoppie wees om die
+   * stukkie wat voorgestel word te hoor."* The room was recommending a
+   * moment by a number — "at 0:22, steady and clear" — and the only way to
+   * find out whether it was the right one was to spend a cut on it.
+   */
+  const [hearing, setHearing] = useState<number | null>(null);
+  /**
+   * One player for the room, and a real element in the document.
+   *
+   * `new Audio()` would do the same job and is invisible to everything
+   * outside this file — including a probe, which then has nothing to read
+   * but the button's own label. An element that is really there can be
+   * asked what it is playing and where it is.
+   */
+  const player = useRef<HTMLAudioElement | null>(null);
+  /** The sound behind whatever is chosen, made once and kept. */
+  const heardFrom = useRef<{ key: string; url: string; own: boolean } | null>(null);
   const [hooks, setHooks] = useState<Hook[]>([]);
   const [seconds, setSeconds] = useState(15);
   const [finding, setFinding] = useState(false);
@@ -364,6 +399,107 @@ export default function Hooks({
     }
   }, [clip, seconds, t]);
 
+  /* ── Hearing a moment before spending a cut on it ────────────────────
+
+     One `<audio>` for the whole room rather than one per card: twelve
+     elements each holding the same song is twelve decodes, and on a phone
+     that is the memory the tab gets thrown away for.
+
+     The source is made once per chosen song and kept, because the three
+     things this room cuts from carry their sound three different ways: a
+     song of hers is a blob in the store, a brought-in video is a File, and
+     a shared song is a URL somebody else is serving. Only the first two
+     are ours to revoke. */
+  const stopHearing = useCallback(() => {
+    const one = player.current;
+    if (one) {
+      one.pause();
+      one.onpause = null;
+      one.ontimeupdate = null;
+    }
+    setHearing(null);
+  }, []);
+
+  const soundUrl = useCallback(async (): Promise<string | null> => {
+    const key = shared ? `shared:${shared.id}` : video ? `video:${video.name}` : selected ? `song:${selected.id}` : '';
+    if (!key) return null;
+    const had = heardFrom.current;
+    if (had?.key === key) return had.url;
+    if (had?.own) URL.revokeObjectURL(had.url);
+    heardFrom.current = null;
+    if (shared) {
+      heardFrom.current = { key, url: shared.audio, own: false };
+    } else if (video) {
+      heardFrom.current = { key, url: URL.createObjectURL(video.file), own: true };
+    } else if (selected) {
+      const blob = await readAudio(selected.id);
+      if (!blob) return null;
+      heardFrom.current = { key, url: URL.createObjectURL(blob), own: true };
+    }
+    return heardFrom.current?.url ?? null;
+  }, [selected, shared, video]);
+
+  const hear = async (hook: Hook, index: number) => {
+    if (hearing === index) {
+      stopHearing();
+      return;
+    }
+    stopHearing();
+    const url = await soundUrl();
+    if (!url) {
+      setProblem(t('hooks.noSound', 'That sound could not be read back, so this moment cannot be played.'));
+      return;
+    }
+    const one = player.current;
+    if (!one) return;
+    /* Said at once, before anything is awaited.
+
+       Every button in this app has to answer a thumb — and the answer
+       cannot wait on the media pipeline, which takes a moment on a phone
+       and, on a machine with no audio device at all, never settles. So the
+       press is acknowledged now and taken back below if it fails. */
+    setHearing(index);
+    try {
+      /* Metadata first, and this is the whole of why the first version did
+         nothing. Setting `currentTime` on an element that has not loaded
+         yet throws `InvalidStateError` — and the throw was before the
+         `try`, so it left the room as an unhandled rejection and the
+         button simply did not change. A moment cannot be started at 0:22
+         until the thing being started knows it is longer than that. */
+      if (one.src !== url) {
+        one.src = url;
+        await new Promise<void>((resolve, reject) => {
+          one.onloadedmetadata = () => resolve();
+          one.onerror = () => reject(new Error('unreadable'));
+        });
+        one.onloadedmetadata = null;
+        one.onerror = null;
+      }
+      one.currentTime = hook.startSeconds;
+      /* Stopped by the clock rather than by the end of the song: the whole
+         point is to hear the piece that would be cut, not to start the
+         track playing from there and leave somebody to find the pause
+         button. */
+      const until = hook.startSeconds + hook.seconds;
+      one.ontimeupdate = () => {
+        if (one.currentTime >= until) stopHearing();
+      };
+      one.onpause = () => setHearing(null);
+      await one.play();
+    } catch {
+      setHearing(null);
+      setProblem(t('hooks.noSound', 'That sound could not be read back, so this moment cannot be played.'));
+    }
+  };
+
+  /* Nothing left playing behind a room somebody has left, and nothing left
+     held: a revoked object URL is the difference between closing a tab and
+     the phone deciding to close it for you. */
+  useEffect(() => () => {
+    player.current?.pause();
+    if (heardFrom.current?.own) URL.revokeObjectURL(heardFrom.current.url);
+  }, []);
+
   const cut = async (hook: Hook, index: number) => {
     /* A video is trimmed; a song is drawn. Two different jobs behind one
        button, and the room says which is happening because they take
@@ -505,6 +641,13 @@ export default function Hooks({
 
   return (
     <div className="space-y-5">
+      {/* The one player the whole room shares.
+
+          In the document rather than `new Audio()`, so a probe can ask it
+          what it is playing and from where. Twelve elements each holding
+          the same song is twelve decodes, and on a phone that is the
+          memory the tab gets thrown away for. */}
+      <audio ref={player} data-hearplayer hidden />
       <div>
         <h4 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
           <Smartphone className="w-6 h-6 text-emerald-400" />
@@ -767,6 +910,20 @@ export default function Hooks({
                     <div className="h-1 rounded-full bg-zinc-800 overflow-hidden">
                       <div className="h-full bg-emerald-400" style={{ width: `${Math.round(hook.score * 100)}%` }} />
                     </div>
+                    {/* Hear it first. Above the cut, because it is the
+                        cheaper of the two and the one that decides whether
+                        the other is worth pressing. */}
+                    <button
+                      type="button"
+                      data-hear={index}
+                      onClick={() => void hear(hook, index)}
+                      className="min-h-[44px] w-full py-2.5 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-sky-500 hover:text-sky-300 flex items-center justify-center gap-1.5"
+                    >
+                      {hearing === index ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                      {hearing === index
+                        ? t('hooks.stopHear', 'Stop')
+                        : t('hooks.hear', 'Hear this bit')}
+                    </button>
                     <button
                       type="button"
                       onClick={() => cut(hook, index)}
@@ -776,6 +933,27 @@ export default function Hooks({
                       {cutting === index ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Scissors className="w-3.5 h-3.5" />}
                       {cutting === index ? t('hooks.cutting') : t('hooks.cut')}
                     </button>
+                    {/* And on to a real clip for this moment.
+
+                        Only for a song of hers. A shared song gets no cover
+                        art, no Post to Live and no studio for the reason at
+                        the top of this file, and handing it to the video
+                        desk as the soundtrack of something she makes is the
+                        same claim under another name. */}
+                    {selected && !shared && onMakeVideo && (
+                      <button
+                        type="button"
+                        data-tovideo={index}
+                        onClick={() => {
+                          stopHearing();
+                          onMakeVideo({ trackId: selected.id, seconds: hook.seconds });
+                        }}
+                        className="min-h-[44px] w-full py-2.5 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-1.5"
+                      >
+                        <Film className="w-3.5 h-3.5" />
+                        {t('hooks.toVideo', 'Make a video for it')}
+                      </button>
+                    )}
                     {cutting === index && (
                       <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                         <div className="h-full bg-emerald-400 transition-all" style={{ width: `${Math.round(progress * 100)}%` }} />

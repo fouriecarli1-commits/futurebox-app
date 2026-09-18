@@ -3411,6 +3411,23 @@ export default function FutureBoxHome() {
             )}
             {studioTab === 'hooks_feed' && (
               <Hooks
+                /* The moment worth posting, on to a real clip.
+
+                   Carli, 18 September 2026: *"Hooks benodig ook die button
+                   wat hierdie video na die video desk toe kan vat om 'n
+                   video vir die sniplet te maak."*
+
+                   The same three steps the studio's own "put it on a video"
+                   uses — the song under the desk, the shape it is going out
+                   in, then the room — and in that order, because the
+                   hand-off waits for a room that has not mounted and fires
+                   when it does. Vertical, because a hook is cut for a feed
+                   that is held upright. */
+                onMakeVideo={({ trackId }) => {
+                  setVideoSong(trackId);
+                  copilotBus.handoff('canvas', 'set_aspect', '9:16');
+                  goToRoom('canvas');
+                }}
                 /* A song somebody opened up, carried into Make a song. The
                    same hand-off the Studio's Remake uses — canvas, handoff,
                    go — with one difference: the title says whose it was.

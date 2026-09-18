@@ -159,6 +159,75 @@ try {
   check('moments were found in the video’s own sound', found > 0, `${found} offered`);
   check('and the file is named on screen', /my own footage/.test(await says()));
 
+  /* ── Hearing it before spending a cut on it ─────────────────────────
+
+     Carli, 18 September 2026: *"Daar moet 'n play knoppie wees om die
+     stukkie wat voorgestel word te hoor."* The room recommended a moment
+     by a number — "at 0:22, steady and clear" — and the only way to find
+     out whether it was the right one was to cut it.
+
+     The element is `new Audio()` and never joins the document, so there is
+     nothing in the DOM to query. The label is the measurement instead, and
+     a good one: it only says "Stop" once `play()` has RESOLVED, which a
+     browser does not do for a source it could not start. */
+  const hearButtons = room.locator('button').filter({ hasText: /Hear this bit|Luister na hierdie stukkie/ });
+  check('every moment can be heard before it is cut',
+    (await hearButtons.count()) === found,
+    `${await hearButtons.count()} play buttons against ${found} moments`);
+
+  if (await hearButtons.count()) {
+    await hearButtons.first().click();
+    await p.waitForTimeout(1200);
+    check('  and the press is answered at once',
+      (await room.locator('button').filter({ hasText: /^Stop$/ }).count()) === 1,
+      'a button that looks the same after it is pressed reads as a button that does not work');
+
+    /* Read off the element itself, twice.
+ 
+       The first version of this asserted that the button's label had
+       turned over once `play()` resolved. It never does on this machine:
+       headless Chromium here has no audio device and the promise settles
+       neither way, measured at six seconds. That is an environment and not
+       the app — and the element is playing all the same, which is why the
+       thing to read is the element and not the promise.
+ 
+       A clock that is moving is the whole proof. A source that is set, a
+       label that changed and a duration that exists are all true of a
+       player that is sitting still. */
+    const read = async () => p.evaluate(() => {
+      const one = document.querySelector('audio[data-hearplayer]');
+      return one ? { src: one.currentSrc || one.src, time: one.currentTime, paused: one.paused } : null;
+    });
+    const first = await read();
+    await p.waitForTimeout(900);
+    const later = await read();
+    check('  and it is pointed at the sound in this room',
+      Boolean(first?.src) && first.src.startsWith('blob:'),
+      `src ${first?.src ?? 'none'}`);
+    check('  and the sound is really running',
+      first !== null && later !== null && !later.paused && later.time > first.time,
+      `${first?.time ?? '?'}s then ${later?.time ?? '?'}s`);
+
+    const stop = room.locator('button').filter({ hasText: /^Stop$/ }).first();
+    if (await stop.count()) {
+      await stop.click();
+      await p.waitForTimeout(500);
+      check('  and pressing it again stops it',
+        (await room.locator('button').filter({ hasText: /^Stop$/ }).count()) === 0,
+        'a preview that cannot be stopped plays under whatever is pressed next');
+    }
+  }
+
+  /* And the other new button is deliberately NOT here.
+
+     "Make a video for it" takes a song of hers to the video desk. What is
+     in the room right now is a video somebody brought in, which already is
+     one — and the rule at the top of `Hooks.tsx` is that a file that is not
+     hers must not pick up the controls that say it is. */
+  check('a brought-in video is not offered a video of its own',
+    (await room.locator('[data-tovideo]').count()) === 0,
+    'the button belongs to a song in her library, not to a file passing through');
+
   await moments.first().click();
   /* Cutting runs in real time, so a six-second hook takes six seconds. */
   const clip = room.locator('video[src^="blob:"]');
