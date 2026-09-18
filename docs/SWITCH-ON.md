@@ -743,6 +743,24 @@ commercial catalogue. That is a paid service:
 | Audible Magic | What the large platforms use. Heavier to integrate. | Enterprise contract |
 | Pex | Built for rights and attribution rather than identification alone. | Enterprise contract |
 
+**That table is out of date on its middle row — 18 September 2026.**
+Audible Magic is no longer only an enterprise contract. Since a December 2024
+partnership they are a MODULE on Music.ai's API, listed as *"Content ID:
+Powered by Audible Magic"*, returning ISRC, artist, title, label, album UPC
+and release date. We already hold a Music.ai key, already call their API, and
+already meter their per-minute cost in `credits.ts`. So the heaviest-to-
+integrate option is now the lightest one we have: no new vendor, no new
+contract, no new key, no new billing relationship.
+
+*Not verified at source.* The proxy on the build machine blocks both
+`music.ai` and `acrcloud.com`, so the module's existence comes off search
+results and the partnership announcement, and the figure I have seen quoted
+for it — **$0.08 per minute** — is a secondary reading of Music.ai's pricing
+page that I could not open. Treat the number as an order of magnitude, not a
+price. It is one question to their support, and it belongs in the same email
+as the Music.ai per-minute rate that `docs/MAANDELIKSE-KOSTE.md` item 3 has
+been waiting on since the cost model was written.
+
 **Why a home-made one is worse than none.** A check that compares waveforms,
 or asks a model whether a song "sounds like" something, produces confident
 answers with no catalogue behind them. Every false clear tells you that you
@@ -750,12 +768,57 @@ are covered when you are not, and the whole reason to have this is that you
 are not covered. If it is not a licensed fingerprint against a real catalogue,
 it should not be on the screen.
 
-**Two questions to answer before any of it is worth wiring:**
+**Two questions to answer before any of it is worth wiring** — with a
+recommendation for each, 18 September 2026, so this is a yes or a no rather
+than an open question sitting for another month.
 
-1. What does a match DO? Refuse the upload, hold it for review, or let it
-   through and mark it? Each is a different product and a different risk.
-2. Who pays for the scan? At a per-upload cost it belongs in the credit model,
-   and nothing in `credits.ts` has a line for it yet.
+**1. What does a match DO?**
+
+*Recommended: let it through, mark the row, and stop it at the POSTING door
+rather than the upload door.*
+
+Refusing the upload reads as the safe answer and is the wrong one, for a
+reason that is easy to miss: the person most likely to trip a correct match
+is **an artist uploading their own released track**. Their song IS in the
+catalogue. It is theirs. A refusal would identify it perfectly and then
+throw out the one member whose rights are not in question at all.
+
+Holding every match for review means a person reads them, and there is one
+person. That is not a policy, it is a second job.
+
+So the third: the upload succeeds, the row carries what the fingerprint said,
+and the song works privately — sing over it in the Booth, split it, use it.
+What it cannot do without the member saying in as many words that the work is
+theirs is **go to Live** or **out through the share sheet**.
+
+The reason this is the right shape is not a compromise, it is where the risk
+actually sits. Somebody holding a copy of a song on their own phone is not
+FutureBox's exposure. FutureBox publishing it is. And the app is already
+built along that line: an upload is private, posting to Live is a separate
+act, and sharing is a third. The gate belongs on a door that already exists.
+
+**2. Who pays for the scan?**
+
+*Recommended: scan at posting, not at upload — and it may not need the whole
+track.*
+
+This follows from the first answer and is most of the cost argument. Scanning
+every upload means paying for every file anybody ever brings in, including
+the ones they sing over once and never publish. Scanning at the moment
+somebody presses Post means paying only for the files that are about to
+become FutureBox's problem, which is a small fraction of them.
+
+And fingerprinting identifies a recording from a short sample — the
+technology does not need the full song. Whether Music.ai's module charges on
+the duration submitted, and whether it will accept a thirty-second excerpt,
+is the second question for that same email. If it does, the cost of this
+feature rounds to nothing.
+
+Which leaves the credit question genuinely open, and it should stay open until
+there is a real rate: at a cent or two a post, absorb it and say nothing; at
+anything more, it is a line in `credits.ts` beside the others. Pricing a
+feature off a number I could not open would be the same mistake the cost model
+already made twice.
 
 **What is there in the meantime.** The upload screen says the work must be
 yours, and the account that uploaded it is recorded. That is the position most
