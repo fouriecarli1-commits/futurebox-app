@@ -4746,3 +4746,89 @@ sein nie — dit is 'n gerug.** Ses van agt valle was verouderde probes, en die
 enigste rede dat hulle almal op een dag opgedaag het, is dat dit die eerste
 dag was dat al tagtig saam gehardloop het. Die getal wat saak maak is nie
 hoeveel probes bestaan nie, dit is wanneer hulle laas gehardloop het.
+
+
+## R. Die logo, die tab-balk, en twee foute van my
+
+*18 September 2026, laat. Alles hier is gedoen ná die sleep van 80 probes,
+en drie van die vier stukke kom uit een skermkiekie wat sy gestuur het.*
+
+### Die tab-balk het twee panele opgeëet
+
+Sy het 'n foto gestuur van die "Want a video for this one?"-kaart: *"daai pop
+up window is half uit die prent."*
+
+**My eerste lesing was verkeerd, en dit is die deel wat onthou moet word.** Ek
+het van die foto af gemeet dat die kaart by die **regterkant** afloop, en
+begin soek na 'n voorouer met 'n `transform` wat `position: fixed` teen 'n
+539-pixel-boks anker. In die blaaier op 390 pixels het die kaart gemeet:
+links 144, regs 366, onder 820. Sy regterkant was die hele tyd korrek 24
+pixels in. Die balk se bokant is 786 en hy verf op `z-95` oor die kaart se
+`z-60`, dus het 34 pixels — presies die knoppie-ry — daaronder gelê. **Te
+laag, nie te wyd nie.**
+
+`bottom-6` is 24 pixels van die **skerm** se onderkant, wat hier 58 pixels
+binne die balk is. `barClearance()` hou al daardie getal, maar help net 'n
+bladsy wat **rol**: 'n vaste element is nie in die vloei nie, en niemand se
+padding skuif hom nie.
+
+Twee plekke het dit gehad — haar kaart en die kanaal se swewende "Next"-
+knoppie, wat op dieselfde manier onsigbaar was. Dit is dus 'n klas, nie 'n
+tikfout nie. Albei loop nou deur `aboveBar()` langs `barClearance()`,
+dieselfde som deur dieselfde funksie. `check:tabbar` loop nou elke `.tsx`
+onder `app/` en val enige nie-nul `bottom-N` saam met `fixed`.
+
+### Die kopiereg-toets het 'n verskaffer wat ons reeds betaal
+
+`docs/SWITCH-ON.md` het gesê Audible Magic is 'n enterprise-kontrak en die
+swaarste van die drie om in te prop. Verouderd: sedert 'n vennootskap in
+Desember 2024 is hulle 'n **module op Music.ai se API**, en ons hou al 'n
+Music.ai-sleutel met die bedrading en die kredietmeter in plek. Nie by die
+bron bevestig nie — die proxy blok `music.ai` en `acrcloud.com` — en die
+$0,08 per minuut wat ek gesien het, is 'n tweedehandse lesing. Opgeteken as
+'n orde van grootte, nie 'n prys nie.
+
+Die twee oop vrae dra nou 'n aanbeveling in plaas daarvan om nog 'n maand te
+lê. Die kern daarvan: **die hek hoort by die post-deur, nie die oplaai-deur
+nie.** Die mens wat die meeste waarskynlik 'n *korrekte* match trek, is 'n
+kunstenaar wat sy eie uitgereikte liedjie oplaai. Sy liedjie ís in die
+katalogus; dit is syne. 'n Weiering sou dit perfek identifiseer en dan die
+een lid uitgooi wie se regte nie in twyfel is nie.
+
+### Die uitspraak is bevestig
+
+*"Die liedjie, dus djie na kie het perfek gewerk. Die uitspraak is nou 100%."*
+
+Dit sluit twee dinge gelyk: die `-djie`-reël was **my afleiding** en nie haar
+waarneming nie, en dit was reg; en 'n alias-herspelling is die regte
+gereedskap, dus geen IPA-foneemreëls nodig nie. Wat dit **nie** sluit nie is
+opgeteken eerder as aanvaar: `liedjie` staan in altwee helftes van
+`sayit.ts`, so die toets kan nie sê watter een gevuur het nie. Een woord in
+geen van die twee — hondjie, kindjie, blommetjie — skei substring-passing
+van hele-woord-passing, en die antwoord bepaal of die woordlys oorbodig is
+of die inskrywings opgewek moet word.
+
+### Twee foute van my, en die tweede is die erger een
+
+**Een.** Ek het `git checkout` op `FollowWords.tsx` gehardloop om 'n
+toetswysiging terug te rol, en elke ongecommitteerde verandering in daardie
+lêer uitgevee. Oorgedoen.
+
+**Twee, en dit is die een wat saak maak.** Ek het vir haar gesê 'n check
+bewys die veiligheidsreël van die merk-deurloop, voordat dit bewys was. Die
+assertion het die posisie van `setTake` teenoor `markTake` vergelyk, en die
+variant waarmee ek dit probeer breek het, het `setTake` stééds vroeër in die
+lêer gehad — dus het dit tereg geslaag en niks getoets nie.
+
+'n **Volgorde** is nie wat dit veilig maak nie. Wat dit veilig maak, is dat
+die take **onvoorwaardelik** gestoor word voor enige tak, sodat geen pad die
+deurloop kan bereik sonder dat sy reeds die lêer het nie. 'n Take kan nie
+oorgefilm word nie; die oomblik is verby.
+
+### Die reël wat hieruit kom
+
+**"Ek het 'n check geskryf" is nie "dit is bewys" nie.** Die check moet teen
+die régte foutvorm geval het, en as jy dit nie laat val het nie, het jy 'n
+reël geskryf en nie 'n toets nie. Dieselfde les as `check:pressed` op
+15 September, twee weke later weer geleer — en hierdie keer het ek dit hardop
+gesê voor sy dit moes ontdek.
