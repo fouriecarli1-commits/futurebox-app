@@ -4832,3 +4832,56 @@ die régte foutvorm geval het, en as jy dit nie laat val het nie, het jy 'n
 reël geskryf en nie 'n toets nie. Dieselfde les as `check:pressed` op
 15 September, twee weke later weer geleer — en hierdie keer het ek dit hardop
 gesê voor sy dit moes ontdek.
+
+
+## S. Drie vorme van dieselfde fout, op een dag
+
+*18 September 2026, die laaste stuk. Hierdie afdeling is nie oor 'n funksie
+nie — dit is oor 'n patroon wat drie keer in een sessie opgedaag het, elke
+keer met 'n ander gesig.*
+
+### Die eerste: 'n probe wat 'n werkende app dop
+
+Ses van agt valle in die oggend se sleep was probes wat vasgehou het aan
+woorde wat sy self gevra het om weg te vat, of aan drempels wat die app
+verlaat het. Die kode was reg. Die seine was oud.
+
+### Die tweede: ek wat sê iets is bewys voor dit was
+
+Ek het 'n check geskryf wat die merk-deurloop se veiligheid sou hou, vir haar
+gesê dit is bewys, en toe eers probeer om dit te breek. Die variant wat ek
+probeer het, was nie die gevaarlike een nie, dus het die check tereg geslaag
+— en niks getoets nie. **Die assertion het na 'n volgorde gekyk, en 'n
+volgorde is nie wat dit veilig maak nie.**
+
+### Die derde: 'n check wat die bug beskerm
+
+`check:magnet` het geëis dat `next[from] = was[to]` in die bron staan — die
+presiese twee reëls wat 'n vasgeslote groep middeldeur skeur. Toe die fout
+reggemaak is, het die check geval. Hy het die bug vasgehou asof dit die
+bedoeling was.
+
+'n Check wat 'n **implementasie** noem eerder as 'n **gedrag**, word 'n slot
+op die fout wat hy toevallig saam met die gedrag vasgevang het.
+
+### En 'n vierde, wat myne is en nie 'n masjien s'n nie
+
+Sy het gevra of die interlock in is en of die op-en-af bestaan. Ek het gesê
+ek gaan kyk eerder as onthou — en toe in **een lêer** gekyk, dit nie daar
+gevind nie, en die afwesigheid vir die antwoord aangesien. Die knoppies was
+op die baan se kaart, en `audit/boothmagnet.mjs` het hulle 'n dag lank gedruk.
+
+**"Ek het gekyk" is nie "ek het oral gekyk nie."** Die goedkoop weergawe is
+om in die hele repo te grep voor jy 'n afwesigheid rapporteer, nie in die
+lêer waar jy dit sou geplaas het nie.
+
+### Die vier saam
+
+Al vier is dieselfde ding: **iets wat soos 'n sein lyk en niks gemeet het
+nie.** 'n Verouderde probe, 'n assertion wat nooit geval het nie, 'n check
+wat 'n implementasie naboots, en 'n soektog in een lêer.
+
+Die toets wat al vier vang, is dieselfde een: **laat dit val voor jy glo dit
+werk.** Vir 'n probe, hardloop hom teen die kode wat verander het. Vir 'n
+check, sit die régte foutvorm in en kyk of hy val. Vir 'n afwesigheid, soek
+op 'n manier wat 'n valse negatief onmoontlik maak.

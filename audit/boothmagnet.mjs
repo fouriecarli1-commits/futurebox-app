@@ -236,11 +236,57 @@ try {
     );
   }
 
-  /* ── Swapping two lanes ─────────────────────────────────────────────── */
+  /* ── Moving a lane, and the one case that used to tear the lock ──────
+
+     This section used to lock the two lanes together and then press "Move
+     down", and it passed — because moving was a SWAP, and a swap happily
+     exchanges two lanes that are locked to each other and leaves the group
+     in pieces. The probe was holding the fault in place.
+
+     On 18 September the move started going through `app/lib/laneorder.ts`,
+     where a locked group is the unit. With these two lanes locked and
+     nothing else in the stack, there is nowhere for the group to go, so the
+     arrow is correctly OFF — and the old press timed out against a disabled
+     button, which is how this was found.
+
+     So both halves are asserted now, in order. The refusal first, because
+     it is the new rule and the one a future swap would break; then the lock
+     comes off and the move is proved to work. */
   await openDesk('Track controls', 'Baankontroles');
   const down = p.getByRole('button', { name: new RegExp(af ? 'Skuif af' : 'Move down') }).first();
   check('a lane can be moved down the stack', (await down.count()) > 0);
-  if (await down.count()) {
+
+  check(
+    '  and while these two are locked to each other, with nothing else in the stack,'
+    + ' the arrow is off rather than tearing the group',
+    (await down.count()) > 0 && (await down.isDisabled()),
+    'a swap would have exchanged them and left the lock holding one lane each',
+  );
+
+  /* Off with the lock, so the move itself can be proved. The same chip that
+     made the group breaks it — pressing a locked lane again lets it out.
+
+     Found again rather than reused: the desk has been shut and reopened
+     since `chips` was taken, so React has rebuilt that row and the old
+     handle points at an element no longer in the document. It fails with
+     "Element is not attached to the DOM", which reads like the chip is
+     gone and means only that this one is stale. */
+  const lockAgain = p.getByText(new RegExp(af ? '^Maak vas aan$' : '^Lock to$')).first();
+  if (await lockAgain.count()) {
+    const row = await lockAgain.evaluateHandle((el) => el.parentElement);
+    const again = await row.asElement();
+    const chipsNow = await again.$$('button');
+    if (chipsNow.length) {
+      await chipsNow[0].click();
+      await p.waitForTimeout(500);
+    }
+  }
+  check(
+    '  and with the lock off, the arrow comes back on',
+    (await down.count()) > 0 && !(await down.isDisabled()),
+  );
+
+  if ((await down.count()) && !(await down.isDisabled())) {
     await shutDesk();
     const wasOrder = await clipsAt();
     await openDesk('Track controls', 'Baankontroles');

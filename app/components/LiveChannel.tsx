@@ -55,6 +55,18 @@ const HELLO_EVERY = 30_000;
 /** How often the room is re-read. A channel that updates once a minute is not live. */
 const REFRESH_EVERY = 8_000;
 
+/**
+ * Whether a post has the medium its own kind plays.
+ *
+ * A video post keeps its file in `video`; everything else keeps it in
+ * `audio`. Asking only about `audio` is what put "That file is not there
+ * any more" over two perfectly good videos on 18 September — and what made
+ * "Play the room" step over them. One predicate, so the room and the panel
+ * cannot drift apart on the answer again.
+ */
+const playable = (post: Post): boolean =>
+  post.kind !== 'elsewhere' && Boolean(post.kind === 'video' ? post.video : post.audio);
+
 interface Post {
   id: string;
   kind: 'track' | 'episode' | 'elsewhere' | 'video';
@@ -193,7 +205,23 @@ function RoomPanel({
   readonly onTakeOut: () => void;
 }): React.ReactElement {
   const { t } = useLang();
-  const listenable = post.kind !== 'elsewhere' && Boolean(post.audio);
+  /* ── A post has its own medium, and a video's is not `audio` ──────────
+   *
+   * Carli, 18 September 2026, with a photograph of two video posts in the
+   * room, each wearing "That file is not there any more": *"Video in live
+   * room."*
+   *
+   * The files were there. `Post` carries both `audio` and `video`, and a
+   * video post fills the second — which `livevideo.sql` only made possible
+   * this morning. Three places in this file asked `Boolean(post.audio)` and
+   * meant "is this playable", so every video read as a post whose file had
+   * gone: the badge said so, the panel would not open, and "Play the room"
+   * skipped them.
+   *
+   * One question, asked once — `playable`, up beside the type. Keeping a
+   * second copy of the test here is how the badge and the room came to
+   * disagree in the first place. */
+  const listenable = playable(post);
 
   return (
     <article className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
@@ -406,7 +434,7 @@ function RoomPanel({
 
       {/* A post whose file has gone. Said on the panel rather than by a
           button that does nothing when pressed. */}
-      {post.kind !== 'elsewhere' && !post.audio && (
+      {post.kind !== 'elsewhere' && !listenable && (
         <p
           className="absolute left-4 top-4 rounded-full px-2.5 py-1 text-xs font-semibold"
           style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(255,255,255,0.8)' }}
@@ -1015,11 +1043,14 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
       {/* Play the whole room rather than one thing out of it. Kept above the
           panels, where it was, because it is the one control that is about
           the room instead of about a post. */}
-      {room.posts.some((one) => one.audio) && (
+      {/* A video counts as something to play. The same miss as the badge:
+          this asked for `audio` and meant "anything with a medium", so a
+          room holding nothing but videos offered no way to start it. */}
+      {room.posts.some(playable) && (
         <button
           type="button"
           onClick={() => {
-            const first = room.posts.find((one) => one.audio);
+            const first = room.posts.find(playable);
             if (first) setOpenAt(first.id);
           }}
           className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold"
