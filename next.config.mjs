@@ -86,7 +86,28 @@ const pageExtensions = ['tsx', 'ts', 'jsx', 'js'];
 if (process.env.PROBE === '1') pageExtensions.push('probe.tsx');
 
 /** @type {import('next').NextConfig} */
+/* ── Which build is on the phone ──────────────────────────────────────────
+ *
+ * Carli reported the same five faults three times. Two were fixed and pushed
+ * between the first report and the third, and neither of us could tell
+ * whether what she was holding contained the fix — so a repeat could mean the
+ * fix failed, or that her phone still had yesterday's app, and those need
+ * opposite next moves. Most of what went wrong this week was picking the
+ * wrong one.
+ *
+ * Baked in here because a browser cannot read a server's environment. Vercel
+ * sets `VERCEL_GIT_COMMIT_SHA` on every deploy; a local run sets neither and
+ * the screen says "local" rather than inventing a number.
+ *
+ * Not a secret: the repository is the source of it, and a commit id says
+ * nothing the repository does not already say out loud. */
+const stamp = {
+  NEXT_PUBLIC_BUILD_SHA: process.env.VERCEL_GIT_COMMIT_SHA ?? '',
+  NEXT_PUBLIC_BUILT_AT: new Date().toISOString().slice(0, 10),
+};
+
 const nextConfig = {
+  env: stamp,
   pageExtensions,
   async headers() {
     return [

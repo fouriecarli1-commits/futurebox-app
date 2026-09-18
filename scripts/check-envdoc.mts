@@ -92,7 +92,20 @@ function computedIn(dir: string, found: string[] = []): string[] {
   return found;
 }
 
+/* ── `next.config.mjs` reads variables too, and was invisible ─────────
+ *
+ * This scanned `app/` only. On 18 September a variable read nowhere else —
+ * Vercel's `VERCEL_GIT_COMMIT_SHA`, baked into the bundle so a phone can say
+ * which build it is holding — was documented on the switch-on page and this
+ * check called it a variable nothing reads. It was wrong: the config is part
+ * of the app and its reads are reads.
+ *
+ * Caught by the page being right and the check being out of date, which is
+ * the good way round. A variable read ONLY in the config would, before this,
+ * have been undocumented with nothing objecting. */
 const used = readsIn(join(ROOT, 'app'));
+for (const m of readFileSync(join(ROOT, 'next.config.mjs'), 'utf8')
+  .matchAll(/process\.env\.([A-Z][A-Z0-9_]*)/g)) used.add(m[1]);
 
 /* `NEXT_PUBLIC_` on its own is the prefix test that keeps the owner list off
    the client, not a variable anybody sets. */

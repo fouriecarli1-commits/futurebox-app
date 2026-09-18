@@ -262,6 +262,49 @@ export default function BoothTimeline({
    * `lib/magnet` has the rule it follows and why the reach is in pixels.
    */
   const [magnet, setMagnet] = useState(true);
+  /**
+   * How much wider than the screen the song is drawn.
+   *
+   * ── What was missing, and it was the whole thing ─────────────────────
+   *
+   * Carli, 18 September 2026: *"Die probooth se sideways scroll werk nie."*
+   *
+   * It did not work because it did not exist. Until now the whole session
+   * was squeezed into whatever width the screen had: on a 390-pixel phone
+   * the lane area is 294 pixels, so a three-minute song put a BAR at about
+   * a pixel and a half. Every gesture this room offers — place a clip, cut
+   * an edge, mark a piece — was being asked for at a scale where a fingertip
+   * covers eight bars. The magnet was carrying work that a zoom should have
+   * been doing.
+   *
+   * 1 is "the whole song fits", which is where it starts and is the right
+   * first view: you can see what you have before you go into it. Above that
+   * the axis is drawn wider than the box it sits in and the box scrolls.
+   *
+   * ── Why it doubles rather than sliding ───────────────────────────────
+   *
+   * A slider is a fiddly control on a phone and a continuous zoom means the
+   * bar lines never sit still. Doubling gives six steps from a whole song to
+   * a single bar, each one a press, and every step is a number somebody can
+   * hold in their head: half the song, a quarter of it, an eighth.
+   */
+  const [zoom, setZoom] = useState(1);
+  const MOST_ZOOM = 32;
+  /** The box the axis is drawn inside, which is what the zoom multiplies. */
+  const scroller = useRef<HTMLDivElement | null>(null);
+  const [room, setRoom] = useState(0);
+  useEffect(() => {
+    const box = scroller.current;
+    if (!box) return;
+    const measure = (): void => setRoom(Math.max(0, box.clientWidth - GUTTER));
+    measure();
+    const watcher = new ResizeObserver(measure);
+    watcher.observe(box);
+    return () => watcher.disconnect();
+  }, []);
+  /* The axis's own width in pixels. At zoom 1 it is the room, so nothing
+     scrolls and the room reads exactly as it did before this existed. */
+  const axisWide = Math.max(1, Math.round(room * zoom));
   /** What the drag in progress stuck to, for the readout. Null is the grid. */
   const [stuck, setStuck] = useState<Sticky | null>(null);
 
@@ -616,6 +659,60 @@ export default function BoothTimeline({
         <span className="text-xs font-bold tabular-nums" style={{ color: 'rgba(56,189,248,0.9)' }}>
           {sayPlace(placeAt(at, meter))}
         </span>
+
+        {/* ── In and out along the song ────────────────────────────────
+
+            Here rather than in the ruler's corner, which now holds two
+            switches and has no room for two more, and rather than on a desk
+            behind an icon — a zoom is not a setting, it is something you
+            reach for every few seconds while you work, so it sits in the one
+            row that is always on the screen.
+
+            `self-center` because this row is `items-baseline`, which is right
+            for the clock beside its units and wrong for a button. */}
+        <span className="ml-1 flex flex-shrink-0 items-center self-center">
+          {([-1, 1] as const).map((way) => {
+            const off = way === -1 ? zoom <= 1 : zoom >= MOST_ZOOM;
+            return (
+              <button
+                key={way}
+                type="button"
+                data-zoom={way === 1 ? 'in' : 'out'}
+                disabled={off}
+                onClick={() =>
+                  setZoom((was) =>
+                    way === 1 ? Math.min(MOST_ZOOM, was * 2) : Math.max(1, was / 2),
+                  )
+                }
+                aria-label={
+                  way === 1
+                    ? t('pro.zoomIn', 'Closer in along the song')
+                    : t('pro.zoomOut', 'Further out along the song')
+                }
+                title={t(
+                  'pro.zoomWhat',
+                  'How much of the song is on the screen. All of it to start with, which is where a bar on a phone is a pixel and a half wide — press + and the timeline gets wider than the screen and scrolls sideways, so a clip can be put exactly where it belongs. The names on the left stay put while it does.',
+                )}
+                className="flex h-11 w-11 items-center justify-center disabled:opacity-30"
+              >
+                <span
+                  className="flex h-6 w-7 items-center justify-center rounded text-base font-black leading-none"
+                  style={{ background: 'rgba(255,255,255,0.07)', color: INK_DIM }}
+                >
+                  {way === 1 ? '+' : '\u2212'}
+                </span>
+              </button>
+            );
+          })}
+          {/* Only once it is doing something. A "1x" sitting on the screen
+              for ever is a number nobody needs; a "4x" is the answer to
+              "why does this not look like the whole song". */}
+          {zoom > 1 && (
+            <span className="ml-0.5 text-[11px] font-bold tabular-nums" style={{ color: INK_DIM }}>
+              {zoom}\u00d7
+            </span>
+          )}
+        </span>
         {/* Armed, and nothing marked yet: say what to do, in the one row
             that is always on the screen and always looked at.
 
@@ -639,10 +736,22 @@ export default function BoothTimeline({
         ) : null}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      {/* Both directions on one box. Down the lanes and along the song are
+          the same scroller, because the ruler and every lane are cells of one
+          grid — which is the guarantee this component exists for, and two
+          scrollers would be two ways for them to disagree about where a
+          second is. */}
+      <div
+        ref={scroller}
+        className="min-h-0 flex-1 overflow-x-auto overflow-y-auto overscroll-contain"
+      >
         <div
           className="relative grid"
-          style={{ gridTemplateColumns: `${GUTTER}px 1fr` }}
+          /* A width in pixels rather than `1fr`, because `1fr` means "what
+             is left of the box" and the whole point of a zoom is to be
+             wider than the box. At zoom 1 it IS what is left of the box, so
+             this is the same layout it always was until somebody presses +. */
+          style={{ gridTemplateColumns: `${GUTTER}px ${axisWide}px` }}
         >
           {/* ── The ruler ──────────────────────────────────────────────
 
@@ -686,7 +795,19 @@ export default function BoothTimeline({
               lane's, and both of them say what a DRAG is about to do. */}
           <div
             className="flex items-center justify-between"
-            style={{ gridColumn: 1, gridRow: 1, background: PANEL, borderBottom: `1px solid ${EDGE}`, borderRight: `1px solid ${EDGE}` }}
+            /* Stuck to the left edge, so the two switches stay reachable
+               however far along the song you have scrolled. `z-3` puts it
+               over the lanes sliding past and under the playhead. */
+            style={{
+              gridColumn: 1,
+              gridRow: 1,
+              position: 'sticky',
+              left: 0,
+              zIndex: 3,
+              background: PANEL,
+              borderBottom: `1px solid ${EDGE}`,
+              borderRight: `1px solid ${EDGE}`,
+            }}
           >
             <button
               type="button"
@@ -870,10 +991,18 @@ export default function BoothTimeline({
                     of those two. That is what a desk does. */}
                 <div
                   className="relative"
+                  /* Stuck, like the corner above it. A name column that
+                     scrolled away with the song would leave somebody looking
+                     at four anonymous stripes of colour a minute into a
+                     track — and the whole reason for a name beside a lane is
+                     to tell them apart while you are working inside one. */
                   style={{
                     gridColumn: 1,
                     gridRow: index + 2,
                     height: ROW,
+                    position: 'sticky',
+                    left: 0,
+                    zIndex: 3,
                     background: on ? 'rgba(56,189,248,0.10)' : PANEL,
                     borderBottom: `1px solid ${EDGE}`,
                     borderRight: `1px solid ${EDGE}`,
@@ -983,12 +1112,27 @@ export default function BoothTimeline({
                      vertical scrolling, and a horizontal drag is still ours
                      to claim — which is what the clip and the cut handles
                      below do with their own `touch-none`. */
-                  className={marking ? 'relative touch-none' : 'relative touch-pan-y'}
+                  className="relative"
+                  /* ── Both directions, in one declaration ───────────────
+
+                     Tailwind has `touch-pan-x` and `touch-pan-y` and no
+                     utility for the two together, and two classes do not
+                     combine — the second wins and the first is silently
+                     lost. Written as a style so it says what it means:
+                     the browser may pan this element in either direction,
+                     and anything else is ours.
+
+                     Which is exactly what a lane needs now that the song is
+                     wider than the screen: up and down goes to the lane
+                     list, along goes to the song, and a drag on a CLIP is
+                     still the clip's own. While the marker is armed it is
+                     all ours, because marking draws across the lanes. */
                   style={{
                     gridColumn: 2,
                     gridRow: index + 2,
                     height: ROW,
                     borderBottom: `1px solid ${EDGE}`,
+                    touchAction: marking ? 'none' : 'pan-x pan-y',
                   }}
                   /* The empty stretch either side of a clip. It is most of a
                      row on a long song and it had no handler at all, so a

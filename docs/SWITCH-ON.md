@@ -564,10 +564,20 @@ krediet weg as vantevore, en die prys moet verander.
 Die bladsy dra geen teks, klank of naam nie — net getalle en hulle versoek-id's
 — so dit is veilig om in 'n gesprek te plak. Dit weier sonder `POST_SECRET`.
 | `ANTHROPIC_API_KEY` | The copilot in every room. |
+| `NEXT_PUBLIC_BUILD_SHA` | **Niks om te stel nie.** `next.config.mjs` bak dit in uit Vercel se eie `VERCEL_GIT_COMMIT_SHA`, sodat `/oops` kan sê watter weergawe op die foon is. |
+| `NEXT_PUBLIC_BUILT_AT` | **Niks om te stel nie.** Dieselfde plek, die dag waarop gebou is. |
+| `PROBE` | **Niks om te stel nie, en moet nooit op Vercel gestel word nie.** `PROBE=1` laat `*.probe.tsx` as bladsye tel, sodat die blaaierseine iewers het om 'n komponent te monteer. 'n Produksiebou kan hulle nie sien nie. |
 
-The two `NEXT_PUBLIC_` ones are meant to be visible and are the only kind that
+Die vier `NEXT_PUBLIC_` ones are meant to be visible and are the only kind that
 may carry that prefix. Nothing else here may ever have it — `OWNER_EMAIL` with
 that prefix would ship the list of who runs the place to every visitor.
+
+Die laaste twee is nie iets om aan te skakel nie; hulle staan hier omdat die
+app hulle lees en alles wat die app lees op hierdie bladsy moet staan. Hulle
+bestaan omdat Carli dieselfde vyf foute drie keer gerapporteer het en niemand
+kon sê of die weergawe in haar hand die regmaak in het nie — 'n herhaling het
+gelees soos "die regmaak het gefaal", en die volgende uur het in kode gegaan
+wat al reg was.
 
 ### Die waarskuwing as die krediete opraak — en die twee dinge wat moet gebeur
 

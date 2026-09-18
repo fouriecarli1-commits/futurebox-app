@@ -30,6 +30,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { forgetProblems, problems, type Problem } from '../lib/lasterror';
+import { buildLine } from '../lib/whichbuild';
 
 const INK = 'rgb(228 228 231)';
 const DIM = 'rgb(161 161 170)';
@@ -73,6 +74,23 @@ export default function Oops(): React.ReactElement {
           <span style={{ color: FAINT }}>
             Kept on this device only and never sent. Copy it and send it to me.
           </span>
+        </p>
+
+        {/* ── Which build this is ───────────────────────────────────────
+
+            First, above everything, because it is the first question about
+            any report: is this the app that has the fix in it? Three rounds
+            of the same list were answered as though the answer was yes, and
+            nobody could check. */}
+        <p
+          data-build=""
+          style={{
+            margin: '0 0 1.5rem', padding: '0.5rem 0.75rem',
+            border: '1px solid rgb(39 39 42)', borderRadius: '0.5rem',
+            fontSize: '0.8125rem', color: DIM, fontFamily: 'ui-monospace, monospace',
+          }}
+        >
+          Weergawe · Build: <strong style={{ color: INK }}>{buildLine()}</strong>
         </p>
 
         {list === null ? (

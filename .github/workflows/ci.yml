@@ -579,6 +579,12 @@ jobs:
       - name: Every button answers a thumb
         run: npm run check:pressed
 
+      # "Is this the build with the fix in it" is the first question about any
+      # report, and it was unanswerable three times running — so a repeat read
+      # as "the fix failed" and the next hour went into code that was right.
+      - name: The phone can say which build it is holding
+        run: npm run check:whichbuild
+
       # The booth carries its own two rows of controls, so the app's tab bar
       # stands down while it is open. That is only safe while the back button
       # at the top left is there, which is why the two are one assertion.

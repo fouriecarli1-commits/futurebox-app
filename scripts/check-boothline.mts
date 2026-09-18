@@ -57,12 +57,23 @@ const css = readFileSync('app/globals.css', 'utf8');
 /* ── One axis ─────────────────────────────────────────────────────────── */
 ok(
   'the ruler and every lane sit in one grid column',
-  /gridTemplateColumns: `\$\{GUTTER\}px 1fr`/.test(line),
+  /* `1fr` became a width in pixels on 18 September, when the timeline learned
+     to zoom: `1fr` means "what is left of the box", and the whole point of a
+     zoom is to be WIDER than the box. The property is unchanged and is the
+     one this file exists for — the ruler and every lane are still two cells
+     of one column, so they cannot disagree about where a second is. What is
+     pinned here is that there are exactly two columns and the second is one
+     value shared by all of them. */
+  /gridTemplateColumns: `\$\{GUTTER\}px \$\{axisWide\}px`/.test(line) &&
+    /const axisWide = Math\.max\(1, Math\.round\(room \* zoom\)\)/.test(line),
   'a per-row axis is a per-row pixels-per-second, which is what made a ruler useless',
 );
 ok(
   '  and every cell names its own row and column',
-  /gridColumn: 1, gridRow: 1,/.test(line) &&
+  /* The corner cell's style object went multi-line again when it was pinned
+     to the left edge for the sideways scroll, so this is matched per property
+     like the three below it rather than as one line of source. */
+  /gridColumn: 1,\n\s*gridRow: 1,/.test(line) &&
     /* The ruler's cell grew a conditional background when the marker was
        added, so its style object is written over several lines now. The rule
        is that the cell NAMES its row and column, not that both sit on one

@@ -260,6 +260,63 @@ try {
     );
   }
 
+  /* ── Along the song, which did not exist at all ──────────────────────
+
+     Carli, 18 September 2026: *"Die probooth se sideways scroll werk nie."*
+
+     It did not work because there was nothing to work: the whole session was
+     squeezed into whatever width the screen had, so on a 390-pixel phone a
+     three-minute song put a BAR at about a pixel and a half and there was
+     never anything to scroll to. The zoom is the missing half of every
+     gesture in this room.
+
+     Three things, because two of them would pass on their own: the buttons
+     exist, pressing + really does make the axis wider than its box, and the
+     names on the left stay where they are while the song slides past. That
+     last one is what a horizontal scroller usually breaks. */
+  const zoomIn = p.locator('[data-zoom="in"]').first();
+  check('the timeline has a way to go closer in', (await zoomIn.count()) === 1);
+  if (await zoomIn.count()) {
+    const axisBefore = await p.locator('[data-axis]').first().evaluate((one) => one.clientWidth);
+    const scrollBefore = await p.evaluate(() => {
+      const box = document.querySelector('[data-timeline] .overflow-x-auto');
+      return box ? box.scrollWidth - box.clientWidth : -1;
+    });
+    check('and at the first view nothing hangs off the side', scrollBefore <= 1,
+      `${scrollBefore}px of overflow before pressing +`);
+
+    await zoomIn.click();
+    await p.waitForTimeout(500);
+    const axisAfter = await p.locator('[data-axis]').first().evaluate((one) => one.clientWidth);
+    check('pressing + makes the song wider than the screen',
+      axisAfter > axisBefore * 1.5, `${axisBefore}px → ${axisAfter}px`);
+
+    /* And it really scrolls, which a width alone does not prove: a box that
+       is `overflow-hidden` is also wider than its content and shows none of
+       it. */
+    const moved = await p.evaluate(() => {
+      const box = document.querySelector('[data-timeline] .overflow-x-auto');
+      if (!box) return null;
+      const was = box.scrollLeft;
+      box.scrollLeft = was + 80;
+      return { was, now: box.scrollLeft };
+    });
+    check('and the timeline slides sideways', moved !== null && moved.now > moved.was,
+      moved ? `${moved.was} → ${moved.now}` : 'no scroller found');
+
+    /* The names stay. Measured against the scroller's own left edge rather
+       than the page's, so a room that happens to sit at x=0 cannot pass this
+       by accident. */
+    const stuck = await p.evaluate(() => {
+      const box = document.querySelector('[data-timeline] .overflow-x-auto');
+      const name = document.querySelector('[data-lanename]');
+      if (!box || !name) return null;
+      return Math.round(name.getBoundingClientRect().left - box.getBoundingClientRect().left);
+    });
+    check('and the lane names stay put while it does', stuck !== null && stuck >= -1 && stuck <= 8,
+      stuck === null ? 'not found' : `${stuck}px from the left edge, scrolled`);
+  }
+
   await p.screenshot({ path: shot('boothmagnet.png') });
   await b.close();
 } finally {

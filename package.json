@@ -35,6 +35,7 @@
     "check:finepr": "tsx scripts/check-finepr.mts",
     "check:recordroom": "tsx scripts/check-recordroom.mts",
     "check:pressed": "tsx scripts/check-pressed.mts",
+    "check:whichbuild": "tsx scripts/check-whichbuild.mts",
     "check:boothdock": "tsx scripts/check-boothdock.mts",
     "check:boothfx": "tsx scripts/check-boothfx.mts",
     "check:mixplan": "tsx scripts/check-mixplan.mts",
