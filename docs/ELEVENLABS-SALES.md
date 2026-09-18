@@ -219,8 +219,8 @@ inside the plan we already hold.
 Their bar creates a pull towards quoting a bigger first-quarter number to
 clear it. **Do not.** An Enterprise minimum is a contractual floor that is
 paid whether or not the members arrive, and the cost model says break-even on
-Business is 99 paying members. Committing to $3,000 a month before there are
-250 paying members converts a good deal into a monthly loss with a signature
+Business is 80 paying members. Committing to $3,000 a month before there are
+216 paying members converts a good deal into a monthly loss with a signature
 on it.
 
 The right ask is not a smaller commitment. It is a **floor plus a ramp**: a
@@ -231,13 +231,21 @@ confidence rather than hesitation, and it is the honest shape of the business
 
 | Committed spend | What it costs, incl. VAT | Paying members needed to fund it |
 |---|---|---|
-| $990 (today) | R18 216 | 99 |
-| $2 000 | R36 800 | 167 |
-| $3 000 | R55 200 | 250 |
-| $4 000 | R73 600 | 333 |
+| $990 (today) | R18 216 | 80 |
+| $2 000 | R36 800 | 149 |
+| $3 000 | R55 200 | 216 |
+| $4 000 | R73 600 | 284 |
 
-*Margin of R221 per paying member, realistic case, from
-`scripts/costs-eleven.mts`.*
+*Margin of R272,06 per paying member, realistic case without the workshops,
+from `docs/KOSTE-EN-WINS.md`. Fixed costs excluding ElevenLabs: R3 543,74.*
+
+**Corrected 18 September 2026.** This table was built on a margin of R221 and
+a break-even of 99, both from the cost model before task #155 found it
+charging ElevenLabs twice — once inside the per-member cost and again as a
+fixed monthly. Every row moved DOWN, which is to say each commitment needs
+fewer members than this table used to claim. The arithmetic reproduces the 80
+that `KOSTE-EN-WINS.md` reaches independently, which is the check that it is
+the same model rather than a second guess.
 
 ---
 
@@ -308,10 +316,10 @@ business rather than a request for a discount:
   Our revenue arrives one member at a time, and I would rather sign something I
   can honour every month than a number that looks impressive in September.
 
-We have modelled the tiers above that carefully — our break-even on the
-current plan is 99 paying members, and each step up the commitment maps to a
-member count we can name. I am happy to walk your commercial team through that
-model; the arithmetic is not hand-waving and I would rather they saw it.
+We have modelled the tiers carefully, and each step up maps to an active
+member count we can name. I am happy to walk your commercial team through the
+capacity side of that model; the arithmetic is not hand-waving and I would
+rather they saw it.
 
 **3. For the call, briefly.**
 
@@ -362,9 +370,14 @@ The table earlier in this document is the **internal** one. It carries the
 margin per paying member and the break-even count, which is exactly what a
 commercial team would price against if they saw it. **Do not send it.**
 
-Telling a supplier "each member earns me R221" is telling them how much of
-that R221 they can take. Telling them "we break even at 99 members" is telling
-them the floor below which we cannot walk away. Both are true, both are useful
+Telling a supplier "each member earns me R272" is telling them how much of
+that R272 they can take. Telling them "we break even at 80 members" is telling
+them the floor below which we cannot walk away.
+
+The draft above used to do exactly that, in one sentence, while this section
+two pages later said not to. Caught on 18 September, along with the stale
+numbers — a rule written down in the same document as the text that breaks it
+is a rule nobody reads in time. Both are true, both are useful
 to us, and neither is theirs.
 
 What is safe — and genuinely persuasive — is the same ramp expressed in
