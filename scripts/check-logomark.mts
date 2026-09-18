@@ -107,6 +107,63 @@ ok(
   /if \(cut\.mark\) drawMark/.test(stitch),
 );
 
+/* ── The filmed take, and the one ordering that makes it safe ────────────
+
+   A take cannot be re-recorded. The moment has gone. So the marking pass
+   runs AFTER `setTake`, never instead of it: from that line on she has her
+   take, and the pass that follows either improves it or is discarded. Get
+   that order the wrong way round and a failed pass loses a performance.
+
+   Checked as an ordering in the source rather than by running it, because
+   the failure it guards against only appears when something else goes
+   wrong, and a probe cannot make a MediaRecorder fail on demand. */
+const follow = readFileSync('app/components/FollowWords.tsx', 'utf8');
+ok('the filmed take is branded too', /markTake\(raw, mark/.test(follow));
+/* Pinned to the SHAPE, not to two positions in the file.
+
+   The first version of this compared indexes — setTake before markTake —
+   and I tried to prove it by moving the call inside the guard. It still
+   passed, because setTake was still earlier in the text. An ordering is not
+   what makes this safe; what makes it safe is that the take is set
+   UNCONDITIONALLY, before any branch, so no path can reach the marking pass
+   without her already having the file. That is a shape a regex can hold:
+   the bare call, then the guard, in that order and with nothing between
+   them but a comment. */
+ok(
+  '  but only after the take itself is unconditionally in hand',
+  /setTake\(raw\);\s*(?:\/\*[\s\S]*?\*\/\s*)?if \(!mark \|\| !brandIt\) return;/.test(follow),
+  'the pass must not be reachable on any path where the take is not already saved',
+);
+ok(
+  '  and the camera recording itself is untouched',
+  /new MediaRecorder\(built \? built\.stream : camera/.test(follow),
+  'a canvas inside a live take is a dropped frame in a moment that cannot be repeated',
+);
+ok(
+  '  and the screen says the pass is running, because it is real time',
+  /data-marking=/.test(follow) && /aria-live="polite"/.test(follow),
+);
+ok(
+  '  and says the take is already saved without it',
+  /"sing\.marking"/.test(readFileSync('app/lib/i18n.tsx', 'utf8')),
+);
+
+const mark = readFileSync('app/lib/logomark.ts', 'utf8');
+ok(
+  'the take keeps its own sound through the pass',
+  /createMediaElementSource/.test(mark) && /createMediaStreamDestination/.test(mark),
+  'the stitcher drops clip audio by design; a take IS its audio',
+);
+ok(
+  '  and the pass is silent to whoever is waiting for it',
+  !/connect\(context\.destination\)/.test(mark),
+  'routing to the speakers would play the take back at them while it marks',
+);
+ok(
+  '  and one failed pass gives back nothing rather than a broken file',
+  /return \{ ok: false, why: 'failed' \}/.test(mark),
+);
+
 if (failures) {
   console.error(`\ncheck:logomark — ${failures} assertion(s) failed.\n`);
   process.exit(1);

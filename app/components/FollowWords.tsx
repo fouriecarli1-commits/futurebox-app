@@ -57,6 +57,9 @@ import { useBackLayer } from '../lib/backstack';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { keepFilmed } from '../lib/filmed';
 import { mixFor, type Mix } from '../lib/singmix';
+import { loadBrandKit } from '../lib/brandkit';
+import { assetDataUrl } from '../lib/assets';
+import { canMark, loadMark, markTake } from '../lib/logomark';
 
 /** Where the headphones answer is kept. Hers, not this song's. */
 /**
@@ -222,6 +225,33 @@ export default function FollowWords({
    */
   const [paused, setPaused] = useState(false);
   const [take, setTake] = useState<Blob | null>(null);
+
+  /* ── Her logo on the take ───────────────────────────────────────────────
+
+     Loaded when the screen opens, for the reason `logomark.ts` gives: an
+     image decode inside a draw loop is a dropped frame, and here the frames
+     being drawn are hers.
+
+     `marking` is a fraction, or null when nothing is running. It has to be
+     on the screen: the pass is real time, so a minute of take is a minute of
+     waiting, and a minute of nothing changing is a minute somebody spends
+     deciding the app has hung. */
+  const [mark, setMark] = useState<HTMLImageElement | null>(null);
+  const [brandIt, setBrandIt] = useState(true);
+  const [marking, setMarking] = useState<number | null>(null);
+  useEffect(() => {
+    let dropped = false;
+    void (async () => {
+      if (!canMark()) return;
+      const id = loadBrandKit().logoAssetId;
+      if (!id) return;
+      const url = await assetDataUrl(id).catch(() => null);
+      if (!url || dropped) return;
+      const image = await loadMark(url);
+      if (!dropped) setMark(image);
+    })();
+    return () => { dropped = true; };
+  }, []);
   /** Wall-clock marks, so the take's length is measured and not guessed. */
   const began = useRef(0);
   const held = useRef(0);
@@ -462,7 +492,20 @@ export default function FollowWords({
          it has wall clock, and the number that matters is the one somebody
          will watch. */
       ran.current = Math.max(0, (performance.now() - began.current - held.current) / 1000);
-      setTake(new Blob(chunks.current, { type }));
+      const raw = new Blob(chunks.current, { type });
+      /* The take lands first, unconditionally, branded or not.
+
+         This one line is the whole safety of the marking pass. A take cannot
+         be filmed again — the moment has gone — so from here on she has it,
+         and what follows either improves it or is thrown away. Anything that
+         made the take conditional on the pass succeeding would be trading a
+         performance for a logo. */
+      setTake(raw);
+      if (!mark || !brandIt) return;
+      setMarking(0);
+      void markTake(raw, mark, 'bottomRight', setMarking)
+        .then((done) => { if (done.ok) setTake(done.blob); })
+        .finally(() => setMarking(null));
     };
     recorder.current = made;
     made.start();
@@ -795,6 +838,38 @@ export default function FollowWords({
                 {t('sing.cameraOff', 'Camera off')}
               </button>
             </>
+          )}
+          {/* Off in one press, and only offered when there is a logo to put
+              on. A take is your own footage, so this is on by default — but
+              a take you filmed for somebody else is still a take, and the
+              way out has to be one press rather than a trip to another
+              room. */}
+          {mark && !take && !recording && (
+            <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer min-h-[44px]">
+              <input
+                type="checkbox"
+                checked={brandIt}
+                onChange={(event) => setBrandIt(event.target.checked)}
+                className="w-4 h-4 accent-emerald-500 flex-shrink-0"
+              />
+              {t('sing.brandIt', 'Put my logo on the take')}
+            </label>
+          )}
+          {/* ── The marking pass, out loud ────────────────────────────────
+
+              Real time, so it has to be visible. The take is already hers at
+              this point, so this says so: it is an improvement in progress,
+              not a wait for something to exist. */}
+          {marking !== null && (
+            <p
+              className="w-full text-xs text-zinc-400 leading-snug"
+              role="status"
+              aria-live="polite"
+              data-marking={Math.round(marking * 100)}
+            >
+              {t('sing.marking', 'Putting your logo on the take — {pc}%. It is already saved without it; this only improves it.')
+                .replace('{pc}', String(Math.round(marking * 100)))}
+            </p>
           )}
           {take && (
             <button

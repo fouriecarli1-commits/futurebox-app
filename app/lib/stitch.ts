@@ -152,8 +152,15 @@ export type Made =
   | { readonly ok: true; readonly blob: Blob; readonly seconds: number; readonly ext: 'webm' | 'mp4' }
   | { readonly ok: false; readonly why: 'unsupported' | 'no_scenes' | 'unreadable' | 'failed' };
 
-/** What this browser will record into, best first. */
-function recordable(): string | null {
+/**
+ * What this browser will record into, best first.
+ *
+ * Exported since 18 September because `logomark.ts` records too, when it
+ * brands a filmed take, and a second list would be a second answer to the
+ * same question — which is how one of the two ends up writing a file the
+ * other cannot open.
+ */
+export function recordable(): string | null {
   if (typeof MediaRecorder === 'undefined') return null;
   const wanted = [
     'video/mp4;codecs=avc1,mp4a.40.2',

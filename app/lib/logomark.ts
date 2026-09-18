@@ -158,3 +158,170 @@ export function drawMark(
   context.drawImage(mark, box.x, box.y, box.w, box.h);
   context.globalAlpha = was;
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Branding something that is already a video
+   ════════════════════════════════════════════════════════════════════════
+
+   Everything above is for a frame somebody else is already painting. A
+   filmed take is not that: `FollowWords` hands the camera's own stream
+   straight to a `MediaRecorder`, with no canvas anywhere in it.
+
+   There were two ways to brand it and the choice matters.
+
+   The first is to put a canvas INSIDE the live recording — draw each camera
+   frame plus the logo, and record the canvas instead of the camera. It is
+   the cheaper one, and it is the wrong one. That path has broken twice
+   already (the take that came out wide, the take whose sound would not
+   play), it runs on a phone while the person is singing, and a dropped
+   frame there is a ruined take that cannot be repeated — the moment has
+   gone. A logo is not worth that risk.
+
+   The second is this: leave the recording exactly as it is, and make one
+   pass afterwards over a file that already exists. If it fails, the take is
+   untouched and still hers. That is the whole argument.
+
+   ── What it costs, said plainly ─────────────────────────────────────────
+
+   Real time. A minute of take is a minute of marking, for the same reason
+   `stitch.ts` gives: a canvas is recorded as it is painted, and it can only
+   be painted as fast as the video plays. The caller has to show that.
+
+   ── The sound, which is the part that is easy to lose ───────────────────
+
+   The stitcher throws each clip's own audio away on purpose — twelve
+   generations of room tone under one song is noise. Here the take's sound
+   IS the take: somebody singing. So the audio is routed through a
+   `MediaElementAudioSourceNode` into a `MediaStreamDestination` and added to
+   the recorded stream, and deliberately NOT connected to the speakers, so
+   the marking pass is silent to whoever is waiting for it.
+*/
+
+import { recordable } from './stitch';
+
+export type Marked =
+  | { readonly ok: true; readonly blob: Blob; readonly ext: 'webm' | 'mp4' }
+  | { readonly ok: false; readonly why: 'unsupported' | 'unreadable' | 'failed' };
+
+/** Whether this browser can brand a take at all. */
+export function canMark(): boolean {
+  return (
+    typeof document !== 'undefined'
+    && typeof HTMLCanvasElement.prototype.captureStream === 'function'
+    && recordable() !== null
+  );
+}
+
+/**
+ * Burn the mark into a video that has already been recorded.
+ *
+ * Never throws and never returns a broken file: anything at all going wrong
+ * is `ok: false`, and the caller keeps the take it already had.
+ *
+ * @param onProgress fraction 0–1, so a screen can say how far in it is.
+ */
+export async function markTake(
+  take: Blob,
+  mark: HTMLImageElement,
+  corner: Corner = 'bottomRight',
+  onProgress?: (fraction: number) => void,
+): Promise<Marked> {
+  const mimeType = recordable();
+  if (!mimeType || !canMark()) return { ok: false, why: 'unsupported' };
+
+  const url = URL.createObjectURL(take);
+  const video = document.createElement('video');
+  video.src = url;
+  video.muted = false;
+  video.playsInline = true;
+
+  let context: AudioContext | null = null;
+  try {
+    await new Promise<void>((resolve, reject) => {
+      video.onloadedmetadata = () => resolve();
+      video.onerror = () => reject(new Error('unreadable'));
+    });
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    if (!width || !height) return { ok: false, why: 'unreadable' };
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const paint = canvas.getContext('2d');
+    if (!paint) return { ok: false, why: 'unsupported' };
+
+    const stream = canvas.captureStream(30);
+
+    /* The take's own sound, onto the same stream, without going through the
+       speakers. A `MediaElementAudioSourceNode` takes the element's output
+       over, so connecting it only to the destination is what makes this pass
+       silent — and is also what stops the person hearing themselves twice. */
+    const Ctx =
+      window.AudioContext
+      ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (Ctx) {
+      try {
+        context = new Ctx();
+        const source = context.createMediaElementSource(video);
+        const destination = context.createMediaStreamDestination();
+        source.connect(destination);
+        for (const track of destination.stream.getAudioTracks()) stream.addTrack(track);
+      } catch {
+        /* A take with no audio track, or a browser that will not route it.
+           A silent branded take is worse than an unbranded one with sound,
+           so this gives up on the whole pass rather than on the sound. */
+        return { ok: false, why: 'failed' };
+      }
+    }
+
+    const parts: Blob[] = [];
+    const recorder = new MediaRecorder(stream, { mimeType });
+    recorder.ondataavailable = (event) => {
+      if (event.data.size) parts.push(event.data);
+    };
+    const finished = new Promise<void>((resolve) => {
+      recorder.onstop = () => resolve();
+    });
+    recorder.start();
+
+    const length = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
+    await video.play();
+    await new Promise<void>((resolve) => {
+      let stopped = false;
+      const end = () => {
+        if (stopped) return;
+        stopped = true;
+        resolve();
+      };
+      video.onended = end;
+      const draw = () => {
+        if (stopped) return;
+        if (video.ended) {
+          end();
+          return;
+        }
+        paint.drawImage(video, 0, 0, width, height);
+        drawMark(paint, mark, width, height, corner);
+        if (length) onProgress?.(Math.min(1, video.currentTime / length));
+        requestAnimationFrame(draw);
+      };
+      draw();
+    });
+
+    recorder.stop();
+    await finished;
+    if (!parts.length) return { ok: false, why: 'failed' };
+    return {
+      ok: true,
+      blob: new Blob(parts, { type: mimeType }),
+      ext: mimeType.startsWith('video/mp4') ? 'mp4' : 'webm',
+    };
+  } catch {
+    return { ok: false, why: 'failed' };
+  } finally {
+    video.pause();
+    URL.revokeObjectURL(url);
+    void context?.close();
+  }
+}
