@@ -48,6 +48,7 @@ import {
 import { stretchBuffer } from '../lib/stretch';
 import NoteBar, { type Trail } from './NoteBar';
 import TakeStrip from './TakeStrip';
+import SungWords from './SungWords';
 import Hint from './Hint';
 import Staff from './Staff';
 import Cost from './Cost';
@@ -1119,69 +1120,21 @@ export default function VocalBooth({
             as its content, so there is no free space to centre and nothing
             gets pushed above the top edge. */}
         <div className="min-h-full flex flex-col justify-center">
-        <div className="px-6 min-h-[7rem] flex flex-col items-center justify-center text-center gap-3 py-4">
-        {/* The count belongs to the recording, not to the words: a song with
-            no words on it still has to be counted in. */}
-        {phase === 'counting' && (
-          <span className="text-5xl font-black text-emerald-400 tabular-nums leading-none">{count}</span>
-        )}
-
-        {lines.length === 0 ? (
-          <p className="text-base text-zinc-500 max-w-md leading-relaxed">
-            {t('booth.noWords', 'This song has no words on it, so there is nothing to follow. Sing anyway — the waveform and the note still work.')}
-          </p>
-        ) : (
-          <>
-            {phase !== 'counting' && current > 0 && (
-              <p className="text-base text-zinc-600 truncate max-w-3xl">{lines[current - 1].text}</p>
-            )}
-            <p
-              className="font-black text-white leading-tight max-w-4xl"
-              style={{ fontSize: 'clamp(1.35rem, 5.2vh, 3rem)' }}
-            >
-              {/* Always something to read: the line you are in, or the one you
-                  are about to be in. "Ready" only when the song is over. */}
-              {current >= 0 ? lines[current].text : next ? next.text : t('booth.ready', 'Ready')}
-            </p>
-            {current >= 0 && next && (
-              <p className="text-lg text-zinc-500 max-w-3xl truncate">{next.text}</p>
-            )}
-            {/* The AI singer is on this backing, and nothing said so.
-
-                Singing along with it is the whole point of a guide vocal —
-                it is how you learn where the lines fall — and it has worked
-                from the first day, because an unsplit song plays exactly as
-                it was generated. But the only control for it, the "AI voice
-                in your ear" fader, appears after the song is split. So the
-                one state where the AI voice is definitely playing was the
-                one state that never mentioned it, and people concluded the
-                feature was gone.
-
-                It says so now, once, under the words. */}
-            {!stems && phase !== 'counting' && (
-              <p className="text-sm text-emerald-400/80 flex items-center gap-1 max-w-md leading-snug">
-                {t('booth.withAi', 'The AI singer is on this backing — sing along with it.')}
-                <Hint>
-                  {t(
-                    'booth.withAiWhy',
-                    'An unsplit song plays as it was made, voice and all, which is what makes it a guide. On headphones your take comes back with only your voice on it. Out loud, the microphone hears the AI singer too — split the song below to take that voice out of the backing.',
-                  )}
-                </Hint>
-              </p>
-            )}
-
-            {/* The run-up. A bar that empties is easier to sing to than a number. */}
-            {untilNext < 4 && (
-              <div className="w-64 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
-                <div
-                  className="h-full bg-emerald-400 transition-none"
-                  style={{ width: `${Math.max(0, Math.min(100, (1 - untilNext / 4) * 100))}%` }}
-                />
-              </div>
-            )}
-          </>
-        )}
-        </div>
+        {/* The words themselves, in a block whose height does not depend on
+            them. Its own file because a claim about height has to be
+            measured in a browser, and this room needs a track, a microphone
+            and a decoded song before it draws anything — so the probe that
+            proves it would never have been written. See `SungWords.tsx` and
+            `check:wordsteady`. */}
+        <SungWords
+          lines={lines}
+          current={current}
+          next={next}
+          untilNext={untilNext}
+          counting={phase === 'counting'}
+          count={count}
+          split={stems !== null}
+        />
 
       {/* ── The phone's own instrument ──────────────────────────────────
 
