@@ -50,6 +50,43 @@ const PATIENCE = 4000;
 /** Below this many characters, nothing has drawn. Every screen has a header. */
 const EMPTY = 20;
 
+/**
+ * What is on the page, not counting the app's own furniture.
+ *
+ * ── Why this is not `document.body.innerText` ────────────────────────────
+ *
+ * It was, and that is why this guard has never once fired for Carli.
+ *
+ * On 18 September she sent a photograph of the white screen. The page is
+ * empty — no header, no room, nothing — and across the bottom of it, drawn
+ * perfectly, sits the tab bar: *Spotlight · Live · Make · Channel · You*.
+ * That is thirty-two characters. The threshold is twenty. So the guard
+ * looked at a screen with nothing on it, counted the five words it had put
+ * there itself, and decided the page was fine.
+ *
+ * Both instruments were blind at once and for different reasons, which is
+ * why four nights went into theories: `/oops` was empty because nothing
+ * threw, and the panel never came because the bar was drawn. Neither
+ * silence meant what it looked like it meant.
+ *
+ * So anything permanent carries `data-chrome` — the tab bar and the site
+ * footer — and is subtracted. What is left is the room, which is the thing
+ * that is either there or not.
+ *
+ * Nested marks are counted once: an element inside another `data-chrome`
+ * subtree is skipped, or its words would be taken off twice and a full page
+ * could measure as empty.
+ */
+function roomText(): { readonly words: number; readonly chrome: number } {
+  const all = (document.body?.innerText ?? '').trim().length;
+  let chrome = 0;
+  for (const bit of Array.from(document.querySelectorAll<HTMLElement>('[data-chrome]'))) {
+    if (bit.parentElement?.closest('[data-chrome]')) continue;
+    chrome += (bit.innerText ?? '').trim().length;
+  }
+  return { words: Math.max(0, all - chrome), chrome };
+}
+
 export default function BlankGuard(): null {
   useEffect(() => {
     let timer: number | null = null;
@@ -59,12 +96,25 @@ export default function BlankGuard(): null {
 
     const look = (): void => {
       if (document.getElementById(MARK)) return;
-      const words = (document.body?.innerText ?? '').trim();
-      if (words.length >= EMPTY) return;
+      const { words, chrome } = roomText();
+      if (words >= EMPTY) return;
 
       /* Recorded as well as drawn, so `/oops` carries it too and the two
-         cannot disagree about what happened. */
-      noteProblem('discarded', 'The page came back with nothing on it.');
+         cannot disagree about what happened.
+
+         Which of the two it was, in the sentence itself, because they are
+         different faults and the next report has to be able to tell them
+         apart. Nothing at all on the page is a document that was thrown
+         away and restored empty. The furniture still standing with the room
+         gone is React alive and one screen rendering nothing — which is a
+         bug in this app, not the operating system's doing, and is what her
+         photograph actually shows. */
+      noteProblem(
+        'discarded',
+        chrome > 0
+          ? 'The app was still there and the room in it was empty.'
+          : 'The page came back with nothing on it.',
+      );
 
       const step = (() => {
         try {
@@ -92,16 +142,26 @@ export default function BlankGuard(): null {
         return one;
       };
 
+      /* Two faults, two sentences. Telling somebody their phone threw the
+         tab away when the app is plainly still on the screen around the
+         hole is worse than saying nothing: it sends them to look at their
+         phone for a fault that is ours. `chrome` is how the panel knows. */
       panel.appendChild(line('Hierdie bladsy het leeg teruggekom.', '20px'));
       panel.appendChild(line(
-        'Jou foon het die oortjie weggegooi terwyl die fotokieser oop was, en '
-        + 'leeg teruggesit. Niks wat jy gemaak het, is weg — druk hieronder.',
+        chrome > 0
+          ? 'Die app is nog hier, maar die kamer het niks in hom nie. Dit is ons '
+            + 'kant se fout en dit is aangeteken. Niks wat jy gemaak het, is weg — druk hieronder.'
+          : 'Jou foon het die oortjie weggegooi terwyl die fotokieser oop was, en '
+            + 'leeg teruggesit. Niks wat jy gemaak het, is weg — druk hieronder.',
         '15px', true,
       ));
       panel.appendChild(line('This page came back empty.', '15px'));
       panel.appendChild(line(
-        'Your phone took the tab away while the picture picker was open and put '
-        + 'an empty one back. Nothing you made is lost — press below.',
+        chrome > 0
+          ? 'The app is still here but the room in it drew nothing. That is ours, '
+            + 'and it has been written down. Nothing you made is lost — press below.'
+          : 'Your phone took the tab away while the picture picker was open and put '
+            + 'an empty one back. Nothing you made is lost — press below.',
         '14px', true,
       ));
       if (step) panel.appendChild(line(`Besig met · Doing: ${step}`, '13px', true));

@@ -89,9 +89,45 @@ try {
       'the reload has to actually reload');
   }
 
+  /* ── The one this guard was actually failing ──────────────────────────
+
+     Carli, 18 September 2026, a photograph of the white screen: the page
+     has nothing on it — no header, no room — and across the bottom, drawn
+     perfectly, the tab bar. *Spotlight · Live · Make · Channel · You*.
+
+     Thirty-two characters, against a threshold of twenty. So the guard
+     counted the five words it had put there itself and decided the page
+     was fine, which is why she had never seen this panel and why `/oops`
+     and the panel were silent at the same time for two different reasons.
+
+     Emptied down to the furniture, not down to nothing. Before the fix
+     this scene drew no panel at all. */
+  await p.evaluate(() => document.getElementById('fb-blank-guard')?.remove());
+  await p.evaluate(() => {
+    document.body.replaceChildren();
+    const bar = document.createElement('nav');
+    bar.setAttribute('data-chrome', '');
+    bar.textContent = 'Spotlight Live Make Channel You';
+    document.body.appendChild(bar);
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await p.waitForTimeout(1800);
+
+  const left = p.locator('#fb-blank-guard');
+  check('the app still standing with the room gone counts as empty',
+    (await left.count()) === 1,
+    'the tab bar is 32 characters and the threshold is 20 — this is the real report');
+  if (await left.count()) {
+    const words = await left.innerText();
+    check('  and it does not blame the phone for a fault of ours',
+      /kamer het niks in hom nie/.test(words) && /room in it drew nothing/.test(words),
+      words.split('\n')[1] ?? '');
+  }
+
   /* And it does not fire on a page that is merely quiet. A panel over a
      working screen is worse than no panel at all. */
   await p.evaluate(() => document.getElementById('fb-blank-guard')?.remove());
+  await p.reload({ waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(5000);
   check('it stays away from a page that is working',
     (await p.locator('#fb-blank-guard').count()) === 0,

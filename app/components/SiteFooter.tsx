@@ -53,7 +53,7 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-24 border-t border-zinc-800/80">
+    <footer data-chrome className="mt-24 border-t border-zinc-800/80">
       {/* The bottom padding is the tab bar's, not this footer's taste.
 
           This is the last element on the document on every route, so it is the
