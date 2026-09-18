@@ -38,7 +38,28 @@ export default function Hint({
 }): React.ReactElement {
   const { t } = useLang();
   const [open, setOpen] = useState(false);
-  const [side, setSide] = useState<'left' | 'right'>('left');
+  /**
+   * How far the panel is pushed sideways to keep it on the screen, in pixels.
+   *
+   * ── Why a measured shift and not a side ─────────────────────────────
+   *
+   * It used to be `side`: open to the left of the mark, or to the right of
+   * it if the mark sat past the middle of the window. That is a rule about
+   * the MARK's position and the thing that hangs off the screen is the
+   * PANEL.
+   *
+   * Carli, 18 September 2026, the Stems desk in the Pro Booth, with the
+   * panel running off the right-hand edge: *"Hierdie een description is van
+   * die bladsy af."* The mark she pressed is about four tenths of the way
+   * across a 390-pixel phone — the left half, so the old rule opened
+   * leftwards — and the panel is 240 wide. 164 plus 240 is 404, and the
+   * screen ends at 390.
+   *
+   * So the panel's own edges are worked out and pushed back inside the
+   * window. That covers the mark near the right edge, the mark near the
+   * left edge, and this one in the middle that fits under neither rule.
+   */
+  const [shift, setShift] = useState(0);
   /**
    * Which way it opens vertically.
    *
@@ -80,11 +101,23 @@ export default function Hint({
 
   /** Roughly how tall the panel gets. Enough to decide which way to open. */
   const TALL = 140;
+  /** `w-60`, and `max-w-[70vw]` above it. Both are on the panel below. */
+  const WIDE = 240;
+  /** What it keeps between itself and the edge of the window. */
+  const EDGE = 8;
 
   const show = () => {
     const at = box.current?.getBoundingClientRect();
     if (at) {
-      setSide(at.left > window.innerWidth / 2 ? 'right' : 'left');
+      /* The panel's real width, which is the smaller of the two rules on
+         it. Measuring the rendered panel is not possible here — it does
+         not exist until `setOpen` below — and guessing high would push a
+         panel that fits. */
+      const wide = Math.min(WIDE, window.innerWidth * 0.7);
+      /* Where its left edge wants to be, and where it is allowed to be. */
+      const want = at.left;
+      const allowed = Math.max(EDGE, Math.min(want, window.innerWidth - wide - EDGE));
+      setShift(Math.round(allowed - want));
       /* Measured against the space that is actually usable, not against the
          viewport. The tab bar owns the bottom strip of every screen in this
          app, so the floor for this decision is above it — otherwise a mark
@@ -124,9 +157,13 @@ export default function Hint({
         <span
           id={id}
           role="tooltip"
-          className={`absolute z-[96] w-60 max-w-[70vw] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-xs font-normal leading-relaxed text-zinc-300 shadow-2xl ${
-            side === 'right' ? 'right-0' : 'left-0'
-          } ${up ? 'bottom-full mb-1' : 'top-full mt-1'}`}
+          className={`absolute left-0 z-[96] w-60 max-w-[70vw] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-xs font-normal leading-relaxed text-zinc-300 shadow-2xl ${
+            up ? 'bottom-full mb-1' : 'top-full mt-1'
+          }`}
+          /* Always anchored to the mark and then pushed back onto the
+             screen, rather than flipped to one side or the other. See the
+             note on `shift`. */
+          style={shift ? { transform: `translateX(${shift}px)` } : undefined}
         >
           {children}
         </span>
