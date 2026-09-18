@@ -4972,3 +4972,64 @@ is nie "iemand kan dit sien nie."** Drie van vier verslae vanaand was 'n
 waarde wat aangekom het in 'n plek waar sy nie kon kyk nie — 'n toe kaart, 'n
 paneel van die bladsy af, 'n leë kamer met die meubels nog daar. Elke check
 wat "die waarde is daar" meet, moet ook vra **"en is dit op die skerm?"**
+
+## U. Die interlock het gewerk. Die snit kon net nie opgetel word nie
+
+Carli, 19 September 2026: *"Die interlocking werk nie. Dit wys die funksie is
+aan maar die bane is nie vas aan mekaar nie."*
+
+Die interlock hét gewerk. `handoverFor` se ekwivalent hier — `lane.link`, die
+groep in `held.current.with`, die muur wat oor die hele groep bereken word —
+was alles reg, en `audit/boothmagnet.mjs` het dit elke nag bewys terwyl sy dit
+rapporteer het.
+
+Wat nie gewerk het nie, was **om die snit hoegenaamd op te tel.**
+
+### Die meting
+
+Die twee trim-handvatsels was 'n plat 24 pixels elk, aan elke ent van 'n snit
+wat minstens 44 wyd geteken word. Op 'n 390-pixel foon, twee bane, 'n sessie
+van sestien sekondes:
+
+    snit 49 pixels wyd · handvatsels 24 + 24 · element in die middel:
+    "Where this lane ends"
+
+Elke raak was 'n trim. Niks het beweeg nie. Die slot kon nie gesien word hou
+nie, en van haar kant af is dit presies "die bane is nie vas aan mekaar nie".
+
+### Waarom dit later breek en nie dadelik nie
+
+'n Snit se breedte is sy **aandeel van die hele liedjie**. Elke baan wat
+bykom en elke deel wat verder uitgesleep word, maak elke ander snit smaller.
+So dit werk die eerste keer en hou op werk daarna — wat presies die vorm van
+die verslag is.
+
+### Die reël
+
+'n Ent mag nooit meer as 'n **kwart** van die snit vat nie. Die helfte van
+die snit is altyd die greep, by elke breedte en elke zoom, en trim bly
+beskikbaar — die handvatsels word net kleiner saam met die ding waaraan hulle
+behoort.
+
+### Twee foute van my, in die probe
+
+1. **Ek het te gou gesê ek het dit gereproduseer.** Die eerste meting het
+   gewys die slot skeur onder 'n vinger en hou onder 'n muis, en ek het dit
+   as "touch teen mouse" gelees. Dit was nie. Die tweede sleep het gefaal,
+   watter een ook al tweede was.
+2. **Links gesleep en niks gemeet nie.** `percent` klem 'n begin voor nul na
+   0%, so 'n snit wat verby die begin gesleep word, beweeg regtig en die
+   getal wat die probe lees, beweeg nie. Die kommentaar op die eerste sleep
+   sê dit al vandat dit geskryf is. Tweede keer geleer.
+
+### Die les, bo-op T
+
+T was: *"dit het aangekom" is nie "iemand kan dit sien nie."* U voeg by:
+**"die logika is reg" is nie "'n vinger kan daarby kom nie."** Elke
+drag-probe in hierdie repo gebruik `p.mouse`, en almal wat hierdie kamer
+gebruik hou 'n foon vas. Die sleep gaan nou deur CDP se
+`Input.dispatchTouchEvent` in, as regte touch pointers — 'n `PointerEvent`
+wat in die bladsy gebou word dra 'n `pointerId` wat die browser nooit
+uitgereik het nie, en `setPointerCapture` gooi daarop, so 'n handgemaakte
+touch-sleep sterf binne `grab()` en rapporteer die app stukkend vir 'n rede
+wat aan die probe behoort.

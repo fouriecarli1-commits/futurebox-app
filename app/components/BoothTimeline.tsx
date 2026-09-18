@@ -968,6 +968,15 @@ export default function BoothTimeline({
             const once = window.to - window.from;
             const times = repeatOf(lane);
             const hue = hueFor(index, lanes.length);
+            /* How wide the clip really comes out, in pixels, so the handles
+               can be a share of it rather than a fixed 24 that swallows a
+               narrow one whole. The same `minWidth: 44` floor the block
+               below draws with, applied here first — and `wide` is 0 until
+               the axis has been measured once, which falls through to the
+               floor and corrects itself on the next render. */
+            const clipPx = Math.max(44, wide > 0 ? (plays / Math.max(0.001, total)) * wide : 0);
+            /* At most a quarter each, so half the clip is always a grip. */
+            const gripEnd = Math.max(8, Math.min(24, clipPx / 4));
             const on = picked === lane.id;
             return (
               <React.Fragment key={lane.id}>
@@ -1313,6 +1322,11 @@ export default function BoothTimeline({
                         two ends are the cut handles. */}
                     {lane.link && (
                       <span
+                        /* Named, so a probe can ask which lanes are in a
+                           lock without reading a React state it cannot
+                           see. The number is the group's place in the
+                           order the lanes sit in. */
+                        data-lock={locks.indexOf(lane.link) + 1}
                         className="pointer-events-none absolute bottom-1 left-1.5 flex items-center gap-0.5 rounded px-1 text-[9px] font-black leading-none"
                         style={{ background: 'rgba(5,6,10,0.55)', color: '#fde047' }}
                       >
@@ -1324,7 +1338,36 @@ export default function BoothTimeline({
                         {locks.indexOf(lane.link) + 1}
                       </span>
                     )}
-                    {/* The two ends. Wide enough for a thumb, drawn narrow. */}
+                    {/* ── The two ends, and the grip between them ──────────
+
+                        Carli, 19 September 2026: *"Die interlocking werk nie.
+                        Dit wys die funksie is aan maar die bane is nie vas
+                        aan mekaar nie."*
+
+                        The interlock was working. What was not working was
+                        picking the clip up at all — and a lock you cannot
+                        test by dragging is a lock that looks broken.
+
+                        These handles were a flat 24 pixels at each end, and
+                        the clip is drawn at least 44 wide. Measured on a
+                        390-pixel phone with two lanes over a 16-second
+                        session: the clip came out 49 pixels, the two handles
+                        took 48 of them, and the element under the middle of
+                        the clip was "Where this lane ends". Every touch was
+                        a trim, so nothing ever moved.
+
+                        It gets worse as a session grows, which is the shape
+                        of the report: a clip's width is its share of the
+                        whole song, so every lane added and every part
+                        dragged further out makes every other clip narrower.
+                        It works at first and stops working later.
+
+                        So an end may never take more than a quarter of the
+                        clip. Half the clip is always the grip, at every
+                        width and every zoom, and trimming stays available
+                        rather than being switched off below some threshold
+                        — the handles simply get narrower with the thing
+                        they belong to. */}
                     {(['from', 'to'] as const).map((edge) => (
                       <span
                         key={edge}
@@ -1342,10 +1385,10 @@ export default function BoothTimeline({
                            drag, so vertical stays the browser's. These are
                            24 pixels at each end of the clip and a thumb aimed
                            at the lane below lands on one often. */
-                        className={`absolute inset-y-0 w-6 cursor-ew-resize ${
+                        className={`absolute inset-y-0 cursor-ew-resize ${
                           marking ? 'touch-none' : 'touch-pan-y'
                         }`}
-                        style={{ [edge === 'from' ? 'left' : 'right']: 0 }}
+                        style={{ width: gripEnd, [edge === 'from' ? 'left' : 'right']: 0 }}
                         onPointerDown={(event) => {
                           /* Before the block underneath, or every cut would
                              be read as picking the whole clip up. */

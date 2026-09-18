@@ -208,6 +208,58 @@ try {
 
   if (before.length >= 2 && before.every((one) => one !== null)) {
     const clips = p.locator('[aria-label*="Drag this sound"], [aria-label*="Sleep hierdie klank"]');
+
+    /* ── A finger first, because that is what she is holding ──────────
+ 
+       Every drag probe in this repo uses `p.mouse`, and every person in
+       this room is on a phone. Carli, 19 September 2026: *"Die
+       interlocking werk nie. Dit wys die funksie is aan maar die bane is
+       nie vas aan mekaar nie."* The mouse drag below was already here and
+       already passing while she was reporting that.
+ 
+       Dispatched through CDP rather than built in the page: a
+       `PointerEvent` made by hand carries a `pointerId` the browser never
+       issued, and `setPointerCapture` throws on it — so a hand-rolled
+       touch drag dies inside `grab()` before the room sees it and reports
+       the app broken for a reason belonging to the probe. */
+    const cdp = await p.context().newCDPSession(p);
+    const fingerDrag = async (box, by) => {
+      const y = box.y + box.height / 2;
+      const from = box.x + box.width / 2;
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: from, y }] });
+      for (let step = 1; step <= 10; step += 1) {
+        await cdp.send('Input.dispatchTouchEvent', {
+          type: 'touchMove',
+          touchPoints: [{ x: from + (by * step) / 10, y }],
+        });
+      }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    };
+
+    const grip = await clips.nth(0).boundingBox();
+    await fingerDrag(grip, 60);
+    await p.waitForTimeout(500);
+    const afterTouch = await clipsAt();
+    const byFinger = afterTouch.map((one, i) =>
+      one === null || before[i] === null ? null : one - before[i]);
+    check(
+      'a finger moves the clip, not only a mouse',
+      byFinger[0] !== null && Math.abs(byFinger[0]) > 0.2,
+      `${say(before)} -> ${say(afterTouch)}`,
+    );
+    check(
+      '  and the lock holds under a thumb',
+      byFinger.length >= 2 && byFinger[1] !== null && Math.abs(byFinger[1] - byFinger[0]) < 0.05,
+      `first ${byFinger[0]?.toFixed(2)}s, second ${byFinger[1]?.toFixed(2)}s`,
+    );
+
+    /* Picking a clip up opens its lane's desk, and the desk is drawn over
+       the timeline. So the desk goes away before the next drag — otherwise
+       the press lands on the panel and the probe reports a clip that will
+       not move when what really happened is that nothing touched it. */
+    await shutDesk();
+    await p.waitForTimeout(300);
+
     const first = await clips.nth(0).boundingBox();
     /* Grabbed in the middle of the clip and dragged RIGHT.
        Left was the first attempt and it measured nothing: the first half of
@@ -216,24 +268,82 @@ try {
        screen really did not, which is correct behaviour and a useless thing
        to assert against. The canvas has room past the end of the song for
        exactly this, so right is where a clip can go and be seen going. */
-    await p.mouse.move(first.x + first.width / 2, first.y + first.height / 2);
-    await p.mouse.down();
-    await p.mouse.move(first.x + first.width / 2 + 60, first.y + first.height / 2, { steps: 12 });
-    await p.mouse.up();
+    /* LEFT this time, and that is not a detail.
+ 
+       The finger drag above has already taken the group as far right as it
+       goes: the wall is worked out for the whole group, and the lane at the
+       back is half a second from the end of the song. A second drag to the
+       right is correctly refused — which the first version of this read as
+       "the clip will not move" and reported as a fault in the room. It was
+       the room holding the lock together at the end of the song, which is
+       the thing it is for. */
+    /* ── What is under the middle of a clip ──────────────────────────
+ 
+       This is the assertion that found it, and it is worth more than the
+       drag below: a drag that does nothing has a dozen possible reasons
+       and this has one. The two trim handles were a flat 24 pixels each at
+       the ends of a clip drawn at least 44 wide — so on a phone, measured
+       here at 49 pixels, they covered 48 of it and the thing under the
+       middle of the clip was "Where this lane ends".
+ 
+       Every touch was a trim. Nothing moved, the lock could not be seen to
+       hold, and Carli reported the interlock as broken. It was not: the
+       clip could not be picked up. */
+    const middles = await p.evaluate(() => {
+      const clips = Array.from(document.querySelectorAll(
+        '[aria-label*="Drag this sound"], [aria-label*="Sleep hierdie klank"]'));
+      return clips.map((one) => {
+        const box = one.getBoundingClientRect();
+        const at = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+        const ends = Array.from(one.querySelectorAll('[role="slider"]'))
+          .map((edge) => edge.getBoundingClientRect().width);
+        return {
+          wide: Math.round(box.width),
+          ends: ends.map((w) => Math.round(w)),
+          mine: Boolean(at && (at === one || one.contains(at))),
+          got: at ? (at.getAttribute('aria-label') ?? at.tagName) : 'nothing',
+        };
+      });
+    });
+    /* The rule, stated as a ratio so it can be broken at any width rather
+       than only at the one this run happens to produce. Two ends at a flat
+       24 on a 73-pixel clip already fails here; the same two on a 49-pixel
+       clip leave nothing at all, which is what was measured on the phone. */
+    check(
+      'neither end of a clip takes more than a quarter of it',
+      middles.length > 0 && middles.every((one) => one.ends.every((w) => w <= one.wide / 4 + 1)),
+      middles.map((one) => `${one.wide}px clip, ends ${one.ends.join('+')}`).join(', '),
+    );
+    check(
+      '  so the middle of every clip belongs to the clip, not to a trim handle',
+      middles.length > 0 && middles.every((one) => one.mine),
+      middles.map((one) => `${one.wide}px → ${one.got}`).join(', '),
+    );
+
+    /* Right again, and that is not laziness. Left was tried and it
+       measures nothing: `percent` clamps a start before zero to 0%, so a
+       clip dragged past the beginning really does move and the number this
+       probe reads really does not — which came back as the lock holding to
+       within a second and was neither. The comment on the first drag has
+       said so since the day it was written; this is the second time it had
+       to be learned. */
+    await fingerDrag(first, 60);
     await p.waitForTimeout(400);
+    console.log('DEBUG drag2 events:', (await p.evaluate(() => (window).__bt ?? [])).slice(0, 4).join(' | '));
 
     const after = await clipsAt();
-    const moved = after.map((one, i) => (one === null ? null : one - before[i]));
+    const moved = after.map((one, i) => (one === null ? null : one - afterTouch[i]));
     check(
-      'dragging one clip moved it',
+      'a second drag moves it too — the first one was never the problem',
       moved[0] !== null && Math.abs(moved[0]) > 0.2,
       `moved ${moved[0]?.toFixed(2)}s`,
     );
     check(
-      'and the lane locked to it came with, by the same number of seconds',
+      '  and the lock holds on the second drag as well',
       moved.length >= 2 && moved[1] !== null && Math.abs(moved[1] - moved[0]) < 0.05,
       `first ${moved[0]?.toFixed(2)}s, second ${moved[1]?.toFixed(2)}s`,
     );
+
   }
 
   /* ── Moving a lane, and the one case that used to tear the lock ──────
