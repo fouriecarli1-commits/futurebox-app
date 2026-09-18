@@ -571,18 +571,64 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
    And anything with `[aria-pressed]`, which answers a press by changing
    colour and keeping it. Adding a flicker to a control that already gives a
    durable answer is noise on top of a signal. */
+/* ── And the lift has to be ADDED, not multiplied ────────────────────────
+
+   The first version of this used `filter: brightness(1.3)`, and that was
+   arithmetic nobody did. The commonest button background in this app is
+   `bg-zinc-950` — rgb(9, 9, 11), very nearly black — and multiplying nearly
+   nothing by 1.3 is still nearly nothing: the colour moved by THREE parts in
+   255. On `bg-zinc-900` it moved by seven. Invisible, on exactly the buttons
+   she said were not moving, which is why the report came back a second time
+   after the "fix" had shipped.
+
+   A brightness filter is the right tool on a mid-tone and the wrong one on a
+   dark palette, and this palette is dark on purpose. So the lift is an inset
+   shadow instead: a flat 16% white laid over whatever the background is,
+   which takes rgb(9, 9, 11) to about rgb(48, 48, 50) and is plainly a
+   different colour. It works the same on a transparent button, which a
+   filter also does not.
+
+   The scale went with it, from 0.97 to 0.94. On a 44-pixel button 0.97 is a
+   pixel and a third — true, and not a thing an eye registers under a finger
+   that is covering the button anyway.
+
+   `check:pressed` now does the sum rather than checking that a rule exists,
+   so an invisible press state cannot be shipped a second time. */
 @media (pointer: coarse) {
   button:not([disabled]):active,
   a:active,
   [role='button']:not([aria-disabled='true']):active {
-    filter: brightness(1.3);
-    transform: scale(0.97);
+    box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.16);
+    transform: scale(0.94);
+  }
+
+  /* ── And the bright buttons get the opposite ────────────────────────
+
+     White over a dark button is a plain change: `bg-zinc-950` moves 17 steps
+     of lightness, which is about two greys on the ramp. White over the green
+     primary moves it FOUR, because green is already near the top of its
+     range — so the one button in this app that is not dark would have gone
+     on giving almost nothing back.
+
+     Black over that same green moves it eleven the other way. So the rule is
+     reversed for the accent, keyed on the Tailwind class the app actually
+     paints it with: 173 buttons carry `bg-emerald-500` and 21 more are the
+     emerald gradient, and those are every bright button there is.
+
+     Not a general solution — CSS cannot ask how light a background is — and
+     an honest one: the app has exactly two kinds of button and this names
+     both. `check:pressed` does the sum for each, so a third kind added with
+     neither rule fails rather than shipping silent. */
+  button.bg-emerald-500:not([disabled]):active,
+  a.bg-emerald-500:active,
+  [class*='from-emerald']:not([disabled]):active {
+    box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.18);
   }
 
   [data-timeline] button:active,
   [data-timeline] [role='button']:active,
   [aria-pressed]:active {
-    filter: none;
+    box-shadow: none;
     transform: none;
   }
 }
