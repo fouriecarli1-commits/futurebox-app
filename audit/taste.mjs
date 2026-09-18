@@ -236,11 +236,24 @@ check('the welcome offers what the account remembers, not what this browser hold
   af ? /Nog ’n amapiano-liedjie vandag\?/.test(words) : /Another amapiano song today\?/.test(words),
   words.match(/.*(song today|liedjie vandag).*/i)?.[0] ?? 'no question found');
 check('and not the genre sitting in this browser', !/trance/i.test(words));
-check('it says the memory is on the account, not on the device',
-  af ? /teen jou rekening/.test(words) : /kept against your account/.test(words),
-  'the old device-only sentence is still there');
-check('and that it is a count rather than a record of when you work',
-  af ? /Nie ’n rekord van wanneer jy werk nie/.test(words) : /Not a record of when you work/.test(words));
+/* And the welcome screen says nothing further about it.
+
+   These two lines used to be checked here, on this screen, and they failed
+   for the best possible reason: the paragraph they looked for is gone
+   because Carli asked for it to go. 14 September 2026, with a photograph:
+   *"Haal daai fyn skrif uit op die make a song room."* Six lines of grey
+   type under the doors read as terms and conditions on the one screen that
+   is meant to be a set of choices.
+
+   The disclosure was not dropped, it moved — to the account screen, beside
+   the button that clears the counting, where a person can act on it. So the
+   two claims are still proved below, on the screen that now carries them,
+   and what is checked here is the decision itself: that the welcome screen
+   has gone quiet again. `check:finepr` holds the same line in the source;
+   this holds it in a browser. */
+check('and the fine print is not back on the welcome screen',
+  !/rekord van wanneer jy werk|record of when you work/i.test(words),
+  'the paragraph she asked to have removed has come back');
 
 // ── It can be seen, and stopped ──────────────────────────────────────────
 await p.locator('button').filter({ hasText: af ? /^Nie nou nie/ : /^Not now/ }).first().click();
@@ -253,6 +266,18 @@ check('the account screen shows what is remembered',
   /amapiano/.test(shown) && /9×/.test(shown),
   shown.split('\n').filter((one) => /amapiano|×/.test(one)).join(' / ') || 'not shown');
 check('and what each line means', af ? /wat jy maak/.test(shown) : /what you make/.test(shown));
+/* The two claims that used to be made on the welcome screen, checked where
+   they are now made. The second is word for word what it always was. The
+   first is not: the account screen does not say "kept against your account",
+   it says the counting is what lets the suggestion follow you "on any device
+   you sign in on" — which is the same claim made concretely, and better. The
+   probe follows the words rather than asking the app to come back to it. */
+check('it says the memory follows the account rather than this device',
+  af ? /op enige toestel waarop jy aanteken/.test(shown) : /on any device you sign in on/.test(shown),
+  shown.split('\n').find((one) => /toestel|device/i.test(one)) ?? 'the sentence is not there');
+check('and that it is a count rather than a record of when you work',
+  af ? /nie ’n rekord van wanneer jy werk nie/i.test(shown) : /not a record of when you work/i.test(shown),
+  shown.split('\n').find((one) => /rekord|record/i.test(one)) ?? 'the sentence is not there');
 
 await panel.locator('button').filter({ hasText: af ? /^Vee dit uit/ : /^Clear this/ }).first().click();
 await p.waitForTimeout(1500);

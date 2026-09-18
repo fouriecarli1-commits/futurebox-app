@@ -25,7 +25,7 @@
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
-import { dismissDoor, toRoom } from './enter.mjs';
+import { dismissDoor, toRoom, unfold } from './enter.mjs';
 
 const PORT = Number(process.argv[2] || 3021);
 const af = process.argv[3] === 'af';
@@ -195,6 +195,22 @@ await p.waitForTimeout(1800);
 const room = p.locator('div.fixed.inset-0.z-50').first();
 await toRoom(p, af ? 'Videolessenaar' : 'Video desk');
 await p.waitForTimeout(2200);
+
+/* ── Open the cards before reading them ──────────────────────────────────
+
+   Every card in every room starts folded now. This probe was written before
+   that and never run after it, so what it saw was a room with the presenter
+   card's TITLE on it and nothing else: "the presenter is on the desk" passed
+   on the heading, and then the line about the language, the cast button and
+   the script box were all reported missing — three findings with one cause,
+   and none of them real. The fill on `#presenter-script` then waited thirty
+   seconds for a field inside a shut card and took the probe down with it.
+
+   `unfold` opens the cards and deliberately leaves the question marks alone,
+   because a hint is an absolutely-positioned tooltip that lands on top of
+   whatever is under the heading. */
+await unfold(p);
+await p.waitForTimeout(800);
 
 const words = await room.innerText();
 check('the presenter is on the desk',

@@ -90,18 +90,47 @@ for (const [name, device] of WANTED) {
 
   /* Anything under 44 pixels either way. A strip that scrolls inside its own
      box is allowed to be wider than the screen; nothing is allowed to be
-     smaller than a thumb. */
-  const small = await p.evaluate(() => {
+     smaller than a thumb.
+
+     ── The one exception, and why it is not a loophole ────────────────────
+
+     A link inside a running sentence. WCAG's target-size rules (2.5.8 at AA,
+     2.5.5 at AAA) both carve this out in the same words: the rule does not
+     apply where "the target is in a sentence or its size is otherwise
+     constrained by the line-height of non-target text". The word "terms" in
+     "I accept the terms and privacy policy" is 30 by 14 pixels because the
+     sentence around it is 12-pixel text. Making it 44 tall would either
+     tear the sentence into three lines or push the words apart — the fix
+     would be worse to use than the fault.
+
+     So the exception is narrow and it is measured, not asserted: an `<a>`
+     that is laid out inline AND has real words, not just whitespace, in a
+     text node beside it. A link alone in its own box has no sentence to be
+     constrained by and is not excused. And the count is printed on every
+     line, because an exception nobody can see is how a rule quietly dies. */
+  const { small, inline } = await p.evaluate(() => {
     const out = [];
+    let excused = 0;
+    /* In a sentence: inline, with a sibling text node that has words in it. */
+    const inSentence = (el) => {
+      if (el.tagName !== 'A') return false;
+      if (getComputedStyle(el).display !== 'inline') return false;
+      const parent = el.parentElement;
+      if (!parent) return false;
+      return Array.from(parent.childNodes).some(
+        (node) => node.nodeType === 3 && node.textContent.trim().length > 0,
+      );
+    };
     for (const el of Array.from(document.querySelectorAll('button, a, input, select'))) {
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) continue;
       if (r.width < 44 || r.height < 44) {
+        if (inSentence(el)) { excused += 1; continue; }
         const label = (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 20);
         out.push(`${Math.round(r.width)}×${Math.round(r.height)} "${label}"`);
       }
     }
-    return out;
+    return { small: out, inline: excused };
   });
 
   const wide = page > width + 1;
@@ -109,6 +138,7 @@ for (const [name, device] of WANTED) {
     `${name.padEnd(13)} ${String(width).padStart(4)}px  ` +
     `coarse:${coarse ? 'yes' : 'NO '}  page:${page}${wide ? ' ← WIDER' : ''}  ` +
     `sign-in:${opens ? 'opens' : 'DOES NOT OPEN'}  small:${small.length}` +
+    `${inline ? `  (${inline} in-sentence link${inline === 1 ? '' : 's'} excused)` : ''}` +
     `${small.length ? ' → ' + small.slice(0, 3).join(', ') : ''}`,
   );
   /* Naming the element, because "the page is 61 pixels too wide" is a fact
@@ -143,7 +173,7 @@ for (const [name, device] of WANTED) {
 console.log(
   problems.length
     ? `\ncheck:devices — ${problems.length} problem(s):\n  · ${problems.join('\n  · ')}`
-    : `\ncheck:devices — ${WANTED.length} real devices, upright and sideways: nothing runs off the side, every control is a thumb wide, and the way in opens.`,
+    : `\ncheck:devices — ${WANTED.length} real devices, upright and sideways: nothing runs off the side, every control is a thumb wide (bar links inside a sentence, which WCAG excuses because the line around them sets their size), and the way in opens.`,
 );
 await b.close();
 mine?.stop();

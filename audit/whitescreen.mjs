@@ -161,9 +161,26 @@ try {
        being tested, so it is waited out rather than guessed under. */
     await page.waitForTimeout(9000);
     const after = ((await page.locator('body').innerText()) ?? '').replace(/\s+/g, ' ').trim();
+    /* The words are named, and they are the panel's own.
+
+       This failed on 18 September against a guard that was working perfectly:
+       it looked for "geteken" and "Laai weer", which is what the panel said
+       when this probe was written, and the panel had since been rewritten to
+       say "Hierdie bladsy het leeg teruggekom" and "Laai die bladsy weer".
+       The probe was a day older than the screen and nobody had run it in
+       between.
+
+       A probe about wording has to name the wording — reading the strings out
+       of the component it is checking would make it agree with itself. So the
+       answer is not to loosen these into something that cannot fail; it is to
+       anchor them on the sentence that carries the meaning, and to re-run the
+       probe when the sentence changes. */
     check('a page that goes blank later still says so',
-      /geteken|drew nothing/i.test(after), after.slice(0, 120) || '(still nothing)');
-    check('  in Afrikaans as well as English', /Laai weer/i.test(after), after.slice(0, 120));
+      /leeg teruggekom|came back empty/i.test(after), after.slice(0, 120) || '(still nothing)');
+    check('  in Afrikaans as well as English',
+      /leeg teruggekom/i.test(after) && /came back empty/i.test(after), after.slice(0, 160));
+    check('  and gives her something to press rather than a dead screen',
+      /Laai die bladsy weer/i.test(after), after.slice(0, 160));
     check('  and offers the record of what went wrong',
       (await page.locator('a[href="/oops"]').count()) > 0);
     await page.close();

@@ -11,7 +11,7 @@
  * open, read and choose from; what somebody in a room wants is one press back
  * to the screen that shows everything.
  */
-import { enter, studio } from './enter.mjs';
+import { enter, studioDoor } from './enter.mjs';
 import { serve, shot } from './where.mjs';
 
 const problems = [];
@@ -28,7 +28,25 @@ const DOOR = 'div.fixed.inset-0.z-\\[55\\]';
 const PORT = process.argv[2] || '3251';
 const server = await serve(PORT);
 const { browser, page } = await enter({ width: 390, height: 844, at: server.url, touch: true });
-await studio(page);
+/* ── The door, left standing ──────────────────────────────────────────────
+
+   `studioDoor`, not `studio`. They are not the same destination, and this
+   probe is the one place where the difference is the whole subject: the door
+   IS the studio's home page, and what is being counted is the buttons on it.
+
+   `studio()` opens the door and then shuts it, on purpose — it wants the
+   overlay behind it, and leaving a `z-[55]` page on top of a `z-50` one made
+   every click inside come back as "subtree intercepts pointer events". The
+   day it learned to do that, this probe started opening the door, closing it,
+   and then counting the buttons in a door that was no longer there. It
+   reported all twelve rooms missing and then timed out for thirty seconds
+   waiting to click one of them.
+
+   `enter.mjs` says this in its own comment on `studioDoor` — it names
+   `audit/quiz.mjs`, which broke the same way on the same day. Quiz was fixed
+   and this one was not, because nothing had run it since. */
+const door = await studioDoor(page);
+await door.waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
 await page.waitForTimeout(1400);
 
 const names = (await page.locator(`${DOOR} button`).allInnerTexts())

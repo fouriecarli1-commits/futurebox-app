@@ -1579,12 +1579,25 @@ export default function VocalBooth({
                instead of "Listening to the song…", which was four words
                longer than what it replaced and re-wrapped the row every time
                somebody pressed it. */
-            <span className="flex flex-shrink-0 items-center gap-2">
+            /* ── And it has to be allowed to shrink ────────────────────
+
+               `flex-shrink-0` was wrong and `check:boothwalk` caught it: the
+               group holds a button whose label is six words and a price
+               beside it, and refusing to shrink meant the row asked for 533
+               pixels on a 390-pixel phone. `flex-wrap` on the parent cannot
+               rescue a single item that is wider than the line — it can only
+               move it to a line of its own, and it was still too wide for
+               that one.
+
+               `min-w-0` on both the group and the button, because a flex
+               item's floor is its content unless it is told otherwise, and
+               the shrink has to reach the label to do anything. */
+            <span className="flex min-w-0 items-center gap-2">
               <button
                 type="button"
                 onClick={() => void readWords()}
                 disabled={reading || busy || busyOrLive}
-                className="min-h-[44px] px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+                className="min-h-[44px] min-w-0 px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
               >
                 {reading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ear className="w-4 h-4" />}
                 {reading ? t('booth.readingShort', 'Reading\u2026') : t('booth.readWords', 'Read the words off the song')}
@@ -1622,7 +1635,9 @@ export default function VocalBooth({
               type="button"
               onClick={() => void split()}
               disabled={splitting || busy || busyOrLive}
-              className="min-h-[44px] flex-shrink-0 px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
+              /* Shrinkable, for the same reason as the row above: a button
+                 that will not give way is a row that runs off the side. */
+              className="min-h-[44px] min-w-0 px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50"
             >
               {splitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
               {splitting ? t('booth.splittingShort', 'Separating…') : t('booth.split', 'Separate the voice')}

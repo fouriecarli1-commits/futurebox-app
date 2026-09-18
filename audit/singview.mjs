@@ -84,8 +84,27 @@ try {
         guideLine: /sing along with it|sing saam met hom/i.test(body),
       /* The four things that went missing when the waveform's whole section
          was hidden rather than the waveform. Named by their own words, so a
-         layout change that swallows them again fails here. */
-      readsTheWords: /reads the words off the recording|lees die woorde/i.test(body),
+         layout change that swallows them again fails here.
+
+         ── Why this one now looks for the button and not the sentence ────
+
+         It looked for "reads the words off the recording", and on 18
+         September that failed against a room where the feature is perfectly
+         present. The sentence is behind the question mark because Carli
+         asked for it to be: 17 September, *"daai read the words of the song
+         met 2 credits moet net 'n button wees en vat die verduideliking
+         weg"* — the paragraph was taking a phone's height and shoving the
+         words she was singing down the screen every time it re-wrapped.
+
+         So the probe was holding the room to the opposite of what she asked
+         for, and it would have kept passing if the button had gone and the
+         paragraph had stayed. What matters is that the thing can be DONE:
+         the row is named and there is a control in it. Both are checked,
+         because a heading with no button under it is the failure this line
+         exists to catch. */
+      readsTheWords:
+        /The words as sung|Die woorde soos gesing/i.test(body)
+        && /Read the words off the song|Lees die woorde van die liedjie|As sung|Soos gesing/i.test(body),
       micLevel: !!document.querySelector('div.h-1\\.5.rounded-full'),
         biggest: big,
         small,

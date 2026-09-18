@@ -9,11 +9,11 @@ they can be reviewed in one place instead of remembered.
 not be checked, it says so and it says how to check it. Entries move to
 **Settled** with a date and a commit rather than being deleted.
 
-Last updated: 2026-09-17.
+Last updated: 2026-09-18.
 
 ---
 
-## Lees dit eerste — waar dinge staan, 17 September 2026
+## Lees dit eerste — waar dinge staan, 18 September 2026
 
 *Hierdie register is 4 600 reëls lank en groei elke sessie. Niemand lees dit
 van voor af nie, en 'n register wat niemand lees nie, is nie 'n register nie.
@@ -4625,3 +4625,124 @@ nie. 'n Clip wat vier keer omgaan het een keer teruggekom; 'n rak met 'n EQ, 'n
 kompressor en 'n weerklank het leeg teruggekom. Die stoor het elke keer sukses
 gerapporteer, want hy het gestoor — hy het 'n baan gestoor wat die werk
 kortkom. Gevind terwyl `link` bygesit is, wat die vierde is.
+
+
+## P. Dieselfde lys, drie keer — en wat dit werklik gekos het
+
+*18 September 2026. Carli het dieselfde vyf foute drie agtereenvolgende kere
+gerapporteer. Hierdie afdeling is oor wat elke ronde geleer het, want die
+patroon is meer werd as enige een van die regmakings.*
+
+### Wat elke ronde opgelewer het
+
+| Wat sy gesê het | Wat dit werklik was |
+|---|---|
+| "Video werk steeds nie in live nie" (×3) | **Nie die kode nie.** `supabase/livevideo.sql` is nooit gehardloop nie, so Postgres weier die ry. Die roete het `live_not_set_up` geantwoord, wat die kamer druk as *"die lewendige kamer is nog nie aangeskakel nie"* — oor 'n kamer waarin sy liedjies speel. Sy het dit geglo en die simptoom gerapporteer wat sy kon sien. **'n Weiering wat die verkeerde fout beskryf, kos meer as geen weiering nie.** |
+| "Copilot didn't have the description ready … die probleem met elke kamer" | Een reël in `planActions`. 'n Bewerking sonder 'n kamernaam is met *waar sy staan* gestempel, ook wanneer dieselfde antwoord haar elders oopmaak. Die waarde is afgelewer, versigtig, aan die **verkeerde kant van die deur**. |
+| "Die add a photo in Shot gee steeds 'n wit blad" (×3) | Die instrument wat dit moes reproduseer, was **twee keer stukkend**: dit het die fotostrook gesoek op 'n lessenaar wat nog vra watter soort video (die strook bestaan nie op Standard nie), en toe dit daar kom, die **Cast** se invoer gevul — dieselfde vyf beeldtipes, eerste in die DOM. Drie verslae het daaragter ongereproduseer gebly. |
+| "scroll up and down werk nie" → "sideways scroll werk nie" | **Twee verskillende foute**, en die tweede het pas verander. Op-en-af: die clip het `touch-none` gehou nadat die ry dit verloor het. Sywaarts: dit het **nie bestaan nie** — die hele liedjie is in die skermbreedte saamgepers, 'n maat op anderhalwe pixel. |
+| "die delete knoppie maak geen beweging" (×2) | Eers: net `hover:`-toestande, en 'n foon het geen hover. Toe my regmaak: `brightness(1.3)` op `bg-zinc-950` skuif die kleur met **drie dele uit 255**. Onsigbaar. Sy het dit 'n tweede keer gerapporteer ná die "regmaak" gestuur is. |
+
+### Die duurste ding was nie 'n fout nie — dit was onsekerheid
+
+Twee van die vyf is tussen die eerste en die derde verslag reggemaak en
+gestoot. **Nie een van ons kon sê of wat sy vashou die regmaak in het nie.**
+
+Dit kos in een spesifieke rigting: 'n herhaling lees soos *"die regmaak het
+gefaal"*, so die volgende uur gaan in om kode te herskryf wat al reg was,
+terwyl die werklike antwoord — 'n ou bou op die toestel — onsigbaar bly.
+
+`/oops` dra nou die commit en die datum, ingebak by bou-tyd. Die vraag "is dit
+die bou met die regmaak in" is nou beantwoordbaar in sewe karakters.
+
+### Vier seine wat my reg gevang het, en twee wat self verkeerd was
+
+- `check:probooth` het my zoom-knoppies gevang: 44 hoog, 36 breed.
+- `check:boothline` het die rooster se ou vorm vasgehou — herpen met die rede.
+- `check:envdoc` het gesê niks lees `VERCEL_GIT_COMMIT_SHA` nie. Dit was reg
+  oor die bladsy en **verkeerd oor homself**: dit het net `app/` gelees,
+  nooit `next.config.mjs` nie.
+- `check:afrikaans` het 'n Engelse woord in my nuwe Afrikaans gevang.
+- `check:pressed` het bevestig dat 'n reël bestaan en **nooit gevra wat die
+  reël doen nie**. Dit doen nou die som. Sy eerste poging daarmee het
+  luminansie gebruik en elke donker knoppie laat val terwyl hulle duidelik
+  van kleur verander — luminansie is lineêr en 'n oog is nie. L\* is die maat.
+- `tsc` het 'n JSX-kommentaar as die enigste voorste kind binne `{x && ( … )}`
+  aanvaar; net die **bou** vang dit. Ek het twee keer "tsc-ok" gesê waar ek
+  moes gebou het.
+
+### Die reël wat hieruit kom
+
+Wanneer 'n verslag herhaal:
+
+1. **Vra eerste watter bou.** Nie watter kode nie.
+2. **Reproduseer voor jy regmaak.** Drie rondtes kode het aan die wit bladsy
+   gegaan voor iemand die reproduksie self nagegaan het, en die reproduksie
+   was die fout.
+3. **'n Sein wat 'n reël bevestig, toets niks.** Dit moet die som doen.
+
+
+## Q. Tagtig probes in een sleep, en wat ses van die agt valle regtig was
+
+*18 September 2026. Die eerste volledige sleep van al 80 browser-probes in
+een sitting: **72 pass, 8 fail**. Dit is die eerste keer dat hulle almal
+saam gehardloop het, en die uitslag is meer oor die probes as oor die app.*
+
+### Twee waar die app verkeerd was
+
+- `check:boothwalk` — die record room het 533 pixels gevra op 'n 390-pixel
+  foon. `flex-shrink-0` op 'n groep wat 'n ses-woord-etiket en 'n prys dra.
+  `flex-wrap` kan nie 'n enkele item red wat self te wyd is nie; dit kan hom
+  net op 'n reël van sy eie sit, en hy was steeds te wyd daarvoor. `min-w-0`
+  op die groep **en** die knoppie, want 'n flex-item se vloer is sy inhoud
+  tensy jy hom anders vertel.
+- `check:devices` — die terme-blokkie was 20×20 op al veertien toestelprofiele.
+  Nou 44 om te druk en 20 om na te kyk: die werklike `input` lê onsigbaar oor
+  'n 44-pixel span, die merkie word langs hom geteken. Negatiewe kantlyne gee
+  die ekstra 24 pixels terug, sodat niks anders op die skerm skuif nie.
+
+### Ses waar die probe verkeerd was — en almal op dieselfde manier
+
+Elkeen van die ses het 'n app gedop wat doen wat sy gevra het. Nie een was
+'n slap probe wat iets gemis het nie; hulle was almal **te presies oor die
+verkeerde ding**, en hulle het dit geword op die dag dat iemand die app
+verander het en die probe nie oorgehardloop het nie.
+
+- `check:taste` en `check:singview` het altwee gesoek na 'n paragraaf wat
+  **sy gevra het om weg te vat**. "Haal daai fyn skrif uit"; "vat die
+  verduideliking weg". Die probes het die kamers gehou aan die teenoorgestelde
+  van wat sy gevra het, en sou bly slaag het as die knoppie verdwyn het en die
+  paragraaf gebly het. Albei toets nou die **kontrole** of die skerm waar die
+  woorde nou wél staan.
+- `check:whitescreen` het na woorde gesoek wat ek self 'n dag vantevore
+  herskryf het. Die BlankGuard het perfek gewerk.
+- `check:videohome` het 'n vulling van meer as 20% alfa geëis. Sedert
+  13 September verf `globals.css` elke omraamde knoppie in die huis se groen
+  op **9%** — dus sou daardie reël elke knoppie in FutureBox laat val. Dit
+  vra nou soos `audit/buttonlook.mjs` vra: bo 5%, en anders as wat agter dit
+  lê. Een reël, twee probes.
+- `check:studiohome` was my eie regressie. Toe ek `studioDoor()` afgesplit
+  het, het `studio()` geleer om die deur agter hom toe te maak — en hierdie
+  probe se hele onderwerp *is* die deur. My eie kommentaar in `enter.mjs`
+  waarsku daarteen en noem `audit/quiz.mjs`, wat ek reggemaak het. Hierdie
+  een het ek nie.
+- `check:presenterdesk` het drie valle gehad met een oorsaak: dit roep nooit
+  `unfold` nie, en sedert #134 begin elke kaart toegevou. Dit het die
+  opskrif gesien en niks daaronder nie.
+
+### En een wat my eie regstelling gebreek het
+
+`check:recordroom` het geval omdat ek **kommentaar geskryf het**. Dit sny 'n
+venster van 3 800 karakters om die opskrif, en die veertien reëls waarin ek
+verduidelik hoekom `flex-shrink-0` weg is, het die `<Cost>` by daardie venster
+uitgestoot. Die prys het nie beweeg nie; die maatstaf het. 'n Reël wat 'n
+geskrewe verduideliking kan breek, is 'n reël wat mense leer om nie te
+verduidelik nie — die venster loop nou van landmerk tot landmerk.
+
+### Die reël wat hieruit kom
+
+**'n Probe wat nie gehardloop het sedert die kode verander het, is nie 'n
+sein nie — dit is 'n gerug.** Ses van agt valle was verouderde probes, en die
+enigste rede dat hulle almal op een dag opgedaag het, is dat dit die eerste
+dag was dat al tagtig saam gehardloop het. Die getal wat saak maak is nie
+hoeveel probes bestaan nie, dit is wanneer hulle laas gehardloop het.

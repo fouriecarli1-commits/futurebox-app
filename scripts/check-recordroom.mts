@@ -48,12 +48,26 @@ const words = readFileSync('app/lib/i18n.tsx', 'utf8');
 /* The block, found by the string that names it rather than by position. */
 const at = booth.indexOf("'booth.heardWhat'");
 ok('the read-the-words block is a named row', at > 0);
-/* Wide enough to reach the button, which sits about three thousand
-   characters past the heading: the two branches of `heard` — the As
-   sung / As written pair and the read button — are both inside the row
-   and both are long. Measured rather than guessed, because a slice that
-   stops short makes every assertion after it pass for the wrong reason. */
-const block = at > 0 ? booth.slice(at - 1400, at + 3800) : '';
+/* The row, bounded by what it IS rather than by how long it was.
+
+   This used to be `slice(at - 1400, at + 3800)`, a window measured off the
+   heading, and on 18 September it failed a room where nothing had moved: the
+   `flex-shrink-0` fix in the row came with fourteen lines of comment saying
+   why, and those characters pushed `<Cost>` out the far end of the window.
+   The check then reported that the price had been moved under the button.
+   It had not. A rule that a written explanation can break is a rule that
+   teaches people not to write explanations.
+
+   So the row runs from the card `<div>` that opens it to the heading of the
+   next card — both of which are landmarks in the file rather than distances
+   from one. The old numbers stay as a floor for the day one of the two
+   landmarks is renamed, so a missing marker shortens the window instead of
+   swallowing the whole file. */
+const opens = booth.lastIndexOf('<div className="rounded-2xl', at);
+const nextCard = booth.indexOf("'booth.splitWhat'", at);
+const block = at > 0
+  ? booth.slice(opens > 0 ? opens : at - 1400, nextCard > at ? nextCard : at + 3800)
+  : '';
 
 ok(
   'its explanation is behind the mark, not printed in the row',

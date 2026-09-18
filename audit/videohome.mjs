@@ -140,18 +140,46 @@ try {
      a caption. Every button in this app gets a box.
 
      Measured as a box rather than as a class name: a border and a background
-     that is not the card's own. */
+     that is not the card's own.
+
+     ── Why the fill test is not a number of its own ─────────────────────
+
+     It was: `alpha > 0.2`. On 18 September that failed a button that is
+     perfectly fine, and the reason is worth keeping. The heading wears
+     `bg-zinc-900`, but since 13 September `globals.css` repaints every
+     bordered button in the app — "omtrent nog elke kamer se buttons moet
+     verkleur word na groen" — so it actually computes to the house green at
+     nine per cent. Under a twenty per cent rule, every button in FutureBox
+     is unfilled. The probe was measuring a threshold the app had stopped
+     using and nobody had run it since.
+
+     So the fill question is asked the way `audit/buttonlook.mjs` asks it for
+     the whole app: a surface counts when it is above five per cent AND is
+     not simply the colour of the thing behind it. Two probes, one rule — if
+     that rule ever changes, it changes in both, and the comment here names
+     the other one so the next person finds it. */
   const heading = room.locator('button').filter({ hasText: /Made in this app|Hier gemaak/ }).first();
   check('the heading that opens her work is on the screen', (await heading.count()) > 0);
   if ((await heading.count()) > 0) {
     const looks = await heading.first().evaluate((one) => {
       const style = getComputedStyle(one);
-      const parts = (style.backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
+      const alpha = (colour) => {
+        const parts = (colour.match(/[\d.]+/g) ?? []).map(Number);
+        return parts.length >= 4 ? parts[3] : 1;
+      };
+      const behind = one.parentElement ? getComputedStyle(one.parentElement).backgroundColor : '';
       return {
         border: style.borderTopWidth,
         radius: style.borderTopLeftRadius,
-        filled: parts.length >= 4 ? parts[3] > 0.2 : true,
+        filled: alpha(style.backgroundColor) > 0.05 && style.backgroundColor !== behind,
         height: one.getBoundingClientRect().height,
+        /* Named, not just measured. "filled: false" is a fact nobody can act
+           on; the colour it actually computed to and the classes it was asked
+           for are what say whether the button lost its background or the
+           probe is looking at the wrong button. */
+        paint: style.backgroundColor,
+        behind,
+        asked: String(one.className).slice(0, 90),
       };
     });
     check('and it looks like a button rather than a line of text',

@@ -53,23 +53,66 @@ export default function AgreeToTerms({
 
   return (
     <label className="flex items-start gap-3 cursor-pointer select-none rounded-xl border border-zinc-800 bg-black/40 p-3">
-      <input
-        type="checkbox"
-        /* Named, for the probes and for the check that keeps them honest.
-           Forty probes sign up by hand, and the first version of this box
-           broke every one of them — they press the submit, which this box
-           disables until it is ticked. The fix was a shared helper, and a
-           helper that reaches for "the first checkbox on the page" would
-           tick whatever else happened to come first the day a second one
-           appears. So the box says which box it is. */
-        data-agree=""
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        /* 20px, not the browser default. A 13px target beside two paragraphs
-           of small text is the one control on this screen somebody has to hit
-           with a thumb. */
-        className="mt-0.5 h-5 w-5 shrink-0 accent-emerald-500 cursor-pointer"
-      />
+      {/* 44 to press, 20 to look at.
+
+          The box was 20 by 20 — twenty being already a deliberate step up
+          from the browser's thirteen. `check:devices` still failed it on all
+          fourteen phones and tablets, and it was right to: twenty is what a
+          thumb misses. But a 44-pixel checkbox drawn next to 12-pixel text
+          looks like a mistake, and the honest fix is the one the booth's
+          mute and solo buttons already use — the target is 44, the drawing
+          inside it is not.
+
+          So: a 44-pixel span, the real input stretched invisibly across all
+          of it, and the tick drawn by the span beside it at twenty. The
+          negative margins give back the 12 pixels on each side that the
+          bigger target takes, so the drawn box lands exactly where the old
+          one did and no other spacing on this screen moves. The target
+          overhangs into the panel's own padding, which is space nothing else
+          is using. */}
+      <span className="relative -my-3 -ml-3 grid h-11 w-11 shrink-0 place-items-center">
+        <input
+          type="checkbox"
+          /* Named, for the probes and for the check that keeps them honest.
+             Forty probes sign up by hand, and the first version of this box
+             broke every one of them — they press the submit, which this box
+             disables until it is ticked. The fix was a shared helper, and a
+             helper that reaches for "the first checkbox on the page" would
+             tick whatever else happened to come first the day a second one
+             appears. So the box says which box it is. */
+          data-agree=""
+          checked={checked}
+          onChange={(event) => onChange(event.target.checked)}
+          className="peer absolute inset-0 h-11 w-11 cursor-pointer appearance-none rounded-xl"
+        />
+        {/* Drawn, not native, because a native checkbox cannot be a different
+            size from its own hit box. `aria-hidden` and no pointer events:
+            the input above is still the whole control, so the keyboard, the
+            screen reader and the label all behave exactly as before. */}
+        <span
+          aria-hidden
+          /* Ticked or not is read from the prop, not from `peer-checked`.
+             Tailwind's peer variants are a sibling selector, so they reach
+             this span but not the tick inside it — and a rule that styles
+             the box and not its tick is the kind of half-working thing that
+             only shows up on screen. React already knows. */
+          className={`pointer-events-none grid h-5 w-5 place-items-center rounded-md border-2 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-400 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-black ${
+            checked ? 'border-emerald-500 bg-emerald-500' : 'border-zinc-500 bg-black/60'
+          }`}
+        >
+          <svg
+            viewBox="0 0 16 16"
+            className={`h-3.5 w-3.5 text-black ${checked ? 'opacity-100' : 'opacity-0'}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 8.5 6.5 12 13 4.5" />
+          </svg>
+        </span>
+      </span>
       <span className="text-xs text-zinc-400 leading-relaxed">
         {t('auth.agreeAge', 'I am 18 or older, and I accept the')}{' '}
         <Link href="/terms" target="_blank" rel="noopener noreferrer" className={link}>
