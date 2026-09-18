@@ -139,18 +139,44 @@ for (const one of NAMED) {
    today is the podcast room's "Put it on a video" asking to be taken to the
    long form rather than merely to the room the long form is in.
 
-   It is still the loophole shape, so it is counted. Raise OPENABLE here,
-   with the card named, having read why the rule is what it is. */
-const OPENABLE = 2;
+   It is still the loophole shape, so every one of them is named here, with
+   what presses it. A count would have let the eighth through on the day
+   somebody raised a number; a list makes whoever adds the ninth write down
+   who is pressing it.
+
+   Eight of these arrived together on 18 September, and they are one
+   answer to one report: Carli, of the advert desk, *"As ek druk op open
+   the room dan vat hy my net na die regte kamer toe, maar die AI vul nie
+   die afdelings vir my in nie."* It did fill them in. It filled them into
+   cards that were shut, and a filled card that is shut is a room that
+   looks untouched. `lib/opencard.ts` and `check:opencard` have the whole
+   of it. */
+const OPENABLE: Record<string, string> = {
+  'Storyboard.tsx': 'the podcast room\u2019s "Put it on a video", and the advert desk\u2019s longer explainer',
+  'VideoCanvas.tsx': 'a shot handed over from the advert desk or the copilot',
+  'VoiceLab.tsx': 'a script handed over from the advert desk',
+  'PodcastStudio.tsx': 'an episode\u2019s title and notes handed over from the advert desk',
+  'MakeMusic.tsx': 'words and a sound handed over from the advert desk',
+  'Campaign.tsx': 'a brief filled in by the copilot from another room',
+  'CollabRoom.tsx': 'a message the copilot drafted',
+  'Hooks.tsx': 'a clip length the copilot set',
+};
 const openers: string[] = [];
 for (const file of files) {
   if (!file.endsWith('.tsx') || file === 'Card.tsx') continue;
   const source = read(file);
   for (const _ of source.matchAll(/<Card\b[^]*?openOn=/g)) openers.push(file);
 }
+const unnamed = [...new Set(openers)].filter((one) => !OPENABLE[one]);
 ok('a card opens on a signal only where one was asked for',
-  openers.length <= OPENABLE,
-  `${openers.length}: ${openers.join(', ')}`);
+  unnamed.length === 0,
+  `${unnamed.join(', ')} — name it above, with what presses it, having read why the rule is what it is`);
+/* And the other way: a name that no longer opens anything is a reason
+   nobody can check. */
+const stale = Object.keys(OPENABLE).filter((one) => !openers.includes(one));
+ok('  and every card named here still has one',
+  stale.length === 0,
+  `${stale.join(', ')} — named as openable and no longer openable`);
 ok('and the signal never survives a mount',
   /const arrivedWith = useRef\(openOn\)/.test(read('Card.tsx'))
     && /openOn === arrivedWith\.current/.test(read('Card.tsx')),
