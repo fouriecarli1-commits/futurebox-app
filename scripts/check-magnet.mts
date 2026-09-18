@@ -144,14 +144,32 @@ ok('a locked clip says so on the timeline', /lane\.link && \(/.test(line));
 
 /* ── Reordering ───────────────────────────────────────────────────────── */
 
+/* This asserted the SWAP — `next[from] = was[to]` — and by 18 September it
+   was holding the bug in place rather than the behaviour.
+
+   A swap knows about two indexes and nothing about a group, so it tore an
+   interlocked pair in half every time one of its members moved. That is the
+   one thing Carli said she wanted the arrows FOR. The move now goes through
+   `app/lib/laneorder.ts`, and `check:laneorder` owns what it should do,
+   including a group with a stranger between its members.
+
+   What stays here is the seam this file is about: that the lock and the
+   reorder are the same lane's business, and that the button is greyed from
+   the GROUP rather than from one lane's index. */
 ok(
-  'a lane can be swapped with the one above or below it',
-  /const shuffleLane = \(id: string, way: -1 \| 1\)/.test(booth) &&
-    /next\[from\] = was\[to\];/.test(booth),
+  'a lane can be moved up or down the stack',
+  /const shuffleLane = \(id: string, way: -1 \| 1\)/.test(booth)
+  && /move\(was, id, way === -1 \? 'up' : 'down'\)/.test(booth),
+);
+ok(
+  '  and the old swap that tore a locked group in half is gone',
+  !/next\[from\] = was\[to\]/.test(booth),
+  'it was two obviously correct lines that knew nothing about a group',
 );
 ok(
   '  with the button switched off at the ends of the stack',
-  /disabled=\{off\}/.test(booth),
+  /const off = !canMove\(lanes, picked,/.test(booth),
+  'asked of the group: a lane at index 1 whose lock starts at 0 cannot go up either',
 );
 
 /* ── Both switches, and both reachable ────────────────────────────────── */

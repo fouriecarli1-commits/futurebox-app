@@ -575,6 +575,13 @@ jobs:
       - name: The logo lands where all three platforms leave it visible
         run: npm run check:logomark
 
+      # Moving a lane is a swap until somebody locks two together — and then
+      # a swap tears the group in half. This holds the group as the unit,
+      # including the case a browser test would never stage: a locked pair
+      # with a stranger sitting between its two members.
+      - name: A locked group moves as one block
+        run: npm run check:laneorder
+
       # The block above the words in the recording room may not change
       # height: what is being read while it moves is the line somebody is
       # singing, with their hands full and their eyes in one place.

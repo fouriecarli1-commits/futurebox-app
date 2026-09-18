@@ -54,6 +54,7 @@ import BoothDock, { type Desk } from './BoothDock';
 import BoothFx from './BoothFx';
 import BoothAsk from './BoothAsk';
 import { applyMove, type LaneNow, type Move } from '../lib/mixplan';
+import { canMove, move } from '../lib/laneorder';
 import { NO_FX, type Fx } from '../lib/fx';
 import { useOwnScreen } from '../lib/fullroom';
 import { useSideways } from '../lib/sideways';
@@ -855,15 +856,38 @@ export default function ProBooth({
    * stack takes its neighbour's shade, which is the point of colouring by
    * depth in the first place.
    */
+  /**
+   * Move a lane one place, with everything locked to it.
+   *
+   * ── What this used to do, and why it was wrong ─────────────────────────
+   *
+   * It SWAPPED: take the lane at `from`, take the one at `from + way`, put
+   * each where the other was. Two lines, obviously correct, and it tore an
+   * interlocked group in half every time one of its members was moved —
+   * because a swap knows about two indexes and nothing about a group.
+   *
+   * Carli, 18 September 2026, asked for the arrows to be in the gutter and
+   * gave the reason in the same breath: *"dit raak belangrik wanneer 'n hele
+   * tydlyn se klankbane gelyktydig opgeskuif moet word."* The reason was the
+   * real finding. The arrows already existed, here on the lane's own card —
+   * she could not find them, which is its own answer — but the thing she
+   * wanted them FOR was the one thing they could not do.
+   *
+   * She chose to keep them here rather than widen the gutter, which on a
+   * 390-pixel phone would have cost the timeline 44 pixels and a whole lane
+   * of height. So the buttons stay and the behaviour changes.
+   *
+   * `app/lib/laneorder.ts` holds the arithmetic, so what a group does when
+   * it is moved past a lane outside it is settled where a check can ask it
+   * rather than in a handler where the only way to ask is a browser. It
+   * gives back the SAME array when there is nowhere to go, and that
+   * identity is what stops a press at the top of the stack writing the
+   * session to disk for nothing.
+   */
   const shuffleLane = (id: string, way: -1 | 1): void => {
     setLanes((was) => {
-      const from = was.findIndex((one) => one.id === id);
-      const to = from + way;
-      if (from < 0 || to < 0 || to >= was.length) return was;
-      const next = was.slice();
-      next[from] = was[to];
-      next[to] = was[from];
-      return next;
+      const next = move(was, id, way === -1 ? 'up' : 'down');
+      return next === was ? was : [...next];
     });
   };
 
@@ -1971,8 +1995,12 @@ export default function ProBooth({
         {picked && lanes.length > 1 && (
           <div className="flex flex-wrap items-center gap-2">
             {([-1, 1] as const).map((way) => {
-              const index = lanes.findIndex((one) => one.id === picked);
-              const off = way === -1 ? index <= 0 : index >= lanes.length - 1;
+              /* `canMove`, not "is this index 0". A lane sitting at index 1
+                 whose locked group starts at index 0 cannot go up either —
+                 the group is the unit, so the question has to be asked of
+                 the group. The old index test greyed out exactly one button
+                 and let the rest lie. */
+              const off = !canMove(lanes, picked, way === -1 ? 'up' : 'down');
               return (
                 <button
                   key={way}
@@ -1981,8 +2009,8 @@ export default function ProBooth({
                   onClick={() => shuffleLane(picked, way)}
                   title={
                     way === -1
-                      ? t('pro.laneUpWhat', 'Swap this lane with the one above it. It changes the order the lanes are drawn in and the colour this one takes; it changes nothing about the sound, because a mix is a sum.')
-                      : t('pro.laneDownWhat', 'Swap this lane with the one below it.')
+                      ? t('pro.laneUpWhat', 'Move this lane one place up, and everything locked to it with it. It changes the order the lanes are drawn in and the colour this one takes; it changes nothing about the sound, because a mix is a sum.')
+                      : t('pro.laneDownWhat', 'Move this lane one place down, and everything locked to it with it.')
                   }
                   className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-100 disabled:opacity-40"
                 >

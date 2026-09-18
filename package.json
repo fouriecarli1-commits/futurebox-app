@@ -34,6 +34,7 @@
     "check:saysdone": "tsx scripts/check-saysdone.mts",
     "check:finepr": "tsx scripts/check-finepr.mts",
     "check:logomark": "tsx scripts/check-logomark.mts",
+    "check:laneorder": "tsx scripts/check-laneorder.mts",
     "check:logoshot": "node audit/logoshot.mjs",
     "check:recordroom": "tsx scripts/check-recordroom.mts",
     "check:pressed": "tsx scripts/check-pressed.mts",
