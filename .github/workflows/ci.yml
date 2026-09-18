@@ -568,6 +568,13 @@ jobs:
       - name: The fine print is off the door and beside the button
         run: npm run check:finepr
 
+      # A logo in "the corner" of a video is under TikTok's buttons, Reels'
+      # caption or Shorts' title — visible to nobody, at the cost of a render.
+      # This holds it inside the part all three leave alone, on every frame
+      # shape, and holds it to the logo's own proportions.
+      - name: The logo lands where all three platforms leave it visible
+        run: npm run check:logomark
+
       # The block above the words in the recording room may not change
       # height: what is being read while it moves is the line somebody is
       # singing, with their hands full and their eyes in one place.

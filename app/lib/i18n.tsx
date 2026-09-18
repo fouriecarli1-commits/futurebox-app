@@ -1231,6 +1231,8 @@ export const STRINGS: Dict = {
   "canvas.grade.premium": { en: "Premium", af: "Premium" },
   "canvas.gradeNote.premium": { en: "The best picture there is.", af: "Die beste beeld wat daar is." },
   "canvas.letItSpeak": { en: "Let the engine say the line", af: "Laat die enjin die sin s\u00ea" },
+  "canvas.brandIt": { en: "Put my logo in the corner", af: "Sit my logo in die hoek" },
+  "canvas.brandItNote": { en: "Burned into the picture, so it survives a download and goes wherever the clip goes. Placed where TikTok, Reels and Shorts all leave the frame visible. Change the logo itself on the Adverts desk.", af: "In die prent ingebrand, sodat dit \u2019n aflaai oorleef en saamgaan waarheen die video ook al gaan. Geplaas waar TikTok, Reels en Shorts almal die raam sigbaar laat. Verander die logo self op die Advertensie-lessenaar." },
   "canvas.letItSpeakNote": { en: "Costs more, and only in English. Leave this off and record the line in your own voice under Script my voice — it is cheaper, it is the same voice every time, and it is the only way to get Afrikaans.", af: "Kos meer, en net in Engels. Los dit af en neem die sin in jou eie stem op onder Skryf my stem \u2014 dit is goedkoper, dit is elke keer dieselfde stem, en dit is die enigste manier om Afrikaans te kry." },
   "canvas.cannotSpeak": { en: "No connected engine can speak a line. Record it under Script my voice instead.", af: "Geen gekoppelde enjin kan \u2019n sin s\u00ea nie. Neem dit eerder op onder Skryf my stem." },
   "canvas.on": { en: "The engine is connected", af: "Die enjin is gekoppel" },

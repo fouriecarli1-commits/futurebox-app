@@ -58,6 +58,9 @@ import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import ShareRow from './ShareRow';
+import { loadBrandKit } from '../lib/brandkit';
+import { assetDataUrl } from '../lib/assets';
+import { loadMark } from '../lib/logomark';
 
 type Aspect = EngineAspect;
 
@@ -134,13 +137,22 @@ async function withSong(
      lose it. `stitch` has taken a caption per scene since the storyboard was
      built; a single clip is simply one scene. */
   caption?: string,
+  /* The brand kit's logo, already decoded, or null for a clip that is not
+     being branded.
+
+     Third passenger on the same pass, for the reason the caption gives
+     above: this re-encode happens in real time, so a second one to add a
+     logo would cost a person another minute of their evening and give the
+     file another chance to be lost. One pass, everything it carries. */
+  mark?: HTMLImageElement | null,
 ): Promise<Blob> {
   const wanted = (caption ?? '').trim();
-  if ((!cut && !wanted) || !canStitch()) return clip;
+  if ((!cut && !wanted && !mark) || !canStitch()) return clip;
   try {
     const audio = cut ? await readAudio(cut.songId) : null;
-    // A song that has gone missing must not take the subtitles with it.
-    if (cut && !audio && !wanted) return clip;
+    // A song that has gone missing must not take the subtitles or the logo
+    // with it.
+    if (cut && !audio && !wanted && !mark) return clip;
     const size = aspect === '9:16'
       ? { width: 720, height: 1280 }
       : aspect === '1:1'
@@ -151,6 +163,7 @@ async function withSong(
       ...(audio ? { audio, audioFrom: cut?.from } : {}),
       ...size,
       background: 'blur',
+      ...(mark ? { mark } : {}),
     });
     return made.ok ? made.blob : clip;
   } catch {
@@ -195,6 +208,31 @@ export default function VideoCanvas({
    * a single advert could not put a word on screen. See `Subtitles.tsx`.
    */
   const [subtitles, setSubtitles] = useState<SubtitleChoice>(NO_SUBTITLES);
+
+  /* ── The brand kit's logo, if there is one ──────────────────────────────
+
+     Loaded once when the room opens, not at the moment of cutting: decoding
+     an image inside the draw loop is how a recorded canvas drops frames, and
+     the stitcher's comment on the song says the same thing about the audio.
+
+     `null` covers three cases that behave identically and should not be told
+     apart here — no brand kit, a kit with no logo, and a logo that would not
+     decode. In all three the clip is cut exactly as it was before this
+     existed. A logo is a nice-to-have; a lost render is not. */
+  const [mark, setMark] = useState<HTMLImageElement | null>(null);
+  const [brandIt, setBrandIt] = useState(true);
+  useEffect(() => {
+    let dropped = false;
+    void (async () => {
+      const id = loadBrandKit().logoAssetId;
+      if (!id) return;
+      const url = await assetDataUrl(id).catch(() => null);
+      if (!url || dropped) return;
+      const image = await loadMark(url);
+      if (!dropped) setMark(image);
+    })();
+    return () => { dropped = true; };
+  }, []);
   /**
    * The words themselves, when they are not the line already in the prompt.
    *
@@ -476,7 +514,7 @@ export default function VideoCanvas({
           );
         }
       }
-      const clip = await withSong(result.blob, songCut, aspect, seconds, words);
+      const clip = await withSong(result.blob, songCut, aspect, seconds, words, brandIt ? mark : null);
       const url = URL.createObjectURL(clip);
       setMade((held) => [{ blob: clip, url, prompt: said, aspect, spoken: willSpeak, seconds }, ...held]);
       signal('video', { category: scene?.id ?? 'canvas' });
@@ -938,6 +976,41 @@ export default function VideoCanvas({
             />
           </div>
         </Subtitles>
+
+        {/* ── The logo, and the one case it must not be on ────────────────
+
+            Only shown when there IS a logo. A tick that explains a feature
+            nobody has set up is a row of text pretending to be a control,
+            and this room already has enough to read.
+
+            On by default, because somebody who went and uploaded a logo has
+            said what they want. Off is one press, and it needs to be: a
+            logo belongs on your own advert and not on a music video you cut
+            for somebody else. Carli asked for this on filmed takes and on
+            anything going to Live, which is most things — so the way OUT
+            has to be as easy as the way in. */}
+        {mark && (
+          <label className="flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 cursor-pointer">
+            <input
+              id="canvas-brand"
+              type="checkbox"
+              checked={brandIt}
+              onChange={(event) => setBrandIt(event.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-zinc-200">
+                {t('canvas.brandIt', 'Put my logo in the corner')}
+              </span>
+              <span className="block text-xs text-zinc-500 leading-snug">
+                {t(
+                  'canvas.brandItNote',
+                  'Burned into the picture, so it survives a download and goes wherever the clip goes. Placed where TikTok, Reels and Shorts all leave the frame visible. Change the logo itself on the Adverts desk.',
+                )}
+              </span>
+            </span>
+          </label>
+        )}
 
         {/* The engine speaking is a deliberate, dearer choice — see `speak`. */}
         {spoken.length > 0 && (

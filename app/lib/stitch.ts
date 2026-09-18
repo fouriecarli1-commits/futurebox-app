@@ -56,6 +56,8 @@
  * belongs in the video desk on its own.
  */
 
+import { drawMark, type Corner } from './logomark';
+
 export interface Scene {
   /** The clip itself, as it came back from the engine. */
   readonly clip: Blob;
@@ -129,6 +131,19 @@ export interface Cut {
    * Defaults to `'black'`, which is what every existing cut was made with.
    */
   readonly background?: 'black' | 'blur';
+  /**
+   * The brand kit's logo, already decoded, to burn into every frame.
+   *
+   * Passed in rather than loaded here, for the same reason the song is: this
+   * function draws and records, and a draw loop that waits on an image
+   * decode is a draw loop that drops frames. `app/lib/logomark.ts` loads it
+   * and says where it goes; the caller decides whether this film wants one.
+   *
+   * Left out, nothing is drawn — which is what every existing cut does.
+   */
+  readonly mark?: HTMLImageElement | null;
+  /** Which corner the mark sits in. Defaults to bottom right. */
+  readonly markCorner?: Corner;
   /** Called as each scene starts, so a screen can say where it is. */
   readonly onScene?: (index: number, total: number) => void;
 }
@@ -556,6 +571,13 @@ export async function stitch(cut: Cut): Promise<Made> {
              shot in a tall film sits in the black band rather than across a
              face. Painted every frame because the frame under it is. */
           if (caption) drawCaption(context, caption, cut.width, cut.height);
+          /* Last, over everything. A caption that slid over the logo would
+             be the worse of the two, and the caption is the one that moves.
+             Costs nothing here: this loop already runs for every frame, so
+             the mark is one more `drawImage` on a canvas being painted
+             anyway — which is the whole reason the logo is burned in at the
+             cut rather than in a pass of its own. */
+          if (cut.mark) drawMark(context, cut.mark, cut.width, cut.height, cut.markCorner);
           requestAnimationFrame(draw);
         };
         draw();
