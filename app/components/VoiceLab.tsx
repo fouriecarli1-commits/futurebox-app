@@ -25,6 +25,7 @@ import Recommend from './Recommend';
 import VoicePicker from './VoicePicker';
 import Note from './Note';
 import Card from './Card';
+import { useOpenCard } from '../lib/opencard';
 import HowToTrain from './HowToTrain';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
@@ -185,8 +186,16 @@ export default function VoiceLab({
   /* The copilot writes the read. Nothing here costs anything until the person
      presses the button that does, so it needs no approval — it fills a box they
      were going to fill themselves. */
+  /* Opened and scrolled to, not merely filled. The advert desk sends a
+     script here and the room opens with every panel folded, so a script
+     that arrives in a shut card is a room that looks untouched. See
+     `lib/arrival.ts`. */
+  const reading = useOpenCard();
   useCopilotOps('voice_studio', {
-    set_script: (value) => setScript(value),
+    set_script: (value) => {
+      setScript(value);
+      reading.arrived();
+    },
   });
   const [voiceId, setVoiceId] = useState('');
   const [model, setModel] = useState<'steady' | 'wide'>('steady');
@@ -626,7 +635,8 @@ export default function VoiceLab({
       </Card>
 
       {/* ── Read a script ───────────────────────────────────────────────── */}
-      <Card title={t('voice.readIt', 'Read a script aloud')}>
+      <div ref={reading.mine} className="scroll-mt-4">
+      <Card title={t('voice.readIt', 'Read a script aloud')} openOn={reading.openOn}>
         <Note>{t('voice.readNote', 'Write it, pick a voice, and hear it. An episode made this way says so on the episode.')}</Note>
 
         {underScript}
@@ -780,6 +790,7 @@ export default function VoiceLab({
 
         <audio ref={playerRef} controls className={spoken ? 'w-full' : 'hidden'} />
       </Card>
+      </div>
 
       {/* ── The same words, another voice ─────────────────────────── */}
       <Card title={t('voice.changer', 'Say it again in another voice')}>

@@ -51,6 +51,7 @@ import { refusalText } from '../lib/apierror';
 import StyleFrom from './StyleFrom';
 import { useCopilotOps } from '../lib/copilotactions';
 import Card from './Card';
+import { useOpenCard } from '../lib/opencard';
 import SongStarts from './SongStarts';
 import PromptCards from './PromptCards';
 import type { Mood } from '../data/songstarts';
@@ -143,12 +144,27 @@ export default function MakeMusic({
      which is why the copilot could already write to it through the page.
      That path is a different one — whole actions, not room operations —
      and it cannot be reached from another room. This can. */
+  /* Both cards open and the page goes to the first of them. A room opens
+     folded, so words written into a shut card are words nobody can see —
+     which is what the advert desk's hand-off looked like. `lib/arrival.ts`
+     has the whole of it, including why only the first one scrolls. */
+  const wordsCard = useOpenCard();
+  const soundCard = useOpenCard();
   useCopilotOps('make', {
     /* Updater form, not the spread of a captured object: these three
        arrive in a row, and each has to see the one before it. */
-    set_song_title: (value) => setCanvas((was) => ({ ...was, title: value.trim() })),
-    set_words: (value) => setCanvas((was) => ({ ...was, lyrics: value })),
-    set_sound: (value) => setCanvas((was) => ({ ...was, style: value.trim() })),
+    set_song_title: (value) => {
+      setCanvas((was) => ({ ...was, title: value.trim() }));
+      wordsCard.arrived();
+    },
+    set_words: (value) => {
+      setCanvas((was) => ({ ...was, lyrics: value }));
+      wordsCard.arrived();
+    },
+    set_sound: (value) => {
+      setCanvas((was) => ({ ...was, style: value.trim() }));
+      soundCard.arrived();
+    },
   });
 
   /**
@@ -893,7 +909,9 @@ export default function MakeMusic({
             The words themselves are what gets sung with a real engine, and
             without one they still travel with the track — so nothing typed
             here is lost either way. */}
+        <div ref={wordsCard.mine} className="scroll-mt-4">
         <Card
+          openOn={wordsCard.openOn}
           title={t('make.words')}
           wand={
             wandReady
@@ -965,13 +983,16 @@ export default function MakeMusic({
           )}
 
         </Card>
+        </div>
 
         {/* The style field is the whole instrument: ElevenLabs Music has no
             genre setting and no voice picker, only a list of plain-English
             directions. So this is open text, and the small buttons underneath
             add to it rather than replacing it — twelve fixed buttons was a
             smaller instrument than the model can play. */}
+        <div ref={soundCard.mine} className="scroll-mt-4">
         <Card
+          openOn={soundCard.openOn}
           title={t('make.sound')}
           wand={
             wandReady
@@ -1059,6 +1080,7 @@ export default function MakeMusic({
             />
           </div>
         </Card>
+        </div>
 
         {/* A voice is described, not chosen — there is no voice parameter in the
             Music API. These words lean on breath, room and imperfection, because

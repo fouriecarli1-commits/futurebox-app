@@ -65,6 +65,7 @@ import { EMPTY as EMPTY_KIT, brandLine, type BrandKit as Kit } from '../lib/bran
 import History from './History';
 import Note from './Note';
 import Card from './Card';
+import { useOpenCard } from '../lib/opencard';
 import { makeId, rememberMake } from '../lib/makes';
 
 interface Ad {
@@ -330,14 +331,32 @@ export default function Campaign({
      rather say "an advert for my bakery in Bellville, aimed at people driving
      past" than fill five boxes gets to, and the boxes then show what it
      understood — which is also how they correct it. */
+  /* Filled is not the same as visible: this room opens folded too. See
+     `lib/arrival.ts`. */
+  const aboutCard = useOpenCard();
+  const whereCard = useOpenCard();
   useCopilotOps('campaign', {
-    set_what: (value) => setWhat(value),
-    set_who: (value) => setWho(value),
-    set_offer: (value) => setOffer(value),
-    set_tone: (value) => setTone(value),
+    set_what: (value) => {
+      setWhat(value);
+      aboutCard.arrived();
+    },
+    set_who: (value) => {
+      setWho(value);
+      aboutCard.arrived();
+    },
+    set_offer: (value) => {
+      setOffer(value);
+      aboutCard.arrived();
+    },
+    set_tone: (value) => {
+      setTone(value);
+      aboutCard.arrived();
+    },
     set_market: (value) => {
       const found = MARKETS.find((one) => one.toLowerCase() === value.trim().toLowerCase());
-      if (found) setMarket(found);
+      if (!found) return;
+      setMarket(found);
+      whereCard.arrived();
     },
   });
 
@@ -476,7 +495,8 @@ export default function Campaign({
         onSetUp={onSetUp}
       />
 
-      <Card title={t('ads.whereTitle', 'Where is it going?')}>
+      <div ref={whereCard.mine} className="scroll-mt-4">
+      <Card title={t('ads.whereTitle', 'Where is it going?')} openOn={whereCard.openOn}>
         <Note className="text-xs text-zinc-500 leading-relaxed">{t('ads.whereNote', 'This decides the shape, the length and how fast the hook has to land — so it is asked before the writing, not after.')}</Note>
         <div className="flex flex-wrap gap-2">
           {PLATFORMS.map((one) => {
@@ -534,12 +554,14 @@ export default function Campaign({
           })}
         </div>
       </Card>
+      </div>
 
       {/* The brief. Only the first box is required: an ad for "my bakery in
           Bellville" is a worse ad than one with an audience and an offer, but
           it is a real one, and making somebody fill five boxes before they see
           anything is how a room gets abandoned. */}
-      <Card title={t('ads.aboutTitle', 'What the advert is about')}>
+      <div ref={aboutCard.mine} className="scroll-mt-4">
+      <Card title={t('ads.aboutTitle', 'What the advert is about')} openOn={aboutCard.openOn}>
         {/* ── Kept, and a way to stop keeping it ──────────────────────
  
             The brief comes back when you come back, which is the whole
@@ -754,6 +776,7 @@ export default function Campaign({
           </p>
         )}
       </Card>
+      </div>
 
       {ads.map((ad, index) => (
         <div key={`${ad.angle}-${index}`} className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">

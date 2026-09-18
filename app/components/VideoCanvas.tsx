@@ -54,6 +54,7 @@ import DubFilm from './DubFilm';
 import Note from './Note';
 import Subtitles, { NO_SUBTITLES, translated, type SubtitleChoice } from './Subtitles';
 import Card from './Card';
+import { useOpenCard } from '../lib/opencard';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
@@ -254,15 +255,26 @@ export default function VideoCanvas({
      no generate call will accept. A rejected value leaves the control alone,
      which is the honest outcome — the reply said what it meant to do, and if
      it could not be done, nothing should look as though it was. */
+  /* The shot card opens and the page goes to it. The shape and the length
+     live inside the same card, so they need no arrival of their own —
+     opening it shows all three. See `lib/arrival.ts`. */
+  const shotCard = useOpenCard();
   useCopilotOps('canvas', {
-    set_prompt: (value) => setPrompt(value),
+    set_prompt: (value) => {
+      setPrompt(value);
+      shotCard.arrived();
+    },
     set_aspect: (value) => {
       const wanted = value.trim();
-      if (wanted === '16:9' || wanted === '9:16' || wanted === '1:1') setAspect(wanted);
+      if (wanted !== '16:9' && wanted !== '9:16' && wanted !== '1:1') return;
+      setAspect(wanted);
+      shotCard.arrived();
     },
     set_seconds: (value) => {
       const wanted = Number.parseInt(value.trim(), 10);
-      if (LENGTHS.some((one) => one.seconds === wanted)) setSeconds(wanted);
+      if (!LENGTHS.some((one) => one.seconds === wanted)) return;
+      setSeconds(wanted);
+      shotCard.arrived();
     },
   });
   /**
@@ -777,7 +789,9 @@ export default function VideoCanvas({
       )}
 
       {/* ── The box ───────────────────────────────────────────────────── */}
+      <div ref={shotCard.mine} className="scroll-mt-4">
       <Card
+        openOn={shotCard.openOn}
         title={t('canvas.shot', 'The shot')}
         aside={
           prompt ? (
@@ -1192,6 +1206,7 @@ export default function VideoCanvas({
 
         {error && <p className="text-sm text-rose-400 leading-relaxed">{error}</p>}
       </Card>
+      </div>
 
       {/* ── A film out of many shots ──────────────────────────────────────
 

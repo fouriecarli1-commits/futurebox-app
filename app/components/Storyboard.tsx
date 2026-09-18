@@ -62,6 +62,7 @@ import {
 import { useCopilotOps } from '../lib/copilotactions';
 import { useLang } from '../lib/i18n';
 import Card from './Card';
+import { useOpenCard } from '../lib/opencard';
 import Note from './Note';
 import Subtitles, { translated } from './Subtitles';
 
@@ -199,20 +200,24 @@ export default function Storyboard({
      it. The scroll is here rather than at the door because the door cannot
      know where this card lands, and because on a phone the difference
      between "opened" and "opened below the fold" is the whole of it. */
-  const [openOn, setOpenOn] = useState(0);
-  const mine = useRef<HTMLDivElement | null>(null);
-  const openBoard = useCallback(() => {
-    setOpenOn((n) => n + 1);
-    /* After the fold has painted, or it scrolls to where the shut card was. */
-    requestAnimationFrame(() =>
-      mine.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-    );
-  }, []);
+  /* This room wrote these three lines first, for exactly this reason, and
+     kept them to itself while twelve other rooms went without. They are
+     `lib/arrival.ts` now. See the note in that file. */
+  const { openOn, mine, arrived } = useOpenCard();
+  const openBoard = arrived;
 
   useCopilotOps('canvas', {
     open_board: openBoard,
-    set_look: (value) => setBoard((was) => ({ ...was, look: value.trim() })),
+    set_look: (value) => {
+      setBoard((was) => ({ ...was, look: value.trim() }));
+      arrived();
+    },
+    /* The one that was wrong. Scenes arrived, the card stayed shut, and the
+       desk looked untouched — which is the report. Opening is not a separate
+       operation a caller has to remember to send; it is what filling a card
+       means. */
     write_scenes: (value) => {
+      arrived();
       setBoard((was) => {
         const made = was.shots.filter((one) => one.makeId);
         const fresh = shotsFrom(value, lengths[0]?.seconds ?? 5);

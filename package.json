@@ -85,6 +85,7 @@
     "check:shotwords": "tsx scripts/check-shotwords.mts",
     "check:adformats": "tsx scripts/check-adformats.mts",
     "check:adhandover": "tsx scripts/check-adhandover.mts",
+    "check:opencard": "tsx scripts/check-opencard.mts",
     "check:adschema": "tsx scripts/check-adschema.mts",
     "check:adstyles": "tsx scripts/check-adstyles.mts",
     "check:paystackplans": "tsx scripts/check-paystackplans.mts",

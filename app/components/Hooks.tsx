@@ -58,6 +58,7 @@ import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import ShareRow from './ShareRow';
 import Note from './Note';
 import Card from './Card';
+import { useOpenCard } from '../lib/opencard';
 import { addUpload, loadUploads, removeUpload } from '../lib/uploads';
 import { cutHook, soundOf } from '../lib/videoclip';
 import { fetchCreator, nameOf } from '../lib/radar';
@@ -177,6 +178,9 @@ export default function Hooks({
   /* Pick the song to cut from, and how long the clip runs. Both go through the
      same `look` the buttons use, so the hooks are re-found rather than left
      showing the previous song's. */
+  /* The length lives in a card that opens folded, so a length the copilot
+     sets is a change nobody can see. See `lib/opencard.ts`. */
+  const lengthCard = useOpenCard();
   useCopilotOps('hooks_feed', {
     pick_song: (value) => {
       const track = matchByTitle(tracks, value);
@@ -186,6 +190,7 @@ export default function Hooks({
       const wanted = Number.parseInt(value.trim(), 10);
       if (!LENGTHS.includes(wanted)) return;
       setSeconds(wanted);
+      lengthCard.arrived();
       if (selected) void look(selected, wanted);
     },
   });
@@ -664,7 +669,9 @@ export default function Hooks({
 
           {/* The length, as its own card with the choices as the small buttons
               along the bottom — which is exactly what the `tools` row is for. */}
+          <div ref={lengthCard.mine} className="scroll-mt-4">
           <Card
+            openOn={lengthCard.openOn}
             title={t('hooks.clipLength')}
             /* eslint-disable-next-line react/jsx-no-useless-fragment */
             tools={<>{LENGTHS.map((option) => (
@@ -689,6 +696,7 @@ export default function Hooks({
               {t('hooks.clipLengthWhy', 'The first fifteen seconds decide whether anybody watches the rest, so shorter is usually better.')}
             </p>
           </Card>
+          </div>
 
           {/* The other half of what the permission allows.
 

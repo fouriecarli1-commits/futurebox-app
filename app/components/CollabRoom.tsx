@@ -30,6 +30,7 @@ import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
 import Note from './Note';
 import InviteLink from './InviteLink';
 import Card from './Card';
+import { useOpenCard } from '../lib/opencard';
 
 /** Long enough that a conversation feels live, gentle enough to leave open. */
 const ASK_AGAIN_MS = 15_000;
@@ -61,8 +62,14 @@ export default function CollabRoom({
 
   /* Draft the message. Not send it — the same rule as the live room: a message
      to another person goes out under their name, so it waits for them. */
+  /* The message box sits inside a folded card, so a draft written into it
+     by the copilot is a draft nobody can see. See `lib/arrival.ts`. */
+  const working = useOpenCard();
   useCopilotOps('collab', {
-    set_message: (value) => setDraft(value),
+    set_message: (value) => {
+      setDraft(value);
+      working.arrived();
+    },
   });
   const [tracks, setTracks] = useState<Track[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -301,7 +308,8 @@ export default function CollabRoom({
       )}
 
       {/* ── The rooms ────────────────────────────────────────────────── */}
-      <Card title={t('collab.rooms', 'Working together')}>
+      <div ref={working.mine} className="scroll-mt-4">
+      <Card title={t('collab.rooms', 'Working together')} openOn={working.openOn}>
         <Note>{t(
               'collab.roomsNote',
               'A room opens when you both agree. Drop a song into it and the other person can hear what you mean — the song travels, not the file.',
@@ -427,6 +435,7 @@ export default function CollabRoom({
           </div>
         )}
       </Card>
+      </div>
 
       {/* ── Waiting on them ──────────────────────────────────────────── */}
       {sent.length > 0 && (

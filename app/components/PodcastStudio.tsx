@@ -28,6 +28,7 @@ import Transcript from './Transcript';
 import Cost from './Cost';
 import Note from './Note';
 import Card from './Card';
+import { useOpenCard } from '../lib/opencard';
 import { episodeAudioUrl } from '../lib/episodeaudio';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
@@ -105,9 +106,18 @@ export default function PodcastStudio({
 
   /* The episode's title and its notes. Both are text they were going to type
      and can retype, and neither costs anything or publishes anything. */
+  /* An episode sent here by the advert desk lands in a card that opens
+     folded, which is a room that looks untouched. See `lib/arrival.ts`. */
+  const episode = useOpenCard();
   useCopilotOps('podcast', {
-    set_title: (value) => setTitle(value),
-    set_notes: (value) => setNotes(value),
+    set_title: (value) => {
+      setTitle(value);
+      episode.arrived();
+    },
+    set_notes: (value) => {
+      setNotes(value);
+      episode.arrived();
+    },
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
@@ -495,7 +505,8 @@ export default function PodcastStudio({
       />
 
       {/* ── An episode ──────────────────────────────────────────────────── */}
-      <Card title={t('pod.episode', 'An episode')}>
+      <div ref={episode.mine} className="scroll-mt-4">
+      <Card title={t('pod.episode', 'An episode')} openOn={episode.openOn}>
         <Note>{t('pod.episodeNote', 'Record it here, or use something a voice read. Publishing puts the audio at a public address that podcast apps keep fetching.')}</Note>
 
         {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
@@ -700,6 +711,7 @@ export default function PodcastStudio({
           </div>
         )}
       </Card>
+      </div>
 
       {/* ── When a word does not come out right ───────────────────────────
 

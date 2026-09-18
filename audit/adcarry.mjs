@@ -59,6 +59,18 @@ const PICKS = {
       styleWhy: 'Hands doing the work is the one thing a generated clip cannot fake.',
     },
     {
+      /* The format Carli pressed on 18 September, and the one nothing had
+         ever walked. Its whole payload is `write_scenes`, which lands in
+         the storyboard — a card further down the video desk than the shot
+         box, and shut. */
+      id: 'explainer_film',
+      why: 'Somebody deciding on a bag wants to see it made.',
+      first: 'Two minutes: the hide arriving, the pattern cut, the last seam',
+      watchOut: 'Do not make it an advert; make it the work.',
+      style: 'hands_working',
+      styleWhy: 'Hands doing the work is the one thing a generated clip cannot fake.',
+    },
+    {
       id: 'song_with_a_photo',
       why: 'A song is the only thing here somebody plays twice.',
       first: 'A slow Afrikaans song over one photograph of the workshop',
@@ -195,15 +207,40 @@ try {
   await p.screenshot({ path: shot('adcarry-picks.png') });
 
   const open = room.locator('button').filter({ hasText: /Open the room and start it|Maak die kamer oop/i });
-  check('it recommends something you can press', (await open.count()) >= 2,
-    `${await open.count()} cards — the stub sends two`);
+  check('it recommends something you can press', (await open.count()) >= 3,
+    `${await open.count()} cards — the stub sends three`);
 
   /* ── One: a clip. The room is the video desk. ──────────────────── */
   await open.first().click();
   await p.waitForTimeout(2200);
+
+  /* ── What she sees, before anything is unfolded ──────────────────
+ 
+     Carli, 18 September 2026: *"As ek druk op open the room dan vat hy my
+     net na die regte kamer toe, maar die AI vul nie die afdelings vir my
+     in nie. Dit is 'n groot flaw."*
+ 
+     The value was arriving. It landed in a card that opens shut, three
+     headings down a page — and the line below this one used to be
+     `unfold(p)`, with a comment saying every box below is inside a card.
+     So this probe opened the door and then asked whether the door was
+     open, and passed, for as long as she was reporting the fault.
+ 
+     Nothing is pressed here. `aria-expanded` on the card's own fold button
+     is the whole question. */
+  const overlay = 'div.fixed.inset-0.z-50';
+  const shotFold = p.locator(`${overlay} button[aria-expanded]`)
+    .filter({ hasText: /The shot|Die skoot/ }).first();
+  check('the card the shot went into opened by itself',
+    (await shotFold.count()) > 0 && (await shotFold.getAttribute('aria-expanded')) === 'true',
+    'a value in a shut card is a room that looks untouched — this is the report');
+  check('  so the shot is on the screen without anybody hunting for it',
+    await p.locator(`${overlay} textarea`).first().isVisible().catch(() => false),
+    'the box exists and is folded away');
+
   /* The room a card opens is reached by switching the studio's tab rather
-     than through `toRoom`, so nothing has unfolded it. Every box below is
-     inside a card. */
+     than through `toRoom`. Everything from here on is about the VALUES,
+     so the rest of the cards are opened for reading. */
   await unfold(p);
   await p.screenshot({ path: shot('adcarry-canvas.png') });
 
@@ -274,11 +311,53 @@ try {
   const kept = (await back.locator('#ads-what').inputValue().catch(() => '')) ?? '';
   check('walking back in, the brief is waiting', kept.trim() === WHAT, `"${kept}"`);
   const cards = back.locator('button').filter({ hasText: /Open the room and start it|Maak die kamer oop/i });
-  check('  and so are the cards, without asking again', (await cards.count()) >= 2,
+  check('  and so are the cards, without asking again', (await cards.count()) >= 3,
     `${await cards.count()} — the advice was written, shown once and dropped`);
 
+  /* ── Two: the longer film. The one she pressed. ─────────────────
+ 
+     Its whole payload is `write_scenes`, and the storyboard is further
+     down the video desk than the shot box. So this is the worst case of
+     the fault: the composer at the top of the desk stays empty on purpose
+     — a film out of many shots does not use it — and everything that
+     arrived is in a shut card below the fold. From the doorway the desk is
+     blank, which is exactly what she described.
+ 
+     Nothing is unfolded before the two assertions below. */
   await cards.nth(1).click();
+  await p.waitForTimeout(2600);
+  await p.screenshot({ path: shot('adcarry-board.png') });
+
+  const boardFold = p.locator(`${overlay} button[aria-expanded]`)
+    .filter({ hasText: /Build a long one|Bou ’n lang een/ }).first();
+  check('the longer film opens the storyboard by itself',
+    (await boardFold.count()) > 0 && (await boardFold.getAttribute('aria-expanded')) === 'true',
+    'the scenes arrived into a shut card at the bottom of the desk');
+  /* Read out of the shot boxes rather than off the card's own element.
+     The first version of this took `ancestor::div[1]` of the fold button,
+     which is the heading's wrapper — it came back with the word "Build a
+     long one" and nothing else, and would have passed the day the scenes
+     stopped arriving as easily as it failed the day they did. */
+  const written = await p.locator(`${overlay} textarea`).evaluateAll((all) =>
+    all.map((one) => one.value).filter(Boolean));
+  check('  with her own shots written into it',
+    written.some((one) => /hide|pattern|seam/i.test(one)),
+    `${written.length} boxes: ${written.join(' | ').replace(/\s+/g, ' ').slice(0, 160)}`);
+
+  /* ── Three: a song. The room that used to open completely empty. ─ */
+  await toRoom(p, 'Adverts');
+  await p.waitForTimeout(1600);
+  const third = p.locator('div.fixed.inset-0.z-50').first();
+  const songCards = third.locator('button').filter({ hasText: /Open the room and start it|Maak die kamer oop/i });
+  await songCards.nth(2).click();
   await p.waitForTimeout(2200);
+
+  const wordsFold = p.locator(`${overlay} button[aria-expanded]`)
+    .filter({ hasText: /The words|Die woorde/ }).first();
+  check('the song’s words card opens by itself too',
+    (await wordsFold.count()) > 0 && (await wordsFold.getAttribute('aria-expanded')) === 'true',
+    'words written into a shut card are words nobody can see');
+
   await unfold(p);
   await p.screenshot({ path: shot('adcarry-make.png') });
 

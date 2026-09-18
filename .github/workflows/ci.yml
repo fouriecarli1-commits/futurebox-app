@@ -261,6 +261,14 @@ jobs:
       - name: Every recommendation arrives in the next room with the brief in it
         run: npm run check:adhandover
 
+      # Arriving is not the same as being seen. A room opens as its own table
+      # of contents, so a value handed to it landed in a shut card three
+      # headings down and the desk looked untouched — which is the report:
+      # "hy vat my net na die regte kamer toe, maar die AI vul nie die
+      # afdelings vir my in nie."
+      - name: A room handed something opens the card it went into
+        run: npm run check:opencard
+
       - name: Every format the advert desk recommends can be made here
         run: npm run check:adformats
 
