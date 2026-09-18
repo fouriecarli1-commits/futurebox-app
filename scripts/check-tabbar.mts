@@ -16,7 +16,7 @@
  * without an inset, and invisible to anybody who does not already know the bar
  * pads itself. So it is checked in the one place it can be: the source.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -68,6 +68,51 @@ for (const one of reserved) {
     'use barClearance()',
   );
 }
+
+/* ── Nothing fixed may sit where the bar will land on it ─────────────────
+
+   The rules above are about a page that SCROLLS. They do nothing for
+   something `position: fixed`, which is not in the flow and so is not moved
+   by anybody's padding — it needs the number on its own `bottom`.
+
+   Carli, 18 September 2026, with a photograph of the "Want a video for this
+   one?" card: *"daai pop up window is half uit die prent."* On a 390-pixel
+   phone its bottom measured 820 against the bar's top at 786, so 34 pixels
+   of it — the whole button row — sat under a bar painted at z-95 over its
+   z-60. It was not too wide and not off the side. It was too low.
+
+   `bottom-6` is 24 pixels from the bottom of the SCREEN, which in this app
+   is 58 pixels inside the bar. Two places had it and both were invisible in
+   the same way, so this is a class and not a typo.
+
+   `bottom-0` is allowed through: a full-width sheet or the bar itself is
+   MEANT to reach the bottom edge, and covering the bar deliberately is a
+   different decision from being eaten by it. Everything else fixed near the
+   bottom goes through `aboveBar`. */
+ok('the bar exports where a fixed thing has to stop', /export function aboveBar/.test(bar));
+
+const walk = (dir: string): string[] =>
+  readdirSync(dir).flatMap((name) => {
+    const full = join(dir, name);
+    if (statSync(full).isDirectory()) return walk(full);
+    return full.endsWith('.tsx') ? [full] : [];
+  });
+
+const tooLow: string[] = [];
+for (const file of walk(join(ROOT, 'app'))) {
+  const text = readFileSync(file, 'utf8');
+  for (const line of text.split('\n')) {
+    if (!/\bfixed\b/.test(line)) continue;
+    /* A non-zero bottom-N on the same className as `fixed`. */
+    const hit = line.match(/\bbottom-(?!0\b)([1-9]\d*)\b/);
+    if (hit) tooLow.push(`${file.slice(ROOT.length + 1)} — bottom-${hit[1]}`);
+  }
+}
+ok(
+  'and nothing fixed is pinned to the screen bottom instead of above the bar',
+  tooLow.length === 0,
+  `${tooLow.length}: ${tooLow.join(', ')} — use style={{ bottom: aboveBar() }}`,
+);
 
 /* And the bar is still over the things a person should be able to leave. */
 ok('the bar sits above the studio and the front door', /z-\[?95\]?/.test(bar));

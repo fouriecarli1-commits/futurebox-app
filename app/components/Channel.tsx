@@ -56,6 +56,7 @@ import Note from './Note';
 import Card from './Card';
 import { timelineOf, type Part, type TimedLine } from '../lib/timeline';
 import History from './History';
+import { aboveBar } from './TabBar';
 
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
@@ -1206,7 +1207,11 @@ export default function Channel({
         <button
           type="button"
           onClick={() => void play(queue[0], queue.slice(1))}
-          className="fixed bottom-6 right-6 z-40 px-4 py-3 rounded-full bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-2 shadow-2xl"
+          className="fixed right-6 z-40 px-4 py-3 rounded-full bg-zinc-900 border border-zinc-700 text-zinc-200 text-sm font-semibold flex items-center gap-2 shadow-2xl"
+          /* Off the tab bar. `bottom-6` put this Next button behind it, the
+             same way it did the "Want a video?" card — and this one is worse,
+             because a control you cannot see is a control nobody presses. */
+          style={{ bottom: aboveBar(12) }}
         >
           <SkipForward className="w-4 h-4" />
           {t('chan.next', 'Next')}

@@ -86,6 +86,37 @@ export function barClearance(extra = 12): string {
   return `calc(${BAR_HEIGHT}px + env(safe-area-inset-bottom) + ${extra}px)`;
 }
 
+/**
+ * Where the BOTTOM of something fixed has to sit, so the bar does not eat it.
+ *
+ * ── A second way of hitting the same wall ────────────────────────────────
+ *
+ * `barClearance` is for a page that SCROLLS: it reserves room under the
+ * content so the last thing in the room is reachable. That does nothing for
+ * something `position: fixed`, which is not in the flow and so is not pushed
+ * by anybody's padding. Those need the number on their own `bottom`.
+ *
+ * Carli, 18 September 2026, with a photograph of the "Want a video for this
+ * one?" card: *"daai pop up window is half uit die prent."* Measured on a
+ * 390-pixel phone, its bottom was at 820 and the bar's top at 786 — so 34
+ * pixels of it, which is exactly the button row, sat under a bar painted at
+ * `z-95` over its `z-60`. The card was not too wide and not off the side:
+ * its right edge was correctly 24 pixels in. It was 34 pixels too low.
+ *
+ * `bottom-6` is what both of them used, and `bottom-6` is 24 pixels from the
+ * bottom of the SCREEN — which on this app is 58 pixels inside the bar.
+ *
+ * Same arithmetic as the clearance, on purpose and through the same function,
+ * because two numbers for one bar drift the first time the bar changes
+ * height. Two names, because the two uses are not the same thing and a reader
+ * should be able to tell which one is meant.
+ *
+ * @param extra breathing space above the bar, in pixels.
+ */
+export function aboveBar(extra = 12): string {
+  return barClearance(extra);
+}
+
 const TABS: readonly {
   readonly id: TabId;
   readonly icon: typeof Compass;

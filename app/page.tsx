@@ -49,7 +49,7 @@ import PasswordField from './components/PasswordField';
 import Campaign from './components/Campaign';
 import Greeting from './components/Greeting';
 import Account from './components/Account';
-import TabBar, { barClearance, type TabId } from './components/TabBar';
+import TabBar, { aboveBar, barClearance, type TabId } from './components/TabBar';
 import { useOwnedScreen } from './lib/fullroom';
 import SearchCorner from './components/SearchCorner';
 import { fetchCreator, type Creator } from './lib/radar';
@@ -3677,7 +3677,14 @@ export default function FutureBoxHome() {
       {/* After a song lands: the one thing most people want next. Asked once,
           and dismissable — it is a suggestion, not a funnel. */}
       {madeTrack && (
-        <div className="fixed bottom-6 right-6 z-[60] max-w-sm rounded-2xl border border-amber-500/40 bg-zinc-900 shadow-2xl p-4 space-y-3">
+        <div
+          className="fixed right-6 z-[60] max-w-sm rounded-2xl border border-amber-500/40 bg-zinc-900 shadow-2xl p-4 space-y-3"
+          /* `aboveBar`, not `bottom-6`. The bar is 64 plus the home
+             indicator and is painted at z-95, so 24 pixels from the bottom
+             of the screen put this card's button row underneath it — 34 of
+             its 142 pixels, measured on a 390-pixel phone. */
+          style={{ bottom: aboveBar(12) }}
+        >
           <p className="text-sm font-bold text-white">{t('video.suggest')}</p>
           <p className="text-sm text-zinc-400 leading-relaxed">{madeTrack.title}</p>
           <div className="flex gap-2">

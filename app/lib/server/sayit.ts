@@ -47,6 +47,20 @@
  * says either way. If the suffix rules do work the word entries are redundant
  * and produce the same sound, so there is no case where carrying both is
  * worse than carrying one.
+ *
+ * ── Still open, and the test that closes it ─────────────────────────────
+ *
+ * 18 September 2026: `liedjie` now comes out right. That proves the
+ * dictionary is reaching the reads and that alias rules work. It does not
+ * say WHICH fork we are on, because `liedjie` is in both halves — the suffix
+ * rule and the word list — and either alone would produce that sound.
+ *
+ * The test that separates them is one word this file has never heard of:
+ * hondjie, kindjie, blommetjie. Said right, matching is by substring and the
+ * word list is redundant belt-and-braces. Said wrong while liedjie is right,
+ * matching is whole-word and every future diminutive needs its own entry —
+ * which is a different feature, not a bigger list, because nobody will keep
+ * a list of a language's diminutives up to date by hand.
  */
 
 /** One alias rule: a string ElevenLabs reads, and what to read instead. */
@@ -83,6 +97,16 @@ export interface SayRule {
  * observation being wrong means her ear was misled. An interpretation being
  * wrong means the alias form is the wrong tool and a phoneme rule is needed,
  * which is a different fix in a different place.
+ *
+ * **Heard working, 18 September 2026.** The dictionary went onto the account
+ * and its two ids into Vercel, and she listened: *"Die liedjie, dus djie na
+ * kie het perfek gewerk. Die uitspraak is nou 100%."* So the alias form was
+ * the right tool — no phoneme rule needed — and the inferred -djie rule was
+ * a correct inference. That is the whole chain confirmed by the only
+ * instrument that can confirm it.
+ *
+ * What that test did NOT settle is below: `liedjie` is in the word list too,
+ * so it cannot say which of the two rules fired.
  */
 const SUFFIXES: readonly SayRule[] = [
   {
