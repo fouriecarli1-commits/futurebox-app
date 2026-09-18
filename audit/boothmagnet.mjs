@@ -320,6 +320,40 @@ try {
      exist, pressing + really does make the axis wider than its box, and the
      names on the left stay where they are while the song slides past. That
      last one is what a horizontal scroller usually breaks. */
+  /* ── The ruler and the grid run the whole length of the song ────────
+
+     Carli, 18 September 2026, a photograph of the Pro Booth on her phone:
+     *"Die grid op die foon app gaan nie lank genoeg aan nie. Die tyd en
+     grid raak weg."*
+
+     `BoothTimeline` exists to make this impossible — its own note says a
+     ruler above the lanes *"becomes a fourth opinion about where a second
+     is"*, and that the answer is one CSS grid with the ruler and every
+     lane in the same column. A claim that strong is worth measuring, and
+     nothing had. So: the two cells are the same width, the last bar line
+     reaches the far end, and the marks go the whole way. */
+  {
+    const axisBox = await p.locator('[data-axis]').first().boundingBox();
+    const rowBox = await p.locator('[data-lanerow]').first().boundingBox();
+    check('the ruler and a lane are the same width',
+      axisBox !== null && rowBox !== null && Math.abs(axisBox.width - rowBox.width) <= 1,
+      `ruler ${Math.round(axisBox?.width ?? -1)}, lane ${Math.round(rowBox?.width ?? -1)}`);
+    check('  and they start at the same place',
+      axisBox !== null && rowBox !== null && Math.abs(axisBox.x - rowBox.x) <= 1,
+      `ruler at ${Math.round(axisBox?.x ?? -1)}, lane at ${Math.round(rowBox?.x ?? -1)}`);
+
+    const lines = await p.locator('[data-lanerow="0"] [data-barline]').evaluateAll((all) =>
+      all.map((one) => Number.parseFloat(one.style.left)));
+    const marks = await p.locator('[data-axis] span[class*="top-1"]').allInnerTexts().catch(() => []);
+    const furthest = lines.length ? Math.max(...lines) : -1;
+    check('the bar grid reaches the end of the song',
+      lines.length > 1 && furthest > 90,
+      `${lines.length} lines, the last at ${furthest.toFixed(1)}% of the way along`);
+    check('  and the clock goes with it',
+      marks.length > 1,
+      `${marks.length} time labels: ${marks.join(' ')}`);
+  }
+
   const zoomIn = p.locator('[data-zoom="in"]').first();
   check('the timeline has a way to go closer in', (await zoomIn.count()) === 1);
   if (await zoomIn.count()) {
@@ -361,6 +395,45 @@ try {
     });
     check('and the lane names stay put while it does', stuck !== null && stuck >= -1 && stuck <= 8,
       stuck === null ? 'not found' : `${stuck}px from the left edge, scrolled`);
+
+    /* ── Zoomed in and pushed to the far end ─────────────────────────
+ 
+       Carli's photograph is of a timeline whose grid and clock stop
+       partway along while the sound carries on. The assertions above
+       measure the whole axis, which is the right question and only the
+       first half of it: the part she is LOOKING at is a window onto that
+       axis, and a window near the end is the one state nothing had ever
+       opened. So: all the way right, and then count what is actually
+       inside the window. */
+    await p.evaluate(() => {
+      const box = document.querySelector('[data-timeline] .overflow-x-auto');
+      if (box) box.scrollLeft = box.scrollWidth;
+    });
+    await p.waitForTimeout(400);
+    const inView = await p.evaluate(() => {
+      const box = document.querySelector('[data-timeline] .overflow-x-auto');
+      if (!box) return null;
+      const frame = box.getBoundingClientRect();
+      /* The gutter is sticky and sits over the left of the window, so the
+         part of the window the song is actually drawn in starts after it. */
+      const name = document.querySelector('[data-lanename]');
+      const from = name ? name.getBoundingClientRect().right : frame.left;
+      const seen = (list) => Array.from(list).filter((one) => {
+        const at = one.getBoundingClientRect();
+        return at.right > from && at.left < frame.right;
+      }).length;
+      return {
+        bars: seen(document.querySelectorAll('[data-lanerow="0"] [data-barline]')),
+        clock: seen(document.querySelectorAll('[data-axis] span[class*="top-1"]')),
+        wide: Math.round(frame.right - from),
+      };
+    });
+    check('the grid is still there at the far end of the song',
+      inView !== null && inView.bars > 0,
+      inView ? `${inView.bars} bar lines in the ${inView.wide}px of window` : 'no scroller');
+    check('  and so is the clock',
+      inView !== null && inView.clock > 0,
+      inView ? `${inView.clock} time labels in the ${inView.wide}px of window` : 'no scroller');
   }
 
   await p.screenshot({ path: shot('boothmagnet.png') });

@@ -1127,6 +1127,11 @@ export default function BoothTimeline({
                      list, along goes to the song, and a drag on a CLIP is
                      still the clip's own. While the marker is armed it is
                      all ours, because marking draws across the lanes. */
+                  /* Named so a probe can measure it against the ruler.
+                     The whole point of this layout is that they are two
+                     cells of one grid and cannot disagree about where a
+                     second is; a claim like that is worth a measurement. */
+                  data-lanerow={index}
                   style={{
                     gridColumn: 2,
                     gridRow: index + 2,
@@ -1144,6 +1149,7 @@ export default function BoothTimeline({
                   {bars.map((second) => (
                     <span
                       key={second}
+                      data-barline={second}
                       className="pointer-events-none absolute inset-y-0 w-px"
                       style={{ left: `${percent(second)}%`, background: EDGE }}
                     />
