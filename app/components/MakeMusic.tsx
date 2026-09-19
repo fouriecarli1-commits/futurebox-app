@@ -53,10 +53,8 @@ import { useCopilotOps } from '../lib/copilotactions';
 import Card from './Card';
 import { useOpenCard } from '../lib/opencard';
 import SongStarts from './SongStarts';
-import SongFeeling from './SongFeeling';
-import SongParts from './SongParts';
 import PromptCards from './PromptCards';
-import type { Mood } from '../data/songstarts';
+import { MOODS, type Mood } from '../data/songstarts';
 
 export interface Canvas {
   title: string;
@@ -182,6 +180,33 @@ export default function MakeMusic({
     set_sound: (value) => {
       setCanvas((was) => ({ ...was, style: value.trim() }));
       soundCard.arrived();
+    },
+    /* ── The feeling, asked for rather than picked ────────────────────
+
+       Carli, 19 September 2026: *"Die emosie goed voel ek moes als deel
+       wees van copilot. Die hele room is baie besig."*
+
+       She is right, and the shape she is describing is the one her own
+       brief asked for — the copilot must *guide* somebody through writing
+       a song. What shipped instead was a row of eight chips and a text
+       box bolted onto the top of a room that already had too much in it.
+       A chip row is not guidance. It is one more thing to look at before
+       you have been asked a single question.
+
+       So the two answers still land on the canvas — they have to, because
+       the canvas is what travels back to the copilot and what narrows the
+       fifty starting points — but they get there from a conversation.
+       Nothing new is on the screen; something was taken off it. */
+    set_feeling: (value) => {
+      const want = value.trim().toLowerCase();
+      const found = MOODS.find((one) => one.id === want);
+      /* An unknown feeling is dropped rather than guessed at. The eight are
+         the eight the shelves below are cut by, so a ninth would narrow the
+         starting points to nothing and look like a broken room. */
+      if (found) setCanvas((was) => ({ ...was, feeling: found.id }));
+    },
+    set_about: (value) => {
+      setCanvas((was) => ({ ...was, about: value.trim() }));
     },
   });
 
@@ -872,21 +897,6 @@ export default function MakeMusic({
             what a bad song is made of — four vague words produce a take that
             wanders, and the person concludes the engine is no good. Fifty
             written starting points, none of which costs anything. */}
-        {/* ── How you feel, before anything else ────────────────────────
-
-            Carli, 19 September 2026, passing on a friend's idea: *"Inplaas
-            van om style daar heel bo in make a song voor te stel, om dan
-            eerder te werk met emosie."*
-
-            Above the starting points and the photo cards, because it is the
-            question somebody actually walked in with. A style is an answer
-            to a question nobody arrived with; a feeling is the thing they
-            came here holding. Picking one narrows the fifty below to the
-            shelf that matches, which is most of what it is for. */}
-        <SongFeeling
-          value={{ mood: canvas.feeling ?? null, about: canvas.about ?? '' }}
-          onChange={(next) => setCanvas({ ...canvas, feeling: next.mood, about: next.about })}
-        />
 
         {/* And the shortest way in of all: press a sentence, pick a photo.
 
@@ -983,20 +993,6 @@ export default function MakeMusic({
               it. */}
           {wandProblem && <p className="text-sm text-amber-300 leading-snug">{wandProblem}</p>}
 
-          {/* ── What each part of a song is for ─────────────────────────
-
-              Under the sheet somebody is writing into, because that is the
-              only moment the answer is wanted — and nobody stuck on a
-              bridge goes looking for a help page.
-
-              Carli, 19 September 2026, on her friend's idea: *"dan leer dit
-              ook mense sommer van liedjie skryf en van musiek."* An app
-              that writes somebody a song leaves them where it found them.
-
-              Written down in `data/songcraft.ts`, the same every time,
-              costing nothing. Not the model: teaching that is right nine
-              times out of ten is a different product from teaching. */}
-          <SongParts />
 
           {/* What language to sing it in.
 

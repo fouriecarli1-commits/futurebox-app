@@ -203,7 +203,10 @@ export default function Copilot({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 rounded-2xl border border-zinc-800 bg-zinc-900/60">
+    <div
+      data-copilot={context.surface}
+      className="flex flex-col h-full min-h-0 rounded-2xl border border-zinc-800 bg-zinc-900/60"
+    >
       <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800 flex-shrink-0">
         <Sparkles className="w-4 h-4 text-emerald-400" />
         <p className="text-sm font-bold text-white">{t('copilot.title')}</p>
@@ -211,7 +214,11 @@ export default function Copilot({
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-3">
         {turns.length === 0 && (
-          <div className="space-y-3">
+          /* Named so a probe can read what the panel opens with. This is the
+             guidance of a session — the first thing said, before anything is
+             typed — and until it was moved here it lived as chips on the
+             canvas, where nothing asked anybody anything. */
+          <div data-copilotopen className="space-y-3">
             {/* What this room's copilot can actually do, rather than one
                 sentence for all thirteen.
 

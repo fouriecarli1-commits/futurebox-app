@@ -5223,3 +5223,60 @@ dit elf routes wat elkeen sy eie prompt-vorm gebou het. Weer is die fix nie om
 die elf reg te maak nie, maar om **een plek te hê wat dit doen** —
 `cachedSystem()` — en `check:caching` wat die build laat faal as 'n route dit
 self probeer, of as 'n prompt by die oproep self saamgestel word.
+
+## §Y · 'n Ry chips is nie begeleiding nie (19 September 2026)
+
+Carli, oor die eerste sny van die emosie-eerste herontwerp:
+
+> *"Wat weird is van jou verandering in make a song. Die emosie goed voel ek
+> moes als deel wees van copilot. Die hele room is baie besig. Ook die
+> begeleiding van elke sessie."*
+
+Sy is reg, en die skerpste deel is dat **haar eie brief dit reeds gesê het.**
+Haar woorde was: *"Die AI prompt moet mens deur 'n liedjie se skryf begelei en
+word dan ook 'n prompter wat iemand leer hoe musiek werk."* Begelei. Leer.
+
+Wat ek gebou het was agt gevoel-chips bo-aan die doek, 'n teksblok daaronder,
+en ses vak-chips onder die woorde. Die kennis was reg. Die **plek** was verkeerd
+op 'n manier wat die hele punt omdraai.
+
+### Die les
+
+**'n Ry chips is nie begeleiding nie.** Dit is die teenoorgestelde: dit vra
+iemand om hulself te klassifiseer voordat enigiemand met hulle gepraat het, en
+dit doen dit deur nóg iets op 'n skerm te sit wat sy reeds "baie besig" genoem
+het. Begeleiding is 'n vraag, 'n antwoord, en dan die volgende vraag. Dis 'n
+gesprek, en die app het reeds 'n plek vir gesprekke gehad.
+
+Dieselfde vorm as §T, van 'n ander kant af. §T was: *"dit het aangekom" is nie
+"iemand kan dit sien" nie.* Hierdie een is: **"dit is op die skerm" is nie
+"iemand is gevra" nie.** Ek het die kennis gelewer en die interaksie oorgeslaan,
+en toe die lewering vir die ding aangesien.
+
+### Wat verander het
+
+Niks nuuts is bygevoeg nie. Iets is **afgehaal**:
+
+- `SongFeeling` en `SongParts` is weg — 280 reëls komponent van die doek af.
+- Die kopiloot kry twee nuwe ops, `set_feeling` en `set_about`, so die
+  antwoorde land nog steeds op die doek — hulle kom net uit 'n gesprek. Die
+  doek is wat na die kopiloot toe terugreis en wat die vyftig beginpunte
+  vernou, so dit moes bly.
+- Die kopiloot se openingsreël in hierdie kamer vra nou hoe jy voel, met drie
+  starters: twee gevoelens en een vraag oor vakmanskap. **Daardie opening ís
+  die begeleiding van 'n sessie** — dit is wat iemand lees voor hulle een
+  karakter getik het. Dit was nog altyd daar; dit het net die verkeerde ding
+  gesê.
+- `ABOUT` — die plekke waar 'n gevoel gewoonlik land — was ook chips. Dit gaan
+  nou in die kopiloot se opdrag in as *voorbeelde om aan te bied*, nooit as 'n
+  lys om uit te kies nie.
+
+### Wat nog oop is
+
+Sy het gesê **die hele kamer** is besig, nie net my twee panele nie. Ek het net
+teruggevat wat ek bygesit het. Bo die knoppie wat 'n liedjie maak staan steeds:
+'n verduidelikingsmerk, die foto-kaarte, vyftig beginpunte, die woordekaart met
+sy towerstaf en skryfhulp, die klankkaart met twee maniere om 'n styl te kry,
+en die sangtaal-keuse. Dit is 'n aparte besluit en dit is hare om te neem —
+maar dit is nie reggemaak deur hierdie commit nie, en dit moet nie so gelees
+word nie.

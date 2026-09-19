@@ -307,13 +307,14 @@ function contextFor(body: Body): string {
       ? 'Their style already says who sings. Leave it alone unless they ask.'
       : 'Their style does not say who sings. If they are heading for a song, suggest one and set it.',
     body.lyrics ? `Lyrics so far:\n${body.lyrics}` : 'No lyrics yet.',
-    /* What the song is FOR, when the room asked and they answered.
+    /* What the song is FOR, once they have said it.
 
        This is the difference between advice about a sad song and advice
-       about their sad song, and the whole reason `SongFeeling` asks the
-       second question at all. Said as their own sentence rather than
-       summarised: "they left in March and I still set two cups out" is the
-       song, and a paraphrase of it is not. */
+       about their sad song. It arrives from this conversation now rather
+       than from a chip row on the canvas — `set_feeling` and `set_about`
+       write it, and it comes back here on the next turn. Said as their own
+       sentence rather than summarised: "they left in March and I still set
+       two cups out" is the song, and a paraphrase of it is not. */
     ...(body.feeling || body.about?.trim()
       ? [
           body.feeling ? `How they said they feel: ${body.feeling}.` : '',

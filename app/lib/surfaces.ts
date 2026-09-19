@@ -112,9 +112,25 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     next: { to: "booth", en: "Sing on it yourself", af: "Sing self daarop" },
     purpose:
       "Making a song from nothing: a title, a style, the words, then the track itself.",
+    /* ── The room's opening question ──────────────────────────────────
+
+       Carli, 19 September 2026: *"Die emosie goed voel ek moes als deel wees
+       van copilot. Die hele room is baie besig. Ook die begeleiding van elke
+       sessie."*
+
+       This line and the three under it ARE the guidance of a session — the
+       panel already opens with them, in every room, before anything is
+       typed. The emotion question was built as a chip row bolted on above
+       the canvas instead, which added to the room rather than asking
+       anything. It is a question, so it goes where the questions are.
+
+       It leads with the feeling and not with the list of what the copilot
+       can do, because "what would you like me to do" is a menu and "how are
+       you feeling" is a conversation, and only one of those a person can
+       answer without knowing how the app works. */
     helps: {
-      en: "I can name it, pick how it should sound, write the words, or just answer a question about any of it.",
-      af: "Ek kan dit ’n naam gee, kies hoe dit moet klink, die woorde skryf, of net ’n vraag daaroor antwoord.",
+      en: "Tell me how you are feeling and what the song is about, and I will take it from there — the words, how it should sound, a name for it. Or ask me anything about how a song is put together.",
+      af: "Sê my hoe jy voel en waaroor die liedjie gaan, dan vat ek dit van daar af — die woorde, hoe dit moet klink, ’n naam daarvoor. Of vra my enigiets oor hoe ’n liedjie inmekaarsteek.",
     },
     can: [
       "set the title",
@@ -137,6 +153,15 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         "the value is the words of the song, with [Verse], [Chorus] and [Bridge] markers on their own lines. Send all of them, not a description of them",
       set_sound:
         "the value is how it should sound, in a few words: the feel, the instruments, the pace. Never a picture - this is music, so a window or a colour means nothing here",
+      /* What they walked in holding. Neither reaches the engine: a mood is
+         not a sound, and turning "sad" into "slow and minor" behind
+         somebody's back is the app making a musical decision it was not
+         asked to make. What the feeling does do is narrow the fifty
+         starting points to the shelf that matches. */
+      set_feeling:
+        "the value is exactly one of: love, loss, party, home, road, faith, work, young. Nothing else - anything not on that list is dropped. Set it as soon as they tell you how they feel, in whatever words they use",
+      set_about:
+        "the value is what the song is about in THEIR own words, as short as they said it. Not your summary of it and not a tidied version - the point of it is that it is theirs",
       /* The video panel that opens on a finished song. */
       set_shot:
         "the value is the full description of what is on screen: subject, what it is doing, the shot, the light, the mood. Never put anything in quotation marks here - quoted text is spoken aloud, and a voice over a song is two things fighting",
@@ -144,18 +169,23 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         "the value is one of: performance, story, road, room, abstract. It fills the shot, the shape and the length with that way of working",
       set_shape: "the value is 9:16 or 16:9, and nothing else",
     },
+    /* Two feelings and a question about craft, rather than three requests
+       for output. Somebody who knows what they want will type it; these are
+       for the person who does not, and what that person can always answer is
+       how they feel. The third is there so the room says out loud that it
+       will explain the thing as well as make it. */
     seeds: [
       {
-        en: "Write me a chorus about leaving home",
-        af: "Skryf vir my ’n koor oor weggaan van die huis af",
+        en: "I am sad about someone",
+        af: "Ek is hartseer oor iemand",
       },
       {
-        en: "What style suits these words?",
-        af: "Watter styl pas by hierdie woorde?",
+        en: "Something happy, for my people",
+        af: "Iets vrolik, vir my mense",
       },
       {
-        en: "Give me three titles for this",
-        af: "Gee my drie titels hiervoor",
+        en: "What is a bridge actually for?",
+        af: "Waarvoor is ’n bridge eintlik daar?",
       },
     ],
   },

@@ -121,19 +121,60 @@ ok(
   'without it the advice is about a sad song, which is the advice everybody gets',
 );
 
-/* ── The feeling leads the room, and reaches the copilot ──────────────── */
+/* ── The feeling is asked for, not picked off a wall ──────────────────
+
+   Carli, 19 September 2026: *"Die emosie goed voel ek moes als deel wees van
+   copilot. Die hele room is baie besig. Ook die begeleiding van elke sessie."*
+
+   The first build put the feeling on the canvas as eight chips and a box, and
+   the craft as six more chips below the words. Both were the right knowledge
+   in the wrong place: a chip row is not guidance, it is one more thing to
+   look at before anybody has asked you a question — on a screen she had
+   already called busy.
+
+   So the assertions flipped. What used to be "the room shows it" is now "the
+   room does NOT show it, and the copilot can set it". The negative half
+   matters as much as the positive one: without it, somebody adds the panel
+   back one day and every other assertion here still passes. */
 
 const make = readFileSync('app/components/MakeMusic.tsx', 'utf8');
 ok(
-  'the room asks how you feel before it asks anything else',
-  make.indexOf('<SongFeeling') > 0 && make.indexOf('<SongFeeling') < make.indexOf('<SongStarts'),
-  'a style is an answer to a question nobody arrived with',
+  'the room does not ask for the feeling on the canvas',
+  !/<SongFeeling|<SongParts/.test(make),
+  'the emotion question belongs in the conversation, not as chips above a busy room',
 );
 ok(
-  '  and the feeling narrows the fifty starting points',
+  '  and the copilot can put the answer there instead',
+  /set_feeling:/.test(make) && /set_about:/.test(make),
+  'taking the chips away without giving the copilot the ops leaves the canvas unfillable',
+);
+ok(
+  '  and an unknown feeling is dropped rather than guessed at',
+  /MOODS\.find\(/.test(make),
+  'a ninth feeling would narrow the starting points to nothing and look like a broken room',
+);
+ok(
+  '  and the feeling still narrows the fifty starting points',
   /openAt=\{canvas\.feeling \?\? fromPhoto\}/.test(make),
 );
-ok('  and what each part is for sits with the words', /<SongParts \/>/.test(make));
+
+const surfaces = readFileSync('app/lib/surfaces.ts', 'utf8');
+ok(
+  'the copilot opens this room with the question, not with a menu',
+  /set_feeling:\s*$|set_feeling:/m.test(surfaces) && /set_about:/.test(surfaces),
+  'the room can only be filled from a conversation if the conversation knows the ops exist',
+);
+
+ok(
+  '  and is told to ask it one question at a time',
+  /Do not open with a menu/.test(brief) && /one question at a/.test(brief),
+  'a copilot that opens with a list of what it can do has replaced the chips with prose',
+);
+ok(
+  '  and has somewhere for a feeling to land',
+  ABOUT.every((one) => brief.includes(one.en)),
+  'the places a feeling lands were chips too, and they are only useful if the copilot has them',
+);
 
 const page = readFileSync('app/page.tsx', 'utf8');
 ok(

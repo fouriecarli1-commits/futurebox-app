@@ -290,6 +290,19 @@ export function aboutFor(mood: Mood): readonly About[] {
 }
 
 /**
+ * The eight feelings with the places each one lands, one line apiece.
+ *
+ * `ABOUT` used to be a second row of chips that appeared once a feeling was
+ * picked. Same knowledge, better placed: handed to the copilot it becomes
+ * something to offer in a sentence, rather than sixteen more buttons on a
+ * screen somebody already called busy.
+ */
+function MOODS_WITH_PLACES(): string[] {
+  const moods = [...new Set(ABOUT.map((one) => one.mood))];
+  return moods.map((mood) => `  ${mood}: ${aboutFor(mood).map((one) => one.en).join('; ')}`);
+}
+
+/**
  * The craft, as the copilot is handed it.
  *
  * Flat lines rather than an object, because it goes into a prompt and a
@@ -299,6 +312,34 @@ export function aboutFor(mood: Mood): readonly About[] {
  */
 export function craftBrief(): string[] {
   const out: string[] = [
+    /* ── How to run the session ──────────────────────────────────────
+
+       Carli, 19 September 2026: *"Die emosie goed voel ek moes als deel
+       wees van copilot. Die hele room is baie besig. Ook die begeleiding
+       van elke sessie."*
+
+       The feeling used to be a row of eight chips above the canvas. She
+       is right that it did not belong there, and the reason is worth
+       keeping: a chip row is not guidance. It is one more thing on a busy
+       screen, and it asks somebody to classify themselves before anybody
+       has spoken to them. Guidance is a question, an answer, and the next
+       question — which is this, and which is why these lines are here
+       rather than in a component. */
+    'How to run this. They came here with something they want to say and usually',
+    'no idea how to turn it into a song. Do not open with a menu of what you can do.',
+    'Ask how they are feeling and what it is about, in that order, one question at a',
+    'time. When they tell you, set_feeling and set_about straight away — that is what',
+    'narrows the starting points on their screen, so it is visible work rather than',
+    'small talk. Then offer, do not assume: a title, or the words, or how it should',
+    'sound. Explain what you are doing as you go, briefly, using the craft below, so',
+    'they come out knowing something they did not know. Never ask two questions in one',
+    'message and never write a whole song before they have told you what it is about.',
+    '',
+    'Places a feeling usually lands, if they know the feeling but not the subject.',
+    'Offer two or three in their own language, never the whole list, and never as a',
+    'menu they have to pick from — as examples of what other people write about.',
+    ...MOODS_WITH_PLACES(),
+    '',
     'What each part of a song is for. This is the studio’s own teaching, and it is',
     'the same every time. Use it to explain, in your own words, to this person about',
     'this song. Do not invent a part that is not here, and never quote the words of a',
