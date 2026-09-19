@@ -198,19 +198,70 @@ export default function BoothTimeline({
     return () => watcher.disconnect();
   }, [lanes.length]);
 
+  /**
+   * The length the axis is being read against, held still while a finger is down.
+   *
+   * ── The runaway ─────────────────────────────────────────────────────
+   *
+   * Carli, 19 September 2026, a photograph of a session that had been
+   * twenty-six seconds long the night before: *"Die grid het eweskielik
+   * groter geword, en toe sit gebeur toe wil niks meer beweeg nie."* The
+   * transport read **11:52**, the clips were slivers eleven minutes apart,
+   * and nothing could be dragged anywhere.
+   *
+   * One drag did that, and the mechanism is a loop:
+   *
+   *   1. `total` is the session's own length — `span(lanes)` rounded up to
+   *      a block, so the canvas always has room past the last sound.
+   *   2. `secondsAt` turns a pixel into a second by taking the finger's
+   *      fraction across the axis and multiplying by `total`.
+   *   3. Dragging a clip right makes the session longer, so `total` grows.
+   *   4. Which makes the same pixel worth MORE seconds.
+   *   5. Which moves the clip further right. Back to 3.
+   *
+   * Each frame feeds the next. A sixty-pixel drag walked a clip out to
+   * eleven minutes and forty seconds, and there it stuck: the group's wall
+   * is half a second from the end of the song, so the interlock — which
+   * was working — could not move the group anywhere at all. Both of her
+   * reports this morning are this one loop.
+   *
+   * The instrumented drag showed it plainly before it was understood: in a
+   * single gesture the ceiling went 11.50 → 15.00 → 15.50 while the finger
+   * moved sixty pixels.
+   *
+   * So the scale is taken once, when the finger goes down, and held until
+   * it comes up. A gesture may make the session longer; it may not change
+   * what its own pixels mean while it is happening.
+   */
+  const frozen = useRef<number | null>(null);
+
   const secondsAt = useCallback(
     (clientX: number): number => {
       const box = axis.current;
-      if (!box || total <= 0) return 0;
+      /* `frozen` while a gesture is running, `total` otherwise. A ref
+         rather than state on purpose: this must be true on the very next
+         pointermove, not after a render. */
+      const against = frozen.current ?? total;
+      if (!box || against <= 0) return 0;
       const rect = box.getBoundingClientRect();
       const part = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
-      return part * total;
+      return part * against;
     },
     [total],
   );
 
+  /**
+   * The length everything on the axis is drawn and measured against.
+   *
+   * One number for the whole picture, so the ruler, the bar grid, the
+   * clips and the walls cannot disagree about where a second is while a
+   * finger is down. During a gesture that is the frozen length; the rest
+   * of the time it is the session's own. See the note on `frozen`.
+   */
+  const scaleTotal = frozen.current ?? total;
+
   const percent = (seconds: number): number =>
-    total > 0 ? Math.max(0, Math.min(100, (seconds / total) * 100)) : 0;
+    scaleTotal > 0 ? Math.max(0, Math.min(100, (seconds / scaleTotal) * 100)) : 0;
 
   /* ── Dragging ─────────────────────────────────────────────────────────
 
@@ -426,9 +477,13 @@ export default function BoothTimeline({
          takes the tightest of each. */
       let low = -Infinity;
       let high = Infinity;
+      /* Against the frozen length, not the growing one. A drag that makes
+         the session longer must not thereby raise its own ceiling — that
+         is the second half of the runaway, and on its own it is what let
+         a sixty-pixel gesture walk a clip out to eleven minutes. */
       for (const one of now.with) {
         low = Math.max(low, -one.plays + 0.5 - one.at);
-        high = Math.min(high, total - 0.5 - one.at);
+        high = Math.min(high, scaleTotal - 0.5 - one.at);
       }
       const walled = (shift: number): number => Math.max(low, Math.min(high, shift));
 
@@ -526,6 +581,7 @@ export default function BoothTimeline({
   const endDrag = (): void => {
     const was = held.current;
     held.current = null;
+    frozen.current = null;
     setShowing(null);
     setStuck(null);
     /* A tap with the marker armed is a tap, not a piece. Without this every
@@ -543,6 +599,9 @@ export default function BoothTimeline({
 
   const grab = (event: React.PointerEvent): void => {
     (event.currentTarget as Element).setPointerCapture?.(event.pointerId);
+    /* Every drag in this room goes through here, which is why the scale is
+       frozen here rather than in each handler. See the note on `frozen`. */
+    frozen.current = total;
   };
 
   /* ── The ruler's marks ────────────────────────────────────────────────
@@ -550,20 +609,20 @@ export default function BoothTimeline({
      Every fifteen seconds on a short session, every thirty on a long one.
      Chosen from the length rather than fixed, because a four-minute song at
      a mark every five seconds is forty-eight labels in the width of a phone. */
-  const step = total > 240 ? 30 : total > 90 ? 15 : 5;
+  const step = scaleTotal > 240 ? 30 : scaleTotal > 90 ? 15 : 5;
   const marks: number[] = [];
-  for (let second = 0; second <= total; second += step) marks.push(second);
+  for (let second = 0; second <= scaleTotal; second += step) marks.push(second);
 
   /* The bar lines, behind everything, on the shared axis rather than inside
      each waveform — which is the whole point of this layout. Thinned out
      where a bar would be less than eight pixels wide, because a grid you
      cannot see through is not a grid. */
   const bar = barSeconds(meter);
-  const barsEvery = wide > 0 && bar > 0 && (bar / Math.max(0.001, total)) * wide < 8
-    ? Math.ceil(8 / ((bar / Math.max(0.001, total)) * wide))
+  const barsEvery = wide > 0 && bar > 0 && (bar / Math.max(0.001, scaleTotal)) * wide < 8
+    ? Math.ceil(8 / ((bar / Math.max(0.001, scaleTotal)) * wide))
     : 1;
   const bars: number[] = [];
-  if (bar > 0) for (let second = 0, n = 0; second <= total; second += bar, n += 1) {
+  if (bar > 0) for (let second = 0, n = 0; second <= scaleTotal; second += bar, n += 1) {
     if (n % barsEvery === 0) bars.push(second);
   }
 
@@ -606,6 +665,14 @@ export default function BoothTimeline({
          given. Named rather than climbed to by shape, so restyling the
          column does not quietly move the measurement. */
       data-timeline=""
+      /* The length every position on this axis is a fraction of, exact.
+         The transport beside it prints whole seconds, which is right for
+         a person and wrong for a measurement: a probe that turns a clip's
+         percentage back into seconds against a rounded total gets an
+         error that grows with how far along the clip sits, and two lanes
+         that moved together come back a tenth of a second apart. That
+         read as an interlock which almost holds. */
+      data-total={scaleTotal}
       /* ── And the floor comes off on a short screen ─────────────────────
  
          `min-h-[40vh]` is a floor, and a floor taller than the room is a
@@ -709,7 +776,7 @@ export default function BoothTimeline({
               "why does this not look like the whole song". */}
           {zoom > 1 && (
             <span className="ml-0.5 text-[11px] font-bold tabular-nums" style={{ color: INK_DIM }}>
-              {zoom}\u00d7
+              {zoom}×
             </span>
           )}
         </span>
@@ -974,7 +1041,7 @@ export default function BoothTimeline({
                below draws with, applied here first — and `wide` is 0 until
                the axis has been measured once, which falls through to the
                floor and corrects itself on the next render. */
-            const clipPx = Math.max(44, wide > 0 ? (plays / Math.max(0.001, total)) * wide : 0);
+            const clipPx = Math.max(44, wide > 0 ? (plays / Math.max(0.001, scaleTotal)) * wide : 0);
             /* At most a quarter each, so half the clip is always a grip. */
             const gripEnd = Math.max(8, Math.min(24, clipPx / 4));
             const on = picked === lane.id;
@@ -1204,7 +1271,7 @@ export default function BoothTimeline({
                     }`}
                     style={{
                       left: `${percent(lane.at)}%`,
-                      width: `${Math.max(1.2, (plays / Math.max(0.001, total)) * 100)}%`,
+                      width: `${Math.max(1.2, (plays / Math.max(0.001, scaleTotal)) * 100)}%`,
                       /* Eighteen pixels of clip is not a handle. A four-bar
                          part inside a four-minute song is a sliver of the
                          width, and the thing a thumb has to pick up cannot

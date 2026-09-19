@@ -5033,3 +5033,77 @@ wat in die bladsy gebou word dra 'n `pointerId` wat die browser nooit
 uitgereik het nie, en `setPointerCapture` gooi daarop, so 'n handgemaakte
 touch-sleep sterf binne `grab()` en rapporteer die app stukkend vir 'n rede
 wat aan die probe behoort.
+
+## V. Die sessie wat van 0:26 na 11:52 weggehardloop het
+
+Carli, 19 September 2026, twee boodskappe agtermekaar:
+
+> *"Die grid het eweskielik groter geword, en toe sit gebeur toe wil niks
+> meer beweeg nie."*
+> *"Shaker en tamboryn wil nie beweeg nie, al is dit interlocked."*
+
+Dieselfde fout, twee keer gesien. Die sessie was die vorige aand **0:26**.
+Op haar foto lees die transport **11:52**, die snitte is splinters elf
+minute uitmekaar, en niks beweeg nie.
+
+### Die lus
+
+1. `total` is die sessie se eie lengte — `span(lanes)` afgerond na 'n blok,
+   sodat die doek altyd plek het ná die laaste klank.
+2. `secondsAt` maak van 'n pixel 'n sekonde deur die vinger se breukdeel oor
+   die as met `total` te vermenigvuldig.
+3. 'n Snit na regs sleep maak die sessie langer, so `total` groei.
+4. Wat daardie selfde pixel **meer sekondes werd** maak.
+5. Wat die snit verder na regs skuif. Terug na 3.
+
+Elke raam voer die volgende. En toe dit eenmaal daar is, was die interlock
+— wat régtig gewerk het — magteloos: die groep se muur is 'n halwe sekonde
+van die einde van die liedjie af, en 'n baan van die groep het by 11:40
+gesit. Albei haar verslae is hierdie een lus.
+
+### Gemeet
+
+Die geïnstrumenteerde sleep het dit gewys voordat dit verstaan is: in **een**
+gebaar het die plafon 11.50 → 15.00 → 15.50 geloop terwyl die vinger sestig
+pixels beweeg het. En met die regmaak uitgehaal: **16s → 48s uit een sleep
+van 200 pixels.** Drie keer die lengte, in een gebaar.
+
+### Die regmaak
+
+Die skaal word **een keer** geneem, wanneer die vinger neersak, en vasgehou
+tot dit optel. Een getal — `scaleTotal` — vir die liniaal, die maatroosters,
+die snitte en die mure, sodat niks van hulle met mekaar kan verskil terwyl 'n
+vinger onder is nie. 'n Gebaar mag die sessie langer maak; dit mag nie
+verander wat sy eie pixels beteken terwyl dit gebeur nie.
+
+### Waarom die eerste probe dit nie gevang het nie
+
+Dit het sestig pixels gesleep. Solank die laaste klank nog binne die doek
+eindig, verander 'n groeiende `span` niks nie en 'n kort sleep lyk reg. Die
+lus byt eers wanneer die sleep die sessie **verby die plek druk wat dit
+klaar gehad het** — en sodra dit begin het, hou dit homself aan die gang.
+
+### En twee linjaale wat gelieg het
+
+1. Die probe het die sessie se lengte uit die **transport** gelees, wat hele
+   sekondes druk. Die fout groei met hoe ver 'n snit lê, so twee bane wat
+   presies ewe ver beweeg het, kom 'n tiende van 'n sekonde uitmekaar terug.
+   Dit het gelees soos 'n interlock wat *amper* hou. `data-total` is nou die
+   onafgeronde getal waarteen die kamer self teken.
+2. Toe in **pixels** gemeet, en dit lieg anders: die as herskaal ná die
+   sleep, so twee snitte wat ewe veel sekondes beweeg het, beweeg verskillend
+   baie pixels. Pixels is reg vir "het dit die vinger gevolg", sekondes vir
+   "het die slot gehou". Elke vraag het sy eie eenheid.
+
+### Nog 'n klein een in dieselfde foto
+
+Die zoom-etiket het `4×` gedruk in plaas van `4×` — 'n JSX-teksnoot waar
+`×` net letters is en nie 'n escape nie.
+
+### Die les, bo-op U
+
+U was: *"die logika is reg" is nie "'n vinger kan daarby kom nie."* V voeg by:
+**'n meting waarvan die eenheid saam met die ding verander, meet niks.** Die
+as se skaal was terselfdertyd die ding wat gemeet word en die liniaal wat
+meet. Vries die liniaal, of die getal wat terugkom is die liniaal se storie
+en nie die ding s'n nie.

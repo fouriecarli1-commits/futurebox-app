@@ -155,12 +155,21 @@ try {
      screen in the readout — `0:04 / 0:16`. Percentage times length is
      seconds, which is what the lock actually promises and what survives a
      rescale. */
+  /* The axis's exact length, off the timeline itself.
+ 
+     This used to read the transport — "/ 0:16" — and turn that into
+     seconds. The transport prints whole seconds, which is right for a
+     person and wrong for a ruler: the error grows with how far along a
+     clip sits, so two lanes that moved by exactly the same amount came
+     back a tenth of a second apart and the interlock read as almost
+     holding. `data-total` is the unrounded number the room itself is
+     drawing against. */
   const canvasSeconds = async () => {
-    const readout = p.getByText(/^\/\s*\d+:\d\d$/).first();
-    if ((await readout.count()) === 0) return null;
-    const said = (await readout.textContent()) ?? '';
-    const bits = said.replace('/', '').trim().split(':');
-    return bits.length === 2 ? Number(bits[0]) * 60 + Number(bits[1]) : null;
+    const root = p.locator('[data-timeline]').first();
+    if ((await root.count()) === 0) return null;
+    const said = await root.getAttribute('data-total');
+    const long = Number(said);
+    return Number.isFinite(long) && long > 0 ? long : null;
   };
 
   const clipsAt = async () => {
@@ -176,6 +185,7 @@ try {
     return out;
   };
   const say = (list) => list.map((one) => (one === null ? '?' : `${one.toFixed(2)}s`)).join(', ');
+
 
   /* ── The interlock ──────────────────────────────────────────────────── */
   const lockRow = p.getByText(new RegExp(af ? '^Maak vas aan$' : '^Lock to$')).first();
@@ -236,9 +246,53 @@ try {
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     };
 
+    /* ── The clip goes where the finger went, in pixels ───────────────
+ 
+       Carli, 19 September 2026, on a session that had been twenty-six
+       seconds long the night before: *"Die grid het eweskielik groter
+       geword, en toe sit gebeur toe wil niks meer beweeg nie."* The
+       transport read 11:52, the clips were slivers eleven minutes apart,
+       and the interlock — which was working — could move nothing, because
+       the group's wall is half a second from the end of the song.
+ 
+       One drag did that. `total` is the session's own length, `secondsAt`
+       turns a pixel into a second by multiplying by `total`, and dragging
+       right makes the session longer — so the same pixel became worth more
+       seconds, which moved the clip further right, which made the session
+       longer again. A sixty-pixel gesture walked a clip out to eleven
+       minutes and forty seconds.
+ 
+       Measured in PIXELS on purpose, and this is the whole point: in
+       seconds a runaway looks like a big number and a big number can
+       always be argued about. In pixels there is one right answer — the
+       clip ends where the finger let go — and it is the same answer at
+       every zoom and every session length. */
     const grip = await clips.nth(0).boundingBox();
-    await fingerDrag(grip, 60);
+    const longBefore = await canvasSeconds();
+    /* Far enough to push the session past the room it already had, which
+       is where the loop bites: while the last sound still ends inside the
+       canvas, growing `span` changes nothing and a short drag looks fine.
+       A short one was tried first and reported no fault. */
+    const REACHED = 200;
+    await fingerDrag(grip, REACHED);
     await p.waitForTimeout(500);
+    const landed = await clips.nth(0).boundingBox();
+    const longAfter = await canvasSeconds();
+    /* Never FURTHER than the finger went, and that asymmetry is the
+       point. Coming up short is a wall — the group's trailing lane is
+       half a second from the end of the song and the room is right to
+       stop it. Going past is the runaway, and nothing else does it. */
+    const travelled = landed === null ? 0 : landed.x - grip.x;
+    check(
+      'a clip never travels further than the finger did',
+      landed !== null && travelled <= REACHED + 14 && travelled > 20,
+      `finger ${REACHED}px, clip ${Math.round(travelled)}px`,
+    );
+    check(
+      '  and one drag does not run the session away with it',
+      longBefore !== null && longAfter !== null && longAfter - longBefore < 30,
+      `${longBefore}s → ${longAfter}s`,
+    );
     const afterTouch = await clipsAt();
     const byFinger = afterTouch.map((one, i) =>
       one === null || before[i] === null ? null : one - before[i]);
@@ -332,7 +386,8 @@ try {
     console.log('DEBUG drag2 events:', (await p.evaluate(() => (window).__bt ?? [])).slice(0, 4).join(' | '));
 
     const after = await clipsAt();
-    const moved = after.map((one, i) => (one === null ? null : one - afterTouch[i]));
+    const moved = after.map((one, i) =>
+      one === null || afterTouch[i] === null ? null : one - afterTouch[i]);
     check(
       'a second drag moves it too — the first one was never the problem',
       moved[0] !== null && Math.abs(moved[0]) > 0.2,
