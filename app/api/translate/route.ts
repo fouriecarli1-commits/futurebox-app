@@ -37,6 +37,7 @@ import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { screen } from '@/app/lib/moderation';
 import { tooMany } from '@/app/lib/server/brake';
 import { aiFault } from '@/app/lib/server/aifault';
+import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -95,6 +96,23 @@ function languageNamed(value: unknown): string | null {
   return typeof value === 'string' && Object.hasOwn(LANGUAGES, value) ? LANGUAGES[value] : null;
 }
 
+/* One constant rather than a string built inside the handler: the cache
+   matches on bytes, and a prompt assembled per call is one edit away from
+   quietly varying. `AFRIKAANS_RULE` is itself a module constant. */
+const SYSTEM = `You translate song lyrics for subtitles.
+
+Answer with exactly as many lines as you were given, in the same order, one
+for one. A blank line in stays a blank line out.
+
+Translate for singing rather than for a dictionary: keep the register, keep it
+short enough to read in the time a line is on screen, and keep an idiom as the
+nearest idiom rather than word by word. Afrikaans means real spoken Afrikaans,
+not a textbook rendering of the English.
+
+Leave a proper name, a place and a brand as they are.
+
+${AFRIKAANS_RULE}`;
+
 export async function POST(request: Request): Promise<Response> {
   if (tooMany('translate', request, LIMITS)) {
     return Response.json(
@@ -148,19 +166,7 @@ export async function POST(request: Request): Promise<Response> {
     const response = await client.messages.parse({
       model: 'claude-opus-5',
       max_tokens: 4000,
-      system: `You translate song lyrics for subtitles.
-
-Answer with exactly as many lines as you were given, in the same order, one
-for one. A blank line in stays a blank line out.
-
-Translate for singing rather than for a dictionary: keep the register, keep it
-short enough to read in the time a line is on screen, and keep an idiom as the
-nearest idiom rather than word by word. Afrikaans means real spoken Afrikaans,
-not a textbook rendering of the English.
-
-Leave a proper name, a place and a brand as they are.
-
-${AFRIKAANS_RULE}`,
+      system: cachedSystem(SYSTEM),
       output_config: { effort: 'low', format: zodOutputFormat(Answer) },
       messages: [
         {
@@ -169,6 +175,7 @@ ${AFRIKAANS_RULE}`,
         },
       ],
     });
+    notecache('translate', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json(

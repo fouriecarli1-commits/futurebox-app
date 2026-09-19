@@ -57,6 +57,7 @@ import { tooMany } from '@/app/lib/server/brake';
 import { FORMAT_IDS, describeFormats, formatById } from '@/app/lib/adformats';
 import { RANGES, STYLE_IDS, describeStyles, styleById } from '@/app/lib/adstyles';
 import { aiFault } from '@/app/lib/server/aifault';
+import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -231,7 +232,7 @@ export async function POST(request: Request): Promise<Response> {
     const response = await client.messages.parse({
       model: 'claude-opus-5',
       max_tokens: 6000,
-      system: SYSTEM,
+      system: cachedSystem(SYSTEM),
       thinking: { type: 'adaptive' },
       /* High, and worth it. This is one paragraph that decides whether the
          next month is spent on the right shape of thing, and it is read
@@ -239,6 +240,7 @@ export async function POST(request: Request): Promise<Response> {
       output_config: { effort: 'high', format: zodOutputFormat(PickSchema) },
       messages: [{ role: 'user' as const, content: briefFor(body) }],
     });
+    notecache('adformats', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json({ error: 'refused', message: 'I cannot advise on that one.' }, { status: 200 });

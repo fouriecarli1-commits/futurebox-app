@@ -43,6 +43,7 @@ import { hasAddon } from '@/app/lib/server/addons';
 import { MARKETING } from '@/app/lib/addons';
 import { FORMAT_IDS, formatById } from '@/app/lib/adformats';
 import { aiFault } from '@/app/lib/server/aifault';
+import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -331,13 +332,14 @@ export async function POST(request: Request): Promise<Response> {
     const response = await client.messages.parse({
       model: 'claude-opus-5',
       max_tokens: 12000,
-      system: SYSTEM,
+      system: cachedSystem(SYSTEM),
       thinking: { type: 'adaptive' },
       /* Higher effort than the ad writer, because this is one answer somebody
          works from for a month rather than eight lines they pick between. */
       output_config: { effort: 'high', format: zodOutputFormat(PlanSchema) },
       messages: [{ role: 'user' as const, content: briefFor(body) }],
     });
+    notecache('plan', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json({ error: 'refused', message: 'I cannot plan that one.' }, { status: 200 });

@@ -197,6 +197,27 @@ rekening kom, gaan hierdie drie na en werk die tabel by:
 
 1. **Anthropic R1 500** — die grootste skatting op die bladsy en die maklikste
    om verkeerd te hê. Die kopiloot loop op elke skerm.
+
+   **19 September 2026 — prompt caching aan, saldo leeg.** Carli se saldo het
+   opgeraak en die skryfhulp het gaan staan. Daarmee saam is gevind dat geen
+   een van die elf model-routes gekas het nie: elke druk het die hele vaste
+   instruksieblok teen vol prys gestuur, woord vir woord dieselfde as die
+   vorige druk. Die helpblad was die ergste — die **hele** bepalings- en
+   privaatheidsbeleid, sowat 24 500 karakters, is met elke enkele vraag weer
+   gestuur.
+
+   Dit is nou gekas (`app/lib/server/aicache.ts`). **Maar daar word nog geen
+   besparing hier aangeteken nie, en dit is opsetlik.** 'n Kas wat nooit tref
+   nie lyk presies soos een wat altyd tref, behalwe op die rekening — en die
+   tarief is 'n kwart *duurder* vir 'n druk wat alleen staan. Die app log nou
+   per oproep wat die kas werklik gedoen het (`ai cache: help — read 6127,
+   wrote 0, fresh 240`). Wanneer daar credits is en daardie reëls 'n week lank
+   opgetel is, kom die egte getal hier in. Tot dan bly R1 500 staan.
+
+   Wat wél reeds seker is: ses van die elf prompts is korter as die model se
+   512-token vloer en kas dus niks, ook nie met die merker op nie. Dit is nie
+   'n fout nie — die merker wag tot die prompt groei — maar dit beteken die
+   besparing kom van `help`, `copilot` en `songfrom`, en van nêrens anders nie.
 2. ~~**ElevenLabs se planne**~~ — **klaar, 8 September 2026.** Carli het hulle
    prysbladsy gestuur. Musiek kos $0,15 per minuut en 'n plan is 'n
    dollar-begroting; die volledige lys en wat dit aan die winssomme doen staan

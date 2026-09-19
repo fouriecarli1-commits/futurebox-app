@@ -5160,3 +5160,66 @@ nie gelees word nie"* oor 'n versoek wat perfek was, en dan soek die eienaar
 **'n weiering wat die verkeerde fout beskryf, kos meer as geen weiering nie**
 — dieselfde les as `live_video_not_migrated` in `apierror.ts`, nou vir die
 tweede keer.
+
+## §X · Die kas wat nooit tref, lyk soos die een wat altyd tref (19 September 2026)
+
+Carli, toe sy hoor die skryfhulp is af omdat die modelrekening leeg is:
+*"Ek het nie geweet Copilot gaan betaald moet wees nie? As mens 'n windows365
+account het, val dit nie daar binne nie?"*
+
+Twee produkte, een naam. Microsoft se Copilot is 'n sitplek vir 'n mens binne
+Word en Teams; ons s'n is 'n naam wat ons gekies het vir iets wat op Anthropic
+se API loop en per gebruik betaal word. 'n 365-lisensie kan nie 'n app se
+knoppies aandryf nie.
+
+### Wat die vraag oopgemaak het
+
+Gaan kyk wat ons eintlik betaal, en **nie een van die elf model-routes het
+gekas nie.** Elke druk stuur die hele vaste instruksieblok teen vol prys —
+woord vir woord dieselfde as die druk voor dit. Die helpblad die ergste: die
+volle bepalings en privaatheidsbeleid, sowat 24 500 karakters, weer gestuur
+met elke enkele vraag.
+
+By die kopiloot was dit erger as net "nie gekas nie". Die veertig reëls
+liedjieskryf-lesse het in die **boodskap** gery, nie in die stelselprompt nie —
+die een deel van 'n versoek wat per definisie nooit gekas kan word nie. Die
+stabielste teks in die versoek het in die enigste plek gesit waar stabiliteit
+niks werd is nie.
+
+### Die les
+
+Prompt caching faal op drie maniere, en al drie lyk presies soos sukses:
+
+1. Die prompt is korter as die model se vloer (512 tokens hier). Geen fout,
+   geen waarskuwing — die merker word aanvaar en doen niks. Ses van ons elf is
+   vandag daaronder.
+2. Een greep in die voorvoegsel verander tussen oproepe. 'n Naam, 'n datum, 'n
+   telling.
+3. Niemand het die merker opgesit nie.
+
+Nie een daarvan wys op 'n skerm, in 'n toets of in 'n typecheck nie. Dit wys
+op die rekening, 'n maand later, as 'n getal wat niemand kan verklaar nie.
+
+**'n Kas wat nooit tref nie is ononderskeibaar van een wat altyd tref, behalwe
+op die rekening.** Dít is waarom `notecache()` bestaan: die app lees terug wat
+werklik gebeur het en sê dit hardop. Niemand mag 'n besparing uit hierdie werk
+aanteken sonder 'n logreël met `read` bo nul nie — en in
+`docs/MAANDELIKSE-KOSTE.md` staan die R1 500 dus nog net soos dit was.
+
+### Dit is 'n weddenskap, nie 'n gratis wins nie
+
+'n Kas-*skryf* kos 'n kwart méér as om glad nie te kas nie; 'n kas-*lees* kos
+omtrent 'n tiende. Dit betaal dus van die tweede druk af binne vyf minute, en
+dit kos meer vir 'n druk wat alleen staan. Die weddenskap is dat iemand in 'n
+kamer meer as een keer druk — die towerstaf, dan die kopiloot, dan die
+skryfhulp — en dít is presies wat die logreëls gaan uitwys. Gesê eerder as
+aangeneem, want 'n weddenskap wat nie as een aangeteken is nie, word 'n feit
+wat niemand nagegaan het nie.
+
+### Nog 'n keer dieselfde vorm as §W
+
+§W was: tien versigtige `catch`-blokke en niks wat die elfde keer nie. Hier is
+dit elf routes wat elkeen sy eie prompt-vorm gebou het. Weer is die fix nie om
+die elf reg te maak nie, maar om **een plek te hê wat dit doen** —
+`cachedSystem()` — en `check:caching` wat die build laat faal as 'n route dit
+self probeer, of as 'n prompt by die oproep self saamgestel word.

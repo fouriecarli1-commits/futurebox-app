@@ -53,6 +53,7 @@ import { surfaceDirectory } from '@/app/lib/surfaces';
 import { HANDBOOK } from '@/app/lib/server/handbook.generated';
 import { tooMany } from '@/app/lib/server/brake';
 import { aiFault } from '@/app/lib/server/aifault';
+import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -181,9 +182,10 @@ export async function POST(request: Request): Promise<Response> {
     const response = await client.messages.create({
       model: 'claude-opus-5',
       max_tokens: 1200,
-      system: SYSTEM,
+      system: cachedSystem(SYSTEM),
       messages: [...history, { role: 'user' as const, content: question }],
     });
+    notecache('help', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json({

@@ -33,6 +33,7 @@ import { tooMany } from '@/app/lib/server/brake';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { planMix, MOST_MOVES, type LaneNow } from '@/app/lib/mixplan';
 import { aiFault } from '@/app/lib/server/aifault';
+import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -142,11 +143,12 @@ export async function POST(request: Request): Promise<Response> {
     const response = await client.messages.parse({
       model: 'claude-opus-5',
       max_tokens: 4000,
-      system: SYSTEM,
+      system: cachedSystem(SYSTEM),
       thinking: { type: 'adaptive' },
       output_config: { effort: 'low', format: zodOutputFormat(AnswerSchema) },
       messages: [{ role: 'user' as const, content: desk }],
     });
+    notecache('mixdesk', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json({ reply: 'I cannot help with that one.', moves: [] }, { status: 200 });

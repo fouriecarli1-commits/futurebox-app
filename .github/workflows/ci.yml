@@ -282,6 +282,13 @@ jobs:
       - name: No route puts a supplier's own error on a member's screen
         run: npm run check:aifault
 
+      # Every press was re-sending the whole fixed instruction block at full
+      # price — the help desk re-sent the entire terms and privacy policy with
+      # every question. Caching fails silently in three ways, all of which
+      # look exactly like success until the bill arrives.
+      - name: The fixed part of a prompt is cached, and the cache is measured
+        run: npm run check:caching
+
       # The studio teaches what each part of a song is for, and teaching that
       # is usually right is a different product from teaching. Written down,
       # both languages, every feeling with somewhere to land — and no example

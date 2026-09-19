@@ -101,8 +101,19 @@ const route = readFileSync('app/api/copilot/route.ts', 'utf8');
 ok('the route sends it', /craftBrief\(\)/.test(route));
 ok(
   '  on the song screens and not on the others',
-  /here === 'make' \|\| here === 'studio' \? \['', \.\.\.craftBrief\(\)\]/.test(route),
+  /here === 'make' \|\| here === 'studio' \? SYSTEM_CRAFT : SYSTEM/.test(route),
   'forty lines of song craft on every turn of every room is money spent making an answer worse',
+);
+/* It used to ride in the per-turn message, where it was the largest stable
+   thing in the one part of the request that can never be cached — forty lines
+   re-bought on every press. As a system variant it is billed once per burst.
+   Asserted from the other side as well: the per-turn builder must not have
+   grown its own copy back. */
+ok(
+  '  as a cached system prompt rather than in the turn',
+  /const SYSTEM_CRAFT = \[SYSTEM, '', \.\.\.craftBrief\(\)\]/.test(route)
+    && !/craftBrief\(\)/.test(route.slice(route.indexOf('function contextFor'), route.indexOf('const SYSTEM_CRAFT'))),
+  'stable text in the per-turn message is bought again on every single press',
 );
 ok(
   'and it is told what this song is about, in their own words',

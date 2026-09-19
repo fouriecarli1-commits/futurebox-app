@@ -31,6 +31,7 @@ import { SINGERS } from '@/app/data/sound';
 import { craftBrief } from '@/app/data/songcraft';
 import { planActions } from '@/app/lib/copilotplan';
 import { aiFault } from '@/app/lib/server/aifault';
+import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -230,11 +231,23 @@ function namesASinger(style: string): boolean {
   return /\b(male|female|man|woman|men|women|boy|girl|choir|chorus|duet|vocal|vocals|voice|singer|soprano|alto|tenor|baritone|bass vocal|rapper|instrumental)\b/i.test(style);
 }
 
+/**
+ * The room this turn is about.
+ *
+ * An unknown or missing room falls back to the song screen rather than to
+ * nothing: the canvas is always sent, so that is the one answer that is never
+ * wrong, only sometimes irrelevant.
+ *
+ * Its own function because the answer now picks the system prompt as well as
+ * the context, and two copies of this line would eventually disagree about
+ * which room somebody is in — which would show up as a cache that never hits.
+ */
+function roomOf(body: Body): SurfaceId {
+  return body.surface && isSurfaceId(body.surface) ? body.surface : 'make';
+}
+
 function contextFor(body: Body): string {
-  // An unknown or missing room falls back to the song screen rather than to
-  // nothing: the canvas is always sent, so that is the one answer that is never
-  // wrong, only sometimes irrelevant.
-  const here: SurfaceId = body.surface && isSurfaceId(body.surface) ? body.surface : 'make';
+  const here = roomOf(body);
   const room = SURFACES[here];
   const ops = describeOps(here, body.ops ?? []);
 
@@ -329,24 +342,6 @@ function contextFor(body: Body): string {
     body.engineReady
       ? 'A real music engine is connected, so generate makes a sung, produced track and costs credits.'
       : 'No music engine is connected, so generate makes a rough instrumental sketch in their browser and costs nothing.',
-    /* ── What each part of a song is for ─────────────────────────────
-
-       Carli, 19 September 2026, passing on a friend's idea and adding the
-       part that makes it worth building: *"dan leer dit ook mense sommer
-       van liedjie skryf en van musiek."*
-
-       Handed over as knowledge rather than left to the model, and
-       `data/songcraft.ts` carries the argument: a model asked what a
-       bridge is for answers well nine times and, the tenth, fluently says
-       something untrue — and the person has no way to tell which one they
-       got. This is teaching, and teaching that is usually right is a
-       different product.
-
-       Only on the two screens where somebody is writing a song. It is
-       forty lines, it goes in on every turn, and forty lines of song
-       craft sent to somebody asking about a podcast feed is money spent
-       to make an answer worse. */
-    ...(here === 'make' || here === 'studio' ? ['', ...craftBrief()] : []),
   ];
   return `${lines.join('\n')}\n\nThey said:\n${body.message}`;
 }
@@ -361,6 +356,34 @@ function contextFor(body: Body): string {
  * `lib/server/brake.ts` for why this is a brake and not a gate.
  */
 const LIMITS = { perMinute: 20, perHour: 200 };
+
+/* ── What each part of a song is for ───────────────────────────────────
+
+   Carli, 19 September 2026, passing on a friend's idea and adding the part
+   that makes it worth building: *"dan leer dit ook mense sommer van liedjie
+   skryf en van musiek."*
+
+   Handed over as knowledge rather than left to the model, and
+   `data/songcraft.ts` carries the argument: a model asked what a bridge is
+   for answers well nine times and, the tenth, fluently says something
+   untrue — and the person has no way to tell which one they got. This is
+   teaching, and teaching that is usually right is a different product.
+
+   It used to ride in the per-turn message, which put forty lines of stable
+   text in the one part of the request that can never be cached. As its own
+   system variant it is billed once per burst instead of once per press, and
+   the original reason for keeping it conditional still holds: forty lines of
+   song craft sent to somebody asking about a podcast feed is money spent to
+   make an answer worse. Two variants means two cache entries, each one warm
+   in its own room. */
+const SYSTEM_CRAFT = [SYSTEM, '', ...craftBrief()].join('\n');
+
+/** Which of the two the room gets. Two variants, two cache entries. */
+function systemFor(body: Body): string {
+  const here = roomOf(body);
+  return here === 'make' || here === 'studio' ? SYSTEM_CRAFT : SYSTEM;
+}
+
 
 export async function POST(request: Request): Promise<Response> {
   if (tooMany('copilot', request, LIMITS)) {
@@ -413,7 +436,7 @@ export async function POST(request: Request): Promise<Response> {
     const response = await client.messages.parse({
       model: 'claude-opus-5',
       max_tokens: 8000,
-      system: SYSTEM,
+      system: cachedSystem(systemFor(body)),
       thinking: { type: 'adaptive' },
       // It is typed at, so it has to feel quick. Writing a whole lyric sheet is
       // the one thing worth more thinking, and that arrives as a longer message.
@@ -423,6 +446,7 @@ export async function POST(request: Request): Promise<Response> {
       },
       messages: [...history, { role: 'user' as const, content: contextFor(body) }],
     });
+    notecache('copilot', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json(
