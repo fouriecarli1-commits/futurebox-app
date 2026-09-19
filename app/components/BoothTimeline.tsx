@@ -475,16 +475,11 @@ export default function BoothTimeline({
          Each lane gives a floor and a ceiling for the shift — half a second
          of it has to stay inside the song at either end — and the group
          takes the tightest of each. */
-      let low = -Infinity;
-      let high = Infinity;
       /* Against the frozen length, not the growing one. A drag that makes
          the session longer must not thereby raise its own ceiling — that
          is the second half of the runaway, and on its own it is what let
          a sixty-pixel gesture walk a clip out to eleven minutes. */
-      for (const one of now.with) {
-        low = Math.max(low, -one.plays + 0.5 - one.at);
-        high = Math.min(high, scaleTotal - 0.5 - one.at);
-      }
+      const { low, high } = walls(now.with);
       const walled = (shift: number): number => Math.max(low, Math.min(high, shift));
 
       const wanted = held0.at + walled(asked);
@@ -578,6 +573,48 @@ export default function BoothTimeline({
       }
     }
   };
+  /**
+   * How far a group may be shifted, in seconds.
+   *
+   * ── Why the two ends are not the same rule ──────────────────────────
+   *
+   * Carli, 19 September 2026: *"met 'n instrument waarmee ek dit
+   * geinterlock het, het die 2de baan nogsteeds kleinbietjie sonder die
+   * ander bar beweeg al was dit geinterlock. Dit is dus nie 100% vas nie."*
+   *
+   * The lock was holding. The floor was not. It used to be "half a second
+   * of the clip has to stay inside the song" at BOTH ends, which on the
+   * left let a start go negative — and `percent` clamps a negative start to
+   * 0%, so the leading lane was drawn pinned at the beginning while its
+   * partner, still positive, carried on sliding. Four seconds apart in the
+   * state, two on the screen. Measured: `audit/boothmagnet.mjs`.
+   *
+   * So the two ends get different rules, and the asymmetry is the point.
+   * The right-hand end of a session is soft — it grows as you work, and
+   * hanging a part off the end to bring it in later is a real thing to
+   * want. The left-hand end is not soft: time zero is where the song
+   * starts, there is no earlier, and audio placed before it is audio the
+   * mix cannot play. The floor is therefore 0 and nothing negotiates it.
+   *
+   * ── One place, because there are two ways to move a clip ────────────
+   *
+   * A finger and the arrow keys. The arrows had no walls at all, so the
+   * same fault was reachable by holding left — a lock that holds for one
+   * gesture and not the other is not a lock, which is written on the nudge
+   * itself and was true of its walls rather than its grouping.
+   */
+  const walls = (
+    group: readonly { readonly at: number; readonly plays: number }[],
+  ): { readonly low: number; readonly high: number } => {
+    let low = -Infinity;
+    let high = Infinity;
+    for (const one of group) {
+      low = Math.max(low, -one.at);
+      high = Math.min(high, scaleTotal - 0.5 - one.at);
+    }
+    return { low, high };
+  };
+
   const endDrag = (): void => {
     const was = held.current;
     held.current = null;
@@ -1241,6 +1278,18 @@ export default function BoothTimeline({
                     role="button"
                     tabIndex={0}
                     aria-label={t('pro.dragLane', 'Drag this sound to where it belongs')}
+                    /* Where this clip really starts, before the drawing gets
+                       hold of it.
+
+                       `percent` clamps a start before zero to 0%, so the only
+                       number a probe could read off the screen was the
+                       clamped one — and `audit/boothmagnet.mjs` twice wrote a
+                       comment explaining that dragging left "measures
+                       nothing" rather than reading the truth. It is the same
+                       reason `data-total` exists: when a picture and the
+                       state can disagree, a test that can only see the
+                       picture cannot say which of the two broke. */
+                    data-at={lane.at}
                     /* ── And the CLIP has to let a thumb scroll too ────────
  
                        Carli, 17 September 2026, the second time: *"Die
@@ -1340,7 +1389,15 @@ export default function BoothTimeline({
                       const moving = lane.link
                         ? lanes.filter((one) => one.link === lane.link)
                         : [lane];
-                      onSlide(moving.map((one) => ({ id: one.id, at: one.at + step })));
+                      /* Through the same walls as a finger. These had none,
+                         so holding the left arrow walked a clip out past the
+                         beginning of the song where it is drawn pinned at
+                         zero and its locked partner is not. */
+                      const held = moving.map((one) => ({ at: one.at, plays: lengthOf(one) }));
+                      const { low, high } = walls(held);
+                      const shift = Math.max(low, Math.min(high, step));
+                      if (shift === 0) return;
+                      onSlide(moving.map((one) => ({ id: one.id, at: one.at + shift })));
                     }}
                   >
                     <Wave lane={lane} />

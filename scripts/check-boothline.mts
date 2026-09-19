@@ -134,8 +134,38 @@ ok(
 ok(
   'a clip can be dragged the length of the song',
   /onSlide\(now\.with\.map\(\(one\) => \(\{ id: one\.id, at: one\.at \+ shift \}\)\)\)/.test(line) &&
-    /low = Math\.max\(low, -one\.plays \+ 0\.5 - one\.at\)/.test(line),
+    /high = Math\.min\(high, scaleTotal - 0\.5 - one\.at\)/.test(line),
   'Carli: the added instrument sound must be draggable over the whole song',
+);
+/* ── And not one second before it starts ────────────────────────────────
+
+   Carli, 19 September 2026: *"met 'n instrument waarmee ek dit geinterlock
+   het, het die 2de baan nogsteeds kleinbietjie sonder die ander bar beweeg
+   al was dit geinterlock."*
+
+   The floor used to be the same rule as the ceiling — half a second of the
+   clip inside the song — which on the left let a start go negative. The
+   drawing clamps a negative start to 0%, so the leading lane of a locked
+   group was drawn pinned at the beginning while its partner kept sliding,
+   and a lock that holds perfectly in the numbers came apart on the screen.
+
+   Asserted as the asymmetry rather than as one line, because the asymmetry
+   is the decision: the end of a session is soft and grows, the beginning is
+   not and never moves. */
+ok(
+  '  and never to before the song starts',
+  /low = Math\.max\(low, -one\.at\)/.test(line) && !/low = Math\.max\(low, -one\.plays/.test(line),
+  'a clip drawn pinned at zero while its locked partner slides is the lock coming apart',
+);
+/* Both ways of moving a clip go through the same walls. The arrows had none
+   at all, so the same fault was reachable by holding the left key — and a
+   lock that holds for one gesture and not the other is not a lock. */
+ok(
+  '  through one set of walls, whether it is a finger or the arrow keys',
+  /const walls = \(/.test(line)
+    && (line.match(/= walls\(/g) ?? []).length === 2
+    && !/onSlide\(moving\.map\(\(one\) => \(\{ id: one\.id, at: one\.at \+ step \}\)\)\)/.test(line),
+  'the nudge used to add its step straight onto `at` with nothing stopping it',
 );
 ok(
   '  and it lands on the grid the room is set to',

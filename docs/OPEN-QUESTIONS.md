@@ -5396,3 +5396,72 @@ sing"* — en een vraag oor vakmanskap.
 Daardie derde een stel die lengte, die taal én wie sing in een reël. **'n
 Vermoë wat in 'n sin genoem word met geen voorbeeld daaronder nie, is 'n
 aanspraak; 'n voorbeeld is 'n demonstrasie.**
+
+## §AB · Die toets het die fout twee keer in 'n kommentaar weggepraat (19 September 2026)
+
+Carli:
+
+> *"Die probooth se interlock. Maar ek het nou gesien met 'n instrument
+> waarmee ek dit geinterlock het, het die 2de baan nogsteeds kleinbietjie
+> sonder die ander bar beweeg al was dit geinterlock. Dit is dus nie 100%
+> vas nie."*
+
+Sy is reg. Maar die slot was nooit stukkend nie — die **vloer** was.
+
+### Wat gemeet is
+
+| | eerste baan | tweede baan |
+|---|---|---|
+| waar dit werklik is | **−2,00 s** | 2,00 s |
+| waar dit geteken word | **0,00 s** | 2,00 s |
+
+Vier sekondes uitmekaar in die data. Twee sekondes uitmekaar op die skerm.
+Die slot hou perfek; die prentjie lieg.
+
+Die groep se linkermuur was dieselfde reël as die regtermuur — *"'n halwe
+sekonde van die snit moet binne die liedjie bly"* — wat links beteken die
+begin mag negatief gaan. `percent` klem 'n negatiewe begin op 0%. Dus: die
+voorste baan word vasgepen teken by die begin terwyl sy maat, nog positief,
+aanhou gly. **Presies "kleinbietjie sonder die ander bar beweeg".**
+
+### Die les
+
+`audit/boothmagnet.mjs` het **twee keer** geweier om links te sleep, en
+altwee kere 'n kommentaar gelos wat verduidelik hoekom. Die tweede een noem
+dit *"correct behaviour and a useless thing to assert against"*.
+
+**'n Toets wat 'n gedrag in 'n kommentaar wegpraat, is 'n toets wat die fout
+op sy plek hou.** Die kommentaar was die spoor, en dit was daar voordat sy
+dit gesien het.
+
+**Waar 'n prentjie en die toestand kan verskil, ís die verskil die
+assertion.** Die snit dra nou `data-at` — wat waar dit werklik is — sodat 'n
+toets altwee getalle kan lees. Sonder dit kan 'n toets wat net die prentjie
+sien nie sê watter van die twee gebreek het nie. Dieselfde rede as
+`data-total` in §V.
+
+### En §V het amper weer gebyt
+
+My eerste weergawe van hierdie assertion het die gaping tussen die twee snitte
+**in pixels** gemeet. Dit het geslaag. Die sleep het die sessie korter gemaak,
+die as het herskaal, en vier sekondes op die ou skaal is dieselfde breedte as
+twee sekondes op die nuwe een.
+
+§V, in die presiese plek waaroor §V geskryf is. Die regte meting is die gaping
+**in sekondes uit die toestand** (die slot) *plus* of elke snit geteken word
+waar dit is (die prentjie). Twee vrae, twee eenhede.
+
+### Wat verander het
+
+Die twee ente kry nou verskillende reëls, en die asimmetrie is die besluit:
+
+- **Regs is sag.** Die einde van 'n sessie groei soos jy werk, en 'n stuk
+  wat oorhang om later ingebring te word is 'n regte ding om te wil hê.
+- **Links is nie sag nie.** Tyd nul is waar die liedjie begin. Daar is geen
+  vroeër nie, en klank voor die begin is klank wat die mix nie kan speel nie.
+
+En die pyltjiesleutels het glad **geen mure** gehad nie — dieselfde fout deur
+'n ander deur. Altwee maniere om 'n snit te skuif loop nou deur een `walls()`.
+Op die nudge self staan al lankal geskryf: *"a lock that holds for one gesture
+and not the other is not a lock."* Dit was waar van sy groepering en nie van
+sy mure nie.

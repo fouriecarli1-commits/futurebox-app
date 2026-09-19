@@ -383,7 +383,6 @@ try {
        to be learned. */
     await fingerDrag(first, 60);
     await p.waitForTimeout(400);
-    console.log('DEBUG drag2 events:', (await p.evaluate(() => (window).__bt ?? [])).slice(0, 4).join(' | '));
 
     const after = await clipsAt();
     const moved = after.map((one, i) =>
@@ -397,6 +396,98 @@ try {
       '  and the lock holds on the second drag as well',
       moved.length >= 2 && moved[1] !== null && Math.abs(moved[1] - moved[0]) < 0.05,
       `first ${moved[0]?.toFixed(2)}s, second ${moved[1]?.toFixed(2)}s`,
+    );
+
+    /* ── LEFT, into the beginning of the song ────────────────────────
+
+       Carli, 19 September 2026: *"met 'n instrument waarmee ek dit
+       geinterlock het, het die 2de baan nogsteeds kleinbietjie sonder die
+       ander bar beweeg al was dit geinterlock. Dit is dus nie 100% vas
+       nie."*
+
+       This probe has refused to drag left twice, and left a comment each
+       time saying why: `percent` clamps a start before zero to 0%, so the
+       clip moves and the number does not. The second comment calls that
+       *"correct behaviour and a useless thing to assert against"*.
+
+       It is not correct behaviour. It is the bug she is holding. When the
+       group is dragged left, the leading lane's start goes negative, the
+       screen pins it at 0% — and its partner, still positive, carries on.
+       Two bars that are locked together come apart in front of her, by a
+       little, exactly as described. The data was right the whole time and
+       nobody can see the data.
+
+       So: measured in PIXELS, because the question is "did these two bars
+       stay together on the screen" and a screen is made of pixels. The gap
+       between the two clips is the whole assertion — it is the one number
+       a lock promises not to change, it needs no reference to the scale,
+       and it survives both the clamp and any rescaling. */
+    await shutDesk();
+    await p.waitForTimeout(300);
+
+    /* Both numbers, because they can disagree and only one of them is what
+       she is looking at. `data-at` is where the clip really is; `style.left`
+       against `data-total` is where it is DRAWN. */
+    const readBoth = async () => p.evaluate(() => {
+      const total = Number(document.querySelector('[data-total]')?.getAttribute('data-total') ?? 0);
+      return Array.from(document.querySelectorAll('[data-at]')).map((el) => ({
+        truly: Number(el.getAttribute('data-at')),
+        drawn: (parseFloat(el.style.left) / 100) * total,
+      }));
+    });
+
+    const was = await readBoth();
+    const hold = await clips.nth(0).boundingBox();
+    /* Far enough that the leading lane is asked for a negative start. A
+       short drag stays inside the song and proves nothing, which is how
+       this survived two probes. */
+    await fingerDrag(hold, -260);
+    await p.waitForTimeout(500);
+    const now = await readBoth();
+
+    /* ── In seconds, off the state — the lock itself ─────────────────
+
+       NOT in pixels. The first version of this assertion measured the gap
+       between the two clips in pixels and passed: the drag shortened the
+       session, the axis rescaled, and four seconds at the old scale came
+       out the same width as two seconds at the new one. §V again, in the
+       one place §V was written about. */
+    const gapWas = was.length >= 2 ? was[1].truly - was[0].truly : null;
+    const gapNow = now.length >= 2 ? now[1].truly - now[0].truly : null;
+    check(
+      'dragged into the start of the song, the lock holds',
+      gapWas !== null && gapNow !== null && Math.abs(gapNow - gapWas) < 0.02,
+      `${gapWas?.toFixed(2)}s apart, then ${gapNow?.toFixed(2)}s apart`,
+    );
+
+    /* ── And the picture says the same thing ─────────────────────────
+
+       Carli, 19 September 2026: *"met 'n instrument waarmee ek dit
+       geinterlock het, het die 2de baan nogsteeds kleinbietjie sonder die
+       ander bar beweeg al was dit geinterlock. Dit is dus nie 100% vas
+       nie."*
+
+       She is right and the lock was never the thing that was wrong.
+       `percent` clamps a start before zero to 0%, and the group's left wall
+       let a clip go to half a second from its own end — so the leading lane
+       was drawn pinned at the beginning while its partner, still positive,
+       kept sliding. Four seconds apart in the state, two seconds apart on
+       the screen. That is a lock coming apart in front of somebody, and no
+       amount of correctness in the numbers answers it.
+
+       This probe wrote the clamp off twice, in two comments, as "correct
+       behaviour and a useless thing to assert against". Where a picture and
+       the state can disagree, the disagreement IS the assertion. */
+    const lying = now.filter((one) => Math.abs(one.drawn - one.truly) > 0.05);
+    check(
+      '  and every clip is drawn where it actually is',
+      lying.length === 0,
+      lying.map((one) => `really at ${one.truly.toFixed(2)}s, drawn at ${one.drawn.toFixed(2)}s`).join('; '),
+    );
+    check(
+      '  because nothing is allowed to start before the song does',
+      now.every((one) => one.truly >= -0.01),
+      now.map((one) => `${one.truly.toFixed(2)}s`).join(', '),
     );
 
   }
