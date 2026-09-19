@@ -15,6 +15,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
+import { aiFault } from '@/app/lib/server/aifault';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -146,19 +147,7 @@ export async function POST(request: Request) {
 
     return Response.json({ suggestions: parsed.suggestions });
   } catch (error) {
-    if (error instanceof Anthropic.AuthenticationError) {
-      return Response.json({ error: 'bad_key', detail: 'The configured API key was rejected.' }, { status: 502 });
-    }
-    if (error instanceof Anthropic.RateLimitError) {
-      return Response.json({ error: 'rate_limited', detail: 'Too many requests just now. Try again in a moment.' }, { status: 429 });
-    }
-    if (error instanceof Anthropic.BadRequestError) {
-      return Response.json({ error: 'bad_request', detail: error.message }, { status: 400 });
-    }
-    if (error instanceof Anthropic.APIError) {
-      return Response.json({ error: 'api_error', detail: `${error.status}: ${error.message}` }, { status: 502 });
-    }
-    return Response.json({ error: 'unknown', detail: 'The writing help could not be reached.' }, { status: 502 });
+    return aiFault(error, 'The writing help could not be reached.');
   }
 }
 

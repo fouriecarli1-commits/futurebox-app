@@ -5107,3 +5107,56 @@ U was: *"die logika is reg" is nie "'n vinger kan daarby kom nie."* V voeg by:
 as se skaal was terselfdertyd die ding wat gemeet word en die liniaal wat
 meet. Vries die liniaal, of die getal wat terugkom is die liniaal se storie
 en nie die ding s'n nie.
+
+## §W · Tien versigtige hande is nie 'n reël nie (19 September 2026)
+
+Carli stuur 'n foto van Make a song. Waar vier geskrewe idees hoort, staan
+daar:
+
+```
+400 {"type":"error","error":{"type":"invalid_request_error","message":"Your
+credit balance is too low to access the Anthropic API. Please go to Plans &
+Billing to upgrade or purchase credits."},"request_id":"req_011CfCoJ..."
+```
+
+Drie foute op een reël skerm:
+
+1. 'n Lid lees 'n verskaffer se konsole-fout. In Engels, in 'n Afrikaanse
+   kamer, wat hulle na 'n rekeningblad stuur waarop hulle geen login het nie.
+2. Dit dra ons `request_id`. Dit is ons s'n, dit identifiseer ons rekening se
+   verkeer, en dit hoort nie op iemand anders se foon nie.
+3. Dit sê niks waars vir die persoon wat dit lees nie. Wat waar is: *die
+   skryfhulp is af, deur niks wat jy gedoen het nie.*
+
+### Wat dit gedoen het
+
+Een reël, in een route uit elf:
+
+```ts
+detail: `${error.status}: ${error.message}`
+```
+
+### Die les
+
+Die ander tien routes was reg. Dít is die punt. Tien met die hand geskryfde
+`catch`-blokke wat toevallig versigtig is, en niks wat keer dat die elfde
+môre nie weer so geskryf word nie. **Versigtigheid wat nie afgedwing word
+nie, is nie 'n eienskap van die kode nie — dit is 'n eienskap van die dag
+waarop dit geskryf is.**
+
+`aiFault()` is nou die enigste plek wat 'n modelfout uitsorteer, en
+`check:aifault` laat die build faal as 'n route dit self probeer doen, of as
+enige route in `app/api` 'n gegooide fout se eie woorde in 'n antwoord
+interpoleer. Die check het dadelik vier meer gekry wat niemand gesoek het
+nie: Supabase-boodskappe — beperkingsname, tabelname — wat na lede se skerms
+toe gegaan het uit `cast`, `episode`, `radar` en `show`.
+
+### Die kleiner een daaronder
+
+'n Leë saldo kom terug as 'n 400 `invalid_request_error` — dieselfde klas as
+'n stukkende versoek. Sonder sy eie kode sê die kamer *"daardie versoek kon
+nie gelees word nie"* oor 'n versoek wat perfek was, en dan soek die eienaar
+'n fout in kode wat niks makeer nie. `no_credit` is dus nie mooimaakwerk nie:
+**'n weiering wat die verkeerde fout beskryf, kos meer as geen weiering nie**
+— dieselfde les as `live_video_not_migrated` in `apierror.ts`, nou vir die
+tweede keer.

@@ -96,7 +96,8 @@ export async function POST(request: Request): Promise<Response> {
   if (error) {
     // Nothing half-published: the file goes back if the row will not.
     await client.storage.from('episodes').remove([path]);
-    return Response.json({ message: error.message }, { status: 500 });
+    console.error(`episode: the row could not be written — ${error.message}`);
+    return Response.json({ error: 'not_saved', message: 'That could not be saved just now.' }, { status: 500 });
   }
 
   return Response.json({ episode: row });

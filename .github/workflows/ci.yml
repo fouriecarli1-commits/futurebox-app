@@ -275,6 +275,13 @@ jobs:
       - name: No screen prints a backslash-u where a character was meant
         run: npm run check:escapes
 
+      # A raw Anthropic 400 reached her phone — the billing sentence, the JSON
+      # around it and our own request_id — in English, in an Afrikaans room,
+      # telling her to buy credits on an account she has no login for. One
+      # route out of eleven did it; the other ten were careful by hand.
+      - name: No route puts a supplier's own error on a member's screen
+        run: npm run check:aifault
+
       # The studio teaches what each part of a song is for, and teaching that
       # is usually right is a different product from teaching. Written down,
       # both languages, every feeling with somewhere to land — and no example

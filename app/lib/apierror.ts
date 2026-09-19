@@ -162,6 +162,24 @@ const SAID: Record<string, { en: string; af: string }> = {
     en: 'The key this app uses was rejected. Nothing has been charged.',
     af: 'Die sleutel wat hierdie toep gebruik is verwerp. Niks is gehef nie.',
   },
+  /* An empty account at the model supplier, which arrives as a 400 with the
+     same shape as a malformed request — so without its own code the room says
+     "that request could not be read" over a request that was fine.
+
+     Worded away from the member twice over: it is not theirs to fix and there
+     is nothing of theirs to buy. The owner learns it from the server log, not
+     from somebody else's screen. */
+  /* A write that did not land. The database's own sentence used to go out
+     here — a constraint name means nothing to the person reading it and quite
+     a lot to anyone else. It goes to the log now, where it is useful. */
+  not_saved: {
+    en: 'That could not be saved just now.',
+    af: 'Dit kon nou nie gestoor word nie.',
+  },
+  no_credit: {
+    en: 'The writing help is switched off right now. Nothing you did caused it and nothing has been charged.',
+    af: 'Die skryfhulp is op die oomblik afgeskakel. Niks wat jy gedoen het het dit veroorsaak nie, en niks is gehef nie.',
+  },
   unreachable: {
     en: 'That service could not be reached. Try again in a moment.',
     af: 'Daardie diens kon nie bereik word nie. Probeer weer oor ’n oomblik.',

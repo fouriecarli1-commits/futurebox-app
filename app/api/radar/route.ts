@@ -144,7 +144,10 @@ export async function POST(request: Request): Promise<Response> {
     .eq('id', id)
     .eq('owner', caller.id);
 
-  if (error) return Response.json({ message: error.message }, { status: 500 });
+  if (error) {
+    console.error(`radar: the sharing switch could not be written — ${error.message}`);
+    return Response.json({ error: 'not_saved', message: 'That could not be saved just now.' }, { status: 500 });
+  }
   if (!count) return Response.json({ message: 'That song is not on your account yet.' }, { status: 404 });
   return Response.json({ id, shared: Boolean(body.shared) });
 }

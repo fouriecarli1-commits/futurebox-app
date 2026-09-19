@@ -82,7 +82,13 @@ export async function POST(request: Request): Promise<Response> {
       // Scoped as well as filtered. The service key bypasses row-level
       // security, so without this an id from another account would be edited.
       .eq('owner', caller.id);
-    if (error) return Response.json({ error: 'failed', message: error.message }, { status: 500 });
+    if (error) {
+      /* Postgres writes for whoever is reading the log, not for whoever is
+         holding the phone — a constraint name on a member's screen tells them
+         nothing and tells us everything. */
+      console.error(`cast: the presenter could not be saved — ${error.message}`);
+      return Response.json({ error: 'not_saved', message: 'That could not be saved just now.' }, { status: 500 });
+    }
     return Response.json({ saved: true });
   }
 
@@ -132,6 +138,9 @@ export async function DELETE(request: Request): Promise<Response> {
     .delete()
     .eq('id', id)
     .eq('owner', caller.id);
-  if (error) return Response.json({ error: 'failed', message: error.message }, { status: 500 });
+  if (error) {
+    console.error(`cast: the presenter could not be removed — ${error.message}`);
+    return Response.json({ error: 'not_saved', message: 'That could not be removed just now.' }, { status: 500 });
+  }
   return Response.json({ removed: true });
 }

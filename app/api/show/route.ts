@@ -109,7 +109,10 @@ export async function POST(request: Request): Promise<Response> {
   };
 
   const { error } = await client.from('shows').upsert(row);
-  if (error) return Response.json({ message: error.message }, { status: 500 });
+  if (error) {
+    console.error(`show: the show could not be written — ${error.message}`);
+    return Response.json({ error: 'not_saved', message: 'That could not be saved just now.' }, { status: 500 });
+  }
 
   return Response.json({ show: row });
 }

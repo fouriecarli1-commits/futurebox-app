@@ -30,6 +30,7 @@ import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { SINGERS } from '@/app/data/sound';
 import { craftBrief } from '@/app/data/songcraft';
 import { planActions } from '@/app/lib/copilotplan';
+import { aiFault } from '@/app/lib/server/aifault';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -441,16 +442,7 @@ export async function POST(request: Request): Promise<Response> {
        `app/lib/copilotplan.ts` and `scripts/check-copilotplan.mts`. */
     return Response.json({ reply: parsed.reply, actions: planActions(parsed.actions ?? [], body.surface) });
   } catch (error) {
-    if (error instanceof Anthropic.AuthenticationError) {
-      return Response.json({ error: 'bad_key', message: 'The configured key was rejected.' }, { status: 502 });
-    }
-    if (error instanceof Anthropic.RateLimitError) {
-      return Response.json({ error: 'rate_limited', message: 'Too many at once. Try again in a moment.' }, { status: 429 });
-    }
-    if (error instanceof Anthropic.APIError) {
-      return Response.json({ error: 'api_error', message: 'The copilot could not be reached.' }, { status: 502 });
-    }
-    return Response.json({ error: 'unknown', message: 'The copilot could not be reached.' }, { status: 502 });
+    return aiFault(error, 'The copilot could not be reached.');
   }
 }
 

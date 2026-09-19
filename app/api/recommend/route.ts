@@ -31,6 +31,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
+import { aiFault } from '@/app/lib/server/aifault';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -140,9 +141,6 @@ export async function POST(request: Request): Promise<Response> {
     }
     return Response.json(parsed);
   } catch (error) {
-    if (error instanceof Anthropic.RateLimitError) {
-      return Response.json({ error: 'rate_limited', message: 'Too many at once. Try again in a moment.' }, { status: 429 });
-    }
-    return Response.json({ error: 'api_error', message: 'The recommendation could not be reached.' }, { status: 502 });
+    return aiFault(error, 'The recommendation could not be reached.');
   }
 }

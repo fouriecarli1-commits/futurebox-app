@@ -52,6 +52,7 @@ import { TIERS, TIER_SPECS } from '@/app/lib/plans';
 import { surfaceDirectory } from '@/app/lib/surfaces';
 import { HANDBOOK } from '@/app/lib/server/handbook.generated';
 import { tooMany } from '@/app/lib/server/brake';
+import { aiFault } from '@/app/lib/server/aifault';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -205,22 +206,7 @@ export async function POST(request: Request): Promise<Response> {
 
     return Response.json({ reply });
   } catch (error) {
-    if (error instanceof Anthropic.RateLimitError) {
-      return Response.json(
-        { error: 'rate_limited', message: 'Too many at once. Try again in a moment.' },
-        { status: 429 },
-      );
-    }
-    if (error instanceof Anthropic.APIError) {
-      return Response.json(
-        { error: 'api_error', message: 'The help assistant could not be reached. The form below still works.' },
-        { status: 502 },
-      );
-    }
-    return Response.json(
-      { error: 'unknown', message: 'The help assistant could not be reached. The form below still works.' },
-      { status: 502 },
-    );
+    return aiFault(error, 'The help assistant could not be reached. The form below still works.');
   }
 }
 

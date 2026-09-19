@@ -18,6 +18,7 @@
 import React, { useCallback, useState } from 'react';
 import { Loader2, PenLine, Sparkles } from 'lucide-react';
 import { useLang } from '../lib/i18n';
+import { refusalText } from '../lib/apierror';
 
 interface Idea {
   readonly label: string;
@@ -37,7 +38,7 @@ export default function LyricHelp({
   /** Replaces the lyric sheet. The caller decides what to do with the text. */
   onLyrics: (next: string) => void;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [mode, setMode] = useState<'continue' | 'polish' | null>(null);
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [problem, setProblem] = useState<string | null>(null);
@@ -53,14 +54,16 @@ export default function LyricHelp({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mode: which, title, style, lyrics }),
         });
-        const data = (await response.json()) as { suggestions?: Idea[]; detail?: string; error?: string };
+        const data = (await response.json()) as { suggestions?: Idea[]; detail?: string; message?: string; error?: string };
         if (response.ok && Array.isArray(data.suggestions)) {
           setIdeas(data.suggestions);
           return;
         }
-        // Their reason, not a bucket. It is the only sentence that says what to
-        // do next — no key configured, rate limited, the request was declined.
-        setProblem(data.detail ?? data.error ?? 'That did not work.');
+        /* Their reason, in the reader's own language, and never the supplier's
+           own words — this line used to print a raw 400 with our request_id in
+           it onto a member's phone. `refusalText` reads the code, not the
+           sentence, so a new refusal degrades to English rather than to a leak. */
+        setProblem(refusalText(data, lang, t('write.failed', 'That did not work.')));
       } catch {
         setProblem('Could not reach the writing help.');
       } finally {

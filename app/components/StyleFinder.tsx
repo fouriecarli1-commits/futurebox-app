@@ -31,6 +31,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Loader2, Pause, Play, Sparkles, Wand2 } from 'lucide-react';
 import { GENRE_CATEGORIES, GENRE_SAMPLES, type GenreSample } from '../data/genres';
 import { useLang } from '../lib/i18n';
+import { refusalText } from '../lib/apierror';
 import { sketch, supported, SKETCH_SECONDS, type Sketch } from '../lib/preview';
 import Note from './Note';
 
@@ -67,7 +68,7 @@ export default function StyleFinder({
   /** A genre carries a tempo, and the sketch fallback needs to know it. */
   onBpm: (bpm: number) => void;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   const [want, setWant] = useState('');
   const [asking, setAsking] = useState(false);
@@ -151,13 +152,14 @@ export default function StyleFinder({
           lyrics,
         }),
       });
-      const data = (await response.json()) as { suggestions?: Idea[]; detail?: string; error?: string };
+      const data = (await response.json()) as { suggestions?: Idea[]; detail?: string; message?: string; error?: string };
       if (response.ok && Array.isArray(data.suggestions)) {
         setIdeas(data.suggestions);
         return;
       }
-      // The reason the route gives is the only thing that says what to do next.
-      setProblem(data.detail ?? data.error ?? 'That did not work.');
+      /* The reason the route gives, translated on its code rather than printed
+         as the supplier wrote it. See LyricHelp for what that used to look like. */
+      setProblem(refusalText(data, lang, t('style.failed', 'That did not work.')));
     } catch {
       setProblem('Could not reach the writing help.');
     } finally {

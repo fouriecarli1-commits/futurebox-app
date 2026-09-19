@@ -56,6 +56,7 @@ import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { tooMany } from '@/app/lib/server/brake';
 import { FORMAT_IDS, describeFormats, formatById } from '@/app/lib/adformats';
 import { RANGES, STYLE_IDS, describeStyles, styleById } from '@/app/lib/adstyles';
+import { aiFault } from '@/app/lib/server/aifault';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -281,13 +282,7 @@ export async function POST(request: Request): Promise<Response> {
 
     return Response.json({ picks, instead: parsed.instead, moves: parsed.moves });
   } catch (error) {
-    if (error instanceof Anthropic.AuthenticationError) {
-      return Response.json({ error: 'bad_key', message: 'The configured key was rejected.' }, { status: 502 });
-    }
-    if (error instanceof Anthropic.RateLimitError) {
-      return Response.json({ error: 'rate_limited', message: 'Too many at once. Try again in a moment.' }, { status: 429 });
-    }
-    return Response.json({ error: 'api_error', message: 'The adviser could not be reached.' }, { status: 502 });
+    return aiFault(error, 'The adviser could not be reached.');
   }
 }
 
