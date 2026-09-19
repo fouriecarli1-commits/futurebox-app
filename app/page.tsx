@@ -1362,6 +1362,11 @@ export default function FutureBoxHome() {
       title: canvas.title,
       style: canvas.style,
       lyrics: canvas.lyrics,
+      /* The two questions the song room opens with. Sent with the rest of
+         the canvas so the copilot's help is about this song rather than
+         about songs — see `Canvas` in `MakeMusic.tsx`. */
+      feeling: canvas.feeling ?? null,
+      about: canvas.about ?? '',
       trackCount,
       engineReady,
     }}

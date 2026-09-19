@@ -275,6 +275,13 @@ jobs:
       - name: No screen prints a backslash-u where a character was meant
         run: npm run check:escapes
 
+      # The studio teaches what each part of a song is for, and teaching that
+      # is usually right is a different product from teaching. Written down,
+      # both languages, every feeling with somewhere to land — and no example
+      # may quote a word of somebody else's song.
+      - name: The song craft is complete, in both languages, and quotes nobody
+        run: npm run check:songcraft
+
       - name: Every format the advert desk recommends can be made here
         run: npm run check:adformats
 

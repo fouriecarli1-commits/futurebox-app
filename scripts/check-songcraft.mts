@@ -1,0 +1,149 @@
+/**
+ * The studio teaches the same thing every time, and quotes nobody.
+ *
+ * ── What this guards ─────────────────────────────────────────────────────
+ *
+ * Carli, 19 September 2026, passing on a friend's idea and adding the part
+ * that makes it worth building: *"dan leer dit ook mense sommer van liedjie
+ * skryf en van musiek."*
+ *
+ * `data/songcraft.ts` is that teaching, and it is written down rather than
+ * asked of a model for the reason in its own header: a model asked what a
+ * bridge is for answers well nine times and, the tenth, fluently says
+ * something untrue. Teaching that is usually right is a different product
+ * from teaching.
+ *
+ * Written down, it needs the things written-down text needs: both languages
+ * everywhere, every part complete, and a place to land for every feeling the
+ * room offers. A half-filled entry is a blank space on somebody's screen.
+ *
+ * ── And the line the examples may not cross ──────────────────────────────
+ *
+ * Every part carries an example from a song most people have heard. Saying
+ * what HAPPENS at that point in a song is an observation. Printing what it
+ * SAYS is somebody's copyright, and this app does not print other people's
+ * words — the same line `docs` §138 draws around an uploaded song.
+ *
+ * So no example may carry a quotation mark. It is a blunt rule and it is the
+ * right blunt rule: there is no reason to quote anything here, and the
+ * moment somebody wants to, that is exactly the moment to stop them.
+ */
+
+import { readFileSync } from 'node:fs';
+import { CRAFT, ABOUT, aboutFor, craftBrief } from '../app/data/songcraft';
+import { MOODS } from '../app/data/songstarts';
+
+let failures = 0;
+const ok = (what: string, passed: boolean, detail = ''): void => {
+  console.log(`  ${passed ? 'ok ' : 'NOT'}  ${what}${detail && !passed ? ` — ${detail}` : ''}`);
+  if (!passed) failures += 1;
+};
+
+/* ── Every part, complete, in both languages ──────────────────────────── */
+
+const FIELDS = ['name', 'what', 'does', 'how', 'wrong', 'example'] as const;
+const thin: string[] = [];
+for (const one of CRAFT) {
+  for (const field of FIELDS) {
+    const pair = one[field];
+    if (!pair.en.trim() || !pair.af.trim()) thin.push(`${one.id}.${field}`);
+  }
+}
+ok('every part of a song is explained, in both languages', thin.length === 0, thin.join(', '));
+
+ok(
+  'the six parts are all there',
+  CRAFT.length === 6 && ['intro', 'verse', 'prechorus', 'chorus', 'bridge', 'outro']
+    .every((id) => CRAFT.some((one) => one.id === id)),
+  CRAFT.map((one) => one.id).join(', '),
+);
+
+/* ── The examples say what happens, never what it says ────────────────── */
+
+const quoted = CRAFT.filter((one) =>
+  /["“”]/.test(one.example.en) || /["“”]/.test(one.example.af));
+ok(
+  'no example quotes a word of somebody else’s song',
+  quoted.length === 0,
+  `${quoted.map((one) => one.id).join(', ')} — say what happens at that point, not what it says`,
+);
+
+/* ── The second question always has somewhere to land ─────────────────── */
+
+const bare = MOODS.filter((one) => aboutFor(one.id).length < 3);
+ok(
+  'every feeling has at least three things it could be about',
+  bare.length === 0,
+  `${bare.map((one) => one.id).join(', ')} — a feeling with an empty row asks a question and offers no way in`,
+);
+ok(
+  '  and every one of them is in both languages',
+  ABOUT.every((one) => one.en.trim() && one.af.trim()),
+  ABOUT.filter((one) => !one.en.trim() || !one.af.trim()).map((one) => one.id).join(', '),
+);
+ok(
+  '  and belongs to a feeling the room actually offers',
+  ABOUT.every((one) => MOODS.some((mood) => mood.id === one.mood)),
+  ABOUT.filter((one) => !MOODS.some((mood) => mood.id === one.mood)).map((one) => one.id).join(', '),
+);
+
+/* ── The copilot is handed it, and only where it is worth the tokens ──── */
+
+const brief = craftBrief().join('\n');
+ok('the copilot is handed every part', CRAFT.every((one) => brief.includes(one.name.en)));
+ok(
+  '  and told not to quote anybody',
+  /never quote the words of a/.test(brief),
+  'the rule has to travel with the knowledge, or it is a rule only this file knows',
+);
+
+const route = readFileSync('app/api/copilot/route.ts', 'utf8');
+ok('the route sends it', /craftBrief\(\)/.test(route));
+ok(
+  '  on the song screens and not on the others',
+  /here === 'make' \|\| here === 'studio' \? \['', \.\.\.craftBrief\(\)\]/.test(route),
+  'forty lines of song craft on every turn of every room is money spent making an answer worse',
+);
+ok(
+  'and it is told what this song is about, in their own words',
+  /What it is about, in their words/.test(route) && /body\.feeling/.test(route),
+  'without it the advice is about a sad song, which is the advice everybody gets',
+);
+
+/* ── The feeling leads the room, and reaches the copilot ──────────────── */
+
+const make = readFileSync('app/components/MakeMusic.tsx', 'utf8');
+ok(
+  'the room asks how you feel before it asks anything else',
+  make.indexOf('<SongFeeling') > 0 && make.indexOf('<SongFeeling') < make.indexOf('<SongStarts'),
+  'a style is an answer to a question nobody arrived with',
+);
+ok(
+  '  and the feeling narrows the fifty starting points',
+  /openAt=\{canvas\.feeling \?\? fromPhoto\}/.test(make),
+);
+ok('  and what each part is for sits with the words', /<SongParts \/>/.test(make));
+
+const page = readFileSync('app/page.tsx', 'utf8');
+ok(
+  'the feeling travels to the copilot with the rest of the canvas',
+  /feeling: canvas\.feeling/.test(page) && /about: canvas\.about/.test(page),
+  'a feeling the copilot cannot see is a question asked for nothing',
+);
+
+/* ── And it is not quietly turned into a sound ────────────────────────── */
+
+ok(
+  'the feeling is never sent to the engine as a style',
+  !/style:.*canvas\.feeling/.test(make) && !/feeling.*=> .*setStyle/.test(make),
+  'a mood is not a sound, and turning "sad" into "slow and minor" is a musical decision nobody asked for',
+);
+
+if (failures) {
+  console.error(`\ncheck:songcraft — ${failures} failure(s).\n`);
+  process.exit(1);
+}
+console.log(
+  '\ncheck:songcraft — the six parts are explained in both languages, every feeling has somewhere'
+  + ' to land, no example quotes anybody, and the copilot is handed the lot on the song screens.',
+);

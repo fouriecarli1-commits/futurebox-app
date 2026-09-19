@@ -28,6 +28,7 @@ import { ERRANDS, briefFor, isErrandId } from '@/app/lib/errands';
 import { tooMany } from '@/app/lib/server/brake';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { SINGERS } from '@/app/data/sound';
+import { craftBrief } from '@/app/data/songcraft';
 import { planActions } from '@/app/lib/copilotplan';
 
 export const runtime = 'nodejs';
@@ -112,6 +113,10 @@ interface Body {
   title?: string;
   style?: string;
   lyrics?: string;
+  /** How they said they feel, as one of `data/songstarts.ts`'s mood ids. */
+  feeling?: string | null;
+  /** Their own words for what the song is about. */
+  about?: string;
   trackCount?: number;
   /** Prior turns, oldest first, so it can follow a conversation. */
   history?: { role: 'user' | 'assistant'; text: string }[];
@@ -288,6 +293,20 @@ function contextFor(body: Body): string {
       ? 'Their style already says who sings. Leave it alone unless they ask.'
       : 'Their style does not say who sings. If they are heading for a song, suggest one and set it.',
     body.lyrics ? `Lyrics so far:\n${body.lyrics}` : 'No lyrics yet.',
+    /* What the song is FOR, when the room asked and they answered.
+
+       This is the difference between advice about a sad song and advice
+       about their sad song, and the whole reason `SongFeeling` asks the
+       second question at all. Said as their own sentence rather than
+       summarised: "they left in March and I still set two cups out" is the
+       song, and a paraphrase of it is not. */
+    ...(body.feeling || body.about?.trim()
+      ? [
+          body.feeling ? `How they said they feel: ${body.feeling}.` : '',
+          body.about?.trim() ? `What it is about, in their words: ${body.about.trim()}` : '',
+          'Write and advise about THAT. Do not ask them again what it is about.',
+        ].filter(Boolean)
+      : []),
     `Songs they have already made: ${body.trackCount ?? 0}`,
     /* What they keep coming back to, where the account has enough to say it.
 
@@ -309,6 +328,24 @@ function contextFor(body: Body): string {
     body.engineReady
       ? 'A real music engine is connected, so generate makes a sung, produced track and costs credits.'
       : 'No music engine is connected, so generate makes a rough instrumental sketch in their browser and costs nothing.',
+    /* ── What each part of a song is for ─────────────────────────────
+
+       Carli, 19 September 2026, passing on a friend's idea and adding the
+       part that makes it worth building: *"dan leer dit ook mense sommer
+       van liedjie skryf en van musiek."*
+
+       Handed over as knowledge rather than left to the model, and
+       `data/songcraft.ts` carries the argument: a model asked what a
+       bridge is for answers well nine times and, the tenth, fluently says
+       something untrue — and the person has no way to tell which one they
+       got. This is teaching, and teaching that is usually right is a
+       different product.
+
+       Only on the two screens where somebody is writing a song. It is
+       forty lines, it goes in on every turn, and forty lines of song
+       craft sent to somebody asking about a podcast feed is money spent
+       to make an answer worse. */
+    ...(here === 'make' || here === 'studio' ? ['', ...craftBrief()] : []),
   ];
   return `${lines.join('\n')}\n\nThey said:\n${body.message}`;
 }

@@ -66,6 +66,16 @@ export interface CopilotContext {
   title: string;
   style: string;
   lyrics: string;
+  /**
+   * How they said they feel, and what about — the two questions Make a song
+   * now opens with.
+   *
+   * Travels with the canvas so the help is about THEIR song. Without it the
+   * copilot is advising on "a sad song", which is the advice everybody gets
+   * and the reason the question is asked in the first place.
+   */
+  feeling?: string | null;
+  about?: string;
   trackCount: number;
   engineReady: boolean;
   /**

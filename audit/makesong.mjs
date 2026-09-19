@@ -552,6 +552,93 @@ try {
   check('including a style the engine can work with',
     styleBox.split(',').length >= 3, styleBox.slice(0, 60));
 
+  /* ── How you feel, before anything else ────────────────────────────
+
+     Carli, 19 September 2026, passing on a friend's idea: *"Inplaas van om
+     style daar heel bo in make a song voor te stel, om dan eerder te werk
+     met emosie."*
+
+     Last in the walk, and that is not where it belongs on the screen — it
+     is where it belongs in a PROBE. Choosing a feeling opens the fifty
+     starting points at the matching shelf, which is most of what choosing
+     a feeling is for, and a room left in that state would have every
+     assertion after it measuring a room this walk had already been
+     through. So it goes where nothing follows it.
+
+     Asserted as a POSITION and not only as a presence: the room has had a
+     mood row for months, three screens down, and the whole of this change
+     is which question comes first. */
+  const feeling = room.locator('[data-feeling]');
+  check('the room asks how you feel', (await feeling.count()) === 1);
+  if (await feeling.count()) {
+    const order = await room.evaluate(() => {
+      const feel = document.querySelector('[data-feeling]');
+      const starts = document.querySelector('[data-starts]');
+      if (!feel || !starts) return null;
+      return {
+        feelTop: Math.round(feel.getBoundingClientRect().top),
+        startsTop: Math.round(starts.getBoundingClientRect().top),
+      };
+    });
+    check('  above the fifty starting points, not below them',
+      order !== null && order.feelTop < order.startsTop,
+      order ? `feeling at ${order.feelTop}, starting points at ${order.startsTop}` : 'one of the two is not on the page');
+
+    /* The second question only exists once a feeling has been chosen.
+       Asking "what is it about?" of somebody who has not said how they
+       feel is a blank box with a question mark over it. */
+    check('  and does not ask what it is about before it knows how you feel',
+      (await room.locator('[data-about]').count()) === 0);
+    await feeling.locator('[data-mood="loss"]').click();
+    await p.waitForTimeout(400);
+    const places = await room.locator('[data-about]').count();
+    check('  then asks what it is about, with somewhere to land',
+      places >= 3, `${places} things it could be about`);
+    if (places) {
+      await room.locator('[data-about]').first().click();
+      await p.waitForTimeout(200);
+      const said = (await room.locator('#feel-about').inputValue().catch(() => '')) ?? '';
+      check('    and pressing one fills the box rather than replacing it',
+        said.trim().length > 0, `"${said}"`);
+    }
+    /* And the thing the feeling is actually FOR: the fifty open at the
+       shelf that matches, so the next thing on the screen is six songs
+       about losing somebody rather than six about anything. */
+    await p.waitForTimeout(400);
+    /* The chosen shelf, read off the chip that is pressed rather than off
+       the words in the block. The first version looked for "Losing
+       someone" anywhere in the starting points, and all eight shelves are
+       named there whichever one is showing — so it passed without
+       measuring anything. */
+    const shelf = room.locator('[data-starts] [data-shelf="loss"]');
+    check('  and choosing one opens the starting points at that shelf',
+      (await shelf.count()) === 1 && (await shelf.getAttribute('aria-pressed')) === 'true',
+      `${await shelf.count()} chips, pressed: ${await shelf.getAttribute('aria-pressed').catch(() => '?')}`);
+  }
+
+  /* ── And the teaching, beside the words ──────────────────────────────
+
+     Carli, the same day: *"dan leer dit ook mense sommer van liedjie skryf
+     en van musiek."* */
+  const parts = room.locator('[data-parts]');
+  check('the room says what each part of a song is for', (await parts.count()) === 1);
+  if (await parts.count()) {
+    check('  all six of them', (await parts.locator('[data-part]').count()) === 6);
+    await parts.locator('[data-part="bridge"]').click();
+    await p.waitForTimeout(200);
+    const taught = ((await parts.innerText()) ?? '').replace(/\s+/g, ' ');
+    check('  and opening one explains it rather than naming it',
+      taught.length > 300 && /turn|wending/i.test(taught),
+      `${taught.length} characters: ${taught.slice(0, 90)}`);
+    /* The line the examples may not cross. `check:songcraft` holds it in
+       the data; this holds it on the screen, which is where it would do
+       the damage. */
+    check('    without quoting a word of somebody else\u2019s song',
+      !/["\u201c\u201d]/.test(taught),
+      'say what happens at that point, not what it says');
+  }
+
+
 } finally {
   if (browser) await browser.close();
   if (server) { try { process.kill(-server.pid); } catch { /* already gone */ } }

@@ -86,6 +86,11 @@ export default function SongStarts({
     return (
       <button
         type="button"
+        /* Named, so a probe can ask where this sits rather than hunting for
+           it by its wording. `audit/makesong.mjs` needs to compare its
+           position against the feeling row above it, and matching on the
+           label would not survive the second language. */
+        data-starts=""
         onClick={() => setOpen(true)}
         className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-100 hover:border-emerald-500 hover:text-emerald-300"
       >
@@ -96,7 +101,7 @@ export default function SongStarts({
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5">
+    <div data-starts="" className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5">
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-sm font-semibold text-zinc-200">
           {t('starts.title', 'Fifty songs to start from')}
@@ -132,6 +137,14 @@ export default function SongStarts({
           <button
             key={one.id}
             type="button"
+            /* Which shelf, and whether it is the one showing. The chip said
+               so in colour only, which a screen reader cannot see and a
+               probe cannot read — `audit/makesong.mjs` was asserting that
+               the words "Losing someone" appeared somewhere in this block,
+               which is true of all eight of them whichever is chosen. An
+               assertion that cannot fail is not one. */
+            data-shelf={one.id}
+            aria-pressed={mood === one.id}
             onClick={() => { setMood(one.id); setRound(0); }}
             className={`min-h-[44px] rounded-lg border px-2.5 py-1.5 text-sm ${
               mood === one.id

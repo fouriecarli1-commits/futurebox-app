@@ -53,6 +53,8 @@ import { useCopilotOps } from '../lib/copilotactions';
 import Card from './Card';
 import { useOpenCard } from '../lib/opencard';
 import SongStarts from './SongStarts';
+import SongFeeling from './SongFeeling';
+import SongParts from './SongParts';
 import PromptCards from './PromptCards';
 import type { Mood } from '../data/songstarts';
 
@@ -61,6 +63,22 @@ export interface Canvas {
   lyrics: string;
   /** Free text, so the copilot can set a sound no preset covers. */
   style: string;
+  /**
+   * How they feel, and what about — the two questions the room opens with.
+   *
+   * On the canvas rather than in this component's own state, and that is the
+   * point of putting it here: the canvas is what travels to the copilot, so
+   * the help somebody gets is about THEIR song rather than about songs. A
+   * feeling kept in this file would be a feeling the copilot cannot see.
+   *
+   * Neither is sent to the engine. A mood is not a sound, and turning "sad"
+   * into "slow and minor" behind somebody's back is the app making a musical
+   * decision it was not asked to make — the style field is still where the
+   * sound is decided, further down, by them.
+   */
+  feeling?: Mood | null;
+  /** Their own words for what the song is about. */
+  about?: string;
 }
 
 /** Where the chosen mode is remembered. */
@@ -854,6 +872,22 @@ export default function MakeMusic({
             what a bad song is made of — four vague words produce a take that
             wanders, and the person concludes the engine is no good. Fifty
             written starting points, none of which costs anything. */}
+        {/* ── How you feel, before anything else ────────────────────────
+
+            Carli, 19 September 2026, passing on a friend's idea: *"Inplaas
+            van om style daar heel bo in make a song voor te stel, om dan
+            eerder te werk met emosie."*
+
+            Above the starting points and the photo cards, because it is the
+            question somebody actually walked in with. A style is an answer
+            to a question nobody arrived with; a feeling is the thing they
+            came here holding. Picking one narrows the fifty below to the
+            shelf that matches, which is most of what it is for. */}
+        <SongFeeling
+          value={{ mood: canvas.feeling ?? null, about: canvas.about ?? '' }}
+          onChange={(next) => setCanvas({ ...canvas, feeling: next.mood, about: next.about })}
+        />
+
         {/* And the shortest way in of all: press a sentence, pick a photo.
 
             Above the fifty written starting points, because it asks for less
@@ -875,7 +909,10 @@ export default function MakeMusic({
         />
 
         <SongStarts
-          openAt={fromPhoto}
+          /* The feeling first, the photograph second. Both can work one
+             out, and the one somebody chose by hand beats the one a picture
+             was read for. */
+          openAt={canvas.feeling ?? fromPhoto}
           onPick={({ title: name, words, style, bpm: beat }) => {
             setBpm(beat);
             /* One write, not two.
@@ -945,6 +982,21 @@ export default function MakeMusic({
               place to look for the same sentence is a second place to miss
               it. */}
           {wandProblem && <p className="text-sm text-amber-300 leading-snug">{wandProblem}</p>}
+
+          {/* ── What each part of a song is for ─────────────────────────
+
+              Under the sheet somebody is writing into, because that is the
+              only moment the answer is wanted — and nobody stuck on a
+              bridge goes looking for a help page.
+
+              Carli, 19 September 2026, on her friend's idea: *"dan leer dit
+              ook mense sommer van liedjie skryf en van musiek."* An app
+              that writes somebody a song leaves them where it found them.
+
+              Written down in `data/songcraft.ts`, the same every time,
+              costing nothing. Not the model: teaching that is right nine
+              times out of ten is a different product from teaching. */}
+          <SongParts />
 
           {/* What language to sing it in.
 
