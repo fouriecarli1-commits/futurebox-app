@@ -269,6 +269,12 @@ jobs:
       - name: A room handed something opens the card it went into
         run: npm run check:opencard
 
+      # `{zoom}\u00d7` in JSX text is six characters of nothing, printed as
+      # typed. It compiles, it passes every test that reads the DOM by role
+      # or label, and it reached a phone as "4\u00d7" in a photograph.
+      - name: No screen prints a backslash-u where a character was meant
+        run: npm run check:escapes
+
       - name: Every format the advert desk recommends can be made here
         run: npm run check:adformats
 
