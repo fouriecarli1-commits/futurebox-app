@@ -5280,3 +5280,64 @@ sy towerstaf en skryfhulp, die klankkaart met twee maniere om 'n styl te kry,
 en die sangtaal-keuse. Dit is 'n aparte besluit en dit is hare om te neem —
 maar dit is nie reggemaak deur hierdie commit nie, en dit moet nie so gelees
 word nie.
+
+## §Z · Die kamer maak oop as 'n inhoudsopgawe, nie as 'n werkbank nie (19 September 2026)
+
+Carli, nadat §Y se snit gepush is:
+
+> *"Ek dink dit is 'n goeie plan, maar doen dit alles so dat dit super netjies
+> en aantreklik is en die buttons moet lyk soos 'n button wat uitstaan."*
+
+Sy het die voorstel gevat: **alles behalwe die woorde en die klank agter 'n
+gevoude kaart.** Make a song maak nou oop met Copilot bo, die naam, vier
+opskrifte, en die knoppie.
+
+### Wat afgekom het
+
+Voor hierdie snit het 'n mens verby dít geskuif om by die woordeboks te kom:
+'n Simple/Everything-skakelaar, foto-kaarte, vyftig beginpunte, en 'n
+lengte-ry. Elkeen van hulle is goed. Almal saam, ongevraag, bo die boks wat
+hulle invul, is 'n mens wat die app toemaak.
+
+Nou: `Iets om mee te begin` (foto-kaarte + vyftig beginpunte) en `Hoe dit
+gemaak word` (lengte + die Simple/Everything-desk) is elkeen **een opskrif**.
+Een druk vir wie dit soek, niks vir wie dit nie soek nie.
+
+### Drie besluite wat die verskil maak
+
+1. **Geen boks om die bokse nie.** Dit was een omraamde paneel met vier
+   kaarte binne-in — 'n raam om 'n raam, en die hele kamer lees as een swaar
+   voorwerp. Die kaarte is nou die enigste bokse op die bladsy, almal
+   dieselfde vorm, so die kamer lees af as 'n lys.
+2. **'n Toe kaart mag nie 'n prys wegsteek nie.** `Hoe dit gemaak word` dra
+   *60s · 5 credits* op sy opskrif. Die lengte is uit die skakelaar gehaal
+   presies omdat Simple die prys weggesteek het terwyl dit dit hef; agter 'n
+   vou sit met niks daarop is dieselfde fout met 'n ander deur.
+3. **Twee kaarte dra 'n towerstaf, twee dra niks.** Dít is die hele hiërargie.
+   Vier eenderse opskriffies met vier verskillende merkies is versiering;
+   vier eenderse opskrifte waarvan twee gemerk is, is 'n kamer wat sê watter
+   twee saak maak.
+
+En die knoppie: groter, ronder, en met sy eie gloed. 'n Bladsy vol stil grys
+opskrifte is presies waar 'n stil knoppie verdwyn.
+
+### Wat die probe gevang het, wat niemand gesoek het nie
+
+Die skuif het 'n ou fout wakker gemaak. Daar is **twee** `accept="image/*"`
+invoere in hierdie kamer — die foto-kaarte s'n en die styl-leser s'n — en die
+probe het na *"die eerste een op die skerm"* gegryp. Toe die beginpunte agter
+'n vou gaan, het die klankkaart bo hulle uitgekom, en die foto het by die
+styl-leser beland. Sewe assertions het 'n werkende funksie as stukkend
+gerapporteer.
+
+`StyleFrom` se eie kommentaar wáársku al sedert die dag dit geskryf is teen
+presies dit. Dis nou twee keer, so albei invoere dra 'n naam: **'n toets wat
+op posisie pas, toets die uitleg en nie die funksie nie** — dieselfde les as
+die beginpunt wat sy titel verloor het, en as `check:folded` se "eerste kaart
+in die kamer".
+
+### Wat nie verander het nie
+
+Niks is weggevat nie. Elke kontrole wat gister daar was, is vandag daar — een
+druk verder weg. Dis die hele verskil tussen 'n vou en 'n verwydering, en dis
+waarom hierdie snit veilig was om te doen en die vorige een nie was nie.

@@ -382,7 +382,13 @@ try {
   p.on('filechooser', () => undefined);
   await promptCards.first().click();
   await p.waitForTimeout(400);
-  await room.locator('input[type="file"][accept="image/*"]').first()
+  /* By its own name, not by being the first image picker in the room.
+
+     There are two — this one and the style reader's — and which one comes
+     first in the DOM changed the day the starting points moved behind a
+     fold. The photograph went to the style reader, nothing was sent, and
+     seven assertions reported a working feature as broken. */
+  await room.locator('input[data-take="photocard"]')
     .setInputFiles({ name: 'kombuis.png', mimeType: 'image/png', buffer: picture });
   for (let waited = 0; waited < 40 && !photographed; waited += 1) await p.waitForTimeout(300);
   check('picking a photograph sends it', Boolean(photographed));
@@ -530,10 +536,42 @@ try {
     (await says()).includes('From a song') && (await says()).includes('From a photo'),
     (await says()).slice(0, 90));
 
+  /* ── Behind one heading now ─────────────────────────────────────────
+
+     Carli, 19 September 2026: *"alles behalwe die woorde en die klank agter
+     'n gevoude kaart... die vyftig beginpunte en foto-kaarte net daar is vir
+     wie dit soek."*
+
+     Opened by NAME here rather than left to `unfold`, and the difference is
+     the assertion above it: this probe has to know the card was shut when
+     the room opened, which a helper that opens everything cannot tell it. */
+  const startCard = room.locator('button[aria-expanded]')
+    .filter({ hasText: /^Somewhere to start|^.n Plek om te begin/ }).first();
+  check('the starting points are behind one heading', (await startCard.count()) === 1);
+  if ((await startCard.getAttribute('aria-expanded')) === 'true') await startCard.click();
+  await p.waitForTimeout(300);
+  check('  and the room does not show them until it is pressed',
+    (await startCard.getAttribute('aria-expanded')) === 'false'
+    && (await room.locator('button').filter({ hasText: /^Give me a song to start from$/ }).count()) === 0,
+    'the person who knows what they want should not scroll past fifty suggestions to reach the box');
+  await startCard.click();
+  await p.waitForTimeout(400);
+
+  /* Pressed only if it is still shut.
+
+     `SongStarts` opens itself at the matching shelf once a feeling or a
+     photograph has named one, and this walk read a photograph several
+     hundred lines ago — so by the time it gets here the fifty are already
+     showing and there is no button left to press. Asserting the button
+     exists would fail on a room that is doing exactly what it should.
+
+     What matters is that the fifty are reachable from here, so that is
+     what is asserted, either way round. */
   const startsButton = room.locator('button').filter({ hasText: /^Give me a song to start from$/ });
-  check('the room offers a song to start from', (await startsButton.count()) === 1);
-  await startsButton.first().click();
+  if ((await startsButton.count()) === 1) await startsButton.first().click();
   await p.waitForTimeout(600);
+  check('the fifty starting points are inside it',
+    (await room.locator('[data-starts]').count()) >= 1);
   check('and says they are not AI', (await says()).includes('not by a model'));
   const pick = room.locator('button').filter({ hasText: /BPM$/ });
   check('with real starting points on it', (await pick.count()) >= 4, `${await pick.count()} shown`);

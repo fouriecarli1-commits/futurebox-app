@@ -333,10 +333,20 @@ export default function PromptCards({
         ))}
       </div>
 
+      {/* Named, and the name is not decoration.
+
+          `StyleFrom` has an image picker too, and its own comment records
+          being caught by exactly this: a probe that reaches for "the first
+          accept=image/* on the screen" gets whichever one the room happens
+          to render first. That was this one until the starting points moved
+          behind a fold and the sound card came out above them — at which
+          point the photograph went to the style reader instead and the
+          feature read as broken. Twice now, so it gets a name. */}
       <input
         ref={picker}
         type="file"
         accept="image/*"
+        data-take="photocard"
         className="hidden"
         onChange={(event) => void take(event.target.files?.[0])}
       />

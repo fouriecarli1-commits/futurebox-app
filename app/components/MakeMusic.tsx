@@ -849,103 +849,26 @@ export default function MakeMusic({
         </p>
       </div>
 
-      {/* ── Simple, or everything ────────────────────────────────────────
+      {/* ── Set it up ───────────────────────────────────────────────────
 
-          Two buttons rather than a dropdown: it is a choice between two
-          things, both of them worth naming, and a menu you open to read is
-          the shape this app has been taking out everywhere else.
-
-          Under it, whenever anything behind the switch is not its default,
-          one line saying what. That line is the difference between a simple
-          screen and a screen that is quietly lying about what it will make. */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-zinc-400">{t('make.mode', 'How much of it')}</span>
-        {[false, true].map((one) => (
-          <button
-            key={String(one)}
-            type="button"
-            onClick={() => chooseMode(one)}
-            aria-pressed={advanced === one}
-            className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold ${
-              advanced === one
-                ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
-                : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600'
-            }`}
-          >
-            {one ? t('make.modeAll', 'Everything') : t('make.modeSimple', 'Simple')}
-          </button>
-        ))}
-        <Hint>
-          {t(
-            'make.modeWhy',
-            'Simple asks for the three things a song needs: a name, the words, and what it should sound like. Everything opens the voice, the speed, the mood, the length and your own trained sound. Nothing is switched off by Simple — whatever you set stays set.',
-          )}
-        </Hint>
-      </div>
-
-      {!advanced && changedFromDefault.length > 0 && (
-        <p className="text-xs text-zinc-500 leading-snug">
-          {t('make.inForce', 'Still set from Everything:')} {changedFromDefault.join(' · ')}
-        </p>
-      )}
-
-      {/* Set it up */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-4">
-        {/* Something to start from, above the empty box rather than beside it.
-
-            The blank box is the hardest part of this room and a bad start is
-            what a bad song is made of — four vague words produce a take that
-            wanders, and the person concludes the engine is no good. Fifty
-            written starting points, none of which costs anything. */}
-
-        {/* And the shortest way in of all: press a sentence, pick a photo.
-
-            Above the fifty written starting points, because it asks for less
-            — a starting point is still a decision between fifty, and this is
-            one press and a picture somebody already has on their phone. It
-            draws nothing at all where there is no model behind it. */}
-        <PromptCards
-          onSong={({ title: name, style, lyrics: words }) => {
-            /* One write, for the reason the two below it also say: two
-               setCanvas calls built from the same captured object put the
-               first one's change back, and that cost the title once. */
-            setCanvas({
-              ...canvas,
-              title: name || canvas.title,
-              style: style || canvas.style,
-              lyrics: words,
-            });
-          }}
-        />
-
-        <SongStarts
-          /* The feeling first, the photograph second. Both can work one
-             out, and the one somebody chose by hand beats the one a picture
-             was read for. */
-          openAt={canvas.feeling ?? fromPhoto}
-          onPick={({ title: name, words, style, bpm: beat }) => {
-            setBpm(beat);
-            /* One write, not two.
-
-               It was `setTitle(name)` and then `setCanvas({...canvas, ...})`,
-               and both build their object from the same `canvas` that was
-               captured when this render started — so the second one put the
-               old title back and pressing a starting point filled in
-               everything except the name of the song. The probe caught it
-               only because its assertion was tightened to compare the title
-               against the one it pressed rather than to check it was not
-               empty. */
-            setCanvas({ ...canvas, title: name, lyrics: words, style });
-          }}
-        />
+          No box around the boxes. This used to be one bordered panel with
+          four cards inside it, which draws a frame around a frame and makes
+          the whole room read as one heavy object. Now the cards are the only
+          boxes on the page and they are all the same shape, so the room
+          reads down as a list: the name, then four headings, then the
+          button. */}
+      <div className="space-y-3">
 
         <div>
-          <label className="text-sm text-zinc-400">{t('make.name')}</label>
+          <label htmlFor="song-name" className="text-sm font-semibold text-zinc-300">
+            {t('make.name')}
+          </label>
           <input
+            id="song-name"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder={t('make.namePlaceholder')}
-            className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+            className="mt-1.5 w-full rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 text-base text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none"
           />
         </div>
 
@@ -1134,250 +1057,400 @@ export default function MakeMusic({
             Music API. These words lean on breath, room and imperfection, because
             the usual complaint about generated singing is that it is too clean,
             and asking for the flaw works better than asking for "realistic". */}
-        {/* How long, in Simple as well as in Everything.
+        {/* ── Somewhere to start ─────────────────────────────────────────
 
-            It was behind the switch, and it is the one control there that
-            changes what the song costs — so Simple hid the price while
-            charging it. Carli looked for it and it was not there. Bars only
-            mean something once you know the tempo, so "32 bars" answered a
-            question nobody asked; these are seconds, with what each one
-            costs printed on it. */}
-        <div>
-          <label className="text-sm text-zinc-400">{t('make.length')}</label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
-            {LENGTH_CHOICES.map((choice) => (
-              <button
-                key={choice.seconds}
-                type="button"
-                onClick={() => setSeconds(choice.seconds)}
-                className={`min-h-[44px] text-left px-3 py-2.5 rounded-xl border transition-all ${
-                  seconds === choice.seconds
-                    ? 'bg-emerald-500/15 border-emerald-500'
-                    : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
-                }`}
-              >
-                {/* The lengths live in `data/sound.ts`, which has no language
-                    of its own; the English there is the fallback and the
-                    dictionary carries the Afrikaans. Found by the two-language
-                    walk the moment these came out from behind the switch —
-                    sixteen English lines landed on an Afrikaans screen. */}
-                <span className={`block text-sm font-semibold ${seconds === choice.seconds ? 'text-emerald-300' : 'text-zinc-200'}`}>
-                  {t(`len.${choice.seconds}`, choice.label)}
-                </span>
-                <span className="block text-sm text-zinc-500 leading-snug">
-                  {t(`len.${choice.seconds}.n`, choice.note)}
-                </span>
-                <span className="block text-xs text-zinc-500 pt-0.5">
-                  {songCost(choice.seconds)} {t('video.credits', 'credits')}
-                </span>
-              </button>
-            ))}
+            Carli, 19 September 2026, on the room as a whole: *"Die hele room
+            is baie besig."* Then, on the cut: *"alles behalwe die woorde en
+            die klank agter 'n gevoude kaart... die vyftig beginpunte en
+            foto-kaarte net daar is vir wie dit soek."*
+
+            Both of these were on the screen unasked, above the boxes they
+            fill in. Neither is wrong to have — the blank box is the hardest
+            part of this room, and a bad start is what a bad song is made of.
+            But a person who already knows what they want to write had to
+            scroll past fifty suggestions and a photo picker to reach the box,
+            every single time.
+
+            One heading now. It costs one press for the person who wants it
+            and nothing at all for the person who does not. */}
+        {/* No icon on this one or on the next, and that is the whole of the
+            hierarchy: the two cards this room is FOR carry a wand on the
+            right, and these two carry nothing. Four identical headings with
+            four different little marks is a row of decorations; four
+            identical headings where two are marked is a room that says which
+            two matter. */}
+        <Card
+          title={t('make.startCard', 'Somewhere to start')}
+          aside={
+            <Hint>
+              {t(
+                'make.startCardWhy',
+                'Fifty written starting points and a way in from a photograph. None of them costs anything, and pressing one fills the boxes above in — you can change every word afterwards.',
+              )}
+            </Hint>
+          }
+        >
+          {/* Something to start from, above the empty box rather than beside it.
+
+              The blank box is the hardest part of this room and a bad start is
+              what a bad song is made of — four vague words produce a take that
+              wanders, and the person concludes the engine is no good. Fifty
+              written starting points, none of which costs anything. */}
+
+          {/* And the shortest way in of all: press a sentence, pick a photo.
+
+              Above the fifty written starting points, because it asks for less
+              — a starting point is still a decision between fifty, and this is
+              one press and a picture somebody already has on their phone. It
+              draws nothing at all where there is no model behind it. */}
+          <PromptCards
+            onSong={({ title: name, style, lyrics: words }) => {
+              /* One write, for the reason the two below it also say: two
+                 setCanvas calls built from the same captured object put the
+                 first one's change back, and that cost the title once. */
+              setCanvas({
+                ...canvas,
+                title: name || canvas.title,
+                style: style || canvas.style,
+                lyrics: words,
+              });
+            }}
+          />
+
+          <SongStarts
+            /* The feeling first, the photograph second. Both can work one
+               out, and the one somebody chose by hand beats the one a picture
+               was read for. */
+            openAt={canvas.feeling ?? fromPhoto}
+            onPick={({ title: name, words, style, bpm: beat }) => {
+              setBpm(beat);
+              /* One write, not two.
+
+                 It was `setTitle(name)` and then `setCanvas({...canvas, ...})`,
+                 and both build their object from the same `canvas` that was
+                 captured when this render started — so the second one put the
+                 old title back and pressing a starting point filled in
+                 everything except the name of the song. The probe caught it
+                 only because its assertion was tightened to compare the title
+                 against the one it pressed rather than to check it was not
+                 empty. */
+              setCanvas({ ...canvas, title: name, lyrics: words, style });
+            }}
+          />
+        </Card>
+
+        {/* ── How it is made ──────────────────────────────────────────────
+
+            Everything that is not the words and not the sound: how long, and
+            then the whole Everything desk behind its own switch.
+
+            The heading carries a summary, and that is not decoration. A shut
+            card that changes what a song costs while saying nothing is the
+            exact fault the length control was pulled out of the switch to
+            fix — so the price and anything set away from its default are on
+            the heading, readable without opening anything. */}
+        <Card
+          title={t('make.madeCard', 'How it is made')}
+          aside={
+            <span className="truncate text-xs text-zinc-500">
+              {[
+                `${seconds}s · ${songCost(seconds)} ${t('video.credits', 'credits')}`,
+                ...changedFromDefault,
+              ].join(' · ')}
+            </span>
+          }
+        >
+          {/* ── How long, and what that costs ──────────────────────────────
+
+              Behind the fold with the rest of the settings now, but never
+              behind a silence: the card's heading carries the length, because
+              this is the one control here that changes what the song costs and
+              a shut card that hides a price is the fault this control was
+              surfaced to fix in the first place.
+
+              Bars only mean something once you know the tempo, so "32 bars"
+              answered a question nobody asked; these are seconds, with what
+              each one costs printed on them. */}
+          <div>
+            <label className="text-sm text-zinc-400">{t('make.length')}</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1.5">
+              {LENGTH_CHOICES.map((choice) => (
+                <button
+                  key={choice.seconds}
+                  type="button"
+                  onClick={() => setSeconds(choice.seconds)}
+                  className={`min-h-[44px] text-left px-3 py-2.5 rounded-xl border transition-all ${
+                    seconds === choice.seconds
+                      ? 'bg-emerald-500/15 border-emerald-500'
+                      : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
+                  }`}
+                >
+                  {/* The lengths live in `data/sound.ts`, which has no language
+                      of its own; the English there is the fallback and the
+                      dictionary carries the Afrikaans. Found by the two-language
+                      walk the moment these came out from behind the switch —
+                      sixteen English lines landed on an Afrikaans screen. */}
+                  <span className={`block text-sm font-semibold ${seconds === choice.seconds ? 'text-emerald-300' : 'text-zinc-200'}`}>
+                    {t(`len.${choice.seconds}`, choice.label)}
+                  </span>
+                  <span className="block text-sm text-zinc-500 leading-snug">
+                    {t(`len.${choice.seconds}.n`, choice.note)}
+                  </span>
+                  <span className="block text-xs text-zinc-500 pt-0.5">
+                    {songCost(choice.seconds)} {t('video.credits', 'credits')}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
+
+
+          {/* ── Simple, or everything ──────────────────────────────────────
+
+              Two buttons rather than a dropdown: it is a choice between two
+              things, both of them worth naming.
+
+              Inside this card rather than at the top of the room. It is a
+              setting about how much of the desk to show, and a setting about
+              the desk belongs on the desk — at the top it was the first thing
+              a person met, before the room had asked them anything. */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm text-zinc-400">{t('make.mode', 'How much of it')}</span>
+          {[false, true].map((one) => (
+            <button
+              key={String(one)}
+              type="button"
+              onClick={() => chooseMode(one)}
+              aria-pressed={advanced === one}
+              className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold ${
+                advanced === one
+                  ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                  : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600'
+              }`}
+            >
+              {one ? t('make.modeAll', 'Everything') : t('make.modeSimple', 'Simple')}
+            </button>
+          ))}
+          <Hint>
+            {t(
+              'make.modeWhy',
+              'Simple asks for the three things a song needs: a name, the words, and what it should sound like. Everything opens the voice, the speed, the mood, the length and your own trained sound. Nothing is switched off by Simple — whatever you set stays set.',
+            )}
+          </Hint>
         </div>
 
-        {/* ── Everything else, behind one switch ─────────────────────────
-
-            Not deleted, and that is the whole point of the switch. Simple
-            hides these controls; it does not turn them off. Whatever was
-            set here still goes to the engine, and the line under the switch
-            says so whenever any of it is not the default — a setting that
-            applies silently because its control is out of sight is worse
-            than a crowded screen, and this app has already hidden four
-            working features once by taking things away. */}
-        {advanced && (
-          <>
-          {/* Sing it yourself. ElevenLabs cannot be handed your voice — their
-              cloning is for speech and the Music API takes no voice at all — so
-              the honest route is a backing track and a real recording. */}
-          <label className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={singItYourself}
-              onChange={(event) => setSingItYourself(event.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
-            />
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold text-zinc-200">{t('make.singSelf')}</span>
-              <span className="block text-sm text-zinc-500 leading-snug">{t('make.singSelfNote')}</span>
-            </span>
-          </label>
-
-          {/* The voice picker was here, and it was a promise nothing could keep.
-
-              Six bars — woman warm, man low, a group — that wrote their words
-              into the style list. It was wired: `voice.words` reached
-              `styleText`, which reached `body.style`. Two things then threw it
-              away. `toStyles` caps the list at twelve, and the picker appended
-              its words AFTER whatever the person had written, so a long style
-              dropped the singer outright. Worse, `buildRequest` gives the first
-              chunk the full list and every chunk after it `leading.slice(0, 6)`
-              — so on a song with six words of its own, the singer was asked for
-              in the intro and nowhere else. A song is mostly "chunks after the
-              first". Carli: "as ek daar 'n man of 'n vrou stem kies tel hy dit
-              nie op nie, want hy generate net wat hy wil."
-
-              Her instruction was to take it out rather than to keep tuning it:
-              "As iets fisies nie werk nie moet jy dit weg vat." The choice
-              lives in the copilot now, where it becomes words the person asked
-              for, at the front of their own style line, and where the copilot
-              offers it to somebody who did not know to ask. */}
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              {/* Tied to the slider rather than sitting above it.
-
-                  A label with no `htmlFor` is a sentence next to a control, not
-                  a name for it: the slider read out as "slider, 112" with
-                  nothing saying what 112 counted. It was the only unnamed
-                  control left in the studio. */}
-              <label className="text-sm text-zinc-400" htmlFor="make-bpm">
-                {t('make.speed')} — {bpm} {t('make.bpm')}
-              </label>
-              <input
-                id="make-bpm"
-                type="range"
-                min={60}
-                max={180}
-                value={bpm}
-                onChange={(e) => setBpm(Number(e.target.value))}
-                className="w-full mt-2 accent-emerald-500"
-              />
-              <p className="text-sm text-zinc-600">{bpm < 95 ? t('make.slow') : bpm < 125 ? t('make.steady') : t('make.fast')}</p>
-            </div>
-            <div>
-              <label className="text-sm text-zinc-400">{t('make.mood')}</label>
-              <select
-                value={songKey}
-                onChange={(e) => setSongKey(e.target.value)}
-                className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
-              >
-                <option value="C Major">{t('make.mood.bright')}</option>
-                <option value="G Major">{t('make.mood.warm')}</option>
-                <option value="A Minor">{t('make.mood.thoughtful')}</option>
-                <option value="D Minor">{t('make.mood.dark')}</option>
-                <option value="F Minor">{t('make.mood.heavy')}</option>
-              </select>
-            </div>
-          </div>
-
-
-          {/* ── A sound of your own ────────────────────────────────────────
-              Directly above the button, because it is the last thing decided
-              before the song is made rather than a setting filed with the tempo.
-              It reads as part of pressing Make, which is what it is.
-
-              It used to be hidden entirely unless you already had one, on the
-              reasoning that an empty picker explaining a feature you do not have
-              is a screen telling you off. Half right: what it produced instead
-              was a feature nobody could find, which is the same failure the
-              booth had. So it is always here, and what it says depends on where
-              you actually are — the plan does not include it, none trained yet,
-              one still training, or here they are.
-
-              It is a tick because it is a decision about the next song rather
-              than a preset: on or off, and the choice underneath only matters
-              once it is on. */}
-          {sounds.configured && sounds.signedIn && (
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-3 space-y-2">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={useOwnSound}
-                  disabled={readySounds.length === 0}
-                  onChange={(event) => toggleOwnSound(event.target.checked)}
-                  className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0 disabled:opacity-40"
-                />
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-zinc-200">
-                    {t('make.useOwnSound', 'Make it in a sound of my own')}
-                  </span>
-                  <span className="block text-sm text-zinc-500 leading-snug">{t('make.ownSoundNote')}</span>
-                </span>
-              </label>
-
-              {/* Which one, once it is on. Only drawn when there is a choice to
-                  make — one trained sound and a picker of one is furniture. */}
-              {useOwnSound && readySounds.length > 1 && (
-                <div className="grid sm:grid-cols-3 gap-2 pt-0.5">
-                  {readySounds.map((one) => (
-                    <button
-                      key={one.id}
-                      type="button"
-                      onClick={() => setOwnSound(one.id)}
-                      className={`min-h-[44px] text-left px-3 py-2.5 rounded-xl border transition-all ${
-                        ownSound === one.id
-                          ? 'bg-emerald-500/15 border-emerald-500'
-                          : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
-                      }`}
-                    >
-                      <span className={`block text-sm font-semibold ${ownSound === one.id ? 'text-emerald-300' : 'text-zinc-200'}`}>
-                        {one.name}
-                      </span>
-                      <span className="block text-sm text-zinc-500 leading-snug pt-0.5">
-                        {one.genre} · {one.tracks} {t('make.ownSoundSongs', 'of your songs')}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {useOwnSound && readySounds.length === 1 && (
-                <p className="text-sm text-emerald-300/90 leading-snug pl-6">
-                  {readySounds[0].name} — {readySounds[0].genre} · {readySounds[0].tracks}{' '}
-                  {t('make.ownSoundSongs', 'of your songs')}
-                </p>
-              )}
-
-              {/* And when the tick cannot be used, why not — with the way out. */}
-              {readySounds.length === 0 && (
-                <div className="pl-6 space-y-1.5">
-                  {sounds.keep === 0 ? (
-                    <>
-                      <Note>{t('make.ownSoundNoPlan')}</Note>
-                      <button
-                        type="button"
-                        onClick={onUpgrade}
-                        className="text-sm font-semibold text-emerald-400 hover:text-emerald-300"
-                      >
-                        {t('make.ownSoundSeePlans', 'See the plans')}
-                      </button>
-                    </>
-                  ) : stillTraining.length > 0 ? (
-                    <p className="text-sm text-amber-300/90 leading-snug flex items-center gap-1.5">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
-                      {t('make.ownSoundTraining')}
-                    </p>
-                  ) : (
-                    <>
-                      <Note>{t('make.ownSoundNone')}</Note>
-                      {/* Into the room that does it, not the Channel.
-
-                          Carli: "daai woorde in make a song vat mens na die
-                          verkeerde blad toe ... dan vat dit jou na die Sound
-                          trainer toe. huidiglik vat die mens na die channel
-                          toe." Training moved into its own room and this
-                          button kept pointing at where it used to live — so
-                          the one thing it promises is the one thing the screen
-                          it opens cannot do.
-
-                          Boxed, like every other button here. */}
-                      <button
-                        type="button"
-                        onClick={onGoToSound}
-                        className="min-h-[44px] px-3 py-2 rounded-xl border border-emerald-500/60 bg-emerald-500/10 text-sm font-bold text-emerald-300 hover:border-emerald-500 flex items-center gap-1.5"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        {t('make.ownSoundTrain', 'Train one now')}
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-          </>
+        {!advanced && changedFromDefault.length > 0 && (
+          <p className="text-xs text-zinc-500 leading-snug">
+            {t('make.inForce', 'Still set from Everything:')} {changedFromDefault.join(' · ')}
+          </p>
         )}
 
+
+          {/* ── Everything else, behind one switch ─────────────────────────
+
+              Not deleted, and that is the whole point of the switch. Simple
+              hides these controls; it does not turn them off. Whatever was
+              set here still goes to the engine, and the line under the switch
+              says so whenever any of it is not the default — a setting that
+              applies silently because its control is out of sight is worse
+              than a crowded screen, and this app has already hidden four
+              working features once by taking things away. */}
+          {advanced && (
+            <>
+            {/* Sing it yourself. ElevenLabs cannot be handed your voice — their
+                cloning is for speech and the Music API takes no voice at all — so
+                the honest route is a backing track and a real recording. */}
+            <label className="flex items-start gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={singItYourself}
+                onChange={(event) => setSingItYourself(event.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-zinc-200">{t('make.singSelf')}</span>
+                <span className="block text-sm text-zinc-500 leading-snug">{t('make.singSelfNote')}</span>
+              </span>
+            </label>
+
+            {/* The voice picker was here, and it was a promise nothing could keep.
+
+                Six bars — woman warm, man low, a group — that wrote their words
+                into the style list. It was wired: `voice.words` reached
+                `styleText`, which reached `body.style`. Two things then threw it
+                away. `toStyles` caps the list at twelve, and the picker appended
+                its words AFTER whatever the person had written, so a long style
+                dropped the singer outright. Worse, `buildRequest` gives the first
+                chunk the full list and every chunk after it `leading.slice(0, 6)`
+                — so on a song with six words of its own, the singer was asked for
+                in the intro and nowhere else. A song is mostly "chunks after the
+                first". Carli: "as ek daar 'n man of 'n vrou stem kies tel hy dit
+                nie op nie, want hy generate net wat hy wil."
+
+                Her instruction was to take it out rather than to keep tuning it:
+                "As iets fisies nie werk nie moet jy dit weg vat." The choice
+                lives in the copilot now, where it becomes words the person asked
+                for, at the front of their own style line, and where the copilot
+                offers it to somebody who did not know to ask. */}
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                {/* Tied to the slider rather than sitting above it.
+
+                    A label with no `htmlFor` is a sentence next to a control, not
+                    a name for it: the slider read out as "slider, 112" with
+                    nothing saying what 112 counted. It was the only unnamed
+                    control left in the studio. */}
+                <label className="text-sm text-zinc-400" htmlFor="make-bpm">
+                  {t('make.speed')} — {bpm} {t('make.bpm')}
+                </label>
+                <input
+                  id="make-bpm"
+                  type="range"
+                  min={60}
+                  max={180}
+                  value={bpm}
+                  onChange={(e) => setBpm(Number(e.target.value))}
+                  className="w-full mt-2 accent-emerald-500"
+                />
+                <p className="text-sm text-zinc-600">{bpm < 95 ? t('make.slow') : bpm < 125 ? t('make.steady') : t('make.fast')}</p>
+              </div>
+              <div>
+                <label className="text-sm text-zinc-400">{t('make.mood')}</label>
+                <select
+                  value={songKey}
+                  onChange={(e) => setSongKey(e.target.value)}
+                  className="w-full mt-1 bg-black/60 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="C Major">{t('make.mood.bright')}</option>
+                  <option value="G Major">{t('make.mood.warm')}</option>
+                  <option value="A Minor">{t('make.mood.thoughtful')}</option>
+                  <option value="D Minor">{t('make.mood.dark')}</option>
+                  <option value="F Minor">{t('make.mood.heavy')}</option>
+                </select>
+              </div>
+            </div>
+
+
+            {/* ── A sound of your own ────────────────────────────────────────
+                Directly above the button, because it is the last thing decided
+                before the song is made rather than a setting filed with the tempo.
+                It reads as part of pressing Make, which is what it is.
+
+                It used to be hidden entirely unless you already had one, on the
+                reasoning that an empty picker explaining a feature you do not have
+                is a screen telling you off. Half right: what it produced instead
+                was a feature nobody could find, which is the same failure the
+                booth had. So it is always here, and what it says depends on where
+                you actually are — the plan does not include it, none trained yet,
+                one still training, or here they are.
+
+                It is a tick because it is a decision about the next song rather
+                than a preset: on or off, and the choice underneath only matters
+                once it is on. */}
+            {sounds.configured && sounds.signedIn && (
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-3 space-y-2">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useOwnSound}
+                    disabled={readySounds.length === 0}
+                    onChange={(event) => toggleOwnSound(event.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0 disabled:opacity-40"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-zinc-200">
+                      {t('make.useOwnSound', 'Make it in a sound of my own')}
+                    </span>
+                    <span className="block text-sm text-zinc-500 leading-snug">{t('make.ownSoundNote')}</span>
+                  </span>
+                </label>
+
+                {/* Which one, once it is on. Only drawn when there is a choice to
+                    make — one trained sound and a picker of one is furniture. */}
+                {useOwnSound && readySounds.length > 1 && (
+                  <div className="grid sm:grid-cols-3 gap-2 pt-0.5">
+                    {readySounds.map((one) => (
+                      <button
+                        key={one.id}
+                        type="button"
+                        onClick={() => setOwnSound(one.id)}
+                        className={`min-h-[44px] text-left px-3 py-2.5 rounded-xl border transition-all ${
+                          ownSound === one.id
+                            ? 'bg-emerald-500/15 border-emerald-500'
+                            : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-600'
+                        }`}
+                      >
+                        <span className={`block text-sm font-semibold ${ownSound === one.id ? 'text-emerald-300' : 'text-zinc-200'}`}>
+                          {one.name}
+                        </span>
+                        <span className="block text-sm text-zinc-500 leading-snug pt-0.5">
+                          {one.genre} · {one.tracks} {t('make.ownSoundSongs', 'of your songs')}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {useOwnSound && readySounds.length === 1 && (
+                  <p className="text-sm text-emerald-300/90 leading-snug pl-6">
+                    {readySounds[0].name} — {readySounds[0].genre} · {readySounds[0].tracks}{' '}
+                    {t('make.ownSoundSongs', 'of your songs')}
+                  </p>
+                )}
+
+                {/* And when the tick cannot be used, why not — with the way out. */}
+                {readySounds.length === 0 && (
+                  <div className="pl-6 space-y-1.5">
+                    {sounds.keep === 0 ? (
+                      <>
+                        <Note>{t('make.ownSoundNoPlan')}</Note>
+                        <button
+                          type="button"
+                          onClick={onUpgrade}
+                          className="text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+                        >
+                          {t('make.ownSoundSeePlans', 'See the plans')}
+                        </button>
+                      </>
+                    ) : stillTraining.length > 0 ? (
+                      <p className="text-sm text-amber-300/90 leading-snug flex items-center gap-1.5">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
+                        {t('make.ownSoundTraining')}
+                      </p>
+                    ) : (
+                      <>
+                        <Note>{t('make.ownSoundNone')}</Note>
+                        {/* Into the room that does it, not the Channel.
+
+                            Carli: "daai woorde in make a song vat mens na die
+                            verkeerde blad toe ... dan vat dit jou na die Sound
+                            trainer toe. huidiglik vat die mens na die channel
+                            toe." Training moved into its own room and this
+                            button kept pointing at where it used to live — so
+                            the one thing it promises is the one thing the screen
+                            it opens cannot do.
+
+                            Boxed, like every other button here. */}
+                        <button
+                          type="button"
+                          onClick={onGoToSound}
+                          className="min-h-[44px] px-3 py-2 rounded-xl border border-emerald-500/60 bg-emerald-500/10 text-sm font-bold text-emerald-300 hover:border-emerald-500 flex items-center gap-1.5"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          {t('make.ownSoundTrain', 'Train one now')}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            </>
+          )}
+
+
+        </Card>
 
         {/* What is about to be made, when it is not what the button says.
 
@@ -1394,13 +1467,24 @@ export default function MakeMusic({
           </p>
         )}
 
+        {/* ── The one button the room is for ─────────────────────────────
+
+            Carli, 19 September 2026: *"die buttons moet lyk soos 'n button
+            wat uitstaan."*
+
+            Everything above it is now a folded heading, which is the point —
+            and it is also the risk, because a page of quiet grey headings
+            makes a quiet button disappear into them. So this one got taller,
+            rounder and a glow of its own. It is the only thing on the screen
+            that costs anything and the only thing that makes a song; nothing
+            else in this room may look like it. */}
         <button
           type="button"
           onClick={() => make()}
           disabled={busy}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-extrabold text-base flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 py-5 text-lg font-extrabold tracking-tight text-onAccent shadow-[0_8px_30px_rgba(16,185,129,0.28)] hover:opacity-90 disabled:opacity-60 disabled:shadow-none"
         >
-          {busy ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
           {busy ? `${t('make.going')} ${elapsed}s` : t('make.go')}
         </button>
 
