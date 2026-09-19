@@ -5341,3 +5341,58 @@ in die kamer".
 Niks is weggevat nie. Elke kontrole wat gister daar was, is vandag daar — een
 druk verder weg. Dis die hele verskil tussen 'n vou en 'n verwydering, en dis
 waarom hierdie snit veilig was om te doen en die vorige een nie was nie.
+
+## §AA · 'n Belofte in die openingsreël is 'n operasie, of dit is 'n leuen (19 September 2026)
+
+Carli, oor die song-kamer se Copilot:
+
+> *"Die Copilot in die make a song booth moet iets sê van, jy kan alles deur
+> my doen in hierdie kamer, sê net wat jy nodig het, die tema, die tyd, die
+> styl, jou stem keuse. Dit moet ekstra wees saam met dit wat daar is wat vra
+> oor gevoelens ens."*
+
+Sy is reg, en die **skryf van daardie sin is die gevaarlike deel.**
+
+### Wat die sin amper laat sê het
+
+Vier dinge is genoem. Drie het reeds 'n operasie agter hulle gehad:
+
+| wat sy genoem het | wat dit doen |
+|---|---|
+| die tema | `set_about` + `set_words` |
+| die tyd | **niks** |
+| die styl | `set_sound` |
+| jou stem keuse | `set_sound` — die stem ry in die stylreël, want die Music API het geen stemparameter nie |
+
+**Die lengte het niks gehad nie.** As ek net die sin geskryf het, sou die
+kamer belowe het om iets te doen wat nêrens bestaan nie — bereikbaar, korrek,
+en nie in staat om die werk te doen nie. Dit is die derde keer met dieselfde
+vorm in hierdie app: die stemkieser (#122), die vyfveld-brief (#123), en nou
+hierdie. So `set_length` is saam met die sin ingegaan, nie daarna nie.
+
+### Wat nou keer dat dit weer gebeur
+
+`check:ops` het 'n tabel bygekry: elke ding wat die openingsreël **hardop sê**,
+met die operasie wat dit waar maak. Altwee rigtings faal:
+
+- 'n Vermoë by die sin voeg sonder 'n operasie → *"the opening line offers the
+  length and nothing can do it"*.
+- 'n Operasie uithaal en die sin los → *"the opening line no longer offers the
+  length, but set_length is still listed as the thing that delivers it"*.
+
+Altwee is laat faal voor ek dit geglo het.
+
+Dit is met opset 'n **benoemde lys en nie 'n woordskandering** nie. 'n
+Openingsreël is prosa, en prosa wat 'n regex moet bevredig, hou op om prosa te
+wees — dieselfde rede waarom `check:folded` se telling deur 'n benoemde lys
+vervang is.
+
+### En 'n voorbeeld, nie net 'n aanspraak nie
+
+Die starters is nou vier in plaas van drie: twee gevoelens vir iemand wat nie
+kan begin nie, **een volle instruksie** — *"Twee minute, Afrikaans, 'n vrou wat
+sing"* — en een vraag oor vakmanskap.
+
+Daardie derde een stel die lengte, die taal én wie sing in een reël. **'n
+Vermoë wat in 'n sin genoem word met geen voorbeeld daaronder nie, is 'n
+aanspraak; 'n voorbeeld is 'n demonstrasie.**

@@ -208,6 +208,28 @@ export default function MakeMusic({
     set_about: (value) => {
       setCanvas((was) => ({ ...was, about: value.trim() }));
     },
+    /* ── How long, asked for in words ─────────────────────────────────
+
+       Carli, 19 September 2026: the copilot's opening must say *"jy kan
+       alles deur my doen in hierdie kamer, sê net wat jy nodig het, die
+       tema, die tyd, die styl, jou stem keuse."*
+
+       Three of those four already had somewhere to land. The length did
+       not, and a sentence promising something with no operation behind it
+       is the exact fault this app has shipped twice — a control that is
+       reachable, correct, and unable to do the job. So the promise and the
+       operation go in together, and `check:ops` holds them together.
+
+       Snapped to a choice the room actually offers rather than passed
+       through: the engine takes a number, the price list does not, and a
+       47-second song would be charged against a row that does not exist. */
+    set_length: (value) => {
+      const want = Number.parseInt(value.trim(), 10);
+      if (!Number.isFinite(want)) return;
+      const near = LENGTH_CHOICES.reduce((best, one) =>
+        Math.abs(one.seconds - want) < Math.abs(best.seconds - want) ? one : best);
+      setSeconds(near.seconds);
+    },
   });
 
   /**

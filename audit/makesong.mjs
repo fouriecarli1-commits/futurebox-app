@@ -626,16 +626,30 @@ try {
     check('  and opens by asking how you feel rather than listing what it can do',
       /how you are feeling|hoe jy voel/i.test(opening),
       `it opened with: ${opening.slice(0, 120)}`);
-    /* The starters under it are the other half of the guidance. Two are
-       feelings somebody can answer without knowing anything about the app,
-       and the third asks the copilot to teach — which is the whole reason
-       the craft chips could come off the screen at all. */
+    /* Carli, 19 September 2026: the room must also say *"jy kan alles deur
+       my doen in hierdie kamer, sê net wat jy nodig het, die tema, die tyd,
+       die styl, jou stem keuse"* — and say it as well as the feeling
+       question, not instead of it. Both halves are asserted, because
+       rewriting one over the other is the easy way to lose this. */
+    check('  and says the whole room can go through it',
+      /go through me|deur my gaan/i.test(opening)
+      && /how long|hoe lank/i.test(opening)
+      && /who sings|wie dit sing/i.test(opening),
+      `it opened with: ${opening.slice(0, 200)}`);
+    /* The starters under it are the other half of the guidance, and each is
+       a different kind of person: two feelings for somebody who cannot
+       start, one full instruction that demonstrates the sentence above
+       rather than repeating it, and one that asks the copilot to teach —
+       which is the whole reason the craft chips could come off the screen. */
     const starters = await panel.locator('[data-copilotopen] button').count();
     check('  with something to press for somebody who cannot start',
-      starters === 3, `${starters} starters`);
+      starters === 4, `${starters} starters`);
     check('    one of which asks it to explain rather than to make',
       /bridge/i.test(opening),
       'taking the teaching off the canvas only works if the room says it can still teach');
+    check('    and one that shows what saying what you need looks like',
+      /Two minutes|Twee minute/i.test(opening),
+      'a capability named in a sentence with no example under it is a claim, not an offer');
   }
 
 

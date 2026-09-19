@@ -110,6 +110,70 @@ for (const file of readdirSync(DIR).filter((name) => name.endsWith('.tsx'))) {
   }
 }
 
+/* ── A promise in the opening line is an operation, or it is a lie ──────
+
+   Carli, 19 September 2026, on the song room: *"Die Copilot in die make a
+   song booth moet iets sê van, jy kan alles deur my doen in hierdie kamer,
+   sê net wat jy nodig het, die tema, die tyd, die styl, jou stem keuse."*
+
+   She is right, and writing that sentence is the dangerous part. The panel's
+   opening line is the one place the app tells somebody what the copilot can
+   do, and nothing above this point checks it against what the copilot can
+   actually do. Three of her four already had an operation behind them; the
+   length did not, so promising it would have shipped a fourth sentence
+   describing a button that does not exist — reachable, correct, and unable
+   to do the job, for the third time in this repo.
+
+   The table below is the promise read back as code. Each row is a thing the
+   opening says out loud, and the operation that has to exist for it to be
+   true. Adding a capability to the sentence without adding the operation
+   fails here; deleting the operation and leaving the sentence fails here
+   too. It is deliberately a named list rather than a word scan — a sentence
+   is prose, and prose that a regex has to satisfy stops being prose. */
+const PROMISED: ReadonlyArray<{
+  readonly room: 'make';
+  readonly says: RegExp;
+  readonly needs: string;
+  readonly why: string;
+}> = [
+  { room: 'make', says: /what it is about/i, needs: 'set_about', why: 'the theme' },
+  { room: 'make', says: /how long it should be/i, needs: 'set_length', why: 'the length' },
+  { room: 'make', says: /how it should sound/i, needs: 'set_sound', why: 'the style' },
+  /* Who sings rides in the style string — there is no voice parameter in the
+     Music API — so the same operation backs two promises. That is fine, and
+     it is written down here rather than left to be rediscovered. */
+  { room: 'make', says: /who sings it/i, needs: 'set_sound', why: 'the voice' },
+  { room: 'make', says: /how you are feeling/i, needs: 'set_feeling', why: 'the feeling' },
+];
+
+for (const one of PROMISED) {
+  const opening = SURFACES[one.room].helps.en;
+  if (!one.says.test(opening)) {
+    problems.push(
+      `  ${one.room}: the opening line no longer offers ${one.why}, but ${one.needs} is still ` +
+        'listed as the thing that delivers it — say it again, or take this row out',
+    );
+    continue;
+  }
+  if (!(SURFACES[one.room].ops ?? {})[one.needs]) {
+    problems.push(
+      `  ${one.room}: the opening line offers ${one.why} and nothing can do it — ` +
+        `${one.needs} is described nowhere, so the copilot is promising a button that does not exist`,
+    );
+  }
+}
+
+/* And the sentence has to say it in both languages. An opening that offers
+   four things in English and two in Afrikaans is a different product for
+   half the people who read it. */
+for (const room of ['make'] as const) {
+  const en = SURFACES[room].helps.en;
+  const af = SURFACES[room].helps.af;
+  if (Math.abs(en.split(':').length - af.split(':').length) > 0 || af.split(',').length < en.split(',').length - 1) {
+    problems.push(`  ${room}: the Afrikaans opening offers fewer things than the English one`);
+  }
+}
+
 if (found === 0) {
   console.error('check:ops — found no useCopilotOps calls at all. The scan is probably broken.');
   process.exit(1);

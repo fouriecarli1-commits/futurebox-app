@@ -98,9 +98,14 @@ export interface Surface {
    */
   readonly ops?: Readonly<Record<string, string>>;
   /**
-   * Three starters, shown before anything has been typed. They are the answer
+   * The starters, shown before anything has been typed. They are the answer
    * to a blank panel, so they are specific: "make the chorus hit harder" is
    * worth a tap, "help me with my song" is not.
+   *
+   * Three in most rooms. The song room has four, because its opening line
+   * now offers two different ways in — tell me how you feel, or tell me
+   * exactly what you want — and a way in with no example under it is a
+   * sentence rather than an offer.
    */
   readonly seeds: readonly { readonly en: string; readonly af: string }[];
 }
@@ -129,8 +134,8 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
        you feeling" is a conversation, and only one of those a person can
        answer without knowing how the app works. */
     helps: {
-      en: "Tell me how you are feeling and what the song is about, and I will take it from there — the words, how it should sound, a name for it. Or ask me anything about how a song is put together.",
-      af: "Sê my hoe jy voel en waaroor die liedjie gaan, dan vat ek dit van daar af — die woorde, hoe dit moet klink, ’n naam daarvoor. Of vra my enigiets oor hoe ’n liedjie inmekaarsteek.",
+      en: "Everything in this room can go through me — just say what you need: what it is about, how long it should be, how it should sound, and who sings it. Or start by telling me how you are feeling, and I will take it from there.",
+      af: "Alles in hierdie kamer kan deur my gaan — sê net wat jy nodig het: waaroor dit gaan, hoe lank dit moet wees, hoe dit moet klink, en wie dit sing. Of begin deur my te sê hoe jy voel, dan vat ek dit van daar af.",
     },
     can: [
       "set the title",
@@ -162,6 +167,12 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         "the value is exactly one of: love, loss, party, home, road, faith, work, young. Nothing else - anything not on that list is dropped. Set it as soon as they tell you how they feel, in whatever words they use",
       set_about:
         "the value is what the song is about in THEIR own words, as short as they said it. Not your summary of it and not a tidied version - the point of it is that it is theirs",
+      /* The one setting in this room that changes what a song COSTS, so it
+         is the one most worth being able to ask for in words. Snapped to a
+         length the room offers, because the price list has rows and a
+         47-second song is not one of them. */
+      set_length:
+        "the value is how many seconds long, as a plain number: 30, 60, 120, 180, 240, 300, 420 or 600. Anything else is snapped to the nearest of those",
       /* The video panel that opens on a finished song. */
       set_shot:
         "the value is the full description of what is on screen: subject, what it is doing, the shot, the light, the mood. Never put anything in quotation marks here - quoted text is spoken aloud, and a voice over a song is two things fighting",
@@ -169,11 +180,18 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
         "the value is one of: performance, story, road, room, abstract. It fills the shot, the shape and the length with that way of working",
       set_shape: "the value is 9:16 or 16:9, and nothing else",
     },
-    /* Two feelings and a question about craft, rather than three requests
-       for output. Somebody who knows what they want will type it; these are
-       for the person who does not, and what that person can always answer is
-       how they feel. The third is there so the room says out loud that it
-       will explain the thing as well as make it. */
+    /* ── Four, and each one is a different kind of person ────────────
+
+       Two feelings, for somebody who does not know what they want and can
+       always answer how they feel. One full instruction, because Carli's
+       ask was that the room say *"jy kan alles deur my doen... sê net wat jy
+       nodig het, die tema, die tyd, die styl, jou stem keuse"* — and a
+       capability named in a sentence with no example under it is a claim,
+       where an example is a demonstration. That third one sets the length,
+       the language and who sings in one line, which is the whole point.
+
+       And one question about craft, so the room says out loud that it will
+       explain the thing as well as make it. */
     seeds: [
       {
         en: "I am sad about someone",
@@ -182,6 +200,10 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       {
         en: "Something happy, for my people",
         af: "Iets vrolik, vir my mense",
+      },
+      {
+        en: "Two minutes, Afrikaans, a woman singing",
+        af: "Twee minute, Afrikaans, ’n vrou wat sing",
       },
       {
         en: "What is a bridge actually for?",
