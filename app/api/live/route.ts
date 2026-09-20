@@ -36,6 +36,7 @@ import { readPlatformLink } from '@/app/lib/server/platformlink';
 import { guard } from '@/app/lib/server/safety';
 import { episodeAudioUrl } from '@/app/lib/episodeaudio';
 import { storageId } from '@/app/lib/server/ownedpath';
+import { creditFrom } from '@/app/lib/artcredit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -99,6 +100,13 @@ interface PostRow {
      every post made before this column existed has no style, and the room
      answers for those too. */
   style?: string;
+  /* The cover's credit, copied onto the post when it was made. Optional for
+     the `build_on` reason — a project without `albumart.sql` answers without
+     these columns — and empty on every song whose cover was generated, which
+     is most of them. `creditFrom` prints a credit only when both halves are
+     there, so a half-filled pair says nothing rather than half a name. */
+  art_title?: string;
+  art_by?: string;
 }
 
 /** Where a track's audio sits, which is the shape `pushTrack` writes. */
@@ -348,6 +356,9 @@ export async function GET(request: Request): Promise<Response> {
         title: post.title,
         note: post.note,
         genre: post.genre ?? '',
+        /* The cover's credit, copied onto the post when it was made rather
+           than joined at read time. See `app/lib/artcredit.ts` for why. */
+        art: creditFrom(post),
         words: Array.isArray(post.words) ? post.words : null,
         seconds: post.seconds,
         platform: post.platform,
@@ -462,6 +473,15 @@ export async function POST(request: Request): Promise<Response> {
      */
     words?: unknown;
     note?: string;
+    /**
+     * The cover's title and who painted it.
+     *
+     * Sent for the genre's reason: the artwork's credit lives on the buyer's
+     * own row, and everybody in the live room is somebody else. Both or
+     * neither — half a credit is printed as nothing.
+     */
+    artTitle?: string;
+    artBy?: string;
     seconds?: number;
     platform?: string;
     link?: string;
@@ -728,6 +748,18 @@ export async function POST(request: Request): Promise<Response> {
        and is shown to strangers. A genre is two or three words; anything
        longer is somebody using the field for something else. */
     genre: String(body.genre ?? '').trim().slice(0, 60),
+    /* ── Who painted the cover ─────────────────────────────────────────
+
+       Carli: *"Binne live moet die liedjie naam, artist naam, style en dan
+       die kunstenaar se naam en art naam appear."*
+
+       Bounded like the genre, and for the sharper reason: these two are a
+       real person's name and their work's title on somebody else's post,
+       so the room is the last place they can be turned into a sentence.
+       Empty when the cover was generated, which is most songs — a credit
+       is only ever printed when both halves are there. */
+    art_title: String(body.artTitle ?? '').trim().slice(0, 80),
+    art_by: String(body.artBy ?? '').trim().slice(0, 80),
     /* Null rather than an empty array where there are none, so a reader can
        tell "this song has no words written down" from "this post was made
        before the room carried them". */

@@ -1792,6 +1792,7 @@ export const STRINGS: Dict = {
   "make.startCardWhy": { en: "Fifty written starting points and a way in from a photograph. None of them costs anything, and pressing one fills the boxes above in \u2014 you can change every word afterwards.", af: "Vyftig geskrewe beginpunte en \u2019n manier in vanaf \u2019n foto. Nie een kos iets nie, en as jy een druk vul dit die bokse hierbo in \u2014 jy kan elke woord daarna verander." },
   "make.madeCard": { en: "How it is made", af: "Hoe dit gemaak word" },
   "write.failed": { en: "That did not work.", af: "Dit het nie gewerk nie." },
+  "live.artBy": { en: "Cover art", af: "Omslagkuns" },
   "write.fix": { en: "What is not working", af: "Wat werk nie" },
   "write.fixNeeds": { en: "Write some words first — there is nothing to look at yet.", af: "Skryf eers ’n paar woorde — daar is nog niks om na te kyk nie." },
   "style.ask": { en: "Say what you want it to sound like", af: "S\u00ea hoe jy wil h\u00ea dit moet klink" },

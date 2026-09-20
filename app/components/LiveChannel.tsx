@@ -40,6 +40,7 @@ import { accessToken } from '../lib/cloud';
 import { loadTracks, type Track } from '../lib/library';
 import { visitorId } from '../lib/signal';
 import { useLang } from '../lib/i18n';
+import { creditLine, type ArtCredit } from '../lib/artcredit';
 import { refusalText } from '../lib/apierror';
 import RoomScreen from './RoomScreen';
 import { planOf, type Part } from '../lib/timeline';
@@ -81,6 +82,14 @@ interface Post {
    * than a line that is simply not there.
    */
   genre: string;
+  /**
+   * Who painted the cover, when somebody bought it from a real artist.
+   *
+   * Null on every song with a generated cover, which is most of them — see
+   * `app/lib/artcredit.ts`. Carried on the post rather than looked up,
+   * because a stranger scrolling this room cannot see anybody's library.
+   */
+  art: ArtCredit | null;
   /**
    * The song's plan, for the full-screen panel to follow.
    *
@@ -303,6 +312,31 @@ function RoomPanel({
             >
               {post.genre}
             </span>
+          </p>
+        )}
+        {/* ── Who painted the cover ────────────────────────────────────
+
+            Carli, 20 September 2026: *"Binne live moet die liedjie naam,
+            artist naam, style en dan die kunstenaar se naam en art naam
+            appear."* The first three are the three lines above. This is the
+            fourth and fifth, and it is last on purpose: the song is what
+            somebody stopped scrolling for, and the credit is what they read
+            once they have.
+
+            It says what it is. A bare "Brug om sewe — Nomsa M" under a
+            song's genre reads as a second artist or a featured singer; the
+            one word in front of it is the difference between crediting a
+            painter and confusing a listener.
+
+            Drawn only where both halves are there — `creditLine` returns
+            null otherwise — because a generated cover is nobody's work to
+            sign, and that is most songs in this room. */}
+        {post.kind === 'track' && creditLine(post.art) && (
+          <p
+            className="truncate pt-1.5 text-xs font-semibold"
+            style={{ color: 'rgba(255,255,255,0.72)', textShadow: '0 1px 6px rgba(0,0,0,0.7)' }}
+          >
+            {t('live.artBy', 'Cover art')}: {creditLine(post.art)}
           </p>
         )}
         {post.note && (

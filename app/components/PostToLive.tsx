@@ -119,6 +119,15 @@ export default function PostToLive({
              either way — see the note on the insert. What gates its use is
              the permission, not whether the string was ever sent. */
           style: track.style,
+          /* Who painted the cover, sent for the genre's reason: the credit
+             lives on the buyer's own row and everybody in the room is
+             somebody else. Empty strings on a generated cover, which the
+             room reads as no credit rather than as a blank one.
+
+             Carli: *"Binne live moet die liedjie naam, artist naam, style
+             en dan die kunstenaar se naam en art naam appear."* */
+          artTitle: track.art?.title ?? '',
+          artBy: track.art?.by ?? '',
         }),
       });
       if (!response.ok) {

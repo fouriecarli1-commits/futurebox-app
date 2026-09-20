@@ -589,6 +589,12 @@ interface TrackRow {
   created_at: string;
   remix_of: string | null;
   seed: number;
+  /* The bought cover's credit. Optional in the type because a project that
+     has not run `albumart.sql` answers without the columns, and a channel
+     that throws on a missing column is worse than one showing no credits. */
+  art_title?: string;
+  art_by?: string;
+  art_work?: string | null;
 }
 
 function rowToTrack(row: TrackRow): Track {
@@ -606,7 +612,15 @@ function rowToTrack(row: TrackRow): Track {
     createdAt: row.created_at,
     seed: row.seed,
   };
-  return row.remix_of ? { ...track, remixOf: row.remix_of } : track;
+  /* Both halves or nothing. A row with a title and no painter is a credit
+     that names nobody, so it is dropped here rather than half-printed in
+     four rooms. */
+  const art =
+    row.art_title && row.art_by
+      ? { title: row.art_title, by: row.art_by, ...(row.art_work ? { work: row.art_work } : {}) }
+      : undefined;
+  const withArt = art ? { ...track, art } : track;
+  return row.remix_of ? { ...withArt, remixOf: row.remix_of } : withArt;
 }
 
 function audioPath(owner: string, trackId: string): string {
@@ -678,6 +692,9 @@ export async function pushTrack(track: Track, audio: Blob): Promise<PushResult> 
     created_at: track.createdAt,
     remix_of: track.remixOf ?? null,
     seed: track.seed,
+    art_title: track.art?.title ?? '',
+    art_by: track.art?.by ?? '',
+    art_work: track.art?.work ?? null,
   };
   const { error } = await supabase.from('tracks').upsert(row);
   if (error) return { saved: false, reason: 'row', message: `Song did not save: ${error.message}` };

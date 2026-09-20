@@ -81,6 +81,21 @@ export interface Track {
    * nobody named stays unattributed instead of quietly becoming yours.
    */
   readonly by?: string;
+  /**
+   * The cover, when it was painted by one of our artists rather than
+   * generated.
+   *
+   * Carli, 20 September 2026: *"Hierdie kunswerk moet ook saam met die
+   * liedjie in die channel en live kan funksioneer en werk."* So the credit
+   * is on the song, not on the picture file — a picture is bytes, and bytes
+   * do not know whose hand made them. Every room that shows the song reads
+   * it from here, and `creditLine` prints nothing unless both halves are
+   * filled: half a credit is worse than none, because it names nobody while
+   * looking like it does.
+   *
+   * Absent on a generated cover, which is most songs.
+   */
+  readonly art?: { readonly title: string; readonly by: string; readonly work?: string };
 }
 
 const META_KEY = 'futurebox.tracks.v1';
