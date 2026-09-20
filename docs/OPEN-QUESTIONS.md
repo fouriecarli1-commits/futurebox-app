@@ -5465,3 +5465,60 @@ En die pyltjiesleutels het glad **geen mure** gehad nie — dieselfde fout deur
 Op die nudge self staan al lankal geskryf: *"a lock that holds for one gesture
 and not the other is not a lock."* Dit was waar van sy groepering en nie van
 sy mure nie.
+
+## §AC · Drie-en-dertig lêers wat niks kan faal nie (20 September 2026)
+
+Terwyl gister se herbou deur die blaaier-probes geloop is: `audit/` hou **120
+lêers** en **83** is aan 'n `check:` gekoppel. Die ander 37 word deur niks
+gehardloop nie.
+
+Dit is `§` "sestig probes wat niemand hardloop nie" — taak #96 — wat teruggekom
+het. En die eerste instink, *koppel hulle op*, is **verkeerd**.
+
+### Wat die lees gewys het
+
+Elkeen van die 34 wat nie 'n helper is nie, is gelees. **Nie een van hulle
+beweer enigiets nie.** Geen `problems.push`, geen `check(`, geen
+`process.exit(1)`. Hulle druk wat hulle gesien het en neem skermskote.
+
+Om hulle by CI te voeg sou 34 jobs bygesit het wat **nie kan faal nie**, wat
+erger is as om hulle nie te hardloop nie: **'n groen job wat niemand kan laat
+faal nie, lees soos dekking.**
+
+Die fout is dus nie dat hulle ongehardloop is nie. Dit is dat iemand wat
+`audit/` oopmaak 120 lêers sien en glo die app het 120 toetse, terwyl dit 83
+het.
+
+### Wat nou geld
+
+Drie soorte lêers, en elkeen verklaar homself: **wired** (’n `check:` hardloop
+dit), **helper** (deur ander probes ingevoer), of **tool** (benoem in `TOOLS`
+met een reël wat sê waarvoor dit is). Enigiets anders laat die build faal.
+
+En die reël wat hierdie lêer verdien: **'n tool wat 'n assertion aankweek,
+faal ook.** Dit is die egte toekomstige fout — iemand skryf 'n regte toets in
+'n skermskoot-skrip, niks hardloop dit nie, en dit lyk van die lêernaam af
+presies soos een wat wel gehardloop word.
+
+### Wat dit op sy eerste loop gevang het
+
+`audit/ads-af.mjs` — **die advertensie-desk end tot end in Afrikaans, 98
+reëls, met regte assertions, en niks hardloop dit nie.**
+
+Dit is nie as 'n "tool" gemerk nie, en dít is die punt. Om 'n etiket op iets
+te plak sodat die check stilbly, is presies die beweging waarteen hierdie lêer
+geskryf is. Dit staan in 'n aparte `UNRUN`-lys wat **elke loop gedruk word**,
+met die rede: dit gaan direk na `localhost:3000` en neem aan iemand het 'n
+server daar gesit — wat `check:probes` juis verbied. Dit het sy eie `serve()`
+en poort nodig voor dit gekoppel kan word.
+
+Die lys mag nie groei nie, en 'n lêer daarop wat stilweg gekoppel word, faal
+ook — skuld wat betaal is en nie afgeskryf is nie, lees soos skuld wat nog
+verskuldig is.
+
+### Die les
+
+**Skuld wat niemand lees nie, is skuld wat niemand betaal nie.** Dieselfde
+vorm as §W en §X: die fix is nie om die 34 een vir een reg te maak nie, maar
+om **een plek te hê wat tel** — en om die een regte toets wat wegkruip, hardop
+te noem in plaas van dit onder 'n etiket weg te steek.

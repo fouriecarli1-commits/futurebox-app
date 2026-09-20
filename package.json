@@ -90,6 +90,7 @@
     "check:escapes": "tsx scripts/check-escapes.mts",
     "check:aifault": "tsx scripts/check-aifault.mts",
     "check:caching": "tsx scripts/check-caching.mts",
+    "check:probefiles": "tsx scripts/check-probefiles.mts",
     "check:songcraft": "tsx scripts/check-songcraft.mts",
     "check:adschema": "tsx scripts/check-adschema.mts",
     "check:adstyles": "tsx scripts/check-adstyles.mts",
