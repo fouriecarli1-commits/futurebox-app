@@ -30,10 +30,60 @@
 
 import { gatewayFee } from '../lib/plans';
 
-/** What every piece in the gallery starts at, printed on the photograph. */
+/**
+ * Where the bidding opens on every piece.
+ *
+ * Carli, 20 September 2026: *"Die R200 is die begin vir 'n bee rate, mense
+ * moet op die bee, en die hoogste bee wen die art binne 36 hours."*
+ *
+ * So this is not a price. It is the floor a first bid has to clear, and
+ * what is actually paid is whatever the highest bid is when the clock runs
+ * out. `split()` below works on that number, not on this one.
+ */
 export const START_RAND = 200;
 
-/** What a commissioned, one-off piece costs. Her number. */
+/** How long a piece is open for bids, from the moment it is hung. */
+export const AUCTION_HOURS = 36;
+
+/**
+ * The least a new bid must beat the standing one by.
+ *
+ * Without it an auction is decided by whoever is willing to type
+ * R200.01, which is not an auction — it is a queue with extra steps, and
+ * it wastes everybody's attention for one cent. Twenty rand is small
+ * enough not to lock somebody out of a R200 piece and big enough that
+ * each bid means something.
+ */
+export const BID_STEP = 20;
+
+/**
+ * A bid in the last few minutes pushes the end out by the same few.
+ *
+ * Otherwise the whole thirty-six hours is theatre and the auction is
+ * really one second long: everybody who wants it waits for the end and
+ * the fastest connection wins. Extending on a late bid is what makes the
+ * clock mean what it says — the piece goes to whoever values it most,
+ * not to whoever refreshed at the right moment.
+ */
+export const SNIPE_MINUTES = 5;
+
+/** The least a bid may be, given what is already standing. */
+export function nextBid(standing: number | null): number {
+  return standing === null ? START_RAND : standing + BID_STEP;
+}
+
+/** When a piece hung now stops taking bids. */
+export function endsAt(from: Date = new Date()): string {
+  return new Date(from.getTime() + AUCTION_HOURS * 60 * 60 * 1000).toISOString();
+}
+
+/**
+ * What a commissioned, one-off piece costs. Her number.
+ *
+ * A commission is not an auction: it is one buyer asking one artist for
+ * one thing, and there is nobody to bid against. The artist names a price
+ * and a window, and that is what is paid.
+ */
 export const UNIQUE_RAND = 500;
 
 /** The artist's share of the profit. Hers: 70/30. */
@@ -92,7 +142,26 @@ export function split(paid: number): Split {
      waiting for the input they did not. */
   const gateway = Math.min(cents, Math.round(gatewayFee(paid) * 100));
   const profit = cents - gateway;
-  const artist = Math.floor(profit * ARTIST_SHARE);
+  /* ── In whole cents, not through a float ──────────────────────────
+
+     This was `Math.floor(profit * ARTIST_SHARE)` and it quietly cost the
+     artist a cent whenever the true answer was an exact integer.
+
+     A R900 winning bid: the fee is R33.50, the profit 86 650 cents, and
+     86 650 × 0.7 is 60 655 exactly. In binary it is 60 654.999999999993,
+     and the floor of that is 60 654 — R606.54 where R606.55 was owed.
+
+     The floor itself is deliberate and stays: the three figures have to
+     add up to exactly what was paid and somebody has to carry the half
+     cent. What is not deliberate is losing a whole cent to the way a
+     computer stores 0.7. Multiplying first and dividing after keeps
+     every step a whole number, so the only rounding left is the one
+     that was meant.
+
+     Found by `check:artmarket` the day the room became an auction, on a
+     price nobody had swept before — the sweep runs to R2000 in rand and
+     this needed a bid whose profit landed exactly on a tenth. */
+  const artist = Math.floor((profit * Math.round(ARTIST_SHARE * 100)) / 100);
   return {
     paid: cents / 100,
     gateway: gateway / 100,

@@ -94,6 +94,7 @@ import {
   ART_MAX_BYTES,
   ART_SIDE,
   ART_SIZE_SAID,
+  AUCTION_HOURS,
   START_RAND,
   UNIQUE_RAND,
   WINDOWS,
@@ -170,7 +171,17 @@ interface AnyArtist {
 interface WallPiece {
   readonly id: string;
   readonly title: string;
+  /** Where the bidding opened. What gets paid is `top`. */
   readonly rand: number;
+  /** The standing highest bid, or null when nobody has bid yet. */
+  readonly top: number | null;
+  readonly bids: number;
+  /** The least a new bid may be. */
+  readonly next: number;
+  readonly endsAt: string | null;
+  readonly over: boolean;
+  readonly wonByMe: boolean;
+  readonly leadingMe: boolean;
   readonly artist: string;
   readonly by: string;
   readonly url: string | null;
@@ -226,6 +237,53 @@ interface Market {
 
 /** The steps a commission goes through, in order, for the status bar. */
 const STEPS: readonly OfferState[] = ['offered', 'paid', 'accepted', 'delivered'];
+
+/* ───────────────────────────────────────────────────────────── the clock ── */
+
+/**
+ * How long is left, counted down on the screen.
+ *
+ * Her rule: *"die hoogste bee wen die art binne 36 hours."* A deadline
+ * shown as a date is a deadline somebody works out; shown as "4h 12m" it
+ * is a deadline somebody acts on, which is the entire point of putting a
+ * clock on an auction.
+ *
+ * It ticks every thirty seconds rather than every second. A second hand
+ * on a thirty-six hour clock is a re-render a minute for nothing, and
+ * under a minute the words carry it instead of the number.
+ */
+function Countdown({
+  endsAt,
+  over,
+  t,
+}: {
+  readonly endsAt: string | null;
+  readonly over: boolean;
+  readonly t: (key: string) => string;
+}): React.ReactElement | null {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const beat = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(beat);
+  }, []);
+
+  if (!endsAt) return null;
+  const left = new Date(endsAt).getTime() - now;
+  if (over || left <= 0) return <span className={MIKRO}>{t('art.over')}</span>;
+
+  const hours = Math.floor(left / 3_600_000);
+  const minutes = Math.floor((left % 3_600_000) / 60_000);
+  /* Under an hour it goes amber, because at that point the number is no
+     longer information — it is a reason to press something. */
+  const soon = left < 3_600_000;
+  return (
+    <span
+      className={`text-[10px] font-bold uppercase tracking-[0.14em] ${soon ? 'text-[#E8A33A]' : 'text-[color:var(--gedemp)]'}`}
+    >
+      {hours > 0 ? `${hours}u ${minutes}m` : `${minutes}m`} {t('art.left')}
+    </span>
+  );
+}
 
 /* ──────────────────────────────────────────────────────────── uploading ── */
 
@@ -678,9 +736,25 @@ export default function ArtMarket(): React.ReactElement {
                     <span className="min-w-0 truncate text-[14px] font-semibold text-[color:var(--room)]">
                       {piece.title}
                     </span>
-                    <span className="shrink-0 text-[14px] font-bold text-[color:var(--brons)]">R{piece.rand}</span>
+                    {/* The standing bid, not a price. Everything in this
+                        room is an auction now: `rand` is where it opened
+                        and this is what somebody would have to beat. */}
+                    <span className="shrink-0 text-[14px] font-bold text-[color:var(--brons)]">
+                      R{piece.top ?? piece.rand}
+                    </span>
                   </span>
-                  <span className={`${MIKRO} block truncate pt-0.5`}>{piece.by}</span>
+                  <span className="flex items-baseline justify-between gap-2 pt-0.5">
+                    <span className={`${MIKRO} min-w-0 truncate`}>{piece.by}</span>
+                    <Countdown endsAt={piece.endsAt} over={piece.over} t={t} />
+                  </span>
+                  {piece.leadingMe && !piece.over && (
+                    <span className={`${MIKRO} block pt-0.5 text-[#8FBF6A]`}>{t('art.youLead')}</span>
+                  )}
+                  {piece.wonByMe && (
+                    <span className="block pt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#E8A33A]">
+                      {t('art.youWon')}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -881,6 +955,7 @@ export default function ArtMarket(): React.ReactElement {
           artist={market?.artists.find((one) => one.id === sheet.artist) ?? null}
           onClose={() => setSheet(null)}
           onBuy={() => void pay({ kind: 'art', work: sheet.id })}
+          onBid={(rand) => void doIt({ what: 'bid', work: sheet.id, rand })}
           onArtist={(artist) => {
             setSheet(null);
             setProfile(artist);
@@ -940,6 +1015,7 @@ function WorkSheet({
   artist,
   onClose,
   onBuy,
+  onBid,
   onArtist,
   t,
 }: {
@@ -947,6 +1023,7 @@ function WorkSheet({
   readonly artist: Artist | null;
   readonly onClose: () => void;
   readonly onBuy: () => void;
+  readonly onBid: (rand: number) => void;
   readonly onArtist: (artist: Artist) => void;
   readonly t: (key: string) => string;
 }): React.ReactElement {
@@ -978,7 +1055,25 @@ function WorkSheet({
             <p className="pt-1 text-[14px]">{piece.by}</p>
           )}
 
+          {/* Where it stands, and how long is left. The three facts a
+              bidder needs in the order they need them. */}
+          <div className="mt-4 flex items-end justify-between gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-3">
+            <div>
+              <p className={MIKRO}>{piece.top === null ? t('art.opensAt') : t('art.standing')}</p>
+              <p className="pt-1 text-[24px] font-bold leading-none text-[color:var(--brons)]">
+                R{piece.top ?? piece.rand}
+              </p>
+              {piece.bids > 0 && (
+                <p className={`${MIKRO} pt-1.5`}>
+                  {piece.bids} {piece.bids === 1 ? t('art.oneBid') : t('art.manyBids')}
+                </p>
+              )}
+            </div>
+            <Countdown endsAt={piece.endsAt} over={piece.over} t={t} />
+          </div>
+
           <p className="pt-4 text-[14px] leading-relaxed">{t('art.oneOnly')}</p>
+          <p className="pt-2 text-[13px] leading-relaxed text-[color:var(--gedemp)]">{t('art.howBidding')}</p>
 
           <ul className="space-y-2 pt-4">
             {[t('art.get.1'), t('art.get.2'), t('art.get.3'), t('art.get.4')].map((one) => (
@@ -993,9 +1088,20 @@ function WorkSheet({
         </div>
 
         <div className="shrink-0 border-t border-[var(--lyn)] px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-4">
-          <button type="button" onClick={onBuy} className={VUL}>
-            {t('art.buy')} · R{piece.rand}
-          </button>
+          {/* Three states and one button, because at any moment there is
+              exactly one thing to do: bid, pay for what you won, or
+              nothing at all because somebody else won it. */}
+          {piece.wonByMe ? (
+            <button type="button" onClick={onBuy} className={VUL}>
+              {t('art.payWin')} · R{piece.top ?? piece.rand}
+            </button>
+          ) : piece.over ? (
+            <p className={`${MIKRO} py-3 text-center`}>{t('art.wentToSomebody')}</p>
+          ) : (
+            <button type="button" onClick={() => onBid(piece.next)} className={VUL}>
+              {t('art.bid')} · R{piece.next}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -1076,7 +1182,7 @@ function ArtistSheet({
                   {piece.title}
                 </p>
                 <button type="button" className={`${LEEG} mt-1.5 w-full`} onClick={() => onBuy(piece)}>
-                  R{piece.rand}
+                  R{piece.top ?? piece.rand}
                 </button>
               </div>
             ))}

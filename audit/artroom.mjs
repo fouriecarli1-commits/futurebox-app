@@ -137,7 +137,7 @@ try {
     const shut = await room.first().innerText();
 
     check('the sold-once rule is on the screen before anything is pressed',
-      /sold once|one only|1 of 1|never appear/i.test(shut),
+      /sold once|one only|1 of 1|never appear|never again|een keer verkoop|nooit weer/i.test(shut),
       'the room stops promising the one thing it is built to promise');
 
     check('the starting price is on the screen before anything is pressed',

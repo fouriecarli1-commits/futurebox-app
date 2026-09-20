@@ -318,11 +318,17 @@ export async function POST(request: Request): Promise<Response> {
       .update({ sold_to: owner, sold_at: new Date().toISOString() })
       .eq('id', meta.work)
       .is('sold_to', null)
+      /* And the payer has to be the person who won it. The till checks
+         this too, but a charge arrives here minutes later and carries
+         only what it was started with — so the last word belongs to the
+         row, where `won_by` was written when the clock ran out. */
+      .eq('won_by', owner)
       .select('id, title');
     const sold = (data ?? []) as { id: string; title: string }[];
     if (error || sold.length === 0) {
       console.error(
-        `[artmarket] paid for a piece that was already sold. work=${meta.work} owner=${owner} reference=${reference} — this needs a refund.`,
+        `[artmarket] paid for a piece that was already sold, or by somebody who did not win it.`
+        + ` work=${meta.work} owner=${owner} reference=${reference} — this needs a refund.`,
       );
       return new Response('already sold', { status: 200 });
     }

@@ -103,8 +103,20 @@ buyer may not resell or re-license the work as an artwork in its own right.
 
 ## 5. Prices and commissions
 
-**Off the wall.** The Artist sets their own price, with a floor of **R200**
-per work. The price is on the picture before anybody opens it.
+**Off the wall it is an auction.** The Artist sets the opening bid, with a
+floor of **R200** per work. From there buyers bid against each other, and the
+**highest bid when the clock stops takes the work**.
+
+The clock runs for **36 hours** from the moment the work is hung. Each new bid
+must beat the last by at least **R20**. A bid in the final five minutes pushes
+the clock out by five, so a work is not won on a fast connection.
+
+The Artist may **not bid on their own work**, and may not ask anybody else to
+do so on their behalf. It is the one rule without which an auction means
+nothing, and the app refuses it too.
+
+What is paid is the winning bid, not the opening one. The profit in clause 6
+is computed on that amount.
 
 **Commissions.** A buyer may ask an artist for a one-off work for a
 particular song. The app lets the buyer say only two things — *"I want unique
@@ -123,8 +135,12 @@ the one thing this agreement treats as a material breach.
 
 ## 6. How the money is split
 
-The card fee comes off the payment first. What is left is the **profit**, and
-the profit is split **70% to the Artist and 30% to the Studio**.
+The card fee comes off the **winning bid** first. What is left is the
+**profit**, and the profit is split **70% to the Artist and 30% to the
+Studio**.
+
+The table below shows a few amounts. It is not a price list — it is what comes
+out at different winning bids.
 
 This is deliberately on the profit and not on the sticker price. A "70%"
 computed on the sticker price pays the Artist 70% of money that never
@@ -133,7 +149,7 @@ arrived — on a R200 piece that is R6.30 of somebody else's money, every time.
 The card fee is **3.5% of the payment plus R2**. That is what the payment
 provider charges and the Studio keeps none of it.
 
-| Buyer pays | Card fee | Profit | Artist receives (70%) | Studio keeps (30%) |
+| Winning bid | Card fee | Profit | Artist receives (70%) | Studio keeps (30%) |
 |---|---|---|---|---|
 | R200 | R9.00 | R191.00 | **R133.70** | R57.30 |
 | R250 | R10.75 | R239.25 | **R167.47** | R71.78 |
@@ -144,16 +160,18 @@ provider charges and the Studio keeps none of it.
 | R1000 | R37.00 | R963.00 | **R674.10** | R288.90 |
 | R1500 | R54.50 | R1445.50 | **R1011.85** | R433.65 |
 
-Cents are rounded against the Artist: the Artist's share is rounded down and
-the remaining cent stays with the Studio. Not because the Studio deserves it
-— because the three figures have to add up to exactly what was paid, and
-somebody has to carry the half cent.
+The Artist's share is rounded down and the remaining cent stays with the
+Studio. Not because the Studio deserves it — because the three figures have to
+add up to exactly what was paid, and somebody has to carry the half cent. The
+sum is done in whole cents so that it is only that half cent, and not a whole
+one lost to a computer's rounding.
 
 ## 7. Payment, and the invoice
 
 **When.** The Studio pays **monthly, at the end of each calendar month**, for
-every sale completed in that month. A sale is complete when the payment has
-gone through and — for a commission — the work has been delivered.
+every sale completed in that month. A sale is complete when the winner has paid
+and — for a commission — the work has been delivered. An auction that has
+ended but not been paid for is not a sale and is not paid out.
 
 A sale completed on the last day of a month falls in that month. A refund or
 a reversed payment is deducted from the following month's payout.

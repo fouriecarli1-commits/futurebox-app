@@ -42,7 +42,14 @@ type Want =
   /* A commissioned one-off, at the price its artist named. */
   | { kind: 'commission'; offer: string };
 
-async function priceOf(want: Want): Promise<{ cents: number; label: string } | null> {
+/**
+ * What this costs, decided on the server.
+ *
+ * `who` is the caller, needed because one of these prices is not a price
+ * at all: a piece of album art is an auction, and only the person who won
+ * it may be charged — for the amount they won it at.
+ */
+async function priceOf(want: Want, who: string): Promise<{ cents: number; label: string } | null> {
   if (want.kind === 'credits') {
     // The pack's price comes from the same table the panel showed, never from
     // the request. A page that can name its own price eventually will.
@@ -73,12 +80,33 @@ async function priceOf(want: Want): Promise<{ cents: number; label: string } | n
     if (!db) return null;
     const { data } = await db
       .from('art_works')
-      .select('title, rand, sold_to')
+      .select('title, rand, won_by, sold_to')
       .eq('id', want.work)
       .maybeSingle();
-    const work = data as { title: string; rand: number; sold_to: string | null } | null;
+    const work = data as
+      | { title: string; rand: number; won_by: string | null; sold_to: string | null }
+      | null;
     if (!work || work.sold_to) return null;
-    return { cents: Math.round(work.rand * 100), label: `Album art: ${work.title}` };
+
+    /* ── It is an auction, so the price is the winning bid ───────────
+
+       Carli: *"Die R200 is die begin vir 'n bee rate … die hoogste bee
+       wen die art binne 36 hours."* `rand` on the row is where the
+       bidding OPENED. Charging it would sell a piece that went to R900
+       for R200, which is the artist's money.
+
+       And only the winner may pay. `won_by` is written once, by the
+       route, when the clock runs out — never from a request — so this
+       is a comparison against a fact and not against a claim. */
+    if (work.won_by !== who) return null;
+    const { data: standing } = await db
+      .from('art_top_bids')
+      .select('top')
+      .eq('work', want.work)
+      .maybeSingle();
+    const top = (standing as { top: number } | null)?.top ?? null;
+    if (top === null || top < work.rand) return null;
+    return { cents: Math.round(top * 100), label: `Album art: ${work.title}` };
   }
 
   /* And a commission, at the price its artist named and the buyer is
@@ -185,7 +213,7 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
-  const price = await priceOf(want);
+  const price = await priceOf(want, caller.id);
   if (!price) {
     return Response.json({ error: 'unknown_item', message: 'Nothing is sold at that name.' }, { status: 400 });
   }

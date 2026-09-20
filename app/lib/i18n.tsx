@@ -452,6 +452,26 @@ export const STRINGS: Dict = {
      An app switches between the two or three things a screen is for; a
      page stacks them and makes you scroll. */
   "art.tab.works": { en: "Works", af: "Werke" },
+
+  /* ── The auction ───────────────────────────────────────────────────────
+     Carli: *"Die R200 is die begin vir 'n bee rate, mense moet op die bee,
+     en die hoogste bee wen die art binne 36 hours."* R200 is not a price
+     any more — it is where the bidding opens. */
+  "art.bid": { en: "Bid", af: "Bie" },
+  "art.opensAt": { en: "Bidding opens at", af: "Bod maak oop by" },
+  "art.standing": { en: "Highest bid", af: "Hoogste bod" },
+  "art.oneBid": { en: "bid", af: "bod" },
+  "art.manyBids": { en: "bids", af: "bodde" },
+  "art.left": { en: "left", af: "oor" },
+  "art.over": { en: "Bidding closed", af: "Bod gesluit" },
+  "art.youLead": { en: "You are the highest bidder", af: "Jy is die hoogste bieër" },
+  "art.youWon": { en: "You won it — pay to take it", af: "Jy het dit gewen — betaal om dit te vat" },
+  "art.payWin": { en: "Pay and take it", af: "Betaal en vat dit" },
+  "art.wentToSomebody": { en: "This one went to somebody else.", af: "Hierdie een het na iemand anders gegaan." },
+  "art.howBidding": {
+    en: `Bidding runs for ${36} hours from the moment a piece is hung. The highest bid when the clock stops takes it. A bid in the last five minutes pushes the clock out by five, so nobody wins on a fast connection alone.`,
+    af: `Die bod loop ${36} uur vandat ’n werk opgehang word. Die hoogste bod wanneer die klok stop, vat dit. ’n Bod in die laaste vyf minute stoot die klok vyf minute verder, sodat niemand net op ’n vinnige verbinding wen nie.`,
+  },
   "art.tab.artists": { en: "Artists", af: "Kunstenaars" },
   "art.tab.mine": { en: "Mine", af: "Myne" },
   "art.noArtists": {
@@ -464,9 +484,14 @@ export const STRINGS: Dict = {
      album art nie, dit is album art created by real artists, human made."*
      One line and not a hero paragraph: made by a person, not a machine,
      sold once, from R200. */
+  /* This one line carries the whole proposition, and `check:artroom`
+     holds two of its three facts — the opening bid and the sold-once
+     rule — because both have to be readable before anything is pressed.
+     The rewrite for the auction dropped the words "sold once" and the
+     probe caught it on the next run. */
   "art.whatThisIs": {
-    en: "Album art painted by hand, by real artists. Not generated. Every piece is sold once and then it is yours alone — from R200.",
-    af: "Albumkuns wat met die hand geskilder is, deur regte kunstenaars. Nie gegenereer nie. Elke werk word een keer verkoop en is dan net joune — vanaf R200.",
+    en: "Album art painted by hand, by real artists. Not generated. Bidding opens at R200 and runs 36 hours — the highest bid takes it, and every piece is sold once and never again.",
+    af: "Albumkuns wat met die hand geskilder is, deur regte kunstenaars. Nie gegenereer nie. Die bod maak oop by R200 en loop 36 uur — die hoogste bod vat dit, en elke werk word een keer verkoop en nooit weer nie.",
   },
   "art.marked": {
     en: "The picture here carries a mark. The clean file, 3000 × 3000, goes to the buyer alone.",

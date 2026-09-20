@@ -108,8 +108,21 @@ herlisensieer nie.
 
 ## 5. Pryse en bestellings
 
-**Van die muur af.** Die Kunstenaar stel sy of haar eie prys, met 'n vloer van
-**R200** per werk. Die prys staan op die foto voordat iemand dit oopmaak.
+**Van die muur af is dit 'n veiling.** Die Kunstenaar stel die openingsbod,
+met 'n vloer van **R200** per werk. Van daar af bie kopers teen mekaar, en die
+**hoogste bod wanneer die klok stop, vat die werk**.
+
+Die klok loop **36 uur** vandat die werk opgehang word. Elke nuwe bod moet die
+vorige een met ten minste **R20** klop. 'n Bod in die laaste vyf minute stoot
+die klok vyf minute verder, sodat 'n werk nie op 'n vinnige verbinding gewen
+word nie.
+
+Die Kunstenaar mag **nie op sy of haar eie werk bie nie**, en mag niemand
+anders vra om dit te doen nie. Dit is die een reël waarsonder 'n veiling niks
+beteken nie, en die app weier dit ook.
+
+Wat betaal word, is die wenbod — nie die openingsbod nie. Die wins in klousule
+6 word op daardie bedrag bereken.
 
 **Bestellings.** 'n Koper kan 'n kunstenaar vra vir 'n eenmalige werk vir 'n
 spesifieke liedjie. Die app laat die koper net twee dinge sê — *"ek wil unieke
@@ -129,8 +142,11 @@ verbreking behandel.
 
 ## 6. Winsverdeling
 
-Die kaartfooi kom eerste van die betaling af. Wat oorbly is die **wins**, en
+Die kaartfooi kom eerste van die **wenbod** af. Wat oorbly is die **wins**, en
 die wins word **70% aan die Kunstenaar en 30% aan die Studio** verdeel.
+
+Die tabel hieronder wys 'n paar bedrae. Dit is nie 'n pryslys nie — dit is wat
+by verskillende wenbodde uitkom.
 
 Dit is met opset op die wins en nie op die plakkerprys nie. 'n "70%" wat op
 die plakkerprys bereken word, betaal die Kunstenaar 70% van geld wat nooit
@@ -140,7 +156,7 @@ elke keer.
 Die kaartfooi is **3,5% van die betaling plus R2**. Dit is wat die
 betaaldiens hef en die Studio hou niks daarvan nie.
 
-| Koper betaal | Kaartfooi | Wins | Kunstenaar kry (70%) | Studio hou (30%) |
+| Wenbod | Kaartfooi | Wins | Kunstenaar kry (70%) | Studio hou (30%) |
 |---|---|---|---|---|
 | R200 | R9.00 | R191.00 | **R133.70** | R57.30 |
 | R250 | R10.75 | R239.25 | **R167.47** | R71.78 |
@@ -151,11 +167,11 @@ betaaldiens hef en die Studio hou niks daarvan nie.
 | R1000 | R37.00 | R963.00 | **R674.10** | R288.90 |
 | R1500 | R54.50 | R1445.50 | **R1011.85** | R433.65 |
 
-Sente word na onder afgerond in die Kunstenaar se guns se teenoorgestelde
-rigting: die Kunstenaar se deel word afgerond en die oorblywende sent bly by
+Die Kunstenaar se deel word na onder afgerond en die oorblywende sent bly by
 die Studio. Dit is nie omdat die Studio dit verdien nie — dit is omdat die
 drie getalle presies moet optel tot wat betaal is, en iemand die halwe sent
-moet dra.
+moet dra. Die som word in hele sente gedoen sodat dit net daardie halwe sent
+is en nie 'n hele een wat aan 'n rekenaar se afronding verlore gaan nie.
 
 ## 7. Betaling, en die faktuur
 

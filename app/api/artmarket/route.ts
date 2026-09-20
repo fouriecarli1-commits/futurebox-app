@@ -39,7 +39,10 @@
 import { admin, callerFrom, callerIsOwner, metered } from '@/app/lib/server/account';
 import { ownerEmails } from '@/app/lib/server/owners';
 import { filterSafe } from '@/app/lib/server/filtersafe';
-import { ART_MAX_BYTES, START_RAND, UNIQUE_RAND, WINDOWS, split } from '@/app/data/artmarket';
+import {
+  ART_MAX_BYTES, BID_STEP, SNIPE_MINUTES, START_RAND, UNIQUE_RAND, WINDOWS,
+  endsAt, nextBid, split,
+} from '@/app/data/artmarket';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -77,6 +80,10 @@ interface WorkRow {
      difference between them is the whole of this room's answer to a
      screenshot. Empty on a work uploaded before the column existed. */
   preview?: string;
+  /** When the bidding closes. Null on a work hung before this existed. */
+  ends_at?: string | null;
+  /** Who was leading when it closed. Not a sale: `sold_to` is the sale. */
+  won_by?: string | null;
   sold_to: string | null;
   sold_at: string | null;
   /* Null until the owner has actually transferred the artist's share. See
@@ -153,7 +160,7 @@ export async function GET(request: Request): Promise<Response> {
      looks merely quiet. */
   const { data: workRows, error: workError } = await client
     .from('art_works')
-    .select('id, artist, title, path, preview, rand, sold_to, sold_at, paid_out')
+    .select('id, artist, title, path, preview, rand, ends_at, won_by, sold_to, sold_at, paid_out')
     .order('created_at', { ascending: false });
   if (workError) {
     return Response.json(
@@ -163,18 +170,117 @@ export async function GET(request: Request): Promise<Response> {
   }
   const works = (workRows ?? []) as WorkRow[];
 
+  /* ── The standing bids ───────────────────────────────────────────────
+     One read for the whole wall, from a view, so "who is leading" has one
+     answer rather than one per screen. */
+  const { data: topRows, error: topError } = await client.from('art_top_bids').select('work, top, bids');
+  /* A failed read here is the worst kind: `?? []` would make every piece
+     show its OPENING bid as the standing one, which is a wrong price on
+     the screen where the money is decided — and it would look completely
+     normal. `check:couldnotask` caught this the first time it ran over
+     the auction. */
+  if (topError) {
+    return Response.json(
+      { error: 'not_read', message: 'The bids could not be read just now. Nothing is shown rather than the wrong amount.' },
+      { status: 503 },
+    );
+  }
+  const tops = new Map(
+    ((topRows ?? []) as { work: string; top: number; bids: number }[]).map((one) => [
+      one.work,
+      { top: one.top, bids: one.bids },
+    ]),
+  );
+
+  /* ── Closing the clock, without a cron ───────────────────────────────
+
+     Carli: *"die hoogste bee wen die art binne 36 hours."*
+
+     There is no scheduler behind this app that runs every minute, and
+     adding one for this would be a second thing to keep alive. So an
+     auction closes the next time anybody looks: a work whose `ends_at`
+     has passed and that has a leading bid gets `won_by` written, once.
+
+     `.is('won_by', null)` makes it conditional, so two people opening the
+     room in the same second cannot write it twice — and the read below
+     uses what the write returned rather than what was read a moment ago,
+     because between those two the clock may have run out.
+
+     The honest limit: nothing happens until somebody opens the room. A
+     piece whose clock ended at three in the morning is decided at the
+     first visit after that, not at three. Nobody is worse off — the
+     winner is whoever had the highest bid when the clock ran out, and
+     that is a fact about the past. */
+  const nowAt = Date.now();
+  for (const one of works) {
+    if (one.sold_to || one.won_by || !one.ends_at) continue;
+    if (new Date(one.ends_at).getTime() > nowAt) continue;
+    const leading = tops.get(one.id);
+    if (!leading) continue;
+    const { data: highest } = await client
+      .from('art_bids')
+      .select('bidder')
+      .eq('work', one.id)
+      .order('rand', { ascending: false })
+      .order('at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    const winner = (highest as { bidder: string } | null)?.bidder;
+    if (!winner) continue;
+    const { data: closed } = await client
+      .from('art_works')
+      .update({ won_by: winner, won_at: new Date().toISOString() })
+      .eq('id', one.id)
+      .is('won_by', null)
+      .is('sold_to', null)
+      .select('id');
+    if (((closed ?? []) as unknown[]).length > 0) one.won_by = winner;
+  }
+
   /* ── The wall ───────────────────────────────────────────────────────
      Unsold pieces by an approved artist. Sold pieces leave the wall
      entirely rather than being greyed out: her rule is that a piece is
      sold ONCE, and a sold piece still hanging there with a line through
      it is an invitation to ask whether it really is. */
+  /* Whether the caller is the one leading, per work. Their own bids only:
+     everybody else's are nobody's business, and a leaderboard is how an
+     auction turns into a fight. */
+  const { data: mineRows, error: mineError } = await client
+    .from('art_bids')
+    .select('work, rand')
+    .eq('bidder', caller.id);
+  /* And this one decides whether somebody is told they are winning. An
+     empty list on a failed read tells a person who IS leading that they
+     are not, which is how they lose a piece they thought they had. */
+  if (mineError) {
+    return Response.json(
+      { error: 'not_read', message: 'Your bids could not be read just now.' },
+      { status: 503 },
+    );
+  }
+  const myBest = new Map<string, number>();
+  for (const one of (mineRows ?? []) as { work: string; rand: number }[]) {
+    myBest.set(one.work, Math.max(myBest.get(one.work) ?? 0, one.rand));
+  }
+
   const wall = await Promise.all(
     works
       .filter((one) => !one.sold_to && byId.get(one.artist)?.approved)
       .map(async (one) => ({
         id: one.id,
         title: one.title,
+        /* The opening bid, which is what `rand` means now. What will be
+           paid is `top`, when the clock runs out. */
         rand: one.rand,
+        top: tops.get(one.id)?.top ?? null,
+        bids: tops.get(one.id)?.bids ?? 0,
+        next: nextBid(tops.get(one.id)?.top ?? null),
+        endsAt: one.ends_at ?? null,
+        /* Over, and who it went to — said as two booleans rather than an
+           id, because the browser has no business knowing who else bid. */
+        over: Boolean(one.won_by) || (one.ends_at ? new Date(one.ends_at).getTime() <= nowAt : false),
+        wonByMe: one.won_by === caller.id,
+        leadingMe: (myBest.get(one.id) ?? 0) > 0 && (myBest.get(one.id) ?? 0) === (tops.get(one.id)?.top ?? -1),
         artist: one.artist,
         by: byId.get(one.artist)?.name ?? '',
         /* ── The marked one, never the master ────────────────────────
@@ -417,7 +523,7 @@ type Body = {
   preview?: string;
   title?: string;
   for?: string;
-  /* Putting a bought piece on one of your own songs. */
+  /* Bidding, and putting a bought piece on one of your own songs. */
   work?: string;
   trackId?: string;
   /* Marking an artist paid: the owner's own reference off her bank statement. */
@@ -548,9 +654,12 @@ export async function POST(request: Request): Promise<Response> {
       if (preview && !preview.startsWith(`${artist.id}/`)) {
         return Response.json({ error: 'not_yours', message: 'That is not a file you uploaded.' }, { status: 403 });
       }
+      /* The clock starts when the piece is hung. On the row rather than
+         computed from `created_at`, so changing the rule later cannot
+         backdate the auctions already running. */
       const { error } = await client
         .from('art_works')
-        .insert({ artist: artist.id, title, path, preview, rand });
+        .insert({ artist: artist.id, title, path, preview, rand, ends_at: endsAt() });
       if (error) {
         return Response.json({ error: 'not_saved', message: 'That did not save.' }, { status: 500 });
       }
@@ -754,6 +863,80 @@ export async function POST(request: Request): Promise<Response> {
         return Response.json({ error: 'not_saved', message: 'That did not go onto the song.' }, { status: 500 });
       }
       return Response.json({ worn: true });
+    }
+
+    /* ── A bid ───────────────────────────────────────────────────────
+
+       Carli: *"mense moet op die bee, en die hoogste bee wen die art
+       binne 36 hours."*
+
+       Every rule that decides who wins is enforced here and nowhere else.
+       A browser that can write its own bid is an auction without rules,
+       which is why `art_bids` has row level security on and no policy at
+       all. */
+    case 'bid': {
+      const { data: found } = await client
+        .from('art_works')
+        .select('id, artist, rand, ends_at, won_by, sold_to')
+        .eq('id', String(body.work ?? ''))
+        .maybeSingle();
+      const work = (found ?? null) as WorkRow | null;
+      if (!work) {
+        return Response.json({ error: 'no_work', message: 'There is no such piece.' }, { status: 404 });
+      }
+      if (work.sold_to || work.won_by) {
+        return Response.json({ error: 'over', message: 'The bidding on that piece is over.' }, { status: 409 });
+      }
+      /* The clock, read from the row rather than from the request. A
+         browser with a slow phone and an old page would otherwise be
+         bidding on an auction that ended ten minutes ago. */
+      const closes = work.ends_at ? new Date(work.ends_at).getTime() : 0;
+      if (!closes || closes <= Date.now()) {
+        return Response.json({ error: 'over', message: 'The bidding on that piece is over.' }, { status: 409 });
+      }
+      /* An artist may not bid their own work up. This is the one rule an
+         auction cannot do without, and it costs one comparison. */
+      const { data: they } = await client
+        .from('art_artists')
+        .select('owner')
+        .eq('id', work.artist)
+        .maybeSingle();
+      if ((they as { owner: string | null } | null)?.owner === caller.id) {
+        return Response.json(
+          { error: 'your_own', message: 'You cannot bid on your own work.' },
+          { status: 403 },
+        );
+      }
+
+      const { data: standing } = await client.from('art_top_bids').select('top').eq('work', work.id).maybeSingle();
+      const top = (standing as { top: number } | null)?.top ?? null;
+      const least = Math.max(nextBid(top), work.rand);
+      const rand = Math.round(Number(body.rand) || 0);
+      if (rand < least) {
+        return Response.json(
+          { error: 'too_low', message: `The next bid is R${least}.`, least },
+          { status: 409 },
+        );
+      }
+
+      const { error } = await client.from('art_bids').insert({ work: work.id, bidder: caller.id, rand });
+      if (error) {
+        return Response.json({ error: 'not_saved', message: 'That bid did not go through.' }, { status: 500 });
+      }
+
+      /* ── The late bid pushes the end out ───────────────────────────
+         Otherwise the thirty-six hours is theatre and the auction is
+         really one second long: everybody waits for the end and the
+         fastest connection wins. */
+      const left = closes - Date.now();
+      if (left < SNIPE_MINUTES * 60 * 1000) {
+        await client
+          .from('art_works')
+          .update({ ends_at: new Date(Date.now() + SNIPE_MINUTES * 60 * 1000).toISOString() })
+          .eq('id', work.id)
+          .is('won_by', null);
+      }
+      return Response.json({ bid: rand, next: rand + BID_STEP });
     }
 
     /* ── Bring an artist in, or change one ───────────────────────────

@@ -1602,6 +1602,67 @@ alter table public.art_artists alter column owner drop not null;
 alter table public.art_works
   add column if not exists preview text not null default '';
 
+-- ── Dit is 'n veiling, nie 'n prys nie ─────────────────────────────────
+--
+-- Carli, 20 September 2026: *"Die R200 is die begin vir 'n bee rate, mense
+-- moet op die bee, en die hoogste bee wen die art binne 36 hours."*
+--
+-- Dit verander die hele model. R200 is nie meer wat 'n werk kos nie — dit
+-- is waar die bod oopmaak. `art_works.rand` bly staan en beteken nou die
+-- **openingsbod**; wat betaal word, is die hoogste bod wanneer die klok
+-- opraak.
+--
+-- ── Wanneer die klok begin en waarom dit hier lê ───────────────────────
+--
+-- 36 uur vanaf die oomblik wat die werk opgehang word. Op die ry en nie
+-- bereken uit `created_at` nie, want 'n veiling se einde is 'n feit oor
+-- daardie veiling: as 'n reël ooit verander, mag dit nie die werke wat
+-- reeds loop terugdateer nie.
+alter table public.art_works
+  add column if not exists ends_at timestamptz;
+
+-- Wie gewen het toe die klok opgeraak het, en wanneer. Dit is NIE verkoop
+-- nie: `sold_to` word eers geskryf wanneer daar betaal is. Die twee apart
+-- te hou is wat 'n wenner wat nie betaal nie, van 'n verkoop skei.
+alter table public.art_works
+  add column if not exists won_by uuid references auth.users (id) on delete set null;
+alter table public.art_works
+  add column if not exists won_at timestamptz;
+
+-- ── Die bodde ───────────────────────────────────────────────────────────
+--
+-- Een ry per bod, en niks word ooit oorgeskryf nie. 'n Veiling waarvan die
+-- geskiedenis weggegooi word, is 'n veiling wat niemand kan nagaan as daar
+-- 'n argument is nie — en met regte geld en regte kunstenaars kom daardie
+-- argument.
+create table if not exists public.art_bids (
+  id          bigint generated always as identity primary key,
+  work        uuid not null references public.art_works (id) on delete cascade,
+  bidder      uuid not null references auth.users (id) on delete cascade,
+  -- Rand. Die roete dwing die minimum af; die databasis dwing af dat dit
+  -- ten minste die vloer is, want 'n bod onder R200 is nooit geldig nie.
+  rand        integer not null check (rand >= 200),
+  at          timestamptz not null default now()
+);
+
+create index if not exists art_bids_work_idx on public.art_bids (work, rand desc);
+
+alter table public.art_bids enable row level security;
+-- Geen policy nie: alles gaan deur /api/artmarket, soos die res van hierdie
+-- kamer. 'n Blaaier wat self 'n bod kan skryf, is 'n veiling sonder reëls.
+drop policy if exists "bids are server only" on public.art_bids;
+
+-- ── Die huidige stand van elke veiling ─────────────────────────────────
+--
+-- Die hoogste bod en hoeveel daar was. As 'n aansig eerder as in die roete
+-- bereken, sodat "wie lei" een antwoord het en nie een per skerm nie.
+create or replace view public.art_top_bids as
+  select work,
+         max(rand)   as top,
+         count(*)    as bids
+    from public.art_bids
+   group by work;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/aikoste.sql
