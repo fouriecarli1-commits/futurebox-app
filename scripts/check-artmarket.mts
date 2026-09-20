@@ -415,6 +415,66 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
     `${cleared} of 3 overlays stop above it — the last button in the sheet is the one the sheet is for`);
 }
 
+/* ── The buy-in is PER PIECE ─────────────────────────────────────────────
+
+   Carli, 20 September 2026: *"Jy het dit ook verkeerd R50 buy in is per
+   piece. Dit is nie vir elke bidding nie."*
+
+   I built it once-and-for-all and wrote a paragraph arguing for that. Her
+   reading is the stronger one: a once-off R50 buys the right to push every
+   price in the room for the rest of somebody's life — the exact person the
+   fee exists to stop, admitted permanently for the price of one piece.
+
+   This is the kind of rule that slides back without anybody meaning it,
+   because "once" is the simpler thing to write at every one of the four
+   places it lives. So all four are held here: the table's key, the read,
+   the refusal, and the till. A screen showing the right words over a
+   once-off charge would look completely correct.
+
+   `check:ooreenkoms` holds the same rule in both signed agreements. */
+{
+  const sql = readFileSync('supabase/albumart.sql', 'utf8');
+  ok('the buy-in is keyed to the person AND the piece',
+    /primary key \(owner, work\)/.test(sql),
+    'art_bidders is still one row per person — one R50 and they may bid on everything, forever');
+
+  const route = readFileSync('app/api/artmarket/route.ts', 'utf8');
+  ok('  and a bid is refused unless they bought into THAT piece',
+    /\.from\('art_bidders'\)[\s\S]{0,240}?\.eq\('work', work\.id\)/.test(route),
+    'the bid check asks only whether they have ever bought in, which is the rule she corrected');
+  ok('  and each sleeve says whether this person may bid on it',
+    /mineToBid: boughtIn\.has\(one\.id\)/.test(route),
+    'the room is told once for the whole wall, so every piece looks the same as the first');
+
+  const till = readFileSync('app/api/checkout/route.ts', 'utf8');
+  const at = till.indexOf("want.kind === 'bidpass'");
+  const branch = at < 0 ? '' : till.slice(at, at + 1400);
+  ok('  and the till charges it against a named piece',
+    /\.eq\('work', work\)/.test(branch),
+    'a second R50 is refused for the wrong reason, or taken for no piece at all');
+  /* The REFUSAL, not merely the word. `/sold_to/` passed on a branch that
+     fetched the column and then ignored it — which is the version that
+     charges R50 to bid on a piece that sold yesterday, and it went green.
+     A check that cannot fail on the bug it is named after is §AC. */
+  ok('    which has to be a piece that is still for sale',
+    /if \(!piece \|\|[\s\S]{0,80}?\.sold_to\) return null;/.test(branch),
+    'R50 can be charged to bid on a piece that is already sold, or on a work id somebody invented');
+
+  const hook = readFileSync('app/api/payments/webhook/route.ts', 'utf8');
+  const hat = hook.indexOf("meta.kind === 'bidpass'");
+  const hbranch = hat < 0 ? '' : hook.slice(hat, hat + 1400);
+  ok('  and the webhook writes it against that piece',
+    /onConflict: 'owner,work'/.test(hbranch) && /meta\.work/.test(hbranch),
+    'the payment lands as a room-wide pass again, whatever the till charged for');
+
+  const words = readFileSync('app/lib/i18n.tsx', 'utf8');
+  const wat = words.indexOf('"art.passWhy"');
+  const said = wat < 0 ? '' : words.slice(wat, wat + 1600);
+  ok('  and the room says so before anybody pays',
+    /once for that piece/i.test(said) && /een keer vir daardie werk/i.test(said),
+    'somebody pays R50 believing it covers the whole room, in one language or both');
+}
+
 /* ── A failed read says which column is missing ──────────────────────────
 
    Two evenings went to a migration that half landed. The Supabase editor

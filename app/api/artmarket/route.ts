@@ -362,6 +362,38 @@ export async function GET(request: Request): Promise<Response> {
     myBest.set(one.work, Math.max(myBest.get(one.work) ?? 0, one.rand));
   }
 
+  /* Which pieces this person has already bought into.
+
+     Read up front, so a sleeve can say "buy in" in place of "bid" rather
+     than letting somebody settle on an amount and be refused at the end
+     of it.
+
+     A set of work ids and not one boolean, because Carli's rule is per
+     piece: *"R50 buy in is per piece. Dit is nie vir elke bidding
+     nie."* One row per person per work. */
+  const { data: passRows, error: passError } = await client
+    .from('art_bidders')
+    .select('work')
+    .eq('owner', caller.id);
+  /* Refused rather than read as an empty list. An empty list here tells
+     somebody who HAS bought into a piece that they have not, and sends
+     them to pay a second R50 for it. `check:couldnotask` is about
+     exactly this shape of mistake. */
+  if (passError) {
+    say('buy-ins', passError);
+    const missing = await missingFrom(client, 'art_bidders', ['owner', 'work']);
+    return Response.json(
+      {
+        error: 'not_read',
+        message: 'Your buy-ins could not be read just now.',
+        which: 'buy-ins',
+        missing,
+      },
+      { status: 503 },
+    );
+  }
+  const boughtIn = new Set(((passRows ?? []) as { work: string }[]).map((one) => one.work));
+
   const wall = await Promise.all(
     works
       .filter((one) => !one.sold_to && byId.get(one.artist)?.approved)
@@ -382,6 +414,11 @@ export async function GET(request: Request): Promise<Response> {
         started: Boolean(one.ends_at),
         over: Boolean(one.won_by) || (one.ends_at ? new Date(one.ends_at).getTime() <= nowAt : false),
         wonByMe: one.won_by === caller.id,
+        /* Whether this person may bid on THIS piece. Carli: *"R50 buy in
+           is per piece. Dit is nie vir elke bidding nie."* Per sleeve and
+           not once for the room, so somebody who bought into one work
+           still meets the gate on the next. */
+        mineToBid: boughtIn.has(one.id),
         leadingMe: (myBest.get(one.id) ?? 0) > 0 && (myBest.get(one.id) ?? 0) === (tops.get(one.id)?.top ?? -1),
         artist: one.artist,
         by: byId.get(one.artist)?.name ?? '',
@@ -550,19 +587,12 @@ export async function GET(request: Request): Promise<Response> {
   const soldBy = (artist: string) =>
     works.filter((one) => one.artist === artist && one.sold_to).length;
 
-  /* Whether this person has the pass. One read, so the screen can say
-     "take the pass" instead of letting somebody type a bid and be
-     refused at the end of it. */
-  const { data: pass } = await client
-    .from('art_bidders')
-    .select('owner')
-    .eq('owner', caller.id)
-    .maybeSingle();
 
   return Response.json({
     owing,
     /* Her R50, once. See `app/data/artmarket.ts`. */
-    canBid: Boolean(pass),
+    /* Her R50, per piece. Each sleeve on the wall carries `mineToBid`;
+       this is only what it costs, for the room's own copy. */
     bidderRand: BIDDER_RAND,
     /* The gallery shows approved artists only. An application in the
        waiting room is between that person and the owner. */
@@ -1022,10 +1052,11 @@ export async function POST(request: Request): Promise<Response> {
         .from('art_bidders')
         .select('owner')
         .eq('owner', caller.id)
+        .eq('work', work.id)
         .maybeSingle();
       if (!pass) {
         return Response.json(
-          { error: 'no_pass', message: 'Take the bidder pass first.', rand: BIDDER_RAND },
+          { error: 'no_pass', message: 'Buy in on this piece first.', rand: BIDDER_RAND },
           { status: 402 },
         );
       }

@@ -98,6 +98,9 @@ for (const paper of PAPERS) {
   ok(`  and it names the R${BIDDER_RAND} buy-in`,
     new RegExp(`R${BIDDER_RAND}\\b`).test(text),
     'the agreement does not mention the buy-in at all');
+  ok('    and says it is per piece, not once for the room',
+    /(per werk|per piece)/i.test(text),
+    'the agreement reads as a once-off buy-in, which is the rule she corrected');
   ok('    and says the artist gets none of it',
     /(kry\s+niks\s+daarvan\s+nie|receives\s+none\s+of\s+it)/i.test(text),
     'an artist can read this agreement and believe the buy-in is shared 70/30');

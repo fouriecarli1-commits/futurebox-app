@@ -53,7 +53,7 @@ export const START_RAND = 200;
 export const AUCTION_HOURS = 36;
 
 /**
- * What it costs to be allowed to bid at all. Once, not per piece.
+ * What it costs to be allowed to bid on a piece. Per piece, every time.
  *
  * Carli: *"Elke persoon sal 'n R50 by in moet hê om te mag bee, want
  * anders kan enige random mens die prys opstoot."*
@@ -64,9 +64,22 @@ export const AUCTION_HOURS = 36;
  * to R4000 and then vanish has cost the artist the sale and the buyer the
  * work, and there is no way to undo it afterwards.
  *
- * Once, and then for every piece forever. A fee per auction turns every
- * work into a tollgate, which is not what she asked for and would stop
- * the ordinary case — somebody who watches three pieces and bids on one.
+ * ── Per piece, and I built it wrong first ────────────────────────────────
+ *
+ * This was once-and-for-all, and the comment that stood here argued for
+ * that: a fee per auction is a tollgate, it said. Carli, 20 September
+ * 2026: *"Jy het dit ook verkeerd R50 buy in is per piece. Dit is nie vir
+ * elke bidding nie."*
+ *
+ * Her reading is the stronger one and the argument I had written against
+ * it was the wrong way round. A once-off R50 buys somebody the right to
+ * push every price in the room for the rest of their life — the exact
+ * person the fee exists to stop, admitted permanently for the price of
+ * one piece. Per work, the promise is renewed against each piece, which
+ * is what makes it a promise about THAT piece.
+ *
+ * It is also the auction house's own rule: a paddle is per sale, and a
+ * deposit is per lot for the lots that need one.
  */
 export const BIDDER_RAND = 50;
 

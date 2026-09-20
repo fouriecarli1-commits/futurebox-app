@@ -139,12 +139,13 @@ The card fee comes off the **winning bid** first. What is left is the
 **profit**, and the profit is split **70% to the Artist and 30% to the
 Studio**.
 
-**The buy-in does not count here.** To be allowed to bid at all, a buyer pays
-the Studio a once-off **R50**. It is a door fee, there to stop somebody who is
-not serious from running a price up and walking away. It is not part of the
-price of a work, it is not deducted from a winning bid, and **the Artist
-receives none of it**. The Artist is paid on the winning bid and on nothing
-else.
+**The buy-in does not count here.** To be allowed to bid on a piece, a buyer
+pays the Studio **R50**, **per piece**. It is a door fee, there to stop
+somebody who is not serious from running a price up and walking away, and it
+applies to each work separately: a buyer who wants to bid on three works pays
+it three times. It is not part of the price of a work, it is not deducted from
+a winning bid, and **the Artist receives none of it**. The Artist is paid on
+the winning bid and on nothing else.
 
 The table below shows a few amounts. It is not a price list — it is what comes
 out at different winning bids.

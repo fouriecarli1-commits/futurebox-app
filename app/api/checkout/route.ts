@@ -43,7 +43,7 @@ type Want =
   /* A commissioned one-off, at the price its artist named. */
   | { kind: 'commission'; offer: string }
   /* The once-off R50 that makes somebody a bidder. */
-  | { kind: 'bidpass' };
+  | { kind: 'bidpass'; work: string };
 
 /**
  * What this costs, decided on the server.
@@ -123,9 +123,29 @@ async function priceOf(want: Want, who: string): Promise<{ cents: number; label:
   if (want.kind === 'bidpass') {
     const db = admin();
     if (!db) return null;
-    const { data } = await db.from('art_bidders').select('owner').eq('owner', who).maybeSingle();
+    /* Per piece. Carli, 20 September 2026: *"R50 buy in is per piece. Dit
+       is nie vir elke bidding nie."* So the work is part of the question:
+       already bought into THIS one is refused, already bought into
+       another one is not. */
+    const work = String(want.work ?? '');
+    if (!work) return null;
+    /* And it has to be a piece somebody could still bid on. A buy-in
+       charged against a sold piece, or against a work id somebody
+       invented, is R50 taken for nothing. */
+    const { data: piece } = await db
+      .from('art_works')
+      .select('id, sold_to')
+      .eq('id', work)
+      .maybeSingle();
+    if (!piece || (piece as { sold_to: string | null }).sold_to) return null;
+    const { data } = await db
+      .from('art_bidders')
+      .select('owner')
+      .eq('owner', who)
+      .eq('work', work)
+      .maybeSingle();
     if (data) return null;
-    return { cents: BIDDER_RAND * 100, label: 'Bidder pass' };
+    return { cents: BIDDER_RAND * 100, label: 'Buy-in to bid' };
   }
 
   /* And a commission, at the price its artist named and the buyer is

@@ -460,22 +460,26 @@ export const STRINGS: Dict = {
   "art.bid": { en: "Bid", af: "Bie" },
   "art.notStarted": { en: "No bids yet", af: "Nog geen bodde" },
 
-  /* ── The R50 buy-in ─────────────────────────────────────────
+  /* ── The R50 buy-in, per piece ───────────────────────────────
      Carli: *"elke persoon sal 'n R50 by in moet hê om te mag bee, want
-     anders kan enige random mens die prys opstoot."* Once, not per piece.
+     anders kan enige random mens die prys opstoot."*
 
-     Called the buy-in and not "the pass", because that is her word for it:
+     Per piece, not once for the room. I built it once-off and she
+     corrected it: *"Jy het dit ook verkeerd R50 buy in is per piece. Dit
+     is nie vir elke bidding nie."* Her reading is the stronger one — a
+     once-off R50 admits the exact person the fee exists to stop, for the
+     rest of their life, for the price of one piece.
+
+     Called the buy-in and not "the pass", because that is her word:
      *"Buy in."*
 
-     And her second sentence about it, which is the one that costs money if
-     it is left unsaid: *"Die kunstenaar kry nie geld vir die by in nie, net
-     vir die wen prys."* The R50 is the door, not part of the price of the
-     work — so the person paying it is told so before they pay, and the
-     artist is told the same thing in their agreement. */
-  "art.takePass": { en: "Take the buy-in", af: "Vat die buy-in" },
+     And her other sentence about it, the one that costs money if it is
+     left unsaid: *"Die kunstenaar kry nie geld vir die by in nie, net vir
+     die wen prys."* */
+  "art.takePass": { en: "Buy in on this piece", af: "Koop in op hierdie werk" },
   "art.passWhy": {
-    en: "Bidding costs R50, once, and then you may bid on anything here for good. It is what keeps somebody who is not serious from running a price up and walking away. The buy-in is not part of what you pay for a piece, and none of it goes to the artist — the artist is paid out of the winning bid.",
-    af: "Om te bie kos R50, een keer, en daarna mag jy vir altyd op enigiets hier bie. Dit is wat keer dat iemand wat nie ernstig is nie ’n prys opstoot en wegloop. Die buy-in is nie deel van wat jy vir ’n werk betaal nie, en niks daarvan gaan na die kunstenaar nie — die kunstenaar word uit die wenbod betaal.",
+    en: "Bidding on a piece costs R50, once for that piece, and then you may bid on it as often as you like. It is what keeps somebody who is not serious from running a price up and walking away. Each piece is its own buy-in. It is not part of what you pay for the work, and none of it goes to the artist — the artist is paid out of the winning bid.",
+    af: "Om op ’n werk te bie kos R50, een keer vir daardie werk, en daarna mag jy so dikwels daarop bie as wat jy wil. Dit is wat keer dat iemand wat nie ernstig is nie ’n prys opstoot en wegloop. Elke werk het sy eie buy-in. Dit is nie deel van wat jy vir die werk betaal nie, en niks daarvan gaan na die kunstenaar nie — die kunstenaar word uit die wenbod betaal.",
   },
   /* The columns a half-landed migration left behind. Named, so the next
      one costs a minute instead of an evening. */
@@ -685,8 +689,8 @@ export const STRINGS: Dict = {
      both directions at once: the number above is a floor and not a price,
      and the R50 at the door is not theirs. */
   "art.paidOnWin": {
-    en: "You are paid on the winning bid, not on this number — a piece that opens at R200 and closes at R900 pays you on R900. The R50 buy-in a bidder takes to be allowed to bid is not part of the price and none of it comes to you.",
-    af: "Jy word op die wenbod betaal, nie op hierdie syfer nie — ’n werk wat by R200 oopmaak en op R900 sluit, betaal jou op R900. Die R50 buy-in wat ’n bieër vat om te mag bie, is nie deel van die prys nie en niks daarvan kom na jou toe nie.",
+    en: "You are paid on the winning bid, not on this number — a piece that opens at R200 and closes at R900 pays you on R900. The R50 each bidder pays to buy in on a piece is not part of the price and none of it comes to you.",
+    af: "Jy word op die wenbod betaal, nie op hierdie syfer nie — ’n werk wat by R200 oopmaak en op R900 sluit, betaal jou op R900. Die R50 wat elke bieër betaal om op ’n werk in te koop, is nie deel van die prys nie en niks daarvan kom na jou toe nie.",
   },
   "art.choose": { en: "Choose the picture", af: "Kies die prent" },
   "art.uploading": { en: "Uploading…", af: "Laai op…" },

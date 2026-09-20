@@ -1743,6 +1743,42 @@ create or replace view public.art_owing as
    group by a.id, a.name
    order by min(w.sold_at);
 
+-- ── Die buy-in is PER WERK ──────────────────────────────────────────────
+--
+-- Carli, 20 September 2026: *"Jy het dit ook verkeerd R50 buy in is per
+-- piece. Dit is nie vir elke bidding nie."*
+--
+-- Ek het dit as een keer vir altyd gebou. Dit is 'n ander ding: 'n eenmalige
+-- R50 laat iemand vir die res van hulle lewe op elke werk bie, en die reël
+-- waarvoor sy die fooi gevra het — *"anders kan enige random mens die prys
+-- opstoot"* — geld dan net vir die eerste werk. Per werk is dit wat sy
+-- bedoel het: op elke stuk sit jy jou eie R50 in voordat jy op DAARDIE stuk
+-- mag bie.
+--
+-- Die sleutel word dus die persoon én die werk. `art_bidders` het `owner`
+-- as die primêre sleutel gehad, so daardie beperking moet val en 'n
+-- saamgestelde een kom in die plek.
+alter table public.art_bidders
+  add column if not exists work uuid references public.art_works (id) on delete cascade;
+
+-- Rye wat voor hierdie verandering betaal is, is vir geen werk nie. Hulle
+-- kan nie 'n saamgestelde sleutel deel nie en hulle is nie meer geldig nie:
+-- daardie mense het vir 'n reël betaal wat nie meer bestaan nie. Daar is
+-- nog niemand nie — die kamer het nog nooit 'n bod gehad nie — so dit is
+-- veilig. As daar ooit wel was, sou dit 'n terugbetaling wees en nie 'n
+-- delete nie.
+delete from public.art_bidders where work is null;
+
+alter table public.art_bidders
+  alter column work set not null;
+
+-- Die ou sleutel af, die nuwe een op. Per naam gedroplaat sodat dit twee
+-- keer kan loop.
+alter table public.art_bidders
+  drop constraint if exists art_bidders_pkey;
+alter table public.art_bidders
+  add constraint art_bidders_pkey primary key (owner, work);
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/aikoste.sql

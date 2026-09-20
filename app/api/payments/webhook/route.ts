@@ -347,17 +347,29 @@ export async function POST(request: Request): Promise<Response> {
 
   /* ── The bidder's pass ───────────────────────────────────────────────
 
-     One row per person, and the primary key is the person — so a webhook
-     that arrives twice for the same payment cannot make two, and an
-     upsert is the whole of it. */
+     One row per person PER PIECE, and the two together are the key — so
+     a webhook that arrives twice for the same payment cannot make two,
+     and an upsert is the whole of it.
+
+     Carli, 20 September 2026: *"R50 buy in is per piece. Dit is nie vir
+     elke bidding nie."* `meta.work` is what makes that true here, and a
+     charge that arrives without it is a R50 taken for nothing — so it is
+     refused and said loudly rather than written against no piece. */
   if (meta.kind === 'bidpass') {
     const store = db();
     if (!store) return new Response('no database', { status: 200 });
+    if (!meta.work) {
+      console.error(
+        `[artmarket] a buy-in arrived with no piece on it. owner=${owner} reference=${reference}`
+        + ' — this needs a refund.',
+      );
+      return new Response('no piece', { status: 200 });
+    }
     const { error } = await store
       .from('art_bidders')
-      .upsert({ owner, reference }, { onConflict: 'owner' });
+      .upsert({ owner, work: meta.work, reference }, { onConflict: 'owner,work' });
     if (error) {
-      console.error(`[artmarket] the bidder pass did not save. owner=${owner} reference=${reference} error=${error.message}`);
+      console.error(`[artmarket] the buy-in did not save. owner=${owner} work=${meta.work} reference=${reference} error=${error.message}`);
       return new Response('not saved', { status: 200 });
     }
     await receipt(owner, 'Buy-in to bid', cents, reference, false);

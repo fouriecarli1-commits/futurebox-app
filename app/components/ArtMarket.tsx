@@ -242,6 +242,8 @@ interface WallPiece {
   readonly started: boolean;
   readonly over: boolean;
   readonly wonByMe: boolean;
+  /** Whether this person has bought into THIS piece. Per piece, her rule. */
+  readonly mineToBid: boolean;
   readonly leadingMe: boolean;
   readonly artist: string;
   readonly by: string;
@@ -288,7 +290,6 @@ interface Market {
   /** Everybody, waiting room included. Owner only; null for the rest. */
   readonly everyArtist: readonly AnyArtist[] | null;
   /** Whether this person has paid the once-off pass and may bid. */
-  readonly canBid: boolean;
   readonly bidderRand: number;
   /** True when OWNER_EMAIL is unset, so nobody is the owner. See the route. */
   readonly noOwner: boolean;
@@ -1069,8 +1070,7 @@ export default function ArtMarket(): React.ReactElement {
           onClose={() => setSheet(null)}
           onBuy={() => void pay({ kind: 'art', work: sheet.id })}
           onBid={(rand) => void doIt({ what: 'bid', work: sheet.id, rand })}
-          onPass={() => void pay({ kind: 'bidpass' })}
-          canBid={market?.canBid ?? false}
+          onPass={() => void pay({ kind: 'bidpass', work: sheet.id })}
           bidderRand={market?.bidderRand ?? 50}
           onArtist={(artist) => {
             setSheet(null);
@@ -1184,7 +1184,6 @@ function WorkSheet({
   onBuy,
   onBid,
   onPass,
-  canBid,
   bidderRand,
   onArtist,
   t,
@@ -1196,7 +1195,6 @@ function WorkSheet({
   readonly onBid: (rand: number) => void;
   /** Take the once-off pass that makes somebody a bidder. */
   readonly onPass: () => void;
-  readonly canBid: boolean;
   readonly bidderRand: number;
   readonly onArtist: (artist: Artist) => void;
   readonly t: (key: string) => string;
@@ -1279,7 +1277,7 @@ function WorkSheet({
             </button>
           ) : piece.over ? (
             <p className={`${MIKRO} py-3 text-center normal-case tracking-normal`}>{t('art.wentToSomebody')}</p>
-          ) : canBid ? (
+          ) : piece.mineToBid ? (
             <button type="button" onClick={() => onBid(piece.next)} className={VUL}>
               {t('art.bid')} · R{piece.next}
             </button>
