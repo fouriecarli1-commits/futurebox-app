@@ -110,6 +110,8 @@ interface Post {
   /** A moving picture with its own sound, on a video post. Signed like the
    *  audio and good for about as long as watching it takes. */
   video?: string | null;
+  /** Why a video post has no file. Our own word, never storage's sentence. */
+  why?: 'unread' | 'no_row' | 'no_file' | null;
   /** The song behind a track post, so a play is counted against the song. */
   sourceId?: string;
   /** The sleeve its owner made, when there is one. Signed by the server and

@@ -872,6 +872,14 @@ jobs:
       - name: Every column the app reads is a column the SQL creates
         run: npm run check:sqlcolumns
 
+      # A comment in JSX is {/* … */}. A bare /* … */ between two elements
+      # is not a comment — it is text, and React prints it. It is valid
+      # JavaScript, valid TypeScript, valid JSX, and the build is happy; the
+      # page just renders with a paragraph of engineering notes across it.
+      # Carli photographed eight lines of mine over her artwork.
+      - name: No comment is printed on a screen
+        run: npm run check:jsxcomment
+
       # What prompt caching actually saved, and the sum that turns four token
       # counts into rand. A cache that never hits looks exactly like one that
       # always does, except on the bill — and a lone write costs 25% MORE, so

@@ -260,6 +260,10 @@ export async function GET(request: Request): Promise<Response> {
     .filter((post) => post.kind === 'video')
     .map((post) => post.source_id);
   const videoPaths = new Map<string, string>();
+  /* Whether the read itself fell over, as opposed to a video having been
+     deleted. From the room the two are the same absence, and only one of
+     them is somebody's job to fix — see `why` on the post below. */
+  let videosUnread = false;
   if (videoIds.length) {
     const { data: files, error: unread } = await client
       .from('videos')
@@ -271,6 +275,7 @@ export async function GET(request: Request): Promise<Response> {
        still opens either way: a post that cannot find its file says so,
        which is better than the room refusing to load over one video. */
     if (unread) console.error(`live: the videos could not be read — ${unread.message}`);
+    videosUnread = Boolean(unread);
     for (const one of files ?? []) {
       if (one.path) videoPaths.set(one.id as string, one.path as string);
     }
@@ -332,11 +337,39 @@ export async function GET(request: Request): Promise<Response> {
          that does not know about video draws nothing instead of a player
          with no picture. */
       let video: string | null = null;
+      /* ── Why there is no picture, when there is no picture ────────────
+
+         Carli, 20 September 2026: *"Die videos in die live room werk
+         nogsteeds nie."* Three tasks have been closed on this and it is
+         still broken, which means all three were guesses — and they were
+         guesses because the room cannot tell the three causes apart.
+
+         A video post with no player can be any of: the videos table could
+         not be read at all, the row is gone or has no path, or the file
+         could not be signed because it is not in the bucket. Every one of
+         them draws the same nothing, and the third swallowed its error
+         completely: `data?.signedUrl ?? null`.
+
+         So each says which, in this file's own word — never the storage
+         layer's sentence, which `check:aifault` keeps off a screen. One
+         screenshot now names the cause instead of costing another guess. */
+      let why: 'unread' | 'no_row' | 'no_file' | null = null;
       if (post.kind === 'video') {
         const path = videoPaths.get(post.source_id);
-        if (path) {
-          const { data } = await client.storage.from('videos').createSignedUrl(path, LINK_SECONDS);
+        if (!path) {
+          why = videosUnread ? 'unread' : 'no_row';
+        } else {
+          const { data, error: unsigned } = await client.storage
+            .from('videos')
+            .createSignedUrl(path, LINK_SECONDS);
           video = data?.signedUrl ?? null;
+          if (!video) {
+            why = 'no_file';
+            console.error(
+              `live: the video file could not be signed. post=${post.id} path=${path}`
+              + ` — ${unsigned?.message ?? 'no message'}`,
+            );
+          }
         }
       } else if (post.kind === 'episode') {
         const path = episodePaths.get(post.source_id);
@@ -369,6 +402,9 @@ export async function GET(request: Request): Promise<Response> {
         mine: caller ? post.owner === caller.id : false,
         audio,
         video,
+        /* Why there is no picture, when a video post has none. Null on
+           every post that is fine, so the room draws nothing extra. */
+        why,
         /* The real sleeve, when the owner has made one. Null is the ordinary
            case and the room draws its generated picture instead. */
         cover: post.kind === 'track' && post.source_id

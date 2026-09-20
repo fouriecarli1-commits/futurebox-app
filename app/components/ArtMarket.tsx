@@ -1220,14 +1220,14 @@ function WorkSheet({
          that space stops where the tab bar starts. On a desktop the bar
          is not there and `md:` keeps the sheet centred as before. */
     >
-      /* `max-h-full`, not a share of the viewport.
+      {/* `max-h-full`, not a share of the viewport.
           Carli: *"Die back buttons is daar, maar is ook weggesteek."* They
           were, and it was my own fix from an hour earlier. The overlay now
           stops above the tab bar, so its content box is `100vh` minus the
           bar — but the sheet still asked for 92vh of the VIEWPORT, which is
           taller than the box it sits in. `items-end` pins the bottom, so
           the excess goes off the TOP, taking the back button with it.
-          Full of its parent is the only number that cannot be wrong. */
+          Full of its parent is the only number that cannot be wrong. */}
       <div className="flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
         <SheetTop onClose={onClose} t={t} />
 
@@ -1363,14 +1363,14 @@ function ArtistSheet({
          that space stops where the tab bar starts. On a desktop the bar
          is not there and `md:` keeps the sheet centred as before. */
     >
-      /* `max-h-full`, not a share of the viewport.
+      {/* `max-h-full`, not a share of the viewport.
           Carli: *"Die back buttons is daar, maar is ook weggesteek."* They
           were, and it was my own fix from an hour earlier. The overlay now
           stops above the tab bar, so its content box is `100vh` minus the
           bar — but the sheet still asked for 92vh of the VIEWPORT, which is
           taller than the box it sits in. `items-end` pins the bottom, so
           the excess goes off the TOP, taking the back button with it.
-          Full of its parent is the only number that cannot be wrong. */
+          Full of its parent is the only number that cannot be wrong. */}
       <div className="flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
         <SheetTop onClose={onClose} t={t} />
 
@@ -1465,14 +1465,14 @@ function Popout({
          that space stops where the tab bar starts. On a desktop the bar
          is not there and `md:` keeps the sheet centred as before. */
     >
-      /* `max-h-full`, not a share of the viewport.
+      {/* `max-h-full`, not a share of the viewport.
           Carli: *"Die back buttons is daar, maar is ook weggesteek."* They
           were, and it was my own fix from an hour earlier. The overlay now
           stops above the tab bar, so its content box is `100vh` minus the
           bar — but the sheet still asked for 92vh of the VIEWPORT, which is
           taller than the box it sits in. `items-end` pins the bottom, so
           the excess goes off the TOP, taking the back button with it.
-          Full of its parent is the only number that cannot be wrong. */
+          Full of its parent is the only number that cannot be wrong. */}
       <div className="flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[84vh] md:rounded-[22px]">
         <SheetTop onClose={onClose} t={t} />
 
