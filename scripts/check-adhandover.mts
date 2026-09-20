@@ -245,11 +245,36 @@ ok('  and the spoken line is inside the shot, in quotation marks',
   'the desk knows a line is SAID only by its quotation marks — without them the engine draws it');
 
 const read = readThisAd({ ad: AD });
+const script = read.find((one) => one.op === 'set_script');
 ok('"read this one" carries the whole advert, not one line',
-  read.length === 1
-    && read[0].value.includes(AD.body)
-    && read[0].value.includes(AD.cta),
-  read[0]?.value.replace(/\n/g, ' / ') ?? 'nothing');
+  Boolean(script) && script!.value.includes(AD.body) && script!.value.includes(AD.cta),
+  script?.value.replace(/\n/g, ' / ') ?? 'nothing');
+
+/* ── And the next room's copilot is handed it too ────────────────────────
+
+   Carli, 20 September 2026: *"Die advert room se prompts spring nogsteeds
+   nie oor na die nuwe kamer toe se copilot nie. Die voorstelle in adverts
+   is puntloos as dit nie dit doen nie."*
+
+   The fields have arrived for a while — `check:adcarry` presses the button
+   and reads them on the other side. The copilot in the destination room is
+   a different address, and it had none: it read what the room could do and
+   registered nothing, so there was nothing to hand it. It opened empty,
+   and changing one line of an advert meant describing the whole advert
+   again to the thing that had just written it.
+
+   This held `read.length === 1`, which was the old rule written as a
+   count — so adding the second wire failed a check that was not about
+   counts at all. Named by op now, which is what it was always testing. */
+for (const [what, wires] of [['film', film], ['read', read]] as const) {
+  const brief = wires.find((one) => one.op === 'brief');
+  ok(`  and "${what} this one" hands the advert to that room's copilot`,
+    Boolean(brief),
+    'the copilot opens empty, so the suggestion cannot be carried on from');
+  ok('    with the words she is looking at, not a summary of them',
+    Boolean(brief) && brief!.value.includes(AD.body),
+    "the copilot is told an advert arrived but not which one");
+}
 
 /* ── Nothing is invented ─────────────────────────────────────────────── */
 /* The rule the desk is built on. A model that adds "R199 a month" because it

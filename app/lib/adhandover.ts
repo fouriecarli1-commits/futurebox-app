@@ -394,6 +394,43 @@ export function handoverFor(input: HandoverInput): readonly Wire[] {
 
 
 /**
+ * The advert, in the words the copilot in the next room needs.
+ *
+ * ── Why the copilot gets its own wire ────────────────────────────────────
+ *
+ * Carli, 20 September 2026: *"Die advert room se prompts spring nogsteeds
+ * nie oor na die nuwe kamer toe se copilot nie. Die voorstelle in adverts is
+ * puntloos as dit nie dit doen nie."*
+ *
+ * The fields already arrive — `check:adcarry` presses the button and reads
+ * the brief on the other side. What did not arrive is the conversation. The
+ * copilot in the destination room opened empty, so changing one line of an
+ * advert meant typing the whole advert again, to the thing that had just
+ * written it. That is what makes a suggestion pointless: you can take it,
+ * but you cannot carry on from it.
+ *
+ * Its own sentences and not a summary of them. The model is being handed
+ * what it will be asked to change, so paraphrasing it here would mean
+ * *"make the second line shorter"* refers to a line nobody has.
+ */
+function briefFor(ad: HandoverAd, did: string): string {
+  return joined([
+    did,
+    /* The SHOT first, because it is what is in the box she is looking at.
+       The first version of this carried the headline, the body and the
+       call and left the shot out — so the copilot knew an advert had
+       arrived and not which one, and *"make the second line shorter"*
+       referred to a line it had never seen. `audit/adcarry.mjs` caught
+       that by reading the panel instead of the wire. */
+    sentence(ad.shot ?? ''),
+    sentence(ad.headline),
+    sentence(ad.body),
+    ad.spoken ? `\u201C${ad.spoken.trim()}\u201D` : '',
+    sentence(ad.cta),
+  ], '\n\n');
+}
+
+/**
  * "Film this one", from a written advert.
  *
  * The prompt was already right — `withSpoken` puts the quoted line into the
@@ -418,6 +455,14 @@ export function filmThisAd(input: {
      sending nothing and looks like success from here. */
   wires.push({ room: 'canvas', op: 'set_seconds', value: '15' });
   if (look) wires.push({ room: 'canvas', op: 'set_look', value: look });
+  /* And the same advert to the room's copilot, so she can change it there
+     instead of describing it again. Last, so the fields are already set
+     when the conversation opens on them. */
+  wires.push({
+    room: 'canvas',
+    op: 'brief',
+    value: briefFor(input.ad, 'This is the advert you brought over from the adverts desk. The shot, the shape and the length are already set — tell me what to change.'),
+  });
   return wires;
 }
 
@@ -437,5 +482,13 @@ export function readThisAd(input: { readonly ad: HandoverAd }): readonly Wire[] 
     sentence(ad.body),
     sentence(ad.cta),
   ], '\n\n');
-  return script.trim() ? [{ room: 'voice_studio', op: 'set_script', value: script }] : [];
+  if (!script.trim()) return [];
+  return [
+    { room: 'voice_studio', op: 'set_script', value: script },
+    {
+      room: 'voice_studio',
+      op: 'brief',
+      value: briefFor(ad, 'This is the advert you brought over from the adverts desk. The script is already in the box — tell me what to change.'),
+    },
+  ];
 }

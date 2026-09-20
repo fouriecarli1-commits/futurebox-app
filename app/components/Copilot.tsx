@@ -25,7 +25,7 @@ import { Sparkles, Send, Loader2, Check, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { type SurfaceId, seedsFor, helpsWith } from '../lib/surfaces';
 import { errandHelps, errandSeeds, type Errand } from '../lib/errands';
-import { useCopilotBusContext } from '../lib/copilotactions';
+import { useCopilotBusContext, useCopilotOps } from '../lib/copilotactions';
 
 export type CopilotAction =
   | { kind: 'none'; value: string }
@@ -116,6 +116,40 @@ export default function Copilot({
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [turns, busy]);
+
+  /* ── What the last room handed over ──────────────────────────────────
+ 
+     Carli, 20 September 2026: *"Die advert room se prompts spring
+     nogsteeds nie oor na die nuwe kamer toe se copilot nie. Die
+     voorstelle in adverts is puntloos as dit nie dit doen nie."*
+ 
+     Three tasks have been closed on the hand-over and `check:adcarry`
+     proves it works — the brief really does arrive, in the room's own
+     fields. What never arrived is the part she is naming: the COPILOT in
+     the new room. It registered nothing on the bus, only read from it, so
+     there was no address to hand anything to. It opened empty every time,
+     and she had to type the whole advert again to change one line of it.
+     That is what makes a suggestion pointless: you can take it, but you
+     cannot carry on from it.
+ 
+     Seeded as a turn rather than as a draft in the box. The history is
+     sent with every question (see `history` below), so once this is in the
+     conversation the model already knows the brief and *"maak dit korter"*
+     is a complete sentence. A draft she has to press send on would be one
+     more step between the idea and the work.
+ 
+     Appended, never replacing: walking into a room twice with two adverts
+     should read as two, and losing the first would be worse than the empty
+     panel this replaces. */
+  useCopilotOps(context.surface, {
+    brief: (value) => {
+      const said = value.trim();
+      if (!said) return;
+      setTurns((was) => (
+        was.some((turn) => turn.text === said) ? was : [...was, { role: 'assistant', text: said }]
+      ));
+    },
+  });
 
   const send = async (text: string) => {
     const question = text.trim();
