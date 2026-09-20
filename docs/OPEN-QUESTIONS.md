@@ -5712,3 +5712,97 @@ eers regtig word wanneer daar genoeg opgelaaide musiek is om 'n eis te trek.
 enige van hierdie twee lyk op 'n skerm presies soos 'n werkende een. Dit is
 dieselfde fout as §AE en §AB: 'n ding wat niks kan faal nie, wat soos 'n
 waarborg lyk. Neergeskryf is eerlik; half gebou is 'n leuen met 'n knoppie.
+
+## §AG · Die kamer wat nie sy eie kleur mag hê nie, en die radar wat niemand voorgestel het nie (20 September 2026)
+
+Twee dinge in een aand, en hulle is dieselfde soort fout op twee vlakke: 'n
+ding wat reg lyk en niks doen nie.
+
+### Die art room, vier keer oorgebou en elke keer verkeerd
+
+Carli het vier keer gesê dit lyk soos *"'n website binne 'n app"*, en vier
+keer het ek die kamer **meer** eiesoortig gemaak — beige papier, 'n indigo
+aksent, 'n serif, alles in vaste hex. Die kommentaar bo daardie palet het die
+fout self neergeskryf: *"it is not emerald, which is the rest of this app,
+which is the point."* Daardie sin wás die fout.
+
+Op haar skerm het dit as drie kleurstelsels op mekaar gelees: groen
+app-chroom bo, 'n room-en-pers kaart in die middel, die app se eie bladsy
+rondom. Haar instruksie het die antwoord al bevat en ek het dit as 'n ding
+oor die *binnekant* van die kamer gelees: *"daai hele bladsy en kamer moet
+die selfde kleur en tema regdeur hê."*
+
+Sy het toe die meganisme self uitgewys:
+
+> *"Kyk net hoe netjies het jy die probooth verander. Die hele kamer in
+> probooth lyk dieselfde."*
+
+Die Pro Booth lees as een kamer omdat sy uitsondering op die **dop** toegepas
+word — `[data-booth]` herdefinieer die tema se veranderlikes vir die header,
+die rail, die werkvlak en die copilot saam, sodat elke klasnaam in die app
+aanhou beteken wat dit altyd beteken het. Ek het die kamer se binnekant
+oorgeverf, wat net een ding kan oplewer: 'n vreemde kaart in iemand anders se
+bladsy, met 'n naat bo.
+
+Die gallery is nou `GALLERY_THEME` — die app se eie `ember`-oppervlak en
+`amber`-aksent deur `themeVariables()`, dieselfde ramp-wiskunde en dieselfde
+AA-som as elke voorafinstelling wat 'n mens kan kies. Warm naby-swart muur,
+goud, en 'n serif. Niks handgekose nie.
+
+**Die les.** 'n Kamer wat sy eie palet dra, ís 'n vreemde bladsy. Dit kan ook
+nie die tema volg wat die persoon gekies het nie, en dit ontsnap die
+kontras-som heeltemal. `check:theme` verbied dit nou — en die **eerste
+weergawe van daardie reël was hol**: dit het na `bg-[#hex]`-klasse gesoek en
+presies die palet gemis, want dit was tien CSS-veranderlikes in 'n
+styl-objek. 'n Hex een vlak van Tailwind af weggesteek volg nie die tema nie;
+dit is net moeiliker om te grep.
+
+### Die radar het nooit iemand voorgestel nie
+
+`/api/radar` het die mense-lys op `created_at` gesorteer. Die tabel
+`creators` het nog nooit so 'n kolom gehad nie — net `updated_at`. Postgres
+weier dan die hele select, die fout is deur 'n kaal `data`-destructure laat
+val, en `people ?? []` maak daarvan 'n leë lys.
+
+Die radar het dus **niemand** voorgestel, van die dag af wat dit gebou is.
+Op die skerm lyk 'n leë radar en 'n stukkende radar presies dieselfde, en net
+een van die twee is die moeite werd om te rapporteer.
+
+`check:sqlcolumns` het dit op sy **eerste hardloop** gevind. Dit trek elke
+`.from('tabel').select('a, b, c')` uit die roetes en soek elke kolom in
+`supabase/*.sql` op. 284 kolomlesings oor 49 tabelle en aansigte.
+
+### Waarom daardie check bestaan, en wat dit nié vang nie
+
+Twee aande is verloor aan *"The gallery could not be read just now."* Albei
+kere was dit haar databasis wat agter die repository was: die Supabase-editor
+hardloop 'n script as **één transaksie**, so 'n stelling wat onder faal rol
+die twintig daarbo terug, en dit lyk soos 'n gewone foutboodskap. Dit is
+niemand se fout nie en dit is amper onsigbaar.
+
+Twee halwes, en die onderskeid is die punt:
+
+**Haar helfte** — die kolom bestaan in die lêer, net nie in haar databasis
+nie. Die roete werk nou self uit watter kolomme kort en die kamer druk hulle:
+*"Die databasis kort: ends_at, won_by."* Die name kom uit die roete se **eie
+lys**, een vir een gevra, nooit uit Postgres se sin nie — sodat
+`check:aifault` bly geld.
+
+**My helfte** — die kolom bestaan in **geen** lêer nie. Dieselfde sin op
+dieselfde skerm, behalwe dat die SQL hardloop nie help nie. Dit is
+`check:sqlcolumns`, en ek kon dit enige tyd hierdie sessie gestuur het: ek
+het vier kolomme by daardie een roete gevoeg en niks in hierdie repository
+sou 'n woord gesê het nie.
+
+### Drie ontlederfoute in my eie check, wat almal in die slaag-rigting was
+
+1. 'n Meerkolom `alter table` — net die eerste `add column` is gelees.
+2. 'n Aansigkolom sonder alias — `art_top_bids.work` is as ongeskep gemeld.
+3. 'n **kommapunt binne 'n kommentaar** in `livevideo.sql` het die statement
+   vroeg afgekap, drie reëls voor `seconds_real`. 'n Prosa-kommapunt is nie
+   'n statement-grens nie. Kommentaar word nou eerste gestroop.
+
+Al drie het gelyk soos regte foute in die kode. Die enigste manier om hulle
+uit mekaar te hou was om elkeen by die bron na te gaan, en dit is presies
+waarom 'n check se vals-positiewe net so duur is as sy vals-negatiewe: 'n
+mens leer om dit te ignoreer.

@@ -861,6 +861,17 @@ jobs:
       - name: The gallery block is the gallery theme, and it is on the shell
         run: npm run check:gallery
 
+      # Every column a route selects is a column some sql file creates. The
+      # failure this catches looks EXACTLY like a migration somebody has not
+      # run — the same sentence on the same screen — except that running the
+      # migration does not help, because the column is in no file. It found
+      # one on its first run: /api/radar ordered the people list by a
+      # `created_at` that `creators` has never had, so Postgres refused the
+      # select, a bare `data` destructure dropped the error, and `?? []`
+      # turned it into an empty radar. Built, shipped, introducing nobody.
+      - name: Every column the app reads is a column the SQL creates
+        run: npm run check:sqlcolumns
+
       # What prompt caching actually saved, and the sum that turns four token
       # counts into rand. A cache that never hits looks exactly like one that
       # always does, except on the bill — and a lone write costs 25% MORE, so

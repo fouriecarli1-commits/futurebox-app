@@ -75,15 +75,32 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   /* Everybody findable, whether or not they have shown a song.
- 
-     Ordered newest first and capped: this is a list of people, and the screen
-     shuffles it once a day rather than always showing the same six names at
-     the top. */
-  const { data: people } = await client
+
+     Ordered most recently touched first and capped: this is a list of people,
+     and the screen shuffles it once a day rather than always showing the same
+     six names at the top.
+
+     `updated_at`, which is the only time this table keeps. It read
+     `created_at` — a column `supabase/radar.sql` has never created — so
+     Postgres refused the whole select, the error was dropped on the floor by
+     a bare `data` destructure, and `people ?? []` turned it into an empty
+     list. The radar has been introducing nobody, silently, since it was
+     built. `check:sqlcolumns` found it on its first run.
+
+     The error is read now. An empty radar and a broken radar look identical,
+     and only one of them is worth reporting. */
+  const { data: people, error: peopleError } = await client
     .from('creators')
-    .select('owner, name, handle, about, links, created_at')
-    .order('created_at', { ascending: false })
+    .select('owner, name, handle, about, links, updated_at')
+    .order('updated_at', { ascending: false })
     .limit(PEOPLE_LIMIT);
+  if (peopleError) {
+    console.error(`[radar] the creators read failed. code=${peopleError.code} — ${peopleError.message}`);
+    return Response.json(
+      { error: 'not_read', message: 'The radar could not be read just now.', which: 'people' },
+      { status: 503 },
+    );
+  }
 
   return Response.json({
     configured: true,
