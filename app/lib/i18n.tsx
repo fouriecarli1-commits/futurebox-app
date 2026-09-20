@@ -468,6 +468,35 @@ export const STRINGS: Dict = {
   },
   "art.shelf": { en: "Your shelf", af: "Jou rak" },
 
+  /* ── An artist's own profile ───────────────────────────────────────────
+     Carli: *"Elke kunstenaar moet ook 'n profile hê met hulle eie kunswerk
+     in, want een kunstenaar kan nogal baie album art hê."* */
+  "art.seeAll": { en: "See all", af: "Sien al" },
+  "art.worksHere": { en: "works in the crate", af: "werke in die kis" },
+  "art.forSaleNow": { en: "for sale", af: "te koop" },
+  "art.soldAlready": { en: "sold", af: "verkoop" },
+
+  /* ── Bringing an artist in. The owner sees these and nobody else. ────── */
+  "art.bring": { en: "Bring an artist in", af: "Bring ’n kunstenaar in" },
+  "art.bringWhy": {
+    en: "Their work goes straight from this phone into the gallery — it never passes through anybody else. An artist without a FutureBox account is a house artist: you write their words, you hang their work, and you pay them yourself. If they ever make an account, the profile is already here with their work in it.",
+    af: "Hulle werk gaan reguit van hierdie foon af in die galery in — dit gaan deur niemand anders nie. ’n Kunstenaar sonder ’n FutureBox-rekening is ’n huiskunstenaar: jy skryf hulle woorde, jy hang hulle werk op, en jy betaal hulle self. As hulle ooit ’n rekening maak, is die profiel reeds hier met hulle werk in.",
+  },
+  "art.addArtist": { en: "Add an artist", af: "Voeg ’n kunstenaar by" },
+  "art.newArtist": { en: "A new artist", af: "’n Nuwe kunstenaar" },
+  "art.theirName": { en: "The name they sign with", af: "Die naam waarmee hulle teken" },
+  "art.theirPlace": { en: "Where they work from", af: "Waarvandaan hulle werk" },
+  "art.theirAbout": { en: "What they paint, in their own words", af: "Wat hulle skilder, in hulle eie woorde" },
+  "art.saveWords": { en: "Save their profile", af: "Stoor hulle profiel" },
+  "art.editWords": { en: "Their words", af: "Hulle woorde" },
+  "art.hangFor": { en: "Hang a piece", af: "Hang ’n werk op" },
+  "art.letIn": { en: "Let them in", af: "Laat hulle in" },
+  "art.takeOut": { en: "Take them off the wall", af: "Haal hulle van die muur af" },
+  "art.isIn": { en: "On the wall", af: "Op die muur" },
+  "art.waitingRoom": { en: "Waiting", af: "Wag" },
+  "art.houseArtist": { en: "no account", af: "geen rekening" },
+  "art.theyGet": { en: "They receive", af: "Hulle ontvang" },
+
   /* One piece, raised over the wall as a sheet. */
   "art.oneOnly": {
     en: "This piece is sold once. When you buy it, it leaves the gallery and it is yours alone — nobody else can put it on a song.",

@@ -56,7 +56,9 @@ const NO_ACCOUNTS = {
 
 interface ArtistRow {
   id: string;
-  owner: string;
+  /* Null for a house artist: somebody Carli brought in who has no account.
+     See `supabase/albumart.sql` for why that had to be allowed. */
+  owner: string | null;
   name: string;
   about: string;
   place: string;
@@ -302,13 +304,52 @@ export async function GET(request: Request): Promise<Response> {
     owing = [...byArtist.entries()].map(([id, one]) => ({ artist: id, ...one }));
   }
 
+  /* ── Every artist's own work, on their own profile ───────────────────
+
+     Carli: *"Elke kunstenaar moet ook 'n profile hê met hulle eie kunswerk
+     in, want een kunstenaar kan nogal baie album art hê."*
+
+     Counted here rather than filtered in the browser: the crate shows one
+     piece at a time and a painter with eleven works was eleven separate
+     sleeves scattered through it, with no way to see them as a body of
+     work. `sold` is a number and not a list — a portfolio of things
+     nobody can buy is a wall of disappointments, and the count says the
+     same thing in four characters. */
+  const worksOf = (artist: string) =>
+    wall.filter((one) => one.artist === artist).map((one) => one.id);
+  const soldBy = (artist: string) =>
+    works.filter((one) => one.artist === artist && one.sold_to).length;
+
   return Response.json({
     owing,
     /* The gallery shows approved artists only. An application in the
        waiting room is between that person and the owner. */
     artists: artists
       .filter((one) => one.approved)
-      .map((one) => ({ id: one.id, name: one.name, about: one.about, place: one.place, avatar: one.avatar })),
+      .map((one) => ({
+        id: one.id,
+        name: one.name,
+        about: one.about,
+        place: one.place,
+        avatar: one.avatar,
+        works: worksOf(one.id),
+        sold: soldBy(one.id),
+      })),
+    /* Everybody, approved or not, for the owner alone — the list she works
+       from when she lets somebody in. Null for everybody else, so the
+       waiting room is not a thing an ordinary member can enumerate. */
+    everyArtist: callerIsOwner(caller)
+      ? artists.map((one) => ({
+          id: one.id,
+          name: one.name,
+          about: one.about,
+          place: one.place,
+          approved: one.approved,
+          house: one.owner === null,
+          works: worksOf(one.id).length,
+          sold: soldBy(one.id),
+        }))
+      : null,
     wall,
     bought,
     asBuyer,
@@ -348,6 +389,8 @@ type Body = {
   trackId?: string;
   /* Marking an artist paid: the owner's own reference off her bank statement. */
   note?: string;
+  /* The owner letting somebody in, and acting for them. */
+  approved?: boolean;
 };
 
 export async function POST(request: Request): Promise<Response> {
@@ -367,8 +410,26 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'bad_request', message: 'Could not read that.' }, { status: 400 });
   }
 
-  /** The caller's artist row, when they have one and it has been let in. */
-  const asArtist = async (): Promise<ArtistRow | null> => {
+  /**
+   * Which artist this request is acting as.
+   *
+   * Normally the caller's own row. The owner may name one instead, because
+   * a house artist has no account to sign in with — Carli uploads their
+   * work and pays them by hand, which is the arrangement she has anyway.
+   *
+   * The override is owner-only and it is checked here, once, rather than
+   * in each of the four operations that take an artist: an escape hatch
+   * repeated four times is an escape hatch that is wrong in one of them.
+   */
+  const asArtist = async (named?: string): Promise<ArtistRow | null> => {
+    if (named && callerIsOwner(caller)) {
+      const { data } = await client
+        .from('art_artists')
+        .select('id, owner, name, about, place, avatar, approved')
+        .eq('id', named)
+        .maybeSingle();
+      return (data ?? null) as ArtistRow | null;
+    }
     const { data } = await client
       .from('art_artists')
       .select('id, owner, name, about, place, avatar, approved')
@@ -410,7 +471,7 @@ export async function POST(request: Request): Promise<Response> {
        painting is comfortably over it. A signed upload address has no
        such wall and keeps the bucket shut to everybody else. */
     case 'upload': {
-      const artist = await asArtist();
+      const artist = await asArtist(body.artist);
       if (!artist) {
         return Response.json({ error: 'not_an_artist', message: 'Only our artists upload here.' }, { status: 403 });
       }
@@ -428,7 +489,7 @@ export async function POST(request: Request): Promise<Response> {
        prefix check is: without it, an artist could name somebody else's
        delivered commission and put it up for sale. */
     case 'listed': {
-      const artist = await asArtist();
+      const artist = await asArtist(body.artist);
       if (!artist) {
         return Response.json({ error: 'not_an_artist', message: 'Only our artists list here.' }, { status: 403 });
       }
@@ -484,7 +545,7 @@ export async function POST(request: Request): Promise<Response> {
        and the database checks it again. A date somebody types is a date
        nobody agreed to. */
     case 'offer': {
-      const artist = await asArtist();
+      const artist = await asArtist(body.artist);
       if (!artist) {
         return Response.json({ error: 'not_an_artist', message: 'Only our artists answer here.' }, { status: 403 });
       }
@@ -559,7 +620,7 @@ export async function POST(request: Request): Promise<Response> {
        bucket and the only address for it is handed out by the GET above,
        to the buyer, for an hour at a time. */
     case 'deliver': {
-      const artist = await asArtist();
+      const artist = await asArtist(body.artist);
       if (!artist) {
         return Response.json({ error: 'not_an_artist', message: 'Only our artists deliver here.' }, { status: 403 });
       }
@@ -648,6 +709,55 @@ export async function POST(request: Request): Promise<Response> {
         return Response.json({ error: 'not_saved', message: 'That did not go onto the song.' }, { status: 500 });
       }
       return Response.json({ worn: true });
+    }
+
+    /* ── Bring an artist in, or change one ───────────────────────────
+
+       Carli: *"Ek het nou reeds 'n kunstenaar wat ek wil in sit."*
+
+       Owner only, and it is the one place `approved` is ever written.
+       `apply` above deliberately cannot touch it — a marketplace anybody
+       can list on is a marketplace nobody trusts — so letting somebody in
+       is a separate act by a separate person, here.
+
+       It creates a HOUSE artist when no id is given: a row with no
+       `owner`, for a painter who has no FutureBox account and does not
+       want one. Carli uploads their work and pays them by hand, which is
+       the arrangement she already has with them. */
+    case 'artist': {
+      if (!callerIsOwner(caller)) {
+        return Response.json({ error: 'not_yours', message: 'That is not yours to do.' }, { status: 403 });
+      }
+      const name = String(body.name ?? '').trim().slice(0, 60);
+      const fields = {
+        name,
+        about: String(body.about ?? '').trim().slice(0, 1200),
+        place: String(body.place ?? '').trim().slice(0, 60),
+        approved: body.approved === true,
+      };
+      const named = String(body.artist ?? '');
+      if (named) {
+        const { error } = await client.from('art_artists').update(fields).eq('id', named);
+        if (error) {
+          return Response.json({ error: 'not_saved', message: 'That did not save.' }, { status: 500 });
+        }
+        return Response.json({ saved: true, artist: named });
+      }
+      if (!name) {
+        return Response.json({ error: 'no_name', message: 'An artist needs a name.' }, { status: 400 });
+      }
+      /* `owner: null` is the whole of what makes this a house artist. It
+         is written explicitly rather than left out, so the intent is on
+         the row and not only in this comment. */
+      const { data, error } = await client
+        .from('art_artists')
+        .insert({ ...fields, owner: null })
+        .select('id')
+        .maybeSingle();
+      if (error || !data) {
+        return Response.json({ error: 'not_saved', message: 'That did not save.' }, { status: 500 });
+      }
+      return Response.json({ saved: true, artist: (data as { id: string }).id });
     }
 
     /* ── Mark an artist paid ─────────────────────────────────────────

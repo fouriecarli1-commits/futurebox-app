@@ -1559,6 +1559,28 @@ create or replace view public.art_owing as
    group by a.id, a.name
    order by min(w.sold_at);
 
+-- ── 'n Kunstenaar wat nog nie 'n rekening het nie ───────────────────────
+--
+-- Carli, 20 September 2026: *"Ek het nou reeds 'n kunstenaar wat ek wil in
+-- sit."*
+--
+-- Daardie persoon is 'n regte skilder, nie 'n app-lid nie. Die tabel het
+-- `owner` as not-null gehad, wat beteken 'n kunstenaar moes eers self
+-- aanmeld, self aansoek doen en self oplaai voordat een kunswerk kon hang.
+-- Vir die eerste kunstenaars — en vir enigeen wat nie 'n app wil gebruik om
+-- 'n skildery te verkoop nie — is dit 'n deur wat niemand deurgaan nie.
+--
+-- So `owner` mag nou null wees. 'n Ry met null is 'n **huiskunstenaar**: die
+-- eienaar laai hulle werk namens hulle op en betaal hulle met die hand,
+-- presies soos sy in elk geval doen. As daardie persoon later 'n rekening
+-- maak, word `owner` op hulle gestel en die profiel is reeds daar, met hulle
+-- werk en hulle woorde in.
+--
+-- Die `unique (owner)` bly staan en doen steeds sy werk: Postgres tel nulls
+-- nie as duplikate nie, so baie huiskunstenaars is reg en twee rye vir een
+-- rekening bly onmoontlik.
+alter table public.art_artists alter column owner drop not null;
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/aikoste.sql
