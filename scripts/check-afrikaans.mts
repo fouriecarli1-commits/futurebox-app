@@ -207,6 +207,13 @@ const ALLOWED = new Set([
      meaning two things on one screen is worse than a borrowed one, and "app"
      is the word she and everybody else actually says. */
   'app',
+  /* "buy-in" — the R50 that makes somebody allowed to bid.
+
+     Carli, 20 September 2026: *"elke persoon sal 'n R50 by in moet hê om
+     te mag bee … Buy in."* She wrote the Afrikaans "by in" and then named
+     the English word she meant. It is hers, it is what she says, and
+     "inkoop" would be a word nobody in this room uses. */
+  'buy',
   'instagram', 'meta', 'google', 'chrome', 'firefox', 'safari', 'edge',
   'copilot', 'collab', 'collabs', 'radar', 'arena', 'spotlight', 'masterclass',
   'masterclasses', 'premium', 'pro', 'reel', 'reels', 'shorts', 'studio',

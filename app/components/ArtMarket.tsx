@@ -1853,6 +1853,11 @@ function ArtistDesk({
           {t('art.youGet')} <strong className="text-[color:var(--ink)]">R{money.artist.toFixed(2)}</strong>{' '}
           {t('art.afterFees')} R{money.gateway.toFixed(2)}.
         </p>
+        {/* Carli: *"Die kunstenaar kry nie geld vir die by in nie, net vir
+            die wen prys."* Both halves of that on the one screen where the
+            artist could get it wrong: the number above is a floor, and the
+            buy-in is a door fee that never reaches them. */}
+        <p className={`${MIKRO} normal-case tracking-normal leading-relaxed`}>{t('art.paidOnWin')}</p>
         <label className={`${VUL} cursor-pointer`}>
           {busy ? t('art.uploading') : t('art.choose')}
           <input

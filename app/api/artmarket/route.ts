@@ -80,6 +80,11 @@ interface WorkRow {
      difference between them is the whole of this room's answer to a
      screenshot. Empty on a work uploaded before the column existed. */
   preview?: string;
+  /* What was actually paid for it, which is NOT `rand`: `rand` is where the
+     bidding opened. Written by the webhook out of the charge, and by
+     `deliver` out of the commission's own price. Null on anything sold
+     before the column existed, where the two were the same thing. */
+  paid_rand?: number | null;
   /** When the bidding closes. Null on a work hung before this existed. */
   ends_at?: string | null;
   /** Who was leading when it closed. Not a sale: `sold_to` is the sale. */
@@ -160,7 +165,7 @@ export async function GET(request: Request): Promise<Response> {
      looks merely quiet. */
   const { data: workRows, error: workError } = await client
     .from('art_works')
-    .select('id, artist, title, path, preview, rand, ends_at, won_by, sold_to, sold_at, paid_out')
+    .select('id, artist, title, path, preview, rand, paid_rand, ends_at, won_by, sold_to, sold_at, paid_out')
     .order('created_at', { ascending: false });
   if (workError) {
     return Response.json(
@@ -424,7 +429,11 @@ export async function GET(request: Request): Promise<Response> {
         /* Rounded to the cent per piece and then added, not added and then
            rounded. A statement that disagrees with the sum of its own
            lines by a cent is a statement somebody stops trusting. */
-        rand: Math.round((was.rand + split(one.rand).artist) * 100) / 100,
+        /* On what was PAID, never on the opening bid. A piece that
+           closed at R900 owes the artist R606.55, not the R133.70 that
+           R200 works out to. `?? one.rand` is for rows sold before the
+           column existed, where the two were the same thing. */
+        rand: Math.round((was.rand + split(one.paid_rand ?? one.rand).artist) * 100) / 100,
       });
     }
     owing = [...byArtist.entries()].map(([id, one]) => ({ artist: id, ...one }));
@@ -800,7 +809,7 @@ export async function POST(request: Request): Promise<Response> {
       }
       const { data: offer } = await client
         .from('art_offers')
-        .select('id, request, state')
+        .select('id, request, state, rand')
         .eq('id', String(body.offer ?? ''))
         .maybeSingle();
       if (!offer) {
@@ -832,11 +841,16 @@ export async function POST(request: Request): Promise<Response> {
          appears in the buyer's collection beside anything they bought
          off the wall. One list, because from the buyer's side there is
          no difference: it is their picture. */
+      /* `rand` has to clear the table's R200 floor, so the commission's
+         real price goes in `paid_rand` — which is the column the payout
+         statement reads. Without it a R500 commission would have paid
+         the artist as though it were a R200 auction. */
       await client.from('art_works').insert({
         artist: artist.id,
         title: (ask as RequestRow).song_title || 'Commission',
         path,
         rand: START_RAND,
+        paid_rand: (offer as OfferRow).rand,
         sold_to: (ask as RequestRow).buyer,
         sold_at: new Date().toISOString(),
       });

@@ -1701,6 +1701,48 @@ alter table public.art_bidders enable row level security;
 -- Geen policy nie: die roete sê wie mag bie, nie die blaaier nie.
 drop policy if exists "bidders are server only" on public.art_bidders;
 
+-- ── Wat werklik betaal is ───────────────────────────────────────────────
+--
+-- `rand` is die **openingsbod**. Sedert die kamer 'n veiling geword het, is
+-- dit nie meer wat iemand betaal het nie — en die uitbetalingstaat het dit
+-- steeds as die prys gelees. 'n Werk wat op R900 gesluit het, sou die
+-- kunstenaar op R200 betaal het: R133,70 in plaas van R606,55.
+--
+-- Dieselfde fout in die ander rigting vir 'n bestelling: die ry wat by
+-- lewering geskep word het `rand` op die vloer van R200 gehad, terwyl die
+-- kunstenaar 'n prys van R500 genoem het.
+--
+-- So: een kolom wat sê wat werklik oorbetaal is. Die webhook skryf dit uit
+-- die bedrag wat die betaaldiens gehef het — nie uit 'n bod wat intussen
+-- kon verander nie — en `deliver` skryf die bestelling se eie prys.
+--
+-- Null op elke ry wat voor hierdie kolom verkoop is; die staat val dan
+-- terug op `rand`, wat vir daardie rye korrek was.
+alter table public.art_works
+  add column if not exists paid_rand integer check (paid_rand is null or paid_rand >= 0);
+
+-- Die staat lees nou daardie kolom. Dit word hier oorgeskryf en nie boontoe
+-- by die eerste `create view` verander nie: op 'n skoon databasis bestaan
+-- `paid_rand` eers 'n paar reëls hierbo, en 'n aansig kan nie na 'n kolom
+-- verwys wat nog nie daar is nie.
+--
+-- Carli, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in nie,
+-- net vir die wen prys."* Die R50 inkoop staan in `art_bidders` en daardie
+-- tabel word hier nêrens gejoin nie — dit is wat daardie reël in die
+-- databasis waar hou. Die staat tel net verkoopte werke.
+create or replace view public.art_owing as
+  select a.id                                as artist,
+         a.name                              as artist_name,
+         count(w.id)                         as pieces,
+         array_agg(coalesce(w.paid_rand, w.rand) order by w.sold_at) as rands,
+         min(w.sold_at)                      as oldest_sale
+    from public.art_works w
+    join public.art_artists a on a.id = w.artist
+   where w.sold_to is not null
+     and w.paid_out is null
+   group by a.id, a.name
+   order by min(w.sold_at);
+
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/aikoste.sql

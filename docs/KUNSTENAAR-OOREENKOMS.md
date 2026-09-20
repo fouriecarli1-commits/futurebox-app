@@ -145,6 +145,12 @@ verbreking behandel.
 Die kaartfooi kom eerste van die **wenbod** af. Wat oorbly is die **wins**, en
 die wins word **70% aan die Kunstenaar en 30% aan die Studio** verdeel.
 
+**Die buy-in tel nie hier nie.** Om te mag bie, betaal 'n koper eenmalig
+**R50** aan die Studio. Dit is 'n deurfooi wat keer dat iemand wat nie ernstig
+is nie 'n prys opstoot en wegloop. Dit is nie deel van die prys van 'n werk
+nie, dit word nie van 'n wenbod afgetrek nie, en **die Kunstenaar kry niks
+daarvan nie**. Die Kunstenaar word op die wenbod betaal en op niks anders nie.
+
 Die tabel hieronder wys 'n paar bedrae. Dit is nie 'n pryslys nie — dit is wat
 by verskillende wenbodde uitkom.
 

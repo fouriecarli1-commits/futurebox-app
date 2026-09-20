@@ -27,7 +27,7 @@
  * invoice after payment, and both parties signing.
  */
 import { readFileSync } from 'node:fs';
-import { split, START_RAND, UNIQUE_RAND, ARTIST_SHARE } from '../app/data/artmarket';
+import { split, START_RAND, UNIQUE_RAND, ARTIST_SHARE, BIDDER_RAND } from '../app/data/artmarket';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -84,6 +84,23 @@ for (const paper of PAPERS) {
     'the agreement names a different commission price from the app');
   ok('  and the share is stated as 70/30', /70%/.test(text) && /30%/.test(text),
     `the app splits ${ARTIST_SHARE * 100}/${100 - ARTIST_SHARE * 100} and the paper does not say so`);
+
+  /* ── The buy-in, and who it does not belong to ───────────────────
+     Carli, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in
+     nie, net vir die wen prys."*
+
+     This is the clause an artist would otherwise discover on a statement:
+     twelve people paid R50 to bid on their piece and none of that R600 is
+     theirs. The table above says nothing about it — a buy-in is not a
+     sale and never appears as a row — so the sentence has to be held
+     here, or a reword that drops it costs nothing and is found by an
+     argument. */
+  ok(`  and it names the R${BIDDER_RAND} buy-in`,
+    new RegExp(`R${BIDDER_RAND}\\b`).test(text),
+    'the agreement does not mention the buy-in at all');
+  ok('    and says the artist gets none of it',
+    /(kry\s+niks\s+daarvan\s+nie|receives\s+none\s+of\s+it)/i.test(text),
+    'an artist can read this agreement and believe the buy-in is shared 70/30');
 
   /* ── The three things she asked for in so many words ────────────────────
      *"betalings maandelliks aan die einde van 'n kalender maand"*, *"die

@@ -315,7 +315,16 @@ export async function POST(request: Request): Promise<Response> {
     if (!store) return new Response('no database', { status: 200 });
     const { data, error } = await store
       .from('art_works')
-      .update({ sold_to: owner, sold_at: new Date().toISOString() })
+      /* `paid_rand` is what the artist is paid on, and it is written
+         here because here is the only place that knows it: `rand` on the
+         row is the OPENING bid, and what the winner actually paid is the
+         amount on the charge. A piece that opened at R200 and closed at
+         R900 would otherwise have paid its artist R133.70. */
+      .update({
+        sold_to: owner,
+        sold_at: new Date().toISOString(),
+        paid_rand: Math.round(cents / 100),
+      })
       .eq('id', meta.work)
       .is('sold_to', null)
       /* And the payer has to be the person who won it. The till checks
@@ -351,7 +360,7 @@ export async function POST(request: Request): Promise<Response> {
       console.error(`[artmarket] the bidder pass did not save. owner=${owner} reference=${reference} error=${error.message}`);
       return new Response('not saved', { status: 200 });
     }
-    await receipt(owner, 'Bidder pass', cents, reference, false);
+    await receipt(owner, 'Buy-in to bid', cents, reference, false);
     return new Response('ok', { status: 200 });
   }
 

@@ -22,7 +22,7 @@
 
 import {
   split, START_RAND, UNIQUE_RAND, ARTIST_SHARE, WINDOWS,
-  AUCTION_HOURS, BID_STEP, SNIPE_MINUTES, endsAt, nextBid,
+  AUCTION_HOURS, BID_STEP, SNIPE_MINUTES, BIDDER_RAND, endsAt, nextBid,
 } from '../app/data/artmarket';
 import { gatewayFee } from '../app/lib/plans';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -253,6 +253,103 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
     won.artist > split(START_RAND).artist * 4,
     `R${won.artist.toFixed(2)} against R${split(START_RAND).artist.toFixed(2)}`,
   );
+}
+
+/* ── The STATEMENT is on what was paid, not on the opening bid ──────
+
+   The till was fixed to charge the winning bid, and that made this the next
+   place the old number hides: the payout statement added up `art_works.rand`,
+   which is still where the bidding OPENED. A piece that closed at R900 would
+   have told her to pay the artist R133.70 instead of R606.55 — and unlike a
+   wrong charge, nothing about a wrong statement is visible to anybody except
+   the artist, months later.
+
+   The same number in the other direction for a commission: the row `deliver`
+   creates has to clear the table's R200 floor, so a R500 commission was
+   written down as R200 and paid out as one.
+
+   So there is a second column, `paid_rand`, written by the only two places
+   that know what actually changed hands, and read by the statement. Held as
+   three reads of the source, because the rule is which column each place
+   touches and only the source can say that. */
+{
+  const route = readFileSync('app/api/artmarket/route.ts', 'utf8');
+  ok('the payout statement pays on what was paid, not on the opening bid',
+    /split\(one\.paid_rand \?\? one\.rand\)/.test(route),
+    'the statement is summing art_works.rand, which is where the bidding opened');
+  ok('  and it asks the database for that column',
+    /\.select\([^)]*paid_rand[^)]*\)/.test(route),
+    'paid_rand is read off rows that were never fetched with it — every one is undefined');
+
+  /* A commission never goes through the wall, so its price reaches the
+     statement only if `deliver` writes it — and only if the offer it copies
+     from was read with `rand` on it. Both halves, because the second one was
+     missing and the first looked right. */
+  const at = route.indexOf("case 'deliver'");
+  const deliver = at < 0 ? '' : route.slice(at, route.indexOf("case 'wear'", at));
+  ok("  and a commission's own price is carried onto the work it creates",
+    /paid_rand: \(offer as OfferRow\)\.rand/.test(deliver),
+    'a R500 commission is written down at the R200 floor and paid out as one');
+  ok('    from an offer that was actually read with its price on it',
+    /\.select\('id, request, state, rand'\)/.test(deliver),
+    "deliver selects the offer without `rand`, so the price it writes is undefined");
+}
+
+{
+  const hook = readFileSync('app/api/payments/webhook/route.ts', 'utf8');
+  const at = hook.indexOf("meta.kind === 'art'");
+  const branch = at < 0 ? '' : hook.slice(at, at + 1600);
+  ok('  and the webhook writes down what the winner was actually charged',
+    /paid_rand: Math\.round\(cents \/ 100\)/.test(branch),
+    'the only place that knows the winning price does not record it');
+}
+
+/* ── The buy-in is not the artist's money ───────────────────────
+
+   Carli, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in nie,
+   net vir die wen prys."*
+
+   Twelve people paying R50 to bid on one piece is R600 that has nothing to do
+   with the piece, and a statement that swept it in would be paying 70% of it
+   away silently. It is true today by construction — the statement walks
+   `art_works` and `art_bidders` is a different table — and "true by
+   construction" is exactly the kind of true that a helpful edit undoes.
+
+   Two halves. The statement may not touch the bidders' table at all, and the
+   room has to SAY so, in both languages, where the money is discussed. */
+{
+  const route = readFileSync('app/api/artmarket/route.ts', 'utf8');
+  const at = route.indexOf('let owing: unknown = null;');
+  const statement = at < 0 ? '' : route.slice(at, route.indexOf('const worksOf', at));
+  ok('the payout statement exists to be checked', statement.length > 100,
+    'the owing block has moved — the rule below is measuring nothing');
+  ok('  and the buy-in never enters it', !/art_bidders|bidderRand|BIDDER_RAND/.test(statement),
+    "the R50 door fee is being added to what an artist is owed");
+
+  const sql = readFileSync('supabase/albumart.sql', 'utf8');
+  const view = sql.lastIndexOf('create or replace view public.art_owing');
+  ok('  and the view behind it does not join them either',
+    view >= 0 && !/art_bidders/.test(sql.slice(view, sql.indexOf(';', view))),
+    'art_owing joins the bidders table');
+  ok('  and that view reads the paid price, not the opening one',
+    view >= 0 && /coalesce\(w\.paid_rand, w\.rand\)/.test(sql.slice(view, sql.indexOf(';', view))),
+    'art_owing still lists art_works.rand, which is where the bidding opened');
+}
+
+{
+  const words = readFileSync('app/lib/i18n.tsx', 'utf8');
+  const at = words.indexOf('"art.paidOnWin"');
+  const both = at < 0 ? '' : words.slice(at, at + 1200);
+  ok('  and the artist is told so where they set the opening bid',
+    /none of it comes to you/i.test(both) && /niks daarvan kom na jou toe nie/i.test(both),
+    'art.paidOnWin does not say the buy-in is not theirs, in both languages');
+
+  const why = words.indexOf('"art.passWhy"');
+  const pass = why < 0 ? '' : words.slice(why, why + 1400);
+  ok('    and the bidder is told before they pay it',
+    /none of it goes to the artist/i.test(pass) && /gaan na die kunstenaar nie/i.test(pass),
+    'somebody pays the R50 believing part of it reaches the painter');
+  ok(`    and it is R${BIDDER_RAND} on both sides`, BIDDER_RAND === 50, `${BIDDER_RAND}`);
 }
 
 /* ── An artist may not bid up their own work ──────────────────────────────

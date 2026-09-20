@@ -460,13 +460,22 @@ export const STRINGS: Dict = {
   "art.bid": { en: "Bid", af: "Bie" },
   "art.notStarted": { en: "No bids yet", af: "Nog geen bodde" },
 
-  /* ── The R50 pass ──────────────────────────────────────────────────────
+  /* ── The R50 buy-in ─────────────────────────────────────────
      Carli: *"elke persoon sal 'n R50 by in moet hê om te mag bee, want
-     anders kan enige random mens die prys opstoot."* Once, not per piece. */
-  "art.takePass": { en: "Take the bidder pass", af: "Vat die bod-pas" },
+     anders kan enige random mens die prys opstoot."* Once, not per piece.
+
+     Called the buy-in and not "the pass", because that is her word for it:
+     *"Buy in."*
+
+     And her second sentence about it, which is the one that costs money if
+     it is left unsaid: *"Die kunstenaar kry nie geld vir die by in nie, net
+     vir die wen prys."* The R50 is the door, not part of the price of the
+     work — so the person paying it is told so before they pay, and the
+     artist is told the same thing in their agreement. */
+  "art.takePass": { en: "Take the buy-in", af: "Vat die buy-in" },
   "art.passWhy": {
-    en: "Bidding costs R50, once, and then you may bid on anything here for good. It is what keeps somebody who is not serious from running a price up and walking away.",
-    af: "Om te bie kos R50, een keer, en daarna mag jy vir altyd op enigiets hier bie. Dit is wat keer dat iemand wat nie ernstig is nie ’n prys opstoot en wegloop.",
+    en: "Bidding costs R50, once, and then you may bid on anything here for good. It is what keeps somebody who is not serious from running a price up and walking away. The buy-in is not part of what you pay for a piece, and none of it goes to the artist — the artist is paid out of the winning bid.",
+    af: "Om te bie kos R50, een keer, en daarna mag jy vir altyd op enigiets hier bie. Dit is wat keer dat iemand wat nie ernstig is nie ’n prys opstoot en wegloop. Die buy-in is nie deel van wat jy vir ’n werk betaal nie, en niks daarvan gaan na die kunstenaar nie — die kunstenaar word uit die wenbod betaal.",
   },
   "art.opensAt": { en: "Bidding opens at", af: "Bod maak oop by" },
   "art.standing": { en: "Highest bid", af: "Hoogste bod" },
@@ -655,9 +664,21 @@ export const STRINGS: Dict = {
   },
   "art.hang": { en: "Hang a new piece", af: "Hang ’n nuwe werk op" },
   "art.pieceName": { en: "What the piece is called", af: "Wat die werk genoem word" },
-  "art.price": { en: "Your price, at least", af: "Jou prys, ten minste" },
-  "art.youGet": { en: "You receive", af: "Jy ontvang" },
+  "art.price": { en: "Where the bidding opens, at least", af: "Waar die bod oopmaak, ten minste" },
+  "art.youGet": { en: "At that opening bid you receive", af: "By daardie openingsbod ontvang jy" },
   "art.afterFees": { en: "after the card fee of", af: "ná die kaartfooi van" },
+  /* ── What the artist is paid on, and what they are not ──────────────
+     Carli, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in
+     nie, net vir die wen prys."*
+
+     Said on the screen where the artist sets the opening bid, because that
+     is the screen where somebody would otherwise do the arithmetic wrong in
+     both directions at once: the number above is a floor and not a price,
+     and the R50 at the door is not theirs. */
+  "art.paidOnWin": {
+    en: "You are paid on the winning bid, not on this number — a piece that opens at R200 and closes at R900 pays you on R900. The R50 buy-in a bidder takes to be allowed to bid is not part of the price and none of it comes to you.",
+    af: "Jy word op die wenbod betaal, nie op hierdie syfer nie — ’n werk wat by R200 oopmaak en op R900 sluit, betaal jou op R900. Die R50 buy-in wat ’n bieër vat om te mag bie, is nie deel van die prys nie en niks daarvan kom na jou toe nie.",
+  },
   "art.choose": { en: "Choose the picture", af: "Kies die prent" },
   "art.uploading": { en: "Uploading…", af: "Laai op…" },
   "art.badFile": { en: "That picture could not be read.", af: "Daardie prent kon nie gelees word nie." },
