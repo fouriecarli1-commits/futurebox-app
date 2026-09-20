@@ -446,6 +446,27 @@ export const STRINGS: Dict = {
   "art.from": { en: "From", af: "Vanaf" },
   "art.one": { en: "Each one sold once", af: "Elkeen een keer verkoop" },
   "art.wall": { en: "For sale now", af: "Nou te koop" },
+  "art.crate": { en: "The crate", af: "Die kis" },
+  "art.by": { en: "by", af: "deur" },
+  "art.close": { en: "Close", af: "Maak toe" },
+
+  /* ── The sleeve turns over ─────────────────────────────────────────────
+     A record sleeve's back is where the credits are, so the artist is on
+     the back of the thing rather than in a card that opens over the room.
+     These four are what is printed on that back. */
+  "art.turnOver": { en: "turn it over", af: "draai dit om" },
+  "art.turnBack": { en: "Tap to turn it back", af: "Tik om dit terug te draai" },
+  "art.painted": { en: "Painted by", af: "Geskilder deur" },
+  "art.noWords": {
+    en: "This artist has not written anything about themselves yet.",
+    af: "Hierdie kunstenaar het nog niks oor haarself of homself geskryf nie.",
+  },
+  "art.askThem": { en: "Ask them for your own", af: "Vra hulle vir jou eie" },
+  "art.orderWhat": {
+    en: "Ask for a piece made for one of your songs. You pick the song; they answer with a price and a date. There is nothing to type — that is on purpose.",
+    af: "Vra vir ’n werk wat vir een van jou liedjies gemaak word. Jy kies die liedjie; hulle antwoord met ’n prys en ’n datum. Daar is niks om te tik nie — dit is met opset.",
+  },
+  "art.shelf": { en: "Your shelf", af: "Jou rak" },
 
   /* One piece, raised over the wall as a sheet. */
   "art.oneOnly": {

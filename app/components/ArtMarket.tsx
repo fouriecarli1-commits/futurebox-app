@@ -1,65 +1,64 @@
 'use client';
 
 /**
- * Album kunswerk — real artists, uniquely yours.
+ * Album kunswerk — the crate.
  *
- * ── What she asked for ───────────────────────────────────────────────────
+ * ── What this room has to do ─────────────────────────────────────────────
  *
- * Carli, 20 September 2026, under SELL IT: a room where real artists sell
- * album art. R200 off the wall, R500 for a commission, *"elke kunswerk wat
- * te koop is uniek is en net een keer verkoop"*, an artist pop-out, and a
- * DM made only of buttons so the deal cannot be arranged off the platform.
+ * Carli's list, across 20 September 2026:
  *
- * ── And what she said about the first attempt ────────────────────────────
+ *   real artists' real work at the top, buyable, R200 on every piece
+ *   every piece unique and sold exactly once, and the room must SHOW that
+ *   each artist has a pop-out that tells their profile
+ *   a DM asking for unique art for a particular song — buttons only, no typing
+ *   the artist answers with a price and one of four windows
+ *   paid → the buyer presses accept → a status bar → the artist gets an
+ *     upload that goes to that one person and shows in their channel
+ *   a buyer may generate art or buy ours; they may not upload their own
+ *   at the bottom, their songs and their collection, so a bought piece can
+ *     be put on a song
+ *   and the credit travels with the song into the channel and into Live
  *
- *   "Ek hou nie van die kunstenaar blad nie. Jy het presies gedoen wat ek
- *    jou nie gevra het om te doen nie. Ek het gevra jy moet net daardie
- *    website idee as 'n idee gebruik, nie net so nie. Dit lyk nou soos 'n
- *    website in plaas van 'n funksionele app."
+ * ── How it looks, and why ────────────────────────────────────────────────
  *
- * She is right and the diagnosis is exact. The first version had a
- * two-column hero with a headline and a lead paragraph, a "See the gallery"
- * anchor link, a row of marketing statistics, and a full-width dark band
- * selling the idea of buying art. Every one of those is a thing a landing
- * page does to a stranger who has not decided yet. Nobody in this room is a
- * stranger — they are signed in, they came here on purpose, and they want
- * to see the pictures.
+ * She gave me a design brief as an example. I built the example, twice, and
+ * she was right both times:
  *
- * ── So: what makes it an app and not a page ──────────────────────────────
+ *   *"Ek is baie spyt ek het enigsins vir jou 'n voorbeeld gegee … Sjoe daar
+ *    is nou geen verbeelding en kreatiwiteit daar in nie."*
  *
- *   it starts working    No hero, no pitch. Nine lines of chrome and then
- *                        the artwork. The first thing under your thumb is a
- *                        piece you can buy.
- *   it goes up, not      A sheet rises from the bottom with a grab handle
- *   across               and the buy button pinned where a thumb already
- *                        is. A website opens a new page; an app raises a
- *                        sheet over the one you are on.
- *   nothing anchors      No `href="#section"`. Links that scroll the page
- *                        are how a document works.
- *   one column of        Two-up, and that is the whole layout. The desktop
- *   thought              gets more of the same rather than a different
- *                        arrangement.
+ * So this one starts from the object instead. **Nobody buys album art to
+ * hang it.** They buy it to become a record sleeve. Every decision below
+ * comes out of that one sentence:
  *
- * ── And what makes it feel like an artist's room ─────────────────────────
+ *   THE CRATE     Records live in a crate you flick through, one at a time,
+ *                 large, in your hands. That is how you look at art you
+ *                 might buy, and it is a real phone gesture rather than a
+ *                 grid borrowed from a shop. Each sleeve snaps to the middle
+ *                 with its neighbours showing at the edges, so it reads as a
+ *                 stack you are going through rather than a page of
+ *                 thumbnails.
  *
- * Not decoration bolted on. Four decisions, each of which also earns its
- * place functionally:
+ *   THE SPINE     A sliver of dark down the right edge of every sleeve: the
+ *                 record sticking out of its jacket. One flourish, and it is
+ *                 the one that says what this thing is going to become.
  *
- *   paper, not panel   An off-white ground and ink text, where every other
- *                      room is white cards on grey with emerald buttons.
- *                      The artwork is then the only colour on the screen —
- *                      which is the one rule a gallery actually has.
- *   the hung rhythm    The second column sits lower than the first. Real
- *                      work is hung at different heights; a perfect grid
- *                      reads as a product listing. It costs one line of CSS
- *                      and it is the difference between a shop and a wall.
- *   a catalogue number Small, above each piece. Derived from the id, so it
- *                      needs no column. It is the detail that says these
- *                      are works and not stock photographs.
- *   a serif, for the   Titles and prices only, never for an instruction.
- *   names              Georgia, which is on every device — this app's CSP
- *                      is `font-src 'self'` and a webfont is not worth
- *                      widening it. `check:security` guards that directive.
+ *   THE FLIP      A sleeve's back is where the credits are. So the artist is
+ *                 not a card that opens over the room — you turn the sleeve
+ *                 over and they are on the back, in their own words, with
+ *                 the one button under them. Her pop-out, made out of the
+ *                 object rather than bolted beside it.
+ *
+ *   THE SEAL      "1 / 1", pressed into the corner of every sleeve. Her rule
+ *                 — *"elke kunswerk … uniek is en net een keer verkoop"* —
+ *                 as a mark on the thing rather than a sentence about it.
+ *
+ *   AT NIGHT      Warm near-black, cream ink, brass. Every other room in
+ *                 this app is cool grey with emerald buttons; this is a
+ *                 listening room with the work lit. It makes the artwork the
+ *                 only colour on the screen, which is the one rule a gallery
+ *                 actually has, and it gets there without a single borrowed
+ *                 line.
  *
  * ── Why there is not one text box in the conversation ────────────────────
  *
@@ -67,26 +66,22 @@
  *    bewus wees van dit, sodat kunstenaar nie agter my rug kan kunswerk
  *    verkoop nie."
  *
- * A free-text message between a buyer and an artist is a place to swap a
- * phone number and do the deal somewhere else, and the studio then carries
- * the cost of the introduction and earns nothing. The whole vocabulary is:
- * one button that says "I want unique art", and one of your own songs. The
- * artist answers with a price and one of four windows — also buttons. There
- * is nowhere in the schema to put a message either: not a nullable column,
- * no column.
+ * A free-text message is a place to swap a phone number and do the deal
+ * elsewhere, and the studio then carries the cost of the introduction and
+ * earns nothing. The whole vocabulary is: one button, and one of your own
+ * songs. The artist answers with a price and one of four windows — also
+ * buttons. There is nowhere in the schema to put a message either: not a
+ * nullable column, no column.
  *
  * ── And why a buyer cannot bring their own picture ───────────────────────
  *
- *   "binne elke klient se channel kan iemand net album art generate en ons
- *    kunstenaars se fotos op sit, hulle kan nie hulle eie fotos oplaai nie."
- *
- * The only file input in this file is inside the artist's own desk, and
+ * The only file input in this file is on the artist's own desk, and
  * `/api/artmarket` refuses an upload from anybody without an approved
  * artist row. Both, because a hidden button is not a closed door.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, ChevronDown, Loader2, Plus } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import { barClearance } from './TabBar';
 import { accessToken, getStorageClient } from '../lib/cloud';
 import { refusalText } from '../lib/apierror';
@@ -107,44 +102,42 @@ import {
 /* ────────────────────────────────────────────────────────────── the skin ── */
 
 /**
- * The room's palette, scoped to its own root.
+ * A listening room at night, scoped to this room's own root.
  *
- * Custom properties here rather than in `globals.css`: these names mean
- * something in this room and nowhere else, and a token in the global sheet
- * is a token the next room reaches for by accident.
+ * Warm rather than cool, which is the whole difference from everywhere else
+ * in this app: the other twelve rooms are zinc and emerald, and a gallery
+ * lit like a control panel makes paintings look like thumbnails. Brass for
+ * the accent because brass is what frames and plaques are made of.
+ *
+ * Custom properties here and not in `globals.css`: these names mean
+ * something in this room and nowhere else.
  */
 const SKIN = {
-  '--papier': '#F6F3ED',
-  '--papier-2': '#EFEBE3',
-  '--leeg': '#E7E2D8',
-  '--lyn': '#DBD6CC',
-  '--ink': '#17161B',
-  '--ink-2': '#4A463F',
-  '--gedemp': '#6E6A63',
-  '--aksent': '#9E4526',
+  '--nag': '#14110E',
+  '--nag-2': '#1D1915',
+  '--leeg': '#272119',
+  '--lyn': 'rgba(242,235,224,0.13)',
+  '--room': '#F2EBE0',
+  '--room-2': 'rgba(242,235,224,0.68)',
+  '--gedemp': 'rgba(242,235,224,0.42)',
+  '--brons': '#C08B4A',
   '--vertoon': 'Georgia, "Times New Roman", serif',
 } as React.CSSProperties;
 
-/** The small uppercase label. Catalogue numbers, section names, states. */
-const MIKRO = 'text-[10px] uppercase tracking-[0.18em] text-[color:var(--gedemp)]';
+/** The small uppercase mark: counts, states, section names. */
+const MIKRO = 'text-[10px] uppercase tracking-[0.2em] text-[color:var(--gedemp)]';
 
-/**
- * The one filled button, and it is a pill.
- *
- * Square everywhere else in this room, rounded here on purpose: in an app
- * the thing you press should look pressable at a glance, and a sharp black
- * rectangle reads as a banner. 48px tall, which is a thumb.
- */
+/** The one filled button. Brass, a pill, and 48px — which is a thumb. */
 const VUL =
-  'inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-[var(--ink)] px-6 text-[14px] font-semibold text-[var(--papier)] transition active:translate-y-px active:opacity-90 disabled:opacity-40';
+  'inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-[var(--brons)] px-6 text-[14px] font-bold text-[#17120B] transition active:translate-y-px active:opacity-90 disabled:opacity-40';
 
-/** Outlined, same height, for everything that is not the one thing to do. */
+/** Outlined, for everything that is not the one thing to do. */
 const LEEG =
-  'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[var(--lyn)] px-4 text-[13px] font-semibold text-[color:var(--ink-2)] transition active:translate-y-px active:bg-[var(--papier-2)] disabled:opacity-40';
+  'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[var(--lyn)] px-4 text-[13px] font-semibold text-[color:var(--room-2)] transition active:translate-y-px active:bg-[var(--nag-2)] disabled:opacity-40';
 
-/** A field. Square, quiet, with a real label above it. */
+/** A field. Quiet, and with a real label above it. */
 const VELD =
-  'mt-1.5 w-full rounded-[3px] border border-[var(--lyn)] bg-[var(--papier-2)] px-3 py-3 text-[15px] text-[color:var(--ink)] outline-none focus:border-[var(--aksent)]';
+  'mt-1.5 w-full rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] px-3 py-3 text-[15px] text-[color:var(--room)] outline-none focus:border-[var(--brons)]';
 
 /* ─────────────────────────────────────────────────────────── the shapes ── */
 
@@ -212,80 +205,65 @@ interface Market {
 /** The steps a commission goes through, in order, for the status bar. */
 const STEPS: readonly OfferState[] = ['offered', 'paid', 'accepted', 'delivered'];
 
-/**
- * A catalogue number, derived rather than stored.
- *
- * It needs no column: an id is already unique and its first characters are
- * stable for the life of the row. A counter would need a sequence, a
- * backfill, and a decision about what happens when a piece is deleted.
- */
-function cat(id: string): string {
-  return `AH-${id.replace(/[^0-9a-f]/gi, '').slice(0, 4).toUpperCase()}`;
-}
-
 /* ──────────────────────────────────────────────────────── the small parts ── */
 
 /**
- * A sheet that rises from the bottom.
+ * The sleeve: a square, a spine, and a seal.
  *
- * This is the one structural decision that makes the room an app rather
- * than a site. A website opens a new page and you press Back; an app raises
- * a sheet over what you were doing and you push it down. The grab handle,
- * the rounded top and the bottom-pinned action are all the same sentence:
- * the thing to press is where your thumb already is.
- *
- * Full height on a desk, where there is no thumb and a floating half-panel
- * would just be a small window.
+ * The spine is a sliver of dark down the right edge — the record sticking
+ * out of its jacket. It is the one flourish in the room and it is the one
+ * that says what this thing is going to become.
  */
-function Sheet({
-  onClose,
-  label,
-  children,
-  foot,
+function Sleeve({
+  url,
+  alt,
+  seal,
+  className = '',
 }: {
-  readonly onClose: () => void;
-  readonly label: string;
-  readonly children: React.ReactNode;
-  /** Pinned to the bottom, above the safe area. The one thing to do. */
-  readonly foot?: React.ReactNode;
+  readonly url: string | null;
+  readonly alt: string;
+  /** The "1 / 1" pressed into the corner. Off for a piece already owned. */
+  readonly seal?: boolean;
+  readonly className?: string;
 }): React.ReactElement {
   return (
-    <div
-      style={SKIN}
-      role="dialog"
-      aria-label={label}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(23,22,27,0.55)] md:items-center md:p-6"
-    >
-      <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[20px] bg-[var(--papier)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[20px]">
-        {/* The handle. It is also the close button, because the gesture it
-            stands for is one this app has no room to implement properly —
-            a handle you cannot pull is furniture. */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={label}
-          className="flex w-full shrink-0 justify-center py-3"
+    <span className={`relative block aspect-square overflow-hidden rounded-[3px] bg-[var(--leeg)] ${className}`}>
+      {url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt={alt} loading="lazy" className="h-full w-full object-cover" />
+      )}
+      {/* The record, just showing past the jacket. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-[7%] right-0 w-[5px] rounded-l-[2px]"
+        style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0.85))' }}
+      />
+      {/* The edition mark, pressed in rather than printed on. */}
+      {seal && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute bottom-2 left-2 rounded-full border px-2 py-0.5 text-[9px] font-bold tracking-[0.18em]"
+          style={{
+            borderColor: 'rgba(192,139,74,0.75)',
+            color: '#E8C89A',
+            background: 'rgba(20,17,14,0.55)',
+            backdropFilter: 'blur(2px)',
+          }}
         >
-          <span className="h-1 w-10 rounded-full bg-[var(--lyn)]" />
-        </button>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">{children}</div>
-        {foot && (
-          <div className="shrink-0 border-t border-[var(--lyn)] bg-[var(--papier)] px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-4">
-            {foot}
-          </div>
-        )}
-      </div>
-    </div>
+          1 / 1
+        </span>
+      )}
+    </span>
   );
 }
 
 /**
  * A fold, in this room's own language.
  *
- * `Card` is how the other twelve rooms fold, and its rounded emerald shape
- * would be the one thing on this screen that belongs somewhere else. Same
- * behaviour and the same `aria-expanded` the probes press: a hairline, a
- * small label, a chevron, and shut on arrival like every room in this app.
+ * Every room in this app opens as its own table of contents. `Card` is how
+ * the other twelve do it, and its rounded emerald shape would be the one
+ * thing here that belongs somewhere else. Same behaviour and the same
+ * `aria-expanded` the probes press.
  */
 function Fold({
   label,
@@ -302,7 +280,7 @@ function Fold({
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((was) => !was)}
-          className={`flex min-h-[52px] w-full items-center justify-between gap-3 py-3 text-left text-[13px] font-semibold text-[color:var(--ink)]`}
+          className="flex min-h-[52px] w-full items-center justify-between gap-3 py-3 text-left text-[13px] font-semibold text-[color:var(--room)]"
         >
           {label}
           <ChevronDown
@@ -320,10 +298,9 @@ function Fold({
  * Where a commission has got to.
  *
  * Her words: *"as die betaling deur is, druk die koper accept, en dan moet
- * daar 'n status bar wees"*. Drawn from the offer's own state rather than
- * from a separate progress number — two things that can disagree about
- * where a deal is eventually will. Ink, not green: the artwork is the only
- * colour in this room.
+ * daar 'n status bar wees"*. Drawn from the offer's own state rather than a
+ * separate progress number — two things that can disagree about where a
+ * deal is eventually will.
  */
 function StatusBar({ state, said }: { readonly state: OfferState; readonly said: string }): React.ReactElement {
   const reached = STEPS.indexOf(state);
@@ -333,34 +310,16 @@ function StatusBar({ state, said }: { readonly state: OfferState; readonly said:
         {STEPS.map((step, index) => (
           <span
             key={step}
-            className={`h-[3px] flex-1 rounded-full ${
-              state !== 'declined' && index <= reached ? 'bg-[var(--ink)]' : 'bg-[var(--lyn)]'
-            }`}
+            className="h-[3px] flex-1 rounded-full"
+            style={{
+              background:
+                state !== 'declined' && index <= reached ? 'var(--brons)' : 'var(--lyn)',
+            }}
           />
         ))}
       </div>
       <p className={`${MIKRO} pt-2`}>{said}</p>
     </div>
-  );
-}
-
-/** The frame every picture sits in: square, hairline, paper where empty. */
-function Frame({
-  url,
-  alt,
-  className = '',
-}: {
-  readonly url: string | null;
-  readonly alt: string;
-  readonly className?: string;
-}): React.ReactElement {
-  return (
-    <span className={`block aspect-square overflow-hidden rounded-[2px] border border-[var(--lyn)] bg-[var(--leeg)] ${className}`}>
-      {url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={alt} loading="lazy" className="h-full w-full object-cover" />
-      )}
-    </span>
   );
 }
 
@@ -371,14 +330,16 @@ export default function ArtMarket(): React.ReactElement {
   const [market, setMarket] = useState<Market | null>(null);
   const [problem, setProblem] = useState('');
   const [loading, setLoading] = useState(true);
-  const [popout, setPopout] = useState<Artist | null>(null);
-  const [sheet, setSheet] = useState<WallPiece | null>(null);
+  /** Which sleeve is turned over, showing the artist on its back. */
+  const [flipped, setFlipped] = useState<string | null>(null);
+  /** Whose buttons-only conversation is open. */
+  const [asking, setAsking] = useState<Artist | null>(null);
   const [songs, setSongs] = useState<readonly Track[]>([]);
-  /** Which artist's work the wall is filtered to. Empty is everybody. */
-  const [only, setOnly] = useState('');
+  /** Which sleeve is in the middle of the crate, for the dots. */
+  const [at, setAt] = useState(0);
+  const crate = useRef<HTMLDivElement | null>(null);
 
-  useBackLayer(popout !== null, () => setPopout(null));
-  useBackLayer(sheet !== null, () => setSheet(null));
+  useBackLayer(asking !== null, () => setAsking(null));
 
   const read = useCallback(async () => {
     setProblem('');
@@ -461,12 +422,18 @@ export default function ArtMarket(): React.ReactElement {
     [lang, t],
   );
 
-  const wall = useMemo(
-    () => (market?.wall ?? []).filter((one) => only === '' || one.artist === only),
-    [market, only],
-  );
-
+  const wall = market?.wall ?? [];
   const mine = market?.me ?? null;
+
+  /* Which sleeve is in the middle, read off the scroll rather than tracked
+     by the presses — a flick past three of them is one gesture and no
+     press at all. */
+  const onCrateScroll = useCallback(() => {
+    const box = crate.current;
+    if (!box) return;
+    const each = box.scrollWidth / Math.max(1, wall.length);
+    setAt(Math.round(box.scrollLeft / Math.max(1, each)));
+  }, [wall.length]);
 
   const saidState = (state: OfferState): string =>
     ({
@@ -481,16 +448,17 @@ export default function ArtMarket(): React.ReactElement {
     <div
       data-room="albumart"
       style={{ ...SKIN, paddingBottom: barClearance() }}
-      className="min-h-full bg-[var(--papier)] text-[color:var(--ink-2)]"
+      className="min-h-full bg-[var(--nag)] text-[color:var(--room-2)]"
     >
-      {/* ── Nine lines of chrome, and then the artwork ──────────────────
-          No hero and no pitch. Everybody here is signed in and came on
-          purpose. The two facts that have to be readable before anything
-          is pressed — what a piece starts at, and that it sells once —
-          are the subtitle, not a paragraph. */}
-      <header className="px-4 pb-3 pt-4">
+      {/* ── The plaque ─────────────────────────────────────────────────
+          A brass rule, the room's name, and the two facts that have to be
+          readable before anything is pressed: what a piece starts at, and
+          that each one sells once. No hero and no pitch — everybody here
+          is signed in and came on purpose. */}
+      <header className="px-4 pb-4 pt-5">
+        <span className="block h-px w-9 bg-[var(--brons)]" aria-hidden />
         <h2
-          className="text-[26px] leading-none text-[color:var(--ink)]"
+          className="pt-3 text-[27px] leading-none text-[color:var(--room)]"
           style={{ fontFamily: 'var(--vertoon)' }}
         >
           {t('art.title')}
@@ -500,45 +468,10 @@ export default function ArtMarket(): React.ReactElement {
         </p>
       </header>
 
-      {/* The artists, as a row you swipe. A filter, and also the way into
-          somebody's profile — which is the same gesture a person already
-          makes when they like what they are looking at. */}
-      {market && market.artists.length > 0 && (
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <button
-            type="button"
-            onClick={() => setOnly('')}
-            aria-pressed={only === ''}
-            className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold ${
-              only === ''
-                ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--papier)]'
-                : 'border-[var(--lyn)] text-[color:var(--ink-2)]'
-            }`}
-          >
-            {t('art.all')}
-          </button>
-          {market.artists.map((one) => (
-            <button
-              key={one.id}
-              type="button"
-              onClick={() => setOnly(only === one.id ? '' : one.id)}
-              aria-pressed={only === one.id}
-              className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-semibold ${
-                only === one.id
-                  ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--papier)]'
-                  : 'border-[var(--lyn)] text-[color:var(--ink-2)]'
-              }`}
-            >
-              {one.name}
-            </button>
-          ))}
-        </div>
-      )}
-
       {problem && (
         <p
           role="alert"
-          className="mx-4 mb-3 rounded-[3px] border border-[var(--aksent)] px-3 py-2.5 text-[14px] text-[color:var(--aksent)]"
+          className="mx-4 mb-3 rounded-[4px] border border-[var(--brons)] px-3 py-2.5 text-[14px] text-[#E8C89A]"
         >
           {problem}
         </p>
@@ -551,46 +484,123 @@ export default function ArtMarket(): React.ReactElement {
         </p>
       )}
 
-      {/* ── The wall ────────────────────────────────────────────────────
-          Two up, and the second column hangs lower. Real work is hung at
-          different heights; a perfect grid reads as a product listing.
-          One line of CSS, and it is the difference between a shop and a
-          wall.
-
-          A sold piece leaves the wall rather than being greyed out: her
-          rule is that a piece sells ONCE, and one still hanging with a
-          line through it invites somebody to ask whether it really has. */}
+      {/* ── The crate ───────────────────────────────────────────────────
+          One sleeve at a time, large, snapping to the middle, with its
+          neighbours showing at the edges so it reads as a stack you are
+          going through rather than a page of thumbnails. That is how a
+          person looks at art they might buy, and it is a real phone
+          gesture rather than a grid borrowed from a shop. */}
       {!loading && market && (
-        <section aria-label={t('art.wall')} className="px-4">
+        <section aria-label={t('art.crate')}>
           {wall.length === 0 ? (
-            <p className="rounded-[3px] border border-dashed border-[var(--lyn)] px-4 py-10 text-center text-[14px]">
+            <p className="mx-4 rounded-[4px] border border-dashed border-[var(--lyn)] px-4 py-12 text-center text-[14px]">
               {t('art.empty')}
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 [&>*:nth-child(even)]:mt-7 md:[&>*:nth-child(even)]:mt-0 md:[&>*:nth-child(3n+2)]:mt-9">
-              {wall.map((piece) => (
-                <button
-                  key={piece.id}
-                  type="button"
-                  data-piece={piece.id}
-                  onClick={() => setSheet(piece)}
-                  className="block w-full text-left"
-                >
-                  <span className="flex items-baseline justify-between pb-1.5">
-                    <span className={MIKRO}>{cat(piece.id)}</span>
-                    <span className="text-[13px] font-semibold text-[color:var(--ink)]">R{piece.rand}</span>
-                  </span>
-                  <Frame url={piece.url} alt={`${piece.title}, ${piece.by}`} />
-                  <span
-                    className="mt-2 block truncate text-[17px] leading-tight text-[color:var(--ink)]"
-                    style={{ fontFamily: 'var(--vertoon)' }}
-                  >
-                    {piece.title}
-                  </span>
-                  <span className={`${MIKRO} block truncate pt-0.5`}>{piece.by}</span>
-                </button>
-              ))}
-            </div>
+            <>
+              <div
+                ref={crate}
+                onScroll={onCrateScroll}
+                className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-[12vw] pb-2 [scrollbar-width:none] md:px-[28vw] [&::-webkit-scrollbar]:hidden"
+              >
+                {wall.map((piece) => (
+                  <article key={piece.id} data-piece={piece.id} className="w-[76vw] shrink-0 snap-center md:w-[44vw]">
+                    {/* The sleeve turns over. A record sleeve's back is
+                        where the credits are, so the artist is not a card
+                        that opens over the room — you turn the thing over
+                        and they are on the back, in their own words. */}
+                    <div className="[perspective:1400px]">
+                      <button
+                        type="button"
+                        onClick={() => setFlipped(flipped === piece.id ? null : piece.id)}
+                        aria-pressed={flipped === piece.id}
+                        aria-label={`${piece.title} — ${t('art.turnOver')}`}
+                        className="relative block w-full [transform-style:preserve-3d] transition-transform duration-500"
+                        style={{ transform: flipped === piece.id ? 'rotateY(180deg)' : undefined }}
+                      >
+                        <span className="block [backface-visibility:hidden]">
+                          <Sleeve url={piece.url} alt={`${piece.title}, ${piece.by}`} seal />
+                        </span>
+
+                        {/* The back. Paper-coloured, because the back of a
+                            sleeve is printed card and not a photograph. */}
+                        <span
+                          className="absolute inset-0 flex flex-col rounded-[3px] border p-4 text-left [backface-visibility:hidden] [transform:rotateY(180deg)]"
+                          style={{ background: 'var(--nag-2)', borderColor: 'var(--lyn)' }}
+                        >
+                          <span className={MIKRO}>{t('art.painted')}</span>
+                          <span
+                            className="pt-1.5 text-[22px] leading-tight text-[color:var(--room)]"
+                            style={{ fontFamily: 'var(--vertoon)' }}
+                          >
+                            {piece.by}
+                          </span>
+                          {(() => {
+                            const artist = market.artists.find((one) => one.id === piece.artist);
+                            return (
+                              <>
+                                {artist?.place && <span className={`${MIKRO} pt-1`}>{artist.place}</span>}
+                                <span className="mt-3 line-clamp-6 overflow-hidden whitespace-pre-wrap text-[13px] leading-relaxed">
+                                  {artist?.about || t('art.noWords')}
+                                </span>
+                              </>
+                            );
+                          })()}
+                          <span className={`${MIKRO} mt-auto pt-3`}>{t('art.turnBack')}</span>
+                        </span>
+                      </button>
+                    </div>
+
+                    <div className="pt-3">
+                      <p
+                        className="truncate text-[20px] leading-tight text-[color:var(--room)]"
+                        style={{ fontFamily: 'var(--vertoon)' }}
+                      >
+                        {piece.title}
+                      </p>
+                      <p className={`${MIKRO} pt-1`}>
+                        {t('art.by')} {piece.by}
+                      </p>
+                      <button
+                        type="button"
+                        className={`${VUL} mt-3`}
+                        onClick={() => void pay({ kind: 'art', work: piece.id })}
+                      >
+                        {t('art.buy')} · R{piece.rand}
+                      </button>
+                      {(() => {
+                        const artist = market.artists.find((one) => one.id === piece.artist);
+                        return artist ? (
+                          <button
+                            type="button"
+                            className={`${LEEG} mt-2 w-full`}
+                            onClick={() => setAsking(artist)}
+                          >
+                            {t('art.askThem')}
+                          </button>
+                        ) : null;
+                      })()}
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {/* Where you are in the crate. */}
+              {wall.length > 1 && (
+                <div className="flex justify-center gap-1.5 pt-1" aria-hidden>
+                  {wall.map((piece, index) => (
+                    <span
+                      key={piece.id}
+                      className="h-1 rounded-full transition-all"
+                      style={{
+                        width: index === at ? 18 : 6,
+                        background: index === at ? 'var(--brons)' : 'var(--lyn)',
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </section>
       )}
@@ -601,10 +611,14 @@ export default function ArtMarket(): React.ReactElement {
           <Fold label={t('art.yours')}>
             <ul className="space-y-5">
               {market.asBuyer.map((thread) => (
-                <li key={thread.id} data-thread={thread.id} className="rounded-[3px] border border-[var(--lyn)] p-4">
+                <li
+                  key={thread.id}
+                  data-thread={thread.id}
+                  className="rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-4"
+                >
                   <p className={MIKRO}>{thread.by}</p>
                   <p
-                    className="pt-1 text-[19px] leading-tight text-[color:var(--ink)]"
+                    className="pt-1 text-[19px] leading-tight text-[color:var(--room)]"
                     style={{ fontFamily: 'var(--vertoon)' }}
                   >
                     {thread.songTitle}
@@ -642,7 +656,7 @@ export default function ArtMarket(): React.ReactElement {
                         </p>
                       )}
                       {thread.offer.state === 'delivered' && thread.offer.url && (
-                        <Frame
+                        <Sleeve
                           url={thread.offer.url}
                           alt={`${thread.songTitle}, ${thread.by}`}
                           className="mt-3 w-36"
@@ -678,11 +692,11 @@ export default function ArtMarket(): React.ReactElement {
                 <li
                   key={one.artist}
                   data-owed={one.artist}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-[3px] border border-[var(--lyn)] p-4"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-4"
                 >
                   <div className="min-w-0">
                     <p
-                      className="truncate text-[19px] leading-tight text-[color:var(--ink)]"
+                      className="truncate text-[19px] leading-tight text-[color:var(--room)]"
                       style={{ fontFamily: 'var(--vertoon)' }}
                     >
                       {one.name}
@@ -691,7 +705,7 @@ export default function ArtMarket(): React.ReactElement {
                       {one.pieces} {one.pieces === 1 ? t('art.piece') : t('art.pieces')}
                     </p>
                   </div>
-                  <p className="text-[22px] text-[color:var(--ink)]" style={{ fontFamily: 'var(--vertoon)' }}>
+                  <p className="text-[22px] text-[color:var(--room)]" style={{ fontFamily: 'var(--vertoon)' }}>
                     R{one.rand.toFixed(2)}
                   </p>
                   <button
@@ -726,33 +740,19 @@ export default function ArtMarket(): React.ReactElement {
         </Fold>
       </div>
 
-      {sheet && (
-        <WorkSheet
-          piece={sheet}
-          artist={market?.artists.find((one) => one.id === sheet.artist) ?? null}
-          onClose={() => setSheet(null)}
-          onBuy={() => void pay({ kind: 'art', work: sheet.id })}
-          onArtist={(artist) => {
-            setSheet(null);
-            setPopout(artist);
-          }}
-          t={t}
-        />
-      )}
-
-      {popout && (
+      {asking && (
         <Popout
-          artist={popout}
+          artist={asking}
           songs={songs}
-          onClose={() => setPopout(null)}
+          onClose={() => setAsking(null)}
           onAsk={async (song) => {
             const ok = await doIt({
               what: 'ask',
-              artist: popout.id,
+              artist: asking.id,
               songId: song.id,
               songTitle: song.title,
             });
-            if (ok) setPopout(null);
+            if (ok) setAsking(null);
             return ok;
           }}
           t={t}
@@ -762,97 +762,19 @@ export default function ArtMarket(): React.ReactElement {
   );
 }
 
-/* ──────────────────────────────────────────────────────────── the one piece ── */
+/* ────────────────────────────────────────────────────────────── the order ── */
 
 /**
- * One work, raised over the wall.
- *
- * Everything a buyer needs before paying, in the order they need it: the
- * picture, then whose it is, then the one rule, then the price — and the
- * button pinned at the bottom where their thumb already is.
- *
- * There are no licence tiers. Three of them is a sensible marketplace and
- * it is not hers: *"elke kunswerk wat te koop is uniek is en net een keer
- * verkoop."* An option to sell the same painting twice would contradict the
- * one thing this room promises.
- */
-function WorkSheet({
-  piece,
-  artist,
-  onClose,
-  onBuy,
-  onArtist,
-  t,
-}: {
-  readonly piece: WallPiece;
-  readonly artist: Artist | null;
-  readonly onClose: () => void;
-  readonly onBuy: () => void;
-  readonly onArtist: (artist: Artist) => void;
-  readonly t: (key: string) => string;
-}): React.ReactElement {
-  return (
-    <Sheet
-      onClose={onClose}
-      label={piece.title}
-      foot={
-        <button type="button" onClick={onBuy} className={VUL}>
-          {t('art.buy')} · R{piece.rand}
-        </button>
-      }
-    >
-      <Frame url={piece.url} alt={`${piece.title}, ${piece.by}`} />
-
-      <div className="flex items-baseline justify-between pt-4">
-        <span className={MIKRO}>{cat(piece.id)}</span>
-        <span className={MIKRO}>{t('art.one')}</span>
-      </div>
-
-      <h3
-        className="pt-1 text-[30px] leading-tight text-[color:var(--ink)]"
-        style={{ fontFamily: 'var(--vertoon)' }}
-      >
-        {piece.title}
-      </h3>
-
-      {artist ? (
-        <button
-          type="button"
-          onClick={() => onArtist(artist)}
-          className="pt-1 text-[14px] text-[color:var(--aksent)] underline underline-offset-4"
-        >
-          {piece.by}
-        </button>
-      ) : (
-        <p className="pt-1 text-[14px]">{piece.by}</p>
-      )}
-
-      <p className="pt-4 text-[14px] leading-relaxed">{t('art.oneOnly')}</p>
-
-      <ul className="space-y-2 pt-4">
-        {[t('art.get.1'), t('art.get.2'), t('art.get.3'), t('art.get.4')].map((one) => (
-          <li key={one} className="flex gap-2 text-[14px] leading-relaxed">
-            <Check className="mt-1 h-3.5 w-3.5 shrink-0 text-[color:var(--aksent)]" aria-hidden />
-            {one}
-          </li>
-        ))}
-      </ul>
-
-      <p className={`${MIKRO} pt-4`}>
-        {t('art.dl.file')}: WebP · {ART_SIDE} × {ART_SIDE}
-      </p>
-    </Sheet>
-  );
-}
-
-/* ────────────────────────────────────────────────────────────── the artist ── */
-
-/**
- * The artist, and the whole of what a buyer may say to them.
+ * The whole of what a buyer may say to an artist.
  *
  * Two presses and no keyboard: "I want unique art", then which of your own
- * songs. There is no text input in this component and there must never be
- * one — see the note at the top of the file for why.
+ * songs it is for. There is no text input in this component and there must
+ * never be one — see the note at the top of the file, and `check:artmarket`,
+ * which reads this function's own body.
+ *
+ * It rises from the bottom with the one thing to do pinned where a thumb
+ * already is. A website opens a page; an app raises a sheet over what you
+ * were looking at.
  */
 function Popout({
   artist,
@@ -867,68 +789,84 @@ function Popout({
   readonly onAsk: (song: Track) => Promise<boolean>;
   readonly t: (key: string) => string;
 }): React.ReactElement {
-  /** Shut until they press the one button. Then: which song. */
   const [picking, setPicking] = useState(false);
   const [busy, setBusy] = useState('');
 
   return (
-    <Sheet
-      onClose={onClose}
-      label={artist.name}
-      foot={
-        picking ? undefined : (
-          <button type="button" className={VUL} onClick={() => setPicking(true)} data-ask>
-            <Plus className="h-4 w-4" aria-hidden />
-            {t('art.want')}
-          </button>
-        )
-      }
+    <div
+      style={SKIN}
+      role="dialog"
+      aria-label={artist.name}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(10,8,6,0.72)] md:items-center md:p-6"
     >
-      <h3
-        className="text-[30px] leading-tight text-[color:var(--ink)]"
-        style={{ fontFamily: 'var(--vertoon)' }}
-      >
-        {artist.name}
-      </h3>
-      {artist.place && <p className={`${MIKRO} pt-1.5`}>{artist.place}</p>}
-      {artist.about && <p className="whitespace-pre-wrap pt-4 text-[14px] leading-relaxed">{artist.about}</p>}
+      <div className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--nag)] text-[color:var(--room-2)] md:max-h-[84vh] md:rounded-[22px]">
+        <button type="button" onClick={onClose} aria-label={t('art.close')} className="flex w-full shrink-0 justify-center py-3">
+          <span className="h-1 w-10 rounded-full bg-[var(--lyn)]" />
+        </button>
 
-      {picking && (
-        <div className="pt-6">
-          <p className="text-[13px] font-semibold text-[color:var(--ink)]">{t('art.whichSong')}</p>
-          <p className="pt-1.5 text-[13px] leading-relaxed text-[color:var(--gedemp)]">{t('art.whyButtons')}</p>
-          {songs.length === 0 ? (
-            <p className="pt-4 text-[14px]">{t('art.noSongs')}</p>
-          ) : (
-            <ul className="space-y-2 pt-4">
-              {songs.map((song) => (
-                <li key={song.id}>
-                  <button
-                    type="button"
-                    className={`${LEEG} w-full justify-start`}
-                    disabled={busy !== ''}
-                    onClick={async () => {
-                      setBusy(song.id);
-                      await onAsk(song);
-                      setBusy('');
-                    }}
-                  >
-                    {busy === song.id && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
-                    <span className="truncate">{song.title}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+          <span className="block h-px w-9 bg-[var(--brons)]" aria-hidden />
+          <h3
+            className="pt-3 text-[26px] leading-tight text-[color:var(--room)]"
+            style={{ fontFamily: 'var(--vertoon)' }}
+          >
+            {artist.name}
+          </h3>
+          {artist.place && <p className={`${MIKRO} pt-1.5`}>{artist.place}</p>}
+
+          <p className="pt-4 text-[14px] leading-relaxed">{t('art.orderWhat')}</p>
+
+          {picking && (
+            <div className="pt-6">
+              <p className="text-[13px] font-semibold text-[color:var(--room)]">{t('art.whichSong')}</p>
+              <p className="pt-1.5 text-[13px] leading-relaxed text-[color:var(--gedemp)]">{t('art.whyButtons')}</p>
+              {songs.length === 0 ? (
+                <p className="pt-4 text-[14px]">{t('art.noSongs')}</p>
+              ) : (
+                <ul className="space-y-2 pt-4">
+                  {songs.map((song) => (
+                    <li key={song.id}>
+                      <button
+                        type="button"
+                        className={`${LEEG} w-full justify-start`}
+                        disabled={busy !== ''}
+                        onClick={async () => {
+                          setBusy(song.id);
+                          await onAsk(song);
+                          setBusy('');
+                        }}
+                      >
+                        {busy === song.id && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
+                        <span className="truncate">{song.title}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
         </div>
-      )}
-    </Sheet>
+
+        {!picking && (
+          <div className="shrink-0 border-t border-[var(--lyn)] px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-4">
+            <button type="button" className={VUL} onClick={() => setPicking(true)} data-ask>
+              {t('art.want')}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
 /* ──────────────────────────────────────────────── the bottom of the room ── */
 
-/** Pick a piece you own, pick a song you made, and the credit goes on it. */
+/**
+ * Your shelf, and your songs.
+ *
+ * Pick a sleeve, pick a song, and the credit goes onto it — which is what
+ * makes it travel into the channel and into Live.
+ */
 function PutOnSong({
   owned,
   songs,
@@ -951,14 +889,14 @@ function PutOnSong({
   return (
     <div className="space-y-7">
       <div>
-        <p className={MIKRO}>{t('art.collection')}</p>
+        <p className={MIKRO}>{t('art.shelf')}</p>
         <div className="grid grid-cols-3 gap-3 pt-3 md:grid-cols-5">
           {owned.map((one) => (
             <button key={one.id} type="button" onClick={() => setPiece(one.id)} aria-pressed={piece === one.id}>
-              <Frame
+              <Sleeve
                 url={one.url}
                 alt={`${one.title}, ${one.by}`}
-                className={piece === one.id ? 'outline outline-2 outline-offset-2 outline-[var(--ink)]' : ''}
+                className={piece === one.id ? 'outline outline-2 outline-offset-2 outline-[var(--brons)]' : ''}
               />
               <span className={`${MIKRO} mt-1.5 block truncate`}>{one.by}</span>
             </button>
@@ -980,7 +918,7 @@ function PutOnSong({
                   aria-pressed={song === one.id}
                   className={`w-full justify-start ${
                     song === one.id
-                      ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--ink)] px-4 text-[13px] font-semibold text-[var(--papier)]'
+                      ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--brons)] px-4 text-[13px] font-bold text-[#17120B]'
                       : LEEG
                   }`}
                 >
@@ -1059,7 +997,7 @@ function Apply({
 /* ────────────────────────────────────────────────────────────── the desk ── */
 
 /**
- * What an approved artist sees: hang a piece, and answer the requests.
+ * What an approved artist sees: hang a piece, and answer the orders.
  *
  * The only file input in this room lives here, and the route refuses an
  * upload from anybody without an approved artist row. Both, because a
@@ -1083,18 +1021,17 @@ function ArtistDesk({
   const [title, setTitle] = useState('');
   const [rand, setRand] = useState(String(START_RAND));
   const [busy, setBusy] = useState(false);
-  /** What each open request has been priced at, before it is sent. */
-  const [asking, setAsking] = useState<Record<string, { rand: string; days: number }>>({});
+  const [priced, setPriced] = useState<Record<string, { rand: string; days: number }>>({});
 
   const money = useMemo(() => split(Number(rand) || START_RAND), [rand]);
 
   /**
    * Take a file to 3000×3000 WebP and put it in the bucket.
    *
-   * The picture goes from here straight to storage with an address this
-   * app's server signed — it does not pass through a route. Six routes in
-   * this app already promised ceilings the platform will not pass; 4.5 MB
-   * is the wall, and a painting at this size is comfortably over it.
+   * Straight from here to storage with an address this app's server signed
+   * — it does not pass through a route. Six routes in this app already
+   * promised ceilings the platform will not pass; 4.5 MB is the wall, and a
+   * painting at this size is comfortably over it.
    */
   const upload = useCallback(
     async (file: File, why: 'work' | 'delivery'): Promise<string | null> => {
@@ -1139,7 +1076,6 @@ function ArtistDesk({
 
   return (
     <div className="space-y-9">
-      {/* ── Hang a new piece ─────────────────────────────────────────── */}
       <div className="max-w-md space-y-4">
         <p className={MIKRO}>{t('art.hang')}</p>
         <p className="text-[13px] leading-relaxed text-[color:var(--gedemp)]">{ART_SIZE_SAID[lang]}</p>
@@ -1159,12 +1095,11 @@ function ArtistDesk({
             className={VELD}
           />
         </label>
-        {/* What they actually take home, said before they set the price
-            rather than discovered on a statement. The gateway comes off
-            first and 70/30 is on what is left — `split` is the one place
-            that arithmetic lives. */}
+        {/* What they take home, said before they set the price rather than
+            discovered on a statement. The gateway comes off first and 70/30
+            is on what is left — `split` is the one place that lives. */}
         <p className="text-[14px] leading-relaxed">
-          {t('art.youGet')} <strong className="text-[color:var(--ink)]">R{money.artist.toFixed(2)}</strong>{' '}
+          {t('art.youGet')} <strong className="text-[color:var(--room)]">R{money.artist.toFixed(2)}</strong>{' '}
           {t('art.afterFees')} R{money.gateway.toFixed(2)}.
         </p>
         <label className={`${VUL} cursor-pointer`}>
@@ -1191,7 +1126,6 @@ function ArtistDesk({
         </label>
       </div>
 
-      {/* ── The requests ─────────────────────────────────────────────── */}
       <div>
         <p className={MIKRO}>{t('art.asks')}</p>
         {threads.length === 0 ? (
@@ -1199,11 +1133,11 @@ function ArtistDesk({
         ) : (
           <ul className="space-y-5 pt-3">
             {threads.map((thread) => {
-              const draft = asking[thread.id] ?? { rand: String(UNIQUE_RAND), days: WINDOWS[0].days };
+              const draft = priced[thread.id] ?? { rand: String(UNIQUE_RAND), days: WINDOWS[0].days };
               return (
-                <li key={thread.id} className="rounded-[3px] border border-[var(--lyn)] p-4">
+                <li key={thread.id} className="rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-4">
                   <p
-                    className="text-[19px] leading-tight text-[color:var(--ink)]"
+                    className="text-[19px] leading-tight text-[color:var(--room)]"
                     style={{ fontFamily: 'var(--vertoon)' }}
                   >
                     {thread.songTitle}
@@ -1219,7 +1153,7 @@ function ArtistDesk({
                           min={1}
                           value={draft.rand}
                           onChange={(event) =>
-                            setAsking((was) => ({ ...was, [thread.id]: { ...draft, rand: event.target.value } }))
+                            setPriced((was) => ({ ...was, [thread.id]: { ...draft, rand: event.target.value } }))
                           }
                           className={VELD}
                         />
@@ -1231,11 +1165,11 @@ function ArtistDesk({
                             type="button"
                             aria-pressed={draft.days === one.days}
                             onClick={() =>
-                              setAsking((was) => ({ ...was, [thread.id]: { ...draft, days: one.days } }))
+                              setPriced((was) => ({ ...was, [thread.id]: { ...draft, days: one.days } }))
                             }
                             className={
                               draft.days === one.days
-                                ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--ink)] px-4 text-[13px] font-semibold text-[var(--papier)]'
+                                ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--brons)] px-4 text-[13px] font-bold text-[#17120B]'
                                 : LEEG
                             }
                           >
