@@ -84,7 +84,7 @@ interface PaystackEvent {
     status?: string;
     metadata?: {
       owner?: string;
-      kind?: 'plan' | 'credits' | 'addon' | 'art' | 'commission';
+      kind?: 'plan' | 'credits' | 'addon' | 'art' | 'commission' | 'bidpass';
       trackId?: string | null;
       tier?: Tier | null;
       pack?: string | null;
@@ -333,6 +333,25 @@ export async function POST(request: Request): Promise<Response> {
       return new Response('already sold', { status: 200 });
     }
     await receipt(owner, `Album art: ${sold[0].title}`, cents, reference, false);
+    return new Response('ok', { status: 200 });
+  }
+
+  /* ── The bidder's pass ───────────────────────────────────────────────
+
+     One row per person, and the primary key is the person — so a webhook
+     that arrives twice for the same payment cannot make two, and an
+     upsert is the whole of it. */
+  if (meta.kind === 'bidpass') {
+    const store = db();
+    if (!store) return new Response('no database', { status: 200 });
+    const { error } = await store
+      .from('art_bidders')
+      .upsert({ owner, reference }, { onConflict: 'owner' });
+    if (error) {
+      console.error(`[artmarket] the bidder pass did not save. owner=${owner} reference=${reference} error=${error.message}`);
+      return new Response('not saved', { status: 200 });
+    }
+    await receipt(owner, 'Bidder pass', cents, reference, false);
     return new Response('ok', { status: 200 });
   }
 

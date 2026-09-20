@@ -40,7 +40,7 @@ import { admin, callerFrom, callerIsOwner, metered } from '@/app/lib/server/acco
 import { ownerEmails } from '@/app/lib/server/owners';
 import { filterSafe } from '@/app/lib/server/filtersafe';
 import {
-  ART_MAX_BYTES, BID_STEP, SNIPE_MINUTES, START_RAND, UNIQUE_RAND, WINDOWS,
+  ART_MAX_BYTES, BID_STEP, BIDDER_RAND, SNIPE_MINUTES, START_RAND, UNIQUE_RAND, WINDOWS,
   endsAt, nextBid, split,
 } from '@/app/data/artmarket';
 
@@ -278,6 +278,9 @@ export async function GET(request: Request): Promise<Response> {
         endsAt: one.ends_at ?? null,
         /* Over, and who it went to — said as two booleans rather than an
            id, because the browser has no business knowing who else bid. */
+        /* Not started is not over. A piece nobody has bid on has no
+           clock at all, and waits. */
+        started: Boolean(one.ends_at),
         over: Boolean(one.won_by) || (one.ends_at ? new Date(one.ends_at).getTime() <= nowAt : false),
         wonByMe: one.won_by === caller.id,
         leadingMe: (myBest.get(one.id) ?? 0) > 0 && (myBest.get(one.id) ?? 0) === (tops.get(one.id)?.top ?? -1),
@@ -443,8 +446,20 @@ export async function GET(request: Request): Promise<Response> {
   const soldBy = (artist: string) =>
     works.filter((one) => one.artist === artist && one.sold_to).length;
 
+  /* Whether this person has the pass. One read, so the screen can say
+     "take the pass" instead of letting somebody type a bid and be
+     refused at the end of it. */
+  const { data: pass } = await client
+    .from('art_bidders')
+    .select('owner')
+    .eq('owner', caller.id)
+    .maybeSingle();
+
   return Response.json({
     owing,
+    /* Her R50, once. See `app/data/artmarket.ts`. */
+    canBid: Boolean(pass),
+    bidderRand: BIDDER_RAND,
     /* The gallery shows approved artists only. An application in the
        waiting room is between that person and the owner. */
     artists: artists
@@ -654,12 +669,13 @@ export async function POST(request: Request): Promise<Response> {
       if (preview && !preview.startsWith(`${artist.id}/`)) {
         return Response.json({ error: 'not_yours', message: 'That is not a file you uploaded.' }, { status: 403 });
       }
-      /* The clock starts when the piece is hung. On the row rather than
-         computed from `created_at`, so changing the rule later cannot
-         backdate the auctions already running. */
+      /* No clock yet. Carli: *"Die beeing begin wanneer iemand begin
+         bee."* A piece that goes up on a Tuesday and that nobody sees
+         until Wednesday had already closed under the old rule. `ends_at`
+         stays null until the first bid, which is what starts it. */
       const { error } = await client
         .from('art_works')
-        .insert({ artist: artist.id, title, path, preview, rand, ends_at: endsAt() });
+        .insert({ artist: artist.id, title, path, preview, rand });
       if (error) {
         return Response.json({ error: 'not_saved', message: 'That did not save.' }, { status: 500 });
       }
@@ -887,11 +903,32 @@ export async function POST(request: Request): Promise<Response> {
       if (work.sold_to || work.won_by) {
         return Response.json({ error: 'over', message: 'The bidding on that piece is over.' }, { status: 409 });
       }
+      /* ── You have to be a bidder ─────────────────────────────────
+         *"Elke persoon sal 'n R50 by in moet hê om te mag bee, want
+         anders kan enige random mens die prys opstoot."* A bid is a
+         promise to pay, and a promise that costs nothing is worth
+         nothing. Checked here and nowhere else: a browser that can bid
+         without this is the thing the fee exists to stop. */
+      const { data: pass } = await client
+        .from('art_bidders')
+        .select('owner')
+        .eq('owner', caller.id)
+        .maybeSingle();
+      if (!pass) {
+        return Response.json(
+          { error: 'no_pass', message: 'Take the bidder pass first.', rand: BIDDER_RAND },
+          { status: 402 },
+        );
+      }
+
       /* The clock, read from the row rather than from the request. A
          browser with a slow phone and an old page would otherwise be
-         bidding on an auction that ended ten minutes ago. */
-      const closes = work.ends_at ? new Date(work.ends_at).getTime() : 0;
-      if (!closes || closes <= Date.now()) {
+         bidding on an auction that ended ten minutes ago.
+
+         Null means nobody has bid yet, which is not "over" — it is "not
+         started", and this bid is what starts it. */
+      const closes = work.ends_at ? new Date(work.ends_at).getTime() : null;
+      if (closes !== null && closes <= Date.now()) {
         return Response.json({ error: 'over', message: 'The bidding on that piece is over.' }, { status: 409 });
       }
       /* An artist may not bid their own work up. This is the one rule an
@@ -924,12 +961,22 @@ export async function POST(request: Request): Promise<Response> {
         return Response.json({ error: 'not_saved', message: 'That bid did not go through.' }, { status: 500 });
       }
 
-      /* ── The late bid pushes the end out ───────────────────────────
-         Otherwise the thirty-six hours is theatre and the auction is
-         really one second long: everybody waits for the end and the
-         fastest connection wins. */
-      const left = closes - Date.now();
-      if (left < SNIPE_MINUTES * 60 * 1000) {
+      if (closes === null) {
+        /* ── The first bid starts the clock ──────────────────────────
+           `.is('ends_at', null)` makes it the FIRST bid that does it and
+           not the second: two people bidding in the same second would
+           otherwise each set a clock, and the later one would quietly
+           give the piece another thirty-six hours. */
+        await client
+          .from('art_works')
+          .update({ ends_at: endsAt() })
+          .eq('id', work.id)
+          .is('ends_at', null);
+      } else if (closes - Date.now() < SNIPE_MINUTES * 60 * 1000) {
+        /* ── The late bid pushes the end out ─────────────────────────
+           Otherwise the thirty-six hours is theatre and the auction is
+           really one second long: everybody waits for the end and the
+           fastest connection wins. */
         await client
           .from('art_works')
           .update({ ends_at: new Date(Date.now() + SNIPE_MINUTES * 60 * 1000).toISOString() })

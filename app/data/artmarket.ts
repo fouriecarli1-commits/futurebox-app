@@ -42,8 +42,33 @@ import { gatewayFee } from '../lib/plans';
  */
 export const START_RAND = 200;
 
-/** How long a piece is open for bids, from the moment it is hung. */
+/**
+ * How long a piece is open for bids, from the FIRST bid.
+ *
+ * Carli: *"Die beeing begin wanneer iemand begin bee."* It used to run
+ * from the moment a piece was hung, which meant a work that went up on a
+ * Tuesday morning and that nobody saw until Wednesday had already closed.
+ * A piece with no bids waits, for as long as it has to.
+ */
 export const AUCTION_HOURS = 36;
+
+/**
+ * What it costs to be allowed to bid at all. Once, not per piece.
+ *
+ * Carli: *"Elke persoon sal 'n R50 by in moet hê om te mag bee, want
+ * anders kan enige random mens die prys opstoot."*
+ *
+ * She is right, and it is the old reason an auction house asks you to
+ * register: a bid is a promise to pay, and a promise that costs nothing
+ * is worth nothing. One person who finds it funny to run a R200 piece up
+ * to R4000 and then vanish has cost the artist the sale and the buyer the
+ * work, and there is no way to undo it afterwards.
+ *
+ * Once, and then for every piece forever. A fee per auction turns every
+ * work into a tollgate, which is not what she asked for and would stop
+ * the ordinary case — somebody who watches three pieces and bids on one.
+ */
+export const BIDDER_RAND = 50;
 
 /**
  * The least a new bid must beat the standing one by.
@@ -72,7 +97,7 @@ export function nextBid(standing: number | null): number {
   return standing === null ? START_RAND : standing + BID_STEP;
 }
 
-/** When a piece hung now stops taking bids. */
+/** When a piece first bid on now stops taking bids. */
 export function endsAt(from: Date = new Date()): string {
   return new Date(from.getTime() + AUCTION_HOURS * 60 * 60 * 1000).toISOString();
 }

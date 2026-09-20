@@ -104,42 +104,71 @@ import {
 /* ────────────────────────────────────────────────────────────── the skin ── */
 
 /**
- * A listening room at night, scoped to this room's own root.
+ * One palette, light, and the whole room uses it.
  *
- * Warm rather than cool, which is the whole difference from everywhere else
- * in this app: the other twelve rooms are zinc and emerald, and a gallery
- * lit like a control panel makes paintings look like thumbnails. Brass for
- * the accent because brass is what frames and plaques are made of.
+ * Carli: *"Die donker tema gaan ook nie werk nie. Dit moet lig en skoon
+ * lyk, dit moet artsy en uniek wees. Dan moet daai hele bladsy en kamer
+ * die selfde kleur en tema regdeur hê."*
  *
- * Custom properties here and not in `globals.css`: these names mean
- * something in this room and nowhere else.
+ * Warm cream rather than white: a gallery is lit, not clinical, and pure
+ * white makes every artwork on it look like a product photograph. Cards
+ * are white ON the cream, which is what gives the screen its layers — and
+ * layers are most of what separates an app from a page.
+ *
+ * One accent, deep indigo, and it is the only colour that is not paper or
+ * ink. It is on every button, every price, the live tab, and nothing
+ * else. Indigo and cream is a printmaker's pairing — it is not emerald,
+ * which is the rest of this app, and it is not a colour a music app
+ * usually reaches for, which is the point.
+ *
+ * Every pair below clears WCAG AA for body text on the surface it is used
+ * on: ink on cream is about 15:1, the muted grey about 5:1, white on
+ * indigo about 11:1. `check:theme` holds the app's own rule that a light
+ * surface must never be painted with a bare `bg-white`, which is why
+ * every surface here is a token.
  */
 const SKIN = {
-  '--nag': '#14110E',
-  '--nag-2': '#1D1915',
-  '--leeg': '#272119',
-  '--lyn': 'rgba(242,235,224,0.13)',
-  '--room': '#F2EBE0',
-  '--room-2': 'rgba(242,235,224,0.68)',
-  '--gedemp': 'rgba(242,235,224,0.42)',
-  '--brons': '#C08B4A',
+  /** The ground the whole room stands on. */
+  '--grond': '#F7F3EC',
+  /** A card floating on it. */
+  '--blad': '#FFFFFF',
+  /** Where a picture has not loaded. */
+  '--leeg': '#EFE9DF',
+  '--lyn': '#E4DCD0',
+  '--ink': '#1A1714',
+  '--ink-2': '#57504A',
+  '--gedemp': '#6E655B',
+  '--aksent': '#3B2E7E',
+  /** The accent at a tenth, for a chip or a track. */
+  '--aksent-sag': '#ECEAF6',
   '--vertoon': 'Georgia, "Times New Roman", serif',
 } as React.CSSProperties;
 
 /** The small uppercase mark: counts, states, section names. */
-const MIKRO = 'text-[10px] uppercase tracking-[0.2em] text-[color:var(--gedemp)]';
+/** The small label. One size, one weight, everywhere in the room. */
+const MIKRO = 'text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--gedemp)]';
+
+/**
+ * A card: white, on the cream ground.
+ *
+ * This one token is most of what separates an app from a page. A page
+ * puts content on the background; an app puts it on a surface, and the
+ * gap between the two is what tells a thumb where one thing ends and the
+ * next begins.
+ */
+const KAART = 'rounded-[18px] bg-[var(--blad)] shadow-[0_1px_3px_rgba(26,23,20,0.06),0_8px_24px_-12px_rgba(26,23,20,0.12)]';
 
 /** The one filled button. Brass, a pill, and 48px — which is a thumb. */
 const VUL =
-  'inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-[var(--brons)] px-6 text-[14px] font-bold text-[#17120B] transition active:translate-y-px active:opacity-90 disabled:opacity-40';
+  'inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[14px] bg-[var(--aksent)] px-6 text-[15px] font-bold text-[var(--blad)] shadow-[0_2px_10px_rgba(59,46,126,0.25)] transition active:translate-y-px active:opacity-90 disabled:opacity-35 disabled:shadow-none';
 
 /** Outlined, for everything that is not the one thing to do. */
 const LEEG =
-  'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-[var(--lyn)] px-4 text-[13px] font-semibold text-[color:var(--room-2)] transition active:translate-y-px active:bg-[var(--nag-2)] disabled:opacity-40';
+  'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] border border-[var(--lyn)] bg-[var(--blad)] px-4 text-[14px] font-semibold text-[color:var(--ink)] transition active:translate-y-px active:bg-[var(--grond)] disabled:opacity-40';
 
 /** A field. Quiet, and with a real label above it. */
 const VELD =
-  'mt-1.5 w-full rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] px-3 py-3 text-[15px] text-[color:var(--room)] outline-none focus:border-[var(--brons)]';
+  'mt-1.5 w-full rounded-[12px] border border-[var(--lyn)] bg-[var(--blad)] px-3.5 py-3 text-[16px] text-[color:var(--ink)] outline-none focus:border-[var(--aksent)] focus:ring-2 focus:ring-[var(--aksent-sag)]';
 
 /* ─────────────────────────────────────────────────────────── the shapes ── */
 
@@ -179,6 +208,8 @@ interface WallPiece {
   /** The least a new bid may be. */
   readonly next: number;
   readonly endsAt: string | null;
+  /** False until somebody has bid. A piece with no bids waits. */
+  readonly started: boolean;
   readonly over: boolean;
   readonly wonByMe: boolean;
   readonly leadingMe: boolean;
@@ -226,6 +257,9 @@ interface Market {
   readonly artists: readonly Artist[];
   /** Everybody, waiting room included. Owner only; null for the rest. */
   readonly everyArtist: readonly AnyArtist[] | null;
+  /** Whether this person has paid the once-off pass and may bid. */
+  readonly canBid: boolean;
+  readonly bidderRand: number;
   /** True when OWNER_EMAIL is unset, so nobody is the owner. See the route. */
   readonly noOwner: boolean;
   readonly wall: readonly WallPiece[];
@@ -254,10 +288,13 @@ const STEPS: readonly OfferState[] = ['offered', 'paid', 'accepted', 'delivered'
  */
 function Countdown({
   endsAt,
+  started,
   over,
   t,
 }: {
   readonly endsAt: string | null;
+  /** False until somebody has bid. Not started is not over. */
+  readonly started?: boolean;
   readonly over: boolean;
   readonly t: (key: string) => string;
 }): React.ReactElement | null {
@@ -267,7 +304,14 @@ function Countdown({
     return () => window.clearInterval(beat);
   }, []);
 
-  if (!endsAt) return null;
+  /* Her rule: *"Die beeing begin wanneer iemand begin bee."* A piece
+     nobody has bid on has no clock at all, and that state is worth
+     naming — silence here reads as a clock that failed to load. */
+  if (!endsAt) {
+    return started === false
+      ? <span className={`${MIKRO} shrink-0 normal-case tracking-normal`}>{t('art.notStarted')}</span>
+      : null;
+  }
   const left = new Date(endsAt).getTime() - now;
   if (over || left <= 0) return <span className={MIKRO}>{t('art.over')}</span>;
 
@@ -278,7 +322,9 @@ function Countdown({
   const soon = left < 3_600_000;
   return (
     <span
-      className={`text-[10px] font-bold uppercase tracking-[0.14em] ${soon ? 'text-[#E8A33A]' : 'text-[color:var(--gedemp)]'}`}
+      className={`shrink-0 rounded-[8px] px-2 py-1 text-[11px] font-bold ${
+        soon ? 'bg-[#FBEFE4] text-[#A8480F]' : 'bg-[var(--grond)] text-[color:var(--ink-2)]'
+      }`}
     >
       {hours > 0 ? `${hours}u ${minutes}m` : `${minutes}m`} {t('art.left')}
     </span>
@@ -415,9 +461,9 @@ function Sleeve({
           aria-hidden
           className="pointer-events-none absolute bottom-2 left-2 rounded-full border px-2 py-0.5 text-[9px] font-bold tracking-[0.18em]"
           style={{
-            borderColor: 'rgba(192,139,74,0.75)',
-            color: '#E8C89A',
-            background: 'rgba(20,17,14,0.55)',
+            borderColor: 'var(--aksent)',
+            color: 'var(--aksent)',
+            background: 'rgba(255,255,255,0.92)',
             backdropFilter: 'blur(2px)',
           }}
         >
@@ -451,7 +497,7 @@ function Fold({
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((was) => !was)}
-          className="flex min-h-[52px] w-full items-center justify-between gap-3 py-3 text-left text-[13px] font-semibold text-[color:var(--room)]"
+          className="flex min-h-[52px] w-full items-center justify-between gap-3 py-3 text-left text-[13px] font-semibold text-[color:var(--ink)]"
         >
           {label}
           <ChevronDown
@@ -484,7 +530,7 @@ function StatusBar({ state, said }: { readonly state: OfferState; readonly said:
             className="h-[3px] flex-1 rounded-full"
             style={{
               background:
-                state !== 'declined' && index <= reached ? 'var(--brons)' : 'var(--lyn)',
+                state !== 'declined' && index <= reached ? 'var(--aksent)' : 'var(--lyn)',
             }}
           />
         ))}
@@ -655,18 +701,24 @@ export default function ArtMarket(): React.ReactElement {
     <div
       data-room="albumart"
       style={{ ...SKIN, paddingBottom: barClearance() }}
-      className="min-h-full bg-[var(--nag)] text-[color:var(--room-2)]"
+      className="min-h-full bg-[var(--grond)] text-[color:var(--ink-2)]"
     >
       {/* ── The bar ─────────────────────────────────────────────────────
           Fifty-two pixels, a name, and nothing else. Not a masthead: a
           masthead is the thing that made this read as a page. */}
-      <header className="flex h-[52px] items-center justify-between border-b border-[var(--lyn)] px-4">
-        <h2 className="text-[16px] font-bold tracking-tight text-[color:var(--room)]">{t('art.title')}</h2>
+      {/* ── The title, in the content ───────────────────────────────────
+          A bar across the top with a name in it is a website's nav. An
+          app puts its title in the page, large, and lets it scroll away
+          once you are looking at something. */}
+      <header className="px-4 pt-6">
+        <h2 className="text-[30px] font-bold leading-none tracking-tight text-[color:var(--ink)]">
+          {t('art.title')}
+        </h2>
       </header>
 
       {/* The segmented control. An app switches between the two or three
           things a screen is for; a page stacks them and makes you scroll. */}
-      <div role="tablist" className="flex gap-1 border-b border-[var(--lyn)] px-3 py-2">
+      <div role="tablist" className="mx-4 mt-4 flex gap-1 rounded-[14px] bg-[var(--aksent-sag)] p-1">
         {TABS.map((one) => (
           <button
             key={one.id}
@@ -674,16 +726,18 @@ export default function ArtMarket(): React.ReactElement {
             role="tab"
             aria-selected={tab === one.id}
             onClick={() => setTab(one.id)}
-            className={`flex min-h-[38px] flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition ${
+            /* The live one is lifted out of the track rather than
+               filled in: that is the control every phone uses to say
+               "one screen, three ways", and it is the most app-shaped
+               thing on here. */
+            className={`flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-[11px] px-2 text-[14px] font-semibold transition ${
               tab === one.id
-                ? 'bg-[var(--brons)] text-[#17120B]'
-                : 'text-[color:var(--room-2)] active:bg-[var(--nag-2)]'
+                ? 'bg-[var(--blad)] text-[color:var(--aksent)] shadow-[0_1px_4px_rgba(26,23,20,0.12)]'
+                : 'text-[color:var(--ink-2)]'
             }`}
           >
             {one.said}
-            {one.count > 0 && (
-              <span className={`text-[11px] ${tab === one.id ? 'opacity-70' : 'opacity-50'}`}>{one.count}</span>
-            )}
+            {one.count > 0 && <span className="text-[12px] opacity-60">{one.count}</span>}
           </button>
         ))}
       </div>
@@ -691,7 +745,7 @@ export default function ArtMarket(): React.ReactElement {
       {problem && (
         <p
           role="alert"
-          className="mx-4 mt-3 rounded-[4px] border border-[var(--brons)] px-3 py-2.5 text-[14px] text-[#E8C89A]"
+          className="mx-4 mt-3 rounded-[4px] border border-[var(--aksent)] px-3 py-2.5 text-[14px] text-[color:var(--aksent)]"
         >
           {problem}
         </p>
@@ -709,7 +763,7 @@ export default function ArtMarket(): React.ReactElement {
           machine, sold once, from R200. It stays on the works tab, where
           somebody is deciding whether any of this is for them. */}
       {!loading && tab === 'works' && (
-        <p className="px-4 pt-3 text-[13px] leading-relaxed text-[color:var(--room-2)]">{t('art.whatThisIs')}</p>
+        <p className="px-4 pt-3 text-[13px] leading-relaxed text-[color:var(--ink-2)]">{t('art.whatThisIs')}</p>
       )}
 
       {/* ── WERKE ───────────────────────────────────────────────────────
@@ -729,32 +783,36 @@ export default function ArtMarket(): React.ReactElement {
                   type="button"
                   data-piece={piece.id}
                   onClick={() => setSheet(piece)}
-                  className="block w-full text-left"
+                  className={`${KAART} block w-full overflow-hidden text-left transition active:scale-[0.985]`}
                 >
                   <Sleeve url={piece.url} alt={`${piece.title}, ${piece.by}`} seal />
-                  <span className="mt-2 flex items-baseline justify-between gap-2">
-                    <span className="min-w-0 truncate text-[14px] font-semibold text-[color:var(--room)]">
+                  <span className="block p-3">
+                    <span className="block truncate text-[15px] font-semibold text-[color:var(--ink)]">
                       {piece.title}
                     </span>
-                    {/* The standing bid, not a price. Everything in this
-                        room is an auction now: `rand` is where it opened
-                        and this is what somebody would have to beat. */}
-                    <span className="shrink-0 text-[14px] font-bold text-[color:var(--brons)]">
-                      R{piece.top ?? piece.rand}
+                    <span className="block truncate pt-0.5 text-[13px] text-[color:var(--gedemp)]">
+                      {piece.by}
                     </span>
-                  </span>
-                  <span className="flex items-baseline justify-between gap-2 pt-0.5">
-                    <span className={`${MIKRO} min-w-0 truncate`}>{piece.by}</span>
-                    <Countdown endsAt={piece.endsAt} over={piece.over} t={t} />
-                  </span>
-                  {piece.leadingMe && !piece.over && (
-                    <span className={`${MIKRO} block pt-0.5 text-[#8FBF6A]`}>{t('art.youLead')}</span>
-                  )}
-                  {piece.wonByMe && (
-                    <span className="block pt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#E8A33A]">
-                      {t('art.youWon')}
+                    <span className="mt-2.5 flex items-center justify-between gap-2">
+                      {/* The standing bid, not a price. Everything here
+                          is an auction: `rand` is where it opened, and
+                          this is what somebody would have to beat. */}
+                      <span className="text-[17px] font-bold text-[color:var(--aksent)]">
+                        R{piece.top ?? piece.rand}
+                      </span>
+                      <Countdown endsAt={piece.endsAt} started={piece.started} over={piece.over} t={t} />
                     </span>
-                  )}
+                    {piece.leadingMe && !piece.over && (
+                      <span className="mt-2 block rounded-[8px] bg-[#EAF3E4] px-2 py-1 text-[11px] font-semibold text-[#2F6B1C]">
+                        {t('art.youLead')}
+                      </span>
+                    )}
+                    {piece.wonByMe && (
+                      <span className="mt-2 block rounded-[8px] bg-[#FBEFE4] px-2 py-1 text-[11px] font-semibold text-[#A8480F]">
+                        {t('art.youWon')}
+                      </span>
+                    )}
+                  </span>
                 </button>
               ))}
             </div>
@@ -780,10 +838,10 @@ export default function ArtMarket(): React.ReactElement {
                     type="button"
                     data-artistrow={one.id}
                     onClick={() => setProfile(one)}
-                    className="flex w-full items-center gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-3 text-left active:bg-[var(--leeg)]"
+                    className="flex w-full items-center gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--blad)] p-3 text-left active:bg-[var(--leeg)]"
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[16px] font-semibold text-[color:var(--room)]">
+                      <span className="block truncate text-[16px] font-semibold text-[color:var(--ink)]">
                         {one.name}
                       </span>
                       <span className={`${MIKRO} block truncate pt-1`}>
@@ -814,10 +872,10 @@ export default function ArtMarket(): React.ReactElement {
                   <li
                     key={thread.id}
                     data-thread={thread.id}
-                    className="rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-4"
+                    className="rounded-[4px] border border-[var(--lyn)] bg-[var(--blad)] p-4"
                   >
                     <p className={MIKRO}>{thread.by}</p>
-                    <p className="pt-1 text-[16px] font-semibold text-[color:var(--room)]">{thread.songTitle}</p>
+                    <p className="pt-1 text-[16px] font-semibold text-[color:var(--ink)]">{thread.songTitle}</p>
                     {!thread.offer ? (
                       <p className={`${MIKRO} pt-3`}>{t('art.waiting')}</p>
                     ) : (
@@ -885,15 +943,15 @@ export default function ArtMarket(): React.ReactElement {
                   <li
                     key={one.artist}
                     data-owed={one.artist}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-4"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--blad)] p-4"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-[16px] font-semibold text-[color:var(--room)]">{one.name}</p>
+                      <p className="truncate text-[16px] font-semibold text-[color:var(--ink)]">{one.name}</p>
                       <p className={`${MIKRO} pt-1`}>
                         {one.pieces} {one.pieces === 1 ? t('art.piece') : t('art.pieces')}
                       </p>
                     </div>
-                    <p className="text-[18px] font-bold text-[color:var(--brons)]">R{one.rand.toFixed(2)}</p>
+                    <p className="text-[18px] font-bold text-[color:var(--aksent)]">R{one.rand.toFixed(2)}</p>
                     <button
                       type="button"
                       className={LEEG}
@@ -924,7 +982,7 @@ export default function ArtMarket(): React.ReactElement {
               is set, nobody is the owner and the panel above is drawn for
               nobody — which looks exactly like a feature never built. */}
           {market?.noOwner && (
-            <p className="my-3 rounded-[4px] border border-[var(--brons)] px-3 py-2.5 text-[13px] leading-relaxed text-[#E8C89A]">
+            <p className="my-3 rounded-[4px] border border-[var(--aksent)] px-3 py-2.5 text-[13px] leading-relaxed text-[color:var(--aksent)]">
               {t('art.noOwner')}
             </p>
           )}
@@ -956,6 +1014,9 @@ export default function ArtMarket(): React.ReactElement {
           onClose={() => setSheet(null)}
           onBuy={() => void pay({ kind: 'art', work: sheet.id })}
           onBid={(rand) => void doIt({ what: 'bid', work: sheet.id, rand })}
+          onPass={() => void pay({ kind: 'bidpass' })}
+          canBid={market?.canBid ?? false}
+          bidderRand={market?.bidderRand ?? 50}
           onArtist={(artist) => {
             setSheet(null);
             setProfile(artist);
@@ -1016,6 +1077,9 @@ function WorkSheet({
   onClose,
   onBuy,
   onBid,
+  onPass,
+  canBid,
+  bidderRand,
   onArtist,
   t,
 }: {
@@ -1024,6 +1088,10 @@ function WorkSheet({
   readonly onClose: () => void;
   readonly onBuy: () => void;
   readonly onBid: (rand: number) => void;
+  /** Take the once-off pass that makes somebody a bidder. */
+  readonly onPass: () => void;
+  readonly canBid: boolean;
+  readonly bidderRand: number;
   readonly onArtist: (artist: Artist) => void;
   readonly t: (key: string) => string;
 }): React.ReactElement {
@@ -1032,9 +1100,9 @@ function WorkSheet({
       style={SKIN}
       role="dialog"
       aria-label={piece.title}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(10,8,6,0.72)] md:items-center md:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(26,23,20,0.45)] md:items-center md:p-6"
     >
-      <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--nag)] text-[color:var(--room-2)] md:max-h-[86vh] md:rounded-[22px]">
+      <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
         <button type="button" onClick={onClose} aria-label={t('art.close')} className="flex w-full shrink-0 justify-center py-3">
           <span className="h-1 w-10 rounded-full bg-[var(--lyn)]" />
         </button>
@@ -1042,12 +1110,12 @@ function WorkSheet({
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
           <Sleeve url={piece.url} alt={`${piece.title}, ${piece.by}`} seal />
 
-          <h3 className="pt-4 text-[22px] font-bold leading-tight text-[color:var(--room)]">{piece.title}</h3>
+          <h3 className="pt-4 text-[22px] font-bold leading-tight text-[color:var(--ink)]">{piece.title}</h3>
           {artist ? (
             <button
               type="button"
               onClick={() => onArtist(artist)}
-              className="pt-1 text-[14px] text-[color:var(--brons)] underline underline-offset-4"
+              className="pt-1 text-[14px] text-[color:var(--aksent)] underline underline-offset-4"
             >
               {piece.by}
             </button>
@@ -1057,10 +1125,10 @@ function WorkSheet({
 
           {/* Where it stands, and how long is left. The three facts a
               bidder needs in the order they need them. */}
-          <div className="mt-4 flex items-end justify-between gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-3">
+          <div className="mt-4 flex items-end justify-between gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--blad)] p-3">
             <div>
               <p className={MIKRO}>{piece.top === null ? t('art.opensAt') : t('art.standing')}</p>
-              <p className="pt-1 text-[24px] font-bold leading-none text-[color:var(--brons)]">
+              <p className="pt-1 text-[24px] font-bold leading-none text-[color:var(--aksent)]">
                 R{piece.top ?? piece.rand}
               </p>
               {piece.bids > 0 && (
@@ -1069,7 +1137,7 @@ function WorkSheet({
                 </p>
               )}
             </div>
-            <Countdown endsAt={piece.endsAt} over={piece.over} t={t} />
+            <Countdown endsAt={piece.endsAt} started={piece.started} over={piece.over} t={t} />
           </div>
 
           <p className="pt-4 text-[14px] leading-relaxed">{t('art.oneOnly')}</p>
@@ -1078,7 +1146,7 @@ function WorkSheet({
           <ul className="space-y-2 pt-4">
             {[t('art.get.1'), t('art.get.2'), t('art.get.3'), t('art.get.4')].map((one) => (
               <li key={one} className="flex gap-2 text-[14px] leading-relaxed">
-                <Check className="mt-1 h-3.5 w-3.5 shrink-0 text-[color:var(--brons)]" aria-hidden />
+                <Check className="mt-1 h-3.5 w-3.5 shrink-0 text-[color:var(--aksent)]" aria-hidden />
                 {one}
               </li>
             ))}
@@ -1096,11 +1164,24 @@ function WorkSheet({
               {t('art.payWin')} · R{piece.top ?? piece.rand}
             </button>
           ) : piece.over ? (
-            <p className={`${MIKRO} py-3 text-center`}>{t('art.wentToSomebody')}</p>
-          ) : (
+            <p className={`${MIKRO} py-3 text-center normal-case tracking-normal`}>{t('art.wentToSomebody')}</p>
+          ) : canBid ? (
             <button type="button" onClick={() => onBid(piece.next)} className={VUL}>
               {t('art.bid')} · R{piece.next}
             </button>
+          ) : (
+            /* ── The pass, before the bid ────────────────────────────
+               Carli: *"elke persoon sal 'n R50 by in moet hê om te mag
+               bee, want anders kan enige random mens die prys
+               opstoot."* Said here, in front of the button it replaces,
+               rather than as a refusal after somebody has already
+               decided what to bid. */
+            <>
+              <p className="pb-3 text-[13px] leading-relaxed text-[color:var(--ink-2)]">{t('art.passWhy')}</p>
+              <button type="button" onClick={onPass} className={VUL}>
+                {t('art.takePass')} · R{bidderRand}
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -1146,17 +1227,17 @@ function ArtistSheet({
       role="dialog"
       aria-label={artist.name}
       data-profile={artist.id}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(10,8,6,0.72)] md:items-center md:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(26,23,20,0.45)] md:items-center md:p-6"
     >
-      <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--nag)] text-[color:var(--room-2)] md:max-h-[86vh] md:rounded-[22px]">
+      <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
         <button type="button" onClick={onClose} aria-label={t('art.close')} className="flex w-full shrink-0 justify-center py-3">
           <span className="h-1 w-10 rounded-full bg-[var(--lyn)]" />
         </button>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
-          <span className="block h-px w-9 bg-[var(--brons)]" aria-hidden />
+          <span className="block h-px w-9 bg-[var(--aksent)]" aria-hidden />
           <h3
-            className="pt-3 text-[28px] leading-tight text-[color:var(--room)]"
+            className="pt-3 text-[28px] leading-tight text-[color:var(--ink)]"
             style={{ fontFamily: 'var(--vertoon)' }}
           >
             {artist.name}
@@ -1176,7 +1257,7 @@ function ArtistSheet({
               <div key={piece.id} data-profilepiece={piece.id}>
                 <Sleeve url={piece.url} alt={`${piece.title}, ${piece.by}`} seal />
                 <p
-                  className="truncate pt-2 text-[16px] leading-tight text-[color:var(--room)]"
+                  className="truncate pt-2 text-[16px] leading-tight text-[color:var(--ink)]"
                   style={{ fontFamily: 'var(--vertoon)' }}
                 >
                   {piece.title}
@@ -1234,17 +1315,17 @@ function Popout({
       style={SKIN}
       role="dialog"
       aria-label={artist.name}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(10,8,6,0.72)] md:items-center md:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(26,23,20,0.45)] md:items-center md:p-6"
     >
-      <div className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--nag)] text-[color:var(--room-2)] md:max-h-[84vh] md:rounded-[22px]">
+      <div className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[84vh] md:rounded-[22px]">
         <button type="button" onClick={onClose} aria-label={t('art.close')} className="flex w-full shrink-0 justify-center py-3">
           <span className="h-1 w-10 rounded-full bg-[var(--lyn)]" />
         </button>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
-          <span className="block h-px w-9 bg-[var(--brons)]" aria-hidden />
+          <span className="block h-px w-9 bg-[var(--aksent)]" aria-hidden />
           <h3
-            className="pt-3 text-[26px] leading-tight text-[color:var(--room)]"
+            className="pt-3 text-[26px] leading-tight text-[color:var(--ink)]"
             style={{ fontFamily: 'var(--vertoon)' }}
           >
             {artist.name}
@@ -1255,7 +1336,7 @@ function Popout({
 
           {picking && (
             <div className="pt-6">
-              <p className="text-[13px] font-semibold text-[color:var(--room)]">{t('art.whichSong')}</p>
+              <p className="text-[13px] font-semibold text-[color:var(--ink)]">{t('art.whichSong')}</p>
               <p className="pt-1.5 text-[13px] leading-relaxed text-[color:var(--gedemp)]">{t('art.whyButtons')}</p>
               {songs.length === 0 ? (
                 <p className="pt-4 text-[14px]">{t('art.noSongs')}</p>
@@ -1333,7 +1414,7 @@ function PutOnSong({
               <Sleeve
                 url={one.url}
                 alt={`${one.title}, ${one.by}`}
-                className={piece === one.id ? 'outline outline-2 outline-offset-2 outline-[var(--brons)]' : ''}
+                className={piece === one.id ? 'outline outline-2 outline-offset-2 outline-[var(--aksent)]' : ''}
               />
               <span className={`${MIKRO} mt-1.5 block truncate`}>{one.by}</span>
             </button>
@@ -1355,7 +1436,7 @@ function PutOnSong({
                   aria-pressed={song === one.id}
                   className={`w-full justify-start ${
                     song === one.id
-                      ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--brons)] px-4 text-[13px] font-bold text-[#17120B]'
+                      ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--aksent)] px-4 text-[13px] font-bold text-[var(--blad)]'
                       : LEEG
                   }`}
                 >
@@ -1511,11 +1592,11 @@ function BringArtist({
             <li
               key={one.id}
               data-anyartist={one.id}
-              className="rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-4"
+              className="rounded-[4px] border border-[var(--lyn)] bg-[var(--blad)] p-4"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p
-                  className="text-[19px] leading-tight text-[color:var(--room)]"
+                  className="text-[19px] leading-tight text-[color:var(--ink)]"
                   style={{ fontFamily: 'var(--vertoon)' }}
                 >
                   {one.name}
@@ -1582,7 +1663,7 @@ function BringArtist({
                   </label>
                   <p className="text-[13px] leading-relaxed">
                     {t('art.theyGet')}{' '}
-                    <strong className="text-[color:var(--room)]">R{money.artist.toFixed(2)}</strong>{' '}
+                    <strong className="text-[color:var(--ink)]">R{money.artist.toFixed(2)}</strong>{' '}
                     {t('art.afterFees')} R{money.gateway.toFixed(2)}.
                   </p>
                   <label className={`${VUL} cursor-pointer`}>
@@ -1664,7 +1745,7 @@ function BringArtist({
       )}
 
       {open === 'new' ? (
-        <div className="space-y-3 rounded-[4px] border border-[var(--brons)] p-4">
+        <div className="space-y-3 rounded-[4px] border border-[var(--aksent)] p-4">
           <p className={MIKRO}>{t('art.newArtist')}</p>
           <label className="block">
             <span className={MIKRO}>{t('art.theirName')}</span>
@@ -1769,7 +1850,7 @@ function ArtistDesk({
             discovered on a statement. The gateway comes off first and 70/30
             is on what is left — `split` is the one place that lives. */}
         <p className="text-[14px] leading-relaxed">
-          {t('art.youGet')} <strong className="text-[color:var(--room)]">R{money.artist.toFixed(2)}</strong>{' '}
+          {t('art.youGet')} <strong className="text-[color:var(--ink)]">R{money.artist.toFixed(2)}</strong>{' '}
           {t('art.afterFees')} R{money.gateway.toFixed(2)}.
         </p>
         <label className={`${VUL} cursor-pointer`}>
@@ -1811,9 +1892,9 @@ function ArtistDesk({
             {threads.map((thread) => {
               const draft = priced[thread.id] ?? { rand: String(UNIQUE_RAND), days: WINDOWS[0].days };
               return (
-                <li key={thread.id} className="rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-4">
+                <li key={thread.id} className="rounded-[4px] border border-[var(--lyn)] bg-[var(--blad)] p-4">
                   <p
-                    className="text-[19px] leading-tight text-[color:var(--room)]"
+                    className="text-[19px] leading-tight text-[color:var(--ink)]"
                     style={{ fontFamily: 'var(--vertoon)' }}
                   >
                     {thread.songTitle}
@@ -1845,7 +1926,7 @@ function ArtistDesk({
                             }
                             className={
                               draft.days === one.days
-                                ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--brons)] px-4 text-[13px] font-bold text-[#17120B]'
+                                ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--aksent)] px-4 text-[13px] font-bold text-[var(--blad)]'
                                 : LEEG
                             }
                           >

@@ -23,6 +23,7 @@ import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { addonPlanCode, planCode } from '@/app/lib/server/paystack';
 import { mayTopUp, packById } from '@/app/lib/credits';
 import { addonById } from '@/app/lib/addons';
+import { BIDDER_RAND } from '@/app/data/artmarket';
 import { langOf, roomToSell } from '@/app/lib/server/elevenroom';
 
 export const runtime = 'nodejs';
@@ -40,7 +41,9 @@ type Want =
      it costs is read out of the row, like everything else here. */
   | { kind: 'art'; work: string }
   /* A commissioned one-off, at the price its artist named. */
-  | { kind: 'commission'; offer: string };
+  | { kind: 'commission'; offer: string }
+  /* The once-off R50 that makes somebody a bidder. */
+  | { kind: 'bidpass' };
 
 /**
  * What this costs, decided on the server.
@@ -107,6 +110,22 @@ async function priceOf(want: Want, who: string): Promise<{ cents: number; label:
     const top = (standing as { top: number } | null)?.top ?? null;
     if (top === null || top < work.rand) return null;
     return { cents: Math.round(top * 100), label: `Album art: ${work.title}` };
+  }
+
+  /* ── The bidder's pass ─────────────────────────────────────────────
+
+     Carli: *"Elke persoon sal 'n R50 by in moet hê om te mag bee, want
+     anders kan enige random mens die prys opstoot."*
+
+     Fifty rand, once, from `app/data/artmarket.ts` like every other
+     amount in this app — never from the request. Refused to somebody who
+     already has it, so a second press cannot charge twice. */
+  if (want.kind === 'bidpass') {
+    const db = admin();
+    if (!db) return null;
+    const { data } = await db.from('art_bidders').select('owner').eq('owner', who).maybeSingle();
+    if (data) return null;
+    return { cents: BIDDER_RAND * 100, label: 'Bidder pass' };
   }
 
   /* And a commission, at the price its artist named and the buyer is
@@ -260,6 +279,8 @@ export async function POST(request: Request): Promise<Response> {
              saying the payment went through. */
           work: want.kind === 'art' ? want.work : null,
           offer: want.kind === 'commission' ? want.offer : null,
+          /* Nothing to name: the pass is one thing and there is one of
+             it. The webhook reads `kind` alone. */
           label: price.label,
         },
       }),

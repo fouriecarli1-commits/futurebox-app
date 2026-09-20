@@ -458,6 +458,16 @@ export const STRINGS: Dict = {
      en die hoogste bee wen die art binne 36 hours."* R200 is not a price
      any more — it is where the bidding opens. */
   "art.bid": { en: "Bid", af: "Bie" },
+  "art.notStarted": { en: "No bids yet", af: "Nog geen bodde" },
+
+  /* ── The R50 pass ──────────────────────────────────────────────────────
+     Carli: *"elke persoon sal 'n R50 by in moet hê om te mag bee, want
+     anders kan enige random mens die prys opstoot."* Once, not per piece. */
+  "art.takePass": { en: "Take the bidder pass", af: "Vat die bod-pas" },
+  "art.passWhy": {
+    en: "Bidding costs R50, once, and then you may bid on anything here for good. It is what keeps somebody who is not serious from running a price up and walking away.",
+    af: "Om te bie kos R50, een keer, en daarna mag jy vir altyd op enigiets hier bie. Dit is wat keer dat iemand wat nie ernstig is nie ’n prys opstoot en wegloop.",
+  },
   "art.opensAt": { en: "Bidding opens at", af: "Bod maak oop by" },
   "art.standing": { en: "Highest bid", af: "Hoogste bod" },
   "art.oneBid": { en: "bid", af: "bod" },
@@ -469,8 +479,8 @@ export const STRINGS: Dict = {
   "art.payWin": { en: "Pay and take it", af: "Betaal en vat dit" },
   "art.wentToSomebody": { en: "This one went to somebody else.", af: "Hierdie een het na iemand anders gegaan." },
   "art.howBidding": {
-    en: `Bidding runs for ${36} hours from the moment a piece is hung. The highest bid when the clock stops takes it. A bid in the last five minutes pushes the clock out by five, so nobody wins on a fast connection alone.`,
-    af: `Die bod loop ${36} uur vandat ’n werk opgehang word. Die hoogste bod wanneer die klok stop, vat dit. ’n Bod in die laaste vyf minute stoot die klok vyf minute verder, sodat niemand net op ’n vinnige verbinding wen nie.`,
+    en: "The clock starts the moment somebody makes the first bid, and then runs 36 hours. The highest bid when it stops takes the piece. A bid in the last five minutes pushes the clock out by five, so nobody wins on a fast connection alone.",
+    af: "Die klok begin op die oomblik wat iemand die eerste bod maak, en loop dan 36 uur. Die hoogste bod wanneer dit stop, vat die werk. ’n Bod in die laaste vyf minute stoot die klok vyf minute verder, sodat niemand net op ’n vinnige verbinding wen nie.",
   },
   "art.tab.artists": { en: "Artists", af: "Kunstenaars" },
   "art.tab.mine": { en: "Mine", af: "Myne" },
@@ -490,8 +500,8 @@ export const STRINGS: Dict = {
      The rewrite for the auction dropped the words "sold once" and the
      probe caught it on the next run. */
   "art.whatThisIs": {
-    en: "Album art painted by hand, by real artists. Not generated. Bidding opens at R200 and runs 36 hours — the highest bid takes it, and every piece is sold once and never again.",
-    af: "Albumkuns wat met die hand geskilder is, deur regte kunstenaars. Nie gegenereer nie. Die bod maak oop by R200 en loop 36 uur — die hoogste bod vat dit, en elke werk word een keer verkoop en nooit weer nie.",
+    en: "Album art painted by hand, by real artists. Not generated. Bidding opens at R200 and runs 36 hours from the first bid — the highest bid takes it, and every piece is sold once and never again.",
+    af: "Albumkuns wat met die hand geskilder is, deur regte kunstenaars. Nie gegenereer nie. Die bod maak oop by R200 en loop 36 uur vanaf die eerste bod — die hoogste bod vat dit, en elke werk word een keer verkoop en nooit weer nie.",
   },
   "art.marked": {
     en: "The picture here carries a mark. The clean file, 3000 × 3000, goes to the buyer alone.",

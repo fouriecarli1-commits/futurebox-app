@@ -331,3 +331,41 @@ create or replace view public.art_top_bids as
          count(*)    as bids
     from public.art_bids
    group by work;
+
+-- ── Die klok begin by die eerste bod ───────────────────────────────────
+--
+-- Carli, 20 September 2026: *"Die beeing begin wanneer iemand begin bee."*
+--
+-- Dit was 36 uur vandat die werk opgehang is, wat beteken 'n werk wat op 'n
+-- Dinsdagoggend opgaan en wat niemand Woensdag sien nie, se veiling is
+-- verby voordat dit begin het. Nou bly `ends_at` **null** totdat die eerste
+-- bod inkom, en word dan op 36 uur van daardie oomblik af gestel. 'n Werk
+-- sonder bodde wag, vir so lank as wat dit moet.
+--
+-- Niks om te verander nie — die kolom was reeds nullable. Die reël woon in
+-- die roete, en hierdie nota is hier sodat iemand wat na die tabel kyk nie
+-- dink 'n null is 'n ontbrekende waarde nie. Dit is 'n veiling wat nog nie
+-- begin het nie.
+
+-- ── Wie mag bie ────────────────────────────────────────────────────────
+--
+-- *"Elke persoon sal 'n R50 by in moet hê om te mag bee, want anders kan
+-- enige random mens die prys opstoot."*
+--
+-- Sy is reg en dit is die ouderdomsoue rede waarom 'n vendusie registrasie
+-- vra: 'n bod is 'n belofte om te betaal, en 'n belofte wat niks kos nie,
+-- is niks werd nie. Een keer R50, en daarna mag jy bie — op enige werk, vir
+-- altyd. Nie per werk nie: 'n fooi per stuk maak van elke veiling 'n
+-- tolhek, en dit is nie wat sy gevra het nie.
+--
+-- Een ry per persoon. `reference` is Paystack se eie verwysing, sodat 'n
+-- betaling wat twee keer deurkom nie twee rye maak nie.
+create table if not exists public.art_bidders (
+  owner       uuid primary key references auth.users (id) on delete cascade,
+  reference   text not null default '',
+  paid_at     timestamptz not null default now()
+);
+
+alter table public.art_bidders enable row level security;
+-- Geen policy nie: die roete sê wie mag bie, nie die blaaier nie.
+drop policy if exists "bidders are server only" on public.art_bidders;
