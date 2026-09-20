@@ -39,7 +39,7 @@
  */
 
 import { configured, currentAccount, getStorageClient, accessToken } from './cloud';
-import { ACCEPTS as IMAGE_ACCEPTS, fit } from './imagefile';
+import { ACCEPTS as IMAGE_ACCEPTS, fit, square } from './imagefile';
 
 const BUCKET = 'cast';
 
@@ -175,7 +175,10 @@ export async function addToCast(file: File, name: string): Promise<Added> {
   }
 
   const said = (await response.json()) as { member: Member };
-  remember(said.member.path, made.preview);
+  /* A thumbnail from the bytes already in hand, so the strip draws the new
+     member without a round trip. It used to cache `made.preview` — the WHOLE
+     1024px picture as a data URL — which is the fault described below. */
+  void thumbFrom(said.member.path, made.blob);
   return { ok: true, member: said.member };
 }
 
@@ -207,42 +210,143 @@ export async function removeFromCast(member: Member): Promise<boolean> {
      path is checked to be theirs first, because it came back from a row. */
   if (storage && account && member.path.startsWith(`${account.id}/`)) {
     await storage.from(BUCKET).remove([member.path]).catch(() => undefined);
-    forget(member.path);
+    const going = thumbs.get(member.path);
+    if (going) URL.revokeObjectURL(going);
+    thumbs.delete(member.path);
   }
   return true;
 }
 
 /* ── The pictures themselves ─────────────────────────────────────────────
  *
- * A private bucket has no URL to put in a `src`, so each one is downloaded and
- * turned into a data URL. Held for the life of the page: six members on a
- * strip would otherwise be six fetches per render.
+ * ── The white screen, and what was actually causing it ──────────────────
+ *
+ * Carli, three times now, most recently 20 September 2026: *"Die witskerm
+ * bly op kom. Dit is weird want die add a photo wat net langs dit is werk,
+ * maar daai cast funksie werk nie."*
+ *
+ * That sentence is the whole diagnosis, and it took three rounds to read it
+ * properly. The two strips sit six pixels apart and do the same job. One
+ * works. The difference is not the file picker, which is where the previous
+ * two rounds looked — it is what each strip puts on the screen:
+ *
+ *   Pictures  renders `asset.thumb`, a 240px JPEG made once and kept.
+ *   Cast      rendered the WHOLE 1024px reference, as a base64 data URL,
+ *             into a 96px tile. For every member. All twelve at once.
+ *
+ * The arithmetic is the bug. Twelve 1024×1024 images is 12 × 1024 × 1024 × 4
+ * bytes of decoded bitmap — **48 MB** — held live while the rest of this app
+ * is also in memory, on a phone. Plus the base64 strings, which are a third
+ * larger again than the bytes they encode, plus twelve concurrent downloads
+ * and twelve concurrent FileReaders to build them. A tab killed for memory
+ * does not throw and leaves nothing in the console: it goes white, and a
+ * reload cures it. Which is exactly, and only, what she has reported.
+ *
+ * `Pictures` has a comment about being fixed for a version of this same
+ * fault. This strip never got the lesson.
+ *
+ * So the strip now shows a 192px thumbnail — 12 × 192 × 192 × 4 = **1.7 MB**,
+ * twenty-eight times less — and the full picture is downloaded only at the
+ * moment somebody actually chooses a member, which is one at a time and is
+ * the only moment the full thing is needed.
+ *
+ * ── Object URLs, not data URLs ──────────────────────────────────────────
+ *
+ * The thumbnails are handed out as object URLs. A data URL is a string the
+ * JavaScript heap has to hold; an object URL is a pointer to a blob the
+ * browser owns and can page out. They are revoked on unmount, which the old
+ * map of data URLs could not do — it was module-level, never evicted, and
+ * grew for the life of the tab across every screen that showed a face.
+ *
+ * `check:castmemory` holds all of it.
  */
-const held = new Map<string, string>();
 
-function remember(path: string, dataUrl: string): void {
-  held.set(path, dataUrl);
-}
+/** The strip's tile is 96px; the thumbnail is twice that, for a retina screen. */
+const THUMB = 192;
 
-function forget(path: string): void {
-  held.delete(path);
-}
+/**
+ * Thumbnails handed out, by path, so a strip of twelve is twelve downloads
+ * once rather than twelve per render.
+ *
+ * Bounded at twice the cast limit and revoked oldest-first. An unbounded
+ * cache of object URLs is the same leak as the data URLs it replaces, only
+ * quieter — the strings are gone but the blobs are not.
+ */
+const thumbs = new Map<string, string>();
 
-export async function pictureOf(path: string): Promise<string | null> {
-  const already = held.get(path);
-  if (already) return already;
-
+/** The one download, shared by both the thumbnail and the full picture. */
+async function bytesOf(path: string): Promise<Blob | null> {
   const storage = getStorageClient();
   if (!storage) return null;
   const { data, error } = await storage.from(BUCKET).download(path);
-  if (error || !data) return null;
+  return error || !data ? null : data;
+}
 
-  const dataUrl = await new Promise<string | null>((resolve) => {
+function keepThumb(path: string, url: string): void {
+  thumbs.set(path, url);
+  while (thumbs.size > CAST_LIMIT * 2) {
+    const oldest = thumbs.keys().next();
+    if (oldest.done) break;
+    const going = thumbs.get(oldest.value);
+    if (going) URL.revokeObjectURL(going);
+    thumbs.delete(oldest.value);
+  }
+}
+
+/** A thumbnail for a blob we already hold, without a second download. */
+async function thumbFrom(path: string, blob: Blob): Promise<string | null> {
+  /* Through `square`, which puts the resize INTO the decode: on a browser
+     that honours it the 1024px bitmap is never allocated at all. A decode
+     followed by a scale allocates both, which is the thing being fixed. */
+  const made = await square(new File([blob], 'cast.webp', { type: blob.type || 'image/webp' }), THUMB);
+  if (!made.ok) return null;
+  const url = URL.createObjectURL(made.blob);
+  keepThumb(path, url);
+  return url;
+}
+
+/**
+ * The small picture for the strip. This is what a list of members shows.
+ *
+ * Never the full reference. See the note above for the arithmetic.
+ */
+export async function thumbOf(path: string): Promise<string | null> {
+  const already = thumbs.get(path);
+  if (already) return already;
+  const blob = await bytesOf(path);
+  return blob ? thumbFrom(path, blob) : null;
+}
+
+/**
+ * The full reference, as a data URL, for the one moment it is needed.
+ *
+ * A data URL rather than an object URL here on purpose: this one is handed
+ * to the video route as the shot's start frame, and it has to survive being
+ * put in a request body. An object URL is meaningless outside this page.
+ *
+ * Not cached. It is fetched when somebody presses a member and not before,
+ * which is once or twice in a session — and holding it is the leak this
+ * whole rewrite removes.
+ */
+export async function pictureOf(path: string): Promise<string | null> {
+  const blob = await bytesOf(path);
+  if (!blob) return null;
+  return new Promise<string | null>((resolve) => {
     const reader = new FileReader();
     reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null);
     reader.onerror = () => resolve(null);
-    reader.readAsDataURL(data);
+    reader.readAsDataURL(blob);
   });
-  if (dataUrl) remember(path, dataUrl);
-  return dataUrl;
+}
+
+/**
+ * Let go of every thumbnail this module handed out.
+ *
+ * Called when the strip unmounts. Without it the blobs stay alive for the
+ * life of the tab, which is the quiet half of the fault being fixed: the
+ * old cache was module-level and nothing ever emptied it.
+ */
+export function releaseCast(): void {
+  for (const url of thumbs.values()) URL.revokeObjectURL(url);
+  thumbs.clear();
 }

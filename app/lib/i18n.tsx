@@ -2486,6 +2486,10 @@ export const STRINGS: Dict = {
   "cast.tooManyPixels": { en: "That photo is too big for a phone browser to open \u2014 it is one of the very high-megapixel camera modes. Take one on the normal setting, or use a screenshot of it.", af: "Daardie foto is te groot vir \u2019n foon se blaaier om oop te maak \u2014 dit is een van die baie ho\u00eb-megapiksel kameramodusse. Neem een op die gewone instelling, of gebruik \u2019n skermskoot daarvan." },
   "cast.notImage": { en: "That is not a picture.", af: "Dit is nie ’n foto nie." },
   "cast.failed": { en: "That did not save. Try again in a moment.", af: "Dit het nie gestoor nie. Probeer oor ’n oomblik weer." },
+  /* The full reference is now fetched at the moment a member is chosen
+     rather than twelve at a time on mount, so that one download can fail
+     on its own and has to say so. */
+  "cast.noPicture": { en: "That picture could not be fetched. Try again in a moment.", af: "Daardie prent kon nie gehaal word nie. Probeer oor ’n oomblik weer." },
   "frame.orDevice": { en: "Or a picture from this device \u2014 kept here only, not on your account.", af: "Of ’n foto van hierdie toestel \u2014 net hier gehou, nie teen jou rekening nie." },
   "chan.edit": { en: "Open it in the studio", af: "Maak dit in die studio oop" },
   "sec.estimated": { en: "These sections are worked out from the words \u2014 this song did not carry a plan, so the times are close rather than exact. Everything you change here still travels through in full.", af: "Hierdie afdelings is uit die woorde uitgewerk \u2014 hierdie liedjie het nie ’n plan saamgedra nie, so die tye is naby eerder as presies. Alles wat jy hier verander gaan steeds volledig deur." },

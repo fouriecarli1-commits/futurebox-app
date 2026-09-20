@@ -24,6 +24,36 @@
  * picture, and this is the shelf that makes that one press instead of a trip
  * to the file manager on whichever device you happen to be holding.
  *
+ * ── Rebuilt, 20 September 2026, and what was wrong with it ──────────────
+ *
+ * Carli, for the third time: *"Die witskerm bly op kom. Dit is weird want
+ * die add a photo wat net langs dit is werk, maar daai cast funksie werk
+ * nie. Bou dit net heeltemal van vooraf."*
+ *
+ * The two strips sit six pixels apart and do the same job. That she kept
+ * saying so was the diagnosis, and the previous two rounds did not read it:
+ * both went looking at the file picker, because that is where the press is.
+ * The picker was never the fault. What differed was what each strip PUT ON
+ * THE SCREEN.
+ *
+ * This one fetched every member's whole 1024px reference, turned each into
+ * a base64 data URL, held all twelve in React state, and rendered them into
+ * 96-pixel tiles. Twelve 1024×1024 bitmaps is 48 MB of image memory on a
+ * phone that is already holding the rest of this app, plus base64 strings a
+ * third larger than the bytes, built by twelve concurrent downloads and
+ * twelve concurrent FileReaders. A tab killed for memory does not throw and
+ * leaves nothing in a console: it goes white, and a reload cures it.
+ *
+ * So it is rebuilt around the thing `Pictures` does and this never did:
+ *
+ *   the strip shows a 192px thumbnail, 1.7 MB for all twelve instead of 48
+ *   the thumbnails are object URLs, revoked when the strip goes away
+ *   they load two at a time rather than twelve at once
+ *   the FULL picture is downloaded at the moment a member is chosen, once
+ *
+ * `check:castmemory` holds each of those, because every one of them is the
+ * kind of thing a later edit undoes without anything going red.
+ *
  * ── The note, and why it is not applied ──────────────────────────────────
  *
  * A member can carry a line the picture cannot say — "always shot from his
@@ -37,7 +67,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Image as ImageIcon, Loader2, Trash2, UserPlus, Users } from 'lucide-react';
 import {
   ACCEPTS, CAST_LIMIT, addToCast, addToCastFromKept, editCast, loadCast, pictureOf,
-  removeFromCast, type Member,
+  releaseCast, removeFromCast, thumbOf, type Member,
 } from '../lib/cast';
 import { assetDataUrl, loadAssets, type Asset } from '../lib/assets';
 import { useLang } from '../lib/i18n';
@@ -73,22 +103,42 @@ export default function Cast({
     void loadCast().then(setCast);
   }, []);
 
-  // The pictures are in a private bucket, so each is downloaded once and held.
+  /* ── The thumbnails ─────────────────────────────────────────────────
+     Two at a time, not twelve. `Promise.all` over the whole cast started
+     twelve downloads and twelve decodes in the same tick, which is the
+     spike that killed the tab — and it is a spike whether or not the
+     pictures themselves are small, because a phone has one decoder.
+
+     Each arrives on its own, so the strip fills in rather than appearing
+     all at once, which is also the better thing to look at. */
   useEffect(() => {
     if (!cast?.length) return;
     let alive = true;
-    void Promise.all(
-      cast.map(async (one) => [one.path, await pictureOf(one.path)] as const),
-    ).then((pairs) => {
-      if (!alive) return;
-      const found: Record<string, string> = {};
-      for (const [path, dataUrl] of pairs) if (dataUrl) found[path] = dataUrl;
-      setFaces((was) => ({ ...was, ...found }));
-    });
+    const paths = cast.map((one) => one.path);
+    void (async () => {
+      for (let at = 0; at < paths.length && alive; at += 2) {
+        const pair = paths.slice(at, at + 2);
+        const got = await Promise.all(pair.map(async (path) => [path, await thumbOf(path)] as const));
+        if (!alive) return;
+        setFaces((was) => {
+          const next = { ...was };
+          for (const [path, url] of got) if (url) next[path] = url;
+          return next;
+        });
+      }
+    })();
     return () => {
       alive = false;
     };
   }, [cast]);
+
+  /* And let the blobs go when the strip does.
+
+     The old cache was a module-level map of data URLs that nothing ever
+     emptied, so every face anybody had ever looked at stayed in memory for
+     the life of the tab, across every screen. That is the quiet half of
+     the same fault. */
+  useEffect(() => releaseCast, []);
 
   // A picture taken off the desk elsewhere leaves nobody selected here.
   useEffect(() => {
@@ -180,15 +230,42 @@ export default function Cast({
     [busy, t],
   );
 
+  /**
+   * Choose a member, and only now fetch the picture at full size.
+   *
+   * This is the other half of the rebuild. The strip holds thumbnails; the
+   * engine needs the real reference, and it needs exactly one of them. So
+   * the full download happens on the press — once, for the one member —
+   * instead of twelve times on mount for pictures nobody asked for.
+   *
+   * A thumbnail is never handed on as the start frame. It would work, and
+   * the clip would come back built from a 192-pixel reference, which is
+   * the failure that looks like the feature working.
+   */
   const use = useCallback(
-    (member: Member) => {
-      const face = faces[member.path];
-      if (!face) return;
+    async (member: Member) => {
+      if (busy) return;
       const same = chosen === member.id;
-      setChosen(same ? null : member.id);
-      onChange(same ? null : face);
+      if (same) {
+        setChosen(null);
+        onChange(null);
+        return;
+      }
+      setBusy(true);
+      setProblem(null);
+      try {
+        const full = await pictureOf(member.path);
+        if (!full) {
+          setProblem(t('cast.noPicture', 'That picture could not be fetched. Try again in a moment.'));
+          return;
+        }
+        setChosen(member.id);
+        onChange(full);
+      } finally {
+        setBusy(false);
+      }
     },
-    [faces, chosen, onChange],
+    [busy, chosen, onChange, t],
   );
 
   const take = useCallback(
@@ -241,8 +318,8 @@ export default function Cast({
               <div key={one.id} className="flex-shrink-0 w-24 space-y-1">
                 <button
                   type="button"
-                  onClick={() => use(one)}
-                  disabled={disabled || !face}
+                  onClick={() => void use(one)}
+                  disabled={disabled || !face || busy}
                   aria-pressed={active}
                   className={`relative block w-24 h-24 rounded-xl overflow-hidden border-2 transition-all disabled:opacity-50 ${
                     active ? 'border-emerald-500' : 'border-zinc-800 hover:border-zinc-600'
