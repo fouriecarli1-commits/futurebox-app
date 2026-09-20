@@ -154,6 +154,55 @@ function say(which: string, error: { message?: string; code?: string } | null): 
   );
 }
 
+/**
+ * Which of the columns we asked for are not in the table.
+ *
+ * ── Why the room names them ──────────────────────────────────────────────
+ *
+ * `which` was a real improvement and it was not enough. It got Carli to
+ * *"(works)"* and then to a hand-written `information_schema` query I had
+ * to compose for her, which found `ends_at` and `won_by` missing. That is
+ * the second evening lost to a migration that only half landed, and the
+ * cause both times is the same and is nobody's mistake: the Supabase SQL
+ * editor runs a script as ONE transaction, so a statement that fails at
+ * the bottom rolls back the twenty above it. It looks like an ordinary
+ * error message. It means none of that block is there.
+ *
+ * A column name is not a secret. It is this file's own vocabulary — the
+ * same list four lines up in the `.select()` — and it is already in the
+ * repository. What must not reach a browser is the DATABASE's sentence,
+ * which names constraints and internals and is what `check:aifault` is
+ * about. So the names come from OUR list and never from the error: each
+ * one is asked for on its own, and the ones that come back refused are the
+ * ones that are missing. Nothing is parsed out of Postgres' words.
+ *
+ * Only ever called after a read has already failed, so the cost is a dozen
+ * empty queries on a screen that is broken anyway. `limit(0)` asks for no
+ * rows: this is a question about the shape of the table, not its contents.
+ */
+async function missingFrom(
+  client: ReturnType<typeof admin>,
+  table: string,
+  columns: readonly string[],
+): Promise<string[]> {
+  if (!client) return [];
+  const gone: string[] = [];
+  for (const column of columns) {
+    const { error } = await client.from(table).select(column).limit(0);
+    /* 42703 is "column does not exist" and 42P01 is "no such table". Any
+       other refusal — a timeout, a permission — is not a missing column and
+       must not be reported as one. */
+    if (error && (error.code === '42703' || error.code === '42P01')) gone.push(column);
+  }
+  return gone;
+}
+
+/** What the gallery read asks `art_works` for. Named once, used twice. */
+const WORK_COLUMNS = [
+  'id', 'artist', 'title', 'path', 'preview', 'rand', 'paid_rand',
+  'ends_at', 'won_by', 'sold_to', 'sold_at', 'paid_out', 'created_at',
+] as const;
+
 /* ─────────────────────────────────────────────────────────────── reading ── */
 
 export async function GET(request: Request): Promise<Response> {
@@ -192,16 +241,27 @@ export async function GET(request: Request): Promise<Response> {
      looks merely quiet. */
   const { data: workRows, error: workError } = await client
     .from('art_works')
-    .select('id, artist, title, path, preview, rand, paid_rand, ends_at, won_by, sold_to, sold_at, paid_out')
+    .select(WORK_COLUMNS.join(', '))
     .order('created_at', { ascending: false });
   if (workError) {
     say('works', workError);
+    const missing = await missingFrom(client, 'art_works', WORK_COLUMNS);
     return Response.json(
-      { error: 'not_read', message: 'The gallery could not be read just now.', which: 'works' },
+      {
+        error: 'not_read',
+        message: 'The gallery could not be read just now.',
+        which: 'works',
+        missing,
+      },
       { status: 503 },
     );
   }
-  const works = (workRows ?? []) as WorkRow[];
+  /* Through `unknown`, because the select is built from `WORK_COLUMNS` at
+     runtime and supabase-js can only infer a row shape from a literal
+     string. That is the price of one list instead of two — and two lists
+     is exactly how the browser ends up asking for a column the diagnostic
+     does not check, which is the failure this whole path is for. */
+  const works = (workRows ?? []) as unknown as WorkRow[];
 
   /* ── The standing bids ───────────────────────────────────────────────
      One read for the whole wall, from a view, so "who is leading" has one

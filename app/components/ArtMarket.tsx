@@ -81,7 +81,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, Loader2 } from 'lucide-react';
 import { barClearance } from './TabBar';
 import { accessToken, getStorageClient } from '../lib/cloud';
 import { refusalText } from '../lib/apierror';
@@ -636,7 +636,7 @@ export default function ArtMarket(): React.ReactElement {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const said = (await response.json().catch(() => null)) as
-        (Market & { message?: string; which?: string }) | null;
+        (Market & { message?: string; which?: string; missing?: string[] }) | null;
       if (!response.ok || !said) {
         /* `which` on the end, in brackets.
 
@@ -648,7 +648,15 @@ export default function ArtMarket(): React.ReactElement {
            which names columns and stays in the server log where
            `check:aifault` requires it. One screenshot now says which. */
         const why = refusalText(said, lang, t('art.failed'));
-        setProblem(said?.which ? `${why} (${said.which})` : why);
+        /* And, when the route worked out why, the columns themselves.
+
+           `(works)` got us one step and then still needed a hand-written
+           query against `information_schema` to find that `ends_at` and
+           `won_by` had never landed. The names are the route's own list,
+           not Postgres' sentence — see `missingFrom` — so this says what
+           to run without saying anything a stranger should not read. */
+        const gone = said?.missing?.length ? ` ${t('art.missing')} ${said.missing.join(', ')}` : '';
+        setProblem(`${said?.which ? `${why} (${said.which})` : why}${gone}`);
         return;
       }
       setMarket(said);
@@ -1118,6 +1126,57 @@ export default function ArtMarket(): React.ReactElement {
  * and the measure that works against both is that the only file anybody
  * can reach before paying is 1000 pixels with a band of text through it.
  */
+/**
+ * The top of every sheet: a way out you can actually see.
+ *
+ * ── What this replaces ───────────────────────────────────────────────────
+ *
+ * A 40 x 4 pixel grab handle, painted in the room's border colour, with the
+ * word "Close" only in an `aria-label`. Carli, 20 September 2026: *"Wanneer
+ * mens binne artist se profile kyk is daar nie 'n back knoppie nie."*
+ *
+ * She is right and it was worse than it looks. The handle is the iOS
+ * convention for a sheet you drag, and this sheet cannot be dragged — so it
+ * was a control that looked like decoration and behaved like neither. Then
+ * the gallery theme made the wall near-black and the border colour with it,
+ * and the one pale bar that hinted at it disappeared entirely.
+ *
+ * So: an arrow and the word, left-aligned where a back button lives, at the
+ * app's own 44px target. The handle stays, centred, because it still reads
+ * as "this is a sheet" to anybody who knows the convention — it is just no
+ * longer the only way out.
+ *
+ * One component for all three sheets. There were three copies of the old
+ * handle, identical, which is how all three were wrong at once.
+ */
+function SheetTop({
+  onClose,
+  t,
+}: {
+  readonly onClose: () => void;
+  readonly t: (key: string) => string;
+}): React.ReactElement {
+  return (
+    <div className="relative flex shrink-0 items-center px-2 pt-2 pb-1">
+      <button
+        type="button"
+        onClick={onClose}
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-[14px] font-semibold text-[color:var(--ink)] transition active:translate-y-px active:bg-[var(--leeg)]"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        {t('art.back')}
+      </button>
+      {/* Still a sheet, and still says so. Not a button any more: two
+          controls that do the same thing, one of them invisible, is what
+          this is replacing. */}
+      <span
+        className="pointer-events-none absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-[var(--lyn)]"
+        aria-hidden
+      />
+    </div>
+  );
+}
+
 function WorkSheet({
   piece,
   artist,
@@ -1144,17 +1203,25 @@ function WorkSheet({
 }): React.ReactElement {
   return (
     <div
-      style={SKIN}
+      style={{ ...SKIN, paddingBottom: barClearance(0) }}
       role="dialog"
       aria-label={piece.title}
       className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 md:items-center md:p-6"
+      /* The sheet ends ABOVE the tab bar, rather than reaching under it.
+
+         Carli: *"Al die onderste buttons kruip weg agter die hoof
+         buttons."* Padding inside the sheet's scrolling body was not
+         enough and was the wrong shape of answer: it made the button
+         reachable by scrolling to it, when the complaint is that the one
+         button the sheet exists for is not on the screen. A bottom sheet
+         is anchored to the bottom of the space it HAS, and in this app
+         that space stops where the tab bar starts. On a desktop the bar
+         is not there and `md:` keeps the sheet centred as before. */
     >
       <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
-        <button type="button" onClick={onClose} aria-label={t('art.close')} className="flex w-full shrink-0 justify-center py-3">
-          <span className="h-1 w-10 rounded-full bg-[var(--lyn)]" />
-        </button>
+        <SheetTop onClose={onClose} t={t} />
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
           <Sleeve url={piece.url} alt={`${piece.title}, ${piece.by}`} seal />
 
           <h3 className="pt-4 text-[22px] font-bold leading-tight text-[color:var(--ink)]">{piece.title}</h3>
@@ -1270,18 +1337,26 @@ function ArtistSheet({
 }): React.ReactElement {
   return (
     <div
-      style={SKIN}
+      style={{ ...SKIN, paddingBottom: barClearance(0) }}
       role="dialog"
       aria-label={artist.name}
       data-profile={artist.id}
       className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 md:items-center md:p-6"
+      /* The sheet ends ABOVE the tab bar, rather than reaching under it.
+
+         Carli: *"Al die onderste buttons kruip weg agter die hoof
+         buttons."* Padding inside the sheet's scrolling body was not
+         enough and was the wrong shape of answer: it made the button
+         reachable by scrolling to it, when the complaint is that the one
+         button the sheet exists for is not on the screen. A bottom sheet
+         is anchored to the bottom of the space it HAS, and in this app
+         that space stops where the tab bar starts. On a desktop the bar
+         is not there and `md:` keeps the sheet centred as before. */
     >
       <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
-        <button type="button" onClick={onClose} aria-label={t('art.close')} className="flex w-full shrink-0 justify-center py-3">
-          <span className="h-1 w-10 rounded-full bg-[var(--lyn)]" />
-        </button>
+        <SheetTop onClose={onClose} t={t} />
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
           <span className="block h-px w-9 bg-[var(--aksent)]" aria-hidden />
           <h3
             className="pt-3 text-[28px] leading-tight text-[color:var(--ink)]"
@@ -1357,17 +1432,25 @@ function Popout({
 
   return (
     <div
-      style={SKIN}
+      style={{ ...SKIN, paddingBottom: barClearance(0) }}
       role="dialog"
       aria-label={artist.name}
       className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 md:items-center md:p-6"
+      /* The sheet ends ABOVE the tab bar, rather than reaching under it.
+
+         Carli: *"Al die onderste buttons kruip weg agter die hoof
+         buttons."* Padding inside the sheet's scrolling body was not
+         enough and was the wrong shape of answer: it made the button
+         reachable by scrolling to it, when the complaint is that the one
+         button the sheet exists for is not on the screen. A bottom sheet
+         is anchored to the bottom of the space it HAS, and in this app
+         that space stops where the tab bar starts. On a desktop the bar
+         is not there and `md:` keeps the sheet centred as before. */
     >
       <div className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[84vh] md:rounded-[22px]">
-        <button type="button" onClick={onClose} aria-label={t('art.close')} className="flex w-full shrink-0 justify-center py-3">
-          <span className="h-1 w-10 rounded-full bg-[var(--lyn)]" />
-        </button>
+        <SheetTop onClose={onClose} t={t} />
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
           <span className="block h-px w-9 bg-[var(--aksent)]" aria-hidden />
           <h3
             className="pt-3 text-[26px] leading-tight text-[color:var(--ink)]"

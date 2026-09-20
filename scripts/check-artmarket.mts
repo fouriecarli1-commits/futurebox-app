@@ -277,8 +277,14 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
   ok('the payout statement pays on what was paid, not on the opening bid',
     /split\(one\.paid_rand \?\? one\.rand\)/.test(route),
     'the statement is summing art_works.rand, which is where the bidding opened');
+  /* Off WORK_COLUMNS rather than off the `.select(...)` call, which no
+     longer carries a literal list: the select is built from that array so
+     the diagnostic and the query cannot ask for different things. The
+     rule is the same one — a column the statement reads has to be a
+     column the query fetched, or every row has it undefined. */
   ok('  and it asks the database for that column',
-    /\.select\([^)]*paid_rand[^)]*\)/.test(route),
+    /const WORK_COLUMNS = \[[\s\S]*?'paid_rand'/.test(route)
+      && /\.select\(WORK_COLUMNS\.join/.test(route),
     'paid_rand is read off rows that were never fetched with it — every one is undefined');
 
   /* A commission never goes through the wall, so its price reaches the
@@ -350,6 +356,91 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
     /none of it goes to the artist/i.test(pass) && /gaan na die kunstenaar nie/i.test(pass),
     'somebody pays the R50 believing part of it reaches the painter');
   ok(`    and it is R${BIDDER_RAND} on both sides`, BIDDER_RAND === 50, `${BIDDER_RAND}`);
+}
+
+/* ── Every sheet has a way out, and it clears the tab bar ────────────────
+
+   Two faults Carli found in one minute, on the same three sheets, both
+   invisible to every check in this repository:
+
+     *"Wanneer mens binne artist se profile kyk is daar nie 'n back knoppie
+     nie."* There was one — a 40 x 4 pixel grab handle whose only word was
+     an `aria-label`, painted in the border colour. The gallery theme made
+     that near-black on near-black. A control nobody can see is not a
+     control, and an `aria-label` satisfies a linter while satisfying
+     nobody holding the phone.
+
+     *"Ask them for your own, val onder die hoof buttons heel onder. Dit is
+     nie sienbaar nie."* The sheet is bottom-aligned on a phone and the tab
+     bar is fixed on top of it, so the last thing in the sheet — which is
+     always the button the sheet exists for — sat underneath it. This app
+     has had `barClearance()` for exactly this since the night two panels
+     were eaten the same way; these three never used it.
+
+   Held as source rules rather than as pixels: the browser probe cannot
+   open a sheet on a run with no artists in the database, which is every
+   unattended run, so a measurement here would be one that never executes.
+   §AC is the file full of those. */
+{
+  const room = readFileSync('app/components/ArtMarket.tsx', 'utf8');
+
+  const at = room.indexOf('function SheetTop(');
+  const top = at < 0 ? '' : room.slice(at, room.indexOf('\nfunction ', at + 1));
+  ok('every sheet shares one top', at >= 0,
+    'SheetTop is gone — each sheet draws its own way out again, and they drifted last time');
+  if (at >= 0) {
+    ok('  and the way out is a word, not only a handle',
+      /t\('art\.back'\)/.test(top),
+      'the only way out is an icon or a bar again — which is what she could not find');
+    ok('  on a target a thumb can hit',
+      /min-h-\[44px\]/.test(top),
+      'under 44px, which this app has already been through once');
+  }
+
+  /* All three, counted. Two of three would have left her exactly where she
+     started, on whichever one she happened to open. */
+  const tops = (room.match(/<SheetTop\b/g) ?? []).length;
+  ok('  and all three sheets use it', tops === 3, `${tops} of 3`);
+
+  /* Counted on the sheets' own scrolling body, not on every use of the
+     helper in the file: the room's root has carried clearance since it was
+     built, and counting that too made this read 4 of 3 — a check that is
+     wrong in the passing direction the moment anything else is padded. */
+  /* On the OVERLAY, which is what actually keeps the sheet off the bar.
+     The first fix padded the scrolling body instead, so the button was
+     reachable by scrolling rather than on the screen — and this check
+     passed on it, which is why the rule now names the element. */
+  const cleared = (room.match(/paddingBottom: barClearance\(0\)/g) ?? []).length;
+  ok('and no sheet reaches under the tab bar', cleared === 3,
+    `${cleared} of 3 overlays stop above it — the last button in the sheet is the one the sheet is for`);
+}
+
+/* ── A failed read says which column is missing ──────────────────────────
+
+   Two evenings went to a migration that half landed. The Supabase editor
+   runs a script as one transaction, so a statement failing at the bottom
+   silently rolls back the twenty above it, and the room could only say
+   that something could not be read.
+
+   The names come from the route's own list and never from Postgres'
+   sentence — see `missingFrom` — so this can be on a screen while
+   `check:aifault` stays satisfied. Both halves are held: the route has to
+   work the columns out, and the room has to print them. */
+{
+  const route = readFileSync('app/api/artmarket/route.ts', 'utf8');
+  ok('a failed read works out which columns are missing',
+    /async function missingFrom\(/.test(route),
+    'the room can say a read failed but not why — which is a hand-written information_schema query, every time');
+  ok('  from our own list of columns, never from the error text',
+    /WORK_COLUMNS/.test(route) && !/error\.message\.match|parse.*error\.message/.test(route),
+    "the column names are being read out of Postgres' words, which is what check:aifault forbids");
+  ok('  and it only counts a refusal that really is a missing column',
+    /'42703'/.test(route) && /'42P01'/.test(route),
+    'a timeout or a permission error would be reported to her as a missing column');
+
+  const room = readFileSync('app/components/ArtMarket.tsx', 'utf8');
+  ok('  and the room prints them', /said\?\.missing/.test(room),
+    'the route works it out and nothing shows it — the answer stays in a server log');
 }
 
 /* ── An artist may not bid up their own work ──────────────────────────────

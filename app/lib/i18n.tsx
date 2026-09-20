@@ -477,6 +477,12 @@ export const STRINGS: Dict = {
     en: "Bidding costs R50, once, and then you may bid on anything here for good. It is what keeps somebody who is not serious from running a price up and walking away. The buy-in is not part of what you pay for a piece, and none of it goes to the artist — the artist is paid out of the winning bid.",
     af: "Om te bie kos R50, een keer, en daarna mag jy vir altyd op enigiets hier bie. Dit is wat keer dat iemand wat nie ernstig is nie ’n prys opstoot en wegloop. Die buy-in is nie deel van wat jy vir ’n werk betaal nie, en niks daarvan gaan na die kunstenaar nie — die kunstenaar word uit die wenbod betaal.",
   },
+  /* The columns a half-landed migration left behind. Named, so the next
+     one costs a minute instead of an evening. */
+  "art.missing": {
+    en: "The database is missing:",
+    af: "Die databasis kort:",
+  },
   "art.opensAt": { en: "Bidding opens at", af: "Bod maak oop by" },
   "art.standing": { en: "Highest bid", af: "Hoogste bod" },
   "art.oneBid": { en: "bid", af: "bod" },
@@ -529,6 +535,9 @@ export const STRINGS: Dict = {
   },
   "art.by": { en: "by", af: "deur" },
   "art.close": { en: "Close", af: "Maak toe" },
+  /* The way out of a sheet, in words rather than as a grab handle nobody
+     could see on a near-black wall. */
+  "art.back": { en: "Back", af: "Terug" },
 
   /* ── The sleeve turns over ─────────────────────────────────────────────
      A record sleeve's back is where the credits are, so the artist is on
