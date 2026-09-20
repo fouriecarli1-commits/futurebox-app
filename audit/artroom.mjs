@@ -187,7 +187,10 @@ try {
       uploads === 0,
       `${uploads} file input(s) reachable by somebody who is not one of our artists`);
 
-    await p.screenshot({ path: shot('artroom.png'), fullPage: true });
+    /* A JPEG, not a PNG. A full-page phone screenshot of this room is a
+       1.3 MB PNG of flat paper and one photograph, which is too large to
+       hand to anybody and says nothing a 200 KB JPEG does not. */
+    await p.screenshot({ path: shot('artroom.jpg'), type: 'jpeg', quality: 72, fullPage: true });
   }
 } catch (error) {
   problems.push(`threw: ${String(error).slice(0, 200)}`);
