@@ -93,6 +93,7 @@
     "check:adsaf": "node audit/ads-af.mjs",
     "check:refusals": "node audit/errors.mjs",
     "check:artroom": "node audit/artroom.mjs",
+    "check:aikoste": "tsx scripts/check-aikoste.mts",
     "check:artmarket": "tsx scripts/check-artmarket.mts",
     "check:songcraft": "tsx scripts/check-songcraft.mts",
     "check:adschema": "tsx scripts/check-adschema.mts",

@@ -186,7 +186,7 @@ export async function POST(request: Request): Promise<Response> {
       output_config: { effort: 'medium', format: zodOutputFormat(AdsSchema) },
       messages: [{ role: 'user' as const, content: briefFor(body) }],
     });
-    notecache('campaign', response.usage);
+    await notecache('campaign', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json(

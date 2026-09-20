@@ -36,9 +36,9 @@
  * is paid for" is a route that will be.
  */
 
-import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { admin, callerFrom, callerIsOwner, metered } from '@/app/lib/server/account';
 import { filterSafe } from '@/app/lib/server/filtersafe';
-import { ART_MAX_BYTES, START_RAND, UNIQUE_RAND, WINDOWS } from '@/app/data/artmarket';
+import { ART_MAX_BYTES, START_RAND, UNIQUE_RAND, WINDOWS, split } from '@/app/data/artmarket';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -72,6 +72,11 @@ interface WorkRow {
   rand: number;
   sold_to: string | null;
   sold_at: string | null;
+  /* Null until the owner has actually transferred the artist's share. See
+     the statement below, and `supabase/albumart.sql` for why this is one
+     column rather than a payouts table: there is one payment per piece and
+     one person making it. */
+  paid_out?: string | null;
 }
 
 interface RequestRow {
@@ -141,7 +146,7 @@ export async function GET(request: Request): Promise<Response> {
      looks merely quiet. */
   const { data: workRows, error: workError } = await client
     .from('art_works')
-    .select('id, artist, title, path, rand, sold_to, sold_at')
+    .select('id, artist, title, path, rand, sold_to, sold_at, paid_out')
     .order('created_at', { ascending: false });
   if (workError) {
     return Response.json(
@@ -258,7 +263,47 @@ export async function GET(request: Request): Promise<Response> {
     ? await Promise.all(requests.filter((one) => one.artist === mine.id).map(dress))
     : [];
 
+  /* ── What the owner owes, and to whom ────────────────────────────────
+
+     Carli, 20 September 2026: *"Ek dink nie paystack doen sulke ekstra
+     uitbetalings nie. Dit sal in my rekening uitbetaal word en ek betaal
+     dit uit aan die kunstenaar."*
+
+     She is right, and it changes what the app has to do. If the money
+     lands in her account and she forwards it by hand, the one thing she
+     needs is a statement: per artist, what sold, what they are owed, and
+     what has already gone out. Without it, "I pay them myself" means
+     working it out from Paystack exports every month.
+
+     Owner only. It is on this route rather than on a page of its own
+     because it is the same data three lines up, and a second route
+     reading the same rows is a second place for the 70/30 to be wrong.
+
+     The rand comes from `split()`, per piece, never from the view: the
+     gateway's cut and the 70/30 live in one file and a copy of them in
+     SQL is how two answers to one sum begin. */
+  let owing: unknown = null;
+  if (callerIsOwner(caller)) {
+    const unpaid = works.filter((one) => one.sold_to && !one.paid_out);
+    const byArtist = new Map<string, { name: string; pieces: number; rand: number }>();
+    for (const one of unpaid) {
+      const artist = byId.get(one.artist);
+      if (!artist) continue;
+      const was = byArtist.get(one.artist) ?? { name: artist.name, pieces: 0, rand: 0 };
+      byArtist.set(one.artist, {
+        name: artist.name,
+        pieces: was.pieces + 1,
+        /* Rounded to the cent per piece and then added, not added and then
+           rounded. A statement that disagrees with the sum of its own
+           lines by a cent is a statement somebody stops trusting. */
+        rand: Math.round((was.rand + split(one.rand).artist) * 100) / 100,
+      });
+    }
+    owing = [...byArtist.entries()].map(([id, one]) => ({ artist: id, ...one }));
+  }
+
   return Response.json({
+    owing,
     /* The gallery shows approved artists only. An application in the
        waiting room is between that person and the owner. */
     artists: artists
@@ -301,6 +346,8 @@ type Body = {
   /* Putting a bought piece on one of your own songs. */
   work?: string;
   trackId?: string;
+  /* Marking an artist paid: the owner's own reference off her bank statement. */
+  note?: string;
 };
 
 export async function POST(request: Request): Promise<Response> {
@@ -601,6 +648,31 @@ export async function POST(request: Request): Promise<Response> {
         return Response.json({ error: 'not_saved', message: 'That did not go onto the song.' }, { status: 500 });
       }
       return Response.json({ worn: true });
+    }
+
+    /* ── Mark an artist paid ─────────────────────────────────────────
+       Owner only, and it writes a timestamp rather than deleting a debt:
+       a payout that can be un-recorded silently is a payout somebody
+       eventually claims twice. `paid_note` is her own reference off the
+       bank statement, in her own words. */
+    case 'paidout': {
+      if (!callerIsOwner(caller)) {
+        return Response.json({ error: 'not_yours', message: 'That is not yours to do.' }, { status: 403 });
+      }
+      const artist = String(body.artist ?? '');
+      if (!artist) {
+        return Response.json({ error: 'bad_request', message: 'Which artist?' }, { status: 400 });
+      }
+      const { error } = await client
+        .from('art_works')
+        .update({ paid_out: new Date().toISOString(), paid_note: String(body.note ?? '').trim().slice(0, 120) })
+        .eq('artist', artist)
+        .not('sold_to', 'is', null)
+        .is('paid_out', null);
+      if (error) {
+        return Response.json({ error: 'not_saved', message: 'That did not save.' }, { status: 500 });
+      }
+      return Response.json({ paidOut: true });
     }
 
     default:

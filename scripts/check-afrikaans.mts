@@ -199,6 +199,14 @@ const ALLOWED = new Set([
   'futurebox', 'youtube', 'spotify', 'tiktok', 'apple', 'music', 'soundcloud',
   /* Half of "Apple Podcasts", which is a product name and not a word. */
   'podcasts',
+  /* "App Styl" — the button that changes how the app looks.
+ 
+     Carli, 20 September 2026, pointing at the screen: *"Voorkoms= App Styl."*
+     It said "Voorkoms", which is correct Afrikaans and is also what this app
+     calls the LOOK of a video, three lines away on the video desk. One word
+     meaning two things on one screen is worse than a borrowed one, and "app"
+     is the word she and everybody else actually says. */
+  'app',
   'instagram', 'meta', 'google', 'chrome', 'firefox', 'safari', 'edge',
   'copilot', 'collab', 'collabs', 'radar', 'arena', 'spotlight', 'masterclass',
   'masterclasses', 'premium', 'pro', 'reel', 'reels', 'shorts', 'studio',

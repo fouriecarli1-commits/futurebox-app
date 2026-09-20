@@ -240,7 +240,7 @@ export async function POST(request: Request): Promise<Response> {
       output_config: { effort: 'high', format: zodOutputFormat(PickSchema) },
       messages: [{ role: 'user' as const, content: briefFor(body) }],
     });
-    notecache('adformats', response.usage);
+    await notecache('adformats', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json({ error: 'refused', message: 'I cannot advise on that one.' }, { status: 200 });

@@ -175,7 +175,7 @@ export async function POST(request: Request): Promise<Response> {
         },
       ],
     });
-    notecache('translate', response.usage);
+    await notecache('translate', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json(

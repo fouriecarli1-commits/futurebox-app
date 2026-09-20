@@ -148,7 +148,7 @@ export async function POST(request: Request): Promise<Response> {
       output_config: { effort: 'low', format: zodOutputFormat(AnswerSchema) },
       messages: [{ role: 'user' as const, content: desk }],
     });
-    notecache('mixdesk', response.usage);
+    await notecache('mixdesk', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json({ reply: 'I cannot help with that one.', moves: [] }, { status: 200 });

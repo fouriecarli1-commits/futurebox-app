@@ -58,8 +58,13 @@ export function cachedSystem(text: string): Array<{
   return [{ type: 'text', text, cache_control: { type: 'ephemeral' } }];
 }
 
-/** Below this, the model will not make a cache entry at all, and says nothing. */
-export const FLOOR_TOKENS = 512;
+/* The floor lives with the prices now, because it is a fact about the model
+   and not about this file — and `check:aikoste` reads both from one place.
+   Re-exported so the eleven routes that import it here keep compiling. */
+export { FLOOR_TOKENS } from '@/app/data/aiprices';
+
+import { admin } from './account';
+import { FLOOR_TOKENS, MODEL } from '@/app/data/aiprices';
 
 interface Used {
   readonly input_tokens?: number | null;
@@ -80,16 +85,46 @@ interface Used {
  *             failure that costs money while looking exactly like success,
  *             so it is the one that gets the loud line.
  */
-export function notecache(where: string, used: Used | null | undefined): void {
+export async function notecache(where: string, used: Used | null | undefined): Promise<void> {
   const read = used?.cache_read_input_tokens ?? 0;
   const wrote = used?.cache_creation_input_tokens ?? 0;
   const fresh = used?.input_tokens ?? 0;
+  const out = used?.output_tokens ?? 0;
+
   if (read === 0 && wrote === 0) {
     console.warn(
       `ai cache: ${where} cached NOTHING — ${fresh} tokens billed fresh.`
       + ` Either the prompt is under ${FLOOR_TOKENS} tokens, or its prefix changed between calls.`,
     );
-    return;
+  } else {
+    console.log(`ai cache: ${where} — read ${read}, wrote ${wrote}, fresh ${fresh}`);
   }
-  console.log(`ai cache: ${where} — read ${read}, wrote ${wrote}, fresh ${fresh}`);
+
+  /* ── And written down, not only logged ────────────────────────────────
+
+     The line above went to the console and nowhere else, which is the same
+     mistake `eleven_costs` was built to fix: a number in a log is a number
+     that ages out before anybody adds it up. `docs/MAANDELIKSE-KOSTE.md`
+     has been carrying "die egte getal kom hier in" since the day caching
+     went on, and it could not, because there was nothing to read.
+
+     Awaited rather than fired and forgotten. A serverless function that
+     returns before its promises settle is frozen mid-write, and a row that
+     is lost is a call missing from the month — which biases the saving in
+     whichever direction the lost calls happened to lie. It is one small
+     insert against a database the route has already spoken to.
+
+     It never raises. A cost row that fails to save must not fail the
+     member's request: they asked for help, not for bookkeeping. */
+  const store = admin();
+  if (!store) return;
+  const { error } = await store.from('ai_costs').insert({
+    what: where,
+    model: MODEL,
+    input_tokens: fresh,
+    output_tokens: out,
+    cache_read: read,
+    cache_write: wrote,
+  });
+  if (error) console.warn(`ai cache: ${where} — the cost row did not save: ${error.message}`);
 }

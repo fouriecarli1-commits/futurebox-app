@@ -190,6 +190,18 @@ const ANONYMOUS: Record<string, string> = {
      and it refuses without POST_SECRET. */
   'app/api/eleven/prices/route.ts':
     'the price comparison — an account-wide total, guarded by POST_SECRET instead of a caller',
+  /* What prompt caching actually saved. Account-wide by construction — one
+     member's calls cannot answer whether the cache is working — so there is
+     no caller to scope it to, exactly like the price comparison above.
+
+     It reads one view of totals per route: how many calls, how many tokens
+     in each of the four buckets. No prompt, no answer, nobody's name and
+     nobody's id. And it refuses without POST_SECRET rather than defaulting
+     to open, compared in constant time.
+
+     It is a read. Nothing on this route writes anything. */
+  'app/api/aikoste/route.ts':
+    'the caching measurement — account-wide totals per route, guarded by POST_SECRET instead of a caller',
   /* ElevenLabs telling us a dub has finished. There is no caller by
      construction — that is what a webhook is — so the rule below cannot be
      satisfied and the question becomes what stands in its place.

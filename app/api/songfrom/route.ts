@@ -156,7 +156,7 @@ export async function POST(request: Request): Promise<Response> {
         },
       ],
     });
-    notecache('songfrom', response.usage);
+    await notecache('songfrom', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json(

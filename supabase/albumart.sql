@@ -185,3 +185,45 @@ alter table public.tracks
 insert into storage.buckets (id, name, public)
 values ('art', 'art', false)
 on conflict (id) do update set public = false;
+
+-- ── Wat aan elke kunstenaar uitbetaal moet word ─────────────────────────
+--
+-- Carli, 20 September 2026: *"Ek dink nie paystack doen sulke ekstra
+-- uitbetalings nie. Dit sal in my rekening uitbetaal word en ek betaal dit
+-- uit aan die kunstenaar."*
+--
+-- Sy is reg, en dit verander wat die app moet doen. As die geld in haar
+-- rekening land en sy dit met die hand aanstuur, dan is die een ding wat sy
+-- nodig het 'n staat: per kunstenaar, wat verkoop is, wat hulle kry, en wat
+-- reeds betaal is. Sonder dit beteken "ek betaal dit self uit" dat sy dit
+-- elke maand uit Paystack-uitvoere moet uitwerk.
+--
+-- Hierdie kolom is die hele meganisme. Null = nog nie betaal nie. 'n Datum
+-- = betaal, en die aansig hieronder laat dit uit.
+alter table public.art_works
+  add column if not exists paid_out timestamptz;
+
+-- Waarmee dit betaal is — 'n EFT-verwysing, 'n datum, wat ook al sy in haar
+-- bankstaat sien. Vrye teks, want dit is haar eie nota aan haarself.
+alter table public.art_works
+  add column if not exists paid_note text not null default '';
+
+-- ── Die staat ───────────────────────────────────────────────────────────
+--
+-- Een ry per kunstenaar met iets uitstaande. Die rand-bedrae word NIE hier
+-- bereken nie: `split()` in `app/data/artmarket.ts` is die enigste plek waar
+-- die 70/30 en die kaartfooi woon, en 'n tweede kopie daarvan in SQL is hoe
+-- twee antwoorde vir een som ontstaan. Hierdie aansig gee die pryse; die
+-- roete doen die som.
+create or replace view public.art_owing as
+  select a.id                                as artist,
+         a.name                              as artist_name,
+         count(w.id)                         as pieces,
+         array_agg(w.rand order by w.sold_at) as rands,
+         min(w.sold_at)                      as oldest_sale
+    from public.art_works w
+    join public.art_artists a on a.id = w.artist
+   where w.sold_to is not null
+     and w.paid_out is null
+   group by a.id, a.name
+   order by min(w.sold_at);

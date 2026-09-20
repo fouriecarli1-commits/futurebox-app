@@ -221,8 +221,25 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
 
 /** Credits ElevenLabs charges per minute of music. */
 const CREDITS_PER_MINUTE = 900;
-/** Rand per credit on the Business plan: $990 for 11,000,000, at R16/USD. */
-const RAND_PER_CREDIT = (990 * 16) / 11_000_000;
+
+/**
+ * Rand to the dollar, used everywhere a supplier prices in USD.
+ *
+ * Exported rather than written twice. It was a `16` inside the expression
+ * below and a second `16` on the line that turns the Business plan into
+ * rand; `app/data/aiprices.ts` would have been the third. This app has
+ * already had two meanings for one word twice, and an exchange rate that
+ * disagrees with itself is every supplier's cost wrong in a different
+ * direction on the same page.
+ *
+ * Deliberately a round number and deliberately a little pessimistic. It is
+ * not a live rate and must not become one: a cost table that moves on its
+ * own is a cost table nobody can check against last month's.
+ */
+export const RAND_PER_USD = 16;
+
+/** Rand per credit on the Business plan: $990 for 11,000,000. */
+const RAND_PER_CREDIT = (990 * RAND_PER_USD) / 11_000_000;
 
 /**
  * The free format: half a song.
@@ -263,7 +280,7 @@ export function marginOf(tier: Tier): number {
 
 /** Monthly fixed costs, in rand. Edit these as the real bills arrive. */
 export const FIXED_MONTHLY: Record<string, number> = {
-  'ElevenLabs Business': 990 * 16,
+  'ElevenLabs Business': 990 * RAND_PER_USD,
   'Anthropic (copilot)': 1500,
   Workshops: 4000,
   'Supabase Pro': 400,

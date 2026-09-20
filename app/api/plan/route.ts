@@ -339,7 +339,7 @@ export async function POST(request: Request): Promise<Response> {
       output_config: { effort: 'high', format: zodOutputFormat(PlanSchema) },
       messages: [{ role: 'user' as const, content: briefFor(body) }],
     });
-    notecache('plan', response.usage);
+    await notecache('plan', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json({ error: 'refused', message: 'I cannot plan that one.' }, { status: 200 });

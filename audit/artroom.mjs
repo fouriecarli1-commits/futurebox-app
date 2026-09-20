@@ -38,7 +38,7 @@
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
-import { dismissDoor, unfold } from './enter.mjs';
+import { dismissDoor, toRoom, unfold } from './enter.mjs';
 
 const PORT = 3323;
 const HERE = `http://localhost:${PORT}`;
@@ -62,7 +62,12 @@ try {
   }
 
   b = await chromium.launch(launchOptions());
-  const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
+  /* A phone, not a desk. The first version of this room passed here at
+     1280px and Carli opened it on a phone and said it looked like a
+     website — which it did, and the probe had no way to notice because a
+     two-column hero looks correct at desktop width. 390 × 844 is the
+     screen she actually holds. */
+  const p = await b.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 160)}`));
   /* ── The one refusal that is not a fault ─────────────────────────────
 
@@ -109,26 +114,19 @@ try {
   await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
   await p.waitForTimeout(1800);
 
-  /* The studio opens on its own door — every room as a card — so the way in
-     may be there rather than on the rail. Both are tried, in the order a
-     person meets them. */
-  const doorRooms = p.locator('div.fixed.inset-0.z-\\[55\\] button');
-  const manyDoors = await doorRooms.count();
-  for (let i = 0; i < manyDoors; i += 1) {
-    const first = ((await doorRooms.nth(i).innerText().catch(() => '')) ?? '').split('\n')[0].trim();
-    if (/^Album art/i.test(first)) {
-      await doorRooms.nth(i).click();
-      break;
-    }
-  }
-  await p.waitForTimeout(1600);
+  /* `toRoom` rather than a door-then-rail walk written here.
 
-  const shell = p.locator('div.fixed.inset-0.z-50').first();
-  const rail = shell.locator('button').filter({ hasText: /^Album art/ });
-  if (await rail.count()) {
-    await rail.first().click();
-    await p.waitForTimeout(1600);
-  }
+     The hand-written version worked at 1280px and timed out at 390px, for
+     the reason this helper exists: on a phone there is no rail, the way in
+     is the door card, and a probe that knows only one of the two paths
+     finds the room on a desk and not in a hand. `enter.mjs` has carried
+     both since the day sixty probes were triaged.
+
+     `folded: true` — this probe measures the room as somebody walks into
+     it, shut, before anything is pressed. Unfolding happens further down,
+     after the three rules that are about the closed room. */
+  await toRoom(p, 'Album art', { folded: true });
+  await p.waitForTimeout(1200);
 
   const room = p.locator('[data-room="albumart"]');
   check('the gallery is a room you can walk into', (await room.count()) === 1,

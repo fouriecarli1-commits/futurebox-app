@@ -123,7 +123,7 @@ export async function POST(request: Request): Promise<Response> {
         },
       ],
     });
-    notecache('recommend', response.usage);
+    await notecache('recommend', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json({ error: 'refused', message: 'I cannot choose for that one.' }, { status: 200 });

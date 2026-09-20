@@ -447,7 +447,7 @@ export async function POST(request: Request): Promise<Response> {
       },
       messages: [...history, { role: 'user' as const, content: contextFor(body) }],
     });
-    notecache('copilot', response.usage);
+    await notecache('copilot', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json(

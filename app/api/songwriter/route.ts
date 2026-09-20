@@ -133,7 +133,7 @@ export async function POST(request: Request) {
       },
       messages: [{ role: 'user', content: promptFor(body) }],
     });
-    notecache('songwriter', response.usage);
+    await notecache('songwriter', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json(

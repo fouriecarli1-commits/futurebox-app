@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- FutureBox — die 14 lêers wat nog nooit geloop het nie, in een plak.
+-- FutureBox — die 15 lêers wat nog nooit geloop het nie, in een plak.
 -- ═══════════════════════════════════════════════════════════════════════════
 --
 -- Supabase → SQL Editor → plak alles → Run. Veilig om weer te loop: elke stuk
@@ -39,6 +39,10 @@
 --                 is, en die krediet wat saam met ’n liedjie na die
 --                 speelkamer reis. Sonder dit is die kamer leeg en wys Live
 --                 geen kunstenaar se naam nie.
+--   aikoste.sql   Wat elke model-oproep gekos het, en wat die kas werklik
+--                 gespaar het. Sonder dit bly die besparing ’n skatting — en
+--                 ’n kas wat nooit tref nie lyk presies soos een wat altyd
+--                 tref, behalwe op die rekening.
 --
 -- ── Twee dinge moet reeds daar wees ────────────────────────────────────────
 --
@@ -54,7 +58,7 @@
 --
 -- ── Moenie hierdie lêer regmaak nie ────────────────────────────────────────
 --
--- Dit word geskryf deur `npm run sql:bundle` uit die 14 lêers self.
+-- Dit word geskryf deur `npm run sql:bundle` uit die 15 lêers self.
 -- Verander hulle en loop die skrip weer; `npm run check:sqlbundle` keer dat
 -- die kopie stilweg van sy oorsprong af wegdryf.
 
@@ -1512,3 +1516,133 @@ alter table public.tracks
 insert into storage.buckets (id, name, public)
 values ('art', 'art', false)
 on conflict (id) do update set public = false;
+
+-- ── Wat aan elke kunstenaar uitbetaal moet word ─────────────────────────
+--
+-- Carli, 20 September 2026: *"Ek dink nie paystack doen sulke ekstra
+-- uitbetalings nie. Dit sal in my rekening uitbetaal word en ek betaal dit
+-- uit aan die kunstenaar."*
+--
+-- Sy is reg, en dit verander wat die app moet doen. As die geld in haar
+-- rekening land en sy dit met die hand aanstuur, dan is die een ding wat sy
+-- nodig het 'n staat: per kunstenaar, wat verkoop is, wat hulle kry, en wat
+-- reeds betaal is. Sonder dit beteken "ek betaal dit self uit" dat sy dit
+-- elke maand uit Paystack-uitvoere moet uitwerk.
+--
+-- Hierdie kolom is die hele meganisme. Null = nog nie betaal nie. 'n Datum
+-- = betaal, en die aansig hieronder laat dit uit.
+alter table public.art_works
+  add column if not exists paid_out timestamptz;
+
+-- Waarmee dit betaal is — 'n EFT-verwysing, 'n datum, wat ook al sy in haar
+-- bankstaat sien. Vrye teks, want dit is haar eie nota aan haarself.
+alter table public.art_works
+  add column if not exists paid_note text not null default '';
+
+-- ── Die staat ───────────────────────────────────────────────────────────
+--
+-- Een ry per kunstenaar met iets uitstaande. Die rand-bedrae word NIE hier
+-- bereken nie: `split()` in `app/data/artmarket.ts` is die enigste plek waar
+-- die 70/30 en die kaartfooi woon, en 'n tweede kopie daarvan in SQL is hoe
+-- twee antwoorde vir een som ontstaan. Hierdie aansig gee die pryse; die
+-- roete doen die som.
+create or replace view public.art_owing as
+  select a.id                                as artist,
+         a.name                              as artist_name,
+         count(w.id)                         as pieces,
+         array_agg(w.rand order by w.sold_at) as rands,
+         min(w.sold_at)                      as oldest_sale
+    from public.art_works w
+    join public.art_artists a on a.id = w.artist
+   where w.sold_to is not null
+     and w.paid_out is null
+   group by a.id, a.name
+   order by min(w.sold_at);
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/aikoste.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- FutureBox — wat die model werklik gekos het, en wat die kas werklik gespaar het.
+--
+-- Loop dit ná schema.sql, in dieselfde projek. Veilig om weer te loop.
+--
+-- ── Waarom dit bestaan ────────────────────────────────────────────────────
+--
+-- Prompt caching is op 19 September 2026 aangeskakel, en `docs/MAANDELIKSE-
+-- KOSTE.md` het met opset GEEN besparing aangeteken nie:
+--
+--   "'n Kas wat nooit tref nie lyk presies soos een wat altyd tref, behalwe
+--    op die rekening."
+--
+-- Daardie sin is die hele rede vir hierdie tabel. 'n Kas wat misluk gee geen
+-- fout nie: die merker word aanvaar en doen eenvoudig niks. En die tarief is
+-- 'n kwart *duurder* vir 'n druk wat alleen staan. So die besparing mag nie
+-- bereken word uit 'n aanname oor hoe dikwels dit tref nie — dit moet gelees
+-- word uit oproepe wat werklik gebeur het.
+--
+-- Die app het dit tot nou toe net na die log geskryf, waar dit verouder en
+-- niemand dit optel nie. Dieselfde fout as `eleven_costs` voor dit bestaan
+-- het, en dieselfde oplossing.
+--
+-- Een ry per oproep. Geen prompt, geen antwoord, geen naam — net watter
+-- roete, hoeveel tokens in elke van die vier emmers, en watter model.
+
+create table if not exists public.ai_costs (
+  id            bigint generated always as identity primary key,
+  -- 'help', 'copilot', 'songfrom', … — die roete se eie naam vir homself.
+  -- Vrye teks eerder as 'n check, sodat 'n nuwe roete nie 'n migrasie nodig
+  -- het nie; 'n naam wat verkeerd gespel is wys in die aansig as sy eie ry.
+  what          text not null,
+  model         text not null default '',
+  -- Die vier emmers, presies soos die model dit self gerapporteer het.
+  -- Nie-negatief, want 'n negatiewe telling is 'n leesfout en nie 'n oproep.
+  input_tokens  integer not null default 0 check (input_tokens >= 0),
+  output_tokens integer not null default 0 check (output_tokens >= 0),
+  cache_read    integer not null default 0 check (cache_read >= 0),
+  cache_write   integer not null default 0 check (cache_write >= 0),
+  at            timestamptz not null default now()
+);
+
+create index if not exists ai_costs_at_idx on public.ai_costs (at desc);
+create index if not exists ai_costs_what_idx on public.ai_costs (what, at desc);
+
+alter table public.ai_costs enable row level security;
+
+-- Niemand lees dit uit die blaaier nie. Die bediener skryf met die
+-- diens-sleutel; `/api/aikoste` is die enigste pad wat 'n getal teruggee, en
+-- dit weier sonder POST_SECRET. Presies soos `eleven_costs`.
+drop policy if exists "ai costs are server only" on public.ai_costs;
+
+-- ── Wat die kas gedoen het ────────────────────────────────────────────────
+--
+-- Per roete, oor die laaste 30 dae. Die kolomme wat saak maak:
+--
+--   hits      hoeveel oproepe werklik uit die kas gelees het
+--   nothings  hoeveel niks gekas het nie — nie gelees én nie geskryf nie.
+--             Dít is die stil mislukking. As hierdie kolom hoog bly terwyl
+--             die merker aan is, is die prompt onder die 512-token vloer of
+--             sy voorvoegsel verander tussen oproepe.
+--
+-- Die rand-bedrae word NIE hier bereken nie. Die tariewe en die wisselkoers
+-- woon in `app/data/aiprices.ts`, en 'n tweede kopie daarvan in SQL is hoe
+-- twee pryse vir een ding ontstaan. Hierdie aansig gee die tokens; die roete
+-- doen die som.
+
+create or replace view public.ai_cache_check as
+  select what,
+         count(*)                                             as calls,
+         count(*) filter (where cache_read > 0)               as hits,
+         count(*) filter (where cache_read = 0
+                            and cache_write = 0)              as nothings,
+         sum(input_tokens)                                    as input_tokens,
+         sum(output_tokens)                                   as output_tokens,
+         sum(cache_read)                                      as cache_read,
+         sum(cache_write)                                     as cache_write,
+         min(at)                                              as first_at,
+         max(at)                                              as last_at
+    from public.ai_costs
+   where at > now() - interval '30 days'
+   group by what
+   order by sum(cache_read) + sum(input_tokens) desc;

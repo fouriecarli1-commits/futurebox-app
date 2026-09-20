@@ -209,10 +209,40 @@ rekening kom, gaan hierdie drie na en werk die tabel by:
    Dit is nou gekas (`app/lib/server/aicache.ts`). **Maar daar word nog geen
    besparing hier aangeteken nie, en dit is opsetlik.** 'n Kas wat nooit tref
    nie lyk presies soos een wat altyd tref, behalwe op die rekening — en die
-   tarief is 'n kwart *duurder* vir 'n druk wat alleen staan. Die app log nou
-   per oproep wat die kas werklik gedoen het (`ai cache: help — read 6127,
-   wrote 0, fresh 240`). Wanneer daar credits is en daardie reëls 'n week lank
-   opgetel is, kom die egte getal hier in. Tot dan bly R1 500 staan.
+   tarief is 'n kwart *duurder* vir 'n druk wat alleen staan.
+
+   **20 September 2026 — die meting is gebou.** Die logreël was nie genoeg
+   nie: 'n getal in 'n log verouder voordat iemand dit optel, wat presies
+   dieselfde fout is as wat `eleven_costs` bestaan om reg te maak. Elke
+   model-oproep skryf nou 'n ry in `ai_costs` — vier tokentellings, soos die
+   model dit self gerapporteer het, en niks anders nie. Geen prompt, geen
+   antwoord, geen naam.
+
+   Om die getal te lees, met `POST_SECRET` uit Vercel:
+
+   ```
+   curl -s "https://<jou-domein>/api/aikoste?key=<POST_SECRET>" | jq
+   ```
+
+   Wat dit teruggee, per roete en as 'n totaal: hoeveel oproepe, hoeveel uit
+   die kas gelees het, wat werklik betaal is, wat dieselfde oproepe **sonder**
+   enige kas sou gekos het, en die verskil. Plus `monthly`, wat dit na 30 dae
+   skaal en sê uit hoeveel dae dit skaal — onder een dag weier dit om te
+   skaal, want dertig dae wat uit vier uur afgelei is, is 'n getal met 'n
+   reguit gesig en niks daaragter nie.
+
+   **Die kolom om eerste te lees is `silentFailures`.** Dit tel die oproepe
+   waar die merker niks gedoen het nie — nie gelees en nie geskryf nie. As dit
+   hoog bly, is die prompt onder die 512-token vloer of sy voorvoegsel het
+   tussen oproepe verander, en daar kom geen besparing nie.
+
+   En dit kan negatief wees. 'n Oproep wat net die inskrywing geskryf het en
+   nooit weer gelees is nie, het 21% meer betaal as sonder kas. `split`-styl
+   wegsteek van daardie geval sou elke slegte week soos 'n gelyk week laat lyk;
+   `check:aikoste` hou die som eerlik, met elke bedrag met die hand uitgewerk.
+
+   Tot daar 'n week se rye is, bly R1 500 staan. Die syfer word hier ingeskryf
+   uit die uitvoer hierbo, nie uit 'n skatting nie.
 
    Wat wél reeds seker is: ses van die elf prompts is korter as die model se
    512-token vloer en kas dus niks, ook nie met die merker op nie. Dit is nie

@@ -185,7 +185,7 @@ export async function POST(request: Request): Promise<Response> {
       system: cachedSystem(SYSTEM),
       messages: [...history, { role: 'user' as const, content: question }],
     });
-    notecache('help', response.usage);
+    await notecache('help', response.usage);
 
     if (response.stop_reason === 'refusal') {
       return Response.json({
