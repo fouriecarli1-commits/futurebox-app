@@ -89,6 +89,7 @@ import { useBackLayer } from '../lib/backstack';
 import { useLang } from '../lib/i18n';
 import { loadTracks, type Track } from '../lib/library';
 import { square } from '../lib/imagefile';
+import { previewOf } from '../lib/artmark';
 import {
   ART_MAX_BYTES,
   ART_SIDE,
@@ -214,6 +215,8 @@ interface Market {
   readonly artists: readonly Artist[];
   /** Everybody, waiting room included. Owner only; null for the rest. */
   readonly everyArtist: readonly AnyArtist[] | null;
+  /** True when OWNER_EMAIL is unset, so nobody is the owner. See the route. */
+  readonly noOwner: boolean;
   readonly wall: readonly WallPiece[];
   readonly bought: readonly Owned[];
   readonly asBuyer: readonly Thread[];
@@ -223,6 +226,97 @@ interface Market {
 
 /** The steps a commission goes through, in order, for the status bar. */
 const STEPS: readonly OfferState[] = ['offered', 'paid', 'accepted', 'delivered'];
+
+/* ──────────────────────────────────────────────────────────── uploading ── */
+
+/**
+ * Put one blob in the private bucket, and give back where it landed.
+ *
+ * Straight from the browser to storage with an address this app's server
+ * signed. It does not pass through a route: six routes in this app already
+ * promised ceilings the platform will not pass, 4.5 MB is the wall, and a
+ * 3000-pixel painting is comfortably over it.
+ *
+ * Shared by the artist's own desk and by the owner's, because those two
+ * were the same forty lines twice and the second copy is where a rule goes
+ * missing.
+ */
+async function putInBucket(
+  blob: Blob,
+  why: 'work' | 'preview' | 'delivery',
+  artist: string | undefined,
+  lang: 'en' | 'af',
+  onProblem: (said: string) => void,
+  t: (key: string) => string,
+): Promise<string | null> {
+  const token = await accessToken();
+  const opened = await fetch('/api/artmarket', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ what: 'upload', for: why, ...(artist ? { artist } : {}) }),
+  });
+  const said = (await opened.json().catch(() => null)) as
+    | { path?: string; token?: string; message?: string }
+    | null;
+  if (!opened.ok || !said?.path || !said.token) {
+    onProblem(refusalText(said, lang, t('art.noUpload')));
+    return null;
+  }
+  const storage = getStorageClient();
+  if (!storage) {
+    onProblem(t('art.offline'));
+    return null;
+  }
+  const put = await storage
+    .from('art')
+    .uploadToSignedUrl(said.path, said.token, blob, { contentType: 'image/webp' });
+  if (put.error) {
+    onProblem(t('art.noUpload'));
+    return null;
+  }
+  return said.path;
+}
+
+/**
+ * A piece of artwork, as the two files it has to become.
+ *
+ * The clean 3000-pixel master, which only a buyer ever reaches, and the
+ * marked 1000-pixel preview, which is what the wall shows. Made in that
+ * order and uploaded as a pair, because a work with a master and no
+ * preview would hang on the wall as its own clean self.
+ *
+ * See `app/lib/artmark.ts` for why a watermark and not a screenshot
+ * blocker: nothing a web page can do stops a capture or a phone camera,
+ * and making the copy worthless is the measure that works against both.
+ */
+async function hangable(
+  file: File,
+  artistName: string,
+  artist: string | undefined,
+  lang: 'en' | 'af',
+  onProblem: (said: string) => void,
+  t: (key: string) => string,
+): Promise<{ path: string; preview: string } | null> {
+  const master = await square(file, ART_SIDE);
+  if (master.ok !== true) {
+    onProblem(t('art.badFile'));
+    return null;
+  }
+  if (master.blob.size > ART_MAX_BYTES) {
+    onProblem(ART_SIZE_SAID[lang]);
+    return null;
+  }
+  const marked = await previewOf(file, artistName);
+  if (marked.ok !== true) {
+    onProblem(t('art.badFile'));
+    return null;
+  }
+  const path = await putInBucket(master.blob, 'work', artist, lang, onProblem, t);
+  if (!path) return null;
+  const preview = await putInBucket(marked.blob, 'preview', artist, lang, onProblem, t);
+  if (!preview) return null;
+  return { path, preview };
+}
 
 /* ──────────────────────────────────────────────────────── the small parts ── */
 
@@ -344,24 +438,61 @@ function StatusBar({ state, said }: { readonly state: OfferState; readonly said:
 
 /* ─────────────────────────────────────────────────────────────── the room ── */
 
+/**
+ * The room itself: a top bar, three tabs, and what each tab is for.
+ *
+ * ── Why it is tabs and not a scroll ──────────────────────────────────────
+ *
+ * Carli, twice: *"Die album art plek lyk steeds soos 'n website in plaas
+ * van 'n app."* She was right both times and the reason was structural,
+ * not decorative. What I kept building was:
+ *
+ *   a masthead — a display heading with a rule above it, alone at the top
+ *   a carousel with dots underneath — a landing-page hero, exactly
+ *   four accordions stacked down one long scroll — a page's sections
+ *
+ * Those three things ARE a website, whatever colour they are painted. An
+ * app is a bar, a way to switch between the two or three things the screen
+ * is for, and content you act on directly.
+ *
+ * So: a 52-pixel bar, a segmented control, and three tabs.
+ *
+ *   WERKE        everything for sale, as a grid you tap
+ *   KUNSTENAARS  the people, one row each, into their profile
+ *   MYNE         what you own, what you have asked for, your own desk
+ *
+ * The folds survive inside MYNE, where they are genuinely panels in a
+ * drawer rather than the skeleton of a page — and every room in this app
+ * opens with its panels shut.
+ *
+ * ── And what it says it is ───────────────────────────────────────────────
+ *
+ *   *"Die bladsy moet ook beskryf wat hierdie is, dit is nie net album art
+ *    nie, dit is album art created by real artists, human made."*
+ *
+ * That is the proposition and it was nowhere on the screen. It is now one
+ * line under the tabs — not a hero paragraph, one line — and it carries
+ * the three facts that decide whether somebody stays: made by a person,
+ * not by a machine, sold once, from R200.
+ */
 export default function ArtMarket(): React.ReactElement {
   const { t, lang } = useLang();
   const [market, setMarket] = useState<Market | null>(null);
   const [problem, setProblem] = useState('');
   const [loading, setLoading] = useState(true);
-  /** Which sleeve is turned over, showing the artist on its back. */
-  const [flipped, setFlipped] = useState<string | null>(null);
+  /** Which of the three the screen is showing. */
+  const [tab, setTab] = useState<'works' | 'artists' | 'mine'>('works');
   /** Whose buttons-only conversation is open. */
   const [asking, setAsking] = useState<Artist | null>(null);
   /** Whose profile is open — their words and their whole body of work. */
   const [profile, setProfile] = useState<Artist | null>(null);
+  /** Which piece is open, full size, with the price and the buy button. */
+  const [sheet, setSheet] = useState<WallPiece | null>(null);
   const [songs, setSongs] = useState<readonly Track[]>([]);
-  /** Which sleeve is in the middle of the crate, for the dots. */
-  const [at, setAt] = useState(0);
-  const crate = useRef<HTMLDivElement | null>(null);
 
   useBackLayer(asking !== null, () => setAsking(null));
   useBackLayer(profile !== null, () => setProfile(null));
+  useBackLayer(sheet !== null, () => setSheet(null));
 
   const read = useCallback(async () => {
     setProblem('');
@@ -447,16 +578,6 @@ export default function ArtMarket(): React.ReactElement {
   const wall = market?.wall ?? [];
   const mine = market?.me ?? null;
 
-  /* Which sleeve is in the middle, read off the scroll rather than tracked
-     by the presses — a flick past three of them is one gesture and no
-     press at all. */
-  const onCrateScroll = useCallback(() => {
-    const box = crate.current;
-    if (!box) return;
-    const each = box.scrollWidth / Math.max(1, wall.length);
-    setAt(Math.round(box.scrollLeft / Math.max(1, each)));
-  }, [wall.length]);
-
   const saidState = (state: OfferState): string =>
     ({
       offered: t('art.step.offered'),
@@ -466,34 +587,53 @@ export default function ArtMarket(): React.ReactElement {
       declined: t('art.step.declined'),
     })[state];
 
+  const TABS = [
+    { id: 'works' as const, said: t('art.tab.works'), count: wall.length },
+    { id: 'artists' as const, said: t('art.tab.artists'), count: market?.artists.length ?? 0 },
+    { id: 'mine' as const, said: t('art.tab.mine'), count: market?.bought.length ?? 0 },
+  ];
+
   return (
     <div
       data-room="albumart"
       style={{ ...SKIN, paddingBottom: barClearance() }}
       className="min-h-full bg-[var(--nag)] text-[color:var(--room-2)]"
     >
-      {/* ── The plaque ─────────────────────────────────────────────────
-          A brass rule, the room's name, and the two facts that have to be
-          readable before anything is pressed: what a piece starts at, and
-          that each one sells once. No hero and no pitch — everybody here
-          is signed in and came on purpose. */}
-      <header className="px-4 pb-4 pt-5">
-        <span className="block h-px w-9 bg-[var(--brons)]" aria-hidden />
-        <h2
-          className="pt-3 text-[27px] leading-none text-[color:var(--room)]"
-          style={{ fontFamily: 'var(--vertoon)' }}
-        >
-          {t('art.title')}
-        </h2>
-        <p className={`${MIKRO} pt-2`}>
-          {t('art.from')} R{START_RAND} · {t('art.one')}
-        </p>
+      {/* ── The bar ─────────────────────────────────────────────────────
+          Fifty-two pixels, a name, and nothing else. Not a masthead: a
+          masthead is the thing that made this read as a page. */}
+      <header className="flex h-[52px] items-center justify-between border-b border-[var(--lyn)] px-4">
+        <h2 className="text-[16px] font-bold tracking-tight text-[color:var(--room)]">{t('art.title')}</h2>
       </header>
+
+      {/* The segmented control. An app switches between the two or three
+          things a screen is for; a page stacks them and makes you scroll. */}
+      <div role="tablist" className="flex gap-1 border-b border-[var(--lyn)] px-3 py-2">
+        {TABS.map((one) => (
+          <button
+            key={one.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === one.id}
+            onClick={() => setTab(one.id)}
+            className={`flex min-h-[38px] flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition ${
+              tab === one.id
+                ? 'bg-[var(--brons)] text-[#17120B]'
+                : 'text-[color:var(--room-2)] active:bg-[var(--nag-2)]'
+            }`}
+          >
+            {one.said}
+            {one.count > 0 && (
+              <span className={`text-[11px] ${tab === one.id ? 'opacity-70' : 'opacity-50'}`}>{one.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
 
       {problem && (
         <p
           role="alert"
-          className="mx-4 mb-3 rounded-[4px] border border-[var(--brons)] px-3 py-2.5 text-[14px] text-[#E8C89A]"
+          className="mx-4 mt-3 rounded-[4px] border border-[var(--brons)] px-3 py-2.5 text-[14px] text-[#E8C89A]"
         >
           {problem}
         </p>
@@ -506,303 +646,248 @@ export default function ArtMarket(): React.ReactElement {
         </p>
       )}
 
-      {/* ── The crate ───────────────────────────────────────────────────
-          One sleeve at a time, large, snapping to the middle, with its
-          neighbours showing at the edges so it reads as a stack you are
-          going through rather than a page of thumbnails. That is how a
-          person looks at art they might buy, and it is a real phone
-          gesture rather than a grid borrowed from a shop. */}
-      {!loading && market && (
-        <section aria-label={t('art.crate')}>
+      {/* ── What this is ────────────────────────────────────────────────
+          Her ask, in one line rather than a hero: made by a person, not a
+          machine, sold once, from R200. It stays on the works tab, where
+          somebody is deciding whether any of this is for them. */}
+      {!loading && tab === 'works' && (
+        <p className="px-4 pt-3 text-[13px] leading-relaxed text-[color:var(--room-2)]">{t('art.whatThisIs')}</p>
+      )}
+
+      {/* ── WERKE ───────────────────────────────────────────────────────
+          A grid you tap. Price on every tile, because a price behind a
+          press is a price somebody meets after they have decided. */}
+      {!loading && market && tab === 'works' && (
+        <section className="px-4 py-4">
           {wall.length === 0 ? (
-            <p className="mx-4 rounded-[4px] border border-dashed border-[var(--lyn)] px-4 py-12 text-center text-[14px]">
+            <p className="rounded-[4px] border border-dashed border-[var(--lyn)] px-4 py-12 text-center text-[14px]">
               {t('art.empty')}
             </p>
           ) : (
-            <>
-              <div
-                ref={crate}
-                onScroll={onCrateScroll}
-                className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-[12vw] pb-2 [scrollbar-width:none] md:px-[28vw] [&::-webkit-scrollbar]:hidden"
-              >
-                {wall.map((piece) => (
-                  <article key={piece.id} data-piece={piece.id} className="w-[76vw] shrink-0 snap-center md:w-[44vw]">
-                    {/* The sleeve turns over. A record sleeve's back is
-                        where the credits are, so the artist is not a card
-                        that opens over the room — you turn the thing over
-                        and they are on the back, in their own words. */}
-                    <div className="[perspective:1400px]">
-                      <button
-                        type="button"
-                        onClick={() => setFlipped(flipped === piece.id ? null : piece.id)}
-                        aria-pressed={flipped === piece.id}
-                        aria-label={`${piece.title} — ${t('art.turnOver')}`}
-                        className="relative block w-full [transform-style:preserve-3d] transition-transform duration-500"
-                        style={{ transform: flipped === piece.id ? 'rotateY(180deg)' : undefined }}
-                      >
-                        <span className="block [backface-visibility:hidden]">
-                          <Sleeve url={piece.url} alt={`${piece.title}, ${piece.by}`} seal />
-                        </span>
-
-                        {/* The back. Paper-coloured, because the back of a
-                            sleeve is printed card and not a photograph. */}
-                        <span
-                          className="absolute inset-0 flex flex-col rounded-[3px] border p-4 text-left [backface-visibility:hidden] [transform:rotateY(180deg)]"
-                          style={{ background: 'var(--nag-2)', borderColor: 'var(--lyn)' }}
-                        >
-                          <span className={MIKRO}>{t('art.painted')}</span>
-                          <span
-                            className="pt-1.5 text-[22px] leading-tight text-[color:var(--room)]"
-                            style={{ fontFamily: 'var(--vertoon)' }}
-                          >
-                            {piece.by}
-                          </span>
-                          {(() => {
-                            const artist = market.artists.find((one) => one.id === piece.artist);
-                            return (
-                              <>
-                                {artist?.place && <span className={`${MIKRO} pt-1`}>{artist.place}</span>}
-                                <span className="mt-3 line-clamp-6 overflow-hidden whitespace-pre-wrap text-[13px] leading-relaxed">
-                                  {artist?.about || t('art.noWords')}
-                                </span>
-                              </>
-                            );
-                          })()}
-                          {(() => {
-                            const artist = market.artists.find((one) => one.id === piece.artist);
-                            const many = artist?.works.length ?? 0;
-                            return many > 1 ? (
-                              <span className={`${MIKRO} mt-auto pt-3`}>
-                                {many} {t('art.worksHere')}
-                              </span>
-                            ) : (
-                              <span className={`${MIKRO} mt-auto pt-3`}>{t('art.turnBack')}</span>
-                            );
-                          })()}
-                        </span>
-                      </button>
-                    </div>
-
-                    <div className="pt-3">
-                      <p
-                        className="truncate text-[20px] leading-tight text-[color:var(--room)]"
-                        style={{ fontFamily: 'var(--vertoon)' }}
-                      >
-                        {piece.title}
-                      </p>
-                      <p className={`${MIKRO} pt-1`}>
-                        {t('art.by')} {piece.by}
-                      </p>
-                      <button
-                        type="button"
-                        className={`${VUL} mt-3`}
-                        onClick={() => void pay({ kind: 'art', work: piece.id })}
-                      >
-                        {t('art.buy')} · R{piece.rand}
-                      </button>
-                      {(() => {
-                        const artist = market.artists.find((one) => one.id === piece.artist);
-                        if (!artist) return null;
-                        return (
-                          <div className="flex gap-2 pt-2">
-                            {/* Her ask: *"een kunstenaar kan nogal baie
-                                album art hê."* The crate shows one piece
-                                at a time, so a painter with eleven works
-                                was eleven sleeves scattered through it.
-                                This is the way to see them as one body of
-                                work. Only offered where there is more than
-                                one — a button promising "all 1 works" is a
-                                button that wastes a press. */}
-                            {artist.works.length > 1 && (
-                              <button
-                                type="button"
-                                className={`${LEEG} flex-1`}
-                                onClick={() => setProfile(artist)}
-                              >
-                                {t('art.seeAll')} {artist.works.length}
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              className={`${LEEG} flex-1`}
-                              onClick={() => setAsking(artist)}
-                            >
-                              {t('art.askThem')}
-                            </button>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </article>
-                ))}
-              </div>
-
-              {/* Where you are in the crate. */}
-              {wall.length > 1 && (
-                <div className="flex justify-center gap-1.5 pt-1" aria-hidden>
-                  {wall.map((piece, index) => (
-                    <span
-                      key={piece.id}
-                      className="h-1 rounded-full transition-all"
-                      style={{
-                        width: index === at ? 18 : 6,
-                        background: index === at ? 'var(--brons)' : 'var(--lyn)',
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-4">
+              {wall.map((piece) => (
+                <button
+                  key={piece.id}
+                  type="button"
+                  data-piece={piece.id}
+                  onClick={() => setSheet(piece)}
+                  className="block w-full text-left"
+                >
+                  <Sleeve url={piece.url} alt={`${piece.title}, ${piece.by}`} seal />
+                  <span className="mt-2 flex items-baseline justify-between gap-2">
+                    <span className="min-w-0 truncate text-[14px] font-semibold text-[color:var(--room)]">
+                      {piece.title}
+                    </span>
+                    <span className="shrink-0 text-[14px] font-bold text-[color:var(--brons)]">R{piece.rand}</span>
+                  </span>
+                  <span className={`${MIKRO} block truncate pt-0.5`}>{piece.by}</span>
+                </button>
+              ))}
+            </div>
           )}
         </section>
       )}
 
-      {/* ── Everything that is about you rather than about them ───────── */}
-      <div className="mt-10 px-4">
-        {market && market.asBuyer.length > 0 && (
-          <Fold label={t('art.yours')}>
-            <ul className="space-y-5">
-              {market.asBuyer.map((thread) => (
-                <li
-                  key={thread.id}
-                  data-thread={thread.id}
-                  className="rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-4"
-                >
-                  <p className={MIKRO}>{thread.by}</p>
-                  <p
-                    className="pt-1 text-[19px] leading-tight text-[color:var(--room)]"
-                    style={{ fontFamily: 'var(--vertoon)' }}
-                  >
-                    {thread.songTitle}
-                  </p>
-                  {!thread.offer ? (
-                    <p className={`${MIKRO} pt-3`}>{t('art.waiting')}</p>
-                  ) : (
-                    <>
-                      <StatusBar state={thread.offer.state} said={saidState(thread.offer.state)} />
-                      <p className="pt-3 text-[14px]">
-                        R{thread.offer.rand} ·{' '}
-                        {WINDOWS.find((one) => one.days === thread.offer?.days)?.[lang] ?? `${thread.offer.days}d`}
-                      </p>
-                      {thread.offer.state === 'offered' && (
-                        <button
-                          type="button"
-                          className={`${VUL} mt-3`}
-                          onClick={() => void pay({ kind: 'commission', offer: thread.offer?.id })}
-                        >
-                          {t('art.pay')} R{thread.offer.rand}
-                        </button>
-                      )}
-                      {thread.offer.state === 'paid' && (
-                        <button
-                          type="button"
-                          className={`${VUL} mt-3`}
-                          onClick={() => void doIt({ what: 'accept', offer: thread.offer?.id })}
-                        >
-                          {t('art.accept')}
-                        </button>
-                      )}
-                      {thread.offer.state === 'accepted' && thread.offer.dueAt && (
-                        <p className={`${MIKRO} pt-2`}>
-                          {t('art.due')} {new Date(thread.offer.dueAt).toLocaleDateString()}
-                        </p>
-                      )}
-                      {thread.offer.state === 'delivered' && thread.offer.url && (
-                        <Sleeve
-                          url={thread.offer.url}
-                          alt={`${thread.songTitle}, ${thread.by}`}
-                          className="mt-3 w-36"
-                        />
-                      )}
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </Fold>
-        )}
-
-        {market && (
-          <Fold label={t('art.put')}>
-            <PutOnSong
-              owned={market.bought}
-              songs={songs}
-              onPut={(work, trackId) => doIt({ what: 'wear', work, trackId })}
-              t={t}
-            />
-          </Fold>
-        )}
-
-        {/* Owner only. The route returns null for everybody else, so this
-            fold is absent rather than empty. Carli: *"Dit sal in my
-            rekening uitbetaal word en ek betaal dit uit aan die
-            kunstenaar."* */}
-        {market?.owing && market.owing.length > 0 && (
-          <Fold label={t('art.owing')}>
-            <ul className="space-y-3">
-              {market.owing.map((one) => (
-                <li
-                  key={one.artist}
-                  data-owed={one.artist}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-4"
-                >
-                  <div className="min-w-0">
-                    <p
-                      className="truncate text-[19px] leading-tight text-[color:var(--room)]"
-                      style={{ fontFamily: 'var(--vertoon)' }}
-                    >
-                      {one.name}
-                    </p>
-                    <p className={`${MIKRO} pt-1`}>
-                      {one.pieces} {one.pieces === 1 ? t('art.piece') : t('art.pieces')}
-                    </p>
-                  </div>
-                  <p className="text-[22px] text-[color:var(--room)]" style={{ fontFamily: 'var(--vertoon)' }}>
-                    R{one.rand.toFixed(2)}
-                  </p>
+      {/* ── KUNSTENAARS ─────────────────────────────────────────────────
+          One row each, into their profile. This is the list her ask about
+          profiles was really for: a painter with eleven works is a person,
+          not eleven tiles. */}
+      {!loading && market && tab === 'artists' && (
+        <section className="px-4 py-4">
+          {market.artists.length === 0 ? (
+            <p className="rounded-[4px] border border-dashed border-[var(--lyn)] px-4 py-12 text-center text-[14px]">
+              {t('art.noArtists')}
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {market.artists.map((one) => (
+                <li key={one.id}>
                   <button
                     type="button"
-                    className={LEEG}
-                    onClick={() => void doIt({ what: 'paidout', artist: one.artist })}
+                    data-artistrow={one.id}
+                    onClick={() => setProfile(one)}
+                    className="flex w-full items-center gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-3 text-left active:bg-[var(--leeg)]"
                   >
-                    {t('art.markPaid')}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[16px] font-semibold text-[color:var(--room)]">
+                        {one.name}
+                      </span>
+                      <span className={`${MIKRO} block truncate pt-1`}>
+                        {one.place && `${one.place} · `}
+                        {one.works.length} {t('art.forSaleNow')}
+                        {one.sold > 0 && ` · ${one.sold} ${t('art.soldAlready')}`}
+                      </span>
+                    </span>
+                    <ChevronDown className="h-4 w-4 shrink-0 -rotate-90 text-[color:var(--gedemp)]" aria-hidden />
                   </button>
                 </li>
               ))}
             </ul>
-            <p className="pt-4 text-[13px] leading-relaxed text-[color:var(--gedemp)]">{t('art.owingWhy')}</p>
-          </Fold>
-        )}
-
-        {market?.everyArtist && (
-          <Fold label={t('art.bring')}>
-            <BringArtist
-              artists={market.everyArtist}
-              onDo={doIt}
-              onProblem={setProblem}
-              lang={lang}
-              t={t}
-            />
-          </Fold>
-        )}
-
-        <Fold label={t('art.sell')}>
-          {!mine ? (
-            <Apply onApply={(name, about, place) => doIt({ what: 'apply', name, about, place })} t={t} />
-          ) : !mine.approved ? (
-            <p className="text-[14px] leading-relaxed">{t('art.pending')}</p>
-          ) : (
-            <ArtistDesk
-              threads={market?.asArtist ?? []}
-              onDo={doIt}
-              onProblem={setProblem}
-              saidState={saidState}
-              lang={lang}
-              t={t}
-            />
           )}
-        </Fold>
-      </div>
+        </section>
+      )}
+
+      {/* ── MYNE ────────────────────────────────────────────────────────
+          Everything that is about you rather than about them. Folds here,
+          because in a drawer they really are panels — which is what the
+          rest of this app does and what its probes press. */}
+      {!loading && tab === 'mine' && (
+        <section className="px-4 py-2">
+          {market && market.asBuyer.length > 0 && (
+            <Fold label={t('art.yours')}>
+              <ul className="space-y-5">
+                {market.asBuyer.map((thread) => (
+                  <li
+                    key={thread.id}
+                    data-thread={thread.id}
+                    className="rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-4"
+                  >
+                    <p className={MIKRO}>{thread.by}</p>
+                    <p className="pt-1 text-[16px] font-semibold text-[color:var(--room)]">{thread.songTitle}</p>
+                    {!thread.offer ? (
+                      <p className={`${MIKRO} pt-3`}>{t('art.waiting')}</p>
+                    ) : (
+                      <>
+                        <StatusBar state={thread.offer.state} said={saidState(thread.offer.state)} />
+                        <p className="pt-3 text-[14px]">
+                          R{thread.offer.rand} ·{' '}
+                          {WINDOWS.find((one) => one.days === thread.offer?.days)?.[lang] ?? `${thread.offer.days}d`}
+                        </p>
+                        {thread.offer.state === 'offered' && (
+                          <button
+                            type="button"
+                            className={`${VUL} mt-3`}
+                            onClick={() => void pay({ kind: 'commission', offer: thread.offer?.id })}
+                          >
+                            {t('art.pay')} R{thread.offer.rand}
+                          </button>
+                        )}
+                        {thread.offer.state === 'paid' && (
+                          <button
+                            type="button"
+                            className={`${VUL} mt-3`}
+                            onClick={() => void doIt({ what: 'accept', offer: thread.offer?.id })}
+                          >
+                            {t('art.accept')}
+                          </button>
+                        )}
+                        {thread.offer.state === 'accepted' && thread.offer.dueAt && (
+                          <p className={`${MIKRO} pt-2`}>
+                            {t('art.due')} {new Date(thread.offer.dueAt).toLocaleDateString()}
+                          </p>
+                        )}
+                        {thread.offer.state === 'delivered' && thread.offer.url && (
+                          <Sleeve
+                            url={thread.offer.url}
+                            alt={`${thread.songTitle}, ${thread.by}`}
+                            className="mt-3 w-36"
+                          />
+                        )}
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Fold>
+          )}
+
+          {market && (
+            <Fold label={t('art.put')}>
+              <PutOnSong
+                owned={market.bought}
+                songs={songs}
+                onPut={(work, trackId) => doIt({ what: 'wear', work, trackId })}
+                t={t}
+              />
+            </Fold>
+          )}
+
+          {/* Owner only. The route returns null for everybody else, so
+              this fold is absent rather than empty. */}
+          {market?.owing && market.owing.length > 0 && (
+            <Fold label={t('art.owing')}>
+              <ul className="space-y-3">
+                {market.owing.map((one) => (
+                  <li
+                    key={one.artist}
+                    data-owed={one.artist}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-[4px] border border-[var(--lyn)] bg-[var(--nag-2)] p-4"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-[16px] font-semibold text-[color:var(--room)]">{one.name}</p>
+                      <p className={`${MIKRO} pt-1`}>
+                        {one.pieces} {one.pieces === 1 ? t('art.piece') : t('art.pieces')}
+                      </p>
+                    </div>
+                    <p className="text-[18px] font-bold text-[color:var(--brons)]">R{one.rand.toFixed(2)}</p>
+                    <button
+                      type="button"
+                      className={LEEG}
+                      onClick={() => void doIt({ what: 'paidout', artist: one.artist })}
+                    >
+                      {t('art.markPaid')}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <p className="pt-4 text-[13px] leading-relaxed text-[color:var(--gedemp)]">{t('art.owingWhy')}</p>
+            </Fold>
+          )}
+
+          {market?.everyArtist && (
+            <Fold label={t('art.bring')}>
+              <BringArtist
+                artists={market.everyArtist}
+                onDo={doIt}
+                onProblem={setProblem}
+                lang={lang}
+                t={t}
+              />
+            </Fold>
+          )}
+
+          {/* Said rather than left as an absence. Until the owner's address
+              is set, nobody is the owner and the panel above is drawn for
+              nobody — which looks exactly like a feature never built. */}
+          {market?.noOwner && (
+            <p className="my-3 rounded-[4px] border border-[var(--brons)] px-3 py-2.5 text-[13px] leading-relaxed text-[#E8C89A]">
+              {t('art.noOwner')}
+            </p>
+          )}
+
+          <Fold label={t('art.sell')}>
+            {!mine ? (
+              <Apply onApply={(name, about) => doIt({ what: 'apply', name, about })} t={t} />
+            ) : !mine.approved ? (
+              <p className="text-[14px] leading-relaxed">{t('art.pending')}</p>
+            ) : (
+              <ArtistDesk
+                name={mine.name}
+                threads={market?.asArtist ?? []}
+                onDo={doIt}
+                onProblem={setProblem}
+                saidState={saidState}
+                lang={lang}
+                t={t}
+              />
+            )}
+          </Fold>
+        </section>
+      )}
+
+      {sheet && (
+        <WorkSheet
+          piece={sheet}
+          artist={market?.artists.find((one) => one.id === sheet.artist) ?? null}
+          onClose={() => setSheet(null)}
+          onBuy={() => void pay({ kind: 'art', work: sheet.id })}
+          onArtist={(artist) => {
+            setSheet(null);
+            setProfile(artist);
+          }}
+          t={t}
+        />
+      )}
 
       {profile && (
         <ArtistSheet
@@ -840,6 +925,82 @@ export default function ArtMarket(): React.ReactElement {
   );
 }
 
+/* ─────────────────────────────────────────────────────────── one piece ── */
+
+/**
+ * One work, raised over the grid, with the buy button where a thumb is.
+ *
+ * The piece shown here is the MARKED preview, like everywhere else before
+ * a sale: nothing a web page can do stops a screenshot or a phone camera,
+ * and the measure that works against both is that the only file anybody
+ * can reach before paying is 1000 pixels with a band of text through it.
+ */
+function WorkSheet({
+  piece,
+  artist,
+  onClose,
+  onBuy,
+  onArtist,
+  t,
+}: {
+  readonly piece: WallPiece;
+  readonly artist: Artist | null;
+  readonly onClose: () => void;
+  readonly onBuy: () => void;
+  readonly onArtist: (artist: Artist) => void;
+  readonly t: (key: string) => string;
+}): React.ReactElement {
+  return (
+    <div
+      style={SKIN}
+      role="dialog"
+      aria-label={piece.title}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(10,8,6,0.72)] md:items-center md:p-6"
+    >
+      <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--nag)] text-[color:var(--room-2)] md:max-h-[86vh] md:rounded-[22px]">
+        <button type="button" onClick={onClose} aria-label={t('art.close')} className="flex w-full shrink-0 justify-center py-3">
+          <span className="h-1 w-10 rounded-full bg-[var(--lyn)]" />
+        </button>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+          <Sleeve url={piece.url} alt={`${piece.title}, ${piece.by}`} seal />
+
+          <h3 className="pt-4 text-[22px] font-bold leading-tight text-[color:var(--room)]">{piece.title}</h3>
+          {artist ? (
+            <button
+              type="button"
+              onClick={() => onArtist(artist)}
+              className="pt-1 text-[14px] text-[color:var(--brons)] underline underline-offset-4"
+            >
+              {piece.by}
+            </button>
+          ) : (
+            <p className="pt-1 text-[14px]">{piece.by}</p>
+          )}
+
+          <p className="pt-4 text-[14px] leading-relaxed">{t('art.oneOnly')}</p>
+
+          <ul className="space-y-2 pt-4">
+            {[t('art.get.1'), t('art.get.2'), t('art.get.3'), t('art.get.4')].map((one) => (
+              <li key={one} className="flex gap-2 text-[14px] leading-relaxed">
+                <Check className="mt-1 h-3.5 w-3.5 shrink-0 text-[color:var(--brons)]" aria-hidden />
+                {one}
+              </li>
+            ))}
+          </ul>
+
+          <p className={`${MIKRO} pt-4`}>{t('art.marked')}</p>
+        </div>
+
+        <div className="shrink-0 border-t border-[var(--lyn)] px-5 pb-[max(20px,env(safe-area-inset-bottom))] pt-4">
+          <button type="button" onClick={onBuy} className={VUL}>
+            {t('art.buy')} · R{piece.rand}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 /* ──────────────────────────────────────────────────────────── the painter ── */
 
 /**
@@ -1121,16 +1282,30 @@ function PutOnSong({
 
 /* ──────────────────────────────────────────────────── becoming an artist ── */
 
+/**
+ * Applying to sell here.
+ *
+ * Two fields, and that is deliberate.
+ *
+ *   *"Die artist se box moet net vra vir naam, en profile, en dan in die
+ *    profile boks moet daar staan wat jy moet skryf, write something about
+ *    yourself, your art and create a profile which the public will view."*
+ *
+ * It asked for a third — where they work from — and a third field on a
+ * form somebody fills in once, on a phone, to sell a painting is a third
+ * chance to close the tab. The placeholder in the big box is hers, word
+ * for word, because a blank box labelled "about you" gets one sentence
+ * and a box that says what it is for gets a profile.
+ */
 function Apply({
   onApply,
   t,
 }: {
-  readonly onApply: (name: string, about: string, place: string) => Promise<boolean>;
+  readonly onApply: (name: string, about: string) => Promise<boolean>;
   readonly t: (key: string) => string;
 }): React.ReactElement {
   const [name, setName] = useState('');
   const [about, setAbout] = useState('');
-  const [place, setPlace] = useState('');
   const [busy, setBusy] = useState(false);
 
   return (
@@ -1141,12 +1316,14 @@ function Apply({
         <input value={name} onChange={(event) => setName(event.target.value)} className={VELD} />
       </label>
       <label className="block">
-        <span className={MIKRO}>{t('art.yourPlace')}</span>
-        <input value={place} onChange={(event) => setPlace(event.target.value)} className={VELD} />
-      </label>
-      <label className="block">
-        <span className={MIKRO}>{t('art.yourAbout')}</span>
-        <textarea value={about} onChange={(event) => setAbout(event.target.value)} rows={5} className={VELD} />
+        <span className={MIKRO}>{t('art.yourProfile')}</span>
+        <textarea
+          value={about}
+          onChange={(event) => setAbout(event.target.value)}
+          rows={7}
+          placeholder={t('art.profileHint')}
+          className={`${VELD} placeholder:text-[color:var(--gedemp)]`}
+        />
       </label>
       <button
         type="button"
@@ -1154,7 +1331,7 @@ function Apply({
         className={VUL}
         onClick={async () => {
           setBusy(true);
-          await onApply(name, about, place);
+          await onApply(name, about);
           setBusy(false);
         }}
       >
@@ -1203,7 +1380,6 @@ function BringArtist({
   /** The row being written: '' is nobody, 'new' is a fresh one. */
   const [open, setOpen] = useState('');
   const [name, setName] = useState('');
-  const [place, setPlace] = useState('');
   const [about, setAbout] = useState('');
   const [busy, setBusy] = useState(false);
   /** Which artist a piece is being hung for, and what it is called. */
@@ -1216,51 +1392,8 @@ function BringArtist({
   const start = (who: AnyArtist | null): void => {
     setOpen(who ? who.id : 'new');
     setName(who?.name ?? '');
-    setPlace(who?.place ?? '');
     setAbout(who?.about ?? '');
   };
-
-  /** The same upload the artist's own desk uses, with an artist named. */
-  const upload = useCallback(
-    async (file: File, artist: string): Promise<string | null> => {
-      const made = await square(file, ART_SIDE);
-      if (made.ok !== true) {
-        onProblem(t('art.badFile'));
-        return null;
-      }
-      if (made.blob.size > ART_MAX_BYTES) {
-        onProblem(ART_SIZE_SAID[lang]);
-        return null;
-      }
-      const token = await accessToken();
-      const opened = await fetch('/api/artmarket', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ what: 'upload', for: 'work', artist }),
-      });
-      const said = (await opened.json().catch(() => null)) as
-        | { path?: string; token?: string; message?: string }
-        | null;
-      if (!opened.ok || !said?.path || !said.token) {
-        onProblem(refusalText(said, lang, t('art.noUpload')));
-        return null;
-      }
-      const storage = getStorageClient();
-      if (!storage) {
-        onProblem(t('art.offline'));
-        return null;
-      }
-      const put = await storage
-        .from('art')
-        .uploadToSignedUrl(said.path, said.token, made.blob, { contentType: 'image/webp' });
-      if (put.error) {
-        onProblem(t('art.noUpload'));
-        return null;
-      }
-      return said.path;
-    },
-    [lang, onProblem, t],
-  );
 
   return (
     <div className="space-y-6">
@@ -1300,7 +1433,6 @@ function BringArtist({
                       artist: one.id,
                       name: one.name,
                       about: one.about,
-                      place: one.place,
                       approved: !one.approved,
                     })
                   }
@@ -1360,13 +1492,14 @@ function BringArtist({
                         event.target.value = '';
                         if (!file) return;
                         setBusy(true);
-                        const path = await upload(file, one.id);
-                        if (path) {
+                        const made = await hangable(file, one.name, one.id, lang, onProblem, t);
+                        if (made) {
                           await onDo({
                             what: 'listed',
                             artist: one.id,
                             title,
-                            path,
+                            path: made.path,
+                            preview: made.preview,
                             rand: Number(rand) || START_RAND,
                           });
                           setTitle('');
@@ -1389,16 +1522,13 @@ function BringArtist({
                     <input value={name} onChange={(event) => setName(event.target.value)} className={VELD} />
                   </label>
                   <label className="block">
-                    <span className={MIKRO}>{t('art.theirPlace')}</span>
-                    <input value={place} onChange={(event) => setPlace(event.target.value)} className={VELD} />
-                  </label>
-                  <label className="block">
-                    <span className={MIKRO}>{t('art.theirAbout')}</span>
+                    <span className={MIKRO}>{t('art.theirProfile')}</span>
                     <textarea
                       value={about}
                       onChange={(event) => setAbout(event.target.value)}
-                      rows={6}
-                      className={VELD}
+                      rows={7}
+                      placeholder={t('art.profileHint')}
+                      className={`${VELD} placeholder:text-[color:var(--gedemp)]`}
                     />
                   </label>
                   <button
@@ -1412,7 +1542,6 @@ function BringArtist({
                         artist: one.id,
                         name,
                         about,
-                        place,
                         approved: one.approved,
                       });
                       if (ok) setOpen('');
@@ -1436,12 +1565,14 @@ function BringArtist({
             <input value={name} onChange={(event) => setName(event.target.value)} className={VELD} />
           </label>
           <label className="block">
-            <span className={MIKRO}>{t('art.theirPlace')}</span>
-            <input value={place} onChange={(event) => setPlace(event.target.value)} className={VELD} />
-          </label>
-          <label className="block">
-            <span className={MIKRO}>{t('art.theirAbout')}</span>
-            <textarea value={about} onChange={(event) => setAbout(event.target.value)} rows={6} className={VELD} />
+            <span className={MIKRO}>{t('art.theirProfile')}</span>
+            <textarea
+              value={about}
+              onChange={(event) => setAbout(event.target.value)}
+              rows={7}
+              placeholder={t('art.profileHint')}
+              className={`${VELD} placeholder:text-[color:var(--gedemp)]`}
+            />
           </label>
           <button
             type="button"
@@ -1452,11 +1583,10 @@ function BringArtist({
               /* Let in straight away. She is the one approving, and a
                  waiting room she puts somebody into herself is a step
                  that exists only to be undone. */
-              const ok = await onDo({ what: 'artist', name, about, place, approved: true });
+              const ok = await onDo({ what: 'artist', name, about, approved: true });
               if (ok) {
                 setOpen('');
                 setName('');
-                setPlace('');
                 setAbout('');
               }
               setBusy(false);
@@ -1484,6 +1614,8 @@ function BringArtist({
  * hidden button is not a closed door.
  */
 function ArtistDesk({
+  /** Their own name, which goes into the watermark on their previews. */
+  name: mine,
   threads,
   onDo,
   onProblem,
@@ -1491,6 +1623,7 @@ function ArtistDesk({
   lang,
   t,
 }: {
+  readonly name: string;
   readonly threads: readonly Thread[];
   readonly onDo: (body: Record<string, unknown>) => Promise<boolean>;
   readonly onProblem: (said: string) => void;
@@ -1504,55 +1637,6 @@ function ArtistDesk({
   const [priced, setPriced] = useState<Record<string, { rand: string; days: number }>>({});
 
   const money = useMemo(() => split(Number(rand) || START_RAND), [rand]);
-
-  /**
-   * Take a file to 3000×3000 WebP and put it in the bucket.
-   *
-   * Straight from here to storage with an address this app's server signed
-   * — it does not pass through a route. Six routes in this app already
-   * promised ceilings the platform will not pass; 4.5 MB is the wall, and a
-   * painting at this size is comfortably over it.
-   */
-  const upload = useCallback(
-    async (file: File, why: 'work' | 'delivery'): Promise<string | null> => {
-      const made = await square(file, ART_SIDE);
-      if (made.ok !== true) {
-        onProblem(t('art.badFile'));
-        return null;
-      }
-      if (made.blob.size > ART_MAX_BYTES) {
-        onProblem(ART_SIZE_SAID[lang]);
-        return null;
-      }
-      const token = await accessToken();
-      const opened = await fetch('/api/artmarket', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ what: 'upload', for: why }),
-      });
-      const said = (await opened.json().catch(() => null)) as
-        | { path?: string; token?: string; message?: string }
-        | null;
-      if (!opened.ok || !said?.path || !said.token) {
-        onProblem(refusalText(said, lang, t('art.noUpload')));
-        return null;
-      }
-      const storage = getStorageClient();
-      if (!storage) {
-        onProblem(t('art.offline'));
-        return null;
-      }
-      const put = await storage
-        .from('art')
-        .uploadToSignedUrl(said.path, said.token, made.blob, { contentType: 'image/webp' });
-      if (put.error) {
-        onProblem(t('art.noUpload'));
-        return null;
-      }
-      return said.path;
-    },
-    [lang, onProblem, t],
-  );
 
   return (
     <div className="space-y-9">
@@ -1595,9 +1679,15 @@ function ArtistDesk({
               event.target.value = '';
               if (!file) return;
               setBusy(true);
-              const path = await upload(file, 'work');
-              if (path) {
-                await onDo({ what: 'listed', title, path, rand: Number(rand) || START_RAND });
+              const made = await hangable(file, mine, undefined, lang, onProblem, t);
+              if (made) {
+                await onDo({
+                  what: 'listed',
+                  title,
+                  path: made.path,
+                  preview: made.preview,
+                  rand: Number(rand) || START_RAND,
+                });
                 setTitle('');
               }
               setBusy(false);
@@ -1689,7 +1779,20 @@ function ArtistDesk({
                           const file = event.target.files?.[0];
                           event.target.value = '';
                           if (!file) return;
-                          const path = await upload(file, 'delivery');
+                          /* One clean file. A commission is delivered to
+                             one person who has already paid, so there is
+                             no preview to make and nobody to protect it
+                             from. */
+                          const made = await square(file, ART_SIDE);
+                          if (made.ok !== true) {
+                            onProblem(t('art.badFile'));
+                            return;
+                          }
+                          if (made.blob.size > ART_MAX_BYTES) {
+                            onProblem(ART_SIZE_SAID[lang]);
+                            return;
+                          }
+                          const path = await putInBucket(made.blob, 'delivery', undefined, lang, onProblem, t);
                           if (path) await onDo({ what: 'deliver', offer: thread.offer?.id, path });
                         }}
                       />

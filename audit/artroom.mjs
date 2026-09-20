@@ -144,14 +144,26 @@ try {
       /R\s?200/.test(shut),
       'R200 is behind a fold — a price somebody meets after they have decided');
 
-    /* Every fold is shut on arrival, like every other room in this app.
-       Counted rather than assumed: this room draws its own folds instead of
-       using `Card`, so it does not inherit that guarantee. */
+    /* ── The panels, on the tab that has them ────────────────────────
+
+       The room is three tabs now, and the panels live in the last one.
+       This assertion used to run on arrival and pass because the works
+       tab happens to have no folds — which is the vacuous shape this
+       whole file exists to avoid, so it moved to the tab it is about.
+
+       Getting there is also worth pressing: a tab that does not switch
+       is a third of the room nobody can reach. */
+    const mine = room.locator('[role="tab"]').last();
+    await mine.click();
+    await p.waitForTimeout(600);
+    check('the last tab opens', (await mine.getAttribute('aria-selected')) === 'true',
+      'pressing the tab did not select it');
+
     const open = await room.locator('button[aria-expanded="true"]').count();
     const folds = await room.locator('button[aria-expanded]').count();
-    check('every fold in the room starts shut',
+    check('every panel behind it starts shut',
       folds > 0 && open === 0,
-      folds === 0 ? 'there are no folds at all' : `${open} of ${folds} were already open`);
+      folds === 0 ? 'there are no panels at all' : `${open} of ${folds} were already open`);
 
     /* ── The keyboard that must not be there ────────────────────────── */
     await unfold(p);

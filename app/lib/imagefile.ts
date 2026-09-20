@@ -249,6 +249,42 @@ export async function square(file: File, side: number): Promise<Made> {
 }
 
 /**
+ * The centre square with something painted over it.
+ *
+ * ── Why this exists ──────────────────────────────────────────────────────
+ *
+ * Carli, 20 September 2026, about the art market: *"Screenshots gaan die
+ * kunswerke skade doen."* She is right, and the honest position is that
+ * neither a screenshot nor a phone camera pointed at the screen can be
+ * stopped by anything a web page is able to do. What CAN be done is make
+ * the copy worthless: show a marked, downsized preview to everybody and
+ * release the clean file only to the person who paid for it.
+ *
+ * That is what every stock library does, for exactly this reason, and it
+ * is the only measure that works against a camera as well as a capture.
+ *
+ * The mark is drawn INTO the pixels at upload, not over the picture in
+ * CSS. A CSS overlay is one line in a browser's inspector away from gone,
+ * and the clean bytes were on the wire the whole time.
+ */
+export async function squareMarked(
+  file: File,
+  side: number,
+  paintMark: (context: CanvasRenderingContext2D, side: number) => void,
+): Promise<Made> {
+  const bitmap = await decode(file);
+  if (typeof bitmap === 'string') return { ok: false, why: bitmap };
+
+  const from = Math.min(bitmap.width, bitmap.height);
+  const left = Math.round((bitmap.width - from) / 2);
+  const top = Math.round((bitmap.height - from) / 2);
+  return draw(bitmap, side, side, (context) => {
+    context.drawImage(bitmap, left, top, from, from, 0, 0, side, side);
+    paintMark(context, side);
+  });
+}
+
+/**
  * The whole picture, with its longest edge at `longest`.
  *
  * Nothing cropped, because this one is a reference for what a shot should look

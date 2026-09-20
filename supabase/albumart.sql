@@ -249,3 +249,24 @@ create or replace view public.art_owing as
 -- nie as duplikate nie, so baie huiskunstenaars is reg en twee rye vir een
 -- rekening bly onmoontlik.
 alter table public.art_artists alter column owner drop not null;
+
+-- ── Die voorskou, en waarom die skoon lêer apart lê ─────────────────────
+--
+-- Carli, 20 September 2026: *"Screenshots gaan die kunswerke skade doen."*
+--
+-- Sy is reg, en die eerlike posisie is dat nóg 'n screenshot nóg 'n foon se
+-- kamera wat na die skerm wys, gekeer kan word deur enigiets wat 'n
+-- webblad kan doen. Wat wél gedoen kan word, is om die kopie waardeloos te
+-- maak: wys vir almal 'n gemerkte, klein voorskou, en gee die skoon lêer
+-- net vir die een wat daarvoor betaal het.
+--
+-- `path` bly die skoon 3000px meester. `preview` is die gemerkte 1000px een
+-- wat op die muur hang. Die roete gee `preview` vir almal en `path` vir
+-- niemand behalwe die koper nie.
+--
+-- Leeg op elke werk wat opgelaai is voordat hierdie kolom bestaan het. Die
+-- roete val dan terug op die meester, want 'n kamer wat niks wys nie is
+-- erger as een wat te veel wys — en dit is 'n handjievol werke wat met die
+-- hand vervang kan word.
+alter table public.art_works
+  add column if not exists preview text not null default '';

@@ -37,6 +37,7 @@
  */
 
 import { admin, callerFrom, callerIsOwner, metered } from '@/app/lib/server/account';
+import { ownerEmails } from '@/app/lib/server/owners';
 import { filterSafe } from '@/app/lib/server/filtersafe';
 import { ART_MAX_BYTES, START_RAND, UNIQUE_RAND, WINDOWS, split } from '@/app/data/artmarket';
 
@@ -72,6 +73,10 @@ interface WorkRow {
   title: string;
   path: string;
   rand: number;
+  /* The marked 1000px preview. `path` is the clean 3000px master, and the
+     difference between them is the whole of this room's answer to a
+     screenshot. Empty on a work uploaded before the column existed. */
+  preview?: string;
   sold_to: string | null;
   sold_at: string | null;
   /* Null until the owner has actually transferred the artist's share. See
@@ -148,7 +153,7 @@ export async function GET(request: Request): Promise<Response> {
      looks merely quiet. */
   const { data: workRows, error: workError } = await client
     .from('art_works')
-    .select('id, artist, title, path, rand, sold_to, sold_at, paid_out')
+    .select('id, artist, title, path, preview, rand, sold_to, sold_at, paid_out')
     .order('created_at', { ascending: false });
   if (workError) {
     return Response.json(
@@ -172,7 +177,17 @@ export async function GET(request: Request): Promise<Response> {
         rand: one.rand,
         artist: one.artist,
         by: byId.get(one.artist)?.name ?? '',
-        url: await look(client, one.path),
+        /* ── The marked one, never the master ────────────────────────
+
+           Nothing a web page can do stops a screenshot or a phone camera
+           pointed at the screen. What stops the copy being USEFUL is that
+           the only file anybody can reach before paying is 1000 pixels
+           with a band of text baked through it. See `app/lib/artmark.ts`.
+
+           The fallback to `path` is for works uploaded before the preview
+           column existed — a handful, replaceable by hand, and a room
+           that shows nothing is worse than one that shows too much. */
+        url: await look(client, one.preview || one.path),
       })),
   );
 
@@ -187,6 +202,8 @@ export async function GET(request: Request): Promise<Response> {
         id: one.id,
         title: one.title,
         by: byId.get(one.artist)?.name ?? '',
+        /* The clean master, and this is the only place it is handed out:
+           `sold_to === caller.id` above is what earns it. */
         url: await look(client, one.path),
       })),
   );
@@ -335,6 +352,20 @@ export async function GET(request: Request): Promise<Response> {
         works: worksOf(one.id),
         sold: soldBy(one.id),
       })),
+    /* ── When nobody is the owner ────────────────────────────────────
+
+       `OWNER_EMAIL` is a Vercel variable, and until it is set nobody is
+       the owner — so the fold that brings an artist in is invisible, and
+       invisible for a reason no screen explains. That is the exact shape
+       of `docs/OPEN-QUESTIONS.md` §T: *"dit het aangekom" is nie "iemand
+       kan dit sien nie*.
+
+       So the room says it. It is the absence of a setting, not a secret:
+       nothing grants owner access without a matching address, so telling
+       a signed-in member that no owner is configured costs nothing and
+       saves the person who set this up an hour of looking for a button
+       that was never going to be drawn. */
+    noOwner: ownerEmails().length === 0,
     /* Everybody, approved or not, for the owner alone — the list she works
        from when she lets somebody in. Null for everybody else, so the
        waiting room is not a thing an ordinary member can enumerate. */
@@ -382,6 +413,8 @@ type Body = {
   /* Delivering, and listing. */
   offer?: string;
   path?: string;
+  /** The marked preview's path, beside the master's. */
+  preview?: string;
   title?: string;
   for?: string;
   /* Putting a bought piece on one of your own songs. */
@@ -475,7 +508,10 @@ export async function POST(request: Request): Promise<Response> {
       if (!artist) {
         return Response.json({ error: 'not_an_artist', message: 'Only our artists upload here.' }, { status: 403 });
       }
-      const kind = body.for === 'delivery' ? 'delivery' : 'work';
+      /* Three kinds, and the names are only for a human reading the
+         bucket — what makes a path safe is the artist-id prefix below. */
+      const kind =
+        body.for === 'delivery' ? 'delivery' : body.for === 'preview' ? 'preview' : 'work';
       const path = `${artist.id}/${kind}-${crypto.randomUUID()}.webp`;
       const { data, error } = await client.storage.from(BUCKET).createSignedUploadUrl(path);
       if (error || !data) {
@@ -505,7 +541,16 @@ export async function POST(request: Request): Promise<Response> {
          not ask less, and the database says so too — `rand >= 200` — so
          this is the polite refusal rather than the only one. */
       const rand = Math.max(START_RAND, Math.round(Number(body.rand) || START_RAND));
-      const { error } = await client.from('art_works').insert({ artist: artist.id, title, path, rand });
+      /* The marked preview, checked to be this artist's own file for the
+         same reason the master is: without it, an artist could name
+         somebody else's picture as the preview for their own work. */
+      const preview = String(body.preview ?? '');
+      if (preview && !preview.startsWith(`${artist.id}/`)) {
+        return Response.json({ error: 'not_yours', message: 'That is not a file you uploaded.' }, { status: 403 });
+      }
+      const { error } = await client
+        .from('art_works')
+        .insert({ artist: artist.id, title, path, preview, rand });
       if (error) {
         return Response.json({ error: 'not_saved', message: 'That did not save.' }, { status: 500 });
       }

@@ -447,6 +447,42 @@ export const STRINGS: Dict = {
   "art.one": { en: "Each one sold once", af: "Elkeen een keer verkoop" },
   "art.wall": { en: "For sale now", af: "Nou te koop" },
   "art.crate": { en: "The crate", af: "Die kis" },
+
+  /* ── The three tabs ────────────────────────────────────────────────────
+     An app switches between the two or three things a screen is for; a
+     page stacks them and makes you scroll. */
+  "art.tab.works": { en: "Works", af: "Werke" },
+  "art.tab.artists": { en: "Artists", af: "Kunstenaars" },
+  "art.tab.mine": { en: "Mine", af: "Myne" },
+  "art.noArtists": {
+    en: "No artists are listed yet.",
+    af: "Daar is nog geen kunstenaars gelys nie.",
+  },
+
+  /* ── What this room is ─────────────────────────────────────────────────
+     Carli: *"Die bladsy moet ook beskryf wat hierdie is, dit is nie net
+     album art nie, dit is album art created by real artists, human made."*
+     One line and not a hero paragraph: made by a person, not a machine,
+     sold once, from R200. */
+  "art.whatThisIs": {
+    en: "Album art painted by hand, by real artists. Not generated. Every piece is sold once and then it is yours alone — from R200.",
+    af: "Albumkuns wat met die hand geskilder is, deur regte kunstenaars. Nie gegenereer nie. Elke werk word een keer verkoop en is dan net joune — vanaf R200.",
+  },
+  "art.marked": {
+    en: "The picture here carries a mark. The clean file, 3000 × 3000, goes to the buyer alone.",
+    af: "Die prent hier dra ’n merk. Die skoon lêer, 3000 × 3000, gaan net na die koper toe.",
+  },
+
+  /* ── The artist's own two fields ───────────────────────────────────────
+     *"Die artist se box moet net vra vir naam, en profile."* The
+     placeholder is hers, word for word: a blank box labelled "about you"
+     gets one sentence, and a box that says what it is for gets a profile. */
+  "art.yourProfile": { en: "Your profile", af: "Jou profiel" },
+  "art.theirProfile": { en: "Their profile", af: "Hulle profiel" },
+  "art.profileHint": {
+    en: "Write something about yourself, your art, and create a profile which the public will view.",
+    af: "Skryf iets oor jouself en jou kuns, en maak ’n profiel wat die publiek gaan sien.",
+  },
   "art.by": { en: "by", af: "deur" },
   "art.close": { en: "Close", af: "Maak toe" },
 
@@ -496,6 +532,16 @@ export const STRINGS: Dict = {
   "art.waitingRoom": { en: "Waiting", af: "Wag" },
   "art.houseArtist": { en: "no account", af: "geen rekening" },
   "art.theyGet": { en: "They receive", af: "Hulle ontvang" },
+  /* The variable's NAME is deliberately not in here. `check:security`
+     keeps every secret's name out of the client bundle, and it caught this
+     string on the first build after it was written — correctly: the rule is
+     that a name in the bundle is a name an attacker does not have to guess,
+     and an exception for "this one is harmless" is how the rule dies. The
+     name is in docs/SWITCH-ON.md §1, where the person setting it up is. */
+  "art.noOwner": {
+    en: "Nobody is set as the owner of this app yet, so the panel for bringing an artist in is shown to nobody. It is the first setting in docs/SWITCH-ON.md.",
+    af: "Niemand is nog as die eienaar van hierdie toep gestel nie, so die paneel om ’n kunstenaar in te bring word vir niemand gewys nie. Dit is die eerste instelling in docs/SWITCH-ON.md.",
+  },
 
   /* One piece, raised over the wall as a sheet. */
   "art.oneOnly": {
