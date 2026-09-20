@@ -150,6 +150,67 @@ for (const file of walk('app')) {
         'Use bg-emerald-500 with text-onAccent for a bright fill.',
     );
   }
+
+  /* ── And no room brings its own colours ──────────────────────────────
+
+     Carli, four times across two days, about the album art room: *"dit lyk
+     soos 'n website binne 'n app"*, and then *"daai hele bladsy en kamer
+     moet die selfde kleur en tema regdeur hê"*, and finally *"dit lyk
+     uiters crap"*.
+
+     Each time I answered by making that room MORE its own thing, and the
+     comment I left above its palette said the quiet part plainly: "it is
+     not emerald, which is the rest of this app, which is the point." It
+     was not the point. A room with its own hex palette is a foreign page
+     pasted into the app — three colour systems on one phone screen — and
+     it also silently opts out of every theme the person can choose and of
+     the AA arithmetic above, which only knows about the families.
+
+     A literal colour in a Tailwind arbitrary value is the tell, so that is
+     what is counted. The allowlist is short and each entry is a reason,
+     not a grandfathering: a colour that must NOT follow the theme. */
+  const brandOrOverPicture = new Set([
+    /* Sign-in buttons. Google, Apple and Facebook each specify their
+       button's exact colours, and a themed version is off-brand. */
+    'app/components/Landing.tsx',
+    'app/components/SignInWith.tsx',
+    /* Words printed over somebody's artwork or video. White with a scrim
+       under it, because the surface behind is a photograph and not a
+       theme — the same reasoning as subtitles on any player. */
+    'app/components/FollowWords.tsx',
+    'app/components/SongScreen.tsx',
+  ]);
+  if (brandOrOverPicture.has(file.split('\\').join('/'))) continue;
+  for (const found of src.matchAll(
+    /\b(?:bg|text|border|ring|from|to|via|fill|stroke|shadow)-\[(?:#[0-9A-Fa-f]{3,8}|rgba?\([^\]]*\))\]/g,
+  )) {
+    failures.push(
+      `  ${file}: ${found[0]} is a colour of its own. It ignores the theme the person chose` +
+        ' and the contrast arithmetic above. Use the zinc/emerald families, or scrim/onAccent.',
+    );
+  }
+
+  /* And the same colour written as a CSS variable in a style object.
+ 
+     Which is how the album art room actually did it, and the first version of the
+     rule above sailed straight past it: the palette was ten entries of
+     `'--grond': '#F7F3EC'` in a `React.CSSProperties`, not a single
+     `bg-[#...]` class. Putting a hex one level of indirection away from
+     Tailwind does not make it follow the theme — it only makes it harder to
+     grep, which is worse.
+ 
+     A value that resolves through `var(--fb-…)` is the correct shape and
+     passes: that IS the theme, named once and reused. */
+  for (const found of src.matchAll(/'(--[\w-]+)':\s*'([^']+)'/g)) {
+    const value = found[2];
+    const literal = /^#[0-9A-Fa-f]{3,8}$/.test(value)
+      || (/^rgba?\(/.test(value) && !value.includes('var(--fb-'));
+    if (!literal) continue;
+    failures.push(
+      `  ${file}: ${found[1]} is set to the literal ${value}. A room may not carry its own palette` +
+        ' — point it at rgb(var(--fb-surface-…)) or rgb(var(--fb-primary-…)) so it follows the theme.',
+    );
+  }
 }
 
 if (failures.length > 0) {

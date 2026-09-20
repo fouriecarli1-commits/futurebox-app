@@ -127,6 +127,33 @@ async function look(
   return data?.signedUrl ?? null;
 }
 
+/**
+ * Put the database's own words in the log, where only we can read them.
+ *
+ * ── Why this exists ──────────────────────────────────────────────────────
+ *
+ * Carli, 20 September 2026, holding her phone: *"The gallery could not be
+ * read just now."* That sentence is honest and completely useless. Five
+ * reads in this route can produce it, each against a different table, and
+ * the difference between "you have not run the SQL" and "one column is
+ * missing" is the difference between a minute and an evening. Neither she
+ * nor I could tell which from the screen, and I had no way to reach her
+ * database to find out.
+ *
+ * So two halves, and the split is the point. The browser is told `which`
+ * read fell over, in OUR word for it — `works`, `bids`, `commissions` —
+ * which is a label this file chose and not a sentence a database wrote.
+ * The database's own message goes here, to the server log, because it
+ * names columns and constraints and is exactly the thing `check:aifault`
+ * exists to keep off a stranger's screen.
+ */
+function say(which: string, error: { message?: string; code?: string } | null): void {
+  console.error(
+    `[artmarket] the ${which} read failed.`
+    + ` code=${error?.code ?? 'none'} — ${error?.message ?? 'no message'}`,
+  );
+}
+
 /* ─────────────────────────────────────────────────────────────── reading ── */
 
 export async function GET(request: Request): Promise<Response> {
@@ -150,7 +177,7 @@ export async function GET(request: Request): Promise<Response> {
      showing a gallery that is empty for a reason nobody can guess. */
   if (artistError) {
     return Response.json(
-      { error: 'not_set_up', message: 'The art market tables are not in this project yet.' },
+      { error: 'not_set_up', message: 'The art market tables are not in this project yet.', which: 'artists' },
       { status: 503 },
     );
   }
@@ -168,8 +195,9 @@ export async function GET(request: Request): Promise<Response> {
     .select('id, artist, title, path, preview, rand, paid_rand, ends_at, won_by, sold_to, sold_at, paid_out')
     .order('created_at', { ascending: false });
   if (workError) {
+    say('works', workError);
     return Response.json(
-      { error: 'not_read', message: 'The gallery could not be read just now.' },
+      { error: 'not_read', message: 'The gallery could not be read just now.', which: 'works' },
       { status: 503 },
     );
   }
@@ -185,8 +213,13 @@ export async function GET(request: Request): Promise<Response> {
      normal. `check:couldnotask` caught this the first time it ran over
      the auction. */
   if (topError) {
+    say('bids', topError);
     return Response.json(
-      { error: 'not_read', message: 'The bids could not be read just now. Nothing is shown rather than the wrong amount.' },
+      {
+        error: 'not_read',
+        message: 'The bids could not be read just now. Nothing is shown rather than the wrong amount.',
+        which: 'bids',
+      },
       { status: 503 },
     );
   }
@@ -258,8 +291,9 @@ export async function GET(request: Request): Promise<Response> {
      empty list on a failed read tells a person who IS leading that they
      are not, which is how they lose a piece they thought they had. */
   if (mineError) {
+    say('my bids', mineError);
     return Response.json(
-      { error: 'not_read', message: 'Your bids could not be read just now.' },
+      { error: 'not_read', message: 'Your bids could not be read just now.', which: 'my bids' },
       { status: 503 },
     );
   }
@@ -344,8 +378,9 @@ export async function GET(request: Request): Promise<Response> {
      have asked nobody for anything", to somebody who is waiting on a piece
      they have already paid for. */
   if (requestError) {
+    say('commissions', requestError);
     return Response.json(
-      { error: 'not_read', message: 'Your commissions could not be read just now.' },
+      { error: 'not_read', message: 'Your commissions could not be read just now.', which: 'commissions' },
       { status: 503 },
     );
   }

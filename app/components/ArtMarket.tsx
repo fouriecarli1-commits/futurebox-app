@@ -104,71 +104,99 @@ import {
 /* ────────────────────────────────────────────────────────────── the skin ── */
 
 /**
- * One palette, light, and the whole room uses it.
+ * The room's colour is the app's colour. Nothing here is a new palette.
  *
- * Carli: *"Die donker tema gaan ook nie werk nie. Dit moet lig en skoon
- * lyk, dit moet artsy en uniek wees. Dan moet daai hele bladsy en kamer
- * die selfde kleur en tema regdeur hê."*
+ * ── The mistake this replaces ────────────────────────────────────────────
  *
- * Warm cream rather than white: a gallery is lit, not clinical, and pure
- * white makes every artwork on it look like a product photograph. Cards
- * are white ON the cream, which is what gives the screen its layers — and
- * layers are most of what separates an app from a page.
+ * Four times Carli said this room looked like *"'n website binne 'n app"*,
+ * and four times I answered by making it MORE its own thing: cream paper,
+ * an indigo accent, a serif. The comment that used to stand here said so
+ * out loud — *"it is not emerald, which is the rest of this app, which is
+ * the point"* — and that sentence was the bug, written down and shipped.
  *
- * One accent, deep indigo, and it is the only colour that is not paper or
- * ink. It is on every button, every price, the live tab, and nothing
- * else. Indigo and cream is a printmaker's pairing — it is not emerald,
- * which is the rest of this app, and it is not a colour a music app
- * usually reaches for, which is the point.
+ * A room that carries its own palette IS a foreign page. On her screen it
+ * read as three colour systems stacked: green app chrome at the top, a
+ * cream-and-purple card in the middle, the app's own page around it. Her
+ * instruction had already said the answer and I had read it as being about
+ * the inside of the room: *"daai hele bladsy en kamer moet die selfde
+ * kleur en tema regdeur hê."* The whole page AND the room. One theme.
  *
- * Every pair below clears WCAG AA for body text on the surface it is used
- * on: ink on cream is about 15:1, the muted grey about 5:1, white on
- * indigo about 11:1. `check:theme` holds the app's own rule that a light
- * surface must never be painted with a bare `bg-white`, which is why
- * every surface here is a token.
+ * ── How this works ───────────────────────────────────────────────────────
+ *
+ * Every variable below is now an expression over the app's own families —
+ * `--fb-surface-*` for paper and ink, `--fb-primary-*` for the accent —
+ * which are what `bg-zinc-900` and `text-emerald-400` resolve to in every
+ * other room (see `tailwind.config.js`). So the room follows the chosen
+ * theme, light or dark, for free, and it cannot drift: there is no hex
+ * here to go stale.
+ *
+ * The variables are kept rather than replaced with plain Tailwind classes
+ * because the layout below already funnels through them — which is the one
+ * thing the old version got right, and is why this is a small edit instead
+ * of a fifth rebuild.
+ *
+ * ── Where the room's character lives instead ─────────────────────────────
+ *
+ * In the layout and in the work: big pictures, a lot of air, the price and
+ * the clock as small quiet marks, one strong button per screen. A gallery
+ * does not look like a gallery because of its wall colour. `--vertoon` is
+ * the one exception left, and it is used only on the name of a piece and
+ * of a painter — a caption under a picture is set in a book face, which is
+ * a convention and not decoration.
  */
 const SKIN = {
-  /** The ground the whole room stands on. */
-  '--grond': '#F7F3EC',
-  /** A card floating on it. */
-  '--blad': '#FFFFFF',
-  /** Where a picture has not loaded. */
-  '--leeg': '#EFE9DF',
-  '--lyn': '#E4DCD0',
-  '--ink': '#1A1714',
-  '--ink-2': '#57504A',
-  '--gedemp': '#6E655B',
-  '--aksent': '#3B2E7E',
+  /* Which way the scale runs is worth saying, because I got it backwards
+     once and shipped a black room into a light app: the HIGH stops are
+     paper and the LOW stops are ink. `bg-zinc-950` — the page — resolves
+     to surface-950, and `text-zinc-400` to surface-400. The families are
+     defined that way round in `globals.css` so that markup written in the
+     app's original dark idiom comes out light without a single class
+     changing, and `check:theme` only solves stops 50–600 for text. */
+  /** The ground the whole room stands on — what `bg-zinc-950` gives. */
+  '--grond': 'rgb(var(--fb-surface-950))',
+  /** A card on it — `bg-zinc-900`. */
+  '--blad': 'rgb(var(--fb-surface-900))',
+  /** Pressed, and where a picture has not loaded yet — `bg-zinc-800`. */
+  '--leeg': 'rgb(var(--fb-surface-800))',
+  /** The line between things — `border-zinc-800`. */
+  '--lyn': 'rgb(var(--fb-surface-800))',
+  /** The strongest text the theme has: `text-white` resolves to this. */
+  '--ink': 'rgb(var(--fb-ink))',
+  /** Body text and the quiet label. Both inside the stops solved for AA. */
+  '--ink-2': 'rgb(var(--fb-surface-400))',
+  '--gedemp': 'rgb(var(--fb-surface-500))',
+  /** The app's own accent — `text-emerald-400`, and nothing else. */
+  '--aksent': 'rgb(var(--fb-primary-500))',
   /** The accent at a tenth, for a chip or a track. */
-  '--aksent-sag': '#ECEAF6',
+  '--aksent-sag': 'rgb(var(--fb-primary-500) / 0.14)',
+  /** Text that sits ON the accent. Dark in every theme, by design. */
+  '--op-aksent': 'rgb(var(--fb-on-accent))',
   '--vertoon': 'Georgia, "Times New Roman", serif',
 } as React.CSSProperties;
 
-/** The small uppercase mark: counts, states, section names. */
 /** The small label. One size, one weight, everywhere in the room. */
 const MIKRO = 'text-[11px] font-semibold uppercase tracking-[0.12em] text-[color:var(--gedemp)]';
 
 /**
- * A card: white, on the cream ground.
+ * A card.
  *
- * This one token is most of what separates an app from a page. A page
- * puts content on the background; an app puts it on a surface, and the
- * gap between the two is what tells a thumb where one thing ends and the
- * next begins.
+ * A border rather than only a shadow, because a shadow is invisible on a
+ * dark surface and this room now has to work in both. Same reasoning as
+ * every other room in the app, which is the point.
  */
-const KAART = 'rounded-[18px] bg-[var(--blad)] shadow-[0_1px_3px_rgba(26,23,20,0.06),0_8px_24px_-12px_rgba(26,23,20,0.12)]';
+const KAART = 'rounded-2xl border border-[var(--lyn)] bg-[var(--blad)]';
 
-/** The one filled button. Brass, a pill, and 48px — which is a thumb. */
+/** The one filled button. The app's accent, and 50px — which is a thumb. */
 const VUL =
-  'inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[14px] bg-[var(--aksent)] px-6 text-[15px] font-bold text-[var(--blad)] shadow-[0_2px_10px_rgba(59,46,126,0.25)] transition active:translate-y-px active:opacity-90 disabled:opacity-35 disabled:shadow-none';
+  'inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--aksent)] px-6 text-[15px] font-bold text-[color:var(--op-aksent)] transition active:translate-y-px active:opacity-90 disabled:opacity-35';
 
 /** Outlined, for everything that is not the one thing to do. */
 const LEEG =
-  'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[12px] border border-[var(--lyn)] bg-[var(--blad)] px-4 text-[14px] font-semibold text-[color:var(--ink)] transition active:translate-y-px active:bg-[var(--grond)] disabled:opacity-40';
+  'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-[var(--lyn)] bg-[var(--blad)] px-4 text-[14px] font-semibold text-[color:var(--ink)] transition active:translate-y-px active:bg-[var(--leeg)] disabled:opacity-40';
 
 /** A field. Quiet, and with a real label above it. */
 const VELD =
-  'mt-1.5 w-full rounded-[12px] border border-[var(--lyn)] bg-[var(--blad)] px-3.5 py-3 text-[16px] text-[color:var(--ink)] outline-none focus:border-[var(--aksent)] focus:ring-2 focus:ring-[var(--aksent-sag)]';
+  'mt-1.5 w-full rounded-xl border border-[var(--lyn)] bg-[var(--blad)] px-3.5 py-3 text-[16px] text-[color:var(--ink)] outline-none focus:border-[var(--aksent)] focus:ring-2 focus:ring-[var(--aksent-sag)]';
 
 /* ─────────────────────────────────────────────────────────── the shapes ── */
 
@@ -323,7 +351,7 @@ function Countdown({
   return (
     <span
       className={`shrink-0 rounded-[8px] px-2 py-1 text-[11px] font-bold ${
-        soon ? 'bg-[#FBEFE4] text-[#A8480F]' : 'bg-[var(--grond)] text-[color:var(--ink-2)]'
+        soon ? 'bg-amber-500/15 text-amber-400' : 'bg-[var(--leeg)] text-[color:var(--ink-2)]'
       }`}
     >
       {hours > 0 ? `${hours}u ${minutes}m` : `${minutes}m`} {t('art.left')}
@@ -605,9 +633,20 @@ export default function ArtMarket(): React.ReactElement {
       const response = await fetch('/api/artmarket', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const said = (await response.json().catch(() => null)) as (Market & { message?: string }) | null;
+      const said = (await response.json().catch(() => null)) as
+        (Market & { message?: string; which?: string }) | null;
       if (!response.ok || !said) {
-        setProblem(refusalText(said, lang, t('art.failed')));
+        /* `which` on the end, in brackets.
+
+           Carli sent a screenshot of "The gallery could not be read just
+           now." and neither of us could act on it: five reads in the route
+           produce that sentence, against five different tables, and the
+           screen named none of them. The word is the route's own label —
+           `works`, `bids`, `commissions` — never the database's message,
+           which names columns and stays in the server log where
+           `check:aifault` requires it. One screenshot now says which. */
+        const why = refusalText(said, lang, t('art.failed'));
+        setProblem(said?.which ? `${why} (${said.which})` : why);
         return;
       }
       setMarket(said);
@@ -732,7 +771,7 @@ export default function ArtMarket(): React.ReactElement {
                thing on here. */
             className={`flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-[11px] px-2 text-[14px] font-semibold transition ${
               tab === one.id
-                ? 'bg-[var(--blad)] text-[color:var(--aksent)] shadow-[0_1px_4px_rgba(26,23,20,0.12)]'
+                ? 'bg-[var(--blad)] text-[color:var(--aksent)] ring-1 ring-[var(--lyn)]'
                 : 'text-[color:var(--ink-2)]'
             }`}
           >
@@ -742,10 +781,16 @@ export default function ArtMarket(): React.ReactElement {
         ))}
       </div>
 
+      {/* Something went wrong reads as something went wrong.
+
+          This wore the accent, so "the gallery could not be read" arrived
+          in the same colour as the Bid button — which on Carli's screen
+          made a failure look like a feature. The app has a danger family
+          and it follows the theme like everything else. */}
       {problem && (
         <p
           role="alert"
-          className="mx-4 mt-3 rounded-[4px] border border-[var(--aksent)] px-3 py-2.5 text-[14px] text-[color:var(--aksent)]"
+          className="mx-4 mt-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-[14px] text-rose-400"
         >
           {problem}
         </p>
@@ -803,12 +848,12 @@ export default function ArtMarket(): React.ReactElement {
                       <Countdown endsAt={piece.endsAt} started={piece.started} over={piece.over} t={t} />
                     </span>
                     {piece.leadingMe && !piece.over && (
-                      <span className="mt-2 block rounded-[8px] bg-[#EAF3E4] px-2 py-1 text-[11px] font-semibold text-[#2F6B1C]">
+                      <span className="mt-2 block rounded-lg bg-emerald-500/15 px-2 py-1 text-[11px] font-semibold text-emerald-400">
                         {t('art.youLead')}
                       </span>
                     )}
                     {piece.wonByMe && (
-                      <span className="mt-2 block rounded-[8px] bg-[#FBEFE4] px-2 py-1 text-[11px] font-semibold text-[#A8480F]">
+                      <span className="mt-2 block rounded-lg bg-amber-500/15 px-2 py-1 text-[11px] font-semibold text-amber-400">
                         {t('art.youWon')}
                       </span>
                     )}
@@ -1100,7 +1145,7 @@ function WorkSheet({
       style={SKIN}
       role="dialog"
       aria-label={piece.title}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(26,23,20,0.45)] md:items-center md:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 md:items-center md:p-6"
     >
       <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
         <button type="button" onClick={onClose} aria-label={t('art.close')} className="flex w-full shrink-0 justify-center py-3">
@@ -1227,7 +1272,7 @@ function ArtistSheet({
       role="dialog"
       aria-label={artist.name}
       data-profile={artist.id}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(26,23,20,0.45)] md:items-center md:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 md:items-center md:p-6"
     >
       <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
         <button type="button" onClick={onClose} aria-label={t('art.close')} className="flex w-full shrink-0 justify-center py-3">
@@ -1315,7 +1360,7 @@ function Popout({
       style={SKIN}
       role="dialog"
       aria-label={artist.name}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(26,23,20,0.45)] md:items-center md:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/60 md:items-center md:p-6"
     >
       <div className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[84vh] md:rounded-[22px]">
         <button type="button" onClick={onClose} aria-label={t('art.close')} className="flex w-full shrink-0 justify-center py-3">
@@ -1436,7 +1481,7 @@ function PutOnSong({
                   aria-pressed={song === one.id}
                   className={`w-full justify-start ${
                     song === one.id
-                      ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--aksent)] px-4 text-[13px] font-bold text-[var(--blad)]'
+                      ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--aksent)] px-4 text-[13px] font-bold text-[color:var(--op-aksent)]'
                       : LEEG
                   }`}
                 >
@@ -1931,7 +1976,7 @@ function ArtistDesk({
                             }
                             className={
                               draft.days === one.days
-                                ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--aksent)] px-4 text-[13px] font-bold text-[var(--blad)]'
+                                ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--aksent)] px-4 text-[13px] font-bold text-[color:var(--op-aksent)]'
                                 : LEEG
                             }
                           >

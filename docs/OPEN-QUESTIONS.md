@@ -4528,7 +4528,12 @@ So the page now writes down what it is about to do before it does it, and
 
 - `ELEVEN_AURORA_READY=1` in Vercel, a redeploy, and one short clip. The check
   that costs nothing is `/api/presenter`, which answers `{"available":true}`.
-- The copyright test on an uploaded song, banked in `docs/SWITCH-ON.md`.
+- The copyright test on an uploaded song, banked in `docs/SWITCH-ON.md`, and
+  waiting on Music.ai. Written up with the forensic-watermark decision in §AF:
+  both are deliberately NOT half built.
+- Whether to buy a forensic watermark for the artwork (Digimarc, Imatag,
+  Steg.AI, Content Credentials). They trace, they do not prevent. §AF has the
+  trigger: the month one artist's sales exceed one service's yearly cost.
 - The dictionary ids, pasted into Vercel.
 - `supabase/livevideo.sql`, run — and then the chain end to end: film a take,
   keep it in the channel, post it in Live, open it. It is the first thing in
@@ -5642,3 +5647,68 @@ geval — met die server se Engels op die skerm. Toe teruggesit.
 
 **Die les, bo-op §AD:** 'n lêer wat rapporteer in plaas van faal, is nie 'n
 halwe toets nie. Dit is nul toets met die koste van een.
+
+## §AF · Twee besluite wat geld kos, neergeskryf eerder as half gebou (20 September 2026)
+
+Carli, 20 September 2026:
+
+> *"Kan jy hierdie vir my stoor en 'n nota maak oor iets wat ek nog moet
+> besluit, dieselfde met die copyright van musiek program. Daar bestaan wel
+> forensiese watermerke (Digimarc, Imatag, Steg.AI) en Content Credentials wat
+> 'n kamerafoto oorleef en jou later kan laat bewys 'n kopie was joune. Hulle
+> keer niks nie — hulle spoor na. Dit kos regte geld en is die moeite werd die
+> dag 'n kunstenaar genoeg verkoop om van gesteel te word. Ek het dit
+> neergeskryf eerder as half gebou."*
+
+Haar laaste sin is die reël, nie die konteks nie. Albei hierdie goed is die
+soort ding wat as 'n halwe implementasie in die kode beland, dan 'n jaar lank
+soos 'n kenmerk lyk, en op die dag wat dit moet werk niks doen nie. 'n Halwe
+watermerk is erger as geen watermerk nie: dit gee 'n kunstenaar 'n bewysstuk
+wat in 'n hof niks weeg nie.
+
+### 1. Forensiese watermerke op kunswerk
+
+**Wat nou bestaan.** `app/lib/artmark.ts` teken 'n **sigbare** diagonale merk
+in die pixels van die 1000px-voorskou. Die skoon 3000px-meester lê in 'n
+private emmer en gaan net na die koper. Dit is 'n afskrikking, nie 'n bewys
+nie, en die kamer sê dit ook so.
+
+**Wat nie bestaan nie, en hoekom.** 'n Web-bladsy kan nie 'n screenshot keer
+nie, en niks wat ons skryf kan aan 'n ander foon se kamera raak nie. Wat wel
+bestaan is forensies:
+
+| Wat | Wat dit doen | Wat dit nie doen nie |
+|---|---|---|
+| Digimarc | Onsigbare merk in die pixels; oorleef 'n foto van 'n skerm, hersnit, herkompressie | Keer niks |
+| Imatag | Dieselfde, plus deurlopende soektog oor die web | Keer niks |
+| Steg.AI | Dieselfde, op beeld en video | Keer niks |
+| Content Credentials (C2PA) | Onderteken die herkoms in die lêer se metadata | Metadata word gestroop deur elke sosiale platform |
+
+Al vier **spoor na**. Hulle laat jou later bewys 'n kopie was joune. Nie een
+van hulle keer dat iemand die prent met 'n foon afneem nie.
+
+**Die besluit wat wag.** Dit kos regte geld — per beeld of per maand — en dit
+is die moeite werd **die dag 'n kunstenaar genoeg verkoop dat iemand die
+moeite doen om van hulle te steel**. Vandag verkoop niemand nog nie. So: nie
+nou nie, en die trekker is 'n getal en nie 'n gevoel nie.
+
+**Wanneer dit weer op die tafel kom.** Wanneer een kunstenaar se verkope in 'n
+maand die jaarlikse koste van een van hierdie dienste oorskry. Dan is die som
+gunstig en nie 'n voorskot op hoop nie.
+
+### 2. Die copyright-toets op 'n opgelaaide liedjie
+
+Dieselfde vorm, en dit staan reeds as 'n oop taak. Iemand laai 'n liedjie op
+wat nie hulle s'n is nie, en die app het geen manier om dit te weet nie.
+
+**Wat nou bestaan.** Niks nie. Die bepalings sê die oplaaier waarborg dat dit
+hulle eie werk is, wat die risiko skuif en nie opspoor nie.
+
+**Waarop dit wag.** Music.ai se antwoord oor 'n herkennings-eindpunt. Die
+koste-vorm is dieselfde as hierbo: 'n koste per oplaai, teen 'n risiko wat
+eers regtig word wanneer daar genoeg opgelaaide musiek is om 'n eis te trek.
+
+**Hoekom albei hier staan en nie in die kode nie.** 'n Halwe weergawe van
+enige van hierdie twee lyk op 'n skerm presies soos 'n werkende een. Dit is
+dieselfde fout as §AE en §AB: 'n ding wat niks kan faal nie, wat soos 'n
+waarborg lyk. Neergeskryf is eerlik; half gebou is 'n leuen met 'n knoppie.
