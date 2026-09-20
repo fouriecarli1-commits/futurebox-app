@@ -5522,3 +5522,67 @@ verskuldig is.
 vorm as §W en §X: die fix is nie om die 34 een vir een reg te maak nie, maar
 om **een plek te hê wat tel** — en om die een regte toets wat wegkruip, hardop
 te noem in plaas van dit onder 'n etiket weg te steek.
+
+## §AD · Dit het al die werk gedoen en toe die antwoord gedruk (20 September 2026)
+
+Carli: *"Wat moet ek doen met die ads-af"* — niks. Dit was nooit hare nie.
+
+`audit/ads-af.mjs` is die advertensie-desk end tot end in Afrikaans.
+Twee-en-twintig sigbare strings gesoek, vyftien Engelse lekke gesoek,
+bladsyfoute en HTTP-mislukkings in 'n `problems`-lys ingesamel — en toe:
+
+```js
+console.log('missing Afrikaans strings:', missing);
+console.log('problems:', problems.join(' ;; ') || 'none');
+```
+
+**Exit 0. Altyd.** Elke loop groen, ook met elke string weg.
+
+### Twee foute, wat dieselfde fout twee keer is
+
+1. Dit het na `http://localhost:3000` gegaan en aangeneem iemand het 'n
+   server daar gesit — presies wat `check:probes` verbied, en die rede
+   waarom dit nooit in CI kon kom nie.
+2. Dit het foute **getel** in plaas van daarop te **faal**.
+
+'n Toets wat rapporteer is 'n mens se werk om te lees. 'n Toets wat faal is
+die masjien se werk om te stop. **Net een van die twee oorleef om vergeet te
+word.**
+
+### Waar ek myself moes regmaak
+
+Ek het 'n nuwe check geskryf — `check:probefiles` — om die 120 lêers in
+`audit/` te tel en te klassifiseer. Toe ek dit hardloop, het
+`check:everycheck` gefaal, en die rede was dat **dit al klaar presies
+hierdie register gehad het**: `TOOLS`, `WAITING`, `WAITING_WAS`, en 'n reël
+dat niks op die lys stilweg opgekoppel mag word nie.
+
+Ek het 'n tweede register langs 'n bestaande een gebou. Twee registers vir
+een eienskap is dieselfde fout as twee betekenisse vir een woord (§ arrival
+/ opencard). Die duplikaat is uitgevee.
+
+Wat oorgebly het, is die een reël wat `everycheck` **nie** gehad het nie, en
+dit is die reël wat `ads-af` gevang het:
+
+> **'n Lêer wat as 'n *tool* gelys is, mag nie assertions bevat nie.**
+
+Die drie lyste werk op vertroue. `ads-af` het maande lank in `TOOLS` gesit
+met twee-en-twintig assertions in — en `devices` en `bigphoto` voor dit, om
+presies dieselfde rede. **Drie keer is 'n patroon, en 'n patroon wat 'n lys
+nie kan sien nie, is 'n reël wat die lys nodig het.** Die belofte word nou
+van die lêer self afgelees in plaas van geglo.
+
+### Wat die probe toe gevind het
+
+Niks. Al twee-en-twintig strings is daar, geen Engels op die skerm nie. Die
+advertensie-desk is eerlik Afrikaans.
+
+Dit is 'n regte resultaat en nie 'n teleurstelling nie — maar ek het dit
+eers **laat faal** voor ek dit geglo het: 'n string bygesit wat nêrens staan
+nie, en bevestig dat dit met exit 1 uitgaan en sê wat kort.
+
+En `check:probes` het nog een gevang toe dit opgekoppel is: die probe het op
+'n **tydhouer** gewag in plaas van op die app. 'n Vaste timeout lees wat
+ook al op die skerm is wanneer dit verstryk — op 'n stadige loop die
+aanmeldvorm — en rapporteer dan elke Afrikaanse string as weg van 'n bladsy
+wat nooit die kamer was nie. Dit wag nou vir die tab-balk.

@@ -289,12 +289,6 @@ jobs:
       - name: The fixed part of a prompt is cached, and the cache is measured
         run: npm run check:caching
 
-      # audit/ holds 120 files and 83 are wired to a check. Thirty-three of
-      # the rest assert nothing — they are screenshot takers and walkthrough
-      # reporters — and one, the Afrikaans advert desk end to end, is a real
-      # probe nothing runs. A folder where 83 of 120 are tests reads as 120.
-      - name: Every file in audit/ is a test, a helper, or a named tool
-        run: npm run check:probefiles
 
       # The studio teaches what each part of a song is for, and teaching that
       # is usually right is a different product from teaching. Written down,
@@ -950,7 +944,7 @@ jobs:
           # camera, and `contrast` reads the computed colour of every piece of
           # text against what is actually painted behind it.
           - group: colour and camera
-            probes: check:selfie check:contrast check:mixdown check:stitch check:devices
+            probes: check:selfie check:contrast check:mixdown check:stitch check:devices check:adsaf
     steps:
       - uses: actions/checkout@v4
 

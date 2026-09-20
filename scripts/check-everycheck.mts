@@ -145,7 +145,17 @@ const audits = readdirSync('audit')
    unreproduced behind those two mistakes. It exits non-zero now, and it is
    `check:bigphoto`. */
 const TOOLS = new Set([
-  'a11y', 'ads-af', 'ads-af-fail', 'ads-en-fail', 'badge', 'blurshot', 'boxes',
+/* `ads-af` came out on 20 September, and it is the third one to leave this
+   list for the same reason — after `devices` and `bigphoto`. It was the
+   advert desk end to end in Afrikaans: twenty-two strings looked for,
+   fifteen English leaks looked for, and then `console.log` and exit 0. A
+   file that does all the work of a test and prints the answer is not a
+   walk, and filing it here said it was.
+
+   That is what the rule below it is for. Every other name on this list was
+   taken on trust, and this list is exactly where a real check goes to be
+   forgotten. */
+  'a11y', 'ads-af-fail', 'ads-en-fail', 'badge', 'blurshot', 'boxes',
   'buttons', 'copilotplace', 'deep', 'errors', 'frame', 'home',
   'home2', 'homelength', 'land', 'landing', 'net', 'newui', 'newui2', 'one',
   'phone', 'phoneshots', 'price', 'probe', 'radarcards', 'rooms', 'shots',
@@ -196,6 +206,26 @@ check(
   `${WAITING.size} waiting, was ${WAITING_WAS}`,
 );
 /* A name in either list that has since been wired is a list going stale. */
+/* ── A tool may not quietly be a test ──────────────────────────────────
+
+   The three lists above work by trust: a name in TOOLS is a promise that the
+   file walks and prints and asserts nothing. `ads-af` sat in there making
+   twenty-two assertions, and `devices` and `bigphoto` before it. Three times
+   is a pattern, and a pattern a list cannot see is a rule the list needs.
+
+   So the promise is read off the file rather than believed. A tool holding
+   `check(`, `problems.push` or `process.exit(1)` is a check somebody filed
+   as a walk — either wire it up or take the assertion out. */
+const pretending = [...TOOLS].filter((one) => {
+  const body = readFileSync(`audit/${one}.mjs`, 'utf8');
+  return /\bproblems\.push\(|\bcheck\(|process\.exit\(1\)/.test(body);
+});
+check(
+  'and nothing filed as a tool is really a check',
+  pretending.length === 0,
+  `${pretending.join(', ')} — assertions in a file nobody runs`,
+);
+
 const stale = [...TOOLS, ...WAITING].filter((one) => wiredProbe(one));
 check(
   'and nothing is listed as unrun that is now run',
