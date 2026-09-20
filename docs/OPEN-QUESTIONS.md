@@ -5586,3 +5586,59 @@ En `check:probes` het nog een gevang toe dit opgekoppel is: die probe het op
 ook al op die skerm is wanneer dit verstryk — op 'n stadige loop die
 aanmeldvorm — en rapporteer dan elke Afrikaanse string as weg van 'n bladsy
 wat nooit die kamer was nie. Dit wag nou vir die tab-balk.
+
+## §AE · Die tweede helfte van die fout, wat niks bewaak het nie (20 September 2026)
+
+Nog 'n lêer wat al die werk gedoen en die antwoord gedruk het —
+`audit/errors.mjs`, *"When something refuses, does the person see it?"*:
+
+```js
+console.log(`${name}: says something → ${said}`);
+```
+
+Gevind deur dieselfde reël wat `ads-af` gevang het, dieselfde oggend. Twee in
+een dag is hoekom daardie reël nou bestaan.
+
+### Wat dit moes bewaak
+
+§W se fout het twee helftes gehad. `check:aifault` hou die **server**-helfte:
+geen route mag 'n verskaffer se eie woorde in 'n antwoord sit nie. Niks het
+die **kliënt**-helfte gehou nie — dat die kamer 'n weieringskóde in ons eie
+sin omskakel, in die taal wat gelees word.
+
+Daardie onderskeid is die hele punt. 'n Kamer wat die server se Engelse sin
+druk, **slaag** 'n "sê dit iets?"-toets en faal die mens wat dit in Afrikaans
+lees.
+
+Die probe loop nou in Afrikaans, stuur 'n `no_credit` met 'n Engelse sin van
+die server af, en meet drie dinge: dat die kamer iets sê, dat dit **nie** die
+server se Engels is nie, en dat geen kode, statuslyn, JSON-hakie of
+`request_id` op die skerm kom nie.
+
+### Drie foute in my eie toets, en al drie is die bekendes
+
+1. **Die knoppies is agter voue.** Elke kamer maak oop as sy eie
+   inhoudsopgawe. Sonder `unfold` is die skryfknoppie nie daar nie.
+2. **Ek het die kamer op sy Engelse naam gesoek in 'n Afrikaanse loop.** Die
+   song-kamer is *"Maak 'n liedjie"* daar, en my losse regex
+   (`^Make a song|^Advertensies`) het toe die **ander** kamer gematch. Die
+   eerste geval het na Adverts gegaan en die song-kamer se knoppie as weg
+   gerapporteer. **'n Kamer wat op 'n naam gematch word wat hy nie het nie,
+   is 'n probe wat die verkeerde skerm toets en oor die regte een praat.**
+3. **Die assertion was amper hol.** Dit het die héle kamerteks deursoek —
+   'n rail, 'n kamerlys, 'n desk, duisende karakters wat "nie" bevat — en dit
+   sou geslaag het met **geen** weiering op die skerm nie. Dit meet nou net
+   wat die druk **bygevoeg** het. Die verskil lees nou:
+
+   > *"skryfhulp oomblik afgeskakel. Niks gedoen veroorsaak gehef"*
+
+   Dít is die Afrikaanse sin, terwyl die server Engels gestuur het. Die fix
+   van §W, end tot end bewys.
+
+### Laat faal voor geglo
+
+`no_credit` is uit `SAID` in `apierror.ts` gehaal, herbou, en die probe het
+geval — met die server se Engels op die skerm. Toe teruggesit.
+
+**Die les, bo-op §AD:** 'n lêer wat rapporteer in plaas van faal, is nie 'n
+halwe toets nie. Dit is nul toets met die koste van een.

@@ -156,7 +156,7 @@ const TOOLS = new Set([
    taken on trust, and this list is exactly where a real check goes to be
    forgotten. */
   'a11y', 'ads-af-fail', 'ads-en-fail', 'badge', 'blurshot', 'boxes',
-  'buttons', 'copilotplace', 'deep', 'errors', 'frame', 'home',
+  'buttons', 'copilotplace', 'deep', 'frame', 'home',
   'home2', 'homelength', 'land', 'landing', 'net', 'newui', 'newui2', 'one',
   'phone', 'phoneshots', 'price', 'probe', 'radarcards', 'rooms', 'shots',
   'slogan', 'small', 'thin', 'touch', 'transcript', 'voices', 'walk',
