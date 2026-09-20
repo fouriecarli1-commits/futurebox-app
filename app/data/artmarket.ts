@@ -101,3 +101,43 @@ export function split(paid: number): Split {
     house: (profit - artist) / 100,
   };
 }
+
+/* ── How big a picture has to be ──────────────────────────────────────────
+
+   Carli asked it plainly: *"What size must the artist album art be, in
+   kb/mb and physical size?"*
+
+   3000 × 3000. That is the square every distributor asks for — Spotify,
+   Apple Music and DistroKid all take 3000×3000 and Apple refuses anything
+   under 1400 — so a piece bought here can go out on a real release without
+   being made again. It is also four times the pixels of a phone screen at
+   full brightness, which is what makes a sleeve look painted rather than
+   printed when somebody opens it full screen.
+
+   Square, not "roughly square": a sleeve is cropped to a square by every
+   shop that shows it, and a crop somebody else chooses is a crop with the
+   artist's signature cut off.
+
+   The bytes are a ceiling, not a target. The browser re-encodes to WebP at
+   quality 0.85 before anything is uploaded — see `app/lib/imagefile.ts` —
+   which puts a 3000×3000 painting at roughly 1 to 3 MB. The ceiling is here
+   for the file that does not compress: a photograph of a canvas, full of
+   grain, can land at 8 MB and still be one picture. */
+
+/** The side of the square, in pixels. Both dimensions, exactly. */
+export const ART_SIDE = 3000;
+
+/** The ceiling on the finished WebP. Roughly 1–3 MB is what to expect. */
+export const ART_MAX_BYTES = 8 * 1024 * 1024;
+
+/**
+ * What to say to an artist before they choose a file, in their language.
+ *
+ * One sentence with the numbers in it, because "high resolution please" is
+ * what every marketplace says and it is the reason every marketplace has a
+ * folder of pictures that are 900 pixels wide.
+ */
+export const ART_SIZE_SAID = {
+  en: `${ART_SIDE} × ${ART_SIDE} pixels, square, up to ${ART_MAX_BYTES / (1024 * 1024)} MB. That is the size every music shop asks for, so the piece can go out on a real release exactly as it is.`,
+  af: `${ART_SIDE} × ${ART_SIDE} pixels, vierkantig, tot ${ART_MAX_BYTES / (1024 * 1024)} MB. Dit is die grootte wat elke musiekwinkel vra, so die kunswerk kan net so op 'n regte vrystelling uitgaan.`,
+} as const;

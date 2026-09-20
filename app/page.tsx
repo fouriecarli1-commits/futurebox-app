@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Cover from './components/Cover';
 import { EVERY as ASKS_EVERY, asksWaiting } from './lib/asks';
 import { 
-  Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone, AudioWaveform,
+  Play, Sparkles, Radio, TrendingUp, ShieldCheck, ListMusic, ArrowRight, Megaphone, AudioWaveform, Palette,
   Search as SearchIcon, Home,
   Tv, Cpu, ArrowUpRight, Compass, CheckCircle2, X,
   UploadCloud, FileVideo, Music, Headphones, Lightbulb, Code2, 
@@ -47,6 +47,7 @@ import type { EventKind } from './lib/server/stats';
 import Landing from './components/Landing';
 import PasswordField from './components/PasswordField';
 import Campaign from './components/Campaign';
+import ArtMarket from './components/ArtMarket';
 import Greeting from './components/Greeting';
 import Account from './components/Account';
 import TabBar, { aboveBar, barClearance, type TabId } from './components/TabBar';
@@ -548,6 +549,7 @@ export default function FutureBoxHome() {
     podcast: { label: t('rail.podcast'), hint: t('rail.podcast.hint'), icon: Radio },
     sound: { label: t('rail.sound'), hint: t('rail.sound.hint'), icon: AudioWaveform },
     campaign: { label: t('rail.campaign'), hint: t('rail.campaign.hint'), icon: Megaphone },
+    albumart: { label: t('rail.albumart'), hint: t('rail.albumart.hint'), icon: Palette },
   };
 
   /* The door, shown once per page load rather than on every tab switch.
@@ -3540,6 +3542,8 @@ export default function FutureBoxHome() {
                 onSetUp={(room, op, value) => copilotBus.handoff(room, op, value)}
               />
             )}
+
+            {studioTab === 'albumart' && <ArtMarket />}
 
             {/* STUDIO: your own song, in its own sections, over its own audio */}
             {studioTab === 'studio' && (

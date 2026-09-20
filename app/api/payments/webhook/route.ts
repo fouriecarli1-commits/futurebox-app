@@ -15,7 +15,7 @@
  */
 
 import crypto from 'node:crypto';
-import { admin, recordPurchase } from '@/app/lib/server/account';
+import { recordPurchase } from '@/app/lib/server/account';
 import { createClient } from '@supabase/supabase-js';
 import type { Tier } from '@/app/lib/plans';
 import { addonOfPlan, arrangementOf, payerOf } from '@/app/lib/server/paystack';
@@ -84,11 +84,14 @@ interface PaystackEvent {
     status?: string;
     metadata?: {
       owner?: string;
-      kind?: 'plan' | 'credits' | 'addon';
+      kind?: 'plan' | 'credits' | 'addon' | 'art' | 'commission';
       trackId?: string | null;
       tier?: Tier | null;
       pack?: string | null;
       addon?: string | null;
+      /* Album art: which piece off the wall, or which commission offer. */
+      work?: string | null;
+      offer?: string | null;
     };
     /* Present when the charge belongs to a subscription, and absent — or an
        empty array, which is Paystack's way of saying "none" — when it does
@@ -289,6 +292,71 @@ export async function POST(request: Request): Promise<Response> {
       const payer = reference ? await payerOf(reference) : null;
       if (payer) await rememberAddonPayer(payer.customerCode, owner);
     }
+    return new Response('ok', { status: 200 });
+  }
+
+  /* ── A piece of album art ────────────────────────────────────────────
+
+     This is where a work becomes sold, and it is the ONLY place. Her rule
+     is that every piece is unique and sells exactly once, and the two
+     halves of keeping that true are here and in the database:
+
+       `.is('sold_to', null)` makes the update conditional, so the second
+       charge for the same piece changes no rows and writes no receipt.
+
+       the partial unique index in `supabase/albumart.sql` catches the two
+       that arrive in the same millisecond, which a conditional update on
+       its own cannot.
+
+     A refund for the loser of that race is a person's job, not a webhook's
+     — so the console carries it, loudly, with the reference on it. */
+  if (meta.kind === 'art' && meta.work) {
+    const store = db();
+    if (!store) return new Response('no database', { status: 200 });
+    const { data, error } = await store
+      .from('art_works')
+      .update({ sold_to: owner, sold_at: new Date().toISOString() })
+      .eq('id', meta.work)
+      .is('sold_to', null)
+      .select('id, title');
+    const sold = (data ?? []) as { id: string; title: string }[];
+    if (error || sold.length === 0) {
+      console.error(
+        `[artmarket] paid for a piece that was already sold. work=${meta.work} owner=${owner} reference=${reference} — this needs a refund.`,
+      );
+      return new Response('already sold', { status: 200 });
+    }
+    await receipt(owner, `Album art: ${sold[0].title}`, cents, reference, false);
+    return new Response('ok', { status: 200 });
+  }
+
+  /* ── A commissioned one-off ──────────────────────────────────────────
+
+     Paid, not accepted. Her order: *"as die betaling deur is, druk die
+     koper accept"* — the buyer presses accept afterwards, and that is what
+     starts the artist's clock. So this moves the offer to `paid` and
+     stops; `/api/artmarket` refuses an accept on anything else, which is
+     what makes the sequence a sequence rather than two buttons. */
+  if (meta.kind === 'commission' && meta.offer) {
+    const store = db();
+    if (!store) return new Response('no database', { status: 200 });
+    /* The error is read, not shrugged off: `?? []` on a failed update looks
+       exactly like an offer that was not open, and the two need different
+       words in the log — one is a person to refund, the other is a database
+       to look at. */
+    const { data, error } = await store
+      .from('art_offers')
+      .update({ state: 'paid' })
+      .eq('id', meta.offer)
+      .eq('state', 'offered')
+      .select('id');
+    if (error || ((data ?? []) as unknown[]).length === 0) {
+      console.error(
+        `[artmarket] paid for an offer that was not open. offer=${meta.offer} owner=${owner} reference=${reference}${error ? ` error=${error.message}` : ''}`,
+      );
+      return new Response('not open', { status: 200 });
+    }
+    await receipt(owner, 'Commissioned album art', cents, reference, false);
     return new Response('ok', { status: 200 });
   }
 

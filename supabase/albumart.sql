@@ -170,3 +170,18 @@ alter table public.tracks
 -- cover.
 alter table public.tracks
   add column if not exists art_work uuid references public.art_works (id) on delete set null;
+
+-- ── The bucket the pictures live in ─────────────────────────────────────
+--
+-- Private, and it has to be. A piece for sale is shown to everybody through
+-- a short-lived signed address handed out by `/api/artmarket`; a commissioned
+-- piece is shown to exactly one buyer and to nobody else. Her words:
+-- *"'n upload button kry wat net aan daardie persoon geupload kan word."*
+-- A public bucket makes both of those a guessable URL.
+--
+-- No storage policies at all, for the same reason the tables have none: the
+-- route holds the service key and decides who may see which file. There is
+-- no browser path to this bucket, so there is nothing for a policy to allow.
+insert into storage.buckets (id, name, public)
+values ('art', 'art', false)
+on conflict (id) do update set public = false;

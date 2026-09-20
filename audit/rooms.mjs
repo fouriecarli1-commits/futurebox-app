@@ -45,6 +45,7 @@ export const DOORS = {
   podcast: 'Podcast',
   campaign: 'Adverts',
   collab: 'Collab Radar',
+  albumart: 'Album art',
 };
 
 /**
@@ -55,7 +56,7 @@ export const DOORS = {
  */
 export const ROOMS = [
   'Make a song', 'Studio', 'ProBooth', 'Your voice', 'Sound trainer', 'Video desk',
-  'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar',
+  'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar', 'Album art',
 ];
 
 /**

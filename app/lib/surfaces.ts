@@ -47,6 +47,7 @@ export const SURFACE_IDS = [
   "sound",
   "podcast",
   "campaign",
+  "albumart",
 ] as const;
 
 export type SurfaceId = (typeof SURFACE_IDS)[number];
@@ -608,6 +609,46 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       {
         en: "Say this in Afrikaans instead",
         af: "Sê dit eerder in Afrikaans",
+      },
+    ],
+  },
+  albumart: {
+    id: "albumart",
+    stage: "sell",
+    purpose:
+      "Album art by real artists: a wall of one-off pieces at R200 and up, each sold exactly once, and a way to commission a painter for a particular song.",
+    /* ── Why the copilot cannot send a message here ──────────────────
+
+       Carli: *"Daai dm moet net buttons hê wat hulle kan kies … Geen tik
+       moontlikhede nie."*
+
+       The copilot is a text box, and a text box that reaches an artist is
+       the one thing this room is built not to have. So it helps with the
+       parts that are not a conversation — what a piece costs, what the
+       artist takes home, which of your songs to put a piece on — and it
+       says plainly that the asking itself is two buttons on the artist's
+       own card. */
+    helps: {
+      en: "I can explain what a piece costs, what the artist takes home, and how a commission runs. Asking an artist is two buttons on their own card — there is no typing in this room on purpose.",
+      af: "Ek kan verduidelik wat 'n kunswerk kos, wat die kunstenaar kry, en hoe 'n bestelling werk. Om 'n kunstenaar te vra is twee buttons op sy eie kaart — daar is met opset geen tik in hierdie kamer nie.",
+    },
+    can: [
+      "explain the price, the split and the four windows",
+      "explain that every piece is sold once and never appears twice",
+      "explain that a buyer cannot upload their own picture, only buy or generate",
+    ],
+    seeds: [
+      {
+        en: "What does the artist actually get from R200?",
+        af: "Wat kry die kunstenaar regtig uit R200?",
+      },
+      {
+        en: "How does a commission work?",
+        af: "Hoe werk 'n bestelling?",
+      },
+      {
+        en: "Why can I not upload my own picture?",
+        af: "Hoekom kan ek nie my eie foto oplaai nie?",
       },
     ],
   },

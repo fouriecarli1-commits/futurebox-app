@@ -38,7 +38,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Sparkles, Sliders, Mic, Video, Clapperboard, Smartphone, ListMusic,
-  Handshake, Radio, Mic2, AudioWaveform, Megaphone, ArrowRight,
+  Handshake, Radio, Mic2, AudioWaveform, Megaphone, Palette, ArrowRight,
 } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { habitOf, suggest, partOfDay, type Habit } from '../lib/habits';
@@ -70,6 +70,7 @@ const ICONS: Record<SurfaceId, typeof Sparkles> = {
   podcast: Radio,
   sound: AudioWaveform,
   campaign: Megaphone,
+  albumart: Palette,
 };
 
 const RAIL_KEY: Record<SurfaceId, string> = {
@@ -85,6 +86,7 @@ const RAIL_KEY: Record<SurfaceId, string> = {
   podcast: 'rail.podcast',
   sound: 'rail.sound',
   campaign: 'rail.campaign',
+  albumart: 'rail.albumart',
 };
 
 /**

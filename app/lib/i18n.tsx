@@ -419,6 +419,152 @@ export const STRINGS: Dict = {
   "cost.free": { en: "Costs nothing", af: "Kos niks" },
   "rail.campaign": { en: "Adverts", af: "Advertensies" },
   "rail.campaign.hint": { en: "Written, then filmed", af: "Geskryf, dan verfilm" },
+  "rail.albumart": { en: "Album art", af: "Albumhoese" },
+  "rail.albumart.hint": { en: "Real artists, sold once", af: "Regte kunstenaars, een keer verkoop" },
+
+  /* ── The gallery ──────────────────────────────────────────────────────
+     Album art by real artists. The room is a catalogue rather than a desk,
+     so the wording is a catalogue's: short, plain, and no exclamation
+     marks anywhere. */
+  "art.kicker": { en: "Original work · Licensed once", af: "Oorspronklike werk · Een keer verkoop" },
+  "art.hero": { en: "Real art for your album cover.", af: "Egte kuns vir jou albumhoes." },
+  "art.lead": {
+    en: "Every piece here was painted by hand by an artist we know. Buy one and it comes off the wall for good — it will never appear on anybody else’s song.",
+    af: "Elke kunswerk hier is met die hand geskilder deur ’n kunstenaar wat ons ken. Koop een en dit kom vir goed van die muur af — dit sal nooit op iemand anders se liedjie verskyn nie.",
+  },
+  "art.browse": { en: "See the gallery", af: "Sien die galery" },
+  "art.sellLink": { en: "Sell your work here", af: "Verkoop jou werk hier" },
+  "art.count.works": { en: "Pieces", af: "Werke" },
+  "art.count.artists": { en: "Artists", af: "Kunstenaars" },
+  "art.count.edition": { en: "Edition", af: "Oplaag" },
+  "art.gallery": { en: "The gallery", af: "Die galery" },
+  "art.all": { en: "Everyone", af: "Almal" },
+  "art.sort": { en: "Order", af: "Volgorde" },
+  "art.sort.new": { en: "Newest", af: "Nuutste" },
+  "art.sort.low": { en: "Price, lowest", af: "Prys, laagste" },
+  "art.sort.high": { en: "Price, highest", af: "Prys, hoogste" },
+  "art.medium": { en: "Original artwork", af: "Oorspronklike kunswerk" },
+  "art.reading": { en: "Opening the gallery…", af: "Maak die galery oop…" },
+  "art.empty": {
+    en: "Nothing is hanging yet. Our artists are working.",
+    af: "Daar hang nog niks nie. Ons kunstenaars werk.",
+  },
+  "art.failed": { en: "That did not go through.", af: "Dit het nie deurgegaan nie." },
+  "art.offline": { en: "Could not reach the app’s server.", af: "Kon nie by die toep se bediener uitkom nie." },
+  "art.noTill": { en: "That could not be paid for.", af: "Daarvoor kon nie betaal word nie." },
+
+  /* The band where the page turns over: the same piece at the sizes it
+     will really be seen at. */
+  "art.context": { en: "See it where it lands.", af: "Sien dit waar dit beland." },
+  "art.contextSaid": {
+    en: "A sleeve is bought to be looked at on a wall and then seen at 300 pixels in a streaming app. This is the same file at both.",
+    af: "’n Hoes word gekoop om teen ’n muur na gekyk te word en dan by 300 pixels in ’n stroomtoep gesien te word. Dit is dieselfde lêer by albei.",
+  },
+  "art.asThumb": { en: "Stream thumbnail", af: "Stroomduimnael" },
+  "art.asSleeve": { en: "Sleeve 12″", af: "Hoes 12″" },
+  "art.asPoster": { en: "Poster", af: "Plakkaat" },
+
+  /* The work page. */
+  "art.close": { en: "Close", af: "Maak toe" },
+  "art.available": { en: "Available", af: "Beskikbaar" },
+  "art.oneOnly": {
+    en: "This piece is sold once. When you buy it, it leaves the gallery and it is yours alone — nobody else can put it on a song.",
+    af: "Hierdie kunswerk word een keer verkoop. As jy dit koop, verlaat dit die galery en is dit net joune — niemand anders kan dit op ’n liedjie sit nie.",
+  },
+  "art.dl.medium": { en: "Medium", af: "Materiaal" },
+  "art.dl.original": { en: "Original", af: "Oorspronklik" },
+  "art.dl.originalSaid": { en: "Painted by hand", af: "Met die hand geskilder" },
+  "art.dl.file": { en: "File", af: "Lêer" },
+  "art.dl.edition": { en: "Edition", af: "Oplaag" },
+  "art.dl.editionSaid": { en: "1 of 1", af: "1 van 1" },
+  "art.view.sleeve": { en: "Sleeve 12″", af: "Hoes 12″" },
+  "art.view.thumb": { en: "Thumbnail", af: "Duimnael" },
+  "art.view.label": { en: "Vinyl label", af: "Vinyletiket" },
+  "art.view.detail": { en: "Detail", af: "Nabyskoot" },
+  "art.buy": { en: "Buy this piece", af: "Koop hierdie werk" },
+  "art.aboutArtist": { en: "About the artist", af: "Oor die kunstenaar" },
+  "art.get.1": {
+    en: "The full file, 3000 × 3000, ready for every music shop",
+    af: "Die volle lêer, 3000 × 3000, reg vir elke musiekwinkel",
+  },
+  "art.get.2": {
+    en: "It comes off the wall — nobody else can buy it",
+    af: "Dit kom van die muur af — niemand anders kan dit koop nie",
+  },
+  "art.get.3": {
+    en: "The artist’s name travels with your song, into your channel and into Live",
+    af: "Die kunstenaar se naam reis saam met jou liedjie, in jou kanaal in en in Live in",
+  },
+  "art.get.4": { en: "Put it on any song you have made", af: "Sit dit op enige liedjie wat jy gemaak het" },
+
+  /* Asking an artist for a one-off. Buttons only, on purpose. */
+  "art.want": { en: "I want unique art", af: "Ek wil unieke kuns hê" },
+  "art.whichSong": { en: "Which of your songs is it for?", af: "Vir watter van jou liedjies is dit?" },
+  "art.whyButtons": {
+    en: "Buttons only here, on purpose: the song you pick is the whole message. The artist answers with a price and a date.",
+    af: "Met opset net buttons hier: die liedjie wat jy kies is die hele boodskap. Die kunstenaar antwoord met ’n prys en ’n datum.",
+  },
+  "art.noSongs": {
+    en: "Make a song first — a commission is for a particular one.",
+    af: "Maak eers ’n liedjie — ’n bestelling is vir ’n spesifieke een.",
+  },
+
+  /* What you have asked for, and where it has got to. */
+  "art.yours": { en: "What you have asked for", af: "Wat jy gevra het" },
+  "art.waiting": { en: "Waiting for a price", af: "Wag vir ’n prys" },
+  "art.pay": { en: "Pay", af: "Betaal" },
+  "art.accept": { en: "Accept and start the clock", af: "Aanvaar en begin die horlosie" },
+  "art.due": { en: "Due by", af: "Klaar teen" },
+  "art.step.offered": { en: "A price has been named", af: "’n Prys is genoem" },
+  "art.step.paid": { en: "Paid — press accept to start the clock", af: "Betaal — druk aanvaar om die horlosie te begin" },
+  "art.step.accepted": { en: "The artist is working", af: "Die kunstenaar werk" },
+  "art.step.delivered": { en: "Delivered to you", af: "Aan jou gelewer" },
+  "art.step.declined": { en: "Turned down", af: "Van die hand gewys" },
+
+  /* The bottom of the room: your songs and your collection. */
+  "art.put": { en: "Put a piece on one of your songs", af: "Sit ’n werk op een van jou liedjies" },
+  "art.collection": { en: "Your collection", af: "Jou versameling" },
+  "art.yourSongs": { en: "Your songs", af: "Jou liedjies" },
+  "art.putOn": { en: "Put it on that song", af: "Sit dit op daardie liedjie" },
+  "art.putting": { en: "Putting it on…", af: "Sit dit op…" },
+  "art.noneOwned": {
+    en: "Nothing in your collection yet. Buy a piece off the wall, or ask an artist for one of your own.",
+    af: "Nog niks in jou versameling nie. Koop ’n werk van die muur af, of vra ’n kunstenaar vir een van jou eie.",
+  },
+  "art.credit": {
+    en: "The artist’s name and the piece’s name travel with the song — into your channel and into Live, under the song’s own name.",
+    af: "Die kunstenaar se naam en die werk se naam reis saam met die liedjie — in jou kanaal in en in Live in, onder die liedjie se eie naam.",
+  },
+
+  /* The artist's own desk. */
+  "art.sell": { en: "Sell your art here", af: "Verkoop jou kuns hier" },
+  "art.applyWhy": {
+    en: "We look at every artist by hand before their work hangs here. Tell us who you are — this is what your pop-out will say.",
+    af: "Ons kyk met die hand na elke kunstenaar voordat hulle werk hier hang. Sê vir ons wie jy is — dit is wat jou pop-out gaan sê.",
+  },
+  "art.yourName": { en: "The name you sign with", af: "Die naam waarmee jy teken" },
+  "art.yourPlace": { en: "Where you work from", af: "Waarvandaan jy werk" },
+  "art.yourAbout": { en: "What you paint, and what you paint it with", af: "Wat jy skilder, en waarmee jy dit skilder" },
+  "art.apply": { en: "Apply to sell here", af: "Doen aansoek om hier te verkoop" },
+  "art.applying": { en: "Sending…", af: "Stuur…" },
+  "art.pending": {
+    en: "Your application is with us. We look at every artist by hand — that is what makes this gallery worth hanging in.",
+    af: "Jou aansoek is by ons. Ons kyk met die hand na elke kunstenaar — dit is wat hierdie galery die moeite werd maak om in te hang.",
+  },
+  "art.hang": { en: "Hang a new piece", af: "Hang ’n nuwe werk op" },
+  "art.pieceName": { en: "What the piece is called", af: "Wat die werk genoem word" },
+  "art.price": { en: "Your price, at least", af: "Jou prys, ten minste" },
+  "art.youGet": { en: "You receive", af: "Jy ontvang" },
+  "art.afterFees": { en: "after the card fee of", af: "ná die kaartfooi van" },
+  "art.choose": { en: "Choose the picture", af: "Kies die prent" },
+  "art.uploading": { en: "Uploading…", af: "Laai op…" },
+  "art.badFile": { en: "That picture could not be read.", af: "Daardie prent kon nie gelees word nie." },
+  "art.noUpload": { en: "The picture did not upload.", af: "Die prent het nie opgelaai nie." },
+  "art.asks": { en: "People asking for a one-off", af: "Mense wat vir ’n eenmalige werk vra" },
+  "art.noAsks": { en: "Nobody yet.", af: "Nog niemand nie." },
+  "art.yourPrice": { en: "Your price", af: "Jou prys" },
+  "art.send": { en: "Send the price", af: "Stuur die prys" },
+  "art.deliver": { en: "Deliver it to them", af: "Lewer dit aan hulle" },
   "cheaper.title": { en: "Cheaper the other way", af: "Goedkoper anders om" },
   "cheaper.against": { en: "against", af: "teenoor" },
   "cheaper.saves": { en: "Saves", af: "Spaar" },

@@ -35,7 +35,12 @@ const PAYSTACK = 'https://api.paystack.co/transaction/initialize';
 type Want =
   | { kind: 'plan'; tier: Tier }
   | { kind: 'credits'; pack: string }
-  | { kind: 'addon'; addon: string };
+  | { kind: 'addon'; addon: string }
+  /* A piece of album art off the wall. The request names WHICH piece; what
+     it costs is read out of the row, like everything else here. */
+  | { kind: 'art'; work: string }
+  /* A commissioned one-off, at the price its artist named. */
+  | { kind: 'commission'; offer: string };
 
 async function priceOf(want: Want): Promise<{ cents: number; label: string } | null> {
   if (want.kind === 'credits') {
@@ -52,6 +57,46 @@ async function priceOf(want: Want): Promise<{ cents: number; label: string } | n
     if (!addon) return null;
     return { cents: addon.rand * 100, label: `${addon.id} add-on, a month` };
   }
+  /* ── Album art ─────────────────────────────────────────────────────
+
+     The price is on the row, put there by the artist, and the row is read
+     here. A sold piece is not for sale a second time — her whole rule —
+     so it is refused at the till as well as hidden on the wall: the wall
+     is a screen, and two people pressing buy in the same second are not
+     looking at a screen.
+
+     This is not the sold-once guarantee. That is the partial unique index
+     in `supabase/albumart.sql`, which settles the race in the database.
+     This is the polite refusal that stops most of them reaching it. */
+  if (want.kind === 'art') {
+    const db = admin();
+    if (!db) return null;
+    const { data } = await db
+      .from('art_works')
+      .select('title, rand, sold_to')
+      .eq('id', want.work)
+      .maybeSingle();
+    const work = data as { title: string; rand: number; sold_to: string | null } | null;
+    if (!work || work.sold_to) return null;
+    return { cents: Math.round(work.rand * 100), label: `Album art: ${work.title}` };
+  }
+
+  /* And a commission, at the price its artist named and the buyer is
+     looking at. Only an offer still standing — one already paid for, or
+     turned down, is not a thing to pay for. */
+  if (want.kind === 'commission') {
+    const db = admin();
+    if (!db) return null;
+    const { data } = await db
+      .from('art_offers')
+      .select('rand, state')
+      .eq('id', want.offer)
+      .maybeSingle();
+    const offer = data as { rand: number; state: string } | null;
+    if (!offer || offer.state !== 'offered') return null;
+    return { cents: Math.round(offer.rand * 100), label: 'Commissioned album art' };
+  }
+
   const spec = TIER_SPECS[want.tier];
   if (!spec || spec.rand === 0) return null;
   return { cents: spec.rand * 100, label: `${spec.name}, a month` };
@@ -182,6 +227,11 @@ export async function POST(request: Request): Promise<Response> {
           // Which add-on, not how long it lasts: the webhook reads the length
           // out of our own table, so a tampered checkout cannot buy a year.
           addon: want.kind === 'addon' ? want.addon : null,
+          /* Which piece, and for whom. The webhook marks it sold; nothing
+             in this app marks a piece sold on the strength of a browser
+             saying the payment went through. */
+          work: want.kind === 'art' ? want.work : null,
+          offer: want.kind === 'commission' ? want.offer : null,
           label: price.label,
         },
       }),
