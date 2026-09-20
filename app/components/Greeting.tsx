@@ -261,7 +261,14 @@ export default function Greeting({
           <span className="block text-sm font-bold leading-tight text-white">
             {roomName(id)}
           </span>
-          <span className="mt-0.5 block min-h-[2rem] text-xs leading-snug text-zinc-500">
+          {/* The floor under the line is what keeps a row of cards the same
+              height when one hint is a word and the next is a sentence. It
+              is dropped on a card that has stretched across the row, where
+              there is nothing beside it to line up with — see the grid. */}
+          <span
+            data-roomhint
+            className="mt-0.5 block min-h-[2rem] text-xs leading-snug text-zinc-500"
+          >
             {t(`${RAIL_KEY[id]}.hint`)}
           </span>
         </span>
@@ -369,7 +376,27 @@ export default function Greeting({
               </p>
               <span className="h-px flex-1 bg-zinc-800" aria-hidden="true" />
             </div>
-            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-4">
+            {/* ── The odd one out fills the row ────────────────────────
+
+                Carli, 20 September 2026, with a photograph of MAKE IT:
+                *"Daai sound trainer box moet daai wit gaping vol maak. So
+                stretch dit uit en maak die bar bietjie dunner."*
+
+                Five rooms in a two-column grid leaves the fifth alone with
+                an empty square beside it, and an empty square in a grid of
+                cards reads as something missing rather than as space.
+
+                Done in the grid rather than by giving one room a flag: the
+                card that stretches is whichever one happens to be last and
+                odd, so adding a sixth room to a stage fixes itself. Only at
+                two columns — at three and four the arithmetic is different
+                and the last card is usually not alone.
+
+                Wider means shorter: the hint that needed two lines in a
+                half-width card needs one across the row, so the floor under
+                it comes off and the padding comes in. That is the "bar
+                bietjie dunner". */}
+            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-4 [&>:last-child:nth-child(odd)]:col-span-2 [&>:last-child:nth-child(odd)]:py-2.5 [&>:last-child:nth-child(odd)_[data-roomhint]]:min-h-0 md:[&>:last-child:nth-child(odd)]:col-span-1 md:[&>:last-child:nth-child(odd)]:py-3.5 md:[&>:last-child:nth-child(odd)_[data-roomhint]]:min-h-[2rem]">
               {surfacesInStage(stage.id).map((id) => (
                 <QuickButton key={id} id={id} />
               ))}
@@ -377,7 +404,7 @@ export default function Greeting({
           </div>
         ))}
         {standaloneSurfaces().length > 0 && (
-          <div className="grid grid-cols-2 gap-2.5 pt-1 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 pt-1 md:grid-cols-3 lg:grid-cols-4 [&>:last-child:nth-child(odd)]:col-span-2 [&>:last-child:nth-child(odd)]:py-2.5 [&>:last-child:nth-child(odd)_[data-roomhint]]:min-h-0 md:[&>:last-child:nth-child(odd)]:col-span-1 md:[&>:last-child:nth-child(odd)]:py-3.5 md:[&>:last-child:nth-child(odd)_[data-roomhint]]:min-h-[2rem]">
             {standaloneSurfaces().map((id) => (
               <QuickButton key={id} id={id} />
             ))}
