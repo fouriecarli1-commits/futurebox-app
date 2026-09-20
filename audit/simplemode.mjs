@@ -88,13 +88,50 @@ try {
   await p.waitForTimeout(1600);
 
   const room = p.locator('div.fixed.inset-0.z-50').first();
+
+  /* ── The switch lives inside a card now ──────────────────────────────
+
+     Carli, 19 September 2026: *"Die hele room is baie besig... alles behalwe
+     die woorde en die klank agter 'n gevoude kaart."*
+
+     Simple / Everything is a setting about how much of the desk to show, so
+     it went onto the desk — inside "How it is made", with the length and the
+     rest of the Everything controls. At the top of the room it was the first
+     thing a person met before the room had asked them anything.
+
+     Opened once, by name, and then left open: everything this probe measures
+     is inside it. Left to a helper that opens every fold in the room, a
+     probe cannot say afterwards which card it was looking at. */
+  const made = room.locator('button[aria-expanded]')
+    .filter({ hasText: /^How it is made|^Hoe dit gemaak word/ }).first();
+  const openMade = async () => {
+    if ((await made.count()) && (await made.getAttribute('aria-expanded')) === 'false') {
+      await made.click();
+      await p.waitForTimeout(500);
+    }
+  };
+  check('the settings live behind one heading', (await made.count()) === 1,
+    'Simple, Everything and the length are all inside "How it is made"');
+  await openMade();
+
   const mode = async (which) => {
+    await openMade();
     await room.locator('button').filter({ hasText: new RegExp(`^${which}$`) }).first().click();
     await p.waitForTimeout(800);
   };
-  /** How tall the form is, which is the only honest measure of "simpler". */
+  /** How tall the settings card is, which is the only thing the switch changes.
+
+      It used to measure `div.rounded-2xl.border.border-zinc-800` — the one
+      bordered panel the whole form sat in. That panel is gone: the cards are
+      the only boxes now, so `.first()` would quietly have measured the words
+      card, which the switch does not touch, and reported a difference of
+      nothing forever. A ruler that survives the thing it measures being
+      removed is not a ruler. */
   const formHeight = async () =>
-    room.locator('div.rounded-2xl.border.border-zinc-800').first().evaluate((el) => Math.round(el.scrollHeight));
+    room.locator('section')
+      .filter({ has: p.locator('button[aria-expanded]').filter({ hasText: /^How it is made|^Hoe dit gemaak word/ }) })
+      .first()
+      .evaluate((el) => Math.round(el.scrollHeight));
   const says = async () => ((await room.innerText()) ?? '').replace(/\s+/g, ' ');
 
   check('the room offers both', /Simple/.test(await says()) && /Everything/.test(await says()));
