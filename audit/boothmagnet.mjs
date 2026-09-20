@@ -684,11 +684,31 @@ try {
         wide: Math.round(frame.right - from),
       };
     });
-    check('the grid is still there at the far end of the song',
-      inView !== null && inView.bars > 0,
+    /* ── Counted, not merely present ─────────────────────────────────
+
+       These two asserted `> 0` and passed for days while Carli kept
+       reporting *"die tyd en grid raak weg"*. One bar line and one label
+       in a 390-pixel window IS the fault, and `> 0` cannot see it.
+
+       Measured on this exact page, before the fix:
+
+           zoom 1   axis  294 px ·  3 labels ·  9 bar lines
+           zoom 8   axis 2352 px ·  4 labels ·  9 bar lines
+
+       Eight times the width bought one more label and not one more bar,
+       because both were chosen from the session's LENGTH — which a zoom
+       does not change. A label every 588 pixels on a 390-pixel screen is
+       a whole screenful of empty ruler.
+
+       So the numbers are the assertion. Three bar lines and two labels in
+       a window is the floor at which a grid is still a grid; the real
+       rule is a label about every 90 pixels and a bar no further apart
+       than 140, and this is that rule stated as what an eye would see. */
+    check('the grid is still a grid at the far end of the song',
+      inView !== null && inView.bars >= 3,
       inView ? `${inView.bars} bar lines in the ${inView.wide}px of window` : 'no scroller');
-    check('  and so is the clock',
-      inView !== null && inView.clock > 0,
+    check('  and the clock still reads as a clock',
+      inView !== null && inView.clock >= 2,
       inView ? `${inView.clock} time labels in the ${inView.wide}px of window` : 'no scroller');
   }
 

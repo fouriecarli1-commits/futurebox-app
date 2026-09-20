@@ -646,7 +646,35 @@ export default function BoothTimeline({
      Every fifteen seconds on a short session, every thirty on a long one.
      Chosen from the length rather than fixed, because a four-minute song at
      a mark every five seconds is forty-eight labels in the width of a phone. */
-  const step = scaleTotal > 240 ? 30 : scaleTotal > 90 ? 15 : 5;
+  /* ── Chosen from PIXELS, not from seconds ─────────────────────────
+
+     Carli, 19 September 2026: *"Die grid op die foon app gaan nie lank
+     genoeg aan nie. Die tyd en grid raak weg."* Two people looked at this
+     twice and could not reproduce it, because both looked at zoom 1.
+
+     Measured, 20 September, on a 390-pixel phone with a sixteen-second
+     session:
+
+         zoom 1   axis  294 px ·  3 labels ·  9 bar lines
+         zoom 8   axis 2352 px ·  4 labels ·  9 bar lines
+
+     There it is. The step was picked from the session's LENGTH and the
+     length does not change when you zoom, so eight times the width got
+     one more label and not one more bar. At zoom 8 that is a label every
+     588 pixels and a bar every 261 — on a screen 390 wide, which means a
+     whole screenful of ruler with nothing on it. The time and the grid do
+     not disappear; they spread out until they may as well have.
+
+     So both are chosen from how wide the axis actually is. A label about
+     every 90 pixels, a bar line no closer than 16, and the step still
+     lands on a round number of seconds so the ruler reads 0:15 and not
+     0:13. `wide` is 0 for the first frame, before the axis is measured —
+     the old rule stands in until it is known. */
+  const NICE = [1, 2, 5, 10, 15, 30, 60, 120, 300] as const;
+  const step =
+    wide > 0 && scaleTotal > 0
+      ? (NICE.find((one) => (one / scaleTotal) * wide >= 90) ?? NICE[NICE.length - 1])
+      : scaleTotal > 240 ? 30 : scaleTotal > 90 ? 15 : 5;
   const marks: number[] = [];
   for (let second = 0; second <= scaleTotal; second += step) marks.push(second);
 
@@ -655,12 +683,27 @@ export default function BoothTimeline({
      where a bar would be less than eight pixels wide, because a grid you
      cannot see through is not a grid. */
   const bar = barSeconds(meter);
-  const barsEvery = wide > 0 && bar > 0 && (bar / Math.max(0.001, scaleTotal)) * wide < 8
-    ? Math.ceil(8 / ((bar / Math.max(0.001, scaleTotal)) * wide))
-    : 1;
+  const barPx = bar > 0 && scaleTotal > 0 ? (bar / scaleTotal) * wide : 0;
+  const barsEvery = wide > 0 && barPx > 0 && barPx < 8 ? Math.ceil(8 / barPx) : 1;
+  /* And the other direction, which is the half that was missing.
+ 
+     Thinning out where a bar would be under eight pixels was already
+     here. Nothing filled the gaps back in when a zoom pushed the bars
+     hundreds of pixels apart, so the grid got sparser the further in you
+     went — which is backwards, and is the second half of what she was
+     looking at. Beats, then half-bars, so every extra line still lands on
+     something a musician would count. */
+  const inBetween = wide > 0 && barPx > 140 ? (barPx > 420 ? 4 : 2) : 1;
   const bars: number[] = [];
-  if (bar > 0) for (let second = 0, n = 0; second <= scaleTotal; second += bar, n += 1) {
-    if (n % barsEvery === 0) bars.push(second);
+  if (bar > 0) {
+    for (let second = 0, n = 0; second <= scaleTotal; second += bar, n += 1) {
+      if (n % barsEvery !== 0) continue;
+      bars.push(second);
+      for (let part = 1; part < inBetween; part += 1) {
+        const at = second + (bar * part) / inBetween;
+        if (at <= scaleTotal) bars.push(at);
+      }
+    }
   }
 
   /**
@@ -1036,17 +1079,39 @@ export default function BoothTimeline({
                 on top of the one before it, and a tick with no number is
                 still a tick. Measured against the axis's real width, so the
                 rule is the same on a phone and on a desk. */}
-            {marks
-              .filter((second) => wide <= 0 || (percent(second) / 100) * wide <= wide - 42)
-              .map((second) => (
-              <span
-                key={second}
-                className="pointer-events-none absolute top-1 text-[10px] tabular-nums"
-                style={{ left: `${percent(second)}%`, color: INK_DIM, transform: 'translateX(2px)' }}
-              >
-                {clock(second)}
-              </span>
-            ))}
+            {marks.map((second) => {
+              /* ── The last label is tucked in, not thrown away ────────
+
+                 It used to be dropped: a label at 100% runs past the end
+                 and widened the room sideways on a phone — measured at
+                 294 wide holding 329. Dropping it was the cheap answer
+                 and it cost the thing that matters at the far end of a
+                 zoom, where the window holds two label slots and losing
+                 one leaves a single number on a whole screen of ruler.
+                 `check:boothmagnet` counts them now, and caught exactly
+                 that the first time it counted rather than merely looked.
+
+                 So a label in the last 42 pixels hangs to the LEFT of its
+                 own tick instead of the right. It still points at the
+                 right second, it cannot push the room wider, and it
+                 cannot collide with the one before it — the step is
+                 chosen so they are ninety pixels apart. */
+              const at = wide > 0 ? (percent(second) / 100) * wide : 0;
+              const tucked = wide > 0 && at > wide - 42;
+              return (
+                <span
+                  key={second}
+                  className="pointer-events-none absolute top-1 text-[10px] tabular-nums"
+                  style={{
+                    left: `${percent(second)}%`,
+                    color: INK_DIM,
+                    transform: tucked ? 'translateX(calc(-100% - 2px))' : 'translateX(2px)',
+                  }}
+                >
+                  {clock(second)}
+                </span>
+              );
+            })}
             {/* The sections, on the ruler, where a name can be read once
                 rather than repeated on every lane. */}
             {(spans ?? [])
