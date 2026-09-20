@@ -150,6 +150,48 @@ ok(
   `the sticker reading pays R${wrong(500)}, the app pays R${split(500).artist}`,
 );
 
+/* ── The conversation has no keyboard in it ────────────────────────────────
+
+   Carli: *"Daai dm moet net buttons hê wat hulle kan kies … Geen tik
+   moontlikhede nie. Ek as eienaar van die app moet bewus wees van dit, sodat
+   kunstenaar nie agter my rug kan kunswerk verkoop nie."*
+
+   `check:artroom` presses this in a real browser, and on a run with no
+   approved artist there is no pop-out to open — it says so out loud rather
+   than passing silently. This is what holds the rule on those runs, which is
+   every run in CI until there are real artists in the project.
+
+   Two halves, because either alone rots. The schema half is the stronger one:
+   a message needs somewhere to live, and there is nowhere — a column that
+   exists is a column somebody eventually wires a box to. The component half
+   catches the box wired to something else.
+
+   Read off the `Popout` function's own body rather than the whole file: the
+   artist's desk has a name, a price and an about, and is allowed them. That
+   is a person describing themselves to us, not a message to a buyer. */
+const popout = (() => {
+  const source = readFileSync('app/components/ArtMarket.tsx', 'utf8');
+  const at = source.indexOf('function Popout(');
+  if (at < 0) return null;
+  const next = source.indexOf('\nfunction ', at + 1);
+  return source.slice(at, next < 0 ? source.length : next);
+})();
+ok('the artist pop-out exists to be checked', popout !== null,
+  'ArtMarket.tsx no longer has a Popout — the rule below is measuring nothing');
+if (popout) {
+  ok('  and there is nowhere in it to type a message',
+    !/<input\b|<textarea\b|contentEditable/i.test(popout),
+    'a box in the pop-out is a phone number swapped and the deal done elsewhere');
+}
+
+const schema = readFileSync('supabase/albumart.sql', 'utf8');
+ok('and the request table has nowhere to put a message either',
+  !/\b(message|body|note|text_body)\s+text/i.test(
+    schema.slice(schema.indexOf('create table if not exists public.art_requests'),
+                 schema.indexOf('create index if not exists art_requests_artist_idx')),
+  ),
+  'art_requests gained a free-text column — the room can now be talked through');
+
 if (failures) {
   console.error(
     '\ncheck:artmarket — a share computed on the sticker price pays an artist out of money'

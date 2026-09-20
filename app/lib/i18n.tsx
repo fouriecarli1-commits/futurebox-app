@@ -436,6 +436,7 @@ export const STRINGS: Dict = {
   "art.sellLink": { en: "Sell your work here", af: "Verkoop jou werk hier" },
   "art.count.works": { en: "Pieces", af: "Werke" },
   "art.count.artists": { en: "Artists", af: "Kunstenaars" },
+  "art.count.from": { en: "From", af: "Vanaf" },
   "art.count.edition": { en: "Edition", af: "Oplaag" },
   "art.gallery": { en: "The gallery", af: "Die galery" },
   "art.all": { en: "Everyone", af: "Almal" },

@@ -466,7 +466,20 @@ export default function ArtMarket(): React.ReactElement {
               {t('art.sellLink')}
             </a>
           </div>
-          <dl className="mt-8 grid grid-cols-3 border-t border-[var(--hairline)] pt-4">
+          {/* ── The four numbers, and why the price is one of them ──────
+
+              Her instruction was that R200 goes on every photograph, and
+              it does. `check:artroom` walked the room on a run with
+              nothing hanging and found that the gallery then names no
+              price at all — the restyle had moved the old "From R200"
+              band off the page and the photographs were carrying the
+              whole of it. A price that exists only on a picture is a
+              price that disappears the day there is no picture, which is
+              every new artist's first visit and every empty Monday.
+
+              So it is stated here as well, in the row that is on the
+              screen before anything is pressed. */}
+          <dl className="mt-8 grid grid-cols-2 border-t border-[var(--hairline)] pt-4 sm:grid-cols-4">
             <div>
               <dt className={MIKRO}>{t('art.count.works')}</dt>
               <dd className="text-[25px] text-[color:var(--ink)]" style={{ fontFamily: 'var(--vertoon)' }}>
@@ -477,6 +490,12 @@ export default function ArtMarket(): React.ReactElement {
               <dt className={MIKRO}>{t('art.count.artists')}</dt>
               <dd className="text-[25px] text-[color:var(--ink)]" style={{ fontFamily: 'var(--vertoon)' }}>
                 {market?.artists.length ?? 0}
+              </dd>
+            </div>
+            <div>
+              <dt className={MIKRO}>{t('art.count.from')}</dt>
+              <dd className="text-[25px] text-[color:var(--ink)]" style={{ fontFamily: 'var(--vertoon)' }}>
+                R{START_RAND}
               </dd>
             </div>
             <div>
