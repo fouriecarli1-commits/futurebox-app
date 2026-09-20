@@ -143,38 +143,78 @@ for (const file of walk('app/api')) {
     if (items.length) arrays.set(found[1], items);
   }
 
-  for (const found of source.matchAll(
-    /\.from\('(\w+)'\)\s*(?:\.\w+\([^)]*\)\s*)*?\.select\(\s*([^)]*?)\s*\)/g,
-  )) {
-    const table = found[1];
-    const raw = found[2].trim();
+  /* ── One chain at a time ────────────────────────────────────────────
 
-    let columns: string[] | null = null;
-    const literal = /^'([^']*)'$/.exec(raw);
-    if (literal) columns = literal[1].split(',').map((one) => one.trim());
-    else {
-      const built = /^(\w+)\.join\(/.exec(raw);
-      if (built && arrays.has(built[1])) columns = [...(arrays.get(built[1]) as string[])];
+     `.from('x')` and everything hanging off it up to the next `.from(`
+     or the end of the statement. Taken as a block rather than by
+     matching `.from(…).select(…)` directly, because a column can reach
+     the database through eight other calls and the one that started
+     this check — `/api/radar` ordering by a column that does not exist
+     — was BOTH a select and an order. A rule that reads only selects
+     would have caught that one by luck. */
+  const chains = [...source.matchAll(/\.from\('(\w+)'\)/g)].map((found, i, all) => {
+    const from = (found.index ?? 0) + found[0].length;
+    /* The chain ends at its own semicolon, or at the next `.from(` if it
+       somehow has none. Capping by a character count instead — which is
+       what this did first — lets one chain read the next statement's
+       calls and blame this table for another table's columns. It found
+       nothing wrong here, which is exactly how a false positive of that
+       shape would first appear: as a real-looking bug, months later. */
+    const semi = source.indexOf(';', from);
+    const next = i + 1 < all.length ? (all[i + 1].index ?? source.length) : source.length;
+    return { table: found[1], body: source.slice(from, Math.min(semi < 0 ? next : semi, next)) };
+  });
+
+  for (const chain of chains) {
+    const has = made.get(chain.table);
+    if (!has) { skip(`a table no sql file creates (${chain.table})`); continue; }
+
+    /** Every column this chain names, with how it named it. */
+    const named: { column: string; how: string }[] = [];
+
+    /* What it reads back. */
+    for (const found of chain.body.matchAll(/^\s*\.select\(\s*([^)]*?)\s*\)/gm)) {
+      const raw = found[1].trim();
+      const literal = /^'([^']*)'$/.exec(raw);
+      let columns: string[] | null = null;
+      if (literal) columns = literal[1].split(',').map((one) => one.trim());
+      else {
+        const built = /^(\w+)\.join\(/.exec(raw);
+        if (built && arrays.has(built[1])) columns = [...(arrays.get(built[1]) as string[])];
+      }
+      if (!columns) { skip('a select this cannot read'); continue; }
+      if (columns.some((one) => one === '*' || one === '')) { skip('select(*)'); continue; }
+      for (const column of columns) named.push({ column, how: 'selected' });
     }
-    if (!columns) { skip('a select this cannot read'); continue; }
-    if (columns.some((one) => one === '*' || one === '')) { skip('select(*)'); continue; }
 
-    const has = made.get(table);
-    if (!has) { skip(`a table no sql file creates (${table})`); continue; }
+    /* What it filters and sorts on. A `.eq('work', …)` against a column
+       that is not there fails the same way a select does. */
+    for (const found of chain.body.matchAll(
+      /\.(eq|neq|gt|gte|lt|lte|is|in|like|ilike|contains|order)\(\s*'([^']+)'/g,
+    )) named.push({ column: found[2], how: found[1] === 'order' ? 'ordered by' : `filtered on with .${found[1]}()` });
 
-    for (const column of columns) {
-      /* `count`, an alias, or a joined table — none of them a plain
-         column of this table, and none of them this check's business. */
+    /* And what it writes. An insert naming a column that is not there is
+       refused outright, which is a button that does nothing. */
+    for (const found of chain.body.matchAll(/\.(insert|update|upsert)\(\s*\{([^}]*)\}/g)) {
+      for (const key of found[2].matchAll(/(?:^|,)\s*(\w+)\s*:/g)) {
+        named.push({ column: key[1], how: `written by .${found[1]}()` });
+      }
+      if (/\.\.\./.test(found[2])) skip(`a spread in an ${found[1]}`);
+    }
+
+    for (const { column, how } of named) {
+      /* An alias, a joined table, a count — none of them a plain column
+         of this table and none of this check's business. */
       if (!/^\w+$/.test(column)) continue;
       checked += 1;
       if (!has.has(column)) {
-        problems.push(`${file}: ${table}.${column} is selected and no sql file creates it`);
+        problems.push(`${file}: ${chain.table}.${column} is ${how} and no sql file creates it`);
       }
     }
   }
 }
 
-ok(`and every one of the ${checked} columns the routes read is created somewhere`,
+ok(`and every one of the ${checked} columns the routes read or write is created somewhere`,
   problems.length === 0, problems.slice(0, 6).join(' ;; '));
 
 if (skipped.size) {
@@ -192,5 +232,5 @@ if (failures) {
   process.exit(1);
 }
 console.log(
-  `\ncheck:sqlcolumns — ${checked} column reads across ${made.size} tables and views, all created.`,
+  `\ncheck:sqlcolumns — ${checked} column uses across ${made.size} tables and views, all created.`,
 );
