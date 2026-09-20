@@ -528,6 +528,36 @@ export async function GET(request: Request): Promise<Response> {
     ? await Promise.all(requests.filter((one) => one.artist === mine.id).map(dress))
     : [];
 
+  /* ── And the inbox of every artist who cannot sign in ────────────────
+
+     Carli, 20 September 2026, having brought Milan in and then asked him
+     for a piece: *"Because I have added the artist I am supposed to
+     approve this artwork. I want to test it."*
+
+     She is right and it was a dead end. A house artist has `owner` null
+     by design — they are a real painter, not an app member — so nobody
+     can ever sign in as them to name a price, and a commission addressed
+     to one waits forever on somebody who does not exist. The route has
+     always allowed the owner to act for them (`asArtist(named)` above);
+     the screen simply never offered it.
+
+     `art.bringWhy` already promises exactly this: *"you write their
+     words, you hang their work, and you pay them yourself."* Answering
+     for them is the same sentence, and it was the one part missing.
+
+     Owner only, and only for artists with no account: an artist WITH an
+     account answers for themselves, and the owner reaching into that
+     inbox would be reading somebody else's post. */
+  let asHouse: unknown = null;
+  if (callerIsOwner(caller)) {
+    const houses = new Set(artists.filter((one) => !one.owner).map((one) => one.id));
+    asHouse = await Promise.all(
+      requests
+        .filter((one) => houses.has(one.artist))
+        .map(async (one) => ({ ...(await dress(one)), artist: one.artist })),
+    );
+  }
+
   /* ── What the owner owes, and to whom ────────────────────────────────
 
      Carli, 20 September 2026: *"Ek dink nie paystack doen sulke ekstra
@@ -640,6 +670,7 @@ export async function GET(request: Request): Promise<Response> {
     bought,
     asBuyer,
     asArtist,
+    asHouse,
     /* The caller's own artist row, approved or not — this is the one place
        an unapproved application is visible, to the person who made it, so
        "we are looking at it" is a state they can see rather than silence. */

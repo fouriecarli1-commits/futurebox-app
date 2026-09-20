@@ -297,6 +297,8 @@ interface Market {
   readonly bought: readonly Owned[];
   readonly asBuyer: readonly Thread[];
   readonly asArtist: readonly Thread[];
+  /** Owner only: every request waiting on an artist who has no account. */
+  readonly asHouse: readonly (Thread & { artist: string })[] | null;
   readonly me: { readonly id: string; readonly name: string; readonly approved: boolean } | null;
 }
 
@@ -1026,6 +1028,8 @@ export default function ArtMarket(): React.ReactElement {
             <Fold label={t('art.bring')}>
               <BringArtist
                 artists={market.everyArtist}
+                waiting={market.asHouse ?? []}
+                saidState={saidState}
                 onDo={doIt}
                 onProblem={setProblem}
                 lang={lang}
@@ -1216,7 +1220,15 @@ function WorkSheet({
          that space stops where the tab bar starts. On a desktop the bar
          is not there and `md:` keeps the sheet centred as before. */
     >
-      <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
+      /* `max-h-full`, not a share of the viewport.
+          Carli: *"Die back buttons is daar, maar is ook weggesteek."* They
+          were, and it was my own fix from an hour earlier. The overlay now
+          stops above the tab bar, so its content box is `100vh` minus the
+          bar — but the sheet still asked for 92vh of the VIEWPORT, which is
+          taller than the box it sits in. `items-end` pins the bottom, so
+          the excess goes off the TOP, taking the back button with it.
+          Full of its parent is the only number that cannot be wrong. */
+      <div className="flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
         <SheetTop onClose={onClose} t={t} />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
@@ -1351,7 +1363,15 @@ function ArtistSheet({
          that space stops where the tab bar starts. On a desktop the bar
          is not there and `md:` keeps the sheet centred as before. */
     >
-      <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
+      /* `max-h-full`, not a share of the viewport.
+          Carli: *"Die back buttons is daar, maar is ook weggesteek."* They
+          were, and it was my own fix from an hour earlier. The overlay now
+          stops above the tab bar, so its content box is `100vh` minus the
+          bar — but the sheet still asked for 92vh of the VIEWPORT, which is
+          taller than the box it sits in. `items-end` pins the bottom, so
+          the excess goes off the TOP, taking the back button with it.
+          Full of its parent is the only number that cannot be wrong. */
+      <div className="flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[86vh] md:rounded-[22px]">
         <SheetTop onClose={onClose} t={t} />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
@@ -1445,7 +1465,15 @@ function Popout({
          that space stops where the tab bar starts. On a desktop the bar
          is not there and `md:` keeps the sheet centred as before. */
     >
-      <div className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[84vh] md:rounded-[22px]">
+      /* `max-h-full`, not a share of the viewport.
+          Carli: *"Die back buttons is daar, maar is ook weggesteek."* They
+          were, and it was my own fix from an hour earlier. The overlay now
+          stops above the tab bar, so its content box is `100vh` minus the
+          bar — but the sheet still asked for 92vh of the VIEWPORT, which is
+          taller than the box it sits in. `items-end` pins the bottom, so
+          the excess goes off the TOP, taking the back button with it.
+          Full of its parent is the only number that cannot be wrong. */
+      <div className="flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-t-[22px] bg-[var(--grond)] text-[color:var(--ink-2)] md:max-h-[84vh] md:rounded-[22px]">
         <SheetTop onClose={onClose} t={t} />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
@@ -1678,12 +1706,17 @@ function Apply({
  */
 function BringArtist({
   artists,
+  waiting,
+  saidState,
   onDo,
   onProblem,
   lang,
   t,
 }: {
   readonly artists: readonly AnyArtist[];
+  /** What is waiting on each artist who cannot sign in and answer it. */
+  readonly waiting: readonly (Thread & { artist: string })[];
+  readonly saidState: (state: OfferState) => string;
   readonly onDo: (body: Record<string, unknown>) => Promise<boolean>;
   readonly onProblem: (said: string) => void;
   readonly lang: 'en' | 'af';
@@ -1762,6 +1795,38 @@ function BringArtist({
                   {t('art.hangFor')}
                 </button>
               </div>
+
+              {/* ── Answering for them ──────────────────────────────
+
+                  Carli: *"Because I have added the artist I am supposed to
+                  approve this artwork. I want to test it."* A house artist
+                  has no account, so a commission addressed to one waits on
+                  somebody who cannot sign in. `art.bringWhy` already
+                  promises this — you write their words, you hang their
+                  work — and answering their post is the same sentence.
+
+                  Only drawn when something is actually waiting: an empty
+                  inbox under every name is a panel that says nothing four
+                  times. */}
+              {/* `ask`, not `one`. The list above already binds `one` to
+                  the artist, and an inner `one` shadowed it into
+                  `thread.artist === thread.id` — a string compared with
+                  itself, always false, and the panel would simply never
+                  have appeared. Both sides are strings, so nothing
+                  complained. */}
+              {waiting.some((ask) => ask.artist === one.id) && (
+                <div className="pt-5">
+                  <Inbox
+                    threads={waiting.filter((ask) => ask.artist === one.id)}
+                    artist={one.id}
+                    onDo={onDo}
+                    onProblem={onProblem}
+                    saidState={saidState}
+                    lang={lang}
+                    t={t}
+                  />
+                </div>
+              )}
 
               {/* Hanging a piece for them. The only file input a buyer
                   could ever reach is behind the owner check on the server,
@@ -1918,6 +1983,162 @@ function BringArtist({
 /* ────────────────────────────────────────────────────────────── the desk ── */
 
 /**
+ * One artist's inbox, wherever it is drawn.
+ *
+ * ── Why this is a component and not a second copy ────────────────────────
+ *
+ * Carli, having brought a painter in and then asked him for a piece:
+ * *"Because I have added the artist I am supposed to approve this artwork.
+ * I want to test it."*
+ *
+ * A house artist has no account by design — they are a real painter, not
+ * an app member — so nobody can ever sign in as them to name a price, and
+ * a commission addressed to one waited forever on somebody who does not
+ * exist. The server has always let the owner act for them; only the screen
+ * did not offer it.
+ *
+ * The obvious fix was to paste this markup into the owner's panel. Three
+ * copies of a sheet handle is how all three sheets came to have no visible
+ * way out at once, earlier the same night. So: one component, drawn twice.
+ *
+ * `artist` is the whole difference. Undefined, the route falls back to the
+ * caller's own artist row, which is an artist answering their own post.
+ * Set, it names the house artist the owner is answering for — and the
+ * route checks the owner really is the owner before honouring it.
+ */
+function Inbox({
+  threads,
+  artist,
+  onDo,
+  onProblem,
+  saidState,
+  lang,
+  t,
+}: {
+  readonly threads: readonly Thread[];
+  /** The house artist being answered for. Undefined when it is your own. */
+  readonly artist?: string;
+  readonly onDo: (body: Record<string, unknown>) => Promise<boolean>;
+  readonly onProblem: (said: string) => void;
+  readonly saidState: (state: OfferState) => string;
+  readonly lang: 'en' | 'af';
+  readonly t: (key: string) => string;
+}): React.ReactElement {
+  const [priced, setPriced] = useState<Record<string, { rand: string; days: number }>>({});
+
+  return (
+    <div>
+      <p className={MIKRO}>{t('art.asks')}</p>
+      {threads.length === 0 ? (
+        <p className="pt-3 text-[14px]">{t('art.noAsks')}</p>
+      ) : (
+        <ul className="space-y-5 pt-3">
+          {threads.map((thread) => {
+            const draft = priced[thread.id] ?? { rand: String(UNIQUE_RAND), days: WINDOWS[0].days };
+            return (
+              <li key={thread.id} className="rounded-[4px] border border-[var(--lyn)] bg-[var(--blad)] p-4">
+                <p
+                  className="text-[19px] leading-tight text-[color:var(--ink)]"
+                >
+                  {thread.songTitle}
+                </p>
+                {thread.offer && <StatusBar state={thread.offer.state} said={saidState(thread.offer.state)} />}
+
+                {!thread.offer && (
+                  <div className="space-y-4 pt-4">
+                    <label className="block max-w-[220px]">
+                      <span className={MIKRO}>{t('art.yourPrice')}</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={draft.rand}
+                        onChange={(event) =>
+                          setPriced((was) => ({ ...was, [thread.id]: { ...draft, rand: event.target.value } }))
+                        }
+                        className={VELD}
+                      />
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {WINDOWS.map((one) => (
+                        <button
+                          key={one.days}
+                          type="button"
+                          aria-pressed={draft.days === one.days}
+                          onClick={() =>
+                            setPriced((was) => ({ ...was, [thread.id]: { ...draft, days: one.days } }))
+                          }
+                          className={
+                            draft.days === one.days
+                              ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--aksent)] px-4 text-[13px] font-bold text-[color:var(--op-aksent)]'
+                              : LEEG
+                          }
+                        >
+                          {one[lang]}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className={VUL}
+                      onClick={() =>
+                        void onDo({
+                          what: 'offer',
+                          artist,
+                          request: thread.id,
+                          rand: Number(draft.rand) || UNIQUE_RAND,
+                          days: draft.days,
+                        })
+                      }
+                    >
+                      {t('art.send')}
+                    </button>
+                  </div>
+                )}
+
+                {/* The upload appears only once the buyer has accepted,
+                    and it goes to that one person. Her rule: *"'n upload
+                    button wat net aan daardie persoon geupload kan word."* */}
+                {thread.offer?.state === 'accepted' && (
+                  <label className={`${VUL} mt-4 cursor-pointer`}>
+                    {t('art.deliver')}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      data-take="delivery"
+                      className="sr-only"
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        event.target.value = '';
+                        if (!file) return;
+                        /* One clean file. A commission is delivered to
+                           one person who has already paid, so there is
+                           no preview to make and nobody to protect it
+                           from. */
+                        const made = await square(file, ART_SIDE);
+                        if (made.ok !== true) {
+                          onProblem(t('art.badFile'));
+                          return;
+                        }
+                        if (made.blob.size > ART_MAX_BYTES) {
+                          onProblem(ART_SIZE_SAID[lang]);
+                          return;
+                        }
+                        const path = await putInBucket(made.blob, 'delivery', undefined, lang, onProblem, t);
+                        if (path) await onDo({ what: 'deliver', artist, offer: thread.offer?.id, path });
+                      }}
+                    />
+                  </label>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/**
  * What an approved artist sees: hang a piece, and answer the orders.
  *
  * The only file input in this room lives here, and the route refuses an
@@ -1945,7 +2166,6 @@ function ArtistDesk({
   const [title, setTitle] = useState('');
   const [rand, setRand] = useState(String(START_RAND));
   const [busy, setBusy] = useState(false);
-  const [priced, setPriced] = useState<Record<string, { rand: string; days: number }>>({});
 
   const money = useMemo(() => split(Number(rand) || START_RAND), [rand]);
 
@@ -2012,113 +2232,14 @@ function ArtistDesk({
         </label>
       </div>
 
-      <div>
-        <p className={MIKRO}>{t('art.asks')}</p>
-        {threads.length === 0 ? (
-          <p className="pt-3 text-[14px]">{t('art.noAsks')}</p>
-        ) : (
-          <ul className="space-y-5 pt-3">
-            {threads.map((thread) => {
-              const draft = priced[thread.id] ?? { rand: String(UNIQUE_RAND), days: WINDOWS[0].days };
-              return (
-                <li key={thread.id} className="rounded-[4px] border border-[var(--lyn)] bg-[var(--blad)] p-4">
-                  <p
-                    className="text-[19px] leading-tight text-[color:var(--ink)]"
-                  >
-                    {thread.songTitle}
-                  </p>
-                  {thread.offer && <StatusBar state={thread.offer.state} said={saidState(thread.offer.state)} />}
-
-                  {!thread.offer && (
-                    <div className="space-y-4 pt-4">
-                      <label className="block max-w-[220px]">
-                        <span className={MIKRO}>{t('art.yourPrice')}</span>
-                        <input
-                          type="number"
-                          min={1}
-                          value={draft.rand}
-                          onChange={(event) =>
-                            setPriced((was) => ({ ...was, [thread.id]: { ...draft, rand: event.target.value } }))
-                          }
-                          className={VELD}
-                        />
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {WINDOWS.map((one) => (
-                          <button
-                            key={one.days}
-                            type="button"
-                            aria-pressed={draft.days === one.days}
-                            onClick={() =>
-                              setPriced((was) => ({ ...was, [thread.id]: { ...draft, days: one.days } }))
-                            }
-                            className={
-                              draft.days === one.days
-                                ? 'inline-flex min-h-[44px] items-center rounded-full bg-[var(--aksent)] px-4 text-[13px] font-bold text-[color:var(--op-aksent)]'
-                                : LEEG
-                            }
-                          >
-                            {one[lang]}
-                          </button>
-                        ))}
-                      </div>
-                      <button
-                        type="button"
-                        className={VUL}
-                        onClick={() =>
-                          void onDo({
-                            what: 'offer',
-                            request: thread.id,
-                            rand: Number(draft.rand) || UNIQUE_RAND,
-                            days: draft.days,
-                          })
-                        }
-                      >
-                        {t('art.send')}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* The upload appears only once the buyer has accepted,
-                      and it goes to that one person. Her rule: *"'n upload
-                      button wat net aan daardie persoon geupload kan word."* */}
-                  {thread.offer?.state === 'accepted' && (
-                    <label className={`${VUL} mt-4 cursor-pointer`}>
-                      {t('art.deliver')}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        data-take="delivery"
-                        className="sr-only"
-                        onChange={async (event) => {
-                          const file = event.target.files?.[0];
-                          event.target.value = '';
-                          if (!file) return;
-                          /* One clean file. A commission is delivered to
-                             one person who has already paid, so there is
-                             no preview to make and nobody to protect it
-                             from. */
-                          const made = await square(file, ART_SIDE);
-                          if (made.ok !== true) {
-                            onProblem(t('art.badFile'));
-                            return;
-                          }
-                          if (made.blob.size > ART_MAX_BYTES) {
-                            onProblem(ART_SIZE_SAID[lang]);
-                            return;
-                          }
-                          const path = await putInBucket(made.blob, 'delivery', undefined, lang, onProblem, t);
-                          if (path) await onDo({ what: 'deliver', offer: thread.offer?.id, path });
-                        }}
-                      />
-                    </label>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+      <Inbox
+        threads={threads}
+        onDo={onDo}
+        onProblem={onProblem}
+        saidState={saidState}
+        lang={lang}
+        t={t}
+      />
     </div>
   );
 }

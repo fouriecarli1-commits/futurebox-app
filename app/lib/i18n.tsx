@@ -442,7 +442,14 @@ export const STRINGS: Dict = {
 
   /* The room's own header. Four words and a line of fact — no headline, no
      lead paragraph. Everybody here is signed in and came on purpose. */
-  "art.title": { en: "Album art", af: "Album kunswerk" },
+  /* The heading says whose work it is, not only what it is.
+
+     Carli, twice in one message: *"Ek voel nogsteeds die hoofopskrif moet
+     sê, Album art by real artists"* and *"Jy het ook nie by gesê: Album
+     art by real artists nie."* Twice, because I had put it in the line
+     UNDER the heading and counted that as done. The heading is the one
+     thing on the screen everybody reads, so it carries the claim. */
+  "art.title": { en: "Album art by real artists", af: "Album kunswerk deur regte kunstenaars" },
   "art.from": { en: "From", af: "Vanaf" },
   "art.one": { en: "Each one sold once", af: "Elkeen een keer verkoop" },
   "art.wall": { en: "For sale now", af: "Nou te koop" },
@@ -478,8 +485,8 @@ export const STRINGS: Dict = {
      die wen prys."* */
   "art.takePass": { en: "Buy in on this piece", af: "Koop in op hierdie werk" },
   "art.passWhy": {
-    en: "Bidding on a piece costs R50, once for that piece, and then you may bid on it as often as you like. It is what keeps somebody who is not serious from running a price up and walking away. Each piece is its own buy-in. It is not part of what you pay for the work, and none of it goes to the artist — the artist is paid out of the winning bid.",
-    af: "Om op ’n werk te bie kos R50, een keer vir daardie werk, en daarna mag jy so dikwels daarop bie as wat jy wil. Dit is wat keer dat iemand wat nie ernstig is nie ’n prys opstoot en wegloop. Elke werk het sy eie buy-in. Dit is nie deel van wat jy vir die werk betaal nie, en niks daarvan gaan na die kunstenaar nie — die kunstenaar word uit die wenbod betaal.",
+    en: "Bidding on a piece costs R50, once for that piece, and then you may bid on it as often as you like. It is what keeps somebody who is not serious from running a price up and walking away. Each piece is its own buy-in, and it is not part of what you pay for the work.",
+    af: "Om op ’n werk te bie kos R50, een keer vir daardie werk, en daarna mag jy so dikwels daarop bie as wat jy wil. Dit is wat keer dat iemand wat nie ernstig is nie ’n prys opstoot en wegloop. Elke werk het sy eie buy-in, en dit is nie deel van wat jy vir die werk betaal nie.",
   },
   /* The columns a half-landed migration left behind. Named, so the next
      one costs a minute instead of an evening. */
@@ -512,15 +519,25 @@ export const STRINGS: Dict = {
      Carli: *"Die bladsy moet ook beskryf wat hierdie is, dit is nie net
      album art nie, dit is album art created by real artists, human made."*
      One line and not a hero paragraph: made by a person, not a machine,
-     sold once, from R200. */
+     sold once, from R200.
+
+     "Created", never the narrower word. Carli, twice: *"Die woorde moet
+     ook nie sê painted by hand nie, maar created by hand (omdat daar
+     verskillende mediums is)."* A painter is one kind of artist.
+     Somebody working in ink, collage, photography or thread reads the
+     narrower word as a room that is not for them, and this room is for
+     all of them.
+
+     "By real artists" has moved up into the heading, so this line no
+     longer repeats it. */
   /* This one line carries the whole proposition, and `check:artroom`
      holds two of its three facts — the opening bid and the sold-once
      rule — because both have to be readable before anything is pressed.
      The rewrite for the auction dropped the words "sold once" and the
      probe caught it on the next run. */
   "art.whatThisIs": {
-    en: "Album art painted by hand, by real artists. Not generated. Bidding opens at R200 and runs 36 hours from the first bid — the highest bid takes it, and every piece is sold once and never again.",
-    af: "Albumkuns wat met die hand geskilder is, deur regte kunstenaars. Nie gegenereer nie. Die bod maak oop by R200 en loop 36 uur vanaf die eerste bod — die hoogste bod vat dit, en elke werk word een keer verkoop en nooit weer nie.",
+    en: "Created by hand, not generated. Bidding opens at R200 and runs 36 hours from the first bid — the highest bid takes it, and every piece is sold once and never again.",
+    af: "Met die hand geskep, nie gegenereer nie. Die bod maak oop by R200 en loop 36 uur vanaf die eerste bod — die hoogste bod vat dit, en elke werk word een keer verkoop en nooit weer nie.",
   },
   "art.marked": {
     en: "The picture here carries a mark. The clean file, 3000 × 3000, goes to the buyer alone.",
@@ -549,7 +566,6 @@ export const STRINGS: Dict = {
      These four are what is printed on that back. */
   "art.turnOver": { en: "turn it over", af: "draai dit om" },
   "art.turnBack": { en: "Tap to turn it back", af: "Tik om dit terug te draai" },
-  "art.painted": { en: "Painted by", af: "Geskilder deur" },
   "art.noWords": {
     en: "This artist has not written anything about themselves yet.",
     af: "Hierdie kunstenaar het nog niks oor haarself of homself geskryf nie.",
@@ -684,13 +700,18 @@ export const STRINGS: Dict = {
      Carli, 20 September 2026: *"Die kunstenaar kry nie geld vir die by in
      nie, net vir die wen prys."*
 
-     Said on the screen where the artist sets the opening bid, because that
-     is the screen where somebody would otherwise do the arithmetic wrong in
-     both directions at once: the number above is a floor and not a price,
-     and the R50 at the door is not theirs. */
+     Said on the screen where the artist sets the opening bid, because
+     that is where they would otherwise assume the door fee is part of
+     what they are owed.
+
+     It used to open by restating that an auction pays on the winning
+     bid and not on the opening one. Carli: *"dit is onnodige
+     inligting."* She is right — that is what an auction is, and the
+     line above it already shows the figure moving with the price. What
+     is left is the one fact they could not work out for themselves. */
   "art.paidOnWin": {
-    en: "You are paid on the winning bid, not on this number — a piece that opens at R200 and closes at R900 pays you on R900. The R50 each bidder pays to buy in on a piece is not part of the price and none of it comes to you.",
-    af: "Jy word op die wenbod betaal, nie op hierdie syfer nie — ’n werk wat by R200 oopmaak en op R900 sluit, betaal jou op R900. Die R50 wat elke bieër betaal om op ’n werk in te koop, is nie deel van die prys nie en niks daarvan kom na jou toe nie.",
+    en: "The R50 each bidder pays to buy in on a piece is not part of the price, and none of it comes to you.",
+    af: "Die R50 wat elke bieër betaal om op ’n werk in te koop, is nie deel van die prys nie en niks daarvan kom na jou toe nie.",
   },
   "art.choose": { en: "Choose the picture", af: "Kies die prent" },
   "art.uploading": { en: "Uploading…", af: "Laai op…" },

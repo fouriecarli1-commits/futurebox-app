@@ -350,11 +350,21 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
     /none of it comes to you/i.test(both) && /niks daarvan kom na jou toe nie/i.test(both),
     'art.paidOnWin does not say the buy-in is not theirs, in both languages');
 
+  /* The BUYER is deliberately not told this, and that is a decision and
+     not an omission. Carli, looking at the room: *"dit is onnodige
+     inligting."* How the studio and the artist divide the money is
+     between the studio and the artist — it is in clause 6 of both
+     signed agreements, where the person it concerns will read it. A
+     buyer needs to know the R50 is not part of the price, which the
+     line still says, and nothing more. */
   const why = words.indexOf('"art.passWhy"');
-  const pass = why < 0 ? '' : words.slice(why, why + 1400);
-  ok('    and the bidder is told before they pay it',
-    /none of it goes to the artist/i.test(pass) && /gaan na die kunstenaar nie/i.test(pass),
-    'somebody pays the R50 believing part of it reaches the painter');
+  const pass = why < 0 ? '' : words.slice(why, why + 1600);
+  ok("    and the buyer is told the R50 is not part of the price",
+    /not part of what you pay/i.test(pass) && /nie deel van wat jy .* betaal nie/i.test(pass),
+    'somebody could read the R50 as a deposit against the work');
+  ok("      and is not told the artist's terms, which are not theirs to read",
+    !/goes to the artist|na die kunstenaar/i.test(pass),
+    'the buyer is being shown how the studio and the artist split the money');
   ok(`    and it is R${BIDDER_RAND} on both sides`, BIDDER_RAND === 50, `${BIDDER_RAND}`);
 }
 
@@ -413,6 +423,84 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
   const cleared = (room.match(/paddingBottom: barClearance\(0\)/g) ?? []).length;
   ok('and no sheet reaches under the tab bar', cleared === 3,
     `${cleared} of 3 overlays stop above it — the last button in the sheet is the one the sheet is for`);
+}
+
+/* ── An artist who cannot sign in still gets answered ────────────────────
+
+   Carli, having brought a painter in and then commissioned him:
+   *"Because I have added the artist I am supposed to approve this
+   artwork. I want to test it."*
+
+   A house artist has `owner` null by design — a real painter, not an app
+   member — so nobody can ever sign in as them. A commission addressed to
+   one therefore waited forever on somebody who does not exist. The route
+   had always allowed the owner to act for them; only the screen did not
+   offer it, which is the same shape as the upload gap before it.
+
+   Four rules, and the last two are the ones that would rot quietly: the
+   inbox has to be ONE component (three copies of a sheet handle is how
+   all three sheets lost their way out on the same night), and the owner
+   must not be handed the inbox of an artist who CAN answer for
+   themselves — that is reading somebody else's post. */
+{
+  const route = readFileSync('app/api/artmarket/route.ts', 'utf8');
+  ok('the owner is given the inbox of every artist with no account',
+    /asHouse/.test(route),
+    'a commission to a house artist waits on somebody who cannot sign in');
+  ok('  and only of those, never of an artist who can answer for themselves',
+    /const houses = new Set\(artists\.filter\(\(one\) => !one\.owner\)/.test(route),
+    "the owner is being shown the post of artists who have their own account");
+  ok('    and only for the owner',
+    /if \(callerIsOwner\(caller\)\) \{\s*const houses/.test(route),
+    'anybody signed in can read what house artists have been asked for');
+
+  const room = readFileSync('app/components/ArtMarket.tsx', 'utf8');
+  ok('  and the two screens draw the same inbox',
+    /function Inbox\(/.test(room) && (room.match(/<Inbox\b/g) ?? []).length === 2,
+    'the owner has a second copy of the inbox markup, which is how two of them drift');
+  /* Anchored to the <Inbox> call, not searched across the file.
+     `/artist=\{one\.id\}/` alone matched `data-anyartist={one.id}` forty
+     lines above it — the prop could be deleted outright and this stayed
+     green. A pattern loose enough to hit the wrong line is a pattern that
+     is not measuring the rule. */
+  const call = room.slice(room.indexOf('<Inbox', room.indexOf('function BringArtist(')));
+  ok('    with the house artist named on every write',
+    /^[\s\S]{0,400}?\bartist=\{one\.id\}/.test(call) && /what: 'offer',\s*artist,/.test(room),
+    'the owner answers as themselves, and the route refuses it');
+}
+
+/* ── The heading carries the claim, and the room is for every medium ─────
+
+   Carli, in one message, twice: *"Ek voel nogsteeds die hoofopskrif moet
+   sê, Album art by real artists"* … *"Jy het ook nie by gesê: Album art
+   by real artists nie."* She had to say it twice because I put it in the
+   line under the heading and counted that as done. A claim in the body
+   text is a claim most people scroll past; the heading is the one string
+   on the screen everybody reads.
+
+   And, also twice: *"Die woorde moet ook nie sê painted by hand nie, maar
+   created by hand (omdat daar verskillende mediums is)."* A painter is
+   one kind of artist. Somebody working in ink, collage, photography or
+   thread reads the narrower word as a room that is not for them — and
+   this is a room she is recruiting into, so that word costs her artists.
+
+   Held in both languages, because a narrowing like that comes back the
+   next time somebody rewrites a line and reaches for the vivid word. */
+{
+  const words = readFileSync('app/lib/i18n.tsx', 'utf8');
+  const at = words.indexOf('"art.title"');
+  const title = at < 0 ? '' : words.slice(at, at + 200);
+  ok('the heading says whose work this is',
+    /by real artists/i.test(title) && /deur regte kunstenaars/i.test(title),
+    'art.title is back to naming the thing instead of the claim');
+
+  /* Across the whole dictionary rather than one key: the word is wrong
+     wherever it appears, and the line it was in has already moved once. */
+  const narrow = [...words.matchAll(/"(art\.[\w.]+)":[^}]*?\b(painted|geskilder)\b/gi)]
+    .map((one) => one[1]);
+  ok('  and no line in the room says painted',
+    narrow.length === 0,
+    `${narrow.join(', ')} — a painter is one kind of artist, and this room is for all of them`);
 }
 
 /* ── The buy-in is PER PIECE ─────────────────────────────────────────────
