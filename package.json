@@ -93,6 +93,7 @@
     "check:adsaf": "node audit/ads-af.mjs",
     "check:refusals": "node audit/errors.mjs",
     "check:artroom": "node audit/artroom.mjs",
+    "check:gallery": "tsx scripts/check-gallery.mts",
     "check:ooreenkoms": "tsx scripts/check-ooreenkoms.mts",
     "check:castmemory": "tsx scripts/check-castmemory.mts",
     "check:aikoste": "tsx scripts/check-aikoste.mts",

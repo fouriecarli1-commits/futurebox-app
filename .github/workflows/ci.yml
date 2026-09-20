@@ -852,6 +852,15 @@ jobs:
       - name: The art market's money adds up, and the share is on profit
         run: npm run check:artmarket
 
+      # The gallery is a whole room, not a card in somebody else's page.
+      # Eighty-one variables generated from GALLERY_THEME rather than typed,
+      # a wall dark enough for a painting to glow, a gold accent, and the
+      # flag on the SHELL beside the booth's — which is the one thing four
+      # rebuilds of this room got wrong, every time leaving a seam at the
+      # top where the app's own chrome carried on in its own colours.
+      - name: The gallery block is the gallery theme, and it is on the shell
+        run: npm run check:gallery
+
       # What prompt caching actually saved, and the sum that turns four token
       # counts into rand. A cache that never hits looks exactly like one that
       # always does, except on the bill — and a lone write costs 25% MORE, so

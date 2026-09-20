@@ -138,11 +138,14 @@ import {
  * ── Where the room's character lives instead ─────────────────────────────
  *
  * In the layout and in the work: big pictures, a lot of air, the price and
- * the clock as small quiet marks, one strong button per screen. A gallery
- * does not look like a gallery because of its wall colour. `--vertoon` is
- * the one exception left, and it is used only on the name of a piece and
- * of a painter — a caption under a picture is set in a book face, which is
- * a convention and not decoration.
+ * the clock as small quiet marks, one strong button per screen.
+ *
+ * The wall it all hangs on is `GALLERY_THEME` in `app/lib/theme.ts`, pulled
+ * in by `[data-gallery]` on the studio's own root — warm near-black, gold,
+ * and a serif, across the header and the rail and the copilot too, not just
+ * inside this component. That is the difference between a room and a card
+ * sitting in somebody else's page, and it is why this file no longer sets a
+ * font of its own.
  */
 const SKIN = {
   /* Which way the scale runs is worth saying, because I got it backwards
@@ -171,7 +174,6 @@ const SKIN = {
   '--aksent-sag': 'rgb(var(--fb-primary-500) / 0.14)',
   /** Text that sits ON the accent. Dark in every theme, by design. */
   '--op-aksent': 'rgb(var(--fb-on-accent))',
-  '--vertoon': 'Georgia, "Times New Roman", serif',
 } as React.CSSProperties;
 
 /** The small label. One size, one weight, everywhere in the room. */
@@ -1283,7 +1285,6 @@ function ArtistSheet({
           <span className="block h-px w-9 bg-[var(--aksent)]" aria-hidden />
           <h3
             className="pt-3 text-[28px] leading-tight text-[color:var(--ink)]"
-            style={{ fontFamily: 'var(--vertoon)' }}
           >
             {artist.name}
           </h3>
@@ -1303,7 +1304,6 @@ function ArtistSheet({
                 <Sleeve url={piece.url} alt={`${piece.title}, ${piece.by}`} seal />
                 <p
                   className="truncate pt-2 text-[16px] leading-tight text-[color:var(--ink)]"
-                  style={{ fontFamily: 'var(--vertoon)' }}
                 >
                   {piece.title}
                 </p>
@@ -1371,7 +1371,6 @@ function Popout({
           <span className="block h-px w-9 bg-[var(--aksent)]" aria-hidden />
           <h3
             className="pt-3 text-[26px] leading-tight text-[color:var(--ink)]"
-            style={{ fontFamily: 'var(--vertoon)' }}
           >
             {artist.name}
           </h3>
@@ -1642,7 +1641,6 @@ function BringArtist({
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p
                   className="text-[19px] leading-tight text-[color:var(--ink)]"
-                  style={{ fontFamily: 'var(--vertoon)' }}
                 >
                   {one.name}
                 </p>
@@ -1945,7 +1943,6 @@ function ArtistDesk({
                 <li key={thread.id} className="rounded-[4px] border border-[var(--lyn)] bg-[var(--blad)] p-4">
                   <p
                     className="text-[19px] leading-tight text-[color:var(--ink)]"
-                    style={{ fontFamily: 'var(--vertoon)' }}
                   >
                     {thread.songTitle}
                   </p>

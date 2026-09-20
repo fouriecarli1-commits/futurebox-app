@@ -3150,8 +3150,18 @@ export default function FutureBoxHome() {
             because every other room in this app must follow the theme and
             this is the one exception. See `lib/boothlook.ts` and
             `check:boothline` for why the exception exists. */}
+        {/* And the gallery, the same way and for the same reason.
+
+            Carli: *"Die hele kamer in probooth lyk dieselfde. So moet
+            hierdie een se hele kamer ook dieselfde lyk."* The flag goes on
+            the studio's own root, not on the room inside it, so the header,
+            the rail, the working surface and the copilot all become the
+            gallery — which is the whole difference between a room and a
+            card sitting in somebody else's page. See `[data-gallery]` in
+            `globals.css` and `GALLERY_THEME` in `lib/theme.ts`. */}
         <div
           {...(studioTab === 'booth' ? { 'data-booth': '' } : {})}
+          {...(studioTab === 'albumart' ? { 'data-gallery': '' } : {})}
           className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden"
         >
           {/* One column that scrolls, on a phone. Two panes that scroll

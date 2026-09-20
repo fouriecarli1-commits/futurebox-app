@@ -185,6 +185,74 @@ export const PRESETS: readonly Preset[] = [
 
 export const DEFAULT_THEME: Theme = { ...PRESETS[0] };
 
+/**
+ * The gallery, which is the album art room and everything around it.
+ *
+ * ── Why a second theme and not a skin inside the room ────────────────────
+ *
+ * Carli, 20 September 2026: *"Kyk net hoe netjies het jy die probooth
+ * verander. Die hele kamer in probooth lyk dieselfde. So moet hierdie een se
+ * hele kamer ook dieselfde lyk … Dink mooi oor die art room. Dit is 'n
+ * gallery wat kunswerk moet verkoop. Dit moet high class en baie aantreklik
+ * wees."*
+ *
+ * She named the mechanism herself. The Pro Booth reads as one room because
+ * its exception is applied to the SHELL — header, rail, working surface,
+ * copilot — by redefining these variables under `[data-booth]`, so every
+ * class name in the app goes on meaning what it always meant. Four attempts
+ * at the art room failed because I skinned the inside of the room instead,
+ * which can only ever produce a foreign card sitting in somebody else's
+ * page. The seam was the whole complaint.
+ *
+ * ── The choices, and why each one ────────────────────────────────────────
+ *
+ * `ember` — warm dark, hue 20. A gallery at an evening viewing, not a code
+ * editor. Near-black is what makes a painting glow: the default light theme
+ * is right for a page of the person's own work and wrong for a wall of
+ * somebody else's, where the work has to be the only thing with colour in
+ * it. Warm rather than the default's blue-grey, because the Pro Booth has
+ * cold near-black and two rooms should not be the same room.
+ *
+ * `amber` at hue 42 — gold. The one colour in here that is not the wall or
+ * the label: the price, the standing bid, the button that takes the piece.
+ * Gilt and catalogue foil. It is also, conveniently, the colour this app
+ * already keeps for money.
+ *
+ * `editorial` — Georgia. A wall label is set in a book face, and so is every
+ * auction catalogue ever printed. This is the one room where that is a
+ * convention rather than decoration, and it means the room's own `--vertoon`
+ * can go: the shell provides it now, so the title of a piece and the name of
+ * the painter are set in the same face as everything around them.
+ *
+ * `spacious` — a gallery is mostly empty wall.
+ *
+ * Nothing here is a hand-picked colour. It goes through `themeVariables()`
+ * like every other theme, which means the same AA arithmetic
+ * `check:theme` runs over the presets runs over this, and the block in
+ * `globals.css` is generated rather than typed. `check:gallery` compares
+ * the two.
+ */
+export const GALLERY_THEME: Theme = {
+  surface: 'ember',
+  primary: 'amber',
+  /* Everything that is not the work and not the money stays out of the way.
+     Slate twice on purpose: a second and third accent in a gallery is two
+     more things competing with the paintings. */
+  secondary: 'slate',
+  highlight: 'amber',
+  tertiary: 'slate',
+  radius: 'soft',
+  density: 'spacious',
+  font: 'editorial',
+  /* Layout and motion are the person's, not the room's: these two are about
+     how somebody gets around and how much movement they can stand, and a
+     room has no business overriding either. They are carried here only
+     because `Theme` requires them, and `themeVariables` emits nothing for
+     `layout`. */
+  layout: 'rail',
+  motion: 'full',
+};
+
 // -----------------------------------------------------------------------------
 // Scale generation
 // -----------------------------------------------------------------------------

@@ -540,6 +540,133 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
   color: rgb(var(--fb-ink));
 }
 
+
+/* ── The gallery: the album art room, and everything around it ───────────
+
+   Carli, 20 September 2026: *"Kyk net hoe netjies het jy die probooth
+   verander. Die hele kamer in probooth lyk dieselfde. So moet hierdie een
+   se hele kamer ook dieselfde lyk … Dit is 'n gallery wat kunswerk moet
+   verkoop. Dit moet high class en baie aantreklik wees. Dit is waar mense
+   wil wees so aantreklik is dit."*
+
+   Same mechanism as the block above, for the same reason. Four rebuilds of
+   the art room failed because each one skinned the INSIDE of the room —
+   which can only ever be a foreign card sitting in somebody else's page,
+   with a visible seam at the top where the app's chrome carried on in its
+   own colours. She saw that seam every time and called it "a website inside
+   an app". The booth does not have it, because the booth re-skins the shell.
+
+   A gallery at an evening viewing: warm near-black wall, gold, and a book
+   face. Near-black is what makes a painting glow, and warm rather than the
+   booth's blue-black so the two rooms are not the same room. Gold is the
+   only colour in here that is not wall or label — the price, the standing
+   bid, the button that takes the piece. Georgia because a wall label and an
+   auction catalogue are set in a serif, which here is a convention and not
+   decoration.
+
+   Generated, never typed: this is `themeVariables(GALLERY_THEME)` from
+   `app/lib/theme.ts`, run through the same ramp maths and the same AA solve
+   as every preset the person can pick. `check:gallery` regenerates it and
+   compares, so the two cannot drift the way the :root block once did.
+
+   Unlike the booth, this overrides the whole set rather than a few families
+   — including the radius, the spacing and the font — because the ask was
+   the whole room and not its colour. Layout and motion are deliberately not
+   in here: how somebody gets around, and how much movement they can stand,
+   stay theirs. */
+[data-gallery] {
+  --fb-surface-50: 246 244 244;
+  --fb-surface-100: 235 231 229;
+  --fb-surface-200: 217 210 206;
+  --fb-surface-300: 190 178 172;
+  --fb-surface-400: 161 144 135;
+  --fb-surface-500: 131 113 103;
+  --fb-surface-600: 103 88 81;
+  --fb-surface-700: 80 69 63;
+  --fb-surface-800: 57 49 45;
+  --fb-surface-900: 37 32 29;
+  --fb-surface-950: 20 17 16;
+  --fb-primary-50: 254 247 231;
+  --fb-primary-100: 253 237 201;
+  --fb-primary-200: 251 223 157;
+  --fb-primary-300: 249 207 108;
+  --fb-primary-400: 247 191 59;
+  --fb-primary-500: 245 176 15;
+  --fb-primary-600: 211 150 9;
+  --fb-primary-700: 171 122 7;
+  --fb-primary-800: 137 98 6;
+  --fb-primary-900: 108 77 4;
+  --fb-primary-950: 73 52 3;
+  --fb-secondary-50: 240 242 244;
+  --fb-secondary-100: 222 226 231;
+  --fb-secondary-200: 196 203 212;
+  --fb-secondary-300: 166 176 191;
+  --fb-secondary-400: 137 150 169;
+  --fb-secondary-500: 111 127 151;
+  --fb-secondary-600: 92 107 127;
+  --fb-secondary-700: 75 87 104;
+  --fb-secondary-800: 60 69 83;
+  --fb-secondary-900: 47 55 65;
+  --fb-secondary-950: 32 37 44;
+  --fb-highlight-50: 254 247 231;
+  --fb-highlight-100: 253 237 201;
+  --fb-highlight-200: 251 223 157;
+  --fb-highlight-300: 249 207 108;
+  --fb-highlight-400: 247 191 59;
+  --fb-highlight-500: 245 176 15;
+  --fb-highlight-600: 211 150 9;
+  --fb-highlight-700: 171 122 7;
+  --fb-highlight-800: 137 98 6;
+  --fb-highlight-900: 108 77 4;
+  --fb-highlight-950: 73 52 3;
+  --fb-tertiary-50: 240 242 244;
+  --fb-tertiary-100: 222 226 231;
+  --fb-tertiary-200: 196 203 212;
+  --fb-tertiary-300: 166 176 191;
+  --fb-tertiary-400: 137 150 169;
+  --fb-tertiary-500: 111 127 151;
+  --fb-tertiary-600: 92 107 127;
+  --fb-tertiary-700: 75 87 104;
+  --fb-tertiary-800: 60 69 83;
+  --fb-tertiary-900: 47 55 65;
+  --fb-tertiary-950: 32 37 44;
+  --fb-danger-50: 251 233 236;
+  --fb-danger-100: 247 207 212;
+  --fb-danger-200: 241 167 177;
+  --fb-danger-300: 234 123 138;
+  --fb-danger-400: 226 80 99;
+  --fb-danger-500: 225 68 89;
+  --fb-danger-600: 189 31 52;
+  --fb-danger-700: 154 25 42;
+  --fb-danger-800: 123 20 34;
+  --fb-danger-900: 96 16 26;
+  --fb-danger-950: 66 11 18;
+  --fb-font-sans: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --fb-root-size: 17.5px;
+  --fb-page: 20 17 16;
+  --fb-ink: 234 231 230;
+  --fb-void: 11 10 9;
+  --fb-on-accent: 23 20 18;
+  --fb-scrim: 17 15 13;
+  --fb-motion: 200ms;
+  --fb-radius-sm: 1.00px;
+  --fb-radius: 2.00px;
+  --fb-radius-md: 3.00px;
+  --fb-radius-lg: 4.00px;
+  --fb-radius-xl: 6.00px;
+  --fb-radius-2xl: 8.00px;
+  --fb-radius-3xl: 12.00px;
+
+  color: rgb(var(--fb-ink));
+  /* And the face, declared and not merely redefined.
+
+     `body` above resolves `--fb-font-sans` once, and every child then
+     inherits the RESULT, not the variable — so overriding the variable
+     here changed nothing at all and the gallery came out in the app's
+     sans. The booth never noticed because it does not change the font.
+     Declared here, the whole room reads in a book face. */
+  font-family: var(--fb-font-sans);
+}
 /* ── A press you can see, on a screen with no hover ──────────────────────
 
    Carli, 17 September 2026, twice: *"Die knoppies binne die videos en
