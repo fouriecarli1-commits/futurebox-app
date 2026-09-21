@@ -80,6 +80,22 @@ ok('the studio reads the flag when it comes back',
 ok('  and opens the room the till named',
   /resolveSurfaceId\(here\.searchParams\.get\('room'\)/.test(page),
   'resolved, so an unknown name leaves her where she is rather than nowhere');
+/* ── And opens the STUDIO, which is a separate thing ─────────────────
+ 
+   `goToRoom` chooses which room is drawn. It does not put the studio over
+   the home page — every other caller in `page.tsx` pairs it with
+   `setUploadModalOpen(true)`, and the first version of this fix did not.
+   So she came back from the till, the flag was read, the room was chosen,
+   the address was cleaned, and she was looking at the front page: the
+   exact fault she reported, rebuilt faithfully underneath a fix for it.
+ 
+   `audit/paidback.mjs` caught it by walking the address Paystack actually
+   sends her to. No source rule could have: every part was wired and the
+   sequence was wrong. */
+const arriving = page.slice(page.indexOf("searchParams.get('paid')"));
+ok('  and puts the studio over the home page, which goToRoom does not do',
+  /setUploadModalOpen\(true\);[\s\S]{0,80}goToRoom\(room\)/.test(arriving.slice(0, 2000)),
+  'choosing the room without opening the studio leaves her on the front page');
 ok('  and tells that room to read itself again',
   /copilotBus\.handoff\(room, 'paid', ''\)/.test(page),
   'the webhook lands while she is being redirected, so the first read is the old wall');

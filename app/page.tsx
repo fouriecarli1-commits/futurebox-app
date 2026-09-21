@@ -788,6 +788,16 @@ export default function FutureBoxHome() {
     if (here.searchParams.get('paid') !== '1') return;
     const room = resolveSurfaceId(here.searchParams.get('room') ?? '');
     if (room) {
+      /* The studio overlay, and THEN the room.
+
+         `goToRoom` chooses which room is drawn; it does not open the studio
+         over the home page, and every other caller in this file pairs it
+         with this line. Mine did not, so the first version of this fix put
+         her back on the front page — the exact thing she reported, rebuilt
+         faithfully. `audit/paidback.mjs` caught it by walking the address
+         Paystack actually sends her to, which is the only way it could have
+         been caught: every part was wired and the sequence was wrong. */
+      setUploadModalOpen(true);
       goToRoom(room);
       /* Tell the room to read itself again. The webhook is what actually
          marks the buy-in, and it lands on the server while she is still
