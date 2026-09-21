@@ -494,6 +494,12 @@ export const STRINGS: Dict = {
     en: "The database is missing:",
     af: "Die databasis kort:",
   },
+  /* ── Saying no, from either chair ──────────────────────────────
+     Carli: *"Op album art moet die kunstenaar ’n aanbod kan afkeer, asook
+     die koper. Daardie knoppies is nie daar nie."* `declined` had been a
+     state on the table since it was written and nothing could set it, so a
+     commission had exactly one ending. */
+  "art.decline": { en: "No thank you", af: "Nee dankie" },
   "art.opensAt": { en: "Bidding opens at", af: "Bod maak oop by" },
   "art.standing": { en: "Highest bid", af: "Hoogste bod" },
   "art.oneBid": { en: "bid", af: "bod" },
@@ -2672,6 +2678,21 @@ export const STRINGS: Dict = {
   "cast.tooManyPixels": { en: "That photo is too big for a phone browser to open \u2014 it is one of the very high-megapixel camera modes. Take one on the normal setting, or use a screenshot of it.", af: "Daardie foto is te groot vir \u2019n foon se blaaier om oop te maak \u2014 dit is een van die baie ho\u00eb-megapiksel kameramodusse. Neem een op die gewone instelling, of gebruik \u2019n skermskoot daarvan." },
   "cast.notImage": { en: "That is not a picture.", af: "Dit is nie ’n foto nie." },
   "cast.failed": { en: "That did not save. Try again in a moment.", af: "Dit het nie gestoor nie. Probeer oor ’n oomblik weer." },
+  /* ── The two that used to be "that did not save" ──────────────────
+     Carli: *"Die button net onder hom wat sê dat mens ’n foto kan oplaai
+     werk, maar die cast member oplaai werk nie."* The one under it keeps
+     the photo on the device; this one keeps it on the account, so it needs
+     a bucket AND a table. Both refusals read as one sentence, which is why
+     this was rebuilt twice for a fault that was never in the component. */
+  "cast.noBucket": {
+    en: "The picture could not be stored on your account. The cast’s storage is not set up in this project yet — supabase/cast.sql.",
+    af: "Die prent kon nie op jou rekening gestoor word nie. Die cast se stoorplek is nog nie in hierdie projek opgestel nie — supabase/cast.sql.",
+  },
+  "cast.noRow": {
+    en: "The picture went up but the cast could not be written to. Run supabase/cast.sql.",
+    af: "Die prent het opgegaan maar die cast kon nie geskryf word nie. Hardloop supabase/cast.sql.",
+  },
+  "cast.missing": { en: "The database is missing:", af: "Die databasis kort:" },
   /* The full reference is now fetched at the moment a member is chosen
      rather than twelve at a time on mount, so that one download can fail
      on its own and has to say so. */

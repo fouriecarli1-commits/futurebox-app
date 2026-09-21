@@ -118,10 +118,38 @@ export async function POST(request: Request): Promise<Response> {
     .single();
 
   if (error || !data) {
-    return Response.json({ error: 'failed', message: error?.message ?? 'Could not save.' }, { status: 500 });
+    /* The same split the branch above already uses, and this one was the
+       exception: it put `error.message` straight on the screen. Postgres
+       writes for whoever reads the log.
+
+       What DOES go back is the list of columns this insert asked for that
+       the table has not got — our own names, from our own list, never
+       parsed out of the error. Carli has lost two evenings to a migration
+       that half landed, and twice to this component, which she has asked
+       me to rebuild twice. `cast.sql` may simply never have been run, and
+       until now nothing anywhere could say so. */
+    console.error(`cast: the presenter could not be saved — ${error?.message ?? 'no row came back'}`);
+    const missing: string[] = [];
+    for (const column of CAST_COLUMNS) {
+      const { error: gone } = await client.from('cast_members').select(column).limit(0);
+      if (gone && (gone.code === '42703' || gone.code === '42P01')) missing.push(column);
+    }
+    return Response.json(
+      { error: 'failed', message: 'That could not be saved just now.', missing },
+      { status: 500 },
+    );
   }
   return Response.json({ member: data });
 }
+
+/**
+ * What a cast row is made of.
+ *
+ * One list, used by the insert above and by the diagnostic beside it, so
+ * the two cannot ask about different columns — which is how a diagnostic
+ * comes to report that everything is fine.
+ */
+const CAST_COLUMNS = ['id', 'owner', 'name', 'note', 'path', 'created_at', 'updated_at'] as const;
 
 export async function DELETE(request: Request): Promise<Response> {
   if (!metered()) return Response.json({ error: 'not_configured' }, { status: 503 });

@@ -425,6 +425,49 @@ ok('  and a late bid pushes the clock out', SNIPE_MINUTES >= 1,
     `${cleared} of 3 overlays stop above it — the last button in the sheet is the one the sheet is for`);
 }
 
+/* ── Either side can say no ──────────────────────────────────────────────
+
+   Carli, 21 September 2026: *"Op album art moet die kunstenaar 'n aanbod
+   kan afkeer, asook die koper. Daardie knoppies is nie daar nie."*
+
+   `declined` has been a state on `art_offers` since the table was written
+   and nothing could ever set it — which is the quietest kind of missing
+   feature, because the schema reads as though the case is handled. A
+   commission therefore had exactly one ending: the artist names a price
+   and the buyer pays it. An artist who does not want to paint somebody
+   else's idea, and a buyer who thinks the price is too high, both had
+   silence as their only answer.
+
+   The line that matters is money. Both sides may say no until it has
+   moved, and neither afterwards: `paid`, `accepted` and `delivered` are
+   past it, and a refund is a person's job. That rule is held here because
+   a screen that simply stops drawing the button is a screen, and this one
+   is about money that has already left somebody's account. */
+{
+  const route = readFileSync('app/api/artmarket/route.ts', 'utf8');
+  const at = route.indexOf("case 'decline'");
+  const branch = at < 0 ? '' : route.slice(at, route.indexOf("case 'accept'", at));
+  ok('a commission can be declined', at >= 0,
+    "`declined` is a state nothing can set, so a thread only ever ends in a sale");
+  ok('  by the buyer or by the artist, not only one of them',
+    /row\.buyer === caller\.id \|\| \(artist !== null && artist\.id === row\.artist\)/.test(branch),
+    'only one chair can say no, and the other is left with silence');
+  ok('  and by nobody else',
+    /error: 'not_yours'/.test(branch),
+    'anybody who can name a request id can cancel somebody else\u2019s commission');
+  ok('  but never once the money has moved',
+    /state === 'paid' \|\| state === 'accepted' \|\| state === 'delivered'/.test(branch),
+    'a paid commission can be declined away, and the refund is nobody\u2019s job');
+  ok('    and the row is written rather than deleted',
+    /state: 'declined'/.test(branch) && !/\.delete\(\)/.test(branch),
+    'a thread that vanishes cannot be told from one that never happened');
+
+  const room = readFileSync('app/components/ArtMarket.tsx', 'utf8');
+  ok('  and both sides have the button',
+    (room.match(/what: 'decline'/g) ?? []).length === 2,
+    'one of the two chairs still has no way to say it');
+}
+
 /* ── An artist who cannot sign in still gets answered ────────────────────
 
    Carli, having brought a painter in and then commissioned him:

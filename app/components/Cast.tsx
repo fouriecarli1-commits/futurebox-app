@@ -67,11 +67,67 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Image as ImageIcon, Loader2, Trash2, UserPlus, Users } from 'lucide-react';
 import {
   ACCEPTS, CAST_LIMIT, addToCast, addToCastFromKept, editCast, loadCast, pictureOf,
-  releaseCast, removeFromCast, thumbOf, type Member,
+  releaseCast, removeFromCast, thumbOf, type Added, type Member,
 } from '../lib/cast';
 import { assetDataUrl, loadAssets, type Asset } from '../lib/assets';
 import { useLang } from '../lib/i18n';
 import Note from './Note';
+
+/**
+ * Why a picture did not become a cast member, in one place.
+ *
+ * ── Why this is a function ───────────────────────────────────────────────
+ *
+ * There were two of these ladders — one for the file picker, one for the
+ * device shelf — and they had already drifted: the second knew about three
+ * of the seven reasons and said "that did not save" to the other four.
+ * Carli has reported this component as broken twice and asked for it to be
+ * rebuilt from scratch, and the two most useful sentences it could have
+ * said were in neither ladder.
+ *
+ * Same lesson as the sheet handles and the artist inbox, in the same week:
+ * two copies of one answer is how half of an answer ships.
+ */
+function whySaid(
+  why: Exclude<Added, { ok: true }>['why'],
+  missing: readonly string[] | undefined,
+  t: (key: string, fallback: string) => string,
+): string {
+  if (why === 'full') {
+    return `${t('cast.full', 'A cast holds')} ${CAST_LIMIT}. ${t('cast.fullTake', 'Take somebody out first.')}`;
+  }
+  if (why === 'signed_out') {
+    return t('cast.signedOut', 'Sign in first, so the cast is on your account rather than this device.');
+  }
+  if (why === 'too_big') return t('cast.tooBig', 'That picture is very large. Try one under 12MB.');
+  /* Named separately from `too_big`, because the two have different
+     answers. A file that is too many bytes wants a smaller file; a file
+     that is too many pixels is usually a phone set to its biggest camera
+     mode, and the answer is the mode, not the file. */
+  if (why === 'too_many_pixels') {
+    return t('cast.tooManyPixels', 'That photo is too big for a phone browser to open \u2014 it is one of the very high-megapixel camera modes. Take one on the normal setting, or use a screenshot of it.');
+  }
+  if (why === 'not_an_image') return t('cast.notImage', 'That is not a picture.');
+  /* ── The two that used to be one word ──────────────────────────────
+
+     Carli: *"Die button net onder hom wat sê dat mens 'n foto kan oplaai
+     werk, maar die cast member oplaai werk nie."* The button under this
+     one is the device shelf, which touches no server. This one keeps the
+     picture on the ACCOUNT, so it needs a bucket AND a table — and both
+     refusals read as "that did not save", which is why this component has
+     been rebuilt twice for a fault that was probably never in it. */
+  if (why === 'no_bucket') {
+    return t('cast.noBucket', 'The picture could not be stored on your account. The cast\u2019s storage is not set up in this project yet \u2014 supabase/cast.sql.');
+  }
+  if (why === 'no_row') {
+    const named = missing?.length
+      ? ` ${t('cast.missing', 'The database is missing:')} ${missing.join(', ')}`
+      : '';
+    return `${t('cast.noRow', 'The picture went up but the cast could not be written to. Run supabase/cast.sql.')}${named}`;
+  }
+  return t('cast.failed', 'That did not save. Try again in a moment.');
+}
+
 
 export default function Cast({
   /** The data URL in use right now, so the strip can show which member it is. */
@@ -156,26 +212,7 @@ export default function Cast({
         const from = file.name.replace(/\.[^.]+$/, '').slice(0, 60);
         const made = await addToCast(file, from);
         if (!made.ok) {
-          setProblem(
-            made.why === 'full'
-              ? `${t('cast.full', 'A cast holds')} ${CAST_LIMIT}. ${t('cast.fullTake', 'Take somebody out first.')}`
-              : made.why === 'signed_out'
-                ? t('cast.signedOut', 'Sign in first, so the cast is on your account rather than this device.')
-                : made.why === 'too_big'
-                  ? t('cast.tooBig', 'That picture is very large. Try one under 12MB.')
-                  /* Named separately from `too_big`, because the two have
-                     different answers. A file that is too many bytes wants a
-                     smaller file; a file that is too many pixels is usually a
-                     phone set to its biggest camera mode, and the answer is
-                     the mode, not the file. Saying "try a smaller one" to
-                     somebody holding a 12MB photo they cannot make smaller is
-                     a dead end. */
-                  : made.why === 'too_many_pixels'
-                    ? t('cast.tooManyPixels', 'That photo is too big for a phone browser to open \u2014 it is one of the very high-megapixel camera modes. Take one on the normal setting, or use a screenshot of it.')
-                    : made.why === 'not_an_image'
-                      ? t('cast.notImage', 'That is not a picture.')
-                      : t('cast.failed', 'That did not save. Try again in a moment.'),
-          );
+          setProblem(whySaid(made.why, made.missing, t));
           return;
         }
         setCast((was) => [made.member, ...(was ?? [])]);
@@ -211,13 +248,7 @@ export default function Cast({
         }
         const made = await addToCastFromKept(dataUrl, asset.name || 'Cast');
         if (!made.ok) {
-          setProblem(
-            made.why === 'full'
-              ? `${t('cast.full', 'A cast holds')} ${CAST_LIMIT}. ${t('cast.fullTake', 'Take somebody out first.')}`
-              : made.why === 'signed_out'
-                ? t('cast.signedOut', 'Sign in first, so the cast is on your account rather than this device.')
-                : t('cast.failed', 'That did not save. Try again in a moment.'),
-          );
+          setProblem(whySaid(made.why, made.missing, t));
           return;
         }
         setCast((was) => [made.member, ...(was ?? [])]);

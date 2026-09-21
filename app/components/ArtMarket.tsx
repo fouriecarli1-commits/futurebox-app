@@ -944,13 +944,29 @@ export default function ArtMarket(): React.ReactElement {
                           {WINDOWS.find((one) => one.days === thread.offer?.days)?.[lang] ?? `${thread.offer.days}d`}
                         </p>
                         {thread.offer.state === 'offered' && (
-                          <button
-                            type="button"
-                            className={`${VUL} mt-3`}
-                            onClick={() => void pay({ kind: 'commission', offer: thread.offer?.id })}
-                          >
-                            {t('art.pay')} R{thread.offer.rand}
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              className={`${VUL} mt-3`}
+                              onClick={() => void pay({ kind: 'commission', offer: thread.offer?.id })}
+                            >
+                              {t('art.pay')} R{thread.offer.rand}
+                            </button>
+                            {/* Carli: *"Op album art moet die kunstenaar 'n aanbod
+                                kan afkeer, asook die koper. Daardie knoppies is
+                                nie daar nie."* Beside the price and not under a
+                                menu: saying no to a number is as ordinary as
+                                saying yes to it, and a thread with only one exit
+                                is one nobody closes. Outlined, because the price
+                                is still the thing to press. */}
+                            <button
+                              type="button"
+                              className={`${LEEG} mt-2 w-full`}
+                              onClick={() => void doIt({ what: 'decline', request: thread.id })}
+                            >
+                              {t('art.decline')}
+                            </button>
+                          </>
                         )}
                         {thread.offer.state === 'paid' && (
                           <button
@@ -2091,6 +2107,19 @@ function Inbox({
                       }
                     >
                       {t('art.send')}
+                    </button>
+                    {/* And the artist's no, before a price is ever named.
+                        Carli: *"Op album art moet die kunstenaar 'n aanbod
+                        kan afkeer, asook die koper."* This is the more
+                        common no of the two — somebody asks for a piece the
+                        painter does not want to make — and it had no button
+                        at all, so the only way to say it was silence. */}
+                    <button
+                      type="button"
+                      className={`${LEEG} w-full`}
+                      onClick={() => void onDo({ what: 'decline', artist, request: thread.id })}
+                    >
+                      {t('art.decline')}
                     </button>
                   </div>
                 )}

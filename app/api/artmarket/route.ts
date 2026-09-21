@@ -911,6 +911,79 @@ export async function POST(request: Request): Promise<Response> {
        accept"*. The state has to be `paid` already, and only the webhook
        writes that — so accept cannot be pressed into existence by a
        browser that skipped the till. */
+    /* ── No, from either side ────────────────────────────────────────
+
+       Carli, 21 September 2026: *"Op album art moet die kunstenaar 'n
+       aanbod kan afkeer, asook die koper. Daardie knoppies is nie daar
+       nie."*
+
+       `declined` has been a state on `art_offers` since the table was
+       written, and nothing could ever set it. So a commission had exactly
+       one ending: the artist names a price and the buyer pays it. An
+       artist who does not want to paint somebody else's idea, and a buyer
+       who thinks R900 is too much, were both left with a thread that sits
+       there forever — which is how a room quietly fills up with work
+       nobody is doing.
+
+       Both sides, one case, because the rule is the same from either
+       chair: you may say no until money has moved, and not after. `paid`,
+       `accepted` and `delivered` are all past that line — a refund is a
+       person's job and not a button's.
+
+       The artist may also decline before naming a price at all, which is
+       the more common no. There is no offer row to update then, so one is
+       written as declined: a thread that shows "declined" is an answer,
+       and a thread that shows nothing is an artist who is ignoring you. */
+    case 'decline': {
+      const asked = String(body.request ?? '');
+      const { data: ask } = await client
+        .from('art_requests')
+        .select('id, buyer, artist')
+        .eq('id', asked)
+        .maybeSingle();
+      if (!ask) {
+        return Response.json({ error: 'no_ask', message: 'There is no such request.' }, { status: 404 });
+      }
+      const row = ask as RequestRow;
+      /* Either chair. `asArtist` already lets the owner answer for a house
+         artist, which is the whole reason a commission to one can move at
+         all — see `asHouse` in the read above. */
+      const artist = await asArtist(body.artist);
+      const theirs = row.buyer === caller.id || (artist !== null && artist.id === row.artist);
+      if (!theirs) {
+        return Response.json({ error: 'not_yours', message: 'That commission is not yours.' }, { status: 403 });
+      }
+
+      const { data: offer } = await client
+        .from('art_offers')
+        .select('id, state')
+        .eq('request', row.id)
+        .maybeSingle();
+      const state = offer ? (offer as OfferRow).state : null;
+      if (state === 'paid' || state === 'accepted' || state === 'delivered') {
+        return Response.json(
+          { error: 'too_late', message: 'This one has been paid for. A refund is a person, not a button.' },
+          { status: 409 },
+        );
+      }
+      if (state === 'declined') return Response.json({ declined: true });
+
+      /* Written rather than deleted. A thread that vanishes is one nobody
+         can tell from a thread that never happened, and an artist who has
+         said no twice to the same person should be able to see that. */
+      const { error } = await client
+        .from('art_offers')
+        .upsert(
+          { request: row.id, rand: UNIQUE_RAND, days: WINDOWS[0].days, state: 'declined' },
+          { onConflict: 'request' },
+        );
+      if (error) {
+        say('the decline', error);
+        return Response.json({ error: 'not_saved', message: 'That did not go through.' }, { status: 500 });
+      }
+      return Response.json({ declined: true });
+    }
+
     case 'accept': {
       const { data: offer } = await client
         .from('art_offers')

@@ -129,6 +129,65 @@ ok('and the strip beside it, which always worked, still renders a thumbnail',
   /\.thumb\b/.test(pictures),
   'Pictures no longer uses asset.thumb — the two strips have swapped faults');
 
+/* ── And a refusal says WHICH refusal ────────────────────────────────────
+
+   Carli, twice: *"die add a cast member heeltemal afhaal en weer oor doen.
+   Die witskerm bly op kom"*, and then, a week later: *"Die button net onder
+   hom wat sê dat mens 'n foto kan oplaai werk, maar die cast member oplaai
+   werk nie."*
+
+   The second sentence is the diagnosis and it is hers, not mine. The button
+   under this one is `Pictures`, which keeps the photo on the device and
+   touches no server at all. The cast keeps it on the ACCOUNT, which needs a
+   bucket AND a table — and every way either could refuse collapsed into one
+   word, `failed`, on her screen and in `lib/cast.ts`.
+
+   So this component has been rebuilt twice for a fault that was very likely
+   never in it. The three causes have three different owners, and until now
+   nothing could tell them apart:
+
+     no_bucket  the picture never reached storage — the bucket is missing,
+                or its policy refused this path
+     no_row     the picture is there and the row is not, which is the shape
+                of `supabase/cast.sql` never having been run
+     full       the shelf holds twelve
+
+   Held as source rules because none of it can be measured in an unattended
+   run: there is no Supabase project behind the probes, so every one of these
+   paths is unreachable and a browser assertion would be one that never
+   executes. §AC is the file full of those. */
+{
+  const lib = readFileSync('app/lib/cast.ts', 'utf8');
+  ok('a picture that never reached storage says so',
+    /why: 'no_bucket'/.test(lib),
+    'a missing bucket and a missing table are the same word again');
+  ok('  and a picture with no row behind it says that instead',
+    /why: 'no_row'/.test(lib),
+    'the one failure that means "run the SQL" is described as "try again in a moment"');
+  ok('  and the bucket’s own words go to the log, not the screen',
+    /console\.error\(`\[cast\] the picture did not reach the bucket/.test(lib),
+    'a storage error names policies and ids, which is nobody’s business but ours');
+
+  const route = readFileSync('app/api/cast/route.ts', 'utf8');
+  /* The LOOP, not the name. Renaming the constant left the word in the
+     file and this stayed green — a rule that passes on any mention of a
+     thing it is meant to see used. */
+  ok('  and the row write names the columns the table has not got',
+    /for \(const column of CAST_COLUMNS\)/.test(route) && /'42703'/.test(route),
+    'she is told it could not be saved, and has to ask which column');
+  /* This branch put `error.message` straight on the screen while the branch
+     forty lines above it explained why that is wrong. One of the two was
+     following the rule. */
+  ok('    without putting Postgres’ sentence on her screen',
+    !/message: error\?\.message/.test(route),
+    'the insert is sending the database’s own words to the browser');
+
+  const room = readFileSync('app/components/Cast.tsx', 'utf8');
+  ok('and both doors give the same answer',
+    /function whySaid\(/.test(room) && (room.match(/whySaid\(/g) ?? []).length === 3,
+    'there are two ladders of reasons again, and last time they had already drifted');
+}
+
 if (failures) {
   console.error(
     `\ncheck:castmemory — ${failures} wrong. A tab killed for memory does not throw and leaves`

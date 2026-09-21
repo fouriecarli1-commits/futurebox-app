@@ -92,7 +92,37 @@ export async function loadCast(): Promise<Member[]> {
 
 export type Added =
   | { readonly ok: true; readonly member: Member }
-  | { readonly ok: false; readonly why: 'too_big' | 'too_many_pixels' | 'not_an_image' | 'unreadable' | 'signed_out' | 'full' | 'failed' };
+  | {
+      readonly ok: false;
+      /* ── Why 'failed' became three words ──────────────────────────────
+ 
+         Carli, twice: *"die add a cast member heeltemal afhaal en weer oor
+         doen. Die witskerm bly op kom"*, and then *"Die button net onder
+         hom wat sê dat mens 'n foto kan oplaai werk, maar die cast member
+         oplaai werk nie."*
+ 
+         That second sentence is the diagnosis. The button under it is
+         `Pictures`, which keeps the photo on the device and touches no
+         server at all. The cast keeps it on the ACCOUNT, which means a
+         bucket and a table — and every way either of those can refuse
+         collapsed into one word, `failed`, on her screen and in this file.
+ 
+         Three things can go wrong and they have three different owners:
+         the bucket is missing or its policy refuses the upload; the row is
+         refused because `cast.sql` was never run; or the shelf is full.
+         Guessing between them has now cost two rebuilds of a component
+         that was probably never the problem. */
+      readonly why:
+        | 'too_big' | 'too_many_pixels' | 'not_an_image' | 'unreadable'
+        | 'signed_out' | 'full'
+        /** The picture never reached the bucket. */
+        | 'no_bucket'
+        /** The picture is there; the row the app finds it by is not. */
+        | 'no_row'
+        | 'failed';
+      /** Columns the row write asked for that the database does not have. */
+      readonly missing?: readonly string[];
+    };
 
 /**
  * Put somebody in the cast.
@@ -158,7 +188,13 @@ export async function addToCast(file: File, name: string): Promise<Added> {
     upsert: false,
     cacheControl: '31536000',
   });
-  if (put.error) return { ok: false, why: 'failed' };
+  if (put.error) {
+    /* The bucket's own words to the console, our word to the screen — the
+       same split the art market uses, and the same reason: a storage
+       error names policies and ids that are nobody's business but ours. */
+    console.error(`[cast] the picture did not reach the bucket. ${put.error.message}`);
+    return { ok: false, why: 'no_bucket' };
+  }
 
   const response = await fetch('/api/cast', {
     method: 'POST',
@@ -170,8 +206,13 @@ export async function addToCast(file: File, name: string): Promise<Added> {
     // The row is what makes the file findable, so a file whose row was refused
     // is rubbish. Taken out rather than left to sit in the bucket forever.
     await storage.from(BUCKET).remove([path]).catch(() => undefined);
-    const said = (await response?.json().catch(() => ({}))) as { error?: string };
-    return { ok: false, why: said?.error === 'full' ? 'full' : 'failed' };
+    const said = (await response?.json().catch(() => ({}))) as
+      { error?: string; missing?: string[] };
+    if (said?.error === 'full') return { ok: false, why: 'full' };
+    /* The file went up and the row did not. That is the shape of a
+       migration nobody ran, and it is the one failure the screen used to
+       describe as simply "it did not work". */
+    return { ok: false, why: 'no_row', missing: said?.missing };
   }
 
   const said = (await response.json()) as { member: Member };
