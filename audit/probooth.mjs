@@ -193,6 +193,53 @@ try {
     await p.waitForTimeout(300);
   };
 
+  /* ── And it makes a sound ────────────────────────────────────────────
+
+     Carli, 21 September 2026, asking for something that was already
+     built: *"Metronome in probooth."* Every assertion above is about the
+     switch and the words beside it, and all of them would pass over a
+     metronome that schedules nothing at all — which is the one thing a
+     person asking for a metronome means.
+
+     Counted rather than heard. The click is two nodes and an envelope,
+     deliberately, so that nothing has to be fetched in the moment
+     somebody presses record — and an oscillator is the thing only it
+     makes here, because every lane plays a buffer. So: count the
+     oscillators the page creates while it is playing. */
+  await p.evaluate(() => {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx || Ctx.prototype.__counted) return;
+    Ctx.prototype.__counted = true;
+    window.__tones = 0;
+    const was = Ctx.prototype.createOscillator;
+    Ctx.prototype.createOscillator = function counted() {
+      window.__tones += 1;
+      return was.call(this);
+    };
+  });
+
+  const clicksWhen = async (wanted) => {
+    const toggle = p.locator('[data-click]').first();
+    if ((await toggle.count()) && (await toggle.getAttribute('aria-pressed')) !== String(wanted)) {
+      await toggle.click();
+      await p.waitForTimeout(300);
+    }
+    await p.evaluate(() => { window.__tones = 0; });
+    /* Named rather than skipped. `return null` here used to make both
+       assertions below pass without measuring anything — a probe reporting
+       ok on a metronome it never started. */
+    const play = p.locator('button').filter({ hasText: af ? /^Speel$/ : /^Play$/ }).first();
+    if (!(await play.count())) return 'no Play button on the transport';
+    if (await play.isDisabled()) return 'Play is disabled — nothing to play against';
+    await play.click();
+    await p.waitForTimeout(2200);
+    const tones = await p.evaluate(() => window.__tones);
+    const stop = p.locator('button').filter({ hasText: af ? /^Stop$/ : /^Stop$/ }).first();
+    if (await stop.count()) await stop.click().catch(() => undefined);
+    await p.waitForTimeout(300);
+    return tones;
+  };
+
   await openDesk('Track controls', 'Baankontroles');
   check(
     'the track-controls icon opens the clock',
@@ -1063,7 +1110,52 @@ try {
       check(`${what}: nothing runs off the side`, shape.wide <= 1, `${shape.wide}px over`);
       check(`${what}: every button is big enough for a thumb`, shape.small === 0, `${shape.small} too small`);
       await held.screenshot({ path: shot(`booth-${what.replace(/\s+/g, '-')}.png`) });
-    } finally {
+      /* Open the desk, then the card, then look.
+
+     Three wrong guesses before this one, each of which reported a button
+     that was there as missing: the clock desk was open and the room had
+     swapped the working area out; then no desk was open and the transport
+     still was not there; and then the right card was looked for on the
+     wrong desk. Play, Record and the click live at the foot of the AUDIO
+     EFFECTS desk, inside a card called "Record, and mix it down", and
+     every card in this room starts folded.
+
+     Worth the three: a probe that cannot find a control is indistinguishable
+     from a control that is not there, and the difference is a whole round
+     of work. */
+  await openDesk('Audio effects', 'Klankeffekte');
+  const takeCard = p.locator('button[aria-expanded]')
+    .filter({ hasText: af ? /Neem op, en meng/ : /Record, and mix it down/ }).first();
+  if ((await takeCard.count()) && (await takeCard.getAttribute('aria-expanded')) === 'false') {
+    await takeCard.scrollIntoViewIfNeeded().catch(() => undefined);
+    await takeCard.click();
+    await p.waitForTimeout(500);
+  }
+
+  /* Inside the viewport loop, and left there once I noticed.
+
+     It landed here by accident — the anchor I used for "the end of the
+     walk" was the loop's own closing brace — and running it on a phone
+     upright, a phone sideways and a tablet both ways is worth more than
+     running it once on a desk. The room lays its transport out
+     differently at each of those, and a click switch that is on the
+     screen at one width and off it at another is exactly the kind of
+     thing this file exists to catch. Labelled with the shape, like every
+     other assertion in this loop. */
+  check(`${what}: the click has a switch beside Play`,
+    (await p.locator('[data-click]').count()) > 0,
+    'the only one was inside a folded card inside the clock panel');
+  const loud = await clicksWhen(true);
+  check(`${what}: playing with the click on actually schedules clicks`,
+    typeof loud === 'number' && loud > 0,
+    typeof loud === 'number' ? `${loud} tones in two seconds` : String(loud));
+  const quiet = await clicksWhen(false);
+  check(`${what}:   and switching it off silences it`,
+    quiet === 0,
+    typeof quiet === 'number' ? `${quiet} tones with the click off` : String(quiet));
+
+
+} finally {
       await held.close();
     }
   }

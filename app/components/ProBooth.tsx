@@ -3089,6 +3089,45 @@ export default function ProBooth({
           {playing ? t('pro.stopPlaying', 'Stop') : t('pro.play', 'Play')}
         </button>
 
+        {/* ── The click, beside the thing you press to hear it ───────────
+
+            Carli, 21 September 2026, asking for a feature that already
+            exists: *"Metronome in probooth."*
+
+            It is built and it is good — its own class, its own clock, a
+            count-in, a volume, four divisions, and it runs on the lanes'
+            clock rather than a timer of its own. What it did not have was
+            anywhere a musician would look. The only switch was inside a
+            card called "Click", inside the clock panel, folded shut like
+            every other card in the room; on a phone that is three presses
+            from the transport, and if you do not already know it is there
+            you will not find it.
+
+            So there is a switch in the transport row, next to Play and
+            Record. The card keeps the settings — how often and how loud
+            are things you set once — and this is the one you reach for
+            every take. Same state, two doors; a second copy of the state
+            is how two switches come to disagree. */}
+        <button
+          type="button"
+          data-click
+          onClick={() => setClicking((was) => !was)}
+          aria-pressed={clicking}
+          disabled={busy}
+          title={t(
+            'pro.clickWhat',
+            'The metronome you record against. How often it clicks and how loud it is are here too — a click you cannot hear over the song is a click that is not doing its job.',
+          )}
+          className={`min-h-[44px] px-3.5 py-2.5 rounded-xl border text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50 ${
+            clicking
+              ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
+              : 'bg-zinc-900 border-zinc-700 text-zinc-200'
+          }`}
+        >
+          <Timer className="w-4 h-4" />
+          {clicking ? t('pro.clickOn', 'Clicking') : t('pro.click', 'Click')}
+        </button>
+
         <button
           type="button"
           onClick={() => {
