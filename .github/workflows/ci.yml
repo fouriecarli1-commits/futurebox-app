@@ -702,6 +702,8 @@ jobs:
 
       - name: The one-paste SQL still says what the five files say
         run: npm run check:sqlbundle
+      - name: The "what is missing in my project" query is current, and cannot write
+        run: npm run check:sqlmissing
 
       # And that it runs at all, which is a different question and the one
       # nothing here had ever asked. Matching the files is consistency;

@@ -79,10 +79,26 @@ drifting away from the originals.
 **How to tell:** open the room. Each of those says "not set up" in plain words
 rather than failing — that sentence *is* the check.
 
-If you are not sure which of the older files have been run, the Table Editor
-lists what exists. `schema.sql`, `usage.sql`, `abuse.sql`, `credits.sql`,
-`collab.sql`, `live.sql`, `radar.sql`, `podcast.sql`, `video.sql` and
-`video2.sql` are the ones the main rooms need.
+**If you are not sure what has been run, ask the project instead of guessing.**
+Paste `supabase/WATKORT.sql` into the SQL Editor. It checks every table, every
+column that arrived after its table, and every storage bucket the app expects,
+and returns one row per missing thing with the file that creates it. Nothing
+back means nothing is missing. **It changes nothing** — one `select`, no
+create, no insert, no alter — so it is safe to run at any time, including with
+people on the app.
+
+That file exists because of the cast strip: it was broken for a fortnight and
+no code was wrong. `cast.sql` had simply never been run, and two rounds of
+work went into diagnosing a route that was answering correctly the whole time.
+Reading the Table Editor and deciding it "looks right" is what let that
+happen. `npm run sql:missing` regenerates the query from the `.sql` files and
+`npm run check:sqlmissing` stops it going stale, because a stale list comes
+back empty and then you believe it.
+
+One ordering note, found by running the whole schema into an empty Postgres:
+`events.sql` needs `usage.sql` first — it references `public.generations`.
+Both are long since run here, so this matters only if the project is ever
+rebuilt from scratch.
 
 ### 3. Check the ElevenLabs plan carries a commercial licence
 

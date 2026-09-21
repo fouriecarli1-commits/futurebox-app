@@ -90,8 +90,12 @@ export const ALREADY = [
   'finetunes',
 ] as const;
 
-/** Not schema at all: the two notes that live in this folder. */
-export const NOT_SCHEMA = ['ALMAL', 'TOETSTOEGANG', 'WATISGEDOEN'] as const;
+/**
+ * Not schema at all: the notes that live in this folder, and the two
+ * generated files. `WATKORT.sql` asks the project what is missing and
+ * creates nothing — see `scripts/sql-missing.mts`.
+ */
+export const NOT_SCHEMA = ['ALMAL', 'TOETSTOEGANG', 'WATISGEDOEN', 'WATKORT'] as const;
 
 export const BUNDLE = join(ROOT, 'supabase/ALMAL.sql');
 
