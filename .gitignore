@@ -28,3 +28,31 @@ audit/*.log
 
 # Copied out of @opendaw/nam-wasm by scripts/nam-copy.mjs at build time.
 public/nam/
+
+# The pages a probe mounts while it runs.
+#
+# Each of these is copied from its `*.probe.tsx` neighbour when the probe
+# starts and deleted when it stops, so it exists only for the minute or two
+# the probe is running. That is long enough: a `git add -A` during a probe
+# run committed `app/proboothprobe/page.tsx` to main on 22 September 2026.
+# `check:probepages` regenerates this list from the probes themselves and
+# fails if any of them is tracked.
+app/blowup/page.tsx
+app/buildon/page.tsx
+app/collabroom/page.tsx
+app/heard/page.tsx
+app/mixprobe/page.tsx
+app/probe-hint/page.tsx
+app/probe-logomark/page.tsx
+app/probe-sungwords/page.tsx
+app/proboothprobe/page.tsx
+app/safezoneprobe/page.tsx
+app/sharesheet/page.tsx
+app/singbooth/page.tsx
+app/singcheck/page.tsx
+app/singvoices/page.tsx
+app/songform/page.tsx
+app/songfull/page.tsx
+app/songwindow/page.tsx
+app/staff/page.tsx
+app/videowords/page.tsx

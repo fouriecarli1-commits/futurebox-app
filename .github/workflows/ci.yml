@@ -721,6 +721,8 @@ jobs:
       # kind of test to own — the run that matters is always the group.
       - name: Every probe stands on its own
         run: npm run check:probes
+      - name: No page a probe mounts while it runs is ever committed
+        run: npm run check:probepages
 
       # Everything past stage one in docs/ADS_AS_A_SERVICE.md is attribution,
       # and none of it can recover a click that went out on an untagged link.

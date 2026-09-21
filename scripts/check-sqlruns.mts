@@ -119,8 +119,10 @@ psql(DB, ['-f', 'scripts/sql-stubs.sql']);
  *  `ALMAL.sql` is the generated one-paste bundle and gets its own database
  *  below — running it into the same one would prove only that `if not
  *  exists` works. `TOETSTOEGANG.sql` is a tool with a placeholder in it that
- *  raises on purpose until somebody fills it in, and is handled last. */
-const SPECIAL = new Set(['ALMAL.sql', 'TOETSTOEGANG.sql']);
+ *  raises on purpose until somebody fills it in, and is handled last.
+ *  `WATKORT.sql` is a question rather than a schema — it is asked of the
+ *  finished bundle database below, where the answer means something. */
+const SPECIAL = new Set(['ALMAL.sql', 'TOETSTOEGANG.sql', 'WATKORT.sql']);
 const files = readdirSync('supabase')
   .filter((one) => one.endsWith('.sql') && !SPECIAL.has(one))
   .sort();
@@ -197,6 +199,110 @@ try {
   bundleSaid = (String((error as { stderr?: string }).stderr ?? error).match(/ERROR:.*/) ?? ['failed'])[0];
 }
 ok('the one-paste bundle runs too', bundleSaid === '', bundleSaid);
+
+/* ── The "what is missing" question, asked of a finished project ────────
+ *
+ * `WATKORT.sql` is what she pastes to find out whether her project is
+ * actually set up, instead of reading the Table Editor and deciding it
+ * looks right — which is what let `cast.sql` be missing for a fortnight.
+ *
+ * It is only worth having if it has been SEEN to detect something. A
+ * diagnostic that has only ever returned "nothing missing" and a diagnostic
+ * that is broken print the same sentence.
+ */
+const watkort = () => psql(BUNDLE_DB, ['-tA', '-f', 'supabase/WATKORT.sql']).trim();
+
+ok('and WATKORT.sql finds nothing missing in a finished project', watkort() === '', watkort());
+
+/* The cast fault, put back: its table, its bucket, and a column that
+   arrived after its table — one of each kind the query knows how to look
+   for, so a kind with no working branch cannot hide. */
+psql(BUNDLE_DB, [
+  '-c', 'drop table public.cast_members cascade',
+  '-c', "delete from storage.buckets where id = 'cast'",
+  '-c', 'alter table public.creators drop column avatar_path',
+]);
+const missing = watkort().split('\n').filter(Boolean);
+ok('  and names the table, the bucket and the column when they are taken away',
+  missing.length === 3
+  && missing.some((one) => one.includes('cast_members'))
+  && missing.some((one) => one.includes('|emmer|cast'))
+  && missing.some((one) => one.includes('avatar_path')),
+  `${missing.length}: ${missing.join(' / ')}`);
+
+let mended = '';
+try { psql(BUNDLE_DB, ['-f', 'supabase/ALMAL.sql']); } catch (error) {
+  mended = (String((error as { stderr?: string }).stderr ?? error).match(/ERROR:.*/) ?? ['failed'])[0];
+}
+ok('  and the file it tells her to run puts all three back',
+  mended === '' && watkort() === '', mended || watkort());
+
+/* ── One member cannot touch another member's songs ────────────────────
+ *
+ * `tracks` is the only table the browser talks to directly — everything
+ * else goes through a route on the service key, which bypasses row-level
+ * security anyway. So these five policies ARE the client-facing security
+ * boundary, and nothing in this repository has ever tested them. Reading a
+ * policy and running one are different things: `using (shared = true)` on a
+ * SELECT is correct and the same clause on an UPDATE lets anybody edit
+ * anything posted to the room.
+ */
+const ANNA = '11111111-1111-1111-1111-111111111111';
+const BEN = '22222222-2222-2222-2222-222222222222';
+const HERS = 'aaaaaaaa-0000-0000-0000-000000000001';
+const SHARED = 'aaaaaaaa-0000-0000-0000-000000000002';
+
+psql(BUNDLE_DB, ['-c', `
+  insert into auth.users (id, email) values ('${ANNA}', 'anna@example.test'), ('${BEN}', 'ben@example.test')
+    on conflict do nothing;
+  insert into public.tracks (id, owner, title, shared) values
+    ('${HERS}', '${ANNA}', 'Anna prive', false),
+    ('${SHARED}', '${ANNA}', 'Anna gedeel', true),
+    ('bbbbbbbb-0000-0000-0000-000000000001', '${BEN}', 'Ben prive', false)
+    on conflict (id) do nothing;
+  grant usage on schema public to authenticated;
+  grant select, insert, update, delete on public.tracks to authenticated;`]);
+
+/** As Ben, signed in — the role a browser holds, not the service key. */
+const asBen = (sql: string): string => psql(BUNDLE_DB, ['-tA', '-c',
+  `set role authenticated; set request.jwt.claim.sub = '${BEN}'; ${sql}`])
+  /* psql echoes a command tag per statement, so `set role` costs two lines
+     of "SET" before any data. Counted as rows they are two songs that do
+     not exist, which is how this first read wrong. */
+  .split('\n').map((one) => one.trim())
+  .filter((one) => one && !/^(SET|UPDATE \d+|DELETE \d+|INSERT \d+ \d+)$/.test(one))
+  .join('\n');
+
+const sees = asBen('select title from public.tracks order by title').split('\n').filter(Boolean);
+ok('a member sees his own songs and the ones others shared',
+  sees.length === 2 && sees.includes('Ben prive') && sees.includes('Anna gedeel'), sees.join(', '));
+ok('  and not the ones they did not share', !sees.includes('Anna prive'), sees.join(', '));
+
+asBen(`update public.tracks set title = 'GEKAAP' where id = '${HERS}'`);
+asBen(`update public.tracks set title = 'GEKAAP' where id = '${SHARED}'`);
+asBen(`delete from public.tracks where id = '${SHARED}'`);
+const after = psql(BUNDLE_DB, ['-tA', '-c', 'select title from public.tracks order by title'])
+  .split('\n').map((one) => one.trim()).filter(Boolean);
+ok('  and cannot rename a song of hers he cannot even see', after.includes('Anna prive'), after.join(', '));
+ok('  nor the one she shared, which being allowed to READ it does not entitle him to',
+  after.includes('Anna gedeel'), after.join(', '));
+ok('  nor delete it', after.length === 3, `${after.length} songs left: ${after.join(', ')}`);
+
+let planted = '';
+try {
+  psql(BUNDLE_DB, ['-c', `set role authenticated; set request.jwt.claim.sub = '${BEN}';`
+    + ` insert into public.tracks (id, owner, title) values (gen_random_uuid(), '${ANNA}', 'geplant')`]);
+} catch (error) { planted = String((error as { stderr?: string }).stderr ?? error); }
+ok('  and cannot put a song into her library under her name',
+  /row-level security/i.test(planted), planted ? planted.slice(0, 120) : 'it was allowed');
+
+/* And nothing is left open by accident. A table with row-level security off
+   is readable by anybody holding the browser key. */
+const open = psql(BUNDLE_DB, ['-tA', '-c',
+  `select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity order by 1`]).trim();
+ok('  and every table in public has row-level security switched on', open === '',
+  open.split('\n').filter(Boolean).join(', '));
 
 /* ── The test-access tool, both ways round ─────────────────────────────── */
 /*
