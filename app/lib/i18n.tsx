@@ -1606,6 +1606,10 @@ export const STRINGS: Dict = {
   "video.bringWhy": { en: "A song you made here, or an audio file off this device — up to 60 MB. A brought-in song stays on this device and is not put on your channel.", af: "’n Liedjie wat jy hier gemaak het, of ’n klanklêer van hierdie toestel af — tot 60 MB. ’n Ingebringde liedjie bly op hierdie toestel en kom nie op jou kanaal nie." },
   "video.none": { en: "No songs here yet \u2014 make one, or bring one in.", af: "Nog geen liedjies hier nie \u2014 maak een, of bring een in." },
   "copilot.title": { en: "Copilot", af: "Copilot" },
+  /* Carli: *"Copilot en daardie kamer moet 'n reset hê om die kamer skoon
+     te maak en van vooraf te prompt."* One press, both halves — the
+     conversation and what the conversation put in the room. */
+  "copilot.reset": { en: "Start again", af: "Begin oor" },
   "copilot.intro": { en: "Tell me what you want to make and I will set it up on the canvas. I can name it, pick the sound, write the words, or just answer a question.", af: "Sê my wat jy wil maak, dan sit ek dit op vir jou. Ek kan dit naam gee, die klank kies, die woorde skryf, of net ’n vraag antwoord." },
   "copilot.eg1": { en: "Make me something slow for driving at night", af: "Maak vir my iets stadig vir nagry" },
   "copilot.eg2": { en: "Write a chorus about leaving home", af: "Skryf \u2019n refrein oor weggaan van die huis" },

@@ -244,6 +244,38 @@ export default function Copilot({
       <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800 flex-shrink-0">
         <Sparkles className="w-4 h-4 text-emerald-400" />
         <p className="text-sm font-bold text-white">{t('copilot.title')}</p>
+        {/* ── Start again ────────────────────────────────────────────────
+
+            Carli, 21 September 2026: *"Copilot en daardie kamer moet 'n
+            reset hê om die kamer skoon te maak en van vooraf te prompt."*
+
+            Both halves, one press. Clearing the conversation alone leaves
+            the room full of what the conversation put there, and a copilot
+            that opens fresh over a half-filled canvas is the more confusing
+            of the two states — it has forgotten, and the room has not.
+
+            The room's half goes through the bus as `reset`, which a room
+            registers like any other operation. A room that has not is a
+            no-op: `dispatch` returns false and nothing is claimed. That
+            way this button is honest in thirteen rooms on the day it
+            reaches one.
+
+            Only drawn once there is something to clear, so an empty panel
+            does not offer to empty itself. */}
+        {turns.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setTurns([]);
+              setDraft('');
+              setOffline(false);
+              bus.dispatch(context.surface, 'reset', '');
+            }}
+            className="ml-auto min-h-[44px] rounded-xl px-3 text-xs font-semibold text-zinc-400 hover:text-white active:translate-y-px"
+          >
+            {t('copilot.reset')}
+          </button>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-3">

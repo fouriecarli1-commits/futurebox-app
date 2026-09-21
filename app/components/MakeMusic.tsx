@@ -167,6 +167,23 @@ export default function MakeMusic({
   const wordsCard = useOpenCard();
   const soundCard = useOpenCard();
   useCopilotOps('make', {
+    /* ── Start again, and mean it ─────────────────────────────────────
+
+       Carli, 21 September 2026: *"Copilot en daardie kamer moet 'n reset
+       hê om die kamer skoon te maak en van vooraf te prompt."*
+
+       The copilot's button clears the conversation; this clears what the
+       conversation put on the canvas. Both halves or neither: a copilot
+       that has forgotten, sitting over a canvas that has not, is more
+       confusing than either state on its own — you type a new idea and
+       the room answers with the old one.
+
+       Every field, including the two the room opens with. A reset that
+       leaves the feeling behind is a reset that quietly steers the next
+       song, which is the opposite of starting again. */
+    reset: () => {
+      setCanvas({ title: '', lyrics: '', style: '', feeling: null, about: '' });
+    },
     /* Updater form, not the spread of a captured object: these three
        arrive in a row, and each has to see the one before it. */
     set_song_title: (value) => {
@@ -175,6 +192,33 @@ export default function MakeMusic({
     },
     set_words: (value) => {
       setCanvas((was) => ({ ...was, lyrics: value }));
+      wordsCard.arrived();
+    },
+    /* ── The song arrives a section at a time ─────────────────────────
+
+       Carli, 21 September 2026: *"It must work verse for verse, and
+       before every new verse are written, ask questions and explain what
+       this part in a song is usually for. It must not generate everything
+       at once."*
+
+       Appending rather than replacing is what makes that possible without
+       the model keeping its own copy of the song. `set_words` sends the
+       whole sheet, so a second section through that door has to carry the
+       first one back with it — and anything she changed by hand in
+       between is gone, overwritten by the model's memory of what it
+       wrote. Here the canvas is the only copy and the new section lands
+       under whatever is in it.
+
+       Blank is dropped rather than appended: a model that answers with
+       nothing should not push the words card open and claim it did
+       something. */
+    add_section: (value) => {
+      const part = value.trim();
+      if (!part) return;
+      setCanvas((was) => ({
+        ...was,
+        lyrics: was.lyrics.trim() ? `${was.lyrics.trimEnd()}\n\n${part}` : part,
+      }));
       wordsCard.arrived();
     },
     set_sound: (value) => {

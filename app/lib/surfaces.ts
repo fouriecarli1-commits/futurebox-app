@@ -149,6 +149,23 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
        clip while the storyboard, the look and the words on screen lived next
        door; that room is gone and the desk has all of it. */
     ops: {
+      /* ── Starting over ────────────────────────────────────────────
+
+         Carli, 21 September 2026: *"Copilot en daardie kamer moet 'n
+         reset hê om die kamer skoon te maak en van vooraf te prompt."*
+
+         The Start again button on the copilot's header clears the
+         conversation and sends this, so the room empties with it — a
+         reset that clears the talking and leaves the canvas full is not
+         starting over, it is starting over with somebody else's song
+         still on the desk.
+
+         Described here as well, rather than left as a button-only path,
+         because "kom ons begin oor" is a thing people say out loud
+         mid-sentence, and the copilot that has to answer "press the
+         button above me" is the app talking about itself. */
+      reset:
+        "the value is ignored. It empties the whole song canvas - title, words, sound, feeling and what it is about. Only ever when they have asked to start over in so many words. Never as tidying up before you write something, and never to make room for your own idea",
       /* The song itself. These were missing, and the gap was invisible
          because the copilot could already write the song canvas through a
          different path — whole actions handled by the page. That path
@@ -156,7 +173,26 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
          recommendations opened this room empty. */
       set_song_title: "the value is the song's title, and nothing else",
       set_words:
-        "the value is the words of the song, with [Verse], [Chorus] and [Bridge] markers on their own lines. Send all of them, not a description of them",
+        "the value is the words of the song, with [Verse], [Chorus] and [Bridge] markers on their own lines. Send all of them, not a description of them. Use this to REPLACE a sheet that is already there - rewriting, tidying, translating. It is not how a song gets written from nothing here",
+      /* ── One section at a time ────────────────────────────────────
+
+         Carli, 21 September 2026: *"The copilot must guide someone in a
+         song in make a song. It must work verse for verse, and before
+         every new verse are written, ask questions and explain what this
+         part in a song is usually for. It must not generate everything at
+         once."*
+
+         `set_words` cannot do that. It carries a whole sheet, so the only
+         way to add a chorus to a verse with it is to resend the verse —
+         which means the model holds the song rather than the canvas, and
+         a section the person edited by hand between two turns is quietly
+         overwritten by the model's memory of what it wrote.
+
+         So the writing path is its own operation that appends, and the
+         canvas stays the one copy. What the person typed themselves is
+         still there under the section that lands on top of it. */
+      add_section:
+        "the value is ONE section and nothing else: its marker on its own line ([Verse 1], [Chorus], [Bridge]) and then its lines. It is added underneath what is already written, so never resend a section you have already sent. This is how a song is written in this room - one section at a time, each one after you have asked about it and said what that part of a song is for",
       set_sound:
         "the value is how it should sound, in a few words: the feel, the instruments, the pace. Never a picture - this is music, so a window or a colour means nothing here",
       /* What they walked in holding. Neither reaches the engine: a mood is

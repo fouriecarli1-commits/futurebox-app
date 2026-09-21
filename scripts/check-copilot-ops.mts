@@ -174,6 +174,39 @@ for (const room of ['make'] as const) {
   }
 }
 
+/* ── Starting over ────────────────────────────────────────────────────
+ *
+ * Carli, 21 September 2026: *"Copilot en daardie kamer moet 'n reset hê om
+ * die kamer skoon te maak en van vooraf te prompt."*
+ *
+ * Two halves that are useless apart. A button that clears the conversation
+ * and leaves the canvas full has not started anything over — the next
+ * question is answered against somebody else's half-written song, and
+ * nothing on screen says why. So the button has to send `reset` down the
+ * bus, and the room that takes it has to empty EVERY field: a reset that
+ * leaves the feeling behind quietly steers the next song.
+ */
+const copilot = readFileSync('app/components/Copilot.tsx', 'utf8');
+const resetButton = /setTurns\(\[\]\);[\s\S]{0,240}?\}\}/.exec(copilot)?.[0] ?? '';
+
+if (!/copilot\.reset/.test(copilot)) {
+  problems.push('  Copilot.tsx: there is no Start again button — a room cannot be emptied from the panel');
+}
+if (!/bus\.dispatch\(context\.surface, 'reset', ''\)/.test(resetButton)) {
+  problems.push("  Copilot.tsx: Start again clears the talking but never tells the room — the canvas stays full");
+}
+if (!/setDraft\(''\)/.test(resetButton)) {
+  problems.push('  Copilot.tsx: Start again leaves whatever was half-typed in the box');
+}
+
+const makeRoom = readFileSync('app/components/MakeMusic.tsx', 'utf8');
+const canvasReset = /reset: \(\) => \{[\s\S]*?\n    \},/.exec(makeRoom)?.[0] ?? '';
+for (const field of ['title', 'lyrics', 'style', 'feeling', 'about']) {
+  if (!new RegExp(`${field}:`).test(canvasReset)) {
+    problems.push(`  MakeMusic.tsx: reset leaves ${field} behind, which is starting over with the last song still steering`);
+  }
+}
+
 if (found === 0) {
   console.error('check:ops — found no useCopilotOps calls at all. The scan is probably broken.');
   process.exit(1);

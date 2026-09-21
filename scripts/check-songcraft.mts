@@ -191,6 +191,61 @@ ok(
   'a mood is not a sound, and turning "sad" into "slow and minor" is a musical decision nobody asked for',
 );
 
+/* ── One section at a time ────────────────────────────────────────────
+ *
+ * Carli, 21 September 2026: *"It must work verse for verse, and before every
+ * new verse are written, ask questions and explain what this part in a song
+ * is usually for. It must not generate everything at once."*
+ *
+ * Three things have to hold together or the room quietly goes back to
+ * handing over a finished lyric sheet, and nothing on screen would say so:
+ * the copilot has to be TOLD to write one section at a time, it has to have
+ * an operation that ADDS one, and that operation has to actually append
+ * rather than replace. Two out of three is the failure that looks fine — a
+ * model dutifully sending one verse at a time into a handler that overwrites
+ * the last one, so the song is always one section long.
+ */
+
+/* The brief is wrapped prose, so a phrase that reads as one sentence on the
+   page may have a newline through the middle of it. Matched flat, or this
+   check passes and fails on where the wrapping happens to fall. */
+const flat = brief.replace(/\s+/g, ' ');
+
+ok(
+  'the copilot is told to write one section at a time',
+  /one section per reply/i.test(flat) && /never more than one section/i.test(flat),
+  'without this it hands over a finished lyric sheet, which teaches nobody anything',
+);
+ok(
+  '  and to say what the part is for, and ask, before writing it',
+  /what that part of a song is for/i.test(flat) && /ask the one question you need answered/i.test(flat),
+  'the craft below it is only teaching if it is said at the moment it is needed',
+);
+ok(
+  '  and never to build the song up with a whole sheet',
+  /Never use either to build the song up/i.test(flat),
+  'set_words carries the lot, so building with it overwrites what they typed themselves',
+);
+
+ok(
+  'the room offers an operation that adds one section',
+  /add_section:/.test(surfaces) && /ONE section and nothing else/.test(surfaces),
+  'an instruction to write a section at a time, with no way to send one, is a rule against working',
+);
+
+/* The one that would not show up by reading either file on its own. */
+const adder = /add_section: \(value\) => \{[\s\S]*?\n    \},/.exec(make)?.[0] ?? '';
+ok(
+  '  and the room APPENDS it rather than replacing the words',
+  adder !== '' && /was\.lyrics/.test(adder) && !/lyrics: part,?\s*\}\)\);\s*$/.test(adder),
+  'a section at a time into a handler that overwrites leaves the song one section long forever',
+);
+ok(
+  '  and drops a blank one instead of announcing it',
+  /if \(!part\) return;/.test(adder),
+  'an empty answer should not open the words card and claim it wrote something',
+);
+
 if (failures) {
   console.error(`\ncheck:songcraft — ${failures} failure(s).\n`);
   process.exit(1);
