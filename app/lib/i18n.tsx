@@ -1768,6 +1768,16 @@ export const STRINGS: Dict = {
   "song.bySpan": { en: "The words are laid across the part of the file that is sung.", af: "Die woorde l\u00ea oor die deel van die l\u00eaer waarop gesing word." },
   /* The front page’s own drop-downs. Carli: everything folded except the
      one big class and the maker’s advert. */
+  /* How a mix comes out of the Pro Booth. The surround line says what it
+     is NOT on purpose: Dolby is licensed and trademarked, and this is the
+     matrix fold those decoders unfold, which is arithmetic. */
+  "mix.layout": { en: "How it comes out", af: "Hoe dit uitkom" },
+  "mix.stereo": { en: "Stereo", af: "Stereo" },
+  "mix.stereoNote": { en: "Two channels, exactly as the room plays it. This is the one to pick unless you have a reason not to.", af: "Twee kanale, presies soos die kamer dit speel. Kies hierdie een tensy jy \u2019n rede het om nie." },
+  "mix.mono": { en: "Mono", af: "Mono" },
+  "mix.monoNote": { en: "One channel. Radio, a phone speaker, a shop \u2014 and the honest test of a mix, because anything that disappears here was only there because of the width.", af: "Een kanaal. Radio, \u2019n foon se luidspreker, \u2019n winkel \u2014 en die eerlike toets van \u2019n mengsel, want enigiets wat hier verdwyn was net daar oor die wydte." },
+  "mix.surround": { en: "Surround (matrix)", af: "Surround (matriks)" },
+  "mix.surroundNote": { en: "Still two channels, folded so a surround receiver in its matrix mode can put the middle of the mix in the centre speaker and the sides behind you. It is not a Dolby file and we do not licence Dolby \u2014 on anything else it plays as ordinary stereo.", af: "Steeds twee kanale, gevou sodat \u2019n surround-ontvanger in sy matriks-modus die middel van die mengsel in die middelste luidspreker kan sit en die kante agter jou. Dit is nie \u2019n Dolby-l\u00eaer nie en ons lisensieer nie Dolby nie \u2014 op enigiets anders speel dit as gewone stereo." },
   "fold.pods": { en: "Podcasts worth the hour", af: "Podcasts wat die uur werd is" },
   "fold.classes": { en: "The rest of the classes", af: "Die res van die klasse" },
   "fold.creations": { en: "Music and video members made", af: "Musiek en video’s wat lede gemaak het" },

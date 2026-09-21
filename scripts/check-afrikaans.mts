@@ -82,6 +82,11 @@ const SAME_IN_BOTH = new Set([
   'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',
   'Collab Radar', 'Radar', 'Arena', 'Pro', 'S', 'handle', 'Tempo', 'min',
   'Later', 'Warm', 'Afrikaans',
+  /* The two channel layouts. An Afrikaans musician says "mono" and "stereo"
+     — they are the words on every mixer in the country — and inventing
+     "enkelkanaal" for a download button would be the kind of translation
+     that makes somebody wonder whether it is the same thing. */
+  'Mono', 'Stereo',
   /* The room's own name. Carli, 15 September 2026: "Kan ons ook nie maar The
      booth se naam verander na ProBooth nie?" — one name, and a name is not
      translated. It had three in English ("The Booth", "The booth", "The booth

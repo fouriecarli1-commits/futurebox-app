@@ -36,6 +36,7 @@ import { CREDITS, perMinute } from '../lib/credits';
 import { decodeAt, shapeOf } from '../lib/takes';
 import { forgetSession, keepSession, keptSession, soundOf } from '../lib/keepsession';
 import { encodeWav } from '../lib/wav';
+import { LAYOUTS, layoutById, type Layout } from '../lib/channels';
 import { knownLatency } from '../lib/mixdown';
 import {
   COUNT_INS, DEFAULT_METER, DIVISIONS, FASTEST, SLOWEST, barSeconds, countInSeconds,
@@ -1282,6 +1283,19 @@ export default function ProBooth({
     [context, rate, t],
   );
 
+  /**
+   * Mono, stereo, or folded for a surround decoder.
+   *
+   * Carli, 21 September 2026: *"Mono/stereo/dolby surround. Download type."*
+   *
+   * One state for both doors — the phone and the Library — because a song
+   * that goes to her channel in a different layout from the one she just
+   * saved is the kind of difference nobody notices until a shop plays it.
+   * Stereo to begin with, which is what every file this room has ever made
+   * has been.
+   */
+  const [layout, setLayout] = useState<Layout>('stereo');
+
   const keep = useCallback(async (): Promise<boolean> => {
     setBusy(true);
     setProblem(null);
@@ -1294,7 +1308,7 @@ export default function ProBooth({
         setProblem(t('pro.mixFailed', 'The mix could not be made.'));
         return false;
       }
-      await onKeep(encodeWav(mixed));
+      await onKeep(encodeWav(mixed, layout));
       return true;
     } catch {
       setProblem(t('pro.mixFailed', 'The mix could not be made.'));
@@ -1302,7 +1316,7 @@ export default function ProBooth({
     } finally {
       setBusy(false);
     }
-  }, [lanes, master, onKeep, rate, t, trim]);
+  }, [lanes, layout, master, onKeep, rate, t, trim]);
 
   const heard = useMemo(() => audible(lanes), [lanes]);
 
@@ -1345,7 +1359,7 @@ export default function ProBooth({
         setProblem(t('pro.mixFailed', 'The mix could not be made.'));
         return false;
       }
-      const blob = encodeWav(mixed);
+      const blob = encodeWav(mixed, layout);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -1353,7 +1367,13 @@ export default function ProBooth({
          Anything a file system might refuse becomes a dash, and a song with
          no name at all still gets a file rather than an error. */
       const safe = (title || t('pro.untitled', 'song')).replace(/[^\p{L}\p{N} _-]/gu, '-').trim();
-      link.download = `${safe || 'song'}.wav`;
+      /* The layout goes in the name unless it is the ordinary one. Comparing
+         the three means downloading all three, and three files called
+         `song.wav` become `song (1).wav` and `song (2).wav` — which is a
+         phone's downloads folder telling you nothing about the one thing
+         you downloaded them to tell apart. Stereo keeps its plain name so
+         nothing about the existing file changes. */
+      link.download = `${safe || 'song'}${layout === 'stereo' ? '' : ` (${layout})`}.wav`;
       link.click();
       URL.revokeObjectURL(url);
       return true;
@@ -1363,7 +1383,7 @@ export default function ProBooth({
     } finally {
       setSaving(false);
     }
-  }, [lanes, master, rate, t, title, trim]);
+  }, [lanes, layout, master, rate, t, title, trim]);
 
   /* ── The desks ────────────────────────────────────────────────────
 
@@ -2122,6 +2142,56 @@ export default function ProBooth({
         'Both give you the same mix: every lane, its level, where it sits, its cuts and its effects, rendered exactly as the room plays it. The phone is a file you keep; the Library is the copy your channel posts from.',
       )}
     >
+      {/* ── Which layout the file comes out in ─────────────────────────
+
+          Carli, 21 September 2026: *"Mono/stereo/dolby surround. Download
+          type."*
+
+          Above both buttons, not beside one, because it is a property of
+          the file and both doors make the same file — a song that reaches
+          her channel in a different layout from the one she just saved to
+          her phone is the kind of difference nobody notices until a shop
+          plays it.
+
+          The note under it changes with the choice rather than listing all
+          three at once. Three paragraphs of explanation above two buttons
+          is the wall of writing this room was rebuilt to get rid of, and
+          the only one worth reading is the one you have chosen.
+
+          And the surround note says what it is NOT. Dolby is licensed and
+          trademarked; this is the matrix fold those decoders unfold, which
+          is arithmetic and belongs to nobody. Saying so on the screen is
+          the same rule as every other claim in this app. */}
+      <div className="space-y-1.5">
+        <p className="text-sm font-semibold" style={{ color: INK_DIM }}>
+          {t('mix.layout', 'How it comes out')}
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {LAYOUTS.map((one) => (
+            <button
+              key={one.id}
+              type="button"
+              data-layout={one.id}
+              onClick={() => setLayout(layoutById(one.id))}
+              aria-pressed={layout === one.id}
+              className={`min-h-[44px] rounded-xl border px-3.5 text-sm font-semibold ${
+                layout === one.id
+                  ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-300'
+                  : 'border-zinc-700 bg-zinc-900 text-zinc-200'
+              }`}
+            >
+              {t(one.label[0], one.label[1])}
+            </button>
+          ))}
+        </div>
+        <p className="text-sm leading-snug" style={{ color: INK_DIM }}>
+          {(() => {
+            const chosen = LAYOUTS.find((one) => one.id === layout) ?? LAYOUTS[0];
+            return t(chosen.note[0], chosen.note[1]);
+          })()}
+        </p>
+      </div>
+
       {/* `again`: a second copy in the phone's downloads folder is nothing
           worse than a second copy, and somebody who cannot find the first
           one will want to press it again. */}

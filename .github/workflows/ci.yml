@@ -229,6 +229,8 @@ jobs:
       # The copilot could only ever do one thing per reply, so the adverts
       # brief — five fields — came back as a paragraph about the five fields.
       # Every other link in that chain was correct and check:ops was green.
+      - name: The download's layout — mono halves, the turn is a real quarter, and nothing is called Dolby
+        run: npm run check:channels
       - name: The copilot may act on several fields at once
         run: npm run check:copilotplan
 
