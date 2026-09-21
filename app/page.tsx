@@ -77,6 +77,7 @@ import {
 } from './lib/surfaces';
 
 import { videoFromHook, videoFromSong } from './lib/hookhandover';
+import { featuredClass, youTubeId } from './data/masterclasses';
 import { errandBelongs, type Errand } from './lib/errands';
 import Spotlight from './components/Spotlight';
 import HereNow from './components/HereNow';
@@ -926,14 +927,13 @@ export default function FutureBoxHome() {
   const [mediaLink, setMediaLink] = useState('');
 
   // AI Scanner & Stream Regeneration
-  const [isScanning, setIsScanning] = useState(false);
   const [streamCycle, setStreamCycle] = useState(0);
   /* Which of the three things the picks line is saying, not the sentence
      itself. A sentence stored in state is a sentence that was chosen in
      whatever language the app happened to be in when it was stored, and it
      never changes again — so switching to Afrikaans left this line in English
      for the rest of the session. */
-  const [scanSaying, setScanSaying] = useState<'picks' | 'looking' | 'another'>('picks');
+  const [scanSaying, setScanSaying] = useState<'picks' | 'another'>('picks');
 
   // Marketing Contact Form
   const [contactName, setContactName] = useState('');
@@ -1266,17 +1266,23 @@ export default function FutureBoxHome() {
         externalUrl: 'https://www.youtube.com/watch?v=1bPEq4f454M',
         isPro: false
       },
-      {
-        id: 'pod-5',
-        title: 'The Industrialization of Intelligence & Supercomputing',
-        host: 'Dwarkesh Podcast (Dwarkesh Patel)',
-        guest: 'Dario Amodei (CEO, Anthropic)',
-        duration: '2h 30m',
-        views: '2.1M',
-        embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
-        externalUrl: 'https://www.youtube.com/watch?v=zjkBMFhNj_g',
-        isPro: false
-      },
+      /* ── One card is missing from here on purpose ──────────────────
+
+         There was a sixth: *The Industrialization of Intelligence &
+         Supercomputing*, Dwarkesh Podcast, with Dario Amodei — two real
+         people, a real show, a duration and a view count. Its link and
+         its embed both pointed at Andrej Karpathy's LLM lecture. So a
+         visitor pressing a named episode by a named person watched
+         somebody else's talk, and the numbers beside it were of a thing
+         that was not there.
+
+         Carli, 21 September 2026: *"Die content moet ons oor doen en
+         double check… wat goeie sources is. Daar kan nie goed op wees
+         wat random is nie."* This is what she means. Taken out rather
+         than pointed somewhere plausible: the right link is a fact,
+         nobody here has it to hand, and the way that card came to exist
+         is somebody filling a grid. Five real ones beat six with a lie
+         in them, and `check:feedlinks` refuses the next one. */
       {
         id: 'pod-6',
         title: 'State of the Economy, AI Startup Bubbles & Valuations',
@@ -1321,15 +1327,51 @@ export default function FutureBoxHome() {
     return Array.from({ length: many }, (_, i) => all[(start + i) % all.length]);
   }, [shownFrom]);
 
+  /**
+   * The one big class, and the way to open it.
+   *
+   * Read from the data rather than typed into the markup. See the note
+   * beside the section itself.
+   */
+  const featured = featuredClass();
+  const openFeatured = useCallback(() => {
+    if (!featured) return;
+    const id = youTubeId(featured.url);
+    setSelectedMedia({
+      title: featured.title,
+      embedUrl: id ? `https://www.youtube.com/embed/${id}` : featured.url,
+      externalUrl: featured.url,
+      type: 'youtube',
+      host: featured.instructor,
+      counts: { kind: 'masterclass', category: featured.track, ref: featured.id },
+    });
+  }, [featured]);
+
+  /**
+   * Show me different ones.
+   *
+   * ── The two seconds that were theatre ────────────────────────────────
+   *
+   * Carli, 21 September 2026: *"Die reload button moet actually nuwes
+   * generate."*
+   *
+   * It did move the window along — and it waited two seconds first, with a
+   * spinner and the words "Finding different ones…", for a change that was
+   * already decided and takes no time at all. Nothing was being found. A
+   * wait invented to make a local array index feel like a search is the app
+   * lying about what it is doing, and it is why the button reads as fake:
+   * you press it, something pretends to think, and four cards move.
+   *
+   * So it moves now, at once, and says which set of how many you are
+   * looking at. That is the honest version of the same promise — there IS
+   * more than one set, this is which one, and the button is how you get to
+   * the next. A count is also the thing that tells her when a shelf has run
+   * thin, which no spinner ever could.
+   */
   const handleAiScanRefresh = () => {
-    setIsScanning(true);
-    setScanSaying('looking');
-    setTimeout(() => {
-      setIsScanning(false);
-      setStreamCycle(prev => prev + 1);
-      setShownFrom(prev => prev + 1);
-      setScanSaying('another');
-    }, 2000);
+    setStreamCycle((prev) => prev + 1);
+    setShownFrom((prev) => prev + 1);
+    setScanSaying('another');
   };
 
   /**
@@ -2032,24 +2074,36 @@ export default function FutureBoxHome() {
           <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
         </div>
         <div className="min-w-0">
-          <p className="font-bold text-white">{t('home.todaysPicks', 'Today’s picks')}</p>
+          <p className="font-bold text-white">
+            {t('home.todaysPicks', 'Today’s picks')}
+            {/* Which set, said plainly.
+
+                Carli: *"Die reload button moet actually nuwes generate."*
+                It always did move the window — what it did first was wait
+                two seconds behind a spinner that said "Finding different
+                ones…", for a change that was already decided. Nothing was
+                being found, and a wait invented to make a local array
+                index feel like a search is what makes a real button read
+                as fake. A number says the true thing the spinner was
+                pretending: this is a different set from the last one. */}
+            <span className="pl-2 text-[11px] font-semibold text-zinc-500">
+              {t('home.setNo', 'Set')} {shownFrom + 1}
+            </span>
+          </p>
           <p className="text-zinc-400 text-[13px]">
-            {scanSaying === 'looking'
-              ? t('feed.scanLooking', 'Finding different ones…')
-              : scanSaying === 'another'
-                ? t('feed.scanAnother', 'Here is another set.')
-                : t('feed.picks', 'Podcasts and classes we think are worth your time.')}
+            {scanSaying === 'another'
+              ? t('feed.scanAnother', 'Here is another set. It moves along the whole shelf and comes back round.')
+              : t('feed.picks', 'Podcasts and classes we think are worth your time.')}
           </p>
         </div>
       </div>
 
       <button
         onClick={handleAiScanRefresh}
-        disabled={isScanning}
-        className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[40px] bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-onAccent text-xs font-extrabold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50 flex-shrink-0"
+        className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 text-onAccent text-xs font-extrabold rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] active:translate-y-px flex-shrink-0"
       >
-        <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-        <span>{isScanning ? t('home.looking', 'Looking…') : t('home.otherPicks', 'Show me different ones')}</span>
+        <RefreshCw className="w-3.5 h-3.5" />
+        <span>{t('home.otherPicks', 'Show me different ones')}</span>
       </button>
     </section>
   );
@@ -2413,8 +2467,26 @@ export default function FutureBoxHome() {
           should meet. Both still live on their own pages.
         */}
 
-        {/* 🎬 1. FEATURED SPOTLIGHT */}
-        {(activeTab === 'all') && (
+        {/* ── 1. THE ONE BIG CLASS ───────────────────────────────────────
+
+            Carli, 21 September 2026: *"Die 1 featured masterclass moet ook
+            groot wees, en die res van die masterclasses in 'n drop down…
+            Daar kan nie goed op wees wat random is nie."*
+
+            It was already big. It was also typed out by hand — the title,
+            the instructor, the length, the YouTube id and the thumbnail
+            seed, four separate times in this file, beside an entry in
+            `data/masterclasses.ts` that already says all five. Two copies
+            of a fact is one fact and one thing that will eventually be
+            wrong, and the front page is the copy nobody re-reads: change a
+            lecture's link in the data and the biggest thing on the home
+            page keeps pointing at the old one.
+
+            One `featured` flag in the data now, `check:masterclasses`
+            holds it to exactly one, and everything below is read. Drawn
+            only when there IS one, because a hero built out of undefined
+            is a white screen where the front page was. */}
+        {activeTab === 'all' && featured && (
           <section className="relative rounded-3xl overflow-hidden border border-zinc-800 bg-gradient-to-b from-zinc-900/60 to-zinc-950/80 p-8 md:p-12 shadow-2xl">
             <div className="grid md:grid-cols-2 gap-8 items-center relative z-10">
               <div className="space-y-4">
@@ -2423,48 +2495,41 @@ export default function FutureBoxHome() {
                     <Radio className="w-3 h-3 animate-pulse text-emerald-400" />
                     <span>{t('feed.freeClass')}</span>
                   </span>
-                  <span className="text-xs text-zinc-400">1h 00m • Andrej Karpathy</span>
+                  <span className="text-xs text-zinc-400">
+                    {featured.minutes}m • {featured.instructor}
+                  </span>
                 </div>
                 <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                  Intro to Large Language Models: How Neural Networks Think
+                  {featured.title}
                 </h2>
-                <p className="text-sm text-zinc-400 leading-relaxed">
-                  The world-renowned masterclass by Andrej Karpathy (Former Director of AI at Tesla & Co-founder of OpenAI) explaining how modern neural networks work and what lies ahead.
-                </p>
+                {/* What you can DO afterwards, which is the field the data
+                    already carries. The paragraph here was a second
+                    description of the same lecture, written once and never
+                    checked against it again. */}
+                <p className="text-sm text-zinc-400 leading-relaxed">{featured.outcome}</p>
 
-                <div className="bg-black/40 backdrop-blur-md rounded-2xl p-4 border border-zinc-800/80 space-y-2">
-                  <span className="text-[11px] uppercase text-emerald-400 tracking-wider">{t('feed.takeaways')}</span>
-                  <ul className="space-y-1.5">
-                    <li className="text-xs text-zinc-300 flex items-center space-x-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                      <span>{t('feed.take1')}</span>
-                    </li>
-                    <li className="text-xs text-zinc-300 flex items-center space-x-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                      <span>{t('feed.take2')}</span>
-                    </li>
-                  </ul>
-                </div>
+                {/* Where it came from, said on the front page rather than
+                    only inside the classes room. Carli: the content has to
+                    be from good sources — a source nobody can see is a
+                    claim, and this is the one card everybody sees. */}
+                {featured.source && (
+                  <p className="text-xs text-zinc-500">
+                    {t('feed.from', 'From')} {featured.source}
+                  </p>
+                )}
 
                 <div className="pt-2 flex items-center space-x-4">
-                  <button 
-                    onClick={() => setSelectedMedia({
-                      title: 'Intro to Large Language Models',
-                      embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
-                      externalUrl: 'https://www.youtube.com/watch?v=zjkBMFhNj_g',
-                      type: 'youtube',
-                      host: 'Andrej Karpathy',
-                      counts: { kind: 'masterclass', category: 'which-ai', ref: 'karpathy-intro-to-llms' }
-                    })}
+                  <button
+                    onClick={() => openFeatured()}
                     className="flex items-center space-x-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-onAccent font-bold text-sm rounded-xl transition-all shadow-[0_0_25px_rgba(16,185,129,0.35)]"
                   >
                     <Play className="w-4 h-4 fill-current" />
                     <span>{t('feed.watchFree')}</span>
                   </button>
 
-                  <a 
-                    href="https://www.youtube.com/watch?v=zjkBMFhNj_g" 
-                    target="_blank" 
+                  <a
+                    href={featured.url}
+                    target="_blank"
                     rel="noreferrer"
                     className="text-xs text-zinc-400 hover:text-white flex items-center space-x-1"
                   >
@@ -2474,23 +2539,18 @@ export default function FutureBoxHome() {
                 </div>
               </div>
 
-              <div 
-                onClick={() => setSelectedMedia({
-                  title: 'Intro to Large Language Models',
-                  embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
-                  externalUrl: 'https://www.youtube.com/watch?v=zjkBMFhNj_g',
-                  type: 'youtube',
-                  host: 'Andrej Karpathy',
-                  counts: { kind: 'masterclass', category: 'which-ai', ref: 'karpathy-intro-to-llms' }
-                })}
-                className="relative group rounded-2xl overflow-hidden border border-zinc-700/60 aspect-video shadow-2xl cursor-pointer"
+              <button
+                type="button"
+                onClick={() => openFeatured()}
+                aria-label={`${t('feed.watchFree')} — ${featured.title}`}
+                className="relative group block w-full rounded-2xl overflow-hidden border border-zinc-700/60 aspect-video shadow-2xl"
               >
                 {/* The lecture's own thumbnail. This was a stock photograph
                     of a stranger over a named, real masterclass. */}
                 <Cover
-                  seed="karpathy-intro-to-llms"
-                  label="Intro to Large Language Models — Andrej Karpathy"
-                  url="https://www.youtube.com/watch?v=zjkBMFhNj_g"
+                  seed={featured.id}
+                  label={`${featured.title} — ${featured.instructor}`}
+                  url={featured.url}
                   className="w-full h-full group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -2498,7 +2558,7 @@ export default function FutureBoxHome() {
                     <Play className="w-6 h-6 fill-current translate-x-0.5" />
                   </div>
                 </div>
-              </div>
+              </button>
             </div>
           </section>
         )}
@@ -2669,85 +2729,44 @@ export default function FutureBoxHome() {
 
             {picksBar}
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
-              {[
-                {
-                  id: 'ai-3',
-                  title: 'BRICKZ — FORGET YESTERDAY (Official AI Video)',
-                  creator: 'JL Records',
-                  domain: profileAddress('brickz'),
-                  medium: 'Sci-Fi Dance & Visual Hook',
-                  tools: ['Suno AI', 'Sora Experimental'],
-                  prompt: 'retro-futuristic robotic dancers with radio helmets, yellow coat, high-energy synth hook, 128 bpm',
-                  embedUrl: 'https://www.youtube.com/embed/zjkBMFhNj_g',
-                  externalUrl: 'https://klingai.org',
-                  type: 'youtube' as const
-                }
-              ].map((creation) => (
-                <div 
-                  key={creation.id} 
-                  className="group bg-zinc-900/60 rounded-2xl border border-zinc-800/80 overflow-hidden hover:border-cyan-500/50 transition-all flex flex-col justify-between"
-                >
-                  <div>
-                    <div 
-                      onClick={() => setSelectedMedia({
-                        title: creation.title,
-                        embedUrl: creation.embedUrl,
-                        externalUrl: creation.externalUrl,
-                        type: 'youtube',
-                        counts: { kind: 'article', category: 'Creative AI', ref: creation.id }
-                      })}
-                      className="aspect-video relative overflow-hidden cursor-pointer"
-                    >
-                      <Cover
-                        seed={creation.id}
-                        label={creation.title}
-                        url={creation.embedUrl}
-                        className="w-full h-full group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                        {creation.tools.map((tool, idx) => (
-                          <span key={idx} className="px-2 py-0.5 bg-black/80 backdrop-blur-md text-[10px] text-cyan-300 rounded-md border border-cyan-500/30">
-                            {tool}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center transition-opacity [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100">
-                        <Play className="w-12 h-12 text-cyan-400 fill-current" />
-                      </div>
-                    </div>
+            {/* ── The shelf that had one invented thing on it ──────────
 
-                    <div className="p-5 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase text-cyan-400 font-bold">{creation.medium}</span>
-                        <span className="text-[10px] text-zinc-400 bg-black/50 px-2 py-0.5 rounded border border-zinc-800">{creation.domain}</span>
-                      </div>
-                      <h4 className="font-bold text-white group-hover:text-cyan-400 transition-colors leading-snug">{creation.title}</h4>
-                      <p className="text-xs text-zinc-400 bg-black/30 p-2.5 rounded-lg border border-zinc-800">
-                        <span className="text-cyan-400 font-semibold">{t('home.prompt', 'Prompt')}: </span>
-                        &ldquo;{creation.prompt}&rdquo;
-                      </p>
-                    </div>
-                  </div>
+                There was one card here: *BRICKZ — FORGET YESTERDAY
+                (Official AI Video)*, by "JL Records", with a tool list
+                and a prompt and a profile address. There is no BRICKZ
+                and no JL Records; the embed played Andrej Karpathy's LLM
+                lecture and the link went to klingai.org.
 
-                  <div className="p-5 pt-0 flex flex-wrap items-center justify-between gap-2 text-[11px] text-zinc-400 border-t border-zinc-800/60">
-                    <span>{t('feed.by')} {creation.creator}</span>
-                    <a 
-                      href={creation.externalUrl} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      /* `min-h-11` is 44px, the smallest thing a thumb hits
-                         reliably. The global coarse-pointer rule in globals.css
-                         cannot reach this one: it adds vertical padding, and a
-                         Tailwind `py-1` on the element itself outranks it. */
-                      className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center justify-center space-x-1 bg-cyan-500/10 px-2.5 py-1 min-h-11 rounded-lg border border-cyan-500/30"
-                    >
-                      <span>{t('home.explore', 'Have a look')}</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                </div>
-              ))}
+                Carli, 21 September 2026: *"Die content moet ons oor doen
+                en double check… Daar kan nie goed op wees wat random
+                is nie."*
+
+                A made-up maker on the page that is supposed to show what
+                members make is the worst one of these to leave: it is
+                the claim the whole section exists to make, and it was
+                furniture. So the section says what it is waiting for
+                instead of pretending to have it, and points at the room
+                where the real ones are — the live room has actual posts
+                by actual people, and that is the shelf this should be
+                reading once there is enough on it to draw. */}
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 space-y-3">
+              <p className="text-sm text-zinc-300 leading-relaxed">
+                {t(
+                  'feed.creationsWaiting',
+                  'This is where members’ own music and videos go. Nothing invented sits here in the meantime — what is on the wall is what people have actually made.',
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setUploadModalOpen(true);
+                  setAtDoor(false);
+                  goToRoom('live');
+                }}
+                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-emerald-300"
+              >
+                {t('feed.creationsGo', 'See what people are posting')}
+              </button>
             </div>
 
           </section>

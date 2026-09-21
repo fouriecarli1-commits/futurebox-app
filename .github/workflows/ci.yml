@@ -909,6 +909,14 @@ jobs:
       - name: Every door into a room carries, or says why it does not
         run: npm run check:handover
 
+      # Every card on the front page plays the thing it names. Two were
+      # pointing at the same lecture — one of them a named episode by two
+      # real people, the other an invented maker on an invented label —
+      # which is what happens when somebody fills a grid before it has
+      # sources.
+      - name: Every front-page card plays what it says it plays
+        run: npm run check:feedlinks
+
       # What prompt caching actually saved, and the sum that turns four token
       # counts into rand. A cache that never hits looks exactly like one that
       # always does, except on the bill — and a lone write costs 25% MORE, so

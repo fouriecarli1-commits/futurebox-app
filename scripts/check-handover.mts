@@ -130,6 +130,7 @@ const PLAIN: Readonly<Record<string, string>> = {
   'podcast|onGoToPodcast': 'a hint from the voice studio: a show lives next door',
   'sound|onGoToSound': 'a hint: where a voice is trained',
   'make|onGoToMake': 'a hint from an empty room — make something first. There is nothing yet to carry',
+  'live|onClick': 'the front page pointing at the room where members’ real work is, now that the invented card is gone. It is "go and look", not "here is the thing you asked for"',
 };
 
 const unexplained = doors.filter((one) => !one.carries && !(one.key in PLAIN));

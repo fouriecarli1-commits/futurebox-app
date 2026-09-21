@@ -58,6 +58,26 @@ export interface Masterclass {
   /** Only for `original` and `ai_video` — not published yet. */
   readonly status?: 'published' | 'in-production' | 'planned';
   readonly proOnly?: boolean;
+  /**
+   * The one on the front page, big.
+   *
+   * ── Why it is a field and not a copy ────────────────────────────────
+   *
+   * Carli, 21 September 2026: *"Die 1 featured masterclass moet ook groot
+   * wees… Daar kan nie goed op wees wat random is nie."*
+   *
+   * It was already big and it was also hard-coded: the title, the
+   * instructor, the length, the YouTube id and the thumbnail seed were
+   * typed into `page.tsx` four separate times, beside an entry in this
+   * file that says all five. Two copies of a fact is one fact and one
+   * thing that will eventually be wrong, and the front page is the copy
+   * nobody re-reads.
+   *
+   * Exactly one, and `check:masterclasses` holds that — a second one is a
+   * front page with two heroes and no way to tell which was meant, and
+   * none at all is a hole where the biggest thing on the page was.
+   */
+  readonly featured?: true;
 }
 
 export const TRACK_LABELS: Record<Track, string> = {
@@ -167,6 +187,8 @@ export const MASTERCLASSES: readonly Masterclass[] = [
   },
   {
     id: 'mc-karpathy-llm',
+    /* The front page's big one. See `featured` above. */
+    featured: true,
     title: 'Intro to Large Language Models',
     instructor: 'Andrej Karpathy',
     provenance: 'curated',
@@ -370,3 +392,21 @@ export const BRIEF_SEEDS: Record<Track, { angle: string[]; format: string[] }> =
     format: ['build one small mechanic end to end', 'a teardown of a shipped game that used these tools', 'the same asset through four tools, compared', 'a playtest with the seams pointed at'],
   },
 };
+
+/**
+ * The class the front page leads with.
+ *
+ * Null is a real answer and the callers draw nothing rather than a hole —
+ * but `check:masterclasses` fails on it, so it should never be null in a
+ * shipped build. Both halves on purpose: a missing hero should be caught
+ * before it is deployed AND should not white-screen the page if it is not.
+ */
+export function featuredClass(): Masterclass | null {
+  return MASTERCLASSES.find((one) => one.featured) ?? null;
+}
+
+/** The YouTube id in a watch link, for an embed. Null for anything else. */
+export function youTubeId(url: string): string | null {
+  const found = /[?&]v=([A-Za-z0-9_-]{6,})/.exec(url) ?? /youtu\.be\/([A-Za-z0-9_-]{6,})/.exec(url);
+  return found ? found[1] : null;
+}

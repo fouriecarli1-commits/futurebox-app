@@ -24,7 +24,10 @@
  * A rule in a comment is a rule until somebody is in a hurry. This is the
  * same rule as assertions.
  */
-import { MASTERCLASSES, PROVENANCE_LABELS, TRACK_LABELS, LEVEL_LABELS } from '../app/data/masterclasses';
+import { readFileSync } from 'node:fs';
+import {
+  MASTERCLASSES, PROVENANCE_LABELS, TRACK_LABELS, LEVEL_LABELS, featuredClass, youTubeId,
+} from '../app/data/masterclasses';
 
 let failures = 0;
 const check = (label: string, ok: boolean, detail = '') => {
@@ -112,6 +115,69 @@ console.log(
   `\n  ${watchable.length} of ${MASTERCLASSES.length} can actually be watched today;` +
     ` the rest say so on their own cards.\n`,
 );
+
+/* ── The one on the front page ────────────────────────────────────────
+ *
+ * Carli, 21 September 2026: *"Die 1 featured masterclass moet ook groot
+ * wees, en die res van die masterclasses in 'n drop down… Daar kan nie goed
+ * op wees wat random is nie."*
+ *
+ * It was big and it was also typed out by hand: the title, the instructor,
+ * the length, the YouTube id and the thumbnail seed, four times over in
+ * `page.tsx`, beside an entry here that already said all five. Two copies of
+ * a fact is one fact and one thing that will eventually be wrong, and the
+ * front page is the copy nobody re-reads — change a lecture's link here and
+ * the biggest thing on the home page keeps pointing at the old one.
+ */
+{
+  const picked = MASTERCLASSES.filter((one) => one.featured);
+  check('exactly one class is the front page\u2019s big one', picked.length === 1,
+    picked.length === 0
+      ? 'none — the biggest thing on the home page would draw nothing'
+      : `${picked.length}: ${picked.map((one) => one.id).join(', ')}`);
+
+  const hero = featuredClass();
+  check('  and it is one somebody can watch today', Boolean(hero?.url?.trim()),
+    hero ? hero.id : 'none');
+  check('  and it is free, because the front page says it is free',
+    hero ? hero.proOnly !== true : false,
+    hero?.proOnly ? `${hero.id} is Pro, and the badge beside it says free` : '');
+  check('  and it says where it came from',
+    hero ? hero.provenance !== 'curated' || Boolean(hero.source?.trim()) : false,
+    'a curated class with no source is a claim with nothing behind it, on the one card everybody sees');
+  check('  and its link is one an embed can be built from',
+    Boolean(hero && youTubeId(hero.url)), hero?.url ?? 'none');
+
+  /* And the page reads it rather than keeping its own copy. */
+  const page = readFileSync('app/page.tsx', 'utf8');
+  check('the front page reads the featured class instead of retyping it',
+    /const featured = featuredClass\(\);/.test(page) && /\{featured\.title\}/.test(page),
+    'a hard-coded hero drifts from the data the first time a link changes');
+  check('  and no lecture id is typed into the page any more',
+    !/zjkBMFhNj_g/.test(page),
+    'the YouTube id was in this file four times');
+
+  /* ── And the reload is not theatre ─────────────────────────────────
+ 
+     Carli: *"Die reload button moet actually nuwes generate."* It did move
+     the window — after waiting two seconds behind a spinner that said
+     "Finding different ones…", for a change that was already decided and
+     takes no time. Nothing was being found. A wait invented to make a
+     local array index feel like a search is what makes a real button read
+     as a fake one. */
+  check('the picks button does not pretend to search',
+    !/setTimeout\([\s\S]{0,200}setShownFrom/.test(page),
+    'a spinner in front of a decision that is already made is the app lying about what it does');
+  check('  and it still moves the window along',
+    /setShownFrom\(\(prev\) => prev \+ 1\)/.test(page),
+    'the honest half: pressing it has to actually show different ones');
+  check('  and says which set she is looking at',
+    /home\.setNo/.test(page) && /shownFrom \+ 1/.test(page),
+    'a number is the true thing the spinner was pretending');
+  check('  and the window slides rather than drawing at random',
+    /const start = \(shownFrom \* many\) % all\.length;/.test(page),
+    'a random draw repeats, which reads as a broken button');
+}
 
 if (failures) {
   console.error(`\ncheck:masterclasses — ${failures} failure(s).\n`);

@@ -15,6 +15,7 @@
     "check:hookcarry": "tsx scripts/check-hookcarry.mts",
     "check:paidback": "tsx scripts/check-paidback.mts",
     "check:handover": "tsx scripts/check-handover.mts",
+    "check:feedlinks": "tsx scripts/check-feedlinks.mts",
     "check:paidwalk": "node audit/paidback.mjs 3134",
     "check:sqlruns": "tsx scripts/check-sqlruns.mts",
     "costs:eleven": "tsx scripts/costs-eleven.mts",
