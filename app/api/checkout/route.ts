@@ -258,6 +258,27 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const origin = new URL(request.url).origin;
+  /* ── Back into the room she paid from ────────────────────────────────
+
+     Carli, 21 September 2026: *"Met die album art wanneer die betaling
+     terug kom is dit nie in dieselfde kamer nie. Ek betaal die R50 om die
+     bid te begin, maar dan gebeur daar niks nie."*
+
+     Every callback was `/?paid=1` — the front page, with nothing reading
+     the flag. So she paid a real R50 at a real till and was put down on
+     the doormat, in a studio that looked exactly as it had before, three
+     taps away from the piece she had just bought the right to bid on.
+     Nothing had gone wrong except that nobody had been brought back.
+
+     Derived from WHAT was bought rather than taken from the request. A
+     room name that arrives over the wire is a room name somebody can
+     choose, and the till is the last place to accept one; the kind is
+     already checked, so the room follows from it. Null for a plan or a
+     pack of credits, which really do belong on the front page. */
+  const back =
+    want.kind === 'art' || want.kind === 'commission' || want.kind === 'bidpass'
+      ? 'albumart'
+      : null;
   let upstream: Response;
   try {
     upstream = await fetch(PAYSTACK, {
@@ -267,7 +288,7 @@ export async function POST(request: Request): Promise<Response> {
         email: caller.email,
         amount: price.cents,
         currency: 'ZAR',
-        callback_url: `${origin}/?paid=1`,
+        callback_url: `${origin}/?paid=1${back ? `&room=${back}` : ''}`,
         // A plan turns this checkout into a subscription: Paystack charges it
         // now and again every month until it is cancelled. Sent only when the
         // account actually has a plan set up for that tier — without one the

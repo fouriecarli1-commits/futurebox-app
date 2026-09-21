@@ -888,6 +888,19 @@ jobs:
       - name: A reason a video will not play reaches the screen
         run: npm run check:livewhy
 
+      # A moment picked in the hooks room has to arrive at the video desk
+      # as a whole shot, not as a song id and a shape. The callback carried
+      # the length and the studio dropped it, so the desk opened with an
+      # empty box and no room in the app knew which moment this was about.
+      - name: A hook arrives at the video desk as a shot
+        run: npm run check:hookcarry
+
+      # Paying puts you back in the room you paid from, and that room reads
+      # itself again. Every callback was the front page and nothing read the
+      # flag, so a real R50 changed nothing anybody could see.
+      - name: Paying comes back to the room it was paid in
+        run: npm run check:paidback
+
       # What prompt caching actually saved, and the sum that turns four token
       # counts into rand. A cache that never hits looks exactly like one that
       # always does, except on the bill — and a lone write costs 25% MORE, so

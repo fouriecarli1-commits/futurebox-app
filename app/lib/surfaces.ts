@@ -688,6 +688,28 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       "explain that every piece is sold once and never appears twice",
       "explain that a buyer cannot upload their own picture, only buy or generate",
     ],
+    /* ── One operation, and it is not the copilot's ──────────────────
+
+       Carli, 21 September 2026: *"Ek betaal die R50 om die bid te begin,
+       maar dan gebeur daar niks nie."* The till sent everybody back to
+       the front page, and the studio now brings her back into this room
+       and sends `paid` so it reads itself again — the webhook marks the
+       buy-in while she is still being redirected, so the room's own first
+       read is easily the state from before she paid.
+
+       It is described here because `check:ops` holds every registered
+       operation to this registry, which is the rule that stops an
+       operation existing that nothing vouches for. The description is
+       what keeps the copilot off it: this is the studio's, and the model
+       is told so in the same words it reads everything else in.
+
+       The alternative was a second delivery mechanism for values that
+       have to wait for a room to mount. There is already one, it works,
+       and two of them would eventually disagree. */
+    ops: {
+      paid:
+        "the studio's own, not yours. It is sent when somebody comes back from paying, so the wall reads itself again. Never choose it: you cannot know whether a payment happened, and saying one did when it did not is the worst thing this room could say",
+    },
     seeds: [
       {
         en: "What does the artist actually get from R200?",

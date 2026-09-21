@@ -85,6 +85,7 @@ import { ArrowLeft, Check, ChevronDown, Loader2 } from 'lucide-react';
 import { barClearance } from './TabBar';
 import { accessToken, getStorageClient } from '../lib/cloud';
 import { refusalText } from '../lib/apierror';
+import { useCopilotOps } from '../lib/copilotactions';
 import { useBackLayer } from '../lib/backstack';
 import { useLang } from '../lib/i18n';
 import { loadTracks, type Track } from '../lib/library';
@@ -675,6 +676,36 @@ export default function ArtMarket(): React.ReactElement {
     setSongs(loadTracks());
   }, [read]);
 
+  /* ── Coming back from the till ────────────────────────────────────────
+
+     Carli, 21 September 2026: *"Ek betaal die R50 om die bid te begin,
+     maar dan gebeur daar niks nie. Daar is nie 'n countdown nie en nie 'n
+     teen bid button nie."*
+
+     The countdown and the bid button were both here and both correct. She
+     never reached them: the till sent everybody back to the front page,
+     so the room she had just paid inside was three taps away and looked
+     untouched. The studio brings her back now and sends this.
+
+     Two things, and the second matters as much as the first. Read again,
+     because the webhook is what marks the buy-in and it lands while she is
+     still being redirected — the room's own first read can easily be the
+     state from BEFORE she paid, which is the same nothing wearing a second
+     hat. And say so, in the room, beside the piece.
+
+     `paid` is not the copilot's to choose. It is described in the registry
+     as the studio's own, which is the price of using the one bus that can
+     hold something for a room that has not mounted yet — and it is the
+     right price: a second delivery mechanism for the same job is how two
+     of them come to disagree. */
+  const [justPaid, setJustPaid] = useState(false);
+  useCopilotOps('albumart', {
+    paid: () => {
+      setJustPaid(true);
+      void read();
+    },
+  });
+
   /** One place every write goes through, so every one of them re-reads. */
   const doIt = useCallback(
     async (body: Record<string, unknown>): Promise<boolean> => {
@@ -806,6 +837,22 @@ export default function ArtMarket(): React.ReactElement {
           className="mx-4 mt-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-[14px] text-rose-400"
         >
           {problem}
+        </p>
+      )}
+
+      {/* The payment landed, said where the payment was for.
+
+          Not a banner on the studio shell: this is news about a piece on
+          this wall, and it belongs on the wall. It stays until she leaves
+          the room rather than fading — she has just been sent out to a
+          till and back, and a message that has gone by the time she looks
+          up is the same nothing she reported. */}
+      {justPaid && (
+        <p
+          role="status"
+          className="mx-4 mt-3 rounded-xl border border-[var(--lyn)] bg-[var(--blad)] px-3 py-2.5 text-[14px]"
+        >
+          {t('art.paidBack')}
         </p>
       )}
 

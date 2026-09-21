@@ -49,6 +49,7 @@ import { loadTracks, downloadBlob, safeFilename, type Track } from '../lib/libra
 import { readAudio } from '../lib/trackaudio';
 import { findHooks, sectionHooks, decodeTrack, formatMoment, type Hook } from '../lib/hooks';
 import { renderVideo, styleFor, videoSupported, extensionFor } from '../lib/video';
+import type { HookCarry } from '../lib/hookhandover';
 import { accessToken } from '../lib/cloud';
 import { useLang } from '../lib/i18n';
 import Cost from './Cost';
@@ -99,7 +100,7 @@ export default function Hooks({
    * art and no studio for the reason at the top of this file, and "make a
    * video of it" is the same claim.
    */
-  readonly onMakeVideo?: (from: { trackId: string; seconds: number }) => void;
+  readonly onMakeVideo?: (from: { trackId: string; hook: HookCarry }) => void;
 } = {}) {
   const { t } = useLang();
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -946,7 +947,33 @@ export default function Hooks({
                         data-tovideo={index}
                         onClick={() => {
                           stopHearing();
-                          onMakeVideo({ trackId: selected.id, seconds: hook.seconds });
+                          /* Everything the moment knows, not its length.
+ 
+                             Carli, 21 September 2026: *"die liedjie hook
+                             lê nie daar in video nie en daar is geen
+                             prompt in die video desk nie."* The callback
+                             took `seconds` and the studio dropped it, so
+                             the desk knew the song and nothing about
+                             which twenty-two seconds of it this was
+                             about — and wrote no shot, because nothing
+                             carried what to write one from. The whole
+                             moment travels now and
+                             `lib/hookhandover.ts` turns it into a shot,
+                             a shape, a length and a word to the copilot
+                             standing in that room. */
+                          onMakeVideo({
+                            trackId: selected.id,
+                            hook: {
+                              title: selected.title,
+                              genre: selected.genre,
+                              bpm: selected.bpm,
+                              startSeconds: hook.startSeconds,
+                              seconds: hook.seconds,
+                              kind: hook.kind,
+                              label: hook.label,
+                              arrived: hook.arrived,
+                            },
+                          });
                         }}
                         className="min-h-[44px] w-full py-2.5 rounded-xl text-sm font-semibold bg-zinc-950 border border-zinc-700 text-zinc-200 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-1.5"
                       >

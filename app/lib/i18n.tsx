@@ -438,6 +438,9 @@ export const STRINGS: Dict = {
      words, and no exclamation marks anywhere. */
   "art.all": { en: "Everyone", af: "Almal" },
   "art.reading": { en: "Opening the gallery…", af: "Maak die galery oop…" },
+  /* Said in the room she paid from, because the till used to put her down
+     on the front page and nothing anywhere said the money had landed. */
+  "art.paidBack": { en: "Your payment came through. The piece below is up to date \u2014 open it to bid.", af: "Jou betaling het deurgekom. Die stuk hieronder is op datum \u2014 maak dit oop om te bie." },
   "art.empty": {
     en: "Nothing is hanging yet. Our artists are working.",
     af: "Daar hang nog niks nie. Ons kunstenaars werk.",

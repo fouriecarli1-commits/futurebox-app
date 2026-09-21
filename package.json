@@ -12,6 +12,8 @@
     "check:sqlcolumns": "tsx scripts/check-sqlcolumns.mts",
     "check:jsxcomment": "tsx scripts/check-jsxcomment.mts",
     "check:livewhy": "tsx scripts/check-livewhy.mts",
+    "check:hookcarry": "tsx scripts/check-hookcarry.mts",
+    "check:paidback": "tsx scripts/check-paidback.mts",
     "check:sqlruns": "tsx scripts/check-sqlruns.mts",
     "costs:eleven": "tsx scripts/costs-eleven.mts",
     "check:probes": "tsx scripts/check-probes.mts",

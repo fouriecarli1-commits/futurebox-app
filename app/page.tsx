@@ -75,6 +75,8 @@ import {
   surfacesInStage,
   type SurfaceId,
 } from './lib/surfaces';
+
+import { videoFromHook } from './lib/hookhandover';
 import { errandBelongs, type Errand } from './lib/errands';
 import Spotlight from './components/Spotlight';
 import HereNow from './components/HereNow';
@@ -756,6 +758,47 @@ export default function FutureBoxHome() {
        forget: nothing waits for it and nothing fails because of it. */
     noteTaste('room', id);
   }, [toTheTop]);
+
+  /* ── Back from the till, into the room she paid from ────────────────
+
+     Carli, 21 September 2026: *"Met die album art wanneer die betaling
+     terug kom is dit nie in dieselfde kamer nie. Ek betaal die R50 om die
+     bid te begin, maar dan gebeur daar niks nie. Daar is nie 'n countdown
+     nie en nie 'n teen bid button nie."*
+
+     Every one of those three is one fault. Paystack was told to come back
+     to `/?paid=1` and nothing in this file had ever read `paid`, so she
+     paid a real R50 and was put down on the front page in a studio that
+     looked exactly as it had before. The countdown and the bid button are
+     both on the sheet, both correct, and both three taps away behind a
+     room she had been walked out of.
+
+     `handoff` rather than `dispatch`, for the same reason the adverts
+     desk uses it: this fires on the first render, and the room it is for
+     has not mounted yet. The bus holds it until it does.
+
+     The address is cleaned afterwards, so a reload is a reload rather than
+     a second arrival from a till nobody visited.
+
+     Nothing is said here. The room says it — in the room, beside the piece,
+     in her language — because a banner on the studio shell would be the
+     same news delivered one layer away from the thing it is about. */
+  useEffect(() => {
+    const here = new URL(window.location.href);
+    if (here.searchParams.get('paid') !== '1') return;
+    const room = resolveSurfaceId(here.searchParams.get('room') ?? '');
+    if (room) {
+      goToRoom(room);
+      /* Tell the room to read itself again. The webhook is what actually
+         marks the buy-in, and it lands on the server while she is still
+         being redirected — so the room's own first read can be the state
+         from before she paid, which is the fault wearing a second hat. */
+      copilotBus.handoff(room, 'paid', '');
+    }
+    here.searchParams.delete('paid');
+    here.searchParams.delete('room');
+    window.history.replaceState(null, '', `${here.pathname}${here.search}${here.hash}`);
+  }, [goToRoom, copilotBus]);
 
   /* And after the room has actually been drawn.
 
@@ -3457,9 +3500,22 @@ export default function FutureBoxHome() {
                    hand-off waits for a room that has not mounted and fires
                    when it does. Vertical, because a hook is cut for a feed
                    that is held upright. */
-                onMakeVideo={({ trackId }) => {
+                onMakeVideo={({ trackId, hook }) => {
                   setVideoSong(trackId);
-                  copilotBus.handoff('canvas', 'set_aspect', '9:16');
+                  /* Every wire, not the shape alone.
+
+                     Carli, 21 September 2026: *"die liedjie hook lê nie
+                     daar in video nie en daar is geen prompt in die video
+                     desk nie."* This sent `set_aspect` and nothing else,
+                     so the desk opened with the right song under it, the
+                     right shape on it, and an empty box where the shot
+                     goes — and the copilot in that room had never heard
+                     of the hook. `videoFromHook` writes all four from the
+                     moment itself; the same shape as the adverts desk's
+                     hand-off, down to the word to the copilot. */
+                  for (const wire of videoFromHook(hook)) {
+                    copilotBus.handoff(wire.room, wire.op, wire.value);
+                  }
                   goToRoom('canvas');
                 }}
                 /* A song somebody opened up, carried into Make a song. The
