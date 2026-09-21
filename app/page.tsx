@@ -80,6 +80,7 @@ import { videoFromHook, videoFromSong } from './lib/hookhandover';
 import { featuredClass, youTubeId } from './data/masterclasses';
 import { errandBelongs, type Errand } from './lib/errands';
 import Spotlight from './components/Spotlight';
+import Fold from './components/Fold';
 import HereNow from './components/HereNow';
 import LanguagePicker from './components/LanguagePicker';
 import Balance from './components/Balance';
@@ -2565,6 +2566,11 @@ export default function FutureBoxHome() {
 
         {/* 🎙️ 2. FUTUREBOX PODCASTS */}
         {(activeTab === 'all' || activeTab === 'futurebox') && (
+          <Fold
+            title={t('fold.pods', 'Podcasts worth the hour')}
+            icon={<Headphones className="h-4 w-4" />}
+            always={activeTab === 'futurebox'}
+          >
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -2659,10 +2665,16 @@ export default function FutureBoxHome() {
               ))}
             </div>
           </section>
+        </Fold>
         )}
 
         {/* 🎓 3. MASTERCLASSES (PRO Gated) */}
         {(activeTab === 'all' || activeTab === 'masterclasses') && (
+          <Fold
+            title={t('fold.classes', 'The rest of the classes')}
+            icon={<GraduationCap className="h-4 w-4" />}
+            always={activeTab === 'masterclasses'}
+          >
           <section className="space-y-6">
             {picksBar}
 
@@ -2709,10 +2721,16 @@ export default function FutureBoxHome() {
                 thing first, which is what `curated` means in that file. */}
 
           </section>
+        </Fold>
         )}
 
         {/* 🎨 4. CREATIVE AI MUSIC & VIDEOS ("HOOKS" SHOWCASE) */}
         {(activeTab === 'all' || activeTab === 'creations') && (
+          <Fold
+            title={t('fold.creations', 'Music and video members made')}
+            icon={<Sparkles className="h-4 w-4" />}
+            always={activeTab === 'creations'}
+          >
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -2770,10 +2788,16 @@ export default function FutureBoxHome() {
             </div>
 
           </section>
+        </Fold>
         )}
 
         {/* ⚡ 5. INTELLIGENCE RADAR */}
         {(activeTab === 'all' || activeTab === 'radar') && (
+          <Fold
+            title={t('fold.radar', 'What changed this week')}
+            icon={<TrendingUp className="h-4 w-4" />}
+            always={activeTab === 'radar'}
+          >
           <section className="space-y-6">
             {/* The quality board is the radar page. On the landing tab it
                 was 5,394 pixels of one section out of six. */}
@@ -2898,6 +2922,7 @@ export default function FutureBoxHome() {
               ))}
             </div>
           </section>
+        </Fold>
         )}
 
 

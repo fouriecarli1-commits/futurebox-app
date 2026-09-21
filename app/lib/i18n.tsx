@@ -1766,6 +1766,12 @@ export const STRINGS: Dict = {
   "song.evenly": { en: "The words are spread evenly over the length \u2014 this one has not been listened to yet, so they can drift.", af: "Die woorde word gelykop oor die lengte versprei \u2014 daar is nog nie na hierdie een geluister nie, so hulle kan wegdryf." },
   "song.byEar": { en: "The words are laid on the singing this app measured in the song.", af: "Die woorde l\u00ea op die sang wat hierdie toep in die liedjie gemeet het." },
   "song.bySpan": { en: "The words are laid across the part of the file that is sung.", af: "Die woorde l\u00ea oor die deel van die l\u00eaer waarop gesing word." },
+  /* The front page’s own drop-downs. Carli: everything folded except the
+     one big class and the maker’s advert. */
+  "fold.pods": { en: "Podcasts worth the hour", af: "Podcasts wat die uur werd is" },
+  "fold.classes": { en: "The rest of the classes", af: "Die res van die klasse" },
+  "fold.creations": { en: "Music and video members made", af: "Musiek en video’s wat lede gemaak het" },
+  "fold.radar": { en: "What changed this week", af: "Wat die week verander het" },
   "feed.creationsWaiting": { en: "This is where members\u2019 own music and videos go. Nothing invented sits here in the meantime \u2014 what is on the wall is what people have actually made.", af: "Hier kom lede se eie musiek en video\u2019s. Niks versinde sit intussen hier nie \u2014 wat op die muur is, is wat mense werklik gemaak het." },
   "feed.creationsGo": { en: "See what people are posting", af: "Kyk wat mense plaas" },
   "home.setNo": { en: "Set", af: "Stel" },
