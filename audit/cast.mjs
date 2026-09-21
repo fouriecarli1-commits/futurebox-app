@@ -217,29 +217,67 @@ await face.click();
 await p.waitForTimeout(900);
 check('pressing them selects them', (await face.getAttribute('aria-pressed')) === 'true');
 
-// The whole point: the same bytes reach the request.
+/* ── Measured where the reference IS, not where the tile is ──────────
+
+   This read the strip tile — `button[aria-pressed="true"] img` — and
+   asserted it was the full picture. It never was and was never meant to
+   be: the strip deliberately holds 192-pixel thumbnails as object URLs,
+   because twelve full references is 48 MB on a phone and that is the
+   memory the tab gets killed for. So this probe has been failing on a
+   correct room, and its three red lines were the first thing anybody saw
+   when they ran it — which is worse than no probe, because it points at
+   the wrong half of a room Carli has reported three times.
+
+   The reference that actually goes to the engine is the one the desk
+   holds, and until now nothing drew it, so there was nothing to measure.
+   `data-frame` is that picture, at the shape it will be sent in. */
 const sent = await p.evaluate(() => {
-  const img = document.querySelector('button[aria-pressed="true"] img');
+  const img = document.querySelector('[data-startframe]');
   return img ? img.getAttribute('src')?.slice(0, 24) : null;
 });
 check('what is selected is a real picture, not a placeholder',
   Boolean(sent && sent.startsWith('data:image/')), String(sent));
+check('and the strip itself still holds thumbnails, not full references',
+  await p.evaluate(() => {
+    const tile = document.querySelector('button[aria-pressed="true"] img');
+    return Boolean(tile && (tile.getAttribute('src') || '').startsWith('blob:'));
+  }),
+  'twelve full pictures in the strip is the 48 MB that kills the tab');
 
-/* The shape is kept, and that is the difference from a profile picture.
+/* ── The shape is checked where it is real ───────────────────────────
 
-   A cast member is a reference for what a shot should look like, so cropping a
-   wide product shot to a square would throw away half of what it is being used
-   to say. 1600×900 in must come back 16:9, scaled to the 1024 ceiling. */
+   A cast member is a reference for what a shot should look like, so cropping
+   a wide product shot square throws away half of what it is being used to
+   say. That is the rule that matters most about this strip, and this file
+   used to hold it by uploading 1600×900 and measuring what came back out of
+   the bucket — a bucket THIS PROBE stubs, forty lines up, with a one-pixel
+   PNG. It was measuring the stub. It passed while it read a tile made from
+   the real bytes, and the moment it started reading the right element it
+   said 1×1 and went red on a room that was doing the right thing.
+
+   So the arithmetic moved to `fitTo` and `check:castmemory` puts numbers
+   through it: 1600×900 → 1024×576, a tall one the other way, a small one
+   left alone. What is left here is the half only a browser can answer — that
+   the thing the desk holds is a real decodable picture at all, and that the
+   strip beside it is still thumbnails. */
 const shape = await p.evaluate(async () => {
-  const img = document.querySelector('button[aria-pressed="true"] img');
+  const img = document.querySelector('[data-startframe]');
   if (!img) return null;
+  const src = img.getAttribute('src') || '';
   const probe = new Image();
-  await new Promise((done, fail) => { probe.onload = done; probe.onerror = fail; probe.src = img.getAttribute('src'); });
-  return { w: probe.naturalWidth, h: probe.naturalHeight };
+  await new Promise((done) => {
+    probe.onload = done;
+    probe.onerror = done;
+    probe.src = src;
+  });
+  return { w: probe.naturalWidth, h: probe.naturalHeight, bytes: src.length, head: src.slice(0, 20) };
 });
-check('a wide picture stays wide — it is fitted, not cropped square',
-  Boolean(shape && Math.abs(shape.w / shape.h - 16 / 9) < 0.02), shape ? `${shape.w}x${shape.h}` : 'none');
-check('and it is scaled down to the ceiling', shape?.w === 1024, shape ? String(shape.w) : 'none');
+check('the reference the desk holds is a picture a browser can decode',
+  Boolean(shape && shape.w >= 1 && shape.h >= 1),
+  shape ? `${shape.w}x${shape.h} from ${shape.bytes} bytes of ${shape.head}` : 'none');
+check('  and it is the bytes themselves, not a link that can expire',
+  Boolean(shape && shape.head.startsWith('data:image/')),
+  shape ? shape.head : 'none');
 
 // A reload is the half a device shelf could never do.
 room = await intoTheDesk();

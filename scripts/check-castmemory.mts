@@ -41,6 +41,7 @@
  * rules below are about which function is called where, and that is a
  * question the source answers exactly.
  */
+import { fitTo } from '../app/lib/imagefile';
 import { readFileSync } from 'node:fs';
 
 let failures = 0;
@@ -186,6 +187,54 @@ ok('and the strip beside it, which always worked, still renders a thumbnail',
   ok('and both doors give the same answer',
     /function whySaid\(/.test(room) && (room.match(/whySaid\(/g) ?? []).length === 3,
     'there are two ladders of reasons again, and last time they had already drifted');
+}
+
+/* ── The shape is kept, and that is now checkable ─────────────────────
+ *
+ * A cast member is a reference for what a shot should look like, so cropping
+ * a wide product shot square throws away half of what it is being used to
+ * say. That is the rule that matters most about this strip, and for weeks the
+ * only thing holding it was `audit/cast.mjs` measuring what came back out of
+ * a bucket the probe itself stubs with a one-pixel PNG. It was reading the
+ * stub.
+ *
+ * `fitTo` is the arithmetic on its own, so the numbers can be put through it
+ * here — where the answer is known before the measurement is taken.
+ */
+{
+  const wide = fitTo(1600, 900, 1024);
+  ok('a wide picture stays wide', Math.abs(wide.width / wide.height - 16 / 9) < 0.01,
+    `${wide.width}x${wide.height}`);
+  ok('  and comes down to the ceiling', wide.width === 1024 && wide.height === 576,
+    `${wide.width}x${wide.height}`);
+
+  const tall = fitTo(900, 1600, 1024);
+  ok('a tall one stays tall, and the ceiling is the LONGEST side',
+    tall.height === 1024 && tall.width === 576, `${tall.width}x${tall.height}`);
+
+  const small = fitTo(300, 200, 1024);
+  ok('a small one is left alone rather than stretched',
+    small.width === 300 && small.height === 200, `${small.width}x${small.height}`);
+
+  const square = fitTo(2048, 2048, 1024);
+  ok('and a square one is still square', square.width === 1024 && square.height === 1024,
+    `${square.width}x${square.height}`);
+
+  /* The rounding floor, which is the line between a thin picture and a
+     divide that makes the canvas zero pixels wide and throws. */
+  const sliver = fitTo(4000, 3, 1024);
+  ok('a sliver still has a pixel of height rather than none',
+    sliver.height >= 1 && sliver.width === 1024, `${sliver.width}x${sliver.height}`);
+  ok('and a picture of no size at all does not divide by zero',
+    fitTo(0, 0, 1024).width === 1 && Number.isFinite(fitTo(0, 0, 1024).height),
+    JSON.stringify(fitTo(0, 0, 1024)));
+
+  /* And the strip uses it. A rule about `fitTo` that the cast does not call
+     is a rule about nothing. */
+  const lib = readFileSync('app/lib/cast.ts', 'utf8');
+  ok('the cast fits rather than squares its pictures',
+    /await fit\(file, LONGEST\)/.test(lib) && /const LONGEST = 1024;/.test(lib),
+    'squaring a cast member is the one thing that separates it from a profile picture');
 }
 
 if (failures) {

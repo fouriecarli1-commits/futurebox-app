@@ -125,6 +125,48 @@ export default function StartFrame({
         </p>
       </div>
 
+      {/* ── The picture you attached, where you can see it ──────────────
+
+          Carli has reported the cast strip three times. Two of those rounds
+          went into the file picker and the route; this is the third thing
+          that was wrong and nobody had looked at it, because nothing on
+          screen could show it.
+
+          A chosen reference was never drawn anywhere. The strip tile went
+          on showing its own 192-pixel thumbnail with a tick on it — which
+          is right for the strip, and meant the only evidence that a
+          full-size picture had been fetched at all was that a tick
+          appeared. A 192-pixel reference reaching the engine looks exactly
+          the same from here as a 1024-pixel one, and `audit/cast.mjs` was
+          measuring the tile and calling it the reference.
+
+          So the picture that will actually be sent is drawn, at the shape
+          it will be sent in. `object-contain` and not `cover`, because the
+          whole argument for a cast member over a profile picture is that
+          its shape is not thrown away — and a preview that crops is a
+          preview that hides the one thing worth checking. */}
+      {value && (
+        <div className="space-y-1.5">
+          <div className="overflow-hidden rounded-xl border border-zinc-800 bg-black">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              data-startframe
+              src={value}
+              alt={t('frame.chosen', 'The picture this clip starts from')}
+              className="mx-auto max-h-40 w-auto object-contain"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            disabled={disabled}
+            className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm font-semibold text-zinc-300 hover:border-zinc-600 hover:text-white disabled:opacity-50"
+          >
+            {t('frame.takeOff', 'Take the picture off')}
+          </button>
+        </div>
+      )}
+
       {/* The cast first, the scratch pad under it.
 
           They answer different questions and the order says which is which:

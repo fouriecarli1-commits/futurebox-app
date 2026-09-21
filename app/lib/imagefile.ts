@@ -292,12 +292,44 @@ export async function squareMarked(
  * A picture already smaller than the limit is left at its own size rather than
  * being scaled up into softness.
  */
+/**
+ * The arithmetic of fitting, on its own, so it can be checked.
+ *
+ * ── Why this is not inside `fit` any more ────────────────────────────────
+ *
+ * Carli has reported the cast strip three times. `audit/cast.mjs` claimed to
+ * hold the rule that matters most about it — *a wide picture stays wide, it
+ * is fitted and not cropped square* — by uploading 1600×900 and measuring
+ * what came back out of the bucket. The bucket in that probe is a stub that
+ * answers every download with a one-pixel PNG. So the assertion was reading
+ * the stub, and the day it started reading the right element it said 1×1 and
+ * went red on a room that was doing the right thing.
+ *
+ * A measurement that can only be taken in a browser, against a stub, is a
+ * measurement nobody can check — the same sentence `check:photo` opens with.
+ * The sizing is arithmetic, so it comes out here where a source check can
+ * put numbers through it, and `fit` keeps the part that genuinely needs a
+ * canvas.
+ */
+export function fitTo(
+  width: number,
+  height: number,
+  longest: number,
+): { readonly width: number; readonly height: number } {
+  const biggest = Math.max(width, height);
+  /* Never up. A 300-pixel picture stretched to 1024 is a 300-pixel picture
+     with more bytes, and the engine reads the detail that is there. */
+  const scale = biggest > 0 ? Math.min(1, longest / biggest) : 1;
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  };
+}
+
 export async function fit(file: File, longest: number): Promise<Made> {
   const bitmap = await decode(file);
   if (typeof bitmap === 'string') return { ok: false, why: bitmap };
 
-  const scale = Math.min(1, longest / Math.max(bitmap.width, bitmap.height));
-  const width = Math.max(1, Math.round(bitmap.width * scale));
-  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const { width, height } = fitTo(bitmap.width, bitmap.height, longest);
   return draw(bitmap, width, height, (context) => context.drawImage(bitmap, 0, 0, width, height));
 }

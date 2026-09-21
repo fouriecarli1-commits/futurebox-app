@@ -1274,6 +1274,8 @@ export const STRINGS: Dict = {
   "radar.kind.podcast": { en: "Listen", af: "Luister" },
   "frame.title": { en: "Start from a picture", af: "Begin by ’n prent" },
   "frame.hint": { en: "The shape of the clip comes from the picture now. Write what moves rather than what it looks like.", af: "Die vorm van die knipsel kom nou van die prent af. Skryf wat beweeg eerder as hoe dit lyk." },
+  "frame.chosen": { en: "The picture this clip starts from", af: "Die foto waarmee hierdie video begin" },
+  "frame.takeOff": { en: "Take the picture off", af: "Haal die foto af" },
   "frame.why": { en: "Optional, and it costs nothing extra. A picture settles the look in one go \u2014 the same face, the same room, the same product in every clip \u2014 so the sentence only has to say what moves.", af: "Opsioneel, en dit kos niks ekstra nie. \u2019n Prent besleg die voorkoms in een slag \u2014 dieselfde gesig, dieselfde kamer, dieselfde produk in elke knipsel \u2014 sodat die sin net hoef te s\u00ea wat beweeg." },
   "style.noAudio": { en: "This browser cannot play a sketch. The words below still work.", af: "Hierdie blaaier kan nie ’n skets speel nie. Die woorde hieronder werk steeds." },
   "style.sketchNote": { en: "Play draws a sketch in your browser — the tempo, the key and the shape of the groove. It is a direction, not a recording of the genre.", af: "Speel teken ’n skets in jou blaaier — die tempo, die toonaard en die vorm van die groef. Dit is ’n rigting, nie ’n opname van die genre nie." },

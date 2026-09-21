@@ -48,7 +48,50 @@ export const ORDER = [
   'livevideo',
   'albumart',
   'aikoste',
+  /* ── The six that were written and never bundled ─────────────────────
+
+     Carli, 21 September 2026, for the third time: *"Sal jy nog iewers die
+     cast member probleem ook fix."*
+
+     `cast.sql` was written on 4 September and this bundle on the 6th, and
+     nobody put one in the other. She runs this file; anything outside it
+     she has never seen. So the cast strip has been calling a table that
+     does not exist in her project for a fortnight, and the last two
+     rounds of work on it went into diagnostics for a route that was
+     answering correctly the whole time.
+
+     Five more were in the same position — written beside the bundle or
+     after it and never added. `check:sqlbundle` now refuses a `.sql` file
+     that is in neither this list nor the one of files that predate the
+     bundle, so this cannot happen again quietly.
+
+     All six are safe to run twice: every table is `if not exists`, every
+     policy is dropped before it is created, and both buckets upsert. */
+  'avatars',
+  'cast',
+  'mail',
+  'taste',
+  'kitsmine',
+  'afrikaans',
 ] as const;
+
+/**
+ * The files she has already run, from before this bundle existed.
+ *
+ * Not "files we decided to leave out" — files that were pasted one at a
+ * time in August and early September, which is why the bundle opens by
+ * checking for three of their tables rather than including them. Listed so
+ * that `check:sqlbundle` can tell them from a file somebody wrote last week
+ * and forgot to bundle, which is the whole of the cast fault.
+ */
+export const ALREADY = [
+  'schema', 'events', 'collab', 'credits', 'live', 'video', 'video2', 'podcast',
+  'subscriptions', 'usage', 'abuse', 'moderation', 'arena', 'radar', 'presence',
+  'finetunes',
+] as const;
+
+/** Not schema at all: the two notes that live in this folder. */
+export const NOT_SCHEMA = ['ALMAL', 'TOETSTOEGANG', 'WATISGEDOEN'] as const;
 
 export const BUNDLE = join(ROOT, 'supabase/ALMAL.sql');
 
@@ -90,6 +133,18 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Album art by regte kunstenaars: wie hulle is, wat te koop is, en die krediet wat saam met \u2019n liedjie na die speelkamer reis. Sonder dit is die kamer leeg en wys Live geen kunstenaar se naam nie.',
   aikoste:
     'Wat elke model-oproep gekos het, en wat die kas werklik gespaar het. Sonder dit bly die besparing \u2019n skatting \u2014 en \u2019n kas wat nooit tref nie lyk presies soos een wat altyd tref, behalwe op die rekening.',
+  avatars:
+    'Jou eie foto op jou profiel. Sonder dit is daar net \u2019n letter in \u2019n sirkel, en die oplaai antwoord dat dit nie opgestel is nie.',
+  cast:
+    'Die cast \u2014 gesigte wat jy een keer oplaai en in elke video weer gebruik. Sonder dit lyk die knoppie reg en die oplaai misluk elke keer.',
+  mail:
+    'Watter e-pos ons al gestuur het. Sonder dit kan niks keer dat dieselfde brief twee keer uitgaan nie.',
+  taste:
+    'Waarheen jy die meeste gaan en wat jy die meeste maak, sodat \u2019n voorstel joune is eerder as generies.',
+  kitsmine:
+    'Jou eie Kits.AI minute, los van die huis s\u2019n. Sonder dit trek elke aflaai aan dieselfde teller.',
+  afrikaans:
+    'Wanneer Afrikaans verkeerd uitkom, gese deur die mense wat dit hoor. Sonder dit is die knoppie daar en die verslag gaan nooit \u00eerens heen nie.',
 };
 
 /**
@@ -135,6 +190,7 @@ ${ORDER.map(says).join('\n')}
 --   public.events    uit supabase/events.sql   — charts.sql brei dit uit
 --   public.collabs   uit supabase/collab.sql   — invites.sql wys daarna
 --   public.tracks    uit supabase/schema.sql   — listens.sql tel net jou eie
+--   public.creators  uit supabase/schema.sql   — avatars.sql hang 'n kolom aan
 --
 -- Die blok hieronder kyk daarvoor en sê in gewone woorde wat om eerste te
 -- loop as een van hulle kort. Dit is met opset \'n sin eerder as \'n Postgres-
@@ -159,6 +215,12 @@ begin
   if to_regclass('public.tracks') is null then
     raise exception
       'Loop eers supabase/schema.sql — listens.sql tel luisterbeurte per liedjie en public.tracks bestaan nog nie.';
+  end if;
+  -- avatars.sql hang 'n kolom aan public.creators, en 'n kolom aan 'n tabel
+  -- wat nie bestaan nie is 'n fout diep in iets wat jy pas geplak het.
+  if to_regclass('public.creators') is null then
+    raise exception
+      'Loop eers supabase/schema.sql — avatars.sql hang jou profielfoto aan public.creators en dit bestaan nog nie.';
   end if;
 end $$;
 `;

@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- FutureBox — die 15 lêers wat nog nooit geloop het nie, in een plak.
+-- FutureBox — die 21 lêers wat nog nooit geloop het nie, in een plak.
 -- ═══════════════════════════════════════════════════════════════════════════
 --
 -- Supabase → SQL Editor → plak alles → Run. Veilig om weer te loop: elke stuk
@@ -43,6 +43,21 @@
 --                 gespaar het. Sonder dit bly die besparing ’n skatting — en
 --                 ’n kas wat nooit tref nie lyk presies soos een wat altyd
 --                 tref, behalwe op die rekening.
+--   avatars.sql   Jou eie foto op jou profiel. Sonder dit is daar net ’n
+--                 letter in ’n sirkel, en die oplaai antwoord dat dit nie
+--                 opgestel is nie.
+--   cast.sql      Die cast — gesigte wat jy een keer oplaai en in elke video
+--                 weer gebruik. Sonder dit lyk die knoppie reg en die oplaai
+--                 misluk elke keer.
+--   mail.sql      Watter e-pos ons al gestuur het. Sonder dit kan niks keer
+--                 dat dieselfde brief twee keer uitgaan nie.
+--   taste.sql     Waarheen jy die meeste gaan en wat jy die meeste maak,
+--                 sodat ’n voorstel joune is eerder as generies.
+--   kitsmine.sql  Jou eie Kits.AI minute, los van die huis s’n. Sonder dit
+--                 trek elke aflaai aan dieselfde teller.
+--   afrikaans.sql Wanneer Afrikaans verkeerd uitkom, gese deur die mense wat
+--                 dit hoor. Sonder dit is die knoppie daar en die verslag
+--                 gaan nooit îrens heen nie.
 --
 -- ── Twee dinge moet reeds daar wees ────────────────────────────────────────
 --
@@ -51,6 +66,7 @@
 --   public.events    uit supabase/events.sql   — charts.sql brei dit uit
 --   public.collabs   uit supabase/collab.sql   — invites.sql wys daarna
 --   public.tracks    uit supabase/schema.sql   — listens.sql tel net jou eie
+--   public.creators  uit supabase/schema.sql   — avatars.sql hang 'n kolom aan
 --
 -- Die blok hieronder kyk daarvoor en sê in gewone woorde wat om eerste te
 -- loop as een van hulle kort. Dit is met opset 'n sin eerder as 'n Postgres-
@@ -58,7 +74,7 @@
 --
 -- ── Moenie hierdie lêer regmaak nie ────────────────────────────────────────
 --
--- Dit word geskryf deur `npm run sql:bundle` uit die 15 lêers self.
+-- Dit word geskryf deur `npm run sql:bundle` uit die 21 lêers self.
 -- Verander hulle en loop die skrip weer; `npm run check:sqlbundle` keer dat
 -- die kopie stilweg van sy oorsprong af wegdryf.
 
@@ -75,6 +91,12 @@ begin
   if to_regclass('public.tracks') is null then
     raise exception
       'Loop eers supabase/schema.sql — listens.sql tel luisterbeurte per liedjie en public.tracks bestaan nog nie.';
+  end if;
+  -- avatars.sql hang 'n kolom aan public.creators, en 'n kolom aan 'n tabel
+  -- wat nie bestaan nie is 'n fout diep in iets wat jy pas geplak het.
+  if to_regclass('public.creators') is null then
+    raise exception
+      'Loop eers supabase/schema.sql — avatars.sql hang jou profielfoto aan public.creators en dit bestaan nog nie.';
   end if;
 end $$;
 
@@ -1866,3 +1888,578 @@ create or replace view public.ai_cache_check as
    where at > now() - interval '30 days'
    group by what
    order by sum(cache_read) + sum(input_tokens) desc;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/avatars.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ─────────────────────────────────────────────────────── a face on a channel ──
+--
+-- A picture for a creator, and the bucket it lives in.
+--
+-- ── Why a column and not a convention ────────────────────────────────────
+--
+-- The path could have been derived — "avatars/<owner>/photo.webp" — and then
+-- nothing would need storing. That falls down twice. A derived path cannot be
+-- cache-busted, so replacing a photo leaves the old one on screen until the
+-- browser feels like asking again; and there is no way to tell "no photo yet"
+-- from "photo that failed to load", which is the difference between showing
+-- initials and showing a broken image.
+--
+-- So the row holds the path, the path carries a stamp, and an empty column
+-- means exactly one thing.
+--
+-- ── Public, and what that costs ──────────────────────────────────────────
+--
+-- The bucket is public, like `episodes` and unlike `tracks`. A profile picture
+-- is shown to whoever is looking at the channel, including people not signed
+-- in, and a signed URL that expires would mean every avatar in a list needing
+-- a round trip and then breaking an hour later.
+--
+-- What that means honestly: anybody who knows the path can fetch the file, and
+-- deleting the row does not delete the object. So replacing a photo overwrites
+-- the same name rather than accumulating, and removing one deletes the object
+-- as well as clearing the column — see `app/lib/avatar.ts`, which does both.
+
+-- ─────────────────────────────────────────────────────────── what comes first ──
+--
+-- This adds a column to a table another file makes. Run out of order, Postgres
+-- says `relation "public.creators" does not exist`, which is accurate and
+-- tells you nothing about which file to run. So it is said in words instead.
+--
+-- Order: schema.sql → radar.sql → this one.
+do $$
+begin
+  if to_regclass('public.creators') is null then
+    raise exception
+      'public.creators does not exist. Run supabase/radar.sql first (and supabase/schema.sql before that, if you have not).';
+  end if;
+end
+$$;
+
+alter table public.creators
+  add column if not exists avatar_path text;
+
+-- ────────────────────────────────────────────────────────────────── bucket ──
+
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do update set public = true;
+
+-- Anyone may look; only the owner may put, replace or remove. The first path
+-- segment is the owner's id, which is what ties a file to a person — the same
+-- shape the episodes bucket uses.
+--
+-- Wrapped, because on some projects the SQL editor does not own
+-- `storage.objects` and every one of these comes back as `42501: must be owner
+-- of table objects`. That is a real thing to hit and it is not a mistake in
+-- this file, so it says what to do instead of failing the whole script and
+-- leaving the column half-added.
+do $$
+begin
+  execute 'drop policy if exists "read avatars" on storage.objects';
+  execute $p$create policy "read avatars" on storage.objects
+    for select using (bucket_id = 'avatars')$p$;
+
+  execute 'drop policy if exists "write own avatar" on storage.objects';
+  execute $p$create policy "write own avatar" on storage.objects
+    for insert with check (
+      bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+    )$p$;
+
+  execute 'drop policy if exists "replace own avatar" on storage.objects';
+  execute $p$create policy "replace own avatar" on storage.objects
+    for update using (
+      bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+    )$p$;
+
+  execute 'drop policy if exists "delete own avatar" on storage.objects';
+  execute $p$create policy "delete own avatar" on storage.objects
+    for delete using (
+      bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+    )$p$;
+exception
+  when insufficient_privilege then
+    raise warning 'The avatars bucket was made, but its policies were refused: %. Add them by hand under Storage → avatars → Policies: read for everyone; insert, update and delete where (storage.foldername(name))[1] = auth.uid()::text.', sqlerrm;
+end
+$$;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/cast.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ──────────────────────────────────────────────────────────────── the cast ──
+--
+-- The people, places and products a set of clips is supposed to be about.
+--
+-- ── What this fixes ──────────────────────────────────────────────────────
+--
+-- A start frame is the only way to get the same face into two clips that are
+-- meant to cut together — two prompts, however carefully written, give two
+-- strangers. That already worked. What did not is that the picture lived in
+-- one browser: `app/lib/assets.ts` keeps a shelf of twenty in IndexedDB, on
+-- the device that uploaded them. Open the studio on a phone and the presenter
+-- your last three adverts were built around is not there.
+--
+-- So a cast member is a row and a file on the account. Named, because "the
+-- picture I used last Tuesday" is not how anybody thinks about a presenter,
+-- and because a name is what makes it choosable in one press in any room.
+--
+-- ── Private, unlike avatars ──────────────────────────────────────────────
+--
+-- The avatars bucket is public: a profile picture is shown to people who are
+-- not signed in, so it has to be. This one is the opposite. A cast member is
+-- an *input* — somebody's face, an unreleased product, a location — and
+-- nothing here ever publishes it. It is read by its owner, sent to the engine
+-- with a generation, and that is the whole of its life.
+--
+-- That means the browser downloads it with the owner's own session rather than
+-- building a URL, and the policies below are what make that safe.
+--
+-- ── Order ────────────────────────────────────────────────────────────────
+--
+-- Needs schema.sql only, for auth.users. Safe to run again.
+
+do $$
+begin
+  if to_regclass('auth.users') is null then
+    raise exception 'auth.users does not exist — this is not a Supabase project, or schema.sql has not been run.';
+  end if;
+end
+$$;
+
+create table if not exists public.cast_members (
+  id          uuid primary key default gen_random_uuid(),
+  owner       uuid not null references auth.users (id) on delete cascade,
+  -- What they are called on the desk: "Sarel, the presenter", "the blue tin".
+  name        text not null default '',
+  -- Anything the picture cannot say: "always shot from his left", "the label
+  -- must face camera". Written into the prompt by whoever is making the clip,
+  -- not automatically — a note that silently edits a prompt is a note nobody
+  -- can debug.
+  note        text not null default '',
+  -- Where the picture sits in the private `cast` bucket: <owner>/<stamp>.webp.
+  -- Stamped rather than fixed, for the same reason as an avatar: a replaced
+  -- picture behind a cached URL is the "I changed it and nothing happened"
+  -- bug, and here it would be worse — the wrong face in a paid-for clip.
+  path        text not null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create index if not exists cast_members_owner_idx
+  on public.cast_members (owner, created_at desc);
+
+alter table public.cast_members enable row level security;
+
+-- Yours alone, in every direction. Nothing about a cast member is public, and
+-- there is no shared or discoverable case to carve out — unlike `creators`,
+-- which exists to be found.
+drop policy if exists "read own cast" on public.cast_members;
+create policy "read own cast" on public.cast_members
+  for select using (auth.uid() = owner);
+
+drop policy if exists "write own cast" on public.cast_members;
+create policy "write own cast" on public.cast_members
+  for insert with check (auth.uid() = owner);
+
+drop policy if exists "change own cast" on public.cast_members;
+create policy "change own cast" on public.cast_members
+  for update using (auth.uid() = owner) with check (auth.uid() = owner);
+
+drop policy if exists "remove own cast" on public.cast_members;
+create policy "remove own cast" on public.cast_members
+  for delete using (auth.uid() = owner);
+
+-- ────────────────────────────────────────────────────────────────── bucket ──
+
+-- Private. `public => false` is the difference between a reference picture and
+-- a published one, and it is the whole reason this is a separate bucket rather
+-- than a folder in `avatars`.
+insert into storage.buckets (id, name, public)
+values ('cast', 'cast', false)
+on conflict (id) do update set public = false;
+
+-- Wrapped, because on some projects the SQL editor does not own
+-- `storage.objects` and every one of these comes back as `42501: must be owner
+-- of table objects`. Failing the whole script there would leave the table made
+-- and the bucket unusable with no explanation.
+do $$
+begin
+  execute 'drop policy if exists "read own cast picture" on storage.objects';
+  execute $p$create policy "read own cast picture" on storage.objects
+    for select using (
+      bucket_id = 'cast' and auth.uid()::text = (storage.foldername(name))[1]
+    )$p$;
+
+  execute 'drop policy if exists "write own cast picture" on storage.objects';
+  execute $p$create policy "write own cast picture" on storage.objects
+    for insert with check (
+      bucket_id = 'cast' and auth.uid()::text = (storage.foldername(name))[1]
+    )$p$;
+
+  execute 'drop policy if exists "replace own cast picture" on storage.objects';
+  execute $p$create policy "replace own cast picture" on storage.objects
+    for update using (
+      bucket_id = 'cast' and auth.uid()::text = (storage.foldername(name))[1]
+    )$p$;
+
+  execute 'drop policy if exists "delete own cast picture" on storage.objects';
+  execute $p$create policy "delete own cast picture" on storage.objects
+    for delete using (
+      bucket_id = 'cast' and auth.uid()::text = (storage.foldername(name))[1]
+    )$p$;
+exception
+  when insufficient_privilege then
+    raise warning 'The cast bucket was made, but its policies were refused: %. Add them by hand under Storage → cast → Policies: select, insert, update and delete, each where (storage.foldername(name))[1] = auth.uid()::text. Do NOT add a public read policy — this bucket is deliberately private.', sqlerrm;
+end
+$$;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/mail.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ───────────────────────────────────────────────────────────── mail log ────
+--
+-- What was sent, and — more to the point — what must not be sent twice.
+--
+-- Paystack retries a webhook on any non-2xx answer, and the webhook is where
+-- receipts come from. Without a claim, a provider hiccup that made us answer
+-- 500 would send a second receipt for the same payment on the retry. The
+-- purchase itself is already guarded by its reference; this guards the letter.
+--
+-- The claim is a unique constraint rather than a check-then-insert, because
+-- check-then-insert is a race between two webhook deliveries arriving at two
+-- instances at once, and that is exactly the case it needs to survive.
+--
+-- It doubles as a record: which letters went, which failed, and why. When
+-- somebody says they never got a receipt, this is the answer.
+
+create table if not exists public.mail_log (
+  id          uuid primary key default gen_random_uuid(),
+  -- The claim. `receipt:<paystack reference>`, `welcome:<owner>`, and so on.
+  dedupe_key  text not null unique,
+  kind        text not null,
+  to_email    text not null,
+  -- Null until the send has been attempted. A row with `ok` still null is one
+  -- that was claimed and never finished — a crash mid-flight, and worth
+  -- looking at if somebody is missing a letter.
+  ok          boolean,
+  detail      text,
+  claimed_at  timestamptz not null default now(),
+  sent_at     timestamptz
+);
+
+create index if not exists mail_log_kind_idx on public.mail_log (kind, claimed_at desc);
+
+-- ────────────────────────────────────────────────────── who may see what ────
+--
+-- On, with no policy: every read and write goes through the server. This table
+-- holds the email address of every paying member, which is the last thing that
+-- should be reachable with the anon key.
+
+alter table public.mail_log enable row level security;
+
+grant select, insert, update on public.mail_log to service_role;
+
+-- ───────────────────────────────────────────────────────── housekeeping ────
+--
+-- The claim only has to outlive the retries — Paystack gives up long before a
+-- day. A year is kept anyway, because "did my receipt go out in March" is a
+-- question somebody asks, and the rows are three short strings.
+
+create or replace function public.mail_log_sweep()
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from public.mail_log where claimed_at < now() - interval '1 year';
+$$;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/taste.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ──────────────────────────────────────────────────────────── what you like ──
+--
+-- What somebody keeps coming back to, on the account rather than on a device.
+--
+-- ── What this fixes ──────────────────────────────────────────────────────
+--
+-- The welcome screen asks "another dubstep song today?" and it was reading
+-- that out of `localStorage` — the songs in this browser and the things made
+-- in this browser. On the phone, or on a second laptop, or after clearing
+-- site data, the app knew nothing about the person in front of it and fell
+-- back to "another song today?", which is a greeting addressed to nobody.
+--
+-- The copilot had it worse: it never read any of it. Thirteen rooms of
+-- suggestions, none of them shaped by what this person actually does.
+--
+-- ── A rollup, deliberately not a log ─────────────────────────────────────
+--
+-- The obvious shape is one row per event — every song, every room opened,
+-- timestamped. That would answer more questions and it is the wrong thing to
+-- keep. A minute-by-minute record of when somebody works is a behavioural
+-- profile; what the app actually needs is "dubstep, eleven times, last on
+-- Tuesday", which is one row that gets updated.
+--
+-- So: a count and a last-seen per label. The app cannot reconstruct a
+-- timeline from it because the timeline was never written down, and the
+-- privacy notice can say that plainly rather than hedging.
+--
+-- ── Written by the server only ───────────────────────────────────────────
+--
+-- Same rule as `generations`: read your own, never write from the browser.
+-- A count the browser can set is a count that means nothing, and this one
+-- feeds what the app tells somebody about themselves.
+
+create table if not exists public.taste (
+  owner       uuid not null references auth.users (id) on delete cascade,
+  -- 'genre' is what they make; 'room' is where they make it. Two kinds rather
+  -- than two tables, because every question asked of one is asked of the other
+  -- and a third kind should not need a migration.
+  kind        text not null check (kind in ('genre', 'room')),
+  -- Lower-cased on the way in so "Dubstep" and "dubstep" are one thing. The
+  -- spelling shown back to somebody comes from their own library, not here.
+  label       text not null check (label <> '' and length(label) <= 60),
+  times       integer not null default 0 check (times >= 0),
+  last_at     timestamptz not null default now(),
+  primary key (owner, kind, label)
+);
+
+-- The only query this table is asked: everything for one person, commonest
+-- first. Small enough that the primary key would do, and named so it is
+-- obvious which query it is for.
+create index if not exists taste_owner_times_idx
+  on public.taste (owner, kind, times desc);
+
+alter table public.taste enable row level security;
+
+-- Read your own. There is no policy for insert, update or delete on purpose:
+-- the server writes with the service role, which bypasses RLS by design, and
+-- the browser gets no way in at all.
+drop policy if exists "read own taste" on public.taste;
+create policy "read own taste" on public.taste
+  for select using (auth.uid() = owner);
+
+-- ─────────────────────────────────────────────────────────────── the write ──
+--
+-- One statement, so a count can never be read, incremented and written back
+-- with somebody else's write in between. `on conflict` is what makes this a
+-- rollup rather than a log.
+
+create or replace function public.note_taste(
+  p_owner uuid,
+  p_kind text,
+  p_label text
+)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  insert into public.taste (owner, kind, label, times, last_at)
+  values (p_owner, p_kind, lower(trim(p_label)), 1, now())
+  on conflict (owner, kind, label)
+  do update set times = public.taste.times + 1, last_at = now();
+$$;
+
+-- ────────────────────────────────────────────────────────────── forgetting ──
+--
+-- Somebody has to be able to make the app stop knowing this, and the account
+-- screen offers it. Deleting the account already takes it — the foreign key
+-- cascades — but wanting the suggestions to stop is not the same as wanting
+-- the account gone, and only offering the second is not offering a choice.
+
+create or replace function public.forget_taste(p_owner uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from public.taste where owner = p_owner;
+$$;
+
+revoke all on function public.note_taste(uuid, text, text) from public, anon, authenticated;
+revoke all on function public.forget_taste(uuid) from public, anon, authenticated;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/kitsmine.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ── Wat één lid hierdie maand van Kits gebruik het ──────────────────────────
+--
+-- Carli, 9 September 2026: "Ek dink ons gaan baie streng cap op elke user moet
+-- sit vir kits se stemkloning. Dus iets soos 5min per persoon. Dan stop ons die
+-- funksie wanneer dit opgebruik word deur 'n maand."
+--
+-- `kits_seconds_this_month()` in kits.sql tel die hele werkskerm. Dit is die
+-- dak wat Kits self stel, en dit keer dat die rekening opraak — maar dit sê
+-- niks oor wié dit opgebruik het nie. Een lid wat vyftig minute omskakel, laat
+-- die ander nege-en-sewentig met niks, en die eerste wat hulle daarvan weet is
+-- 'n weiering.
+--
+-- Hierdie een tel dieselfde ding vir één eienaar. Dieselfde kalendermaand in
+-- UTC, dieselfde tabel, dieselfde rede — dit is die per-lid helfte van 'n
+-- antwoord waarvan die werkskerm-helfte reeds bestaan.
+--
+-- Let op: die per-lid dop voeg geen kapasiteit by nie. 400 minute gedeel deur
+-- 5 is 80 lede, en dit bly 80. Wat dit verander is wié die 400 kry: eerlik
+-- verdeel eerder as eerste-kom.
+
+create or replace function public.kits_seconds_this_month_for(p_owner uuid)
+returns bigint
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(sum(seconds), 0)::bigint
+  from public.kits_minutes
+  where owner = p_owner
+    and at >= date_trunc('month', now() at time zone 'utc');
+$$;
+
+revoke all on function public.kits_seconds_this_month_for(uuid) from public, anon, authenticated;
+grant execute on function public.kits_seconds_this_month_for(uuid) to service_role;
+
+-- Een indeks vir albei funksies. Sonder die eienaar in die sleutel doen die
+-- per-lid vraag 'n volledige skandering van 'n tabel wat by elke omskakeling
+-- groei.
+create index if not exists kits_minutes_owner_month_idx
+  on public.kits_minutes (owner, at desc);
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/afrikaans.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ──────────────────────────────────────── woorde wat verkeerd uitgekom het ──
+--
+-- Loop dit in Supabase → SQL Editor. Veilig om weer te loop.
+--
+-- ── Wat dit is, en hoekom dit bestaan ────────────────────────────────────
+--
+-- `app/lib/server/sayit.ts` sê dit self: 'n uitspraakwoordeboek is maklik om
+-- te bou en onmoontlik om góéd te bou, want wat daarin hoort, moet uit
+-- LUISTER kom. 'n Lys wat by 'n lessenaar uitgedink is, is 'n lys van woorde
+-- wat die model waarskynlik reg sê.
+--
+-- Een mens se oor het `-tjie` gevind. Elke lid se oor vind die res.
+--
+-- Carli, 11 September 2026: "Kan ons dalk vir Afrikaanse generators vra om
+-- vir ons terugvoer te gee as afrikaanse woorde nie reg uit kom nie?"
+--
+-- ── 'n Verslag is 'n KANDIDAAT, nooit 'n reël nie ────────────────────────
+--
+-- Niks hier raak ooit vanself aan wat mense hoor nie. Die reëls woon in
+-- `sayit.ts`, as bronkode, en kom daar in deur 'n commit wat iemand gelees
+-- het. Dit is die hele punt: skare-invoer wat regstreeks in 'n
+-- uitspraakwoordeboek beland, is hoe iemand se grap in almal se Afrikaans
+-- kom. Hierdie tabel is 'n lys om te lees, nie 'n bediener wat luister nie.
+--
+-- ── Waarom die skerm nie vra watter soort fout dit is nie ────────────────
+--
+-- 'n Lid wat hoor dat iets verkeerd klink, weet nie — en hoef nie te weet —
+-- of die skrywer die woord verkeerd geskryf het of die stem dit verkeerd
+-- gelees het. Dit is twee verskillende lêers en een oor. Die skerm vra dus
+-- die woord en hoe dit moet klink; die `surface` en `spoken` kolomme word
+-- deur die kode ingevul, en wie ook al die lys lees, besluit watter van die
+-- twee dit is.
+
+create table if not exists public.afrikaans_reports (
+  id          uuid primary key default gen_random_uuid(),
+  -- Wie dit aangemeld het. Kaskadeer: 'n verslag is iemand wat praat, en
+  -- iemand wat weggegaan het, moet ophou praat — dieselfde reël as harte.
+  owner       uuid not null references auth.users (id) on delete cascade,
+  -- Die woord soos dit was. Kort gehou: dit is 'n woord, nie 'n paragraaf.
+  word        text not null check (length(btrim(word)) between 1 and 80),
+  -- Hoe dit behoort te klink, in gewone letters. Mag leeg wees — "dit klink
+  -- verkeerd" is op sigself bruikbaar en veel beter as stilte.
+  should      text not null default '' check (length(should) <= 120),
+  -- Watter kamer, sodat 'n patroon sigbaar is.
+  surface     text not null default '' check (length(surface) <= 40),
+  -- Was dit gepraat of geskryf? Deur die kode ingevul, nie deur die lid nie.
+  spoken      boolean not null default true,
+  -- Waarnatoe gekyk is, as daar iets was — die teks wat gelees is, afgekap.
+  said        text not null default '' check (length(said) <= 400),
+  created_at  timestamptz not null default now()
+);
+
+-- Om die lys te lees soos dit inkom.
+create index if not exists afrikaans_reports_at_idx
+  on public.afrikaans_reports (created_at desc);
+
+-- Om te sien watter woord die meeste mense pla, wat die een is om eerste
+-- reg te maak.
+create index if not exists afrikaans_reports_word_idx
+  on public.afrikaans_reports (lower(btrim(word)));
+
+alter table public.afrikaans_reports enable row level security;
+
+-- Skryf jou eie, lees jou eie.
+--
+-- Nie "lees almal s'n" nie: 'n lid wat ander se verslae kan lees, kan sien
+-- watter woorde ander mense laat maak het, wat niks met hulle te doen het
+-- nie. Die volle lys word met die diens-sleutel gelees — sien
+-- `/api/afrikaans` se GET, wat POST_SECRET vra.
+drop policy if exists "add your own report" on public.afrikaans_reports;
+create policy "add your own report" on public.afrikaans_reports
+  for insert with check (auth.uid() = owner);
+
+drop policy if exists "read your own reports" on public.afrikaans_reports;
+create policy "read your own reports" on public.afrikaans_reports
+  for select using (auth.uid() = owner);
+
+-- ── 'n Rem, in die tabel eerder as in 'n roete ──────────────────────────
+--
+-- Dieselfde gedagte as `live_hearts` se saamgestelde sleutel: 'n reël wat in
+-- die tabel staan, kan nie deur 'n roete gemis word nie. Een verslag per
+-- mens per woord per dag. Iemand wat dieselfde woord tien keer aanmeld, is
+-- nie tien stemme nie, en 'n lys waarin een woord tien keer staan, laat 'n
+-- egte patroon soos ruis lyk.
+--
+-- ── Waarom die tydsone hier uitgeskryf staan ────────────────────────────
+--
+-- Dit was `(created_at::date)`, en Postgres weier dit botweg:
+--
+--   ERROR: functions in index expression must be marked IMMUTABLE
+--
+-- 'n `timestamptz` na 'n `date` hang af van die sessie se TimeZone, so die
+-- uitdrukking kan môre 'n ander antwoord gee as vandag — en 'n indeks moet
+-- vandag en môre dieselfde antwoord kry. Met die sone uitgeskryf, is dit
+-- immutable en word dit aanvaar.
+--
+-- Dit is nie 'n truuk om die fout stil te maak nie; dit maak die reël ook
+-- reg. "Een per dag" moet die lid se dag beteken, en ons lede is hier.
+-- Suid-Afrika het geen somertyd nie, so die dag begin om middernag en bly
+-- daar.
+create unique index if not exists afrikaans_reports_one_a_day
+  on public.afrikaans_reports (
+    owner,
+    lower(btrim(word)),
+    ((created_at at time zone 'Africa/Johannesburg')::date)
+  );
+
+-- ─────────────────────────────────────── wat dit werklik geklink het ────
+--
+-- Carli, 14 September 2026: "Daar moet ook 'n pop out wees wat verduidelik
+-- waarvoor hierdie feedback bar is en vra: hoe klink dit? Hoe moet dit
+-- foneties klink?"
+--
+-- Twee vrae, en die eerste een het ontbreek. Die vorm het die WOORD gevra en
+-- hoe dit MOET klink — en die stuk tussenin, wat die enjin werklik gesê het,
+-- is die nuttigste van die drie. "voëltjie" plus "voëlkie" sê vir jou wat die
+-- regte antwoord is; "voëltjie", "foeltsjie", "voëlkie" sê vir jou ook wat
+-- verkeerd loop, en dít is wat 'n uitspraakreël moet vang.
+--
+-- Mag leeg wees, soos `should`. Iemand wat hoor dis verkeerd maar dit nie kan
+-- oorskryf nie, is steeds die nuttigste ding wat ons kon gehoor het.
+alter table public.afrikaans_reports
+  add column if not exists heard text not null default '' check (length(heard) <= 120);
