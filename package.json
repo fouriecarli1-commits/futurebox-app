@@ -11,6 +11,7 @@
     "check:sqlbundle": "tsx scripts/check-sqlbundle.mts",
     "check:sqlcolumns": "tsx scripts/check-sqlcolumns.mts",
     "check:jsxcomment": "tsx scripts/check-jsxcomment.mts",
+    "check:livewhy": "tsx scripts/check-livewhy.mts",
     "check:sqlruns": "tsx scripts/check-sqlruns.mts",
     "costs:eleven": "tsx scripts/costs-eleven.mts",
     "check:probes": "tsx scripts/check-probes.mts",

@@ -265,6 +265,12 @@ export const STRINGS: Dict = {
   "pro.barsAria": { en: "The session in bars", af: "Die sessie in mate" },
   "hooks.sharedGone": { en: "That song could not be fetched. The room hands out an address that expires, so opening this tab again usually fixes it.", af: "Daardie liedjie kon nie gehaal word nie. Die kamer gee ’n adres uit wat verval, so as jy hierdie oortjie weer oopmaak, werk dit gewoonlik." },
   "live.gone": { en: "That file is not there any more.", af: "Daardie l\u00eaer is nie meer daar nie." },
+  /* Which nothing, on a video. The route knew and the screen did not print
+     it, so five reports of "die videos wys nie" all looked the same. */
+  "live.goneUnread": { en: "The video list could not be read just now. Try again in a moment.", af: "Die videolys kon nou nie gelees word nie. Probeer weer oor \u2019n oomblik." },
+  "live.goneRow": { en: "This video is not in the account any more.", af: "Hierdie video is nie meer in die rekening nie." },
+  "live.gonePath": { en: "This video is in the account, but no file was ever kept for it.", af: "Hierdie video is in die rekening, maar daar is nooit \u2019n l\u00eaer vir hom gestoor nie." },
+  "live.goneFile": { en: "The file for this video is missing from the store.", af: "Die l\u00eaer vir hierdie video is weg uit die stoor." },
   "live.somewhere": { en: "somewhere", af: "\u00eerens" },
   "live.onNow": { en: "on now", af: "nou aan" },
   "live.in": { en: "in", af: "oor" },

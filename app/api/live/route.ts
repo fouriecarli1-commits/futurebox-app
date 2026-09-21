@@ -264,6 +264,13 @@ export async function GET(request: Request): Promise<Response> {
      deleted. From the room the two are the same absence, and only one of
      them is somebody's job to fix — see `why` on the post below. */
   let videosUnread = false;
+  /* Which ids came back AT ALL, as opposed to which came back with a file.
+     Without this the two are one absence: a row whose `path` is empty was
+     reported as a row that is gone, which is a lie in the direction that
+     sends somebody looking in the wrong place. A deleted video is nobody's
+     bug; a row that exists with nothing behind it is a render that failed
+     and said it was done. */
+  const videoRows = new Set<string>();
   if (videoIds.length) {
     const { data: files, error: unread } = await client
       .from('videos')
@@ -277,6 +284,7 @@ export async function GET(request: Request): Promise<Response> {
     if (unread) console.error(`live: the videos could not be read — ${unread.message}`);
     videosUnread = Boolean(unread);
     for (const one of files ?? []) {
+      videoRows.add(one.id as string);
       if (one.path) videoPaths.set(one.id as string, one.path as string);
     }
   }
@@ -353,11 +361,15 @@ export async function GET(request: Request): Promise<Response> {
          So each says which, in this file's own word — never the storage
          layer's sentence, which `check:aifault` keeps off a screen. One
          screenshot now names the cause instead of costing another guess. */
-      let why: 'unread' | 'no_row' | 'no_file' | null = null;
+      let why: 'unread' | 'no_row' | 'no_path' | 'no_file' | null = null;
       if (post.kind === 'video') {
         const path = videoPaths.get(post.source_id);
         if (!path) {
-          why = videosUnread ? 'unread' : 'no_row';
+          /* Three different absences, and only one of them used to be
+             said. `no_path` is the row that came back with nothing behind
+             it — a render that finished into no file — and it was being
+             reported as a row that is gone. */
+          why = videosUnread ? 'unread' : videoRows.has(post.source_id) ? 'no_path' : 'no_row';
         } else {
           const { data, error: unsigned } = await client.storage
             .from('videos')

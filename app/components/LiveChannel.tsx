@@ -111,7 +111,7 @@ interface Post {
    *  audio and good for about as long as watching it takes. */
   video?: string | null;
   /** Why a video post has no file. Our own word, never storage's sentence. */
-  why?: 'unread' | 'no_row' | 'no_file' | null;
+  why?: 'unread' | 'no_row' | 'no_path' | 'no_file' | null;
   /** The song behind a track post, so a play is counted against the song. */
   sourceId?: string;
   /** The sleeve its owner made, when there is one. Signed by the server and
@@ -202,6 +202,29 @@ function until(when: string, t: (key: string, fallback?: string) => string): str
  * near-black in the light theme. `#ffffff` and a real shadow, the same as
  * `RoomScreen` and `SongScreen`.
  */
+/**
+ * Why a post will not play, in one sentence.
+ *
+ * One ladder, one place. The panel and any future reader of the same field
+ * cannot drift apart if there is only one of these — the cast strip learned
+ * that with `whySaid`, after two copies of the same ladder disagreed about
+ * what a missing bucket meant.
+ *
+ * `null` and an unknown value fall through to the old sentence, which is
+ * right for every kind that is not a video: a song or an episode with no
+ * file really has had its file removed.
+ */
+function goneSaid(
+  why: Post['why'],
+  t: (key: string, fallback?: string) => string,
+): string {
+  if (why === 'unread') return t('live.goneUnread', 'The video list could not be read just now. Try again in a moment.');
+  if (why === 'no_row') return t('live.goneRow', 'This video is not in the account any more.');
+  if (why === 'no_path') return t('live.gonePath', 'This video is in the account, but no file was ever kept for it.');
+  if (why === 'no_file') return t('live.goneFile', 'The file for this video is missing from the store.');
+  return t('live.gone', 'That file is not there any more.');
+}
+
 function RoomPanel({
   post,
   signedIn,
@@ -469,13 +492,31 @@ function RoomPanel({
       </div>
 
       {/* A post whose file has gone. Said on the panel rather than by a
-          button that does nothing when pressed. */}
+          button that does nothing when pressed.
+
+          ── And WHICH nothing, on a video ───────────────────────────────
+
+          Carli, 21 September 2026: *"Die live se videos wys nogsteeds
+          nie."* The fifth report of this.
+
+          The route was taught to say which of the causes it hit and the
+          screen was not taught to print it — so every one of them still
+          came out as "That file is not there any more", which is a
+          sentence about a deleted file and is wrong for three of the four
+          cases. A diagnostic nobody can see is the same as no diagnostic,
+          and it cost another round of her looking at the same panel.
+
+          `whySaid` on the cast strip is the same idea and the same shape.
+          Our own words, never storage's sentence — `check:aifault` keeps
+          that off a screen, and it is the right rule for a reason beyond
+          safety: "StorageApiError: Object not found" tells nobody
+          anything. */}
       {post.kind !== 'elsewhere' && !listenable && (
         <p
-          className="absolute left-4 top-4 rounded-full px-2.5 py-1 text-xs font-semibold"
+          className="absolute left-4 top-4 max-w-[80%] rounded-xl px-2.5 py-1 text-xs font-semibold"
           style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(255,255,255,0.8)' }}
         >
-          {t('live.gone', 'That file is not there any more.')}
+          {goneSaid(post.why, t)}
         </p>
       )}
     </article>

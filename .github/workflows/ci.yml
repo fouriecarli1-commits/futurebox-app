@@ -880,6 +880,14 @@ jobs:
       - name: No comment is printed on a screen
         run: npm run check:jsxcomment
 
+      # A reason the live room works out has to reach the screen. The route
+      # was taught to say WHICH of four causes stops a video playing, and
+      # the panel printed "that file is gone" for all four — so a diagnostic
+      # built to end the guessing cost another round of it. Every cause the
+      # route can set must have its own sentence, in both languages.
+      - name: A reason a video will not play reaches the screen
+        run: npm run check:livewhy
+
       # What prompt caching actually saved, and the sum that turns four token
       # counts into rand. A cache that never hits looks exactly like one that
       # always does, except on the bill — and a lone write costs 25% MORE, so
