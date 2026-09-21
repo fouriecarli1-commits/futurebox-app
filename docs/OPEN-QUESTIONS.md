@@ -5806,3 +5806,78 @@ Al drie het gelyk soos regte foute in die kode. Die enigste manier om hulle
 uit mekaar te hou was om elkeen by die bron na te gaan, en dit is presies
 waarom 'n check se vals-positiewe net so duur is as sy vals-negatiewe: 'n
 mens leer om dit te ignoreer.
+
+## §AH · Die meting het aan die verkeerde kant van 'n normaliseerder gestaan (21 September 2026)
+
+Carli het mono/stereo/surround as 'n download-tipe gevra. Die rekenkunde is
+maklik; wat dit interessant maak is dat die **check reg was oor die getal en
+verkeerd oor waar dit gemeet word** — en dat die jag na daardie verskil twee
+regte foute uitgewys het wat niemand gesoek het nie.
+
+### Die valse fout
+
+Die surround-vou neem die verskil tussen die twee kanale, draai sy fase 'n
+kwartslag (Hilbert), en sit dit omgekeerd op elke kanaal terug. Die gedraaide
+kopie staan loodreg op die oorspronklike, so die verskil moet met wortel twee
+groei: 1.4142.
+
+Die check het 1.0005 gelees. Dit lyk soos 'n draai wat glad nie gebeur nie.
+
+Dit hét gebeur, perfek. By volskaal bereik die vou **presies** wortel twee, so
+`foldTo` skaal alles met een oor wortel twee om onder die plafon te bly, en
+die twee kanselleer tot op vier desimale. Die meting is aan die verkeerde kant
+van 'n normaliseerder geplaas. Met 'n sein wat kopruimte oor het, is die
+antwoord presies wortel een plus die draai se wins in kwadraat — by 60 Hz
+voorspel 1.3895, gemeet 1.3893.
+
+### Die twee regte foute, wat niemand gesoek het nie
+
+1. **Die kern was 127 punte lank** met 'n kommentaar wat beweer die draai is
+   akkuraat *"down to a couple of hundred hertz"*. Gemeet: 0.614 by 220 Hz,
+   0.332 by 110 Hz. 'n Derde van die draai eenvoudig afwesig, en die
+   kommentaar wat die teenoorgestelde sê.
+
+2. **Om daarmee te konvolveer het 4.3 s geneem** vir 'n drie-minuut-mengsel
+   op 'n bediener — verskeie kere dit op haar foon, met die kamer gesluit.
+
+Die tweede is die oorsaak van die eerste. Die kern is kort gehou om die koste
+weg te steek, en die kommentaar is geskryf om die kortheid te regverdig. Die
+basrespons was verkeerd *in diens van* 'n koste wat nooit erken is nie.
+
+`through` vermenigvuldig nou spektra. Die kern se lengte hou op saak maak en
+kan gekies word vir hoe dit klink: 1023 punte, plat van tagtig hertz, en
+1.53 s vir dieselfde mengsel. `convolve` bly langsaan as die definisie
+uitgeskryf, en die check bewys die vinnige een stem met hom saam tot op 'n
+tienduisendste — 'n vinnige transform wat niemand teen leesbare rekenkunde
+nagegaan het nie, is 'n vinnige transform wat verkeerd kan wees.
+
+### Drie reëls wat nie rooi wou word nie
+
+Elke nuwe reël is doelbewus gebreek. Drie het bly slaag, en al drie was
+verkeerd eerder as die kode:
+
+- *"ten minste veertien stringe"* uit die woordeboek. Daar is ses-en-vyftig
+  sleutels wat met `mix.` begin, so elke uitleg-reël kon geskrap gewees het
+  en vier bewoordingsreëls daaronder sou geslaag het terwyl hulle niks lees
+  nie. **'n Reël wie se onderwerp "genoeg van iets" is, is gewoonlik hierdie
+  fout.** Nou by die naam.
+- `Atmos` as 'n kaal substring het op *"Atmosphere"* in die toneellys gefaal.
+  'n Reël wat wolf roep, word uiteindelik geskrap.
+- Die woordeboek skryf sy krulaanhalings as `\u`-ontsnappings, so 'n
+  Afrikaanse reël wat die regte karakters soek, het **niks** gematch en
+  geslaag.
+
+### En die toon self
+
+Die toetstoon vervaag nou in en uit. 'n Toon wat middel-in-'n-siklus ophou is
+'n stap, die draai lui by 'n stap, en die luiding het die hele vou deur die
+plafon getrek — 'n meting van die toetssein, nie van die vou nie.
+
+### Wat ons nie beweer nie
+
+Dolby Digital, Atmos en Pro Logic is gelisensieerde, handelsmerk-formate. Ons
+enkodeer nie een nie en sê nêrens ons doen nie. Wat gebou is, is die
+matriksvou wat daardie dekodeerders uitvou — rekenkunde wat aan niemand
+behoort nie. Die knoppie sê "Surround (matriks)" en die nota daaronder sê
+uitdruklik dat dit **nie** 'n Dolby-lêer is nie, in albei tale. Vier reëls hou
+dit daar.
