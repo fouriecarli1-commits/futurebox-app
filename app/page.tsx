@@ -1390,7 +1390,24 @@ export default function FutureBoxHome() {
            goes in them is the fault this fixes. `planActions` on the
            server is what guarantees `room` is only ever set to somewhere
            this reply is actually taking them. */
-        const where = action.room ?? studioTab;
+        /* ── An empty room is HERE, not a room called "" ────────────
+
+           `action.room ?? studioTab` treated an empty string as a real
+           destination, because `??` only falls through on null. The
+           schema asks the model for `''` when there is no other room —
+           which is most replies — and `planActions` overwrites it with
+           the right one in every case but the one where it has neither a
+           destination nor a valid room to fall back on. When that
+           happened the value went to `handoff('')`, a room that does not
+           exist and never mounts, so it sat in the waiting list for the
+           rest of the session and the copilot's reply was a promise
+           nothing kept.
+
+           Found by `audit/copilotcarry.mjs` sending exactly what the
+           schema describes. Resolved rather than merely defaulted: an
+           unknown room is the same fault with a different spelling. */
+        const named = (action.room ?? '').trim();
+        const where = (named ? resolveSurfaceId(named) : null) ?? studioTab;
         if (where === studioTab) copilotBus.dispatch(studioTab, action.op, action.value);
         else copilotBus.handoff(where, action.op, action.value);
         return;

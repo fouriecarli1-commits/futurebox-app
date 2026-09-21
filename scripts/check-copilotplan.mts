@@ -278,23 +278,49 @@ check(
    lands nowhere: the destination does not exist at the moment of
    sending. That is what `handoff` is for. */
 const page = readFileSync('app/page.tsx', 'utf8');
+const plan = readFileSync('app/lib/copilotplan.ts', 'utf8');
 /* Matched on the branch itself, not on the word `handoff` appearing
    anywhere in the file — page.tsx already hands off in four other places
    (the advert desk's shot to the video desk, its line to the voice
    studio, a song to the booth), so a looser pattern passes while this
    exact path is wrong. The first version of this assertion did, and did
    not notice the surface_op branch being put back to dispatch-only. */
-const branch = page.slice(page.indexOf("if (action.kind === 'surface_op')"));
+/* Bounded by the branch's own `return;` rather than by a character count.
+   It was 1600 characters, which is a bound on the PROSE and not on the
+   code — a note added above the two lines pushed them out of the window
+   and failed a check about routing for a reason that had nothing to do
+   with routing. */
+const whole = page.slice(page.indexOf("if (action.kind === 'surface_op')"));
+const branch = whole.slice(0, whole.indexOf('return;') + 7);
 check(
   'the studio must route a surface_op on the room it names',
-  /action\.room/.test(branch.slice(0, 1600)),
+  /action\.room/.test(branch),
   'the op carries a room and nothing reads it',
 );
 check(
   'and hand off to a room being opened rather than dispatching into the one being left',
-  /copilotBus\.handoff\(where/.test(branch.slice(0, 1600))
-    && /copilotBus\.dispatch\(studioTab/.test(branch.slice(0, 1600)),
+  /copilotBus\.handoff\(where/.test(branch)
+    && /copilotBus\.dispatch\(studioTab/.test(branch),
   'both are needed: dispatch for here, handoff for where they are going',
+);
+/* ── And an empty room is not a room ──────────────────────────────────
+
+   The schema asks the model for `''` when an action is for the screen
+   they are on, which is most actions. `action.room ?? studioTab` only
+   falls through on null, so `''` was read as a destination and the value
+   went to `handoff('')` — a room that never mounts, so it sat in the
+   waiting list for the rest of the session while the reply on screen
+   said it had been done. `audit/copilotcarry.mjs` sent exactly what the
+   schema describes and caught it. */
+check(
+  'and an empty or unknown room means the room they are standing in',
+  /resolveSurfaceId\(named\)/.test(branch) && /\.trim\(\)/.test(branch),
+  'an action aimed at "" is delivered to a room that will never exist',
+);
+check(
+  'and the plan never passes an empty room through to the client',
+  /const \{ room: _asked, \.\.\.rest \} = one;/.test(plan),
+  'spreading the model’s action keeps its empty room when there is nothing to replace it with',
 );
 
 if (problems.length > 0) {

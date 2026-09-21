@@ -86,12 +86,23 @@ for (const file of readdirSync(DIR).filter((name) => name.endsWith('.tsx'))) {
     }
 
     const block = source.slice(start + 1, end);
-    // Handler keys are at the top level of the block: `name:` at depth zero.
+    /* ── Handlers, wherever in the block they are written ──────────────
+ 
+       This read `name:` at depth zero only, which is every handler right
+       up until a room has one it can only sometimes offer. The adverts
+       desk can film an advert once one has been written and not before,
+       and the honest way to say that is to register the operation only
+       then — spread in from a conditional, which puts the key one bracket
+       down and made it invisible here. An operation the scanner cannot
+       see is an operation nothing holds to the registry, which is the one
+       thing this file exists to prevent.
+ 
+       So: a handler is a key whose value is a function, at any depth. A
+       plain property inside a handler body (`lyrics: value`, `...was`) is
+       not one and is still ignored. */
     const names: string[] = [];
-    let level = 0;
-    for (const match of block.matchAll(/([{}()[\]])|(\b[a-z_][a-z0-9_]*)\s*:/g)) {
-      if (match[1]) level += '{(['.includes(match[1]) ? 1 : -1;
-      else if (level === 0 && match[2]) names.push(match[2]);
+    for (const match of block.matchAll(/\b([a-z_][a-z0-9_]*)\s*:\s*(?:async\s*)?(?:\([^)]*\)|[a-z_][a-z0-9_]*)\s*=>/g)) {
+      if (names.indexOf(match[1]) === -1) names.push(match[1]);
     }
     if (names.length === 0) {
       problems.push(`  ${file}: the useCopilotOps block for "${room}" has no operations in it`);

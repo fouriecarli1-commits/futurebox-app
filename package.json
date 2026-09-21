@@ -209,6 +209,7 @@
     "check:elevenprices": "tsx scripts/check-elevenprices.mts",
     "check:adruns": "node audit/adruns.mjs",
     "check:adcarry": "node audit/adcarry.mjs 3131",
+    "check:copilotcarry": "node audit/copilotcarry.mjs 3133",
     "check:webdest": "node audit/webdest.mjs 3118",
     "check:videodesk": "node audit/videodesk.mjs",
     "check:lanes": "node audit/lanes.mjs",

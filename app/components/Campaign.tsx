@@ -37,7 +37,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Megaphone, Loader2, Sparkles, Video as VideoIcon, Mic2, Copy, Check, AlertTriangle, Link2, X } from 'lucide-react';
 import { useLang } from '../lib/i18n';
 import { refusalText } from '../lib/apierror';
-import { useCopilotOps } from '../lib/copilotactions';
+import { matchByTitle, useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import { DESTINATIONS, PLATFORMS } from '../data/social';
 import { filmThisAd, readThisAd } from '../lib/adhandover';
@@ -77,6 +77,22 @@ interface Ad {
   shot: string;
   caption: string;
   hashtags: string[];
+}
+
+/**
+ * Which advert the copilot means.
+ *
+ * It names one by its headline, or by nothing at all when there is only one
+ * to mean. `matchByTitle` already does this for songs — exact, then either
+ * way round as a substring, then null rather than a guess — so it does it
+ * here too rather than a second rule for the same job. Null when nothing is
+ * close enough, and an empty value takes the first, which is the one at the
+ * top of her screen.
+ */
+function pickAd(ads: readonly Ad[], value: string): Ad | null {
+  if (ads.length === 0) return null;
+  if (!value.trim()) return ads[0];
+  return matchByTitle(ads.map((one) => ({ ...one, title: one.headline })), value) ?? ads[0];
 }
 
 /* What happens here, in order, before any of it happens.
@@ -358,6 +374,57 @@ export default function Campaign({
       setMarket(found);
       whereCard.arrived();
     },
+    /* ── The two buttons the copilot could not press ──────────────────
+
+       Carli, 21 September 2026: *"Die advert se copilot skryf nie die
+       shots in die volgende kamer nie."*
+
+       The third report of this, and the first two were answered by fixing
+       a different path each time. `audit/copilotcarry.mjs` walks the one
+       she is describing — type to the copilot, get an action aimed at
+       another room — and it arrives, on a desk and on a phone. The
+       carrying was never the fault.
+
+       What was missing is this: the adverts on her screen were invisible
+       to the copilot. This room registered the five brief fields and
+       nothing else, so a copilot asked *"maak nou die video"* while three
+       finished adverts sat on the page could only write a new shot from
+       memory, or say press the button — it had no way to reach the
+       adverts it had just helped write.
+
+       So it gets the same two buttons the person has, doing literally the
+       same thing: `filmThisAd` / `readThisAd`, the same wires, the same
+       move. Not a second implementation of the hand-off — the one that
+       `check:adcarry` already walks.
+
+       Registered only once an advert exists. That is the property the bus
+       is built on: what is not registered is not offered, so a copilot
+       standing in an empty room is never told it can film something that
+       has not been written. */
+    ...(ads.length > 0
+      ? {
+          film_this: (value: string) => {
+            const ad = pickAd(ads, value);
+            if (!ad) return;
+            for (const wire of filmThisAd({ ad, going, style: lookFor(ad) })) {
+              onSetUp(wire.room, wire.op, wire.value);
+            }
+            onGoTo('canvas');
+          },
+        }
+      : {}),
+    ...(ads.some((one) => one.spoken)
+      ? {
+          read_this: (value: string) => {
+            const ad = pickAd(ads.filter((one) => one.spoken), value);
+            if (!ad) return;
+            for (const wire of readThisAd({ ad })) {
+              onSetUp(wire.room, wire.op, wire.value);
+            }
+            onGoTo('voice_studio');
+          },
+        }
+      : {}),
   });
 
   const write = async (again: boolean) => {

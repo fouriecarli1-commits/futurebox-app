@@ -632,6 +632,21 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       set_tone: "the value is how it should sound, in a few words",
       set_market:
         "the value is one of: English, Afrikaans, isiZulu, Sesotho, Portuguese, French, Spanish",
+      /* ── The two hand-offs, as operations ────────────────────────
+
+         Carli, 21 September 2026: *"Die advert se copilot skryf nie die
+         shots in die volgende kamer nie."*
+
+         These only appear once an advert has been written, because the
+         room only registers them then — so a copilot in an empty room is
+         never told it can film something that does not exist. When they
+         do appear, their presence in this list is itself the news that
+         there is a finished advert on her screen, which is the thing the
+         copilot had no way of knowing. */
+      film_this:
+        "the value is the headline of the advert to film, or empty for the one at the top of the screen. It sets the video desk up with THAT advert's shot, shape, length and look and opens it. Only offered once an advert has actually been written, so seeing it here means there is one on screen. Prefer it over writing a new shot yourself: the advert she is looking at is the one she means",
+      read_this:
+        "the value is the headline of the advert to record, or empty for the one at the top. It puts that advert's script in the voice studio and opens it. Only offered when an advert with a spoken line exists",
     },
     seeds: [
       {

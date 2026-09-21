@@ -135,8 +135,15 @@ export function planActions(asked: readonly PlannedAction[], here?: string): Pla
          question of which of two doors was meant; with no move at all it
          falls back to where they are, which is the ordinary case and was
          always right. */
+      /* Built rather than spread, so the model's own empty `room` cannot
+         survive. `{ ...one }` carried `room: ''` through whenever `to` was
+         null, and the client read that as a room to hand off to — a room
+         with no name, which never mounts, so the value waited there for
+         the rest of the session. The client refuses an empty room now too;
+         it should never have to. */
       const to = going ?? standingIn;
-      free.push({ ...one, ...(to ? { room: to } : {}) });
+      const { room: _asked, ...rest } = one;
+      free.push({ ...rest, ...(to ? { room: to } : {}) });
       continue;
     }
     const room = resolveSurfaceId(named);
