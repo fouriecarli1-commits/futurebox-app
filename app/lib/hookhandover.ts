@@ -1,5 +1,6 @@
 /**
- * A hook, arriving at the video desk as something you can press Make on.
+ * A song, or a moment in one, arriving at the video desk as something you
+ * can press Make on.
  *
  * ── What this is for ─────────────────────────────────────────────────────
  *
@@ -38,6 +39,17 @@
 
 import type { SurfaceId } from './surfaces';
 import { GENRES, LENGTHS, MUSIC_LOOKS } from './videoscenes';
+
+/** The genre's whole entry, when we have written one for it. */
+function genreFor(genre: string) {
+  const wanted = genre.trim().toLowerCase();
+  if (!wanted) return undefined;
+  return (
+    GENRES.find((one) => one.id === wanted || one.label.toLowerCase() === wanted)
+    ?? GENRES.find((one) => wanted.includes(one.id) || wanted.includes(one.label.toLowerCase()))
+    ?? GENRES.find((one) => one.label.toLowerCase().includes(wanted))
+  );
+}
 
 export interface Wire {
   readonly room: SurfaceId;
@@ -81,13 +93,7 @@ export function clockOf(seconds: number): string {
  * is worse than the neutral performance look below.
  */
 export function lookForGenre(genre: string): string | null {
-  const wanted = genre.trim().toLowerCase();
-  if (!wanted) return null;
-  const found =
-    GENRES.find((one) => one.id === wanted || one.label.toLowerCase() === wanted)
-    ?? GENRES.find((one) => wanted.includes(one.id) || wanted.includes(one.label.toLowerCase()))
-    ?? GENRES.find((one) => one.label.toLowerCase().includes(wanted));
-  return found?.scaffolds[0] ?? null;
+  return genreFor(genre)?.scaffolds[0] ?? null;
 }
 
 /**
@@ -183,5 +189,81 @@ export function videoFromHook(hook: HookCarry): readonly Wire[] {
     { room, op: 'set_aspect', value: '9:16' },
     { room, op: 'set_seconds', value: String(lengthForHook(hook.seconds)) },
     { room, op: 'brief', value: briefForHook(hook) },
+  ];
+}
+
+
+/* ── A whole song, not a moment in one ───────────────────────────────────
+ *
+ * Carli, 21 September 2026: *"Al die kamers se AI praat nie met mekaar
+ * nie."* She reported it about hooks; it was just as true one screen
+ * earlier. "Put a video to it", the card that appears the moment a song
+ * finishes, set the song under the desk and moved her there — and that was
+ * all. An empty shot box, whatever shape the desk had last been left on,
+ * and a copilot that had never heard of the song she had spent the last ten
+ * minutes making.
+ *
+ * The same four wires as a hook, with one difference that matters: there is
+ * no moment, so there is nothing for the camera to land on. A music video
+ * for a whole song is an approach rather than a cut, which is the argument
+ * `MUSIC_LOOKS` already makes, and the shape comes from the genre's own
+ * rather than always being upright.
+ * ----------------------------------------------------------------------- */
+
+/** A finished song, as the studio has it. */
+export interface SongCarry {
+  readonly title: string;
+  readonly genre: string;
+  readonly bpm?: number;
+  /** How long the song runs. Only used to keep the clip inside it. */
+  readonly seconds?: number;
+}
+
+/** The shape this genre is usually posted in, upright when we have no view. */
+export function aspectForGenre(genre: string): '16:9' | '9:16' | '1:1' {
+  return genreFor(genre)?.aspect ?? '9:16';
+}
+
+export function shotForSong(song: SongCarry): string {
+  const base = lookForGenre(song.genre) ?? MUSIC_LOOKS[0].scaffolds[0];
+  const pace = (song.bpm ?? 0) >= 120
+    ? 'Cut it on the beat, and keep every shot shorter than it wants to be.'
+    : 'Let each shot run long. Nothing here should be in a hurry.';
+  return [
+    base,
+    pace,
+    'It plays against the whole song. No words on screen and nobody speaking: the song is the sound.',
+  ].join(' ');
+}
+
+/**
+ * Fifteen seconds, or shorter than the song if the song is shorter.
+ *
+ * A reel is the length a platform runs whole, and it is the right default
+ * for the first clip somebody makes of a new song — the dearer rungs are a
+ * decision, taken with the price in front of them, once they have seen one.
+ */
+export function lengthForSong(song: SongCarry): number {
+  const cap = song.seconds && song.seconds > 0 ? lengthForHook(song.seconds) : 15;
+  return Math.min(15, cap);
+}
+
+export function briefForSong(song: SongCarry): string {
+  return [
+    `They have just finished a song of their own, ${song.title}, and want a video for it.`,
+    song.genre.trim() ? `It is ${song.genre.trim()}${song.bpm ? `, at ${song.bpm} beats a minute` : ''}.` : '',
+    'The song is already under the desk and plays under the clip, so there is nothing to be said or sung in it.',
+    'The shot, the shape and the length are set from the song. Change them if they ask, and say what you would change if they do not.',
+  ].filter(Boolean).join('\n\n');
+}
+
+/** Everything that travels when a finished song goes to the video desk. */
+export function videoFromSong(song: SongCarry): readonly Wire[] {
+  const room: SurfaceId = 'canvas';
+  return [
+    { room, op: 'set_prompt', value: shotForSong(song) },
+    { room, op: 'set_aspect', value: aspectForGenre(song.genre) },
+    { room, op: 'set_seconds', value: String(lengthForSong(song)) },
+    { room, op: 'brief', value: briefForSong(song) },
   ];
 }

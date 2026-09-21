@@ -76,7 +76,7 @@ import {
   type SurfaceId,
 } from './lib/surfaces';
 
-import { videoFromHook } from './lib/hookhandover';
+import { videoFromHook, videoFromSong } from './lib/hookhandover';
 import { errandBelongs, type Errand } from './lib/errands';
 import Spotlight from './components/Spotlight';
 import HereNow from './components/HereNow';
@@ -3537,6 +3537,16 @@ export default function FutureBoxHome() {
                   setHandoff(next);
                   setCanvas(next);
                   goToRoom('make');
+                  /* The canvas travels to the copilot on every turn, so it
+                     will SEE the title and the style. What it cannot see is
+                     where they came from — and "built on somebody else's
+                     song" is the one fact that changes what help is worth
+                     giving, because the words may not be that song's. */
+                  copilotBus.handoff(
+                    'make',
+                    'brief',
+                    `${t('brief.fromBuildOn', 'They came from the hooks room, building on somebody else\u2019s song. The style on the canvas is that song\u2019s; the words are theirs to write and must not be that song\u2019s.')} (${from.by})`,
+                  );
                 }}
               />
             )}
@@ -3633,10 +3643,31 @@ export default function FutureBoxHome() {
               <SongSections
                 reloadKey={trackCount}
                 open={editSong}
-                /* No song is carried over: the Booth keeps its own list and
-                   picking there is one press. Passing an id it has no prop
-                   for would be a promise the room cannot keep. */
-                onBooth={() => goToRoom('booth')}
+                /* The song goes with them.
+
+                   This carried nothing, and the note here said why: the
+                   Booth kept its own list, picking there was one press,
+                   and passing an id it had no prop for would have been a
+                   promise the room could not keep. All true when it was
+                   written, and it stopped being true the day the Booth
+                   registered `pick_song` — which the collab room next
+                   door has used ever since. The reason outlived the
+                   fact, and somebody standing over one song, pressing a
+                   button that says take it to the Booth, arrived at a
+                   list to find it in again.
+
+                   Carli, 21 September 2026: *"Al die kamers se AI praat
+                   nie met mekaar nie."* */
+                onBooth={(title) => {
+                  goToRoom('booth');
+                  if (!title.trim()) return;
+                  copilotBus.handoff('booth', 'pick_song', title);
+                  copilotBus.handoff(
+                    'booth',
+                    'brief',
+                    `${t('brief.fromStudio', 'They came from the studio, where they were editing this song of their own and decided to sing it themselves rather than generate it again:')} ${title}`,
+                  );
+                }}
                 onRemake={(next) => {
                   setHandoff(next);
                   setCanvas(next);
@@ -3662,6 +3693,18 @@ export default function FutureBoxHome() {
                   onOpenInBooth={(title) => {
                     goToRoom('booth');
                     copilotBus.handoff('booth', 'pick_song', title);
+                    /* And the copilot in there is told whose it is.
+
+                       Carli, 21 September 2026: *"Al die kamers se AI
+                       praat nie met mekaar nie."* The song arrived and
+                       the conversation did not, so what the copilot in
+                       the booth knew about a song somebody had sent her
+                       was nothing at all. */
+                    copilotBus.handoff(
+                      'booth',
+                      'brief',
+                      `${t('brief.fromCollab', 'They came from the collab room. Somebody they are working with sent them this song to sing on:')} ${title}`,
+                    );
                   }}
                 />
                 <CollabFinder
@@ -3802,8 +3845,26 @@ export default function FutureBoxHome() {
               onClick={() => {
                 /* The desk, not the old Musiekvideo room, and the song goes
                    with her. That room offered one clip and everything that
-                   makes a music video was next door; it is gone now. */
+                   makes a music video was next door; it is gone now.
+
+                   ── And the song goes with her as a SHOT ────────────
+
+                   Carli, 21 September 2026: *"Al die kamers se AI praat
+                   nie met mekaar nie."* She reported it about hooks and
+                   it was just as true here, one screen earlier. This set
+                   the song under the desk, moved her, and stopped — an
+                   empty shot box, whatever shape the desk had last been
+                   left on, and a copilot that had never heard of the
+                   song she had spent the last ten minutes making. */
                 setVideoSong(madeTrack.id);
+                for (const wire of videoFromSong({
+                  title: madeTrack.title,
+                  genre: madeTrack.genre,
+                  bpm: madeTrack.bpm,
+                  seconds: madeTrack.seconds,
+                })) {
+                  copilotBus.handoff(wire.room, wire.op, wire.value);
+                }
                 goToRoom('canvas');
                 setUploadModalOpen(true);
                 setMadeTrack(null);

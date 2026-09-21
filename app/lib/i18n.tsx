@@ -440,6 +440,13 @@ export const STRINGS: Dict = {
   "art.reading": { en: "Opening the gallery…", af: "Maak die galery oop…" },
   /* Said in the room she paid from, because the till used to put her down
      on the front page and nothing anywhere said the money had landed. */
+  /* What the copilot in the NEXT room is told. Handed to a model, so they
+     read like sentences rather than labels — and they are in the dictionary
+     because everything shown or said in this app is, even when the only
+     reader is the copilot answering in her language afterwards. */
+  "brief.fromCollab": { en: "They came from the collab room. Somebody they are working with sent them this song to sing on:", af: "Hulle kom van die collab-kamer af. Iemand saam met wie hulle werk het hierdie liedjie gestuur om op te sing:" },
+  "brief.fromStudio": { en: "They came from the studio, where they were editing this song of their own and decided to sing it themselves rather than generate it again:", af: "Hulle kom van die studio af, waar hulle aan hierdie eie liedjie gewerk het en besluit het om dit self te sing eerder as om dit weer te laat maak:" },
+  "brief.fromBuildOn": { en: "They came from the hooks room, building on somebody else\u2019s song. The style on the canvas is that song\u2019s; the words are theirs to write and must not be that song\u2019s.", af: "Hulle kom van die hooks-kamer af en bou voort op iemand anders se liedjie. Die styl op die doek is daardie liedjie s\u2019n; die woorde is hulle eie om te skryf en mag nie daardie liedjie s\u2019n wees nie." },
   "art.paidBack": { en: "Your payment came through. The piece below is up to date \u2014 open it to bid.", af: "Jou betaling het deurgekom. Die stuk hieronder is op datum \u2014 maak dit oop om te bie." },
   "art.empty": {
     en: "Nothing is hanging yet. Our artists are working.",

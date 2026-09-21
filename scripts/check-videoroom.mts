@@ -57,10 +57,23 @@ ok(
 
 /* ── The hand-off ──────────────────────────────────────────────────────── */
 
+/* Both in the SAME handler, rather than within a hundred and twenty
+   characters of each other. The gap was a bound on how much code happened
+   to sit between them, so the day the card started writing a shot into the
+   desk as well — which is the hand-off working better, not worse — this
+   went red. `}}` is where the handler ends, so requiring the move before
+   one asks the real question: does pressing this do both things? */
+const offer = page.slice(page.indexOf('setVideoSong(madeTrack.id);'));
+const sameHandler = offer.slice(0, offer.indexOf('}}'));
 ok(
   'the offer after a song goes to the desk',
-  /setVideoSong\(madeTrack\.id\);[\s\S]{0,120}goToRoom\('canvas'\)/.test(page),
+  page.includes('setVideoSong(madeTrack.id);') && /goToRoom\('canvas'\)/.test(sameHandler),
   'it still sends her to the old room, or sends her without the song',
+);
+ok(
+  '  with a shot written from that song, not an empty box',
+  /videoFromSong\(/.test(sameHandler),
+  'the song under the desk and nothing in the box is the fault she reported about hooks',
 );
 ok(
   'and the desk is handed that song',

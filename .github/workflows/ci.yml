@@ -901,6 +901,14 @@ jobs:
       - name: Paying comes back to the room it was paid in
         run: npm run check:paidback
 
+      # And every other door, once. Three reports about three different
+      # hand-offs is not three bugs, it is nothing holding a door to
+      # carrying what it knows — so every way into another room is listed,
+      # each plain one has its reason written beside it, and a new door
+      # fails until somebody says which kind it is.
+      - name: Every door into a room carries, or says why it does not
+        run: npm run check:handover
+
       # What prompt caching actually saved, and the sum that turns four token
       # counts into rand. A cache that never hits looks exactly like one that
       # always does, except on the bill — and a lone write costs 25% MORE, so

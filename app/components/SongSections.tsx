@@ -136,7 +136,22 @@ export default function SongSections({
    * than roll for a new one. A prop and not a `goToRoom` call, because
    * navigation belongs to `page.tsx` — the same shape `onRemake` already has.
    */
-  onBooth?: () => void;
+  /**
+   * ── And the song goes with them ────────────────────────────────────
+   *
+   * Carli, 21 September 2026: *"Al die kamers se AI praat nie met mekaar
+   * nie."*
+   *
+   * This took no argument, and the note in `page.tsx` explained why:
+   * *"the Booth keeps its own list and picking there is one press.
+   * Passing an id it has no prop for would be a promise the room cannot
+   * keep."* That was true when it was written and stopped being true the
+   * day the Booth registered `pick_song` — which the collab room has
+   * been using ever since. So the reason outlived the fact, and somebody
+   * standing over one song, pressing a button that says take it to the
+   * Booth, arrived at a list to find it in again.
+   */
+  onBooth?: (title: string) => void;
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -457,7 +472,7 @@ export default function SongSections({
         {onBooth && (
           <button
             type="button"
-            onClick={onBooth}
+            onClick={() => onBooth(track?.title ?? '')}
             className="min-h-[44px] px-3.5 py-2.5 rounded-xl border border-amber-500/50 bg-amber-500/15 text-sm font-semibold text-amber-100 hover:bg-amber-500/25 flex items-center gap-2"
           >
             <Mic className="w-4 h-4" />
