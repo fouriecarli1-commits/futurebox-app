@@ -178,16 +178,52 @@ export type Snap = 'off' | 'bar' | 'beat' | 'smart';
  * "Smart" in a menu with no stated rule is a coin toss the user cannot predict,
  * and an unpredictable snap is worse than none.
  */
+/**
+ * How near a grid line a drag has to be before the grid takes it, as a share
+ * of the interval it would snap to.
+ *
+ * ── Why the grid has a reach at all ──────────────────────────────────────
+ *
+ * Carli, 21 September 2026: *"Ruler is not lose to be very precise, it jumps
+ * from grid to grid. It needs to be loose."*
+ *
+ * It did, and there was nothing between the grid lines. Every snap here was
+ * an unconditional `Math.round`, so with Snap on, every point in the song
+ * resolved to a bar or a beat and nothing else was reachable. Half a bar in
+ * was not a position you could choose; it was a position that immediately
+ * became the bar. With Snap off there was no help at all. Two settings, and
+ * neither of them was "mostly on the grid, and exact when I mean it".
+ *
+ * The magnet next door has had a reach since the day it was written — twelve
+ * pixels, and outside that it leaves you alone. The grid is the same kind of
+ * help and was the only one without one.
+ *
+ * A quarter of the interval: aim at a bar and you get the bar, land in the
+ * middle of one and you keep where you put it. In 4/4 that is one beat
+ * either side of a bar line, which is exactly the tolerance `smart` was
+ * already using for bars — so this is the rule that was already half here,
+ * finished and applied to all three.
+ */
+export const GRID_REACH = 0.25;
+
 export function snapped(seconds: number, meter: Meter, snap: Snap): number {
   if (snap === 'off') return seconds;
   const beat = beatSeconds(meter);
   const bar = barSeconds(meter);
-  if (snap === 'bar') return Math.round(seconds / bar) * bar;
-  if (snap === 'beat') return Math.round(seconds / beat) * beat;
+
+  /** The nearest line of that spacing, or null when it is too far to help. */
+  const near = (every: number): number | null => {
+    if (!(every > 0)) return null;
+    const to = Math.round(seconds / every) * every;
+    return Math.abs(seconds - to) <= every * GRID_REACH ? to : null;
+  };
+
+  if (snap === 'bar') return near(bar) ?? seconds;
+  if (snap === 'beat') return near(beat) ?? seconds;
 
   const toBar = Math.round(seconds / bar) * bar;
   if (Math.abs(seconds - toBar) <= beat) return toBar;
-  return Math.round(seconds / beat) * beat;
+  return near(beat) ?? seconds;
 }
 
 /* ── The metronome ───────────────────────────────────────────────────────── */

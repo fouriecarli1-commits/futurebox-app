@@ -7,7 +7,7 @@
  * audible and invisible, which is the combination worth a gate.
  */
 import {
-  DEFAULT_METER, barSeconds, beatSeconds, clicksIn, countInSeconds, displayOf,
+  DEFAULT_METER, GRID_REACH, barSeconds, beatSeconds, clicksIn, countInSeconds, displayOf,
   positionOf, sane, secondsOf, snapped, type Meter,
 } from '../app/lib/tempo.ts';
 
@@ -52,7 +52,28 @@ for (const [bar, beat] of [[1, 1], [2, 3], [17, 4], [91, 2]] as const) {
 // ── Snapping ─────────────────────────────────────────────────────────────
 check('off leaves a position exactly alone', snapped(1.234, four4, 'off') === 1.234);
 check('beat rounds to the nearest half second', near(snapped(1.4, four4, 'beat'), 1.5), String(snapped(1.4, four4, 'beat')));
-check('bar rounds to the nearest two seconds', near(snapped(2.9, four4, 'bar'), 2), String(snapped(2.9, four4, 'bar')));
+check('bar takes the nearest two seconds when you aim at one', near(snapped(2.2, four4, 'bar'), 2), String(snapped(2.2, four4, 'bar')));
+
+/* ── The grid lets go ────────────────────────────────────────────────────
+
+   Carli, 21 September 2026: *"Ruler is not lose to be very precise, it jumps
+   from grid to grid. It needs to be loose."*
+
+   Every snap here used to be an unconditional round, so half a bar in was
+   not a place you could put anything — it became the bar the moment you let
+   go. Both directions are pinned, because a grid that never lets go is the
+   fault she reported and a grid that never holds is no grid. */
+check('a bar grid lets go in the middle of a bar',
+  near(snapped(2.9, four4, 'bar'), 2.9), String(snapped(2.9, four4, 'bar')));
+check('and a beat grid lets go in the middle of a beat',
+  near(snapped(1.25, four4, 'beat'), 1.25), String(snapped(1.25, four4, 'beat')));
+check('the reach is a quarter of the interval, held exactly',
+  near(snapped(2.5, four4, 'bar'), 2) && !near(snapped(2.51, four4, 'bar'), 2),
+  `${snapped(2.5, four4, 'bar')} / ${snapped(2.51, four4, 'bar')}`);
+check('smart lets go between the beats too',
+  near(snapped(3.25, four4, 'smart'), 3.25), String(snapped(3.25, four4, 'smart')));
+check('and GRID_REACH is what says so, not a number typed twice',
+  GRID_REACH > 0 && GRID_REACH < 0.5, String(GRID_REACH));
 /* Smart is a stated rule, not a feeling: within a beat of a bar line it takes
    the bar, otherwise the beat. Both sides of that line are pinned, because a
    snap nobody can predict is worse than no snap. */

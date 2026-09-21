@@ -678,6 +678,43 @@ export default function BoothTimeline({
   const marks: number[] = [];
   for (let second = 0; second <= scaleTotal; second += step) marks.push(second);
 
+  /* ── The smaller marks between the numbers ────────────────────────────
+
+     Carli, 21 September 2026: *"the grid needs to have smaller marks on top
+     at the time reference, specifically to have that smaller reference."*
+
+     The ruler had numbers and nothing else — no tick under a number, and
+     nothing at all between two of them. A number every ninety pixels with
+     bare strip in between is not a reference you can aim at: at zoom 8 the
+     gap between 0:15 and 0:30 is most of the screen, and every position
+     inside it looks the same as every other.
+
+     So two tiers. A tall mark under each number, and short ones dividing
+     the gap. How many is chosen from pixels for the same reason the step
+     above it is: a division picked from seconds spreads out as you zoom in,
+     which is the fault she reported about the grid in the first place.
+     Nine pixels apart at the closest, so they read as marks rather than as
+     a grey band, and the count is 2, 5 or 10 so each small mark lands on a
+     tenth, a fifth or a half of a round number.
+
+     This is the TIME reference and the bar lines are the MUSIC one. They
+     are deliberately different things in different places: bar lines run
+     the full height behind every lane, and these live in the ruler. */
+  const parts = (() => {
+    if (!(wide > 0) || !(scaleTotal > 0)) return 1;
+    const perPixel = (one: number) => ((step / one) / scaleTotal) * wide;
+    for (const one of [10, 5, 2] as const) if (perPixel(one) >= 9) return one;
+    return 1;
+  })();
+  const ticks: { readonly at: number; readonly tall: boolean }[] = [];
+  for (const second of marks) {
+    ticks.push({ at: second, tall: true });
+    for (let part = 1; part < parts; part += 1) {
+      const where = second + (step * part) / parts;
+      if (where <= scaleTotal) ticks.push({ at: where, tall: false });
+    }
+  }
+
   /* The bar lines, behind everything, on the shared axis rather than inside
      each waveform — which is the whole point of this layout. Thinned out
      where a bar would be less than eight pixels wide, because a grid you
@@ -1069,6 +1106,27 @@ export default function BoothTimeline({
               if (event.key === 'ArrowRight') { event.preventDefault(); onSeek(Math.min(total, at + jump)); }
             }}
           >
+            {/* The marks themselves, under the numbers and between them.
+
+                Drawn before the labels so a number is never underneath a
+                tick, and `pointer-events-none` throughout because the whole
+                strip is one scrub target — a mark that swallowed a press
+                would make the ruler dead in exactly the places a finger
+                aims at. */}
+            {ticks.map((tick) => (
+              <span
+                key={`${tick.at}-${tick.tall ? 'a' : 'b'}`}
+                data-tick={tick.tall ? 'major' : 'minor'}
+                className="pointer-events-none absolute w-px"
+                style={{
+                  left: `${percent(tick.at)}%`,
+                  top: 16,
+                  height: tick.tall ? 10 : 5,
+                  background: tick.tall ? 'rgba(238,242,255,0.42)' : 'rgba(238,242,255,0.2)',
+                }}
+                aria-hidden
+              />
+            ))}
             {/* A label is only drawn where it fits.
 
                 `overflow-hidden` clips the paint and does nothing about the

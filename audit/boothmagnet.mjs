@@ -608,6 +608,28 @@ try {
     check('  and the clock goes with it',
       marks.length > 1,
       `${marks.length} time labels: ${marks.join(' ')}`);
+
+    /* ── The smaller reference ───────────────────────────────────────
+
+       Carli, 21 September 2026: *"the grid needs to have smaller marks
+       on top at the time reference, specifically to have that smaller
+       reference."*
+
+       The ruler carried numbers and nothing else — no tick under a
+       number and nothing at all between two of them, which is a
+       reference you can read and not one you can aim at.
+
+       Counted rather than merely present, for the same reason the two
+       above it are: the fault that lasted days here was `> 0` passing
+       on one label in a 390-pixel window. A tick under every number is
+       the floor; small ones between them are the thing she asked for,
+       so both are counted. */
+    const majors = await p.locator('[data-axis] [data-tick="major"]').count();
+    const minors = await p.locator('[data-axis] [data-tick="minor"]').count();
+    check('  and every number has a mark under it',
+      majors >= marks.length, `${majors} marks for ${marks.length} numbers`);
+    check('  and there are smaller marks between the numbers',
+      minors >= marks.length, `${minors} smaller marks, ${majors} numbered ones`);
   }
 
   const zoomIn = p.locator('[data-zoom="in"]').first();
