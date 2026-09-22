@@ -35,6 +35,7 @@
  * assertions about the room that cuts a music video together have sat here
  * being run by nobody.
  */
+import { statSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { agreeAndSubmit, launchOptions, serve, shot } from './where.mjs';
 import { dismissDoor, studio, toRoom } from './enter.mjs';
@@ -354,6 +355,37 @@ check(
 );
 check('and it can be saved',
   (await room.locator('button').filter({ hasText: af ? /^Stoor die film/ : /^Save the film/ }).count()) > 0);
+
+/* ── And one piece on its own ──────────────────────────────────────────
+ 
+   Carli, 23 September 2026: *"Elke klein gedeelt moet 'n knoppie hê om net
+   die stukkie af te laai."* The room had exactly one download on it, at the
+   bottom, for the finished film.
+ 
+   Pressed rather than counted, and for a specific reason: this board's
+   first shot is TRIMMED by a second above, so saving it cannot be handing
+   over the file the engine sent — it has to cut the piece. A rule that only
+   looked for a button would pass on a button that downloads the wrong
+   thing, which is the shape of most of the faults in this repo. */
+const pieces = room.locator('[data-savepiece]');
+check('every shot has its own download', (await pieces.count()) === 3,
+  `${await pieces.count()} of 3 — she asked for one on every small part`);
+
+const arriving = p.waitForEvent('download', { timeout: 90000 });
+await pieces.first().click();
+const file = await arriving.catch(() => null);
+check('  and pressing one actually saves that piece', Boolean(file),
+  'the button is there and nothing comes out of it');
+if (file) {
+  const where = await file.path();
+  const size = where ? statSync(where).size : 0;
+  check('    and what came out is a real file', size > 2000, `${size} bytes`);
+  /* The trimmed shot is one second shorter than the clip behind it. A save
+     that handed over the raw generation would be the longer one, which is
+     the difference this whole assertion exists for. */
+  check('    named for the shot it came from', /shot-1/.test(file.suggestedFilename()),
+    file.suggestedFilename());
+}
 
 await p.screenshot({ path: shot(`storyboard-${af ? 'af' : 'en'}.png`), fullPage: true });
 } catch (problem) {

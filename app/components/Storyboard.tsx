@@ -90,6 +90,7 @@ export default function Storyboard({
   grade,
   lengths,
   frame,
+  canSpeak,
   onUpgrade,
   songId,
 }: {
@@ -99,6 +100,14 @@ export default function Storyboard({
   readonly lengths: readonly { seconds: number; label: string }[];
   /** The cast member the desk has chosen, so every shot is the same person. */
   readonly frame: string | null;
+  /**
+   * Whether the grade chosen on the desk can speak a quoted line at all.
+   *
+   * Handed down rather than looked up again: the desk reads it off
+   * `can[grade]` and a second lookup would be a second answer the day the
+   * two disagree.
+   */
+  readonly canSpeak: boolean;
   readonly onUpgrade?: () => void;
   /**
    * The song the room above has already chosen, when there is one.
@@ -297,12 +306,21 @@ export default function Storyboard({
       setMaking(id);
       setProblem(null);
       try {
+        /* The line, said out loud, when the board is set to and the shot
+           actually has one.
+ 
+           This was the whole of her report. `VideoRequest.speak` has existed
+           since the desk above got its switch, and this board never sent it
+           — so every shot it has ever made came back silent, whatever the
+           shot said and whatever grade was paid for. */
+        const willSpeak = Boolean(board.speaks && canSpeak && spokenLines(shot.prompt).length);
         const result = await engines.generateVideo({
           title: t('board.shot', 'Shot'),
           treatment: askFor(shot, board.look),
           aspect,
           seconds: shot.seconds,
           grade,
+          ...(willSpeak ? { speak: true } : {}),
           ...(frame ? { image: frame } : {}),
         });
         const id_ = makeId('canvas');
@@ -324,7 +342,7 @@ export default function Storyboard({
           },
           result.blob,
         );
-        setBoard((was) => changed(was, id, { makeId: id_ }));
+        setBoard((was) => changed(was, id, { makeId: id_, spoke: willSpeak }));
       } catch (caught) {
         const message = caught instanceof Error ? caught.message : t('make.failed');
         setProblem(message);
@@ -333,7 +351,7 @@ export default function Storyboard({
         setMaking(null);
       }
     },
-    [board.shots, board.look, making, aspect, grade, frame, onUpgrade, t],
+    [board.shots, board.look, board.speaks, canSpeak, making, aspect, grade, frame, onUpgrade, t],
   );
 
   const cut = useCallback(async () => {
@@ -376,6 +394,10 @@ export default function Storyboard({
           name: `${index + 1}`,
           ...(board.shots[index].from !== undefined ? { from: board.shots[index].from } : {}),
           ...(board.shots[index].to !== undefined ? { to: board.shots[index].to } : {}),
+          /* Read off the SHOT rather than off the switch: the switch can be
+             turned off after a talking shot was paid for, and a cut that
+             read it would mute the voice she bought. */
+          ...(board.shots[index].spoke ? { sound: true } : {}),
           /* Only when the board is captioning. A caption left on a shot from a
              run with the switch on must not reappear in a run with it off. */
           ...(board.captions && captions[index]?.trim()
@@ -420,6 +442,92 @@ export default function Storyboard({
       setCutting(null);
     }
   }, [board, cutting, song, aspect, t]);
+
+  /* ── One piece, on its own ────────────────────────────────────────────
+   *
+   * Carli, 23 September 2026: *"Elke klein gedeelt moet 'n knoppie hê om
+   * net die stukkie af te laai."*
+   *
+   * The whole room had one download on it, at the bottom, for the finished
+   * film. Twelve shots were paid for one at a time and there was no way to
+   * keep any one of them — which is the wrong shape for how these actually
+   * get used: a single shot IS the post, most of the time, and the film is
+   * the thing you build after you have one that works.
+   *
+   * ── What "the piece" means, and why it is not always the file ─────────
+   *
+   * A shot on this board is not the file the engine sent back. It is that
+   * file with the trim handles applied, and with the caption burned in when
+   * the film is captioning. Handing over the raw generation would give her
+   * the seconds she trimmed off and no words, while the board shows neither
+   * — which is the adjacent-measurement mistake in file form.
+   *
+   * So the button hands over the piece as the film uses it. When nothing
+   * has been done to the shot — no trim, no caption — that IS the original
+   * file, so it is handed over directly rather than re-encoded, because
+   * re-encoding a clip to change nothing about it only costs quality.
+   *
+   * The song is not in it. It runs under the whole film, and a slice of it
+   * under one shot would start and stop in an arbitrary place; the note
+   * under the button says so rather than leaving it to be discovered.
+   */
+  const [saving, setSaving] = useState<string | null>(null);
+
+  const savePiece = useCallback(
+    async (shot: Shot, index: number) => {
+      if (saving || !shot.makeId) return;
+      setProblem(null);
+      setSaving(shot.id);
+      try {
+        const clip = await makeBlob(shot.makeId);
+        if (!clip) {
+          setProblem(t('board.lost', 'A shot\u2019s clip is no longer on this device. Make that one again before cutting.'));
+          return;
+        }
+        const words = board.captions ? captionOf(shot) : '';
+        const trimmed = shot.from !== undefined || shot.to !== undefined;
+        const name = safeFilename(`shot-${index + 1}`, 'x');
+
+        /* Nothing to apply, so nothing to re-encode. A shot that speaks
+           needs no special case here: its voice is inside the file the
+           engine sent, so handing that file over keeps it. */
+        if (!trimmed && !words.trim()) {
+          const ext = /mp4/.test(clip.type) ? 'mp4' : 'webm';
+          downloadBlob(clip, safeFilename(`shot-${index + 1}`, ext));
+          return;
+        }
+
+        const wide = aspect === '9:16' ? { width: 720, height: 1280 } : aspect === '1:1'
+          ? { width: 1080, height: 1080 }
+          : { width: 1280, height: 720 };
+        const made = await stitch({
+          scenes: [{
+            clip,
+            name,
+            ...(shot.from !== undefined ? { from: shot.from } : {}),
+            ...(shot.to !== undefined ? { to: shot.to } : {}),
+            ...(words.trim() ? { caption: words } : {}),
+            ...(shot.spoke ? { sound: true } : {}),
+          }],
+          audio: null,
+          ...wide,
+          background: board.background ?? 'black',
+        });
+        if (!made.ok) {
+          setProblem(
+            made.why === 'unsupported'
+              ? t('board.unsupported', 'This browser cannot cut a film together. Chrome or Safari can.')
+              : t('board.pieceFailed', 'That piece could not be saved. Nothing was charged for this step.'),
+          );
+          return;
+        }
+        downloadBlob(made.blob, safeFilename(`shot-${index + 1}`, made.ext));
+      } finally {
+        setSaving(null);
+      }
+    },
+    [saving, board.captions, board.background, aspect, t],
+  );
 
   /* A fold, like every other panel in the app. It was a plain section with
      its heading always open, so a room showed several long panels at once
@@ -527,6 +635,24 @@ export default function Storyboard({
                 >
                   <ArrowDown className="w-4 h-4" />
                 </button>
+                {/* Only once there is something to save. A download beside a
+                    shot that has not been made yet is a button that can only
+                    disappoint. */}
+                {shot.makeId && (
+                  <button
+                    type="button"
+                    onClick={() => void savePiece(shot, index)}
+                    disabled={Boolean(saving)}
+                    data-savepiece={shot.id}
+                    aria-label={`${t('board.savePiece', 'Save this piece')} ${index + 1}`}
+                    title={t('board.savePiece', 'Save this piece')}
+                    className="w-11 h-11 rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-40 flex items-center justify-center"
+                  >
+                    {saving === shot.id
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <Download className="w-4 h-4" />}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setBoard((was) => withoutShot(was, shot.id))}
@@ -758,6 +884,64 @@ export default function Storyboard({
             }
             problem={translateProblem}
           />
+
+          {/* ── The shots saying their lines ────────────────────────────
+
+              Carli, 23 September 2026: *"Dit wil ook voorkom dat daai kamer
+              glad nie klank wat praat genereer nie."*
+
+              It did not, and the reason was one missing word on a request.
+              `VideoRequest.speak` has been there since the composer above
+              got its own switch, and this board never sent it — so every
+              shot it has ever made came back silent, whatever the shot said
+              and whatever grade was paid for. Nothing failed, nothing said
+              anything, and the words came out on screen as a subtitle with
+              nothing behind them.
+
+              One switch for the film, not one per shot, like the grade and
+              the cast picture: a film where some lines are heard and the
+              rest are read is not a choice anybody makes on purpose.
+
+              Off by default. It costs more, and most shots have no quoted
+              line in them to say. */}
+          <label
+            className={`flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 ${
+              canSpeak ? 'cursor-pointer' : 'opacity-60'
+            }`}
+          >
+            <input
+              id="board-speaks"
+              type="checkbox"
+              data-boardspeaks
+              checked={Boolean(board.speaks)}
+              disabled={!canSpeak}
+              onChange={(event) => setBoard((was) => ({ ...was, speaks: event.target.checked }))}
+              className="mt-0.5 w-4 h-4 accent-emerald-500 flex-shrink-0"
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-zinc-200">
+                {t('board.letItSpeak', 'Let the shots say their lines out loud')}
+              </span>
+              <span className="block text-xs text-zinc-500 leading-snug">
+                {canSpeak
+                  ? t(
+                      'board.letItSpeakNote',
+                      'Anything a shot puts in quotation marks is spoken by the engine that makes it, and that shot keeps its voice in the finished film. Shots with nothing in quotes are made silent as before, so the film is not twelve rooms of hiss under the song.',
+                    )
+                  : t(
+                      'board.cannotSpeak',
+                      'The grade chosen on the desk above cannot speak a line. Raise it there and this comes back.',
+                    )}
+              </span>
+              {/* Said where it is chosen rather than found on the invoice.
+                  Speaking costs more per shot, and a board is twelve of them. */}
+              {canSpeak && (
+                <span className="mt-1 block text-xs text-zinc-600 leading-snug">
+                  {t('board.speakCost', 'A shot that speaks costs what its grade costs — this does not add a separate charge, but a talking grade is the dearer one.')}
+                </span>
+              )}
+            </span>
+          </label>
 
           {/* ── What goes around a shot that is the wrong shape ──────────
 

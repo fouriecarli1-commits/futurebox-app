@@ -6175,3 +6175,63 @@ opgeruim, en 'n opruiming wat stilweg die koorvrae of die grappe laat val, is
 klagte is wat sy die meeste oor hierdie repo maak.
 
 Agt mutasies, agt keer rooi.
+
+## §AN · Een woord op een versoek, en die hele kamer was stil (23 September 2026)
+
+Carli: *"Gaan kyk na long shot in video. Elke klein gedeelt moet 'n knoppie hê
+om net die stukkie af te laai. Dit wil ook voorkom dat daai kamer glad nie
+klank wat praat genereer nie."*
+
+Albei waar, en die tweede een was nie wat dit gelyk het nie.
+
+### Die kamer kón praat
+
+`VideoRequest.speak` bestaan al vandat die enkel-knipsel tafel bo sy eie
+skakelaar gekry het. Die langvormbord het dit **nooit gestuur nie** — een
+ontbrekende eienskap op een versoekvoorwerp. Elke skoot wat daardie bord ooit
+gemaak het, het stil teruggekom, wat die skoot ook al gesê het en watter graad
+ook al betaal is.
+
+Niks het misluk nie. Die aangehaalde reël is deur `spokenLines` gelees, as
+onderskrif op die skerm gedruk, en nooit gesê nie. Dit is dieselfde vorm as
+die copilot wat vertel is 'n operasie bestaan nie, en die brand kit se logo
+wat nooit op 'n knipsel aankom nie: 'n vermoë wat bestaan, betaal word, en
+onbereikbaar is.
+
+### En dan sou die film dit in elk geval verloor het
+
+`stitch.ts` het **elke** knipsel gedemp, met 'n rede wat neergeskryf is: twaalf
+generasies se eie vertrekgeruis onder 'n liedjie is geraas. Die rede is reg —
+vir geruis. Dit is geskryf asof geruis die enigste ding in 'n knipsel is, en
+dit is nie. 'n Skoot wat betaal is om te praat het 'n stem daarin.
+
+So dit is nou per toneel: `Scene.sound` dra daardie knipsel se eie klank en
+niks anders nie, wat die oorspronklike besluit presies laat waar dit reg was.
+En dit word van die **skoot** af gelees, nie van die skakelaar nie: die
+skakelaar kan afgesit word nadat 'n pratende skoot betaal is, en 'n snit wat
+die skakelaar lees, sou die stem demp wat sy gekoop het.
+
+### Die stukkie, nie die lêer nie
+
+Die knoppie gee die stukkie soos die **film** dit gebruik — met die snit en
+die onderskrif — nie die rou generasie nie. Anders kry sy die sekondes wat sy
+weggesny het en geen woorde nie, terwyl die bord nie een van die twee wys nie.
+Waar niks toegepas is nie, ís die stukkie die oorspronklike lêer, en dan word
+dit direk oorhandig, want om iets te herkodeer om niks te verander nie, kos
+net gehalte.
+
+### Twee reëls van my eie wat verkeerd was
+
+Die eerste weergawe van `check:longshot` het die hele lêer vir die letterlike
+`speak: true` deursoek — en die **korrekte** tafel laat val, wat
+`speak: willSpeak` stuur. 'n Reël wat net een spelling van 'n regte antwoord
+kan sien, is 'n reël oor spelling. Dit lees nou die oproep se eie
+argumentvoorwerp.
+
+En 'n tiende reël — dat die frase "room tone" in `stitch.ts` moet bly — het
+groen gebly toe ek die kopnota herskryf het, omdat ek dieselfde frase
+intussen in die **nuwe** nota geskryf het. Dit het my eie kommentaar gemeet.
+Dit is verwyder eerder as reggemaak.
+
+Agt van nege mutasies rooi, die oorspronklike fout eerste. En die probe druk
+nou die knoppie: 'n regte lêer kom uit, uit 'n geknipte skoot.

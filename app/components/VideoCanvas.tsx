@@ -1282,6 +1282,10 @@ export default function VideoCanvas({
         lengths={lengths}
         frame={frame}
         songId={songId}
+        /* Read off `can[grade]` here rather than asked again down there: one
+           answer to "can this rung speak", in the place that already has it.
+           A second lookup would be a second answer the day they disagree. */
+        canSpeak={Boolean(able?.speaks)}
         onUpgrade={onUpgrade}
       />
 

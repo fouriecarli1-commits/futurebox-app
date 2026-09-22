@@ -50,10 +50,19 @@
  * added to the same stream the recorder is given — one file, sound and
  * picture, in one pass.
  *
- * The clips' own sound is deliberately not carried. Every one of them is a
+ * The clips' own sound is not carried by default. Every one of them is a
  * separate generation with its own room tone, and twelve of those cutting
- * against each other under a song is noise. A clip with a line worth keeping
- * belongs in the video desk on its own.
+ * against each other under a song is noise.
+ *
+ * That was written as though room tone were the only thing in a clip, and it
+ * is not. Carli, 23 September 2026: *"Dit wil ook voorkom dat daai kamer glad
+ * nie klank wat praat genereer nie."* A shot generated with a spoken line has
+ * a voice in it, and muting every clip threw that away along with the hiss —
+ * so a film whose shots had been paid to speak came out silent, twice over.
+ *
+ * So it is per scene now. `Scene.sound` carries that clip's own audio and
+ * nothing else does, which keeps the original decision exactly where it was
+ * right: a shot nobody asked to speak is still muted.
  */
 
 import { drawMark, type Corner } from './logomark';
@@ -61,6 +70,14 @@ import { drawMark, type Corner } from './logomark';
 export interface Scene {
   /** The clip itself, as it came back from the engine. */
   readonly clip: Blob;
+  /**
+   * Carry this clip's own sound into the film.
+   *
+   * Off unless asked, because most shots hold nothing but room tone — see the
+   * note at the top. On for a shot generated with a spoken line, which is the
+   * only kind that has anything in it worth hearing.
+   */
+  readonly sound?: boolean;
   /** Named only so a progress line can say which one is being laid down. */
   readonly name?: string;
   /**
@@ -461,23 +478,37 @@ export async function stitch(cut: Cut): Promise<Made> {
      element's output cannot be added to a MediaStream — and a music video that
      comes out silent is not a music video. */
   let audioContext: AudioContext | null = null;
+  let destination: MediaStreamAudioDestinationNode | null = null;
   let song: AudioBufferSourceNode | null = null;
-  if (cut.audio) {
+  /* Either reason is enough to need a graph: a song laid under the film, or
+     a single shot that was paid to speak. */
+  const talks = cut.scenes.some((one) => one.sound);
+  if (cut.audio || talks) {
     const Ctx =
       window.AudioContext ??
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (Ctx) {
       audioContext = new Ctx();
+      destination = audioContext.createMediaStreamDestination();
       try {
-        const buffer = await audioContext.decodeAudioData(await cut.audio.arrayBuffer());
-        const destination = audioContext.createMediaStreamDestination();
-        song = audioContext.createBufferSource();
-        song.buffer = buffer;
-        song.connect(destination);
-        for (const track of destination.stream.getAudioTracks()) stream.addTrack(track);
+        if (cut.audio) {
+          const buffer = await audioContext.decodeAudioData(await cut.audio.arrayBuffer());
+          song = audioContext.createBufferSource();
+          song.buffer = buffer;
+          song.connect(destination);
+        }
       } catch {
         // A song that will not decode is a film without one, not a failure.
         song = null;
+      }
+      /* The track joins the stream only when something will come out of it.
+         A song that failed to decode with no talking shots used to mean no
+         audio track at all, and adding a silent one would change the file
+         this browser writes for a case that has already gone wrong. */
+      if (song || talks) {
+        for (const track of destination.stream.getAudioTracks()) stream.addTrack(track);
+      } else {
+        destination = null;
       }
     }
   }
@@ -506,9 +537,25 @@ export async function stitch(cut: Cut): Promise<Made> {
       const url = URL.createObjectURL(cut.scenes[index].clip);
       urls.push(url);
       video.src = url;
-      // The clips' own sound is not carried — see the note at the top.
-      video.muted = true;
       video.playsInline = true;
+      /* Muted unless this shot was asked to speak — see the note at the top.
+ 
+         Unmuting alone would not put it in the film: `captureStream` on a
+         canvas carries pictures only, and an element's audio has to be routed
+         into the same graph the song is in. `createMediaElementSource` also
+         takes the sound away from the speakers, which is what we want — the
+         export is a recording, not a playback. */
+      const talking = Boolean(cut.scenes[index].sound) && Boolean(audioContext && destination);
+      video.muted = !talking;
+      if (talking && audioContext && destination) {
+        try {
+          audioContext.createMediaElementSource(video).connect(destination);
+        } catch {
+          // Already routed, or this browser will not have it. The shot plays
+          // on silently rather than the export failing over one clip.
+          video.muted = true;
+        }
+      }
 
       const ready = await new Promise<boolean>((done) => {
         video.onloadedmetadata = () => done(true);

@@ -42,6 +42,16 @@ export interface Shot {
   /** The `makes.ts` id of the clip that came back, once one has. */
   readonly makeId?: string;
   /**
+   * Whether the clip that came back was generated with its line spoken.
+   *
+   * A property of the FILE, not of the switch. The board's switch can be
+   * turned off after a talking shot was paid for, and turned on before a
+   * silent one is remade — so reading the switch at cutting time would mute
+   * shots that speak and unmute shots with nothing in them but room tone.
+   * Written when the clip is made and never inferred.
+   */
+  readonly spoke?: boolean;
+  /**
    * Where this shot starts and stops inside its clip, in seconds.
    *
    * A generation comes back at the length the engine makes, and the useful
@@ -71,6 +81,23 @@ export interface Shot {
 
 export interface Storyboard {
   readonly shots: readonly Shot[];
+  /**
+   * Whether a shot's quoted line is spoken aloud by the engine that makes it.
+   *
+   * Carli, 23 September 2026: *"Dit wil ook voorkom dat daai kamer glad nie
+   * klank wat praat genereer nie."* It did not, and not because it could
+   * not: `VideoRequest.speak` has been there all along and this board was
+   * the one screen that never sent it. Every shot it has ever made was
+   * generated silent, whatever the shot said and whatever grade was chosen.
+   *
+   * One decision for the film rather than one per shot, like the grade and
+   * the cast picture above it: a film where some lines are heard and others
+   * are read is not a choice anybody makes on purpose.
+   *
+   * Off by default, because it costs more and because most shots have no
+   * line in them at all.
+   */
+  readonly speaks?: boolean;
   /** The track laid under the whole film, by its library id. */
   readonly songId?: string;
   /**

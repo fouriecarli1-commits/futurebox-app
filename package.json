@@ -18,6 +18,7 @@
     "check:hookcarry": "tsx scripts/check-hookcarry.mts",
     "check:paidback": "tsx scripts/check-paidback.mts",
     "check:handover": "tsx scripts/check-handover.mts",
+    "check:longshot": "tsx scripts/check-longshot.mts",
     "check:realart": "tsx scripts/check-realart.mts",
     "check:feedlinks": "tsx scripts/check-feedlinks.mts",
     "check:spotlight": "node audit/spotlight.mjs 3141",

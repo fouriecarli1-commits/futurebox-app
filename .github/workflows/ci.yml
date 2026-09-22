@@ -930,6 +930,11 @@ jobs:
       - name: Cover art offers real art, in both states of the panel
         run: npm run check:realart
 
+      # The long-form board had one download on it, for the whole film, and
+      # never once asked the engine to say a shot's quoted line.
+      - name: Every shot can be saved on its own, and a shot with a line says it
+        run: npm run check:longshot
+
       # Every card on the front page plays the thing it names. Two were
       # pointing at the same lecture — one of them a named episode by two
       # real people, the other an invented maker on an invented label —
