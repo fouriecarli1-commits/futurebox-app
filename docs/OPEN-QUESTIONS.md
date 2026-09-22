@@ -5931,3 +5931,73 @@ het, tot op die reël. Die nuwe `ALMAL.sql` het skoon toegepas, en `WATKORT`
 het toe niks teruggegee nie.
 
 **Die les, weer: 'n lys van wat iemand glo reeds gedoen is, is nie data nie.**
+
+## §AJ · Die vermoë was gebou, en die model is vertel dit bestaan nie (22 September 2026)
+
+Twee foute wat sy herhaaldelik gerapporteer het, albei met 'n groen check
+langsaan. Albei is dieselfde soort fout op verskillende vlakke: iets wat
+**langs** die regte ding meet.
+
+### Die copilot wat nie die volgende kamer invul nie
+
+Alles was gebou. `describeOtherRoomOps(here)` gee die model elke **ander**
+kamer se operasies. `planActions` aanvaar 'n `surface_op` wat 'n ander kamer
+noem, mits dieselfde antwoord daardie kamer oopmaak. Die storyboard se
+`write_scenes` sny die teks in shots en maak sy eie kaart oop.
+
+En die instruksie aan die model het gesê:
+
+> `surface_op changes something in the room they are standing in.`
+
+**Die vermoë is gebou, die data daarvoor verskaf, en die instruksie sê dit
+bestaan nie.** 'n Model wat sy instruksies volg, stel dus nooit die kamer op
+wat dit oopmaak nie. Sy het dit oor die advertensie-lessenaar gerapporteer
+en, in haar woorde, oor *"elke kamer"*.
+
+Hoekom geen probe dit gevang het nie: `adcarry` loop die **aanbevelings-kaart**
+pad, met die model se antwoord gestub. Daardie pad bou sy drade in
+`adhandover.ts` en kom nooit naby die copilot se eie aksies nie.
+
+**Die les: 'n reël wat in kode afgedwing word en nêrens gestel word nie, is 'n
+reël wat die model nie kan volg nie.** `check:copilotplan` hou nou albei
+helftes teen mekaar.
+
+### Die kamer is gekies en toe toegemaak
+
+Die betaling-terugkeer was nooit 'n URL-fout nie. Die effek wat `?paid=1&
+room=…` lees maak die studio oop en kies die kamer, sinchronies, en dit werk.
+
+Wat dit nie oorleef nie is wat **daarna** loop. Albei sessie-herstel paaie
+eindig in `setAtDoor(true)`. Daar was geen pad wat iemand ná 'n bladsy-laai
+in 'n kamer laat nie. Die kamer is gekies en die deur is bo-op gesit — van
+buite af is dit om uit die kamer gegooi te word.
+
+En die probe het drie keer geslaag terwyl sy dit rapporteer, omdat sy eerste
+reël was:
+
+```
+await dismissDoor(p);          ← voor elke assertion
+```
+
+**Dit het die deur afgehaal en toe berig dat niks die kamer toemaak nie.**
+
+Drie pogings om dit reg te maak, elke mislukking myne: net die Supabase-pad
+gewaak (die probe het geen Supabase nie, so dit was die ander een); toe albei
+gewaak deur `paid` binne elke effek uit die URL te lees (maar die paid-effek
+vee dit uit voordat hulle loop); en toe die deur geassert deur knoppies te tel
+wat "Not now" sê — wat die **groet** se knoppie is, nie die deur nie.
+
+Die dop dra nou `data-atdoor`, sodat 'n probe die toestand **lees** eerder as
+om dit uit meubels af te lei.
+
+### En 'n kamer wat geld vat en op geen pakket staan nie
+
+Die album art kamer is gebou, dit vat geld, en nie een van die vier
+plan-kaarte het dit genoem nie. Iemand wat planne vergelyk kon nie sien dit
+bestaan nie.
+
+Die bedrae staan uitgeskryf in `plans.ts` eerder as ingevoer:
+`data/artmarket.ts` voer `gatewayFee` uit `plans.ts` in, so dit terug invoer
+is 'n sirkel — en die sirkel faal **nie die build nie**, dit faal by
+module-init en het drie koste-checks platgetrek. `check:artmarket` hou die
+vier kaarte teen `START_RAND` en `UNIQUE_RAND`.
