@@ -728,10 +728,34 @@ export default function ArtMarket(): React.ReactElement {
      * that is correct and still answers no. Re-opened after the read, not
      * before it, because the sheet drawn from the state she had BEFORE
      * paying is the one still showing the R50 pass. */
+    /* ── Why the piece waits for the read to FINISH ──────────────────
+
+       This was `void read(); setWanted(said)`, and the note beside it
+       said the sheet must be drawn from the wall she paid for rather
+       than the one she had before. It was not. `read()` is a fetch;
+       `setWanted` ran on the next line, so `wanted` was set while
+       `market` was still the wall from BEFORE the payment — and the
+       effect below, which fires on either of them changing, opened the
+       stale piece and then cleared itself.
+
+       It is a race, which is why it passed one sweep and failed the
+       next against the same code. A race that lands on the wrong side
+       is exactly what she reported: *"Ek betaal die R50 om die bid te
+       begin, maar dan gebeur daar niks nie"* — the sheet opens still
+       offering the R50 pass she has just bought.
+
+       Awaited, so `setWanted` cannot run before `setMarket`. In a
+       `finally`, so a read that fails still opens the piece she paid
+       against rather than leaving her on a wall with nothing open. */
     paid: (said) => {
       setJustPaid(true);
-      void read();
-      setWanted(said || null);
+      void (async () => {
+        try {
+          await read();
+        } finally {
+          setWanted(said || null);
+        }
+      })();
     },
     /* The song somebody opened this room from, off a cover panel.
      *

@@ -6060,3 +6060,41 @@ gebruik, wat in 'n lêer wat die vou **definieer** én gebruik op die
 parameterlys land — vierhonderd reëls bo die oproep. Dit het 'n korrekte lêer
 laat faal en `startOpen={}` gedruk: die teken dat die reël niks gevind het en
 in elk geval daaroor berig het.
+
+### En die bid-knoppie was 'n wedloop, nie 'n fout nie
+
+Die volle probe-lopie het `check:paidwalk` laat val — die presiese ding wat sy
+drie keer gerapporteer het. Dieselfde probe was groen in die lopie 'n uur
+vantevore, teen dieselfde kode.
+
+```
+void read();                   ← 'n fetch, wat nog nie terug is nie
+setWanted(said || null);       ← die volgende reël
+```
+
+Die effek wat die stuk oopmaak vuur op enigeen van `wanted` of `market` wat
+verander. `wanted` was dus gestel terwyl `market` nog die muur van **voor**
+die betaling was, en die effek het die ou stuk oopgemaak en homself
+skoongevee. Watter kant die wedloop op val hang af van hoe vinnig die fetch
+terugkom.
+
+'n Wedloop is die slegste vorm vir juis hierdie fout, want *"ek kon dit nie
+weer laat gebeur nie"* is presies die antwoord wat sy al een keer hieroor
+gekry het.
+
+Die reël wat dit moes gevang het was groen:
+
+```
+ok('  and the room opens that piece once the wall carrying it has arrived',
+  /market\.wall\.find\(\(one\) => one\.id === wanted\)/.test(wall), …
+```
+
+Dit vra of die opsoek **bestaan**. Dit bestaan, en dit is die verkeerde muur
+gegee. Die reël meet nou die **volgorde**: `setWanted` moet ná `await read()`
+kom, en in 'n `finally`, sodat 'n leesfout haar nie op 'n muur met niks oop
+laat nie.
+
+En `check:paidback` stroop nou die kommentaar uit `ArtMarket.tsx` voordat dit
+soek, want die nota bo daardie handler haal die **verkeerde** volgorde aan om
+te verduidelik hoekom dit verkeerd is. 'n Skandering wat die nota lees, vind
+wat dit soek in 'n kommentaar en sê niks oor die kode nie.

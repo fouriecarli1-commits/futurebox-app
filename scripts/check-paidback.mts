@@ -42,6 +42,32 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 const till = readFileSync('app/api/checkout/route.ts', 'utf8');
 const page = readFileSync('app/page.tsx', 'utf8');
 const wall = readFileSync('app/components/ArtMarket.tsx', 'utf8');
+/* The gallery, without the prose about the gallery.
+ *
+ * Every rule below that reads the `paid` handler is about the ORDER two
+ * calls happen in, and the note above that handler quotes the wrong order
+ * to explain why it is wrong. A scan that reads the note finds whichever
+ * spelling it is looking for, in a comment, and says nothing about the
+ * code. Replaced with spaces of the same length, so indexes still line up. */
+const wallCode = wall
+  .replace(/\/\*[\s\S]*?\*\//g, (had) => had.replace(/[^\n]/g, ' '))
+  .replace(/(^|[^:])\/\/[^\n]*/g, (had, before) => before + ' '.repeat(had.length - before.length));
+
+/** The body of the `paid` handler, braces matched, prose gone. */
+const paidHandler = ((): string => {
+  const at = wallCode.search(/paid: \([^)]*\) => \{/);
+  if (at === -1) return '';
+  const open = wallCode.indexOf('{', wallCode.indexOf('=>', at));
+  let depth = 0;
+  for (let i = open; i < wallCode.length; i += 1) {
+    if (wallCode[i] === '{') depth += 1;
+    else if (wallCode[i] === '}') {
+      depth -= 1;
+      if (depth === 0) return wallCode.slice(open, i + 1);
+    }
+  }
+  return '';
+})();
 const words = readFileSync('app/lib/i18n.tsx', 'utf8');
 
 /* ── The till says where to come back to ─────────────────────────────── */
@@ -118,7 +144,7 @@ ok('  and cleans the address, so a reload is not a second arrival',
 /* ── The wall takes it, re-reads, and says so ─────────────────────────── */
 
 ok('the wall takes the payment and reads itself again',
-  /paid: \([^)]*\) => \{[\s\S]{0,300}?void read\(\)/.test(wall),
+  paidHandler.length > 0 && /\bread\(\)/.test(paidHandler),
   'arriving at the state from before the payment is the same nothing, one tap closer');
 /* ── And the two faults she reported on 22 September ─────────────────── */
 
@@ -129,10 +155,33 @@ ok('  and the door is not raised on top of the room she paid into',
 ok('  and the till carries WHICH piece back, not only which room',
   /piece=\$\{encodeURIComponent\(piece\)\}/.test(till),
   'the bid button is inside the opened piece, so the wall alone still answers no');
-ok('  and the room opens that piece once the wall carrying it has arrived',
+ok('  and the room opens that piece from the wall rather than from the id alone',
   /market\.wall\.find\(\(one\) => one\.id === wanted\)/.test(wall),
-  'a sheet built from an id alone is empty, and one from the wall she had before'
-  + ' paying is the one still offering the R50 pass');
+  'a sheet built from an id alone is empty');
+
+/* ── The ordering, which is the whole of it ──────────────────────────
+ 
+   The rule above was green for a day while the room did the wrong thing,
+   because it asked whether the lookup EXISTS. It does, and it was being
+   handed the wall from before the payment: `void read(); setWanted(said)`
+   sets `wanted` on the next line, long before the fetch comes back, and
+   the effect that opens the sheet fires on whichever of the two changes
+   first.
+ 
+   A race, so it passed one sweep and failed the next against the same
+   code — which is the worst way for this particular fault to behave,
+   because "I could not reproduce it" is the answer she has already been
+   given about it once. The piece must be named only after the read has
+   RESOLVED, and that is an ordering, not a presence. */
+ok('  and only after that wall has arrived, not while it is still being fetched',
+  /await read\(\)/.test(paidHandler)
+  && paidHandler.indexOf('setWanted') > paidHandler.indexOf('await read()'),
+  'setWanted runs before the fetch resolves, so the sheet is drawn from the wall'
+  + ' she had BEFORE paying — the one still offering the R50 pass she just bought');
+ok('    and a read that fails still opens the piece she paid against',
+  /finally\s*\{[^}]*setWanted\(/.test(paidHandler),
+  'a gallery that will not load leaves her on a wall with nothing open, which is'
+  + ' the silence she reported, wearing a different hat');
 
 ok('  and says the money landed, where the money was spent',
   /art\.paidBack/.test(wall) && words.includes('"art.paidBack"'),
