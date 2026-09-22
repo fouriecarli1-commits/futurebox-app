@@ -39,6 +39,31 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 ok('a piece starts at R200', START_RAND === 200, `${START_RAND}`);
 ok('a one-off costs R500', UNIQUE_RAND === 500, `${UNIQUE_RAND}`);
 ok('the artist takes 70%', ARTIST_SHARE === 0.7, `${ARTIST_SHARE}`);
+
+/* ── And the packages say the room exists, at the right prices ─────────
+ *
+ * Carli, 22 September 2026: *"Kyk ook dat die nuwe album art afdeling deel
+ * van die free, en betalings pakkette vorm en wys."* The room was built,
+ * it takes money, and not one of the four plan cards mentioned it — so
+ * somebody comparing plans could not tell it was there at all.
+ *
+ * It is on every plan because nothing gates it: `app/api/artmarket/route.ts`
+ * reads no tier. The line says so, and says the artwork is paid per piece
+ * rather than out of credits, which is the part that would otherwise be a
+ * promise the credits cannot keep.
+ *
+ * The two amounts are written out in `plans.ts` rather than imported —
+ * `data/artmarket.ts` imports `gatewayFee` from there, and importing back
+ * is a cycle that fails at module init rather than at build. So this is
+ * what stops the card drifting from the till. */
+const plansFile = readFileSync('app/lib/plans.ts', 'utf8');
+const cards = [...plansFile.matchAll(/'Album art by real artists — bidding opens at R(\d+), or R(\d+) to take a piece outright\. On every plan, paid per piece\.'/g)];
+ok('every plan card says the album art room is there', cards.length === 4,
+  `${cards.length} of 4 — a room that takes money and appears on no plan is a room nobody knows about`);
+ok('  and quotes the prices the till actually charges',
+  cards.every((one) => Number(one[1]) === START_RAND && Number(one[2]) === UNIQUE_RAND),
+  `cards say ${cards.map((one) => `R${one[1]}/R${one[2]}`).join(', ')};`
+  + ` the till charges R${START_RAND}/R${UNIQUE_RAND}`);
 ok(
   'and an artist picks from four windows, not a typed date',
   WINDOWS.map((one) => one.days).join(',') === '2,4,6,14',

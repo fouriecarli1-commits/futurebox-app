@@ -125,6 +125,24 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Hooks, the timeline, the sound trainer and the radar',
       'Style previews, so you can hear a sound before you buy anything',
       'A generated song is on a plan — every one of them costs real money to make',
+      /* ── Album art, on every plan ────────────────────────────────────
+         Carli, 22 September 2026: *"Kyk ook dat die nuwe album art
+         afdeling deel van die free, en betalings pakkette vorm en wys."*
+         The room was built, it sells, and no package mentioned it existed.
+         It is not gated by tier — `app/api/artmarket/route.ts` reads no
+         tier at all — so the true line is the same on all four: the room
+         is open to everybody and the artwork is paid for per piece, not
+         out of credits.
+
+         The two amounts are written out rather than imported.
+         `data/artmarket.ts` imports `gatewayFee` from this file, so
+         importing its constants back makes a cycle — and the cycle does
+         not fail the build, it fails at module init with "Cannot access
+         START_RAND before initialization", which took down three cost
+         checks. `check:artmarket` holds these two numbers against
+         `START_RAND` and `UNIQUE_RAND`, so the card still cannot drift
+         from what the till charges. */
+      'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
     ],
   },
   maker: {
@@ -141,6 +159,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'The copilot, uncapped',
       'Post to your own channels',
       'Every workshop',
+      'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
     ],
   },
   studio: {
@@ -176,6 +195,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Everything in Maker, and three cloned voices',
       'Ask FutureBox to boost a collab',
       'The full radar — every item, every reason',
+      'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
     ],
   },
   label: {
@@ -195,6 +215,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Everything in Studio, and ten cloned voices',
       'The feed uncapped — every item, no daily ceiling anywhere',
       'A say in which workshops get made',
+      'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
     ],
   },
 };

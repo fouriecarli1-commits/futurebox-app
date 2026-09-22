@@ -323,6 +323,39 @@ check(
   'spreading the model’s action keeps its empty room when there is nothing to replace it with',
 );
 
+/* ── The rule the code enforces must be a rule the model was told ──────
+ *
+ * `planActions` accepts a `surface_op` aimed at another room only when the
+ * same reply opens that room. That is a real constraint on the model's
+ * output, and it was enforced here and stated nowhere: the prompt said
+ * surface_op "changes something in the room they are standing in", two
+ * lines before `describeOtherRoomOps` handed the model every OTHER room's
+ * operations.
+ *
+ * A model that follows its instructions therefore never set up the room it
+ * was opening, and Carli reported that about the adverts desk more than
+ * once and, in her words, about "every room". Nothing was broken; the
+ * capability was simply never offered.
+ *
+ * The code keeps the rule and the prompt must state it. Neither half is any
+ * use on its own. */
+check(
+  'the model is told it may set up a room it is opening',
+  /set up a room you are OPENING in the same reply/i.test(route),
+  'planActions allows it and describeOtherRoomOps supplies the operations; a model'
+  + ' that is not told cannot use it',
+);
+check(
+  'and that an op for a room it is not opening is dropped',
+  /surface_op for a room you are not opening is dropped/i.test(route),
+  'this is the half that makes the other half arrive',
+);
+check(
+  'and it is no longer told surface_op is only for the room they stand in',
+  !/surface_op changes something in the room they are standing in/i.test(route),
+  'that sentence contradicts the capability, and the model obeys the sentence',
+);
+
 if (problems.length > 0) {
   console.error(`check:copilotplan — the copilot's action list breaks its rules:\n${problems.join('\n')}`);
   process.exit(1);

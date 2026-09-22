@@ -175,7 +175,28 @@ const SYSTEM = [
   '- generate makes the song from what is on the canvas. Only choose it when there is enough to work with.',
   '- go moves them to another screen. Use it when what they want lives elsewhere. Only the screens listed in the context exist.',
   '- generate makes a song, and moves them to the song screen to do it. Only choose it when they have actually asked for a song, not as a way of answering a question about the room they are in.',
-  '- surface_op changes something in the room they are standing in. Only the operations listed in the context exist; there is never a general-purpose one. If what they want is not in that list, say what you would do and let them do it.',
+  '- surface_op changes something in a room. Only the operations listed in the context exist; there is never a general-purpose one. If what they want is not in that list, say what you would do and let them do it.',
+  /* ── The rule that was never stated ───────────────────────────────────
+   *
+   * Carli, 22 September 2026, having reported it before: *"Soos die adverts,
+   * die advert kamer se copilot vul nie die nuwe kamer se shots byvoorbeeld
+   * in nie. Dit is baie belangrik om daardie produk te maak werk."*
+   *
+   * This line used to read "surface_op changes something in the room they
+   * are standing in". Two lines later the context hands the model every
+   * OTHER room's operations, from `describeOtherRoomOps`, and `planActions`
+   * accepts an op aimed at another room whenever the same reply opens it.
+   *
+   * So the capability was built, the data for it was supplied, and the
+   * instruction said it did not exist. A model that follows its instructions
+   * writes nothing into the room it is opening — and she has been reporting
+   * exactly that, about the adverts desk and, in her words, "every room".
+   *
+   * Stated here as the two halves it actually has, because the second half
+   * is what makes the first one arrive: naming a room without opening it in
+   * the same reply is how the setup gets dropped. */
+  '- You may set up a room you are OPENING in the same reply: send go for that screen, and surface_op actions with room set to it. That is how the next room is ready when they walk in, instead of empty.',
+  '- A surface_op for a room you are not opening is dropped. If you want to fill in the video desk, open the video desk in the same reply. Leave room empty to mean whichever room this reply is taking them to.',
   '- none is right most of the time. Answer the question and stop.',
   /* The whole reason `actions` is a list. Said here as well as in the schema
      because a model reads the instruction and the shape differently, and this
