@@ -40,17 +40,27 @@ for (const name of ORDER) {
   at = found;
 }
 
-/* The guard, because the whole point of it is the case nobody tests: a project
-   where one of the two older files was never run. */
-ok('it refuses to run without public.events', /to_regclass\('public\.events'\) is null/.test(onDisk));
-ok('and without public.collabs', /to_regclass\('public\.collabs'\) is null/.test(onDisk));
-ok('and without public.tracks', /to_regclass\('public\.tracks'\) is null/.test(onDisk));
-ok(
-  'and says which file to run first rather than raising a table error',
-  /Loop eers supabase\/events\.sql/.test(onDisk) &&
-    /Loop eers supabase\/collab\.sql/.test(onDisk) &&
-    /Loop eers supabase\/schema\.sql/.test(onDisk),
-);
+/* ── It needs nothing to already be there ─────────────────────────────
+ *
+ * This used to assert the opposite: the bundle carried a guard that RAISED
+ * if `public.events`, `public.collabs` or `public.tracks` was missing, and
+ * told you which older file to run first. That guard was the right answer
+ * to the wrong shape. It existed because the bundle was only the newer
+ * files, resting on sixteen others somebody believed had been run — and
+ * `WATKORT.sql` proved three of those beliefs false the first time it ran.
+ *
+ * So the bundle is now the whole schema and creates those tables itself.
+ * The guard would fire on a project that is simply new, which is the one
+ * case it was written to help. These rules hold it to the new shape: the
+ * foundation is IN the file, and nothing in it refuses to run. */
+for (const table of ['tracks', 'creators', 'events', 'collabs', 'generations']) {
+  ok(`the bundle creates public.${table} rather than requiring it`,
+    new RegExp(`create table if not exists public\\.${table}\\b`, 'i').test(onDisk),
+    'a paste that assumes a table is a paste that assumes a history');
+}
+ok('  and it refuses nothing on the way in',
+  !/Loop eers supabase\//.test(onDisk) && !/raise exception/i.test(onDisk.slice(0, 6000)),
+  'the old guard fired on exactly the project it was meant to help: a new one');
 
 /* ── Every .sql file is accounted for ─────────────────────────────────
  *

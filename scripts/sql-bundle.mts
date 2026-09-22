@@ -33,62 +33,65 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 /** In the order they have to run. */
 export const ORDER = [
-  'charts',
+  'schema',
   'addons',
-  'posting',
-  'dubs',
-  'invites',
-  'listens',
-  'kits',
-  'eleven',
-  'hearts',
-  'buildon',
-  'elevenrem',
-  'roomwords',
-  'livevideo',
-  'albumart',
-  'aikoste',
-  /* ── The six that were written and never bundled ─────────────────────
-
-     Carli, 21 September 2026, for the third time: *"Sal jy nog iewers die
-     cast member probleem ook fix."*
-
-     `cast.sql` was written on 4 September and this bundle on the 6th, and
-     nobody put one in the other. She runs this file; anything outside it
-     she has never seen. So the cast strip has been calling a table that
-     does not exist in her project for a fortnight, and the last two
-     rounds of work on it went into diagnostics for a route that was
-     answering correctly the whole time.
-
-     Five more were in the same position — written beside the bundle or
-     after it and never added. `check:sqlbundle` now refuses a `.sql` file
-     that is in neither this list nor the one of files that predate the
-     bundle, so this cannot happen again quietly.
-
-     All six are safe to run twice: every table is `if not exists`, every
-     policy is dropped before it is created, and both buckets upsert. */
-  'avatars',
-  'cast',
-  'mail',
-  'taste',
-  'kitsmine',
   'afrikaans',
+  'aikoste',
+  'arena',
+  'cast',
+  'collab',
+  'credits',
+  'dubs',
+  'eleven',
+  'elevenrem',
+  'finetunes',
+  'invites',
+  'kits',
+  'kitsmine',
+  'listens',
+  'live',
+  'mail',
+  'moderation',
+  'podcast',
+  'posting',
+  'presence',
+  'radar',
+  'roomwords',
+  'subscriptions',
+  'taste',
+  'usage',
+  'video',
+  'video2',
+  'abuse',
+  'albumart',
+  'avatars',
+  'buildon',
+  'charts',
+  'events',
+  'hearts',
+  'livevideo',
 ] as const;
 
 /**
- * The files she has already run, from before this bundle existed.
+ * Empty, on purpose, as of 22 September 2026.
  *
- * Not "files we decided to leave out" — files that were pasted one at a
- * time in August and early September, which is why the bundle opens by
- * checking for three of their tables rather than including them. Listed so
- * that `check:sqlbundle` can tell them from a file somebody wrote last week
- * and forgot to bundle, which is the whole of the cast fault.
+ * This used to name sixteen files left out of the bundle because somebody
+ * believed she had pasted them one at a time in August. It was a list of
+ * ASSUMPTIONS, and `supabase/WATKORT.sql` — written the day before to stop
+ * exactly this — proved three of them false the first time she ran it:
+ *
+ *   arena.sql   public.competitions, public.entries, public.winners
+ *   abuse.sql   public.generations.email_key, public.generations.ip_hash
+ *   cast.sql    public.cast_members and its bucket
+ *
+ * The cast strip had already cost a fortnight for this reason. Rather than
+ * correct the list a fourth time, the list is gone: `ORDER` is now every
+ * schema file, so one paste IS the whole schema and there is nothing left to
+ * assume. Every file is safe to run again — `check:sqlruns` applies all of
+ * them twice against a real Postgres — so re-running what she already has
+ * costs nothing and removes a whole class of fault.
  */
-export const ALREADY = [
-  'schema', 'events', 'collab', 'credits', 'live', 'video', 'video2', 'podcast',
-  'subscriptions', 'usage', 'abuse', 'moderation', 'arena', 'radar', 'presence',
-  'finetunes',
-] as const;
+export const ALREADY = [] as const;
 
 /**
  * Not schema at all: the notes that live in this folder, and the two
@@ -112,6 +115,40 @@ const RULE = '-- ═════════════════════
  * to `ORDER` without one does not build.
  */
 const WHAT: Record<(typeof ORDER)[number], string> = {
+  schema:
+    'Die fondament: jou profiel, jou liedjies, en waar hulle gestoor word. Alles hieronder staan hierop.',
+  arena:
+    'Kompetisies, inskrywings en wenners. Sonder dit is daar niks om in te skryf nie.',
+  collab:
+    'Saamwerk-kamers en die boodskappe daarin.',
+  credits:
+    'Krediete: wat jy het, wat jy gebruik het, en die slot wat keer dat twee oortjies dieselfde laaste krediet spandeer.',
+  finetunes:
+    'Stemme wat opgelei word, en hoe ver hulle is.',
+  live:
+    'Die speelkamer self — wie daar is, wat geplaas is, en wat gese word.',
+  moderation:
+    'Wat die veiligheidshek gekeer het, sodat dit nagegaan kan word.',
+  podcast:
+    'Potgooie: programme, episodes, stemme en wat ElevenLabs gehef het.',
+  presence:
+    'Wie nou aanlyn is.',
+  radar:
+    'Die radar wat die paar mense hier vir mekaar voorstel.',
+  subscriptions:
+    'Lidmaatskappe en aankope. Sonder dit weet niks wie wat gekoop het nie.',
+  taste:
+    'Waarheen jy die meeste gaan en wat jy die meeste maak.',
+  usage:
+    'Elke generasie wat geloop het, wat dit gekos het, en teen watter model.',
+  video:
+    'Video’s wat gemaak is.',
+  video2:
+    'Die tweede helfte daarvan — onderskrifte, tale en wat by ’n snit hoort.',
+  abuse:
+    'Die twee kolomme wat keer dat een mens honderd rekeninge maak: ’n e-possleutel en ’n IP-vingerafdruk op elke generasie.',
+  events:
+    'Wat in die app gebeur, wat Spotlight se Top 10 voer.',
   charts:
     'Spotlight se Top 10 \u2014 sonder dit bly daardie bars vir altyd leeg, want niks skryf ooit neer dat iemand \u2019n liedjie gespeel het nie.',
   addons: 'Die bemarkings-byvoegsel kan gekoop of toegeken word.',
@@ -177,7 +214,7 @@ function says(name: (typeof ORDER)[number]): string {
 }
 
 const HEAD = `${RULE}
--- FutureBox — die ${ORDER.length} lêers wat nog nooit geloop het nie, in een plak.
+-- FutureBox — die hele skema, al ${ORDER.length} lêers, in een plak.
 ${RULE}
 --
 -- Supabase → SQL Editor → plak alles → Run. Veilig om weer te loop: elke stuk
@@ -187,18 +224,17 @@ ${RULE}
 --
 ${ORDER.map(says).join('\n')}
 --
--- ── Twee dinge moet reeds daar wees ────────────────────────────────────────
+-- ── Niks hoef vooraf te bestaan nie ───────────────────────────────────────
 --
--- Hierdie lêer bou op twee tabelle wat uit ouer lêers kom:
+-- Hierdie lêer is die HELE skema, nie net die nuwe stukke nie. Dit maak alles
+-- wat dit nodig het, in 'n volgorde wat getoets is, en elke stuk is geskryf
+-- om twee keer te kan loop. Jy kan dit dus loop op 'n splinternuwe projek of
+-- op joune soos hy nou is, en in albei gevalle is die antwoord dieselfde.
 --
---   public.events    uit supabase/events.sql   — charts.sql brei dit uit
---   public.collabs   uit supabase/collab.sql   — invites.sql wys daarna
---   public.tracks    uit supabase/schema.sql   — listens.sql tel net jou eie
---   public.creators  uit supabase/schema.sql   — avatars.sql hang 'n kolom aan
---
--- Die blok hieronder kyk daarvoor en sê in gewone woorde wat om eerste te
--- loop as een van hulle kort. Dit is met opset \'n sin eerder as \'n Postgres-
--- fout op reël 200 van iets wat jy pas geplak het.
+-- Dit was voorheen net die nuwe lêers, met 'n lys van wat jy glo al geloop
+-- het. Daardie lys was drie keer verkeerd — cast.sql, arena.sql en abuse.sql
+-- — en elke keer het dit soos 'n kode-fout gelyk. Nou is daar niks om te glo
+-- nie.
 --
 -- ── Moenie hierdie lêer regmaak nie ────────────────────────────────────────
 --
@@ -206,27 +242,6 @@ ${ORDER.map(says).join('\n')}
 -- Verander hulle en loop die skrip weer; \`npm run check:sqlbundle\` keer dat
 -- die kopie stilweg van sy oorsprong af wegdryf.
 
-do $$
-begin
-  if to_regclass('public.events') is null then
-    raise exception
-      'Loop eers supabase/events.sql — hierdie lêer brei public.events uit en dit bestaan nog nie.';
-  end if;
-  if to_regclass('public.collabs') is null then
-    raise exception
-      'Loop eers supabase/collab.sql — invites.sql wys na public.collabs en dit bestaan nog nie.';
-  end if;
-  if to_regclass('public.tracks') is null then
-    raise exception
-      'Loop eers supabase/schema.sql — listens.sql tel luisterbeurte per liedjie en public.tracks bestaan nog nie.';
-  end if;
-  -- avatars.sql hang 'n kolom aan public.creators, en 'n kolom aan 'n tabel
-  -- wat nie bestaan nie is 'n fout diep in iets wat jy pas geplak het.
-  if to_regclass('public.creators') is null then
-    raise exception
-      'Loop eers supabase/schema.sql — avatars.sql hang jou profielfoto aan public.creators en dit bestaan nog nie.';
-  end if;
-end $$;
 `;
 
 /** The bundle as it should be, from the five files as they are now. */
