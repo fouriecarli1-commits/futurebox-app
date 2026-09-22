@@ -250,7 +250,7 @@ try {
       await another.click();
       await p.waitForTimeout(600);
       check('which is a different question', (await asked()) !== first,
-        'sixty-odd in the bank and the same one twice in a row');
+        'a hundred-odd in the bank and the same one twice in a row');
     }
   }
 } finally {

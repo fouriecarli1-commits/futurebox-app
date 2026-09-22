@@ -6137,3 +6137,41 @@ gewees het, wat dieselfde ding een commit later is.
 Al drie het nou 'n reël wat die **verbreding self** beskerm: draai die patroon
 terug en dit sê so, eerder as dat die telling stilweg met een sak en bo die
 vloer bly.
+
+## §AM · Die quiz van 62 na 131, en 'n reël wat dit aan die kamer vasmaak (22 September 2026)
+
+Carli het sewe temas in een boodskap gevra: musiekterme (triool, tonika,
+valset, deskant, p/f/ff, mol teenoor kruis, altviool, alt, sopraan), die Pro
+Booth se funksies, 'n 80's/90's-quiz, koor, musiekgrappe, hoe om goeie musiek
+te **prompt**, en die rekenaarwetenskap agter musiekmaak.
+
+Drie van haar terme was al daar — `octave`, `key-change` en `voice-ranges` —
+so dié is nie twee keer gevra nie.
+
+### Die reël wat die moeite werd was
+
+Twaalf van die nuwe vrae beskryf die Pro Booth. 'n Quiz wat 'n tafel leer wat
+die kamer nie het nie, is erger as geen quiz nie: iemand gaan soek daarna,
+kry dit nie, en hou op om die res te vertrou. Niks aan 'n vraag wat in
+September geskryf is, keer dat die kamer in Oktober verander nie, en die vraag
+sou aanhou gevra word — met selfvertroue.
+
+So `check:quiz` lees nou `BoothDock.tsx` en hou elke stelling aan die kamer:
+
+* elke vraag se tafel moet bestaan, en elke tafel moet 'n vraag hê;
+* "drie van die ses kos krediete" word teen die aantal `paid: true` gehou;
+* "agt mate, in hierdie liedjie se toonsoort" word teen die tafel se eie
+  beskrywing gehou;
+* "net tyd word vasgemaak" teen `pro.interlockWhat`;
+* die drie snap-instellings teen hulle woordeboek-sleutels.
+
+Nie deur die prosa te skandeer nie — 'n bewoordingsreël is 'n reël oor
+spelling. Elke **feit** wat 'n vraag beweer, word vasgespeld aan die plek waar
+die kamer dit sê.
+
+En die sewe temas is by naam gelys, want 'n bank van hierdie grootte word
+opgeruim, en 'n opruiming wat stilweg die koorvrae of die grappe laat val, is
+'n versoek wat een keer beantwoord en toe onbeantwoord is — wat presies die
+klagte is wat sy die meeste oor hierdie repo maak.
+
+Agt mutasies, agt keer rooi.

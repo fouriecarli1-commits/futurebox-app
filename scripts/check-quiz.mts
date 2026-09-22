@@ -169,6 +169,107 @@ ok('  and nothing on that page comes after it',
   !/<[A-Z][A-Za-z]*[\s/>]/.test(afterQuiz),
   afterQuiz.replace(/\s+/g, ' ').trim().slice(0, 80));
 
+/* ── A question about this app has to be true of this app ────────────
+ *
+ * Carli, 22 September 2026: *"Bou die verskillende funksies uit wat binne
+ * ons probooth is en waarvoor dit is."*
+ *
+ * Twelve of these questions describe the Pro Booth, and a quiz that
+ * teaches a desk the room does not have is worse than no quiz: somebody
+ * goes looking for it, does not find it, and stops trusting the rest.
+ * Nothing about a question written in September stops the room changing
+ * in October, and the question would go on being asked, confidently.
+ *
+ * So the answers are held to the room itself. Not by scanning the prose —
+ * a wording rule is a rule about spelling — but by pinning the specific
+ * facts each question asserts to where the room states them.
+ */
+const dock = readFileSync('app/components/BoothDock.tsx', 'utf8');
+const dictionary = readFileSync('app/lib/i18n.tsx', 'utf8');
+
+/** Every desk the Pro Booth has, from the room rather than from memory. */
+const desks = [...dock.matchAll(/^\s{4}id: '([a-z]+)',$/gm)].map((one) => one[1]);
+ok('the Pro Booth still has desks to ask about', desks.length >= 5, `${desks.length} found`);
+
+/**
+ * Which question describes which desk.
+ *
+ * The named-list shape, for the reason `check:handover` and
+ * `check:belowtabs` use it: a desk that is renamed or dropped fails here,
+ * with the question that has to be rewritten named in the failure.
+ */
+const ABOUT: Readonly<Record<string, string>> = {
+  'booth-tracks-desk': 'tracks',
+  'booth-mix-desk': 'mix',
+  'booth-stems-split': 'stems',
+  'booth-stems-play': 'stems',
+  'booth-voice-desk': 'voice',
+  'booth-effects-desk': 'effects',
+  'booth-copilot-desk': 'ai',
+};
+const orphaned = Object.entries(ABOUT).filter(([, desk]) => !desks.includes(desk));
+ok('every question about a desk is about a desk that exists',
+  orphaned.length === 0,
+  `${orphaned.map(([q, d]) => `${q} describes "${d}"`).join(', ')} — the room changed and the`
+  + ' quiz is still teaching what used to be there');
+const askedAbout = new Set(Object.values(ABOUT));
+const unasked = desks.filter((one) => !askedAbout.has(one));
+ok('  and every desk in the room has a question',
+  unasked.length === 0,
+  `${unasked.join(', ')} — a desk nobody is taught is a desk nobody opens`);
+const missingQuestions = Object.keys(ABOUT).filter((id) => !QUIZ.some((one) => one.id === id));
+ok('  and every question named here is still in the bank',
+  missingQuestions.length === 0,
+  `${missingQuestions.join(', ')} — the row outlived the question`);
+
+/* ── The specific claims, each pinned to where the room makes it ──── */
+
+/* "Three of the six spend credits." A fourth desk turning paid makes that
+   answer wrong, silently, in a quiz that says it with confidence. */
+const paid = (dock.match(/paid: true/g) ?? []).length;
+ok('the answer that three desks spend credits is still three',
+  paid === 3,
+  `${paid} desks are marked paid — booth-paid-desks names Stems, Voice and Audio effects`);
+
+/* "Eight bars, in this song's own key and tempo." */
+ok('the Stems desk still plays back eight bars in the session’s key',
+  /[Ee]ight bars[\s\S]{0,60}key and tempo/.test(dock),
+  'booth-stems-play says eight bars in this song’s key and tempo, and the desk no longer does');
+
+/* "Only time is locked." The whole point of the answer is what is NOT. */
+ok('locking two lanes still locks the time and nothing else',
+  /Only time is locked/.test(dictionary),
+  'booth-interlock teaches that the level, mute, solo and cut stay each lane’s own');
+
+/* "Off, to the bar, or to the beat." Three settings, named. */
+for (const snap of ['pro.snap.off', 'pro.snap.bar', 'pro.snap.beat']) {
+  ok(`  and snap still offers ${snap.replace('pro.snap.', '')}`,
+    dictionary.includes(`"${snap}"`),
+    'booth-snap names three settings and one of them is gone');
+}
+
+/* ── And the themes she asked for are all still in here ──────────────
+ *
+ * Seven of them, in one message. A bank this size gets tidied, and a tidy
+ * that quietly drops the choir questions or the jokes leaves a request
+ * answered once and then un-answered, which is the complaint she makes
+ * most often about this repo. One question from each theme, by id, is
+ * enough to make a deletion say so.
+ */
+const THEMES: Readonly<Record<string, string>> = {
+  'the terms on a page of music': 'triplet',
+  'the Pro Booth, desk by desk': 'booth-tracks-desk',
+  'the eighties and nineties': 'eighties-thriller',
+  'the choir': 'choir-solfa',
+  'the jokes': 'joke-flat-minor',
+  'how to ask for a song': 'prompt-specific',
+  'the computer science under it': 'cs-diffusion',
+};
+const dropped = Object.entries(THEMES).filter(([, id]) => !QUIZ.some((one) => one.id === id));
+ok('every theme she asked for is still in the bank',
+  dropped.length === 0,
+  `${dropped.map(([theme, id]) => `${theme} (${id})`).join(', ')} — asked for once and tidied away`);
+
 if (failures) {
   console.error(`\ncheck:quiz — ${failures} failure(s).\n`);
   process.exit(1);

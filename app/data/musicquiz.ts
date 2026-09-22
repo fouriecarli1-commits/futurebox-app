@@ -990,4 +990,1112 @@ export const QUIZ: readonly QuizQuestion[] = [
       af: 'Die vroeë een. Die meeste oorslaan gebeur in die eerste halfminuut, en ’n platform tel ’n speel eers verby ’n drempel — so ’n hook wat aankom nadat die besluit geneem is, kom vir niemand aan nie. Begin naby die beste deel.',
     },
   },
+
+
+  /* ── The words on a page of music ─────────────────────────────────────
+
+     Carli, 22 September 2026: *"Wat is 'n triool, tonika, 'n valsetto,
+     deskant, verskillende stemme, oktaaf hoër, p, f, ff, musiektermes wat
+     baie gebruik word, key change, wat is die verskil tussen mol en kruis,
+     wat is 'n alt, viool en soprano."*
+
+     Three of those were already here — `octave`, `key-change` and
+     `voice-ranges` — so they are not asked twice. The rest are below.
+
+     These break the file's own rule about only asking what changes a
+     decision on a screen, and deliberately. Somebody who has never read
+     music cannot say what they want from a song, because the words for it
+     are the words on this page: you cannot ask for a descant if nobody has
+     told you there is such a thing. */
+  {
+    id: 'triplet',
+    ask: { en: 'What is a triplet?', af: 'Wat is ’n triool?' },
+    options: [
+      { en: 'Three bars that repeat', af: 'Drie mate wat herhaal' },
+      { en: 'Three notes played in the time of two', af: 'Drie note wat in die tyd van twee gespeel word' },
+      { en: 'A chord made of three notes', af: '’n Akkoord wat uit drie note bestaan' },
+      { en: 'Three singers on one line', af: 'Drie sangers op een reël' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Three notes squeezed into the space two would normally take, so the beat stays where it was and the notes roll. It is the “da-da-da, da-da-da” under a shuffle or a gospel ballad, and asking for a triplet feel is what stops a beat sounding stiff.',
+      af: 'Drie note wat ingedruk word in die ruimte wat twee normaalweg sou vat, sodat die slag bly waar hy was en die note rol. Dit is die “da-da-da, da-da-da” onder ’n shuffle of ’n gospel-ballade, en om vir ’n trioolgevoel te vra is wat keer dat ’n beat styf klink.',
+    },
+  },
+  {
+    id: 'tonic',
+    ask: { en: 'What is the tonic of a key?', af: 'Wat is die tonika van ’n toonsoort?' },
+    options: [
+      { en: 'The loudest note in the song', af: 'Die hardste noot in die liedjie' },
+      { en: 'The note the song is built on and comes home to', af: 'Die noot waarop die liedjie gebou is en waarheen dit terugkom' },
+      { en: 'The last note of the melody', af: 'Die laaste noot van die melodie' },
+      { en: 'The lowest note the singer can reach', af: 'Die laagste noot wat die sanger kan haal' },
+    ],
+    answer: 1,
+    why: {
+      en: 'The home note — the “1” of the key. In C major it is C. Everything else is heard against it, which is why a song can end anywhere and only feel finished when it lands on the tonic.',
+      af: 'Die tuisnoot — die “1” van die toonsoort. In C majeur is dit C. Alles anders word daarteen gehoor, en dít is hoekom ’n liedjie enige plek kan eindig en net klaar voel wanneer dit op die tonika land.',
+    },
+  },
+  {
+    id: 'dominant',
+    ask: { en: 'The chord that most wants to fall back to the tonic is the…', af: 'Die akkoord wat die meeste terug wil val na die tonika is die…' },
+    options: [
+      { en: 'Dominant, the fifth', af: 'Dominant, die vyfde' },
+      { en: 'The second', af: 'Die tweede' },
+      { en: 'The relative minor', af: 'Die relatiewe mineur' },
+      { en: 'Whichever one is loudest', af: 'Watter een ook al die hardste is' },
+    ],
+    answer: 0,
+    why: {
+      en: 'The fifth — G in the key of C. Dominant to tonic is the strongest pull in Western music and it is what makes an ending sound like an ending. A chorus that will not resolve is usually sitting on the dominant.',
+      af: 'Die vyfde — G in die toonsoort C. Dominant na tonika is die sterkste trek in Westerse musiek en dit is wat ’n einde soos ’n einde laat klink. ’n Koor wat nie wil oplos nie, sit gewoonlik op die dominant.',
+    },
+  },
+  {
+    id: 'falsetto',
+    ask: { en: 'What is falsetto?', af: 'Wat is valset?' },
+    options: [
+      { en: 'Singing out of tune on purpose', af: 'Om doelbewus vals te sing' },
+      { en: 'A light register above your normal voice', af: '’n Ligte register bo jou gewone stem' },
+      { en: 'Singing very softly', af: 'Om baie sag te sing' },
+      { en: 'A voice that has been pitched up by a machine', af: '’n Stem wat deur ’n masjien hoër gestel is' },
+    ],
+    answer: 1,
+    why: {
+      en: 'A different way of using the cords that reaches above your chest voice, lighter and breathier — think the high bits of a Bee Gees or Prince line. The name looks like “vals”, but it has nothing to do with singing out of tune.',
+      af: '’n Ander manier om die stembande te gebruik wat bo jou borsstem uitkom, ligter en meer asemrig — dink aan die hoë stukke van ’n Bee Gees- of Prince-reël. Die naam lyk na “vals”, maar dit het niks met onsuiwer sing te doen nie.',
+    },
+  },
+  {
+    id: 'descant',
+    ask: { en: 'What is a descant?', af: 'Wat is ’n deskant?' },
+    options: [
+      { en: 'The lowest line in a choir', af: 'Die laagste lyn in ’n koor' },
+      { en: 'A higher counter-melody floating above the tune', af: '’n Hoër teenmelodie wat bo die wysie sweef' },
+      { en: 'The instrumental introduction', af: 'Die instrumentale inleiding' },
+      { en: 'A verse sung by one person alone', af: '’n Vers wat een persoon alleen sing' },
+    ],
+    answer: 1,
+    why: {
+      en: 'A second, higher tune sung over the top of the one everybody knows, usually by a few sopranos on the last verse. It is the oldest trick there is for making a final chorus lift without changing anything else.',
+      af: '’n Tweede, hoër wysie wat bo-oor die een gesing word wat almal ken, gewoonlik deur ’n paar soprane op die laaste vers. Dit is die oudste truuk wat daar is om ’n laaste koor te laat oplig sonder om iets anders te verander.',
+    },
+  },
+  {
+    id: 'sharp-flat',
+    ask: { en: 'What is the difference between a flat (♭) and a sharp (♯)?', af: 'Wat is die verskil tussen ’n mol (♭) en ’n kruis (♯)?' },
+    options: [
+      { en: 'A flat lowers the note a semitone, a sharp raises it a semitone', af: '’n Mol verlaag die noot ’n halftoon, ’n kruis verhoog dit ’n halftoon' },
+      { en: 'A flat is softer, a sharp is louder', af: '’n Mol is sagter, ’n kruis is harder' },
+      { en: 'A flat is for the left hand, a sharp for the right', af: '’n Mol is vir die linkerhand, ’n kruis vir die regter' },
+      { en: 'A flat is out of tune, a sharp is in tune', af: '’n Mol is onsuiwer, ’n kruis is suiwer' },
+    ],
+    answer: 0,
+    why: {
+      en: 'One semitone down, one semitone up — the very next key on a piano, black or white. It has nothing to do with loudness, and “singing flat” is a different use of the same word meaning slightly under the note.',
+      af: 'Een halftoon af, een halftoon op — die heel volgende klawer op ’n klavier, swart of wit. Dit het niks met hardheid te doen nie, en “vals plat sing” is ’n ander gebruik van dieselfde woord wat beteken net-net onder die noot.',
+    },
+  },
+  {
+    id: 'enharmonic',
+    ask: { en: 'F♯ and G♭ on a piano are…', af: 'F♯ en G♭ op ’n klavier is…' },
+    options: [
+      { en: 'Two keys next to each other', af: 'Twee klawers langs mekaar' },
+      { en: 'An octave apart', af: '’n Oktaaf uitmekaar' },
+      { en: 'The same key, written two ways', af: 'Dieselfde klawer, op twee maniere geskryf' },
+      { en: 'Only found in minor keys', af: 'Net in mineur toonsoorte te vinde' },
+    ],
+    answer: 2,
+    why: {
+      en: 'The same black key, named after whichever white note it is leaning on. Which name is written depends on the key of the song, and that is why two people can describe the same note differently and both be right.',
+      af: 'Dieselfde swart klawer, genoem na watter wit noot dit ook al teen leun. Watter naam geskryf word hang van die liedjie se toonsoort af, en dít is hoekom twee mense dieselfde noot verskillend kan beskryf en albei reg is.',
+    },
+  },
+  {
+    id: 'dynamics-pf',
+    ask: { en: 'On a page of music, what do p and f mean?', af: 'Op ’n bladsy musiek, wat beteken p en f?' },
+    options: [
+      { en: 'Piano and forte — soft and loud', af: 'Piano en forte — sag en hard' },
+      { en: 'Play and finish', af: 'Speel en finish' },
+      { en: 'Pause and fast', af: 'Pouse en vinnig' },
+      { en: 'Pitch and frequency', af: 'Toonhoogte en frekwensie' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Italian, and they are about volume: p is piano, soft, and f is forte, loud. The instrument was christened the pianoforte — soft-loud — precisely because it could do both, which the harpsichord before it could not.',
+      af: 'Italiaans, en dit gaan oor volume: p is piano, sag, en f is forte, hard. Die instrument is die pianoforte gedoop — sag-hard — juis omdat dit albei kon doen, wat die klavesimbel voor dit nie kon nie.',
+    },
+  },
+  {
+    id: 'dynamics-order',
+    ask: { en: 'From softest to loudest, which order is right?', af: 'Van sagste na hardste, watter volgorde is reg?' },
+    options: [
+      { en: 'mf, mp, p, f', af: 'mf, mp, p, f' },
+      { en: 'pp, p, mp, mf, f, ff', af: 'pp, p, mp, mf, f, ff' },
+      { en: 'ff, f, p, pp', af: 'ff, f, p, pp' },
+      { en: 'p, pp, f, ff', af: 'p, pp, f, ff' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Doubling the letter goes further in the same direction: pp is very soft, ff is very loud. The m is mezzo, meaning half, so mp is half-soft and mf is half-loud. A song that sits at one level the whole way through is the commonest thing wrong with a first mix.',
+      af: 'Om die letter te verdubbel gaan verder in dieselfde rigting: pp is baie sag, ff is baie hard. Die m is mezzo, wat half beteken, so mp is half-sag en mf is half-hard. ’n Liedjie wat heelpad op een vlak sit, is die algemeenste ding wat met ’n eerste mix verkeerd is.',
+    },
+  },
+  {
+    id: 'crescendo',
+    ask: { en: 'A crescendo is…', af: '’n Crescendo is…' },
+    options: [
+      { en: 'Getting gradually louder', af: 'Om geleidelik harder te word' },
+      { en: 'A sudden stop', af: '’n Skielike stilte' },
+      { en: 'Getting gradually faster', af: 'Om geleidelik vinniger te word' },
+      { en: 'The highest note of the song', af: 'Die hoogste noot van die liedjie' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Louder, over time — its opposite is a diminuendo. It is about volume and not speed, which is the mistake everybody makes once. A bridge that grows into the last chorus is a crescendo whether anybody writes the word or not.',
+      af: 'Harder, oor tyd — die teenoorgestelde is ’n diminuendo. Dit gaan oor volume en nie spoed nie, wat die fout is wat almal een keer maak. ’n Brug wat in die laaste koor ingroei is ’n crescendo, of iemand die woord neerskryf of nie.',
+    },
+  },
+  {
+    id: 'legato-staccato',
+    ask: { en: 'Legato and staccato describe…', af: 'Legato en staccato beskryf…' },
+    options: [
+      { en: 'How loud the notes are', af: 'Hoe hard die note is' },
+      { en: 'Whether the notes flow into each other or are short and separate', af: 'Of die note in mekaar vloei of kort en los is' },
+      { en: 'Which hand plays them', af: 'Watter hand hulle speel' },
+      { en: 'How high they are', af: 'Hoe hoog hulle is' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Legato is joined up, one note leaning into the next; staccato is clipped, each note let go early. It is the difference between a smooth string pad and a plucked bass, and naming it is often the fastest way to fix a part that feels wrong.',
+      af: 'Legato is aaneen, een noot wat in die volgende leun; staccato is afgeknip, elke noot vroeg losgelaat. Dit is die verskil tussen ’n gladde strykerpad en ’n getokkelde bas, en om dit te benoem is dikwels die vinnigste manier om ’n party reg te kry wat verkeerd voel.',
+    },
+  },
+  {
+    id: 'viola',
+    ask: { en: 'How does a viola differ from a violin?', af: 'Hoe verskil ’n altviool van ’n viool?' },
+    options: [
+      { en: 'It has twice as many strings', af: 'Dit het twee keer soveel snare' },
+      { en: 'It is bigger and sounds lower, sitting between violin and cello', af: 'Dit is groter en klink laer, en sit tussen viool en tjello' },
+      { en: 'It is played standing up', af: 'Dit word staande gespeel' },
+      { en: 'It is the same thing under another name', af: 'Dit is dieselfde ding onder ’n ander naam' },
+    ],
+    answer: 1,
+    why: {
+      en: 'A little bigger, tuned a fifth lower, and it plays the alto line — the harmony under the tune rather than the tune. Ask for violas rather than violins when you want warmth low down instead of brightness up top.',
+      af: 'Effens groter, ’n vyfde laer gestem, en dit speel die altlyn — die harmonie onder die wysie eerder as die wysie self. Vra vir altviole eerder as viole wanneer jy warmte onder wil hê in plaas van helderheid bo.',
+    },
+  },
+  {
+    id: 'soprano-role',
+    ask: { en: 'In a four-part choir, what does the soprano line usually do?', af: 'In ’n vierstemmige koor, wat doen die sopraanlyn gewoonlik?' },
+    options: [
+      { en: 'Keeps the beat', af: 'Hou die maat' },
+      { en: 'Carries the tune, at the top', af: 'Dra die wysie, heel bo' },
+      { en: 'Sings the lowest notes', af: 'Sing die laagste note' },
+      { en: 'Only sings in the chorus', af: 'Sing net in die koor' },
+    ],
+    answer: 1,
+    why: {
+      en: 'The highest part, and almost always the melody — which is why the ear follows it and why a wrong note there is heard by everybody. The other three are built underneath it.',
+      af: 'Die hoogste party, en byna altyd die melodie — en dít is hoekom die oor dit volg en hoekom ’n verkeerde noot daar deur almal gehoor word. Die ander drie word daaronder gebou.',
+    },
+  },
+  {
+    id: 'alto-role',
+    ask: { en: 'What does the alto line do in a choir?', af: 'Wat doen die altlyn in ’n koor?' },
+    options: [
+      { en: 'The tune, an octave down', af: 'Die wysie, ’n oktaaf laer' },
+      { en: 'The harmony just under the tune, often moving very little', af: 'Die harmonie net onder die wysie, wat dikwels baie min beweeg' },
+      { en: 'The bass line', af: 'Die baslyn' },
+      { en: 'Nothing until the last verse', af: 'Niks tot die laaste vers nie' },
+    ],
+    answer: 1,
+    why: {
+      en: 'The lower women’s part, filling in the harmony a step or two under the sopranos. It is the hardest line to learn precisely because it moves so little and so rarely sounds like a tune on its own — and it is what makes the chord a chord.',
+      af: 'Die laer vrouestem, wat die harmonie ’n trap of twee onder die soprane invul. Dit is die moeilikste lyn om te leer juis omdat dit so min beweeg en so selde op sy eie soos ’n wysie klink — en dit is wat die akkoord ’n akkoord maak.',
+    },
+  },
+  {
+    id: 'semitone',
+    ask: { en: 'What is a semitone?', af: 'Wat is ’n halftoon?' },
+    options: [
+      { en: 'Half the length of a note', af: 'Die helfte van ’n noot se lengte' },
+      { en: 'The smallest step there is — one key to the very next, black or white', af: 'Die kleinste trap wat daar is — een klawer na die heel volgende, swart of wit' },
+      { en: 'Half the volume', af: 'Die helfte van die volume' },
+      { en: 'Two notes played together', af: 'Twee note wat saam gespeel word' },
+    ],
+    answer: 1,
+    why: {
+      en: 'The smallest step in Western music. Twelve of them make an octave. Everything else — a tone, a third, a fifth — is counted in semitones, so it is the ruler the rest of the language is measured with.',
+      af: 'Die kleinste trap in Westerse musiek. Twaalf daarvan maak ’n oktaaf. Alles anders — ’n heeltoon, ’n derde, ’n vyfde — word in halftone getel, so dit is die liniaal waarmee die res van die taal gemeet word.',
+    },
+  },
+  {
+    id: 'six-eight',
+    ask: { en: 'What does 6/8 feel like to count?', af: 'Hoe voel dit om 6/8 te tel?' },
+    options: [
+      { en: 'Six even stamps', af: 'Ses gelyke stampe' },
+      { en: 'Two big beats, each split into three', af: 'Twee groot slae, elkeen in drie verdeel' },
+      { en: 'The same as 4/4', af: 'Dieselfde as 4/4' },
+      { en: 'Three beats, like a waltz', af: 'Drie slae, soos ’n wals' },
+    ],
+    answer: 1,
+    why: {
+      en: 'ONE-two-three TWO-two-three — a rolling, rocking feel rather than a march. Most sea shanties, a lot of Irish music and a good few gospel ballads live here, and it is the easiest way to make something feel like it is swaying.',
+      af: 'EEN-twee-drie TWEE-twee-drie — ’n rollende, wiegende gevoel eerder as ’n opmars. Die meeste matroosliedjies, baie Ierse musiek en ’n hele klomp gospel-ballades leef hier, en dit is die maklikste manier om iets te laat voel of dit swaai.',
+    },
+  },
+  {
+    id: 'tempo-italian',
+    ask: { en: 'Adagio, andante, allegro. What do they say?', af: 'Adagio, andante, allegro. Wat sê hulle?' },
+    options: [
+      { en: 'How loud to play', af: 'Hoe hard om te speel' },
+      { en: 'How fast to play — slow, walking, quick', af: 'Hoe vinnig om te speel — stadig, stappend, vinnig' },
+      { en: 'Which instrument plays', af: 'Watter instrument speel' },
+      { en: 'How high to sing', af: 'Hoe hoog om te sing' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Speed, roughly: adagio is slow, andante is a walking pace, allegro is brisk. They are feels rather than numbers, which is why a modern score gives a BPM as well — but the words still say something a number cannot.',
+      af: 'Spoed, min of meer: adagio is stadig, andante is ’n stappas, allegro is vinnig. Dit is gevoelens eerder as getalle, en dít is hoekom ’n moderne partituur ook ’n BPM gee — maar die woorde sê steeds iets wat ’n getal nie kan nie.',
+    },
+  },
+  {
+    id: 'key-signature',
+    ask: { en: 'The sharps or flats printed at the start of every line tell you…', af: 'Die kruise of molle wat aan die begin van elke lyn gedruk word sê vir jou…' },
+    options: [
+      { en: 'How loud to play', af: 'Hoe hard om te speel' },
+      { en: 'Which key the piece is in, so those notes are altered all the way through', af: 'In watter toonsoort die stuk is, sodat daardie note deurgaans verander word' },
+      { en: 'How many players are needed', af: 'Hoeveel spelers nodig is' },
+      { en: 'Where to breathe', af: 'Waar om asem te haal' },
+    ],
+    answer: 1,
+    why: {
+      en: 'The key signature. One sharp is G major, two is D, and so on — they save writing the same accidental a hundred times. Knowing the key is what lets somebody else join in without being told a thing.',
+      af: 'Die toonsoortteken. Een kruis is G majeur, twee is D, en so aan — dit spaar ’n mens om dieselfde teken honderd keer te skryf. Om die toonsoort te ken is wat iemand anders in staat stel om saam te speel sonder dat enigiets gesê word.',
+    },
+  },
+
+
+  /* ── The Pro Booth, desk by desk ──────────────────────────────────────
+
+     Carli: *"Bou die verskillende funksies uit wat binne ons probooth is
+     en waarvoor dit is."*
+
+     A room with six desks in it is only six desks if somebody knows what
+     they are for, and the panel that explains each one is read once, on
+     the way past, by somebody who came to record.
+
+     Every answer below is held to the room by `check:quiz`: the desk ids
+     and what each one does come from `BoothDock.tsx`, so a question here
+     cannot go on describing a desk after the desk has changed. A quiz
+     that teaches a feature the app does not have is worse than no quiz. */
+  {
+    id: 'booth-tracks-desk',
+    ask: { en: 'In the Pro Booth, where do you change the tempo, the key and the time signature?', af: 'In die Pro Booth, waar verander jy die tempo, die toonsoort en die maatsoort?' },
+    options: [
+      { en: 'Track controls', af: 'Baanbeheer' },
+      { en: 'Mix & master', af: 'Mix & master' },
+      { en: 'Stems', af: 'Stems' },
+      { en: 'Voice', af: 'Stem' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Track controls holds everything about the song as a whole — tempo, key, time signature, the click and the grid — and, for whichever lane you have picked, its level, where it sits left to right, its mute and its solo.',
+      af: 'Baanbeheer hou alles oor die liedjie as geheel — tempo, toonsoort, maatsoort, die klik en die rooster — en, vir watter baan jy ook al gekies het, sy vlak, waar dit links tot regs sit, sy demping en sy solo.',
+    },
+  },
+  {
+    id: 'booth-mix-desk',
+    ask: { en: 'What does the Mix & master desk actually do?', af: 'Wat doen die Mix & master-tafel eintlik?' },
+    options: [
+      { en: 'Writes the lyrics', af: 'Skryf die lirieke' },
+      { en: 'Measures the mix and matches its loudness to everything else', af: 'Meet die mix en pas sy hardheid aan by alles anders' },
+      { en: 'Splits the song into parts', af: 'Verdeel die liedjie in dele' },
+      { en: 'Records a new take', af: 'Neem ’n nuwe opname' },
+    ],
+    answer: 1,
+    why: {
+      en: 'It measures what you have and brings its loudness up to match what everybody else is releasing, so your song does not arrive quietly after the one before it. Measuring is the point — turning it up by ear is how a mix ends up squashed.',
+      af: 'Dit meet wat jy het en bring sy hardheid op om te pas by wat almal anders uitreik, sodat jou liedjie nie sag aankom ná die een voor dit nie. Om te meet is die punt — om dit op die oor harder te draai is hoe ’n mix platgedruk word.',
+    },
+  },
+  {
+    id: 'booth-stems-split',
+    ask: { en: 'The Stems desk can take one recording and…', af: 'Die Stems-tafel kan een opname vat en…' },
+    options: [
+      { en: 'Make it longer', af: 'Dit langer maak' },
+      { en: 'Translate it', af: 'Dit vertaal' },
+      { en: 'Split it into its parts — drums, bass, voice', af: 'Dit in sy dele verdeel — dromme, bas, stem' },
+      { en: 'Change its key', af: 'Sy toonsoort verander' },
+    ],
+    answer: 2,
+    why: {
+      en: 'It pulls one mixed recording apart into separate lanes, so you can turn the drums down on something that was bounced as one file. It is the only way to get at the inside of a song you did not build lane by lane.',
+      af: 'Dit trek een gemengde opname uitmekaar in aparte bane, sodat jy die dromme kan afdraai op iets wat as een lêer neergesit is. Dit is die enigste manier om by die binnekant te kom van ’n liedjie wat jy nie baan vir baan gebou het nie.',
+    },
+  },
+  {
+    id: 'booth-stems-play',
+    ask: { en: 'The Stems desk can also have a new part played for you. How long, and in what key?', af: 'Die Stems-tafel kan ook ’n nuwe party vir jou laat speel. Hoe lank, en in watter toonsoort?' },
+    options: [
+      { en: 'A whole song, in C', af: '’n Hele liedjie, in C' },
+      { en: 'Eight bars, in this song’s own key and tempo', af: 'Agt mate, in hierdie liedjie se eie toonsoort en tempo' },
+      { en: 'One note, at any pitch', af: 'Een noot, op enige toonhoogte' },
+      { en: 'Four minutes, always at 120 BPM', af: 'Vier minute, altyd op 120 BPM' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Eight bars, in the key and tempo the session is already in, so what comes back fits instead of having to be nudged. Eight bars is a phrase — long enough to be a part, short enough to throw away and ask again.',
+      af: 'Agt mate, in die toonsoort en tempo waarin die sessie reeds is, sodat wat terugkom pas in plaas daarvan dat dit reggestoot moet word. Agt mate is ’n frase — lank genoeg om ’n party te wees, kort genoeg om weg te gooi en weer te vra.',
+    },
+  },
+  {
+    id: 'booth-voice-desk',
+    ask: { en: 'The Voice desk sings a lane again in somebody else’s voice. What does it keep?', af: 'Die Stem-tafel sing ’n baan weer in iemand anders se stem. Wat hou dit?' },
+    options: [
+      { en: 'Nothing — it starts over', af: 'Niks — dit begin oor' },
+      { en: 'Your timing and your phrasing', af: 'Jou tydsberekening en jou frasering' },
+      { en: 'Only the words', af: 'Net die woorde' },
+      { en: 'The key, but not the rhythm', af: 'Die toonsoort, maar nie die ritme nie' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Your performance stays — where you pushed a word early, where you held one — and only the voice changes. That is why it is worth singing the take properly even when you know you will be swapping the voice afterwards.',
+      af: 'Jou vertolking bly — waar jy ’n woord vroeg gestoot het, waar jy een gehou het — en net die stem verander. Dít is hoekom dit die moeite werd is om die opname behoorlik te sing, selfs wanneer jy weet jy gaan die stem daarna omruil.',
+    },
+  },
+  {
+    id: 'booth-effects-desk',
+    ask: { en: 'Which desk do you open to record a take and shape a lane’s tone?', af: 'Watter tafel maak jy oop om ’n opname te maak en ’n baan se toon te vorm?' },
+    options: [
+      { en: 'Copilot', af: 'Copilot' },
+      { en: 'Track controls', af: 'Baanbeheer' },
+      { en: 'Audio effects', af: 'Klankeffekte' },
+      { en: 'Mix & master', af: 'Mix & master' },
+    ],
+    answer: 2,
+    why: {
+      en: 'Audio effects: record a take, shape the tone of a lane, run it through an amp, and mix everything down into one song. Taking the room off a recording lives in here too.',
+      af: 'Klankeffekte: neem ’n opname, vorm die toon van ’n baan, stuur dit deur ’n versterker, en meng alles af in een liedjie. Om die vertrek van ’n opname af te haal leef ook hierin.',
+    },
+  },
+  {
+    id: 'booth-copilot-desk',
+    ask: { en: 'What can the Pro Booth’s Copilot do that just answering a question cannot?', af: 'Wat kan die Pro Booth se Copilot doen wat net ’n vraag beantwoord nie kan nie?' },
+    options: [
+      { en: 'Make the change to the mix for you', af: 'Die verandering aan die mix vir jou maak' },
+      { en: 'Sing the part', af: 'Die party sing' },
+      { en: 'Buy you credits', af: 'Krediete vir jou koop' },
+      { en: 'Post the song', af: 'Die liedjie plaas' },
+    ],
+    answer: 0,
+    why: {
+      en: 'You can ask what to change about the mix and have it changed — it moves the levels rather than telling you which ones to move. Ask it what is wrong first; a mix you cannot hear the problem in is one you cannot judge the fix on either.',
+      af: 'Jy kan vra wat aan die mix verander moet word en dit laat verander — dit skuif die vlakke eerder as om jou te vertel watter om te skuif. Vra dit eers wat fout is; ’n mix waarin jy nie die probleem kan hoor nie is een waarvan jy ook nie die oplossing kan beoordeel nie.',
+    },
+  },
+  {
+    id: 'booth-solo-mute',
+    ask: { en: 'In the Pro Booth, what is the difference between solo and mute on a lane?', af: 'In die Pro Booth, wat is die verskil tussen solo en demp op ’n baan?' },
+    options: [
+      { en: 'They are the same button', af: 'Hulle is dieselfde knoppie' },
+      { en: 'Mute silences that lane; solo silences everything except it', af: 'Demp maak daardie baan stil; solo maak alles behalwe dit stil' },
+      { en: 'Solo deletes the lane', af: 'Solo vee die baan uit' },
+      { en: 'Mute lowers it by half', af: 'Demp verlaag dit met die helfte' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Opposite ends of the same question. Solo to hear one thing on its own; mute to hear everything except it. Fixing a lane in solo is the classic trap — a part that sounds wonderful alone often disappears the moment the rest comes back.',
+      af: 'Teenoorgestelde kante van dieselfde vraag. Solo om een ding op sy eie te hoor; demp om alles behalwe dit te hoor. Om ’n baan in solo reg te maak is die klassieke strik — ’n party wat alleen wonderlik klink verdwyn dikwels die oomblik as die res terugkom.',
+    },
+  },
+  {
+    id: 'booth-click',
+    ask: { en: 'What is the click in the Pro Booth for?', af: 'Waarvoor is die klik in die Pro Booth?' },
+    options: [
+      { en: 'It marks where the song ends', af: 'Dit merk waar die liedjie eindig' },
+      { en: 'It plays in your ears so your take lands on the beat', af: 'Dit speel in jou ore sodat jou opname op die maat land' },
+      { en: 'It counts how many takes you have done', af: 'Dit tel hoeveel opnames jy gedoen het' },
+      { en: 'It is a sound effect', af: 'Dit is ’n klankeffek' },
+    ],
+    answer: 1,
+    why: {
+      en: 'A metronome you record against, so every lane lines up with every other one. Without it two takes drift apart and no amount of dragging afterwards makes them sit together properly.',
+      af: '’n Metronoom waarteen jy opneem, sodat elke baan met elke ander een in lyn is. Sonder dit dryf twee opnames uitmekaar en geen hoeveelheid sleep daarna laat hulle behoorlik saamsit nie.',
+    },
+  },
+  {
+    id: 'booth-snap',
+    ask: { en: 'Snap in the Pro Booth timeline can be set to…', af: 'Klink vas in die Pro Booth se tydlyn kan gestel word op…' },
+    options: [
+      { en: 'Off, to the bar, or to the beat', af: 'Af, op die maat, of op die slag' },
+      { en: 'On or off only', af: 'Net aan of af' },
+      { en: 'Loud or soft', af: 'Hard of sag' },
+      { en: 'One lane at a time', af: 'Een baan op ’n slag' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Three settings. Snapping to the bar keeps whole sections lined up; to the beat is finer, for a clip that has to land on one hit; off is for anything that has to sit slightly early or late on purpose, which is most of what makes a groove feel human.',
+      af: 'Drie instellings. Om op die maat vas te klink hou hele afdelings in lyn; op die slag is fyner, vir ’n knipsel wat op een hou moet land; af is vir enigiets wat doelbewus effens vroeg of laat moet sit, wat die meeste is van wat ’n groove menslik laat voel.',
+    },
+  },
+  {
+    id: 'booth-interlock',
+    ask: { en: 'You lock one lane to another in the Pro Booth. What gets locked?', af: 'Jy maak een baan aan ’n ander vas in die Pro Booth. Wat word vasgemaak?' },
+    options: [
+      { en: 'Everything — level, mute, solo and all', af: 'Alles — vlak, demping, solo en al' },
+      { en: 'Only time: drag either and both slide by the same amount', af: 'Net tyd: sleep enige een en albei skuif met dieselfde hoeveelheid' },
+      { en: 'Their key', af: 'Hulle toonsoort' },
+      { en: 'Nothing until you press play', af: 'Niks totdat jy speel druk nie' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Time only. A part that sits under another part stays under it when either is dragged — but the level, the mute, the solo and where each is cut stay each lane’s own, because those are exactly what you locked two lanes together in order to be able to set differently.',
+      af: 'Net tyd. ’n Deel wat onder ’n ander deel sit bly daar wanneer enige een gesleep word — maar die vlak, die demping, die solo en waar elkeen gesny is bly elke baan se eie, want dit is juis wat jy twee bane aan mekaar vasgemaak het om verskillend te kan stel.',
+    },
+  },
+  {
+    id: 'booth-paid-desks',
+    ask: { en: 'Which of these Pro Booth desks spends credits?', af: 'Watter van hierdie Pro Booth-tafels spandeer krediete?' },
+    options: [
+      { en: 'Track controls', af: 'Baanbeheer' },
+      { en: 'Mix & master', af: 'Mix & master' },
+      { en: 'Stems, Voice and Audio effects', af: 'Stems, Stem en Klankeffekte' },
+      { en: 'All six of them', af: 'Al ses van hulle' },
+    ],
+    answer: 2,
+    why: {
+      en: 'Three of the six. The ones that ask a machine to make something new for you — splitting a recording, singing a lane in another voice, taking the room off a take — cost credits; moving a fader, setting the tempo and asking the Copilot what to change do not.',
+      af: 'Drie van die ses. Dié wat ’n masjien vra om iets nuuts vir jou te maak — ’n opname verdeel, ’n baan in ’n ander stem sing, die vertrek van ’n opname afhaal — kos krediete; om ’n skuifie te beweeg, die tempo te stel en die Copilot te vra wat om te verander, kos nie.',
+    },
+  },
+
+
+  /* ── Two decades everybody half-remembers ─────────────────────────────
+
+     Carli: *"goeie general 80's, 90's bekende musiek quiz."*
+
+     The only questions in this file that are facts about music rather
+     than about somebody's own song, and they earn it a different way:
+     this is the shared ground a room full of strangers already stands on,
+     and it is where most of what this app's members are reaching for was
+     made. A fair share of them are South African on purpose — Graceland
+     and Brenda Fassie are as much this history as Thriller is. */
+  {
+    id: 'eighties-thriller',
+    ask: { en: 'Which 1982 album is the best-selling of all time?', af: 'Watter 1982-album is die topverkoper van alle tye?' },
+    options: [
+      { en: 'Born in the U.S.A.', af: 'Born in the U.S.A.' },
+      { en: 'Thriller', af: 'Thriller' },
+      { en: 'Purple Rain', af: 'Purple Rain' },
+      { en: 'Brothers in Arms', af: 'Brothers in Arms' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Michael Jackson’s Thriller, produced by Quincy Jones. Its fourteen-minute video is the reason a pop song was ever expected to come with a film at all — which is the ancestor of every music video this app makes.',
+      af: 'Michael Jackson se Thriller, vervaardig deur Quincy Jones. Sy veertien minute lange video is die rede hoekom daar ooit van ’n popliedjie verwag is om met ’n film saam te kom — en dit is die voorvader van elke musiekvideo wat hierdie app maak.',
+    },
+  },
+  {
+    id: 'eighties-mtv',
+    ask: { en: 'MTV launched in 1981. Which song did it play first?', af: 'MTV het in 1981 begin uitsaai. Watter liedjie het dit eerste gespeel?' },
+    options: [
+      { en: 'Video Killed the Radio Star', af: 'Video Killed the Radio Star' },
+      { en: 'Billie Jean', af: 'Billie Jean' },
+      { en: 'Take On Me', af: 'Take On Me' },
+      { en: 'Sweet Dreams', af: 'Sweet Dreams' },
+    ],
+    answer: 0,
+    why: {
+      en: 'The Buggles, and the joke wrote itself. Within five years a song without a video was at a real disadvantage, which was the first time in history that how a song LOOKED decided how far it travelled.',
+      af: 'The Buggles, en die grap het homself geskryf. Binne vyf jaar was ’n liedjie sonder ’n video werklik benadeel, en dit was die eerste keer in die geskiedenis dat hoe ’n liedjie GELYK het, besluit het hoe ver dit reis.',
+    },
+  },
+  {
+    id: 'eighties-liveaid',
+    ask: { en: 'What was Live Aid, in 1985?', af: 'Wat was Live Aid, in 1985?' },
+    options: [
+      { en: 'A record label', af: '’n Platemaatskappy' },
+      { en: 'A two-continent concert broadcast live to raise famine relief', af: '’n Konsert op twee vastelande wat regstreeks uitgesaai is om hongersnoodhulp in te samel' },
+      { en: 'A talent competition', af: '’n Talentkompetisie' },
+      { en: 'An early streaming service', af: '’n Vroeë stroomdiens' },
+    ],
+    answer: 1,
+    why: {
+      en: 'London and Philadelphia on the same day, carried live to something like 1.5 billion people. Queen’s twenty minutes is still studied as the best live set ever played, and the lesson in it is unglamorous: they rehearsed for the broadcast, not for the room.',
+      af: 'Londen en Philadelphia op dieselfde dag, regstreeks na sowat 1,5 miljard mense gedra. Queen se twintig minute word steeds bestudeer as die beste regstreekse stel wat ooit gespeel is, en die les daarin is onglansryk: hulle het vir die uitsending geoefen, nie vir die saal nie.',
+    },
+  },
+  {
+    id: 'nineties-teenspirit',
+    ask: { en: 'Which 1991 single is usually credited with breaking grunge worldwide?', af: 'Watter 1991-snit word gewoonlik gekrediteer daarmee dat dit grunge wêreldwyd oopgebreek het?' },
+    options: [
+      { en: 'Black Hole Sun', af: 'Black Hole Sun' },
+      { en: 'Alive', af: 'Alive' },
+      { en: 'Smells Like Teen Spirit', af: 'Smells Like Teen Spirit' },
+      { en: 'Creep', af: 'Creep' },
+    ],
+    answer: 2,
+    why: {
+      en: 'Nirvana, from Nevermind. It is a plain loud-quiet-loud song — verse almost whispered, chorus with everything on — and that one structural trick is still the fastest way to make a chorus feel enormous without adding a thing.',
+      af: 'Nirvana, van Nevermind. Dit is ’n eenvoudige hard-sag-hard liedjie — vers byna gefluister, koor met alles aan — en daardie een strukturele truuk is steeds die vinnigste manier om ’n koor enorm te laat voel sonder om iets by te voeg.',
+    },
+  },
+  {
+    id: 'eighties-graceland',
+    ask: { en: 'Paul Simon’s Graceland (1986) was built with which South African group?', af: 'Paul Simon se Graceland (1986) is saam met watter Suid-Afrikaanse groep gebou?' },
+    options: [
+      { en: 'Ladysmith Black Mambazo', af: 'Ladysmith Black Mambazo' },
+      { en: 'Mango Groove', af: 'Mango Groove' },
+      { en: 'Juluka', af: 'Juluka' },
+      { en: 'Stimela', af: 'Stimela' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Joseph Shabalala’s Ladysmith Black Mambazo, singing isicathamiya — the soft-stepping close-harmony style from the Zulu migrant hostels. The album introduced it to the world and started an argument about credit and the cultural boycott that is still worth reading about.',
+      af: 'Joseph Shabalala se Ladysmith Black Mambazo, wat isicathamiya sing — die sagvoetige noue-harmonie styl uit die Zoeloe-trekarbeidershostelle. Die album het dit aan die wêreld bekendgestel en ’n argument oor erkenning en die kulturele boikot begin wat steeds die moeite werd is om oor te lees.',
+    },
+  },
+  {
+    id: 'eighties-clegg',
+    ask: { en: 'Johnny Clegg’s 1987 song Asimbonanga was about whom?', af: 'Johnny Clegg se 1987-liedjie Asimbonanga het oor wie gegaan?' },
+    options: [
+      { en: 'Steve Biko only', af: 'Net Steve Biko' },
+      { en: 'Nelson Mandela, then still in prison', af: 'Nelson Mandela, toe nog in die tronk' },
+      { en: 'His own father', af: 'Sy eie pa' },
+      { en: 'Nobody in particular', af: 'Niemand in besonder nie' },
+    ],
+    answer: 1,
+    why: {
+      en: '“We have not seen him.” It named Mandela while it was illegal to, and it was banned here and played everywhere else. Clegg was called le Zoulou Blanc in France — proof that a song in a language most of its audience does not speak still travels.',
+      af: '“Ons het hom nie gesien nie.” Dit het Mandela genoem terwyl dit onwettig was om dit te doen, en dit is hier verban en oral elders gespeel. Clegg is in Frankryk le Zoulou Blanc genoem — bewys dat ’n liedjie in ’n taal wat die meeste van sy gehoor nie praat nie, steeds reis.',
+    },
+  },
+  {
+    id: 'nineties-brenda',
+    ask: { en: 'Who was called the Queen of African Pop, with hits from Weekend Special to Vulindlela?', af: 'Wie is die Queen of African Pop genoem, met treffers van Weekend Special tot Vulindlela?' },
+    options: [
+      { en: 'Yvonne Chaka Chaka', af: 'Yvonne Chaka Chaka' },
+      { en: 'Miriam Makeba', af: 'Miriam Makeba' },
+      { en: 'Brenda Fassie', af: 'Brenda Fassie' },
+      { en: 'Letta Mbulu', af: 'Letta Mbulu' },
+    ],
+    answer: 2,
+    why: {
+      en: 'Brenda Fassie. Weekend Special in 1983 at sixteen, Vulindlela in 1997, and a career loud enough that Time called her the Madonna of the Townships. Vulindlela is a wedding song and it still fills a room faster than almost anything else recorded here.',
+      af: 'Brenda Fassie. Weekend Special in 1983 op sestien, Vulindlela in 1997, en ’n loopbaan hard genoeg dat Time haar die Madonna of the Townships genoem het. Vulindlela is ’n troueliedjie en dit vul steeds ’n vertrek vinniger as byna enigiets anders wat hier opgeneem is.',
+    },
+  },
+  {
+    id: 'nineties-whitney',
+    ask: { en: 'Whitney Houston’s I Will Always Love You (1992) was written by…', af: 'Whitney Houston se I Will Always Love You (1992) is geskryf deur…' },
+    options: [
+      { en: 'Dolly Parton', af: 'Dolly Parton' },
+      { en: 'Whitney Houston herself', af: 'Whitney Houston self' },
+      { en: 'Diane Warren', af: 'Diane Warren' },
+      { en: 'Kevin Costner', af: 'Kevin Costner' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Dolly Parton wrote and recorded it in 1973 as a quiet country goodbye. The same words and chords, sung another way, became the biggest single of the decade — which is the clearest lesson there is that the arrangement is half the song.',
+      af: 'Dolly Parton het dit in 1973 geskryf en opgeneem as ’n stil country-afskeid. Dieselfde woorde en akkoorde, op ’n ander manier gesing, het die grootste snit van die dekade geword — en dit is die duidelikste les wat daar is dat die verwerking die helfte van die liedjie is.',
+    },
+  },
+  {
+    id: 'nineties-autotune',
+    ask: { en: 'Which 1998 hit made Auto-Tune famous by leaving the effect obvious on purpose?', af: 'Watter 1998-treffer het Auto-Tune bekend gemaak deur die effek doelbewus voor die hand liggend te los?' },
+    options: [
+      { en: 'Believe', af: 'Believe' },
+      { en: '…Baby One More Time', af: '…Baby One More Time' },
+      { en: 'Torn', af: 'Torn' },
+      { en: 'Truly Madly Deeply', af: 'Truly Madly Deeply' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Cher’s Believe. Auto-Tune was written to correct pitch quietly; turned all the way up it snaps the voice between notes instead, and that accident became an instrument. Andy Hildebrand, who wrote it, had been using the same maths to find oil underground.',
+      af: 'Cher se Believe. Auto-Tune is geskryf om toonhoogte stilweg reg te stel; heeltemal oopgedraai klik dit die stem eerder tussen note vas, en daardie ongeluk het ’n instrument geword. Andy Hildebrand, wat dit geskryf het, het dieselfde wiskunde gebruik om olie ondergronds te vind.',
+    },
+  },
+  {
+    id: 'eighties-walkman',
+    ask: { en: 'What did the Sony Walkman change about listening?', af: 'Wat het die Sony Walkman aan luister verander?' },
+    options: [
+      { en: 'It made music louder', af: 'Dit het musiek harder gemaak' },
+      { en: 'It made listening private and portable, one person at a time', af: 'Dit het luister privaat en draagbaar gemaak, een persoon op ’n slag' },
+      { en: 'It was the first device to play records', af: 'Dit was die eerste toestel wat plate kon speel' },
+      { en: 'It recorded live concerts', af: 'Dit het regstreekse konserte opgeneem' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Before it, music happened in a room and everybody in the room got it. After it, a song could be a private thing you carried, which changed what songs were written for. Every mix you make today is mixed for headphones for the same reason.',
+      af: 'Voor dit het musiek in ’n vertrek gebeur en almal in die vertrek het dit gekry. Daarna kon ’n liedjie ’n privaat ding wees wat jy saamdra, wat verander het waarvoor liedjies geskryf is. Elke mix wat jy vandag maak, word om dieselfde rede vir oorfone gemeng.',
+    },
+  },
+  {
+    id: 'nineties-spice',
+    ask: { en: 'Wannabe (1996) was the debut single of…', af: 'Wannabe (1996) was die eerste snit van…' },
+    options: [
+      { en: 'All Saints', af: 'All Saints' },
+      { en: 'TLC', af: 'TLC' },
+      { en: 'The Spice Girls', af: 'The Spice Girls' },
+      { en: 'En Vogue', af: 'En Vogue' },
+    ],
+    answer: 2,
+    why: {
+      en: 'The Spice Girls, and it went to number one in over thirty countries. Its opening line is the hook — no build, no introduction, the thing you remember is the first thing you hear. Worth copying when a song has fifteen seconds to hold somebody.',
+      af: 'The Spice Girls, en dit het in meer as dertig lande nommer een gehaal. Sy openingsreël is die hook — geen opbou, geen inleiding nie, die ding wat jy onthou is die eerste ding wat jy hoor. Die moeite werd om na te doen wanneer ’n liedjie vyftien sekondes het om iemand te hou.',
+    },
+  },
+  {
+    id: 'nineties-kwaito-arthur',
+    ask: { en: 'Kwaito grew up in nineties South Africa. What is its most recognisable trait?', af: 'Kwaito het in die negentigerjare se Suid-Afrika grootgeword. Wat is sy herkenbaarste eienskap?' },
+    options: [
+      { en: 'House at half speed, with words spoken over it in township slang', af: 'House op halfspoed, met woorde daaroor gepraat in township-sleng' },
+      { en: 'Very fast drum and bass', af: 'Baie vinnige drum and bass' },
+      { en: 'Acoustic guitar and close harmony', af: 'Akoestiese kitaar en noue harmonie' },
+      { en: 'Big band brass', af: 'Groot orkes-koper' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Imported house records slowed down to around 100 BPM, with chanted, half-spoken vocals over the top — Arthur Mafokate, Boom Shaka, TKZee. Slowing a groove down until it leans is a move you can ask for by name in the sound box.',
+      af: 'Ingevoerde house-plate wat verstadig is tot omtrent 100 BPM, met gesing-gepraat bo-oor — Arthur Mafokate, Boom Shaka, TKZee. Om ’n groove te verstadig totdat dit leun is ’n set wat jy op sy naam in die klankblokkie kan vra.',
+    },
+  },
+
+
+  /* ── The choir, and five jokes that are really questions ─────────────
+
+     Carli: *"sommer 'n paar choir en music joke quiz."*
+
+     The choir ones are here because choral singing is the biggest music
+     tradition in this country by a distance, and almost nothing written
+     about making music online assumes you came from one.
+
+     The jokes are jokes, and every one of them turns on a real piece of
+     theory — a flat, a key, a tempo, who has the tune. The explanation
+     is where the teaching happens, which is the same bargain every other
+     question in this file makes; these ones just get a laugh first. */
+  {
+    id: 'choir-solfa',
+    ask: { en: 'In tonic sol-fa, what does doh move to when the key changes?', af: 'In tonic sol-fa, waarheen skuif doh wanneer die toonsoort verander?' },
+    options: [
+      { en: 'Nowhere — doh is always C', af: 'Nêrens — doh is altyd C' },
+      { en: 'Doh moves to the new key’s home note', af: 'Doh skuif na die nuwe toonsoort se tuisnoot' },
+      { en: 'Doh becomes soh', af: 'Doh word soh' },
+      { en: 'It is only used for one key', af: 'Dit word net vir een toonsoort gebruik' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Doh is wherever home is, so the same solfa reads the same in every key — which is exactly why it spread through South African choirs and why a choir can be taught a part with no printed music at all. Sol-fa teaches the shape; staff notation teaches the pitch.',
+      af: 'Doh is waar die tuiste ook al is, so dieselfde solfa lees dieselfde in elke toonsoort — en dít is presies hoekom dit deur Suid-Afrikaanse kore versprei het en hoekom ’n koor ’n party geleer kan word met geen gedrukte musiek nie. Sol-fa leer die vorm; notebalk leer die toonhoogte.',
+    },
+  },
+  {
+    id: 'choir-staggered',
+    ask: { en: 'What is staggered breathing in a choir?', af: 'Wat is verspreide asemhaling in ’n koor?' },
+    options: [
+      { en: 'Everybody breathes at the same marked place', af: 'Almal haal op dieselfde gemerkte plek asem' },
+      { en: 'Nobody breathes for the whole phrase', af: 'Niemand haal die hele frase lank asem nie' },
+      { en: 'Singers breathe at different moments so the line never stops', af: 'Sangers haal op verskillende oomblikke asem sodat die lyn nooit ophou nie' },
+      { en: 'Only the sopranos breathe', af: 'Net die soprane haal asem' },
+    ],
+    answer: 2,
+    why: {
+      en: 'You drop out quietly, breathe, and slip back in while your neighbours hold — so a phrase longer than any one pair of lungs sounds unbroken. Come back in softly: a voice returning at full volume is heard, and the whole point is that nobody hears it.',
+      af: 'Jy val stilweg uit, haal asem, en glip weer in terwyl jou bure hou — sodat ’n frase langer as enige paar longe ononderbroke klink. Kom sag terug in: ’n stem wat op vol volume terugkeer word gehoor, en die hele punt is dat niemand dit hoor nie.',
+    },
+  },
+  {
+    id: 'choir-blend',
+    ask: { en: 'A choir is said to blend well when…', af: 'Daar word gesê ’n koor smelt goed saam wanneer…' },
+    options: [
+      { en: 'Every singer is as loud as possible', af: 'Elke sanger so hard as moontlik is' },
+      { en: 'No single voice can be picked out of the section', af: 'Geen enkele stem uit die afdeling uitgeken kan word nie' },
+      { en: 'Everybody sings the same part', af: 'Almal dieselfde party sing' },
+      { en: 'The sopranos are twice as loud as the rest', af: 'Die soprane twee keer so hard soos die res is' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Not volume — sameness of vowel, tone and timing. Most blend problems are vowels: eight people singing “aa” eight slightly different ways sounds like a crowd, and the same eight matching the vowel sound like one large voice.',
+      af: 'Nie volume nie — eendersheid van vokaal, toon en tydsberekening. Die meeste saamsmelt-probleme is vokale: agt mense wat “aa” op agt effens verskillende maniere sing klink soos ’n skare, en dieselfde agt wat die vokaal laat pas klink soos een groot stem.',
+    },
+  },
+  {
+    id: 'choir-going-flat',
+    ask: { en: 'An unaccompanied choir slowly drifts flat. The usual cause is…', af: '’n Onbegeleide koor sak stadig plat. Die gewone oorsaak is…' },
+    options: [
+      { en: 'The song is too short', af: 'Die liedjie is te kort' },
+      { en: 'Tiredness and shallow breath, so the support under the note drops', af: 'Moegheid en vlak asem, sodat die ondersteuning onder die noot sak' },
+      { en: 'Too many sopranos', af: 'Te veel soprane' },
+      { en: 'Singing in the wrong language', af: 'Om in die verkeerde taal te sing' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Pitch falls when the air behind it does. Long slow pieces at the end of a rehearsal are where it happens, and the fix is breath and energy rather than telling everybody to sing higher — which only makes them push and go sharp in places.',
+      af: 'Toonhoogte val wanneer die lug daaragter val. Lang stadige stukke aan die einde van ’n oefening is waar dit gebeur, en die oplossing is asem en energie eerder as om almal te sê om hoër te sing — wat hulle net laat druk en op plekke skerp laat raak.',
+    },
+  },
+  {
+    id: 'choir-upbeat',
+    ask: { en: 'Before a choir starts, the conductor gives a small beat upwards. What is it for?', af: 'Voor ’n koor begin, gee die dirigent ’n klein slag opwaarts. Waarvoor is dit?' },
+    options: [
+      { en: 'It shows how loud to sing', af: 'Dit wys hoe hard om te sing' },
+      { en: 'It is the breath — it sets the speed and tells everybody when to take air', af: 'Dit is die asem — dit stel die spoed en sê vir almal wanneer om lug in te neem' },
+      { en: 'It is a greeting', af: 'Dit is ’n groet' },
+      { en: 'It marks the end of the piece', af: 'Dit merk die einde van die stuk' },
+    ],
+    answer: 1,
+    why: {
+      en: 'The upbeat carries the tempo and the breath in one gesture, which is why a choir that starts ragged usually was not given a clear one. Anybody counting a band in is doing the same job; the count-in on a click is the mechanical version of it.',
+      af: 'Die opslag dra die tempo en die asem in een gebaar, en dít is hoekom ’n koor wat rafelrig begin gewoonlik nie ’n duidelike een gekry het nie. Enigiemand wat ’n orkes intel doen dieselfde werk; die intel op ’n klik is die meganiese weergawe daarvan.',
+    },
+  },
+  {
+    id: 'choir-isicathamiya',
+    ask: { en: 'Isicathamiya is sung…', af: 'Isicathamiya word gesing…' },
+    options: [
+      { en: 'With a full drum kit', af: 'Met ’n volledige tromstel' },
+      { en: 'Unaccompanied, in close harmony, deliberately soft-footed', af: 'Onbegeleid, in noue harmonie, doelbewus sagvoetig' },
+      { en: 'At very high speed', af: 'Op baie hoë spoed' },
+      { en: 'By one singer alone', af: 'Deur een sanger alleen' },
+    ],
+    answer: 1,
+    why: {
+      en: 'The name comes from stepping softly — it grew in migrant workers’ hostels where competitions ran through the night and the neighbours had to be able to sleep. Constraint made the style: no instruments, no stamping, so everything had to be in the voices.',
+      af: 'Die naam kom van sag trap — dit het in trekarbeidershostelle gegroei waar kompetisies deur die nag geloop het en die bure moes kon slaap. Beperking het die styl gemaak: geen instrumente, geen stamp nie, so alles moes in die stemme wees.',
+    },
+  },
+  {
+    id: 'joke-flat-minor',
+    ask: { en: 'What do you get if you drop a piano down a mine shaft?', af: 'Wat kry jy as jy ’n klavier in ’n mynskag laat val?' },
+    options: [
+      { en: 'A flat major', af: '’n A-mol majeur' },
+      { en: 'A flat minor', af: '’n A-mol mineur' },
+      { en: 'A sharp third', af: '’n Skerp derde' },
+      { en: 'A rest', af: '’n Rus' },
+    ],
+    answer: 1,
+    why: {
+      en: 'A flat miner. The joke only works if you know both words: flat is the ♭ that lowers a note a semitone, and minor is the sadder of the two scales. Drop it on an army base and you get A flat major instead.',
+      af: '’n Plat mynwerker. Die grap werk net as jy albei woorde ken: mol is die ♭ wat ’n noot ’n halftoon verlaag, en mineur is die hartseerder van die twee toonlere. Laat val dit op ’n weermagbasis en jy kry A-mol majeur.',
+    },
+  },
+  {
+    id: 'joke-soprano-bulb',
+    ask: { en: 'How many sopranos does it take to change a light bulb?', af: 'Hoeveel soprane vat dit om ’n gloeilamp te vervang?' },
+    options: [
+      { en: 'Four, one for each part', af: 'Vier, een vir elke party' },
+      { en: 'None, the altos do it', af: 'Geen, die alte doen dit' },
+      { en: 'One — she holds it and the world revolves around her', af: 'Een — sy hou dit vas en die wêreld draai om haar' },
+      { en: 'Two, and they argue about it', af: 'Twee, en hulle stry daaroor' },
+    ],
+    answer: 2,
+    why: {
+      en: 'Every choir tells this one, and it is about the melody rather than about sopranos: the top line is the one the ear follows, so it gets the tune, the solos and the blame. The altos, tenors and basses are doing the harmony nobody notices until it stops.',
+      af: 'Elke koor vertel hierdie een, en dit gaan oor die melodie eerder as oor soprane: die boonste lyn is die een wat die oor volg, so dit kry die wysie, die solo’s en die skuld. Die alte, tenore en basse doen die harmonie wat niemand raaksien totdat dit ophou nie.',
+    },
+  },
+  {
+    id: 'joke-drum-machine',
+    ask: { en: 'What is the difference between a drummer and a drum machine?', af: 'Wat is die verskil tussen ’n dromspeler en ’n dromsmasjien?' },
+    options: [
+      { en: 'The machine is louder', af: 'Die masjien is harder' },
+      { en: 'You only have to punch the tempo into a drum machine once', af: 'Jy moet die tempo net een keer in ’n dromsmasjien inslaan' },
+      { en: 'The machine needs no sticks', af: 'Die masjien het geen stokke nodig nie' },
+      { en: 'There is none', af: 'Daar is geen' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Mean, and it names a real thing: a machine holds one tempo for ever and a person breathes. That is not only a weakness — a drummer speeding up half a BPM into a chorus is part of why it lifts, which is why programmed drums often get a little humanising put back.',
+      af: 'Gemeen, en dit benoem iets werkliks: ’n masjien hou vir ewig een tempo en ’n mens haal asem. Dit is nie net ’n swakheid nie — ’n dromspeler wat ’n halwe BPM vinniger raak die koor in, is deel van hoekom dit oplig, en dít is hoekom geprogrammeerde dromme dikwels ’n bietjie menslikheid teruggesit kry.',
+    },
+  },
+  {
+    id: 'joke-piano-keys',
+    ask: { en: 'Why could the pianist not get into his house?', af: 'Hoekom kon die pianis nie by sy huis inkom nie?' },
+    options: [
+      { en: 'He forgot the address', af: 'Hy het die adres vergeet' },
+      { en: 'He left his keys in the piano', af: 'Hy het sy sleutels in die klavier gelos' },
+      { en: 'The door was flat', af: 'Die deur was plat' },
+      { en: 'He was in the wrong octave', af: 'Hy was in die verkeerde oktaaf' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Two meanings of one word. A piano’s keys are the things you press; a song’s key is the home note everything is built around. English borrowed the second from the first, and knowing that is half of reading a chord chart.',
+      af: 'Twee betekenisse van een woord. ’n Klavier se klawers is die goed wat jy druk; ’n liedjie se toonsoort is die tuisnoot waarom alles gebou is. In Engels heet albei “key”, en om dit te weet is die helfte van hoe ’n mens ’n akkoordkaart lees.',
+    },
+  },
+  {
+    id: 'joke-viola',
+    ask: { en: 'An old orchestra joke: what is the difference between a violin and a viola?', af: '’n Ou orkesgrap: wat is die verskil tussen ’n viool en ’n altviool?' },
+    options: [
+      { en: 'The viola burns longer', af: 'Die altviool brand langer' },
+      { en: 'The viola has no strings', af: 'Die altviool het geen snare nie' },
+      { en: 'The violin is played sitting down', af: 'Die viool word sittende gespeel' },
+      { en: 'Nothing at all', af: 'Niks hoegenaamd nie' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Because it is bigger — and the orchestra has picked on violas for two hundred years for playing the inner line nobody hums. That inner line is the harmony holding the chord together, which is why an arrangement with no violas sounds hollow and nobody can say why.',
+      af: 'Omdat dit groter is — en die orkes pik al tweehonderd jaar op altviole omdat hulle die binnelyn speel wat niemand neurie nie. Daardie binnelyn is die harmonie wat die akkoord bymekaar hou, en dít is hoekom ’n verwerking sonder altviole hol klink en niemand kan sê hoekom nie.',
+    },
+  },
+
+
+  /* ── Asking for a song, and what is happening when you do ────────────
+
+     Carli: *"ook lekker goed wat help om te leer wat om in gedagte te hou
+     om goeie musiek te prompt, dalk kan jy die computer science agter
+     musiekmaak ook uitlig."*
+
+     Two halves of one thing. The prompting half is the most useful
+     writing in this file, because it is the difference between a
+     generation that is worth keeping and two credits gone. The computer
+     science half is why those rules are the rules: a model that predicts
+     what comes next from an enormous amount of music will answer a vague
+     ask with an average, and that is not a fault to be worked around —
+     it is the machine doing exactly what it is. */
+  {
+    id: 'prompt-specific',
+    ask: { en: 'Which of these will get you a better song?', af: 'Watter van hierdie sal jou ’n beter liedjie gee?' },
+    options: [
+      { en: '“A nice upbeat song”', af: '“’n Lekker opgewekte liedjie”' },
+      { en: '“Afrikaans country ballad, 72 BPM, acoustic guitar and pedal steel, sad but warm”', af: '“Afrikaanse country-ballade, 72 BPM, akoestiese kitaar en pedal steel, hartseer maar warm”' },
+      { en: '“Make it good”', af: '“Maak dit goed”' },
+      { en: '“Something like the radio”', af: '“Iets soos die radio”' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Genre, tempo, two or three instruments and a mood. A vague ask gets the average of everything the model has heard, and the average of all music is not a song anybody wants. Specific is not the same as long — four facts beat a paragraph.',
+      af: 'Genre, tempo, twee of drie instrumente en ’n stemming. ’n Vae versoek kry die gemiddeld van alles wat die model gehoor het, en die gemiddeld van alle musiek is nie ’n liedjie wat iemand wil hê nie. Spesifiek is nie dieselfde as lank nie — vier feite klop ’n paragraaf.',
+    },
+  },
+  {
+    id: 'prompt-not-artist',
+    ask: { en: 'Why is “make it sound like Beyoncé” a poor prompt?', af: 'Hoekom is “laat dit soos Beyoncé klink” ’n swak prompt?' },
+    options: [
+      { en: 'It is too short', af: 'Dit is te kort' },
+      { en: 'It names a person instead of a sound, and copying an artist is somebody else’s right', af: 'Dit noem ’n persoon in plaas van ’n klank, en om ’n kunstenaar na te maak is iemand anders se reg' },
+      { en: 'The model has never heard of her', af: 'Die model het nog nooit van haar gehoor nie' },
+      { en: 'It only works for slow songs', af: 'Dit werk net vir stadige liedjies' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Name the sound, not the singer: “breathy close-mic pop vocal, tight stacked harmonies, sparse trap drums” says what you actually want and is yours to release. An artist’s name is both legally somebody else’s and, oddly, less precise.',
+      af: 'Noem die klank, nie die sanger nie: “asemrige na-aan-mikrofoon popstem, styf gestapelde harmonieë, yl trap-dromme” sê wat jy werklik wil hê en is joune om uit te reik. ’n Kunstenaar se naam is albei wettig iemand anders s’n en, vreemd genoeg, minder presies.',
+    },
+  },
+  {
+    id: 'prompt-few-instruments',
+    ask: { en: 'You list twelve instruments in the sound box. What usually happens?', af: 'Jy lys twaalf instrumente in die klankblokkie. Wat gebeur gewoonlik?' },
+    options: [
+      { en: 'You get all twelve, clearly', af: 'Jy kry al twaalf, duidelik' },
+      { en: 'A crowded mix where none of them is the sound of the song', af: '’n Vol mix waar nie een van hulle die klank van die liedjie is nie' },
+      { en: 'The song gets longer', af: 'Die liedjie word langer' },
+      { en: 'Nothing changes', af: 'Niks verander nie' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Two or three named instruments give a song an identity; twelve give it a wash. Real arrangements are mostly thin — a verse with a guitar and a voice, and the rest saved for the chorus so that arriving means something.',
+      af: 'Twee of drie genoemde instrumente gee ’n liedjie ’n identiteit; twaalf gee dit ’n wasgoed. Werklike verwerkings is meestal yl — ’n vers met ’n kitaar en ’n stem, en die res gespaar vir die koor sodat om daar aan te kom iets beteken.',
+    },
+  },
+  {
+    id: 'prompt-tempo-number',
+    ask: { en: 'Instead of writing “fast”, what works better?', af: 'In plaas daarvan om “vinnig” te skryf, wat werk beter?' },
+    options: [
+      { en: '“Very fast”', af: '“Baie vinnig”' },
+      { en: 'A BPM, or a feel everybody shares like “a walking pace”', af: '’n BPM, of ’n gevoel wat almal deel soos “’n stappas”' },
+      { en: 'Nothing — tempo cannot be asked for', af: 'Niks — tempo kan nie gevra word nie' },
+      { en: 'Typing it in capitals', af: 'Om dit in hoofletters te tik' },
+    ],
+    answer: 1,
+    why: {
+      en: '“Fast” is 120 to somebody and 175 to somebody else. A number removes the argument, and if you do not know the number, name a song shape instead — a march, a slow jam, a shuffle — which carries a tempo with it.',
+      af: '“Vinnig” is 120 vir iemand en 175 vir iemand anders. ’n Getal haal die argument weg, en as jy nie die getal weet nie, noem eerder ’n liedjievorm — ’n opmars, ’n stadige jam, ’n shuffle — wat ’n tempo saamdra.',
+    },
+  },
+  {
+    id: 'prompt-structure',
+    ask: { en: 'Why say the shape of the song in the prompt — verse, chorus, bridge?', af: 'Hoekom die vorm van die liedjie in die prompt sê — vers, koor, brug?' },
+    options: [
+      { en: 'It makes the song shorter', af: 'Dit maak die liedjie korter' },
+      { en: 'Without it you often get one mood for three minutes with nothing to arrive at', af: 'Sonder dit kry jy dikwels een stemming vir drie minute met niks om by aan te kom nie' },
+      { en: 'It changes the key', af: 'Dit verander die toonsoort' },
+      { en: 'It is only needed for instrumentals', af: 'Dit is net vir instrumentale stukke nodig' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Structure is what makes a chorus feel like a chorus — it is only big because the verse before it was not. Say where the lift is and what drops out under the bridge, and you get a song rather than a loop.',
+      af: 'Struktuur is wat ’n koor soos ’n koor laat voel — dit is net groot omdat die vers voor dit nie was nie. Sê waar die oplig is en wat onder die brug wegval, en jy kry ’n liedjie eerder as ’n lus.',
+    },
+  },
+  {
+    id: 'prompt-language',
+    ask: { en: 'You want the song sung in Afrikaans. What must you do?', af: 'Jy wil hê die liedjie moet in Afrikaans gesing word. Wat moet jy doen?' },
+    options: [
+      { en: 'Nothing, it works it out from the words', af: 'Niks, dit werk dit uit die woorde uit' },
+      { en: 'Say the language, and say it in the sound box as well as writing Afrikaans lyrics', af: 'Sê die taal, en sê dit in die klankblokkie sowel as om Afrikaanse lirieke te skryf' },
+      { en: 'Only write the lyrics in Afrikaans', af: 'Skryf net die lirieke in Afrikaans' },
+      { en: 'Choose a slower tempo', af: 'Kies ’n stadiger tempo' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Lyrics alone are not always enough — a model trained mostly on English will reach for an English accent, and Afrikaans is close enough to Dutch that it sometimes lands there instead. Saying the language out loud in the sound description is the cheapest fix there is.',
+      af: 'Lirieke alleen is nie altyd genoeg nie — ’n model wat meestal op Engels geleer is, gryp na ’n Engelse aksent, en Afrikaans is naby genoeg aan Nederlands dat dit soms daar beland. Om die taal hardop in die klankbeskrywing te sê is die goedkoopste oplossing wat daar is.',
+    },
+  },
+  {
+    id: 'prompt-scene-words',
+    ask: { en: 'Which mood description is more use to a model?', af: 'Watter stemmingsbeskrywing is meer werd vir ’n model?' },
+    options: [
+      { en: '“Emotional and powerful”', af: '“Emosioneel en kragtig”' },
+      { en: '“Late night, empty road, headlights on wet tar”', af: '“Laataand, leë pad, hoofligte op nat teer”' },
+      { en: '“Really good vibes”', af: '“Baie goeie vibes”' },
+      { en: '“Professional quality”', af: '“Professionele gehalte”' },
+    ],
+    answer: 1,
+    why: {
+      en: 'A scene carries a tempo, a register and an instrument list without naming any of them. “Emotional”, “powerful” and “professional” are true of almost every song ever released, so they narrow nothing down.',
+      af: '’n Toneel dra ’n tempo, ’n register en ’n instrumentlys sonder om enige van hulle te noem. “Emosioneel”, “kragtig” en “professioneel” is waar van byna elke liedjie wat ooit uitgereik is, so hulle vernou niks nie.',
+    },
+  },
+  {
+    id: 'prompt-one-change',
+    ask: { en: 'Your song came out nearly right. What is the best next move?', af: 'Jou liedjie het byna reg uitgekom. Wat is die beste volgende skuif?' },
+    options: [
+      { en: 'Rewrite the whole prompt', af: 'Herskryf die hele prompt' },
+      { en: 'Change one thing and generate again, so you learn what did it', af: 'Verander een ding en genereer weer, sodat jy leer wat dit gedoen het' },
+      { en: 'Generate five at once', af: 'Genereer vyf op ’n slag' },
+      { en: 'Start in a different room', af: 'Begin in ’n ander kamer' },
+    ],
+    answer: 1,
+    why: {
+      en: 'One variable at a time is how anybody learns a tool. Change six things and the next version is better or worse for reasons you will never find out, so the credits buy you a song but no knowledge — and the knowledge is what makes the tenth song cheap.',
+      af: 'Een veranderlike op ’n slag is hoe enigiemand ’n gereedskapstuk leer. Verander ses dinge en die volgende weergawe is beter of slegter om redes wat jy nooit sal uitvind nie, so die krediete koop vir jou ’n liedjie maar geen kennis nie — en die kennis is wat die tiende liedjie goedkoop maak.',
+    },
+  },
+  {
+    id: 'cs-bit-depth',
+    ask: { en: 'What does bit depth decide in a digital recording?', af: 'Wat bepaal bisdiepte in ’n digitale opname?' },
+    options: [
+      { en: 'How long the file can be', af: 'Hoe lank die lêer kan wees' },
+      { en: 'How finely each sample’s loudness is measured, which sets the noise floor', af: 'Hoe fyn elke monster se hardheid gemeet word, wat die ruisvloer stel' },
+      { en: 'How many instruments fit', af: 'Hoeveel instrumente inpas' },
+      { en: 'The tempo', af: 'Die tempo' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Sample rate is how often you measure; bit depth is how precisely. 16-bit gives about 96 dB between the quietest thing and clipping, 24-bit about 144 — which is why recording is done at 24 and only squeezed down at the end.',
+      af: 'Monstertempo is hoe dikwels jy meet; bisdiepte is hoe presies. 16-bis gee omtrent 96 dB tussen die stilste ding en oorstuur, 24-bis omtrent 144 — en dít is hoekom daar op 24 opgeneem word en eers aan die einde afgedruk word.',
+    },
+  },
+  {
+    id: 'cs-fourier',
+    ask: { en: 'An EQ and a spectrum display both rest on one idea. Which?', af: '’n EQ en ’n spektrumvertoning rus albei op een idee. Watter?' },
+    options: [
+      { en: 'Any sound can be broken into pure tones added together', af: 'Enige klank kan in suiwer tone opgebreek word wat bymekaar getel word' },
+      { en: 'Sound travels at a fixed speed', af: 'Klank beweeg teen ’n vaste spoed' },
+      { en: 'Loud sounds mask quiet ones', af: 'Harde klanke verberg stil klankies' },
+      { en: 'Every note has a number', af: 'Elke noot het ’n getal' },
+    ],
+    answer: 0,
+    why: {
+      en: 'Fourier’s idea, and the Fast Fourier Transform is how a computer does it quickly. Once a sound is a list of how much of each frequency is present, an EQ is just turning some of those amounts up or down — and the picture you watch while mixing is that list drawn.',
+      af: 'Fourier se idee, en die Fast Fourier Transform is hoe ’n rekenaar dit vinnig doen. Sodra ’n klank ’n lys is van hoeveel van elke frekwensie teenwoordig is, is ’n EQ net om van daardie hoeveelhede op of af te draai — en die prentjie wat jy dophou terwyl jy meng, is daardie lys geteken.',
+    },
+  },
+  {
+    id: 'cs-latency',
+    ask: { en: 'Why is there a small delay when you hear yourself through the computer?', af: 'Hoekom is daar ’n klein vertraging wanneer jy jouself deur die rekenaar hoor?' },
+    options: [
+      { en: 'The microphone is slow', af: 'Die mikrofoon is stadig' },
+      { en: 'Audio is processed in buffers — a block at a time, not sample by sample', af: 'Klank word in buffers verwerk — ’n blok op ’n slag, nie monster vir monster nie' },
+      { en: 'The song is too long', af: 'Die liedjie is te lank' },
+      { en: 'Headphones always add a delay', af: 'Oorfone voeg altyd ’n vertraging by' },
+    ],
+    answer: 1,
+    why: {
+      en: 'The machine collects a block of samples, works on it, and hands it on. A bigger buffer is safer and slower; a smaller one is quicker and more likely to stutter. Anything over about 20 ms and a singer starts fighting their own voice.',
+      af: 'Die masjien versamel ’n blok monsters, werk daaraan, en gee dit aan. ’n Groter buffer is veiliger en stadiger; ’n kleiner een is vinniger en meer geneig om te hakkel. Enigiets bo omtrent 20 ms en ’n sanger begin teen sy eie stem baklei.',
+    },
+  },
+  {
+    id: 'cs-midi',
+    ask: { en: 'A MIDI file contains…', af: '’n MIDI-lêer bevat…' },
+    options: [
+      { en: 'The recorded sound of the instruments', af: 'Die opgeneemde klank van die instrumente' },
+      { en: 'Instructions — which note, how hard, how long — but no sound at all', af: 'Instruksies — watter noot, hoe hard, hoe lank — maar glad geen klank nie' },
+      { en: 'A compressed mp3', af: '’n Saamgeperste mp3' },
+      { en: 'The lyrics', af: 'Die lirieke' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Sheet music a computer can read. That is why a MIDI file is tiny and why the same file sounds like a cheap keyboard on one machine and an orchestra on another — the sound is whatever instrument you point it at, and it is why the notes can be changed after the fact.',
+      af: 'Bladmusiek wat ’n rekenaar kan lees. Dít is hoekom ’n MIDI-lêer piepklein is en hoekom dieselfde lêer op een masjien soos ’n goedkoop klawerbord en op ’n ander soos ’n orkes klink — die klank is watter instrument jy ook al daarop rig, en dit is hoekom die note agterna verander kan word.',
+    },
+  },
+  {
+    id: 'cs-lossy',
+    ask: { en: 'What does an mp3 do that a wav does not?', af: 'Wat doen ’n mp3 wat ’n wav nie doen nie?' },
+    options: [
+      { en: 'It plays louder', af: 'Dit speel harder' },
+      { en: 'It throws away detail you are unlikely to notice, to make the file small', af: 'Dit gooi detail weg wat jy waarskynlik nie sal raaksien nie, om die lêer klein te maak' },
+      { en: 'It stores the lyrics', af: 'Dit stoor die lirieke' },
+      { en: 'It keeps every sample exactly', af: 'Dit hou elke monster presies' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Lossy compression, built on what a quiet sound next to a loud one does to your ears. The thrown-away part never comes back, so master and archive from a wav and let the mp3 be the copy you send — a copy of a copy is where the swirly, underwater sound comes from.',
+      af: 'Verliesgewende kompressie, gebou op wat ’n stil klank langs ’n harde een aan jou ore doen. Die weggegooide deel kom nooit terug nie, so master en argiveer vanaf ’n wav en laat die mp3 die kopie wees wat jy stuur — ’n kopie van ’n kopie is waar daardie draaierige, onderwater-klank vandaan kom.',
+    },
+  },
+  {
+    id: 'cs-predicts',
+    ask: { en: 'How does a music model decide what to make?', af: 'Hoe besluit ’n musiekmodel wat om te maak?' },
+    options: [
+      { en: 'It searches a library and plays the closest match', af: 'Dit soek ’n biblioteek deur en speel die naaste passing' },
+      { en: 'It predicts what plausibly comes next, over and over, steered by your words', af: 'Dit voorspel wat waarskynlik volgende kom, oor en oor, gestuur deur jou woorde' },
+      { en: 'A person records it', af: '’n Persoon neem dit op' },
+      { en: 'It picks at random', af: 'Dit kies lukraak' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Not a search and not a shuffle: a prediction made again and again, with your description weighting every step. That single fact explains most of the prompting advice in this quiz — vague words weight nothing, so what comes back is the most ordinary thing that fits.',
+      af: 'Nie ’n soektog en nie ’n skommel nie: ’n voorspelling wat oor en oor gemaak word, met jou beskrywing wat elke stap weeg. Daardie enkele feit verklaar die meeste van die prompt-raad in hierdie quiz — vae woorde weeg niks, so wat terugkom is die gewoonste ding wat pas.',
+    },
+  },
+  {
+    id: 'cs-diffusion',
+    ask: { en: 'Many audio and image models start from…', af: 'Baie klank- en beeldmodelle begin by…' },
+    options: [
+      { en: 'Silence', af: 'Stilte' },
+      { en: 'A random seed note', af: '’n Lukrake saadnoot' },
+      { en: 'Pure noise, which is then cleaned away step by step', af: 'Suiwer ruis, wat dan stap vir stap weggeskoonmaak word' },
+      { en: 'An existing song', af: '’n Bestaande liedjie' },
+    ],
+    answer: 2,
+    why: {
+      en: 'Diffusion: start from static and remove a little of it at a time, each step guided by your description, until something that was never there is standing in the noise. It is why generating takes seconds rather than being instant, and why the same prompt twice gives two different songs.',
+      af: 'Diffusie: begin by sneeu en verwyder ’n bietjie daarvan op ’n slag, elke stap gelei deur jou beskrywing, totdat iets wat nooit daar was nie in die ruis staan. Dit is hoekom genereer sekondes vat eerder as om oombliklik te wees, en hoekom dieselfde prompt twee keer twee verskillende liedjies gee.',
+    },
+  },
+  {
+    id: 'cs-seed',
+    ask: { en: 'What is a seed, in a generator?', af: 'Wat is ’n saad, in ’n genereerder?' },
+    options: [
+      { en: 'The first note of the song', af: 'Die eerste noot van die liedjie' },
+      { en: 'The starting number for the randomness, so the same seed repeats the same result', af: 'Die beginsyfer vir die lukraakheid, sodat dieselfde saad dieselfde uitkoms herhaal' },
+      { en: 'How long the song will be', af: 'Hoe lank die liedjie sal wees' },
+      { en: 'The name of the model', af: 'Die naam van die model' },
+    ],
+    answer: 1,
+    why: {
+      en: 'Computers do not do real randomness; they do a long predictable sequence started from a number. Keep the seed and change one word and you hear what that word did — which is the machine-side version of changing one thing at a time.',
+      af: 'Rekenaars doen nie werklike lukraakheid nie; hulle doen ’n lang voorspelbare reeks wat by ’n getal begin. Hou die saad en verander een woord en jy hoor wat daardie woord gedoen het — wat die masjienkant se weergawe is van om een ding op ’n slag te verander.',
+    },
+  },
 ];
