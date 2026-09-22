@@ -279,6 +279,26 @@ export async function POST(request: Request): Promise<Response> {
     want.kind === 'art' || want.kind === 'commission' || want.kind === 'bidpass'
       ? 'albumart'
       : null;
+  /* ── And WHICH piece ──────────────────────────────────────────────────
+   *
+   * Carli, 22 September 2026: *"Daar is nerens 'n afdeling om verder te bid
+   * op daardie spesifieke prent nie."*
+   *
+   * The bid button lives inside the opened piece, not on the wall. So
+   * putting her back in the room and no further leaves her looking at a
+   * grid, with the thing she just bought the right to bid on shut, and
+   * nothing on screen that says "bid". The room is right and the answer is
+   * still no.
+   *
+   * Unlike the room name this IS taken from the request — but only after
+   * `priceOf` has accepted it, so it is an id she has just been charged
+   * against rather than anything she could name. And re-opening a sheet is
+   * not a privileged act: the wall is public and the piece is already on
+   * it. */
+  const piece =
+    'work' in want && typeof want.work === 'string' && /^[\w-]{1,64}$/.test(want.work)
+      ? want.work
+      : null;
   let upstream: Response;
   try {
     upstream = await fetch(PAYSTACK, {
@@ -288,7 +308,8 @@ export async function POST(request: Request): Promise<Response> {
         email: caller.email,
         amount: price.cents,
         currency: 'ZAR',
-        callback_url: `${origin}/?paid=1${back ? `&room=${back}` : ''}`,
+        callback_url: `${origin}/?paid=1${back ? `&room=${back}` : ''}`
+          + `${back && piece ? `&piece=${encodeURIComponent(piece)}` : ''}`,
         // A plan turns this checkout into a subscription: Paystack charges it
         // now and again every month until it is cancelled. Sent only when the
         // account actually has a plan set up for that tier — without one the

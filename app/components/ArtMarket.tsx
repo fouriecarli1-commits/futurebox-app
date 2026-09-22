@@ -699,12 +699,36 @@ export default function ArtMarket(): React.ReactElement {
      right price: a second delivery mechanism for the same job is how two
      of them come to disagree. */
   const [justPaid, setJustPaid] = useState(false);
+  /* The piece she paid against, held until the wall carrying it arrives.
+   *
+   * Not opened straight from the id: a sheet built from `{ id }` alone is an
+   * empty sheet, and a sheet drawn from the wall she had BEFORE paying is
+   * the one still offering her the R50 pass she has just bought. Both are
+   * the room answering with stale state, which is the fault this whole
+   * handoff exists to avoid. So it waits for the read. */
+  const [wanted, setWanted] = useState<string | null>(null);
   useCopilotOps('albumart', {
-    paid: () => {
+    /* `said` is the piece she paid against, when the till knew one.
+     *
+     * Carli, 22 September 2026: *"Daar is nerens 'n afdeling om verder te
+     * bid op daardie spesifieke prent nie."* The bid button is inside the
+     * opened piece, so landing on the wall with everything shut is a room
+     * that is correct and still answers no. Re-opened after the read, not
+     * before it, because the sheet drawn from the state she had BEFORE
+     * paying is the one still showing the R50 pass. */
+    paid: (said) => {
       setJustPaid(true);
       void read();
+      setWanted(said || null);
     },
   });
+
+  useEffect(() => {
+    if (!wanted || !market) return;
+    const piece = market.wall.find((one) => one.id === wanted);
+    if (piece) setSheet(piece);
+    setWanted(null);
+  }, [wanted, market]);
 
   /** One place every write goes through, so every one of them re-reads. */
   const doIt = useCallback(

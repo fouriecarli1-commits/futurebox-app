@@ -117,13 +117,44 @@ try {
 
   /* ── The address Paystack actually sends her to ───────────────────── */
   const before = reads;
-  await p.goto(`${server.url}/?paid=1&room=albumart`, { waitUntil: 'domcontentloaded' });
+  await p.goto(`${server.url}/?paid=1&room=albumart&piece=work-1`, { waitUntil: 'domcontentloaded' });
   await p.locator('nav[aria-label]').first().waitFor({ state: 'visible', timeout: 60000 });
-  await dismissDoor(p);
   await p.waitForTimeout(3000);
+
+  /* ── The door, BEFORE anything takes it down ───────────────────────────
+   *
+   * Carli, 22 September 2026, third time: *"Na betaling gooi hy my uit die
+   * kamer."* And this probe passed every time she said it.
+   *
+   * Because the line here used to be `await dismissDoor(p)` — before the
+   * assertions. The room was always chosen correctly; the door was landing
+   * on top of it, put there by the session restore resolving after the paid
+   * effect. The probe took the door down and then reported that nothing was
+   * covering the room.
+   *
+   * So the door is now the FIRST thing asserted, and it is not dismissed
+   * until after. A probe that tidies the screen before measuring it is a
+   * probe that measures its own tidying.
+   *
+   * Read from `data-atdoor` on the studio shell. The first version of this
+   * rule counted buttons saying "Not now" — which is the GREETING's skip
+   * button and a copilot button, neither of which is the door. It failed on
+   * a screen that was correct, which is the same mistake wearing the other
+   * hat. */
+  const door = await p.locator('[data-atdoor]').count();
+  check('coming back from the till does not put her at the door', door === 0,
+    'the room was chosen and then covered — from the outside that is being thrown out of it');
 
   const room = await p.locator('[data-copilot]').first().getAttribute('data-copilot').catch(() => null);
   check('paying puts her in the room she paid in', room === 'albumart', String(room));
+
+  /* And on the piece, not just the wall: the bid button lives inside the
+     opened sheet, so a room with everything shut still says no. */
+  const sheet = await p.locator('[data-artsheet], [role="dialog"]').first().count();
+  check('  and on the piece she paid against, not the wall', sheet > 0,
+    'she paid to bid on one picture and got a grid with nothing open');
+
+  await dismissDoor(p);
 
   const words = await p.locator('body').innerText();
   check('  and the room says the money came through',
@@ -138,18 +169,15 @@ try {
   check('the countdown is on the piece', /\d+u \d+m|\d+m (left|oor)/i.test(words),
     words.replace(/\s+/g, ' ').slice(0, 160));
 
-  /* Opened, because the bid button is on the sheet — which is the room
-     working as designed, and the thing she could not reach. */
-  const sleeve = p.locator('button').filter({ hasText: /Stof oor die Karoo/ }).first();
-  check('the piece can be opened', (await sleeve.count()) > 0);
-  if (await sleeve.count()) {
-    await sleeve.click();
-    await p.waitForTimeout(1200);
-    const sheet = await p.locator('body').innerText();
-    check('  and the bid button is there, not the R50 pass again',
-      /R280/.test(sheet) && !/R50/.test(sheet),
-      sheet.replace(/\s+/g, ' ').slice(0, 200));
-  }
+  /* The sheet is already open — the till carried the piece back and the room
+     opened it, which is the whole of her second complaint. So this no longer
+     clicks the sleeve to open it: clicking a tile that is already covered by
+     its own sheet times out, which is how this step first failed after the
+     fix landed. It reads what is on screen. */
+  const onSheet = await p.locator('body').innerText();
+  check('the bid button is there, not the R50 pass again',
+    /R280/.test(onSheet) && !/R50/.test(onSheet),
+    onSheet.replace(/\s+/g, ' ').slice(0, 200));
 
   /* ── The address is cleaned, so a refresh is a refresh ────────────── */
   const url = p.url();

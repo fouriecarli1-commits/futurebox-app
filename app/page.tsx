@@ -382,6 +382,25 @@ export default function FutureBoxHome() {
   /** Long enough for a request already in flight, short enough to forget. */
   const JUST_LEFT_MS = 8_000;
 
+  /**
+   * Whether this page load is a return from the till.
+   *
+   * Read once, during render, and held — because the effect that handles the
+   * payment strips `paid` off the address as soon as it has used it, and the
+   * effects that would otherwise open the door run AFTER it. Both of them
+   * read the URL themselves at first, and both saw a URL the paid effect had
+   * already cleaned, so both went on putting her at the door. That is the
+   * fault Carli reported three times: the room was chosen correctly and then
+   * covered.
+   *
+   * A ref rather than state: nothing re-renders because of it, and it must
+   * not change when the address does.
+   */
+  const fromTheTill = useRef(
+    typeof window !== 'undefined'
+    && new URL(window.location.href).searchParams.get('paid') === '1',
+  );
+
   // With an account behind the app, a refresh should not sign you out and a
   // sign-out in another tab should not leave this one looking signed in.
   useEffect(() => {
@@ -391,6 +410,27 @@ export default function FutureBoxHome() {
        to Google and came back is a page load, and a page load looks exactly
        like coming back to a tab. */
     const cameBack = cloud.justArrived();
+    /* ── A return from the till is not an arrival at the door ──────────
+     *
+     * Carli, 22 September 2026, for the third time: *"Na betaling gooi hy
+     * my uit die kamer."*
+     *
+     * The effect further down reads `?paid=1&room=…`, opens the studio and
+     * chooses the room. It is synchronous and it works. This one is a
+     * promise, so it resolves AFTERWARDS — and both of its branches end in
+     * `setAtDoor(true)`. There is no path through here that leaves anybody
+     * in a room after a page load. The room was chosen correctly and then
+     * the door was put on top of it, which from the outside is being thrown
+     * out of the room you just paid to be in.
+     *
+     * `audit/paidback.mjs` passed throughout, because it calls
+     * `dismissDoor()` before it looks — the probe took the door down and
+     * then reported that nothing was covering the room. Measuring past the
+     * fault, again.
+     *
+     * Read from the URL rather than from state: this runs during render,
+     * before the paid effect strips the flag off the address. */
+
     /* The acceptance, written onto the account now that there is one.
 
        Signing in with a provider leaves the page, so the box was ticked in a
@@ -403,7 +443,9 @@ export default function FutureBoxHome() {
       if (account) {
         setUser({ ...account, followers: 1 });
         sayHello();
-        if (cameBack) arrived();
+        /* Somebody coming back from a payment is already somewhere. */
+        if (fromTheTill.current) greeted.current = true;
+        else if (cameBack) arrived();
         else restored();
       }
     });
@@ -805,10 +847,11 @@ export default function FutureBoxHome() {
          marks the buy-in, and it lands on the server while she is still
          being redirected — so the room's own first read can be the state
          from before she paid, which is the fault wearing a second hat. */
-      copilotBus.handoff(room, 'paid', '');
+      copilotBus.handoff(room, 'paid', here.searchParams.get('piece') ?? '');
     }
     here.searchParams.delete('paid');
     here.searchParams.delete('room');
+    here.searchParams.delete('piece');
     window.history.replaceState(null, '', `${here.pathname}${here.search}${here.hash}`);
   }, [goToRoom, copilotBus]);
 
@@ -899,7 +942,12 @@ export default function FutureBoxHome() {
         handle: said.handle ?? `@${said.email.split('@')[0]}`,
         followers: 1,
       });
-      restored();
+      /* Same rule as the Supabase path above: a return from the till is not
+         an arrival at the door. Both paths had it, and only one of them was
+         fixed first — `audit/paidback.mjs` runs without a Supabase project,
+         so it was this one it caught. */
+      if (fromTheTill.current) greeted.current = true;
+      else restored();
     } catch {
       // Nothing readable there. Signed out, which is the safe answer.
     }
@@ -3276,6 +3324,16 @@ export default function FutureBoxHome() {
         <div
           {...(studioTab === 'booth' ? { 'data-booth': '' } : {})}
           {...(studioTab === 'albumart' ? { 'data-gallery': '' } : {})}
+          /* Whether the door is up, as a fact a probe can read.
+           *
+           * `audit/paidback.mjs` needed to assert that coming back from a
+           * payment does not land her at the door, and had nothing to read
+           * it from — so the first attempt counted buttons saying "Not now".
+           * That text is the GREETING's skip button and a copilot button,
+           * neither of which is the door, so the rule failed on a screen
+           * that was correct. The state is the state; expose it rather than
+           * make every probe infer it from furniture. */
+          {...(atDoor ? { 'data-atdoor': '' } : {})}
           className="fixed inset-0 z-50 bg-zinc-950 overflow-hidden"
         >
           {/* One column that scrolls, on a phone. Two panes that scroll

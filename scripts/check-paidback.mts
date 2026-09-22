@@ -92,12 +92,21 @@ ok('  and opens the room the till named',
    `audit/paidback.mjs` caught it by walking the address Paystack actually
    sends her to. No source rule could have: every part was wired and the
    sequence was wrong. */
-const arriving = page.slice(page.indexOf("searchParams.get('paid')"));
+/* The EFFECT, not the first mention.
+ *
+ * This used to slice from the first `searchParams.get('paid')` in the file.
+ * A second reader of that flag was added above it — a ref capturing, during
+ * render, whether this load is a return from the till, because the effects
+ * that would otherwise open the door run after this one has cleaned the
+ * address. The anchor then pointed at the ref and the window never reached
+ * the effect, so three rules failed on code that was correct. Anchored to
+ * the line that guards the effect instead. */
+const arriving = page.slice(page.indexOf("if (here.searchParams.get('paid') !== '1') return;"));
 ok('  and puts the studio over the home page, which goToRoom does not do',
   /setUploadModalOpen\(true\);[\s\S]{0,80}goToRoom\(room\)/.test(arriving.slice(0, 2000)),
   'choosing the room without opening the studio leaves her on the front page');
 ok('  and tells that room to read itself again',
-  /copilotBus\.handoff\(room, 'paid', ''\)/.test(page),
+  /copilotBus\.handoff\(room, 'paid', [^)]*\)/.test(page),
   'the webhook lands while she is being redirected, so the first read is the old wall');
 ok('  by handing off, because that room has not mounted yet',
   /handoff\(room, 'paid'/.test(page) && !/dispatch\(room, 'paid'/.test(page),
@@ -109,8 +118,22 @@ ok('  and cleans the address, so a reload is not a second arrival',
 /* ── The wall takes it, re-reads, and says so ─────────────────────────── */
 
 ok('the wall takes the payment and reads itself again',
-  /paid: \(\) => \{[\s\S]{0,200}?void read\(\)/.test(wall),
+  /paid: \([^)]*\) => \{[\s\S]{0,300}?void read\(\)/.test(wall),
   'arriving at the state from before the payment is the same nothing, one tap closer');
+/* ── And the two faults she reported on 22 September ─────────────────── */
+
+ok('  and the door is not raised on top of the room she paid into',
+  /fromTheTill/.test(page) && (page.match(/fromTheTill\.current/g) ?? []).length >= 2,
+  'both session-restore paths end in setAtDoor(true); each needs the guard, and'
+  + ' reading the flag inside them is too late because the paid effect strips it first');
+ok('  and the till carries WHICH piece back, not only which room',
+  /piece=\$\{encodeURIComponent\(piece\)\}/.test(till),
+  'the bid button is inside the opened piece, so the wall alone still answers no');
+ok('  and the room opens that piece once the wall carrying it has arrived',
+  /market\.wall\.find\(\(one\) => one\.id === wanted\)/.test(wall),
+  'a sheet built from an id alone is empty, and one from the wall she had before'
+  + ' paying is the one still offering the R50 pass');
+
 ok('  and says the money landed, where the money was spent',
   /art\.paidBack/.test(wall) && words.includes('"art.paidBack"'),
   'she had just been sent out to a till and back; silence is what she reported');
