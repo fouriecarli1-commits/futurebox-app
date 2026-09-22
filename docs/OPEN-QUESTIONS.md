@@ -5881,3 +5881,53 @@ matriksvou wat daardie dekodeerders uitvou — rekenkunde wat aan niemand
 behoort nie. Die knoppie sê "Surround (matriks)" en die nota daaronder sê
 uitdruklik dat dit **nie** 'n Dolby-lêer is nie, in albei tale. Vier reëls hou
 dit daar.
+
+## §AI · Die lys aannames was drie keer verkeerd, toe is die lys weg (22 September 2026)
+
+`WATKORT.sql` is die dag ná dit geskryf is vir die eerste keer teen haar regte
+projek geloop, en dit het **nege dinge** gevind wat kort. Dit is die punt van
+die lêer, en dit is ook die bewys dat die vorige manier stukkend was.
+
+### Wat dit gevind het
+
+Drie van die lêers is in `ALMAL.sql` en sou reggekom het deur dit te loop.
+**Twee was nie.** `arena.sql` en `abuse.sql` was op die `ALREADY` lys —
+sestien lêers wat uit die bundel gelaat is omdat iemand **geglo** het sy het
+hulle in Augustus een vir een geplak.
+
+Daardie geloof was verkeerd vir `cast.sql`, wat twee weke gekos het om 'n
+roete te diagnoseer wat heeltyd reg geantwoord het. Dit was weer verkeerd vir
+`arena.sql`, so die kompetisie-kamer roep drie tabelle wat nie bestaan nie. En
+vir `abuse.sql` — wat beteken die twee kolomme wat keer dat een mens honderd
+rekeninge maak, 'n e-possleutel en 'n IP-vingerafdruk op elke generasie, het
+**nog nooit bestaan nie**.
+
+### Die regstelling was nie om die lys reg te maak nie
+
+Om die lys 'n vierde keer reg te maak is dieselfde fout met ander name in.
+Die lys is weg. `ORDER` is nou elke skema-lêer — sewe-en-dertig, in 'n
+volgorde wat teen 'n regte Postgres bewys is — `ALREADY` is leeg, en **een
+plak ís die hele skema**. Daar is niks meer om te glo nie.
+
+Dit is net veilig omdat elke lêer twee keer kan loop, en dít word nie
+aanvaar nie: `check:sqlruns` pas al agt-en-dertig twee keer toe teen Postgres
+by elke loop.
+
+### Die wag wat moes saamgaan
+
+Die bundel se kop het `raise exception 'Loop eers supabase/events.sql'` gehad
+as `public.events` kort. Dit was die regte antwoord op die ou vorm en is nou
+presies agterstevoor: dit sou afgaan op 'n splinternuwe projek, wat die een
+geval is waarvoor dit geskryf is. `check:sqlbundle` se vier reëls daaroor is
+vervang deur hulle teenoorgestelde — die bundel moet daardie tabelle **maak**,
+en niks op pad in weier nie.
+
+### Nagegaan deur haar databasis na te maak
+
+Nie beredeneer nie. 'n Postgres met elke lêer behalwe arena, abuse, cast en
+mail, en met `afrikaans_reports.heard` laat val om by haar ouer loop van
+daardie lêer te pas. `WATKORT` het dieselfde nege rye gegee wat sy gesien
+het, tot op die reël. Die nuwe `ALMAL.sql` het skoon toegepas, en `WATKORT`
+het toe niks teruggegee nie.
+
+**Die les, weer: 'n lys van wat iemand glo reeds gedoen is, is nie data nie.**
