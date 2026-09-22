@@ -22,6 +22,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { wrote } from '../../lib/server/wrote';
 import { EXPENSIVE, refuseIfTooMany } from '@/app/lib/server/brake';
 import { configured, createFinetune, dropFinetune, finetuneStatus } from '@/app/lib/server/eleven';
 import { SOUND_CAPS } from '@/app/lib/plans';
@@ -92,11 +93,9 @@ export async function GET(request: Request): Promise<Response> {
       if (SETTLED.has(row.status)) return row;
       const live = await finetuneStatus(row.id);
       if (!live || live.status === row.status) return row;
-      await client
+      wrote(await client
         .from('finetunes')
-        .update({ status: live.status, why: live.why ?? null })
-        .eq('id', row.id)
-        .eq('owner', caller.id);
+        .update({ status: live.status, why: live.why ?? null }), 'the training job');
       return { ...row, status: live.status, why: live.why ?? null };
     }),
   );
@@ -242,7 +241,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: made.message }, { status: made.status });
   }
 
-  await client.from('finetunes').insert({
+  wrote(await client.from('finetunes').insert({
     id: made.finetune.id,
     owner: caller.id,
     name,
@@ -251,7 +250,7 @@ export async function POST(request: Request): Promise<Response> {
     tracks: files.length,
     status: made.finetune.status,
     why: made.finetune.why ?? null,
-  });
+  }), 'the training job');
 
   return Response.json({
     id: made.finetune.id,
@@ -287,6 +286,6 @@ export async function DELETE(request: Request): Promise<Response> {
   if (!owned) return Response.json({ message: 'Not found.' }, { status: 404 });
 
   await dropFinetune(id);
-  await client.from('finetunes').delete().eq('id', id).eq('owner', caller.id);
+  wrote(await client.from('finetunes').delete(), 'the training job');
   return new Response(null, { status: 204 });
 }

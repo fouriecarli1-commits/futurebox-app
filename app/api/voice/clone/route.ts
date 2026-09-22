@@ -17,6 +17,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { wrote } from '../../../lib/server/wrote';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { cloneVoice, configured, forgetVoice, noteVoiceTaken, voiceRoom } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
@@ -164,13 +165,13 @@ export async function POST(request: Request): Promise<Response> {
   // `consented_at` defaults to now() in the table, so the moment is already
   // kept; what is added here is the wording that was on the screen and where
   // it was accepted from.
-  await client.from('voices').insert({
+  wrote(await client.from('voices').insert({
     id: made.voiceId,
     owner: caller.id,
     name,
     consent_ip_hash: addressKey(address) || null,
     consent_text: VOICE_CONSENT,
-  });
+  }), 'the voice');
   return Response.json({ id: made.voiceId, name });
 }
 
@@ -199,6 +200,6 @@ export async function DELETE(request: Request): Promise<Response> {
   if (!owned) return Response.json({ message: 'Not found.' }, { status: 404 });
 
   await forgetVoice(id);
-  await client.from('voices').delete().eq('id', id).eq('owner', caller.id);
+  wrote(await client.from('voices').delete(), 'the voice');
   return new Response(null, { status: 204 });
 }

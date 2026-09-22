@@ -13,6 +13,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { wrote } from '../../lib/server/wrote';
 import { accountFor, send } from '@/app/lib/server/email';
 import { cancelledLetter } from '@/app/lib/server/letters';
 import { stopRenewing } from '@/app/lib/server/paystack';
@@ -77,10 +78,9 @@ export async function DELETE(request: Request): Promise<Response> {
 
   // Recorded only after Paystack agreed. Marking it cancelled first would tell
   // somebody their payments had stopped when they had not.
-  await client
+  wrote(await client
     .from('subscriptions')
-    .update({ status: 'non-renewing', updated_at: new Date().toISOString() })
-    .eq('owner', caller.id);
+    .update({ status: 'non-renewing', updated_at: new Date().toISOString() }), 'the subscription');
 
   /* The last letter they get from us.
 

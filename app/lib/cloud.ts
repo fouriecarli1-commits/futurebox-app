@@ -734,7 +734,12 @@ export async function removeTrack(trackId: string): Promise<void> {
   const account = await currentAccount();
   if (!account) return;
   await supabase.storage.from(BUCKET).remove([audioPath(account.id, trackId)]);
-  await supabase.from('tracks').delete().eq('id', trackId).eq('owner', account.id);
+  /* Checked, the way `pushTrack` above checks its upsert. A delete that
+     fails leaves the song in her Library after the screen has already taken
+     it off, so it comes back on the next load and looks like the delete
+     button does not work. */
+  const { error } = await supabase.from('tracks').delete().eq('id', trackId).eq('owner', account.id);
+  if (error) console.error(`cloud: the song was not removed: ${error.message}`);
 }
 
 /**

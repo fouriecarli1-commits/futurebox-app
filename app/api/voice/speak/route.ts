@@ -12,6 +12,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { wrote } from '../../../lib/server/wrote';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { guard } from '@/app/lib/server/safety';
 import {
@@ -310,7 +311,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     if (caller && client) {
-      await client.from('speech_runs').insert({ owner: caller.id, characters: text.length });
+      wrote(await client.from('speech_runs').insert({ owner: caller.id, characters: text.length }), 'what the read cost');
     }
 
     /* Null, not an empty list, when the alignment could not be read.
@@ -357,7 +358,7 @@ export async function POST(request: Request): Promise<Response> {
      because with a stream there is no "finished" to wait for on this side. A
      refused read never reaches here, which is what this line was for. */
   if (caller && client) {
-    await client.from('speech_runs').insert({ owner: caller.id, characters: text.length });
+    wrote(await client.from('speech_runs').insert({ owner: caller.id, characters: text.length }), 'what the read cost');
   }
 
   return new Response(read.body, {

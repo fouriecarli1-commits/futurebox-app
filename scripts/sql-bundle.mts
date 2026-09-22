@@ -137,8 +137,6 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
     'Die radar wat die paar mense hier vir mekaar voorstel.',
   subscriptions:
     'Lidmaatskappe en aankope. Sonder dit weet niks wie wat gekoop het nie.',
-  taste:
-    'Waarheen jy die meeste gaan en wat jy die meeste maak.',
   usage:
     'Elke generasie wat geloop het, wat dit gekos het, en teen watter model.',
   video:

@@ -15,6 +15,7 @@
  */
 
 import crypto from 'node:crypto';
+import { wrote } from '../../../lib/server/wrote';
 import { recordPurchase } from '@/app/lib/server/account';
 import { createClient } from '@supabase/supabase-js';
 import type { Tier } from '@/app/lib/plans';
@@ -134,13 +135,13 @@ async function setMembership(owner: string, tier: Tier, reference: string): Prom
   const db = createClient(url, service, { auth: { persistSession: false } });
   const renews = new Date();
   renews.setMonth(renews.getMonth() + 1);
-  await db.from('memberships').upsert({
+  wrote(await db.from('memberships').upsert({
     owner,
     tier,
     renews_at: renews.toISOString(),
     reference,
     updated_at: new Date().toISOString(),
-  });
+  }), 'the membership');
 }
 
 /**
@@ -170,7 +171,7 @@ async function rememberArrangement(owner: string, tier: Tier, customerCode: stri
   const client = db();
   if (!client) return;
   const arrangement = await arrangementOf(customerCode);
-  await client.from('subscriptions').upsert({
+  wrote(await client.from('subscriptions').upsert({
     owner,
     customer_code: customerCode,
     subscription_code: arrangement?.subscriptionCode || null,
@@ -180,7 +181,7 @@ async function rememberArrangement(owner: string, tier: Tier, customerCode: stri
     status: arrangement?.status ?? 'active',
     next_payment_at: arrangement?.nextPaymentAt ?? null,
     updated_at: new Date().toISOString(),
-  });
+  }), 'the subscription');
 }
 
 /** Whose subscription this customer code belongs to, from the first charge. */

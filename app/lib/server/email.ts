@@ -43,6 +43,7 @@
  */
 
 import crypto from 'node:crypto';
+import { wrote } from './wrote';
 import { admin } from './account';
 
 /** Where enquiries go when nothing else is set. */
@@ -329,7 +330,7 @@ async function note(
      about half of them. A generated key keeps the unique constraint honest
      without pretending the letter was deduped. */
   if (!letter.once) {
-    await client
+    wrote(await client
       .from('mail_log')
       .insert({
         dedupe_key: `${letter.kind}:${crypto.randomUUID()}`,
@@ -338,22 +339,13 @@ async function note(
         ok,
         detail,
         sent_at: when,
-      })
-      .then(
-        () => undefined,
-        () => undefined,
-      );
+      }), 'the letter we sent');
     return;
   }
 
-  await client
+  wrote(await client
     .from('mail_log')
-    .update({ ok, detail, sent_at: when })
-    .eq('dedupe_key', letter.once)
-    .then(
-      () => undefined,
-      () => undefined,
-    );
+    .update({ ok, detail, sent_at: when }), 'the letter we sent');
 }
 
 /**

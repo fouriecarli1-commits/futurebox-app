@@ -87,8 +87,17 @@ jobs:
       # failed on the argument parser before it reached any code. A script
       # nobody can run is worse than no script — the whole session's lesson,
       # in package.json.
+      # Run as `check:types` so `npm run checks` sweeps it in.
+      #
+      # It was `npm run typecheck`, which CI ran and the local sweep did not —
+      # the sweep parses this job for `npm run check:…` steps, and this was
+      # the one step in it that did not match. So the gate somebody runs
+      # before pushing was weaker than the gate that stops the push, and on
+      # 22 September 2026 a duplicate key in an object literal went to main
+      # through exactly that gap. The same command, under a name the sweep
+      # can see.
       - name: Typecheck
-        run: npm run typecheck
+        run: npm run check:types
 
       # The literal :root block in globals.css exists so the first paint is
       # right before any JavaScript runs. When it drifts from the theme engine
@@ -1014,6 +1023,8 @@ jobs:
       - name: Build
         run: npx next build
 
+      - name: No write to the database throws its answer away
+        run: npm run check:writes
       - name: Security claims still hold
         run: npm run check:security
 

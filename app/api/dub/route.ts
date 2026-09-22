@@ -36,6 +36,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { wrote } from '../../lib/server/wrote';
 import { EXPENSIVE, refuseIfTooMany } from '@/app/lib/server/brake';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { configured, dub, dubState, dubSubtitles, dubTranscript, dubbed } from '@/app/lib/server/eleven';
@@ -260,11 +261,9 @@ export async function GET(request: Request): Promise<Response> {
   if (caller && client && !settled) {
     /* Skipped when the row is where this answer came from: writing a row back
        onto itself is a round trip to say nothing. */
-    await client
+    wrote(await client
       .from('dubs')
-      .update({ status: state.state.status, error: state.state.error ?? null, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .eq('owner', caller.id);
+      .update({ status: state.state.status, error: state.state.error ?? null, updated_at: new Date().toISOString() }), 'the dubbing job');
 
     // The refund, claimed rather than decided. Two polls can see the same
     // failure at the same moment; only one of them marks the row, and only

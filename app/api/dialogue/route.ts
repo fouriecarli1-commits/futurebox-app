@@ -26,6 +26,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { wrote } from '../../lib/server/wrote';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { guard } from '@/app/lib/server/safety';
 import { configured, converse, stockVoices } from '@/app/lib/server/eleven';
@@ -157,7 +158,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   if (caller && client) {
-    await client.from('speech_runs').insert({ owner: caller.id, characters });
+    wrote(await client.from('speech_runs').insert({ owner: caller.id, characters }), 'what the read cost');
   }
 
   const wav = wavOf(said.spoken.pcm, said.spoken.rate);

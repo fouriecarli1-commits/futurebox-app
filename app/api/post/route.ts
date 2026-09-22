@@ -27,6 +27,7 @@
  */
 
 import crypto from 'node:crypto';
+import { wrote } from '../../lib/server/wrote';
 import { admin, metered } from '@/app/lib/server/account';
 import { handlerFor, type DuePost } from '@/app/lib/server/posting/handlers';
 
@@ -90,10 +91,9 @@ export async function GET(request: Request): Promise<Response> {
       /* A handler that does not exist is not a retry. It means a connector was
          removed or the row was written by a newer version of the app, and
          neither improves by waiting an hour. */
-      await client
+      wrote(await client
         .from('scheduled_posts')
-        .update({ state: 'failed', note: `no handler called ${post.handler}` })
-        .eq('id', post.id);
+        .update({ state: 'failed', note: `no handler called ${post.handler}` }), 'the post');
       failed += 1;
       continue;
     }
@@ -113,10 +113,9 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     if (outcome.ok) {
-      await client
+      wrote(await client
         .from('scheduled_posts')
-        .update({ state: 'sent', sent_at: new Date().toISOString(), note: '' })
-        .eq('id', post.id);
+        .update({ state: 'sent', sent_at: new Date().toISOString(), note: '' }), 'the post');
       sent += 1;
       continue;
     }
@@ -125,13 +124,12 @@ export async function GET(request: Request): Promise<Response> {
        counted this try, so five is five — a row that keeps coming back is
        failed here rather than looping until somebody notices. */
     const keepTrying = outcome.again && post.attempts < 5;
-    await client
+    wrote(await client
       .from('scheduled_posts')
       .update({
         state: keepTrying ? 'due' : 'failed',
         note: outcome.why.slice(0, 500),
-      })
-      .eq('id', post.id);
+      }), 'the post');
     if (keepTrying) again += 1;
     else failed += 1;
   }

@@ -14,6 +14,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { wrote } from '../../../lib/server/wrote';
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { configured, restage, stockVoices, type Performance } from '@/app/lib/server/eleven';
 import { PODCAST_CAPS } from '@/app/lib/plans';
@@ -187,7 +188,7 @@ export async function POST(request: Request): Promise<Response> {
 
   // Counted after it worked, so a failure never costs somebody their day.
   if (caller && client) {
-    await client.from('speech_runs').insert({ owner: caller.id, characters: 0 });
+    wrote(await client.from('speech_runs').insert({ owner: caller.id, characters: 0 }), 'what the read cost');
   }
 
   return new Response(done.audio, {

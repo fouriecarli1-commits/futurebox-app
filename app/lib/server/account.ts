@@ -265,7 +265,18 @@ export async function recordGeneration(
   const db = admin();
   if (!db) return;
   const machine = request ? addressKey(addressOf(request)) : '';
-  await db.from('generations').insert({
+  /* Checked, because this one really was failing.
+   *
+   * `abuse.sql` adds `email_key` and `ip_hash` to this table, and it had
+   * never been run — `supabase/WATKORT.sql` found that on 22 September 2026,
+   * weeks after the columns were written. Postgres refuses the whole insert
+   * when a named column does not exist, the supabase client returns
+   * `{ error }` rather than throwing, and this line dropped it. So every
+   * generation this app has ever made failed to record, in silence.
+   *
+   * The schema is fixed by running the bundle. The silence is fixed here:
+   * a write nobody looks at is a write that can fail for a month. */
+  const { error } = await db.from('generations').insert({
     owner: caller.id,
     kind,
     seconds: Math.round(seconds),
@@ -276,6 +287,12 @@ export async function recordGeneration(
     // counting function rather than a value everybody shares.
     ip_hash: machine || null,
   });
+  if (error) {
+    console.error(
+      `[usage] a generation was not recorded. owner=${caller.id} kind=${kind}`
+      + ` error=${error.message} — run supabase/ALMAL.sql if this names a column`,
+    );
+  }
 }
 
 /** What this person has bought for one track. */

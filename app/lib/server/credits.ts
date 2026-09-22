@@ -19,6 +19,7 @@
  */
 
 import { admin, callerFrom, callerIsOwner, metered, type Caller } from './account';
+import { wrote } from './wrote';
 import { budgetFor, capFor, monthKey, TIER_CREDITS } from '@/app/lib/credits';
 
 /**
@@ -80,12 +81,12 @@ export async function spend(
 export async function refund(owner: string, amount: number, ref?: string): Promise<void> {
   const client = admin();
   if (!client || amount <= 0) return;
-  await client.from('credit_entries').insert({
+  wrote(await client.from('credit_entries').insert({
     owner,
     amount,
     reason: 'refund',
     ref: ref ?? null,
-  });
+  }), 'the credit entry');
 }
 
 /** A purchase. Written only by the payment webhook, and once per reference. */

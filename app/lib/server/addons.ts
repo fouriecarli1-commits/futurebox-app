@@ -18,6 +18,7 @@
  */
 
 import { admin } from './account';
+import { wrote } from './wrote';
 
 export interface Owned {
   /** Add-on id → when it runs out, as an ISO instant. Only unexpired ones. */
@@ -88,9 +89,9 @@ export async function grantAddon(
 export async function rememberAddonPayer(customerCode: string, owner: string): Promise<void> {
   const client = admin();
   if (!client || !customerCode) return;
-  await client
+  wrote(await client
     .from('addon_customers')
-    .upsert({ customer_code: customerCode, owner }, { onConflict: 'customer_code' });
+    .upsert({ customer_code: customerCode, owner }, { onConflict: 'customer_code' }), 'the add-on customer');
 }
 
 /** Who a renewal belongs to, read back from that. */

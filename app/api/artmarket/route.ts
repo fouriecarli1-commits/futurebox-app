@@ -37,6 +37,7 @@
  */
 
 import { admin, callerFrom, callerIsOwner, metered } from '@/app/lib/server/account';
+import { wrote } from '../../lib/server/wrote';
 import { ownerEmails } from '@/app/lib/server/owners';
 import { filterSafe } from '@/app/lib/server/filtersafe';
 import {
@@ -1074,7 +1075,7 @@ export async function POST(request: Request): Promise<Response> {
          real price goes in `paid_rand` — which is the column the payout
          statement reads. Without it a R500 commission would have paid
          the artist as though it were a R200 auction. */
-      await client.from('art_works').insert({
+      wrote(await client.from('art_works').insert({
         artist: artist.id,
         title: (ask as RequestRow).song_title || 'Commission',
         path,
@@ -1082,7 +1083,7 @@ export async function POST(request: Request): Promise<Response> {
         paid_rand: (offer as OfferRow).rand,
         sold_to: (ask as RequestRow).buyer,
         sold_at: new Date().toISOString(),
-      });
+      }), 'the artwork listing');
       return Response.json({ delivered: true });
     }
 
@@ -1211,21 +1212,17 @@ export async function POST(request: Request): Promise<Response> {
            not the second: two people bidding in the same second would
            otherwise each set a clock, and the later one would quietly
            give the piece another thirty-six hours. */
-        await client
+        wrote(await client
           .from('art_works')
-          .update({ ends_at: endsAt() })
-          .eq('id', work.id)
-          .is('ends_at', null);
+          .update({ ends_at: endsAt() }), 'the artwork listing');
       } else if (closes - Date.now() < SNIPE_MINUTES * 60 * 1000) {
         /* ── The late bid pushes the end out ─────────────────────────
            Otherwise the thirty-six hours is theatre and the auction is
            really one second long: everybody waits for the end and the
            fastest connection wins. */
-        await client
+        wrote(await client
           .from('art_works')
-          .update({ ends_at: new Date(Date.now() + SNIPE_MINUTES * 60 * 1000).toISOString() })
-          .eq('id', work.id)
-          .is('won_by', null);
+          .update({ ends_at: new Date(Date.now() + SNIPE_MINUTES * 60 * 1000).toISOString() }), 'the artwork listing');
       }
       return Response.json({ bid: rand, next: rand + BID_STEP });
     }

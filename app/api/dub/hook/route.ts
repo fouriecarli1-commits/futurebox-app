@@ -57,6 +57,7 @@
  */
 
 import crypto from 'node:crypto';
+import { wrote } from '../../../lib/server/wrote';
 import { admin } from '@/app/lib/server/account';
 
 export const runtime = 'nodejs';
@@ -181,14 +182,9 @@ export async function POST(request: Request): Promise<Response> {
      `status` and `error` only. Not `refunded_at`, not `charged`: nothing that
      decides money is writable from an address on the open internet, however
      well signed. */
-  await client
+  wrote(await client
     .from('dubs')
-    .update({ status: said.status, error: said.error, updated_at: new Date().toISOString() })
-    .eq('id', said.id)
-    .then(
-      () => undefined,
-      () => undefined,
-    );
+    .update({ status: said.status, error: said.error, updated_at: new Date().toISOString() }), 'the dubbing job');
 
   return Response.json({ ok: true, noted: true });
 }

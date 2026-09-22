@@ -16,6 +16,7 @@
  */
 
 import { admin, metered } from '@/app/lib/server/account';
+import { wrote } from '../../lib/server/wrote';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -55,7 +56,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ message: 'That is not a visitor id.' }, { status: 400 });
   }
 
-  await client.from('presence').upsert({ visitor, seen_at: new Date().toISOString() });
+  wrote(await client.from('presence').upsert({ visitor, seen_at: new Date().toISOString() }), 'who is here');
   // Cheap, and it keeps the table a number rather than a history. Failing to
   // sweep is not worth failing the request over.
   void client.rpc('presence_sweep').then(

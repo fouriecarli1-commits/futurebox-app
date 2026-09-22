@@ -51,6 +51,7 @@
  */
 
 import { admin } from './account';
+import { wrote } from './wrote';
 
 /** The plan's roof, in minutes. Overridable because plans change. */
 export function monthlyMinutes(): number {
@@ -273,13 +274,9 @@ export async function note(seconds: number, kind: Kind, owner?: string | null): 
      asked again. */
   if (Date.now() < cached.until) cached = { ...cached, seconds: cached.seconds + whole };
 
-  await db
+  wrote(await db
     .from('kits_minutes')
-    .insert({ owner: owner ?? null, kind, seconds: whole })
-    .then(
-      () => undefined,
-      () => undefined,
-    );
+    .insert({ owner: owner ?? null, kind, seconds: whole }), 'the Kits minutes');
 
   /* And look at whether the roof is close enough to write about.
 

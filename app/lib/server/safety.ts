@@ -41,6 +41,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { wrote } from './wrote';
 import { screen, type Refusal, type Rule, type Surface } from '@/app/lib/moderation';
 import { admin, type Caller } from '@/app/lib/server/account';
 import { addressKey } from '@/app/lib/server/identity';
@@ -108,7 +109,7 @@ async function record(
     '';
 
   try {
-    await client.from('moderation_events').insert({
+    wrote(await client.from('moderation_events').insert({
       owner: caller?.id ?? null,
       surface,
       rule: refusal?.rule ?? 'unscreened',
@@ -116,7 +117,7 @@ async function record(
       decided_by: decidedBy,
       excerpt: text.slice(0, 200),
       ip_hash: addressKey(address) || null,
-    });
+    }), 'the moderation record');
   } catch {
     // Deliberately silent. See above.
   }

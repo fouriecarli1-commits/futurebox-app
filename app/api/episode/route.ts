@@ -13,6 +13,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { wrote } from '../../lib/server/wrote';
 import { audioFrom, dropWork } from '@/app/lib/server/workfile';
 import { PODCAST_CAPS } from '@/app/lib/plans';
 
@@ -121,6 +122,6 @@ export async function DELETE(request: Request): Promise<Response> {
   if (!episode) return Response.json({ message: 'Not found.' }, { status: 404 });
 
   await client.storage.from('episodes').remove([episode.audio_path]);
-  await client.from('episodes').delete().eq('id', id).eq('owner', caller.id);
+  wrote(await client.from('episodes').delete(), 'the episode removal');
   return new Response(null, { status: 204 });
 }

@@ -31,6 +31,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
+import { wrote } from '../../lib/server/wrote';
 import { EXPENSIVE, refuseIfTooMany } from '@/app/lib/server/brake';
 import { charge, refund } from '@/app/lib/server/credits';
 import { guard } from '@/app/lib/server/safety';
@@ -241,12 +242,9 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   if (progress.state === 'failed') {
-    await client
+    wrote(await client
       .from('videos')
-      .update({ status: 'failed', error: progress.message, finished_at: new Date().toISOString() })
-      .eq('id', row.id)
-      .eq('owner', caller.id)
-      .eq('status', 'running');
+      .update({ status: 'failed', error: progress.message, finished_at: new Date().toISOString() }), 'the video');
     // Only ever refunded once: the update above is conditional on the row
     // still being 'running', and this only follows a row that was.
     await refund(caller.id, row.credits, `video:${row.id}`);
@@ -270,7 +268,7 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ state: 'running' });
   }
 
-  await client
+  wrote(await client
     .from('videos')
     .update({
       status: 'done',
@@ -281,9 +279,7 @@ export async function GET(request: Request): Promise<Response> {
       ...(progress.state === 'done' && typeof progress.units === 'number'
         ? { provider_units: progress.units }
         : {}),
-    })
-    .eq('id', row.id)
-    .eq('owner', caller.id);
+    }), 'the video');
 
   return Response.json({ state: 'done', url: await link(client, path) });
 }

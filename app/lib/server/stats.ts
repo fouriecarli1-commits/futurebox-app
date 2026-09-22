@@ -13,6 +13,7 @@
  */
 
 import { admin } from './account';
+import { wrote } from './wrote';
 
 /** The things worth counting that nothing else records. */
 /**
@@ -102,13 +103,13 @@ export async function recordEvent(event: {
   });
   if (!error) return;
 
-  await client.from('events').insert({
+  wrote(await client.from('events').insert({
     kind: event.kind,
     category: event.category ?? null,
     ref: event.ref ?? null,
     owner: event.owner ?? null,
     visitor: event.visitor,
-  });
+  }), 'the event');
 }
 
 /**

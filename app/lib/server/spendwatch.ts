@@ -45,6 +45,7 @@
  */
 
 import { admin } from './account';
+import { wrote } from './wrote';
 import { OWNER, configured, tellOwner } from './email';
 import { PLAN_CREDITS, RAND_PER_USD, USD_PER_CREDIT, leftCredits, monthlyCredits, usedCredits } from './elevenceiling';
 import { leftSeconds, monthlyMinutes, usedSeconds } from './kitsminutes';
@@ -101,14 +102,9 @@ function rand(amount: number): string {
 async function release(key: string): Promise<void> {
   const db = admin();
   if (!db) return;
-  await db
+  wrote(await db
     .from('mail_log')
-    .delete()
-    .eq('dedupe_key', key)
-    .then(
-      () => undefined,
-      () => undefined,
-    );
+    .delete(), 'the letter we sent');
 }
 
 /**
