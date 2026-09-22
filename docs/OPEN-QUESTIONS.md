@@ -6098,3 +6098,42 @@ En `check:paidback` stroop nou die kommentaar uit `ArtMarket.tsx` voordat dit
 soek, want die nota bo daardie handler haal die **verkeerde** volgorde aan om
 te verduidelik hoekom dit verkeerd is. 'n Skandering wat die nota lees, vind
 wat dit soek in 'n kommentaar en sê niks oor die kode nie.
+
+## §AL · Drie reëls wat "genoeg" gemeet het in plaas van "watter" (22 September 2026)
+
+Ná §AK het dieselfde patroon drie keer in een aand opgeduik, so ek het die 157
+check-lêers deursoek vir die presiese vorm: 'n reël waarvan die hele
+voorwaarde 'n **telling** is oor die bevolking wat dit beweer om te dek.
+
+Die onderskeid wat uitgekom het:
+
+* 'n Drempel is **reg** wanneer dit net keer dat 'n skandering stilweg niks
+  vind nie — `files.length > 50` oor 'n gids.
+* Dit is **verkeerd** wanneer die bevolking self die dekking-belofte is. Dan
+  is "genoeg van hulle" nie 'n reël nie.
+
+Drie het geval, elkeen bewys deur 'n ware onderwerp te verwyder:
+
+**`check:belowtabs`** vind 11 kamers onder die balk en waak met `> 5` — ses
+van speling. 'n Kamer wat so geskryf is dat die patroon dit mis, val uit die
+lys en word aan niks gehou nie. Bewys met twee mutasies van die album art
+kamer: die klaring verwyder word gevang; die klaring verwyder **plus** die
+klas as `z-${50}` geskryf word nie gevang nie. Die lêer se eie nota teken aan
+dat dit al een keer gebeur het (`z-50` teenoor `z-[50]`, met die studio). Die
+patroon is toe verbreed en die telling is gelos. Die 11 kamers is nou genoem.
+
+**`check:brake`** het net die supplier-**import** gelees om te besluit watter
+roetes dit dek. Twee roetes bel ElevenLabs met hulle eie `fetch`:
+`transcribe` (wat rem, maar aan niks gehou is nie) en `eleven/dictionary`
+(wat **glad nie gerem het nie** — in nóg die lys nóg die vrystellings, want
+niks kon dit sien om te vra nie). Die skandering tel nou die gasheer ook, en
+die woordeboek-roete is gerem.
+
+**`check:backlayers`** het net `z-[nn]` met hakies gelees. Die album art
+kamer se drie blaaie is `fixed inset-0 z-50` en was in geen lys nie. Hulle
+registreer wél 'n laag, so niks was stukkend nie — dit uithaal sou groen
+gewees het, wat dieselfde ding een commit later is.
+
+Al drie het nou 'n reël wat die **verbreding self** beskerm: draai die patroon
+terug en dit sê so, eerder as dat die telling stilweg met een sak en bo die
+vloer bly.

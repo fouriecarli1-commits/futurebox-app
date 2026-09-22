@@ -32,6 +32,7 @@
  */
 
 import crypto from 'node:crypto';
+import { EXPENSIVE, refuseIfTooMany } from '@/app/lib/server/brake';
 import { SAY_RULES, asRules, locators } from '@/app/lib/server/sayit';
 
 export const runtime = 'nodejs';
@@ -109,6 +110,22 @@ export async function GET(request: Request): Promise<Response> {
   if (!wanted || !sameSecret(url.searchParams.get('key') ?? '', wanted)) {
     return new Response('no', { status: 404 });
   }
+
+  /* ── Braked, like every other route that reaches a supplier ────────
+ 
+     Found on 22 September 2026, and only because `check:brake` was
+     widened: it read the supplier IMPORT to decide which routes it
+     covers, and this one calls `api.elevenlabs.io` with its own fetch.
+     So it was in neither the covered list nor the exemptions — not
+     excused, just invisible.
+ 
+     After the secret, not before it: a wrong key is answered with a 404
+     that calls nobody, and braking that would let a stranger guessing
+     keys eat the owner's own budget. `EXPENSIVE` rather than
+     `GENERATION` because this WRITES to her ElevenLabs account, and a
+     page opened by hand twice a month has no use for three a minute. */
+  const flood = refuseIfTooMany('eleven-dictionary', request, EXPENSIVE);
+  if (flood) return flood;
 
   const apiKey = process.env.ELEVENLABS_API_KEY ?? '';
   if (!apiKey) {

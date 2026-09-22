@@ -64,7 +64,20 @@ for (const name of readdirSync(dir)) {
     .replace(/^\s*\/\/.*$/gm, '');
   /* A full-screen overlay above the studio. Below z-50 is furniture inside a
      page; at and above it, it is covering the app. */
-  if (!/fixed inset-0[^"'`]*z-\[(?:[5-9]\d|\d{3,})\]/.test(source)) continue;
+  /* Bracketed AND bare.
+ 
+     Tailwind's own scale needs no brackets, so `z-50` is as much an
+     overlay as `z-[60]`, and this read only the bracketed form. The album
+     art room's three sheets are written `fixed inset-0 z-50` and were
+     therefore in no list here — not excused, invisible. They do register a
+     layer, so nothing was broken; taking it out would have been green,
+     which is the same thing one commit later.
+ 
+     `check:belowtabs` had this exact bug, with the studio, and the probe
+     found a button under the bar in a room this repo's own check had never
+     looked at. Written down in both files now, because it is a property of
+     how Tailwind is written rather than of either check. */
+  if (!/fixed inset-0[^"'`]*z-(?:\[(?:[5-9]\d|\d{3,})\]|(?:[5-9]\d|\d{3,}))/.test(source)) continue;
   overlays.push(name);
   const registers = /useBackLayer\(/.test(source);
   const excused = PAGE_TRACKS[name] ?? NOT_A_SCREEN[name];
@@ -76,6 +89,18 @@ for (const name of readdirSync(dir)) {
 }
 
 ok('there are overlays to check', overlays.length >= 4, `${overlays.length} found`);
+
+/* And the pattern still reaches the bare form, which is the whole of the
+   widening above. Narrow it back and this rule says so, rather than the
+   count quietly dropping by one and staying over the floor. */
+const bare = overlays.filter(
+  (name) => !/fixed inset-0[^"'`]*z-\[/.test(
+    readFileSync(join(dir, name), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''),
+  ),
+);
+ok('  including the ones whose layer is written without brackets',
+  bare.length >= 1,
+  'the pattern has narrowed back to z-[nn], so a room written z-50 is invisible here again');
 
 /* An excuse has to still be about a file that exists and still paints one. */
 for (const [name, why] of Object.entries({ ...PAGE_TRACKS, ...NOT_A_SCREEN })) {

@@ -135,12 +135,57 @@ for (const path of files) {
     const layer = Number(found[1] ?? found[2]);
     if (layer < barZ) rooms.push(path);
   }
-  for (const found of [] as RegExpMatchArray[]) {
-    if (Number(found[1]) < barZ) rooms.push(path);
-  }
 }
-const under = [...new Set(rooms)];
-ok('there are rooms below the bar to check', under.length > 5, `${under.length} found`);
+const under = [...new Set(rooms)].sort();
+
+/**
+ * The rooms that are below the bar, named.
+ *
+ * ── Why a list and not a count ───────────────────────────────────────
+ *
+ * This was `under.length > 5`, against eleven rooms — six of slack. The
+ * rule below it holds every room the scan FINDS to reserving its strip,
+ * so the only way to fail it is to be found. A room written so the scan
+ * misses it is not held to anything, and the count still passes.
+ *
+ * That is not hypothetical: the note above records it happening, when
+ * the pattern read `z-[50]` and not `z-50`, so the studio — which holds
+ * Make a song — was not in the list at all, and `audit/underbar.mjs`
+ * found a button under the bar in it on the probe's first run.
+ *
+ * The pattern was widened and the count was left as it was. Proven
+ * again on 22 September 2026 with two mutations of the album art room:
+ * dropping its clearance is caught; dropping its clearance while the
+ * class is written `z-${'{'}50{'}'}` is not.
+ *
+ * So the population is named. A room that stops being seen fails here
+ * rather than quietly stopping being checked, and a room that is added
+ * has to be written down — which is the same bargain `check:everycheck`
+ * and `check:handover` make.
+ */
+const KNOWN: readonly string[] = [
+  'app/components/Account.tsx',
+  'app/components/ArtMarket.tsx',
+  'app/components/OutOfCredits.tsx',
+  'app/components/PostToLive.tsx',
+  'app/components/ProBooth.tsx',
+  'app/components/RoomScreen.tsx',
+  'app/components/Search.tsx',
+  'app/components/SongScreen.tsx',
+  'app/components/ThemeStudio.tsx',
+  'app/components/VocalBooth.tsx',
+  'app/page.tsx',
+];
+
+const lost = KNOWN.filter((one) => !under.includes(one));
+ok('every room known to be below the bar is still seen by the scan',
+  lost.length === 0,
+  `${lost.join(', ')} — written so the pattern misses it, so nothing holds it to`
+  + ' reserving the strip, and the bar eats the bottom of it in silence');
+const fresh = under.filter((one) => !KNOWN.includes(one));
+ok('  and a new one is written down rather than just counted',
+  fresh.length === 0,
+  `${fresh.join(', ')} — add it to KNOWN, or this list rots into a number again`);
 
 const bare: string[] = [];
 for (const path of under) {

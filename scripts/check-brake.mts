@@ -116,7 +116,31 @@ const REPORTS_ONLY: Record<string, string> = {
   'app/api/watch/route.ts': 'reports where the allowance stands',
 };
 
-const SUPPLIER = /from '@\/app\/lib\/server\/(eleven|kits|musicai)'/;
+/**
+ * A route that reaches a supplier — through the module, or around it.
+ *
+ * ── The hole this closes ─────────────────────────────────────────────
+ *
+ * This read the import alone, and the rule under it holds every route it
+ * FINDS to braking a retry loop. A route that calls a supplier without
+ * going through one of the three server modules is therefore held to
+ * nothing, and `spenders.length > 10` passed on twenty-three either way.
+ *
+ * Two of them were doing exactly that on 22 September 2026, found by
+ * asking which routes name a supplier's host and are not in this list:
+ *
+ *   · `app/api/transcribe/route.ts` fetches `api.elevenlabs.io/v1/
+ *     speech-to-text` itself. It brakes, and always did — but nothing
+ *     was holding it to, so taking the brake out would have been green.
+ *   · `app/api/eleven/dictionary/route.ts` fetches the same host and had
+ *     no brake at all, in neither this list nor the exemptions, because
+ *     nothing could see it to ask.
+ *
+ * So the host counts as well as the import. Going around the module is
+ * not the thing being policed here — that is its own argument — but it
+ * cannot also be a way out of this.
+ */
+const SUPPLIER = /from '@\/app\/lib\/server\/(eleven|kits|musicai)'|api\.elevenlabs\.io|api\.kits\.ai|api\.music\.ai/;
 
 const walk = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
@@ -129,6 +153,17 @@ const walk = (dir: string): string[] =>
 
 const spenders = walk('app/api').filter((path) => SUPPLIER.test(readFileSync(path, 'utf8')));
 ok('there are supplier routes to check', spenders.length > 10, `${spenders.length} found`);
+
+/* And the scan really does reach past the import, which is the whole of
+   the widening above. A pattern that quietly stopped matching the host
+   would put this rule back where it was, silently. */
+const byHost = spenders.filter(
+  (path) => !/from '@\/app\/lib\/server\/(eleven|kits|musicai)'/.test(readFileSync(path, 'utf8')),
+);
+ok('  including the ones that call a supplier without the module',
+  byHost.length >= 2,
+  `${byHost.length} found — the host pattern has stopped matching, so going around`
+  + ' the module is a way out of this check again');
 
 const unbraked: string[] = [];
 for (const path of spenders) {
