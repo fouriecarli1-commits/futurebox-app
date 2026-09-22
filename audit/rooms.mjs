@@ -60,7 +60,7 @@ export const ROOMS = [
 ];
 
 /**
- * The same twelve, as they are written on the door in Afrikaans.
+ * The same rooms, as they are written on the door in Afrikaans.
  *
  * Keyed by the English name rather than listed in parallel, so a room that
  * gains an entry here and not there is a missing key and not a silently
@@ -84,6 +84,12 @@ export const ROOMS_AF = {
   Podcast: 'Potgooi',
   Adverts: 'Advertensies',
   'Collab Radar': 'Collab Radar',
+  /* Added 22 September 2026, after `notcut` failed on it. The room went into
+     ROOMS when it was built and never into here, so a probe walking the app
+     in Afrikaans had no door to knock on. The mechanism worked: a missing
+     key FAILED rather than quietly walking twelve rooms and calling it
+     thirteen, which is the whole reason this table is keyed. */
+  'Album art': 'Album kunswerk',
 };
 
 /**

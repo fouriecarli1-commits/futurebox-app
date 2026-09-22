@@ -91,15 +91,34 @@ function ratio(a: readonly number[], b: readonly number[]): number {
 const failures: string[] = [];
 for (const preset of PRESETS) {
   const surface = SURFACES.find((one) => one.id === preset.surface);
-  if (surface?.mode !== 'light') continue;
+  const light = surface?.mode === 'light';
   const vars = themeVariables(preset as Theme);
   // The worst ground the app puts text on: the zinc-800 chip, not the page.
   const ground = channels(vars['--fb-surface-800']);
 
+  /* ── Dark presets are checked too, as of 22 September 2026 ───────────
+   *
+   * This loop used to open with `if (surface?.mode !== 'light') continue;`
+   * — so the contrast guarantee, in a file whose whole subject is the
+   * contrast guarantee, had never looked at a single dark theme. It was
+   * honest about it in the comment above and that made it no less of a
+   * hole: the generator only solved light surfaces, and nothing anywhere
+   * measured the six dark ones.
+   *
+   * `audit/contrast.mjs` eventually found it, in the one dark theme that is
+   * always on for everybody — the gallery — at 4.05:1. The six a member can
+   * choose were never walked by any probe and never will be, which is why
+   * the arithmetic has to be asserted here instead.
+   *
+   * Surface stops only. Accent ramps are deliberately left alone on dark by
+   * `accentRamp` — a bright emerald reads well on near-black and dimming it
+   * to a ratio would be a change to how the app looks, not a fix. Whether
+   * accent TEXT on dark clears AA is a real question and a separate one. */
   for (const stop of TEXT_STOPS) {
     const got = ratio(channels(vars[`--fb-surface-${stop}`]), ground);
     if (got < AA_BODY) failures.push(`  ${preset.id}: surface-${stop} is ${got.toFixed(2)}:1 on surface-800`);
   }
+  if (!light) continue;
   for (const family of FAMILIES) {
     for (const stop of ACCENT_TEXT_STOPS) {
       const got = ratio(channels(vars[`--fb-${family}-${stop}`]), ground);
@@ -223,5 +242,5 @@ if (failures.length > 0) {
 
 console.log(
   `check:theme — globals.css matches the default theme (${Object.keys(want).length} variables), ` +
-    'and every light preset clears AA for body text.',
+    'every preset clears AA for surface text on either mode, and every light preset for its accents too.',
 );

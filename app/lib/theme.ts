@@ -280,6 +280,23 @@ const DARK_L = [96, 91, 83, 71, 58, 46, 36, 28, 20, 13, 7];
  * hierarchy the app is drawing with them — body, secondary, hint — survives.
  */
 const LIGHT_TEXT_TARGETS = [15, 13, 11, 8.5, 6.5, 5.3, 4.5];
+/**
+ * The same idea on a dark surface, at ratios a dark surface can reach.
+ *
+ * Not the light list. Text on a dark theme sits at worst on the 800 stop —
+ * a chip — which is 20% lightness, and pure white on that is only about
+ * 12.6:1. Asking for 15 asks for something that does not exist, and the
+ * solver answers the only way it can: 100. The light targets flattened
+ * stops 50, 100 and 200 to the same pure white and took the top off the
+ * ramp. So the ladder is redrawn inside what is reachable, same shape.
+ *
+ * And the chip really is the worst case here, checked rather than assumed:
+ * `audit/contrast.mjs` reported the gallery's "Back to FutureBox" as
+ * rgb(161,144,135) on rgb(57,49,45), which is the 400 stop on the 800 stop.
+ * Solving against the wall instead left that pair at 4.4:1 and still short.
+ */
+const DARK_TEXT_TARGETS = [11.5, 10, 8.5, 7, 6, 5.2, 4.5];
+
 const LIGHT_L = [12, 17, 24, 32, 40, 45, 54, 68, 84, 93, 98];
 /** Accents keep a conventional ramp in both modes. */
 const ACCENT_L = [95, 89, 80, 70, 60, 51, 43, 35, 28, 22, 15];
@@ -337,6 +354,32 @@ function lightnessForContrast(h: number, s: number, groundLuminance: number, tar
     else hi = mid;
   }
   return lo;
+}
+
+/**
+ * The dimmest this hue can be and still clear `target` on a DARK ground.
+ *
+ * The mirror of `lightnessForContrast`, and it has to be a separate function
+ * rather than the same one: on a light ground contrast falls as lightness
+ * rises, so the solver walks up and keeps the lightest value that passes. On
+ * a dark ground the relationship inverts — contrast RISES with lightness —
+ * so the same search converges on 100 and every text stop comes out white,
+ * which is a ramp with no hierarchy left in it.
+ *
+ * Dimmest-that-passes, so the step from body to secondary to hint survives
+ * exactly the way it does on a light surface.
+ */
+function lightnessForContrastOnDarkGround(
+  h: number, s: number, groundLuminance: number, target: number,
+): number {
+  let lo = 0;
+  let hi = 100;
+  for (let i = 0; i < 24; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (contrast(luminance(h, s, mid), groundLuminance) >= target) hi = mid;
+    else lo = mid;
+  }
+  return hi;
 }
 
 /**
@@ -456,16 +499,41 @@ export function themeVariables(theme: Theme): Record<string, string> {
 
      The 800 stop keeps its fixed lightness, so there is nothing circular here:
      the reference is a constant of the ramp, and only the stops above it move. */
-  const groundLuminance = light
-    ? relativeLuminance(hslToRgb(surface.hue, surface.sat, surfaceRamp[8]))
-    : pageLuminance;
-  const surfaceScale = light
-    ? surfaceRamp.map((l, i) =>
-        i < LIGHT_TEXT_TARGETS.length
-          ? lightnessForContrast(surface.hue, surface.sat, groundLuminance, LIGHT_TEXT_TARGETS[i])
-          : l,
-      )
-    : surfaceRamp;
+  /* The same worst case in both modes: the 800 stop, which is the ground a
+     chip or a selected row puts text on, and the one furthest from the page
+     in the direction that costs contrast. On a light surface that is the
+     DARKEST ground; on a dark surface it is the LIGHTEST. Either way the 800
+     stop keeps its fixed lightness, so the reference is a constant of the
+     ramp and only the stops above it move. */
+  const groundLuminance = relativeLuminance(hslToRgb(surface.hue, surface.sat, surfaceRamp[8]));
+
+  /* ── Dark surfaces are solved too, as of 22 September 2026 ────────────
+
+     This branch used to hand back `surfaceRamp` untouched: only light
+     surfaces got a contrast solve, and every dark theme took the raw DARK_L
+     lightnesses on trust. `audit/contrast.mjs` found what that costs — the
+     gallery's own 400 and 500 stops, which carry the room's chrome, at
+     4.15:1 and 4.05:1 against its wall, under the 4.5:1 body text needs.
+
+     The tell was already in the file: `[data-booth]` in `globals.css` has a
+     hand-written comment saying its 400/500/600 had to be brightened
+     "bright enough to read, now that the whole room uses them". Somebody hit
+     this once and fixed one room by hand instead of the ramp. */
+  const surfaceScale = surfaceRamp.map((l, i) => {
+    if (i >= LIGHT_TEXT_TARGETS.length) return l;
+    if (light) {
+      return lightnessForContrast(surface.hue, surface.sat, groundLuminance, LIGHT_TEXT_TARGETS[i]);
+    }
+    /* Raised, never redrawn. `DARK_L` is a ramp somebody chose and it reads
+       well; all that was missing is a floor under it. Taking the brighter of
+       the two keeps every stop that already passes exactly where it was and
+       moves only the ones that do not — so this fixes a contrast fault
+       without becoming a redesign of six themes nobody asked for. */
+    const needed = lightnessForContrastOnDarkGround(
+      surface.hue, surface.sat, groundLuminance, DARK_TEXT_TARGETS[i],
+    );
+    return Math.max(l, needed);
+  });
   // The neutral chip accent text sits on: `bg-zinc-800`, the 800 stop.
   const chipRgb = hslToRgb(surface.hue, surface.sat, surfaceRamp[8]);
   // Text on a saturated accent fill stays dark whatever the surface does,

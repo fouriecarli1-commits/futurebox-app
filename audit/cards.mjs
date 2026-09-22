@@ -55,6 +55,11 @@ const NEEDS = {
   'Sound trainer': 'accounts configured; a trained sound belongs to one',
   Live: 'the live tables; without them the room says so instead of drawing',
   Podcast: 'a show set up, which needs the podcast tables',
+  /* Same position as Live and Podcast, and it had no line: the gallery is
+     read from the art tables, which this probe deliberately runs without,
+     so the room says so instead of drawing. A zero with no reason beside it
+     is a claim nobody can check. */
+  'Album art': 'the art tables; without them the gallery is empty and the room says so',
 };
 
 

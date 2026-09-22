@@ -127,8 +127,28 @@ const flatOnes = async (allowed) =>
         style.backgroundImage !== 'none' ||
         (alpha(style.backgroundColor) > 0.05 && style.backgroundColor !== behind);
 
+      /* A segment of a segmented control is boxed by its track.
+       *
+       * The Album art room's "Works / Artists / Mine" is the control every
+       * phone uses to say "one screen, three ways": a filled track with the
+       * live segment lifted out of it, and the other two deliberately bare.
+       * Reported as two buttons with no box — but giving each its own border
+       * turns one control into three buttons, which is worse and is the
+       * opposite of what the room was rebuilt for.
+       *
+       * So the exemption is narrow: a `role="tab"` whose `role="tablist"`
+       * parent is itself painted. An unpainted tablist gives no box to
+       * inherit and still fails, and a bare button anywhere else is
+       * untouched. */
+      const track = one.closest('[role="tablist"]');
+      const inPaintedTrack =
+        one.getAttribute('role') === 'tab' &&
+        track !== null &&
+        (getComputedStyle(track).backgroundImage !== 'none' ||
+          alpha(getComputedStyle(track).backgroundColor) > 0.05);
+
       const how = (one.className || '').toString().slice(0, 120);
-      if (!bordered && !filled) out.push({ label: label.slice(0, 40), why: 'no border and no fill', how });
+      if (!bordered && !filled && !inPaintedTrack) out.push({ label: label.slice(0, 40), why: 'no border and no fill', how });
       else if (box.height < thumb) {
         out.push({ label: label.slice(0, 40), why: `${Math.round(box.height)}px tall`, how });
       }

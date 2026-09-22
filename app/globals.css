@@ -578,10 +578,10 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
   --fb-surface-50: 246 244 244;
   --fb-surface-100: 235 231 229;
   --fb-surface-200: 217 210 206;
-  --fb-surface-300: 190 178 172;
-  --fb-surface-400: 161 144 135;
-  --fb-surface-500: 131 113 103;
-  --fb-surface-600: 103 88 81;
+  --fb-surface-300: 200 191 186;
+  --fb-surface-400: 188 176 169;
+  --fb-surface-500: 177 163 156;
+  --fb-surface-600: 167 151 142;
   --fb-surface-700: 80 69 63;
   --fb-surface-800: 57 49 45;
   --fb-surface-900: 37 32 29;
