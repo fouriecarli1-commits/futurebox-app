@@ -22,8 +22,12 @@ export default function OwnSoundCheck() {
      is not where a sound is trained — see `make.ownSoundTrain`. */
   const [toTrainer, setToTrainer] = useState(false);
   const [upgrades, setUpgrades] = useState(0);
+  /* Which song was carried out to the album art room, if any. Recorded
+     rather than acted on: a probe needs to read that the door sent the
+     song, not to go through it. */
+  const [art, setArt] = useState('');
   return (
-    <div id="mounted" data-ready="yes" data-channel={went ? 'yes' : 'no'} data-trainer={toTrainer ? 'yes' : 'no'} data-upgrades={String(upgrades)}>
+    <div id="mounted" data-ready="yes" data-channel={went ? 'yes' : 'no'} data-trainer={toTrainer ? 'yes' : 'no'} data-upgrades={String(upgrades)} data-art={art}>
       <MakeMusic
         userPlan="studio"
         onUpgrade={() => setUpgrades((n) => n + 1)}
@@ -33,6 +37,7 @@ export default function OwnSoundCheck() {
         onMade={() => {}}
         onGoToChannel={() => setWent(true)}
         onGoToSound={() => setToTrainer(true)}
+        onGoToArt={(song) => setArt(song.id)}
         engineReady
       />
     </div>

@@ -50,10 +50,30 @@
  * And "Another" says what it costs and that it replaces what is there. It
  * always did both and said neither: the price was only on the first press,
  * and nothing warned that the picture on screen would be gone.
+ *
+ * ── The other kind of cover ──────────────────────────────────────────────
+ *
+ * Carli, 22 September 2026: *"Kyk asb in make a song en channel dat daar by
+ * cover art 'n opsie is vir real art."*
+ *
+ * Everything above this line makes a picture with a machine. The album art
+ * room sells the other kind — a one-off painted by a person, sold once — and
+ * it existed with no way in from the two places somebody is actually looking
+ * at a song and thinking about its cover. A room reachable only from the rail
+ * is a room nobody arrives at while the thought is in their head.
+ *
+ * So the choice is offered here, in both states, because it is a real choice
+ * in both: before there is a cover, and after one has been drawn and is not
+ * good enough.
+ *
+ * `onRealArt` is REQUIRED, not optional. An optional door is a door that gets
+ * forgotten at the second call site and fails silently there — which is the
+ * shape of most of the faults in this repo. Required means the compiler
+ * refuses a room that mounts a sleeve with no way through to the artists.
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Check, Image as ImageIcon, Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { Check, Image as ImageIcon, Loader2, Palette, RefreshCw, Trash2 } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
@@ -64,12 +84,19 @@ export default function Sleeve({
   title,
   genre,
   style,
+  onRealArt,
   onShort,
 }: {
   trackId: string;
   title: string;
   genre: string;
   style: string;
+  /**
+   * Out to the album art room, carrying this song.
+   *
+   * Required on purpose — see the note at the top of this file.
+   */
+  onRealArt: () => void;
   /**
    * Handed the refusal body so the top-up panel can open where it belongs.
    *
@@ -181,6 +208,23 @@ export default function Sleeve({
     }
   };
 
+  /* Written once and used in both states of this panel, so the door cannot
+     exist on one of them and be missed on the other. */
+  const realArt = (
+    <>
+      <button
+        type="button"
+        onClick={onRealArt}
+        data-realart
+        className="min-h-[44px] w-full py-2.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-2"
+      >
+        <Palette className="w-3.5 h-3.5" />
+        {t('cover.real')}
+      </button>
+      <Note>{t('cover.realWhy')}</Note>
+    </>
+  );
+
   return (
     <div className="space-y-2">
       {url ? (
@@ -228,19 +272,25 @@ export default function Sleeve({
               cover per song and a new one overwrites it — there is no way
               back to the picture on screen once another is drawn. */}
           <Note>{t('cover.againWarns', 'Another draws a new one and replaces this. There is no way back to this picture.')}</Note>
+          {/* Still a choice once a machine has drawn one. Somebody looking at
+              a cover they are not happy with is exactly who this is for. */}
+          {realArt}
         </>
       ) : (
-        <button
-          type="button"
-          onClick={() => void make()}
-          disabled={busy}
-          className="min-h-[44px] w-full py-2.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-2 disabled:opacity-60"
-        >
-          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
-          {busy
-            ? t('cover.making', 'Drawing the sleeve')
-            : `${t('cover.make')} — ${CREDITS.cover} ${t('video.credits', 'credits')}`}
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => void make()}
+            disabled={busy}
+            className="min-h-[44px] w-full py-2.5 rounded-xl text-sm bg-zinc-950 border border-zinc-700 text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
+            {busy
+              ? t('cover.making', 'Drawing the sleeve')
+              : `${t('cover.make')} — ${CREDITS.cover} ${t('video.credits', 'credits')}`}
+          </button>
+          {realArt}
+        </>
       )}
       {problem && <p className="text-xs text-rose-400 leading-snug">{problem}</p>}
     </div>

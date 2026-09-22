@@ -52,35 +52,111 @@ ok('  and nothing can ask it to start open', !/startShut/.test(card.replace(/\/\
 const forced = files.filter((one) => /startShut|defaultOpen|alwaysOpen/.test(read(one).replace(/\/\*[\s\S]*?\*\//g, ' ')));
 ok('  and no panel asks', forced.length === 0, forced.join(', '));
 
-/* ── The one fold that opens, and the reason it is allowed to ──────────
- 
+/* ── The folds that open, and the reason each is allowed to ────────────
+
    `History` takes `startOpen`, and `Channel` passes it for "Your videos".
    That is not a room showing everything at once: the `Card` around it is
    shut like every other, so nothing is on the screen until somebody asks
    for it — the prop only decides whether the list inside needs a SECOND
    press once they have. "Ek het nou net 'n video gegenerate … en nou kry
    ek dit nie in my channel nie" is the reason it is not two presses.
- 
+
    Bounded rather than trusted. An exception nobody counts is how the rule
    goes back to "every card starts shut except the ones that do not" — so
-   this pins it to one call site, inside a Card, with the default the other
-   way. A second one fails here on the day it is written. */
+   every call site is named below with what it sits inside and why, and one
+   that is not named fails here on the day it is written. That happened the
+   first time on 22 September 2026, to the album art room, which is the
+   rule doing its job: the second exception had to be argued rather than
+   added.
+
+   A named table rather than a count, for the reason `check:everycheck` and
+   `check:handover` are: the point is not that the list is right, it is
+   that adding one makes somebody say which kind it is, in writing. */
 const strip = (source: string): string => source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
 ok('the list card opens shut unless it is asked',
   /startOpen = false/.test(read('History.tsx')),
   'History now opens by default, so every room that shows one does too');
-const opens = files
-  .filter((one) => one !== 'History.tsx')
-  .flatMap((one) => [...strip(read(one)).matchAll(/startOpen/g)].map(() => one));
-ok('  and exactly one panel asks it to, inside a shut card',
-  opens.length === 1 && opens[0] === 'Channel.tsx',
-  opens.length === 0 ? 'nobody asks — the prop is dead, take it out' : `${[...new Set(opens)].join(', ')}`);
-if (opens.length === 1 && opens[0] === 'Channel.tsx') {
-  const source = strip(read('Channel.tsx'));
-  const at = source.indexOf('startOpen');
-  ok('  and the card around it is a Card, which starts shut',
-    /<Card\b/.test(source.slice(Math.max(0, at - 900), at)),
-    'the list is open on arrival with nothing folded over it');
+
+const ALLOWED: Readonly<Record<string, {
+  /** What the opened fold sits inside, which must itself start shut. */
+  readonly inside: RegExp;
+  /** Whether it may open on arrival with nothing asked for. */
+  readonly always: boolean;
+  readonly why: string;
+}>> = {
+  'Channel.tsx': {
+    inside: /<Card\b/,
+    always: true,
+    why: 'the list of videos, inside a Card that is shut. One press, not two, to see a video just made',
+  },
+  /* Carli, 22 September 2026: *"Kyk asb in make a song en channel dat daar
+     by cover art 'n opsie is vir real art."* Somebody arriving from a
+     song's cover panel is handed straight to the shelf that puts a piece
+     ON that song, with the song already chosen — and a preselection inside
+     a shut drawer is the advert fault, where the next room really was
+     filled in and every card was closed over it.
+
+     `always: false` is what keeps this an exception and not a hole: it
+     opens only when a song was carried in. Opened from the rail, the room
+     is folded like every other. */
+  'ArtMarket.tsx': {
+    inside: /<Fold\b/,
+    always: false,
+    why: 'the shelf, when the room was opened from a song\u2019s cover and that song is already chosen in it',
+  },
+};
+
+/**
+ * Where `startOpen` is PASSED, not where it is declared.
+ *
+ * The first version of this read `indexOf('startOpen')`, which in a file
+ * that both defines the fold and uses it lands on `startOpen = false` in
+ * the parameter list — a declaration, four hundred lines above the call —
+ * and then measured what sat around that. It failed a correct file and
+ * printed `startOpen={}`, which is the tell: the rule had found no call at
+ * all and was reporting on one anyway.
+ *
+ * So: every `startOpen` is walked back to the `<` that opens its tag, and
+ * only a capitalised tag — a component — counts as a call site.
+ */
+function passesStartOpen(source: string): Array<{ at: number; value: string }> {
+  const found: Array<{ at: number; value: string }> = [];
+  for (const hit of source.matchAll(/\bstartOpen\b(?:=\{([^}]*)\})?/g)) {
+    const open = source.lastIndexOf('<', hit.index);
+    if (open === -1 || !/[A-Z]/.test(source[open + 1] ?? '')) continue;
+    found.push({ at: open, value: hit[1] ?? 'true' });
+  }
+  return found;
+}
+
+const opens = [...new Set(
+  files.filter((one) => one !== 'History.tsx').filter((one) => passesStartOpen(strip(read(one))).length > 0),
+)];
+const unexcused = opens.filter((one) => !(one in ALLOWED));
+ok('  and every panel that asks to open is named here, with its reason',
+  opens.length > 0 && unexcused.length === 0,
+  opens.length === 0 ? 'nobody asks — the prop is dead, take it out' : unexcused.join(', '));
+/* And the other direction, so a reason cannot outlive the fold it excused. */
+const outlived = Object.keys(ALLOWED).filter((one) => !opens.includes(one));
+ok('  and no reason is left behind for a panel that no longer asks',
+  outlived.length === 0, outlived.join(', '));
+
+for (const one of opens.filter((each) => each in ALLOWED)) {
+  const source = strip(read(one));
+  for (const use of passesStartOpen(source)) {
+    ok(`  ${one}: the fold around it starts shut`,
+      ALLOWED[one].inside.test(source.slice(Math.max(0, use.at - 900), use.at + 40)),
+      'it is open on arrival with nothing folded over it');
+    /* The substance of the exception: a fold allowed to open only on a
+       condition must actually BE conditional. `startOpen` hard-wired to
+       true is the room showing everything at once, whatever the note
+       beside it says. */
+    if (!ALLOWED[one].always) {
+      ok(`  ${one}: and it only opens when it was asked for`,
+        !/^\s*true\s*$/.test(use.value),
+        `startOpen={${use.value}} — the reason says "only when", so it cannot be always`);
+    }
+  }
 }
 
 /* ── A panel is a fold, not a heading ──────────────────────────────────

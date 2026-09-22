@@ -924,6 +924,12 @@ jobs:
       - name: Every door into a room carries, or says why it does not
         run: npm run check:handover
 
+      # The cover panel made a picture with a machine and offered nothing
+      # else, while a room full of painters sat one door away with no way in
+      # from either place somebody looks at a song.
+      - name: Cover art offers real art, in both states of the panel
+        run: npm run check:realart
+
       # Every card on the front page plays the thing it names. Two were
       # pointing at the same lecture — one of them a named episode by two
       # real people, the other an invented maker on an invented label —
@@ -1051,7 +1057,7 @@ jobs:
           - group: make
             probes: check:makeroom check:songform check:staff check:heard2 check:singvoices check:simple check:bringsong check:songscreen check:artistname check:cards check:probooth check:studioroute check:lanes check:boothsideways check:boothmagnet check:blankguard check:bigphoto check:logoshot check:wordsteady check:hintfits
           - group: rooms
-            probes: check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:copilotcarry check:paidwalk check:spotlight check:videocover check:podlanguage check:podvideo check:nameupload check:oops
+            probes: check:accountscreen check:addonroom check:taste check:queueroom check:presenterdesk check:photoscreen check:cast check:liveroom check:buildon check:collabroom check:collabbooth check:invite check:hookfile check:videolang check:videowords check:songwindow check:videohome check:sharesheet check:legalpage check:storyboard check:videodesk check:adreport check:adruns check:adcarry check:copilotcarry check:paidwalk check:realartwalk check:spotlight check:videocover check:podlanguage check:podvideo check:nameupload check:oops
           - group: whole
             probes: check:firsthour check:writing check:wide check:afrikaansscreen check:spotlight check:photosong check:singview check:buttonlook check:notcut check:twice check:subscription check:playbutton check:signinwith check:help check:quizroom check:webdest
           # Both need a real browser for what they measure rather than for

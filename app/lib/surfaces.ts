@@ -709,6 +709,22 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
     ops: {
       paid:
         "the studio's own, not yours. It is sent when somebody comes back from paying, so the wall reads itself again. Never choose it: you cannot know whether a payment happened, and saying one did when it did not is the worst thing this room could say",
+      /* ── Arriving from a song's cover panel ────────────────────────
+
+         Carli, 22 September 2026: *"Kyk asb in make a song en channel
+         dat daar by cover art 'n opsie is vir real art."*
+
+         The cover panel in both of those rooms now offers this room as
+         the other kind of picture, and it sends the song it was opened
+         from. Without it somebody lands on a wall of tiles having lost
+         the one fact they arrived with, and has to find their own song
+         again in a list further down — which is the shape of the fault
+         she reported about paying.
+
+         The studio's own, like `paid`, and for the same reason: the
+         model cannot know which song a person is standing on. */
+      for_song:
+        "the studio's own, not yours. It carries the song somebody opened this room from, so a piece they win goes onto it. Never choose it: you do not know which song they came from, and naming the wrong one puts a painting on a stranger's track",
     },
     seeds: [
       {

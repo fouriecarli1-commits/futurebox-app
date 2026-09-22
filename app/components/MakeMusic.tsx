@@ -92,6 +92,7 @@ export default function MakeMusic({
   onMade,
   onGoToChannel,
   onGoToSound,
+  onGoToArt,
   engineReady,
 }: {
   userPlan: Plan;
@@ -127,6 +128,13 @@ export default function MakeMusic({
   onGoToChannel: () => void;
   /** Into the Sound trainer, which is where a sound is actually trained. */
   onGoToSound: () => void;
+  /**
+   * Out to the album art room, with this song already chosen there.
+   *
+   * The cover panel offers two kinds of picture and only one of them is made
+   * here — see the note at the top of `Sleeve.tsx`.
+   */
+  onGoToArt: (song: { id: string; title: string }) => void;
   engineReady: boolean;
 }) {
   const { t, lang } = useLang();
@@ -1648,6 +1656,7 @@ export default function MakeMusic({
                       title={track.title}
                       genre={track.genre}
                       style={track.style ?? ''}
+                      onRealArt={() => onGoToArt({ id: track.id, title: track.title })}
                     />
                     {playing === track.id && (
                       <NowPlaying track={track} audio={audioRef.current} blob={playingBlob} />

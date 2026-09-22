@@ -68,6 +68,7 @@ export default function Channel({
   onUpgrade,
   email,
   onEdit,
+  onGoToArt,
 }: {
   reloadKey: number;
   onUpgrade: () => void;
@@ -83,6 +84,14 @@ export default function Channel({
    * the thing they want to change.
    */
   onEdit?: (trackId: string) => void;
+  /**
+   * Out to the album art room, with this song already chosen there.
+   *
+   * Required, unlike `onEdit` above: the cover panel offers two kinds of
+   * picture, and a room that mounts the panel without this one would offer
+   * only the machine's. See the note at the top of `Sleeve.tsx`.
+   */
+  onGoToArt: (song: { id: string; title: string }) => void;
 }): React.ReactElement {
   const { t } = useLang();
 
@@ -776,6 +785,7 @@ export default function Channel({
                     title={track.title}
                     genre={track.genre}
                     style={track.style ?? ''}
+                    onRealArt={() => onGoToArt({ id: track.id, title: track.title })}
                   />
                 ) : (
                   <Cover

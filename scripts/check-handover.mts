@@ -181,6 +181,13 @@ const mustBrief: Readonly<Record<string, string>> = {
   'booth|onBooth': 'a song being taken out of the studio to be sung',
   'booth|onOpenInBooth': 'a song somebody sent through the collab room',
   'make|onBuildOn': 'building on somebody else’s song',
+  /* Carli, 22 September 2026: *"Kyk asb in make a song en channel dat daar
+     by cover art 'n opsie is vir real art."* Somebody who presses this is
+     standing on one particular song, and the gallery is a wall of tiles
+     that has no way of knowing which. The id alone is not enough either:
+     the copilot there has to be told a person is shopping for a cover, or
+     it opens as a general explainer about splits and windows. */
+  'albumart|onGoToArt': 'a song whose cover is being decided',
 };
 for (const [key, what] of Object.entries(mustBrief)) {
   const door = doors.find((one) => one.key === key);

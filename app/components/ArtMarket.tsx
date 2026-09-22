@@ -518,12 +518,22 @@ function Sleeve({
  */
 function Fold({
   label,
+  startOpen = false,
   children,
 }: {
   readonly label: string;
+  /**
+   * Open on arrival.
+   *
+   * Only read at mount — a fold that re-opened itself whenever a prop
+   * changed would fight the person who just shut it. The one caller that
+   * needs it later remounts this with a `key`, which is the honest way to
+   * say "this is a different fold now".
+   */
+  readonly startOpen?: boolean;
   readonly children: React.ReactNode;
 }): React.ReactElement {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(startOpen);
   return (
     <section className="border-t border-[var(--lyn)]">
       <h3>
@@ -707,6 +717,8 @@ export default function ArtMarket(): React.ReactElement {
    * the room answering with stale state, which is the fault this whole
    * handoff exists to avoid. So it waits for the read. */
   const [wanted, setWanted] = useState<string | null>(null);
+  /** The song this room was opened from, when it was opened off a cover. */
+  const [forSong, setForSong] = useState<string | null>(null);
   useCopilotOps('albumart', {
     /* `said` is the piece she paid against, when the till knew one.
      *
@@ -721,6 +733,14 @@ export default function ArtMarket(): React.ReactElement {
       void read();
       setWanted(said || null);
     },
+    /* The song somebody opened this room from, off a cover panel.
+     *
+     * Carli, 22 September 2026: *"Kyk asb in make a song en channel dat daar
+     * by cover art 'n opsie is vir real art."* The door is in `Sleeve.tsx`;
+     * this is the other side of it. Arriving with the song means the shelf
+     * below already knows where a won piece is going, instead of asking her
+     * to find the track she was looking at thirty seconds ago. */
+    for_song: (said) => setForSong(said || null),
   });
 
   useEffect(() => {
@@ -877,6 +897,25 @@ export default function ArtMarket(): React.ReactElement {
           className="mx-4 mt-3 rounded-xl border border-[var(--lyn)] bg-[var(--blad)] px-3 py-2.5 text-[14px]"
         >
           {t('art.paidBack')}
+        </p>
+      )}
+
+      {/* Arrived from a song's cover panel, and says so.
+
+          A wall of paintings with no memory of why you opened it is the
+          same room for somebody browsing and somebody shopping for one
+          particular track. The song's own name is here because an id is
+          not a reassurance. */}
+      {forSong && (
+        <p
+          role="status"
+          data-forsong={forSong}
+          className="mx-4 mt-3 rounded-xl border border-[var(--lyn)] bg-[var(--blad)] px-3 py-2.5 text-[14px] leading-relaxed"
+        >
+          <span className="font-semibold text-[color:var(--ink)]">
+            {songs.find((one) => one.id === forSong)?.title ?? ''}
+          </span>{' '}
+          {t('art.forSong')}
         </p>
       )}
 
@@ -1069,10 +1108,15 @@ export default function ArtMarket(): React.ReactElement {
           )}
 
           {market && (
-            <Fold label={t('art.put')}>
+            /* `key` so a song arriving after this drawer was already on
+               screen remounts the fold open, with the song chosen. Without
+               it `startOpen` is read once at mount and the handoff lands in
+               a panel nobody can see. */
+            <Fold key={forSong ?? ''} label={t('art.put')} startOpen={Boolean(forSong)}>
               <PutOnSong
                 owned={market.bought}
                 songs={songs}
+                preset={forSong}
                 onPut={(work, trackId) => doIt({ what: 'wear', work, trackId })}
                 t={t}
               />
@@ -1628,16 +1672,19 @@ function Popout({
 function PutOnSong({
   owned,
   songs,
+  preset,
   onPut,
   t,
 }: {
   readonly owned: readonly Owned[];
   readonly songs: readonly Track[];
+  /** The song this room was opened from, already chosen. */
+  readonly preset?: string | null;
   readonly onPut: (work: string, trackId: string) => Promise<boolean>;
   readonly t: (key: string) => string;
 }): React.ReactElement {
   const [piece, setPiece] = useState('');
-  const [song, setSong] = useState('');
+  const [song, setSong] = useState(preset ?? '');
   const [busy, setBusy] = useState(false);
 
   if (owned.length === 0) {

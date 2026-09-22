@@ -3679,6 +3679,30 @@ export default function FutureBoxHome() {
                 }}
                 onGoToChannel={() => goToRoom('channels')}
                 onGoToSound={() => goToRoom('sound')}
+                /* The other kind of cover.
+
+                   Carli, 22 September 2026: *"Kyk asb in make a song en
+                   channel dat daar by cover art 'n opsie is vir real
+                   art."* The cover panel makes a picture with a machine;
+                   the album art room sells one painted by a person. The
+                   song travels with her, so a piece she wins there has
+                   somewhere to go without her finding the track again.
+
+                   `handoff` rather than `dispatch`: at the moment this
+                   fires the art room is not mounted yet. */
+                onGoToArt={(song) => {
+                  goToRoom('albumart');
+                  copilotBus.handoff('albumart', 'for_song', song.id);
+                  /* And the copilot there is told why, not just the room.
+                     Carrying the value without the reason is the exact
+                     shape of the hand-off she reported three times — see
+                     `check:handover`. */
+                  copilotBus.handoff(
+                    'albumart',
+                    'brief',
+                    `${t('brief.fromCover', 'They came from a song’s cover panel, looking for album art for this song.')} (${song.title})`,
+                  );
+                }}
               />
             )}
 
@@ -3697,6 +3721,30 @@ export default function FutureBoxHome() {
                 onEdit={(id) => {
                   setEditSong(id);
                   goToRoom('studio');
+                }}
+                /* The other kind of cover.
+
+                   Carli, 22 September 2026: *"Kyk asb in make a song en
+                   channel dat daar by cover art 'n opsie is vir real
+                   art."* The cover panel makes a picture with a machine;
+                   the album art room sells one painted by a person. The
+                   song travels with her, so a piece she wins there has
+                   somewhere to go without her finding the track again.
+
+                   `handoff` rather than `dispatch`: at the moment this
+                   fires the art room is not mounted yet. */
+                onGoToArt={(song) => {
+                  goToRoom('albumart');
+                  copilotBus.handoff('albumart', 'for_song', song.id);
+                  /* And the copilot there is told why, not just the room.
+                     Carrying the value without the reason is the exact
+                     shape of the hand-off she reported three times — see
+                     `check:handover`. */
+                  copilotBus.handoff(
+                    'albumart',
+                    'brief',
+                    `${t('brief.fromCover', 'They came from a song’s cover panel, looking for album art for this song.')} (${song.title})`,
+                  );
                 }}
               />
             )}

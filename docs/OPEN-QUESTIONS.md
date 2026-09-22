@@ -6001,3 +6001,62 @@ Die bedrae staan uitgeskryf in `plans.ts` eerder as ingevoer:
 is 'n sirkel — en die sirkel faal **nie die build nie**, dit faal by
 module-init en het drie koste-checks platgetrek. `check:artmarket` hou die
 vier kaarte teen `START_RAND` en `UNIQUE_RAND`.
+
+## §AK · Die probe het die paneel self oopgemaak en toe berig dat dit toe is (22 September 2026)
+
+Carli: *"Kyk asb in make a song en channel dat daar by cover art 'n opsie is
+vir real art."*
+
+Die omslag-paneel het net een soort prent aangebied — die een wat 'n masjien
+teken. Die album art kamer, wat die ander soort verkoop, was net van die
+kantlys af bereikbaar. 'n Kamer wat net van die kantlys af bereikbaar is, is
+'n kamer waar niemand aankom terwyl die gedagte nog in hulle kop is nie.
+
+### Verpligtend, nie opsioneel nie
+
+`onRealArt` is 'n **verpligte** prop op `Sleeve`. 'n Opsionele deur is 'n deur
+wat by die tweede oproepplek vergeet word en daar stilweg misluk — wat die
+vorm van die meeste foute in hierdie repo is. Verpligtend beteken die
+kompileerder weier 'n kamer wat die paneel monteer sonder 'n pad na die
+kunstenaars. Dit het onmiddellik twee probe-bladsye gevang.
+
+### Die fout wat drie keer 'n groen check gehad het
+
+`audit/realart.mjs` het die knoppie gedruk en berig dat die deur nie daar is
+nie — teen 'n build wat dit gehad het.
+
+`toRoom` roep `unfold`, wat elke kontrole met `aria-expanded="false"` oopmaak.
+**Cover art is een van hulle**, want dit maak 'n paneel oop en sê so vir 'n
+skermleser. Die paneel was dus reeds oop toe die probe daar aankom, en die
+klik het dit toegemaak.
+
+```
+await cover.click();           ← die paneel was al oop; dit maak dit toe
+```
+
+Presies dieselfde vorm as `audit/paidback.mjs` wat die deur afgehaal het
+voordat dit daarvoor gesoek het. 'n Probe wat die skerm verander voordat dit
+meet, meet sy eie verandering. Dit vra nou eers in watter toestand die paneel
+is.
+
+Om dit te vind het 'n gebouede build met `console.log` in die handler gekos —
+en die log het die antwoord in een reël gegee: daar was 'n klik **voor** die
+probe se eerste klik.
+
+### En 'n reël wat 'n tweede uitsondering laat argumenteer het
+
+`check:folded` het geval op `startOpen` in die album art kamer: dit het presies
+een oproepplek toegelaat, in `Channel.tsx`, met die nota *"'n tweede een faal
+hier op die dag wat dit geskryf word."* Dit het.
+
+Die reël is nou 'n genoemde tabel — soos `check:handover` se `PLAIN` — met 'n
+rede per inskrywing, wat in watter houer dit sit, en of dit **altyd** mag
+oopmaak. Die album art een mag nie: `startOpen={Boolean(forSong)}` open net
+wanneer 'n liedjie saamgekom het. Die reël hou dit daaraan, sodat die
+uitsondering nie stilweg 'n gat word nie.
+
+Die eerste weergawe van daardie herskrywing het `indexOf('startOpen')`
+gebruik, wat in 'n lêer wat die vou **definieer** én gebruik op die
+parameterlys land — vierhonderd reëls bo die oproep. Dit het 'n korrekte lêer
+laat faal en `startOpen={}` gedruk: die teken dat die reël niks gevind het en
+in elk geval daaroor berig het.

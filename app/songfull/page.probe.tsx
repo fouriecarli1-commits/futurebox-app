@@ -61,6 +61,7 @@ const TRACKS: Track[] = [
 
 export default function SongFull() {
   const [ready, setReady] = useState(false);
+  const [art, setArt] = useState('');
 
   useEffect(() => {
     void (async () => {
@@ -81,8 +82,16 @@ export default function SongFull() {
 
   if (!ready) return <p className="p-6 text-zinc-400">making the songs…</p>;
   return (
-    <div className="min-h-screen bg-zinc-950 p-4">
-      <Channel reloadKey={1} email="probe@futurebox.test" onUpgrade={() => undefined} />
+    <div className="min-h-screen bg-zinc-950 p-4" data-art={art}>
+      <Channel
+        reloadKey={1}
+        email="probe@futurebox.test"
+        onUpgrade={() => undefined}
+        /* Recorded, not followed: the room next door is not mounted here,
+           and what a probe needs to know is that the door carried the song
+           — see `audit/realart.mjs`. */
+        onGoToArt={(song) => setArt(song.id)}
+      />
     </div>
   );
 }

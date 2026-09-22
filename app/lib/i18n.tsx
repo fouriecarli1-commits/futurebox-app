@@ -448,6 +448,8 @@ export const STRINGS: Dict = {
   "brief.fromStudio": { en: "They came from the studio, where they were editing this song of their own and decided to sing it themselves rather than generate it again:", af: "Hulle kom van die studio af, waar hulle aan hierdie eie liedjie gewerk het en besluit het om dit self te sing eerder as om dit weer te laat maak:" },
   "brief.fromBuildOn": { en: "They came from the hooks room, building on somebody else\u2019s song. The style on the canvas is that song\u2019s; the words are theirs to write and must not be that song\u2019s.", af: "Hulle kom van die hooks-kamer af en bou voort op iemand anders se liedjie. Die styl op die doek is daardie liedjie s\u2019n; die woorde is hulle eie om te skryf en mag nie daardie liedjie s\u2019n wees nie." },
   "art.paidBack": { en: "Your payment came through. The piece below is up to date \u2014 open it to bid.", af: "Jou betaling het deurgekom. Die stuk hieronder is op datum \u2014 maak dit oop om te bie." },
+  "art.forSong": { en: "You came here from a song. Win or buy a piece and it goes onto that song \u2014 it is already chosen under Mine.", af: "Jy het van \u2019n liedjie af hier gekom. Wen of koop \u2019n stuk en dit gaan op daardie liedjie \u2014 dit is reeds onder Myne gekies." },
+  "brief.fromCover": { en: "They came from a song\u2019s cover panel, looking for album art for this song. They are deciding between a picture a machine draws and a one-off painted by a person. Anything they win or buy here can go straight onto that song.", af: "Hulle het van \u2019n liedjie se omslagpaneel af gekom en soek omslagkuns vir daardie liedjie. Hulle besluit tussen \u2019n prent wat \u2019n masjien teken en \u2019n enkelstuk wat \u2019n mens geskilder het. Wat hulle ook al hier wen of koop, kan reguit op daardie liedjie gaan." },
   "art.empty": {
     en: "Nothing is hanging yet. Our artists are working.",
     af: "Daar hang nog niks nie. Ons kunstenaars werk.",
@@ -1549,6 +1551,8 @@ export const STRINGS: Dict = {
   "cover.alt": { en: "Cover art for this song", af: "Omslagkuns vir hierdie liedjie" },
   "cover.failed": { en: "The cover could not be made.", af: "Die omslag kon nie gemaak word nie." },
   "cover.slow": { en: "That is taking longer than usual. Try again in a moment.", af: "Dit vat langer as gewoonlik. Probeer netnou weer." },
+  "cover.real": { en: "Real art by an artist \u2014 from R200", af: "Regte kuns deur \u2019n kunstenaar \u2014 vanaf R200" },
+  "cover.realWhy": { en: "A one-off piece painted by a person, sold once and never again. It opens the art wall with this song already chosen, so whatever you win goes straight onto it.", af: "\u2019n Enkelstuk wat deur \u2019n mens geskilder is, een keer verkoop en nooit weer nie. Dit maak die kunsmuur oop met hierdie liedjie reeds gekies, sodat wat jy ook al wen dadelik daarop gaan." },
   "canvas.another": { en: "Press again for another", af: "Druk weer vir nog een" },
   "canvas.ideas": { en: "ideas", af: "idees" },
   "canvas.len.4": { en: "A single beat. A logo sting, a cutaway.", af: "Een slag. \u2019n Logo-stoot, \u2019n oorsnit." },
