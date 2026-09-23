@@ -143,6 +143,22 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          `START_RAND` and `UNIQUE_RAND`, so the card still cannot drift
          from what the till charges. */
       'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
+      /* ── The two things that were sold and were on no card ────────────
+         Found 24 September 2026, going through the plans against what the
+         platform actually charges for.
+
+         The marketing desk is a real product at R199 a month, and it
+         appeared on neither the sales page nor the account screen — it
+         could only be found by already being inside the adverts room. A
+         price nobody browsing prices can see is not a price.
+
+         Dubbing is the sharper one. It is 162 credits a minute, the
+         dearest thing here by a distance, and Maker gives 90 a month — so
+         a Maker member cannot dub a single minute and nothing said so
+         until they tried. The line says which plan it starts at rather
+         than leaving somebody to find the wall. */
+      'The marketing desk — the market read, the week and the queue — R199 a month on top of any plan, including Free.',
+      'Dubbing an episode into another language is the dearest thing here: 162 credits a minute, so it needs Studio or Label.',
     ],
   },
   maker: {
@@ -160,6 +176,22 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Post to your own channels',
       'Every workshop',
       'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
+      /* ── The two things that were sold and were on no card ────────────
+         Found 24 September 2026, going through the plans against what the
+         platform actually charges for.
+
+         The marketing desk is a real product at R199 a month, and it
+         appeared on neither the sales page nor the account screen — it
+         could only be found by already being inside the adverts room. A
+         price nobody browsing prices can see is not a price.
+
+         Dubbing is the sharper one. It is 162 credits a minute, the
+         dearest thing here by a distance, and Maker gives 90 a month — so
+         a Maker member cannot dub a single minute and nothing said so
+         until they tried. The line says which plan it starts at rather
+         than leaving somebody to find the wall. */
+      'The marketing desk — the market read, the week and the queue — R199 a month on top of any plan, including Free.',
+      'Dubbing is 162 credits a minute — more than this plan holds, so it starts at Studio.',
     ],
   },
   studio: {
@@ -196,6 +228,22 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Ask FutureBox to boost a collab',
       'The full radar — every item, every reason',
       'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
+      /* ── The two things that were sold and were on no card ────────────
+         Found 24 September 2026, going through the plans against what the
+         platform actually charges for.
+
+         The marketing desk is a real product at R199 a month, and it
+         appeared on neither the sales page nor the account screen — it
+         could only be found by already being inside the adverts room. A
+         price nobody browsing prices can see is not a price.
+
+         Dubbing is the sharper one. It is 162 credits a minute, the
+         dearest thing here by a distance, and Maker gives 90 a month — so
+         a Maker member cannot dub a single minute and nothing said so
+         until they tried. The line says which plan it starts at rather
+         than leaving somebody to find the wall. */
+      'The marketing desk — the market read, the week and the queue — R199 a month on top of any plan, including Free.',
+      'Dubbing into another language, in the same voice — 162 credits a minute out of your 190.',
     ],
   },
   label: {
@@ -216,6 +264,22 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'The feed uncapped — every item, no daily ceiling anywhere',
       'A say in which workshops get made',
       'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
+      /* ── The two things that were sold and were on no card ────────────
+         Found 24 September 2026, going through the plans against what the
+         platform actually charges for.
+
+         The marketing desk is a real product at R199 a month, and it
+         appeared on neither the sales page nor the account screen — it
+         could only be found by already being inside the adverts room. A
+         price nobody browsing prices can see is not a price.
+
+         Dubbing is the sharper one. It is 162 credits a minute, the
+         dearest thing here by a distance, and Maker gives 90 a month — so
+         a Maker member cannot dub a single minute and nothing said so
+         until they tried. The line says which plan it starts at rather
+         than leaving somebody to find the wall. */
+      'The marketing desk — the market read, the week and the queue — R199 a month on top of any plan, including Free.',
+      'Dubbing into another language, in the same voice — 162 credits a minute out of your 440.',
     ],
   },
 };

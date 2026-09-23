@@ -251,6 +251,46 @@ for (const file of walk('app/api')) {
 }
 if (failures === before4) pass('every service-key route is scoped to its caller, or listed as anonymous');
 
+/* ── 4b. Nothing spends a supplier's money without a name or a ceiling ─────
+
+   Found on 24 September 2026, going through the surface before handing the
+   app over to be rated. `/api/campaign`, `/api/songwriter` and
+   `/api/recommend` each called Anthropic with no account, no charge and no
+   brake: anybody with the address could put one in a loop, and the first
+   anybody would know about it is the invoice. The other eleven model routes
+   had `tooMany` — these three were simply never given it, and nothing asked.
+
+   The moderation screen is not this. `screen()` stops a bad REQUEST; it has
+   nothing to say about a thousand ordinary ones. Nor is a missing-key guard:
+   returning 503 when the key is absent says nothing about the case where it
+   is present, which is every deployment that matters.
+
+   So the rule is: a route that names a supplier's key must either know who
+   is calling (a caller, or a shared secret) or hold a brake. One of the two,
+   every time, or her bill is a public endpoint. */
+const before4b = failures;
+/** Every environment variable that is somebody's meter running. */
+const SPENDS = /ANTHROPIC_API_KEY|OPENAI_API_KEY|ELEVEN_API_KEY|ELEVENLABS_API_KEY|KITS_API_KEY|MUSICAI_API_KEY|GEMINI_API_KEY|KLING_/;
+for (const file of walk('app/api')) {
+  const src = readFileSync(file, 'utf8');
+  if (!SPENDS.test(src)) continue;
+  /* A webhook is told apart by being signature-verified, which is a stronger
+     claim than a brake: an unsigned delivery never reaches the model. */
+  const signed = /timingSafeEqual|createHmac|verifySignature/.test(src);
+  const named = /const caller|await authed\(|requireUser|POST_SECRET|CRON_SECRET/.test(src);
+  const braked = /tooMany\(|refuseIfTooMany\(/.test(src);
+  if (!signed && !named && !braked) {
+    fail(
+      'a route that spends a supplier’s money knows who is calling, or has a ceiling',
+      `${file} names a supplier key with no caller, no secret, no signature and no brake `
+      + '— add tooMany(…) from app/lib/server/brake.ts',
+    );
+  }
+}
+if (failures === before4b) {
+  pass('every route that spends a supplier’s money has a caller, a secret, a signature or a brake');
+}
+
 /* ── 5. Interpolated PostgREST filters are shape-checked ───────────────────
    `or()` takes one string and has no parameterised form, so it is built by
    interpolation. Today every value is a UUID we produced, which is safe and is

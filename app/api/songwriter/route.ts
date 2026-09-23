@@ -17,6 +17,7 @@ import { screen } from '@/app/lib/moderation';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
+import { tooMany } from '@/app/lib/server/brake';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -83,7 +84,29 @@ function promptFor(body: Body): string {
   return `${context}\n\n${ask[body.mode]}`;
 }
 
+/**
+ * The brake, on a route that spends her money and asks nobody who they are.
+ *
+ * Found on 24 September 2026 while going through the surface before handing
+ * the app over to be rated. Three routes called Anthropic with no account, no
+ * charge and no ceiling: this one, the songwriter and the recommender. The
+ * other eleven model routes had `tooMany` — these three were simply never
+ * given it, and nothing in the checks asked.
+ *
+ * The moderation screen below was already there and is a different question:
+ * it stops a bad REQUEST, not a thousand ordinary ones. Anybody with the
+ * address could put this in a loop and the first anybody would know is the
+ * invoice.
+ */
+const LIMITS = { perMinute: 10, perHour: 100 };
+
 export async function POST(request: Request) {
+  if (tooMany('songwriter', request, LIMITS)) {
+    return Response.json(
+      { error: 'rate_limited', message: 'Too many at once. Try again in a moment.' },
+      { status: 429 },
+    );
+  }
   let body: Body;
   try {
     body = (await request.json()) as Body;

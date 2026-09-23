@@ -311,6 +311,17 @@ jobs:
       - name: Nothing the booth does to the lanes escapes the history
         run: npm run check:undo
 
+      # "Kyk ook dat die nuwe album art afdeling deel van die free, en
+      # betalings pakkette vorm en wys" was asked in September and answered
+      # by adding a line to plans.ts — which the account screen then cut off,
+      # because it drew includes.slice(0, 4) and every list is longer. The
+      # same question asked again found the R199 marketing desk on no pricing
+      # screen at all, and dubbing at 162 credits a minute on no card while
+      # Maker holds 90. Two rules: everything priced is named, and the
+      # screens draw the whole list.
+      - name: Everything the platform charges for is on the packages
+        run: npm run check:sold
+
       # `{zoom}\u00d7` in JSX text is six characters of nothing, printed as
       # typed. It compiles, it passes every test that reads the DOM by role
       # or label, and it reached a phone as "4\u00d7" in a photograph.

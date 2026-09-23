@@ -186,8 +186,17 @@ export default function Account({
           {/* Same dictionary keys as the sales page, so the plan somebody
               bought is described to them in the same words they bought it in. */}
           <p className="text-sm text-zinc-500 leading-snug">{t(`plan.${spec.id}.who`, spec.who)}</p>
+          {/* Every line, not the first four.
+              It was `slice(0, 4)`, and the plan lists are five to seven long
+              — so the last line of all four plans was on the sales page and
+              on no screen a member who had already paid could reach. That
+              line is the album art, which she asked for by name: *"Kyk ook
+              dat die nuwe album art afdeling deel van die free, en betalings
+              pakkette vorm en wys."* It formed part of them and it did not
+              show. A list that silently drops its own tail is worse than a
+              short list, because nothing on the screen says it is short. */}
           <ul className="text-sm text-zinc-400 space-y-1">
-            {spec.includes.slice(0, 4).map((one, i) => (
+            {spec.includes.map((one, i) => (
               <li key={one} className="flex items-start gap-2">
                 <span className="text-emerald-400 mt-0.5">·</span>
                 <span>{t(`plan.${spec.id}.inc.${i}`, one)}</span>

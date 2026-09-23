@@ -33,6 +33,7 @@ import { z } from 'zod';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
+import { tooMany } from '@/app/lib/server/brake';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -74,7 +75,29 @@ const SYSTEM = [
   `${AFRIKAANS_RULE}`,
 ].join('\n');
 
+/**
+ * The brake, on a route that spends her money and asks nobody who they are.
+ *
+ * Found on 24 September 2026 while going through the surface before handing
+ * the app over to be rated. Three routes called Anthropic with no account, no
+ * charge and no ceiling: this one, the songwriter and the recommender. The
+ * other eleven model routes had `tooMany` — these three were simply never
+ * given it, and nothing in the checks asked.
+ *
+ * The moderation screen below was already there and is a different question:
+ * it stops a bad REQUEST, not a thousand ordinary ones. Anybody with the
+ * address could put this in a loop and the first anybody would know is the
+ * invoice.
+ */
+const LIMITS = { perMinute: 10, perHour: 100 };
+
 export async function POST(request: Request): Promise<Response> {
+  if (tooMany('recommend', request, LIMITS)) {
+    return Response.json(
+      { error: 'rate_limited', message: 'Too many at once. Try again in a moment.' },
+      { status: 429 },
+    );
+  }
   if (!process.env.ANTHROPIC_API_KEY) {
     return Response.json({ error: 'no_key', message: 'Recommendations are switched off for this app.' }, { status: 503 });
   }
