@@ -112,7 +112,55 @@ export interface HandoverInput {
   readonly ad?: HandoverAd | null;
   /** The ticked destinations, by id, which decide the shape. */
   readonly going?: readonly string[];
+  /**
+   * The words around their words, in the language the app is being used in.
+   *
+   * Only the labels and the two framing sentences: everything between them is
+   * theirs and is never translated. Optional because this module has no `t` —
+   * it is a pure function and is tested as one — so English is what comes out
+   * when a caller sends nothing, and `check:adhandover` holds the call site to
+   * sending something.
+   */
+  readonly words?: HandoverWords;
 }
+
+/**
+ * The labels on the brief the destination's copilot opens with.
+ *
+ * She reads the app in Afrikaans and the copilot answers her in Afrikaans, so
+ * a panel that opens with an English paragraph is the app changing language
+ * at the exact moment it is trying to be useful.
+ */
+export interface HandoverWords {
+  readonly from?: string;
+  readonly sell?: string;
+  readonly who?: string;
+  readonly offer?: string;
+  readonly tone?: string;
+  readonly market?: string;
+  readonly place?: string;
+  readonly brand?: string;
+  readonly said?: string;
+  readonly watch?: string;
+  readonly look?: string;
+  readonly change?: string;
+}
+
+/** English, and the whole list, so a caller can send one word or none. */
+const WORDS: Required<HandoverWords> = {
+  from: 'They came here from the adverts desk. It recommended this and has already filled the fields in.',
+  sell: 'What they sell',
+  who: 'Who it is for',
+  offer: 'The offer, in their own words',
+  tone: 'How it should feel',
+  market: 'Where they sell',
+  place: 'Where it will be seen',
+  brand: 'Their brand kit',
+  said: 'What the adverts desk recommended',
+  watch: 'What it warned against',
+  look: 'The look it chose',
+  change: 'The offer, the price and the deadline are only ever what they typed \u2014 nothing here may be invented. Tell me what to change.',
+};
 
 /** Trimmed, empty dropped. Saves every builder below the same four lines. */
 const joined = (parts: readonly (string | undefined)[], by = ' '): string =>
@@ -341,6 +389,65 @@ function soundFrom(input: HandoverInput): string {
 }
 
 /**
+ * The brief the destination room's copilot opens with.
+ *
+ * ── The half of the hand-off that never travelled ────────────────────────
+ *
+ * Carli, 20 September 2026: *"Die advert room se prompts spring nogsteeds nie
+ * oor na die nuwe kamer toe se copilot nie."* And again on 22 September:
+ * *"adverts sit nogsteeds nie die prompt in die nuwe kamers nie."*
+ *
+ * The answer to the first report added a `brief` wire to `filmThisAd` and
+ * `readThisAd` — the two buttons under a written advert — and stopped there.
+ * The path she actually presses first is the one above them: a recommendation
+ * card, "Open the room and start it", which runs `handoverFor`. That carried
+ * the FIELDS and nothing else, so the room filled in and the copilot beside it
+ * opened empty, in every format, every time.
+ *
+ * Two probes were green over it the whole while. `check:adcarry` presses the
+ * card and reads the boxes; `check:copilotcarry` walks the copilot's own
+ * hand-off from a stubbed reply. Neither ever looked at the panel this fills.
+ * A check that reads the boxes is a check about boxes.
+ *
+ * ── What goes in it ──────────────────────────────────────────────────────
+ *
+ * Their words, labelled, and the desk's recommendation with them. Not a
+ * summary: the model is about to be asked to change this, and *"maak die
+ * tweede sin korter"* has to refer to a sentence it can see. And nothing is
+ * added — the offer, the price and the deadline are only ever what they typed,
+ * which is the rule the whole module is built on and the one a seeded turn is
+ * most likely to quietly break.
+ */
+function deskBrief(input: HandoverInput): string {
+  const { brief, pick } = input;
+  /* Empty strings dropped rather than spread over the defaults: a caller
+     whose dictionary is missing one key would otherwise hand over a line
+     that begins with a colon. */
+  const given = Object.fromEntries(
+    Object.entries(input.words ?? {}).filter(([, value]) => (value ?? '').trim()),
+  ) as HandoverWords;
+  const say: Required<HandoverWords> = { ...WORDS, ...given };
+  const line = (label: string, value?: string): string => {
+    const said = (value ?? '').trim();
+    return said ? sentence(`${label}: ${said}`) : '';
+  };
+  return joined([
+    sentence(say.from),
+    line(say.sell, brief.what),
+    line(say.who, brief.who),
+    line(say.offer, brief.offer),
+    line(say.tone, brief.tone),
+    line(say.market, brief.market),
+    line(say.place, brief.place),
+    line(say.brand, brief.brand),
+    line(say.said, pick.first),
+    line(say.watch, pick.watchOut),
+    line(say.look, lookOf(pick.style)),
+    sentence(say.change),
+  ], '\n');
+}
+
+/**
  * Everything that should travel, for one format.
  *
  * Returns an empty list for a format that stays in this room, and for one
@@ -356,6 +463,11 @@ export function handoverFor(input: HandoverInput): readonly Wire[] {
   const at = (op: string, value: string): Wire[] =>
     value.trim() ? [{ room, op, value: value.trim() }] : [];
 
+  /* The fields, per format. The conversation is added to all of them below
+     — appended there rather than written into each case, so a format cannot
+     be added one day with its copilot left empty. That is the exact shape of
+     the fault this is fixing. */
+  const fields = ((): readonly Wire[] => {
   switch (input.formatId) {
     case 'short_vertical':
       return [
@@ -390,6 +502,15 @@ export function handoverFor(input: HandoverInput): readonly Wire[] {
       /* `written_posts` is this room. Nothing to carry anywhere. */
       return [];
   }
+  })();
+
+  /* Nothing travelled, so there is nothing to open a conversation about. A
+     brief on its own would be a copilot describing a room that was not set
+     up — worse than an empty panel, because it reads as if it had been. */
+  if (fields.length === 0) return fields;
+  /* Last, for the same reason `filmThisAd` puts it last: the fields are
+     already in place when the conversation opens on them. */
+  return [...fields, { room, op: 'brief', value: deskBrief(input) }];
 }
 
 
@@ -413,6 +534,13 @@ export function handoverFor(input: HandoverInput): readonly Wire[] {
  * what it will be asked to change, so paraphrasing it here would mean
  * *"make the second line shorter"* refers to a line nobody has.
  */
+const FILMED =
+  'This is the advert you brought over from the adverts desk. The shot, the shape and '
+  + 'the length are already set \u2014 tell me what to change.';
+const READ =
+  'This is the advert you brought over from the adverts desk. The script is already in '
+  + 'the box \u2014 tell me what to change.';
+
 function briefFor(ad: HandoverAd, did: string): string {
   return joined([
     did,
@@ -443,6 +571,14 @@ export function filmThisAd(input: {
   readonly ad: HandoverAd;
   readonly going?: readonly string[];
   readonly style?: string;
+  /**
+   * The one sentence around the advert, in the room's own language.
+   *
+   * Same reason as `HandoverWords`: the advert itself was written in her
+   * language and the sentence introducing it was not, so the panel opened
+   * half in English. English when a caller sends nothing.
+   */
+  readonly said?: string;
 }): readonly Wire[] {
   const prompt = withSpoken(input.ad.shot ?? '', input.ad.spoken ?? '');
   const look = lookOf(input.style);
@@ -461,7 +597,7 @@ export function filmThisAd(input: {
   wires.push({
     room: 'canvas',
     op: 'brief',
-    value: briefFor(input.ad, 'This is the advert you brought over from the adverts desk. The shot, the shape and the length are already set — tell me what to change.'),
+    value: briefFor(input.ad, input.said?.trim() || FILMED),
   });
   return wires;
 }
@@ -475,7 +611,11 @@ export function filmThisAd(input: {
  * job. So the whole thing goes, and the button says "this one" rather than
  * "this line".
  */
-export function readThisAd(input: { readonly ad: HandoverAd }): readonly Wire[] {
+export function readThisAd(input: {
+  readonly ad: HandoverAd;
+  /** See `filmThisAd`. */
+  readonly said?: string;
+}): readonly Wire[] {
   const { ad } = input;
   const script = joined([
     sentence(ad.spoken?.trim() || ad.headline),
@@ -488,7 +628,7 @@ export function readThisAd(input: { readonly ad: HandoverAd }): readonly Wire[] 
     {
       room: 'voice_studio',
       op: 'brief',
-      value: briefFor(ad, 'This is the advert you brought over from the adverts desk. The script is already in the box — tell me what to change.'),
+      value: briefFor(ad, input.said?.trim() || READ),
     },
   ];
 }

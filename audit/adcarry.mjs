@@ -297,6 +297,33 @@ try {
       `chosen: ${length.said.join(' | ') || 'nothing'} — the desk said eight seconds`);
   }
 
+  /* ── And the copilot beside it ──────────────────────────────────
+ 
+     Carli, 20 September 2026: *"Die advert room se prompts spring nogsteeds
+     nie oor na die nuwe kamer toe se copilot nie."* And again on 22
+     September: *"adverts sit nogsteeds nie die prompt in die nuwe kamers
+     nie."*
+ 
+     Everything above this line was green through both reports, because
+     everything above this line reads BOXES. The panel she types into opened
+     empty in every room, so changing one line of an advert meant describing
+     the whole advert again to the thing that had just written it.
+ 
+     Read out of the panel itself rather than off the page: the room is full
+     of her brief by now, and a search of the whole screen would pass on the
+     shot box alone. */
+  const talkTo = async (room) => {
+    const panel = p.locator(`[data-copilot="${room}"]`).first();
+    await panel.waitFor({ state: 'attached', timeout: 20000 }).catch(() => undefined);
+    return ((await panel.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ');
+  };
+  const canvasTalk = await talkTo('canvas');
+  check('the copilot in the new room opens on the advert, not empty',
+    /workbench|stitching|seam/i.test(canvasTalk),
+    `"${canvasTalk.slice(0, 120)}" — this is the half of the hand-off she has reported three times`);
+  check('  and knows what she sells, in her own words',
+    /leather bags/i.test(canvasTalk), canvasTalk.slice(0, 160));
+
   /* ── Two: a song. The room that used to open completely empty. ─── */
   await toRoom(p, 'Adverts');
   await p.waitForTimeout(1600);
@@ -373,6 +400,13 @@ try {
   check('  with the section markers the engine reads',
     /\[Chorus\]|\[Hook\]/.test(words), words.slice(0, 80));
   check('  and her own subject in them', /bag|leather|workshop/i.test(words), words.slice(0, 120));
+  /* The same question in the room that used to receive nothing at all. One
+     room proving it is a room proving it; eight formats land in four rooms
+     and the wire is built per format. */
+  const makeTalk = await talkTo('make');
+  check('  and the copilot here opened on it too',
+    /leather bags/i.test(makeTalk) && /photograph|workshop|Afrikaans song/i.test(makeTalk),
+    `"${makeTalk.slice(0, 140)}"`);
   /* ── Three: the brief is still there when you come back ────────
  
      Everything this desk produces was already remembered and the brief was
@@ -475,4 +509,4 @@ if (problems.length) {
   console.error(`\n${problems.length} problem(s):\n  ${problems.join('\n  ')}\n`);
   process.exit(1);
 }
-console.log('\nPressed in the advert room and read in the next one: the shot with her brief and the recommended look on it, the words with their section markers, and a brief still there after two trips out and a reload.');
+console.log('\nPressed in the advert room and read in the next one: the shot with her brief and the recommended look on it, the copilot beside it open on the same advert, the words with their section markers, and a brief still there after two trips out and a reload.');

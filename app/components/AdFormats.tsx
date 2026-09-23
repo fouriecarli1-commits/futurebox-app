@@ -292,12 +292,32 @@ export default function AdFormats({
                     /* Everything the destination can take, not the one
                        field it used to be. `lib/adhandover.ts` decides
                        what that is per room, and says why. */
+                    /* And the conversation, not only the boxes. The room
+                       filled in and the copilot beside it opened empty —
+                       the half of this hand-off she has now reported
+                       three times. `lib/adhandover.ts` builds it; the
+                       labels come from here because that module has no
+                       `t` and she reads the app in Afrikaans. */
                     for (const wire of handoverFor({
                       formatId: format.id,
                       brief,
                       pick: { first: pick.first, watchOut: pick.watchOut, style: pick.style },
                       ad,
                       going,
+                      words: {
+                        from: t('carry.from', 'They came here from the adverts desk. It recommended this and has already filled the fields in.'),
+                        sell: t('carry.sell', 'What they sell'),
+                        who: t('carry.who', 'Who it is for'),
+                        offer: t('carry.offer', 'The offer, in their own words'),
+                        tone: t('carry.tone', 'How it should feel'),
+                        market: t('carry.market', 'Where they sell'),
+                        place: t('carry.place', 'Where it will be seen'),
+                        brand: t('carry.brand', 'Their brand kit'),
+                        said: t('carry.said', 'What the adverts desk recommended'),
+                        watch: t('carry.watch', 'What it warned against'),
+                        look: t('carry.look', 'The look it chose'),
+                        change: t('carry.change', 'The offer, the price and the deadline are only ever what they typed \u2014 nothing here may be invented. Tell me what to change.'),
+                      },
                     })) {
                       onSetUp(wire.room, wire.op, wire.value);
                     }

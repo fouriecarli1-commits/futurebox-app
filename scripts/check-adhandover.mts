@@ -86,6 +86,26 @@ for (const [room, surface] of Object.entries(SURFACES)) {
   registered.set(room, new Set(Object.keys(surface.ops ?? {})));
 }
 
+/**
+ * `brief` is in every room and in no room's registry, and both are correct.
+ *
+ * The registry is the list handed to the MODEL — what it may ask a room to
+ * do. `brief` is the other direction: the room's copilot being told what was
+ * carried into it, which is nothing a model should ever request. So it is
+ * registered by `Copilot.tsx` against whatever surface the panel is showing,
+ * which makes it an operation of all thirteen rooms and of none of them.
+ *
+ * Added here on the evidence rather than on my word for it. Delete that
+ * registration and the file below stops matching, this rule goes red, and
+ * every hand-off's brief is reported as landing nowhere — which is exactly
+ * what would then be happening.
+ */
+const copilot = readFileSync('app/components/Copilot.tsx', 'utf8');
+const REGISTERS_BRIEF = /useCopilotOps\(\s*context\.surface\s*,\s*\{[\s\S]{0,200}?\bbrief:/.test(copilot);
+ok('the copilot registers `brief` in whatever room it is drawn in', REGISTERS_BRIEF,
+  'nothing takes the conversation the adverts desk hands over, in any room');
+if (REGISTERS_BRIEF) for (const set of registered.values()) set.add('brief');
+
 /** Every format lands something, in a room that can take every bit of it. */
 const empty: string[] = [];
 const unknown: string[] = [];
@@ -494,6 +514,110 @@ ok('  and a new one clears them rather than inheriting them',
   'a new campaign opens with the last one\'s recommendations on screen');
 ok('and one that is finished can be forgotten', /dropWork\(/.test(desk),
   'twelve campaigns and no way to remove one');
+
+/* ── The conversation, not only the boxes ─────────────────────────────
+ 
+   Carli, 22 September 2026: *"adverts sit nogsteeds nie die prompt in die
+   nuwe kamers nie."* The third report of the same thing, and each earlier
+   answer fixed a different path: first the fields themselves, then the two
+   buttons under a written advert. This is the path she presses first — a
+   recommendation card — and it carried the fields and nothing else, so the
+   room filled in and the copilot beside it opened empty.
+ 
+   Every rule below is about the value NOBODY was reading. `check:adcarry`
+   presses the card and reads the boxes; it was green through all three
+   reports, because a rule about boxes is a rule about boxes. */
+const noBrief: string[] = [];
+const notLast: string[] = [];
+const missing: string[] = [];
+for (const format of AD_FORMATS) {
+  if (format.room === 'campaign') continue;
+  const wires = handoverFor({ formatId: format.id, brief: BRIEF, pick: PICK, ad: AD, going: ['tiktok'] });
+  const at = wires.findIndex((one) => one.op === 'brief');
+  if (at === -1) { noBrief.push(format.id); continue; }
+  /* Last, because the panel opens on a room that is already set up. A
+     conversation that arrives before the fields describes a room that is
+     still empty, which reads as if the hand-off had failed. */
+  if (at !== wires.length - 1) notLast.push(format.id);
+  const said = wires[at].value;
+  /* Their subject and the desk's own recommendation. Both, because a brief
+     with only the subject in it is the room's own heading, and one with only
+     the recommendation in it is advice about nobody. */
+  for (const [part, wanted] of [
+    ['what they sell', BRIEF.what],
+    ['the recommendation', PICK.first],
+    ['the thing to watch out for', PICK.watchOut],
+  ] as const) {
+    if (!said.includes(wanted)) missing.push(`${format.id} carries no ${part}`);
+  }
+}
+ok('every hand-off opens the next room\u2019s copilot as well as its boxes',
+  noBrief.length === 0,
+  `${noBrief.join(', ')} fill the room and leave the copilot empty \u2014 this is the report`);
+ok('  with the conversation last, after the fields it is about', notLast.length === 0,
+  notLast.join(', '));
+ok('  and her own words in it, not a summary of them', missing.length === 0,
+  missing.join('; '));
+
+/* Nothing added. The one rule the whole module is built on, and a seeded
+   turn is the easiest place to break it: a paragraph written around a brief
+   reads as fact and is the first thing the model will repeat back. */
+const invented = handoverFor({
+  formatId: 'short_vertical',
+  brief: { what: 'handmade leather bags' },
+  pick: { first: PICK.first },
+  going: ['tiktok'],
+}).find((one) => one.op === 'brief');
+ok('  and nothing they did not type', Boolean(invented)
+  && !/free repairs|R\d|per month|quiet and confident/i.test(invented!.value),
+  invented?.value.slice(0, 160) ?? 'no brief at all');
+
+/* The words around their words come from the room, so an Afrikaans app does
+   not open its copilot in English. Proved by sending one through rather than
+   by reading the call site: a label that is accepted and dropped looks
+   identical from outside. */
+const inHer = handoverFor({
+  formatId: 'short_vertical', brief: BRIEF, pick: PICK, going: ['tiktok'],
+  words: { sell: 'Wat hulle verkoop', from: 'Hulle kom van die advertensietafel af' },
+}).find((one) => one.op === 'brief');
+ok('  in the language the room is being used in',
+  Boolean(inHer) && inHer!.value.includes('Wat hulle verkoop')
+  && inHer!.value.includes('Hulle kom van die advertensietafel af'),
+  'the caller\u2019s own words were taken and the English used anyway');
+
+/* And the call sites actually send them. The function defaulting to English
+   is right — it is a pure function with no `t` — and is also exactly how
+   this would ship looking correct while every panel opened in English. */
+const cards = [...shape.matchAll(/handoverFor\(\{[\s\S]*?\n(\s*)\}\)/g)].map((one) => one[0]);
+ok('  and the card sends the room\u2019s words with it',
+  cards.length > 0 && cards.every((call) => /words:\s*\{[\s\S]{0,200}?t\(/.test(call)),
+  cards.length === 0
+    ? 'no handoverFor call found in AdFormats.tsx at all'
+    : 'AdFormats.tsx hands over without any words, so the copilot opens in English');
+/* EVERY call site, not one of them. The first version of this rule asked
+   whether the file contained a call carrying `said:`, and the desk calls
+   each of these twice — once from the button under an advert and once from
+   the copilot's own `film_this`. Renaming the argument at the first call
+   site left the rule green, on the strength of the second. A rule that is
+   satisfied by any one of the places it is about is a rule about the file. */
+for (const [button, fn] of [['film', 'filmThisAd'], ['read', 'readThisAd']] as const) {
+  const calls = [...desk.matchAll(new RegExp(`${fn}\\(\\{[^}]*\\}`, 'g'))].map((one) => one[0]);
+  ok(`  and so does \u201C${button} this one\u201D, at every press that leads to it`,
+    calls.length >= 2 && calls.every((call) => /[,{]\s*said:\s*t\(/.test(call)),
+    calls.length < 2
+      ? `${calls.length} call site(s) found; the button and the copilot both reach ${fn}`
+      : `${calls.filter((call) => !/[,{]\s*said:\s*t\(/.test(call)).length} of ${calls.length} `
+        + `call ${fn} with no sentence of their own, so that brief opens in English`);
+}
+
+/* Every key they send, in both languages. A key with no Afrikaans falls back
+   to the English fallback string, which is the same bug wearing a dictionary. */
+const CARRY = [...new Set([...shape.matchAll(/t\('(carry\.[a-z]+)'/g)].map((one) => one[1]))]
+  .concat([...new Set([...desk.matchAll(/t\('(carry\.[a-z]+)'/g)].map((one) => one[1]))]);
+ok(`  under ${CARRY.length} keys that exist in Afrikaans too`, CARRY.length >= 12
+  && CARRY.every((key) => new RegExp(`"${key.replace('.', '\\.')}":\\s*\\{[^}]*\\baf:\\s*"[^"]{2,}"`).test(words)),
+  CARRY.filter((key) => !new RegExp(`"${key.replace('.', '\\.')}":\\s*\\{[^}]*\\baf:\\s*"[^"]{2,}"`).test(words)).join(', ')
+    || `${CARRY.length} keys is fewer than the brief has lines`);
 
 if (failures) {
   console.error(`\ncheck:adhandover — ${failures} failure(s).\n`);
