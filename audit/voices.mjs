@@ -30,7 +30,11 @@ await room.locator('button').filter({ hasText: /^Your voice/i }).first().click()
 await page.waitForTimeout(1800);
 const text = await room.innerText();
 console.log('picker present:', /Rachel/.test(text) && /American, young, narration/.test(text));
-console.log('yours pinned first:', text.indexOf('My own voice') < text.indexOf('Rachel'));
+/* Both, and in that order. A picker with no "My own voice" in it answers -1,
+   which is less than every real position, so the unpinned case reads as pinned. */
+const mine = text.indexOf('My own voice');
+const theirs = text.indexOf('Rachel');
+console.log('yours pinned first:', mine !== -1 && theirs !== -1 && mine < theirs);
 console.log('search box (10 voices > 8):', /An accent, an age, a name/.test(text));
 console.log('free-listen note:', /costs nothing and generates nothing/.test(text));
 

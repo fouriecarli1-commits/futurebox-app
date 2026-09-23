@@ -27,6 +27,7 @@
  * webhook nobody has registered must change nothing.
  */
 import { readFileSync } from 'node:fs';
+import { before } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -60,7 +61,7 @@ ok('and there is no path that skips the signature when one is missing',
 ok('the signature is checked in constant time', /timingSafeEqual/.test(hook));
 ok('over the raw body, not a re-serialised one',
   poll.length > 0 && /await request\.text\(\)/.test(hook) &&
-    hook.indexOf('await request.text()') < hook.indexOf('JSON.parse(raw)'),
+    before(hook, 'await request.text()', 'JSON.parse(raw)'),
   'hashing a re-stringified document hashes a different document');
 ok('an old delivery is refused however well signed it is',
   /OLDEST_MS/.test(hook) && /Math\.abs\(Date\.now\(\) - signed\.at\) > OLDEST_MS/.test(hook));

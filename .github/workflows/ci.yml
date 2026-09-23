@@ -290,6 +290,16 @@ jobs:
       - name: A room handed something opens the card it went into
         run: npm run check:opencard
 
+      # -1 is what `indexOf` answers for something absent, and -1 is less
+      # than every real position — so `a.indexOf(x) < a.indexOf(y)`, written
+      # sixteen times across these checks, was true of a file that does it
+      # in the right order AND of a file that never does the first thing at
+      # all. Proved rather than argued: the subtitle draw was deleted out of
+      # stitch.ts and check:logomark, whose whole subject is draw order,
+      # came back green on every rule.
+      - name: Nothing reads a missing thing as the first thing
+        run: npm run check:ordering
+
       # `{zoom}\u00d7` in JSX text is six characters of nothing, printed as
       # typed. It compiles, it passes every test that reads the DOM by role
       # or label, and it reached a phone as "4\u00d7" in a photograph.

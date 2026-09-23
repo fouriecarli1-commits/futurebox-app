@@ -301,8 +301,14 @@ try {
     (await asks.evaluateAll((els) => els.every((el) => el.getAttribute('aria-expanded') === 'false'))));
   check('what the room is saying is on the screen',
     (await says()).includes('Hierdie een is lekker'), 'the messages');
+  /* Both present, then the order. Read once: two calls can disagree, and a
+     room that never said it at all answers -1, which passes an ordering test
+     against any real position. */
+  const said = await says();
+  const line = said.indexOf('Hierdie een is lekker');
+  const song = said.indexOf('Karoo Wind');
   check('and it is above the songs, not under every one of them',
-    (await says()).indexOf('Hierdie een is lekker') < (await says()).indexOf('Karoo Wind'));
+    line !== -1 && song !== -1 && line < song);
 
   /* ── A post is a panel, not a small block ──────────────────────────
  

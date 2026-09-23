@@ -37,6 +37,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { before, from, upTo } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -62,13 +63,13 @@ ok('  and mix and master to the right', /spec=\{UPPER\[1\]\}/.test(dock) && /id:
    own transport was then being compared with the bottom bar's desk buttons,
    which is two different bars measured as one and said the order was wrong
    while it was right in both. Split at the line that separates them. */
-const upright = dock.slice(dock.indexOf('if (sideways) return rail;'));
-const railOnly = dock.slice(0, dock.indexOf('if (sideways) return rail;'));
+const upright = from(dock, 'if (sideways) return rail;');
+const railOnly = upTo(dock, 'if (sideways) return rail;');
 
 ok(
   '  in that order, which is the order she drew',
-  upright.indexOf('spec={UPPER[0]}') < upright.indexOf('onSkip(-5)') &&
-    upright.indexOf('onSkip(5)') < upright.indexOf('spec={UPPER[1]}'),
+  before(upright, 'spec={UPPER[0]}', 'onSkip(-5)')
+    && before(upright, 'onSkip(5)', 'spec={UPPER[1]}'),
 );
 
 /* ── Turned sideways ───────────────────────────────────────────

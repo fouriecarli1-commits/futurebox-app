@@ -35,6 +35,7 @@ import { AD_FORMATS } from '../app/lib/adformats';
 import { SURFACES } from '../app/lib/surfaces';
 import { LENGTHS } from '../app/lib/videoscenes';
 import { carryWords, filmThisAd, handoverFor, readThisAd, shapeFor, shapeForNamed } from '../app/lib/adhandover';
+import { before } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -507,7 +508,7 @@ ok('  and opening one puts the cards and the week back too',
   /putPicks\(work\.picks, work\.instead\)/.test(desk) && /savePlan\(work\.plan\)/.test(desk),
   'the brief comes back and the advice does not, which is half an answer');
 ok('  before the panels are told to read again',
-  desk.indexOf('putPicks(work.picks') < desk.indexOf('setOpenedAt((was) => was + 1)'),
+  before(desk, 'putPicks(work.picks', 'setOpenedAt((was) => was + 1)'),
   'the panels remount first and read the previous campaign for one paint');
 ok('  and a new one clears them rather than inheriting them',
   /clearPicks\(\)/.test(desk) && /savePlan\(null\)/.test(desk),

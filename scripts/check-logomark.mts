@@ -23,6 +23,7 @@
 import { readFileSync } from 'node:fs';
 import { markBox, MARK_SHARE, MARK_INSET } from '../app/lib/logomark';
 import { ZONES, type Zone } from '../app/lib/safezones';
+import { before } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -100,7 +101,7 @@ const stitch = readFileSync('app/lib/stitch.ts', 'utf8');
 ok('the stitcher draws it', /drawMark\(context, cut\.mark/.test(stitch));
 ok(
   '  after the caption, so the caption cannot slide over it',
-  stitch.indexOf('drawCaption(context') < stitch.indexOf('drawMark(context'),
+  before(stitch, 'drawCaption(context', 'drawMark(context'),
 );
 ok(
   '  and only when the cut asks for one, so an unbranded film is unchanged',

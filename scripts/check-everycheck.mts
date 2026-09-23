@@ -24,6 +24,7 @@
  * failure names the script rather than saying coverage has dropped.
  */
 import { readFileSync, readdirSync } from 'node:fs';
+import { from, upTo } from './order.mts';
 
 let failures = 0;
 const check = (label: string, ok: boolean, detail = '') => {
@@ -74,8 +75,8 @@ check('and CI names no check that does not exist', ghosts.length === 0, ghosts.j
  * The tell is the script itself: a check that runs `node audit/…` drives a
  * browser, and every other one does not.
  */
-const screens = workflow.slice(workflow.indexOf('  screens:'));
-const source = workflow.slice(0, workflow.indexOf('  screens:'));
+const screens = from(workflow, '  screens:');
+const source = upTo(workflow, '  screens:');
 const inShard = (name: string) => new RegExp(`^\\s+probes:.*\\b${name}\\b`, 'm').test(screens);
 const inSource = (name: string) =>
   new RegExp(`npm run (--silent )?"?${name}\\b`, 'm').test(source);

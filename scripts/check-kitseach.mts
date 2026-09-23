@@ -29,6 +29,7 @@
  * open costs everybody the month.
  */
 import { readFileSync } from 'node:fs';
+import { before } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -53,7 +54,7 @@ ok('the singing room passes the member', /await enough\(spend, caller\?\.id \?\?
   'without the owner, enough only checks the workspace roof and the cap does nothing');
 ok('and so does the splitter', /await enough\(spend, owner\)/.test(stems));
 ok('the member’s own share is checked before the workspace roof',
-  minutes.indexOf('const ownLeft') < minutes.indexOf('const left = await leftSeconds()'),
+  before(minutes, 'const ownLeft', 'const left = await leftSeconds()'),
   'their own share is the one they can act on, so it is the one they hear about');
 
 /* ── Fail closed, which is backwards from everywhere else on purpose ───── */
@@ -96,7 +97,7 @@ ok('it is floored, never rounded up into minutes that are not there',
 ok('a signed-out reader is not counted against somebody else',
   /await singing\(null\)/.test(voiceRoute));
 ok('the screen draws it before the button, not after the refusal',
-  /minutesLeft/.test(minePanel) && minePanel.indexOf('state.minutesLeft') < minePanel.indexOf("t('mine.go'"),
+  /minutesLeft/.test(minePanel) && before(minePanel, 'state.minutesLeft', "t('mine.go'"),
   'a ceiling somebody meets only by walking into it is a button that does nothing');
 ok('and it draws nothing at all when the number is unknown',
   /typeof state\.minutesLeft === 'number'/.test(minePanel),

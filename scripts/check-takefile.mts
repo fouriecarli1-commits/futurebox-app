@@ -42,6 +42,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { after, afterLast } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -81,11 +82,11 @@ ok('  and they are the pair a phone and TikTok both take',
   /avc1\.42E01E,mp4a\.40\.2/.test(first),
   `H.264 baseline with AAC-LC has to be asked for by name; got "${first}"`);
 ok('  with the bare container kept below them, not above',
-  wanted.indexOf('video/mp4') > wanted.indexOf('video/mp4;codecs=avc1.42E01E,mp4a.40.2'),
+  after(wanted, 'video/mp4', 'video/mp4;codecs=avc1.42E01E,mp4a.40.2'),
   'isTypeSupported answers yes to the bare form and says nothing about the contents');
 ok('  and WebM last, because most players outside a browser refuse it',
   wanted.filter((one) => one.startsWith('video/webm')).every(
-    (one) => wanted.indexOf(one) > wanted.lastIndexOf('video/mp4'),
+    (one) => afterLast(wanted, one, 'video/mp4'),
   ));
 
 /* ── And honest when it can only give the one that may not open ───────── */

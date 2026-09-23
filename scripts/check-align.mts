@@ -23,6 +23,7 @@
  * answers and only one of them is a reason to throw the work away.
  */
 import { readFileSync } from 'node:fs';
+import { before, from, upTo } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -41,16 +42,22 @@ ok('and hands over the words, which is the whole point',
 ok('a request with no words is refused rather than quietly transcribed',
   /error: 'no_words'/.test(route));
 ok('the brake runs before anything is charged',
-  route.indexOf('refuseIfTooMany') < route.indexOf('await charge('),
+  before(route, 'refuseIfTooMany', 'await charge('),
   'a retry loop must be stopped before the money');
 ok('what it really cost is read off their own response',
   /noteCost\(upstream, 'align'\)/.test(route));
 ok('an upstream refusal refunds', /await paid\.refund\(\)/.test(route));
+/* The branch itself, not a four-hundred-character window around it.
+   The window measured how much code happened to sit between the two
+   landmarks, so a refund belonging to some other branch could satisfy it
+   and a correct route could fail it the day a comment grew. Between the
+   `if` and the refusal it returns is the only place the refund can be. */
+const unplaced = upTo(from(route, 'if (!words.length) {'), "error: 'nothing_aligned'");
 ok('and so does an answer with nothing placed in it',
-  /nothing_aligned[\s\S]{0,200}/.test(route) &&
-    route.slice(0, route.indexOf("error: 'nothing_aligned'")).lastIndexOf('await paid.refund()') >
-      route.indexOf("if (!words.length)") - 400,
-  'the words were handed over and came back unplaced, so the work was not done');
+  unplaced !== '' && unplaced.includes('await paid.refund();'),
+  unplaced === ''
+    ? 'the branch that refuses an unplaced answer is not in the route any more'
+    : 'the words were handed over and came back unplaced, so the work was not done');
 
 /* ── The loss, and the direction of an unknown answer ──────────────────── */
 ok('the loss is sent back raw, not only judged', /loss,/.test(route));
@@ -73,7 +80,7 @@ ok('an unsaid one is kept, for the same reason as the route',
   'refusing anything that is not good would throw away every unreported loss');
 ok('alignment is tried before transcription where there are words',
   /const lined = await alignedFor\(/.test(ladder) &&
-    ladder.indexOf('await alignedFor(') < ladder.indexOf('return heardFor(track, audio);'));
+    before(ladder, 'await alignedFor(', 'return heardFor(track, audio);'));
 ok('and transcription is still there for a song with no words on file',
   /return heardFor\(track, audio\);/.test(ladder));
 ok('the choice is made in one place, not once per room',

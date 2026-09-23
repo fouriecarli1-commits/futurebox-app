@@ -29,6 +29,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { forgetStockVoices, whichVoiceList } from '../app/lib/server/eleven';
+import { before } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -72,8 +73,8 @@ ok('a kept list is not re-stamped as fresh',
 /* ── 3. It is remembered ───────────────────────────────────────────────── */
 ok('the list is cached', /const STOCK_FOR_MS/.test(source) && /let stock: StockCache \| null/.test(source));
 ok('and the cache is checked before anything is fetched',
-  source.indexOf('if (stock && Date.now() - stock.at < STOCK_FOR_MS)')
-    < source.indexOf('const v2 = await askVoices('));
+  before(source, 'if (stock && Date.now() - stock.at < STOCK_FOR_MS)', 'const v2 = await askVoices('),
+  'a cache read that happens after the fetch has already gone out is not a cache');
 const forMs = Number(/const STOCK_FOR_MS = ([^;]+);/.exec(source)?.[1]?.replace(/[^0-9*]/g, '').split('*').reduce((a, b) => String(Number(a) * Number(b))) ?? 0);
 ok('for long enough to matter on a hot path', forMs >= 10 * 60 * 1000, `${forMs}ms`);
 
@@ -81,8 +82,8 @@ ok('for long enough to matter on a hot path', forMs >= 10 * 60 * 1000, `${forMs}
 ok('the unbounded v1 listing is kept as a fallback',
   /await askVoices\(`\$\{BASE\}\/voices`\)/.test(source));
 ok('and it is second, so it only runs when the paginated one fails',
-  source.indexOf("askVoices(\n    `https://api.elevenlabs.io/v2/voices")
-    < source.indexOf('await askVoices(`${BASE}/voices`)'));
+  before(source, "askVoices(\n    `https://api.elevenlabs.io/v2/voices", 'await askVoices(`${BASE}/voices`)'),
+  'the paginated listing is gone, so every member past 500 voices is invisible again');
 ok('the file says the v2 shape was never observed from here',
   /documented rather than observed|from their documentation and not from a response/.test(source));
 
@@ -125,8 +126,7 @@ const clone = readFileSync('app/api/voice/clone/route.ts', 'utf8');
 
 ok('the workspace slots are read at all', /export async function voiceRoom\(/.test(room));
 ok('and the clone route asks before it charges',
-  clone.indexOf('await voiceRoom()') > -1 &&
-    clone.indexOf('await voiceRoom()') < clone.indexOf('await charge('),
+  before(clone, 'await voiceRoom()', 'await charge('),
   'a member should not pay and be refunded to learn the workspace is full');
 ok('the refusal carries a code, so it can be read in Afrikaans',
   /error: 'voice_slots_full'/.test(clone) &&

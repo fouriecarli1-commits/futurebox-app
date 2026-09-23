@@ -25,6 +25,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { AD_FORMATS, FORMAT_IDS, describeFormats, formatById } from '../app/lib/adformats';
 import { SURFACES, isSurfaceId } from '../app/lib/surfaces';
+import { before } from './order.mts';
 
 const problems: string[] = [];
 const check = (what: string, ok: boolean, saw = '') => {
@@ -112,7 +113,7 @@ check(
 );
 check(
   'and sets the room up before moving to it, not after',
-  screen.indexOf('onSetUp(wire.room') < screen.indexOf('onGoTo(format.room'),
+  before(screen, 'onSetUp(wire.room', 'onGoTo(format.room'),
   'setting up after the move puts the value in the room being left',
 );
 

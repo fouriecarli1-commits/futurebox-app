@@ -12,6 +12,7 @@
 import { readFileSync } from 'node:fs';
 import { FREE_MAILBOXES, freeMailbox, fromDomain, recipients } from '../app/lib/server/email.ts';
 import { isOwnerEmail, ownerEmails } from '../app/lib/server/owners.ts';
+import { before } from './order.mts';
 
 let bad = 0;
 const check = (label: string, ok: boolean, detail = ''): void => {
@@ -54,7 +55,7 @@ for (const one of ['futureboxstudio.co.za', 'anything.com', '']) {
   check(`${one || '(empty)'} is not treated as a free mailbox`, !freeMailbox(one));
 }
 check('the setup route checks it before it checks anything upstream',
-  setup.indexOf('freeMailbox(') > 0 && setup.indexOf('freeMailbox(') < setup.indexOf('await domains()'),
+  before(setup, 'freeMailbox(', 'await domains()'),
   'the account is asked about a domain that could never have worked');
 
 /* ── The from domain is read off the address, not guessed ─────────────── */

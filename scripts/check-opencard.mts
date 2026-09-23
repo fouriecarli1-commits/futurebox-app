@@ -39,6 +39,7 @@
  */
 
 import { readFileSync, readdirSync } from 'node:fs';
+import { lastBefore } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -100,7 +101,7 @@ ok(
 const live = readFileSync(`${dir}/LiveChannel.tsx`, 'utf8');
 ok(
   'the live room’s message box really is below every card',
-  live.lastIndexOf('</Card>') < live.indexOf('value={draft}'),
+  lastBefore(live, '</Card>', 'value={draft}'),
   'it has moved inside a fold, so a copilot draft can land out of sight',
 );
 

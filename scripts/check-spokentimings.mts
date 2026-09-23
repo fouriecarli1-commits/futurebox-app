@@ -25,6 +25,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { linesFromWords, wordsFromAlignment } from '../app/lib/spokenwords';
+import { before } from './order.mts';
 
 let failures = 0;
 const check = (label: string, ok: boolean, detail = ''): void => {
@@ -135,7 +136,7 @@ check('but a read with no alignment is handed on as null, not refused',
   /said\.alignment \?\? said\.normalized_alignment \?\? null/.test(timed.slice(0, 3000)),
   'a missing alignment must drop a rung, not fail a read somebody paid for');
 check('the plain alignment is preferred over the normalised one',
-  timed.indexOf('said.alignment') < timed.indexOf('said.normalized_alignment'),
+  before(timed, 'said.alignment', 'said.normalized_alignment'),
   'the normalised text is theirs, not what the member typed');
 
 if (failures) {

@@ -28,6 +28,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { HISS_HZ, NOTHING_OFF, RUMBLE_HZ, isUncleaned } from '../app/lib/tone';
+import { before } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -69,7 +70,7 @@ ok('the cleaner is in front of the tone stack',
 ok('and the head of the chain is the cleaner when there is one',
   /const head: AudioNode = cleaned \? cleaned\.input : shaped \? shaped\.input : afterTone;/.test(session));
 ok('and nothing was quietly inserted before it',
-  session.indexOf('const cleaned =') < session.indexOf('const rack = anyFx'),
+  before(session, 'const cleaned =', 'const rack = anyFx'),
   'a rack in front of the cleaner would drive the rumble, which is the whole point of the order');
 
 /* ── 5. The half a filter cannot do says what it costs ─────────────────── */

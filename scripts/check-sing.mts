@@ -25,6 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { audioUrlIn, idIn, namedModels, outputIn, safeModelId, stateIn } from '../app/lib/server/kits.ts';
 import { CREDITS } from '../app/lib/credits.ts';
+import { before } from './order.mts';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const read = (path: string): string => readFileSync(join(ROOT, path), 'utf8');
@@ -322,7 +323,7 @@ ok('and the function is not reachable from the browser',
   ));
 
 ok('singing asks whether there is room before it charges',
-  sing.indexOf('await enough(') < sing.indexOf("await charge(") && sing.includes('await enough('),
+  before(sing, 'await enough(', 'await charge('),
   'a member turned away by a ceiling they cannot see must not also have paid for the turn');
 ok('and the refusal says how much is left',
   /left: room\.left/.test(sing) && /\$\{minutes\} minute/.test(minutes),

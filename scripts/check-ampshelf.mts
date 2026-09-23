@@ -29,6 +29,7 @@
 
 import { readFileSync } from 'node:fs';
 import { AMP_MAX_BYTES, KEEP } from '../app/lib/amps';
+import { before } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -48,7 +49,7 @@ ok('the shelf keeps the capture itself, not only what it made',
   + 'a second lane cannot have the same amp');
 
 ok('  and the bytes go down before the row does',
-  shelf.indexOf('await putAudio(amp.id') < shelf.indexOf('const all = loadAmps();'),
+  before(shelf, 'await putAudio(amp.id', 'const all = loadAmps();'),
   'a row written first points at nothing until the write lands, and draws an amp nobody can use');
 
 /* Eviction. The rule is not "there is a cap" — it is that the cap cannot take

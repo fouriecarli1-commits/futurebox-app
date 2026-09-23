@@ -29,6 +29,7 @@
  * replacing a general answer with a special one.
  */
 import { readFileSync } from 'node:fs';
+import { before } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -70,7 +71,7 @@ ok('both utterance shapes are read rather than one being assumed',
 ok('the transcript is on the dub route, not a second one',
   /dubTranscript\(id, want\)/.test(route));
 ok('and it is served after the check that the dub is theirs',
-  route.indexOf('That dub is not yours') < route.indexOf('dubTranscript(id, want)'),
+  before(route, 'That dub is not yours', 'dubTranscript(id, want)'),
   'a transcript is the episode’s words; it must not outrun the ownership check');
 ok('the audio collect is unchanged, so callers written before today still work',
   /collect === '1'/.test(route));

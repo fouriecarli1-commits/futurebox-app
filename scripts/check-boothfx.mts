@@ -42,6 +42,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { before } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -66,7 +67,7 @@ ok(
 );
 ok(
   '  before the fader, so turning a lane up does not change its character',
-  session.indexOf('const rack = anyFx(lane.fx)') < session.indexOf('level.gain.value = lane.gain'),
+  before(session, 'const rack = anyFx(lane.fx)', 'level.gain.value = lane.gain'),
 );
 ok(
   '  and its oscillators are started, or a tremolo silently does nothing',

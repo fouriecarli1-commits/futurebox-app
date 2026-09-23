@@ -26,6 +26,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { from, upTo } from './order.mts';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -63,8 +64,8 @@ ok(
    desk as well — which is the hand-off working better, not worse — this
    went red. `}}` is where the handler ends, so requiring the move before
    one asks the real question: does pressing this do both things? */
-const offer = page.slice(page.indexOf('setVideoSong(madeTrack.id);'));
-const sameHandler = offer.slice(0, offer.indexOf('}}'));
+const offer = from(page, 'setVideoSong(madeTrack.id);');
+const sameHandler = upTo(offer, '}}');
 ok(
   'the offer after a song goes to the desk',
   page.includes('setVideoSong(madeTrack.id);') && /goToRoom\('canvas'\)/.test(sameHandler),

@@ -32,6 +32,7 @@
 
 import { readFileSync } from 'node:fs';
 import { SURFACES, isSurfaceId } from '../app/lib/surfaces';
+import { after } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -175,7 +176,7 @@ ok('  and the room opens that piece from the wall rather than from the id alone'
    RESOLVED, and that is an ordering, not a presence. */
 ok('  and only after that wall has arrived, not while it is still being fetched',
   /await read\(\)/.test(paidHandler)
-  && paidHandler.indexOf('setWanted') > paidHandler.indexOf('await read()'),
+  && after(paidHandler, 'setWanted', 'await read()'),
   'setWanted runs before the fetch resolves, so the sheet is drawn from the wall'
   + ' she had BEFORE paying — the one still offering the R50 pass she just bought');
 ok('    and a read that fails still opens the piece she paid against',

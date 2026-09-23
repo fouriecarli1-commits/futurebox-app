@@ -32,6 +32,7 @@
  * a green build for a current summary.
  */
 import { existsSync, readFileSync } from 'node:fs';
+import { from, upTo } from './order.mts';
 
 let failures = 0;
 const ok = (label: string, good: boolean, detail = ''): void => {
@@ -63,7 +64,7 @@ if (door && stamped) {
 
 /* The door points at four things. A pointer to something that is gone is the
    other way a summary lies, and unlike its truth this part IS checkable. */
-const front = page.slice(0, page.indexOf('\n---\n', page.indexOf('Lees dit eerste')));
+const front = upTo(from(page, 'Lees dit eerste'), '\n---\n');
 for (const [what, where] of [
   ['the sales letter', 'docs/ELEVENLABS-SALES.md'],
   ['the dictionary route', 'app/api/eleven/dictionary/route.ts'],
