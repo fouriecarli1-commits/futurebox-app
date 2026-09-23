@@ -6350,3 +6350,45 @@ Ses paar, en die oorspronklike fout word rooi.
 dus onvoorwaardelik gestuur. 'n Veld wat hard op `null` gedraad is, word nié
 gestuur nie. 'n Reël wat 'n konstante null as 'n waarde behandel, is 'n reël
 wat juis die fout nie kan sien waarvoor dit geskryf is nie.
+
+## §AQ · Die kamer het geweet hoekom, en die skerm waarop sy kyk het dit weggegooi (23 September 2026)
+
+Vierde rapport: *"die video werk steeds nie op live nie."*
+
+Die databasis is reg (sy het WATKORT gehardloop: niks kort nie). Ek het die
+hele ketting gelees — die roete lees `videos` met die **service key**, dus is
+RLS nie in die pad nie; `myVideos()` lees van die bediener af, dus is
+`film.id` 'n regte `videos.id`; die lys gee net rye met `status='done'` en 'n
+`path`; die roete stuur `kind` en `video`; `RoomScreen` het sy eie
+`<video>`-elemente. `check:liveroom` bewys al vandat dit geskryf is dat 'n
+video-pos **speel** wanneer die kamer 'n adres kry.
+
+Dus werk elke stuk. Wat nie gewerk het nie, is wat sy sien wanneer een van
+hulle misluk.
+
+### Die filter wat reg was oor liedjies en verkeerd oor hierdie een
+
+```js
+posts.filter((one) => Boolean(one.audio || one.video))
+```
+
+`/api/live` werk sedert 21 September uit **watter** van vier dinge verkeerd
+geloop het — `unread`, `no_row`, `no_path`, `no_file` — en `LiveChannel` druk
+die sin. In die **lys**. Die scroller, wat die kamer is soos enigiemand dit
+werklik gebruik, het die pos uitgefiltreer.
+
+So sy plaas 'n film, maak Live oop, en daar is **niks** — en nêrens naby dit
+'n sin nie. Vier rondtes van soek het niks gevind nie, want daar was niks op
+die skerm om na te kyk nie.
+
+Die filter was reg oor liedjies: 'n paneel waarheen jy swiep en wat niks doen
+nie, is erger as een wat nie daar is nie. Dit was verkeerd oor 'n pos wat
+**weet** hoekom dit leeg is, want dan is die paneel nie niks nie — dit is die
+antwoord, en dit is die enigste plek waar sy ooit sou kyk.
+
+### Wat dit nie is nie
+
+Dit maak nie die video self reg nie. Ek weet nog nie waarom haar spesifieke
+pos geen lêer het nie, want ek kan nie by haar Supabase uitkom nie. Wat dit
+doen is om die kamer die rede te laat **sê**, sodat die volgende rapport 'n
+skermkiekie is wat die oorsaak noem in plaas van nog 'n aand se raai.

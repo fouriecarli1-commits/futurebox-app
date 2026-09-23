@@ -70,6 +70,27 @@ export interface RoomPost {
    */
   readonly video?: string | null;
   /**
+   * Why this post has no picture, when the room could not find one.
+   *
+   * ── A panel that vanishes teaches nothing ────────────────────────────
+   *
+   * Carli, 23 September 2026, for the fourth time: *"die video werk steeds
+   * nie op live nie."*
+   *
+   * `/api/live` has worked out which of four things went wrong since 21
+   * September, and `LiveChannel` prints the sentence — in the LIST. This
+   * scroller, which is the room as anybody actually uses it, filtered the
+   * post out instead: `posts.filter(one => one.audio || one.video)`. So
+   * she posted a film, opened Live, and found nothing at all, with no
+   * sentence anywhere near it.
+   *
+   * The filter was right about songs: a panel you swipe to that does
+   * nothing is worse than one that is not there. It was wrong about a post
+   * that KNOWS why it is empty, because then the panel is not nothing — it
+   * is the answer, and it is the only place she was ever going to look.
+   */
+  readonly why?: 'unread' | 'no_row' | 'no_path' | 'no_file' | null;
+  /**
    * The song this post is of, where it is one of somebody's own.
    *
    * Not the post's id: the charts on Spotlight are keyed on the song, and a
@@ -152,11 +173,12 @@ export default function RoomScreen({
   /** Which post the element is currently on, for the recovery below. */
   const nowPlaying = useRef<string | null>(null);
 
-  /* Only what can actually be played. A panel you swipe to and that does
-     nothing is worse than one that is not there — and a post whose signed URL
-     has expired is exactly that. */
+  /* Only what can actually be played, PLUS anything that knows why it
+     cannot. A panel you swipe to and that does nothing is worse than one
+     that is not there; a panel that says what went wrong is the opposite,
+     and it is the only place somebody scrolling will ever see it. */
   const playable = useMemo(
-    () => posts.filter((one) => Boolean(one.audio || one.video)),
+    () => posts.filter((one) => Boolean(one.audio || one.video || one.why)),
     [posts],
   );
 
@@ -524,7 +546,31 @@ export default function RoomScreen({
                 fill a phone is worse than the bars. `playsInline` because
                 iOS otherwise takes it full screen out of the scroller the
                 moment it plays, and the room is the scroller. */}
-            {one.video ? (
+            {/* ── The one that cannot be played, saying so ──────────────
+ 
+                Drawn where the picture would be, in the panel she swiped
+                to. `/api/live` worked the reason out; this is the only
+                screen in Live that a person scrolling ever reaches, and
+                until now it dropped the post instead of printing it. */}
+            {!one.video && !one.audio && one.why ? (
+              <div
+                data-roomgone={one.why}
+                className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-8 text-center"
+              >
+                <p className="text-base font-semibold text-zinc-200">
+                  {t('room.goneTitle', 'This one will not play')}
+                </p>
+                <p className="text-sm leading-snug text-zinc-400">
+                  {one.why === 'unread'
+                    ? t('live.goneUnread', 'The video list could not be read just now. Try again in a moment.')
+                    : one.why === 'no_row'
+                      ? t('live.goneRow', 'This video is not in the account any more.')
+                      : one.why === 'no_path'
+                        ? t('live.gonePath', 'This video is in the account, but no file was ever kept for it.')
+                        : t('live.goneFile', 'The file for this video is missing from the store.')}
+                </p>
+              </div>
+            ) : one.video ? (
               <video
                 ref={(element) => {
                   if (element) videos.current.set(one.id, element);

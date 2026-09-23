@@ -118,6 +118,40 @@ POSTS.push({
   plays: 0,
 });
 
+/* ── And one that cannot be played, which knows why ──────────────────────
+ 
+   Carli, 23 September 2026, fourth time: *"die video werk steeds nie op live
+   nie."*
+ 
+   `/api/live` has worked out which of four things went wrong since 21
+   September, and the LIST prints the sentence. The scroller — the room as
+   anybody actually uses it — filtered the post out: `posts.filter(one =>
+   one.audio || one.video)`. So a film she posted was simply not there, with
+   no sentence anywhere near it, and four rounds of looking found nothing
+   because there was nothing on the screen to look at.
+ 
+   `video: null` with a `why`, which is exactly the shape the route sends
+   when the row is gone. */
+POSTS.push({
+  id: 'post-gone',
+  kind: 'video',
+  title: 'A film with no file',
+  note: '',
+  seconds: 2,
+  platform: '',
+  link: '',
+  startsAt: null,
+  at: new Date().toISOString(),
+  by: 'Anré',
+  mine: false,
+  audio: null,
+  video: null,
+  why: 'no_row',
+  hearts: 0,
+  hearted: false,
+  plays: 0,
+});
+
 let server = null;
 let browser = null;
 try {
@@ -441,6 +475,29 @@ try {
     next.at === 1 && next.text.includes('Second Song')
       && new RegExp(`2 / ${POSTS.length}`).test(next.text),
     `panel ${next.at}: ${next.text.slice(0, 46)}`);
+
+  /* ── The one that cannot be played is IN the scroller, saying why ────
+ 
+     Carli's fourth report. The route worked out the reason, the list printed
+     it, and this screen — the only one somebody scrolling ever reaches —
+     dropped the post. A film she had posted was simply absent, and there was
+     no sentence anywhere near it to photograph.
+ 
+     Counted rather than sought by eye: every panel's markup exists at once,
+     so the assertion is that the panel EXISTS and carries its reason, which
+     is what the filter used to remove. */
+  const gone = screen.locator('[data-roomgone]');
+  check('a post the room cannot play is in the scroller rather than dropped',
+    (await gone.count()) === 1,
+    `${await gone.count()} — it used to be filtered out, so she saw nothing at all`);
+  check('  and it says which of the four things went wrong',
+    (await gone.first().getAttribute('data-roomgone').catch(() => null)) === 'no_row',
+    'the panel is there and does not carry the reason the route sent');
+  check('  in words, not a code',
+    /not in the account any more|nie meer in die rekening/i.test(
+      await gone.first().innerText().catch(() => ''),
+    ),
+    (await gone.first().innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 90));
 
   /* ── The heart and the listens, inside the full-screen room ─────────
 

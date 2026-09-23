@@ -267,6 +267,7 @@ export const STRINGS: Dict = {
   "live.gone": { en: "That file is not there any more.", af: "Daardie l\u00eaer is nie meer daar nie." },
   /* Which nothing, on a video. The route knew and the screen did not print
      it, so five reports of "die videos wys nie" all looked the same. */
+  "room.goneTitle": { en: "This one will not play", af: "Hierdie een sal nie speel nie" },
   "live.goneUnread": { en: "The video list could not be read just now. Try again in a moment.", af: "Die videolys kon nou nie gelees word nie. Probeer weer oor \u2019n oomblik." },
   "live.goneRow": { en: "This video is not in the account any more.", af: "Hierdie video is nie meer in die rekening nie." },
   "live.gonePath": { en: "This video is in the account, but no file was ever kept for it.", af: "Hierdie video is in die rekening, maar daar is nooit \u2019n l\u00eaer vir hom gestoor nie." },

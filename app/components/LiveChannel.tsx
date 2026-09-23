@@ -1171,6 +1171,9 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             seconds: one.seconds,
             audio: one.audio,
             video: one.video,
+            /* And the reason there is none, which the list has printed since
+               21 September and the scroller has been dropping on the floor. */
+            why: one.why,
             sourceId: one.sourceId,
             /* Both of these were read by the panel and never sent to it.
 
