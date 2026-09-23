@@ -30,11 +30,11 @@
  *
  * So this asks the real function for real output and checks where it lands.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { AD_FORMATS } from '../app/lib/adformats';
 import { SURFACES } from '../app/lib/surfaces';
 import { LENGTHS } from '../app/lib/videoscenes';
-import { filmThisAd, handoverFor, readThisAd, shapeFor, shapeForNamed } from '../app/lib/adhandover';
+import { carryWords, filmThisAd, handoverFor, readThisAd, shapeFor, shapeForNamed } from '../app/lib/adhandover';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -588,18 +588,32 @@ ok('  in the language the room is being used in',
 /* And the call sites actually send them. The function defaulting to English
    is right — it is a pure function with no `t` — and is also exactly how
    this would ship looking correct while every panel opened in English. */
-const cards = [...shape.matchAll(/handoverFor\(\{[\s\S]*?\n(\s*)\}\)/g)].map((one) => one[0]);
-ok('  and the card sends the room\u2019s words with it',
-  cards.length > 0 && cards.every((call) => /words:\s*\{[\s\S]{0,200}?t\(/.test(call)),
-  cards.length === 0
-    ? 'no handoverFor call found in AdFormats.tsx at all'
-    : 'AdFormats.tsx hands over without any words, so the copilot opens in English');
-/* EVERY call site, not one of them. The first version of this rule asked
-   whether the file contained a call carrying `said:`, and the desk calls
-   each of these twice — once from the button under an advert and once from
-   the copilot's own `film_this`. Renaming the argument at the first call
-   site left the rule green, on the strength of the second. A rule that is
-   satisfied by any one of the places it is about is a rule about the file. */
+/* ── Every door that uses this module, not the one I was looking at ───
+ 
+   The rule below used to read `AdFormats.tsx` and ask whether IT sent the
+   room's words. `handoverFor` has two call sites: the recommendation card
+   and the weekly plan's "Make this one". The second was written by copying
+   the first and would have opened its copilot in English, with a rule about
+   the hand-off sitting green beside it — which is the same mistake as
+   `check:handover` reading only `page.tsx`, one module further down.
+ 
+   So the files are found rather than named. A third call site added
+   tomorrow is held to this the moment it exists. */
+const USERS = readdirSync('app/components')
+  .filter((name) => name.endsWith('.tsx'))
+  .map((name) => [`app/components/${name}`, readFileSync(`app/components/${name}`, 'utf8')] as const)
+  .filter(([, body]) => /handoverFor\(\{/.test(body));
+
+const wordless = USERS.flatMap(([name, body]) =>
+  [...body.matchAll(/handoverFor\(\{[\s\S]*?\n\s*\}\)/g)]
+    .filter((call) => !/words:\s*carryWords\(t\)/.test(call[0]))
+    .map(() => name));
+ok(`  and every door that uses it sends the room\u2019s words \u2014 ${USERS.length} files`,
+  USERS.length >= 2 && wordless.length === 0,
+  USERS.length < 2
+    ? `only ${USERS.length} file(s) found calling handoverFor; the card and the weekly plan both do`
+    : `${[...new Set(wordless)].join(', ')} hand over with no words, so that copilot opens in English`);
+
 for (const [button, fn] of [['film', 'filmThisAd'], ['read', 'readThisAd']] as const) {
   const calls = [...desk.matchAll(new RegExp(`${fn}\\(\\{[^}]*\\}`, 'g'))].map((one) => one[0]);
   ok(`  and so does \u201C${button} this one\u201D, at every press that leads to it`,
@@ -610,14 +624,36 @@ for (const [button, fn] of [['film', 'filmThisAd'], ['read', 'readThisAd']] as c
         + `call ${fn} with no sentence of their own, so that brief opens in English`);
 }
 
-/* Every key they send, in both languages. A key with no Afrikaans falls back
-   to the English fallback string, which is the same bug wearing a dictionary. */
-const CARRY = [...new Set([...shape.matchAll(/t\('(carry\.[a-z]+)'/g)].map((one) => one[1]))]
-  .concat([...new Set([...desk.matchAll(/t\('(carry\.[a-z]+)'/g)].map((one) => one[1]))]);
-ok(`  under ${CARRY.length} keys that exist in Afrikaans too`, CARRY.length >= 12
-  && CARRY.every((key) => new RegExp(`"${key.replace('.', '\\.')}":\\s*\\{[^}]*\\baf:\\s*"[^"]{2,}"`).test(words)),
-  CARRY.filter((key) => !new RegExp(`"${key.replace('.', '\\.')}":\\s*\\{[^}]*\\baf:\\s*"[^"]{2,}"`).test(words)).join(', ')
-    || `${CARRY.length} keys is fewer than the brief has lines`);
+/* ── The keys, asked of the builder rather than grepped for ───────────
+ 
+   `carryWords` is handed a `t` that records what it asks for and answers
+   with a marker. That gives the real list — a thirteenth label added to the
+   module appears here the moment it exists — and it also proves the
+   builder's answers are the ones that come out the other end, which a scan
+   of the call site cannot show. */
+const askedFor: string[] = [];
+const marked = carryWords((key) => {
+  askedFor.push(key);
+  return `«${key}»`;
+});
+const throughIt = handoverFor({
+  formatId: 'short_vertical', brief: BRIEF, pick: PICK, going: ['tiktok'], words: marked,
+}).find((one) => one.op === 'brief')?.value ?? '';
+ok(`  built from one place \u2014 ${askedFor.length} labels`, askedFor.length >= 12,
+  `${askedFor.join(', ')} — fewer labels than the brief has lines`);
+ok('  and every one of them reaches the panel',
+  askedFor.every((key) => throughIt.includes(`«${key}»`)),
+  askedFor.filter((key) => !throughIt.includes(`«${key}»`)).join(', ')
+    + ' — asked for and then dropped, which is how a translated label ships untranslated');
+
+/* Both languages, for those and for the two button sentences. A key with no
+   Afrikaans falls back to the English default, which is the same bug wearing
+   a dictionary. */
+const CARRY = [...askedFor, 'carry.filmed', 'carry.read'];
+const hasAf = (key: string): boolean =>
+  new RegExp(`"${key.replace('.', '\\.')}":\\s*\\{[^}]*\\baf:\\s*"[^"]{2,}"`).test(words);
+ok(`  under ${CARRY.length} keys that exist in Afrikaans too`, CARRY.every(hasAf),
+  CARRY.filter((key) => !hasAf(key)).join(', '));
 
 if (failures) {
   console.error(`\ncheck:adhandover — ${failures} failure(s).\n`);

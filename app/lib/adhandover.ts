@@ -389,6 +389,25 @@ function soundFrom(input: HandoverInput): string {
 }
 
 /**
+ * The same labels, in the room's own language, built in one place.
+ *
+ * Both call sites need them — the recommendation card and the weekly plan's
+ * "Make this one" — and two hand-written copies of twelve labels is two
+ * copies to keep in step. The keys are derived from the field names, so a
+ * thirteenth label cannot be added without a `carry.` key to go with it, and
+ * `check:adhandover` holds every one of those keys to existing in Afrikaans.
+ *
+ * `t` is passed in rather than imported: this module is pure and is tested as
+ * a pure function, and importing the dictionary here would make it a module
+ * that cannot be reasoned about without React.
+ */
+export function carryWords(t: (key: string, fallback: string) => string): HandoverWords {
+  return Object.fromEntries(
+    Object.entries(WORDS).map(([name, english]) => [name, t(`carry.${name}`, english)]),
+  ) as HandoverWords;
+}
+
+/**
  * The brief the destination room's copilot opens with.
  *
  * ── The half of the hand-off that never travelled ────────────────────────
@@ -540,6 +559,15 @@ const FILMED =
 const READ =
   'This is the advert you brought over from the adverts desk. The script is already in '
   + 'the box \u2014 tell me what to change.';
+
+/**
+ * The same two sentences, for the room to translate.
+ *
+ * Exported rather than retyped at the call site: a fallback that has drifted
+ * from the default is a difference nobody will ever see, because the
+ * Afrikaans is what shows and the English is what is tested.
+ */
+export const CARRIED = { filmed: FILMED, read: READ } as const;
 
 function briefFor(ad: HandoverAd, did: string): string {
   return joined([

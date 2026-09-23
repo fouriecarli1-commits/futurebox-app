@@ -34,7 +34,7 @@ import { paperOf, type Words } from '../lib/planpaper';
 import { loadReport } from '../lib/adreport';
 import { loadChosen } from '../lib/chosenformat';
 import { formatById } from '../lib/adformats';
-import { handoverFor, shapeForNamed } from '../lib/adhandover';
+import { carryWords, handoverFor, shapeForNamed } from '../lib/adhandover';
 import type { SurfaceId } from '../lib/surfaces';
 import { byWeekday, standoutDays } from '../lib/adweek';
 import Card from './Card';
@@ -438,6 +438,12 @@ export default function MarketPlan({
                           },
                           pick: { first: slot.what },
                           going: [],
+                          /* And the conversation, in this room's language.
+                             The same builder the format card uses: this
+                             door was written by copying that one, which is
+                             exactly how it would have been the door that
+                             still opened its copilot empty. */
+                          words: carryWords(t),
                         })) {
                           onSetUp(
                             wire.room,

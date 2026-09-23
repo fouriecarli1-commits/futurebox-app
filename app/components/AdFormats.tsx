@@ -43,7 +43,7 @@ import { refusalText } from '../lib/apierror';
 import { AD_FORMATS, formatById } from '../lib/adformats';
 import { daysSince, oldestReview, styleById } from '../lib/adstyles';
 import { loadPicks, saveChosen } from '../lib/chosenformat';
-import { handoverFor, type HandoverAd } from '../lib/adhandover';
+import { carryWords, handoverFor, type HandoverAd } from '../lib/adhandover';
 import type { SurfaceId } from '../lib/surfaces';
 import Card from './Card';
 import Note from './Note';
@@ -304,20 +304,7 @@ export default function AdFormats({
                       pick: { first: pick.first, watchOut: pick.watchOut, style: pick.style },
                       ad,
                       going,
-                      words: {
-                        from: t('carry.from', 'They came here from the adverts desk. It recommended this and has already filled the fields in.'),
-                        sell: t('carry.sell', 'What they sell'),
-                        who: t('carry.who', 'Who it is for'),
-                        offer: t('carry.offer', 'The offer, in their own words'),
-                        tone: t('carry.tone', 'How it should feel'),
-                        market: t('carry.market', 'Where they sell'),
-                        place: t('carry.place', 'Where it will be seen'),
-                        brand: t('carry.brand', 'Their brand kit'),
-                        said: t('carry.said', 'What the adverts desk recommended'),
-                        watch: t('carry.watch', 'What it warned against'),
-                        look: t('carry.look', 'The look it chose'),
-                        change: t('carry.change', 'The offer, the price and the deadline are only ever what they typed \u2014 nothing here may be invented. Tell me what to change.'),
-                      },
+                      words: carryWords(t),
                     })) {
                       onSetUp(wire.room, wire.op, wire.value);
                     }

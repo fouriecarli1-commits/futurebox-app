@@ -40,7 +40,7 @@ import { refusalText } from '../lib/apierror';
 import { matchByTitle, useCopilotOps } from '../lib/copilotactions';
 import type { SurfaceId } from '../lib/surfaces';
 import { DESTINATIONS, PLATFORMS } from '../data/social';
-import { filmThisAd, readThisAd } from '../lib/adhandover';
+import { CARRIED, filmThisAd, readThisAd } from '../lib/adhandover';
 import { NOTHING_KEPT, forgetBrief, loadBrief, saveBrief } from '../lib/adbrief';
 import { clearPicks, loadPicks, putPicks } from '../lib/chosenformat';
 import { loadPlan, savePlan } from '../lib/marketplan';
@@ -406,7 +406,7 @@ export default function Campaign({
           film_this: (value: string) => {
             const ad = pickAd(ads, value);
             if (!ad) return;
-            for (const wire of filmThisAd({ ad, going, style: lookFor(ad), said: t('carry.filmed', 'This is the advert you brought over from the adverts desk. The shot, the shape and the length are already set \u2014 tell me what to change.') })) {
+            for (const wire of filmThisAd({ ad, going, style: lookFor(ad), said: t('carry.filmed', CARRIED.filmed) })) {
               onSetUp(wire.room, wire.op, wire.value);
             }
             onGoTo('canvas');
@@ -418,7 +418,7 @@ export default function Campaign({
           read_this: (value: string) => {
             const ad = pickAd(ads.filter((one) => one.spoken), value);
             if (!ad) return;
-            for (const wire of readThisAd({ ad, said: t('carry.read', 'This is the advert you brought over from the adverts desk. The script is already in the box \u2014 tell me what to change.') })) {
+            for (const wire of readThisAd({ ad, said: t('carry.read', CARRIED.read) })) {
               onSetUp(wire.room, wire.op, wire.value);
             }
             onGoTo('voice_studio');
@@ -924,7 +924,7 @@ export default function Campaign({
                    desk decided an advert was vertical and fifteen seconds
                    and then opened a room set to whatever it had last been
                    left on. */
-                for (const wire of filmThisAd({ ad, going, style: lookFor(ad), said: t('carry.filmed', 'This is the advert you brought over from the adverts desk. The shot, the shape and the length are already set \u2014 tell me what to change.') })) {
+                for (const wire of filmThisAd({ ad, going, style: lookFor(ad), said: t('carry.filmed', CARRIED.filmed) })) {
                   onSetUp(wire.room, wire.op, wire.value);
                 }
                 onGoTo('canvas');
@@ -943,7 +943,7 @@ export default function Campaign({
                      the CLIP says, which is a different job — and this
                      button lands in the room whose entire purpose is
                      reading a script out loud. */
-                  for (const wire of readThisAd({ ad, said: t('carry.read', 'This is the advert you brought over from the adverts desk. The script is already in the box \u2014 tell me what to change.') })) {
+                  for (const wire of readThisAd({ ad, said: t('carry.read', CARRIED.read) })) {
                     onSetUp(wire.room, wire.op, wire.value);
                   }
                   onGoTo('voice_studio');
