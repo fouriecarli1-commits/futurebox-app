@@ -299,6 +299,33 @@ check('every shot reads as made',
    nobody could reach if the slider were built on `seconds`. */
 const trims = room.locator('input[id^="from-"]');
 check('a trim appears once a shot has a clip', (await trims.count()) === 3, String(await trims.count()));
+/* ── The looks ─────────────────────────────────────────────────────
+ 
+   Carli, 23 September 2026: *"Ook met 'n paar filter moontlikhede."*
+ 
+   `check:ownfootage` proves the grade reaches the canvas in the right
+   order and that both cut paths carry it. What it cannot show is that
+   there is a row on the screen, that it appears only once a shot has a
+   clip to put a look on, and that pressing one takes. */
+const grades = room.locator('[data-grade] button');
+check('there is a row of looks once a shot has a clip', (await grades.count()) >= 5,
+  `${await grades.count()} looks on the first shot's row`);
+if ((await grades.count()) > 1) {
+  const chosen = grades.nth(1);
+  await chosen.scrollIntoViewIfNeeded().catch(() => undefined);
+  await chosen.click({ timeout: 8000 }).catch(() => undefined);
+  await p.waitForTimeout(400);
+  check('  and pressing one takes', (await chosen.getAttribute('aria-pressed')) === 'true',
+    'a look that says nothing when it is chosen is a look nobody can tell is on');
+  /* And off again, so the film below is cut as filmed — this probe's later
+     assertions are about length, and leaving a grade on would be a change
+     to what they measure that nothing announced. */
+  await grades.first().click({ timeout: 8000 }).catch(() => undefined);
+  await p.waitForTimeout(300);
+  check('  and can be taken off again', (await grades.first().getAttribute('aria-pressed')) === 'true',
+    'the look cannot be put back to as filmed');
+}
+
 const span = await trims.first().evaluate((el) => Number(el.max));
 check('the handles span the clip, not the request',
   Math.abs(span - CLIP_SECONDS) < 0.6, `max ${span} against a ${CLIP_SECONDS}s clip and a 5s request`);

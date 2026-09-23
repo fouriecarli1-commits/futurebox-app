@@ -81,6 +81,15 @@ export interface Scene {
   /** Named only so a progress line can say which one is being laid down. */
   readonly name?: string;
   /**
+   * The grade for this piece, as a `context.filter` value.
+   *
+   * Per scene rather than per film, because the case it exists for is the
+   * mixed one — see `lib/videofilters.ts`. Empty or absent leaves the canvas
+   * filter alone entirely, which is not the same as setting it to `none`:
+   * a browser that does not honour the property must never have it touched.
+   */
+  readonly grade?: string;
+  /**
    * Where to start and stop inside the clip, in seconds.
    *
    * A generation comes back at the length the engine makes, which is rarely
@@ -619,8 +628,25 @@ export async function stitch(cut: Cut): Promise<Made> {
              shot instead of being a still behind a moving picture. */
           context.fillStyle = '#000';
           context.fillRect(0, 0, cut.width, cut.height);
+          /* The grade goes on before the picture and comes off before the
+             words. Both halves matter.
+ 
+             Before the backdrop as well as the picture: `backdrop` sets the
+             blur on the SCRATCH canvas and draws the result through this
+             one, so a grade set here reaches it — which is what makes a
+             black-and-white shot sit in a black-and-white fill rather than
+             in a wash of the colour it just had taken out.
+ 
+             And off again before the caption and the logo. Words tinted
+             sepia and a mark pushed through a contrast curve are the two
+             things on this canvas that are ours rather than hers, and the
+             one thing a grade must not touch is the text somebody has to
+             read. */
+          const grade = cut.scenes[index].grade ?? '';
+          if (grade) context.filter = grade;
           if (wantsBlur && fills < 0.995) backdrop(context, scratch, video, cut.width, cut.height);
           context.drawImage(video, box.x, box.y, box.w, box.h);
+          if (grade) context.filter = 'none';
           /* Over the picture and over the bars alike, so a caption on a wide
              shot in a tall film sits in the black band rather than across a
              face. Painted every frame because the frame under it is. */

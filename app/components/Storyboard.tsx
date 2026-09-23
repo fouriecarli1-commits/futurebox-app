@@ -64,6 +64,8 @@ import { useLang } from '../lib/i18n';
 import Card from './Card';
 import { useOpenCard } from '../lib/opencard';
 import Note from './Note';
+import { FILTERS, NO_FILTER, filterCss } from '../lib/videofilters';
+import OwnFootage from './OwnFootage';
 import Subtitles, { translated } from './Subtitles';
 
 /**
@@ -298,6 +300,11 @@ export default function Storyboard({
   const shoot = useCallback(
     async (id: string) => {
       const shot = board.shots.find((one) => one.id === id);
+      /* Her own footage is never generated over. The button is not drawn for
+         one, and this is the second lock: the copilot can reach this room,
+         and a generation started against a piece she filmed would replace it
+         with an invention of the same length and charge her for it. */
+      if (shot?.mine) return;
       if (!shot || making) return;
       if (shot.prompt.trim().length < 12) {
         setProblem(t('board.tooShort', 'Say a bit more in that shot — what is in it, and what the camera does.'));
@@ -398,6 +405,12 @@ export default function Storyboard({
              turned off after a talking shot was paid for, and a cut that
              read it would mute the voice she bought. */
           ...(board.shots[index].spoke ? { sound: true } : {}),
+          /* The grade, as the css the canvas takes rather than the id. The
+             cut has no business knowing the catalogue, and an id it could
+             not resolve would be a piece silently ungraded. */
+          ...(filterCss(board.shots[index].filter)
+            ? { grade: filterCss(board.shots[index].filter) }
+            : {}),
           /* Only when the board is captioning. A caption left on a shot from a
              run with the switch on must not reappear in a run with it off. */
           ...(board.captions && captions[index]?.trim()
@@ -508,6 +521,11 @@ export default function Storyboard({
             ...(shot.to !== undefined ? { to: shot.to } : {}),
             ...(words.trim() ? { caption: words } : {}),
             ...(shot.spoke ? { sound: true } : {}),
+            /* The same grade the film would give it. A piece downloaded on
+               its own that came out ungraded would be a different picture
+               from the one in the film above it, which is the one thing a
+               per-piece download must never be. */
+            ...(filterCss(shot.filter) ? { grade: filterCss(shot.filter) } : {}),
           }],
           audio: null,
           ...wide,
@@ -597,7 +615,20 @@ export default function Storyboard({
             >
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-semibold text-zinc-500 tabular-nums w-6">{index + 1}</span>
-                {shot.makeId ? (
+                {shot.mine ? (
+                  /* Not "Made". Nothing was made — she filmed it. Saying
+                     "Made" over her own footage is the board claiming credit
+                     for a recording it had nothing to do with, and it is
+                     also the one word that would make somebody press "Make
+                     it again" to improve it. */
+                  <span
+                    data-mineshot={shot.id}
+                    className="inline-flex items-center gap-1 rounded-lg border border-sky-500/50 bg-sky-500/10 px-2 py-1 text-xs font-semibold text-sky-300"
+                  >
+                    <Clapperboard className="w-3 h-3" />
+                    {t('board.mine', 'Your own footage')}
+                  </span>
+                ) : shot.makeId ? (
                   <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-300">
                     <Check className="w-3 h-3" />
                     {t('board.ready', 'Made')}
@@ -715,6 +746,14 @@ export default function Storyboard({
                   </button>
                 ))}
                 <span className="flex-1" />
+                {/* Nothing to generate for a piece she filmed, and "Make it
+                    again" over it would replace her footage with an
+                    invention of the same length. The only thing this shot
+                    can be asked is to leave, and that button is already in
+                    the row above. */}
+                {shot.mine ? (
+                  <Note>{t('board.mineWhy')}</Note>
+                ) : (
                 <button
                   type="button"
                   onClick={() => void shoot(shot.id)}
@@ -726,6 +765,7 @@ export default function Storyboard({
                   {' — '}
                   {videoCost(grade, shot.seconds)}
                 </button>
+                )}
               </div>
 
               {/* ── The trim ──────────────────────────────────────────────
@@ -736,6 +776,56 @@ export default function Storyboard({
                   The cheapest edit on this desk: the first half-second is the
                   model finding the shot and the last is often it drifting off,
                   and both are paid for whatever happens. */}
+              {/* ── The grade ────────────────────────────────────────────
+ 
+                  Carli, 23 September 2026: *"Ook met 'n paar filter
+                  moontlikhede."*
+ 
+                  Only once there is a clip, for the same reason as the trim:
+                  a look with nothing to put it on is a control for a guess.
+ 
+                  The preview is the real thing. `filterCss` returns a value
+                  the CANVAS takes, and a canvas filter and a CSS filter are
+                  the same string — so the swatch below is the arithmetic the
+                  cut will do, not a picture of it. A row of swatches that
+                  approximated the result would be the worst kind of control:
+                  one that is wrong only sometimes. */}
+              {shot.makeId && (
+                <div className="flex flex-wrap gap-1.5" data-grade={shot.id}>
+                  {FILTERS.map((one) => {
+                    const on = (shot.filter ?? NO_FILTER) === one.id;
+                    return (
+                      <button
+                        key={one.id}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => setBoard((was) => changed(was, shot.id, {
+                          filter: one.id === NO_FILTER ? undefined : one.id,
+                        }))}
+                        className={`min-h-[44px] rounded-xl border px-2.5 py-1 text-xs font-semibold transition-all ${
+                          on
+                            ? 'border-emerald-500 bg-emerald-500/10 text-emerald-200'
+                            : 'border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                        }`}
+                      >
+                        <span
+                          aria-hidden
+                          className="mr-1.5 inline-block h-3 w-3 rounded-sm align-[-1px]"
+                          style={{
+                            /* A swatch of the app's own green put through the
+                               same filter, so the row reads as what each one
+                               DOES rather than as seven identical chips. */
+                            background: '#34d399',
+                            ...(one.css ? { filter: one.css } : {}),
+                          }}
+                        />
+                        {t(`filter.${one.id}`, one.en)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {shot.makeId && (clipLengths[shot.makeId] ?? 0) > 0 && (
                 <Trim
                   shot={shot}
@@ -757,6 +847,22 @@ export default function Storyboard({
         <Plus className="w-4 h-4" />
         {t('board.add', 'Add a shot')}
       </button>
+
+      {/* ── Her own filming, on the same board ────────────────────────────
+ 
+          Carli, 23 September 2026: *"Ek het byvoorbeeld nou 'n bemarking wat
+          ek moet bou vir 'n funksie, ek wil sniplets uit my videos gebruik
+          vir bemarking."*
+ 
+          Directly under "Add a shot", because it is the same act: one more
+          piece on the board. A separate room for it would make mixing her
+          own footage with a generated shot a trip between two screens, and
+          mixing them is the whole point — the two shots she has of the
+          function, and one generated to open on. */}
+      <OwnFootage
+        seconds={shortest}
+        onAdd={(shot) => setBoard((was) => withShot(was, shot))}
+      />
 
       {/* Shown from the start, not once a shot has been written.
 

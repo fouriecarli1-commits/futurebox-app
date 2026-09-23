@@ -271,6 +271,8 @@ jobs:
       # no operations for anything to arrive in.
       - name: Every recommendation arrives in the next room with the brief in it
         run: npm run check:adhandover
+      - name: Her own footage cuts in beside the generated shots, graded the same in both cuts
+        run: npm run check:ownfootage
 
       # Arriving is not the same as being seen. A room opens as its own table
       # of contents, so a value handed to it landed in a shut card three

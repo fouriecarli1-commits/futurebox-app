@@ -42,15 +42,41 @@ export interface Shot {
   /** The `makes.ts` id of the clip that came back, once one has. */
   readonly makeId?: string;
   /**
-   * Whether the clip that came back was generated with its line spoken.
+   * Whether this shot's clip has sound worth carrying into the film.
    *
    * A property of the FILE, not of the switch. The board's switch can be
    * turned off after a talking shot was paid for, and turned on before a
    * silent one is remade — so reading the switch at cutting time would mute
    * shots that speak and unmute shots with nothing in them but room tone.
-   * Written when the clip is made and never inferred.
+   * Written when the clip arrives and never inferred.
+   *
+   * Named for the case it was written for — a generated shot whose quoted
+   * line was spoken — and it has always meant the wider thing at cutting
+   * time, where it is the only thing that decides `Scene.sound`. Footage she
+   * filmed herself sets it too, and rightly: a clip of the function has
+   * people talking in it, and that is the sound anybody would keep.
    */
   readonly spoke?: boolean;
+  /**
+   * Her own footage, rather than something an engine made.
+   *
+   * ── Why the board needed to know the difference ───────────────────────
+   *
+   * Carli, 23 September 2026: *"Ek het byvoorbeeld nou 'n bemarking wat ek
+   * moet bou vir 'n funksie, ek wil sniplets uit my videos gebruik vir
+   * bemarking."*
+   *
+   * Everything under this board was already indifferent to where a clip came
+   * from: `makeId` points at bytes, `makeBlob` fetches them, the stitcher
+   * takes any `Blob`, and the trim handles work off the file's real length.
+   * So a piece of her own video needed no new pipeline — it needed the board
+   * to stop treating "has a clip" as "was generated".
+   *
+   * The difference is only visible in three places, and all three matter:
+   * this shot costs nothing, "Make it again" would destroy it rather than
+   * improve it, and its own sound is the point rather than room tone.
+   */
+  readonly mine?: boolean;
   /**
    * Where this shot starts and stops inside its clip, in seconds.
    *
@@ -77,6 +103,18 @@ export interface Shot {
    * sees, and this is what the viewer reads.
    */
   readonly caption?: string;
+  /**
+   * The grade on this piece, by id from `lib/videofilters.ts`.
+   *
+   * Per shot rather than per film on purpose — the note in that file says
+   * why, and the short of it is that the case worth having this for is the
+   * mixed one: three pieces filmed on a phone in a hall and one generated
+   * shot, pulled towards each other so they read as one film.
+   *
+   * Absent means as filmed, which is not the same as the id `none`: the cut
+   * must be able to leave the canvas filter untouched.
+   */
+  readonly filter?: string;
 }
 
 export interface Storyboard {
