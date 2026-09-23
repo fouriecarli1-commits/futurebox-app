@@ -17,6 +17,7 @@
     "check:livewhy": "tsx scripts/check-livewhy.mts",
     "check:hookcarry": "tsx scripts/check-hookcarry.mts",
     "check:paidback": "tsx scripts/check-paidback.mts",
+    "check:paymeta": "tsx scripts/check-paymeta.mts",
     "check:handover": "tsx scripts/check-handover.mts",
     "check:longshot": "tsx scripts/check-longshot.mts",
     "check:realart": "tsx scripts/check-realart.mts",

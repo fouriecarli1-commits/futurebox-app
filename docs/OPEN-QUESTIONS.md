@@ -6301,3 +6301,52 @@ Die oorspronklike volgorde-fout teruggesit → `check:sqlruns` word rooi met
 `relation "public.events" does not exist`. Die beleid laat val → WATKORT noem
 dit op sy naam. Die bundel op 'n leë projek → **0 foute, en WATKORT kom leeg
 terug.**
+
+## §AP · Sy het drie keer R50 betaal en dit is elke keer weggegooi (23 September 2026)
+
+Sy het die SQL gehardloop: **geen foute, niks kort nie.** Dus is die databasis
+reg en al drie foute is kode. Dit het die soektog dadelik vernou.
+
+Die bid eerste, want dit is geld. `app/api/checkout/route.ts`:
+
+```js
+work: want.kind === 'art' ? want.work : null,
+```
+
+en `app/api/payments/webhook/route.ts`:
+
+```js
+if (meta.kind === 'bidpass') {
+  if (!meta.work) { console.error('a buy-in arrived with no piece on it'); return; }
+```
+
+'n Bid-pas het dus met `work: null` uitgegaan, met `work: null` teruggekom, en
+is laat val. **Sy is R50 gehef en het niks gekry nie. Elke keer.**
+
+Niks het misluk nie. Geen roete het gegooi nie, geen check het rooi geword
+nie — en die kommentaar reg bo daardie reël het gesê:
+
+> *"Nothing to name: the pass is one thing and there is one of it. The webhook
+> reads `kind` alone."*
+
+Dit wás waar, toe die pas die hele mark gedek het. Dit het ophou waar wees toe
+sy gesê het *"dit is nie vir elke bidding nie"* en die pas per stuk geword het:
+die prysbepaling hierbo is verander om 'n werk te vat, en die webhook is
+verander om een te **eis**. Hierdie reël is nie verander nie, en die
+kommentaar het aangehou om die ou reëling bo-oor die nuwe een te beweer.
+
+### Die reël wat dit sou gevang het
+
+`check:paymeta` lees **albei kante** eerder as om 'n lys hier te hou: dit
+skandeer die webhook vir die velde wat dit per soort eis, die till vir die
+velde wat dit per soort stuur, en vergelyk hulle. 'n Derde kopie van dieselfde
+kontrak sou presies vrot soos die kommentaar gevrot het.
+
+Ses paar, en die oorspronklike fout word rooi.
+
+### En 'n gat in my eie reël, deur mutasie gevang
+
+`offer: null,` het deurgeglip. My `sentFor` het gesê: geen `?` in die reël nie,
+dus onvoorwaardelik gestuur. 'n Veld wat hard op `null` gedraad is, word nié
+gestuur nie. 'n Reël wat 'n konstante null as 'n waarde behandel, is 'n reël
+wat juis die fout nie kan sien waarvoor dit geskryf is nie.

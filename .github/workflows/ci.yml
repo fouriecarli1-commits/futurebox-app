@@ -916,6 +916,12 @@ jobs:
       - name: Paying comes back to the room it was paid in
         run: npm run check:paidback
 
+      # She paid R50 for a bid pass three times and it was discarded on the
+      # way back, because the till sent the piece for one payment kind and
+      # the webhook required it for two.
+      - name: What the till sends is what the webhook needs
+        run: npm run check:paymeta
+
       # And every other door, once. Three reports about three different
       # hand-offs is not three bugs, it is nothing holding a door to
       # carrying what it knows — so every way into another room is listed,

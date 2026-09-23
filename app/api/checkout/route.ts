@@ -339,10 +339,26 @@ export async function POST(request: Request): Promise<Response> {
           /* Which piece, and for whom. The webhook marks it sold; nothing
              in this app marks a piece sold on the strength of a browser
              saying the payment went through. */
-          work: want.kind === 'art' ? want.work : null,
+          /* ── And the bid pass carries a piece too ──────────────────
+ 
+             Carli, 23 September 2026, for the third time: *"die album art
+             se bid het nogsteeds nie gewerk nie."* This line is why. It
+             read `want.kind === 'art'`, so a `bidpass` went to Paystack
+             with `work: null` — and the webhook, which requires it, logged
+             "a buy-in arrived with no piece on it" and saved nothing.
+ 
+             She was charged R50 and got nothing back. Every time.
+ 
+             The comment that used to sit below said *"Nothing to name: the
+             pass is one thing and there is one of it. The webhook reads
+             `kind` alone."* That was true when the pass covered the whole
+             market. It stopped being true when she said *"dit is nie vir
+             elke bidding nie"* and the pass became per piece: the pricing
+             above was changed to take a work, and the webhook was changed
+             to demand one. This line was not, and the comment went on
+             asserting the old arrangement over the top of it. */
+          work: want.kind === 'art' || want.kind === 'bidpass' ? want.work : null,
           offer: want.kind === 'commission' ? want.offer : null,
-          /* Nothing to name: the pass is one thing and there is one of
-             it. The webhook reads `kind` alone. */
           label: price.label,
         },
       }),
