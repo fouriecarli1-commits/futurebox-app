@@ -2286,6 +2286,24 @@ export const STRINGS: Dict = {
   "live.generated": { en: "generated", af: "gegenereer" },
   "booth.title": { en: "ProBooth", af: "ProBooth" },
   "booth.back": { en: "Back", af: "Terug" },
+
+  /* ── Taking it back ─────────────────────────────────────────────────
+     Each one names the thing that comes off, because the button says
+     "Herstel: die in- of uitdoof" and a bare "Herstel" leaves somebody
+     guessing which of their last four moves is about to be unwound. */
+  "undo.does": { en: "Undo", af: "Herstel" },
+  "undo.again": { en: "Redo", af: "Doen weer" },
+  "undo.nothing": { en: "Nothing to undo", af: "Niks om te herstel nie" },
+  "undo.nothingAgain": { en: "Nothing to redo", af: "Niks om oor te doen nie" },
+  "undo.cut": { en: "the cut", af: "die uitsny" },
+  "undo.keep": { en: "dropping the rest", af: "die weggooi van die res" },
+  "undo.repeat": { en: "the repeat", af: "die herhaling" },
+  "undo.fade": { en: "the fade", af: "die in- of uitdoof" },
+  "undo.mark": { en: "marking the piece", af: "die merk van die stuk" },
+  "undo.split": { en: "the split in two", af: "die sny in twee" },
+  "undo.clean": { en: "taking the room off", af: "die skoonmaak" },
+  "undo.lane": { en: "dropping the lane", af: "die weggooi van die baan" },
+  "undo.all": { en: "clearing every lane", af: "die skoonvee van al die bane" },
   "booth.stripIdle": { en: "Press record: the song’s notes are the bars, and your voice draws on them.", af: "Druk opneem: die liedjie se note is die stawe, en jou stem teken daarop." },
   "booth.ready": { en: "Ready", af: "Gereed" },
   "booth.noWords": { en: "This song has no words on it, so there is nothing to follow. Sing anyway \u2014 the waveform and the note still work.", af: "Hierdie liedjie het geen woorde nie, so daar is niks om te volg nie. Sing maar \u2014 die klankbaan en die noot werk steeds." },

@@ -19,7 +19,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, Circle, Clock, Download, Gauge, Grid3x3, KeyRound, Layers, Link2, Link2Off, Loader2, Mic2, Music2, Plus, Repeat, Scissors, Search, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
+import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, Circle, Clock, Download, Gauge, Grid3x3, KeyRound, Layers, Link2, Link2Off, Loader2, Mic2, Music2, Plus, Redo2, Repeat, Scissors, Search, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Undo2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, carveLane, dbOf, fadedCopy, lengthOf, mixSession, monoOf, pieceOf,
   playsOf, readInto, readSession, repeatOf, span, startLane, windowOf, wireLane, wireMaster,
@@ -73,6 +73,7 @@ import {
   type Bars, type Family,
 } from '../lib/parts';
 import { songCost } from '../lib/credits';
+import { makeHistory } from '../lib/undo';
 
 /** A lane is drawn this tall. Enough to read a waveform, small enough to stack. */
 const LANE_H = 56;
@@ -106,6 +107,64 @@ export default function ProBooth({
   useBackLayer(true, onClose);
 
   const [lanes, setLanes] = useState<Lane[]>([]);
+  /**
+   * Taking it back.
+   *
+   * Kept in a ref rather than in state because the history is not drawn —
+   * only what it can offer is, and that is `undoWhat`/`redoWhat` below,
+   * which are set every time it changes. A history in state would rebuild
+   * the whole room on every remembered step, including the ones that happen
+   * while a finger is still on the screen.
+   *
+   * `lanesNow` exists for the same reason and is the harder half: `undo`
+   * has to hand the CURRENT lanes to redo, and a callback that closed over
+   * `lanes` would hand it whatever they were when the button was last
+   * rendered. The ref is written on every render, so it is never the stale
+   * one.
+   */
+  const history = useRef(makeHistory<Lane>());
+  const lanesNow = useRef<Lane[]>([]);
+  lanesNow.current = lanes;
+  const [undoWhat, setUndoWhat] = useState<string | null>(null);
+  const [redoWhat, setRedoWhat] = useState<string | null>(null);
+  const saidSo = useCallback(() => {
+    setUndoWhat(history.current.undoable());
+    setRedoWhat(history.current.redoable());
+  }, []);
+  /**
+   * Put the lanes as they are on the stack, then change them.
+   *
+   * Before and not after: the stack holds what to go BACK to, so it has to
+   * be read while it is still true. Every change that cannot be undone by
+   * dragging an edge goes through here — see `check:undo`, which reads this
+   * file and says which ones do not.
+   */
+  const remember = useCallback((what: string) => {
+    history.current.remember(what, lanesNow.current);
+    saidSo();
+  }, [saidSo]);
+
+  /**
+   * Back one step, and forward again.
+   *
+   * `setStale(true)` on both, because the mix on file was rendered from
+   * lanes that are no longer the lanes: a bounce still offering the old
+   * file after an undo is the same lie as one offering it after a fade.
+   */
+  const stepBack = useCallback(() => {
+    const step = history.current.undo(lanesNow.current);
+    if (!step) return;
+    setLanes([...step.lanes]);
+    setStale(true);
+    saidSo();
+  }, [saidSo]);
+  const stepForward = useCallback(() => {
+    const step = history.current.redo(lanesNow.current);
+    if (!step) return;
+    setLanes([...step.lanes]);
+    setStale(true);
+    saidSo();
+  }, [saidSo]);
   /**
    * Whether the saved session has been looked for yet.
    *
@@ -1171,6 +1230,7 @@ export default function ProBooth({
         }
         /* The cut is spent: what comes back is already the piece that played,
            so `from` and `to` would trim it a second time. */
+        remember(t('undo.clean', 'die skoonmaak'));
         setLanes((was) => was.map((one) => (
           one.id === lane.id
             ? { ...one, audio: cleaned, from: undefined, to: undefined, amped: undefined }
@@ -1494,6 +1554,11 @@ export default function ProBooth({
     }
     setProblem(null);
     setStale(true);
+    /* Two lanes where there was one, and there is no button that joins them
+       back up — so this is not one of the free ones however cheap it looks.
+       Both halves still point at the same recording, which is why the cut
+       costs nothing; it is the SESSION that cannot be put back by hand. */
+    remember(t('undo.split', 'die sny in twee'));
 
     const left: Lane = { ...lane, id: `${lane.id}-a`, name: lane.name };
     const right: Lane = { ...lane, id: `${lane.id}-b`, name: lane.name };
@@ -1602,18 +1667,26 @@ export default function ProBooth({
   }, [lanes, picked, region, t]);
 
   /** The three pieces back into the session, in the order they play. */
-  const commit = useCallback((id: string, pieces: readonly (Lane | null)[]): Lane[] => {
+  const commit = useCallback((
+    what: string,
+    id: string,
+    pieces: readonly (Lane | null)[],
+  ): Lane[] => {
+    /* Every region operation lands here, so this is the one place undo has
+       to be told about them — a fade, a cut, a keep, a repeat and a send
+       are one remembered step each, named by whoever called. */
+    remember(what);
     const kept = pieces.filter((one): one is Lane => one !== null);
     setLanes((was) => was.flatMap((one) => (one.id !== id ? [one] : kept)));
     setStale(true);
     return kept;
-  }, []);
+  }, [remember]);
 
   /** Out, leaving the gap. */
   const regionCut = useCallback(() => {
     const got = carveHere();
     if (!got) return;
-    const kept = commit(got.lane.id, [got.carved.before, got.carved.after]);
+    const kept = commit(t('undo.cut', 'die uitsny'), got.lane.id, [got.carved.before, got.carved.after]);
     setPicked(kept[0]?.id ?? null);
     setRegion(null);
     setRegionOpen(false);
@@ -1623,7 +1696,7 @@ export default function ProBooth({
   const regionKeep = useCallback(() => {
     const got = carveHere();
     if (!got) return;
-    commit(got.lane.id, [got.carved.inside]);
+    commit(t('undo.keep', 'die weggooi van die res'), got.lane.id, [got.carved.inside]);
     setPicked(got.carved.inside.id);
     setRegionOpen(false);
   }, [carveHere, commit]);
@@ -1640,7 +1713,7 @@ export default function ProBooth({
     if (!got) return;
     const { before, inside, after } = got.carved;
     const extra = lengthOf(inside);
-    commit(got.lane.id, [
+    commit(t('undo.repeat', 'die herhaling'), got.lane.id, [
       before,
       { ...inside, repeat: Math.min(64, repeatOf(inside) * 2) },
       after ? { ...after, at: after.at + extra } : null,
@@ -1666,7 +1739,7 @@ export default function ProBooth({
       const got = carveHere();
       if (!got) return;
       const { before, inside, after } = got.carved;
-      commit(got.lane.id, [
+      commit(t('undo.fade', 'die in- of uitdoof'), got.lane.id, [
         before,
         {
           ...inside,
@@ -1724,7 +1797,7 @@ export default function ProBooth({
       const got = carveHere();
       if (!got) return;
       const { before, inside, after } = got.carved;
-      commit(got.lane.id, [before, inside, after]);
+      commit(t('undo.mark', 'die merk van die stuk'), got.lane.id, [before, inside, after]);
       setPicked(inside.id);
       setRegionOpen(false);
       void (what === 'voice' ? split(inside) : intoParts(inside));
@@ -2091,7 +2164,10 @@ export default function ProBooth({
             meter={meter}
             onChange={(how) => change(lane.id, how)}
             onDeRoom={() => void deRoom(lane)}
-            onRemove={() => setLanes((was) => was.filter((one) => one.id !== lane.id))}
+            onRemove={() => {
+              remember(t('undo.lane', 'die weggooi van die baan'));
+              setLanes((was) => was.filter((one) => one.id !== lane.id));
+            }}
             onSplit={() => void split(lane)}
             onVoice={() => setChanging(lane)}
             onRead={() => void look(lane)}
@@ -3498,6 +3574,55 @@ export default function ProBooth({
           <ArrowLeft className="h-4 w-4" />
           {t('booth.back', 'Back')}
         </button>
+
+        {/* ── Taking it back ────────────────────────────────────────────
+
+            Next to Back and not hidden behind a desk, because the moment
+            somebody needs this is the moment straight after the thing they
+            did not mean to do, and a control you have to go looking for is
+            one more press of something while you are already flustered.
+
+            The word is on it and the label says what goes: "Herstel: die
+            in- of uitdoof" rather than a bare arrow, so nobody has to
+            remember which of the last four things is the one that comes
+            off. Shut off — and it says nothing at all rather than lying
+            about being available — when there is nothing on the stack.
+
+            The two are a pair with a gap between them, and never a
+            segmented strip: `globals.css` paints a one-sided border as a
+            filled rectangle, which is what `check:sideborder` is for. */}
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            data-undo
+            onClick={stepBack}
+            disabled={undoWhat === null}
+            aria-label={undoWhat === null
+              ? t('undo.nothing', 'Niks om te herstel nie')
+              : `${t('undo.does', 'Herstel')}: ${undoWhat}`}
+            title={undoWhat === null
+              ? t('undo.nothing', 'Niks om te herstel nie')
+              : `${t('undo.does', 'Herstel')}: ${undoWhat}`}
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white active:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600 disabled:hover:border-zinc-800"
+          >
+            <Undo2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            data-redo
+            onClick={stepForward}
+            disabled={redoWhat === null}
+            aria-label={redoWhat === null
+              ? t('undo.nothingAgain', 'Niks om oor te doen nie')
+              : `${t('undo.again', 'Doen weer')}: ${redoWhat}`}
+            title={redoWhat === null
+              ? t('undo.nothingAgain', 'Niks om oor te doen nie')
+              : `${t('undo.again', 'Doen weer')}: ${redoWhat}`}
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 hover:border-emerald-500 hover:text-white active:bg-zinc-800 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600 disabled:hover:border-zinc-800"
+          >
+            <Redo2 className="h-4 w-4" />
+          </button>
+        </div>
         <div className="min-w-0">
           <p className="text-base font-bold text-white truncate">{t('pro.title', 'ProBooth — lanes')}</p>
           <p className="text-sm text-zinc-500 truncate">
@@ -3545,6 +3670,7 @@ export default function ProBooth({
               type="button"
               onClick={() => {
                 void forgetSession();
+                remember(t('undo.all', 'die skoonvee van al die bane'));
                 setLanes((was) => was.filter((lane) => lane.backing));
                 setCameBack(false);
                 setSavedAt(null);
@@ -4029,7 +4155,7 @@ function LaneRow({
           <Mic2 className="w-4 h-4" />
         </button>
         {!lane.backing && (
-          <button type="button" onClick={onRemove} className="p-2 sm:p-0 text-zinc-600 hover:text-red-400 ml-auto">
+          <button type="button" data-droplane onClick={onRemove} className="p-2 sm:p-0 text-zinc-600 hover:text-red-400 ml-auto">
             <Trash2 className="w-4 h-4" />
           </button>
         )}

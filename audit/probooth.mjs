@@ -119,6 +119,18 @@ try {
   check('the room opens with the song already in it',
     /A test song/.test(await words()), (await words()).slice(0, 120).replace(/\n/g, ' / '));
 
+  /* ── Nothing to take back yet ──────────────────────────────────────
+
+     Here and not further down: by the time this probe has pressed its way
+     through the tempo strip and the stem splitter there IS something on the
+     stack, and asserting an empty history down there measures how many of
+     the steps above happened to be free rather than what a fresh room
+     offers. Which was the first version of this, and it reported a fault
+     that was the probe's. */
+  check('undo is shut off in a room where nothing has been done',
+    await p.locator('[data-undo]').isDisabled(), 'undo offers to take something back before anything was done');
+  check('  and so is redo', await p.locator('[data-redo]').isDisabled());
+
   /* ── The clock reads in bars ─────────────────────────────────────────
 
      Not seconds. A musician setting up a take reads bars, and the whole
@@ -585,6 +597,54 @@ try {
     /* The mark is spent, so the bar goes with it. */
     check('and the mark is cleared once it has been used',
       (await p.locator('[data-regiontools]').count()) === 0);
+ 
+    /* ── Taking it back ─────────────────────────────────────────────
+
+       Here, because a cut is the destructive operation this room really
+       does — every region tool lands in the same funnel, so if the cut is
+       remembered they all are. `check:undo` runs the stack's arithmetic
+       headlessly; what is worth a browser is that the button in the room is
+       wired to it and that the label named the right thing BEFORE it was
+       pressed.
+
+       The first version of this walk sat at the top of the probe, where the
+       session is only the backing lane and there is nothing to throw away.
+       It reported a fault that was its own. */
+    const undo = p.locator('[data-undo]');
+    const redo = p.locator('[data-redo]');
+    const lanesNow = () => p.locator('[data-lanename]').count();
+    const afterCut = await lanesNow();
+
+    check('the cut put something on the stack', await undo.isEnabled(),
+      'a lane was cut in two and nothing offers to put it back');
+    const says = (await undo.getAttribute('title')) ?? '';
+    check('  and the button says WHICH thing comes off, not just "undo"',
+      /the cut|die uitsny/.test(says), `it says "${says}"`);
+
+    await undo.click();
+    await p.waitForTimeout(600);
+    check('  and pressing it puts the lane back together',
+      (await lanesNow()) === before,
+      `${before} lanes before the cut, ${afterCut} after, ${await lanesNow()} after the undo`);
+
+    check('  after which redo offers the same thing again',
+      await redo.isEnabled() && /the cut|die uitsny/.test((await redo.getAttribute('title')) ?? ''),
+      `redo says "${(await redo.getAttribute('title')) ?? ''}"`);
+    await redo.click();
+    await p.waitForTimeout(600);
+    check('  and redo cuts it again', (await lanesNow()) === afterCut,
+      `${await lanesNow()} lanes, expected ${afterCut}`);
+
+    /* A lane thrown away is the other case with no edge to drag back, and
+       it is NOT walked here. Its remove button lives inside the lane's own
+       card, which has an open state of its own — separate from the pick
+       this probe makes by tapping the name in the gutter — so reaching it
+       means driving a second control that has nothing to do with undo.
+       `check:undo` covers that path instead: it reads every place the room
+       replaces the lanes and fails on any that neither remembers nor is
+       named free, and the lane remove is one of the ones it requires by
+       name. What a browser is needed for is that the button in the header
+       is really wired to the stack, and the cut above is that. */
   }
 
   /* ── Nothing overlaps, at either size ────────────────────────────────
@@ -1209,6 +1269,16 @@ try {
      Last, because it throws away the page every other assertion is standing
      on. The wait is for the debounce: the room writes two seconds after the
      last change, so reloading sooner would prove nothing but the timer. */
+  /* ── Taking it back ─────────────────────────────────────────────────
+
+     Undo is the control somebody reaches for while flustered, so the thing
+     worth proving is not that a stack exists — `check:undo` runs that
+     arithmetic headlessly — but that pressing the button in the room really
+     puts the lane back, and that the label named the right thing BEFORE it
+     was pressed. A history that is correct and a button that is wired to it
+     are two different claims.
+
+     Before the reload below, which throws the page away. */
   await p.waitForTimeout(3000);
   /* Read off the timeline's gutter, which is where every lane's name is.
 

@@ -300,6 +300,17 @@ jobs:
       - name: Nothing reads a missing thing as the first thing
         run: npm run check:ordering
 
+      # The booth's doctrine is that almost nothing costs anything and all
+      # of it is undone by dragging an edge back — and its own prose admits
+      # where that runs out: "The fade is the one exception, it is written
+      # into the sound." Undo is not a feature somebody tries, it is a thing
+      # somebody reaches for while flustered, so one operation that never
+      # told the stack anything makes the whole button untrustworthy. This
+      # also runs the memory ceiling: twenty steps sharing one recording
+      # must weigh one recording, not twenty.
+      - name: Nothing the booth does to the lanes escapes the history
+        run: npm run check:undo
+
       # `{zoom}\u00d7` in JSX text is six characters of nothing, printed as
       # typed. It compiles, it passes every test that reads the DOM by role
       # or label, and it reached a phone as "4\u00d7" in a photograph.

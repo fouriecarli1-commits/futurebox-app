@@ -112,6 +112,7 @@
     "check:ownfootage": "tsx scripts/check-ownfootage.mts",
     "check:opencard": "tsx scripts/check-opencard.mts",
     "check:ordering": "tsx scripts/check-ordering.mts",
+    "check:undo": "tsx scripts/check-undo.mts",
     "check:escapes": "tsx scripts/check-escapes.mts",
     "check:aifault": "tsx scripts/check-aifault.mts",
     "check:caching": "tsx scripts/check-caching.mts",
