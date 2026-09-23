@@ -139,14 +139,19 @@ export async function POST(request: Request): Promise<Response> {
   /* Their store, not ours. The bytes go straight from here to the signed URL
      they hand out — nothing of this app's holds a copy of somebody's song for
      longer than the request. */
-  const url = await upload(audio);
-  if (!url) {
+  const handed = await upload(audio);
+  if (!handed.url) {
     await paid.refund();
+    /* The member is told the plain thing; the reason goes to the log, where
+       the person setting this up can read it. Putting a storage's XML on
+       somebody's screen would be neither useful nor ours to show. */
+    console.error(`[analyse] handing the song over failed — ${handed.why ?? 'no reason given'}`);
     return Response.json(
       { error: 'unreachable', message: 'The song could not be handed over for reading.' },
       { status: 502 },
     );
   }
+  const url = handed.url;
 
   /* The scratch file has done its job the moment the bytes are upstream. Not
      awaited: the member is waiting on the job id, not on our housekeeping. */

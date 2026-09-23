@@ -11,6 +11,7 @@
  * wrong thing, quietly, and put the metronome at half speed. This pins both
  * halves: what they must find, and what they must refuse.
  */
+import { readFileSync } from 'node:fs';
 import { looksLikeVoiceConversion } from '../app/lib/server/musicai';
 import { keyIn, spansIn, tempoIn } from '../app/lib/analyse.ts';
 
@@ -143,6 +144,40 @@ for (const no of [
 ]) {
   check(`"${no.name}" does not — it is not the missing step`, !looksLikeVoiceConversion(no));
 }
+
+/* ── The handover to their storage ───────────────────────────────────
+ 
+   Carli sent Music.ai's own upload documentation on 23 September 2026, and
+   two things in it are worth holding here rather than finding out against a
+   live key at the worst moment.
+ 
+   Their example PUTs with an explicit `Content-Type`, and the URL they sign
+   is a Google Cloud Storage one. A GCS signature can cover the content type,
+   and a PUT whose type does not match is refused with 403
+   SignatureDoesNotMatch — which reads exactly like a bad API key and is not
+   one. Leaving the header to whatever the runtime infers from a Blob makes
+   that failure depend on the runtime.
+ 
+   And the reason has to survive. This is the first step that runs against a
+   paid key; a `return null` there is an hour of guessing at the one moment
+   somebody is watching a bill. */
+const handover = readFileSync('app/lib/server/musicai.ts', 'utf8');
+const put = /fetch\(pair\.uploadUrl[\s\S]*?\n\s*\}\);/.exec(handover)?.[0] ?? '';
+check('the upload says what it is sending', /'Content-Type':\s*audio\.type/.test(put),
+  put ? 'the type is left to the runtime, so a signed-URL refusal depends on which runtime ran it'
+      : 'no PUT to the signed url found at all');
+
+check('  and keeps the storage\u2019s own answer when it is refused',
+  /put\.status/.test(handover) && /why:/.test(handover),
+  'a refusal comes back as nothing, at the one step that runs first against a paid key');
+
+check('  and the route does not put that answer on a member\u2019s screen',
+  /console\.error\(`\[analyse\] handing the song over failed/.test(
+    readFileSync('app/api/analyse/route.ts', 'utf8'))
+  && !/handed\.why/.test(
+    /return Response\.json\([\s\S]{0,300}?unreachable[\s\S]{0,300}?\);/
+      .exec(readFileSync('app/api/analyse/route.ts', 'utf8'))?.[0] ?? ''),
+  'a storage\u2019s XML is a diagnostic for the owner, not a sentence for somebody who uploaded a song');
 
 if (bad) {
   console.error(`\ncheck:analyse — ${bad} wrong.`);

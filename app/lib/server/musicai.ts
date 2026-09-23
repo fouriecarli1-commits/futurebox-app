@@ -118,16 +118,52 @@ async function call<T>(
  * with a PUT, and the second is what the job is given. The file never passes
  * through anything of ours twice.
  */
-export async function upload(audio: Blob): Promise<string | null> {
+export interface Handed {
+  /** The URL to give a job as `inputUrl`, once the bytes are upstream. */
+  readonly url?: string;
+  /**
+   * Why not, when there is no url.
+   *
+   * Kept rather than swallowed. This step is the first thing that runs against
+   * a live key and it is the one most likely to be refused, so the difference
+   * between a five-minute fix and an hour of guessing is whether the storage's
+   * own answer survives the return.
+   */
+  readonly why?: string;
+}
+
+export async function upload(audio: Blob): Promise<Handed> {
   const pair = await call<{ uploadUrl?: string; downloadUrl?: string }>('GET', '/upload');
-  if (!pair?.uploadUrl || !pair.downloadUrl) return null;
-  try {
-    const put = await fetch(pair.uploadUrl, { method: 'PUT', body: audio });
-    if (!put.ok) return null;
-  } catch {
-    return null;
+  if (!pair?.uploadUrl || !pair.downloadUrl) {
+    return { why: 'no signed pair came back from /upload — the key may be refused' };
   }
-  return pair.downloadUrl;
+  try {
+    const put = await fetch(pair.uploadUrl, {
+      method: 'PUT',
+      /* Said outright rather than left to whatever the runtime infers from the
+         blob.
+ 
+         Their own example sends `Content-Type: audio/mpeg` on this PUT, and
+         the URL is a Google Cloud Storage signed one. A GCS signature can
+         cover the content type, and a PUT whose type does not match the
+         signature is refused with 403 SignatureDoesNotMatch — which reads
+         like a bad key and is not one. Sending the blob's real type makes
+         this deterministic; `audio/wav` is the fallback because a wav is what
+         `/api/analyse` posts. */
+      headers: { 'Content-Type': audio.type || 'audio/wav' },
+      body: audio,
+    });
+    if (!put.ok) {
+      /* The storage answers in XML with a `<Code>` worth reading. Sliced,
+         because it is a diagnostic and not a page, and it goes to the owner's
+         own setup screen rather than to a member. */
+      const said = await put.text().catch(() => '');
+      return { why: `the storage refused the upload (${put.status}) ${said.slice(0, 200)}`.trim() };
+    }
+  } catch (problem) {
+    return { why: `the upload could not be sent: ${String(problem).slice(0, 160)}` };
+  }
+  return { url: pair.downloadUrl };
 }
 
 export async function addJob(
