@@ -19,7 +19,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, Circle, Clock, Download, Gauge, Grid3x3, KeyRound, Layers, Link2, Link2Off, Loader2, Mic2, Music2, Plus, Repeat, Scissors, Search, Sliders, Square, SquareSplitHorizontal, Timer, Trash2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
+import { Activity, ArrowDown, ArrowDownToLine, ArrowLeft, ArrowUp, Bot, Check, Circle, Clock, Download, Gauge, Grid3x3, KeyRound, Layers, Link2, Link2Off, Loader2, Mic2, Music2, Plus, Repeat, Scissors, Search, Sliders, Square, SquareSplitHorizontal, Star, Timer, Trash2, Volume2, VolumeX, Wand2, Waves, X } from 'lucide-react';
 import {
   FLAT_MASTER, audible, carveLane, dbOf, fadedCopy, lengthOf, mixSession, monoOf, pieceOf,
   playsOf, readInto, readSession, repeatOf, span, startLane, windowOf, wireLane, wireMaster,
@@ -29,6 +29,9 @@ import { failed, separate, separateParts } from '../lib/stems';
 import { done as forgetJob, keyIn, partOf, read as readSong, spansIn, tempoIn, type Span } from '../lib/analyse';
 import { CLEAN, isClean, type Tone, NOTHING_OFF } from '../lib/tone';
 import { ampName, through } from '../lib/nam';
+import {
+  AMP_MAX_BYTES, ampId, ampJson, favouriteAmp, forgetAmp, loadAmps, rememberAmp, type Amp,
+} from '../lib/amps';
 import { accessToken } from '../lib/cloud';
 import VoicePicker from './VoicePicker';
 import type { VoiceState } from './VoiceLab';
@@ -3762,16 +3765,76 @@ function LaneRow({
   const whole = (lane.amped?.audio ?? lane.audio).duration;
   const cut = window_.from > 0.01 || window_.to < whole - 0.01;
 
+  /* ── The shelf ────────────────────────────────────────────────────────
+ 
+     Carli, 23 September 2026: *"ek wil 'n ordentlike probooth bou en voel ons
+     moet ook nog amp modellers in bring."*
+ 
+     The modelling was already here. What was not was anywhere to keep a
+     capture: the file was read, the lane was run through it, and the file
+     itself was dropped — so a second lane meant finding it in the file
+     manager again, and a re-recorded take could not get its amp back at all.
+     `lib/amps.ts` holds them now. */
+  const [shelf, setShelf] = useState<Amp[]>([]);
+  useEffect(() => { setShelf(loadAmps()); }, []);
+
+  /** Run this lane through a capture, whatever it came from. */
+  const runThrough = async (json: string, name: string): Promise<void> => {
+    /* Any context will do: `through` only wants it to make the buffer, and
+       a one-frame offline context costs nothing and closes itself. */
+    const room = new OfflineAudioContext(1, 1, lane.audio.sampleRate);
+    const audio = await through(room, lane.audio, json);
+    onChange({ amped: { name, audio } });
+  };
+
   const bringAmp = async (file: File) => {
     setAmping(true);
     setAmpFailed('');
     try {
+      if (file.size > AMP_MAX_BYTES) {
+        setAmpFailed(t('pro.ampTooBig', 'That file is too large to be a capture. A .nam is usually under a megabyte.'));
+        return;
+      }
       const json = await file.text();
-      /* Any context will do: `through` only wants it to make the buffer, and
-         a one-frame offline context costs nothing and closes itself. */
-      const room = new OfflineAudioContext(1, 1, lane.audio.sampleRate);
-      const audio = await through(room, lane.audio, json);
-      onChange({ amped: { name: ampName(json), audio } });
+      const name = ampName(json);
+      /* Run it FIRST, and keep it only once it worked.
+ 
+         A shelf that fills up with files that will not load is worse than no
+         shelf: every one of them is a press that fails later, with nothing
+         on the row to say which. `through` throws on a capture this engine
+         cannot read, so the catch below is the whole test. */
+      await runThrough(json, name);
+      await rememberAmp({
+        id: ampId(),
+        name,
+        from: file.name,
+        bytes: file.size,
+        createdAt: new Date().toISOString(),
+      }, json);
+      setShelf(loadAmps());
+    } catch {
+      setAmpFailed(t('pro.ampFailed', 'That file did not load as an amp.'));
+    } finally {
+      setAmping(false);
+    }
+  };
+
+  /** One off the shelf, onto this lane. */
+  const useAmp = async (amp: Amp) => {
+    setAmping(true);
+    setAmpFailed('');
+    try {
+      const json = await ampJson(amp.id);
+      if (!json) {
+        /* The details survived and the bytes did not — a browser's storage
+           can be cleared in halves. Said, and the dead row taken off, rather
+           than leaving a button that fails every time it is pressed. */
+        setAmpFailed(t('pro.ampGone', 'That capture is not on this device any more.'));
+        await forgetAmp(amp.id);
+        setShelf(loadAmps());
+        return;
+      }
+      await runThrough(json, amp.name);
     } catch {
       setAmpFailed(t('pro.ampFailed', 'That file did not load as an amp.'));
     } finally {
@@ -4237,6 +4300,70 @@ function LaneRow({
               </label>
             )}
           </div>
+          {/* ── The ones you keep ──────────────────────────────────────
+              One press to put an amp that is already here onto this lane.
+              Drawn whether or not a lane is amped, because swapping one for
+              another is the thing somebody actually does — the old row made
+              that "take it off, then find the file again". */}
+          {shelf.length > 0 && (
+            <div className="flex flex-wrap gap-1.5" data-ampshelf>
+              {shelf.map((one) => {
+                const on = lane.amped?.name === one.name;
+                return (
+                  /* Three real buttons with a gap, not a segmented group.
+ 
+                     The group version gave the middle one `border-y`, and
+                     `check:sideborder` refused it — the green rule in
+                     globals.css matches a one-sided border and paints it a
+                     filled rectangle with no radius. The check was right and
+                     the look was mine; a tight gap reads the same and every
+                     button is a button. */
+                  <span key={one.id} className="inline-flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => void useAmp(one)}
+                      disabled={amping}
+                      aria-pressed={on}
+                      title={one.from}
+                      data-useamp={one.id}
+                      className={`min-h-[32px] px-2.5 py-1.5 rounded-lg border text-xs font-bold max-w-[10rem] truncate disabled:opacity-50 ${
+                        on
+                          ? 'border-emerald-500 bg-emerald-500/15 text-emerald-300'
+                          : 'border-zinc-700 bg-zinc-950 text-zinc-300 hover:text-white hover:border-zinc-500'
+                      }`}
+                    >
+                      {one.name}
+                    </button>
+                    {/* Kept, so eviction never takes it. Twelve is not many
+                        and the one you always use should not age out. */}
+                    <button
+                      type="button"
+                      onClick={() => setShelf(favouriteAmp(one.id, !one.favourite))}
+                      aria-pressed={Boolean(one.favourite)}
+                      aria-label={t('pro.ampKeep', 'Keep this amp on the shelf')}
+                      className={`min-h-[32px] px-1.5 rounded-lg border border-zinc-700 bg-zinc-950 ${
+                        one.favourite ? 'text-amber-300' : 'text-zinc-600 hover:text-zinc-300'
+                      }`}
+                    >
+                      <Star className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void forgetAmp(one.id).then(() => setShelf(loadAmps()))}
+                      aria-label={t('pro.ampForget', 'Take this amp off this device')}
+                      className="min-h-[32px] px-1.5 rounded-lg border border-rose-500/25 bg-rose-500/[0.06] text-zinc-600 hover:text-rose-300 hover:border-rose-500/50"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          {shelf.length > 0 && (
+            <Note className="text-[11px] text-zinc-600 leading-snug">{t('pro.ampShelf')}</Note>
+          )}
+
           {ampFailed ? (
             <p className="text-[11px] text-amber-400 leading-snug">{ampFailed}</p>
           ) : (

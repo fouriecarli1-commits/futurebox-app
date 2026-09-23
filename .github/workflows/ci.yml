@@ -273,6 +273,8 @@ jobs:
         run: npm run check:adhandover
       - name: Her own footage cuts in beside the generated shots, graded the same in both cuts
         run: npm run check:ownfootage
+      - name: A capture is found once and kept, and never evicted over a starred one
+        run: npm run check:ampshelf
 
       # Arriving is not the same as being seen. A room opens as its own table
       # of contents, so a value handed to it landed in a shut card three
