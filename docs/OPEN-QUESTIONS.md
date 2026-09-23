@@ -9,13 +9,13 @@ they can be reviewed in one place instead of remembered.
 not be checked, it says so and it says how to check it. Entries move to
 **Settled** with a date and a commit rather than being deleted.
 
-Last updated: 2026-09-18.
+Last updated: 2026-09-23.
 
 ---
 
-## Lees dit eerste — waar dinge staan, 18 September 2026
+## Lees dit eerste — waar dinge staan, 23 September 2026
 
-*Hierdie register is 4 600 reëls lank en groei elke sessie. Niemand lees dit
+*Hierdie register is meer as 6 000 reëls lank en groei elke sessie. Niemand lees dit
 van voor af nie, en 'n register wat niemand lees nie, is nie 'n register nie.
 Hierdie blok is die voordeur: wat op jou wag, wat vassit, en waarop. Die res
 van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
@@ -37,6 +37,9 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 | **Kyk of Copilot se shots nou goed genoeg is** | Die beskrywing vra nou die onderwerp, die lig, wat die kamera doen, en aanhalings om gesproke woorde. Wat dit werklik skryf, kan ek nie van hier af sien nie — dit het 'n lewende sleutel nodig. |
 | **Bevestig die twee reggemaakte foute op jou eie foon** | Die wit bladsy by *laai jou eie foto op* (drie komponente, 16 Sept) en die musiekvideo wat nie in Live gewerk het nie (16 Sept). Albei is gebou en albei is **nog nooit teen jou regte rekening of foon getoets nie** — hulle is met stompe en probes bewys, nie met jou hand nie. |
 | **Voel die tydlyn se drie nuwe dinge** | Die magneet, die interlock en die bane wat op en af skuif (17 Sept, §O hieronder). Die somme is bewys en die gebare is in 'n blaaier bewys; of dit onder 'n **duim** reg voel is die een ding wat geen probe kan sê nie. Die magneet se knoppie is die hoefyster langs *Merk* in die tydlyn se hoek — hy begin **aan**. |
+| **Voel die ProBooth se Herstel-knoppie** | Nuut, 23 Sept (§AT). *Herstel* en *Doen weer* staan langs *Terug*, en elkeen sê **watter** ding afkom. Die somme is bewys en 'n sny is in 'n blaaier teruggevat en weer gedoen. Wat geen probe kan sê nie: of **twintig stappe** ver genoeg terug gaan vir hoe jy werk, en of langs *Terug* die plek is waarheen jou duim gaan. Albei is een reël om te verander. |
+| **Toets wagwoord-vergeet en die authenticator op jou eie foon** | Albei gebou 23 Sept (§AR). Die vergeet-pad is met 'n probe geloop en het twee egte foute opgelewer; die authenticator is opsioneel en jy hoef hom nie aan te sit nie. Wat nog nooit gebeur het nie, is dat 'n **regte e-pos** by jou uitkom — dit hang aan Supabase se e-pos-instellings op jou projek, nie aan die kode nie. |
+| **Kyk waar die kaart verander word** | Rekening → intekening. Ek het jou gesê daar is nêrens om die intekening te sien of te stop nie; **dit was verkeerd**, dit was nog altyd daar. Wat werklik gekort het, was *verander die kaart*, en dit is nou 'n knoppie bo die kanselleer. |
 
 ### Twee ontwerpbesluite wat op jou wag
 
@@ -6392,3 +6395,117 @@ Dit maak nie die video self reg nie. Ek weet nog nie waarom haar spesifieke
 pos geen lêer het nie, want ek kan nie by haar Supabase uitkom nie. Wat dit
 doen is om die kamer die rede te laat **sê**, sodat die volgende rapport 'n
 skermkiekie is wat die oorsaak noem in plaas van nog 'n aand se raai.
+
+---
+
+## §AR · Agt commits van 23 September wat nooit hier ingeskryf is nie (23 September 2026)
+
+Hierdie register hou op by §AQ, en tussen daardie inskrywing en vanaand het
+agt commits geland. 'n Register wat 'n dag oorslaan, is 'n register wat 'n
+mens nie meer kan glo nie, so hulle staan hier — kort, met hul commit, want
+die commit-boodskap self is die volledige rekord.
+
+| Commit | Wat dit was |
+|---|---|
+| `2f23536` | **Jou eie footage op die bord.** Laai 'n video op, die studio hoor die oomblikke uit en sny die stukkies uit; elke stuk gaan langs die gegenereerde shots op dieselfde bord. Sewe filters (`app/lib/videofilters.ts`) sit die kleur oor die prent en kom **af** voordat die onderskrifte en die logo geteken word — anders verkleur die filter ook die woorde. |
+| `3a15320` | **Die oplaai na Music.ai het stil misluk.** Die `Content-Type` was verkeerd en 'n weiering is gesluk. Albei reggemaak. |
+| `00e2d92`, `7ee74ca`, `252751d` | **Twee navraag-eposse**, Music.ai en TONE3000, met drie plekhouers elk. Die volumes in die eerste weergawe was 'n **ordegrootte te hoog** — jy het dit gevang — en die opvolg dra die regtes: 365 lede in twee maande, 2 000 in vier. |
+| `412dd47` | **Die ampraak.** 'n Amp-opname is gelaai, gebruik en weggegooi, dus moes dieselfde lêer vir elke baan weer gesoek word. Nou is daar 'n rak van twaalf; die bytes gaan neer **voor** die ry, en uitskuiwing vat nooit een wat jy gester het nie. |
+| `9a31be0` | **Wagwoord vergeet.** Tot vandag was iemand wat vergeet het permanent uitgesluit. Die probe het twee **egte** foute gevind: die knoppie het onder die plaaslike-rekening-terugval gesit (jy druk dit en word as 'n splinternuwe plaaslike mens aangeteken), en die herstelpaneel het onder `if (!user) return` gelê. |
+| `0c81ee8` | **'n Authenticator-app, vir wie dit wil hê.** Opsioneel. Die geheim word as teks gewys voordat die skakelaar aangaan, met 'n sin wat sê om eers 'n app af te laai en watter (Google Authenticator, Microsoft Authenticator, Authy, 2FAS) — sonder skakels. |
+| `1629a32` | **Die kaart kon verander word.** Ek het jou gesê daar is nêrens om die rekening te sien of te stop nie. **Dit was verkeerd** — `Subscription.tsx` wys die plan en kanselleer sedert dit gebou is. Wat werklik gekort het, was om die **kaart te verander**, en dit is nou daar. |
+| `0b52a8a` | **Die twee foute uit jou skermskote.** Die rolverdeling het 'n gesig ingehad en die aanbieder-skerm het gesê om een by te voeg (geen aanstuur ná 'n skryf nie), en 'n kamera-lêernaam soos `IMG_2043` is as 'n naam gehou. Albei reg. |
+
+---
+
+## §AS · 'n Reël kan "nie daar nie" as "eerste" lees, en sestien het (23 September 2026)
+
+`indexOf` antwoord **-1** vir iets wat nie daar is nie, en -1 is kleiner as elke
+egte posisie. Dus is die enkelreël-idioom vir "A kom voor B":
+
+```ts
+ok('die bytes gaan neer voor die ry',
+  shelf.indexOf('putAudio(') < shelf.indexOf('const all ='));
+```
+
+waar van 'n lêer wat dit in die regte volgorde doen **én** van een wat die
+eerste ding glad nie doen nie. Die tweede lêer is presies die een waarvoor die
+reël geskryf is. Hy word as *ok* gerapporteer.
+
+**Bewys eerder as geredeneer.** Ek het die onderskrif-teken uit
+`app/lib/stitch.ts` **uitgevee** — 'n app wat op geen aanmekaargestikte video
+enige woorde sit nie — en `check:logomark`, wie se hele onderwerp is wat in
+watter volgorde geteken word, het op elke reël groen teruggekom.
+
+Twintig reëls oor negentien checks, plus twee probes. Vier van die twintig was
+plekke wat 'n grep nooit sou kry nie: twee vergelykings oor twee reëls, en twee
+weggesteek agter 'n ongebalanseerde hakie **binne-in 'n string**.
+
+Dieselfde fout in sy tweede kostuum: `text.slice(0, text.indexOf(weg))` is
+`slice(0, -1)` — die hele lêer behalwe sy laaste karakter — so 'n reël wat net
+bo-aan 'n lêer moes geld, versprei stilweg oor alles en slaag dan op 'n treffer
+uit die deel wat dit moes uitsluit.
+
+`scripts/order.mts` hou nou `before`, `after`, `lastBefore`, `afterLast`, `upTo`
+en `from`, en **elkeen vereis albei kante**. Daar is nie 'n volgorde tussen twee
+dinge as een van hulle weg is nie; *false* is die eerlike antwoord.
+
+`check:ordering` lees al 297 check- en probe-lêers en keer drie vorms. Dit
+blankeer eers kommentaar **en die binnekant van strings** — 'n hakie in 'n
+string is nie 'n hakie nie, en `page.indexOf('{atDoor && (')` het een sonder
+maat; ongeblankeer is daardie oproep glad nie as 'n posisie herken nie, wat is
+hoe die eerste weergawe van hierdie check `check:quiz` 'n fout genoem het vir 'n
+reël wat reg is.
+
+### Wat dit nié vang nie, reguit gesê
+
+Twee posisies wat deur 'n funksie geloop, teruggegee of op 'n objek gebêre word
+voordat hulle vergelyk word. Dit is nie die idioom wat iemand gebruik nie, en 'n
+check wat beweer hy vang elke vorm hiervan, sou self die ding doen waaroor
+hierdie inskrywing gaan.
+
+---
+
+## §AT · Die ProBooth kon niks terugvat nie (23 September 2026)
+
+*"ek wil 'n ordentlike probooth bou."*
+
+Die kamer se leerstelling is dat amper niks iets kos nie — 'n sny wys na die
+opname eerder as om dit te vervang, 'n skuif is 'n getal — en dat alles
+teruggevat word deur 'n rand terug te trek. Dit is waar. Dit is ook **nie**
+undo nie, en die kamer se eie woorde erken waar dit ophou: *"The fade is the one
+exception — it is written into the sound."* Om die vertrek van 'n baan af te
+haal doen dieselfde en gooi die amp saam weg. 'n Baan wat weggegooi is, het geen
+rand oor om te trek nie. 'n Baan wat in twee gesny is, is twee bane — en daar is
+geen knoppie wat hulle weer aanmekaarsit nie.
+
+Daar is nou 'n **Herstel** en 'n **Doen weer** langs *Terug*, en elkeen sê
+**watter** ding afkom ("Herstel: die in- of uitdoof"), want 'n kaal pyltjie laat
+iemand raai watter van hul laaste vier bewegings nou ongedaan gaan word.
+
+### Die moeilike deel is die geheue-plafon
+
+Amper elke stap deel al sy klank met die stap voor hom: 'n vlak, 'n skuif, 'n
+demping en 'n sny gee almal dieselfde `AudioBuffer`s in 'n nuwe lys terug, en
+kos 'n paar honderd grepe. 'n Uitdoof en 'n skoonmaak nie — elkeen sit 'n hele
+nuwe opname in die geheue, omtrent **66 MB** vir drie minute stereo.
+
+"Hou twintig stappe" is dus 'n plafon op niks. En die voor die hand liggende
+regmaak is erger as geen regmaak nie: weeg elke stap en tel die gewigte op, en
+twintig stappe wat **een** 66 MB-opname deel, kom op 1,3 GB te staan — twintig
+keer verkeerd — sodat die geskiedenis homself weggooi om onder 'n perk te bly
+waar hy nooit naby was nie. Groen om 'n *aangrensende* rede: dit meet wel iets,
+net nie die ding wat besluit of die tabblad bly lewe nie.
+
+Wat geheue kos, is die **versameling verskillende opnames**. Dus word dit getel:
+elke buffer een keer, hoeveel stappe ook al daarna wys. Twintig stappe, 256 MB,
+en die enkele stap wat iemand nóú gaan druk, word nooit uitgeskuif nie, hoe swaar
+hy ook al is.
+
+### Wat op jou wag hier
+
+Die somme is bewys en die knoppie is in 'n blaaier bewys — 'n sny word teruggevat
+en weer gedoen, en die etiket noem die regte ding **voordat** dit gedruk word.
+Wat geen probe kan sê nie: of **twintig stappe** ver genoeg terug gaan vir hoe jy
+werk, en of *Herstel* langs *Terug* die plek is waarheen jou duim gaan. Albei is
+een reël om te verander.
