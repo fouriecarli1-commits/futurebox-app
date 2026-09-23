@@ -102,8 +102,24 @@ told about something useful than discover it in a year.
 
 ## Volumes
 
-[VUL IN: verwagte maandelikse minute klank, of die lede-teiken vir die eerste
-ses maande — sien die nota onder.]
+So you can quote against something real rather than a list price — our targets
+are 365 members by month two and 2 000 by month four. Assuming an average song
+of three and a half minutes:
+
+| | by month 2 (365 members) | by month 4 (2 000 members) |
+|---|---|---|
+| conservative — one job per member per month | ~1 300 min | ~7 000 min |
+| **expected** — 60% of members active, two jobs each | **~1 500 min** | **~8 400 min** |
+| busy — every member, four jobs each | ~5 100 min | ~28 000 min |
+
+The expected row is the one to quote against. The mix is split between reading
+a recording and separating stems, and we'd expect the read to be the larger
+share since it runs whenever somebody opens a session in the booth.
+
+I'd rather give you the assumption than a single confident number: the 60% is
+our own usage estimate and not something we've measured yet, so if your pricing
+has thresholds, please tell me where they sit and I'll tell you which side of
+them we land on.
 
 Happy to get on a call if that's easier than writing it all out.
 
@@ -118,10 +134,24 @@ South Africa
 
 ## Notas vir jou, nie vir die epos nie
 
-**Die volumes.** Los dit nie leeg nie — 'n kwotasie sonder 'n getal kom terug
-as 'n lysprys. Sê vir my jou lede-teiken vir die eerste ses maande en ek werk
-die maandelikse minute uit die koste-model uit wat al staan, dan plak jy die
-getal in.
+**Die volumes, en waarop hulle rus.** Jou teikens is 365 lede teen maand twee
+en 2 000 teen maand vier. Daaruit:
+
+| | maand 2 | maand 4 |
+|---|---|---|
+| versigtig (1 job per lid) | 1 278 min | 7 000 min |
+| **verwag (60% aktief, 2 jobs elk)** | **1 533 min** | **8 400 min** |
+| besig (almal, 4 jobs elk) | 5 110 min | 28 000 min |
+
+Een eerlikheid: die koste-model in `docs/KOSTE-EN-WINS.md` modelleer
+**krediete**, nie Music.ai-minute nie. Om minute daaruit te kry verg twee
+aannames wat nêrens in die repo staan nie — hoe lank 'n gemiddelde liedjie is
+(3,5 min) en hoeveel jobs 'n aktiewe lid per maand laat loop (2). Die 60%
+aktief kom wél uit die model se "realisties"-geval.
+
+Daarom staan die aannames in die epos self. 'n Verskaffer respekteer 'n
+gestelde aanname meer as 'n getal wat presies lyk en niks agter het nie — en as
+hulle prys drumpels het, sal Danny nou self kan sê aan watter kant ons val.
 
 **Hoekom die privaatheid-vraag daar is.** Ons privaatheidsbeleid maak spesifieke
 beloftes oor wat met 'n lid se stemopname gebeur. As Music.ai lêers langer hou
