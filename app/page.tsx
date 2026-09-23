@@ -240,9 +240,11 @@ export default function FutureBoxHome() {
      the page, which is the whole of the protection gone to a keystroke. */
   useEffect(() => {
     let live = true;
-    void cloud.authenticatorWanted().then((wanted) => {
-      if (live && wanted) setOwesCode(true);
-    });
+    void cloud.authenticatorWanted()
+      .then((wanted) => {
+        if (live && wanted) setOwesCode(true);
+      })
+      .catch(() => undefined);
     return () => { live = false; };
   }, [user?.email]);
 

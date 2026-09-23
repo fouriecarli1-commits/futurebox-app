@@ -78,6 +78,49 @@ async function authed(): Promise<Record<string, string>> {
 }
 
 /** Everybody on the account, newest first. Empty when signed out or unconfigured. */
+/**
+ * Told when the cast changes, so two panels cannot disagree about it.
+ *
+ * ── The fault this ends ──────────────────────────────────────────────────
+ *
+ * Carli, 23 September 2026, with a photograph of her own screen: a face in
+ * the cast at the top, and under it, in amber, *"Put somebody in your cast
+ * first — the picture above is who the presenter will be."*
+ *
+ * Both panels were right about what they knew. `Cast` lives inside
+ * `StartFrame` and had just written a member; `Presenter` is a sibling three
+ * components away in `VideoCanvas`, and it reads the cast ONCE, in an effect
+ * keyed on whether the engine is available. Nothing told it. So it went on
+ * holding the empty list it had loaded at mount and went on saying the one
+ * thing that was no longer true — while the evidence sat directly above it.
+ *
+ * Threading a callback from `Cast` up through `StartFrame` to `VideoCanvas`
+ * and down to `Presenter` would fix these two and leave the next reader with
+ * the same bug. The cast is one thing, kept in one place, so being told it
+ * changed belongs in the same place.
+ */
+const listeners = new Set<() => void>();
+
+/** Returns the way to stop listening, so an unmounted panel is not called. */
+export function onCastChanged(handler: () => void): () => void {
+  listeners.add(handler);
+  return () => { listeners.delete(handler); };
+}
+
+/* Called by every writer below. Never exported: a caller that announced a
+   change it had not made would be worse than one that stayed quiet, because
+   every reader would then re-read and find nothing different and nobody
+   would know why. */
+function castChanged(): void {
+  for (const handler of [...listeners]) {
+    try {
+      handler();
+    } catch {
+      /* One panel throwing must not stop the others being told. */
+    }
+  }
+}
+
 export async function loadCast(): Promise<Member[]> {
   if (!configured()) return [];
   try {
@@ -220,6 +263,10 @@ export async function addToCast(file: File, name: string): Promise<Added> {
      member without a round trip. It used to cache `made.preview` — the WHOLE
      1024px picture as a data URL — which is the fault described below. */
   void thumbFrom(said.member.path, made.blob);
+  /* Announced only once the row came back. Telling the other panels before
+     the write landed would have them draw a member that does not exist, and
+     then quietly lose it on the next read. */
+  castChanged();
   return { ok: true, member: said.member };
 }
 
@@ -230,7 +277,9 @@ export async function editCast(id: string, fields: { name?: string; note?: strin
     headers: { 'content-type': 'application/json', ...(await authed()) },
     body: JSON.stringify({ id, ...fields }),
   }).catch(() => null);
-  return Boolean(response?.ok);
+  const saved = Boolean(response?.ok);
+  if (saved) castChanged();
+  return saved;
 }
 
 /** Take somebody out of the cast, and their picture with them. */
@@ -255,6 +304,7 @@ export async function removeFromCast(member: Member): Promise<boolean> {
     if (going) URL.revokeObjectURL(going);
     thumbs.delete(member.path);
   }
+  castChanged();
   return true;
 }
 

@@ -43,7 +43,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SpokenWord } from '../lib/spokenwords';
 import { AlertTriangle, Check, Loader2, Mic, Play, UserRound, Video as VideoIcon } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
-import { loadCast, pictureOf, type Member } from '../lib/cast';
+import { loadCast, onCastChanged, pictureOf, type Member } from '../lib/cast';
 import { presenterCost } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import type { VoiceState } from './VoiceLab';
@@ -129,9 +129,22 @@ export default function Presenter({
       .catch(() => setAvailable(false));
   }, []);
 
+  /* Re-read whenever the cast changes, not only at mount.
+ 
+     Carli, 23 September 2026, with a photograph of her screen: a face in the
+     cast above, and this panel underneath saying "Put somebody in your cast
+     first". It had loaded once, `Cast` had written a member since, and
+     nothing connected the two — they are three components apart. See the
+     note on `onCastChanged` in `lib/cast.ts`. */
+  useEffect(() => {
+    if (available !== true) return undefined;
+    const read = () => { void loadCast().then(setCast); };
+    read();
+    return onCastChanged(read);
+  }, [available]);
+
   useEffect(() => {
     if (available !== true) return;
-    void loadCast().then(setCast);
     void accessToken().then((token) =>
       fetch('/api/voice', { headers: token ? { Authorization: `Bearer ${token}` } : undefined })
         .then((r) => (r.ok ? r.json() : null))

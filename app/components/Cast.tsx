@@ -207,9 +207,27 @@ export default function Cast({
       setBusy(true);
       setProblem(null);
       try {
-        // The filename, minus its extension, is a better first name than
-        // "Untitled" and is one the person can change on the spot.
-        const from = file.name.replace(/\.[^.]+$/, '').slice(0, 60);
+        /* The filename, unless the filename is not a name.
+ 
+           Carli, 23 September 2026, with a photograph of her own screen: the
+           member she had just added was called `1000402633`. That is what a
+           phone calls a picture out of its camera roll, and it was being
+           used verbatim as somebody's name.
+ 
+           The original note said a filename beats "Untitled" and can be
+           changed on the spot — true for `sarel-by-the-window.jpg` and
+           exactly wrong for a camera's counter, which is worse than empty:
+           an empty box shows its label and invites a name, while a ten-digit
+           number looks like something the app decided and means nothing a
+           week later in a strip of twelve faces.
+ 
+           So the camera's own patterns are treated as no name at all. Every
+           one of these is a real prefix off a real device — Android's bare
+           counter, Pixel, iPhone, WhatsApp, Samsung, and the DSC/DCIM family
+           every camera has used since film ended. */
+        const CAMERA = /^(?:\d+|(?:IMG|PXL|DSC|DCIM|PHOTO|SCREENSHOT|VID|MVIMG|IMG_E)[-_ ]?[\d-_ ]+|(?:WhatsApp|Signal|Telegram)[\w .-]*\d)$/i;
+        const named = file.name.replace(/\.[^.]+$/, '').trim().slice(0, 60);
+        const from = CAMERA.test(named) ? '' : named;
         const made = await addToCast(file, from);
         if (!made.ok) {
           setProblem(whySaid(made.why, made.missing, t));

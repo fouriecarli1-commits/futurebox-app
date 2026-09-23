@@ -549,9 +549,21 @@ export async function dropAuthenticator(
 export async function authenticatorWanted(): Promise<boolean> {
   const supabase = getClient();
   if (!supabase) return false;
-  const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (error || !data) return false;
-  return data.nextLevel === 'aal2' && data.currentLevel !== 'aal2';
+  try {
+    const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (error || !data) return false;
+    return data.nextLevel === 'aal2' && data.currentLevel !== 'aal2';
+  } catch {
+    /* A stored session that will not parse throws here rather than answering
+       with an error — `audit/cast.mjs` caught four of them against a stubbed
+       project, as unhandled rejections on every screen.
+ 
+       False is the right answer to "does this session owe a code", because a
+       session this broken is not one anybody is signed in on: whatever else
+       is about to fail will fail with its own sentence, and a code box over
+       the top of it would be one more screen with nothing behind it. */
+    return false;
+  }
 }
 
 /** The code, at sign-in. Answered against whichever authenticator they added. */
