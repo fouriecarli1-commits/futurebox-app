@@ -161,3 +161,84 @@ te vra as om dit later te moet regskryf.
 **Hoekom (a) eerste staan.** Dit is die een ding in die hele app wat gebou is
 behalwe vir een stap — sien `docs/OPEN-QUESTIONS.md` §A1. Alles anders op die
 lys is 'n verbetering; hierdie een maak 'n funksie klaar.
+
+---
+
+# Opvolg-epos — die volumes reggestel
+
+Carli, 23 September 2026: *"Ek dink nou net ons het die verkeerde getalle vir
+music.ai gestuur, want in realiteit gaan ons net enkele professionele mense kry
+wat die produk so gaan gebruik."*
+
+Sy is reg. Die getalle in die epos hierbo het aangeneem elke lid is 'n
+kandidaat vir die read en die stems. Hulle is nie. Albei is **Pro Booth**-werk
+— iemand wat 'n opname multitrack opneem en die tempo, toonaard en stemme
+daaruit wil hê. Die meeste lede maak 'n liedjie uit 'n prompt en raak nooit aan
+daardie kamer nie.
+
+**Stuur dit voordat hy kwoteer.**
+
+---
+
+**Subject:** Re: FutureBox Studio — API capabilities and a quotation
+
+Hi Danny,
+
+One correction before you put a quote together, and I'd rather send it now
+than have you price against a number that was wrong.
+
+The volumes I gave you assumed every member is a candidate for these
+workflows. They aren't. Reading a recording and separating stems are both part
+of our multitrack recording room — they're what somebody uses when they're
+tracking a session properly, not what somebody does when they generate a song
+from a prompt. Realistically that's a small professional slice of our members,
+not all of them.
+
+On the same member targets — 365 by month two, 2 000 by month four — and
+assuming five to fifteen per cent of members actually work that way:
+
+| | by month 2 | by month 4 |
+|---|---|---|
+| low (5% of members) | ~130 min | ~700 min |
+| **expected (8%)** | **~200 min** | **~1 100 min** |
+| high (15%) | ~380 min | ~2 100 min |
+
+So roughly an order of magnitude below what I sent — a couple of hundred
+minutes a month to start, rather than fifteen hundred.
+
+Two things follow from that, and they're the reason I'm writing rather than
+letting it ride:
+
+- **Is there a minimum monthly commitment?** If your entry plan is built
+  around a volume we won't reach for a year, I'd rather know now and start on
+  pay-as-you-go than sign up to minutes we don't use.
+- **Where does your pricing start?** At this size we're a small customer, and
+  I'd rather be a small customer you're happy to have than one who quoted big
+  and delivered small.
+
+The rest of the questions in my first email stand — the template workflow list
+and the module catalogue matter more to us than the price does, because they
+decide what we can build at all.
+
+Best regards,
+
+[JOU NAAM]
+[JOU ROL], FutureBoxStudio (Pty) Ltd
+[KONTAK-E-POS]
+South Africa
+
+---
+
+## Hoekom dit die moeite werd is om reg te stel
+
+Nie netheid nie. Die egte risiko van 'n te hoë getal is 'n **minimum maandelikse
+verbintenis**. As Danny 'n plan kwoteer wat om 8 400 minute gebou is, betaal jy
+vir minute wat jy nie gebruik nie — elke maand, vir 'n jaar. Dit is die soort
+ding wat 'n mens eers agterkom as die faktuur kom.
+
+En 'n verskaffer wat jou hoor sê *"ek stel dit reg voordat jy kwoteer"* lees dit
+as iemand wat weet wat sy doen. Die teenoorgestelde — 'n groot getal wat nie
+realiseer nie — lees as iemand wat nie weet nie.
+
+Die 8% is steeds 'n skatting, nie 'n meting nie, en die epos sê so deur 'n band
+te gee eerder as een getal.
