@@ -6235,3 +6235,69 @@ Dit is verwyder eerder as reggemaak.
 
 Agt van nege mutasies rooi, die oorspronklike fout eerste. En die probe druk
 nou die knoppie: 'n regte lêer kom uit, uit 'n geknipte skoot.
+
+## §AO · Die lêer wat sy plak was self stukkend (23 September 2026)
+
+Carli: *"Is daar enige sql? Dit voel asof jy niks gefix het nie."*
+
+Ja, daar is — en die antwoord is erger as dit klink.
+
+### Dertien mislukte stellings op elke vars projek
+
+`ALMAL.sql` is die een-plak bundel. Op 'n databasis met niks in nie behalwe
+wat Supabase self gee, het dit **13 foute** gegooi:
+
+```
+ERROR: relation "public.events" does not exist        (×6)
+ERROR: function public.note_event(...) does not exist (×2)
+ERROR: function public.listens_for(...) does not exist
+ERROR: function public.charts_top(...) does not exist
+```
+
+`events.sql` maak `public.events`. `listens.sql` en `charts.sql` verander dit.
+Albei was **voor** die lêer wat dit maak. En `events.sql` bou `stats_board()`,
+'n `language sql` funksie wat by skepping ontleed word, so dit kan nie
+`public.generations` noem voor `usage.sql` geloop het nie.
+
+So: luisters, charts en gebeurtenis-tellings was dood op enige projek wat
+gebou is soos sy vertel word om dit te bou — en die foute rol verby in 'n
+Supabase-redigeerder wat nie stop nie.
+
+Dit is my eie werk van 22 September: toe `ORDER` van elf lêers na almal gegroei
+het, is die nuwes **alfabeties agteraan** gesit in plaas van geplaas.
+
+### En hoekom niks dit gesien het nie
+
+`check:sqlruns` hardloop wel die bundel. Maar dit het eers **elke skema-lêer**
+in daardie databasis geloop, en tóé die bundel — met 'n nota wat sê die bundel
+"is die elf nuwes, nie die hele skema nie". Daardie nota was verouderd.
+
+Die bundel is dus getoets teen 'n projek waar alles reeds bestaan. Elke
+`create table if not exists` slaag dan triviaal, in enige volgorde. **Die een
+ding wat die bundel moet doen — 'n projek uit niks bou — is die een ding wat
+nooit getoets is nie.**
+
+### 'n Navraag wat net helfte gevra het
+
+`WATKORT.sql` het tabelle, kolomme en emmers nagegaan. **Geen beleide nie** —
+51 van hulle, deur niks nagegaan nie. Dit is nie abstrak nie: 'n gefilmde
+video kom deur 'n storage-**beleid** by Live uit. Laat die beleid val en die
+navraag kom leeg terug — alles reg — terwyl elke oplaai geweier word.
+
+Dit kyk nou na 133 dinge in plaas van 82.
+
+### 'n Oorslaan is nie 'n slaag nie
+
+`check:sqlruns` sluit met 0 af sonder 'n Postgres en druk *"This is a skip, not
+a pass."* Die veeg het `ok` langs dit gedruk en "All 146 source checks pass"
+aan die einde. Die check was eerlik; die opsomming was nie. Weke lank het die
+duurste check in die repo nêrens geloop nie.
+
+Die veeg tel oorslaan nou apart.
+
+### Bewys
+
+Die oorspronklike volgorde-fout teruggesit → `check:sqlruns` word rooi met
+`relation "public.events" does not exist`. Die beleid laat val → WATKORT noem
+dit op sy naam. Die bundel op 'n leë projek → **0 foute, en WATKORT kom leeg
+terug.**

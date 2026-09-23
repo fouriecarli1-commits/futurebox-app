@@ -53,7 +53,7 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 export interface Expected {
   readonly file: string;
-  readonly kind: 'tabel' | 'kolom' | 'emmer';
+  readonly kind: 'tabel' | 'kolom' | 'emmer' | 'beleid';
   readonly name: string;
 }
 
@@ -89,6 +89,33 @@ export function expected(): Expected[] {
     )) {
       out.push({ file, kind: 'emmer', name: found[1] });
     }
+
+    /* ── The policies, which nothing looked for at all ──────────────────
+ 
+       Carli, 23 September 2026: *"Is daar enige sql? ... die video werk
+       steeds nie op live nie."*
+ 
+       This file proved that tables, columns and buckets exist. It said
+       nothing whatever about whether anybody is ALLOWED to touch them —
+       fifty-one policies across the schema, checked by nothing.
+ 
+       That is not a gap in the abstract. A filmed video reaches Live
+       through a storage policy: `livevideo.sql` creates almost no table
+       of its own, it adds three columns and grants `"put own filmed
+       video"` on `storage.objects`. Run the file half way, or lose the
+       policy to a later edit, and this query came back EMPTY — all
+       clear — while every upload was refused. Green, and the room still
+       does not work, which is the answer she has had three times.
+ 
+       A `drop policy if exists` immediately above a `create policy` is
+       the house idiom for making a file re-runnable, so only the create
+       is collected. */
+    for (const found of text.matchAll(
+      /create policy\s+"([^"]+)"\s+on\s+([a-z_]+\.[a-z_]+|[a-z_]+)/gi,
+    )) {
+      const on = found[2].includes('.') ? found[2] : `public.${found[2]}`;
+      out.push({ file, kind: 'beleid', name: `${on}: ${found[1]}` });
+    }
   }
 
   /* A table created in one file and altered in another appears twice, and a
@@ -110,7 +137,7 @@ export function report(): string {
     .map((one) => `    ('${one.file}', '${one.kind}', '${one.name}')`)
     .join(',\n');
 
-  const counts = { tabel: 0, kolom: 0, emmer: 0 };
+  const counts = { tabel: 0, kolom: 0, emmer: 0, beleid: 0 };
   for (const one of expected()) counts[one.kind] += 1;
 
   return `${RULE}
@@ -123,8 +150,13 @@ ${RULE}
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
 -- Dit kyk na ${counts.tabel} tabelle, ${counts.kolom} kolomme wat later
--- bygekom het, en ${counts.emmer} stoor-emmers, en gee 'n ry terug vir elke
--- een wat kort — met die lêer wat dit maak.
+-- bygekom het, ${counts.emmer} stoor-emmers en ${counts.beleid} beleide, en gee 'n ry
+-- terug vir elke een wat kort — met die lêer wat dit maak.
+--
+-- Die beleide is nuut, en dit is hoekom: 'n tabel wat bestaan en waaraan
+-- niemand mag raak nie, lyk presies soos 'n tabel wat werk. 'n Gefilmde video
+-- kom deur 'n storage-beleid by Live uit, en hierdie navraag het niks daarvan
+-- geweet nie — dit het leeg teruggekom terwyl elke oplaai geweier is.
 --
 --   Niks terug nie  →  alles is daar.
 --   Rye terug       →  loop daardie lêers. supabase/ALMAL.sql dra die meeste
@@ -154,6 +186,11 @@ select
   naam   as "wat kort"
 from verwag
 where (soort = 'tabel' and to_regclass(naam) is null)
+   or (soort = 'beleid' and not exists (
+        select 1 from pg_policies
+        where schemaname || '.' || tablename = split_part(naam, ': ', 1)
+          and policyname = split_part(naam, ': ', 2)
+      ))
    or (soort = 'kolom' and not exists (
          select 1 from information_schema.columns
          where table_schema = split_part(naam, '.', 1)
@@ -175,6 +212,7 @@ if (process.argv[1] && process.argv[1].endsWith('sql-missing.mts')) {
     `supabase/WATKORT.sql — ${all.length} things to look for`
     + ` (${all.filter((o) => o.kind === 'tabel').length} tables,`
     + ` ${all.filter((o) => o.kind === 'kolom').length} added columns,`
-    + ` ${all.filter((o) => o.kind === 'emmer').length} buckets).`,
+    + ` ${all.filter((o) => o.kind === 'emmer').length} buckets,`
+    + ` ${all.filter((o) => o.kind === 'beleid').length} policies).`,
   );
 }

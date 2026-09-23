@@ -8,8 +8,13 @@
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
 -- Dit kyk na 44 tabelle, 32 kolomme wat later
--- bygekom het, en 6 stoor-emmers, en gee 'n ry terug vir elke
--- een wat kort — met die lêer wat dit maak.
+-- bygekom het, 6 stoor-emmers en 51 beleide, en gee 'n ry
+-- terug vir elke een wat kort — met die lêer wat dit maak.
+--
+-- Die beleide is nuut, en dit is hoekom: 'n tabel wat bestaan en waaraan
+-- niemand mag raak nie, lyk presies soos 'n tabel wat werk. 'n Gefilmde video
+-- kom deur 'n storage-beleid by Live uit, en hierdie navraag het niks daarvan
+-- geweet nie — dit het leeg teruggekom terwyl elke oplaai geweier is.
 --
 --   Niks terug nie  →  alles is daar.
 --   Rye terug       →  loop daardie lêers. supabase/ALMAL.sql dra die meeste
@@ -31,6 +36,57 @@
 
 with verwag (l_eer, soort, naam) as (
   values
+    ('addons.sql', 'beleid', 'public.addons: read own addons'),
+    ('afrikaans.sql', 'beleid', 'public.afrikaans_reports: add your own report'),
+    ('afrikaans.sql', 'beleid', 'public.afrikaans_reports: read your own reports'),
+    ('cast.sql', 'beleid', 'public.cast_members: change own cast'),
+    ('cast.sql', 'beleid', 'public.cast_members: read own cast'),
+    ('cast.sql', 'beleid', 'public.cast_members: remove own cast'),
+    ('cast.sql', 'beleid', 'public.cast_members: write own cast'),
+    ('invites.sql', 'beleid', 'public.collab_invites: read own invites'),
+    ('collab.sql', 'beleid', 'public.collab_messages: read collab messages'),
+    ('collab.sql', 'beleid', 'public.collabs: read own collabs'),
+    ('arena.sql', 'beleid', 'public.competitions: read competitions'),
+    ('radar.sql', 'beleid', 'public.creators: read creators'),
+    ('credits.sql', 'beleid', 'public.credit_entries: read own credits'),
+    ('arena.sql', 'beleid', 'public.entries: read own entries'),
+    ('podcast.sql', 'beleid', 'public.episodes: read episodes'),
+    ('finetunes.sql', 'beleid', 'public.finetunes: read own finetunes'),
+    ('usage.sql', 'beleid', 'public.generations: read own generations'),
+    ('usage.sql', 'beleid', 'public.memberships: read own membership'),
+    ('usage.sql', 'beleid', 'public.purchases: read own purchases'),
+    ('posting.sql', 'beleid', 'public.scheduled_posts: read own scheduled posts'),
+    ('podcast.sql', 'beleid', 'public.shows: read shows'),
+    ('podcast.sql', 'beleid', 'public.speech_runs: read own speech'),
+    ('subscriptions.sql', 'beleid', 'public.subscriptions: read own subscription'),
+    ('taste.sql', 'beleid', 'public.taste: read own taste'),
+    ('schema.sql', 'beleid', 'public.tracks: delete own tracks'),
+    ('schema.sql', 'beleid', 'public.tracks: insert own tracks'),
+    ('schema.sql', 'beleid', 'public.tracks: read own tracks'),
+    ('radar.sql', 'beleid', 'public.tracks: read shared tracks'),
+    ('schema.sql', 'beleid', 'public.tracks: update own tracks'),
+    ('video.sql', 'beleid', 'public.videos: read own videos'),
+    ('podcast.sql', 'beleid', 'public.voices: read own voices'),
+    ('arena.sql', 'beleid', 'public.winners: read winners'),
+    ('schema.sql', 'beleid', 'storage.objects: delete own audio'),
+    ('avatars.sql', 'beleid', 'storage.objects: delete own avatar'),
+    ('cast.sql', 'beleid', 'storage.objects: delete own cast picture'),
+    ('podcast.sql', 'beleid', 'storage.objects: delete own episodes audio'),
+    ('video.sql', 'beleid', 'storage.objects: delete own videos file'),
+    ('livevideo.sql', 'beleid', 'storage.objects: put own filmed video'),
+    ('avatars.sql', 'beleid', 'storage.objects: read avatars'),
+    ('podcast.sql', 'beleid', 'storage.objects: read episodes audio'),
+    ('schema.sql', 'beleid', 'storage.objects: read own audio'),
+    ('cast.sql', 'beleid', 'storage.objects: read own cast picture'),
+    ('video.sql', 'beleid', 'storage.objects: read own videos file'),
+    ('schema.sql', 'beleid', 'storage.objects: replace own audio'),
+    ('avatars.sql', 'beleid', 'storage.objects: replace own avatar'),
+    ('cast.sql', 'beleid', 'storage.objects: replace own cast picture'),
+    ('podcast.sql', 'beleid', 'storage.objects: replace own episodes audio'),
+    ('schema.sql', 'beleid', 'storage.objects: write own audio'),
+    ('avatars.sql', 'beleid', 'storage.objects: write own avatar'),
+    ('cast.sql', 'beleid', 'storage.objects: write own cast picture'),
+    ('podcast.sql', 'beleid', 'storage.objects: write own episodes audio'),
     ('albumart.sql', 'emmer', 'art'),
     ('avatars.sql', 'emmer', 'avatars'),
     ('cast.sql', 'emmer', 'cast'),
@@ -120,6 +176,11 @@ select
   naam   as "wat kort"
 from verwag
 where (soort = 'tabel' and to_regclass(naam) is null)
+   or (soort = 'beleid' and not exists (
+        select 1 from pg_policies
+        where schemaname || '.' || tablename = split_part(naam, ': ', 1)
+          and policyname = split_part(naam, ': ', 2)
+      ))
    or (soort = 'kolom' and not exists (
          select 1 from information_schema.columns
          where table_schema = split_part(naam, '.', 1)

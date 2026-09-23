@@ -38,6 +38,9 @@
 --                 daar geen rem nie.
 --   kitsmine.sql  Jou eie Kits.AI minute, los van die huis s’n. Sonder dit
 --                 trek elke aflaai aan dieselfde teller.
+--   usage.sql     Elke generasie wat geloop het, wat dit gekos het, en teen
+--                 watter model.
+--   events.sql    Wat in die app gebeur, wat Spotlight se Top 10 voer.
 --   listens.sql   Hoeveel kere ’n liedjie geluister is, per liedjie, vir die
 --                 maker. Moet ná charts.sql loop.
 --   live.sql      Die speelkamer self — wie daar is, wat geplaas is, en wat
@@ -58,8 +61,6 @@
 --                     gekoop het nie.
 --   taste.sql     Waarheen jy die meeste gaan en wat jy die meeste maak,
 --                 sodat ’n voorstel joune is eerder as generies.
---   usage.sql     Elke generasie wat geloop het, wat dit gekos het, en teen
---                 watter model.
 --   video.sql     Video’s wat gemaak is.
 --   video2.sql    Die tweede helfte daarvan — onderskrifte, tale en wat by
 --                 ’n snit hoort.
@@ -79,7 +80,6 @@
 --   charts.sql    Spotlight se Top 10 — sonder dit bly daardie bars vir
 --                 altyd leeg, want niks skryf ooit neer dat iemand ’n
 --                 liedjie gespeel het nie.
---   events.sql    Wat in die app gebeur, wat Spotlight se Top 10 voer.
 --   hearts.sql    Harte op ’n plasing in die kamer, een per mens per
 --                 liedjie.
 --   livevideo.sql Video’s in die speelkamer, en ’n opname wat jy self gefilm
@@ -1767,6 +1767,258 @@ create index if not exists kits_minutes_owner_month_idx
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/usage.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- FutureBox — metering and purchases.
+--
+-- Run this after schema.sql, in the same project. Safe to run again.
+--
+-- Why this exists: the free tier's caps used to live in localStorage, in the
+-- visitor's own browser. Anyone could clear site data and start over, which was
+-- a design note while generating cost nothing and is an open tap on the owner's
+-- ElevenLabs account now that it does. A limit the client enforces is not a
+-- limit. These tables move the count somewhere the client cannot reach.
+--
+-- Two tables:
+--   * `generations` — one row per song made, so the day's count is a fact
+--   * `purchases`   — one row per song opened or bought, so the download gate
+--                     has something to check
+--
+-- Both are written by the server with the caller's own identity, and the
+-- policies below let a person read their own rows and nothing else. Nobody can
+-- insert a purchase from the browser: that is the whole point of the gate.
+
+-- ────────────────────────────────────────────────────────── generations ────
+
+create table if not exists public.generations (
+  id          bigint generated always as identity primary key,
+  owner       uuid not null references auth.users (id) on delete cascade,
+  -- 'preview' is the short watermarked one; 'full' is the whole song.
+  kind        text not null check (kind in ('preview', 'full')),
+  seconds     integer not null default 0,
+  -- Which track this produced, when it produced one.
+  track_id    text,
+  -- What it cost us, in credits, so spend can be read without guessing.
+  credits     integer not null default 0,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists generations_owner_day_idx
+  on public.generations (owner, created_at desc);
+
+alter table public.generations enable row level security;
+
+-- Read your own; never write from the browser. The server writes these with
+-- the service role, which bypasses RLS by design.
+drop policy if exists "read own generations" on public.generations;
+create policy "read own generations" on public.generations
+  for select using (auth.uid() = owner);
+
+-- ──────────────────────────────────────────────────────────── purchases ────
+
+create table if not exists public.purchases (
+  id          bigint generated always as identity primary key,
+  owner       uuid not null references auth.users (id) on delete cascade,
+  track_id    text not null,
+  -- 'opened' unlocked the full length; 'owned' removed the watermark and
+  -- allows the download. 'owned' implies 'opened'.
+  level       text not null check (level in ('opened', 'owned')),
+  -- In cents, so no float ever touches money.
+  amount_cents integer not null default 0,
+  currency    text not null default 'ZAR',
+  -- The payment provider's own reference, for reconciliation.
+  reference   text,
+  created_at  timestamptz not null default now(),
+  unique (owner, track_id, level)
+);
+
+create index if not exists purchases_owner_track_idx
+  on public.purchases (owner, track_id);
+
+alter table public.purchases enable row level security;
+
+drop policy if exists "read own purchases" on public.purchases;
+create policy "read own purchases" on public.purchases
+  for select using (auth.uid() = owner);
+
+-- ────────────────────────────────────────────────────────────── profiles ───
+
+-- Which tier someone is on. Written by the server when a subscription starts
+-- or lapses; never by the browser, or the tiers would be a suggestion.
+create table if not exists public.memberships (
+  owner       uuid primary key references auth.users (id) on delete cascade,
+  tier        text not null default 'free' check (tier in ('free','maker','studio','label')),
+  -- When the current period ends. Null means it does not.
+  renews_at   timestamptz,
+  reference   text,
+  updated_at  timestamptz not null default now()
+);
+
+alter table public.memberships enable row level security;
+
+drop policy if exists "read own membership" on public.memberships;
+create policy "read own membership" on public.memberships
+  for select using (auth.uid() = owner);
+
+-- ───────────────────────────────────────────────────────────── counting ────
+
+-- Today's generations for one person, by kind. Used by the server before it
+-- spends anything. Defined here rather than in the app so the definition of
+-- "today" cannot differ between two callers.
+create or replace function public.generations_today(p_owner uuid)
+returns table (kind text, used bigint)
+language sql
+stable
+as $$
+  select g.kind, count(*)
+  from public.generations g
+  where g.owner = p_owner
+    and g.created_at >= date_trunc('day', now())
+  group by g.kind;
+$$;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/events.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- FutureBox — what happened, and how many.
+--
+-- Run this after schema.sql and usage.sql, in the same project. Safe to run
+-- again.
+--
+-- Why this exists: the app could say how many songs a person had made today,
+-- because it had to before it would spend a credit. It could not say how many
+-- people had ever visited, watched a masterclass or read an article, because
+-- nothing anywhere wrote that down. A counter on the page needs a fact behind
+-- it, and inventing one would be worse than showing nothing.
+--
+-- What is counted here is *reach*: visits, videos rendered, masterclasses
+-- opened, articles and episodes opened. Songs and money are not, because they
+-- already have their own tables — `generations` and `purchases` — and a number
+-- with two sources eventually has two answers.
+--
+-- One rule shapes the whole table: **one person, one thing, one day, one row.**
+-- Anyone can call the endpoint that writes these, so a count of raw calls is a
+-- count of how determined somebody was. The unique index below is what makes
+-- "1 284 masterclasses watched" mean 1 284 rather than one bored afternoon.
+
+-- ───────────────────────────────────────────────────────────────── events ───
+
+create table if not exists public.events (
+  id          bigint generated always as identity primary key,
+  -- The five things worth counting that nothing else records.
+  kind        text not null check (kind in ('visit', 'video', 'masterclass', 'article', 'podcast')),
+  -- Which part of the app: a masterclass track, a feed category. Null when the
+  -- kind has no category of its own, which is only ever a visit.
+  category    text,
+  -- Which particular one. Null for a visit; the item's id otherwise.
+  ref         text,
+  -- Set when the person was signed in. Null is normal and not a problem: most
+  -- of the reach this table measures is anonymous by nature.
+  owner       uuid references auth.users (id) on delete set null,
+  -- An opaque id the browser keeps, so two visits from one person are one
+  -- person. It is random and carries nothing about them — not their email, not
+  -- their address, nothing that could identify them if this table leaked.
+  visitor     text not null,
+  created_at  timestamptz not null default now(),
+  -- Stored rather than derived at read time, because it is what the uniqueness
+  -- rule is written against and an index cannot be built on a moving `now()`.
+  day         date not null default (now() at time zone 'utc')::date
+);
+
+-- The rule, enforced where it cannot be argued with. Coalesce because a null
+-- ref would make every visit distinct from every other one.
+create unique index if not exists events_once_per_day_idx
+  on public.events (kind, visitor, coalesce(ref, ''), day);
+
+create index if not exists events_kind_category_idx
+  on public.events (kind, category);
+
+alter table public.events enable row level security;
+
+-- No policy grants anything, which is deliberate: the browser neither writes
+-- these nor reads them. The server writes them with the service role, and the
+-- only thing that ever comes back out is the totals below.
+
+-- ────────────────────────────────────────────────────────────── the board ───
+
+-- Every number the counters show, computed in one place.
+--
+-- Defined here rather than in the app so that "how many payers" has exactly one
+-- answer. Two call sites counting the same thing slightly differently is how a
+-- dashboard stops being believed.
+create or replace function public.stats_board()
+returns json
+language sql
+stable
+as $$
+  select json_build_object(
+    -- The earliest thing anybody recorded, so the page can say what period
+    -- these numbers cover instead of implying they are all of history.
+    'since', (
+      select min(t) from (
+        select min(created_at) t from public.events
+        union all select min(created_at) from public.generations
+        union all select min(created_at) from public.purchases
+      ) f
+    ),
+    'totals', json_build_object(
+      'visitors', (select count(distinct visitor) from public.events where kind = 'visit'),
+      -- Songs come from the generation record, which is written only after the
+      -- music service has actually answered. A song that failed is not a song.
+      'songs', (select count(*) from public.generations),
+      'videos', (select count(*) from public.events where kind = 'video'),
+      'masterclasses', (select count(*) from public.events where kind = 'masterclass'),
+      'articles', (select count(*) from public.events where kind = 'article'),
+      'podcasts', (select count(*) from public.events where kind = 'podcast'),
+      -- Anyone who has paid for anything: a single song, or a plan they are on.
+      -- Counted per person, so buying nine songs is one payer.
+      'payers', (
+        select count(*) from (
+          select owner from public.purchases
+          union
+          select owner from public.memberships where tier <> 'free'
+        ) p
+      )
+    ),
+    -- Per item, so a card can show how many people opened that one thing.
+    -- Capped: a runaway list would be sent to every visitor on every load, and
+    -- nothing on a page can show more of these than fits on it anyway.
+    'byRef', (
+      select coalesce(json_agg(row_to_json(r)), '[]'::json) from (
+        select kind, ref, count(*)::bigint as count
+        from public.events
+        where ref is not null
+        group by kind, ref
+        order by count(*) desc
+        limit 500
+      ) r
+    ),
+    -- The same events split by category, for the page each category lives on.
+    'byCategory', (
+      select coalesce(json_agg(row_to_json(c)), '[]'::json) from (
+        select kind, coalesce(category, '') as category, count(*)::bigint as count
+        from public.events
+        where category is not null
+        group by kind, category
+        order by count(*) desc
+      ) c
+    )
+  );
+$$;
+
+-- Only the server calls this, with the service role, which is the same role
+-- that writes the rows. The default grant would let a signed-in browser call it
+-- too; it would come back empty, because row-level security still applies to
+-- the reads inside — but a function nobody should call is better left
+-- uncallable than left returning zeros for a confusing reason.
+revoke all on function public.stats_board() from public, anon, authenticated;
+grant execute on function public.stats_board() to service_role;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/listens.sql
 -- ═══════════════════════════════════════════════════════════════════════════
 
@@ -2927,119 +3179,6 @@ revoke all on function public.forget_taste(uuid) from public, anon, authenticate
 
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- supabase/usage.sql
--- ═══════════════════════════════════════════════════════════════════════════
-
--- FutureBox — metering and purchases.
---
--- Run this after schema.sql, in the same project. Safe to run again.
---
--- Why this exists: the free tier's caps used to live in localStorage, in the
--- visitor's own browser. Anyone could clear site data and start over, which was
--- a design note while generating cost nothing and is an open tap on the owner's
--- ElevenLabs account now that it does. A limit the client enforces is not a
--- limit. These tables move the count somewhere the client cannot reach.
---
--- Two tables:
---   * `generations` — one row per song made, so the day's count is a fact
---   * `purchases`   — one row per song opened or bought, so the download gate
---                     has something to check
---
--- Both are written by the server with the caller's own identity, and the
--- policies below let a person read their own rows and nothing else. Nobody can
--- insert a purchase from the browser: that is the whole point of the gate.
-
--- ────────────────────────────────────────────────────────── generations ────
-
-create table if not exists public.generations (
-  id          bigint generated always as identity primary key,
-  owner       uuid not null references auth.users (id) on delete cascade,
-  -- 'preview' is the short watermarked one; 'full' is the whole song.
-  kind        text not null check (kind in ('preview', 'full')),
-  seconds     integer not null default 0,
-  -- Which track this produced, when it produced one.
-  track_id    text,
-  -- What it cost us, in credits, so spend can be read without guessing.
-  credits     integer not null default 0,
-  created_at  timestamptz not null default now()
-);
-
-create index if not exists generations_owner_day_idx
-  on public.generations (owner, created_at desc);
-
-alter table public.generations enable row level security;
-
--- Read your own; never write from the browser. The server writes these with
--- the service role, which bypasses RLS by design.
-drop policy if exists "read own generations" on public.generations;
-create policy "read own generations" on public.generations
-  for select using (auth.uid() = owner);
-
--- ──────────────────────────────────────────────────────────── purchases ────
-
-create table if not exists public.purchases (
-  id          bigint generated always as identity primary key,
-  owner       uuid not null references auth.users (id) on delete cascade,
-  track_id    text not null,
-  -- 'opened' unlocked the full length; 'owned' removed the watermark and
-  -- allows the download. 'owned' implies 'opened'.
-  level       text not null check (level in ('opened', 'owned')),
-  -- In cents, so no float ever touches money.
-  amount_cents integer not null default 0,
-  currency    text not null default 'ZAR',
-  -- The payment provider's own reference, for reconciliation.
-  reference   text,
-  created_at  timestamptz not null default now(),
-  unique (owner, track_id, level)
-);
-
-create index if not exists purchases_owner_track_idx
-  on public.purchases (owner, track_id);
-
-alter table public.purchases enable row level security;
-
-drop policy if exists "read own purchases" on public.purchases;
-create policy "read own purchases" on public.purchases
-  for select using (auth.uid() = owner);
-
--- ────────────────────────────────────────────────────────────── profiles ───
-
--- Which tier someone is on. Written by the server when a subscription starts
--- or lapses; never by the browser, or the tiers would be a suggestion.
-create table if not exists public.memberships (
-  owner       uuid primary key references auth.users (id) on delete cascade,
-  tier        text not null default 'free' check (tier in ('free','maker','studio','label')),
-  -- When the current period ends. Null means it does not.
-  renews_at   timestamptz,
-  reference   text,
-  updated_at  timestamptz not null default now()
-);
-
-alter table public.memberships enable row level security;
-
-drop policy if exists "read own membership" on public.memberships;
-create policy "read own membership" on public.memberships
-  for select using (auth.uid() = owner);
-
--- ───────────────────────────────────────────────────────────── counting ────
-
--- Today's generations for one person, by kind. Used by the server before it
--- spends anything. Defined here rather than in the app so the definition of
--- "today" cannot differ between two callers.
-create or replace function public.generations_today(p_owner uuid)
-returns table (kind text, used bigint)
-language sql
-stable
-as $$
-  select g.kind, count(*)
-  from public.generations g
-  where g.owner = p_owner
-    and g.created_at >= date_trunc('day', now())
-  group by g.kind;
-$$;
-
-
--- ═══════════════════════════════════════════════════════════════════════════
 -- supabase/video.sql
 -- ═══════════════════════════════════════════════════════════════════════════
 
@@ -4008,145 +4147,6 @@ $$;
 -- uncallable than left returning zeros for a confusing reason.
 revoke all on function public.charts_top(text, integer, integer) from public, anon, authenticated;
 grant execute on function public.charts_top(text, integer, integer) to service_role;
-
-
--- ═══════════════════════════════════════════════════════════════════════════
--- supabase/events.sql
--- ═══════════════════════════════════════════════════════════════════════════
-
--- FutureBox — what happened, and how many.
---
--- Run this after schema.sql and usage.sql, in the same project. Safe to run
--- again.
---
--- Why this exists: the app could say how many songs a person had made today,
--- because it had to before it would spend a credit. It could not say how many
--- people had ever visited, watched a masterclass or read an article, because
--- nothing anywhere wrote that down. A counter on the page needs a fact behind
--- it, and inventing one would be worse than showing nothing.
---
--- What is counted here is *reach*: visits, videos rendered, masterclasses
--- opened, articles and episodes opened. Songs and money are not, because they
--- already have their own tables — `generations` and `purchases` — and a number
--- with two sources eventually has two answers.
---
--- One rule shapes the whole table: **one person, one thing, one day, one row.**
--- Anyone can call the endpoint that writes these, so a count of raw calls is a
--- count of how determined somebody was. The unique index below is what makes
--- "1 284 masterclasses watched" mean 1 284 rather than one bored afternoon.
-
--- ───────────────────────────────────────────────────────────────── events ───
-
-create table if not exists public.events (
-  id          bigint generated always as identity primary key,
-  -- The five things worth counting that nothing else records.
-  kind        text not null check (kind in ('visit', 'video', 'masterclass', 'article', 'podcast')),
-  -- Which part of the app: a masterclass track, a feed category. Null when the
-  -- kind has no category of its own, which is only ever a visit.
-  category    text,
-  -- Which particular one. Null for a visit; the item's id otherwise.
-  ref         text,
-  -- Set when the person was signed in. Null is normal and not a problem: most
-  -- of the reach this table measures is anonymous by nature.
-  owner       uuid references auth.users (id) on delete set null,
-  -- An opaque id the browser keeps, so two visits from one person are one
-  -- person. It is random and carries nothing about them — not their email, not
-  -- their address, nothing that could identify them if this table leaked.
-  visitor     text not null,
-  created_at  timestamptz not null default now(),
-  -- Stored rather than derived at read time, because it is what the uniqueness
-  -- rule is written against and an index cannot be built on a moving `now()`.
-  day         date not null default (now() at time zone 'utc')::date
-);
-
--- The rule, enforced where it cannot be argued with. Coalesce because a null
--- ref would make every visit distinct from every other one.
-create unique index if not exists events_once_per_day_idx
-  on public.events (kind, visitor, coalesce(ref, ''), day);
-
-create index if not exists events_kind_category_idx
-  on public.events (kind, category);
-
-alter table public.events enable row level security;
-
--- No policy grants anything, which is deliberate: the browser neither writes
--- these nor reads them. The server writes them with the service role, and the
--- only thing that ever comes back out is the totals below.
-
--- ────────────────────────────────────────────────────────────── the board ───
-
--- Every number the counters show, computed in one place.
---
--- Defined here rather than in the app so that "how many payers" has exactly one
--- answer. Two call sites counting the same thing slightly differently is how a
--- dashboard stops being believed.
-create or replace function public.stats_board()
-returns json
-language sql
-stable
-as $$
-  select json_build_object(
-    -- The earliest thing anybody recorded, so the page can say what period
-    -- these numbers cover instead of implying they are all of history.
-    'since', (
-      select min(t) from (
-        select min(created_at) t from public.events
-        union all select min(created_at) from public.generations
-        union all select min(created_at) from public.purchases
-      ) f
-    ),
-    'totals', json_build_object(
-      'visitors', (select count(distinct visitor) from public.events where kind = 'visit'),
-      -- Songs come from the generation record, which is written only after the
-      -- music service has actually answered. A song that failed is not a song.
-      'songs', (select count(*) from public.generations),
-      'videos', (select count(*) from public.events where kind = 'video'),
-      'masterclasses', (select count(*) from public.events where kind = 'masterclass'),
-      'articles', (select count(*) from public.events where kind = 'article'),
-      'podcasts', (select count(*) from public.events where kind = 'podcast'),
-      -- Anyone who has paid for anything: a single song, or a plan they are on.
-      -- Counted per person, so buying nine songs is one payer.
-      'payers', (
-        select count(*) from (
-          select owner from public.purchases
-          union
-          select owner from public.memberships where tier <> 'free'
-        ) p
-      )
-    ),
-    -- Per item, so a card can show how many people opened that one thing.
-    -- Capped: a runaway list would be sent to every visitor on every load, and
-    -- nothing on a page can show more of these than fits on it anyway.
-    'byRef', (
-      select coalesce(json_agg(row_to_json(r)), '[]'::json) from (
-        select kind, ref, count(*)::bigint as count
-        from public.events
-        where ref is not null
-        group by kind, ref
-        order by count(*) desc
-        limit 500
-      ) r
-    ),
-    -- The same events split by category, for the page each category lives on.
-    'byCategory', (
-      select coalesce(json_agg(row_to_json(c)), '[]'::json) from (
-        select kind, coalesce(category, '') as category, count(*)::bigint as count
-        from public.events
-        where category is not null
-        group by kind, category
-        order by count(*) desc
-      ) c
-    )
-  );
-$$;
-
--- Only the server calls this, with the service role, which is the same role
--- that writes the rows. The default grant would let a signed-in browser call it
--- too; it would come back empty, because row-level security still applies to
--- the reads inside — but a function nobody should call is better left
--- uncallable than left returning zeros for a confusing reason.
-revoke all on function public.stats_board() from public, anon, authenticated;
-grant execute on function public.stats_board() to service_role;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════

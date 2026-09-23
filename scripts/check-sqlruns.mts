@@ -180,18 +180,32 @@ process.on('exit', () => {
   try { psql(admin, ['-c', `drop database if exists ${BUNDLE_DB}`]); } catch { /* going anyway */ }
 });
 psql(BUNDLE_DB, ['-f', 'scripts/sql-stubs.sql']);
-/* The bundle stands on the older files, the way the real project does — it
-   is the eleven newer ones, not the whole schema. So the same fixpoint runs
-   the others in first, then the bundle. */
-let base = ['schema.sql', ...files.filter((one) => one !== 'schema.sql')];
-for (let round = 0; round < 6 && base.length; round += 1) {
-  const still: string[] = [];
-  for (const one of base) {
-    try { psql(BUNDLE_DB, ['-f', `supabase/${one}`]); } catch { still.push(one); }
-  }
-  if (still.length === base.length) break;
-  base = still;
-}
+/* ── Nothing else goes in first ────────────────────────────────────────
+ *
+ * This used to run every schema file into this database and THEN the
+ * bundle, with a note saying the bundle "is the eleven newer ones, not the
+ * whole schema". That stopped being true on 22 September, when `ORDER`
+ * became every file — and the note stayed, and so did the pre-loading.
+ *
+ * So the bundle was being tested against a project where everything
+ * already existed. Every `create table if not exists` and every `add
+ * column if not exists` succeeded trivially, in any order, and the one
+ * thing the bundle has to do — build a project from NOTHING — was the one
+ * thing never tested.
+ *
+ * It was broken the whole time. Thirteen statements failed on a fresh
+ * project: `events` was ordered after the two files that alter it, and
+ * `usage` after the file whose `language sql` function reads its table. So
+ * listens, charts and event counting were dead on any project built the
+ * way Carli is told to build one, and the errors scrolled past in a
+ * Supabase editor that does not stop.
+ *
+ * Carli, 23 September 2026: *"Is daar enige sql? Dit voel asof jy niks
+ * gefix het nie."*
+ *
+ * Stubs only now. The stubs are `auth.users` and the storage tables —
+ * what Supabase itself provides — and nothing more, which is exactly what
+ * her project is before she pastes. */
 let bundleSaid = '';
 try {
   psql(BUNDLE_DB, ['-f', 'supabase/ALMAL.sql']);
@@ -214,21 +228,37 @@ const watkort = () => psql(BUNDLE_DB, ['-tA', '-f', 'supabase/WATKORT.sql']).tri
 
 ok('and WATKORT.sql finds nothing missing in a finished project', watkort() === '', watkort());
 
-/* The cast fault, put back: its table, its bucket, and a column that
-   arrived after its table — one of each kind the query knows how to look
-   for, so a kind with no working branch cannot hide. */
+/* The cast fault, put back: its table, its bucket, a column that arrived
+   after its table, and — since 23 September — a POLICY, which is the kind
+   that was invisible until then.
+ 
+   One of each kind the query knows how to look for, so a kind with no
+   working branch cannot hide. Named rather than counted: dropping the
+   table takes its four policies with it, so a count is a number that
+   changes whenever the schema does, and a rule tied to it fails for the
+   wrong reason. This asks whether each KIND came back. */
 psql(BUNDLE_DB, [
   '-c', 'drop table public.cast_members cascade',
   '-c', "delete from storage.buckets where id = 'cast'",
   '-c', 'alter table public.creators drop column avatar_path',
+  '-c', 'drop policy if exists "put own filmed video" on storage.objects',
 ]);
 const missing = watkort().split('\n').filter(Boolean);
-ok('  and names the table, the bucket and the column when they are taken away',
-  missing.length === 3
-  && missing.some((one) => one.includes('cast_members'))
-  && missing.some((one) => one.includes('|emmer|cast'))
-  && missing.some((one) => one.includes('avatar_path')),
+const found = (what: string) => missing.some((one) => one.includes(what));
+ok('  and names the table, the bucket, the column and the policy when they are taken away',
+  found('|tabel|public.cast_members')
+  && found('|emmer|cast')
+  && found('avatar_path')
+  && found('storage.objects: put own filmed video'),
   `${missing.length}: ${missing.join(' / ')}`);
+
+/* The policy one is called out on its own, because it is the reason this
+   whole kind exists: a filmed video reaches Live through a storage policy,
+   and a query that proved the table was there and said nothing about who
+   may write to it came back all-clear while every upload was refused. */
+ok('    the policy especially, which nothing looked for until now',
+  found('livevideo.sql|beleid|storage.objects: put own filmed video'),
+  missing.filter((one) => one.includes('beleid')).join(' / ') || 'no policy rows at all');
 
 let mended = '';
 try { psql(BUNDLE_DB, ['-f', 'supabase/ALMAL.sql']); } catch (error) {

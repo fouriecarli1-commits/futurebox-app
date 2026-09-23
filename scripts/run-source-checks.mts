@@ -77,6 +77,9 @@ if (!unique.length) {
 
 console.log(`Running ${unique.length} source checks — the same ones, in the same order, as CI.\n`);
 
+/** Checks that exited 0 having run nothing. Counted apart from passes. */
+const skips: string[] = [];
+
 const broken: { name: string; tail: string }[] = [];
 for (const name of unique) {
   let output = '';
@@ -88,7 +91,22 @@ for (const name of unique) {
     const said = thrown as { stdout?: string; stderr?: string };
     output = `${said.stdout ?? ''}${said.stderr ?? ''}`;
   }
-  console.log(`${ok ? '  ok  ' : '  FAIL'} ${name}`);
+  /* ── A skip is not a pass ─────────────────────────────────────────
+   *
+   * Carli, 23 September 2026: *"Is daar enige sql? Dit voel asof jy niks
+   * gefix het nie."*
+   *
+   * `check:sqlruns` needs a Postgres and exits 0 without one, printing
+   * "This is a skip, not a pass. Nothing about the schema was checked."
+   * Nobody read that line, because this sweep printed `ok` beside it and
+   * "All 146 source checks pass" at the end — so for weeks the most
+   * expensive check in the repo ran nowhere, and the one-paste bundle was
+   * broken the whole time.
+   *
+   * The check was honest. The summary was not. */
+  const skipped = ok && /SKIPPED/.test(output);
+  if (skipped) skips.push(name);
+  console.log(`${!ok ? '  FAIL' : skipped ? '  SKIP' : '  ok  '} ${name}`);
   if (!ok) {
     /* The last few lines, which is where these scripts put their summary.
        The whole output of a failing check is hundreds of `ok` lines and the
@@ -103,4 +121,14 @@ if (broken.length) {
   for (const one of broken) console.error(`  ── ${one.name}\n    ${one.tail}\n`);
   process.exit(1);
 }
-console.log(`\nAll ${unique.length} source checks pass. The browser jobs are separate: npm run checks -- --list`);
+if (skips.length) {
+  console.log(
+    `\n${skips.length} of ${unique.length} SKIPPED — they ran nothing:\n  ${skips.join('\n  ')}\n`
+    + '  A skip is not a pass. check:sqlruns needs a Postgres: set PGURL, or start one.\n',
+  );
+}
+console.log(
+  `\n${unique.length - skips.length} of ${unique.length} source checks pass`
+  + `${skips.length ? `, ${skips.length} skipped` : ''}.`
+  + ' The browser jobs are separate: npm run checks -- --list',
+);

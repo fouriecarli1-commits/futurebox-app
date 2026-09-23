@@ -48,6 +48,20 @@ export const ORDER = [
   'invites',
   'kits',
   'kitsmine',
+  /* ── `events` before the files that alter it ──────────────────────
+
+     `listens.sql` adds `events.times`, and `charts.sql` adds a constraint
+     to the same table. Both were ordered BEFORE the file that creates it,
+     because when this list grew from eleven files to all of them on 22
+     September the new ones were appended alphabetically rather than
+     placed. Thirteen statements failed on every fresh project built from
+     the bundle — listens, charts and event counting, all dead, with the
+     errors scrolling past in a Supabase editor that keeps going. */
+  /* `usage` before `events`: `events.sql` defines `stats_board()`, and a
+     `language sql` function is parsed when it is created, so it cannot
+     name `public.generations` before `usage.sql` has made it. */
+  'usage',
+  'events',
   'listens',
   'live',
   'mail',
@@ -59,7 +73,6 @@ export const ORDER = [
   'roomwords',
   'subscriptions',
   'taste',
-  'usage',
   'video',
   'video2',
   'abuse',
@@ -67,7 +80,6 @@ export const ORDER = [
   'avatars',
   'buildon',
   'charts',
-  'events',
   'hearts',
   'livevideo',
 ] as const;

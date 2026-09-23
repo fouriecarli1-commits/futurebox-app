@@ -61,8 +61,19 @@ ok('  and the cast table and its bucket are among them',
   named('tabel', 'public.cast_members') && named('emmer', 'cast'),
   'the fault this file was written for');
 
-/* It reads. It does not write. */
-const statements = onDisk.replace(/--.*$/gm, '');
+/* It reads. It does not write.
+ 
+   Comments out, and then the string LITERALS out too. Since 23 September
+   the query carries every policy name it expects, and policies are named
+   after what they allow — `"delete own tracks"`, `"insert own tracks"`,
+   `"update own tracks"`. Those are data inside a `values` list, not
+   statements, and reading them as statements failed a query that is
+   perfectly read-only.
+ 
+   A rule that cannot tell a verb from a name is a rule about spelling. */
+const statements = onDisk
+  .replace(/--.*$/gm, '')
+  .replace(/'[^']*'/g, "''");
 const writes = ['insert', 'update', 'delete', 'drop', 'truncate', 'grant', 'revoke']
   .filter((word) => new RegExp(`\\b${word}\\s`, 'i').test(statements));
 /* `create` and `alter` are looked for separately: the words appear inside
