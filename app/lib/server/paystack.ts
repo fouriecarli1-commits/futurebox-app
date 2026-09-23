@@ -177,6 +177,50 @@ export async function arrangementOf(customerCode: string): Promise<Arrangement |
  * honest one: the month already paid for is not refunded and not cut short.
  * Nothing more is charged after it.
  */
+/**
+ * A page where somebody changes the card a subscription is charged to.
+ *
+ * ── Why this is a link and not a form ────────────────────────────────────
+ *
+ * Carli, 23 September 2026: *"En met billing, dat hulle hul billing
+ * information kon verander?"*
+ *
+ * The obvious build is a card form in the account screen. It would be the
+ * wrong one. A card number typed into a field this app renders is a card
+ * number in this app's DOM, in its error reports and in its scope for PCI —
+ * and none of that is needed, because Paystack hosts a page for exactly this
+ * and hands back a link to it.
+ *
+ * `checkout` already takes the same view: the secret never reaches a browser
+ * and no card ever reaches us. This keeps that true for the second card as
+ * well as the first.
+ *
+ * The link is short-lived and belongs to one subscription, so it is fetched
+ * when the button is pressed rather than kept anywhere.
+ */
+export async function cardChangeLink(
+  subscriptionCode: string,
+): Promise<{ ok: true; link: string } | { ok: false; message: string }> {
+  const key = secret();
+  if (!key) return { ok: false, message: 'Payments are not switched on yet.' };
+
+  const response = await fetch(
+    `${BASE}/subscription/${encodeURIComponent(subscriptionCode)}/manage/link`,
+    { method: 'GET', headers: { Authorization: `Bearer ${key}` } },
+  ).catch(() => null);
+  if (!response) return { ok: false, message: 'Could not reach the payment service.' };
+
+  const payload = (await response.json().catch(() => ({}))) as {
+    status?: boolean;
+    message?: string;
+    data?: { link?: string };
+  };
+  if (!response.ok || !payload.status || !payload.data?.link) {
+    return { ok: false, message: payload.message ?? 'The payment service would not open that.' };
+  }
+  return { ok: true, link: payload.data.link };
+}
+
 export async function stopRenewing(
   subscriptionCode: string,
   emailToken: string,

@@ -104,6 +104,7 @@
     "check:shotwords": "tsx scripts/check-shotwords.mts",
     "check:adformats": "tsx scripts/check-adformats.mts",
     "check:ampshelf": "tsx scripts/check-ampshelf.mts",
+    "check:billing": "tsx scripts/check-billing.mts",
     "check:authenticator": "tsx scripts/check-authenticator.mts",
     "check:forgot": "tsx scripts/check-forgot.mts",
     "check:forgotwalk": "node audit/forgot.mjs 3141",

@@ -16,7 +16,7 @@ import { admin, callerFrom, metered } from '@/app/lib/server/account';
 import { wrote } from '../../lib/server/wrote';
 import { accountFor, send } from '@/app/lib/server/email';
 import { cancelledLetter } from '@/app/lib/server/letters';
-import { stopRenewing } from '@/app/lib/server/paystack';
+import { cardChangeLink, stopRenewing } from '@/app/lib/server/paystack';
 import { TIER_SPECS, type Tier } from '@/app/lib/plans';
 
 export const runtime = 'nodejs';
@@ -55,6 +55,43 @@ export async function GET(request: Request): Promise<Response> {
     // and only has them once the arrangement exists on their side.
     cancellable: Boolean(row.subscription_code && row.email_token) && row.status === 'active',
   });
+}
+
+/**
+ * A page where the card can be changed.
+ *
+ * Carli, 23 September 2026: *"En met billing, dat hulle hul billing
+ * information kon verander?"* Seeing the arrangement and stopping it were
+ * both built; changing the card it is charged to was not, and a card expires
+ * long before somebody wants to leave — so the ordinary end of this account
+ * was a failed renewal and a membership that quietly stopped.
+ *
+ * POST rather than GET, because it asks Paystack to mint something. The link
+ * is short-lived and is for one subscription, so it is fetched on the press
+ * and never stored.
+ *
+ * Looked up by `owner`, which is the whole of the authorisation: the only
+ * subscription anybody can get a link for is the one on their own row.
+ */
+export async function POST(request: Request): Promise<Response> {
+  if (!metered()) return Response.json({ message: 'Accounts are not configured.' }, { status: 503 });
+  const caller = await callerFrom(request);
+  const client = admin();
+  if (!caller || !client) return Response.json({ message: 'Sign in first.' }, { status: 401 });
+
+  const { data } = await client
+    .from('subscriptions')
+    .select('subscription_code')
+    .eq('owner', caller.id)
+    .maybeSingle();
+  const code = (data as { subscription_code: string | null } | null)?.subscription_code;
+  if (!code) {
+    return Response.json({ message: 'There is no recurring payment to change.' }, { status: 404 });
+  }
+
+  const opened = await cardChangeLink(code);
+  if (!opened.ok) return Response.json({ message: opened.message }, { status: 502 });
+  return Response.json({ link: opened.link });
 }
 
 export async function DELETE(request: Request): Promise<Response> {

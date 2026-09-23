@@ -37,7 +37,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { CreditCard, Loader2, Check } from 'lucide-react';
+import { CreditCard, Loader2, Check, Pencil } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { refusalText } from '../lib/apierror';
 import { useLang } from '../lib/i18n';
@@ -123,6 +123,48 @@ export default function Subscription(): React.ReactElement | null {
     }
   };
 
+  /* ── Changing the card ────────────────────────────────────────────────
+ 
+     Carli, 23 September 2026: *"En met billing, dat hulle hul billing
+     information kon verander?"* Seeing the arrangement and stopping it were
+     both here; changing the card it is charged to was not — and a card
+     expires long before anybody wants to leave, so the ordinary end of a
+     membership here was a failed renewal and a plan that quietly stopped.
+ 
+     A link to Paystack's own page rather than a card form on this screen. A
+     card number typed into a field this app renders is a card number in this
+     app's DOM, in its error reports, and in its scope for PCI, and none of
+     that buys anything: the checkout already keeps every card at Paystack
+     and this keeps the second one there too.
+ 
+     Opened in this tab rather than a new one. A payment page in a popup is
+     the one thing a phone's browser is most likely to block, and somebody
+     who pressed a button and saw nothing happen concludes the app is broken
+     rather than that the window was blocked. */
+  const changeCard = async () => {
+    setBusy(true);
+    setProblem(null);
+    try {
+      const token = await accessToken();
+      const response = await fetch('/api/subscription', {
+        method: 'POST',
+        headers: token ? { authorization: `Bearer ${token}` } : undefined,
+      });
+      const said = (await response.json().catch(() => ({}))) as {
+        link?: string;
+        error?: string;
+        message?: string;
+      };
+      if (!response.ok || !said.link) {
+        setProblem(refusalText(said, lang, t('sub.cardFailed', 'That page could not be opened just now.')));
+        return;
+      }
+      window.location.href = said.link;
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
       <div className="flex items-start gap-2.5">
@@ -149,6 +191,25 @@ export default function Subscription(): React.ReactElement | null {
           <Check className="w-4 h-4 flex-shrink-0" />
           {t('sub.stopped', 'Stopped. Nothing further will be charged, and a confirmation is on its way to your inbox.')}
         </p>
+      )}
+
+      {/* Above the way out, and on purpose. Somebody whose card has expired
+          has come here to fix that, not to leave — and a screen that offers
+          only "stop the payment" turns an expired card into a cancellation. */}
+      {state.cancellable && !done && !asking && (
+        <button
+          type="button"
+          onClick={() => void changeCard()}
+          disabled={busy}
+          data-changecard
+          className="min-h-[44px] inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:border-emerald-500 disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Pencil className="w-3.5 h-3.5" />}
+          {t('sub.changeCard', 'Change the card')}
+        </button>
+      )}
+      {state.cancellable && !done && !asking && (
+        <p className="text-sm text-zinc-500 leading-snug">{t('sub.cardWhere')}</p>
       )}
 
       {state.cancellable && !done && !asking && (
