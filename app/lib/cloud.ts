@@ -325,6 +325,98 @@ export async function resendCode(email: string): Promise<{ ok: boolean; message:
   return error ? { ok: false, message: error.message } : { ok: true, message: '' };
 }
 
+/**
+ * The mark that says this page load came from a "forgotten password" letter.
+ *
+ * Same shape and same reason as `ARRIVED`: a word, not a token. It grants
+ * nothing — the recovery session Supabase puts in place on arrival is what
+ * grants anything — and all this does is tell the app which screen to open.
+ */
+export const RECOVERING = 'recover';
+
+/**
+ * A letter with a way back in.
+ *
+ * ── Why this was missing, and what it cost ───────────────────────────────
+ *
+ * Carli, 23 September 2026, going through the account screens: *"ek wil net
+ * seker maak dat die login 'n forget password funksie het."*
+ *
+ * It did not. There was no `resetPasswordForEmail` anywhere in this
+ * repository, which means somebody who forgot their password was locked out
+ * permanently: the only way back was a second account on a second address,
+ * losing every song, every video and every credit on the first.
+ *
+ * ── Why it never says whether the address is one of ours ─────────────────
+ *
+ * The answer is the same either way, on purpose. A screen that says "no
+ * account with that address" is a screen that will tell anybody, one address
+ * at a time, exactly who has an account here — and for a music app that is a
+ * list of which artists are members, which is not ours to hand out.
+ *
+ * Supabase answers the same way for the same reason: an unknown address
+ * returns no error. So the only errors that reach here are real ones — a
+ * malformed address, or their rate limit — and both are worth showing.
+ */
+export async function askPasswordReset(
+  email: string,
+  /** Carried through the round trip, exactly as `signInWith` carries it. */
+  lang?: string | null,
+): Promise<{ ok: boolean; message: string }> {
+  const supabase = getClient();
+  if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo:
+      typeof window === 'undefined'
+        ? undefined
+        : `${window.location.origin}${window.location.pathname}?${RECOVERING}=1${
+          lang ? `&${CHOSE_LANG}=${encodeURIComponent(lang)}` : ''
+        }`,
+  });
+  return error ? { ok: false, message: error.message } : { ok: true, message: '' };
+}
+
+/**
+ * The new password, set against the session the letter opened.
+ *
+ * There is no "old password" field and there cannot be: the person asking is
+ * the one who does not know it. What stands in its place is the letter —
+ * Supabase puts a session in place when the link is followed, and this call
+ * fails without one. So the mail account IS the proof, which is the same
+ * arrangement every reset in the world uses and is worth being clear-eyed
+ * about rather than pretending otherwise.
+ *
+ * `updateUser` refuses a password shorter than the project's minimum and says
+ * so; that message is passed through rather than replaced, because ours would
+ * be a guess at their setting.
+ */
+export async function setNewPassword(password: string): Promise<AuthResult> {
+  const supabase = getClient();
+  if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
+  const { data, error } = await supabase.auth.updateUser({ password });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, account: data.user ? toAccount(data.user) : null };
+}
+
+/**
+ * Told when a page load is the end of a "forgotten password" letter.
+ *
+ * Separate from `onAccountChange` rather than folded into it. That handler
+ * says WHO is signed in, and on a recovery both are true at once — there is
+ * an account, and the only thing they may do with it is set a password. A
+ * single callback carrying both would make every caller ask which kind of
+ * sign-in this was, and the one that forgot to ask would drop somebody into
+ * the studio with a password they still do not know.
+ */
+export function onPasswordRecovery(handler: () => void): () => void {
+  const supabase = getClient();
+  if (!supabase) return () => undefined;
+  const { data } = supabase.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') handler();
+  });
+  return () => data.subscription.unsubscribe();
+}
+
 export async function signIn(email: string, password: string): Promise<AuthResult> {
   const supabase = getClient();
   if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };

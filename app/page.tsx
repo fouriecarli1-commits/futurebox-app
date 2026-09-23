@@ -212,6 +212,26 @@ export default function FutureBoxHome() {
       live = false;
     };
   }, [who]);
+  /* ── Arriving from the letter, read off the address ─────────────────
+ 
+     In its own effect, and not in the big one below, because that one opens
+     with `if (!cloud.configured()) return;`. `audit/forgot.mjs` found this:
+     somebody following a reset link on a deployment whose keys are half set
+     landed in the app with nothing on screen saying why they were there.
+ 
+     The mark grants nothing — the session Supabase puts in place is what
+     grants anything — so reading it unconditionally is safe, and it is the
+     one signal that survives a remount after the event has fired. When there
+     is no project behind the app, `setNewPassword` answers with a sentence
+     saying so, which is a worse outcome than a working reset and a much
+     better one than silence. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (new URLSearchParams(window.location.search).get(cloud.RECOVERING) === '1') {
+      setRecovering(true);
+    }
+  }, []);
+
   const [planNote, setPlanNote] = useState<string | null>(null);
 
   // Only the server knows whether a music key is set, so ask once.
@@ -248,7 +268,24 @@ export default function FutureBoxHome() {
   const [packs, setPacks] = useState<readonly Pack[]>(PACKS);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+  /**
+   * Setting a new password, having arrived from the letter.
+   *
+   * Carli, 23 September 2026: *"ek wil net seker maak dat die login 'n forget
+   * password funksie het."* It did not, and the cost was total: somebody who
+   * forgot was locked out for good, because the only way back was a second
+   * account on a second address — leaving every song, video and credit behind
+   * on the first.
+   *
+   * Its own state rather than a fourth `authMode`. On a recovery there IS a
+   * session — Supabase puts one in place when the link is followed — so the
+   * studio would otherwise open behind this screen with somebody signed in
+   * who still does not know their password. A separate flag lets the screen
+   * sit over the top of that, which is what it has to do.
+   */
+  const [recovering, setRecovering] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   /* Unticked every time the sign-up screen opens. A box that remembers it was
@@ -449,6 +486,21 @@ export default function FutureBoxHome() {
         else restored();
       }
     });
+    /* ── Arriving from the "forgotten password" letter ────────────────
+ 
+       Two signals, and both are needed.
+ 
+       The event is the reliable one: Supabase fires `PASSWORD_RECOVERY` when
+       it recognises the link's token. The mark in the address is the belt to
+       that brace — the event fires once, during the load that consumed the
+       token, and anything that remounts this component afterwards would come
+       back to a signed-in studio with no sign of why. Reading the address
+       covers that, and costs a string comparison. */
+    const stopRecovery = cloud.onPasswordRecovery(() => {
+      if (!live) return;
+      setRecovering(true);
+      setNewPassword('');
+    });
     const stop = cloud.onAccountChange((account) => {
       /* A session arriving right after a deliberate sign-out is the answer to
          a question asked before it, not somebody signing in. */
@@ -486,6 +538,7 @@ export default function FutureBoxHome() {
     return () => {
       live = false;
       stop();
+      stopRecovery();
     };
   }, []);
 
@@ -1474,6 +1527,43 @@ export default function FutureBoxHome() {
     arrived();
   };
 
+  /**
+   * The new password, set against the session the letter opened.
+   *
+   * No "old password" field, and there cannot be one: the person here is the
+   * one who does not know it. The letter is what stands in its place, which
+   * is how every reset in the world works and is worth saying plainly rather
+   * than dressing up.
+   *
+   * The mark comes off the address on success. Leaving `?recover=1` on the
+   * URL means a reload drops somebody back onto this screen with nothing left
+   * to do — the token is spent by then — and a screen that cannot be finished
+   * is worse than no screen.
+   */
+  const handleNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authBusy) return;
+    setAuthError(null);
+    setAuthBusy(true);
+    const result = await cloud.setNewPassword(newPassword);
+    setAuthBusy(false);
+    if (!result.ok) {
+      setAuthError(result.message);
+      return;
+    }
+    setNewPassword('');
+    setRecovering(false);
+    if (result.account) setUser({ ...result.account, followers: 1 });
+    setAuthNotice(t('auth.resetDone'));
+    try {
+      const here = new URL(window.location.href);
+      here.searchParams.delete(cloud.RECOVERING);
+      window.history.replaceState({}, '', here.toString());
+    } catch {
+      // An address we could not rewrite changes nothing about the password.
+    }
+  };
+
   const handleResend = async () => {
     if (!verifying || resendIn > 0) return;
     setAuthError(null);
@@ -1597,6 +1687,39 @@ export default function FutureBoxHome() {
       return;
     }
 
+    /* ── A way back in ────────────────────────────────────────────────
+ 
+       Answered the same way whether or not the address is one of ours, and
+       that is the whole point rather than a shortcut. A screen that says "no
+       account with that address" will tell anybody, one address at a time,
+       exactly who is a member here — which for a music app is a list of
+       which artists are on it, and not ours to hand out.
+ 
+       ── Why this sits ABOVE the local-account branch ──────────────────
+ 
+       `audit/forgot.mjs` found it below, and what happened there is worse
+       than nothing working. With no Supabase project behind the app, the
+       branch underneath makes a local account and signs the person in — so
+       somebody who pressed "send me a way back in" on a half-configured
+       deployment was silently signed in as a brand new person, with none of
+       their work and no letter sent. Asking for a password reset is not a
+       sign-in and must never become one.
+ 
+       Below, `askPasswordReset` answers an unconfigured project with a
+       sentence saying so, which is the honest end of this path. */
+    if (authMode === 'forgot') {
+      setAuthBusy(true);
+      const sent = await cloud.askPasswordReset(authEmail, lang);
+      setAuthBusy(false);
+      if (!sent.ok) {
+        setAuthError(sent.message);
+        return;
+      }
+      setAuthError(null);
+      setAuthNotice(t('auth.resetSent'));
+      return;
+    }
+
     // Without a Supabase project behind the app there is nothing to sign in to,
     // so the account stays on this device — which the modal says out loud.
     if (!cloud.configured()) {
@@ -1716,7 +1839,7 @@ export default function FutureBoxHome() {
   };
 
   // Reopening the modal should not show the last attempt's error.
-  const openAuth = (mode: 'signin' | 'signup') => {
+  const openAuth = (mode: 'signin' | 'signup' | 'forgot') => {
     setAuthMode(mode);
     setAuthError(null);
     setAuthNotice(null);
@@ -1941,9 +2064,65 @@ export default function FutureBoxHome() {
     </div>
   ) : null;
 
+  /**
+   * The new-password screen, as a value, so it can be drawn in both returns.
+   *
+   * ── Why it is not written where it is used ────────────────────────────
+   *
+   * There is an early return at `if (!user)` for the signed-out landing page,
+   * and this lived below it — so the one screen whose entire purpose is that
+   * somebody CANNOT sign in was only drawn for people who already had.
+   *
+   * On a real recovery there is a session, so most of the time `user` fills
+   * in and it would have worked. Most of the time is not the case worth
+   * building for: a session that has not arrived yet, a project whose keys
+   * are half set, a link followed in a browser that blocked the storage —
+   * every one of those lands somebody on the landing page with nothing
+   * saying why they are there, which is exactly where they started.
+   *
+   * `audit/forgot.mjs` walks it signed out, which is how this was found.
+   */
+  const recoveryPanel = recovering ? (
+        <div
+          className="fixed inset-0 z-[100] bg-scrim/85 backdrop-blur-sm flex items-center justify-center p-4"
+          data-recovering
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-5 space-y-3">
+            <h3 className="text-lg font-extrabold text-white">{t('auth.resetTitle')}</h3>
+            <p className="text-sm text-zinc-400 leading-relaxed">{t('auth.resetNow')}</p>
+            {authError && (
+              <p className="text-sm text-rose-400 leading-relaxed">{authError}</p>
+            )}
+            <form onSubmit={handleNewPassword} className="space-y-3">
+              <PasswordField
+                value={newPassword}
+                onChange={setNewPassword}
+                placeholder={t('auth.resetNew')}
+                autoComplete="new-password"
+                required
+                className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+              />
+              <button
+                type="submit"
+                disabled={authBusy}
+                data-setpassword
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm disabled:opacity-60"
+              >
+                {authBusy ? t('auth.working') : t('auth.resetSave')}
+              </button>
+            </form>
+          </div>
+        </div>
+        ) : null;
+
   if (!user) {
     return (
       <>
+        {/* Over the landing page as well as over the studio. The one screen
+            whose whole premise is that somebody cannot sign in was drawn
+            only for people who already had — see the note where it is
+            built. `audit/forgot.mjs` walks it signed out. */}
+        {recoveryPanel}
         {inviteBanner}
         <LanguageSwitched />
         <Landing
@@ -2063,27 +2242,57 @@ export default function FutureBoxHome() {
                   required
                   className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
                 />
-                <PasswordField
-                  value={authPassword}
-                  onChange={setAuthPassword}
-                  placeholder={t('home.password', 'Password')}
-                  autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
-                  required
-                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
-                />
+                {/* No password on the way back in. The person asking is the
+                    one who does not know it, and a box for it would be a
+                    field nobody can fill. */}
+                {authMode !== 'forgot' && (
+                  <PasswordField
+                    value={authPassword}
+                    onChange={setAuthPassword}
+                    placeholder={t('home.password', 'Password')}
+                    autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
+                    required
+                    className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+                  />
+                )}
+                {authMode === 'forgot' && (
+                  <p className="text-sm text-zinc-500 leading-relaxed">{t('auth.resetWhat')}</p>
+                )}
                 {authMode === 'signup' && <AgreeToTerms checked={agreed} onChange={setAgreed} />}
                 <button
                   type="submit"
                   disabled={authBusy || (authMode === 'signup' && !agreed)}
+                  data-authgo={authMode}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm disabled:opacity-60"
                 >
                   {authBusy
                     ? t('auth.working')
                     : authMode === 'signin'
                       ? t('common.signIn')
-                      : t('common.createAccount')}
+                      : authMode === 'forgot'
+                        ? t('auth.resetSend')
+                        : t('common.createAccount')}
                 </button>
               </form>
+              {/* ── The way back in ──────────────────────────────────────
+                  Under the form rather than beside the password box, because
+                  somebody reaching for it has already failed to sign in and
+                  is looking at the bottom of the screen. Drawn only on the
+                  sign-in form: offering it while somebody is creating an
+                  account is offering to recover an account that does not
+                  exist yet. */}
+              {authMode === 'signin' && (
+                <p className="text-sm text-center">
+                  <button
+                    type="button"
+                    onClick={() => openAuth('forgot')}
+                    data-forgot
+                    className="min-h-[44px] text-zinc-400 hover:text-emerald-300 hover:underline"
+                  >
+                    {t('auth.forgot')}
+                  </button>
+                </p>
+              )}
               <p className="text-sm text-zinc-500 text-center">
                 {authMode === 'signin' ? t('common.noAccount') : t('common.haveAccount')}{' '}
                 <button
@@ -3985,6 +4194,8 @@ export default function FutureBoxHome() {
         </div>
         </CopilotBusContext.Provider>
       )}
+
+      {recoveryPanel}
 
       {/* After a song lands: the one thing most people want next. Asked once,
           and dismissable — it is a suggestion, not a funnel. */}
