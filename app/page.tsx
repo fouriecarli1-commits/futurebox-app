@@ -232,6 +232,20 @@ export default function FutureBoxHome() {
     }
   }, []);
 
+  /* ── Does this session still owe a code? ────────────────────────────
+ 
+     Asked on every load and not only after a press. A reload in the middle
+     of the challenge leaves a real, valid, aal1 session behind — so a screen
+     that only asked at sign-in would hand the studio to anybody who refreshed
+     the page, which is the whole of the protection gone to a keystroke. */
+  useEffect(() => {
+    let live = true;
+    void cloud.authenticatorWanted().then((wanted) => {
+      if (live && wanted) setOwesCode(true);
+    });
+    return () => { live = false; };
+  }, [user?.email]);
+
   const [planNote, setPlanNote] = useState<string | null>(null);
 
   // Only the server knows whether a music key is set, so ask once.
@@ -286,6 +300,21 @@ export default function FutureBoxHome() {
    */
   const [recovering, setRecovering] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  /**
+   * The session owes a code from an authenticator app.
+   *
+   * Carli, 23 September 2026: *"Ek dink ons moet mense 'n opsie gee om die
+   * app te beveilig met 'n authenticator app as hulle wil."*
+   *
+   * The trap this exists for: a password sign-in against an account with an
+   * authenticator SUCCEEDS. There is a session, `onAccountChange` fires, and
+   * every screen here would draw the studio — at assurance level one, which
+   * is the level the authenticator was switched on to stop being enough.
+   * Supabase tells the two levels apart and this is where the app has to ask.
+   */
+  const [owesCode, setOwesCode] = useState(false);
+  const [mfaCode, setMfaCode] = useState('');
+  const [mfaProblem, setMfaProblem] = useState('');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   /* Unticked every time the sign-up screen opens. A box that remembers it was
@@ -2115,9 +2144,81 @@ export default function FutureBoxHome() {
         </div>
         ) : null;
 
+  /**
+   * The code box, as a value, drawn in both returns for the same reason the
+   * recovery panel is: a session at assurance level one is a signed-in
+   * session, so this has to sit over whichever screen that draws.
+   *
+   * No cancel. There is nothing to cancel TO — the session exists either
+   * way, and a way out of this panel that left it in place would be a way
+   * into the studio at the level the authenticator exists to refuse. Signing
+   * out is the way out, and it is on the panel.
+   */
+  const codePanel = owesCode ? (
+    <div
+      className="fixed inset-0 z-[100] bg-scrim/85 backdrop-blur-sm flex items-center justify-center p-4"
+      data-owescode
+    >
+      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-5 space-y-3">
+        <h3 className="text-lg font-extrabold text-white">{t('mfa.askTitle')}</h3>
+        <p className="text-sm text-zinc-400 leading-relaxed">{t('mfa.askWhat')}</p>
+        {mfaProblem && <p className="text-sm text-rose-400 leading-relaxed">{mfaProblem}</p>}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (authBusy) return;
+            setMfaProblem('');
+            setAuthBusy(true);
+            void cloud.answerAuthenticator(mfaCode).then((said) => {
+              setAuthBusy(false);
+              if (!said.ok) {
+                setMfaProblem(said.message);
+                return;
+              }
+              setMfaCode('');
+              setOwesCode(false);
+            });
+          }}
+          className="space-y-3"
+        >
+          <input
+            value={mfaCode}
+            onChange={(e) => setMfaCode(e.target.value)}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="000000"
+            required
+            data-mfaask
+            className="w-full bg-black/60 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 tabular-nums tracking-widest"
+          />
+          <button
+            type="submit"
+            disabled={authBusy}
+            data-mfaanswer
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-onAccent font-bold text-sm disabled:opacity-60"
+          >
+            {authBusy ? t('auth.working') : t('mfa.askGo', 'Carry on')}
+          </button>
+        </form>
+        {/* The only way out. Somebody whose phone is gone has to be able to
+            leave the screen, and leaving it means leaving the account —
+            which is the honest option and the one the account screen warned
+            about before any of this was switched on. */}
+        <button
+          type="button"
+          onClick={() => { setOwesCode(false); setMfaCode(''); void handleSignOut(); }}
+          className="w-full min-h-[44px] text-sm text-zinc-500 hover:text-zinc-300"
+        >
+          {t('auth.signOut')}
+        </button>
+      </div>
+    </div>
+  ) : null;
+
   if (!user) {
     return (
       <>
+        {codePanel}
         {/* Over the landing page as well as over the studio. The one screen
             whose whole premise is that somebody cannot sign in was drawn
             only for people who already had — see the note where it is
@@ -4196,6 +4297,7 @@ export default function FutureBoxHome() {
       )}
 
       {recoveryPanel}
+      {codePanel}
 
       {/* After a song lands: the one thing most people want next. Asked once,
           and dismissable — it is a suggestion, not a funnel. */}

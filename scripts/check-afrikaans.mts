@@ -82,6 +82,11 @@ const SAME_IN_BOTH = new Set([
   'Live', 'Stop', 'Studio', 'Podcast', 'Premium', 'Reel', 'Copilot', 'Hooks',
   'Collab Radar', 'Radar', 'Arena', 'Pro', 'S', 'handle', 'Tempo', 'min',
   'Later', 'Warm', 'Afrikaans',
+  /* The app on your phone that makes the six digits. Every one of them is
+     called this on both app stores here, and "verifikasie-toepassing" is a
+     word somebody would have to translate back before they knew what to go
+     and install. */
+  'Authenticator',
   /* The two channel layouts. An Afrikaans musician says "mono" and "stereo"
      — they are the words on every mixer in the country — and inventing
      "enkelkanaal" for a download button would be the kind of translation

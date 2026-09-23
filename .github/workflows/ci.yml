@@ -275,6 +275,8 @@ jobs:
         run: npm run check:ownfootage
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
+      - name: The second lock is optional, says what it costs you, and a password alone does not open the studio
+        run: npm run check:authenticator
       - name: A forgotten password has a way back, and the screen never says who is a member
         run: npm run check:forgot
 

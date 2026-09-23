@@ -40,6 +40,7 @@ import type { Region } from '../lib/pricing';
 import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { loadTaste, forgetTaste, NO_TASTE, type Taste } from '../lib/taste';
 import Subscription from './Subscription';
+import Authenticators from './Authenticators';
 import Note from './Note';
 
 export default function Account({
@@ -207,6 +208,9 @@ export default function Account({
             <ArrowRight className="w-4 h-4" />
           </button>
         </section>
+
+        {/* ── A second lock, for the people who want one ─────────────────── */}
+        <Authenticators />
 
         {/* ── What is left in the wallet ─────────────────────────────────── */}
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">

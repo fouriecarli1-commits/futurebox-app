@@ -417,6 +417,153 @@ export function onPasswordRecovery(handler: () => void): () => void {
   return () => data.subscription.unsubscribe();
 }
 
+/* ── An authenticator app, for the people who want one ───────────────────
+ *
+ * Carli, 23 September 2026: *"Ek dink ons moet mense 'n opsie gee om die app
+ * te beveilig met 'n authenticator app as hulle wil."*
+ *
+ * Optional, exactly as she said. A studio is not a bank and most members will
+ * never switch this on; the ones who sell their work through it will want to.
+ *
+ * ── The part that is easy to get wrong ───────────────────────────────────
+ *
+ * An authenticator with no way back is a lock that eats accounts. A lost or
+ * wiped phone, and the password is right and still opens nothing — which is
+ * the same locked door the reset flow was built to end, one step further in.
+ *
+ * Supabase has no backup codes. Inventing our own would mean a table of
+ * hashed codes and a route that skips the second factor, which is a bypass
+ * surface built to protect against a lost phone, and a bypass surface is
+ * exactly what a second factor exists to remove. So the answer here is the
+ * one that adds nothing to attack:
+ *
+ *   - the secret is shown AS TEXT, not only as a square to scan, so it can go
+ *     into a password manager. That text IS the backup: any authenticator app
+ *     anywhere rebuilds the same codes from it.
+ *   - more than one may be added, and the screen says to add a second.
+ *   - the screen says all of this BEFORE the switch, not after.
+ *
+ * ── Why taking it off needs a code ───────────────────────────────────────
+ *
+ * Otherwise somebody who has the password — which is the thing this was
+ * switched on to stop being enough — can simply turn it off. Supabase already
+ * requires an aal2 session to unenroll a verified factor; this asks for a
+ * fresh code on top, because "prove it is you, now" is what the person
+ * expects from a screen that removes a lock.
+ */
+
+/** One authenticator somebody has added, as the account screen shows it. */
+export interface Authenticator {
+  readonly id: string;
+  readonly name: string;
+  readonly at: string;
+}
+
+export async function authenticators(): Promise<Authenticator[]> {
+  const supabase = getClient();
+  if (!supabase) return [];
+  const { data, error } = await supabase.auth.mfa.listFactors();
+  if (error || !data) return [];
+  /* Verified only. An enrolment that was started and never confirmed is not
+     a lock on anything, and listing it would say somebody is protected when
+     they are not. */
+  return (data.totp ?? [])
+    .filter((one) => one.status === 'verified')
+    .map((one) => ({
+      id: one.id,
+      name: one.friendly_name || 'Authenticator',
+      at: one.created_at,
+    }));
+}
+
+/**
+ * Begin. Returns what the person needs to add it to their app.
+ *
+ * `secret` is handed back alongside the QR on purpose — see the note above.
+ * Nothing is protected until `confirmAuthenticator` succeeds, so an enrolment
+ * abandoned here leaves the account exactly as it was.
+ */
+export async function startAuthenticator(
+  name: string,
+): Promise<{ ok: true; id: string; secret: string; uri: string; qr: string } | { ok: false; message: string }> {
+  const supabase = getClient();
+  if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
+  const { data, error } = await supabase.auth.mfa.enroll({
+    factorType: 'totp',
+    friendlyName: name.trim().slice(0, 40) || `Authenticator ${new Date().toISOString().slice(0, 10)}`,
+  });
+  if (error || !data) return { ok: false, message: error?.message ?? 'That could not be started.' };
+  return {
+    ok: true,
+    id: data.id,
+    secret: data.totp.secret,
+    uri: data.totp.uri,
+    qr: data.totp.qr_code,
+  };
+}
+
+/**
+ * The six digits from the app, which is what turns an enrolment into a lock.
+ *
+ * `challengeAndVerify` rather than the two calls: for TOTP there is nothing
+ * to wait for between them — the code is already on their screen — and two
+ * calls is two things to get out of step.
+ */
+export async function confirmAuthenticator(
+  id: string,
+  code: string,
+): Promise<{ ok: boolean; message: string }> {
+  const supabase = getClient();
+  if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
+  const { error } = await supabase.auth.mfa.challengeAndVerify({
+    factorId: id,
+    // Spaces are what an authenticator app puts in the middle of six digits.
+    code: code.replace(/[^0-9]/g, ''),
+  });
+  return error ? { ok: false, message: error.message } : { ok: true, message: '' };
+}
+
+/** Take one off — after proving it is them, with a code from it. */
+export async function dropAuthenticator(
+  id: string,
+  code: string,
+): Promise<{ ok: boolean; message: string }> {
+  const supabase = getClient();
+  if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
+  const proved = await confirmAuthenticator(id, code);
+  if (!proved.ok) return proved;
+  const { error } = await supabase.auth.mfa.unenroll({ factorId: id });
+  return error ? { ok: false, message: error.message } : { ok: true, message: '' };
+}
+
+/**
+ * Whether this session still owes a code.
+ *
+ * The subtlety that makes this necessary: a password sign-in against an
+ * account with an authenticator SUCCEEDS. There is a session, `onAccountChange`
+ * fires, and every screen in this app would happily draw the studio — at
+ * assurance level one, which is the level the authenticator exists to stop
+ * being enough. Supabase distinguishes the two levels and this is where the
+ * app has to ask.
+ */
+export async function authenticatorWanted(): Promise<boolean> {
+  const supabase = getClient();
+  if (!supabase) return false;
+  const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (error || !data) return false;
+  return data.nextLevel === 'aal2' && data.currentLevel !== 'aal2';
+}
+
+/** The code, at sign-in. Answered against whichever authenticator they added. */
+export async function answerAuthenticator(code: string): Promise<{ ok: boolean; message: string }> {
+  const supabase = getClient();
+  if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };
+  const { data } = await supabase.auth.mfa.listFactors();
+  const factor = (data?.totp ?? []).find((one) => one.status === 'verified');
+  if (!factor) return { ok: false, message: 'There is no authenticator on this account.' };
+  return confirmAuthenticator(factor.id, code);
+}
+
 export async function signIn(email: string, password: string): Promise<AuthResult> {
   const supabase = getClient();
   if (!supabase) return { ok: false, message: 'Accounts are not switched on for this app yet.' };

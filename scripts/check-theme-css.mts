@@ -147,9 +147,11 @@ for (const preset of PRESETS) {
 
    So: no `bg-white` anywhere. A fill that has to stay bright in every theme is
    an accent fill — `bg-emerald-500 text-onAccent`, which the check above
-   already proves clears AA in every preset. The one real exception is Google's
-   own sign-in button, which is brand chrome rather than themed UI and is
-   written as a literal `bg-[#ffffff]`. */
+   already proves clears AA in every preset. The exceptions are Google's own
+   sign-in button, which is brand chrome rather than themed UI, and the
+   square an authenticator app scans, which is an optical target rather than
+   a surface; both are written as a literal `bg-[#ffffff]` and both are named
+   in the allowlist below. */
 const walk = (dir: string, out: string[] = []): string[] => {
   for (const name of readdirSync(dir)) {
     if (name === 'node_modules' || name === '.next') continue;
@@ -198,6 +200,14 @@ for (const file of walk('app')) {
        theme — the same reasoning as subtitles on any player. */
     'app/components/FollowWords.tsx',
     'app/components/SongScreen.tsx',
+    /* The square an authenticator app reads. A QR code is not a picture of
+       a control, it is an optical target: a camera finds it by the contrast
+       between dark modules and a light quiet zone. Following the theme
+       would mean a square that stops scanning on half the presets, and the
+       person holding the phone would have no idea why. It is the same case
+       as brand chrome above — a surface that must not follow the theme —
+       and the only literal colour in that file. */
+    'app/components/Authenticators.tsx',
   ]);
   if (brandOrOverPicture.has(file.split('\\').join('/'))) continue;
   for (const found of src.matchAll(
