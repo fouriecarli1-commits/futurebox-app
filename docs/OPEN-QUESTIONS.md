@@ -9,11 +9,11 @@ they can be reviewed in one place instead of remembered.
 not be checked, it says so and it says how to check it. Entries move to
 **Settled** with a date and a commit rather than being deleted.
 
-Last updated: 2026-09-23.
+Last updated: 2026-09-24.
 
 ---
 
-## Lees dit eerste — waar dinge staan, 23 September 2026
+## Lees dit eerste — waar dinge staan, 24 September 2026
 
 *Hierdie register is meer as 6 000 reëls lank en groei elke sessie. Niemand lees dit
 van voor af nie, en 'n register wat niemand lees nie, is nie 'n register nie.
@@ -33,7 +33,13 @@ van die lêer bly die volledige rekord, in die volgorde waarin dit gebeur het.*
 | **Sit die opleidings-opt-out aan** | Rekening → *Terms and Privacy* → *Data use*. Dit kos niks, dit werk nie terugwerkend nie (§4(i)), en elke dag wat dit af is, is data wat dit nie dek nie. |
 | **Lees Supabase Pro en Vercel Pro se limiete** | Albei skaal met **gratis** lede, anders as ElevenLabs. Tienduisend gratis rekeninge is die launch-vorm. Hierdie masjien kan nie by hulle bladsye kom nie (geblokkeer). Die een getal wat besluit: Supabase se **maandelikse aktiewe gebruikers**. |
 | **Stuur drie advertensies wat jou laat stop het** | Die stylkatalogus (`app/lib/adstyles.ts`) is **my mening, vandag gedateer** — ek kon nie by Pinterest, Canva of enige tendens-bladsy uitkom nie (geblokkeer), en ek verkoop nie in hierdie mark nie. Elke inskrywing is geskryf om teëgepraat te word. Stuur drie wat jou laat stop het — 'n skermskoot, 'n skakel, of net 'n beskrywing — en ek sit die patroon daaragter in die lys met vandag se datum. Drie egtes is meer werd as enigiets wat ek kan raai. |
-| **Toets die bemarkingslessenaar** | Die R199-byvoegsel is op jou rekening (11 September, `supabase/TOETSTOEGANG.sql`). Die plan het nog **nooit gewerk nie** — sien hieronder — dit is nou reg en nog nooit met 'n regte sleutel geloop nie. Jy is die eerste mens wat dit gaan sien werk. |
+| **Kanselleer die R199-intekening by Paystack** | **Dringend, en net jy kan dit doen.** Die bemarkings-byvoegsel is op 24 September onttrek — die lessenaar kom nou met elke betaalde plan en wat jy daarin maak kos krediete. Die kode verkoop dit nie meer nie, maar 'n intekening wat reeds by Paystack staan, **hef aan** totdat iemand dit dáár stop. Kode kan dit nie doen nie. Die webhaak herken so 'n hefting en gee niks, sodat dit nie as 'n plan-hernuwing gelees word nie. |
+| **Kry 'n verwerkersooreenkoms by Kits.AI** | Die skerpste ding uit die regsoudit van 24 September (`docs/REGS-OUDIT.md`). 'n Lid se **stem** gaan daarheen — spesiale persoonlike inligting onder POPIA — en daar is geen DPA, geen bewaartermyn en geen POPIA 72-basis op lêer nie. ElevenLabs het al drie. Die privaatheidsbladsy sê dit nou hardop by die naam; dit bly so tot daar 'n ooreenkoms is, of tot ons ophou stemme daarheen stuur. |
+| **Registreer die Inligtingsbeampte** | POPIA vra dit by die Inligtingsreguleerder. `FUTUREBOX_LEGAL_INFORMATION_OFFICER` wag reeds in Vercel. |
+| **Vra 'n Paystack-staat aan** | Die rekeningblad het **2,9% + R1** gesê en as nagegaan gemerk; `gatewayFee` hef **3,5% + R2**, en dít is wat in elke marge-som beland het. R1,90 per lid per maand, in die rigting wat die wins ónderskat. Een staat besleg dit, en dit is R680 'n maand werd by die plan se dak. |
+| **Kry een ElevenLabs-faktuur met video daarop** | Die belangrikste oop getal in die hele kostemodel. Video druk op **R0,0040 per krediet** — 136 keer goedkoper as musiek. Dit is óf die winsgewendste ding wat ons verkoop, óf die skatting is 43 keer verkeerd (`eleven.ts` dra self twee syfers vir dieselfde snit). Niks anders as 'n faktuur besleg dit nie. |
+| **Kyk wat Vercel werklik hef** | Supabase het pas gewys in watter rigting 'n plakkerprys verkeerd is: ons het $25 aangeneem en dit is $34 — R144 'n maand wat nie begroot was nie. Vercel se R320 is nog steeds 'n afleiding uit hulle bladsy. Reken daarop dat dit hoër is. |
+| **Voel die video-redigeerder** | Nuut, 24 Sept (§AU). Tydlyn, snoei met 'n prentjie, sewe voorkomste, woorde op die skerm, jou logo in 'n hoek, klank daaronder, verdowwings, terugvat, en 'n uitvoer — alles in die blaaier, niks kos 'n sent. Dit is met 'n regte knipsel in 'n blaaier geloop. Wat geen probe kan sê nie: of dit onder 'n duim reg voel. |
 | **Kyk of Copilot se shots nou goed genoeg is** | Die beskrywing vra nou die onderwerp, die lig, wat die kamera doen, en aanhalings om gesproke woorde. Wat dit werklik skryf, kan ek nie van hier af sien nie — dit het 'n lewende sleutel nodig. |
 | **Bevestig die twee reggemaakte foute op jou eie foon** | Die wit bladsy by *laai jou eie foto op* (drie komponente, 16 Sept) en die musiekvideo wat nie in Live gewerk het nie (16 Sept). Albei is gebou en albei is **nog nooit teen jou regte rekening of foon getoets nie** — hulle is met stompe en probes bewys, nie met jou hand nie. |
 | **Voel die tydlyn se drie nuwe dinge** | Die magneet, die interlock en die bane wat op en af skuif (17 Sept, §O hieronder). Die somme is bewys en die gebare is in 'n blaaier bewys; of dit onder 'n **duim** reg voel is die een ding wat geen probe kan sê nie. Die magneet se knoppie is die hoefyster langs *Merk* in die tydlyn se hoek — hy begin **aan**. |
@@ -6509,3 +6515,99 @@ en weer gedoen, en die etiket noem die regte ding **voordat** dit gedruk word.
 Wat geen probe kan sê nie: of **twintig stappe** ver genoeg terug gaan vir hoe jy
 werk, en of *Herstel* langs *Terug* die plek is waarheen jou duim gaan. Albei is
 een reël om te verander.
+
+---
+
+## §AU · Die nag waarin veertien skrywes elke ry geraak het (24 September 2026)
+
+Een sessie, en die drie ernstigste dinge was almal dieselfde vorm: **'n
+kommentaar wat 'n reël beskryf wat nooit geskryf is nie.**
+
+### 1. Veertien skrywes sonder 'n filter
+
+Carli het oor die bod-knoppie by album art gekla. Onder dit het `/api/artmarket`
+die veilingsklok gestel **sonder enige filter**, onder 'n paragraaf wat sê dit
+filter op twee. Die eerste bod op enige een prent het 'n 36-uur-klok op **elke**
+prent in die mark gesit.
+
+Dit het `check:unfiltered` geword, en dit het nog dertien gekry:
+
+- een persoon wat 'n episode skrap, skrap **elke** episode in die app
+- 'n stem skrap, skrap elke stem-ry — ander mense se klone ook
+- een persoon wat kanselleer, merk **elke** intekening as non-renewing
+- een mislukte snit merk elke video in die app as misluk, vir almal
+- een pos met 'n ontbrekende handler laat die hele pos-tou misluk
+- 'n getekende dub-webhaak stel elke dub na een job se status
+
+**Elkeen** het 'n kommentaar gehad wat die filter beskryf. Die video-een is die
+duidelikste: *"the update above is conditional on the row still being
+'running'"* — daar was geen voorwaarde en geen filter nie, so die
+terugbetaal-wag waarop daardie sin staatmaak, het ook nie bestaan nie.
+
+'n Tipetoetser vang dit nooit: 'n ongefilterde `update` is geldige kode en
+"elke ry" is 'n wettige ding om te vra. Die enigste manier is om te eis dat die
+bedoeling neergeskryf word — 'n heeltabel-skrywe is toegelaat en moet
+`every row on purpose` bo hom sê.
+
+### 2. Die cast het 'n ander persoon uitgegooi
+
+`cast.find(one => one.id === who) ?? cast[0]`. `who` hou op pas om doodgewone
+redes, en die terugval animeer die **eerste** ry — en die rye kom nuutste-eerste.
+'n Ander persoon, in 'n snit waarvoor sy krediete betaal het.
+
+Dit het elke check oorleef omdat die **highlight** uit dieselfde uitdrukking
+bereken word: die strook het opgelig by wie die terugval gekies het, en die
+skerm het perfek met homself saamgestem. Dieselfde familie as die
+ordening-jag van §AS. `check:whofirst` hou dit nou, en het twee meer gekry.
+
+### 3. Die privaatheidsbladsy het ses verwerkers genoem en die bediener gebruik tien
+
+Die regsoudit voor die Vibefy Code-oorhandiging. **Kits.AI, Music.ai, Resend en
+Kling** het almal persoonlike inligting gekry en op geen lys gestaan nie. En
+**39 tabelle** koppel rye aan 'n persoon terwyl die bladsy omtrent twaalf soorte
+beskryf het — die skerpste `cast_members`, **foto's van mense se gesigte**, na
+ElevenLabs gestuur om geanimeer te word. Die woord "photograph" het nie op die
+bladsy verskyn nie.
+
+Nie een van die gate was slordige werk nie. Elkeen was 'n eerlike funksie wat ná
+die regsbladsye gebou is. **Die gat is nooit geskryf nie, dit het opgehoop** —
+en dít is nie iets wat 'n mens met deurlees vang nie. `check:verwerkers` vang
+dit, en fal.ai is vooraf daarin geregistreer sodat die dag wanneer iemand
+daardie `fetch` skryf, die bou rooi word.
+
+Die volle oudit, met wat joune is om te doen: `docs/REGS-OUDIT.md`.
+
+### Wat nog in dieselfde nag gebeur het
+
+- **Die advertensie-byvoegsel is onttrek.** Twee kasregisters bly oor, 'n plan
+  en 'n top-up. Die lessenaar, die Pro Booth en die video-redigeerder kom met
+  elke betaalde plan. *"Te veel aankoop punte gaan mense afsit."*
+- **Die ekstra produkte was te goedkoop geprys**, en sy het dit gesê. Ek het die
+  3,0x-groep — ElevenLabs se per-minuut roetinewerk — vir "die huis-koers"
+  aangesien, terwyl elke **produk** in die app op ses tot sewe sit. 'n Video-
+  bewerking is teen 3x geprys terwyl die app se eie video op 7,2x staan.
+- **Die lied bly op tien**, en die som staan in `docs/KOSTE-EN-WINS.md`. 'n
+  Duurder lied voeg **niks** by die wins per lid nie: die plan is vooruitbetaalde
+  kapasiteit. Die sneller as dit ooit moet skuif: **358 betalende lede**.
+- **'n Tweede kostemodel in `plans.ts`**, deur niks gelees, en drie maniere
+  verkeerd — 45% te goedkoop per krediet, GitHub op die lys wat niks kos nie, en
+  R1 259,74 aan regte rekeninge weg. Nie 'n fout nie, 'n landmyn: dit is die
+  vanselfsprekende lêer om oop te maak.
+- **Supabase is $34, nie $25 nie.** R144 'n maand wat nie begroot was nie, en
+  dit het in vier dokumente geland waarvan drie hul eie kopie van die totaal
+  gedra het.
+- **Die video-redigeerder is gebou.** 'n Tydlyn met 'n prentjie by die snoei,
+  sewe voorkomste, woorde, jou logo in 'n hoek, klank, verdowwings, terugvat en
+  'n uitvoer — alles in die blaaier, niks kos 'n sent.
+- **Die Pro Booth se deur was oop** terwyl vier planskaarte gesê het dit kom met
+  'n betaalde plan. My eie gat, van die vorige commit af.
+
+### Wat hierdie sessie **nie** kon doen nie
+
+**Die wetteks is nie geverifieer nie.** Die netwerk blokkeer gov.za, die ITU se
+kopie van die Wet, en elke prokureursfirma se opsomming. Alles oor ECTA 43 en
+POPIA 72 kom uit wat die repo self aanteken. Voor 'n regte bekendstelling moet
+'n prokureur bevestig dat die vyf rye op `/legal` die volle s43(1)-lys is.
+
+Twee verdere dinge vir 'n prokureur: die kommersiële lisensie, en die CPA se
+afkoelreg, wat op geen bladsy genoem word nie.
