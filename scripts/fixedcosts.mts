@@ -23,7 +23,18 @@ export const RAND_PER_USD = 16;
 
 export const FIXED_CORE: Record<string, number> = {
   'Anthropic (kopiloot)': 1500,
-  'Supabase Pro': 400,
+  /* Supabase Pro, $34 = R544. BEVESTIG deur Carli op 24 September 2026:
+     "Supabase is nou geupgrade na pro" ... "Dit is 34 dollars 'n maand."
+
+     Dit het R400 gestaan, want $25 is Supabase se plakkerprys vir Pro en
+     hierdie lys het die plakkerprys geneem. Haar rekening is $34 — Pro se $25
+     plus wat die projek se eie rekenkrag bo die ingeslote deel kos. R144 'n
+     maand wat nie begroot was nie.
+
+     Presies dieselfde soort fout as die ElevenLabs-BTW van 8 September: 'n
+     plakkerprys is nie 'n rekening nie, en die verskil wys eers op die staat.
+     Deur RAND_PER_USD, sodat die koers een plek bly. */
+  'Supabase Pro': 34 * RAND_PER_USD,
   'Vercel Pro': 320,
   /* Resend, R64 ($4) — die posbus wat uitnodigings, wagwoorde en
      kennisgewings stuur. Sien `app/lib/server/email.ts`.

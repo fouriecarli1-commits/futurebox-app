@@ -324,9 +324,6 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
 
 /* ────────────────────────────────────────────────────── what it costs us ─ */
 
-/** Credits ElevenLabs charges per minute of music. */
-const CREDITS_PER_MINUTE = 900;
-
 /**
  * Rand to the dollar, used everywhere a supplier prices in USD.
  *
@@ -343,8 +340,37 @@ const CREDITS_PER_MINUTE = 900;
  */
 export const RAND_PER_USD = 16;
 
-/** Rand per credit on the Business plan: $990 for 11,000,000. */
-const RAND_PER_CREDIT = (990 * RAND_PER_USD) / 11_000_000;
+/* ── A second cost model used to live here, and it was the wrong one ─────
+ *
+ * 24 September 2026, going through every sum for a budget. This file carried
+ * `RAND_PER_CREDIT`, `randCost`, `SONG_COST`, `marginOf`, `FIXED_MONTHLY` and
+ * `FIXED_TOTAL` — a complete second cost model, sitting in the main pricing
+ * file, read by absolutely nothing.
+ *
+ * Which is why nobody noticed it was wrong in three separate ways at once:
+ *
+ *   · `RAND_PER_CREDIT` was $990 for **11 000 000** credits. ElevenLabs' own
+ *     email of 9 September says 6 000 000. The rate was 45% too cheap.
+ *   · `SONG_COST` therefore said "about R2.59 on Business". `credits.ts` has
+ *     said since 8 September that a song is R5.52, and says so at length.
+ *   · `FIXED_MONTHLY` listed GitHub at R64 — which Carli confirmed costs her
+ *     nothing — and was missing Kits.AI (R640), Zoho (R241.50), the domains
+ *     (R168) and Spaceship (R210.24). R1 259.74 a month of real bills absent
+ *     from a list called "monthly fixed costs".
+ *
+ * None of it caused a visible fault, because nothing read it. It was worse
+ * than a bug: it was a landmine. Anybody opening `plans.ts` to ask what the
+ * business costs — which is the obvious file to open — would have found a
+ * confident, itemised, wrong answer.
+ *
+ * The live model is `scripts/fixedcosts.mts` for the bills and
+ * `scripts/costs-eleven.mts` for the arithmetic, and `docs/KOSTE-EN-WINS.md`
+ * is generated from them. `fixedcosts.mts` exists because this exact fault —
+ * two lists, one wrong — already happened once between a document and a
+ * generator. It happened a second time, here, and this is the deletion.
+ *
+ * `gatewayFee` below stays: it is the one thing in this block that was both
+ * correct and read. */
 
 /**
  * The free format: half a song.
@@ -359,52 +385,53 @@ export const FREE_PREVIEWS = 2;
 /** What a full song is, in minutes, for both costing and generation. */
 export const SONG_MINUTES = 2;
 
-export function randCost(minutes: number): number {
-  return minutes * CREDITS_PER_MINUTE * RAND_PER_CREDIT;
-}
-
-/** What one full song costs to generate. About R2.59 on Business. */
-export const SONG_COST = randCost(SONG_MINUTES);
-
 /**
  * What a payment gateway takes. South African gateways sit near 3.5% plus a
  * couple of rand fixed, and the fixed part is what hurts: it is 18% of R14 and
  * 8% of R49. That is the known cost of a low entry price, accepted on purpose
  * because a lower step converts more people.
  */
+/**
+ * What the payment gateway takes, as two named numbers.
+ *
+ * ── Two rates for one fee, found 24 September 2026 ───────────────────────
+ *
+ * `docs/MAANDELIKSE-KOSTE.md` said **2.9% + R1** and marked it checked.
+ * This function charged **3.5% + R2**, and this is the one that reached every
+ * margin sum on every page.
+ *
+ * On Maker's R149 that is R5.32 against R7.22 — R1.90 a member a month, in
+ * the direction that UNDERSTATES the profit. Not a disaster, and exactly the
+ * same shape as the R64 that was called Resend on one page and GitHub on
+ * another.
+ *
+ * ── Which one stands, and why ────────────────────────────────────────────
+ *
+ * The dearer one, until a real Paystack statement says otherwise. Scaling a
+ * cost down on a figure nobody in this session could confirm is the wrong
+ * direction to guess in: too low a fee makes the business look better than it
+ * is, and that is the kind of error you meet at the bank rather than in a
+ * test.
+ *
+ * **One statement settles it.** If 2.9% + R1 is right, every margin here is
+ * R1.90 a member a month better than it says. `check:koste` holds the
+ * document against these two numbers so they cannot drift apart again.
+ */
+export const GATEWAY_RATE = 0.035;
+export const GATEWAY_FIXED = 2;
+
 export function gatewayFee(rand: number): number {
-  return rand * 0.035 + 2;
+  return rand * GATEWAY_RATE + GATEWAY_FIXED;
 }
 
-/** What a tier leaves after its songs and the gateway. */
-export function marginOf(tier: Tier): number {
-  const spec = TIER_SPECS[tier];
-  if (spec.rand === 0) return 0;
-  return spec.rand - spec.songs * SONG_COST - gatewayFee(spec.rand);
-}
 
-/** Monthly fixed costs, in rand. Edit these as the real bills arrive. */
-export const FIXED_MONTHLY: Record<string, number> = {
-  'ElevenLabs Business': 990 * RAND_PER_USD,
-  'Anthropic (copilot)': 1500,
-  Workshops: 4000,
-  'Supabase Pro': 400,
-  'Vercel Pro': 320,
-  GitHub: 64,
-  Video: 0,
-};
+/* `breakEvenMembers()` stood here — a THIRD break-even calculation, built on
+   the wrong rate and the incomplete bill list above, and read by nothing.
 
-export const FIXED_TOTAL = Object.keys(FIXED_MONTHLY).reduce(
-  (sum, key) => sum + FIXED_MONTHLY[key],
-  0,
-);
-
-/** Members needed to cover the fixed base, on a 60/30/10 mix. */
-export function breakEvenMembers(): number {
-  const blended =
-    0.6 * marginOf('maker') + 0.3 * marginOf('studio') + 0.1 * marginOf('label');
-  return Math.ceil(FIXED_TOTAL / blended);
-}
+   `costs-eleven.mts` works out break-even across four ElevenLabs plans and
+   four usage scenarios and writes them all into `docs/KOSTE-EN-WINS.md`. One
+   number here, hard-coded to a 60/30/10 mix and a song cost that was 45% too
+   cheap, could only ever have contradicted it. */
 
 /* ──────────────────────────────────────────────────────────── display ─── */
 

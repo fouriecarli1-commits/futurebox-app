@@ -23,7 +23,8 @@
  */
 import { writeFileSync } from 'node:fs';
 import { TIER_SPECS, TIERS, gatewayFee, type Tier } from '../app/lib/plans.ts';
-import { TIER_CREDITS, CREDITS } from '../app/lib/credits.ts';
+import { TIER_CREDITS, CREDITS, videoCost } from '../app/lib/credits.ts';
+import { paid } from '../app/data/aiprices.ts';
 
 /* ────────────────────────────────────────────────────────── aannames ─── */
 
@@ -814,6 +815,196 @@ for (const plan of EL_PLANS) {
   say('Dit is lineêr, so die oomblik as daar '.concat("'n regte prys is, is die som een deling."));
   say('');
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   WAT ELKE KNOPPIE KOS — die tabel waarop 'n begroting rus
+   ═══════════════════════════════════════════════════════════════════════
+
+   Carli, 24 September 2026: *"Werk al die somme uit asb. Dit is uiters
+   belangrik vir begroting en uitgawes."*
+
+   Alles hierbo antwoord een vraag — kan die besigheid werk — en antwoord dit
+   net vir ElevenLabs. Hierdie afdeling antwoord die ander een: **wat kos elke
+   aksie werklik, en watter een is die duurste om weg te gee.**
+
+   Die kolom wat saak maak is die laaste een: rand per FutureBox-krediet. Dit
+   is die enigste manier om 'n sangomskakeling met 'n bemarkingsplan te
+   vergelyk, want dit is waarin ons verkoop. 'n Aksie met 'n hoë rand-per-
+   krediet is 'n aksie waar 'n maand se toelaag vinnig geld kos; een met 'n
+   lae syfer is byna gratis om te bedien.
+
+   Elke koste hieronder kom uit 'n gemete bron en die bron staan by. Waar niks
+   gemeet is nie, staan dit as 'n skatting gemerk en nie as 'n getal nie. */
+
+interface Action {
+  readonly what: string;
+  /** FutureBox-krediete wat ons hef. */
+  readonly credits: number;
+  /** Wat dit ons kos, in rand, vir presies daardie eenheid. */
+  readonly cost: number;
+  readonly supplier: string;
+  /** Waar die koste vandaan kom, in een frase. */
+  readonly from: string;
+  /** Waar is dit 'n skatting eerder as 'n gemete koers. */
+  readonly guess?: boolean;
+}
+
+/** ElevenLabs Business, BTW in, gedeel deur wat die plan van elke ding koop. */
+const EL_BUSINESS = randForPlan(EL_PLANS[3]);
+const EL_MUSIC_MIN = EL_BUSINESS / 6_600;
+const EL_STEMS_MIN = EL_BUSINESS / 8_250;
+const EL_SPEECH_MIN = EL_BUSINESS / (4_500 * 60);
+const EL_CHAR = EL_BUSINESS / 9_900_000;
+const EL_DUB_MIN = EL_BUSINESS / 450;
+
+/** Kits.AI is 'n plat R640 teen 'n 400-minuut-dak. */
+const KITS_MIN = 640 / 400;
+
+/* Anthropic, uit `app/data/aiprices.ts` se eie geldmodel — dieselfde funksie
+   waarmee elke `ai_costs`-ry geprys word, by elke roete se `max_tokens`-dak.
+   Die dak eerder as 'n gemiddeld, want die dak is die enigste syfer wat waar
+   bly ongeag wat terugkom. */
+const PLAN_CALL = paid({ input: 2_000, output: 12_000, cacheRead: 0, cacheWrite: 0 });
+const ADS_CALL = paid({ input: 1_100, output: 8_000, cacheRead: 0, cacheWrite: 0 });
+
+/* fal.ai se VEED-agtergrondverwydering, duurste graad: $0,0225 per dertig
+   rame, wat teen 30fps een sekonde is. Per VYF sekondes, want dit is die
+   eenheid waarin `filterCost` hef.
+
+   ── fal.ai staan op geen vaste kostelys nie, en dit is reg ──────────────
+   Dit is suiwer veranderlik: geen maandelikse plan, niks om te betaal as
+   niemand 'n filter druk nie. Dit is die eerste verskaffer in hierdie toep
+   met daardie vorm, en dit beteken die filters kan nie geld verloor deur
+   stil te lê nie — net deur te goedkoop geprys te wees. */
+const FAL_5S = 0.0225 * 5 * RAND_PER_USD;
+
+/** Een video-krediet by ElevenLabs, teen Business se eie koers. */
+const EL_VIDEO_CREDIT = randPerElCredit(EL_PLANS[3]);
+
+const ACTIONS: Action[] = [
+  { what: "'n Vol liedjie (2 min)", credits: CREDITS.song, cost: 2 * EL_MUSIC_MIN,
+    supplier: 'ElevenLabs', from: '$0,15 per minuut, hul eie prysblad' },
+  { what: "'n Half liedjie (1 min)", credits: CREDITS.halfSong, cost: EL_MUSIC_MIN,
+    supplier: 'ElevenLabs', from: 'dieselfde koers' },
+  { what: 'Stemme skei, per minuut', credits: CREDITS.stems, cost: EL_STEMS_MIN,
+    supplier: 'ElevenLabs', from: '8 250 minute op $990' },
+  { what: "'n Opname skoonmaak, per minuut", credits: CREDITS.clean, cost: EL_STEMS_MIN,
+    supplier: 'ElevenLabs', from: 'dieselfde emmer' },
+  { what: "'n Stem verander, per minuut", credits: CREDITS.voiceChange, cost: EL_STEMS_MIN,
+    supplier: 'ElevenLabs', from: 'dieselfde emmer' },
+  { what: 'Oorskryf, per minuut', credits: CREDITS.transcribe, cost: EL_SPEECH_MIN,
+    supplier: 'ElevenLabs', from: '4 500 uur op $990' },
+  { what: 'Voorlees, per 150 karakters', credits: 1, cost: 150 * EL_CHAR,
+    supplier: 'ElevenLabs', from: '9,9 miljoen karakters op $990' },
+  { what: 'Dub, per minuut', credits: CREDITS.dub, cost: EL_DUB_MIN,
+    supplier: 'ElevenLabs', from: '450 minute op $990 — die duurste reël hier' },
+  { what: 'Sing dit, per minuut', credits: CREDITS.sing, cost: KITS_MIN,
+    supplier: 'Kits.AI', from: 'R640 plat teen 400 minute' },
+  { what: 'Video, 10 sek, standaard', credits: videoCost('standard', 10), cost: 40 * EL_VIDEO_CREDIT,
+    supplier: 'ElevenLabs', from: 'Seedance, 20 krediete per 5 sek', guess: true },
+  { what: "'n Bemarkingsplan", credits: CREDITS.marketPlan, cost: PLAN_CALL,
+    supplier: 'Anthropic', from: 'max_tokens-dak deur aiprices.ts' },
+  { what: 'Agt advertensielyne', credits: CREDITS.adLines, cost: ADS_CALL,
+    supplier: 'Anthropic', from: 'max_tokens-dak deur aiprices.ts' },
+  { what: 'Agtergrond uit, per 5 sek', credits: CREDITS.cutout, cost: FAL_5S,
+    supplier: 'fal.ai', from: '$0,0225 per 30 rame, duurste graad' },
+  { what: 'Item uit, per 5 sek', credits: CREDITS.erase, cost: FAL_5S,
+    supplier: 'fal.ai', from: 'teen dieselfde koers gestel', guess: true },
+  { what: "'n Omslag", credits: CREDITS.cover, cost: 0.15,
+    supplier: 'beeldmodel', from: "'n breukdeel van 'n sent", guess: true },
+  { what: "'n Stem kloon", credits: CREDITS.clone, cost: 0,
+    supplier: 'ElevenLabs', from: 'in die plan ingesluit, geen los koers', guess: true },
+  { what: "'n Klank oplei", credits: CREDITS.finetune, cost: 0,
+    supplier: 'ElevenLabs', from: 'in die plan ingesluit, geen los koers', guess: true },
+];
+
+/** Wat een FutureBox-krediet in hierdie aksie ons kos. */
+const perCredit = (one: Action): number => (one.credits > 0 ? one.cost / one.credits : 0);
+
+say('## Wat elke knoppie kos');
+say('');
+say('Gevra op 24 September 2026: *"Werk al die somme uit asb. Dit is uiters');
+say('belangrik vir begroting en uitgawes."* Alles hierbo antwoord of die');
+say('besigheid kan werk. Hierdie tabel antwoord wat elke aksie kos.');
+say('');
+say('Die laaste kolom is die een wat saak maak. Dit is die enigste manier om');
+say("'n dub met 'n bemarkingsplan te vergelyk, want rand per FutureBox-krediet");
+say('is waarin ons verkoop. Hoog beteken die toelaag brand geld; laag beteken');
+say('die aksie is byna gratis om te bedien.');
+say('');
+say('| Aksie | Verskaffer | Ons hef | Dit kos ons | Rand per krediet |');
+say('|---|---|---|---|---|');
+for (const one of [...ACTIONS].sort((a, b) => perCredit(b) - perCredit(a))) {
+  const mark = one.guess ? ' *(skatting)*' : '';
+  say(
+    `| ${one.what}${mark} | ${one.supplier} | ${one.credits} kr | ${rand(one.cost)} | **R${dec(perCredit(one), 4)}** |`,
+  );
+}
+say('');
+say('*Bronne, reël vir reël:*');
+say('');
+for (const one of ACTIONS) say(`- **${one.what}** — ${one.from}`);
+say('');
+
+/* ── Die aanname wat die hele kapasiteitsom dra, nagegaan ─────────────── */
+
+const dearest = [...ACTIONS].filter((one) => !one.guess).sort((a, b) => perCredit(b) - perCredit(a))[0];
+const songPerCredit = perCredit(ACTIONS[0]);
+
+say('### Die aanname wat die kapasiteit dra, nagegaan');
+say('');
+say('Elke som hierbo reken **alles as musiek**, want musiek was die duurste');
+say('ding per krediet. Dit is die aanname waarop elke gelykbreek- en');
+say('kapasiteitsgetal op hierdie bladsy rus, so dit is nagegaan eerder as');
+say('geglo.');
+say('');
+if (perCredit(dearest) > songPerCredit * 1.001) {
+  say(`Dit hou **nie heeltemal** nie. Die duurste gemete aksie per krediet is`);
+  say(`**${dearest.what}** teen R${dec(perCredit(dearest), 4)}, teen 'n liedjie se`);
+  say(`R${dec(songPerCredit, 4)} — ${dec((perCredit(dearest) / songPerCredit - 1) * 100, 1)}% duurder.`);
+  say('');
+  say('Dit is klein genoeg om nie die vorm van die besigheid te verander nie,');
+  say('en groot genoeg om nie "die slegste geval" genoem te word nie. Wie die');
+  say('kapasiteit gebruik om te besluit, moet weet dit is ongeveer reg en nie');
+  say("'n plafon nie.");
+} else {
+  say(`Dit hou. 'n Liedjie bly die duurste gemete aksie per krediet, teen`);
+  say(`R${dec(songPerCredit, 4)}, so elke ander mengsel is goedkoper as die somme hierbo.`);
+}
+say('');
+/* ── Die ding wat die tabel omkeer, en dit is teen-intuïtief ──────────── */
+
+const dub = ACTIONS.find((one) => one.what.startsWith('Dub'))!;
+const video = ACTIONS.find((one) => one.what.startsWith('Video'))!;
+
+say('### Wat die tabel omkeer');
+say('');
+say('Twee dinge lees anders as wat hulle voel.');
+say('');
+say(`**Dub lyk soos die duurste ding in die toep** — ${dub.credits} krediete vir een`);
+say(`minuut, meer as 'n hele plan se maandtoelaag op Maker. Per krediet is dit`);
+say(`**R${dec(perCredit(dub), 4)}**, wat ${dec((1 - perCredit(dub) / songPerCredit) * 100, 0)}%`);
+say(`GOEDKOPER is as 'n liedjie. Die groot getal is nie 'n groot marge nie — dit`);
+say('is net hoe duur een minuut dubbing werklik is. Wie dub, koop reg; wie dub');
+say('teen 15 krediete verkoop het, het R21,88 per minuut uit haar eie sak betaal,');
+say('wat presies is wat op 8 September gebeur het.');
+say('');
+say(`**Video lees andersom.** ${video.credits} krediete vir 'n tien-sekonde-snit`);
+say(`teen 'n geskatte R${dec(video.cost, 2)} — **R${dec(perCredit(video), 4)}** per krediet,`);
+say(`${dec(songPerCredit / perCredit(video), 0)} keer goedkoper as musiek.`);
+say('');
+say('Dit is óf die winsgewendste ding wat hierdie toep verkoop, óf die');
+say('kosteskatting is verkeerd. `app/lib/server/video/eleven.ts` dra self twee');
+say('syfers vir dieselfde snit wat 43 keer uitmekaar is, en `check:kredietkoste`');
+say('weier om enigiets oor video te beweer totdat '
+  .concat("'n regte faktuur dit besleg."));
+say('');
+say('**Dit is die belangrikste oop getal op hierdie bladsy.** As video regtig so');
+say('goedkoop is, is die video-enjin die enjin om die toep op te bou. As dit');
+say('veertig keer duurder is as wat hier staan, is dit steeds winsgewend maar');
+say('nie buitengewoon nie. Een regte ElevenLabs-faktuur met video daarop besleg');
+say('dit, en niks anders sal nie.');
+say('');
 
 writeFileSync(new URL('../docs/KOSTE-EN-WINS.md', import.meta.url), out.join('\n') + '\n');
 

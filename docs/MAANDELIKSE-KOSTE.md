@@ -36,11 +36,11 @@ reggemaak is, net in die ander rigting.
 | 1 | **ElevenLabs** | musiek, stemme, stem-skeiding, video | R18 216 (Business, BTW in) | vas | **BTW ja** — teen haar eie faktuur, 8 Sept. Die $990 self kom van hulle prysbladsy |
 | 2 | **Anthropic** | die kopiloot, die liedjieskrywer, die advertensies | R1 500 | vas, skatting | **nee** — 'n skatting, nie 'n faktuur nie |
 | 3 | **Vercel** | waar dit loop | R320 (Pro) | vas | nee — afgelei, sien hieronder |
-| 4 | **Supabase** | rekeninge, liedjies, die kanaal | R400 (Pro) | vas | nee — afgelei, sien hieronder |
+| 4 | **Supabase** | rekeninge, liedjies, die kanaal | **R544** ($34, Pro) | vas | **ja** — opgegradeer 24 Sept, bedrag van Carli af |
 | 5 | **Resend** | uitnodigings, wagwoorde, kennisgewings | R64 ($4) | vas | nee |
 | 6 | **Werkswinkels** | die masterclass-inhoud | R4 000 | vas, opsioneel | ja |
 | 7 | **Music.ai** | akkoorde, toonaard, tempo, benoemde stukke | per minuut klank | per gebruik | **nee** — music.ai is ook geblokkeer |
-| 8 | **Paystack** | hoe mense betaal | 2,9% + R1 per transaksie | per gebruik | ja |
+| 8 | **Paystack** | hoe mense betaal | **die somme hef 3,5% + R2**; hierdie bladsy het 2,9% + R1 gesê | per gebruik | **nee — twee koerse, sien hieronder** |
 | 9 | **Spotify** | die derde bar op Spotlight | niks | gratis | ja |
 | 10 | **Kits.AI** | sangstem-omskakeling — die stem wat sing | R640 ($40) | vas | **ja** — sleutel gestel 7 Sept |
 | 11 | **Kling** | video, duurder pad | nie in gebruik nie | — | jou besluit, 6 Sept |
@@ -54,20 +54,20 @@ reggemaak is, net in die ander rigting.
 |---|---|
 | Anthropic | 1 500 |
 | Vercel | 320 |
-| Supabase | 400 |
+| Supabase | 544 |
 | Resend | 64 |
 | Kits.AI | 640 |
 | Zoho | 241,50 |
 | Domeine | 168 |
 | Spaceship | 210,24 |
-| **Sonder ElevenLabs, sonder werkswinkels** | **3 543,74** |
+| **Sonder ElevenLabs, sonder werkswinkels** | **3 687,74** |
 | Werkswinkels | 4 000 |
-| **Sonder ElevenLabs, met werkswinkels** | **7 543,74** |
+| **Sonder ElevenLabs, met werkswinkels** | **7 687,74** |
 | ElevenLabs Business | 18 216 |
-| **Alles saam** | **25 759,74** |
+| **Alles saam** | **25 903,74** |
 
-Dít is waar `R3 543,74` en `R7 543,74` in `docs/KOSTE-EN-WINS.md` vandaan kom,
-en `R25 759,74` is die getal waarteen gelykbreek uitgewerk word.
+Dít is waar `R3 687,74` en `R7 687,74` in `docs/KOSTE-EN-WINS.md` vandaan kom,
+en `R25 903,74` is die getal waarteen gelykbreek uitgewerk word.
 
 ### Een vraag oor hierdie twee reëls, en dit raak geld
 
@@ -96,15 +96,52 @@ niks. Die generator dra nou dieselfde naam.
 
 Vercel en Supabase se twee getalle was tussen die twee bladsye omgeruil. Die
 totaal was albei kante R720, so geen som was verkeerd nie, maar een bladsy het
-die verkeerde bedrag teen die verkeerde diens gehad. Hierdie bladsy is
-reggemaak om by die generator te pas, op hierdie grond: **Vercel Pro is $20 per
-maand en Supabase Pro is $25** — wat teen R16 presies R320 en R400 gee, in
-daardie volgorde.
+die verkeerde bedrag teen die verkeerde diens gehad.
 
-*Dit bly 'n afleiding uit hulle gepubliseerde pryse en nie 'n faktuur nie —
-hierdie masjien kan nie by hulle bladsye uitkom nie, en die kolom sê so. Die
-eerste regte staat maak dit seker; tot dan is dit die weergawe wat ten minste
-aan die regte kant van elke naam staan.*
+### En toe wys die eerste regte bedrag hoekom 'n afleiding nie 'n rekening is nie
+
+Hierdie paragraaf het gesê **Supabase Pro is $25**, afgelei uit hulle
+gepubliseerde prys, en het bygevoeg dat die eerste regte staat dit seker sal
+maak. Op 24 September 2026 het Carli opgegradeer en gesê wat sy betaal:
+
+> *"Supabase is nou geupgrade na pro." ... "Dit is 34 dollars 'n maand."*
+
+**$34, nie $25 nie.** Pro se basis plus wat die projek se eie rekenkrag bo die
+ingeslote deel kos. R544 in plaas van R400 — **R144 'n maand wat nie begroot
+was nie**, en gelykbreek op Business skuif van 80 na 81 lede.
+
+Dit is presies dieselfde soort fout as die ElevenLabs-BTW van 8 September: 'n
+plakkerprys is nie 'n rekening nie, en die verskil wys eers op die staat.
+
+**Vercel bly 'n afleiding.** $20 per maand, R320, uit hulle gepubliseerde prys
+en nie uit 'n staat nie — en Supabase het pas gewys in watter rigting daardie
+soort syfer verkeerd is. Reken daarop dat dit hoër is as wat hier staan.
+
+---
+
+## Twee koerse vir een betaalfooi
+
+Gevind op 24 September 2026, terwyl elke som vir 'n begroting uitgewerk is.
+
+Hierdie bladsy het **2,9% + R1** gesê en dit as nagegaan gemerk.
+`app/lib/plans.ts` se `gatewayFee` het **3,5% + R2** gehef — en dít is die een
+wat in elke marge-som op elke bladsy beland het.
+
+| Op Maker se R149 | Fooi |
+|---|---|
+| Wat hierdie bladsy gesê het | R5,32 |
+| Wat die somme gebruik | R7,22 |
+| Verskil, per lid per maand | **R1,90** |
+
+Die duurder een staan, tot 'n regte Paystack-staat anders sê. Om 'n koste af
+te skaal op 'n syfer wat niemand kon bevestig nie, is die verkeerde rigting om
+in te raai: 'n te lae fooi laat die besigheid beter lyk as wat dit is.
+
+**Een staat besleg dit.** As 2,9% + R1 reg is, is elke marge hier R1,90 per
+lid per maand beter as wat staan — by 100 lede is dit R190 'n maand, en by die
+plan se dak van 358 lede is dit R680. Die twee getalle leef nou langs
+`gatewayFee` self en `check:koste` hou hierdie bladsy daarteen, sodat hulle nie
+weer uitmekaar kan dryf nie.
 
 ---
 
@@ -172,7 +209,7 @@ Twee dinge om na te gaan sodra jy die volledige pakket koop:
 
 ## Wat regtig die vorm van die besigheid bepaal
 
-Kyk na die tabel. **ElevenLabs Business is R18 216 van R25 759,74 — 71%.**
+Kyk na die tabel. **ElevenLabs Business is R18 216 van R25 903,74 — 70,3%.**
 
 Elke ander besluit op hierdie bladsy is klein daarnaas. Kits.AI is 3% van die
 rekening. Vercel en Supabase saam is 3%. Die werkswinkels is 18% en is die

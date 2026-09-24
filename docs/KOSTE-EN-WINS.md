@@ -5,7 +5,7 @@
 > verander die prys in daardie lêers en loop die skrip weer, anders sê die
 > pryskaart en hierdie som twee verskillende dinge.
 
-Geskryf 2026-09-16. Kling is uit die som uit.
+Geskryf 2026-09-24. Kling is uit die som uit.
 
 ## Waarop dit rus
 
@@ -34,14 +34,14 @@ elke plan insluit is presies die plan se prys gedeel deur daardie koers —
 
 Elke lid brand elke krediet op, elke gratis gebruiker ook, en die werkswinkels loop. Dit gebeur nie — maar as die som hier werk, werk hy altyd.
 
-Vaste koste sonder ElevenLabs: R7 543,74 (werkswinkels ingesluit).
+Vaste koste sonder ElevenLabs: R7 687,74 (werkswinkels ingesluit).
 
 | ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede voor bykoop begin | Genoeg krediete ingesluit? |
 |---|---|---|---|---|
 | Creator | R272,06 | 30 | 4 | nee |
 | Pro | R272,06 | 35 | 21 | nee |
-| Scale | R272,06 | 48 | 64 | **ja** |
-| Business | R272,06 | 95 | 215 | **ja** |
+| Scale | R272,06 | 49 | 64 | **ja** |
+| Business | R272,06 | 96 | 215 | **ja** |
 
 *Die laaste kolom is nie 'n slaag-of-druip nie. Dit sê waar die plan se
 ingeslote krediete opraak en bykoop begin — teen presies dieselfde koers,
@@ -56,14 +56,14 @@ Business, want gelykbreek hang aan die vaste koste en nie aan die dak nie.*
 
 Betalende lede gebruik 60% van hul toelae, die helfte van die gratis gebruikers maak ooit iets. Dít is die syfer om planne op te maak.
 
-Vaste koste sonder ElevenLabs: R7 543,74 (werkswinkels ingesluit).
+Vaste koste sonder ElevenLabs: R7 687,74 (werkswinkels ingesluit).
 
 | ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede voor bykoop begin | Genoeg krediete ingesluit? |
 |---|---|---|---|---|
 | Creator | R272,06 | 30 | 7 | nee |
 | Pro | R272,06 | 35 | 35 | **ja** |
-| Scale | R272,06 | 48 | 107 | **ja** |
-| Business | R272,06 | 95 | 358 | **ja** |
+| Scale | R272,06 | 49 | 107 | **ja** |
+| Business | R272,06 | 96 | 358 | **ja** |
 
 *Die laaste kolom is nie 'n slaag-of-druip nie. Dit sê waar die plan se
 ingeslote krediete opraak en bykoop begin — teen presies dieselfde koers,
@@ -78,14 +78,14 @@ Business, want gelykbreek hang aan die vaste koste en nie aan die dak nie.*
 
 Die slegste geval weer, met die werkswinkels af. Dit wys of die slegste geval hoegenaamd veilig gemaak kan word.
 
-Vaste koste sonder ElevenLabs: R3 543,74 (sonder werkswinkels).
+Vaste koste sonder ElevenLabs: R3 687,74 (sonder werkswinkels).
 
 | ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede voor bykoop begin | Genoeg krediete ingesluit? |
 |---|---|---|---|---|
-| Creator | R272,06 | 15 | 4 | nee |
-| Pro | R272,06 | 20 | 21 | **ja** |
+| Creator | R272,06 | 16 | 4 | nee |
+| Pro | R272,06 | 21 | 21 | **ja** |
 | Scale | R272,06 | 34 | 64 | **ja** |
-| Business | R272,06 | 80 | 215 | **ja** |
+| Business | R272,06 | 81 | 215 | **ja** |
 
 *Die laaste kolom is nie 'n slaag-of-druip nie. Dit sê waar die plan se
 ingeslote krediete opraak en bykoop begin — teen presies dieselfde koers,
@@ -100,14 +100,14 @@ Business, want gelykbreek hang aan die vaste koste en nie aan die dak nie.*
 
 Dieselfde as bo, met die werkswinkels af. Dit is die enigste hefboom wat oorbly noudat die gratis laag se musiek weg is.
 
-Vaste koste sonder ElevenLabs: R3 543,74 (sonder werkswinkels).
+Vaste koste sonder ElevenLabs: R3 687,74 (sonder werkswinkels).
 
 | ElevenLabs-plan | Wins per betalende lid | Lede om gelyk te breek | Lede voor bykoop begin | Genoeg krediete ingesluit? |
 |---|---|---|---|---|
-| Creator | R272,06 | 15 | 7 | nee |
-| Pro | R272,06 | 20 | 35 | **ja** |
+| Creator | R272,06 | 16 | 7 | nee |
+| Pro | R272,06 | 21 | 35 | **ja** |
 | Scale | R272,06 | 34 | 107 | **ja** |
-| Business | R272,06 | 80 | 358 | **ja** |
+| Business | R272,06 | 81 | 358 | **ja** |
 
 *Die laaste kolom is nie 'n slaag-of-druip nie. Dit sê waar die plan se
 ingeslote krediete opraak en bykoop begin — teen presies dieselfde koers,
@@ -211,9 +211,9 @@ kontantvloei doen. Die getal hieronder bly dus die moeite werd om te weet
 altyd reg, want die krediete daarbo kos dieselfde. Business is $891 per
 maand vir nege sitplekke wat sy nie het nie.
 
-**2. Gelykbreek hang aan die vaste koste, nie aan die dak nie.** In die slegste geval — elke lid brand elke krediet — is gelykbreek op Business **80 lede**, en die plan se krediete hou **215** voor bykoop begin. Met die werkswinkels terug word dit **95** teen **215**.
+**2. Gelykbreek hang aan die vaste koste, nie aan die dak nie.** In die slegste geval — elke lid brand elke krediet — is gelykbreek op Business **81 lede**, en die plan se krediete hou **215** voor bykoop begin. Met die werkswinkels terug word dit **96** teen **215**.
 
-Realisties — 60% verbruik — is gelykbreek **80 lede** sonder werkswinkels en **95** met; bykoop begin by **358** lede. Die werkswinkels is nie 'n uitgawe nie, dit is 'n besluit: hulle kos 15 ekstra lede.
+Realisties — 60% verbruik — is gelykbreek **81 lede** sonder werkswinkels en **96** met; bykoop begin by **358** lede. Die werkswinkels is nie 'n uitgawe nie, dit is 'n besluit: hulle kos 15 ekstra lede.
 
 
 ### En wat SARS daarvan vat
@@ -223,7 +223,7 @@ neem van hierdie produk, dus wil ek nie 'n verlies ly nie."*
 
 **Die belangrikste ding eerste: maatskappybelasting is op WINS, nie op
 omset nie.** Geen wins, geen belasting. Gelykbreek skuif dus glad nie —
-dit bly 80 lede sonder werkswinkels en 95 met. Belasting
+dit bly 81 lede sonder werkswinkels en 96 met. Belasting
 vat net 'n stuk van wat bo gelykbreek oorbly.
 
 Dit is die hele antwoord op "moet ons die pryse herbesin?". Nie oor SARS
@@ -233,10 +233,10 @@ nie.
 |---|---|---|
 | Lede | 358 | 358 |
 | Omset | R101 672,00 | R101 672,00 |
-| Wins voor belasting | R75 637,74 | R71 637,74 |
-| Ná 27% | R55 215,55 | R52 295,55 |
-| Ná 30% | R52 946,42 | R50 146,42 |
-| Ná 30%, per jaar | R635 357,02 | R601 757,02 |
+| Wins voor belasting | R75 493,74 | R71 493,74 |
+| Ná 27% | R55 110,43 | R52 190,43 |
+| Ná 30% | R52 845,62 | R50 045,62 |
+| Ná 30%, per jaar | R634 147,42 | R600 547,42 |
 
 **Ja, dit maak wins. Maar kyk na wat daardie tabel eintlik sê.**
 
@@ -263,7 +263,7 @@ Drie hefbome, in volgorde van hoeveel hulle beweeg:
 **1. Klein Sake Korporasie (SBC).** 'n (Pty) Ltd wat kwalifiseer betaal
 nie 27% op alles nie: die eerste R95 750 belasbare inkomste is teen **0%**,
 en die snit tot R365 000 teen **7%**. Die maksimum jaarwins hierbo is
-R907 652,88 — heeltemal binne daardie tweede snit.
+R905 924,88 — heeltemal binne daardie tweede snit.
    Die effektiewe koers sou dan naby **3%** wees, nie 30% nie. Kwalifikasie
    het voorwaardes (alle aandeelhouers natuurlike persone, omset onder
    R20m, nie 'n persoonlike diensverskaffer nie) en dit is 'n vraag vir
@@ -279,7 +279,7 @@ R907 652,88 — heeltemal binne daardie tweede snit.
 
    Wat dit werd is: die BTW op ElevenLabs alleen is R2 376,00 per maand,
    oftewel R28 512,00 per jaar. Teen 'n maksimum jaarwins van
-   R907 652,88 is dit nie klein nie.
+   R905 924,88 is dit nie klein nie.
 
 *Geen van hierdie twee is belastingadvies nie. Albei is gedokumenteerde
 SARS-reëls wat groot genoeg is om te vra, met die somme reeds gedoen sodat
@@ -323,16 +323,16 @@ elke krediet moet dra, hang aan die ledetal.
 
 | Betalende lede | Krediete verkoop | Volle koste per krediet | Wins per krediet | Marge |
 |---|---|---|---|---|
-| **80** — gelykbreek | 12 400 | R1,75 | R0,08 | 4% |
-| 100 | 15 500 | R1,40 | R0,43 | 23% |
-| 150 | 23 250 | R0,94 | R0,90 | 49% |
-| 200 | 31 000 | R0,70 | R1,13 | 62% |
-| 250 | 38 750 | R0,56 | R1,27 | 69% |
+| **80** — gelykbreek | 12 400 | R1,77 | R0,07 | 4% |
+| 100 | 15 500 | R1,41 | R0,42 | 23% |
+| 150 | 23 250 | R0,94 | R0,89 | 49% |
+| 200 | 31 000 | R0,71 | R1,13 | 61% |
+| 250 | 38 750 | R0,57 | R1,27 | 69% |
 | 300 | 46 500 | R0,47 | R1,36 | 74% |
-| **358** — die plan se dak | 55 490 | R0,39 | R1,44 | 79% |
+| **358** — die plan se dak | 55 490 | R0,39 | R1,44 | 78% |
 
 *Volle koste is alles: die ElevenLabs-plan van R18 216,00 plus elke ander
-vaste reël, R3 543,74 saam — Anthropic, Vercel, Supabase, Resend,
+vaste reël, R3 687,74 saam — Anthropic, Vercel, Supabase, Resend,
 Kits.AI, Zoho, die domeine en Spaceship. Werkswinkels is uit, want dit is
 'n besluit eerder as 'n rekening.*
 
@@ -351,8 +351,8 @@ reeds gekoop. Bo die dak kos dit ElevenLabs se bykoopkoers:
 
 ### Die een getal om vir ElevenLabs te wys
 
-**ElevenLabs is 84% van die hele koste-basis** — R18 216,00 van
-R21 759,74. Dít is die syfer wat die koersvraag regverdig, en dit is
+**ElevenLabs is 83% van die hele koste-basis** — R18 216,00 van
+R21 903,74. Dít is die syfer wat die koersvraag regverdig, en dit is
 veilig om te stuur: dit sê hoe belangrik hulle is sonder om te sê wat ons
 verdien.
 
@@ -367,4 +367,92 @@ Albei is deur Carli genoem en nie een kan hier geraai word:
 
 Elke R1 000 per maand aan nuwe vaste koste skuif gelykbreek met 3,5 lede.
 Dit is lineêr, so die oomblik as daar 'n regte prys is, is die som een deling.
+
+## Wat elke knoppie kos
+
+Gevra op 24 September 2026: *"Werk al die somme uit asb. Dit is uiters
+belangrik vir begroting en uitgawes."* Alles hierbo antwoord of die
+besigheid kan werk. Hierdie tabel antwoord wat elke aksie kos.
+
+Die laaste kolom is die een wat saak maak. Dit is die enigste manier om
+'n dub met 'n bemarkingsplan te vergelyk, want rand per FutureBox-krediet
+is waarin ons verkoop. Hoog beteken die toelaag brand geld; laag beteken
+die aksie is byna gratis om te bedien.
+
+| Aksie | Verskaffer | Ons hef | Dit kos ons | Rand per krediet |
+|---|---|---|---|---|
+| Stemme skei, per minuut | ElevenLabs | 4 kr | R2,21 | **R0,5520** |
+| 'n Opname skoonmaak, per minuut | ElevenLabs | 4 kr | R2,21 | **R0,5520** |
+| 'n Stem verander, per minuut | ElevenLabs | 4 kr | R2,21 | **R0,5520** |
+| 'n Vol liedjie (2 min) | ElevenLabs | 10 kr | R5,52 | **R0,5520** |
+| 'n Half liedjie (1 min) | ElevenLabs | 5 kr | R2,76 | **R0,5520** |
+| Sing dit, per minuut | Kits.AI | 4 kr | R1,60 | **R0,4000** |
+| Voorlees, per 150 karakters | ElevenLabs | 1 kr | R0,28 | **R0,2760** |
+| Dub, per minuut | ElevenLabs | 162 kr | R40,48 | **R0,2499** |
+| Agtergrond uit, per 5 sek | fal.ai | 8 kr | R1,80 | **R0,2250** |
+| Agt advertensielyne | Anthropic | 20 kr | R3,29 | **R0,1644** |
+| Item uit, per 5 sek *(skatting)* | fal.ai | 11 kr | R1,80 | **R0,1636** |
+| 'n Bemarkingsplan | Anthropic | 40 kr | R4,96 | **R0,1240** |
+| 'n Omslag *(skatting)* | beeldmodel | 2 kr | R0,15 | **R0,0750** |
+| Oorskryf, per minuut | ElevenLabs | 2 kr | R0,07 | **R0,0337** |
+| Video, 10 sek, standaard *(skatting)* | ElevenLabs | 30 kr | R0,12 | **R0,0040** |
+| 'n Stem kloon *(skatting)* | ElevenLabs | 20 kr | R0,00 | **R0,0000** |
+| 'n Klank oplei *(skatting)* | ElevenLabs | 300 kr | R0,00 | **R0,0000** |
+
+*Bronne, reël vir reël:*
+
+- **'n Vol liedjie (2 min)** — $0,15 per minuut, hul eie prysblad
+- **'n Half liedjie (1 min)** — dieselfde koers
+- **Stemme skei, per minuut** — 8 250 minute op $990
+- **'n Opname skoonmaak, per minuut** — dieselfde emmer
+- **'n Stem verander, per minuut** — dieselfde emmer
+- **Oorskryf, per minuut** — 4 500 uur op $990
+- **Voorlees, per 150 karakters** — 9,9 miljoen karakters op $990
+- **Dub, per minuut** — 450 minute op $990 — die duurste reël hier
+- **Sing dit, per minuut** — R640 plat teen 400 minute
+- **Video, 10 sek, standaard** — Seedance, 20 krediete per 5 sek
+- **'n Bemarkingsplan** — max_tokens-dak deur aiprices.ts
+- **Agt advertensielyne** — max_tokens-dak deur aiprices.ts
+- **Agtergrond uit, per 5 sek** — $0,0225 per 30 rame, duurste graad
+- **Item uit, per 5 sek** — teen dieselfde koers gestel
+- **'n Omslag** — 'n breukdeel van 'n sent
+- **'n Stem kloon** — in die plan ingesluit, geen los koers
+- **'n Klank oplei** — in die plan ingesluit, geen los koers
+
+### Die aanname wat die kapasiteit dra, nagegaan
+
+Elke som hierbo reken **alles as musiek**, want musiek was die duurste
+ding per krediet. Dit is die aanname waarop elke gelykbreek- en
+kapasiteitsgetal op hierdie bladsy rus, so dit is nagegaan eerder as
+geglo.
+
+Dit hou. 'n Liedjie bly die duurste gemete aksie per krediet, teen
+R0,5520, so elke ander mengsel is goedkoper as die somme hierbo.
+
+### Wat die tabel omkeer
+
+Twee dinge lees anders as wat hulle voel.
+
+**Dub lyk soos die duurste ding in die toep** — 162 krediete vir een
+minuut, meer as 'n hele plan se maandtoelaag op Maker. Per krediet is dit
+**R0,2499**, wat 55%
+GOEDKOPER is as 'n liedjie. Die groot getal is nie 'n groot marge nie — dit
+is net hoe duur een minuut dubbing werklik is. Wie dub, koop reg; wie dub
+teen 15 krediete verkoop het, het R21,88 per minuut uit haar eie sak betaal,
+wat presies is wat op 8 September gebeur het.
+
+**Video lees andersom.** 30 krediete vir 'n tien-sekonde-snit
+teen 'n geskatte R0,12 — **R0,0040** per krediet,
+136 keer goedkoper as musiek.
+
+Dit is óf die winsgewendste ding wat hierdie toep verkoop, óf die
+kosteskatting is verkeerd. `app/lib/server/video/eleven.ts` dra self twee
+syfers vir dieselfde snit wat 43 keer uitmekaar is, en `check:kredietkoste`
+weier om enigiets oor video te beweer totdat 'n regte faktuur dit besleg.
+
+**Dit is die belangrikste oop getal op hierdie bladsy.** As video regtig so
+goedkoop is, is die video-enjin die enjin om die toep op te bou. As dit
+veertig keer duurder is as wat hier staan, is dit steeds winsgewend maar
+nie buitengewoon nie. Een regte ElevenLabs-faktuur met video daarop besleg
+dit, en niks anders sal nie.
 

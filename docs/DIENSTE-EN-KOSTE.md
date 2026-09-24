@@ -66,8 +66,11 @@ Postgres-fout op reël tweehonderd van iets wat jy pas geplak het.
 Elkeen van daardie kamers sê "nie opgestel nie" in gewone woorde eerder as om
 te breek — daardie sin *is* die toets.
 
-**Wat dit kos:** Pro-plan ongeveer R400 per maand. Die gratis plan werk vir die
-handjievol toetsers, maar slaap ná 'n week se stilte.
+**Wat dit kos:** **R544 ($34) per maand** op Pro, bevestig deur Carli op
+24 September 2026 toe sy opgegradeer het. Hierdie reël het R400 gesê — Supabase
+se plakkerprys van $25 — en haar rekening is $34, want Pro se basis is nie al
+wat op die staat staan nie. Die gratis plan werk vir 'n handjievol toetsers,
+maar slaap ná 'n week se stilte.
 
 ### 3. Vercel — waar dit loop
 

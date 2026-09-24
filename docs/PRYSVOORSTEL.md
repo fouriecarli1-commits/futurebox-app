@@ -10,7 +10,7 @@ die toelaag geprys asof krediete net op liedjies gaan. Vier liedjies vir Maker
 klink redelik tot jy onthou dat **een video van 30 sekondes 90 krediete is** —
 meer as die hele toelaag wat voorgestel is. Die voorstel was onbruikbaar.
 
-Alles hieronder is die kreatiewe ateljee alleen. Vaste koste R21 759,74,
+Alles hieronder is die kreatiewe ateljee alleen. Vaste koste R21 903,74,
 sonder werkswinkels, geen masterclass-inkomste.
 
 ---
