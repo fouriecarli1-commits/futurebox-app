@@ -211,90 +211,142 @@ export const CREDITS = {
    * the browser sketch, and every cut, fade and caption the device does by
    * itself.
    *
-   * ── How the three numbers below were arrived at ──────────────────────────
+   * ── How these numbers were arrived at, and what was wrong the first time ─
    *
-   * Measured, not chosen. The existing table sells the per-minute audio work
-   * at about **three times** what it costs us (`check:kredietkoste` prints
-   * every multiple), so three is the house rate and these were worked back
-   * from it at the same worst-case credit price that check uses: Maker's
-   * R149 for 90 credits, **R1.656 a credit**, because a Maker member presses
-   * the same buttons as everybody else.
+   * Carli, on the first attempt: *"Die krediete wat ons hef vir die ekstra
+   * produkte is heeltemal te min."*
+   *
+   * She was right, and the error is worth writing down because it is the kind
+   * that looks like arithmetic and is actually a category mistake.
+   *
+   * The first version took "about three times upstream cost" as the house
+   * rate, because that is what stems, cleaning, a voice change, a song and a
+   * half song all come out at. But that cluster is not the house rate. It is
+   * one family: **ElevenLabs per-minute routine work**, where we hand over a
+   * file and get the same file back changed. `check:kredietkoste` prints the
+   * whole table and the rest of it does not look like that at all:
+   *
+   *     five seconds of video      7.2x      the flagship generative product
+   *     dubbing, per minute        6.6x      priced off a known invoice
+   *     a read, per 150 chars      6.0x
+   *     stems / clean / voice      3.0x      the routine-work family
+   *
+   * Everything this app sells as a PRODUCT sits at six to seven times. Only
+   * the commodity file-in-file-out jobs sit at three. Pricing a marketing
+   * plan like a stem separation was the mistake, and pricing a **video**
+   * operation at three times while the app's own video sits at 7.2x was the
+   * same mistake with the evidence sitting one line above it in the check's
+   * own output.
+   *
+   * So these are set against the product family, not the commodity one, and
+   * the two model calls sit above even that. The reason is not cost: it is
+   * that the marketing desk was a real product at R199 a month, and what
+   * replaces a R199 product may not be priced as though it were compute with
+   * a margin on it. Cost-plus is the right floor for a thing nobody was
+   * paying for. It is the wrong floor for a thing somebody was.
+   *
+   * The anchor is the same one the check uses — Maker's R149 for 90 credits,
+   * **R1.656 a credit**, the cheapest credit anybody gets, because a Maker
+   * member presses the same buttons as everybody else.
    */
 
   /**
    * A marketing plan: the market read, the week, and the queue. Per plan.
    *
-   * `/api/plan` runs `claude-opus-5` at `max_tokens: 12000` with high effort,
-   * and output is $25 a million tokens. Priced at the ceiling rather than at
-   * an average, because the ceiling is the only number that is true whatever
-   * comes back:
+   * `/api/plan` runs `claude-opus-5` at `max_tokens: 12000` with high effort.
+   * Priced at the ceiling rather than at an average, because the ceiling is
+   * the only number that is true whatever comes back:
    *
-   *     12 000 output × $25/M = $0.30        → R4.80
-   *        500 input  × $5/M  = $0.0025      → R0.04
-   *     the system prompt is served from the cache
+   *     12 000 output × $25/M = $0.300       → R4.80
+   *      2 000 input  × $5/M  = $0.010       → R0.16
    *                                            ─────
-   *                                            R4.84
+   *                                            R4.96
    *
-   * Ten credits is R16.56 against that, **3.4x** — the house rate, with the
-   * rounding going our way rather than the model's.
+   * The system prompt is about 450 tokens, which is below `FLOOR_TOKENS`, so
+   * `cachedSystem` makes no entry and there is neither a saving nor a write
+   * premium to account for. Worth saying, because the first version of this
+   * sum claimed the system prompt was "served from the cache" — it is not,
+   * and could not be at that size.
    *
-   * Ten is also exactly what a song costs, and that is worth saying out loud
-   * on the card: a month of marketing for a business is priced the same as
-   * one song. R199 a month said something very different about it.
+   * **Forty credits is R66.24 against that, 13.4x.** Above the product family
+   * on purpose. Forty is also a shape rather than a number: Maker's 90 buys
+   * two plans a month, Studio's 190 buys four, Label's 440 buys eleven. A
+   * month's marketing plan is a monthly artefact, and the allowances should
+   * read like that rather than like something you press repeatedly.
+   *
+   * It was 10 — the price of one song — which said a month of marketing for
+   * a business is worth the same as one song. R199 a month had said something
+   * very different, and R199 was the number somebody had actually agreed to.
    */
-  marketPlan: 10,
+  marketPlan: 40,
   /**
    * Eight advert lines written against a brief. Per roll.
    *
    * The same model at `max_tokens: 8000` and medium effort:
    *
-   *      8 000 output × $25/M = $0.20        → R3.20
-   *        500 input  × $5/M  = $0.0025      → R0.04
+   *      8 000 output × $25/M = $0.200       → R3.20
+   *      1 100 input  × $5/M  = $0.0055      → R0.09
    *                                            ─────
-   *                                            R3.24
+   *                                            R3.29
    *
-   * Six credits is R9.93, **3.1x**. Cheaper than the plan because it is a
-   * smaller call, which is the whole reason to price per action instead of
-   * per month: somebody who only ever wants ad lines never pays for the plan.
+   * **Twenty credits is R33.12, 10.1x.** Half the plan, because it is a
+   * smaller call and a smaller thing — which is the whole reason to price per
+   * action rather than per month: somebody who only ever wants ad lines never
+   * pays for the plan they do not use.
+   *
+   * Twice a song, for eight finished lines. It was 6.
    */
-  adLines: 6,
+  adLines: 20,
   /**
-   * Taking the background out of a clip, per minute.
+   * Taking the background out of a clip. **Per five seconds**, not per minute.
    *
-   * fal.ai's VEED video background removal, billed per thirty frames:
-   * $0.008 fast, $0.012 fast with refinement, $0.0225 standard. At 30fps
-   * thirty frames is one second, so the dearest grade is $1.35 a minute —
-   * **R21.60**.
+   * ── The unit was wrong, and that mattered more than the rate ───────────
    *
-   * Priced on the dearest grade that may be picked, for the same reason
-   * `video` is: the queue chooses the engine, and a button promising one
-   * price while the server pays another is the sort of thing people are right
-   * to be angry about.
+   * This was 40 a minute through `perMinute`, which floors at one minute. A
+   * five-second clip — the commonest thing anybody puts through an editor —
+   * was charged a full minute. Upstream does not bill that way and neither
+   * does our own video: fal.ai bill per thirty frames, which at 30fps is one
+   * second, and `videoCost` has always counted in five-second units.
    *
-   *     R21.60 × 3 ÷ R1.656 = 39.1
+   * So it counts in fives now, through `filterCost`. Raising a per-minute
+   * rate while leaving the floor in place would have made a three-second
+   * background removal cost more than a whole song, which is how a feature
+   * ends up switched on and never used.
    *
-   * Forty a minute is R66.22, **3.1x**. It is the dearest per-minute thing in
-   * this table after dubbing, and that is honest rather than unfortunate:
-   * cutting a person out of a moving picture is thirty separate pictures a
-   * second of work. Estimated from a published page rather than an invoice,
-   * and `check:kredietkoste` holds it against that page.
+   * ── The rate ───────────────────────────────────────────────────────────
+   *
+   * fal.ai's VEED video background removal: $0.008 fast, $0.012 fast with
+   * refinement, $0.0225 standard, each per thirty frames. Priced on the
+   * dearest grade that may be picked, for the same reason `video` is — the
+   * queue chooses the engine, and a button promising one price while the
+   * server pays another is the sort of thing people are right to be angry
+   * about.
+   *
+   *     $0.0225 a second × 5 = $0.1125 → R1.80 per five seconds
+   *
+   * **Eight credits is R13.25 against R1.80, 7.4x** — the same multiple as
+   * the app's own video, which is what this is. A minute works out at 96,
+   * against the 40 it was.
+   *
+   * Estimated from a published page rather than an invoice, and
+   * `check:kredietkoste` holds it against that page.
    */
-  cutout: 40,
+  cutout: 8,
   /**
-   * Taking an item out of a clip and filling in what was behind it, per
-   * minute.
+   * Taking an item out of a clip and filling in what was behind it. Per five
+   * seconds, like `cutout`.
    *
-   * The same forty, and deliberately not less. This is a heavier job than
-   * lifting a background — it has to invent what was never filmed — and
-   * nothing published gives a rate for it that this file could defend. So it
-   * is set at the dearest thing in the same family, which is the safe
-   * direction to be wrong in: an over-priced action is a number we lower once
-   * an invoice says so, an under-priced one is a bill at the end of the
-   * month.
+   * **Eleven, and deliberately more than the background.** This is a heavier
+   * job — it has to invent what was never filmed — and nothing published
+   * gives a rate for it that this file could defend. Set above the dearest
+   * thing in the same family, which is the safe direction to be wrong in: an
+   * over-priced action is a number we lower once an invoice says so, an
+   * under-priced one is a bill at the end of the month.
    *
-   * Same reasoning as `clone` and `finetune`, marked the same way.
+   * R18.22 against the background's measured R1.80, **10.1x**. Same reasoning
+   * as `clone` and `finetune`, and marked the same way.
    */
-  erase: 40,
+  erase: 11,
 } as const;
 
 /**
@@ -399,6 +451,35 @@ export function dubCost(seconds: number): number {
  * tier, speech-to-text $3.60 an hour — which is $0.06 a minute and the reason
  * transcribing is the cheapest of the four.
  */
+/**
+ * What an editor filter costs, in the five-second units the engines bill in.
+ *
+ * ── Why this is not `perMinute` ──────────────────────────────────────────
+ *
+ * Because `perMinute` floors at one minute, and that floor is right for the
+ * things it was written for. ElevenLabs bill a voice change or a stem split
+ * against a minute of audio whether the take is twenty seconds or sixty, so
+ * charging for a minute is charging what we are charged.
+ *
+ * A video filter is not billed that way. fal.ai charge per thirty frames —
+ * one second at 30fps — so a five-second clip really does cost us a twelfth
+ * of a minute, and rounding it up to one would be a twelvefold markup hidden
+ * inside a unit. It also happens to be the commonest length anybody puts
+ * through an editor, so that markup would land on almost every press.
+ *
+ * Five rather than one because that is what `videoCost` already counts in,
+ * and because a floor of one second is a button that can be pressed for
+ * nearly nothing forty times while somebody decides.
+ *
+ * The same shape as `videoCost`, deliberately: the desk shows this number and
+ * the route charges this number, from this one function, so they cannot
+ * disagree.
+ */
+export function filterCost(seconds: number, rate: number): number {
+  const units = Math.max(1, Math.ceil(Math.max(0, seconds) / 5));
+  return units * rate;
+}
+
 export function perMinute(seconds: number, rate: number): number {
   const minutes = Math.max(1, Math.ceil(Math.max(0, seconds) / 60));
   return minutes * rate;

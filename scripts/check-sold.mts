@@ -35,7 +35,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { CREDITS, dubCost } from '../app/lib/credits';
+import { CREDITS, TIER_CREDITS, dubCost } from '../app/lib/credits';
 import { ADDONS } from '../app/lib/addons';
 import { TIER_SPECS, type Tier } from '../app/lib/plans';
 
@@ -156,6 +156,34 @@ ok('  and Maker still cannot, which is why its card says so',
   TIER_SPECS.maker.songs * 10 < aMinute
     && TIER_SPECS.maker.includes.some((one) => /starts at Studio/.test(one)),
   `Maker has ${TIER_SPECS.maker.songs * 10} credits against ${aMinute} — if that changed, the card must change with it`);
+
+/* ── And the same arithmetic for everything else a card quotes a price for ─
+
+   The dubbing rule above was written for one line and caught one thing. The
+   prices rose on 24 September — Carli: *"Die krediete wat ons hef vir die
+   ekstra produkte is heeltemal te min"* — and a price rise is exactly when a
+   card starts offering somebody something their month cannot reach.
+
+   The unit matters and is deliberately the unit the CARD quotes. A card that
+   says "8 credits per five seconds" has promised five seconds, not a minute,
+   and holding it to a minute would fail a sentence that is true. A card that
+   says "a month's plan is 40 credits" has promised one plan. So: every tier
+   must afford at least one of every unit its own card names. */
+const QUOTED: { readonly what: string; readonly credits: number }[] = [
+  { what: "a month's marketing plan", credits: CREDITS.marketPlan },
+  { what: 'one roll of advert lines', credits: CREDITS.adLines },
+  { what: 'five seconds with the background out', credits: CREDITS.cutout },
+  { what: 'five seconds with an item out', credits: CREDITS.erase },
+];
+
+for (const tier of ['maker', 'studio', 'label'] as const) {
+  const month = TIER_CREDITS[tier];
+  for (const one of QUOTED) {
+    ok(`${TIER_SPECS[tier].name} can afford ${one.what}, which its card quotes`,
+      month >= one.credits,
+      `${month} credits a month against ${one.credits} — either the price comes down or the card must say which plan it starts at`);
+  }
+}
 
 if (failures) {
   console.log(`\ncheck:sold — ${failures} failure(s).`);

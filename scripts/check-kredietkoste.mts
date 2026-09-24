@@ -72,8 +72,13 @@ const ADS_CALL = paid({ input: 500, output: 8_000, cacheRead: 0, cacheWrite: 0 }
 
 /* fal.ai VEED video background removal, standard grade: $0.0225 per thirty
    frames, which at 30fps is one second. The dearest grade that may be picked,
-   for the reason `CREDITS.video` gives. */
-const CUTOUT_PER_MIN = 0.0225 * 60 * RAND_PER_USD;
+   for the reason `CREDITS.video` gives.
+
+   Per FIVE SECONDS, because that is the unit `filterCost` charges in and a
+   check must measure the unit the till uses. Held per minute here first, it
+   made a five-second background removal look twelve times better value than
+   it is. */
+const CUTOUT_PER_5S = 0.0225 * 5 * RAND_PER_USD;
 
 /**
  * The worst rand-per-credit any tier gets.
@@ -94,26 +99,53 @@ const FLOOR = 1;
 /** Below this it is not losing money but has no room in it. */
 const THIN = 1.8;
 
-const priced: { what: string; credits: number; cost: number }[] = [
-  { what: 'a two-minute song', credits: CREDITS.song, cost: 2 * MUSIC_PER_MIN },
-  { what: 'a one-minute half song', credits: CREDITS.halfSong, cost: MUSIC_PER_MIN },
+/**
+ * The multiple a PRODUCT is expected to clear, as against routine work.
+ *
+ * ── Why this exists ──────────────────────────────────────────────────────
+ *
+ * Carli, 24 September 2026: *"Die krediete wat ons hef vir die ekstra
+ * produkte is heeltemal te min."* She was right, and the table below is what
+ * should have told me so before she did.
+ *
+ * Read it and there are plainly two families. Stems, cleaning, a voice
+ * change, a song and a half song all land on 3.0x — that is ElevenLabs
+ * per-minute routine work, file in and the same file back changed. Everything
+ * sold as a product sits far above it: video at 7.2x, dubbing at 6.6x, a read
+ * at 6.0x.
+ *
+ * The first pricing of the marketing desk and the editor filters took the
+ * 3.0x cluster for "the house rate" and landed all four new actions on it,
+ * including a VIDEO operation while the app's own video sat at 7.2x two lines
+ * up in this check's own output.
+ *
+ * So the distinction is asserted rather than left to be noticed. Nothing
+ * fails on it — a low multiple on a genuinely commodity job is correct — but
+ * a product priced like a stem separation is now printed as such, next to the
+ * number it should have been measured against.
+ */
+const PRODUCT = 6;
+
+const priced: { what: string; credits: number; cost: number; product?: boolean }[] = [
+  { product: true, what: 'a two-minute song', credits: CREDITS.song, cost: 2 * MUSIC_PER_MIN },
+  { product: true, what: 'a one-minute half song', credits: CREDITS.halfSong, cost: MUSIC_PER_MIN },
   { what: 'splitting stems, per minute', credits: CREDITS.stems, cost: STEMS_PER_MIN },
   { what: 'transcribing, per minute', credits: CREDITS.transcribe, cost: SPEECH_PER_MIN },
   { what: 'cleaning a take, per minute', credits: CREDITS.clean, cost: STEMS_PER_MIN },
   { what: 'a voice change, per minute', credits: CREDITS.voiceChange, cost: STEMS_PER_MIN },
   { what: 'singing it, per minute (Kits)', credits: CREDITS.sing, cost: SING_PER_MIN },
-  { what: 'dubbing, per minute', credits: CREDITS.dub, cost: DUB_PER_MIN },
+  { product: true, what: 'dubbing, per minute', credits: CREDITS.dub, cost: DUB_PER_MIN },
   /* `readCost` is one credit per 150 characters with a floor of two, so one
      credit is what 150 characters must cover. */
   { what: 'reading 150 characters', credits: 1, cost: 150 * CHAR },
   /* The three rooms that used to be sold separately, or not at all. Entering
      them is included in every paid plan; generating in them is these. */
-  { what: 'a marketing plan', credits: CREDITS.marketPlan, cost: PLAN_CALL },
-  { what: 'eight advert lines', credits: CREDITS.adLines, cost: ADS_CALL },
-  { what: 'a background taken out, per minute', credits: CREDITS.cutout, cost: CUTOUT_PER_MIN },
+  { product: true, what: 'a marketing plan', credits: CREDITS.marketPlan, cost: PLAN_CALL },
+  { product: true, what: 'eight advert lines', credits: CREDITS.adLines, cost: ADS_CALL },
+  { product: true, what: 'a background taken out, per five seconds', credits: CREDITS.cutout, cost: CUTOUT_PER_5S },
   /* Estimated at the dearest thing in the same family — see `CREDITS.erase`.
      Held against that same rate so it can never quietly fall under it. */
-  { what: 'an item taken out, per minute', credits: CREDITS.erase, cost: CUTOUT_PER_MIN },
+  { product: true, what: 'an item taken out, per five seconds', credits: CREDITS.erase, cost: CUTOUT_PER_5S },
 ];
 
 for (const one of priced) {
@@ -124,6 +156,11 @@ for (const one of priced) {
     say(false, `${line}  ← SOLD BELOW COST`);
   } else if (over < THIN) {
     say(true, `${line}  (thin, but above cost)`);
+  } else if (one.product && over < PRODUCT) {
+    /* Not a failure. A product below the product multiple may be a deliberate
+       loss-leader — but it may equally be the mistake of 24 September, and
+       that one was invisible until somebody said so out loud. */
+    say(true, `${line}  ← priced like routine work, not like a product`);
   } else {
     say(true, line);
   }
