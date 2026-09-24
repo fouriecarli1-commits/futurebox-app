@@ -438,6 +438,8 @@ jobs:
       # answers confidently out of last month's policy.
       - name: The handbook matches the policy pages
         run: npm run check:handbook
+      - name: Everyone who sees a member's data is named on the privacy page
+        run: npm run check:verwerkers
 
       # The terms tell members they may sell what they make. ElevenLabs carves
       # out film, television, radio and studio games, and a member who places a

@@ -36,7 +36,7 @@ export const metadata = {
    Music API terms 2(D) require a privacy policy that says how information is
    shared "including with ElevenLabs and third parties". Naming them in a
    list of suppliers was most of the way there; it was not all of it. */
-const UPDATED = '15 September 2026';
+const UPDATED = '24 September 2026';
 
 /* Same as the terms: contact is a page, not an address. See the note there. */
 const CONTACT_PAGE = '/help';
@@ -73,6 +73,13 @@ export default function Privacy(): React.ReactElement {
           <p><strong className="text-white">Your public profile, if you make one.</strong> A name, an @handle, a short description and links you choose to add. This is meant to be seen — it is how somebody finds you to work with. Songs appear on the collaboration radar only for songs you switch on, one at a time, and switching one off removes it.</p>
           <p><strong className="text-white">Collaboration.</strong> A request between you and one other person, and the messages afterwards. Nobody else can read them, and neither of you can read them before you have both agreed — that is enforced in the database, not by a screen.</p>
           <p><strong className="text-white">What kind of thing you make.</strong> A count. When you finish a song the genre is added to a tally against your account — &ldquo;dubstep, eleven&rdquo; — and when you open a room, the room is. That is the whole of it: a label, how many times, and when it last happened. It is what lets the welcome screen and the copilot suggest the kind of thing you actually make instead of asking every time, and it is why that works on your phone as well as your laptop.<br />What is deliberately not kept is the times themselves. There is no row per song and no row per visit, so no record exists of when you work, how long for, or in what order — the app cannot reconstruct that because it was never written down. You can see the whole tally on your account screen and clear it there, which stops the suggestions and deletes the counts.</p>
+          <p><strong className="text-white">Photographs of people, if you add a cast.</strong> The video desk lets you keep a small cast — a picture and a name for each person a presenter clip can be made of. The picture is kept in the same private bucket as your audio, and when you make a clip it is sent to ElevenLabs to be animated. A photograph of somebody is information about them whether or not they hold the account, which is why the app asks you to confirm the face is yours or that you have their permission before a clip is made, and why that confirmation is kept. Take a cast member out and the picture goes with them.</p>
+          <p><strong className="text-white">Who you work together with.</strong> When two people accept a collaboration and open a shared room, a row records the pair and which room it is. If either of you chooses to share a social link so the two of you can talk elsewhere, that link is kept against the pair and shown to the other person — only to them, and only after you both agreed.</p>
+          <p><strong className="text-white">The live room.</strong> What you post there, what you mark as liked, and a note that you are currently watching. If you report somebody&rsquo;s link, a row records that you reported it — that is how the same link being reported twice takes it down, and it means a report is not anonymous to us even though it is to the person reported.</p>
+          <p><strong className="text-white">Bids on album art.</strong> The once-off fee that makes you a bidder on a piece, every bid you place, and what you won. An auction cannot work without a record of who bid what, and the artist can see the bids on their own piece.</p>
+          <p><strong className="text-white">Anything you queue to post.</strong> The marketing desk can hold a caption and a date so it can remind you when the time comes. What is kept is what you wrote and which platform it is for. It reminds rather than posts — nothing is sent anywhere on your behalf from that queue.</p>
+          <p><strong className="text-white">A word that came out wrong.</strong> If you tell us an Afrikaans word was said badly, what is kept is the word, how you say it should sound, and which room you were in. It is how the pronunciation list gets better, and it is read by a person before anything changes.</p>
+          <p><strong className="text-white">Competitions, if you enter one.</strong> Your entry, and whether it won.</p>
           <p><strong className="text-white">Prompts that were refused.</strong> When the safety check refuses something you asked for, what is written down is the rule that refused it, where in the app it happened, the time, and the first 200 characters of what you typed. Prompts that are allowed are not written down this way, and none of this is read by anybody unless a refusal has to be looked into. It is kept because a platform that says it enforces its rules and cannot show a single instance of doing so is making a claim rather than a statement.</p>
         </Section>
 
@@ -89,8 +96,13 @@ export default function Privacy(): React.ReactElement {
             <li><strong className="text-white">ElevenLabs</strong> — music, voices and trained sounds. Lyrics, style words, recordings of your voice and songs you train on are sent there.</li>
             <li><strong className="text-white">Anthropic</strong> — the copilot and the writing help. What you type into those goes there.</li>
             <li><strong className="text-white">Paystack</strong> — payments. Your email, so a receipt reaches you.</li>
+            <li><strong className="text-white">Kits.AI</strong> — singing conversion. When you put a take through &ldquo;sing it in another voice&rdquo;, the recording of you singing is sent to them. It is a recording of your voice, and everything this page says below about what happens to one applies here too.</li>
+            <li><strong className="text-white">Music.ai</strong> — reading a song. When you ask for the chords, the key, the tempo or where the sections are, the audio is sent to them to be listened to.</li>
+            <li><strong className="text-white">Resend</strong> — email. Your address and the letter itself, whenever anything is sent to you: an invitation, a password reset, a receipt.</li>
+            <li><strong className="text-white">Kling</strong> — video, where a clip is generated on their engine. What you typed to describe the clip goes there.</li>
             <li><strong className="text-white">Google</strong> — only if you choose to sign in with it.</li>
           </ul>
+          <p className="text-zinc-400">Kits.AI, Music.ai, Resend and Kling were added to this list on 24 September 2026, in a legal audit before handing the app over to be rated. They had been receiving what is described above for some time; the list had six names on it and should have had ten. Nothing about what is sent changed — what changed is that this page now says so.</p>
           <p>Nothing is sold, and nothing is handed to an advertiser. There is no advertising on FutureBox to hand it to.</p>
         </Section>
 
@@ -126,6 +138,26 @@ export default function Privacy(): React.ReactElement {
             <li><strong className="text-white">Your voice is treated here as special personal information.</strong> A voice identifies a person the way a fingerprint does, and POPIA puts that in a stricter category than an email address. That is why cloning asks you to confirm in words that the voice is your own, and why that confirmation is stored with the moment you gave it. It is also why the voice features are switched off entirely for anybody under 18 &mdash; the engine&apos;s own rules prohibit sending it a child&apos;s voice, with no parental-permission exception.</li>
           </ul>
           <p>If that is more than you want, you do not have to clone anything. Writing songs, generating music, making videos and running a channel all work without a recording of your voice ever leaving this app.</p>
+
+          {/* ── Added 24 September 2026, in the legal audit ──────────────────
+ 
+              Everything above this line is about ElevenLabs, and it was
+              written when ElevenLabs was the only place a recording of a voice
+              went. It is not any more: the singing conversion sends a take to
+              Kits.AI, which is a second company in a second country.
+ 
+              The honest thing is not to quietly widen the paragraphs above to
+              say "the voice engines" — that would imply the same agreement
+              covers both, and it does not. `docs/KITS-TERME.md` records no
+              data-processing agreement, no retention limit and no basis for
+              the transfer, because there is not one on file. So this says so,
+              in front of the button it applies to, while that is sorted out.
+ 
+              A member deciding whether to put their voice through something is
+              entitled to know which of the two they are dealing with. */}
+          <p className="text-zinc-300"><strong className="text-white">And it is not only the voice engine any more.</strong> Everything above is about ElevenLabs, where a cloned voice goes. Singing conversion &mdash; &ldquo;sing it in another voice&rdquo; &mdash; sends your recording to a different company, Kits.AI, in the United States.</p>
+          <p className="text-zinc-400">We are not going to pretend the same protections cover both. With ElevenLabs there is a signed data-processing agreement, a stated retention limit and standard contractual clauses that POPIA accepts as the basis for the recording leaving the country. With Kits.AI, as of 24 September 2026, <strong className="text-white">we do not have those on file</strong>. Their published terms govern what they do with it, we have asked them for an agreement, and until there is one this page is going to keep saying this rather than leaving you to assume.</p>
+          <p className="text-zinc-400">What that means for you, plainly: if you want your voice to go no further than the engine we have an agreement with, use the voice features and not the singing conversion. Everything else in the booth &mdash; recording, takes, the timeline, mixing &mdash; happens on your own device and sends your voice nowhere at all.</p>
           <p className="text-zinc-400">The full list of companies the voice engine uses behind the scenes is published by them at <span className="text-zinc-300">compliance.elevenlabs.io</span>, and they are required to give us thirty days&apos; notice before adding one. If one of them is ever the reason something here has to change, the date at the top of this page changes with it.</p>
         </Section>
 
