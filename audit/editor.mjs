@@ -166,6 +166,60 @@ try {
     check('taking a piece out leaves the rest',
       (await blocks.count()) === 1,
       `${await blocks.count()} after removing one of two`);
+
+    /* ── And it can be taken back ─────────────────────────────────────
+ 
+       An editor without undo is worse than a booth without one: a split you
+       did not mean and the only way back is bringing the file in again and
+       doing every trim over. So the whole sequence is walked backwards. */
+    await p.locator('[data-editorundo]').click();
+    await p.waitForTimeout(500);
+    check('undo puts the dropped piece back',
+      (await blocks.count()) === 2,
+      `${await blocks.count()} after taking back a removal`);
+
+    await p.locator('[data-editorundo]').click();
+    await p.waitForTimeout(500);
+    check('  and again undoes the split',
+      (await blocks.count()) === 1,
+      `${await blocks.count()} after taking back the split too`);
+
+    await p.locator('[data-editorredo]').click();
+    await p.waitForTimeout(500);
+    check('  and forward puts the split back',
+      (await blocks.count()) === 2,
+      `${await blocks.count()} after stepping forward`);
+
+    /* ── All the way back, and all the way forward again ────────────
+ 
+       The first version of this asserted that the clip survives being taken
+       back to the beginning. That was my assumption and not a rule: every
+       editor lets you undo an import, and this one does.
+ 
+       What matters is that nothing is LOST. So it goes all the way back to
+       an empty clock — which is the state before the clip arrived, and is
+       correct — and then all the way forward, and the film has to come back
+       exactly as it was. A history that empties the room and cannot refill
+       it is the fault; an empty room with a forward button is not. */
+    for (let i = 0; i < 8; i += 1) {
+      await p.locator('[data-editorundo]').click().catch(() => undefined);
+      await p.waitForTimeout(120);
+    }
+    check('  taking it all the way back leaves an empty clock',
+      (await blocks.count()) === 0 && (await p.locator('[data-editorempty]').count()) === 1,
+      `${await blocks.count()} blocks — back past the import should be the room as it opened`);
+
+    check('  and Back is then disabled rather than doing nothing',
+      await p.locator('[data-editorundo]').isDisabled(),
+      'a button that is pressable and does nothing is the failure this app keeps meeting');
+
+    for (let i = 0; i < 8; i += 1) {
+      await p.locator('[data-editorredo]').click().catch(() => undefined);
+      await p.waitForTimeout(120);
+    }
+    check('  and forward brings the whole film back',
+      (await blocks.count()) === 1,
+      `${await blocks.count()} after stepping all the way forward — nothing may be lost on the way back`);
   }
 
   /* ── Nothing the room adds breaks the page it sits on ──────────────── */

@@ -48,7 +48,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
-  Play, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon,
+  Play, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2,
 } from 'lucide-react';
 import Card from './Card';
 import Note from './Note';
@@ -59,6 +59,7 @@ import { loadMark, type Corner } from '../lib/logomark';
 import { fit } from '../lib/imagefile';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { check, type Plan } from '../lib/entitlements';
+import { KEEP_STEPS } from '../lib/undo';
 import {
   NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
   add, change, cutFrom, drop, fadesFor, lengthOfPiece, move, runs, split,
@@ -84,6 +85,64 @@ export default function VideoEditor({
 }): React.ReactElement {
   const { t } = useLang();
   const [edit, setEdit] = useState<Edit>(NOTHING);
+
+  /* ── Taking it back ─────────────────────────────────────────────────────
+ 
+     The Pro Booth got undo in September and an editor without it is worse:
+     a split you did not mean, a piece dropped, and the only way back is to
+     bring the file in again and start the trims over.
+ 
+     Not `lib/undo.ts`, and the reason is worth writing down rather than
+     leaving as an inconsistency. That module is built around what makes
+     audio history dangerous — it weighs each step by DISTINCT AudioBuffer
+     bytes and evicts against a 256MB ceiling, because two lanes can hold two
+     copies of the same minute of sound.
+ 
+     An `Edit` is a list of small objects holding Blob REFERENCES. Twenty
+     steps of it share the same handful of files and weigh nothing. Forcing
+     it through a `Holder` contract that wants `audio: Sound` would mean
+     describing a video clip as a sound to satisfy a type, which is how a
+     module ends up meaning two things.
+ 
+     What IS shared is the depth: `KEEP_STEPS`, so the two rooms in this app
+     that can be taken back are taken back the same number of times. */
+  const [past, setPast] = useState<readonly Edit[]>([]);
+  const [future, setFuture] = useState<readonly Edit[]>([]);
+
+  /** Every change to the film goes through here, so none of them is unrepeatable. */
+  const commit = useCallback((how: (was: Edit) => Edit) => {
+    setEdit((was) => {
+      const next = how(was);
+      if (next === was) return was;
+      setPast((steps) => [...steps, was].slice(-KEEP_STEPS));
+      setFuture([]);
+      return next;
+    });
+  }, []);
+
+  const stepBack = useCallback(() => {
+    setPast((steps) => {
+      if (!steps.length) return steps;
+      const back = steps[steps.length - 1];
+      setEdit((now) => {
+        setFuture((ahead) => [now, ...ahead].slice(0, KEEP_STEPS));
+        return back;
+      });
+      return steps.slice(0, -1);
+    });
+  }, []);
+
+  const stepForward = useCallback(() => {
+    setFuture((ahead) => {
+      if (!ahead.length) return ahead;
+      const forward = ahead[0];
+      setEdit((now) => {
+        setPast((steps) => [...steps, now].slice(-KEEP_STEPS));
+        return forward;
+      });
+      return ahead.slice(1);
+    });
+  }, []);
   const [picked, setPicked] = useState<string>('');
   const [busy, setBusy] = useState<string | null>(null);
   const [problem, setProblem] = useState('');
@@ -182,16 +241,16 @@ export default function VideoEditor({
           to: length,
         });
       }
-      setEdit(next);
+      commit(() => next);
     } finally {
       setBusy(null);
     }
-  }, [edit, t]);
+  }, [edit, commit, t]);
 
   const tweak = useCallback((how: Partial<Omit<Piece, 'id'>>) => {
     if (!piece) return;
-    setEdit((was) => change(was, piece.id, how));
-  }, [piece]);
+    commit((was) => change(was, piece.id, how));
+  }, [piece, commit]);
 
   const preview = useCallback(async () => {
     if (!edit.pieces.length || busy) return;
@@ -276,6 +335,40 @@ export default function VideoEditor({
             />
           </label>
 
+          {/* ── Take it back ────────────────────────────────────────────
+ 
+              Beside the way in rather than beside each thing it undoes: one
+              pair of buttons for the whole room is what every editor does,
+              and a per-control undo is a room full of arrows.
+ 
+              Disabled rather than hidden when there is nothing to take back.
+              A button that appears and disappears moves everything beside it,
+              and on a phone that means pressing the wrong thing. */}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              data-editorundo
+              disabled={past.length === 0}
+              onClick={stepBack}
+              title={t('edit.undo', 'Take back the last change')}
+              className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 disabled:opacity-40 inline-flex items-center gap-1.5"
+            >
+              <Undo2 className="w-4 h-4" />
+              {t('edit.undoShort', 'Back')}
+            </button>
+            <button
+              type="button"
+              data-editorredo
+              disabled={future.length === 0}
+              onClick={stepForward}
+              title={t('edit.redo', 'Put the change back')}
+              className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 disabled:opacity-40 inline-flex items-center gap-1.5"
+            >
+              <Redo2 className="w-4 h-4" />
+              {t('edit.redoShort', 'Forward')}
+            </button>
+          </div>
+
           {/* ── The shape, which changes what you are looking at ────── */}
           <div className="space-y-1.5">
             <span className="text-sm text-zinc-400">{t('edit.shape', 'Shape')}</span>
@@ -288,7 +381,7 @@ export default function VideoEditor({
                     type="button"
                     aria-pressed={on}
                     data-editorshape={one}
-                    onClick={() => setEdit((was) => ({ ...was, shape: one }))}
+                    onClick={() => commit((was) => ({ ...was, shape: one }))}
                     className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold ${
                       on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
                     }`}
@@ -509,7 +602,7 @@ export default function VideoEditor({
             <div className="flex gap-2 flex-wrap">
               <button
                 type="button" data-editorearlier
-                onClick={() => setEdit((was) => move(was, piece.id, 'earlier'))}
+                onClick={() => commit((was) => move(was, piece.id, 'earlier'))}
                 className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -517,7 +610,7 @@ export default function VideoEditor({
               </button>
               <button
                 type="button" data-editorlater
-                onClick={() => setEdit((was) => move(was, piece.id, 'later'))}
+                onClick={() => commit((was) => move(was, piece.id, 'later'))}
                 className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
               >
                 {t('edit.later', 'Later')}
@@ -525,7 +618,7 @@ export default function VideoEditor({
               </button>
               <button
                 type="button" data-editorsplit
-                onClick={() => setEdit((was) => split(was, piece.id, piece.from + lengthOfPiece(piece) / 2))}
+                onClick={() => commit((was) => split(was, piece.id, piece.from + lengthOfPiece(piece) / 2))}
                 className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
               >
                 <Scissors className="w-4 h-4" />
@@ -533,7 +626,7 @@ export default function VideoEditor({
               </button>
               <button
                 type="button" data-editordrop
-                onClick={() => setEdit((was) => drop(was, piece.id))}
+                onClick={() => commit((was) => drop(was, piece.id))}
                 className="min-h-[44px] rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-2 text-sm font-semibold text-rose-300 inline-flex items-center gap-1.5"
               >
                 <Trash2 className="w-4 h-4" />
@@ -557,7 +650,7 @@ export default function VideoEditor({
               type="file" accept="audio/*" className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) setEdit((was) => ({ ...was, under: file }));
+                if (file) commit((was) => ({ ...was, under: file }));
                 e.target.value = '';
               }}
             />
@@ -570,7 +663,7 @@ export default function VideoEditor({
                 type="range" min={0} max={2} step={0.05}
                 value={edit.underLoud ?? 1}
                 data-editorunderloud
-                onChange={(e) => setEdit((was) => ({ ...was, underLoud: Number(e.target.value) }))}
+                onChange={(e) => commit((was) => ({ ...was, underLoud: Number(e.target.value) }))}
                 className="w-32 accent-emerald-500"
               />
             </label>
@@ -663,7 +756,7 @@ export default function VideoEditor({
                 type="range" min={0} max={LONGEST_FADE} step={0.1}
                 value={edit.fadeIn ?? 0}
                 data-editorfadein
-                onChange={(e) => setEdit((was) => ({ ...was, fadeIn: Number(e.target.value) }))}
+                onChange={(e) => commit((was) => ({ ...was, fadeIn: Number(e.target.value) }))}
                 className="w-full accent-emerald-500"
               />
               <span className="block text-sm text-zinc-500">{seconds(fades.in)}</span>
@@ -674,7 +767,7 @@ export default function VideoEditor({
                 type="range" min={0} max={LONGEST_FADE} step={0.1}
                 value={edit.fadeOut ?? 0}
                 data-editorfadeout
-                onChange={(e) => setEdit((was) => ({ ...was, fadeOut: Number(e.target.value) }))}
+                onChange={(e) => commit((was) => ({ ...was, fadeOut: Number(e.target.value) }))}
                 className="w-full accent-emerald-500"
               />
               <span className="block text-sm text-zinc-500">{seconds(fades.out)}</span>

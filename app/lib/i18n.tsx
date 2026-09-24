@@ -684,6 +684,22 @@ export const STRINGS: Dict = {
   "art.standing": { en: "Highest bid", af: "Hoogste bod" },
   "art.oneBid": { en: "bid", af: "bod" },
 
+  "edit.undo": {
+    en: "Take back the last change",
+    af: "Vat die laaste verandering terug",
+  },
+  "edit.undoShort": {
+    en: "Back",
+    af: "Terug",
+  },
+  "edit.redo": {
+    en: "Put the change back",
+    af: "Sit die verandering terug",
+  },
+  "edit.redoShort": {
+    en: "Forward",
+    af: "Vorentoe",
+  },
   "edit.mark": {
     en: "Your mark in the corner",
     af: "Jou merk in die hoek",
