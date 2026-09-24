@@ -684,6 +684,34 @@ export const STRINGS: Dict = {
   "art.standing": { en: "Highest bid", af: "Hoogste bod" },
   "art.oneBid": { en: "bid", af: "bod" },
 
+  "edit.mark": {
+    en: "Your mark in the corner",
+    af: "Jou merk in die hoek",
+  },
+  "edit.markAdd": {
+    en: "Put a logo on it",
+    af: "Sit \u2019n logo daarop",
+  },
+  "edit.markBad": {
+    en: "That picture could not be read.",
+    af: "Daardie prent kon nie gelees word nie.",
+  },
+  "edit.topLeft": {
+    en: "Top left",
+    af: "Links bo",
+  },
+  "edit.topRight": {
+    en: "Top right",
+    af: "Regs bo",
+  },
+  "edit.bottomLeft": {
+    en: "Bottom left",
+    af: "Links onder",
+  },
+  "edit.bottomRight": {
+    en: "Bottom right",
+    af: "Regs onder",
+  },
   "edit.playPiece": {
     en: "Play this piece",
     af: "Speel hierdie stuk",

@@ -48,13 +48,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
-  Play, Plus, Volume2, VolumeX, Type, Sparkles, Lock,
+  Play, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon,
 } from 'lucide-react';
 import Card from './Card';
 import Note from './Note';
 import { useLang } from '../lib/i18n';
 import { FILTERS, filterCss, filterName } from '../lib/videofilters';
 import { canStitch, lengthOf, stitch } from '../lib/stitch';
+import { loadMark, type Corner } from '../lib/logomark';
+import { fit } from '../lib/imagefile';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { check, type Plan } from '../lib/entitlements';
 import {
@@ -115,6 +117,21 @@ export default function VideoEditor({
   /* One object URL at a time, revoked when the picked piece changes. A
      viewer that makes a new URL per render leaks one per keystroke on the
      trim boxes, which on a phone is how a tab gets killed mid-edit. */
+  /* ── Your own mark on the film ──────────────────────────────────────────
+ 
+     Carli asked for "om 'n item in te sit". The useful version of that, and
+     the one that needs no engine, is a logo: `stitch.ts` has painted a mark
+     into the corner of every frame since September and `logomark.ts` loads
+     it. Nothing new is being built here — it is being reached.
+ 
+     Kept as a loaded `HTMLImageElement` rather than on the `Edit`, because
+     `cutFrom` is pure and synchronous and loading an image is neither. The
+     edit stays a description of the film; this is the one piece of it that
+     has to be decoded before it can be drawn. */
+  const [mark, setMark] = useState<HTMLImageElement | null>(null);
+  const [markName, setMarkName] = useState('');
+  const [corner, setCorner] = useState<Corner>('bottomRight');
+
   const viewer = useRef<HTMLVideoElement | null>(null);
   const [source, setSource] = useState<string | null>(null);
   useEffect(() => {
@@ -181,7 +198,7 @@ export default function VideoEditor({
     setProblem('');
     setBusy('make');
     try {
-      const result = await stitch(cutFrom(edit));
+      const result = await stitch({ ...cutFrom(edit), mark, markCorner: corner });
       if (!result.ok) {
         setProblem(
           result.why === 'unsupported'
@@ -198,7 +215,7 @@ export default function VideoEditor({
     } finally {
       setBusy(null);
     }
-  }, [edit, busy, t]);
+  }, [edit, busy, mark, corner, t]);
 
   if (!allowed) {
     return (
@@ -558,6 +575,83 @@ export default function VideoEditor({
               />
             </label>
           )}
+
+          {/* ── A mark in the corner ──────────────────────────────────
+ 
+              Sized and placed by `logomark.ts`, which every other route that
+              brands a clip already uses. Same share of the frame, same
+              inset, same opacity — a second set of numbers here would mean a
+              logo that sits in one place on a video desk clip and another
+              place on an edited one. */}
+          <div className="space-y-2">
+            <span className="text-sm text-zinc-400 inline-flex items-center gap-1.5">
+              <ImageIcon className="w-3.5 h-3.5" />
+              {t('edit.mark', 'Your mark in the corner')}
+            </span>
+            <label
+              data-editormark
+              className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 cursor-pointer hover:border-zinc-600"
+            >
+              <Plus className="w-4 h-4" />
+              {markName || t('edit.markAdd', 'Put a logo on it')}
+              <input
+                type="file" accept="image/*" className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = '';
+                  if (!file) return;
+                  /* Through `fit` rather than straight into a FileReader.
+ 
+                     `check:photopath` caught the first version: a photograph
+                     off a modern phone is two hundred megapixels and ten
+                     megabytes, a byte ceiling lets it through, and the decode
+                     kills the tab — a white screen with nothing in the
+                     console. Every other picture input in this app goes
+                     through the same function, so a logo behaves here the way
+                     it behaves in Cast.
+ 
+                     The mark is painted at 16% of the frame's width
+                     (`MARK_SHARE`), so 1024 on the longest edge is more than
+                     it can ever use. */
+                  void fit(file, 1024).then((made) => {
+                    if (!made.ok) {
+                      setProblem(t('edit.markBad', 'That picture could not be read.'));
+                      return;
+                    }
+                    void loadMark(made.preview).then((img) => {
+                      if (!img) {
+                        setProblem(t('edit.markBad', 'That picture could not be read.'));
+                        return;
+                      }
+                      setMark(img);
+                      setMarkName(file.name.replace(/\.[^.]+$/, ''));
+                    });
+                  });
+                }}
+              />
+            </label>
+            {mark && (
+              <div className="flex gap-2 flex-wrap">
+                {(['topLeft', 'topRight', 'bottomLeft', 'bottomRight'] as Corner[]).map((one) => (
+                  <button
+                    key={one}
+                    type="button"
+                    aria-pressed={corner === one}
+                    data-editorcorner={one}
+                    onClick={() => setCorner(one)}
+                    className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
+                      corner === one ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                    }`}
+                  >
+                    {one === 'topLeft' ? t('edit.topLeft', 'Top left')
+                      : one === 'topRight' ? t('edit.topRight', 'Top right')
+                      : one === 'bottomLeft' ? t('edit.bottomLeft', 'Bottom left')
+                      : t('edit.bottomRight', 'Bottom right')}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Fades. Clamped by `fadesFor`, which also stops the two of them
               together being longer than the film — a two-second fade each end
