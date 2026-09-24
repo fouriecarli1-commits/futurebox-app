@@ -4123,6 +4123,7 @@ export default function FutureBoxHome() {
             )}
             {studioTab === 'booth' && (
               <Booth
+                onUpgrade={() => setPricingModalOpen(true)}
                 onGoToMake={() => goToRoom('make')}
                 onMade={(track) => {
                   setMadeTrack(track);

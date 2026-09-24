@@ -684,6 +684,16 @@ export const STRINGS: Dict = {
   "art.standing": { en: "Highest bid", af: "Hoogste bod" },
   "art.oneBid": { en: "bid", af: "bod" },
 
+  /* The Pro Booth door, gated 24 September 2026. */
+  "booth.proPaid": {
+    en: "Lanes, the grid, mixing, mastering and undo. It comes with every paid plan; this room, with the words on screen, stays free.",
+    af: "Bane, die rooster, meng, masterklank en terugvat. Dit kom met elke betaalde plan; hierdie kamer, met die woorde op die skerm, bly gratis.",
+  },
+  "booth.proLocked": {
+    en: "Lanes and mixing \u2014 on a plan",
+    af: "Bane en meng \u2014 op \u2019n plan",
+  },
+
   /* ── The video editor, 24 September 2026 ──────────────────────────────
      A room that opens in English because nobody wrote the other half is a
      room that is not finished. `check:afrikaans` caught every one of these

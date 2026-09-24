@@ -65,6 +65,29 @@ ok('  and the ordinary Booth is not gated at all',
   ENTITLEMENTS['booth.pro'].freeNote.toLowerCase().includes('free'),
   'the free note is what tells somebody what they keep');
 
+/* ── And the doors have to READ the table ─────────────────────────────────
+
+   The three rules above say the table is right. They were all green while
+   `ProBooth` had no gate of any kind and the room opened for anybody, which
+   made four plan cards say something untrue.
+
+   A table nobody consults is a table that is right about nothing. So the
+   door is read too: it must ask `check('booth.pro', …)` and it must offer a
+   way to the plans when the answer is no. */
+const door = readFileSync('app/components/VocalBooth.tsx', 'utf8');
+ok('the Pro Booth door asks the table before it opens',
+  /check\(\s*'booth\.pro'/.test(door),
+  'the cards sell it as a paid-plan room and the door lets everybody in');
+
+ok('  and sends a free member to the plans instead of nowhere',
+  /onUpgrade\?\.\(\)/.test(door) && /data-probooth/.test(door),
+  'a door that refuses and offers nothing is a button that does nothing');
+
+const editorDoor = readFileSync('app/components/VideoEditor.tsx', 'utf8');
+ok('the editor asks the same table',
+  /check\(\s*'video\.editor'/.test(editorDoor),
+  'same rule, same row, same failure if it stops asking');
+
 if (bad > 0) {
   console.log(`\ncheck:editorgate — ${bad} problem(s) between what the cards sell and what the rooms open.`);
   process.exitCode = 1;

@@ -139,11 +139,14 @@ function WhatItIs(): React.ReactElement {
 export default function Booth({
   onGoToMake,
   onMade,
+  onUpgrade,
 }: {
   /** There is nothing to sing on until a song exists. */
   onGoToMake: () => void;
   /** Fires when a sung mix lands, so the studio can offer what comes next. */
   onMade: (track: Track) => void;
+  /** Opens the plans, for the Pro Booth door on a free plan. */
+  onUpgrade?: () => void;
 }): React.ReactElement {
   const { t } = useLang();
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -318,6 +321,7 @@ export default function Booth({
       {/* Full screen and over everything: singing wants the whole window. */}
       {open && (
         <VocalBooth
+          onUpgrade={onUpgrade}
           track={open.track}
           music={open.music}
           startTake={open.take}

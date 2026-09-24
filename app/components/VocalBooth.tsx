@@ -28,7 +28,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { barClearance } from './TabBar';
-import { ArrowLeft, Check, ChevronDown, Circle, Ear, Layers, Loader2, Mic, Music2, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, Circle, Ear, Layers, Loader2, Lock, Mic, Music2, Pause, Play, Scissors, Sliders, Sparkles, Square, Users, Wand2, X } from 'lucide-react';
 import { decode, knownLatency, mixdown } from '../lib/mixdown';
 import { encodeWav } from '../lib/wav';
 import { accessToken } from '../lib/cloud';
@@ -53,6 +53,8 @@ import Hint from './Hint';
 import Staff from './Staff';
 import Cost from './Cost';
 import ProBooth from './ProBooth';
+import { check } from '../lib/entitlements';
+import { usePlan } from '../lib/useplan';
 import Card from './Card';
 import { alignTo, fitInto, partsOf, timelineOf, wordsOf, type Part, type TimedLine } from '../lib/timeline';
 import { vocalSpanOf } from '../lib/vocalspan';
@@ -82,6 +84,7 @@ export default function VocalBooth({
   onKeep,
   onSplit,
   onClose,
+  onUpgrade,
 }: {
   track: Track;
   /** The backing to sing over. */
@@ -101,8 +104,11 @@ export default function VocalBooth({
   /** Told once the song has been split, so the track can remember it. */
   onSplit?: () => void;
   onClose: () => void;
+  /** Opens the plans. The Pro Booth door calls it where the plan is Free. */
+  onUpgrade?: () => void;
 }): React.ReactElement {
   const { t } = useLang();
+  const plan = usePlan();
 
   /* The booth. It is the overlay the Pro Booth opens from, so without a layer
      of its own Back would skip past it to the room underneath. */
@@ -1046,6 +1052,11 @@ export default function VocalBooth({
     'flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 ' +
     'text-sm font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.45)]';
 
+  /* Asked here rather than threaded down from `page.tsx`: this room is
+     mounted by both `Booth` and `MakeMusic`, and neither has any other reason
+     to know what somebody pays. See `lib/useplan.ts`. */
+  const proAllowed = check('booth.pro', plan).allowed;
+
   if (proOpen) {
     return (
       <ProBooth
@@ -1963,14 +1974,39 @@ export default function VocalBooth({
               costs you, because both halves are the decision. Naming the trade
               on the way in is cheaper than a way back on the far side, and
               there is now one of those too. */}
+          {/* ── The door, and the gate on it ────────────────────────────
+ 
+              Every plan card says the Pro Booth comes with a paid plan. Until
+              24 September 2026 nothing in the code agreed: the room opened
+              for anybody, which made four cards say something untrue.
+ 
+              The gate is on the DOOR rather than inside the room, so somebody
+              on Free meets it before they have set anything up rather than
+              after. And it is drawn as a door with a handle — the trade named
+              and a way to the plans — because a button that does nothing is
+              the failure this app keeps running into.
+ 
+              It decides which screen to draw and nothing more. Everything in
+              the Pro Booth that costs money — stems, cleaning, a voice change
+              — asks the server for itself, and the server does not take this
+              browser's word for anything. */}
           <button
             type="button"
-            onClick={() => setProOpen(true)}
-            title={t('booth.proWhat', 'Many lanes, cutting, tone and mixing. The words are not on screen there — this room is where you sing along with them.')}
-            className={`${BAR} bg-zinc-900 border-zinc-700 text-zinc-200`}
+            data-probooth
+            onClick={() => (proAllowed ? setProOpen(true) : onUpgrade?.())}
+            title={
+              proAllowed
+                ? t('booth.proWhat', 'Many lanes, cutting, tone and mixing. The words are not on screen there — this room is where you sing along with them.')
+                : t('booth.proPaid', 'Lanes, the grid, mixing, mastering and undo. It comes with every paid plan; this room, with the words on screen, stays free.')
+            }
+            className={`${BAR} ${
+              proAllowed
+                ? 'bg-zinc-900 border-zinc-700 text-zinc-200'
+                : 'bg-zinc-900 border-emerald-600/50 text-emerald-300'
+            }`}
           >
-            <Layers className="w-4 h-4" />
-            {t('booth.pro', 'Lanes and mixing')}
+            {proAllowed ? <Layers className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+            {proAllowed ? t('booth.pro', 'Lanes and mixing') : t('booth.proLocked', 'Lanes and mixing — on a plan')}
           </button>
 
           <button

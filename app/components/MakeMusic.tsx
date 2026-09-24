@@ -904,6 +904,7 @@ export default function MakeMusic({
           panel inside a form. */}
       {takeFor && (
         <VocalBooth
+          onUpgrade={onUpgrade}
           track={takeFor.track}
           music={takeFor.music}
           startTake={takeFor.take ?? null}
