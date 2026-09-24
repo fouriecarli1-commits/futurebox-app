@@ -1006,6 +1006,108 @@ say('nie buitengewoon nie. Een regte ElevenLabs-faktuur met video daarop besleg'
 say('dit, en niks anders sal nie.');
 say('');
 
+/* ═══════════════════════════════════════════════════════════════════════
+   DIE PRYS VAN 'N LIED — uitgewerk, 24 September 2026
+   ═══════════════════════════════════════════════════════════════════════
+
+   Carli: *"Maak die lied ook reg, werk daai prys uit."*
+
+   Dit volg op die tabel hierbo, waar 'n lied op 3,0x uitkom terwyl elke
+   ander PRODUK op ses tot sewe sit. Die gevolgtrekking lyk
+   vanselfsprekend: maak dit twintig krediete.
+
+   Die som sê iets anders, en dit staan hier uitgewerk eerder as in 'n
+   gesprek verlore. */
+
+const SONG_OPTIONS = [10, 15, 20, 23] as const;
+
+/** Wat die kapasiteit word as 'n lied N krediete kos, alles anders gelyk. */
+const capacityAt = (songCredits: number, scenario: Scenario): number => {
+  const elPerFb = (EL_CREDITS_PER_MINUTE * SONG_MINUTES) / songCredits;
+  const own = (['maker', 'studio', 'label'] as const).reduce(
+    (sum, tier) => sum + TIER_CREDITS[tier] * scenario.use * elPerFb * MIX[tier],
+    0,
+  );
+  const tail = FREE_PER_PAYING * scenario.freeCredits * scenario.freeUse * elPerFb;
+  return Math.floor(EL_PLANS[3].credits / (own + tail));
+};
+
+const realistic = SCENARIOS.find((one) => !one.workshops && one.name.startsWith('Realisties'))!;
+const songRand = 2 * EL_MUSIC_MIN;
+const WORST_RATE = Math.min(
+  ...(['maker', 'studio', 'label'] as const).map((t) => TIER_SPECS[t].rand / TIER_CREDITS[t]),
+);
+
+say('## Die prys van \'n lied, uitgewerk');
+say('');
+say('Gevra op 24 September 2026, nadat die tabel hierbo gewys het dat \'n lied');
+say('op 3,0x sit terwyl elke ander produk op ses tot sewe is.');
+say('');
+say('**Die vanselfsprekende antwoord is verkeerd, en dit is die moeite werd om');
+say('te weet hoekom.**');
+say('');
+say('### Wat \'n duurder lied WEL doen, en wat nie');
+say('');
+say('Die plan is vooruitbetaalde kapasiteit. R18 216 koop 6 000 000 krediete,');
+say('en \'n lid wat hulle opbrand kos niks verder totdat die plan opraak nie —');
+say('dít is die hele rede waarom `check:koste` \'n reël het dat wins per lid die');
+say('intekening min die betaalpoort is, **en niks anders nie**.');
+say('');
+say('So \'n duurder lied voeg **nie een sent** by die wins per lid nie. Wat dit');
+say('doen, is dat elke lid minder van die emmer opvreet — dus hou die plan meer');
+say('lede voor bykoop begin.');
+say('');
+say('| \'n Lied kos | Marge | Maker kry | Studio kry | Label kry | Plek vir |');
+say('|---|---|---|---|---|---|');
+for (const n of SONG_OPTIONS) {
+  const mult = (n * WORST_RATE) / songRand;
+  const mark = n === CREDITS.song ? ' **(nou)**' : '';
+  say(
+    `| ${n} kr${mark} — ${dec(mult, 1)}x | ${rand(272.06)} | ` +
+      `${Math.floor(TIER_CREDITS.maker / n)} liedjies | ${Math.floor(TIER_CREDITS.studio / n)} | ` +
+      `${Math.floor(TIER_CREDITS.label / n)} | ${count(capacityAt(n, realistic))} lede |`,
+  );
+}
+say('');
+say('*Marge is by elke een dieselfde, want dit is die intekening min die poort.*');
+say('');
+say('### Wat dit kos om dit te doen');
+say('');
+say('Gelykbreek bly **81 lede**, by elke prys in daardie tabel, want gelykbreek');
+say('is vaste koste gedeel deur wins per lid en nie een van die twee beweeg nie.');
+say('');
+say(`Wat wel beweeg is die aanbod. By twintig krediete kry \'n Maker-lid`);
+say(`**${Math.floor(TIER_CREDITS.maker / 20)} liedjies vir R${TIER_SPECS.maker.rand}** in plaas van`);
+say(`${Math.floor(TIER_CREDITS.maker / 10)} — R${dec(TIER_SPECS.maker.rand / Math.floor(TIER_CREDITS.maker / 20), 0)} \'n lied.`);
+say('');
+say('En dit is \'n prysverhoging op wat elke bestaande lid reeds gekoop het.');
+say('`credits.ts` het sedert 8 September \'n nota gedra wat presies dit sê.');
+say('');
+say('### Verloor ons geld teen tien?');
+say('');
+const payg = 0.000165 * RAND_PER_USD;
+const songPayg = EL_CREDITS_PER_MINUTE * SONG_MINUTES * payg;
+say('Nee, en dit is die syfer wat die saak besleg. Bo die plan se dak koop sy');
+say(`by teen ElevenLabs se eie koers van R${dec(payg, 6)} per krediet, wat \'n lied`);
+say(`op **${rand(songPayg)}** te staan bring — teen die **${rand(10 * WORST_RATE)}** wat tien`);
+say(`krediete op Maker verkoop. ${dec((10 * WORST_RATE) / songPayg, 1)}x, selfs daar.`);
+say('');
+say('\'n Lied teen tien krediete maak geld op elke pad: binne die plan gratis om');
+say('te bedien, en bo die dak steeds drie keer sy koste. Dit is nie \'n lek nie.');
+say('');
+say('### Die aanbeveling');
+say('');
+say('**Laat dit op tien.** Die 3,0x wat in die tabel hierbo staan is nie \'n fout');
+say('soos die advertensiedesk s\'n was nie. Die desk het \'n R199-produk vervang en');
+say('koste-plus het regte waarde vernietig. \'n Lied is die ding waarin die plan');
+say('se krediete GEDENOMINEER is — die tien is nie \'n prys wat teen koste gestel');
+say('is nie, dit is die eenheid waarteen die toelae self gemeet is.');
+say('');
+say(`Die een geval waar dit saak maak: bo **${count(capacityAt(10, realistic))} betalende lede**,`);
+say('wat vier keer gelykbreek is. As daardie dag kom, is twintig krediete die');
+say('regte skuif en hierdie tabel is die som. Tot dan koop dit niks en kos dit');
+say('die helfte van die aanbod.');
+say('');
 writeFileSync(new URL('../docs/KOSTE-EN-WINS.md', import.meta.url), out.join('\n') + '\n');
 
 /* ─────────────────────────────────────────────── kort op die skerm ──── */

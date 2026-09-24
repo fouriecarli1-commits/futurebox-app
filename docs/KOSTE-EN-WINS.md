@@ -456,3 +456,66 @@ veertig keer duurder is as wat hier staan, is dit steeds winsgewend maar
 nie buitengewoon nie. Een regte ElevenLabs-faktuur met video daarop besleg
 dit, en niks anders sal nie.
 
+## Die prys van 'n lied, uitgewerk
+
+Gevra op 24 September 2026, nadat die tabel hierbo gewys het dat 'n lied
+op 3,0x sit terwyl elke ander produk op ses tot sewe is.
+
+**Die vanselfsprekende antwoord is verkeerd, en dit is die moeite werd om
+te weet hoekom.**
+
+### Wat 'n duurder lied WEL doen, en wat nie
+
+Die plan is vooruitbetaalde kapasiteit. R18 216 koop 6 000 000 krediete,
+en 'n lid wat hulle opbrand kos niks verder totdat die plan opraak nie —
+dít is die hele rede waarom `check:koste` 'n reël het dat wins per lid die
+intekening min die betaalpoort is, **en niks anders nie**.
+
+So 'n duurder lied voeg **nie een sent** by die wins per lid nie. Wat dit
+doen, is dat elke lid minder van die emmer opvreet — dus hou die plan meer
+lede voor bykoop begin.
+
+| 'n Lied kos | Marge | Maker kry | Studio kry | Label kry | Plek vir |
+|---|---|---|---|---|---|
+| 10 kr **(nou)** — 3,0x | R272,06 | 9 liedjies | 19 | 44 | 358 lede |
+| 15 kr — 4,5x | R272,06 | 6 liedjies | 12 | 29 | 537 lede |
+| 20 kr — 6,0x | R272,06 | 4 liedjies | 9 | 22 | 716 lede |
+| 23 kr — 6,9x | R272,06 | 3 liedjies | 8 | 19 | 824 lede |
+
+*Marge is by elke een dieselfde, want dit is die intekening min die poort.*
+
+### Wat dit kos om dit te doen
+
+Gelykbreek bly **81 lede**, by elke prys in daardie tabel, want gelykbreek
+is vaste koste gedeel deur wins per lid en nie een van die twee beweeg nie.
+
+Wat wel beweeg is die aanbod. By twintig krediete kry 'n Maker-lid
+**4 liedjies vir R149** in plaas van
+9 — R37 'n lied.
+
+En dit is 'n prysverhoging op wat elke bestaande lid reeds gekoop het.
+`credits.ts` het sedert 8 September 'n nota gedra wat presies dit sê.
+
+### Verloor ons geld teen tien?
+
+Nee, en dit is die syfer wat die saak besleg. Bo die plan se dak koop sy
+by teen ElevenLabs se eie koers van R0,002640 per krediet, wat 'n lied
+op **R4,75** te staan bring — teen die **R16,56** wat tien
+krediete op Maker verkoop. 3,5x, selfs daar.
+
+'n Lied teen tien krediete maak geld op elke pad: binne die plan gratis om
+te bedien, en bo die dak steeds drie keer sy koste. Dit is nie 'n lek nie.
+
+### Die aanbeveling
+
+**Laat dit op tien.** Die 3,0x wat in die tabel hierbo staan is nie 'n fout
+soos die advertensiedesk s'n was nie. Die desk het 'n R199-produk vervang en
+koste-plus het regte waarde vernietig. 'n Lied is die ding waarin die plan
+se krediete GEDENOMINEER is — die tien is nie 'n prys wat teen koste gestel
+is nie, dit is die eenheid waarteen die toelae self gemeet is.
+
+Die een geval waar dit saak maak: bo **358 betalende lede**,
+wat vier keer gelykbreek is. As daardie dag kom, is twintig krediete die
+regte skuif en hierdie tabel is die som. Tot dan koop dit niks en kos dit
+die helfte van die aanbod.
+

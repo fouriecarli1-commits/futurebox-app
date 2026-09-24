@@ -24,10 +24,53 @@
  * profit sums, and the short version is that the free tier can no longer be
  * given music.
  *
- * The scale below has deliberately *not* been moved yet. Ten credits for a
- * song is what everybody who has bought credits has been charged, and moving
- * it is a price rise that belongs in its own decision rather than in a
- * comment repair.
+ * The scale below has deliberately *not* been moved. Ten credits for a song
+ * is what everybody who has bought credits has been charged, and moving it is
+ * a price rise that belongs in its own decision rather than in a comment
+ * repair.
+ *
+ * ── That decision was taken on 24 September 2026, and the answer was no ──
+ *
+ * Carli: *"Maak die lied ook reg, werk daai prys uit."* It came after the new
+ * cost table showed a song at 3.0x while every other PRODUCT sits at six to
+ * seven, which makes twenty credits look obvious.
+ *
+ * It is not, and the reason is worth keeping here because it will look
+ * obvious again:
+ *
+ * **The plan is prepaid capacity.** R18 216 buys 6 000 000 ElevenLabs
+ * credits, and a member spending them costs nothing further until the plan
+ * runs out. `check:koste` asserts this as a rule — profit per paying member
+ * is the subscription minus the payment gateway, and nothing else — because
+ * the model once deducted supplier cost on both sides of one division and
+ * cost itself 18 members of break-even.
+ *
+ * So a dearer song adds **nothing** to profit per member. What it changes:
+ *
+ *     a song at     margin     Maker gets     the plan holds
+ *        10 cr      R272,06      9 songs        358 members
+ *        20 cr      R272,06      4 songs        716 members
+ *
+ * Break-even stays at 81 members either way. The whole effect is headroom —
+ * how many members fit before top-ups start — bought by halving what every
+ * plan visibly delivers.
+ *
+ * And it is not a leak even above the ceiling: ElevenLabs' own top-up rate is
+ * $0.000165 a credit, so a song bought beyond the plan costs R4.75 against
+ * the R16.56 ten credits sell for on Maker. Three and a half times, at the
+ * worst point on the curve.
+ *
+ * The 3.0x is not the marketing desk's mistake wearing a different hat. That
+ * desk replaced a R199-a-month product and cost-plus destroyed real value. A
+ * song is the unit the plan's allowances are DENOMINATED in — the ten was
+ * never a price set against cost, it is the measure the allowances were sized
+ * against.
+ *
+ * **The trigger, if it ever comes: 358 paying members**, four times
+ * break-even. That is where the plan runs dry and twenty credits becomes the
+ * right move. `docs/KOSTE-EN-WINS.md` carries the whole table under "Die prys
+ * van 'n lied, uitgewerk" and regenerates it from these constants, so the sum
+ * is never more than `npm run costs:eleven` away.
  *
  * The rest — reading a script, cloning a voice, training a sound — are priced
  * from estimates, marked below, and set deliberately high. Under-pricing an
