@@ -683,6 +683,171 @@ export const STRINGS: Dict = {
   "art.opensAt": { en: "Bidding opens at", af: "Bod maak oop by" },
   "art.standing": { en: "Highest bid", af: "Hoogste bod" },
   "art.oneBid": { en: "bid", af: "bod" },
+
+  /* ── The video editor, 24 September 2026 ──────────────────────────────
+     A room that opens in English because nobody wrote the other half is a
+     room that is not finished. `check:afrikaans` caught every one of these
+     before the build, which is what it is for. */
+  "edit.title": {
+    en: "Video editor",
+    af: "Video-redigeerder",
+  },
+  "edit.what": {
+    en: "Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device \u2014 no credits, no queue, no waiting.",
+    af: "Bring jou eie knipsels in, sny hulle op die klok, en vat die film uit. Alles op hierdie bladsy gebeur op jou eie toestel \u2014 geen krediete, geen tou, geen wag nie.",
+  },
+  "edit.bring": {
+    en: "Bring clips in",
+    af: "Bring knipsels in",
+  },
+  "edit.shape": {
+    en: "Shape",
+    af: "Vorm",
+  },
+  "edit.tall": {
+    en: "Tall",
+    af: "Lank",
+  },
+  "edit.wide": {
+    en: "Wide",
+    af: "Wyd",
+  },
+  "edit.square": {
+    en: "Square",
+    af: "Vierkant",
+  },
+  "edit.clock": {
+    en: "The clock",
+    af: "Die klok",
+  },
+  "edit.nothing": {
+    en: "Nothing on the clock yet. Bring a clip in and it appears here as a block you can cut.",
+    af: "Nog niks op die klok nie. Bring ’n knipsel in en dit verskyn hier as ’n blok wat jy kan sny.",
+  },
+  "edit.from": {
+    en: "Starts at",
+    af: "Begin by",
+  },
+  "edit.to": {
+    en: "Ends at",
+    af: "Eindig by",
+  },
+  "edit.look": {
+    en: "Look",
+    af: "Voorkoms",
+  },
+  "edit.words": {
+    en: "Words on screen",
+    af: "Woorde op die skerm",
+  },
+  "edit.wordsAsk": {
+    en: "Up for as long as this piece is",
+    af: "Bly op solank hierdie stuk loop",
+  },
+  "edit.soundOn": {
+    en: "Its own sound is on",
+    af: "Sy eie klank is aan",
+  },
+  "edit.soundOff": {
+    en: "Its own sound is off",
+    af: "Sy eie klank is af",
+  },
+  "edit.loud": {
+    en: "How loud",
+    af: "Hoe hard",
+  },
+  "edit.earlier": {
+    en: "Earlier",
+    af: "Vroe\u00ebr",
+  },
+  "edit.later": {
+    en: "Later",
+    af: "Later",
+  },
+  "edit.split": {
+    en: "Split in two",
+    af: "Sny in twee",
+  },
+  "edit.drop": {
+    en: "Take it out",
+    af: "Haal dit uit",
+  },
+  "edit.under": {
+    en: "Sound and fades",
+    af: "Klank en verdowwings",
+  },
+  "edit.underAdd": {
+    en: "Put a track under it",
+    af: "Sit ’n liedjie daaronder",
+  },
+  "edit.underSwap": {
+    en: "Change the track under it",
+    af: "Verander die liedjie daaronder",
+  },
+  "edit.underLoud": {
+    en: "How loud the track sits",
+    af: "Hoe hard die liedjie sit",
+  },
+  "edit.fadeIn": {
+    en: "Fade in",
+    af: "Verdof in",
+  },
+  "edit.fadeOut": {
+    en: "Fade out",
+    af: "Verdof uit",
+  },
+  "edit.out": {
+    en: "Put it together",
+    af: "Sit dit saam",
+  },
+  "edit.make": {
+    en: "Put it together",
+    af: "Sit dit saam",
+  },
+  "edit.realTime": {
+    en: "It plays the film through once to record it, so it takes about as long as the film is. That is the trade for it costing nothing.",
+    af: "Dit speel die film een keer deur om dit op te neem, so dit vat omtrent so lank as wat die film is. D\u00edt is die ruil daarvoor dat dit niks kos nie.",
+  },
+  "edit.save": {
+    en: "Save it",
+    af: "Stoor dit",
+  },
+  "edit.failed": {
+    en: "That could not be put together just now.",
+    af: "Dit kon nie nou saamgesit word nie.",
+  },
+  "edit.noRecord": {
+    en: "This browser cannot record a film. Chrome or Edge can.",
+    af: "Hierdie blaaier kan nie ’n film opneem nie. Chrome of Edge kan.",
+  },
+  "edit.unreadable": {
+    en: "That file could not be read as video.",
+    af: "Daardie l\u00eaer kon nie as video gelees word nie.",
+  },
+  "edit.locked": {
+    en: "The editor comes with every paid plan \u2014 a timeline you cut on, fades, sound under it, the looks and an export.",
+    af: "Die redigeerder kom met elke betaalde plan \u2014 ’n tydlyn waarop jy sny, verdowwings, klank daaronder, die voorkomste en ’n uitvoer.",
+  },
+  "edit.lockedFree": {
+    en: "Sketching a video in your own browser stays free and always will. This is the version with a clock under it.",
+    af: "Om ’n video in jou eie blaaier te skets bly gratis en sal altyd. D\u00edt is die weergawe met ’n klok onder.",
+  },
+  "edit.seePlans": {
+    en: "See the plans",
+    af: "Kyk na die planne",
+  },
+  "edit.engine": {
+    en: "The ones that need an engine",
+    af: "Di\u00e9 wat ’n enjin nodig het",
+  },
+  "edit.engineWhat": {
+    en: "Taking a background out, taking an item out of a shot, and generating a piece you do not have. These three cannot happen on your device \u2014 they need an engine, and they cost credits.",
+    af: "Om ’n agtergrond uit te haal, ’n item uit ’n skoot te haal, en ’n stuk te genereer wat jy nie het nie. Hierdie drie kan nie op jou toestel gebeur nie \u2014 hulle het ’n enjin nodig, en hulle kos krediete.",
+  },
+  "edit.engineWhen": {
+    en: "They are priced and on the plan cards, and they are not switched on yet. Sending video of a person to another company needs an answer about what that company may do with it first, and that answer is being got rather than assumed.",
+    af: "Hulle is geprys en staan op die planskaarte, en hulle is nog nie aangeskakel nie. Om video van ’n persoon na ’n ander maatskappy te stuur, verg eers ’n antwoord oor wat daardie maatskappy daarmee mag doen \u2014 en daardie antwoord word gekry eerder as aangeneem.",
+  },
   "art.bidIn": { en: "Your bid is in at", af: "Jou bod is in teen" },
   "art.bidTop": {
     en: "You are the top bidder until somebody goes higher.",

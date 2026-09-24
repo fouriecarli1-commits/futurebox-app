@@ -32,6 +32,7 @@ import ThemeStudio from './components/ThemeStudio';
 import QualityRadar from './components/QualityRadar';
 import MakeMusic from './components/MakeMusic';
 import Hooks from './components/Hooks';
+import VideoEditor from './components/VideoEditor';
 import VideoCanvas from './components/VideoCanvas';
 import Copilot, { type CopilotAction } from './components/Copilot';
 import type { Canvas } from './components/MakeMusic';
@@ -3943,11 +3944,32 @@ export default function FutureBoxHome() {
 
             {/* HOOKS: cut the bit worth posting, from your own tracks */}
             {studioTab === 'canvas' && (
-              <VideoCanvas
-                onUpgrade={() => setPricingModalOpen(true)}
-                onGoTo={goToRoom}
-                songId={videoSong}
-              />
+              <>
+                <VideoCanvas
+                  onUpgrade={() => setPricingModalOpen(true)}
+                  onGoTo={goToRoom}
+                  songId={videoSong}
+                />
+                {/* ── The editor, under the desk it belongs to ──────────────
+ 
+                    Carli, 24 September 2026: *"wat ek bedoel is 'n editing
+                    program soos 'n video editor lyk amper soos die probooth.
+                    Waar jy tydlyne het, asook kan jy filters apply en
+                    export."*
+ 
+                    It lives here rather than as a room of its own for the
+                    same reason the Pro Booth lives inside the Booth: it is
+                    the deeper version of what this desk does, not a
+                    different kind of work. A new rail entry would also have
+                    meant touching the surface registry, the copilot's map
+                    and four checks, which is a lot of blast radius for a
+                    door that belongs on a desk somebody is already at.
+ 
+                    Plan-gated on `video.editor` — the same row the plan
+                    cards are drawn from, so the card and the door cannot
+                    say different things. */}
+                <VideoEditor plan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
+              </>
             )}
             {studioTab === 'hooks_feed' && (
               <Hooks

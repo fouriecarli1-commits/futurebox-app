@@ -440,6 +440,8 @@ jobs:
         run: npm run check:handbook
       - name: Everyone who sees a member's data is named on the privacy page
         run: npm run check:verwerkers
+      - name: The editor is shut on Free and open on every paid plan
+        run: npm run check:editorgate
 
       # The terms tell members they may sell what they make. ElevenLabs carves
       # out film, television, radio and studio games, and a member who places a
@@ -1150,7 +1152,7 @@ jobs:
           # camera, and `contrast` reads the computed colour of every piece of
           # text against what is actually painted behind it.
           - group: colour and camera
-            probes: check:selfie check:contrast check:mixdown check:stitch check:devices check:adsaf check:refusals check:artroom
+            probes: check:selfie check:contrast check:mixdown check:stitch check:devices check:adsaf check:refusals check:artroom check:editor
     steps:
       - uses: actions/checkout@v4
 
