@@ -67,20 +67,45 @@ a commercial licence. All three need the key.
 
 ## 2. The standards pass
 
-Run today, all green:
+**Re-measured 24 September 2026**, three weeks on, because a standards pass
+that is not re-run is a claim about a codebase that no longer exists. The
+figures below replaced a set that had gone wrong in four places at once — one
+of which said "44 checks, of which 82 are browser probes", which cannot be
+true of anything.
 
-- **44 checks** wired into `package.json`, of which **82 are browser probes**
-  that drive the real app rather than reading the code. All pass.
-- **`npm audit --omit=dev`: 0 vulnerabilities.** On `next@16.3.4`; the sixteen
-  advisories that were open against `next@14` in August are closed.
-- **TypeScript: no errors**, and no `@ts-ignore` or `@ts-nocheck` anywhere.
-- **One `as any` in 67,000 lines**, and it is gone as of this review — the five
-  feed pills now carry `as const` so a typo in an id is a build error rather
-  than a pill that lights up and shows an empty page.
-- **No `console.log`** outside the probes. **No TODO, FIXME or HACK.**
-- **20 eslint suppressions**, every one of them in a category with a reason:
-  `no-img-element` for blob URLs a Next `<Image>` cannot take, `media-has-caption`
-  for generated audio, `exhaustive-deps` where a re-run would fire a generation.
+- **265 checks** wired into CI, of which **126 are browser probes** that drive
+  the real app rather than reading the code. All pass. (Was 44 and 82.)
+
+  *This figure went from 264 to 265 while it was being written down, because
+  `check:standards` — the rule that holds this list against the code — counted
+  itself. That is the rule working, and it is the reason the figure is now a
+  number somebody has to change rather than a number that quietly rots.*
+- **`npm audit --omit=dev`: 0 vulnerabilities.** On `next@16`; the sixteen
+  advisories open against `next@14` in August are closed.
+- **TypeScript: no errors**, and **no `@ts-ignore` or `@ts-nocheck` anywhere**
+  — still true, measured again.
+- **Zero `as any`** in 128 462 lines of `app/`. The September figure said one
+  in 67 000; the app has nearly doubled and the count went to nought.
+- **No TODO, FIXME or HACK**, anywhere.
+- **Two `console.log`**, both on the server and both deliberate cost
+  diagnostics: `server/aicache.ts` reports what a prompt cache actually saved,
+  and `server/eleven.ts` writes one structured line per call with the
+  character cost ElevenLabs returns. Named here rather than counted as none,
+  because "no console.log" was true in September and stopped being true
+  without anybody deciding it had.
+- **35 eslint suppressions**, every one in a category with a reason:
+  15 × `no-img-element` for blob URLs a Next `<Image>` cannot take,
+  10 × `jsx-a11y/media-has-caption` for generated audio and video,
+  9 × `exhaustive-deps` where a re-run would fire a generation,
+  1 × a useless fragment. (Was 20; the app grew.)
+
+*A note on how these were counted, because it matters more than the numbers.*
+The first attempt used a plain grep and reported **23 `as any`**. Every one was
+prose — "has any other reason", "has anything in it". The real count needs the
+comments and string bodies blanked first, which is what `scripts/prose.mts`
+does and what three checks in this repository were fixed to do this week. A
+standards pass that measures its own paragraphs is the same failure it is
+looking for.
 
 Security posture, asserted rather than described — `check:security` fails the
 build on each of these, and every assertion was negative-tested:
@@ -97,8 +122,14 @@ build on each of these, and every assertion was negative-tested:
 **Still open, unchanged from `docs/GOING_LIVE.md` §1:** `'unsafe-inline'` and
 `'unsafe-eval'` in the script policy, which Next's hydration bootstrap needs
 until per-request nonces are threaded through. Everything on the device is
-unencrypted and unbacked-up, and the app says so. There is no second factor and
-no independent penetration test.
+unencrypted and unbacked-up, and the app says so. There is still no
+independent penetration test.
+
+**One line here is now out of date, in the good direction:** this said "there
+is no second factor". There is — an authenticator app, built 23 September
+(`app/components/Authenticators.tsx`), optional and off unless somebody turns
+it on. It went in without this page being touched, which is how a security
+document ends up understating a product as easily as overstating it.
 
 **One thing this review adds to that list:** no `Strict-Transport-Security`
 header is set by this app. Vercel sends one for domains it serves, so this is

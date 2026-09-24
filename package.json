@@ -144,6 +144,7 @@
     "check:handbook": "tsx scripts/check-handbook.mts",
     "check:verwerkers": "tsx scripts/check-verwerkers.mts",
     "check:editorgate": "tsx scripts/check-editorgate.mts",
+    "check:standards": "tsx scripts/check-standards.mts",
     "check:brake": "tsx scripts/check-brake.mts",
     "check:ownedpath": "tsx scripts/check-ownedpath.mts",
     "check:queue": "tsx scripts/check-queue.mts",

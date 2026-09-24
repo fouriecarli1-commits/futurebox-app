@@ -442,6 +442,8 @@ jobs:
         run: npm run check:verwerkers
       - name: The editor is shut on Free and open on every paid plan
         run: npm run check:editorgate
+      - name: The standards pass describes the code that is here
+        run: npm run check:standards
 
       # The terms tell members they may sell what they make. ElevenLabs carves
       # out film, television, radio and studio games, and a member who places a
