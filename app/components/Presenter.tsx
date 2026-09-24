@@ -229,8 +229,45 @@ export default function Presenter({
     [],
   );
 
-  const member = cast.find((one) => one.id === who) ?? cast[0] ?? null;
+  /* ── Whoever was chosen, and nobody else ────────────────────────────────
+ 
+     Carli, 24 September 2026: *"Die cast het nie gewerk nie ... dit het
+     heeltemal 'n ander persoon uitgegooi."*
+ 
+     This line read `cast.find(...) ?? cast[0] ?? null`, and that `?? cast[0]`
+     is the whole fault. It is the same shape as the sixteen ordering rules
+     hunted down a fortnight ago: **a missing thing reads as the first thing.**
+ 
+     `who` fails to match for ordinary reasons — the panel re-reads the cast
+     whenever `Cast` writes a member, and a chosen id that is not in the rows
+     that come back matches nothing. The fallback then quietly animated
+     `cast[0]`, and the rows arrive `created_at` DESCENDING, so `cast[0]` is
+     the member added most recently. Not a near miss: the newest face in the
+     cast, which is very often somebody else entirely.
+ 
+     What made it invisible is that the highlight is computed from the same
+     expression, so the strip lit up whoever the fallback had picked and the
+     screen looked perfectly consistent with itself. The only place the
+     disagreement surfaced was in the finished clip, after the credits were
+     spent — which is exactly where it is most expensive to find.
+ 
+     So there is no fallback here now. An id that matches nothing is `null`,
+     the Make button is already disabled on `!face`, and the effect below puts
+     `who` on a real member the moment the rows change. A picker that cannot
+     name who it picked must animate nobody. */
+  const member = cast.find((one) => one.id === who) ?? null;
   const face = member ? faces[member.path] : '';
+
+  /* The one place a default is chosen, and it is written down rather than
+     inferred. Opening the panel with the first member selected is right; the
+     bug was doing it silently, in a read, every render, without telling the
+     state. Here it moves `who` itself, so what the strip highlights and what
+     the engine is sent are the same value and cannot drift apart. */
+  useEffect(() => {
+    if (!cast.length) return;
+    if (cast.some((one) => one.id === who)) return;
+    setWho(cast[0].id);
+  }, [cast, who]);
 
   const read = useCallback(async () => {
     if (busy || script.trim().length < 2 || !voiceId) return;

@@ -36,11 +36,11 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import { screen } from '@/app/lib/moderation';
-import { callerFrom, metered } from '@/app/lib/server/account';
 import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { tooMany } from '@/app/lib/server/brake';
-import { hasAddon } from '@/app/lib/server/addons';
-import { MARKETING } from '@/app/lib/addons';
+import { paidRoom } from '@/app/lib/server/room';
+import { charge } from '@/app/lib/server/credits';
+import { CREDITS } from '@/app/lib/credits';
 import { FORMAT_IDS, formatById } from '@/app/lib/adformats';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
@@ -268,38 +268,19 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  /* Signed in, where there are accounts to be signed into.
+  /* The door, on the route rather than on the screen.
 
-     This is the piece the add-on will be sold on, so it belongs to an account
-     rather than to a browser. What is deliberately *not* here yet is the paid
-     check itself: the purchase, the webhook and the entitlement are the next
-     piece of work, and a half-built gate that lets everything through while
-     looking like a gate is worse than an honest open door. When it lands it
-     goes here, on the route, not on the screen. */
-  if (metered()) {
-    const caller = await callerFrom(request);
-    if (!caller) {
-      return Response.json(
-        { error: 'signed_out', message: 'Sign in first — a plan belongs to an account.' },
-        { status: 401 },
-      );
-    }
-    /* The lock, on the route rather than on the screen.
+     The room hides what is not included, and hiding is not a lock — this
+     endpoint is one `fetch` away from anybody who opens the console, and it
+     is the expensive one. So the question is asked here, with the caller's
+     own tier, before a single token is spent.
 
-       The room hides what is not owned, and hiding is not a lock — this
-       endpoint is one `fetch` away from anybody who opens the console, and it
-       is the expensive one. So the question is asked here, with the caller's
-       own id, before a single token is spent. */
-    if (!(await hasAddon(caller.id, MARKETING))) {
-      return Response.json(
-        {
-          error: 'locked',
-          message: 'The marketing desk is an add-on. It is not on this account yet.',
-        },
-        { status: 402 },
-      );
-    }
-  }
+     It used to ask whether the R199 marketing add-on had been bought. There
+     is no add-on any more: the desk is in every paid plan, and what is made
+     in it is charged in credits below. Carli, 24 September 2026 — *"Te veel
+     aankoop punte gaan mense afsit."* */
+  const door = await paidRoom(request, 'market.desk');
+  if (!door.ok) return door.response;
 
   let body: Body;
   try {
@@ -326,6 +307,17 @@ export async function POST(request: Request): Promise<Response> {
   );
   if (refused) return Response.json({ error: 'refused', message: refused.message }, { status: 200 });
 
+  /* Door, screen, charge — in that order, and the order matters.
+
+     A refused brief costs nothing: it is turned away above, before this line,
+     so nobody pays for a sentence we were never going to send. And the
+     credits come off before the call rather than after it, because a call
+     that succeeds and then fails to bill is the one mistake here that costs
+     us money instead of somebody else. `refund()` puts them back on every
+     path where the plan does not arrive. */
+  const paid = await charge(request, CREDITS.marketPlan, 'plan');
+  if (!paid.ok) return paid.response;
+
   const client = new Anthropic();
 
   try {
@@ -342,10 +334,12 @@ export async function POST(request: Request): Promise<Response> {
     await notecache('plan', response.usage);
 
     if (response.stop_reason === 'refusal') {
+      await paid.refund();
       return Response.json({ error: 'refused', message: 'I cannot plan that one.' }, { status: 200 });
     }
     const parsed = response.parsed_output;
     if (!parsed) {
+      await paid.refund();
       return Response.json({ error: 'unparsed', message: 'That came back mangled.' }, { status: 502 });
     }
     /* Wrapped, and it has to be.
@@ -388,6 +382,7 @@ export async function POST(request: Request): Promise<Response> {
 
     return Response.json({ plan });
   } catch (error) {
+    await paid.refund();
     return aiFault(error, 'The planner could not be reached.');
   }
 }

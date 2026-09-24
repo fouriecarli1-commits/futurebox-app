@@ -55,10 +55,7 @@ import AdRuns from './AdRuns';
 import AdReport from './AdReport';
 import Queue from './Queue';
 import MarketPlan from './MarketPlan';
-import AddOn from './AddOn';
 import AdFormats from './AdFormats';
-import { MARKETING } from '../lib/addons';
-import { NOTHING_UNLOCKED, owns, unlocked, type Unlocked } from '../lib/unlocked';
 import Steps, { type Step } from './Steps';
 import BrandKit from './BrandKit';
 import { EMPTY as EMPTY_KIT, brandLine, type BrandKit as Kit } from '../lib/brandkit';
@@ -209,19 +206,6 @@ export default function Campaign({
      up there — this room does not ask for anything twice. */
   const [handles, setHandles] = useState<Handles>({});
 
-  /* What is paid for on this account.
-
-     Asked once when the room opens, and again after a checkout comes back.
-     The server decides this — `/api/plan` and `/api/schedule` each ask for
-     themselves — so this only chooses which screen to draw. A page that
-     decides its own permissions decides them in the buyer's favour. */
-  const [paid, setPaid] = useState<Unlocked>(NOTHING_UNLOCKED);
-  const askAgain = useCallback(() => {
-    void unlocked().then(setPaid);
-  }, []);
-  useEffect(() => {
-    askAgain();
-  }, [askAgain]);
   /**
    * Who these adverts are for, kept between visits.
    *
@@ -978,32 +962,39 @@ export default function Campaign({
       {/* ── The paid half ───────────────────────────────────────────────
 
           Everything above this line is open on every plan, including the free
-          one: the brief, the advert writer, the runs, the report. Below it is
-          the marketing add-on — the market read, the week, and the queue that
-          makes the week happen.
+          one: the brief, the runs, the report. Below it is the marketing desk
+          — the market read, the week, and the queue that makes the week
+          happen — which comes with every paid plan.
 
           Selling by taking away something somebody was already using is how an
           app loses the customer it already has, so the line is drawn here and
-          the sales screen says where it is. */}
-      {owns(paid, MARKETING) ? (
-        <>
-          <MarketPlan
-            key={`plan-${openedAt}`}
-            brief={{ what, who, offer, tone, market }}
-            onGoTo={onGoTo}
-            onSetUp={onSetUp}
-          />
+          the refusal says where it is. */}
+      {/* ── No sales screen here any more ──────────────────────────────
+ 
+          This used to be `owns(paid, MARKETING) ? <the desk> : <AddOn>` — a
+          second shop, inside a room, for R199 a month. Carli, 24 September
+          2026: *"Te veel aankoop punte gaan mense afsit."*
+ 
+          The desk is drawn for everybody now. What decides whether it works
+          is the route, which answers 402 with a sentence naming the plan it
+          needs, and the panels below show that sentence where the answer
+          would have gone. That is the same shape as every other paid thing in
+          this app and one fewer screen to maintain: a browser that decides
+          its own permissions decides them in the buyer's favour, and this one
+          no longer decides anything. */}
+      <MarketPlan
+        key={`plan-${openedAt}`}
+        brief={{ what, who, offer, tone, market }}
+        onGoTo={onGoTo}
+        onSetUp={onSetUp}
+      />
 
-          {/* The plan says Tuesday at six; this is what makes Tuesday at six
-              happen rather than being read once and forgotten. It reminds
-              rather than posts, and says so on its own face — see
-              `components/Queue.tsx`. The caption from the first advert is
-              carried in so the common case is two taps. */}
-          <Queue caption={ads[0]?.caption || ads[0]?.body || ''} />
-        </>
-      ) : (
-        <AddOn what={paid} onBought={askAgain} />
-      )}
+      {/* The plan says Tuesday at six; this is what makes Tuesday at six
+          happen rather than being read once and forgotten. It reminds
+          rather than posts, and says so on its own face — see
+          `components/Queue.tsx`. The caption from the first advert is
+          carried in so the common case is two taps. */}
+      <Queue caption={ads[0]?.caption || ads[0]?.body || ''} />
 
       <History surface="campaign" reloadKey={kept} />
 

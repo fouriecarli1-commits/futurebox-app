@@ -200,6 +200,8 @@ export async function DELETE(request: Request): Promise<Response> {
   if (!owned) return Response.json({ message: 'Not found.' }, { status: 404 });
 
   await forgetVoice(id);
-  wrote(await client.from('voices').delete(), 'the voice');
+  /* Scoped. Unfiltered, deleting one voice deleted every voice row in the
+     app — including other people's clones. See `check:unfiltered`. */
+  wrote(await client.from('voices').delete().eq('id', id).eq('owner', caller.id), 'the voice');
   return new Response(null, { status: 204 });
 }

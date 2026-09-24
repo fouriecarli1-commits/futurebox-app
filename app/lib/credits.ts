@@ -177,6 +177,124 @@ export const CREDITS = {
   read: 6,
   /** Splitting a song into named parts rather than two. Per minute. */
   parts: 8,
+
+  /* ─────────────────────────────── the rooms that used to be a second till ─
+   *
+   * Carli, 24 September 2026, twice in one evening and about two different
+   * rooms:
+   *
+   *   *"Ek dink net ons moet ons gratis funksies monotise, dit moet pakkette
+   *    word wat mense koop. Die probooth, die video editing."*
+   *
+   *   *"Ek dink dieselfde met advert, dit moenie 'n ekstra produk wees nie,
+   *    eerder dit monotise en krediete vra saam met die pakkette wat ons
+   *    reeds het. Te veel aankoop punte gaan mense afsit."*
+   *
+   * And on how, rather than whether:
+   *
+   *   *"Nie byvoegsel nie, ons moet dink wat ons vra per krediete vir
+   *    generasie, meet dit teen ons ander produkte se generasie koste en werk
+   *    jou eie struktuur uit. Dit word dan saam met al die betaalde planne
+   *    ingesluit."*
+   *
+   * So there are exactly **two** ways to give this app money: a plan, and a
+   * top-up when the plan's credits run out. The marketing desk was a third —
+   * R199 a month, its own checkout, its own subscription to cancel — and it
+   * is gone. Three tills for one app is not three products, it is three
+   * chances to decide against all of them.
+   *
+   * What replaces it is the rule the rest of this file already ran on:
+   * **entering a room is included, generating in it costs credits.** The Pro
+   * Booth, the video editor and the advert desk come with every paid plan.
+   * Inside them the model calls are priced here, out of the same wallet as a
+   * song, and the free versions of all three stay free — the ordinary booth,
+   * the browser sketch, and every cut, fade and caption the device does by
+   * itself.
+   *
+   * ── How the three numbers below were arrived at ──────────────────────────
+   *
+   * Measured, not chosen. The existing table sells the per-minute audio work
+   * at about **three times** what it costs us (`check:kredietkoste` prints
+   * every multiple), so three is the house rate and these were worked back
+   * from it at the same worst-case credit price that check uses: Maker's
+   * R149 for 90 credits, **R1.656 a credit**, because a Maker member presses
+   * the same buttons as everybody else.
+   */
+
+  /**
+   * A marketing plan: the market read, the week, and the queue. Per plan.
+   *
+   * `/api/plan` runs `claude-opus-5` at `max_tokens: 12000` with high effort,
+   * and output is $25 a million tokens. Priced at the ceiling rather than at
+   * an average, because the ceiling is the only number that is true whatever
+   * comes back:
+   *
+   *     12 000 output × $25/M = $0.30        → R4.80
+   *        500 input  × $5/M  = $0.0025      → R0.04
+   *     the system prompt is served from the cache
+   *                                            ─────
+   *                                            R4.84
+   *
+   * Ten credits is R16.56 against that, **3.4x** — the house rate, with the
+   * rounding going our way rather than the model's.
+   *
+   * Ten is also exactly what a song costs, and that is worth saying out loud
+   * on the card: a month of marketing for a business is priced the same as
+   * one song. R199 a month said something very different about it.
+   */
+  marketPlan: 10,
+  /**
+   * Eight advert lines written against a brief. Per roll.
+   *
+   * The same model at `max_tokens: 8000` and medium effort:
+   *
+   *      8 000 output × $25/M = $0.20        → R3.20
+   *        500 input  × $5/M  = $0.0025      → R0.04
+   *                                            ─────
+   *                                            R3.24
+   *
+   * Six credits is R9.93, **3.1x**. Cheaper than the plan because it is a
+   * smaller call, which is the whole reason to price per action instead of
+   * per month: somebody who only ever wants ad lines never pays for the plan.
+   */
+  adLines: 6,
+  /**
+   * Taking the background out of a clip, per minute.
+   *
+   * fal.ai's VEED video background removal, billed per thirty frames:
+   * $0.008 fast, $0.012 fast with refinement, $0.0225 standard. At 30fps
+   * thirty frames is one second, so the dearest grade is $1.35 a minute —
+   * **R21.60**.
+   *
+   * Priced on the dearest grade that may be picked, for the same reason
+   * `video` is: the queue chooses the engine, and a button promising one
+   * price while the server pays another is the sort of thing people are right
+   * to be angry about.
+   *
+   *     R21.60 × 3 ÷ R1.656 = 39.1
+   *
+   * Forty a minute is R66.22, **3.1x**. It is the dearest per-minute thing in
+   * this table after dubbing, and that is honest rather than unfortunate:
+   * cutting a person out of a moving picture is thirty separate pictures a
+   * second of work. Estimated from a published page rather than an invoice,
+   * and `check:kredietkoste` holds it against that page.
+   */
+  cutout: 40,
+  /**
+   * Taking an item out of a clip and filling in what was behind it, per
+   * minute.
+   *
+   * The same forty, and deliberately not less. This is a heavier job than
+   * lifting a background — it has to invent what was never filmed — and
+   * nothing published gives a rate for it that this file could defend. So it
+   * is set at the dearest thing in the same family, which is the safe
+   * direction to be wrong in: an over-priced action is a number we lower once
+   * an invoice says so, an under-priced one is a bill at the end of the
+   * month.
+   *
+   * Same reasoning as `clone` and `finetune`, marked the same way.
+   */
+  erase: 40,
 } as const;
 
 /**

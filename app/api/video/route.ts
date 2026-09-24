@@ -242,9 +242,18 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   if (progress.state === 'failed') {
+    /* This video, and only while it is still running.
+
+       The comment below has always said the update is "conditional on the
+       row still being 'running'". It carried no condition and no filter: a
+       single failed clip marked EVERY video in the app failed, for every
+       member, and the refund guard that comment describes did not exist.
+       Both are here now. See `check:unfiltered`. */
     wrote(await client
       .from('videos')
-      .update({ status: 'failed', error: progress.message, finished_at: new Date().toISOString() }), 'the video');
+      .update({ status: 'failed', error: progress.message, finished_at: new Date().toISOString() })
+      .eq('id', row.id)
+      .eq('status', 'running'), 'the video');
     // Only ever refunded once: the update above is conditional on the row
     // still being 'running', and this only follows a row that was.
     await refund(caller.id, row.credits, `video:${row.id}`);
@@ -268,6 +277,10 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json({ state: 'running' });
   }
 
+  /* Scoped, and only while it is still running — the same pair as the failed
+     branch above, and for the same reason: with no filter this marked every
+     video in the app done and pointed them all at one member's file. See
+     `check:unfiltered`. */
   wrote(await client
     .from('videos')
     .update({
@@ -279,7 +292,9 @@ export async function GET(request: Request): Promise<Response> {
       ...(progress.state === 'done' && typeof progress.units === 'number'
         ? { provider_units: progress.units }
         : {}),
-    }), 'the video');
+    })
+    .eq('id', row.id)
+    .eq('status', 'running'), 'the video');
 
   return Response.json({ state: 'done', url: await link(client, path) });
 }

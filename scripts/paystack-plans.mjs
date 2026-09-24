@@ -54,7 +54,6 @@ import { dirname, join } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANS_TS = join(HERE, '..', 'app', 'lib', 'plans.ts');
-const ADDONS_TS = join(HERE, '..', 'app', 'lib', 'addons.ts');
 
 const TIERS = [
   { tier: 'maker', env: 'PAYSTACK_PLAN_MAKER', name: 'FutureBox Maker' },
@@ -62,10 +61,18 @@ const TIERS = [
   { tier: 'label', env: 'PAYSTACK_PLAN_LABEL', name: 'FutureBox Label' },
 ];
 
-/** The add-ons, which are priced in their own file rather than in plans.ts. */
-const ADDONS = [
-  { id: 'marketing', env: 'PAYSTACK_PLAN_MARKETING', name: 'FutureBox Marketing desk' },
-];
+/* ── No add-ons, as of 24 September 2026 ────────────────────────────────
+   The marketing desk was R199 a month with its own plan code. It is in every
+   paid plan now — Carli: *"Te veel aankoop punte gaan mense afsit."* — so
+   there is nothing here that needs a Paystack plan of its own, and this
+   script creates three codes rather than four.
+
+   PAYSTACK_PLAN_MARKETING is deliberately NOT created any more. Whatever
+   subscription already stands at Paystack under it goes on charging until
+   somebody cancels it THERE; the webhook recognises such a renewal and
+   answers without granting anything, so it cannot be misread as a membership
+   renewal. See `lib/addons.ts` and the renewal branch in the webhook. */
+const ADDONS = [];
 
 /** The monthly rand price for one tier, as TIER_SPECS states it. */
 function randFor(source, tier) {
@@ -96,21 +103,9 @@ if (!secret && !dryRun) {
   process.exit(1);
 }
 
-/** The monthly rand price for one add-on, as ADDONS states it. */
-function randForAddon(source, id) {
-  const row = new RegExp(`\\{\\s*id:\\s*${id.toUpperCase()}\\s*,\\s*rand:\\s*([0-9_]+)`).exec(source)
-    ?? new RegExp(`\\{\\s*id:\\s*'${id}'\\s*,\\s*rand:\\s*([0-9_]+)`).exec(source);
-  if (!row) throw new Error(`Could not find the ${id} add-on's price in app/lib/addons.ts.`);
-  const rand = Number(row[1].replace(/_/g, ''));
-  if (!Number.isFinite(rand) || rand <= 0) throw new Error(`${id}'s price read as ${row[1]}.`);
-  return rand;
-}
-
 const source = await readFile(PLANS_TS, 'utf8');
-const addonSource = await readFile(ADDONS_TS, 'utf8');
 const wanted = [
   ...TIERS.map((one) => ({ ...one, rand: randFor(source, one.tier) })),
-  ...ADDONS.map((one) => ({ ...one, rand: randForAddon(addonSource, one.id) })),
 ];
 
 if (dryRun) {

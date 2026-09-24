@@ -90,11 +90,9 @@ const WIDENING = new RegExp(String.raw`\.slice\(\s*0\s*,\s*${NAME}${CALL}\s*\)`)
  * Replaced with spaces rather than removed, so every reported line number
  * is still the real one.
  */
-const blank = (had: string): string => had.replace(/[^\n]/g, ' ');
-const code = (raw: string): string => raw
-  .replace(/\/\*[\s\S]*?\*\//g, blank)
-  .replace(/(^|[^:])\/\/[^\n]*/g, (had, first) => first + ' '.repeat(had.length - first.length))
-  .replace(/'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g, (had) => had[0] + blank(had.slice(1, -1)) + had[0]);
+/* One blanker, shared with `check:whofirst`. See `prose.mts` — two copies
+   of this would be two chances to drift. */
+import { code } from './prose.mts';
 
 const files: string[] = [
   ...readdirSync('scripts').filter((f) => f.endsWith('.mts')).map((f) => join('scripts', f)),

@@ -343,9 +343,13 @@ async function note(
     return;
   }
 
+  /* The claim this letter was sent under, and no other row. Unfiltered it
+     stamped one letter's outcome onto every row in the log, which is the
+     exact opposite of what this table is for. See `check:unfiltered`. */
   wrote(await client
     .from('mail_log')
-    .update({ ok, detail, sent_at: when }), 'the letter we sent');
+    .update({ ok, detail, sent_at: when })
+    .eq('dedupe_key', letter.once), 'the letter we sent');
 }
 
 /**

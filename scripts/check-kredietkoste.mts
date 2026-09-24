@@ -39,7 +39,8 @@
  * invoice settles it. See `docs/PRYSVOORSTEL.md` §6.
  */
 import { CREDITS, TIER_CREDITS } from '../app/lib/credits.ts';
-import { TIER_SPECS } from '../app/lib/plans.ts';
+import { TIER_SPECS, RAND_PER_USD } from '../app/lib/plans.ts';
+import { paid } from '../app/data/aiprices.ts';
 
 let bad = 0;
 const say = (ok: boolean, line: string) => {
@@ -59,6 +60,20 @@ const CHAR = BUSINESS_RAND / 9_900_000;
 const DUB_PER_MIN = BUSINESS_RAND / 450;
 /** Kits is a flat R640 a month against a 400-minute ceiling. */
 const SING_PER_MIN = 640 / 400;
+
+/* ── The model calls, costed by the app's own money model ────────────────
+   `paid()` takes the four token counts and returns rand, and it is what the
+   `ai_costs` rows are priced with — so the check and the ledger cannot
+   disagree about what a call costs. Both are worked at their route's
+   `max_tokens` ceiling rather than at an average, because the ceiling is the
+   only figure that stays true whatever the model sends back. */
+const PLAN_CALL = paid({ input: 500, output: 12_000, cacheRead: 0, cacheWrite: 0 });
+const ADS_CALL = paid({ input: 500, output: 8_000, cacheRead: 0, cacheWrite: 0 });
+
+/* fal.ai VEED video background removal, standard grade: $0.0225 per thirty
+   frames, which at 30fps is one second. The dearest grade that may be picked,
+   for the reason `CREDITS.video` gives. */
+const CUTOUT_PER_MIN = 0.0225 * 60 * RAND_PER_USD;
 
 /**
  * The worst rand-per-credit any tier gets.
@@ -91,6 +106,14 @@ const priced: { what: string; credits: number; cost: number }[] = [
   /* `readCost` is one credit per 150 characters with a floor of two, so one
      credit is what 150 characters must cover. */
   { what: 'reading 150 characters', credits: 1, cost: 150 * CHAR },
+  /* The three rooms that used to be sold separately, or not at all. Entering
+     them is included in every paid plan; generating in them is these. */
+  { what: 'a marketing plan', credits: CREDITS.marketPlan, cost: PLAN_CALL },
+  { what: 'eight advert lines', credits: CREDITS.adLines, cost: ADS_CALL },
+  { what: 'a background taken out, per minute', credits: CREDITS.cutout, cost: CUTOUT_PER_MIN },
+  /* Estimated at the dearest thing in the same family — see `CREDITS.erase`.
+     Held against that same rate so it can never quietly fall under it. */
+  { what: 'an item taken out, per minute', credits: CREDITS.erase, cost: CUTOUT_PER_MIN },
 ];
 
 for (const one of priced) {

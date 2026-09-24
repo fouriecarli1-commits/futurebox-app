@@ -683,6 +683,11 @@ export const STRINGS: Dict = {
   "art.opensAt": { en: "Bidding opens at", af: "Bod maak oop by" },
   "art.standing": { en: "Highest bid", af: "Hoogste bod" },
   "art.oneBid": { en: "bid", af: "bod" },
+  "art.bidIn": { en: "Your bid is in at", af: "Jou bod is in teen" },
+  "art.bidTop": {
+    en: "You are the top bidder until somebody goes higher.",
+    af: "Jy is die hoogste bieër totdat iemand hoër gaan.",
+  },
   "art.manyBids": { en: "bids", af: "bodde" },
   "art.left": { en: "left", af: "oor" },
   "art.over": { en: "Bidding closed", af: "Bod gesluit" },

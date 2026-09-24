@@ -143,21 +143,26 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          `START_RAND` and `UNIQUE_RAND`, so the card still cannot drift
          from what the till charges. */
       'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
-      /* ── The two things that were sold and were on no card ────────────
-         Found 24 September 2026, going through the plans against what the
-         platform actually charges for.
+      /* ── The rooms that used to be free, or sold separately ───────────
+         24 September 2026. Carli: *"Ek dink net ons moet ons gratis
+         funksies monotise, dit moet pakkette word wat mense koop. Die
+         probooth, die video editing."* And on the advert desk, which was
+         R199 a month on its own: *"dit moenie 'n ekstra produk wees nie ...
+         Te veel aankoop punte gaan mense afsit."*
 
-         The marketing desk is a real product at R199 a month, and it
-         appeared on neither the sales page nor the account screen — it
-         could only be found by already being inside the adverts room. A
-         price nobody browsing prices can see is not a price.
+         So there is no add-on. All three come with every paid plan, and
+         what is generated inside them costs credits out of the same wallet
+         as a song. The prices and their derivation are in `credits.ts`;
+         `check:kredietkoste` holds each against its real upstream bill and
+         `check:sold` holds these lines against the prices.
 
-         Dubbing is the sharper one. It is 162 credits a minute, the
-         dearest thing here by a distance, and Maker gives 90 a month — so
-         a Maker member cannot dub a single minute and nothing said so
-         until they tried. The line says which plan it starts at rather
-         than leaving somebody to find the wall. */
-      'The marketing desk — the market read, the week and the queue — R199 a month on top of any plan, including Free.',
+         Dubbing stays on its own line because it is the one thing a plan
+         may not be able to afford: 162 credits a minute against Maker's 90
+         a month. The line says which plan it starts at rather than leaving
+         somebody to find the wall. */
+      'The Booth is free and always will be — record, sing over a track, as many takes as you like. The Pro Booth, with lanes, the grid, mixing and undo, comes with every paid plan.',
+      'Sketch a video in your own browser as much as you like. The video editor — a timeline, fades, sound under it and the filters — comes with every paid plan.',
+      'The marketing desk — the market read, the week and the queue — was R199 a month on its own. It is now in every paid plan, and what you make in it costs credits like anything else.',
       'Dubbing an episode into another language is the dearest thing here: 162 credits a minute, so it needs Studio or Label.',
     ],
   },
@@ -176,21 +181,26 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Post to your own channels',
       'Every workshop',
       'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
-      /* ── The two things that were sold and were on no card ────────────
-         Found 24 September 2026, going through the plans against what the
-         platform actually charges for.
+      /* ── The rooms that used to be free, or sold separately ───────────
+         24 September 2026. Carli: *"Ek dink net ons moet ons gratis
+         funksies monotise, dit moet pakkette word wat mense koop. Die
+         probooth, die video editing."* And on the advert desk, which was
+         R199 a month on its own: *"dit moenie 'n ekstra produk wees nie ...
+         Te veel aankoop punte gaan mense afsit."*
 
-         The marketing desk is a real product at R199 a month, and it
-         appeared on neither the sales page nor the account screen — it
-         could only be found by already being inside the adverts room. A
-         price nobody browsing prices can see is not a price.
+         So there is no add-on. All three come with every paid plan, and
+         what is generated inside them costs credits out of the same wallet
+         as a song. The prices and their derivation are in `credits.ts`;
+         `check:kredietkoste` holds each against its real upstream bill and
+         `check:sold` holds these lines against the prices.
 
-         Dubbing is the sharper one. It is 162 credits a minute, the
-         dearest thing here by a distance, and Maker gives 90 a month — so
-         a Maker member cannot dub a single minute and nothing said so
-         until they tried. The line says which plan it starts at rather
-         than leaving somebody to find the wall. */
-      'The marketing desk — the market read, the week and the queue — R199 a month on top of any plan, including Free.',
+         Dubbing stays on its own line because it is the one thing a plan
+         may not be able to afford: 162 credits a minute against Maker's 90
+         a month. The line says which plan it starts at rather than leaving
+         somebody to find the wall. */
+      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo. Splitting stems is 4 credits a minute, changing a voice 4.',
+      'The video editor: a timeline, fades, sound under it and export. Taking a background or an item out is 40 credits a minute; generating a piece is priced like any clip.',
+      'The marketing desk — the market read, the week and the queue. A plan is 10 credits, the same as a song; eight advert lines are 6.',
       'Dubbing is 162 credits a minute — more than this plan holds, so it starts at Studio.',
     ],
   },
@@ -228,21 +238,26 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'Ask FutureBox to boost a collab',
       'The full radar — every item, every reason',
       'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
-      /* ── The two things that were sold and were on no card ────────────
-         Found 24 September 2026, going through the plans against what the
-         platform actually charges for.
+      /* ── The rooms that used to be free, or sold separately ───────────
+         24 September 2026. Carli: *"Ek dink net ons moet ons gratis
+         funksies monotise, dit moet pakkette word wat mense koop. Die
+         probooth, die video editing."* And on the advert desk, which was
+         R199 a month on its own: *"dit moenie 'n ekstra produk wees nie ...
+         Te veel aankoop punte gaan mense afsit."*
 
-         The marketing desk is a real product at R199 a month, and it
-         appeared on neither the sales page nor the account screen — it
-         could only be found by already being inside the adverts room. A
-         price nobody browsing prices can see is not a price.
+         So there is no add-on. All three come with every paid plan, and
+         what is generated inside them costs credits out of the same wallet
+         as a song. The prices and their derivation are in `credits.ts`;
+         `check:kredietkoste` holds each against its real upstream bill and
+         `check:sold` holds these lines against the prices.
 
-         Dubbing is the sharper one. It is 162 credits a minute, the
-         dearest thing here by a distance, and Maker gives 90 a month — so
-         a Maker member cannot dub a single minute and nothing said so
-         until they tried. The line says which plan it starts at rather
-         than leaving somebody to find the wall. */
-      'The marketing desk — the market read, the week and the queue — R199 a month on top of any plan, including Free.',
+         Dubbing stays on its own line because it is the one thing a plan
+         may not be able to afford: 162 credits a minute against Maker's 90
+         a month. The line says which plan it starts at rather than leaving
+         somebody to find the wall. */
+      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo. Splitting stems is 4 credits a minute, changing a voice 4.',
+      'The video editor: a timeline, fades, sound under it and export. Taking a background or an item out is 40 credits a minute; generating a piece is priced like any clip.',
+      'The marketing desk — the market read, the week and the queue. A plan is 10 credits, the same as a song; eight advert lines are 6.',
       'Dubbing into another language, in the same voice — 162 credits a minute out of your 190.',
     ],
   },
@@ -264,21 +279,26 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
       'The feed uncapped — every item, no daily ceiling anywhere',
       'A say in which workshops get made',
       'Album art by real artists — bidding opens at R200, or R500 to take a piece outright. On every plan, paid per piece.',
-      /* ── The two things that were sold and were on no card ────────────
-         Found 24 September 2026, going through the plans against what the
-         platform actually charges for.
+      /* ── The rooms that used to be free, or sold separately ───────────
+         24 September 2026. Carli: *"Ek dink net ons moet ons gratis
+         funksies monotise, dit moet pakkette word wat mense koop. Die
+         probooth, die video editing."* And on the advert desk, which was
+         R199 a month on its own: *"dit moenie 'n ekstra produk wees nie ...
+         Te veel aankoop punte gaan mense afsit."*
 
-         The marketing desk is a real product at R199 a month, and it
-         appeared on neither the sales page nor the account screen — it
-         could only be found by already being inside the adverts room. A
-         price nobody browsing prices can see is not a price.
+         So there is no add-on. All three come with every paid plan, and
+         what is generated inside them costs credits out of the same wallet
+         as a song. The prices and their derivation are in `credits.ts`;
+         `check:kredietkoste` holds each against its real upstream bill and
+         `check:sold` holds these lines against the prices.
 
-         Dubbing is the sharper one. It is 162 credits a minute, the
-         dearest thing here by a distance, and Maker gives 90 a month — so
-         a Maker member cannot dub a single minute and nothing said so
-         until they tried. The line says which plan it starts at rather
-         than leaving somebody to find the wall. */
-      'The marketing desk — the market read, the week and the queue — R199 a month on top of any plan, including Free.',
+         Dubbing stays on its own line because it is the one thing a plan
+         may not be able to afford: 162 credits a minute against Maker's 90
+         a month. The line says which plan it starts at rather than leaving
+         somebody to find the wall. */
+      'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo. Splitting stems is 4 credits a minute, changing a voice 4.',
+      'The video editor: a timeline, fades, sound under it and export. Taking a background or an item out is 40 credits a minute; generating a piece is priced like any clip.',
+      'The marketing desk — the market read, the week and the queue. A plan is 10 credits, the same as a song; eight advert lines are 6.',
       'Dubbing into another language, in the same voice — 162 credits a minute out of your 440.',
     ],
   },

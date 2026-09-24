@@ -91,9 +91,13 @@ export async function GET(request: Request): Promise<Response> {
       /* A handler that does not exist is not a retry. It means a connector was
          removed or the row was written by a newer version of the app, and
          neither improves by waiting an hour. */
+      /* This row, not the queue. Unfiltered, one post with a missing
+         handler marked every scheduled post in the app failed — everybody's
+         queue emptied at once. See `check:unfiltered`. */
       wrote(await client
         .from('scheduled_posts')
-        .update({ state: 'failed', note: `no handler called ${post.handler}` }), 'the post');
+        .update({ state: 'failed', note: `no handler called ${post.handler}` })
+        .eq('id', post.id), 'the post');
       failed += 1;
       continue;
     }
@@ -113,9 +117,12 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     if (outcome.ok) {
+      /* This post sent, not all of them. It had no filter, so one success
+         marked the whole queue sent. See `check:unfiltered`. */
       wrote(await client
         .from('scheduled_posts')
-        .update({ state: 'sent', sent_at: new Date().toISOString(), note: '' }), 'the post');
+        .update({ state: 'sent', sent_at: new Date().toISOString(), note: '' })
+        .eq('id', post.id), 'the post');
       sent += 1;
       continue;
     }
@@ -124,12 +131,15 @@ export async function GET(request: Request): Promise<Response> {
        counted this try, so five is five — a row that keeps coming back is
        failed here rather than looping until somebody notices. */
     const keepTrying = outcome.again && post.attempts < 5;
+    /* Scoped. Unfiltered, one post's retry decision was written onto every
+       row in the queue. See `check:unfiltered`. */
     wrote(await client
       .from('scheduled_posts')
       .update({
         state: keepTrying ? 'due' : 'failed',
         note: outcome.why.slice(0, 500),
-      }), 'the post');
+      })
+      .eq('id', post.id), 'the post');
     if (keepTrying) again += 1;
     else failed += 1;
   }

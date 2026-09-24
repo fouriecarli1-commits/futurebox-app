@@ -2061,12 +2061,23 @@ export default function ProBooth({
                 'Splits this lane in two at the playhead, and costs nothing. Both halves point at the same recording, so nothing is lost — drag an edge back and it is whole again. Move the white line first: the cut happens where the line is.',
               )}
             </Hint>
-            {repeatOf(lanes.find((one) => one.id === picked) ?? lanes[0]) > 1 && (
-              <span className="inline-flex items-center gap-1 text-sm" style={{ color: INK_DIM }}>
-                <Repeat className="h-4 w-4" />
-                ×{repeatOf(lanes.find((one) => one.id === picked) ?? lanes[0])}
-              </span>
-            )}
+            {/* No `?? lanes[0]`. With nothing picked this printed the FIRST
+                lane's repeat count beside the cut button for whatever lane
+                the eye was on — a number about somebody else's lane, which is
+                worse than no number. Same family as the presenter's cast
+                picker; see the note on `member` in `Presenter.tsx`. */}
+            {(() => {
+              const pickedLane = lanes.find((one) => one.id === picked);
+              if (!pickedLane) return null;
+              const times = repeatOf(pickedLane);
+              if (times <= 1) return null;
+              return (
+                <span className="inline-flex items-center gap-1 text-sm" style={{ color: INK_DIM }}>
+                  <Repeat className="h-4 w-4" />
+                  ×{times}
+                </span>
+              );
+            })()}
           </div>
         )}
 

@@ -182,9 +182,14 @@ export async function POST(request: Request): Promise<Response> {
      `status` and `error` only. Not `refunded_at`, not `charged`: nothing that
      decides money is writable from an address on the open internet, however
      well signed. */
+  /* "The update is by id alone" — which the paragraph above has claimed
+     since the day it was written, while the statement carried no filter at
+     all. One signed webhook set every dub in the app to one job's status.
+     See `check:unfiltered`. */
   wrote(await client
     .from('dubs')
-    .update({ status: said.status, error: said.error, updated_at: new Date().toISOString() }), 'the dubbing job');
+    .update({ status: said.status, error: said.error, updated_at: new Date().toISOString() })
+    .eq('id', said.id), 'the dubbing job');
 
   return Response.json({ ok: true, noted: true });
 }

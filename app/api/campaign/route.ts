@@ -36,6 +36,9 @@ import { AFRIKAANS_RULE } from '@/app/lib/server/afrikaans';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
 import { tooMany } from '@/app/lib/server/brake';
+import { paidRoom } from '@/app/lib/server/room';
+import { charge } from '@/app/lib/server/credits';
+import { CREDITS } from '@/app/lib/credits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -197,6 +200,22 @@ export async function POST(request: Request): Promise<Response> {
   // a refusal in our own words beats one in the engine's, three minutes later.
   const refused = screen([body.what, body.who, body.offer, body.tone].filter(Boolean).join(' '), 'video');
   if (refused) return Response.json({ error: 'refused', message: refused.message }, { status: 200 });
+
+  /* Door, then charge — the brake above is neither.
+
+     `tooMany` stops a loop; it does not decide who may be here or what this
+     costs. Until 24 September 2026 that was the whole of the protection on
+     this route: anybody signed out could take eight ad-writing calls a minute
+     off Carli's Anthropic account forever, free.
+
+     The desk is in every paid plan now and the writing comes out of the same
+     credits as a song — `CREDITS.adLines`, six, worked back from this call's
+     own ceiling. See the note in `credits.ts`. */
+  const door = await paidRoom(request, 'market.desk');
+  if (!door.ok) return door.response;
+
+  const paid = await charge(request, CREDITS.adLines, 'campaign');
+  if (!paid.ok) return paid.response;
 
   const client = new Anthropic();
 

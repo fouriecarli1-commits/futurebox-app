@@ -261,9 +261,12 @@ export async function GET(request: Request): Promise<Response> {
   if (caller && client && !settled) {
     /* Skipped when the row is where this answer came from: writing a row back
        onto itself is a round trip to say nothing. */
+    /* Scoped to this dub. It had no filter at all, so one poll wrote one
+       job's status onto every dub in the table. See `check:unfiltered`. */
     wrote(await client
       .from('dubs')
-      .update({ status: state.state.status, error: state.state.error ?? null, updated_at: new Date().toISOString() }), 'the dubbing job');
+      .update({ status: state.state.status, error: state.state.error ?? null, updated_at: new Date().toISOString() })
+      .eq('id', id), 'the dubbing job');
 
     // The refund, claimed rather than decided. Two polls can see the same
     // failure at the same moment; only one of them marks the row, and only

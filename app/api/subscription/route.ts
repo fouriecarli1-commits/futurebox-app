@@ -115,9 +115,13 @@ export async function DELETE(request: Request): Promise<Response> {
 
   // Recorded only after Paystack agreed. Marking it cancelled first would tell
   // somebody their payments had stopped when they had not.
+  /* Scoped to this member. With no filter, one person cancelling marked
+     EVERY subscription in the app as non-renewing — every paying member
+     silently cancelled by somebody else's click. See `check:unfiltered`. */
   wrote(await client
     .from('subscriptions')
-    .update({ status: 'non-renewing', updated_at: new Date().toISOString() }), 'the subscription');
+    .update({ status: 'non-renewing', updated_at: new Date().toISOString() })
+    .eq('owner', caller.id), 'the subscription');
 
   /* The last letter they get from us.
 

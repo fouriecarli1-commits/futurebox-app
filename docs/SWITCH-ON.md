@@ -180,11 +180,24 @@ company registered and a bank account in its name.
 pretending a checkout exists.
 
 The three plan codes — `PAYSTACK_PLAN_MAKER`, `PAYSTACK_PLAN_STUDIO`,
-`PAYSTACK_PLAN_LABEL` — and `PAYSTACK_PLAN_MARKETING` make a membership renew
-instead of being a single charge. Create them once with
-`node scripts/paystack-plans.mjs`. Written out in full rather than as
-`_STUDIO` and `_LABEL`, so that searching this page for the name Vercel shows
-you actually finds it.
+`PAYSTACK_PLAN_LABEL` — make a membership renew instead of being a single
+charge. Create them once with `node scripts/paystack-plans.mjs`. Written out
+in full rather than as `_STUDIO` and `_LABEL`, so that searching this page for
+the name Vercel shows you actually finds it.
+
+**`PAYSTACK_PLAN_MARKETING` is the fourth, and it is no longer created.** The
+R199 marketing add-on stopped being a separate product on 24 September 2026 —
+the desk is in every paid plan and what is made in it costs credits. Two
+things follow, and the second one needs doing by hand:
+
+- The app still *reads* this code, so leave it in Vercel. It is how the
+  webhook recognises a charge for the withdrawn add-on and answers without
+  granting anything. Take it away and such a charge is read as a membership
+  renewal instead.
+- **Cancel the marketing subscription at Paystack.** Removing the product from
+  the app does not stop a card being charged — only Paystack can do that, and
+  a subscription taken out while it was on sale keeps billing R199 a month
+  until somebody goes and stops it.
 
 ---
 

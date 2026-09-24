@@ -102,9 +102,13 @@ function rand(amount: number): string {
 async function release(key: string): Promise<void> {
   const db = admin();
   if (!db) return;
+  /* Giving back ONE claim,
+     not emptying the log: without the filter this wiped every record of
+     every letter the app has ever sent. */
   wrote(await db
     .from('mail_log')
-    .delete(), 'the letter we sent');
+    .delete()
+    .eq('dedupe_key', key), 'the letter we sent');
 }
 
 /**

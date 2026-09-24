@@ -60,7 +60,10 @@ export type Capability =
   | 'soundboard'
   | 'class.watch'
   | 'class.paths'
-  | 'video.engine';
+  | 'video.engine'
+  | 'booth.pro'
+  | 'video.editor'
+  | 'market.desk';
 
 export interface Entitlement {
   readonly label: string;
@@ -175,6 +178,41 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
     caps: { free: 0, maker: 0, studio: null, label: null },
     unit: '',
     freeNote: 'Single classes are open. A path is four sittings that end in a finished release \u2014 Studio and up.',
+  },
+  /* ── The three rooms that came in from the cold, 24 September 2026 ──────
+     Carli: *"Ek dink net ons moet ons gratis funksies monotise, dit moet
+     pakkette word wat mense koop. Die probooth, die video editing."* And on
+     the advert desk, which had been sold separately at R199 a month: *"dit
+     moenie 'n ekstra produk wees nie ... Te veel aankoop punte gaan mense
+     afsit."*
+
+     All three read the same as `video.engine` above, and for the same reason:
+     this row says only who may open the door. What happens inside is paid in
+     credits, out of the one wallet, and the numbers are in `credits.ts`.
+
+     Each has a free version that is not a demo, and the note says which — a
+     room somebody cannot get into at all reads as a locked door, and a locked
+     door is the thing that makes people leave rather than pay. */
+  'booth.pro': {
+    label: 'The Pro Booth',
+    area: 'The Booth',
+    caps: { free: 0, maker: null, studio: null, label: null },
+    unit: '',
+    freeNote: 'The Booth itself is free and always will be \u2014 record, sing over a track, as many takes as you like, no counter. The Pro Booth is the multitrack version: lanes, the grid, the metronome, mixing, mastering and undo.',
+  },
+  'video.editor': {
+    label: 'The video editor',
+    area: 'Video desk',
+    caps: { free: 0, maker: null, studio: null, label: null },
+    unit: '',
+    freeNote: 'Sketching a video in your own browser stays free. The editor is the timeline version: pieces you cut and reorder, fades, sound under it, and the filters that need an engine behind them.',
+  },
+  'market.desk': {
+    label: 'The marketing desk',
+    area: 'Adverts',
+    caps: { free: 0, maker: null, studio: null, label: null },
+    unit: '',
+    freeNote: 'This was R199 a month on its own. It is now in every paid plan, and what you make in it comes out of the same credits as a song.',
   },
   appearance: {
     label: 'Every theme and layout',

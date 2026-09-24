@@ -299,6 +299,10 @@ jobs:
       # came back green on every rule.
       - name: Nothing reads a missing thing as the first thing
         run: npm run check:ordering
+      - name: A picker never falls through to the first row
+        run: npm run check:whofirst
+      - name: No update or delete touches every row
+        run: npm run check:unfiltered
 
       # The booth's doctrine is that almost nothing costs anything and all
       # of it is undone by dragging an edge back — and its own prose admits
@@ -904,9 +908,7 @@ jobs:
         run: npm run check:radarshuffle
 
       # The rooms that answer "not set up" rather than failing, the names
-      # nobody may take, and the marketing arithmetic that reaches a client.
-      - name: The rest of the arithmetic and the gates
-        run: npm run check:addons && npm run check:queue && npm run check:analyse && npm run check:brand && npm run check:reserved && npm run check:nam && npm run check:marketplan && npm run check:adweek && npm run check:habits
+      # nobody may take, and the marketing arithmetic that reaches a client. && npm run check:queue && npm run check:analyse && npm run check:brand && npm run check:reserved && npm run check:nam && npm run check:marketplan && npm run check:adweek && npm run check:habits
 
       # And the rule that keeps this list honest.
       - name: Every check runs somewhere

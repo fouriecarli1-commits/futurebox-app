@@ -183,7 +183,19 @@ export default function SongSections({
   });
 
   const [chosen, setChosen] = useState<string>('');
-  const track = usable.find((one) => one.id === chosen) ?? usable[0] ?? null;
+  /* No `?? usable[0]`. The same fault as the presenter's cast picker — see
+     the note on `member` in `Presenter.tsx`. `chosen` starts empty and stops
+     matching whenever the usable list is re-read without the song that was
+     picked, and falling through to the first row meant working on a song
+     nobody selected. The effect below moves `chosen` instead, so the row that
+     is highlighted and the row that is worked on are one value. */
+  const track = usable.find((one) => one.id === chosen) ?? null;
+
+  useEffect(() => {
+    if (!usable.length) return;
+    if (usable.some((one) => one.id === chosen)) return;
+    setChosen(usable[0].id);
+  }, [usable, chosen]);
 
   // Opened from somewhere else, and only for as long as that request is new.
   const opened = useRef<string | null>(null);

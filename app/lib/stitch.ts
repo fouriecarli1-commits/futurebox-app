@@ -142,6 +142,29 @@ export interface Cut {
    * Defaults to 0, which is what every existing cut was made with.
    */
   readonly audioFrom?: number;
+  /**
+   * How loud the song sits under the film, 0 to 2. Absent is 1.
+   *
+   * On the cut rather than baked into the file, because the same song under
+   * a spoken advert and under a montage wants two different levels and
+   * neither is the file's fault.
+   */
+  readonly audioLoud?: number;
+  /**
+   * Seconds of black fading up at the start, and down at the end.
+   *
+   * Both the picture and the sound, from one number. A film that fades to
+   * black with the music still playing is the thing that reads as a bug —
+   * and it is the version you get for free if the fade is drawn on the
+   * canvas and nobody remembers the gain.
+   *
+   * Clamped here as well as in `lib/videoedit.ts`. The editor is one caller
+   * and the cut is the thing that renders: a second caller with a five
+   * second fade on a four second film must not be able to produce a film
+   * that is never up.
+   */
+  readonly fadeIn?: number;
+  readonly fadeOut?: number;
   /** The film's shape. Clips are fitted into it, never stretched. */
   readonly width: number;
   readonly height: number;
@@ -489,6 +512,8 @@ export async function stitch(cut: Cut): Promise<Made> {
   let audioContext: AudioContext | null = null;
   let destination: MediaStreamAudioDestinationNode | null = null;
   let song: AudioBufferSourceNode | null = null;
+  /** The song's level, and where its fade is drawn. */
+  let songGain: GainNode | null = null;
   /* Either reason is enough to need a graph: a song laid under the film, or
      a single shot that was paid to speak. */
   const talks = cut.scenes.some((one) => one.sound);
@@ -504,7 +529,15 @@ export async function stitch(cut: Cut): Promise<Made> {
           const buffer = await audioContext.decodeAudioData(await cut.audio.arrayBuffer());
           song = audioContext.createBufferSource();
           song.buffer = buffer;
-          song.connect(destination);
+          /* Through a gain rather than straight at the destination, so the
+             level and the fade have somewhere to live. A song connected
+             directly is a song that can only be as loud as it was recorded,
+             and a fade drawn on the canvas with the music still at full is
+             the thing that reads as a bug. */
+          songGain = audioContext.createGain();
+          songGain.gain.value = Math.max(0, Math.min(2, cut.audioLoud ?? 1));
+          song.connect(songGain);
+          songGain.connect(destination);
         }
       } catch {
         // A song that will not decode is a film without one, not a failure.
@@ -521,6 +554,35 @@ export async function stitch(cut: Cut): Promise<Made> {
       }
     }
   }
+
+  /* ── The fades, worked out once ────────────────────────────────────────
+
+     Against the whole film rather than the first and last scene, which is
+     what "fade in" means: a two-second fade over a one-second opening shot
+     should carry into the second one, not stop at the cut.
+
+     Clamped here as well as in `lib/videoedit.ts`. That module is ONE caller
+     of this one, and the day a second appears — a template, a copilot, an
+     import — a five-second fade on a four-second film must not be able to
+     produce a film that is never fully up. The rule belongs where the
+     rendering is. */
+  const filmRuns = cut.scenes.reduce((all, one) => {
+    const view = windowOf(one, Number.POSITIVE_INFINITY);
+    return all + Math.max(0, view.to - view.from);
+  }, 0);
+  const fade = ((): { up: number; down: number } => {
+    let up = Math.max(0, cut.fadeIn ?? 0);
+    let down = Math.max(0, cut.fadeOut ?? 0);
+    if (!Number.isFinite(filmRuns) || filmRuns <= 0) return { up: 0, down: 0 };
+    if (up + down > filmRuns) {
+      const share = filmRuns / (up + down);
+      up *= share;
+      down *= share;
+    }
+    return { up, down };
+  })();
+  /** Seconds of film laid down before the scene now playing. */
+  let laid = 0;
 
   const recorder = new MediaRecorder(stream, { mimeType });
   const parts: Blob[] = [];
@@ -658,10 +720,49 @@ export async function stitch(cut: Cut): Promise<Made> {
              anyway — which is the whole reason the logo is burned in at the
              cut rather than in a pass of its own. */
           if (cut.mark) drawMark(context, cut.mark, cut.width, cut.height, cut.markCorner);
+          /* ── The fade, over everything ────────────────────────────────
+
+             Last, and that is the point: a fade under the caption would
+             leave the words at full brightness over a darkening picture,
+             which looks like a fault rather than a fade. Everything goes
+             together — picture, bars, words and the logo.
+
+             `at` is the moment on the FILM's clock, not this scene's, so a
+             fade longer than the opening shot carries across the cut into
+             the next one. */
+          if (fade.up > 0 || fade.down > 0) {
+            const at = laid + Math.max(0, video.currentTime - window.from);
+            const upAlpha = fade.up > 0 ? 1 - Math.min(1, at / fade.up) : 0;
+            const left = filmRuns - at;
+            const downAlpha = fade.down > 0 ? 1 - Math.min(1, left / fade.down) : 0;
+            const dark = Math.max(upAlpha, downAlpha);
+            if (dark > 0) {
+              context.save();
+              context.globalAlpha = Math.min(1, dark);
+              context.fillStyle = '#000';
+              context.fillRect(0, 0, cut.width, cut.height);
+              context.restore();
+            }
+            /* And the sound with it, from the same number. Set every frame
+               rather than scheduled once, because a scheduled ramp assumes
+               the film plays at exactly the speed it was planned at — and
+               this renders in real time on whatever device somebody has,
+               where a scene can stall. Following the picture means the two
+               can never disagree. */
+            if (songGain) {
+              songGain.gain.value = Math.max(0, Math.min(2, cut.audioLoud ?? 1)) * (1 - Math.min(1, dark));
+            }
+          }
           requestAnimationFrame(draw);
         };
         draw();
       });
+      /* This scene is behind us. Counted from the WINDOW rather than from
+         the clip, because a trimmed piece contributes what it showed and not
+         what it holds — and the fade at the end is measured back from the
+         film's real length, so an error here moves the fade rather than
+         shortening it, which is the kind of wrong nobody can point at. */
+      laid += Math.max(0, window.to - window.from);
     }
 
     recorder.stop();

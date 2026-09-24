@@ -93,9 +93,13 @@ export async function GET(request: Request): Promise<Response> {
       if (SETTLED.has(row.status)) return row;
       const live = await finetuneStatus(row.id);
       if (!live || live.status === row.status) return row;
+      /* The row this loop is on. Unfiltered, refreshing one job's status
+         stamped it onto every training job in the table — including other
+         people's, and including ones that had failed. See `check:unfiltered`. */
       wrote(await client
         .from('finetunes')
-        .update({ status: live.status, why: live.why ?? null }), 'the training job');
+        .update({ status: live.status, why: live.why ?? null })
+        .eq('id', row.id), 'the training job');
       return { ...row, status: live.status, why: live.why ?? null };
     }),
   );
@@ -286,6 +290,8 @@ export async function DELETE(request: Request): Promise<Response> {
   if (!owned) return Response.json({ message: 'Not found.' }, { status: 404 });
 
   await dropFinetune(id);
-  wrote(await client.from('finetunes').delete(), 'the training job');
+  /* Scoped. Unfiltered, this deleted every training job on the platform.
+     See `check:unfiltered`. */
+  wrote(await client.from('finetunes').delete().eq('id', id).eq('owner', caller.id), 'the training job');
   return new Response(null, { status: 204 });
 }

@@ -1,56 +1,41 @@
 /**
- * What is sold on top of a plan.
+ * What used to be sold on top of a plan, and no longer is.
  *
- * ── Why this is separate from `plans.ts` ─────────────────────────────────
+ * ── Carli, 24 September 2026 ─────────────────────────────────────────────
  *
- * A tier decides how much somebody may make. An add-on decides whether a whole
- * room is theirs at all. They are priced differently, bought differently, and
- * cancel differently, and folding one into the other would mean a member on
- * the cheapest tier could never buy the marketing desk without also buying
- * capacity they did not ask for.
+ * *"Ek dink dieselfde met advert, dit moenie 'n ekstra produk wees nie,
+ * eerder dit monotise en krediete vra saam met die pakkette wat ons reeds
+ * het. Te veel aankoop punte gaan mense afsit."*
  *
- * ── The price is here and nowhere else ───────────────────────────────────
+ * The marketing desk was R199 a month with its own checkout, its own Paystack
+ * subscription and its own table of who had bought it. It is now part of
+ * every paid plan, and what is made in it costs credits out of the same
+ * wallet as a song — `CREDITS.marketPlan` and `CREDITS.adLines`. The door is
+ * `paidRoom(request, 'market.desk')`.
  *
- * The screen reads it from this file and the checkout reads it from this file,
- * so the number on the button and the number charged cannot drift. Nothing is
- * ever taken from the request: a page that can name its own price is a page
- * that will eventually be asked to.
+ * ── Why this file is not simply deleted ──────────────────────────────────
+ *
+ * Because the R199 was a real recurring subscription at Paystack, and one was
+ * taken out. Deleting the plan code would not stop the charge — it would only
+ * stop this app RECOGNISING it. The webhook's renewal branch has a comment
+ * calling that line load-bearing, and it is: a renewal carries none of our
+ * metadata, so an unrecognised R199 charge reads as "a plan renewed" and would
+ * quietly set somebody's membership from whatever it is to whatever the
+ * arrangement says.
+ *
+ * So the shelf is empty and nothing can be bought, while the id stays known
+ * long enough for any charge still in flight to be recognised and ignored
+ * rather than misread. It goes when the subscription at Paystack is cancelled
+ * and the last renewal has passed.
  */
 
-export interface AddOn {
-  readonly id: string;
-  /** Rand a month. */
-  readonly rand: number;
-  /**
-   * What one charge buys, in days, where it is charged as a single month
-   * rather than as a subscription.
-   *
-   * Thirty-one rather than thirty: a month bought on the 31st of January
-   * should not run out before the 1st of March. Erring towards the buyer by a
-   * day is cheaper than a support message about it.
-   */
-  readonly days: number;
-}
-
-/** The marketing desk: the market read, the week, and the queue. */
+/** The marketing desk. No longer sold; kept so a stray renewal is legible. */
 export const MARKETING = 'marketing';
 
-export const ADDONS: readonly AddOn[] = [
-  { id: MARKETING, rand: 199, days: 31 },
-];
-
-export function addonById(id: string): AddOn | null {
-  return ADDONS.find((one) => one.id === id) ?? null;
-}
-
-/** What is behind the lock, as the sales screen lists it. Keys, not sentences —
- *  the words live in the dictionary so both languages say the same thing. */
-export const MARKETING_INCLUDES = [
-  'addon.has.read',
-  'addon.has.buyers',
-  'addon.has.angles',
-  'addon.has.week',
-  'addon.has.beyond',
-  'addon.has.queue',
-  'addon.has.calendar',
-] as const;
+/**
+ * Empty, and that is the point: there is nothing to buy beside a plan.
+ *
+ * Two tills in this app, and only two — a plan, and a top-up when the plan's
+ * credits run out. `check:sold` holds the cards against what is priced.
+ */
+export const ADDONS: readonly never[] = [];

@@ -1211,18 +1211,40 @@ export async function POST(request: Request): Promise<Response> {
            `.is('ends_at', null)` makes it the FIRST bid that does it and
            not the second: two people bidding in the same second would
            otherwise each set a clock, and the later one would quietly
-           give the piece another thirty-six hours. */
+           give the piece another thirty-six hours.
+
+           ── Both filters were missing, 24 September 2026 ────────────
+
+           This comment described `.is('ends_at', null)` and the statement
+           under it had neither that nor `.eq('id', work.id)`. An update
+           with no filter is an update to EVERY ROW, so the first bid on
+           any one piece set the same closing time on every piece in the
+           market — every artwork in the shop suddenly counting down to a
+           deadline nobody had bid on. The snipe branch below had the same
+           hole, and pushed every auction out by fifteen minutes on any
+           late bid anywhere.
+
+           It survived because the paragraph above it was right. Nothing
+           reads a comment, and the one rule this describes was the one
+           rule not written down. `check:unfiltered` now refuses an update
+           or a delete that names no row. */
         wrote(await client
           .from('art_works')
-          .update({ ends_at: endsAt() }), 'the artwork listing');
+          .update({ ends_at: endsAt() })
+          .eq('id', work.id)
+          .is('ends_at', null), 'the artwork listing');
       } else if (closes - Date.now() < SNIPE_MINUTES * 60 * 1000) {
         /* ── The late bid pushes the end out ─────────────────────────
            Otherwise the thirty-six hours is theatre and the auction is
            really one second long: everybody waits for the end and the
-           fastest connection wins. */
+           fastest connection wins.
+
+           Scoped to this piece — see the note above. Without the `.eq` it
+           pushed out every auction in the market. */
         wrote(await client
           .from('art_works')
-          .update({ ends_at: new Date(Date.now() + SNIPE_MINUTES * 60 * 1000).toISOString() }), 'the artwork listing');
+          .update({ ends_at: new Date(Date.now() + SNIPE_MINUTES * 60 * 1000).toISOString() })
+          .eq('id', work.id), 'the artwork listing');
       }
       return Response.json({ bid: rand, next: rand + BID_STEP });
     }

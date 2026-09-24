@@ -122,6 +122,10 @@ export async function DELETE(request: Request): Promise<Response> {
   if (!episode) return Response.json({ message: 'Not found.' }, { status: 404 });
 
   await client.storage.from('episodes').remove([episode.audio_path]);
-  wrote(await client.from('episodes').delete(), 'the episode removal');
+  /* Scoped to this episode AND this owner. It had neither: one person
+     deleting one episode deleted every episode in the app, for everybody.
+     The read above is filtered correctly and the delete under it was not —
+     see `check:unfiltered`. */
+  wrote(await client.from('episodes').delete().eq('id', id).eq('owner', caller.id), 'the episode removal');
   return new Response(null, { status: 204 });
 }

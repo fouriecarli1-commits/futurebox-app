@@ -627,6 +627,22 @@ export default function ArtMarket(): React.ReactElement {
   const { t, lang } = useLang();
   const [market, setMarket] = useState<Market | null>(null);
   const [problem, setProblem] = useState('');
+  /* ── And a place to say something WORKED ────────────────────────────────
+ 
+     Carli, 24 September 2026: *"uiteindelik maak dit bid oop by album art,
+     maar die knoppie van die bid vat mens nie verder nie."*
+ 
+     The room had a way to report a refusal and no way at all to report a
+     success. `doIt` posted the bid, refreshed the gallery and returned true
+     in silence — so pressing Bid looked identical to pressing a button that
+     was not wired to anything. A bid is not a payment and does not leave the
+     page, which makes it exactly the action that most needs saying out loud:
+     there is nowhere for it to take you, so if it does not speak, it did
+     nothing as far as anybody can tell.
+ 
+     It is cleared on the next press rather than on a timer. A message that
+     vanishes on its own is one somebody can miss by looking away. */
+  const [said, setSaid] = useState('');
   const [loading, setLoading] = useState(true);
   /** Which of the three the screen is showing. */
   const [tab, setTab] = useState<'works' | 'artists' | 'mine'>('works');
@@ -774,10 +790,32 @@ export default function ArtMarket(): React.ReactElement {
     setWanted(null);
   }, [wanted, market]);
 
+  /* ── And keep an OPEN sheet in step with the gallery ────────────────────
+ 
+     The sheet was a snapshot taken when it was opened. `doIt` re-read the
+     market after every write, the wall behind updated, and the panel in front
+     went on showing the standing bid and the Bid button price from before the
+     press. So bidding successfully left the screen looking exactly as it had
+     — the second half of *"die knoppie van die bid vat mens nie verder nie"*.
+ 
+     Matched by id rather than replaced wholesale, and closed if the piece is
+     gone from the wall: a sheet for something that has been sold or taken
+     down should not sit there taking bids. */
+  useEffect(() => {
+    if (!sheet || !market) return;
+    const fresh = market.wall.find((one) => one.id === sheet.id) ?? null;
+    if (!fresh) {
+      setSheet(null);
+      return;
+    }
+    if (fresh !== sheet) setSheet(fresh);
+  }, [market, sheet]);
+
   /** One place every write goes through, so every one of them re-reads. */
   const doIt = useCallback(
     async (body: Record<string, unknown>): Promise<boolean> => {
       setProblem('');
+      setSaid('');
       try {
         const token = await accessToken();
         const response = await fetch('/api/artmarket', {
@@ -905,6 +943,18 @@ export default function ArtMarket(): React.ReactElement {
           className="mx-4 mt-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-[14px] text-rose-400"
         >
           {problem}
+        </p>
+      )}
+
+      {/* The other half of that pair. `role="status"` rather than `"alert"`:
+          a screen reader announces good news without interrupting. */}
+      {said && (
+        <p
+          role="status"
+          data-artsaid
+          className="mx-4 mt-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2.5 text-[14px] text-emerald-400"
+        >
+          {said}
         </p>
       )}
 
@@ -1228,7 +1278,19 @@ export default function ArtMarket(): React.ReactElement {
           artist={market?.artists.find((one) => one.id === sheet.artist) ?? null}
           onClose={() => setSheet(null)}
           onBuy={() => void pay({ kind: 'art', work: sheet.id })}
-          onBid={(rand) => void doIt({ what: 'bid', work: sheet.id, rand })}
+          onBid={(rand) =>
+            void doIt({ what: 'bid', work: sheet.id, rand }).then((ok) => {
+              /* Only on a real yes. `doIt` already put the refusal on screen
+                 when it was a no, and saying both would be worse than saying
+                 neither. */
+              if (ok) {
+                setSaid(
+                  `${t('art.bidIn', 'Your bid is in at')} R${rand}. ` +
+                    t('art.bidTop', 'You are the top bidder until somebody goes higher.'),
+                );
+              }
+            })
+          }
           onPass={() => void pay({ kind: 'bidpass', work: sheet.id })}
           bidderRand={market?.bidderRand ?? 50}
           onArtist={(artist) => {

@@ -62,7 +62,13 @@ const everywhere = (needle: RegExp): Tier[] =>
  */
 const MUST_BE_ON_EVERY_CARD: { readonly what: string; readonly says: RegExp }[] = [
   { what: 'album art by real artists', says: /[Aa]lbum art/ },
-  { what: 'the R199 marketing desk', says: /marketing desk/i },
+  { what: 'the marketing desk', says: /marketing desk/i },
+  /* The two rooms that stopped being free on 24 September 2026. A room that
+     used to cost nothing and now needs a plan is the one thing a card must
+     never be vague about — somebody finding that out at the door has been
+     told nothing and charged nothing, which reads as the app breaking. */
+  { what: 'the Pro Booth', says: /Pro Booth/ },
+  { what: 'the video editor', says: /video editor/i },
   { what: 'dubbing, the dearest thing here', says: /[Dd]ubbing/ },
 ];
 
@@ -92,6 +98,14 @@ const NAMED_ELSEWHERE: Record<string, string> = {
   voiceChange: 'a Pro Booth tool, priced at the button it sits on',
   cover: 'the generated cover, priced at the button; the artist route is the card line',
   dub: 'on every card as of 24 September 2026',
+  /* All four are on every card as of 24 September 2026 — the rooms by name,
+     the prices in the same line. The two `MUST_BE_ON_EVERY_CARD` rules above
+     are what actually holds them there; these entries only say they were
+     thought about rather than forgotten. */
+  marketPlan: 'on every card, priced beside the marketing desk',
+  adLines: 'on every card, priced beside the marketing desk',
+  cutout: 'on every card, priced beside the video editor',
+  erase: 'on every card, in the same line as the background — same rate, same sentence',
 };
 
 const priced = Object.keys(CREDITS);
@@ -100,11 +114,17 @@ ok(`every price in the table is on a card or has a written reason not to be — 
   unexplained.length === 0,
   `${unexplained.join(', ')} — add it to a plan card, or to NAMED_ELSEWHERE in this file with the reason`);
 
-for (const addon of ADDONS) {
-  ok(`the ${addon.id} add-on at R${addon.rand} is on the cards`,
-    everywhere(new RegExp(`R${addon.rand}`)).length === 0,
-    'an add-on sold from inside one room only is invisible to anybody comparing plans');
-}
+/* ── Two tills, and only two ──────────────────────────────────────────────
+   Carli, 24 September 2026: *"Te veel aankoop punte gaan mense afsit."*
+
+   This loop used to walk the add-on shelf and insist each thing on it was
+   named on the cards. The shelf is empty now and the rule is stronger: there
+   may BE nothing on it. A plan and a top-up are the two ways to pay, and a
+   third — whatever it is sold as — is a third chance to decide against all of
+   them. `lib/addons.ts` says why the file still exists at all. */
+ok('nothing is sold beside a plan and a top-up',
+  ADDONS.length === 0,
+  `${ADDONS.length} add-on(s) on the shelf — every purchase point past the second costs more than it makes`);
 
 /* ── 2. The screens draw every line ───────────────────────────────────── */
 

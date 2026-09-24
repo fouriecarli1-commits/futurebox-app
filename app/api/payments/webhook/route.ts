@@ -20,8 +20,6 @@ import { recordPurchase } from '@/app/lib/server/account';
 import { createClient } from '@supabase/supabase-js';
 import type { Tier } from '@/app/lib/plans';
 import { addonOfPlan, arrangementOf, payerOf } from '@/app/lib/server/paystack';
-import { addonById } from '@/app/lib/addons';
-import { addonPayer, grantAddon, rememberAddonPayer } from '@/app/lib/server/addons';
 import { packById } from '@/app/lib/credits';
 import { topUp } from '@/app/lib/server/credits';
 import { accountFor, send } from '@/app/lib/server/email';
@@ -85,11 +83,10 @@ interface PaystackEvent {
     status?: string;
     metadata?: {
       owner?: string;
-      kind?: 'plan' | 'credits' | 'addon' | 'art' | 'commission' | 'bidpass';
+      kind?: 'plan' | 'credits' | 'art' | 'commission' | 'bidpass';
       trackId?: string | null;
       tier?: Tier | null;
       pack?: string | null;
-      addon?: string | null;
       /* Album art: which piece off the wall, or which commission offer. */
       work?: string | null;
       offer?: string | null;
@@ -245,15 +242,29 @@ export async function POST(request: Request): Promise<Response> {
        somebody's Studio membership instead, quietly, every month. */
     const renewedAddon = addonOfPlan(planOfCharge(event.data.plan));
     if (renewedAddon) {
-      const spec = addonById(renewedAddon);
-      const holder =
-        (await addonPayer(payer.customerCode)) ??
-        (await ownerOfCustomer(payer.customerCode))?.owner ??
-        null;
-      if (!holder || !spec) return new Response('no owner', { status: 200 });
-      await grantAddon(holder, renewedAddon, spec.days, reference);
-      await receipt(holder, `${renewedAddon} add-on, one month`, cents, reference, true);
-      return new Response('renewed', { status: 200 });
+      /* ── Recognised, and deliberately given nothing ──────────────────
+ 
+         The marketing add-on stopped being sold on 24 September 2026 — it is
+         in every paid plan now, and `lib/addons.ts` says why. What did NOT
+         stop is a subscription already standing at Paystack, which goes on
+         raising a charge every month until somebody cancels it there.
+ 
+         So this line stays, and stays first. Take it out and an R199 renewal
+         falls through to the membership branch below, which reads a charge
+         with none of our metadata as "a plan renewed" and writes a tier from
+         the arrangement — silently moving somebody's membership on the
+         strength of a payment for something else entirely. The comment above
+         called this load-bearing; it is more load-bearing now than it was.
+ 
+         Nothing is granted and no receipt is sent, because nothing was sold.
+         The charge is acknowledged so Paystack stops retrying it, and the
+         line goes when the subscription is cancelled and the last renewal has
+         passed. */
+      console.warn(
+        `payments: a charge arrived for the withdrawn ${renewedAddon} add-on. ` +
+          'Cancel that subscription at Paystack — nothing in this app sells it any more.',
+      );
+      return new Response('withdrawn', { status: 200 });
     }
 
     const known = await ownerOfCustomer(payer.customerCode);
@@ -279,22 +290,6 @@ export async function POST(request: Request): Promise<Response> {
     return new Response('ok', { status: 200 });
   }
 
-  if (meta.kind === 'addon' && meta.addon) {
-    /* How long a month is, read here from our own table. The charge only says
-       which add-on was paid for; it does not get to say how long it lasts.
-       `grant_addon` refuses a reference it has already counted, so a retried
-       webhook cannot hand out two months for one payment. */
-    const spec = addonById(meta.addon);
-    if (spec) {
-      await grantAddon(owner, spec.id, spec.days, reference);
-      await receipt(owner, `${spec.id} add-on`, cents, reference, false);
-      /* And write down whose customer code this is, so the renewal a month
-         from now — which will carry none of this — has somewhere to go. */
-      const payer = reference ? await payerOf(reference) : null;
-      if (payer) await rememberAddonPayer(payer.customerCode, owner);
-    }
-    return new Response('ok', { status: 200 });
-  }
 
   /* ── A piece of album art ────────────────────────────────────────────
 

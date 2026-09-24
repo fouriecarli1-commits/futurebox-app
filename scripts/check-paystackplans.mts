@@ -90,7 +90,33 @@ check(
   rows.map((one) => `${one.env}=${one.rand}`).join(' '),
 );
 
+/**
+ * A code the app reads but nobody creates, with one named exception.
+ *
+ * `PAYSTACK_PLAN_MARKETING` is read and deliberately not created. The R199
+ * marketing add-on stopped being sold on 24 September 2026 — it is in every
+ * paid plan now — but a subscription taken out under it goes on charging at
+ * Paystack until somebody cancels it there. The webhook reads this code to
+ * RECOGNISE such a renewal and answer without granting anything; without the
+ * read, that charge falls through to the membership branch and is treated as
+ * a plan renewal on somebody's account.
+ *
+ * So it is withdrawn, not missing, and the two look identical from here. The
+ * exception is named rather than the rule loosened: any OTHER code the app
+ * reads and the script does not create is still the fault this rule is for.
+ * It goes when the subscription is cancelled and the last renewal has passed.
+ */
+const WITHDRAWN = new Set(['PAYSTACK_PLAN_MARKETING']);
+
 for (const one of read) {
+  if (WITHDRAWN.has(one)) {
+    check(
+      `${one} is read to recognise a withdrawn subscription, and deliberately not created`,
+      !made.has(one),
+      'it is being created again — nothing sells it, so a new plan code at Paystack sells nothing',
+    );
+    continue;
+  }
   check(
     `${one} is created by scripts/paystack-plans.mjs`,
     made.has(one),
@@ -116,10 +142,15 @@ check(
   /readFile\(PLANS_TS/.test(script) && /randFor\(source/.test(script),
   'a price typed into this script bills what no pricing card ever quoted',
 );
+/* The add-on price rule used to live here: the script had to read the price
+   out of `addons.ts` rather than typing it. There is no add-on price any more
+   — the shelf is empty — so the rule is inverted rather than dropped. Reading
+   that file again would mean something had been put back on sale beside a
+   plan, and `check:sold` and this line would both want to know. */
 check(
-  "and the add-on's out of addons.ts, which says the price lives there and nowhere else",
-  /readFile\(ADDONS_TS/.test(script) && /randForAddon\(/.test(script),
-  '',
+  'the script reads no add-on price, because nothing is sold on the side',
+  !/ADDONS_TS/.test(script) && !/randForAddon/.test(script),
+  'the script is pricing an add-on again — see `lib/addons.ts` for why there is not one',
 );
 check(
   'and no rand amount is written into the script as a number',
@@ -127,25 +158,14 @@ check(
   (script.match(/rand:\s*\d+|amount:\s*\d{3,}/g) ?? []).join(', '),
 );
 
-/* Every add-on that is sold needs a plan code, or it can only ever be a
-   single charge that never renews. */
-for (const one of ADDONS) {
-  const wanted = `PAYSTACK_PLAN_${one.id.toUpperCase()}`;
-  check(
-    `the ${one.id} add-on (R${one.rand}) has ${wanted}`,
-    read.has(wanted) && made.has(wanted),
-    `read: ${read.has(wanted)}, created: ${made.has(wanted)}`,
-  );
-  /* And at the price the app charges. A plan created at a different amount
-     bills somebody a number no screen ever showed them, and a refund is the
-     cheapest way that ends. */
-  const row = rows.find((two) => two.env === wanted);
-  check(
-    `and it is created at R${one.rand}, which is what the app charges`,
-    row?.rand === one.rand,
-    `the script would create it at R${row?.rand ?? '(not at all)'}`,
-  );
-}
+/* The add-on shelf is empty — see `lib/addons.ts` — so there is nothing here
+   that needs its own Paystack plan code. Asserted rather than deleted: a new
+   thing sold on the side would need one, and would go unnoticed otherwise. */
+check(
+  'no add-on needs a Paystack plan code, because nothing is sold on the side',
+  ADDONS.length === 0,
+  `${ADDONS.length} on the shelf`,
+);
 
 /* ── And the document must not promise more than the script does ───────
  
@@ -154,6 +174,7 @@ for (const one of ADDONS) {
    script does not create is exactly what happened. */
 const guide = readFileSync('docs/SWITCH-ON.md', 'utf8');
 for (const one of named(guide)) {
+  if (WITHDRAWN.has(one)) continue;
   check(
     `docs/SWITCH-ON.md names ${one}, and the script creates it`,
     made.has(one),
