@@ -724,7 +724,42 @@ export function justArrived(): boolean {
  * A provider being listed here means this app can draw its button. Whether it
  * *works* is a separate question with a separate answer — see `providersOn`.
  */
-export const PROVIDERS = ['google', 'apple', 'facebook'] as const;
+/**
+ * Every way in this app knows how to offer, of the ones Supabase can do.
+ *
+ * ── Why the list is longer than three ────────────────────────────────────
+ *
+ * Carli, 24 September 2026: *"Ek dink in elkgeval op daardie punt moet daar
+ * nog meer sign in opsies wees, ek het heel aan die begin die verskillende
+ * konneksie sign ins genoem."*
+ *
+ * Naming one here costs nothing and shows nothing: the buttons are drawn
+ * from what the PROJECT has switched on, so a name added here appears the
+ * moment it is configured in Supabase and stays invisible until then. That
+ * is the whole design — see `providersOn` below.
+ *
+ * ── The one she will want most, and cannot have ──────────────────────────
+ *
+ * **TikTok is not on this list because Supabase does not offer it.** Nor
+ * Instagram, SoundCloud, Apple Music, Vimeo or Suno — all of them places
+ * this app posts to, none of them a Supabase auth provider. Signing in with
+ * TikTok would mean building the OAuth exchange here and keeping a second
+ * session store, which is a different piece of work and a bigger surface
+ * than everything else on this screen put together. Written down rather
+ * than left as a gap somebody wonders about later.
+ */
+export const PROVIDERS = [
+  'google',
+  'apple',
+  'facebook',
+  /* The creator-facing ones. `twitter` is the id Supabase still uses for X. */
+  'twitter',
+  'spotify',
+  'discord',
+  'twitch',
+  'github',
+  'linkedin_oidc',
+] as const;
 
 export type Provider = (typeof PROVIDERS)[number];
 
@@ -742,22 +777,54 @@ export type Provider = (typeof PROVIDERS)[number];
  * `/auth/v1/settings` is a public, unauthenticated endpoint on every Supabase
  * project that lists exactly this. Ask it once, draw what it says.
  *
- * A project that cannot be reached answers `[]` rather than a guess: no
- * buttons is a worse screen than three, and a broken one is worse than both.
+ * ── "None are on" and "we could not ask" are not the same answer ─────────
+ *
+ * Carli, 24 September 2026: *"Die google sign in op die app het eweskielik
+ * verdwyn."*
+ *
+ * This used to answer `[]` three different ways — no environment variables,
+ * a response that was not ok, or any thrown error — and the screen drew
+ * nothing at all for an empty list. So a network blip, a rate limit, a
+ * momentary Supabase hiccup or a changed CORS rule took every sign-in
+ * button off the page with **nothing on screen saying why**, and left it
+ * looking exactly like a project with no providers configured.
+ *
+ * That is the fault this repository has a whole check for in its routes
+ * (`check:couldnotask`) and it was sitting on the front door. The three
+ * cases are now told apart: `off` means the project really says none are
+ * on, `unreachable` means we could not ask. The screen draws a line and a
+ * retry for the second rather than vanishing.
+ *
+ * It does not rule out the other possibility, and neither should anybody
+ * reading this: Google may simply have been switched off, or its client
+ * secret expired, in the Supabase dashboard. This makes the difference
+ * VISIBLE instead of guessable.
  */
-export async function providersOn(): Promise<Provider[]> {
+export type ProvidersAnswer =
+  | { readonly how: 'on'; readonly providers: Provider[] }
+  | { readonly how: 'off' }
+  | { readonly how: 'unreachable'; readonly why: string };
+
+export async function providersAsked(): Promise<ProvidersAnswer> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return [];
+  if (!url || !key) return { how: 'off' };
   try {
     const response = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: key } });
-    if (!response.ok) return [];
+    if (!response.ok) return { how: 'unreachable', why: `settings answered ${response.status}` };
     const said = (await response.json()) as { external?: Record<string, unknown> };
     const on = said.external ?? {};
-    return PROVIDERS.filter((one) => on[one] === true);
-  } catch {
-    return [];
+    const found = PROVIDERS.filter((one) => on[one] === true);
+    return found.length ? { how: 'on', providers: found } : { how: 'off' };
+  } catch (thrown) {
+    return { how: 'unreachable', why: thrown instanceof Error ? thrown.message : 'could not ask' };
   }
+}
+
+/** The list alone, for callers that genuinely do not care why it is empty. */
+export async function providersOn(): Promise<Provider[]> {
+  const asked = await providersAsked();
+  return asked.how === 'on' ? asked.providers : [];
 }
 
 export async function signInWith(

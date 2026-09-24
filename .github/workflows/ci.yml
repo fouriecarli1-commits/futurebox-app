@@ -331,6 +331,23 @@ jobs:
       - name: The live room's box is not a chat
         run: npm run check:livechat
 
+      # "Elke kamer waarin create word" duplicated for two people. Put the
+      # two designs side by side she chose the one that is not nine copies:
+      # the same rooms, opened in a pair mode with a turn each. So the rule
+      # is that the picker and the server name the same rooms, the pen is
+      # given and never taken, no room exists without an accepted agreement,
+      # and there is nowhere in the shape of it to put a chat.
+      - name: Two people in one room, a turn each, and no chat
+        run: npm run check:pairs
+
+      # "Die google sign in op die app het eweskielik verdwyn." Every failure
+      # to read /auth/v1/settings became an empty list, and an empty list
+      # drew nothing — so a blip took every sign-in button off the front
+      # door with nothing saying why. A person who cannot sign in cannot
+      # report that they cannot sign in.
+      - name: The sign-in buttons do not vanish
+        run: npm run check:signin
+
       # `{zoom}\u00d7` in JSX text is six characters of nothing, printed as
       # typed. It compiles, it passes every test that reads the DOM by role
       # or label, and it reached a phone as "4\u00d7" in a photograph.

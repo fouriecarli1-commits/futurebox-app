@@ -22,6 +22,8 @@ import CollabRadar from './components/CollabRadar';
 import MusicQuiz from './components/MusicQuiz';
 import CollabFinder from './components/CollabFinder';
 import CollabRoom from './components/CollabRoom';
+import PairStrip from './components/PairStrip';
+import { loadPairs, type Pair } from './lib/pairs';
 import Channel from './components/Channel';
 import VoiceScreen from './components/VoiceScreen';
 import SongSections from './components/SongSections';
@@ -649,6 +651,27 @@ export default function FutureBoxHome() {
      three places at once — which is the compiler doing its job, and a list that
      needs the compiler to keep it honest should not be a list. */
   const [studioTab, setStudioTab] = useState<SurfaceId>('make');
+  /**
+   * The two-person rooms this account is in, and the one for the room on
+   * screen.
+   *
+   * Re-read on a signal rather than polled: the pen moves when somebody
+   * presses something, and a timer that asked every few seconds would spend
+   * a request a minute on a room almost nobody is in.
+   */
+  const [pairs, setPairs] = useState<Pair[]>([]);
+  const [pairsUnread, setPairsUnread] = useState(false);
+  const [pairSignal, setPairSignal] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    void loadPairs().then((got) => {
+      if (!alive) return;
+      setPairs(got.pairs);
+      setPairsUnread(Boolean(got.detailUnread));
+    });
+    return () => { alive = false; };
+  }, [pairSignal]);
+  const pairHere = pairs.find((one) => one.surface === studioTab) ?? null;
 
   /* Where the copilot sits when the three panes stack.
 
@@ -3893,6 +3916,22 @@ export default function FutureBoxHome() {
 
 
             {/* TAB 2: CUSTOM VOICE STUDIO (USE YOUR OWN VOICE OR CLONE) */}
+            {/* ── Somebody is in this room with you ───────────────────────
+
+                Above whichever making room is open, and only when there is
+                a pair for THIS room: the two of you working in the booth
+                says nothing about the video desk, and a strip that followed
+                you into every room would be a claim that is false in eight
+                of them.
+
+                Drawn here rather than inside nine components for the reason
+                she chose when the two were put side by side: one room each,
+                opened in a pair mode. A strip in nine places is nine places
+                for it to go stale. */}
+            {pairHere && (
+              <PairStrip pair={pairHere} unread={pairsUnread} onChanged={() => setPairSignal((n) => n + 1)} />
+            )}
+
             {studioTab === 'voice_studio' && (
               <VoiceScreen
                 underScript={copilotPane}
@@ -4158,6 +4197,34 @@ export default function FutureBoxHome() {
                 <CollabRoom
                   reloadKey={collabSignal}
                   me={artistName}
+                  /* Into the room, not merely making one. A button that
+                     creates something somewhere and leaves you looking at
+                     the desk you pressed it on is a button whose effect
+                     nobody can see — which is the fault the advert card
+                     and the hook hand-off were each fixed for. */
+                  onOpenPair={(pair) => {
+                    setPairSignal((n) => n + 1);
+                    goToRoom(pair.surface);
+                    /* And the copilot in there is told it is not one person
+                       working alone.
+
+                       Carli, 21 September: *"Al die kamers se AI praat nie
+                       met mekaar nie."* Found again by `check:handover`,
+                       which asks of every door whether the next room was
+                       told anything: without this the booth opens with two
+                       people in it and a copilot writing for one, offering
+                       to do things the person watching cannot press because
+                       they do not hold the turn. */
+                    copilotBus.handoff(
+                      pair.surface,
+                      'brief',
+                      `${t('brief.fromPair', 'They are working in here with somebody else, one turn at a time. The other person is')} ${pair.withName}. ${
+                        pair.mine
+                          ? t('brief.penMine', 'It is their turn right now.')
+                          : t('brief.penTheirs', 'It is the other person\u2019s turn right now, so they are watching rather than working.')
+                      }`,
+                    );
+                  }}
                   /* Into the booth, on the song they sent. The same hand-off
                      the search and the advert desk use: the room is not
                      mounted yet, so this waits for it and fires the moment it

@@ -319,9 +319,21 @@ export default function CollabFinder({
                   </p>
 
                   <div className="flex flex-wrap items-center gap-1.5">
+                    {/* Two asks, not one. The smaller of them — an ear on
+                        one song — is the one most people say yes to, and
+                        folding it into "work together" is how it stops
+                        being on offer at all. */}
                     <AskToCollab
                       handle={entry.match.track.handle}
                       because={entry.match.reasons.join('; ')}
+                      wanting="input"
+                      song={entry.from.title}
+                      onAsked={() => onAsked?.()}
+                    />
+                    <AskToCollab
+                      handle={entry.match.track.handle}
+                      because={entry.match.reasons.join('; ')}
+                      wanting="room"
                       onAsked={() => onAsked?.()}
                     />
                     <button

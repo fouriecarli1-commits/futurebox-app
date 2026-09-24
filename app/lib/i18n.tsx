@@ -290,6 +290,80 @@ export const STRINGS: Dict = {
   "live.send": { en: "Send", af: "Stuur" },
   "live.noLives": { en: "Nobody is live in here right now.", af: "Niemand is nou hier lewendig nie." },
   "live.flag": { en: "Tell us this one is bad", af: "S\u00ea vir ons hierdie een is sleg" },
+
+  /* ── Two people in one room ──────────────────────────────────────────
+     The rooms are not duplicated; they open in a pair mode with a turn
+     each. These are the words on that strip and on the picker. */
+  "pair.with": { en: "In here with you:", af: "Hier saam met jou:" },
+  "pair.yours": { en: "Your turn \u2014 you can work", af: "Jou beurt \u2014 jy kan werk" },
+  "pair.theirs": { en: "Their turn \u2014 watch, or ask for it", af: "Hulle beurt \u2014 kyk, of vra daarvoor" },
+  "pair.give": { en: "Hand over the turn", af: "Gee die beurt oor" },
+  "pair.giveAsked": { en: "Hand it over \u2014 they asked", af: "Gee dit oor \u2014 hulle het gevra" },
+  "pair.ask": { en: "Ask for the turn", af: "Vra vir die beurt" },
+  "pair.addLink": { en: "Where they can reach you", af: "Waar hulle jou kan kry" },
+  "pair.changeLink": { en: "Change where they reach you", af: "Verander waar hulle jou kry" },
+  "pair.reachThem": { en: "Reach them on", af: "Kry hulle op" },
+  "pair.noChat": {
+    en: "There is no chat in here on purpose. Leave one address or one handle and carry on talking where you already talk.",
+    af: "Daar is doelbewus geen geselshoekie hierin nie. Los een adres of een handvatsel en gesels verder waar julle reeds gesels.",
+  },
+  "pair.linkHint": {
+    en: "Paste a link \u2014 Instagram, TikTok, WhatsApp, YouTube\u2026",
+    af: "Plak \u2019n skakel \u2014 Instagram, TikTok, WhatsApp, YouTube\u2026",
+  },
+  "pair.numberWarning": {
+    en: "A WhatsApp link carries your phone number. A handle or another platform does not.",
+    af: "\u2019n WhatsApp-skakel dra jou selnommer saam. \u2019n Handvatsel of \u2019n ander platform doen nie.",
+  },
+  "pair.orHandle": {
+    en: "Or just a handle, with nothing to press:",
+    af: "Of net \u2019n handvatsel, met niks om te druk nie:",
+  },
+  "pair.leaveIt": { en: "Leave it", af: "Los dit" },
+  "brief.fromPair": {
+    en: "They are working in here with somebody else, one turn at a time. The other person is",
+    af: "Hulle werk hierin saam met iemand anders, een beurt op \u2019n slag. Die ander persoon is",
+  },
+  "brief.penMine": { en: "It is their turn right now.", af: "Dit is nou hulle beurt." },
+  "brief.penTheirs": {
+    en: "It is the other person\u2019s turn right now, so they are watching rather than working.",
+    af: "Dit is nou die ander persoon se beurt, dus kyk hulle eerder as wat hulle werk.",
+  },
+  "pair.detailUnread": {
+    en: "Could not read what they left. Try again in a moment.",
+    af: "Kon nie lees wat hulle gelos het nie. Probeer weer oor \u2019n oomblik.",
+  },
+  "auth.providersUnreachable": {
+    en: "Could not check which sign-in buttons to show. The email form below still works.",
+    af: "Kon nie kyk watter aanteken-knoppies om te wys nie. Die e-posvorm hieronder werk nog.",
+  },
+  "auth.providersRetry": { en: "Try again", af: "Probeer weer" },
+  "pair.pickRoom": {
+    en: "Open a room and work in it together, one turn at a time:",
+    af: "Maak \u2019n kamer oop en werk saam daarin, een beurt op \u2019n slag:",
+  },
+  "pair.room.make": { en: "Make a song", af: "Maak \u2019n liedjie" },
+  "pair.room.booth": { en: "The booth", af: "Die ateljee" },
+  "pair.room.studio": { en: "The studio", af: "Die werkkamer" },
+  "pair.room.canvas": { en: "The video desk", af: "Die videolessenaar" },
+  "pair.room.voice": { en: "The voice studio", af: "Die stemkamer" },
+  "pair.room.sound": { en: "The sound trainer", af: "Die klankafrigter" },
+  "pair.room.podcast": { en: "The show", af: "Die program" },
+  "pair.room.campaign": { en: "The adverts desk", af: "Die advertensielessenaar" },
+  "pair.room.albumart": { en: "Album art", af: "Albumkuns" },
+  "collab.askEar": {
+    en: "Send a song, ask what they think",
+    af: "Stuur \u2019n liedjie, vra wat hulle dink",
+  },
+  "collab.askRoom": { en: "Work together in a room", af: "Werk saam in \u2019n kamer" },
+  "collab.wantsEar": {
+    en: "Would like your ear on one song",
+    af: "Wil graag jou oor op een liedjie h\u00ea",
+  },
+  "collab.wantsRoom": {
+    en: "Would like to work on something with you in a room",
+    af: "Wil graag saam met jou in \u2019n kamer aan iets werk",
+  },
   "live.cannotCheck": {
     en: "The reports could not be read just now, so no live addresses are listed. Try again in a moment.",
     af: "Die rapporte kon nou nie gelees word nie, dus word geen lewendige adresse gelys nie. Probeer weer oor \u2019n oomblik.",

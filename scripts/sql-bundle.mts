@@ -83,6 +83,7 @@ export const ORDER = [
   'hearts',
   'livevideo',
   'liveflags',
+  'pairs',
 ] as const;
 
 /**
@@ -182,7 +183,10 @@ const WHAT: Record<(typeof ORDER)[number], string> = {
   livevideo:
     'Video\u2019s in die speelkamer, en \u2019n opname wat jy self gefilm het wat in jou kanaal bly. Sonder dit is daar geen knoppie om \u2019n video te plaas nie.',
   liveflags:
-    'Wie in die speelkamer s\u00ea \u2019n TikTok-lewendige skakel is sleg. Die boks vat nou net daardie skakels, en niks hier kan sien wat op die ander kant loop nie \u2014 dus is die mense in die kamer die sif. Sonder hierdie tabel kan niemand \u2019n skakel rapporteer nie en bly \u2019n slegte een staan.',  albumart:
+    'Wie in die speelkamer s\u00ea \u2019n TikTok-lewendige skakel is sleg. Die boks vat nou net daardie skakels, en niks hier kan sien wat op die ander kant loop nie \u2014 dus is die mense in die kamer die sif. Sonder hierdie tabel kan niemand \u2019n skakel rapporteer nie en bly \u2019n slegte een staan.',
+  pairs:
+    'Twee mense in een maak-kamer, en wie die pen hou. Sonder dit kan \u2019n paar wat ooreengekom het nie \u2019n kamer oopmaak nie, en is die knoppie stil.',
+  albumart:
     'Album art by regte kunstenaars: wie hulle is, wat te koop is, en die krediet wat saam met \u2019n liedjie na die speelkamer reis. Sonder dit is die kamer leeg en wys Live geen kunstenaar se naam nie.',
   aikoste:
     'Wat elke model-oproep gekos het, en wat die kas werklik gespaar het. Sonder dit bly die besparing \u2019n skatting \u2014 en \u2019n kas wat nooit tref nie lyk presies soos een wat altyd tref, behalwe op die rekening.',

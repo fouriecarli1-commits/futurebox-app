@@ -22,6 +22,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Handshake, Loader2, Mic, Music, Send, X } from 'lucide-react';
 import { answer, ask, loadSaid, loadThreads, say, type Said, type Thread } from '../lib/collab';
+import { openPair, type Pair } from '../lib/pairs';
+import type { SurfaceId } from '../lib/surfaces';
 import { loadTracks, type Track } from '../lib/library';
 import { keepGiven } from '../lib/uploads';
 import { accessToken } from '../lib/cloud';
@@ -45,6 +47,7 @@ function when(at: string): string {
 export default function CollabRoom({
   reloadKey,
   onOpenInBooth,
+  onOpenPair,
   me,
 }: {
   reloadKey: number;
@@ -52,11 +55,33 @@ export default function CollabRoom({
   me?: string;
   /** Take them to the booth with this song open, once it is on the device. */
   onOpenInBooth?: (title: string) => void;
+  /** Go into the two-person room that was just opened. */
+  onOpenPair?: (pair: Pair) => void;
 }): React.ReactElement {
   const { t } = useLang();
 
   const [threads, setThreads] = useState<Thread[]>([]);
   const [open, setOpen] = useState<string | null>(null);
+  /** Which room is being opened, so its button spins and the rest sit still. */
+  const [opening, setOpening] = useState<string | null>(null);
+  const [pairProblem, setPairProblem] = useState('');
+
+  /**
+   * Open the two-person room, and go into it.
+   *
+   * The go-into-it half matters as much as the opening: a button that makes
+   * a room somewhere and leaves you looking at the collab desk is a button
+   * whose effect nobody can see, which is the fault the advert card and the
+   * hook hand-off were both fixed for.
+   */
+  const startPair = useCallback(async (collab: string, surface: SurfaceId) => {
+    setOpening(surface);
+    setPairProblem('');
+    const made = await openPair(collab, surface);
+    setOpening(null);
+    if ('message' in made) { setPairProblem(made.message); return; }
+    onOpenPair?.(made);
+  }, [onOpenPair]);
   const [said, setSaid] = useState<Said[]>([]);
   const [draft, setDraft] = useState('');
 
@@ -336,6 +361,41 @@ export default function CollabRoom({
           </div>
         )}
 
+        {/* ── Into a room where the two of you actually make something ───
+
+            Carli: *"in daai moment moet die duplicated room oop maak waar in
+            net hierdie twee mense is en beide kry functionality om binne die
+            kamer te werk."*
+
+            Not a copy of the booth. The booth, opened with the other person
+            in it and a turn each — which is what she chose when the two
+            were put side by side, because nine two-person copies of nine
+            rooms is nine second places for every fault to live. */}
+        {room && (
+          <div className="rounded-xl border border-emerald-800/60 bg-emerald-950/20 p-3 space-y-2">
+            <p className="text-sm text-zinc-300">
+              {t('pair.pickRoom', 'Open a room and work in it together, one turn at a time:')}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {PAIR_ROOMS.map((one) => (
+                <button
+                  key={one.id}
+                  type="button"
+                  data-openpair={one.id}
+                  disabled={opening !== null}
+                  onClick={() => void startPair(room.id, one.id)}
+                  className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 disabled:opacity-50"
+                >
+                  {opening === one.id
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : t(one.words, one.fallback)}
+                </button>
+              ))}
+            </div>
+            {pairProblem && <p className="text-sm text-amber-300">{pairProblem}</p>}
+          </div>
+        )}
+
         {room && (
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-3 space-y-3">
             <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
@@ -462,13 +522,60 @@ export default function CollabRoom({
 }
 
 /** The button the radar puts on a match. Exported so it lives beside the room. */
+/**
+ * The two things one person can want from another.
+ *
+ * Carli, 24 September 2026: *"Dan moet hierdie mense voorstelle kry van 2
+ * buttons en opsies. 1 jy kan 'n lied met iemand deel en vra vir hulle
+ * inset, of die persoon kan accept om saam in 'n room te werk."*
+ *
+ * They are not the same ask and they must not read as one. "Listen to this
+ * and tell me what you think" is twenty minutes of somebody's evening;
+ * "let us work on something together" is a commitment. Sent as one button
+ * they get one answer, and the smaller of the two asks stops being
+ * available at all — which is the one most people would say yes to.
+ *
+ * The difference travels in `because`, which is the line the other person
+ * reads while deciding. It is not a second column on the table: what makes
+ * an ask answerable is the sentence, and a flag beside a sentence that says
+ * something else is a second place for the same fact.
+ */
+export type Wanting = 'input' | 'room';
+
+/**
+ * The rooms two people can be in together, as the picker offers them.
+ *
+ * The making rooms, which is what she asked for — *"elke kamer waarin create
+ * word"*. Live, the channel and the collab desk itself are not places two
+ * people make one thing, so a pair in them would be a strip drawn over a
+ * room with nothing to take turns at. `check:pairs` holds this list against
+ * the route's, so the picker cannot offer a room the server refuses.
+ */
+const PAIR_ROOMS: ReadonlyArray<{ readonly id: SurfaceId; readonly words: string; readonly fallback: string }> = [
+  { id: 'make', words: 'pair.room.make', fallback: 'Make a song' },
+  { id: 'booth', words: 'pair.room.booth', fallback: 'The booth' },
+  { id: 'studio', words: 'pair.room.studio', fallback: 'The studio' },
+  { id: 'canvas', words: 'pair.room.canvas', fallback: 'The video desk' },
+  { id: 'voice_studio', words: 'pair.room.voice', fallback: 'The voice studio' },
+  { id: 'sound', words: 'pair.room.sound', fallback: 'The sound trainer' },
+  { id: 'podcast', words: 'pair.room.podcast', fallback: 'The show' },
+  { id: 'campaign', words: 'pair.room.campaign', fallback: 'The adverts desk' },
+  { id: 'albumart', words: 'pair.room.albumart', fallback: 'Album art' },
+];
+
 export function AskToCollab({
   handle,
   because,
+  wanting = 'room',
+  song,
   onAsked,
 }: {
   handle: string;
   because: string;
+  /** Which of the two she asked for. Defaults to the room, as it always was. */
+  wanting?: Wanting;
+  /** The song this is about, when the ask is for an ear on one. */
+  song?: string;
   onAsked: () => void;
 }): React.ReactElement | null {
   const { t } = useLang();
@@ -486,7 +593,15 @@ export function AskToCollab({
         disabled={busy || note !== null}
         onClick={async () => {
           setBusy(true);
-          const done = await ask(handle, because);
+          /* The ask is written for the person reading it, not for us. A
+             request that says only "you two matched" is a cold call; one
+             that says what is wanted and why these two is answerable. */
+          const done = await ask(
+            handle,
+            wanting === 'input'
+              ? `${t('collab.wantsEar', 'Would like your ear on one song')}${song ? ` — “${song}”` : ''}. ${because}`
+              : `${t('collab.wantsRoom', 'Would like to work on something with you in a room')}. ${because}`,
+          );
           setBusy(false);
           setNote(
             done.ok
@@ -500,7 +615,9 @@ export function AskToCollab({
         className="min-h-[44px] px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-700 text-sm font-semibold text-zinc-300 hover:border-emerald-500 hover:text-emerald-300 flex items-center gap-1.5 disabled:opacity-60"
       >
         {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Handshake className="w-3.5 h-3.5" />}
-        {t('collab.askThem', 'Ask to work together')}
+        {wanting === 'input'
+          ? t('collab.askEar', 'Send a song, ask what they think')
+          : t('collab.askRoom', 'Work together in a room')}
       </button>
       {note && <span className="text-sm text-zinc-500">{note}</span>}
     </span>

@@ -29,11 +29,11 @@ import {
 } from '../lib/social';
 import { check, ENTITLEMENTS, type Plan } from '../lib/entitlements';
 import {
-  matchPodcasts, matchTracks, buildPitch, buildLiveBrief, buildPosts,
+  matchPodcasts, buildPitch, buildLiveBrief, buildPosts,
   type CreatorProfile,
 } from '../lib/matching';
 
-type RadarTab = 'podcasts' | 'live' | 'flavour' | 'posts';
+type RadarTab = 'podcasts' | 'live' | 'posts';
 
 function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -111,13 +111,12 @@ export default function CollabRadar({
   const [liveTopic, setLiveTopic] = useState('');
   const [liveSlot, setLiveSlot] = useState('');
 
-  // Flavour matching
+  /* Viral posts.
+     The starting song is one of the maker's own where there is one. This
+     used to be shared with the flavour matcher, which is gone; the post lab
+     is a different thing and keeps its own. */
   const myTracks = TRACK_FLAVOURS.filter((t) => t.handle === profile.handle);
-  const [sourceId, setSourceId] = useState((myTracks[0] ?? TRACK_FLAVOURS[0]).id);
-  const source = TRACK_FLAVOURS.find((t) => t.id === sourceId) as TrackFlavour;
-
-  // Viral posts
-  const [postTrackId, setPostTrackId] = useState(sourceId);
+  const [postTrackId, setPostTrackId] = useState((myTracks[0] ?? TRACK_FLAVOURS[0]).id);
   const [platformId, setPlatformId] = useState(SOCIAL_PLATFORMS[0].id);
   const [handles, setHandles] = useState<Handles>({});
   const [boosts, setBoosts] = useState<BoostRequest[]>([]);
@@ -144,7 +143,6 @@ export default function CollabRadar({
     () => matchPodcasts(profile, allTargets, lang),
     [profile, allTargets, lang],
   );
-  const trackMatches = useMemo(() => matchTracks(source), [source]);
   const postTrack = TRACK_FLAVOURS.find((t) => t.id === postTrackId) as TrackFlavour;
   const platform = platformById(platformId);
   const posts = useMemo(() => buildPosts(postTrack, platform), [postTrack, platform]);
@@ -178,7 +176,6 @@ export default function CollabRadar({
   const tabs: Array<{ id: RadarTab; label: string; icon: typeof Mic }> = [
     { id: 'podcasts', label: t('radar.tab.podcasts', 'Podcast Match'), icon: Mic },
     { id: 'live', label: t('radar.tab.live', 'TikTok Live Room'), icon: Radio },
-    { id: 'flavour', label: t('radar.tab.flavour', 'Music Flavour Match'), icon: Music },
     { id: 'posts', label: t('radar.tab.posts', 'Viral Post Lab'), icon: Flame },
   ];
 
@@ -490,78 +487,25 @@ export default function CollabRadar({
       {/* ---------------------------------------------------------------- */}
       {/* Music flavour matching                                            */}
       {/* ---------------------------------------------------------------- */}
-      {tab === 'flavour' && (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-zinc-400">{t('radar.matchAgainst', "Match against:")}</span>
-            {TRACK_FLAVOURS.filter((t) => t.onChannel).map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setSourceId(t.id)}
-                className={`min-h-[44px] px-2.5 py-1.5 rounded-xl text-sm font-bold border transition-all ${
-                  sourceId === t.id
-                    ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
-                    : 'bg-zinc-950/60 border-zinc-800 text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                {t.title}
-              </button>
-            ))}
-          </div>
+      {/* Music flavour matching: gone, 24 September 2026                   */}
+      {/* ---------------------------------------------------------------- */}
+      {/*
+          It matched a fixed list of demo songs in `app/data/studio.ts`
+          against the same fixed list. Names, scores, reasons and a suggested
+          collaboration format — drawn exactly like a real result, and not
+          one of them anybody with an account.
 
-          <div className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-zinc-400">
-            <span className="text-white font-bold">{source.title}</span>
-            <span>{source.genre}</span>
-            <span>{source.bpm} BPM</span>
-            <span>{source.key}</span>
-            <span className="text-cyan-300">{source.models.join(' + ')}</span>
-          </div>
+          The real one is `CollabFinder`, above this on the same screen. It
+          reads songs members have chosen to share — tempo, key, the style
+          words — through `/api/radar`, opt-in per song and reversible.
 
-          <div className="grid md:grid-cols-2 gap-3 [&>*]:min-w-0">
-            {trackMatches.map(({ track, score, reasons, collabFormat, collabWhy }) => (
-              <div key={track.id} className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-cyan-500/40 transition-all space-y-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-white truncate">{track.title}</p>
-                    <p className="text-[13px] text-zinc-500">
-                      {track.handle} · {track.genre} · {track.bpm} BPM · {track.key}
-                    </p>
-                  </div>
-                  <ScoreBar score={score} />
-                </div>
-
-                <ul className="space-y-0.5">
-                  {reasons.map((r) => (
-                    <li key={r} className="text-[13px] text-zinc-400 flex items-start space-x-1.5">
-                      <span className="text-zinc-600 mt-0.5">·</span>
-                      <span>{r}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="p-2.5 rounded-xl bg-cyan-950/20 border border-cyan-500/25">
-                  <p className="text-sm font-bold text-cyan-300 flex items-center space-x-1.5">
-                    <Sparkles className="w-3 h-3" />
-                    <span>{collabFormat}</span>
-                  </p>
-                  <p className="text-[13px] text-zinc-400 pt-0.5 leading-relaxed">{collabWhy}</p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-500">
-                    {track.isDemo ? 'demo entry' : 'on channel'} · {track.models.join(', ')}
-                  </span>
-                  <CopyButton
-                    text={`Collab idea: "${source.title}" × "${track.title}" — ${collabFormat}. ${collabWhy}`}
-                    label="Copy idea"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+          So this was not a lesser version of that. It was a screen full of
+          people who do not exist, beside a screen of people who do, with
+          nothing on either to tell them apart. Asked what to do with it, she
+          said take it out. The podcast pitching, the live brief and the post
+          lab are untouched: those never pretended to be a roomful of
+          strangers.
+      */}
 
       {/* ---------------------------------------------------------------- */}
       {/* Viral post lab                                                    */}
