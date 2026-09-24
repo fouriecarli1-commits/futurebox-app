@@ -130,6 +130,23 @@ try {
       (await p.locator('[data-editorpiece]').count()) === 1,
       'the block is selected on arrival, so its panel should be up');
 
+    /* The panel had two number boxes and no picture at first, which is asking
+       somebody to decide "starts at 3.4" about a shot they cannot see. */
+    const viewer = p.locator('[data-editorviewer]');
+    check('  and shows the piece you are trimming',
+      (await viewer.count()) === 1 && Boolean(await viewer.getAttribute('src')),
+      'the trim boxes without a picture are a guess checked by exporting the whole film');
+
+    /* The look has to be ON the viewer, not only in the render — a swatch
+       that previews one thing while the film does another is worse than no
+       preview. `filterCss` is the same function on both sides. */
+    await p.locator('[data-editorlook="mono"]').click();
+    await p.waitForTimeout(400);
+    const styled = await viewer.evaluate((el) => el.style.filter || '');
+    check('  and the look is on the picture, not only in the render',
+      /grayscale|saturate|contrast|brightness/.test(styled),
+      `the viewer's filter is "${styled}"`);
+
     /* Split, which is the one operation that proves there is a clock under
        this rather than a list: one piece becomes two, and the total length
        does not change. */

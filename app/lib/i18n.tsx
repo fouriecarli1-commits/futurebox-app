@@ -684,6 +684,11 @@ export const STRINGS: Dict = {
   "art.standing": { en: "Highest bid", af: "Hoogste bod" },
   "art.oneBid": { en: "bid", af: "bod" },
 
+  "edit.playPiece": {
+    en: "Play this piece",
+    af: "Speel hierdie stuk",
+  },
+
   /* The Pro Booth door, gated 24 September 2026. */
   "booth.proPaid": {
     en: "Lanes, the grid, mixing, mastering and undo. It comes with every paid plan; this room, with the words on screen, stays free.",

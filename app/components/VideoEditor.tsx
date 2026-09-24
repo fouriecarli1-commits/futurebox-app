@@ -112,6 +112,36 @@ export default function VideoEditor({
     setPicked(edit.pieces[0].id);
   }, [edit.pieces, picked]);
 
+  /* One object URL at a time, revoked when the picked piece changes. A
+     viewer that makes a new URL per render leaks one per keystroke on the
+     trim boxes, which on a phone is how a tab gets killed mid-edit. */
+  const viewer = useRef<HTMLVideoElement | null>(null);
+  const [source, setSource] = useState<string | null>(null);
+  useEffect(() => {
+    if (!piece) { setSource(null); return undefined; }
+    const url = URL.createObjectURL(piece.clip);
+    setSource(url);
+    return () => URL.revokeObjectURL(url);
+    /* Keyed on the clip rather than the piece: trimming makes a new piece
+       object every keystroke and the material behind it has not changed. */
+  }, [piece?.clip]);
+
+  /* Seek to whichever end just moved, so the frame on screen is the frame
+     being decided about. `stop` runs the piece rather than the file. */
+  useEffect(() => {
+    const v = viewer.current;
+    if (!v || !piece) return;
+    if (Number.isFinite(piece.from)) v.currentTime = piece.from;
+  }, [piece?.from]);
+
+  useEffect(() => {
+    const v = viewer.current;
+    if (!v || !piece) return;
+    const stop = () => { if (v.currentTime >= piece.to) v.pause(); };
+    v.addEventListener('timeupdate', stop);
+    return () => v.removeEventListener('timeupdate', stop);
+  }, [piece?.to]);
+
   const total = runs(edit);
   const fades = fadesFor(edit);
 
@@ -315,6 +345,50 @@ export default function VideoEditor({
             <Scissors className="w-4 h-4 text-emerald-400" />
             {piece.name}
           </h3>
+
+          {/* ── You were cutting blind ─────────────────────────────────────
+ 
+              The first version of this panel had two number boxes and no
+              picture. "Starts at 3.4" is not a decision anybody can make
+              about a shot they cannot see — it is a guess, checked by
+              exporting the whole film and watching it.
+ 
+              So the piece is on screen, the look is on it, and moving either
+              end seeks to that end. Watching the frame you are trimming TO is
+              the entire job.
+ 
+              `filterCss` is the same function the render uses, so the frame
+              here and the frame in the finished film cannot disagree. */}
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <video
+            ref={viewer}
+            data-editorviewer
+            src={source ?? undefined}
+            playsInline
+            muted={!piece.sound}
+            style={{ filter: filterCss(piece.look) || undefined }}
+            className="w-full rounded-xl border border-zinc-800 bg-black"
+          />
+          <div className="flex gap-2 flex-wrap">
+            <button
+              type="button"
+              data-editorplaypiece
+              onClick={() => {
+                const v = viewer.current;
+                if (!v) return;
+                v.currentTime = piece.from;
+                void v.play();
+              }}
+              className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
+            >
+              <Play className="w-4 h-4" />
+              {t('edit.playPiece', 'Play this piece')}
+            </button>
+            <span className="self-center text-sm text-zinc-500" data-editorpiecelen>
+              {seconds(lengthOfPiece(piece))}
+            </span>
+          </div>
+
           <div className="space-y-4">
             {/* Trim. Two numbers rather than a drag: a drag on a phone is a
                 guess, and the thing somebody wants is usually "start half a
