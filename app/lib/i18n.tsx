@@ -278,12 +278,25 @@ export const STRINGS: Dict = {
   "live.min": { en: "min", af: "min" },
   "live.hours": { en: "hours", af: "uur" },
   "live.days": { en: "days", af: "dae" },
-  "live.say": { en: "Say something to the room", af: "S\u00ea iets vir die kamer" },
+  /* ── The box is not a chat any more ──────────────────────────────────
+     24 September 2026. It took five hundred characters of anything; it now
+     takes a TikTok live address and nothing else. The old keys are gone
+     rather than left pointing at a box that refuses what they invite. */
+  "live.onlyLive": {
+    en: "This is for TikTok live addresses only \u2014 where you are streaming right now. It is not a chat.",
+    af: "Hierdie is net vir TikTok se lewendige adresse \u2014 waar jy nou stroom. Dit is nie \u2019n geselshoekie nie.",
+  },
+  "live.sayLive": { en: "https://www.tiktok.com/@you/live", af: "https://www.tiktok.com/@jy/live" },
   "live.send": { en: "Send", af: "Stuur" },
-  "live.noSays": { en: "Nobody has said anything yet.", af: "Niemand het nog iets ges\u00ea nie." },
+  "live.noLives": { en: "Nobody is live in here right now.", af: "Niemand is nou hier lewendig nie." },
+  "live.flag": { en: "Tell us this one is bad", af: "S\u00ea vir ons hierdie een is sleg" },
+  "live.cannotCheck": {
+    en: "The reports could not be read just now, so no live addresses are listed. Try again in a moment.",
+    af: "Die rapporte kon nou nie gelees word nie, dus word geen lewendige adresse gelys nie. Probeer weer oor \u2019n oomblik.",
+  },
   "live.signInToSay": {
-    en: "Sign in to say something. Listening needs no account.",
-    af: "Teken in om iets te s\u00ea. Luister het geen rekening nodig nie.",
+    en: "Sign in to put your live address up. Watching needs no account.",
+    af: "Teken in om jou lewendige adres op te sit. Kyk het geen rekening nodig nie.",
   },
   "live.notReady": { en: "The live channel is not switched on yet", af: "Die live-kanaal is nog nie aangeskakel nie" },
   "live.failed": { en: "That did not go through.", af: "Dit het nie deurgegaan nie." },

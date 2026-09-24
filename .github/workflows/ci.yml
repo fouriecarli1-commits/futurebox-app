@@ -322,6 +322,15 @@ jobs:
       - name: Everything the platform charges for is on the packages
         run: npm run check:sold
 
+      # "Daai open chat moenie kan werk nie, as dit werk moet daar net
+      # tiktok live links gedeel word." The box took five hundred characters
+      # of anything. It now takes a TikTok live address and nothing else, the
+      # handle is screened as words, and the half this app cannot do —
+      # watching the stream on the far end — is done by the room: two reports
+      # and a link stops being read out.
+      - name: The live room's box is not a chat
+        run: npm run check:livechat
+
       # `{zoom}\u00d7` in JSX text is six characters of nothing, printed as
       # typed. It compiles, it passes every test that reads the DOM by role
       # or label, and it reached a phone as "4\u00d7" in a photograph.

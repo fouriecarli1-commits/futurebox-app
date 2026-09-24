@@ -32,7 +32,7 @@
  */
 
 import { admin, callerFrom, metered } from '@/app/lib/server/account';
-import { readPlatformLink } from '@/app/lib/server/platformlink';
+import { readPlatformLink, readTikTokLive } from '@/app/lib/server/platformlink';
 import { guard } from '@/app/lib/server/safety';
 import { episodeAudioUrl } from '@/app/lib/episodeaudio';
 import { storageId } from '@/app/lib/server/ownedpath';
@@ -46,6 +46,17 @@ const LINK_SECONDS = 60 * 60;
 /** How much of the room is worth loading at once. */
 const POSTS = 40;
 const SAYS = 60;
+/**
+ * How many people have to say a link is bad before the room stops seeing it.
+ *
+ * Two. Nothing in this app can watch a live stream, so the people in the room
+ * are the only ones who can see what is on the far end — and a link is up for
+ * the twenty minutes somebody is live, so a threshold that takes an hour to
+ * reach protects nobody. Two strangers agreeing is a strong signal in a room
+ * this size, and the cost of being wrong is one link going unfollowed for as
+ * long as that stream lasts.
+ */
+const HIDE_AT = 2;
 
 const NOT_SET_UP = {
   ready: false,
@@ -139,6 +150,49 @@ export async function GET(request: Request): Promise<Response> {
     .order('created_at', { ascending: false })
     .limit(SAYS);
   if (saysError) return Response.json(NOT_SET_UP, { status: 503 });
+
+  /* ── The links the room has flagged ───────────────────────────────────
+
+     Read in one go for the page, and dropped below. `HIDE_AT` is deliberately
+     low: a live link is up for minutes, so a threshold that takes an hour to
+     reach protects nobody. Two people who do not know each other agreeing
+     that a stream is bad is a stronger signal in a room this size than ten
+     would be in a big one, and the cost of being wrong is one link nobody
+     follows for the twenty minutes somebody is live. */
+  const saidIds = (says ?? []).map((one) => (one as { id: string }).id);
+  const flagged = new Set<string>();
+  /** True when the reports could not be read, so nothing is listed and the room says so. */
+  let couldNotCheck = false;
+  if (saidIds.length) {
+    const { data: flags, error: flagError } = await client
+      .from('live_flags')
+      .select('said')
+      .in('said', saidIds);
+    if (flagError) {
+      /* Fail closed, and this is the one place in this file where that is
+         the right direction.
+ 
+         Everywhere else a failed read becomes "nothing here", because a room
+         with no songs in it is a disappointment and not a danger. Here the
+         list is links to live streams that other people have reported, and
+         "the reports could not be read" means exactly "we do not know which
+         of these the room said was bad". Showing them all is the one outcome
+         this whole feature exists to prevent, so none is shown and the room
+         says why rather than looking empty.
+ 
+         Found by `check:couldnotask`, on the first version of this read,
+         which threw the error away — so a database blip would have put every
+         reported link back in front of everybody. */
+      for (const id of saidIds) flagged.add(id);
+      couldNotCheck = true;
+    } else {
+      const counted = new Map<string, number>();
+      for (const one of (flags ?? []) as { said: string }[]) {
+        counted.set(one.said, (counted.get(one.said) ?? 0) + 1);
+      }
+      for (const [said, howmany] of counted) if (howmany >= HIDE_AT) flagged.add(said);
+    }
+  }
 
   const { data: here } = await client.rpc('live_room_count');
 
@@ -472,7 +526,12 @@ export async function GET(request: Request): Promise<Response> {
     countingError: counted && played ? undefined : 'live_counts_not_set_up',
     here: typeof here === 'number' ? here : Number(here ?? 0),
     posts: listed,
+    /* True when the reports could not be read. The room draws a sentence
+       rather than an empty strip: "nobody is live" and "we cannot tell you
+       who is" look the same and are not the same. */
+    livesUnchecked: couldNotCheck,
     says: ((says ?? []) as { id: string; owner: string; body: string; created_at: string }[])
+      .filter((one) => !flagged.has(one.id))
       .map((one) => ({
         id: one.id,
         body: one.body,
@@ -492,7 +551,7 @@ export async function GET(request: Request): Promise<Response> {
  */
 export async function POST(request: Request): Promise<Response> {
   let body: {
-    what?: 'hello' | 'post' | 'say' | 'elsewhere' | 'heart';
+    what?: 'hello' | 'post' | 'say' | 'elsewhere' | 'heart' | 'flag';
     visitor?: string;
     /** Which post a heart is for. Unused by everything else. */
     id?: string;
@@ -572,22 +631,67 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (!caller) return Response.json({ message: 'Sign in first.', signedIn: false }, { status: 401 });
 
+  /* ── Not a chat any more ──────────────────────────────────────────────
+
+     Carli, 24 September 2026: *"Daai open chat moenie kan werk nie, as dit
+     werk moet daar net tiktok live links gedeel word."*
+
+     This took five hundred characters of anything, screened by the safety
+     model. That screen is real and it is not the point: free text in a room
+     of strangers is the surface here that needs the most watching and is the
+     least worth having, and nobody came to FutureBox to chat. So the box
+     does one thing now — where you are live this minute — and anything that
+     is not a TikTok live address is refused with the reason.
+
+     Three things are checked and one is not. The host, the `/live` path and
+     the handle are checked; the handle is then screened as words, because a
+     handle can be an obscenity and it is about to be printed to the room.
+     What is NOT checked is the stream, and nothing here could: this app
+     cannot see what is on the far end. What it buys is that the destination
+     is TikTok Live, with its own moderation, age rules and reporting behind
+     it, and that the room can flag a link — see `flag` below. */
   if (body.what === 'say') {
-    const text = String(body.note ?? body.title ?? '').trim();
-    if (!text) return Response.json({ message: 'Nothing to say.' }, { status: 400 });
-    if (text.length > 500) {
-      return Response.json({ message: 'That is longer than the room takes.' }, { status: 400 });
+    const read = readTikTokLive(String(body.link ?? body.note ?? body.title ?? '').slice(0, 500));
+    if (!read.ok) {
+      const why: Record<string, string> = {
+        not_a_link: 'Paste your TikTok live address — the room only takes those now.',
+        bad_scheme: 'Paste your TikTok live address — the room only takes those now.',
+        not_listed: 'Paste your TikTok live address — the room only takes those now.',
+        not_tiktok: 'Only a TikTok live address goes here. It is the one place the room sends people.',
+        shortened: 'Use the full address, the one in the browser bar while you are live — a short link could be anything.',
+        not_live: 'That is a TikTok address but not a live one. It should end in /live.',
+      };
+      return Response.json({ message: why[read.why] ?? why.not_a_link }, { status: 400 });
     }
 
-    // Screened before anybody else reads it. This is the one surface where the
-    // audience is people rather than a model, and a room is exactly where the
-    // rules stop being about generation and start being about each other.
-    const allowed = await guard(request, text, 'room', caller);
+    /* The handle, as words. Everything else in the address this route built
+       itself, so the handle is the only part somebody chose. */
+    const allowed = await guard(request, read.handle, 'room', caller);
     if (!allowed.ok) return allowed.response;
 
-    const { error } = await client.from('live_says').insert({ owner: caller.id, body: text });
+    const { error } = await client.from('live_says').insert({ owner: caller.id, body: read.url });
     if (error) return Response.json(NOT_SET_UP, { status: 503 });
     return Response.json({ ok: true });
+  }
+
+  /* ── Somebody in the room says that one is bad ────────────────────────
+
+     The honest half of "screened". Nothing here watches a live stream, so
+     the people in the room are the only ones who can see what is on the far
+     end of a link, and this is how they say so. `HIDE_AT` reports and it
+     stops being read out to anybody — see the read at the top of this file.
+
+     One row per person per link, enforced by the table's own primary key
+     rather than by a check here, so a second report cannot be inserted
+     whatever this route does. */
+  if (body.what === 'flag') {
+    const said = String(body.id ?? '').trim();
+    if (!said) return Response.json({ message: 'Which one?' }, { status: 400 });
+    const { error } = await client
+      .from('live_flags')
+      .upsert({ said, owner: caller.id }, { onConflict: 'said,owner' });
+    if (error) return Response.json(NOT_SET_UP, { status: 503 });
+    return Response.json({ ok: true, flagged: true });
   }
 
   /* ── A heart, on or off ───────────────────────────────────────────────

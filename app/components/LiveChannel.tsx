@@ -33,9 +33,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Eye, Headphones, Heart, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users, Video,
-} from 'lucide-react';
+import { Eye, Flag, Headphones, Heart, Loader2, Music, Play, Radio, Send, Sparkles, Trash2, Upload, Users, Video } from 'lucide-react';
 import { accessToken } from '../lib/cloud';
 import { loadTracks, type Track } from '../lib/library';
 import { visitorId } from '../lib/signal';
@@ -156,6 +154,8 @@ interface Room {
   here: number;
   posts: Post[];
   says: Said[];
+  /** The reports could not be read, so nothing is listed. Not the same as empty. */
+  livesUnchecked?: boolean;
 }
 
 const EMPTY: Room = { ready: true, here: 0, posts: [], says: [] };
@@ -1054,24 +1054,72 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
         </Card>
       )}
 
-      {/* ── What the room is saying ─────────────────────────────────────
+      {/* ── Who is live right now ───────────────────────────────────────
 
-          Above the songs rather than at the bottom of the page. It was last,
-          under every post, which is where a chat goes when nobody has
-          decided it matters — and it is the half of a live room that tells
-          you whether anybody is actually here. */}
+          Carli, 24 September 2026: *"Daai open chat moenie kan werk nie, as
+          dit werk moet daar net tiktok live links gedeel word."*
+
+          It was a chat box: five hundred characters of anything, screened by
+          the safety model. The screen was real and it was not the point —
+          free text in a room of strangers is the surface that needs the most
+          watching and is the least worth having, and nobody came here to
+          chat. So the box does one thing, and the line above it says so
+          before anybody types rather than refusing them afterwards.
+
+          The address is shown as an address, not as words somebody wrote:
+          the route rebuilt it from its own parts and dropped the tracking a
+          share sheet adds, so what is printed here is what the room is
+          sending people to. */}
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
+        <p className="text-xs text-zinc-500 leading-snug">
+          {t(
+            'live.onlyLive',
+            'This is for TikTok live addresses only \u2014 where you are streaming right now. It is not a chat.',
+          )}
+        </p>
         <div className="space-y-1 max-h-64 overflow-y-auto">
           {room.says.length === 0 && (
-            <p className="text-sm text-zinc-600">{t('live.noSays', 'Nobody has said anything yet.')}</p>
+            <p className="text-sm text-zinc-600">
+              {room.livesUnchecked
+                ? t(
+                    'live.cannotCheck',
+                    'The reports could not be read just now, so no live addresses are listed. Try again in a moment.',
+                  )
+                : t('live.noLives', 'Nobody is live in here right now.')}
+            </p>
           )}
           {room.says.map((said) => (
-            <p key={said.id} className="text-sm leading-snug">
-              <span className={said.mine ? 'text-emerald-300 font-semibold' : 'text-zinc-400 font-semibold'}>
+            <div key={said.id} className="flex items-start gap-2 text-sm leading-snug">
+              <span className={said.mine ? 'text-emerald-300 font-semibold flex-shrink-0' : 'text-zinc-400 font-semibold flex-shrink-0'}>
                 {said.by}
               </span>
-              <span className="text-zinc-300"> {said.body}</span>
-            </p>
+              <a
+                href={said.body}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="text-emerald-300 underline break-all min-w-0"
+              >
+                {said.body.replace('https://www.tiktok.com/', '').replace(/\/live$/, '')}
+              </a>
+              {/* Not on your own, because reporting yourself does nothing and
+                  a button that does nothing is a button somebody presses
+                  twice. Nothing here can see the stream on the far end, so
+                  the room is the screen — two of these and it stops being
+                  shown to anybody. */}
+              {!said.mine && room.signedIn && (
+                <button
+                  type="button"
+                  data-flaglive
+                  disabled={busy}
+                  onClick={() => void send({ what: 'flag', id: said.id })}
+                  title={t('live.flag', 'Tell us this one is bad')}
+                  aria-label={t('live.flag', 'Tell us this one is bad')}
+                  className="ml-auto flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border border-zinc-800 text-zinc-600 hover:border-red-500 hover:text-red-400 disabled:opacity-50"
+                >
+                  <Flag className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           ))}
         </div>
 
@@ -1082,16 +1130,16 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && draft.trim()) {
-                  void send({ what: 'say', note: draft }).then((done) => { if (done) setDraft(''); });
+                  void send({ what: 'say', link: draft }).then((done) => { if (done) setDraft(''); });
                 }
               }}
-              placeholder={t('live.say', 'Say something to the room')}
+              placeholder={t('live.sayLive', 'https://www.tiktok.com/@you/live')}
               className="flex-1 min-w-0 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none"
             />
             <button
               type="button"
               disabled={busy || !draft.trim()}
-              onClick={() => void send({ what: 'say', note: draft }).then((done) => { if (done) setDraft(''); })}
+              onClick={() => void send({ what: 'say', link: draft }).then((done) => { if (done) setDraft(''); })}
               className="min-h-[44px] px-3 py-2 rounded-xl bg-emerald-500 text-onAccent flex-shrink-0 disabled:opacity-50"
               aria-label={t('live.send', 'Send')}
             >
@@ -1099,7 +1147,7 @@ export default function LiveChannel({ onGoToMake }: { onGoToMake: () => void }):
             </button>
           </div>
         ) : (
-          <p className="text-sm text-zinc-500">{t('live.signInToSay', 'Sign in to say something. Listening needs no account.')}</p>
+          <p className="text-sm text-zinc-500">{t('live.signInToSay', 'Sign in to put your live address up. Watching needs no account.')}</p>
         )}
       </div>
 

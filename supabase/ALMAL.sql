@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- FutureBox — die hele skema, al 37 lêers, in een plak.
+-- FutureBox — die hele skema, al 38 lêers, in een plak.
 -- ═══════════════════════════════════════════════════════════════════════════
 --
 -- Supabase → SQL Editor → plak alles → Run. Veilig om weer te loop: elke stuk
@@ -85,6 +85,11 @@
 --   livevideo.sql Video’s in die speelkamer, en ’n opname wat jy self gefilm
 --                 het wat in jou kanaal bly. Sonder dit is daar geen knoppie
 --                 om ’n video te plaas nie.
+--   liveflags.sql Wie in die speelkamer sê ’n TikTok-lewendige skakel is
+--                 sleg. Die boks vat nou net daardie skakels, en niks hier
+--                 kan sien wat op die ander kant loop nie — dus is die mense
+--                 in die kamer die sif. Sonder hierdie tabel kan niemand ’n
+--                 skakel rapporteer nie en bly ’n slegte een staan.
 --
 -- ── Niks hoef vooraf te bestaan nie ───────────────────────────────────────
 --
@@ -100,7 +105,7 @@
 --
 -- ── Moenie hierdie lêer regmaak nie ────────────────────────────────────────
 --
--- Dit word geskryf deur `npm run sql:bundle` uit die 37 lêers self.
+-- Dit word geskryf deur `npm run sql:bundle` uit die 38 lêers self.
 -- Verander hulle en loop die skrip weer; `npm run check:sqlbundle` keer dat
 -- die kopie stilweg van sy oorsprong af wegdryf.
 
@@ -4296,3 +4301,42 @@ create policy "put own filmed video" on storage.objects
 -- Updating is NOT granted. An insert that lands on an existing key fails,
 -- which is what we want: every take gets a name of its own, and a policy that
 -- allowed replacement would be the overwrite the folder split just closed.
+
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- supabase/liveflags.sql
+-- ═══════════════════════════════════════════════════════════════════════════
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- The room says which links are bad
+--
+-- Carli, 24 September 2026, about the live room's message box: *"Dit moet
+-- gescreen word om general bad videos teen te werk."*
+--
+-- The box now takes only a TikTok live address, and the handle is screened
+-- as words before anybody reads it. What nothing in this app can do is watch
+-- the stream on the far end. So the people in the room are the screen, and
+-- this is where they say so: two reports and the link stops being read out.
+--
+-- One row per person per link. The primary key is what makes that true —
+-- a second report cannot be inserted whatever the route does, which is a
+-- better place for the rule than a check in code that could later move.
+-- ─────────────────────────────────────────────────────────────────────────
+
+create table if not exists public.live_flags (
+  said        uuid not null references public.live_says (id) on delete cascade,
+  owner       uuid not null references auth.users (id) on delete cascade,
+  created_at  timestamptz not null default now(),
+  primary key (said, owner)
+);
+
+create index if not exists live_flags_said_idx on public.live_flags (said);
+
+-- Read and written only by the route, which knows who is calling. Nothing in
+-- the browser ever touches this table, so no policy grants anon or
+-- authenticated anything: row level security on with no policy is a closed
+-- door, and that is the intent rather than an omission.
+alter table public.live_flags enable row level security;
+
+revoke all on public.live_flags from public, anon, authenticated;
+grant select, insert, delete on public.live_flags to service_role;

@@ -7,7 +7,7 @@
 -- **Dit verander niks.** Een `select`. Geen create, geen insert, geen alter.
 -- Veilig om enige tyd te loop, ook met mense op die app.
 --
--- Dit kyk na 44 tabelle, 32 kolomme wat later
+-- Dit kyk na 45 tabelle, 32 kolomme wat later
 -- bygekom het, 6 stoor-emmers en 51 beleide, en gee 'n ry
 -- terug vir elke een wat kort — met die lêer wat dit maak.
 --
@@ -151,6 +151,7 @@ with verwag (l_eer, soort, naam) as (
     ('finetunes.sql', 'tabel', 'public.finetunes'),
     ('usage.sql', 'tabel', 'public.generations'),
     ('kits.sql', 'tabel', 'public.kits_minutes'),
+    ('liveflags.sql', 'tabel', 'public.live_flags'),
     ('hearts.sql', 'tabel', 'public.live_hearts'),
     ('live.sql', 'tabel', 'public.live_here'),
     ('live.sql', 'tabel', 'public.live_posts'),

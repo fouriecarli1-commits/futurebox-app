@@ -108,3 +108,69 @@ export function readPlatformLink(
      whatever reads the link next. */
   return { ok: true, platform, url: `${asked.protocol}//${asked.host}${asked.pathname}${asked.search}` };
 }
+
+/**
+ * A TikTok **live** link, and nothing else.
+ *
+ * ── Why the room's message box became this ───────────────────────────────
+ *
+ * Carli, 24 September 2026: *"Daai open chat moenie kan werk nie, as dit
+ * werk moet daar net tiktok live links gedeel word."*
+ *
+ * The box took five hundred characters of anything. Free text in a room of
+ * strangers is the one surface here whose audience is people rather than a
+ * model, and it is the surface that needs the most watching and is the least
+ * worth having: nobody came to FutureBox to chat. So the box stops being a
+ * chat and becomes one thing — where you are live right now.
+ *
+ * ── What is actually being checked, said plainly ─────────────────────────
+ *
+ * The host, the path and the handle. Not the video. Nothing here can see
+ * what is on the far end of a live stream, and a check that implied it could
+ * would be the worst kind of reassurance.
+ *
+ * What it does buy:
+ *
+ * - The destination is TikTok Live, which has its own moderation, its own
+ *   age rules and its own reporting — a far bigger apparatus than this app
+ *   will ever have.
+ * - `/live` in the path, so it is a stream and not a profile, a video or a
+ *   shop page.
+ * - The handle is words, and words can be screened before anybody reads them.
+ *
+ * ── Why a short link is refused ──────────────────────────────────────────
+ *
+ * `vm.tiktok.com/ZM8abc` is a real TikTok host and its path says nothing. It
+ * could be a live stream, a video, or a profile, and the only way to find
+ * out is to follow it — which means this app fetching an arbitrary redirect
+ * on somebody else's say-so. Refused, with a sentence saying to use the full
+ * address, which the browser shows while somebody is watching a stream.
+ */
+export type LiveRefusal = LinkRefusal | 'not_tiktok' | 'not_live' | 'shortened';
+
+export function readTikTokLive(
+  link: string,
+): { ok: true; url: string; handle: string } | { ok: false; why: LiveRefusal } {
+  const read = readPlatformLink(link);
+  if (!read.ok) return { ok: false, why: read.why };
+  if (read.platform !== 'TikTok') return { ok: false, why: 'not_tiktok' };
+
+  const asked = new URL(read.url);
+  const host = asked.hostname.toLowerCase().replace(/^www\./, '');
+  if (host !== 'tiktok.com') return { ok: false, why: 'shortened' };
+
+  /* `/@handle/live`, with nothing else allowed after it. A trailing slash is
+     normal from a share sheet; a further segment is a different page. */
+  const path = asked.pathname.replace(/\/+$/, '');
+  const parts = path.split('/').filter(Boolean);
+  if (parts.length !== 2 || parts[1].toLowerCase() !== 'live') {
+    return { ok: false, why: 'not_live' };
+  }
+  const handle = parts[0];
+  if (!/^@[A-Za-z0-9._]{1,24}$/.test(handle)) return { ok: false, why: 'not_live' };
+
+  /* Rebuilt, and the query dropped. A live address needs no parameters, and
+     the ones a share sheet adds are tracking that would be republished to
+     everybody in the room under the sharer's name. */
+  return { ok: true, url: `https://www.tiktok.com/${handle}/live`, handle };
+}

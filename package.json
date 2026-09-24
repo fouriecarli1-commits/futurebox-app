@@ -114,6 +114,7 @@
     "check:ordering": "tsx scripts/check-ordering.mts",
     "check:undo": "tsx scripts/check-undo.mts",
     "check:sold": "tsx scripts/check-sold.mts",
+    "check:livechat": "tsx scripts/check-liveroom-chat.mts",
     "check:escapes": "tsx scripts/check-escapes.mts",
     "check:aifault": "tsx scripts/check-aifault.mts",
     "check:caching": "tsx scripts/check-caching.mts",
