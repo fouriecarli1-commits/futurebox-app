@@ -29,11 +29,14 @@
  * a price rise that belongs in its own decision rather than in a comment
  * repair.
  *
- * ── That decision was taken on 24 September 2026, and the answer was no ──
+ * ── Carli took that decision on 24 September 2026: it stays at ten ──────
  *
- * Carli: *"Maak die lied ook reg, werk daai prys uit."* It came after the new
- * cost table showed a song at 3.0x while every other PRODUCT sits at six to
- * seven, which makes twenty credits look obvious.
+ * *"Maak die lied ook reg, werk daai prys uit."* — and then, with the sums
+ * in front of her: *"Los dit op tien dan."*
+ *
+ * The question came up because the new cost table showed a song at 3.0x
+ * while every other PRODUCT sits at six to seven, which makes twenty credits
+ * look obvious.
  *
  * It is not, and the reason is worth keeping here because it will look
  * obvious again:

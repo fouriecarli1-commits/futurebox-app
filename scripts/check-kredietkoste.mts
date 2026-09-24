@@ -126,9 +126,11 @@ const THIN = 1.8;
  */
 const PRODUCT = 6;
 
-const priced: { what: string; credits: number; cost: number; product?: boolean }[] = [
-  { product: true, what: 'a two-minute song', credits: CREDITS.song, cost: 2 * MUSIC_PER_MIN },
-  { product: true, what: 'a one-minute half song', credits: CREDITS.halfSong, cost: MUSIC_PER_MIN },
+const priced: { what: string; credits: number; cost: number; product?: boolean; decided?: string }[] = [
+  { product: true, decided: 'Carli, 24 Sept: the plan is prepaid capacity, so a dearer song adds nothing to margin. See credits.ts',
+    what: 'a two-minute song', credits: CREDITS.song, cost: 2 * MUSIC_PER_MIN },
+  { product: true, decided: 'half of the song, same decision',
+    what: 'a one-minute half song', credits: CREDITS.halfSong, cost: MUSIC_PER_MIN },
   { what: 'splitting stems, per minute', credits: CREDITS.stems, cost: STEMS_PER_MIN },
   { what: 'transcribing, per minute', credits: CREDITS.transcribe, cost: SPEECH_PER_MIN },
   { what: 'cleaning a take, per minute', credits: CREDITS.clean, cost: STEMS_PER_MIN },
@@ -156,6 +158,12 @@ for (const one of priced) {
     say(false, `${line}  ← SOLD BELOW COST`);
   } else if (over < THIN) {
     say(true, `${line}  (thin, but above cost)`);
+  } else if (one.product && over < PRODUCT && one.decided) {
+    /* Below the product multiple, and settled. A check that keeps flagging a
+       decision somebody already took is a check people learn to scroll past,
+       and the next real finding scrolls past with it. So it reports the
+       decision instead of the finding. */
+    say(true, `${line}  ← below the product rate, decided: ${one.decided}`);
   } else if (one.product && over < PRODUCT) {
     /* Not a failure. A product below the product multiple may be a deliberate
        loss-leader — but it may equally be the mistake of 24 September, and
