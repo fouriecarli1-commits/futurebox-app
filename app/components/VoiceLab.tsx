@@ -15,6 +15,7 @@
  * does not sing, and nothing here pretends otherwise.
  */
 
+import SayItWrong from './SayItWrong';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Loader2, Mic, Play, Square, Trash2, Upload, Wand2 } from 'lucide-react';
 import Cost from './Cost';
@@ -881,6 +882,15 @@ export default function VoiceLab({
         </div>
 
         <audio ref={changedRef} controls className={changed ? 'w-full' : 'hidden'} />
+
+        {/* ── Where the ear reports back ─────────────────────────────────
+
+            Carli, 24 September 2026: *"En dan moet ons nog iewers die klient
+            die geleentheid gee om foute in spraak uit te wys."* It existed,
+            in two rooms out of four. This is one of the two it was missing
+            from, and a voice changer is where a wrong vowel is most audible.
+            See `SayItWrong.tsx`: a report is a candidate, never a rule. */}
+        <SayItWrong surface="voice_lab" spoken />
       </Card>
     </div>
   );

@@ -42,3 +42,25 @@ export const code = (raw: string): string =>
     .replace(/\/\*[\s\S]*?\*\//g, blank)
     .replace(/(^|[^:])\/\/[^\n]*/g, (had, first: string) => first + ' '.repeat(had.length - first.length))
     .replace(/'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g, (had) => had[0] + blank(had.slice(1, -1)) + had[0]);
+
+/**
+ * Comments blanked, strings left whole.
+ *
+ * `code` above blanks string BODIES too, which is right when a check is
+ * reading the shape of the code — a bracket inside a sentence is not a
+ * bracket. It is exactly wrong when the thing being looked for IS a string.
+ *
+ * `check:earsopen` found this the hard way: it searches components for the
+ * route paths they call, every one of those is a quoted literal, and its
+ * first run reported that `SayItWrong.tsx` does not post to `/api/afrikaans`
+ * — while looking at a file whose one `fetch` does precisely that.
+ *
+ * So there are two blankers and picking between them is a real decision:
+ * `code` for the shape of a statement, `withoutComments` for the content of
+ * one. Both still leave the prose out, because a route named in a paragraph
+ * explaining the route is not a call to it.
+ */
+export const withoutComments = (raw: string): string =>
+  raw
+    .replace(/\/\*[\s\S]*?\*\//g, blank)
+    .replace(/(^|[^:])\/\/[^\n]*/g, (had, first: string) => first + ' '.repeat(had.length - first.length));

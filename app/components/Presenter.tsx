@@ -39,6 +39,7 @@
  * argument.
  */
 
+import SayItWrong from './SayItWrong';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { SpokenWord } from '../lib/spokenwords';
 import { AlertTriangle, Check, Loader2, Mic, Play, UserRound, Video as VideoIcon } from 'lucide-react';
@@ -711,6 +712,23 @@ export default function Presenter({
           {problem && <p className="text-sm text-amber-400 leading-snug">{problem}</p>}
         </>
       )}
+
+        {/* ── Where the ear reports back ─────────────────────────────────
+ 
+            Carli, 24 September 2026: *"En dan moet ons nog iewers die klient die
+            geleentheid gee om foute in spraak uit te wys. Hoe doen ons dit?"*
+ 
+            It was built in September and mounted in exactly two rooms — the
+            podcast studio and the voice studio — while four rooms speak. So the
+            answer to "how do we do it" was "we do, but not where you were
+            standing", which for the person standing there is the same as not at
+            all. `sayit.ts` says the dictionary can only be built by LISTENING;
+            a report box in half the rooms hears half of it.
+ 
+            `surface` is what tells whoever reads the list which engine said it.
+            See `SayItWrong.tsx` — nothing here ever changes what anybody hears,
+            it writes a candidate. */}
+        <SayItWrong surface="presenter" spoken />
     </Card>
   );
 }

@@ -114,6 +114,7 @@
     "check:ordering": "tsx scripts/check-ordering.mts",
     "check:whofirst": "tsx scripts/check-whofirst.mts",
     "check:unfiltered": "tsx scripts/check-unfiltered.mts",
+    "check:earsopen": "tsx scripts/check-earsopen.mts",
     "check:undo": "tsx scripts/check-undo.mts",
     "check:sold": "tsx scripts/check-sold.mts",
     "check:livechat": "tsx scripts/check-liveroom-chat.mts",

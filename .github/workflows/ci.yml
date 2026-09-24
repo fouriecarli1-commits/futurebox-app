@@ -303,6 +303,8 @@ jobs:
         run: npm run check:whofirst
       - name: No update or delete touches every row
         run: npm run check:unfiltered
+      - name: Every room that speaks can be told it said it wrong
+        run: npm run check:earsopen
 
       # The booth's doctrine is that almost nothing costs anything and all
       # of it is undone by dragging an edge back — and its own prose admits
