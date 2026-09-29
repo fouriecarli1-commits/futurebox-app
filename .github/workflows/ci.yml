@@ -303,6 +303,8 @@ jobs:
         run: npm run check:whofirst
       - name: No update or delete touches every row
         run: npm run check:unfiltered
+      - name: A failed upload says which of the two things went wrong
+        run: npm run check:whyfailed
       - name: Every room that speaks can be told it said it wrong
         run: npm run check:earsopen
 

@@ -63,7 +63,7 @@ import { CREDITS } from '../lib/credits';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import type { Track } from '../lib/library';
-import { TOO_BIG_TO_SEND, attach } from '../lib/workfile';
+import { attach } from '../lib/workfile';
 
 type Phase = 'idle' | 'counting' | 'recording' | 'playing';
 
@@ -948,7 +948,7 @@ export default function VocalBooth({
          at about four and a half megabytes. See lib/workfile.ts. */
       const put = await attach(form, encodeWav(recorded), 'audio', 'take.wav');
       if (!put.ok) {
-        setProblem(TOO_BIG_TO_SEND);
+        setProblem(put.why);
         return;
       }
       // A WAV states its own length, so the server does not need this — it is

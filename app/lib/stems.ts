@@ -15,7 +15,7 @@
 
 import { getAudio, putAudio } from './library';
 import { accessToken } from './cloud';
-import { TOO_BIG_TO_SEND, attach, dropWork } from './workfile';
+import { attach, dropWork } from './workfile';
 
 export interface Stems {
   /** The AI voice on its own. */
@@ -59,7 +59,7 @@ export async function separate(
      refused by the platform before the route runs, so the route's own
      twenty-five megabyte ceiling never got a word in. */
   const put = await attach(form, audio, 'file', 'song.mp3');
-  if (!put.ok) return { message: TOO_BIG_TO_SEND };
+  if (!put.ok) return { message: put.why };
   const key = put.key;
 
   const token = await accessToken();
@@ -157,7 +157,7 @@ export async function separateParts(
   form.append('parts', 'four');
 
   const put = await attach(form, audio, 'file', 'song.mp3');
-  if (!put.ok) return { message: TOO_BIG_TO_SEND };
+  if (!put.ok) return { message: put.why };
   const key = put.key;
 
   const token = await accessToken();

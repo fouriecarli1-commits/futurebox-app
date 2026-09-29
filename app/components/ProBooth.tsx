@@ -67,7 +67,7 @@ import Cost from './Cost';
 import HowToTrain from './HowToTrain';
 import SingVoices from './SingVoices';
 import Note from './Note';
-import { TOO_BIG_TO_SEND, attach } from '../lib/workfile';
+import { attach } from '../lib/workfile';
 import {
   BAR_CHOICES, INSTRUMENTS, bodyFor, instrumentBy, secondsFor,
   type Bars, type Family,
@@ -1067,7 +1067,7 @@ export default function ProBooth({
         const piece = pieceOf(lane, ctx);
         const put = await attach(form, encodeWav(monoOf(piece, ctx)), 'audio', 'lane.wav');
         if (!put.ok) {
-          setProblem(TOO_BIG_TO_SEND);
+          setProblem(put.why);
           return;
         }
         /* Which engine, and what each one needs told about it: a voice id at

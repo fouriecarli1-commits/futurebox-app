@@ -31,7 +31,7 @@ import HowToTrain from './HowToTrain';
 import { accessToken } from '../lib/cloud';
 import { durationOf } from '../lib/trackaudio';
 import { VOICE_CONSENT } from '@/app/lib/consent';
-import { TOO_BIG_TO_SEND, attach } from '../lib/workfile';
+import { attach } from '../lib/workfile';
 
 export interface Voice {
   readonly id: string;
@@ -482,7 +482,7 @@ export default function VoiceLab({
          it goes to storage first. See lib/workfile.ts. */
       const put = await attach(form, toChange, 'audio', toChange.name);
       if (!put.ok) {
-        setProblem(TOO_BIG_TO_SEND);
+        setProblem(put.why);
         return;
       }
       if (voiceId) form.append('voiceId', voiceId);

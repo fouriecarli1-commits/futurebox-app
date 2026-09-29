@@ -73,13 +73,16 @@ figures below replaced a set that had gone wrong in four places at once — one
 of which said "44 checks, of which 82 are browser probes", which cannot be
 true of anything.
 
-- **265 checks** wired into CI, of which **126 are browser probes** that drive
+- **266 checks** wired into CI, of which **126 are browser probes** that drive
   the real app rather than reading the code. All pass. (Was 44 and 82.)
 
   *This figure went from 264 to 265 while it was being written down, because
   `check:standards` — the rule that holds this list against the code — counted
   itself. That is the rule working, and it is the reason the figure is now a
-  number somebody has to change rather than a number that quietly rots.*
+  number somebody has to change rather than a number that quietly rots. It
+  went to 266 on 29 September with `check:whyfailed`, and the rule stopped
+  the build until this line was changed — which is the second time it has
+  done its job on its own paragraph.*
 - **`npm audit --omit=dev`: 0 vulnerabilities.** On `next@16`; the sixteen
   advisories open against `next@14` in August are closed.
 - **TypeScript: no errors**, and **no `@ts-ignore` or `@ts-nocheck` anywhere**

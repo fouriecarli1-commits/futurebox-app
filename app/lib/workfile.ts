@@ -57,17 +57,67 @@ function pathFor(owner: string, name: string, extension: string): string {
 export const POSTABLE_BYTES = 3 * 1024 * 1024;
 
 /**
- * Puts the audio in storage and gives back the key.
+ * Why a file could not be put in storage — and there are two answers, which
+ * is the whole point of this type.
  *
- * Null when there is no account, no storage, or the upload failed — the caller
- * falls back to posting it directly, which works for a short file and gives
- * the honest platform error for a long one rather than a silent nothing.
+ * Carli, 29 September 2026: *"Wat is die grootte van videos wat opgelaai kan
+ * word? Noudat ons supabase en vercel betaal?"* A fair question that the app
+ * could not answer, because every failure here came back as one sentence
+ * ending "Sign in and try again" — including the failure of somebody who was
+ * already signed in and whose file was simply bigger than the bucket takes.
+ *
+ * That is the shape of the thing she keeps meeting: an error that sends you
+ * back round the loop you just came out of. A message that names the wrong
+ * cause is worse than no message, because it costs an attempt to disprove.
  */
-export async function putWork(audio: Blob, extension = 'wav'): Promise<string | null> {
+export type Stored =
+  | { readonly ok: true; readonly key: string }
+  | { readonly ok: false; readonly why: string };
+
+/**
+ * No account, no storage, or the upload failed for a reason we cannot name.
+ * "Sign in" is the right advice here and only here.
+ */
+export const TOO_BIG_TO_SEND =
+  'This is too long to send in one piece, and it could not be put in your storage first. Sign in and try again.';
+
+/**
+ * The bucket refused it on size.
+ *
+ * Supabase caps uploads per project: 50MB on the free plan, and on a paid one
+ * whatever the project is set to — raising the plan does NOT raise the cap by
+ * itself, it only raises the ceiling the cap may be set to. So a project that
+ * has been upgraded and not reconfigured still refuses at 50MB, and this is
+ * the message that says so instead of blaming the session.
+ *
+ * Deliberately without a number in it. The cap lives in a dashboard, not in
+ * this repository, and a sentence here that names 50MB would be a second
+ * answer to a question this code cannot see — wrong the day it is changed and
+ * green forever, which is the failure mode worth avoiding above all others.
+ */
+export const TOO_BIG_FOR_STORAGE =
+  'This file is larger than your storage will accept. Send a shorter piece, or split it in two.';
+
+/** Does this upload error mean "too big" rather than "not allowed"? */
+function refusedOnSize(error: unknown): boolean {
+  const it = error as { statusCode?: unknown; message?: unknown } | null;
+  if (!it) return false;
+  if (String(it.statusCode ?? '') === '413') return true;
+  return /exceeded the maximum|payload too large|too large/i.test(String(it.message ?? ''));
+}
+
+/**
+ * Puts the audio in storage and gives back the key, or says why not.
+ *
+ * It used to give back `null` for all three failures at once, which is how
+ * "the bucket refused this on size" arrived at the screen dressed as "you are
+ * not signed in".
+ */
+export async function putWork(audio: Blob, extension = 'wav'): Promise<Stored> {
   const storage = getStorageClient();
-  if (!storage) return null;
+  if (!storage) return { ok: false, why: TOO_BIG_TO_SEND };
   const account = await currentAccount();
-  if (!account) return null;
+  if (!account) return { ok: false, why: TOO_BIG_TO_SEND };
 
   /* A uuid, so nothing about the name is guessable and two jobs started at the
      same second cannot land on each other. */
@@ -80,7 +130,8 @@ export async function putWork(audio: Blob, extension = 'wav'): Promise<string | 
   const { error } = await storage
     .from(BUCKET)
     .upload(key, audio, { contentType: audio.type || 'audio/wav', upsert: false });
-  return error ? null : key;
+  if (!error) return { ok: true, key };
+  return { ok: false, why: refusedOnSize(error) ? TOO_BIG_FOR_STORAGE : TOO_BIG_TO_SEND };
 }
 
 /** Takes a scratch file back out. Failure is not worth telling anybody about. */
@@ -112,25 +163,16 @@ export async function attach(
   audio: Blob,
   field: string,
   filename: string,
-): Promise<{ ok: true; key: string | null } | { ok: false }> {
+): Promise<{ ok: true; key: string | null } | { ok: false; why: string }> {
   if (audio.size <= POSTABLE_BYTES) {
     form.append(field, audio, filename);
     return { ok: true, key: null };
   }
-  const key = await putWork(audio, 'wav');
-  if (!key) return { ok: false };
-  form.append('key', key);
-  return { ok: true, key };
+  const put = await putWork(audio, 'wav');
+  if (!put.ok) return put;
+  form.append('key', put.key);
+  return { ok: true, key: put.key };
 }
-
-/**
- * What to say when a big file could not be stored, in both languages.
- *
- * One sentence rather than six slightly different ones, because it is one
- * cause: no account, no storage, or the upload failed.
- */
-export const TOO_BIG_TO_SEND =
-  'This is too long to send in one piece, and it could not be put in your storage first. Sign in and try again.';
 
 /**
  * The same decision, for a request that carries several files.
@@ -147,13 +189,13 @@ export const TOO_BIG_TO_SEND =
 export async function attachAll(
   form: FormData,
   files: readonly { readonly blob: Blob; readonly filename: string }[],
-): Promise<{ ok: true; keys: string[] } | { ok: false; keys: string[] }> {
+): Promise<{ ok: true; keys: string[] } | { ok: false; keys: string[]; why: string }> {
   const keys: string[] = [];
   for (const file of files) {
-    const key = await putWork(file.blob, 'wav');
-    if (!key) return { ok: false, keys };
-    keys.push(key);
-    form.append('keys', key);
+    const put = await putWork(file.blob, 'wav');
+    if (!put.ok) return { ok: false, keys, why: put.why };
+    keys.push(put.key);
+    form.append('keys', put.key);
     /* The name travels beside the key: the key is a uuid on purpose, and the
        upstream service is shown the song's name rather than that. */
     form.append('names', file.filename);

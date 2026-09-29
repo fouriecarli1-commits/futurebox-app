@@ -37,7 +37,7 @@ import { CREDITS, perMinute } from '../lib/credits';
 import { accessToken } from '../lib/cloud';
 import { durationOf, readAudio } from '../lib/trackaudio';
 import { putAudio, type Track } from '../lib/library';
-import { attach, dropWork, TOO_BIG_TO_SEND } from '../lib/workfile';
+import { attach, dropWork } from '../lib/workfile';
 import { useLang } from '../lib/i18n';
 import { useBackLayer } from '../lib/backstack';
 import Cost from './Cost';
@@ -149,7 +149,7 @@ export default function SingItMine({
          her own folder in storage and the route is handed the key. */
       const put = await attach(form, music, 'audio', 'song.wav');
       if (!put.ok) {
-        setProblem(TOO_BIG_TO_SEND);
+        setProblem(put.why);
         return;
       }
       key = put.key;

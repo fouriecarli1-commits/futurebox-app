@@ -9,7 +9,7 @@
  */
 
 import { accessToken } from './cloud';
-import { TOO_BIG_TO_SEND, attachAll, dropAll } from './workfile';
+import { attachAll, dropAll } from './workfile';
 
 export interface Sound {
   readonly id: string;
@@ -88,7 +88,7 @@ export async function train(
   const put = await attachAll(form, files);
   if (!put.ok) {
     await dropAll(put.keys);
-    return { ok: false, message: TOO_BIG_TO_SEND };
+    return { ok: false, message: put.why };
   }
 
   const token = await accessToken();

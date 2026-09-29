@@ -37,7 +37,7 @@ import { CREDITS } from '../lib/credits';
 import { DUB_LANGUAGES } from '../data/dublanguages';
 import { useLang } from '../lib/i18n';
 import { useCopilotOps, matchByTitle } from '../lib/copilotactions';
-import { TOO_BIG_TO_SEND, attach } from '../lib/workfile';
+import { attach } from '../lib/workfile';
 
 interface Show {
   id: string;
@@ -235,7 +235,7 @@ export default function PodcastStudio({
     const put = await attach(form, draft.audio, 'audio', 'take.webm');
     if (!put.ok) {
       setBusy(null);
-      setProblem(TOO_BIG_TO_SEND);
+      setProblem(put.why);
       return;
     }
     // Taking the room out is charged by the minute now, so the length has to
@@ -270,7 +270,7 @@ export default function PodcastStudio({
     const put = await attach(form, draft.audio, 'audio', 'episode.mp3');
     if (!put.ok) {
       setBusy(null);
-      setProblem(TOO_BIG_TO_SEND);
+      setProblem(put.why);
       return;
     }
     form.append('title', title.trim());

@@ -12,7 +12,7 @@
  */
 
 import { accessToken } from './cloud';
-import { TOO_BIG_TO_SEND, attach, dropWork } from './workfile';
+import { attach, dropWork } from './workfile';
 
 export type Reading =
   | {
@@ -47,7 +47,7 @@ export async function read(
      fifty-one seconds the real ceiling on reading a song, while the route
      claimed sixty megabytes. Everything past it came back as "(413)". */
   const put = await attach(form, audio, 'audio', 'lane.wav');
-  if (!put.ok) return { ok: false, message: TOO_BIG_TO_SEND };
+  if (!put.ok) return { ok: false, message: put.why };
   const key = put.key;
 
   const token = await accessToken();
