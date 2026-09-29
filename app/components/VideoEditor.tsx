@@ -48,7 +48,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
-  Play, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2,
+  Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2,
 } from 'lucide-react';
 import Card from './Card';
 import Note from './Note';
@@ -62,12 +62,55 @@ import { check, type Plan } from '../lib/entitlements';
 import { KEEP_STEPS } from '../lib/undo';
 import {
   NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
-  add, change, cutFrom, drop, fadesFor, lengthOfPiece, move, runs, split,
+  add, atSecond, change, cutFrom, drop, fadesFor, lengthOfPiece, move, runs, split, startsAt,
   type Edit, type Piece,
 } from '../lib/videoedit';
 
 /** A block on the strip is never thinner than this, however short the piece. */
 const THINNEST = 11;
+
+/**
+ * How many pixels a second of film is worth on the strip.
+ *
+ * Forty. A one-second piece is a block wide enough to hit with a thumb, and a
+ * thirty-second advert fits in about 1 200 pixels — a couple of screens of
+ * scrolling on a phone, which is what scrolling is for.
+ *
+ * Fixed rather than fitted to the screen, and that is the decision. A strip
+ * that squeezes to fit shows a proportion, not a duration: it makes a
+ * ten-second film and a ten-minute one look identical, and there is nowhere
+ * to point at "eighteen seconds in". A ruler that lies about time is a bar
+ * chart wearing a ruler.
+ */
+const PER_SECOND = 40;
+
+/**
+ * How far apart the marks on the ruler are, for a film of a given length.
+ *
+ * Picked so a strip carries somewhere between four and twenty marks. Every
+ * second on a five-minute film is three hundred labels drawn on top of each
+ * other; every thirty on a ten-second one is one mark and no ruler at all.
+ */
+function stepFor(total: number): number {
+  for (const step of [1, 2, 5, 10, 15, 30, 60, 120, 300]) {
+    if (total / step <= 20) return step;
+  }
+  return 600;
+}
+
+/**
+ * The largest file the editor will take in.
+ *
+ * `OwnFootage` has had a 500MB ceiling since it was written; this room had
+ * none at all, which meant a two-gigabyte phone recording was decoded with
+ * nothing in the way of it and the tab died — a white screen with nothing in
+ * the console, which is the exact failure `check:photopath` exists to stop on
+ * the picture side.
+ *
+ * The same 500MB, in one place, because two ceilings for "a video this app
+ * will hold" is two answers to one question.
+ */
+export const CLIP_MAX_BYTES = 500 * 1024 * 1024;
 
 function seconds(value: number): string {
   const whole = Math.max(0, value);
@@ -173,9 +216,6 @@ export default function VideoEditor({
     setPicked(edit.pieces[0].id);
   }, [edit.pieces, picked]);
 
-  /* One object URL at a time, revoked when the picked piece changes. A
-     viewer that makes a new URL per render leaks one per keystroke on the
-     trim boxes, which on a phone is how a tab gets killed mid-edit. */
   /* ── Your own mark on the film ──────────────────────────────────────────
  
      Carli asked for "om 'n item in te sit". The useful version of that, and
@@ -191,7 +231,61 @@ export default function VideoEditor({
   const [markName, setMarkName] = useState('');
   const [corner, setCorner] = useState<Corner>('bottomRight');
 
+  /* ── The playhead ───────────────────────────────────────────────────────
+ 
+     `at` is a second on the EDIT's clock, not on any one file's. Everything
+     else — which piece is on screen, where the line is drawn, what the viewer
+     is seeked to — is worked out from it by `atSecond`, so there is one
+     answer to "where are we" rather than one per control. */
+  const [at, setAt] = useState(0);
+  const [running, setRunning] = useState(false);
+  const strip = useRef<HTMLDivElement | null>(null);
+
+  /* Where in the picked piece's OWN material the viewer should land, once it
+     has something to land on.
+
+     A `currentTime` set before the element has decoded a frame is thrown
+     away without an error, which is exactly how scrubbing used to put the
+     playhead in the right place and the picture in the wrong one. So the
+     instruction is written down here and applied by whichever of the two
+     effects below gets to a ready element first. */
+  const wanted = useRef<number | null>(null);
   const viewer = useRef<HTMLVideoElement | null>(null);
+
+  const total = runs(edit);
+  const step = stepFor(total);
+  const fades = fadesFor(edit);
+
+  /* The clock cannot point past the end of the film. Dropping the last piece
+     while the playhead is inside it used to leave the line hanging off the
+     right of the strip. */
+  useEffect(() => {
+    const end = runs(edit);
+    setAt((was) => (was > end ? end : was));
+  }, [edit]);
+
+  /**
+   * Move the clock, and bring everything else along.
+   *
+   * This is the only thing that writes `at`, apart from playback itself.
+   * `atSecond` says which piece is over that second and how far into its own
+   * material that is, so the picked piece, the viewer and the playhead all
+   * come from one answer rather than three.
+   */
+  const scrubTo = useCallback((second: number) => {
+    const where = Math.max(0, Math.min(second, runs(edit)));
+    setAt(where);
+    const found = atSecond(edit, where);
+    if (!found) { wanted.current = null; return; }
+    wanted.current = found.into;
+    setPicked(found.piece.id);
+    const v = viewer.current;
+    if (v && found.piece.id === picked && v.readyState > 0) {
+      v.currentTime = found.into;
+      wanted.current = null;
+    }
+  }, [edit, picked]);
+
   const [source, setSource] = useState<string | null>(null);
   useEffect(() => {
     if (!piece) { setSource(null); return undefined; }
@@ -202,24 +296,85 @@ export default function VideoEditor({
        object every keystroke and the material behind it has not changed. */
   }, [piece?.clip]);
 
+  /* A waiting seek, landed the moment the element can take one. */
+  useEffect(() => {
+    const v = viewer.current;
+    if (!v) return undefined;
+    const land = () => {
+      if (wanted.current === null) return;
+      v.currentTime = wanted.current;
+      wanted.current = null;
+      if (running) void v.play();
+    };
+    v.addEventListener('loadeddata', land);
+    return () => v.removeEventListener('loadeddata', land);
+  }, [source, running]);
+
+  /* And the same seek for the case `loadeddata` never fires: two pieces cut
+     out of ONE file share a Blob, so picking the other half of a split does
+     not change `source` and the element is already decoded. Without this,
+     scrubbing across a split moved the line and left the picture. */
+  useEffect(() => {
+    const v = viewer.current;
+    if (!v || wanted.current === null) return;
+    if (v.readyState === 0) return;
+    v.currentTime = wanted.current;
+    wanted.current = null;
+  }, [picked, source]);
+
   /* Seek to whichever end just moved, so the frame on screen is the frame
-     being decided about. `stop` runs the piece rather than the file. */
+     being decided about.
+
+     Only when the start of the SAME piece moved, and that qualifier is the
+     whole fix. The first version watched `piece?.from`, which also changes
+     when you pick a DIFFERENT piece — so scrubbing into the second half of a
+     split moved the line, moved the picture, and then this effect dragged
+     the picture back to the top of that piece. It ran second and won.
+
+     Invisible in a typecheck and invisible on screen unless you happen to
+     look at the frame rather than the line. `check:editor` reads both and
+     reported the line at 1.5s over a picture at 0.99s. */
+  const trimmed = useRef<{ readonly id: string; readonly from: number } | null>(null);
   useEffect(() => {
     const v = viewer.current;
-    if (!v || !piece) return;
+    const was = trimmed.current;
+    trimmed.current = piece ? { id: piece.id, from: piece.from } : null;
+    if (!v || !piece || !was) return;
+    if (was.id !== piece.id || was.from === piece.from) return;
     if (Number.isFinite(piece.from)) v.currentTime = piece.from;
-  }, [piece?.from]);
+  }, [piece?.id, piece?.from]);
 
+  /* The end of a piece: a stop when you are cutting, the next piece when the
+     whole film is running.
+
+     That hop is the one thing that makes this a timeline and not a row of
+     files with their own play buttons. The clock is read off the element
+     rather than counted on a timer, so it cannot drift away from the picture
+     while a slow phone decodes. */
   useEffect(() => {
     const v = viewer.current;
-    if (!v || !piece) return;
-    const stop = () => { if (v.currentTime >= piece.to) v.pause(); };
-    v.addEventListener('timeupdate', stop);
-    return () => v.removeEventListener('timeupdate', stop);
-  }, [piece?.to]);
+    if (!v || !piece) return undefined;
+    const tick = () => {
+      if (running) setAt(startsAt(edit, piece.id) + Math.max(0, v.currentTime - piece.from));
+      if (v.currentTime < piece.to) return;
+      if (!running) { v.pause(); return; }
+      const after = edit.pieces[edit.pieces.findIndex((one) => one.id === piece.id) + 1];
+      if (!after) { v.pause(); setRunning(false); setAt(runs(edit)); return; }
+      wanted.current = after.from;
+      setPicked(after.id);
+    };
+    v.addEventListener('timeupdate', tick);
+    return () => v.removeEventListener('timeupdate', tick);
+  }, [piece, running, edit]);
 
-  const total = runs(edit);
-  const fades = fadesFor(edit);
+  /* Play and pause follow the one flag, so the button and the end of the
+     film cannot disagree about whether the film is running. */
+  useEffect(() => {
+    const v = viewer.current;
+    if (!v) return;
+    if (running) void v.play();
+    else v.pause();
+  }, [running, source]);
 
   const bringIn = useCallback(async (files: FileList | null) => {
     if (!files?.length) return;
@@ -228,6 +383,13 @@ export default function VideoEditor({
     try {
       let next = edit;
       for (const file of Array.from(files)) {
+        if (file.size > CLIP_MAX_BYTES) {
+          setProblem(t(
+            'edit.toobig',
+            'That file is larger than 500MB. Trim it on your phone first, or bring it in in pieces.',
+          ));
+          continue;
+        }
         const length = await lengthOf(file);
         if (!Number.isFinite(length) || length <= 0) {
           setProblem(t('edit.unreadable', 'That file could not be read as video.'));
@@ -393,7 +555,25 @@ export default function VideoEditor({
             </div>
           </div>
 
-          {/* ── The clock ──────────────────────────────────────────── */}
+          {/* ── The clock ────────────────────────────────────────────────
+ 
+              Carli, 29 September: *"dit moet seker ook op 'n tydlyn wees.
+              Die ordentlike editor."*
+ 
+              The first version drew the pieces as blocks in a row, sized by
+              how long each ran as a SHARE of the whole. That reads as a
+              proportion and not as time: a ten-second piece and a ten-second
+              piece next to a two-minute one were both slivers, and there was
+              nowhere to point at "eighteen seconds in".
+ 
+              So it is a real clock now. Seconds are pixels — `PER_SECOND` of
+              them — the strip is as wide as the film is long and scrolls, a
+              ruler above it carries the marks, and a playhead says where you
+              are. Tap anywhere on it and the viewer shows that frame.
+ 
+              The width is the honest part: a three-minute film is a
+              three-minute strip. A timeline that squeezes to fit is a
+              proportion bar wearing a ruler. */}
           {edit.pieces.length === 0 ? (
             <p className="text-sm text-zinc-500 leading-relaxed" data-editorempty>
               {t('edit.nothing', 'Nothing on the clock yet. Bring a clip in and it appears here as a block you can cut.')}
@@ -402,29 +582,101 @@ export default function VideoEditor({
             <div className="space-y-2">
               <div className="flex items-baseline justify-between">
                 <span className="text-sm text-zinc-400">{t('edit.clock', 'The clock')}</span>
-                <span className="text-sm text-zinc-500" data-editorruns>{seconds(total)}</span>
+                <span className="text-sm text-zinc-500" data-editorruns>
+                  {seconds(at)} / {seconds(total)}
+                </span>
               </div>
-              <div className="flex gap-1 rounded-xl border border-zinc-800 bg-zinc-950 p-1.5 overflow-x-auto" data-editorstrip>
-                {edit.pieces.map((one) => {
-                  const share = total > 0 ? lengthOfPiece(one) / total : 1 / edit.pieces.length;
-                  const on = one.id === picked;
-                  return (
-                    <button
-                      key={one.id}
-                      type="button"
-                      aria-pressed={on}
-                      data-editorblock
-                      onClick={() => setPicked(one.id)}
-                      style={{ flexGrow: Math.max(share, 0.04), flexBasis: THINNEST }}
-                      className={`min-h-[56px] shrink-0 rounded-lg border-2 px-2 py-1.5 text-left overflow-hidden ${
-                        on ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
-                      }`}
+
+              <div
+                ref={strip}
+                className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950"
+                data-editorstrip
+              >
+                <div style={{ width: Math.max(280, total * PER_SECOND) }} className="relative select-none">
+                  {/* The ruler. A mark every `stepFor` seconds, so a
+                      ten-second film is marked every second and a five-minute
+                      one every thirty — the alternative is either three marks
+                      or three hundred. */}
+                  <div className="relative h-5 border-b border-zinc-800" data-editorruler>
+                    {Array.from({ length: Math.floor(total / step) + 1 }, (_, i) => i * step).map((mark) => (
+                      <span
+                        key={mark}
+                        style={{ left: mark * PER_SECOND }}
+                        className="absolute top-0 h-full border-l border-zinc-700 pl-1 text-[10px] leading-5 text-zinc-500"
+                      >
+                        {seconds(mark)}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* The blocks, at their real place in time. */}
+                  <div
+                    className="relative h-16"
+                    data-editortrack
+                    onPointerDown={(event) => {
+                      const box = event.currentTarget.getBoundingClientRect();
+                      scrubTo((event.clientX - box.left) / PER_SECOND);
+                    }}
+                  >
+                    {edit.pieces.map((one) => {
+                      const from = startsAt(edit, one.id);
+                      const wide = lengthOfPiece(one) * PER_SECOND;
+                      const on = one.id === picked;
+                      return (
+                        <button
+                          key={one.id}
+                          type="button"
+                          aria-pressed={on}
+                          data-editorblock
+                          onClick={() => setPicked(one.id)}
+                          style={{ left: from * PER_SECOND, width: Math.max(THINNEST, wide) }}
+                          className={`absolute top-1 bottom-1 overflow-hidden rounded-lg border-2 px-2 py-1 text-left ${
+                            on ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
+                          }`}
+                        >
+                          <span className="block truncate text-[11px] font-semibold text-zinc-200">{one.name}</span>
+                          <span className="block text-[11px] text-zinc-500">{seconds(lengthOfPiece(one))}</span>
+                        </button>
+                      );
+                    })}
+
+                    {/* The playhead. Drawn over the blocks and ignoring
+                        pointers, so tapping "on the line" still reaches the
+                        track underneath and moves it. */}
+                    <div
+                      data-editorplayhead
+                      style={{ left: Math.min(at, total) * PER_SECOND }}
+                      className="pointer-events-none absolute inset-y-0 w-0.5 bg-emerald-400"
                     >
-                      <span className="block text-[11px] font-semibold text-zinc-200 truncate">{one.name}</span>
-                      <span className="block text-[11px] text-zinc-500">{seconds(lengthOfPiece(one))}</span>
-                    </button>
-                  );
-                })}
+                      <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Playing the whole film in place, rather than only on export.
+                  It hops the viewer from piece to piece as the clock runs,
+                  which is the one thing that makes a timeline a timeline and
+                  not a list of files. */}
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  data-editorplayall
+                  onClick={() => setRunning((was) => !was)}
+                  className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
+                >
+                  {running ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  {running ? t('edit.pause', 'Pause') : t('edit.playAll', 'Play the film')}
+                </button>
+                <button
+                  type="button"
+                  data-editorrewind
+                  onClick={() => { setRunning(false); scrubTo(0); }}
+                  className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
+                >
+                  <SkipBack className="w-4 h-4" />
+                  {t('edit.rewind', 'Back to the start')}
+                </button>
               </div>
             </div>
           )}

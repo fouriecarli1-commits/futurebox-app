@@ -140,6 +140,42 @@ export function startsAt(edit: Edit, id: string): number {
 }
 
 /**
+ * Which piece is on screen at a given second, and how far into its own
+ * material that second falls.
+ *
+ * ── Why this is here and not in the room ─────────────────────────────────
+ *
+ * A playhead needs exactly two answers — what am I looking at, and where do I
+ * seek it to — and both are arithmetic over the pieces. Working them out in
+ * the component would put a second understanding of what "the clock" means
+ * next to `startsAt` and `runs`, and the two would drift the first time
+ * anything about trimming changed.
+ *
+ * `into` is an offset into the piece's OWN material, so it already has
+ * `from` added. That is the number a `<video>` element wants, and returning
+ * the offset-from-the-piece's-start instead would mean every caller adding
+ * `from` and one of them forgetting.
+ *
+ * Past the end returns null rather than the last piece. A playhead dragged
+ * off the end is at nothing, and answering "the last frame" would make the
+ * end of the film indistinguishable from a second after it.
+ */
+export function atSecond(
+  edit: Edit,
+  second: number,
+): { readonly piece: Piece; readonly into: number } | null {
+  let start = 0;
+  for (const piece of edit.pieces) {
+    const length = lengthOfPiece(piece);
+    if (second < start + length) {
+      return { piece, into: piece.from + Math.max(0, second - start) };
+    }
+    start += length;
+  }
+  return null;
+}
+
+/**
  * A fade, clamped to something the edit can actually hold.
  *
  * Both ends against `LONGEST_FADE`, and both together against the run: a one

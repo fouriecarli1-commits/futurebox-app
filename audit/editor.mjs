@@ -49,6 +49,18 @@ await studio(p);
 await toRoom(p, 'Video desk');
 await unfold(p);
 
+/* The clock reads "1.4s / 12.0s" — where the playhead is, over how long the
+   film runs. Both halves are read by number rather than by string, because a
+   check that compares "0.0s" to "0.0s" passes just as happily when the clock
+   has stopped moving. */
+const clockText = async () => (await p.locator('[data-editorruns]').innerText().catch(() => '')) || '';
+const asSeconds = (text) => {
+  const m = String(text).trim().match(/^(?:(\d+):)?([\d.]+)/);
+  return m ? Number(m[1] ?? 0) * 60 + Number(m[2]) : NaN;
+};
+const playheadAt = async () => asSeconds((await clockText()).split('/')[0]);
+const filmLength = async () => asSeconds((await clockText()).split('/')[1] ?? '');
+
 try {
   /* ── The gate, and why a browser cannot see it here ────────────────
 
@@ -147,18 +159,89 @@ try {
       /grayscale|saturate|contrast|brightness/.test(styled),
       `the viewer's filter is "${styled}"`);
 
+    /* ── It is a clock, and the clock is what you steer by ─────────
+
+       Carli, 29 September 2026: *"dit moet seker ook op 'n tydlyn wees. Die
+       ordentlike editor."* She was right about the strip too. What was there
+       was a row of blocks sized in PROPORTION to each other — which makes a
+       ten-second film and a ten-minute one look identical and leaves nowhere
+       to point at "eighteen seconds in".
+
+       These four checks are the difference between a proportion bar and a
+       timeline: there are marks with times on them, there is a line saying
+       where you are, tapping the track moves it, and playing moves it by
+       itself. A strip that draws all four and steers none of them is the
+       exact failure this app keeps meeting — something green because it
+       measures the picture of the thing. */
+    check('the strip has a ruler with times on it',
+      (await p.locator('[data-editorruler] span').count()) >= 2,
+      `${await p.locator('[data-editorruler] span').count()} marks — a strip with no times on it is a bar chart wearing a ruler`);
+
+    check('  and a playhead saying where you are',
+      (await p.locator('[data-editorplayhead]').count()) === 1);
+
+    /* Tapping the track. Aimed a second in, in the strip's own pixels, so
+       the assertion is about where the clock LANDED rather than about the
+       click having been received. */
+    /* `locator.click({ position })` rather than `mouse.click` at a bounding
+       box, and the difference cost an hour: the mouse does not scroll, so on
+       a page this long the coordinates were honest and pointed off-screen.
+       Both clicks reported a clock at nought, which reads exactly like a
+       dead handler. `position` is the element's own pixels, scrolled to. */
+    const track = p.locator('[data-editortrack]');
+    const perSecond = 40;
+    await track.click({ position: { x: perSecond, y: 30 } });
+    await p.waitForTimeout(500);
+    const landed = await playheadAt();
+    check('  and tapping the track moves the clock to that second',
+      Math.abs(landed - 1) < 0.35,
+      `tapped one second in and the clock reads ${landed}s`);
+
+    check('  and the viewer went with it, rather than the line moving alone',
+      Math.abs(await viewer.evaluate((el) => el.currentTime) - 1) < 0.4,
+      `the picture is at ${await viewer.evaluate((el) => el.currentTime)}s while the line says ${landed}s`);
+
+    /* And it runs. A play button that starts the piece but leaves the clock
+       where it was is the same failure one layer down. */
+    await p.locator('[data-editorrewind]').click();
+    await p.waitForTimeout(300);
+    await p.locator('[data-editorplayall]').click();
+    await p.waitForTimeout(1200);
+    const ran = await playheadAt();
+    await p.locator('[data-editorplayall]').click();
+    await p.waitForTimeout(300);
+    check('  and playing the film moves the clock by itself',
+      ran > 0.3,
+      `after 1.2s of playing, the clock reads ${ran}s`);
+
+    await p.locator('[data-editorrewind]').click();
+    await p.waitForTimeout(300);
+    check('  and Back to the start puts it back to nought',
+      (await playheadAt()) === 0,
+      `the clock reads ${await playheadAt()} after rewinding`);
+
     /* Split, which is the one operation that proves there is a clock under
        this rather than a list: one piece becomes two, and the total length
        does not change. */
-    const before = (await p.locator('[data-editorruns]').innerText().catch(() => '')) || '';
+    const before = await filmLength();
     await p.locator('[data-editorsplit]').click();
     await p.waitForTimeout(600);
     check('splitting a piece makes two blocks out of one',
       (await blocks.count()) === 2,
       `${await blocks.count()} after a split`);
     check('  and the film is still as long as it was',
-      ((await p.locator('[data-editorruns]').innerText().catch(() => '')) || '') === before,
-      'a split moved the total, which means it cut material away rather than in two');
+      (await filmLength()) === before,
+      `${before} before the split, ${await filmLength()} after — a split that moves the total cut material away rather than in two`);
+
+    /* Scrubbing ACROSS the split, which is the case that was broken and
+       invisible: two pieces cut out of one file share a Blob, so picking the
+       second half does not change the viewer's `src` and `loadeddata` never
+       fires again. The line moved and the picture stayed. */
+    await p.locator('[data-editortrack]').click({ position: { x: 40 * 1.5, y: 30 } });
+    await p.waitForTimeout(600);
+    check('  and scrubbing across the split moves the picture, not only the line',
+      Math.abs(await p.locator('[data-editorviewer]').evaluate((el) => el.currentTime) - 1.5) < 0.45,
+      `the line says ${await playheadAt()}s and the picture is at ${await p.locator('[data-editorviewer]').evaluate((el) => el.currentTime)}s`);
 
     /* And taking one out puts it back to one. */
     await p.locator('[data-editordrop]').click();
@@ -259,4 +342,4 @@ if (problems.length > 0) {
   console.error(`\ncheck:editor — ${problems.length} problem(s):\n  ${problems.join('\n  ')}\n`);
   process.exit(1);
 }
-console.log('\ncheck:editor — a clip brought in becomes a block, a split makes two without losing a frame, and nothing added pushes the page sideways.');
+console.log('\ncheck:editor — a clip brought in becomes a block on a ruled clock you can tap, scrub and play; a split makes two without losing a frame; and nothing added pushes the page sideways.');

@@ -779,6 +779,22 @@ export const STRINGS: Dict = {
     en: "The clock",
     af: "Die klok",
   },
+  "edit.pause": {
+    en: "Pause",
+    af: "Wag",
+  },
+  "edit.playAll": {
+    en: "Play the film",
+    af: "Speel die film",
+  },
+  "edit.rewind": {
+    en: "Back to the start",
+    af: "Terug na die begin",
+  },
+  "edit.toobig": {
+    en: "That file is larger than 500MB. Trim it on your phone first, or bring it in in pieces.",
+    af: "Daardie lêer is groter as 500MB. Knip dit eers op jou foon, of bring dit in stukke in.",
+  },
   "edit.nothing": {
     en: "Nothing on the clock yet. Bring a clip in and it appears here as a block you can cut.",
     af: "Nog niks op die klok nie. Bring ’n knipsel in en dit verskyn hier as ’n blok wat jy kan sny.",
