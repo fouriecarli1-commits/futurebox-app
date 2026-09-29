@@ -305,6 +305,61 @@ try {
       `${await blocks.count()} after stepping all the way forward — nothing may be lost on the way back`);
   }
 
+    /* ── And it comes out the other end ───────────────────────
+
+       Nothing walked the export until now, which made this the worst gap in
+       the probe: every check above could pass while "Put it together" gave
+       back nothing at all — and the person who found out would be somebody
+       an hour into cutting, with no way to get their work out.
+
+       It is also the one part with no fallback. `stitch.ts` paints frames
+       onto a canvas and records them in the browser, which is why this room
+       has no per-minute bill; the price of that is that there is no server
+       to ask when it fails.
+
+       Recorded in real time, so a two-second film takes two seconds. The
+       wait is generous rather than tuned: a probe that fails because a
+       loaded runner was half a second slow teaches nobody anything. */
+    await p.locator('[data-editormake]').click();
+    const film = p.locator('[data-editormade]');
+    await film.waitFor({ state: 'visible', timeout: 45000 }).catch(() => undefined);
+
+    const said = await p.locator('[data-videoeditor] [role="alert"]').innerText().catch(() => '');
+    check('putting the film together says nothing went wrong',
+      said.trim() === '',
+      said.trim().slice(0, 120));
+
+    check('  and gives back a film',
+      (await film.count()) === 1,
+      'the export is the only way work leaves this room and there is no server behind it');
+
+    /* Decoded rather than weighed, and the first attempt is worth writing
+       down: fetching the blob URL to measure it returned "Failed to fetch",
+       because the app sends a Content-Security-Policy and `connect-src` does
+       not list `blob:`. That is the policy doing its job — the probe was
+       wrong, not the app.
+
+       Asking the element to decode is the better question anyway. A `<video>`
+       with a blob src that contains nothing looks exactly like one that
+       works, and a MediaRecorder webm reports `duration` as Infinity until
+       it is seeked; `videoWidth` is only non-zero once a real frame has been
+       read out of the file. */
+    const frame = await p.locator('[data-editormade] video').evaluate(
+      (el) => new Promise((done) => {
+        const answer = () => done({ w: el.videoWidth, h: el.videoHeight, state: el.readyState });
+        if (el.readyState >= 1) { answer(); return; }
+        el.addEventListener('loadedmetadata', answer, { once: true });
+        el.addEventListener('error', () => done({ w: 0, h: 0, state: -1 }), { once: true });
+        setTimeout(() => done({ w: el.videoWidth, h: el.videoHeight, state: el.readyState }), 8000);
+      }),
+    ).catch(() => ({ w: 0, h: 0, state: -2 }));
+    check('  with a film in it that actually decodes',
+      frame.w > 0 && frame.h > 0,
+      `${frame.w}×${frame.h}, readyState ${frame.state} — an empty film looks identical to a working one until something reads a frame out of it`);
+
+    check('  and a way to save it',
+      (await p.locator('[data-editorsave]').count()) === 1);
+
   /* ── Nothing the room adds breaks the page it sits on ──────────────── */
 
   const wide = await p.evaluate(() => document.documentElement.scrollWidth);
