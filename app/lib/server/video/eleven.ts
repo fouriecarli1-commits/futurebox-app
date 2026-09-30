@@ -121,7 +121,12 @@ interface Envelope {
  *              too would write a row every two seconds for the whole wait and
  *              bury the one row that has a number in it.
  */
-async function call(path: string, init?: RequestInit, note?: string): Promise<Envelope | null> {
+async function call(
+  path: string,
+  init?: RequestInit,
+  note?: string,
+  credits?: number,
+): Promise<Envelope | null> {
   if (!key()) return null;
   try {
     const response = await fetch(BASE + path, {
@@ -141,7 +146,7 @@ async function call(path: string, init?: RequestInit, note?: string): Promise<En
        thrown away.
  
        One real clip now settles it, without ElevenLabs answering an email. */
-    if (note) noteCost(response, note);
+    if (note) noteCost(response, note, credits);
     return (await response.json().catch(() => null)) as Envelope | null;
   } catch {
     return null;
@@ -201,7 +206,7 @@ async function start(model: string, request: StartRequest, wire: Wire): Promise<
       resolution: wire.resolution,
       generate_audio: request.speak,
     }),
-  }, `video.${model}`);
+  }, `video.${model}`, request.credits);
 
   if (!body) return { ok: false, status: 502, message: 'The video engine could not be reached.' };
   if (!body.id) {

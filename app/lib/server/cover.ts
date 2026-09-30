@@ -50,7 +50,12 @@ interface Envelope {
  *              none. Only the call that starts a generation passes one; see
  *              the same parameter in `video/eleven.ts` for why a poll does not.
  */
-async function call(path: string, init?: RequestInit, note?: string): Promise<Envelope | null> {
+async function call(
+  path: string,
+  init?: RequestInit,
+  note?: string,
+  credits?: number,
+): Promise<Envelope | null> {
   if (!key()) return null;
   try {
     const response = await fetch(BASE + path, {
@@ -60,7 +65,7 @@ async function call(path: string, init?: RequestInit, note?: string): Promise<En
     /* A cover is the cheapest thing on the desk and was still the second of
        two ElevenLabs paths charging this account without writing down what it
        cost. Cheap is not the same as free, and "cheap" was itself a guess. */
-    if (note) noteCost(response, note);
+    if (note) noteCost(response, note, credits);
     return (await response.json().catch(() => null)) as Envelope | null;
   } catch {
     return null;
@@ -95,7 +100,7 @@ export type Started =
   | { readonly ok: true; readonly id: string }
   | { readonly ok: false; readonly status: number; readonly message: string };
 
-export async function startCover(prompt: string): Promise<Started> {
+export async function startCover(prompt: string, credits?: number): Promise<Started> {
   if (!key()) {
     return { ok: false, status: 503, message: 'Cover art is not switched on for this app yet.' };
   }
@@ -108,7 +113,7 @@ export async function startCover(prompt: string): Promise<Started> {
       aspect_ratio: '1:1',
       resolution: '1K',
     }),
-  }, `image.${MODEL}`);
+  }, `image.${MODEL}`, credits);
 
   if (!body) return { ok: false, status: 502, message: 'The image engine could not be reached.' };
   if (!body.id) {

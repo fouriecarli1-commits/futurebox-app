@@ -117,6 +117,7 @@
     "check:whyfailed": "tsx scripts/check-whyfailed.mts",
     "check:elevencounted": "tsx scripts/check-elevencounted.mts",
     "check:availablereal": "tsx scripts/check-availablereal.mts",
+    "check:onlyboothmoves": "tsx scripts/check-onlyboothmoves.mts",
     "check:earsopen": "tsx scripts/check-earsopen.mts",
     "check:undo": "tsx scripts/check-undo.mts",
     "check:sold": "tsx scripts/check-sold.mts",

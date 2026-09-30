@@ -44,8 +44,14 @@ ok('a request with no words is refused rather than quietly transcribed',
 ok('the brake runs before anything is charged',
   before(route, 'refuseIfTooMany', 'await charge('),
   'a retry loop must be stopped before the money');
-ok('what it really cost is read off their own response',
-  /noteCost\(upstream, 'align'\)/.test(route));
+/* And with what she paid beside it, which this used to forbid by accident.
+   It pinned the exact two-argument call — the form that writes `credits` null,
+   which `eleven_price_check` then drops, so alignment has never appeared on
+   the pricing page. A check asserting the precise shape of a line holds the
+   line still, bug and all; what is worth asserting is that both numbers are
+   filed. */
+ok('what it really cost is read off their own response, with what we charged',
+  /noteCost\(upstream, 'align',[^)]*\)/.test(route));
 ok('an upstream refusal refunds', /await paid\.refund\(\)/.test(route));
 /* The branch itself, not a four-hundred-character window around it.
    The window measured how much code happened to sit between the two

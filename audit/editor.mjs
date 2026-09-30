@@ -189,7 +189,11 @@ try {
        Both clicks reported a clock at nought, which reads exactly like a
        dead handler. `position` is the element's own pixels, scrolled to. */
     const track = p.locator('[data-editortrack]');
-    const perSecond = 40;
+    /* Read, not assumed. A second stopped being forty pixels on 30 September:
+       the strip fits the film to its own width now, so a probe that still
+       clicked at x=40 for "one second in" would be testing a number this app
+       no longer uses. */
+    const perSecond = Number(await track.getAttribute('data-persecond')) || 40;
     await track.click({ position: { x: perSecond, y: 30 } });
     await p.waitForTimeout(500);
     const landed = await playheadAt();
@@ -237,7 +241,7 @@ try {
        invisible: two pieces cut out of one file share a Blob, so picking the
        second half does not change the viewer's `src` and `loadeddata` never
        fires again. The line moved and the picture stayed. */
-    await p.locator('[data-editortrack]').click({ position: { x: 40 * 1.5, y: 30 } });
+    await p.locator('[data-editortrack]').click({ position: { x: perSecond * 1.5, y: 30 } });
     await p.waitForTimeout(600);
     check('  and scrubbing across the split moves the picture, not only the line',
       Math.abs(await p.locator('[data-editorviewer]').evaluate((el) => el.currentTime) - 1.5) < 0.45,

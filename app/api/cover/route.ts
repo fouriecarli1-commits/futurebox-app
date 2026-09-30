@@ -202,6 +202,8 @@ export async function POST(request: Request): Promise<Response> {
       genre: String(body.genre ?? ''),
       style: String(body.style ?? ''),
     }),
+    /* What she paid, so `eleven_price_check` keeps the row. */
+    CREDITS.cover,
   );
   if (!started.ok) {
     await paid.refund();

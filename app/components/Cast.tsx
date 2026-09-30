@@ -359,7 +359,7 @@ export default function Cast({
       </div>
 
       {cast.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex flex-wrap gap-2 pb-1">
           {cast.map((one) => {
             const face = faces[one.path];
             const active = chosen === one.id;
@@ -490,7 +490,7 @@ export default function Cast({
             {t('cast.noKept', 'There are no pictures on this device yet. The strip under this one is where they land.')}
           </p>
         ) : (
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex flex-wrap gap-2 pb-1">
             {kept.map((one) => (
               <button
                 key={one.id}

@@ -442,6 +442,10 @@ export async function POST(request: Request): Promise<Response> {
     // makes five and ten is how a request gets refused for no good reason.
     const length = nearestLength(one.can, wanted);
     const started = await one.start({
+      /* What she paid, so the provider can file it next to what ElevenLabs
+         charged. Without it the row is written and then filtered out of
+         `eleven_price_check`, which is the only page that reads it. */
+      credits: price,
       prompt: prompt.slice(0, one.can.maxPromptChars),
       aspect,
       seconds: length,

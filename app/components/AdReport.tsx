@@ -223,6 +223,10 @@ export default function AdReport(): React.ReactElement {
             .
           </p>
 
+          {/* sideways on purpose: a table. Columns cannot wrap — a row
+              broken across two lines is not the same row any more — and this
+              one is `min-w-[36rem]` because seven figures side by side is what
+              makes it readable at all. */}
           <div className="overflow-x-auto">
             <table className="w-full min-w-[36rem]">
               <thead>

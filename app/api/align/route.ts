@@ -202,7 +202,12 @@ export async function POST(request: Request): Promise<Response> {
   /* What it really cost, off their own response. This is the number that
      settles what to charge, and a request id not read here is one that cannot
      be recovered if somebody reports a bad answer. */
-  noteCost(upstream, 'align');
+  /* With what she paid. It was missing since this was written, and a cost
+     noted without it is written to `eleven_costs` and then dropped by
+     `eleven_price_check`, which filters rows where either number is null — so
+     alignment has never once appeared on the pricing page. Recorded and
+     invisible is worse than not recorded: it reads as "never used". */
+  noteCost(upstream, 'align', perMinute(billed, CREDITS.transcribe));
 
   if (!upstream.ok) {
     await paid.refund();

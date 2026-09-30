@@ -3857,6 +3857,9 @@ export default function FutureBoxHome() {
               </button>
 
 
+              {/* sideways on purpose: `hidden md:flex` — this rail does not
+                  exist on a phone, which is the only place the sliding was
+                  ever felt. On a wide screen it is a rail, not a page. */}
               <nav
                 className={`${copilotFirst ? 'order-1 md:order-none' : ''} flex-shrink-0 hidden md:flex gap-1 overflow-x-auto md:overflow-visible ${
                   theme.layout === 'top'

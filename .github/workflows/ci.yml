@@ -309,6 +309,8 @@ jobs:
         run: npm run check:elevencounted
       - name: "Available" means it works, not that a value exists
         run: npm run check:availablereal
+      - name: Only the Pro Booth may slide sideways
+        run: npm run check:onlyboothmoves
       - name: Every room that speaks can be told it said it wrong
         run: npm run check:earsopen
 

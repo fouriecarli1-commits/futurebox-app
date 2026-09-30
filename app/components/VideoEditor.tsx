@@ -85,15 +85,50 @@ const THINNEST = 11;
 const PER_SECOND = 40;
 
 /**
+ * And how few it may shrink to before the strip scrolls instead.
+ *
+ * Carli, 30 September 2026: *"video desk se grootte uit preporsie is. Die hele
+ * skerm slide by ver links en regs … Dit is net die probooth wat ruimte en
+ * beweging moet hê."*
+ *
+ * She was right and the measurement was exact: the page itself cannot slide —
+ * `overflow-x: clip` sees to that — but the strip was 474 pixels inside a 334
+ * pixel window on a phone. At almost the full width of the screen, dragging it
+ * IS dragging the screen as far as anybody's thumb is concerned.
+ *
+ * So a second is no longer a fixed forty pixels. The film is fitted to the
+ * strip, up to `PER_SECOND` — a short film fills the width and never moves,
+ * which is every film this app makes, since Veo's own lengths are four, six
+ * and eight seconds.
+ *
+ * The floor is what stops that becoming the other lie. Squeezing ten minutes
+ * into 334 pixels makes every block half a pixel wide, and a strip nobody can
+ * hit is not a timeline either. Below this density it scrolls, because a long
+ * film genuinely is longer than a phone.
+ *
+ * What makes fitting honest here — and it did not use to be — is the ruler.
+ * A strip that squeezes with no times on it shows a proportion; one whose
+ * marks say "0:30" at thirty seconds shows a duration at whatever zoom it is
+ * drawn at. The ruler is why this is now a fair trade and was not before.
+ */
+const LEAST_PER_SECOND = 9;
+
+/**
  * How far apart the marks on the ruler are, for a film of a given length.
  *
  * Picked so a strip carries somewhere between four and twenty marks. Every
  * second on a five-minute film is three hundred labels drawn on top of each
  * other; every thirty on a ten-second one is one mark and no ruler at all.
  */
-function stepFor(total: number): number {
+function stepFor(total: number, perSecond: number): number {
+  /* Against PIXELS, not against seconds. The marks used to be chosen from the
+     length alone, which was right while a second was always forty pixels and
+     wrong the moment it stopped being — a fitted strip would have drawn twenty
+     labels into 334 pixels and painted them on top of each other. At least
+     forty-four pixels apart is a thumb's width, which is the same number every
+     control in this app is sized against. */
   for (const step of [1, 2, 5, 10, 15, 30, 60, 120, 300]) {
-    if (total / step <= 20) return step;
+    if (step * perSecond >= 44 && total / step <= 20) return step;
   }
   return 600;
 }
@@ -253,7 +288,27 @@ export default function VideoEditor({
   const viewer = useRef<HTMLVideoElement | null>(null);
 
   const total = runs(edit);
-  const step = stepFor(total);
+
+  /* How wide the strip actually is, measured rather than assumed. A breakpoint
+     guess would be wrong on every phone it was not written for, and the strip
+     is not the window: it sits inside a card with its own padding. */
+  const [stripWidth, setStripWidth] = useState(0);
+  useEffect(() => {
+    const box = strip.current;
+    if (!box || typeof ResizeObserver === 'undefined') return undefined;
+    const watch = new ResizeObserver(() => setStripWidth(box.clientWidth));
+    watch.observe(box);
+    setStripWidth(box.clientWidth);
+    return () => watch.disconnect();
+  }, [edit.pieces.length]);
+
+  /** Pixels a second, fitted to the strip and never denser than `PER_SECOND`. */
+  const perSecond = useMemo(() => {
+    if (total <= 0 || stripWidth <= 0) return PER_SECOND;
+    return Math.min(PER_SECOND, Math.max(LEAST_PER_SECOND, stripWidth / total));
+  }, [total, stripWidth]);
+
+  const step = stepFor(total, perSecond);
   const fades = fadesFor(edit);
 
   /* The clock cannot point past the end of the film. Dropping the last piece
@@ -589,10 +644,16 @@ export default function VideoEditor({
 
               <div
                 ref={strip}
+                /* sideways on purpose, and only past the floor: `perSecond`
+                   fits the film to this strip, so everything this app makes —
+                   Veo's lengths are four, six and eight seconds — fills the
+                   width and stays still. It scrolls only below
+                   `LEAST_PER_SECOND`, where a film really is longer than a
+                   phone and the alternative is blocks half a pixel wide. */
                 className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950"
                 data-editorstrip
               >
-                <div style={{ width: Math.max(280, total * PER_SECOND) }} className="relative select-none">
+                <div style={{ width: Math.max(stripWidth || 280, total * perSecond) }} className="relative select-none">
                   {/* The ruler. A mark every `stepFor` seconds, so a
                       ten-second film is marked every second and a five-minute
                       one every thirty — the alternative is either three marks
@@ -601,7 +662,7 @@ export default function VideoEditor({
                     {Array.from({ length: Math.floor(total / step) + 1 }, (_, i) => i * step).map((mark) => (
                       <span
                         key={mark}
-                        style={{ left: mark * PER_SECOND }}
+                        style={{ left: mark * perSecond }}
                         className="absolute top-0 h-full border-l border-zinc-700 pl-1 text-[10px] leading-5 text-zinc-500"
                       >
                         {seconds(mark)}
@@ -613,14 +674,15 @@ export default function VideoEditor({
                   <div
                     className="relative h-16"
                     data-editortrack
+                    data-persecond={perSecond.toFixed(3)}
                     onPointerDown={(event) => {
                       const box = event.currentTarget.getBoundingClientRect();
-                      scrubTo((event.clientX - box.left) / PER_SECOND);
+                      scrubTo((event.clientX - box.left) / perSecond);
                     }}
                   >
                     {edit.pieces.map((one) => {
                       const from = startsAt(edit, one.id);
-                      const wide = lengthOfPiece(one) * PER_SECOND;
+                      const wide = lengthOfPiece(one) * perSecond;
                       const on = one.id === picked;
                       return (
                         <button
@@ -629,7 +691,7 @@ export default function VideoEditor({
                           aria-pressed={on}
                           data-editorblock
                           onClick={() => setPicked(one.id)}
-                          style={{ left: from * PER_SECOND, width: Math.max(THINNEST, wide) }}
+                          style={{ left: from * perSecond, width: Math.max(THINNEST, wide) }}
                           className={`absolute top-1 bottom-1 overflow-hidden rounded-lg border-2 px-2 py-1 text-left ${
                             on ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
                           }`}
@@ -645,7 +707,7 @@ export default function VideoEditor({
                         track underneath and moves it. */}
                     <div
                       data-editorplayhead
-                      style={{ left: Math.min(at, total) * PER_SECOND }}
+                      style={{ left: Math.min(at, total) * perSecond }}
                       className="pointer-events-none absolute inset-y-0 w-0.5 bg-emerald-400"
                     >
                       <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-emerald-400" />
@@ -783,7 +845,12 @@ export default function VideoEditor({
                 finished film cannot disagree. */}
             <div className="space-y-1.5">
               <span className="text-sm text-zinc-400">{t('edit.look', 'Look')}</span>
-              <div className="flex gap-2 overflow-x-auto pb-1">
+              {/* Wrapped, not scrolled. Seven looks at `shrink-0` came to 644
+                  pixels in a 334 pixel strip, so this was the second thing on
+                  this desk that moved under a thumb. Three rows of buttons
+                  that stay still beat one row that slides — and a look nobody
+                  scrolled to is a look nobody knows is there. */}
+              <div className="flex flex-wrap gap-2 pb-1">
                 {FILTERS.map((one) => {
                   const on = (piece.look ?? 'none') === one.id;
                   return (

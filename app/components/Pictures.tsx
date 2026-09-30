@@ -234,7 +234,7 @@ export default function Pictures({
             </p>
           </div>
 
-          <ul className="flex gap-2 overflow-x-auto pb-1">
+          <ul className="flex flex-wrap gap-2 pb-1">
             {assets.map((one) => {
               const on = chosen === one.id;
               return (

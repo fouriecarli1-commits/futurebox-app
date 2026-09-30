@@ -126,6 +126,9 @@ export default function Staff({
         </Hint>
       </div>
 
+      {/* sideways on purpose: an SVG chart. A drawing has no line breaks, so
+          the only alternative to scrolling it is shrinking it until the labels
+          are unreadable. */}
       <div className="overflow-x-auto">
         <svg
           viewBox={`0 0 ${width} ${HEIGHT}`}

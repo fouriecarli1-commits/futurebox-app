@@ -34,6 +34,21 @@ export type Aspect = '16:9' | '9:16' | '1:1';
 export type Grade = 'standard' | 'better' | 'premium';
 
 export interface StartRequest {
+  /**
+   * What the member was charged, in FutureBox credits.
+   *
+   * Carried only so the provider can file it beside what the supplier
+   * charged. `eleven_price_check` — the view the pricing page reads — drops
+   * every row where either number is missing, on the ground that an average
+   * treating an absent figure as nought lies in the expensive direction. So a
+   * cost noted without this is written to the table and then invisible on the
+   * one page anybody looks at, which is worse than not noting it: it reads as
+   * "video was never used".
+   *
+   * Optional because the ceiling and the routing do not need it, and a
+   * provider that does not reach ElevenLabs has nothing to file it against.
+   */
+  readonly credits?: number;
   readonly prompt: string;
   readonly aspect: Aspect;
   readonly seconds: number;

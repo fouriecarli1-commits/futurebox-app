@@ -73,9 +73,40 @@ for (const file of FILES) {
 
   /* And here the other way round: a mention of `noteCost` in a comment is not
      a call to it, so this half reads the code with the prose taken out. */
-  if (/\bnoteCost\s*\(/.test(code(raw))) {
+  const text = code(raw);
+  if (/\bnoteCost\s*\(/.test(text)) {
+    /* ── And it has to file BOTH numbers ──────────────────────────────────
+ 
+       `noteCost(response, what)` writes a row with `credits` null, and
+       `eleven_price_check` — the view the pricing page reads — drops every
+       row where either number is missing, because an average that treats an
+       absent figure as nought lies in the expensive direction.
+ 
+       So a two-argument call is recorded and then invisible, which is worse
+       than not recording it: the page reads as "this was never used". Found
+       on 30 September, when Carli made her first video and asked how to see
+       what it cost. The video row was there and the page would have shown
+       nothing. `align` had been in that state since it was written.
+ 
+       A third argument, whatever it is, means somebody decided what the
+       member paid. Its VALUE is not checkable from here — that is what the
+       pricing page is for. */
+    const thin = [...text.matchAll(/\bnoteCost\s*\(([^;]*?)\)\s*;/g)].filter(
+      (hit) => hit[1].split(',').length < 3,
+    );
+    if (thin.length > 0) {
+      const at = text.slice(0, thin[0].index ?? 0).split('\n').length;
+      bad.push(file);
+      console.log(
+        `  ✗   ${file}:${at} — \`noteCost\` is called without what the member ` +
+          'was charged, so the row is written with credits null and ' +
+          '`eleven_price_check` drops it. Recorded and invisible reads as ' +
+          'never used. Pass the price that was charged as the third argument.',
+      );
+      continue;
+    }
     counted += 1;
-    console.log(`  ok  ${file} — files what it cost`);
+    console.log(`  ok  ${file} — files what it cost, and what we charged`);
     continue;
   }
 
