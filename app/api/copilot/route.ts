@@ -32,6 +32,7 @@ import { craftBrief } from '@/app/data/songcraft';
 import { planActions } from '@/app/lib/copilotplan';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
+import { copilotAvailable } from '@/app/lib/server/aikey';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -493,5 +494,5 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 export async function GET(): Promise<Response> {
-  return Response.json({ available: Boolean(process.env.ANTHROPIC_API_KEY) });
+  return Response.json({ available: copilotAvailable() });
 }

@@ -39,6 +39,7 @@ import { tooMany } from '@/app/lib/server/brake';
 import { paidRoom } from '@/app/lib/server/room';
 import { charge } from '@/app/lib/server/credits';
 import { CREDITS } from '@/app/lib/credits';
+import { copilotAvailable } from '@/app/lib/server/aikey';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -247,5 +248,5 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 export async function GET(): Promise<Response> {
-  return Response.json({ available: Boolean(process.env.ANTHROPIC_API_KEY) });
+  return Response.json({ available: copilotAvailable() });
 }

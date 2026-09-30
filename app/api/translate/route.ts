@@ -38,6 +38,7 @@ import { screen } from '@/app/lib/moderation';
 import { tooMany } from '@/app/lib/server/brake';
 import { aiFault } from '@/app/lib/server/aifault';
 import { cachedSystem, notecache } from '@/app/lib/server/aicache';
+import { copilotAvailable } from '@/app/lib/server/aikey';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -211,7 +212,7 @@ export async function GET(): Promise<Response> {
      offers exactly the choice this route can honour. A list typed into a
      component is a list that goes stale the first time this one changes. */
   return Response.json({
-    available: Boolean(process.env.ANTHROPIC_API_KEY),
+    available: copilotAvailable(),
     writes: Object.entries(LANGUAGES).map(([code, name]) => ({ code, name })),
   });
 }

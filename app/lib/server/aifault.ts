@@ -46,6 +46,7 @@
  * error degrades to "could not be reached", never to a leak.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { noteKeyRefused } from './aikey';
 
 /**
  * Whether this failure is an empty account rather than a bad request.
@@ -72,6 +73,11 @@ function outOfCredit(error: InstanceType<typeof Anthropic.APIError>): boolean {
  */
 export function aiFault(error: unknown, reached: string): Response {
   if (error instanceof Anthropic.AuthenticationError) {
+    /* Remembered, so the rooms stop offering a button that cannot work, and
+       logged, so the owner learns it is the key and not the code. Until this
+       was here, ten routes went on answering `available: true` for a key the
+       supplier was refusing on every call. */
+    noteKeyRefused();
     return Response.json(
       { error: 'bad_key', message: 'The key this app uses was rejected. Nothing has been charged.' },
       { status: 502 },

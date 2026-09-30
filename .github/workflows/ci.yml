@@ -307,6 +307,8 @@ jobs:
         run: npm run check:whyfailed
       - name: Every ElevenLabs call that spends money writes down what it spent
         run: npm run check:elevencounted
+      - name: "Available" means it works, not that a value exists
+        run: npm run check:availablereal
       - name: Every room that speaks can be told it said it wrong
         run: npm run check:earsopen
 
