@@ -173,5 +173,39 @@ async function readComparison(): Promise<{ rows: Row[]; problem: string | null }
       problem: `Could not read the comparison — run supabase/eleven.sql (or supabase/ALMAL.sql) in Supabase first. (${error.message})`,
     };
   }
-  return { rows: (data ?? []) as Row[], problem: null };
+  const rows = (data ?? []) as Row[];
+
+  /* ── And when the view is empty, WHY it is empty ────────────────────────
+
+     Carli, 30 September 2026, after making her first video and opening the
+     table: *"Characters en credits sê net int4"* — the column types, because
+     there were no rows under them.
+
+     The view drops every row where either number is null, so an empty view
+     has two completely different causes and the page said the same sentence
+     to both: "Nothing has been recorded yet. Make one podcast read." That is
+     the wrong instruction if the calls WERE recorded and the rows are simply
+     incomplete, which is exactly the state the video flow was in until today.
+
+     So the raw table is counted as well. It costs one more read on a page
+     somebody opens once a month, and it turns "nothing here" into which of
+     the two nothings it is. */
+  if (rows.length === 0) {
+    const { count, error: rawError } = await db
+      .from('eleven_costs')
+      .select('*', { count: 'exact', head: true });
+    if (!rawError && (count ?? 0) > 0) {
+      return {
+        rows,
+        problem:
+          `${count} call(s) ARE recorded, but every one is missing either what ` +
+          'ElevenLabs charged or what we charged, so the comparison drops them ' +
+          'all. A cost noted without a price is written and then invisible. ' +
+          'The calls since this was fixed will appear; the older ones cannot be ' +
+          'repaired, because the header they came with is gone.',
+      };
+    }
+  }
+
+  return { rows, problem: null };
 }

@@ -2097,21 +2097,45 @@ export default function FutureBoxHome() {
      room, so Back closes them first. */
   const inner = useInnerLayers();
 
-  useBackStack(
-    useMemo(() => {
-      const layers: (() => void)[] = [];
-      if (uploadModalOpen) {
-        layers.push(() => {
-          setUploadModalOpen(false);
-          setAtDoor(false);
-        });
-        if (!atDoor) layers.push(() => setAtDoor(true));
-      }
-      if (searchOpen) layers.push(() => setSearchOpen(false));
-      if (accountOpen) layers.push(() => setAccountOpen(false));
-      return [...layers, ...inner];
-    }, [uploadModalOpen, atDoor, searchOpen, accountOpen, inner]),
-  );
+  const layers = useMemo(() => {
+    const found: (() => void)[] = [];
+    if (uploadModalOpen) {
+      found.push(() => {
+        setUploadModalOpen(false);
+        setAtDoor(false);
+      });
+      if (!atDoor) found.push(() => setAtDoor(true));
+    }
+    if (searchOpen) found.push(() => setSearchOpen(false));
+    if (accountOpen) found.push(() => setAccountOpen(false));
+    return [...found, ...inner];
+  }, [uploadModalOpen, atDoor, searchOpen, accountOpen, inner]);
+
+  useBackStack(layers);
+
+  /**
+   * One press back, whichever back somebody reached for.
+   *
+   * ── The fault this exists for ──────────────────────────────────────────
+   *
+   * Carli, 30 September 2026: *"Die back knoppie in make gaan terug na
+   * spotlight en nie creative studio kamer nie."*
+   *
+   * The phone's own Back button was right — a room falls back to the door
+   * with every room on it, and only a second press leaves the studio. The
+   * arrow in the room's header was not. It was `setUploadModalOpen(false)`
+   * and nothing else: one press, straight out to Spotlight, past the door
+   * entirely. So the app had two Backs that disagreed, and the one under her
+   * thumb in the corner of the room was the wrong one.
+   *
+   * Not two lists. This walks the same `layers` the hardware button walks,
+   * innermost first, so the two cannot drift apart again — and `useBackStack`
+   * notices the depth drop and rewinds its own history entry, so pressing the
+   * arrow does not leave a dead entry for the hardware button to spend.
+   */
+  const stepOut = useCallback(() => {
+    layers[layers.length - 1]?.();
+  }, [layers]);
 
   /**
    * Going to a tab.
@@ -3770,7 +3794,8 @@ export default function FutureBoxHome() {
             {/* Top Back Bar */}
             <div className="flex-shrink-0 flex items-center justify-between border-b border-zinc-800 pb-4">
               <button
-                onClick={() => setUploadModalOpen(false)}
+                onClick={stepOut}
+                data-backout
                 aria-label={t('feed.backToPlatform')}
                 className="flex items-center justify-center sm:justify-start space-x-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 sm:px-4 py-2 min-h-[44px] min-w-[44px] sm:min-w-0 rounded-xl transition-all flex-shrink-0"
               >

@@ -314,17 +314,30 @@ export const CREDITS = {
    * sum claimed the system prompt was "served from the cache" — it is not,
    * and could not be at that size.
    *
-   * **Forty credits is R66.24 against that, 13.4x.** Above the product family
-   * on purpose. Forty is also a shape rather than a number: Maker's 90 buys
-   * two plans a month, Studio's 190 buys four, Label's 440 buys eleven. A
-   * month's marketing plan is a monthly artefact, and the allowances should
-   * read like that rather than like something you press repeatedly.
+   * **Seventy-five credits is R124.20 against that, 25x** — the highest
+   * multiple in this file after dubbing, and deliberately so.
    *
-   * It was 10 — the price of one song — which said a month of marketing for
-   * a business is worth the same as one song. R199 a month had said something
-   * very different, and R199 was the number somebody had actually agreed to.
+   * Carli, 30 September 2026: *"Die advert krediete moet wel duurder wees.
+   * Daai is 'n premium funksie wat baie smart is en mense behoort heelwat
+   * duurder en met meer krediete vir daardie funksie te betaal."*
+   *
+   * She is right, and the reason is that this is the one thing in the app
+   * priced against a **business outcome** rather than against a craft. A song
+   * is worth what a song is worth. A month of marketing that actually lands
+   * is worth what a marketing person costs, and R124 is a long way under any
+   * of them — R199 a month is what somebody had already agreed to pay for
+   * exactly this, as a subscription, before it was folded into credits.
+   *
+   * Seventy-five is a shape as much as a number, and a better one than forty
+   * was: Maker's 90 buys **one plan a month**, Studio's 190 buys two, Label's
+   * 440 buys five. A month's marketing plan is a monthly artefact, and the
+   * allowance now reads exactly like that — where forty gave a Maker member
+   * two a month and quietly invited them to treat it as something you press.
+   *
+   * It was 10 first — the price of one song, which said a month of marketing
+   * for a business is worth the same as one song — then 40.
    */
-  marketPlan: 40,
+  marketPlan: 75,
   /**
    * Eight advert lines written against a brief. Per roll.
    *
@@ -335,14 +348,19 @@ export const CREDITS = {
    *                                            ─────
    *                                            R3.29
    *
-   * **Twenty credits is R33.12, 10.1x.** Half the plan, because it is a
-   * smaller call and a smaller thing — which is the whole reason to price per
-   * action rather than per month: somebody who only ever wants ad lines never
-   * pays for the plan they do not use.
+   * **Forty credits is R66.24, 20x.** Still exactly half the plan, and the
+   * half matters more than either number: it is a smaller call and a smaller
+   * thing, and somebody who only ever wants ad lines should never have to buy
+   * the plan they do not use. Move one and the other moves with it.
    *
-   * Twice a song, for eight finished lines. It was 6.
+   * Raised with the plan on 30 September for the same reason — eight advert
+   * lines written against a brief is the part of this most people will
+   * actually press, and it was priced like a craft rather than like the
+   * business tool it is.
+   *
+   * Four times a song, for eight finished lines. It was 6, then 20.
    */
-  adLines: 20,
+  adLines: 40,
   /**
    * Taking the background out of a clip. **Per five seconds**, not per minute.
    *

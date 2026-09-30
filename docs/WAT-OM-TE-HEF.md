@@ -129,8 +129,37 @@ editor", en dit hef presies waar ons betaal.
 
 ## 5. Adverts
 
-Hier is niks stukkend nie. `CREDITS.marketPlan` is 40 en `CREDITS.adLines` 20,
-en `/api/campaign` en `/api/plan` hef albei.
+Carli, dieselfde aand: *"Die advert krediete moet wel duurder wees. Daai is 'n
+premium funksie wat baie smart is en mense behoort heelwat duurder en met meer
+krediete vir daardie funksie te betaal."*
+
+Gedoen. `CREDITS.marketPlan` gaan van 40 na **75** en `CREDITS.adLines` van 20
+na **40**:
+
+| | Krediete | In rand | Teen die koste |
+|---|---|---|---|
+| 'n Maand se bemarkingsplan | **75** | R124,20 | 25× (was 13,4×) |
+| Agt advertensielyne | **40** | R66,24 | 20× (was 10,1×) |
+
+25× is die hoogste veelvoud in die hele lêer ná oorklanking, en dit is die
+punt: dit is die een ding wat teen 'n **besigheidsuitkoms** geprys word eerder
+as teen 'n ambag. 'n Lied is werd wat 'n lied werd is. 'n Maand se bemarking
+wat werk is werd wat 'n bemarkingsmens kos — en R124 is ver onder enige van
+hulle. R199 'n maand is wat iemand reeds ingestem het om hiervoor te betaal
+toe dit nog 'n intekening was.
+
+75 is ook 'n **vorm**, en 'n beter een as 40: Maker se 90 koop nou **een plan
+per maand**, Studio se 190 twee, Label se 440 vyf. 'n Maandelikse plan behoort
+soos 'n maandelikse ding te lees. Teen 40 het 'n Maker-lid twee per maand
+gekry, wat dit soos iets laat lyk het wat 'n mens druk.
+
+Advertensielyne bly presies die helfte van die plan, en die helfte maak meer
+saak as albei getalle: iemand wat net lyne wil hê, moet nooit die plan koop
+wat hulle nie gebruik nie.
+
+`/api/campaign` en `/api/plan` hef albei reeds, so daar is niks te bedraad nie.
+`check:sold` hou die getalle teen die plan-kaarte vas — ek het dit op 999 gesit
+om seker te maak dit kyk regtig.
 
 Die **een** gat is `/api/adformats` — dit skryf advertensieformate op
 Anthropic en hef niks. Dit hoort onder dieselfde daglimiet as die kopiloot.
