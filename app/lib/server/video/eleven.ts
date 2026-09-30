@@ -64,6 +64,7 @@
  * ElevenLabs states that failed generations are not charged.
  */
 
+import { noteCost } from '../eleven.ts';
 import type { Progress, Provider, StartRequest, Started } from './types.ts';
 
 const BASE = 'https://api.elevenlabs.io/v1/flows/video';
@@ -113,13 +114,34 @@ interface Envelope {
   detail?: unknown;
 }
 
-async function call(path: string, init?: RequestInit): Promise<Envelope | null> {
+/**
+ * @param note  What to file this call's real cost under, or nothing to file
+ *              none. Only the call that STARTS a generation passes one: a poll
+ *              carries a request id and no `character-cost`, so noting those
+ *              too would write a row every two seconds for the whole wait and
+ *              bury the one row that has a number in it.
+ */
+async function call(path: string, init?: RequestInit, note?: string): Promise<Envelope | null> {
   if (!key()) return null;
   try {
     const response = await fetch(BASE + path, {
       ...init,
       headers: { 'xi-api-key': key(), 'content-type': 'application/json', ...(init?.headers ?? {}) },
     });
+    /* ── The only ElevenLabs calls in this app that were not counted ──────
+ 
+       `noteCost` reads their `character-cost` header and files it beside what
+       we charged, and every speech, music and dubbing path has called it
+       since September. The video and image flows never did.
+ 
+       That is exactly why the video number is the open one. `costs-eleven.mts`
+       calls the R2,62-against-R0,06 gap "die belangrikste oop getal op hierdie
+       bladsy" and refuses to add video to the music sums until an invoice
+       arrives — while the answer was being sent back on every response and
+       thrown away.
+ 
+       One real clip now settles it, without ElevenLabs answering an email. */
+    if (note) noteCost(response, note);
     return (await response.json().catch(() => null)) as Envelope | null;
   } catch {
     return null;
@@ -179,7 +201,7 @@ async function start(model: string, request: StartRequest, wire: Wire): Promise<
       resolution: wire.resolution,
       generate_audio: request.speak,
     }),
-  });
+  }, `video.${model}`);
 
   if (!body) return { ok: false, status: 502, message: 'The video engine could not be reached.' };
   if (!body.id) {
@@ -321,7 +343,7 @@ export async function startPresenter(request: PresenterRequest): Promise<Started
       },
       resolution: request.quality,
     }),
-  });
+  }, 'presenter.aurora');
 
   if (!body) return { ok: false, status: 502, message: 'The presenter could not be reached.' };
   if (!body.id) {

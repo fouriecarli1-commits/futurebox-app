@@ -28,6 +28,7 @@ import { CREDITS, perMinute } from '@/app/lib/credits';
 import { billedSeconds } from '@/app/lib/server/audiolen';
 import { charge } from '@/app/lib/server/credits';
 import { langOf, refusal, roomFor } from '@/app/lib/server/elevenroom';
+import { noteCost } from '@/app/lib/server/eleven';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -220,7 +221,14 @@ export async function POST(request: Request): Promise<Response> {
         { status: 502 },
       );
     }
-    if (upstream.ok) break;
+    if (upstream.ok) {
+      /* What they actually billed for this one, filed beside what we took
+         for it. Every other billable ElevenLabs path has done this since
+         September; speech-to-text was missed, so `CREDITS.transcribe` has
+         never once been checked against a real charge. */
+      noteCost(upstream, `transcribe.${model}`, perMinute(billed, CREDITS.transcribe));
+      break;
+    }
     raw = await upstream.text().catch(() => '');
     // Only an argument about the model is worth trying the older one for.
     if (upstream.status !== 422 && upstream.status !== 400) break;

@@ -156,12 +156,31 @@ ok('there are supplier routes to check', spenders.length > 10, `${spenders.lengt
 
 /* And the scan really does reach past the import, which is the whole of
    the widening above. A pattern that quietly stopped matching the host
-   would put this rule back where it was, silently. */
+   would put this rule back where it was, silently.
+
+   ── Why this floor moved from two to one, 30 September 2026 ──────────
+
+   It went red on a change that fixed something. `app/api/transcribe`
+   gained `import { noteCost } from '@/app/lib/server/eleven'` so it would
+   file what ElevenLabs actually charged, and that import moved it out of
+   the host-only set and into the import set. Two became one. The route is
+   no less braked and no less a spender; the canary's population shrank
+   because a file got better.
+
+   A floor is a margin, and this one was never the thing being guarded.
+   What is guarded is that the host half of `SUPPLIER` still matches
+   *something* — because the day it matches nothing, every route that
+   reaches a supplier with its own `fetch` walks out of this check without
+   a word. One is enough to prove that, and nought still fails loudly.
+
+   Lowered rather than propped up with a second import nobody needs, and
+   written down because quietly relaxing a threshold to get green is the
+   move this whole repository exists to make impossible. */
 const byHost = spenders.filter(
   (path) => !/from '@\/app\/lib\/server\/(eleven|kits|musicai)'/.test(readFileSync(path, 'utf8')),
 );
 ok('  including the ones that call a supplier without the module',
-  byHost.length >= 2,
+  byHost.length >= 1,
   `${byHost.length} found — the host pattern has stopped matching, so going around`
   + ' the module is a way out of this check again');
 

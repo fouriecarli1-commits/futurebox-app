@@ -25,6 +25,8 @@
  * names below are what actually goes on the wire.
  */
 
+import { noteCost } from './eleven.ts';
+
 const BASE = 'https://api.elevenlabs.io/v1/flows/image';
 
 const key = (): string => process.env.ELEVENLABS_API_KEY ?? '';
@@ -43,13 +45,22 @@ interface Envelope {
   detail?: unknown;
 }
 
-async function call(path: string, init?: RequestInit): Promise<Envelope | null> {
+/**
+ * @param note  What to file this call's real cost under, or nothing to file
+ *              none. Only the call that starts a generation passes one; see
+ *              the same parameter in `video/eleven.ts` for why a poll does not.
+ */
+async function call(path: string, init?: RequestInit, note?: string): Promise<Envelope | null> {
   if (!key()) return null;
   try {
     const response = await fetch(BASE + path, {
       ...init,
       headers: { 'xi-api-key': key(), 'content-type': 'application/json', ...(init?.headers ?? {}) },
     });
+    /* A cover is the cheapest thing on the desk and was still the second of
+       two ElevenLabs paths charging this account without writing down what it
+       cost. Cheap is not the same as free, and "cheap" was itself a guess. */
+    if (note) noteCost(response, note);
     return (await response.json().catch(() => null)) as Envelope | null;
   } catch {
     return null;
@@ -97,7 +108,7 @@ export async function startCover(prompt: string): Promise<Started> {
       aspect_ratio: '1:1',
       resolution: '1K',
     }),
-  });
+  }, `image.${MODEL}`);
 
   if (!body) return { ok: false, status: 502, message: 'The image engine could not be reached.' };
   if (!body.id) {

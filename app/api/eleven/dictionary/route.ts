@@ -39,6 +39,18 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+/* ── Exempt from `check:elevencounted`, and here is the reason ──────────
+
+   Both calls in this file are pronunciation-dictionary management: one lists
+   the dictionaries on the workspace, one writes rules into ours. Neither
+   generates audio, so neither is **not billed by character** — there is no
+   `character-cost` on the response and nothing for `noteCost` to file.
+
+   Written down rather than left out, because the check reads the URL rather
+   than the import for exactly this file: `check:brake` found in September
+   that it reaches ElevenLabs with its own `fetch` and imports nothing that
+   gives it away, so it sat in neither the covered list nor the exemptions.
+   Not excused — invisible. An exemption anybody can read is the difference. */
 const BASE = 'https://api.elevenlabs.io/v1';
 const NAME = 'FutureBox Afrikaans';
 

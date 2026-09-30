@@ -305,6 +305,8 @@ jobs:
         run: npm run check:unfiltered
       - name: A failed upload says which of the two things went wrong
         run: npm run check:whyfailed
+      - name: Every ElevenLabs call that spends money writes down what it spent
+        run: npm run check:elevencounted
       - name: Every room that speaks can be told it said it wrong
         run: npm run check:earsopen
 
