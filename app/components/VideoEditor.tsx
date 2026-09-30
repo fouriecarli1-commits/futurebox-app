@@ -127,10 +127,21 @@ function stepFor(total: number, perSecond: number): number {
      labels into 334 pixels and painted them on top of each other. At least
      forty-four pixels apart is a thumb's width, which is the same number every
      control in this app is sized against. */
-  for (const step of [1, 2, 5, 10, 15, 30, 60, 120, 300]) {
-    if (step * perSecond >= 44 && total / step <= 20) return step;
+  if (total <= 0) return 1;
+  for (const step of [0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300]) {
+    if (step * perSecond < 44) continue;
+    if (total / step > 20) continue;
+    /* And it has to mark the film more than once. The 44-pixel rule alone
+       chose a two-second step for a 1.9-second film, which is a single mark
+       at nought — `check:editor` reported "1 marks", and a ruler with one mark
+       on it is not a ruler, it is a tick. */
+    if (total / step >= 1) return step;
   }
-  return 600;
+  /* Nothing in the ladder both spaces the labels and marks the film twice,
+     which happens once a film is shorter than about two labels wide. Half the
+     film is then the honest answer: start, middle, end, a little tighter than
+     44 pixels apart. Tight beats absent. */
+  return Math.max(0.1, Math.round((total / 2) * 10) / 10);
 }
 
 /**
@@ -469,6 +480,70 @@ export default function VideoEditor({
     commit((was) => change(was, piece.id, how));
   }, [piece, commit]);
 
+  /* ── Dragging a fade, off the timeline ─────────────────────────────────
+
+     Carli, 30 September 2026: *"Op die tydlyn kan mens aan die begin en einde
+     van elke tydlyn 'n trek lyntjie in sit wat die in en uitfade moontlik maak
+     om te trek."*
+
+     The sliders below the strip stay — a number is the only way to say
+     "exactly half a second" — but a fade is a thing you feel against the
+     picture, and reaching for a slider in another card to set it is reaching
+     away from the thing you are judging.
+
+     ── One step back for a whole drag ───────────────────────────────────
+
+     The drag writes with `setEdit` and not `commit`, on purpose. `commit`
+     files a history step per call, and a drag across a strip is a few hundred
+     calls — which would fill `KEEP_STEPS` with one gesture and leave Back
+     meaning "a pixel and a half ago". The edit as it was is held at
+     pointerdown and filed once, at the end, so one drag is one press of Back.
+
+     ── And it must not scrub ────────────────────────────────────────────
+
+     The handles sit on the track, whose `onPointerDown` moves the clock. So
+     the event is stopped here: grabbing a fade handle and having the playhead
+     jump under it is two answers to one gesture. */
+  const beforeDrag = useRef<Edit | null>(null);
+
+  const takeFade = useCallback((which: 'in' | 'out', event: React.PointerEvent<HTMLElement>) => {
+    event.stopPropagation();
+    event.preventDefault();
+    const node = event.currentTarget;
+    const track = node.parentElement;
+    if (!track || total <= 0) return;
+    const box = track.getBoundingClientRect();
+    beforeDrag.current = edit;
+    node.setPointerCapture(event.pointerId);
+
+    const move = (m: PointerEvent) => {
+      const second = (m.clientX - box.left) / perSecond;
+      const wanted = which === 'in' ? second : total - second;
+      const held = Math.max(0, Math.min(LONGEST_FADE, Math.round(wanted * 10) / 10));
+      setEdit((was) => (which === 'in' ? { ...was, fadeIn: held } : { ...was, fadeOut: held }));
+    };
+    const done = () => {
+      node.removeEventListener('pointermove', move);
+      node.removeEventListener('pointerup', done);
+      node.removeEventListener('pointercancel', done);
+      try { node.releasePointerCapture(event.pointerId); } catch { /* already gone */ }
+      const was = beforeDrag.current;
+      beforeDrag.current = null;
+      if (!was) return;
+      /* Filed by hand rather than through `commit`, which would run the
+         change a second time — the edit already holds the result. */
+      setEdit((now) => {
+        if (now === was) return now;
+        setPast((steps) => [...steps, was].slice(-KEEP_STEPS));
+        setFuture([]);
+        return now;
+      });
+    };
+    node.addEventListener('pointermove', move);
+    node.addEventListener('pointerup', done);
+    node.addEventListener('pointercancel', done);
+  }, [edit, perSecond, total]);
+
   const preview = useCallback(async () => {
     if (!edit.pieces.length || busy) return;
     setProblem('');
@@ -701,6 +776,71 @@ export default function VideoEditor({
                         </button>
                       );
                     })}
+
+                    {/* ── The fades, as something to pull ──────────────────
+
+                        A shaded wedge at each end showing what is being faded,
+                        and a handle on its inside edge to drag. The wedge
+                        ignores pointers so it never eats a tap meant for a
+                        block; only the handle takes one. */}
+                    {fades.in > 0 && (
+                      <div
+                        style={{ width: fades.in * perSecond }}
+                        className="pointer-events-none absolute inset-y-0 left-0 rounded-l-lg bg-gradient-to-r from-black/80 to-transparent"
+                      />
+                    )}
+                    {fades.out > 0 && (
+                      <div
+                        style={{ width: fades.out * perSecond }}
+                        className="pointer-events-none absolute inset-y-0 right-0 rounded-r-lg bg-gradient-to-l from-black/80 to-transparent"
+                      />
+                    )}
+                    <div
+                      data-editorfadeinhandle
+                      role="slider"
+                      aria-label={t('edit.fadeIn', 'Fade in')}
+                      aria-valuemin={0}
+                      aria-valuemax={LONGEST_FADE}
+                      aria-valuenow={fades.in}
+                      tabIndex={0}
+                      onPointerDown={(event) => takeFade('in', event)}
+                      onKeyDown={(event) => {
+                        const by = event.key === 'ArrowRight' ? 0.1 : event.key === 'ArrowLeft' ? -0.1 : 0;
+                        if (!by) return;
+                        event.preventDefault();
+                        commit((was) => ({
+                          ...was,
+                          fadeIn: Math.max(0, Math.min(LONGEST_FADE, Math.round(((was.fadeIn ?? 0) + by) * 10) / 10)),
+                        }));
+                      }}
+                      style={{ left: Math.max(0, fades.in * perSecond - 7) }}
+                      className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
+                    >
+                      <span className="absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full bg-amber-400/90" />
+                    </div>
+                    <div
+                      data-editorfadeouthandle
+                      role="slider"
+                      aria-label={t('edit.fadeOut', 'Fade out')}
+                      aria-valuemin={0}
+                      aria-valuemax={LONGEST_FADE}
+                      aria-valuenow={fades.out}
+                      tabIndex={0}
+                      onPointerDown={(event) => takeFade('out', event)}
+                      onKeyDown={(event) => {
+                        const by = event.key === 'ArrowLeft' ? 0.1 : event.key === 'ArrowRight' ? -0.1 : 0;
+                        if (!by) return;
+                        event.preventDefault();
+                        commit((was) => ({
+                          ...was,
+                          fadeOut: Math.max(0, Math.min(LONGEST_FADE, Math.round(((was.fadeOut ?? 0) + by) * 10) / 10)),
+                        }));
+                      }}
+                      style={{ right: Math.max(0, fades.out * perSecond - 7) }}
+                      className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
+                    >
+                      <span className="absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full bg-amber-400/90" />
+                    </div>
 
                     {/* The playhead. Drawn over the blocks and ignoring
                         pointers, so tapping "on the line" still reaches the

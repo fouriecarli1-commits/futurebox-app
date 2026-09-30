@@ -224,6 +224,50 @@ try {
       (await playheadAt()) === 0,
       `the clock reads ${await playheadAt()} after rewinding`);
 
+    /* ── Fades you pull, rather than set somewhere else ───────────
+
+       Carli, 30 September 2026: *"Op die tydlyn kan mens aan die begin en
+       einde van elke tydlyn 'n trek lyntjie in sit wat die in en uitfade
+       moontlik maak om te trek."*
+
+       The sliders were always there. A fade is judged against the picture,
+       and reaching into another card to set one is reaching away from the
+       thing being judged.
+
+       Dragged rather than clicked, because a drag is the whole feature: a
+       handle that only answers a tap has not been built. And the undo check
+       after it is the half that is easy to skip — a drag writes a few hundred
+       times, and if each one filed a history step, Back would mean "a pixel
+       and a half ago" and the editor's whole history would be one gesture. */
+    const strip = await p.locator('[data-editortrack]').boundingBox();
+    const handle = p.locator('[data-editorfadeinhandle]');
+    check('the timeline carries a fade handle at each end',
+      (await handle.count()) === 1 && (await p.locator('[data-editorfadeouthandle]').count()) === 1);
+
+    const stepsBefore = await p.locator('[data-editorundo]').isDisabled();
+    await handle.hover();
+    await p.mouse.down();
+    await p.mouse.move((strip?.x ?? 0) + perSecond * 0.8, (strip?.y ?? 0) + 30, { steps: 12 });
+    await p.mouse.up();
+    await p.waitForTimeout(500);
+
+    const pulled = Number(await p.locator('[data-editorfadein]').inputValue().catch(() => '0'));
+    check('  and pulling it sets the fade',
+      pulled > 0.2,
+      `the slider reads ${pulled} after dragging the handle most of a second in`);
+
+    check('  and the slider and the handle agree',
+      Math.abs(Number(await handle.getAttribute('aria-valuenow')) - pulled) < 0.15,
+      'two controls for one number that disagree is worse than one');
+
+    /* One press of Back, not three hundred. */
+    await p.locator('[data-editorundo]').click();
+    await p.waitForTimeout(500);
+    check('  and the whole drag is one press of Back',
+      Number(await p.locator('[data-editorfadein]').inputValue().catch(() => '1')) === 0,
+      `the fade is ${await p.locator('[data-editorfadein]').inputValue()} after one undo — a drag that files a step per pixel fills the history with one gesture`);
+    void stepsBefore;
+
     /* Split, which is the one operation that proves there is a clock under
        this rather than a list: one piece becomes two, and the total length
        does not change. */
