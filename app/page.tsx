@@ -78,6 +78,7 @@ import {
   surfacesInStage,
   type SurfaceId,
 } from './lib/surfaces';
+import { forgetWhere, noteWhere, whereIWas } from './lib/whereiwas';
 
 import { videoFromHook, videoFromSong } from './lib/hookhandover';
 import { featuredClass, youTubeId } from './data/masterclasses';
@@ -895,6 +896,59 @@ export default function FutureBoxHome() {
      worse than one answering the room's. */
   const [errand, setErrand] = useState<Errand | null>(null);
 
+  /* ── Back where she was, after Android threw the tab away ──────────
+
+     Carli, 30 September 2026: *"wanneer ek die app minimize en weer terug
+     gaan … Hy gooi jou heeltemal uit en vergeet waarmee hy besig was."*
+
+     Almost word for word what she said about the Pro Booth on 9 September,
+     which became `lib/keepsession.ts`. Only half that lesson was learnt: the
+     booth's takes were made to survive leaving the room, and which room she
+     was in was not. `studioTab` was React state and nothing else, so a tab
+     Android had reclaimed came back as `'make'` — not signed out, nothing
+     saved lost, just put back at the front of a room she was not in.
+
+     Two effects rather than one, and the order they are written in is the
+     design: this one runs first on mount and reads what was kept, so the one
+     below cannot write `'make'` over it before it has been looked at.
+
+     `resolveSurfaceId` rather than a cast. A room id kept by an older version
+     of this app, or half-written, has to read as "nowhere" — the alternative
+     is a `SurfaceId` that matches no room and draws a blank screen, which is
+     a worse bug than the one being fixed and looks exactly like it. */
+  const cameBack = useRef(false);
+  useEffect(() => {
+    if (cameBack.current) return;
+    cameBack.current = true;
+    const was = whereIWas();
+    if (!was) return;
+    const room = resolveSurfaceId(was.room);
+    if (!room) return;
+    setStudioTab(room);
+    setAtDoor(was.atDoor);
+    /* And the studio itself. Restoring the room without this put her back on
+       the feed with the right room chosen behind it, which `check:whereiwas`
+       reported as "still at the front" — correctly, and for a reason the
+       first version of this effect could not see. */
+    setUploadModalOpen(was.inStudio);
+  }, []);
+
+  /* And the door, kept up to date — but only once there is something to keep.
+
+     Deliberately NOT written on mount, and that is the whole subtlety. What
+     is remembered is also the answer to "has this tab been inside before",
+     which `restored` below asks to decide whether to open the door. A mount
+     that wrote `{make, false}` straight away would answer yes to its own
+     question on a tab nobody had used, and the door would stop opening for
+     anybody — breaking the thing Carli asked for in September to fix the
+     thing she asked for today. So the memory is created by going somewhere,
+     and this only follows the door after that. */
+  useEffect(() => {
+    if (!cameBack.current) return;
+    if (!whereIWas()) return;
+    noteWhere({ inStudio: uploadModalOpen, room: studioTab, atDoor });
+  }, [studioTab, atDoor, uploadModalOpen]);
+
   const goToRoom = useCallback((id: SurfaceId, why: Errand | null = null) => {
     setStudioTab(id);
     setErrand(why);
@@ -909,6 +963,10 @@ export default function FutureBoxHome() {
        in three of sixteen places is a count that describes the three. Fire and
        forget: nothing waits for it and nothing fails because of it. */
     noteTaste('room', id);
+    /* And where she is, for the same reason and in the same place: this is
+       the one funnel every way into a room runs through. A room recorded at
+       three of sixteen call sites is a record of the three. */
+    noteWhere({ inStudio: true, room: id, atDoor: false });
   }, [toTheTop]);
 
   /* ── Back from the till, into the room she paid from ────────────────
@@ -1030,7 +1088,26 @@ export default function FutureBoxHome() {
    * Anybody who wants the feed is one press away from it, and that press is
    * the first tab in the bar.
    */
-  const restored = useCallback(() => setAtDoor(true), []);
+  const restored = useCallback(() => {
+    /* ── Unless this tab was already inside ─────────────────────────────
+
+       Carli, 30 September 2026: *"wanneer ek die app minimize en weer terug
+       gaan … Hy gooi jou heeltemal uit en vergeet waarmee hy besig was."*
+
+       Everything above this is right and stays. What it could not tell apart
+       is two different arrivals that look identical from here — a page load
+       with a session already on it is BOTH somebody opening the app, who
+       should land on Make as she asked in September, AND a tab Android
+       reclaimed for a camera or a file picker and handed back, who should
+       land where she was.
+
+       `whereIWas()` separates them without a heuristic, because
+       `sessionStorage` is per-tab: it is empty in a tab nobody has used and
+       full in one that has been inside. Opening the app fresh still lands on
+       Make. Coming back to a tab she never left lands in her room. */
+    if (whereIWas()) return;
+    setAtDoor(true);
+  }, []);
 
   /* The device-only account, read back before anything else.
 
@@ -1888,6 +1965,10 @@ export default function FutureBoxHome() {
     } catch {
       // Storage off, and there was nothing kept in it to remove.
     }
+    /* And where she was, or the next person to open this tab — on a device
+       being handed back, which is the case the note above is written for —
+       lands inside the room the last one left. */
+    forgetWhere();
     setUser(null);
     departed();
     await cloud.signOut().catch(() => undefined);

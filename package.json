@@ -231,6 +231,7 @@
     "check:buttonlook": "node audit/buttonlook.mjs",
     "check:legalpage": "node audit/legalpage.mjs",
     "check:editor": "node audit/editor.mjs",
+    "check:whereiwas": "node audit/whereiwas.mjs",
     "check:stitch": "node audit/stitch.mjs",
     "check:probooth": "node audit/probooth.mjs",
     "check:kredietkoste": "tsx scripts/check-kredietkoste.mts",
