@@ -788,6 +788,14 @@ export const STRINGS: Dict = {
     en: "The clock",
     af: "Die klok",
   },
+  "edit.markSize": {
+    en: "How big the mark is",
+    af: "Hoe groot die merk is",
+  },
+  "edit.markCorner": {
+    en: "Put it back in a corner",
+    af: "Sit dit terug in \u2019n hoek",
+  },
   "edit.pause": {
     en: "Pause",
     af: "Wag",

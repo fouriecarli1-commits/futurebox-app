@@ -55,7 +55,10 @@ import Note from './Note';
 import { useLang } from '../lib/i18n';
 import { FILTERS, filterCss, filterName } from '../lib/videofilters';
 import { canStitch, lengthOf, stitch } from '../lib/stitch';
-import { loadMark, type Corner } from '../lib/logomark';
+import {
+  loadMark, MARK_LARGEST, MARK_SHARE, MARK_SMALLEST,
+  type Corner, type Spot,
+} from '../lib/logomark';
 import { fit } from '../lib/imagefile';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { check, type Plan } from '../lib/entitlements';
@@ -112,6 +115,26 @@ const PER_SECOND = 40;
  * drawn at. The ruler is why this is now a fair trade and was not before.
  */
 const LEAST_PER_SECOND = 9;
+
+/**
+ * Where each corner puts the mark's CENTRE, as fractions of the frame.
+ *
+ * A second description of `markBox`'s corner arithmetic, and that is a real
+ * cost worth naming: two places now know what "bottom right" means. It is
+ * paid because the preview positions an `<img>` with CSS percentages and the
+ * render positions a `drawImage` with pixels, and nothing can be shared
+ * between those two without handing the preview a canvas it does not need.
+ *
+ * `check:logomark` measures the two against each other, so a change to one
+ * that is not made to the other is a red build rather than a logo that moves
+ * when the film is made.
+ */
+const CORNER_AT: Record<Corner, { readonly x: number; readonly y: number }> = {
+  topLeft: { x: 0.13, y: 0.14 },
+  topRight: { x: 0.87, y: 0.14 },
+  bottomLeft: { x: 0.13, y: 0.86 },
+  bottomRight: { x: 0.87, y: 0.86 },
+};
 
 /**
  * How far apart the marks on the ruler are, for a film of a given length.
@@ -276,6 +299,12 @@ export default function VideoEditor({
   const [mark, setMark] = useState<HTMLImageElement | null>(null);
   const [markName, setMarkName] = useState('');
   const [corner, setCorner] = useState<Corner>('bottomRight');
+  /* Where it has been dragged to, or null for "wherever the corner says".
+     Null is the default and is not the same as the centre: a mark that has
+     never been moved should obey the corner buttons, and a `{x: .5, y: .5}`
+     default would silently ignore them. */
+  const [markAt, setMarkAt] = useState<Spot | null>(null);
+  const [markShare, setMarkShare] = useState(MARK_SHARE);
 
   /* ── The playhead ───────────────────────────────────────────────────────
  
@@ -544,12 +573,43 @@ export default function VideoEditor({
     node.addEventListener('pointercancel', done);
   }, [edit, perSecond, total]);
 
+  /* Dragging the mark. The same shape as the fade handles: pointer capture,
+     fractions rather than pixels, and clamped so it cannot be pushed off the
+     frame and left somewhere nobody can reach it again. */
+  const takeMark = useCallback((event: React.PointerEvent<HTMLImageElement>) => {
+    event.preventDefault();
+    const node = event.currentTarget;
+    const frame = node.parentElement;
+    if (!frame) return;
+    const box = frame.getBoundingClientRect();
+    if (box.width <= 0 || box.height <= 0) return;
+    node.setPointerCapture(event.pointerId);
+
+    const move = (m: PointerEvent) => {
+      setMarkAt({
+        x: Math.max(0.03, Math.min(0.97, (m.clientX - box.left) / box.width)),
+        y: Math.max(0.03, Math.min(0.97, (m.clientY - box.top) / box.height)),
+      });
+    };
+    const done = () => {
+      node.removeEventListener('pointermove', move);
+      node.removeEventListener('pointerup', done);
+      node.removeEventListener('pointercancel', done);
+      try { node.releasePointerCapture(event.pointerId); } catch { /* already gone */ }
+    };
+    node.addEventListener('pointermove', move);
+    node.addEventListener('pointerup', done);
+    node.addEventListener('pointercancel', done);
+  }, []);
+
   const preview = useCallback(async () => {
     if (!edit.pieces.length || busy) return;
     setProblem('');
     setBusy('make');
     try {
-      const result = await stitch({ ...cutFrom(edit), mark, markCorner: corner });
+      const result = await stitch({
+        ...cutFrom(edit), mark, markCorner: corner, markAt, markShare,
+      });
       if (!result.ok) {
         setProblem(
           result.why === 'unsupported'
@@ -566,7 +626,7 @@ export default function VideoEditor({
     } finally {
       setBusy(null);
     }
-  }, [edit, busy, mark, corner, t]);
+  }, [edit, busy, mark, corner, markAt, markShare, t]);
 
   if (!allowed) {
     return (
@@ -923,16 +983,46 @@ export default function VideoEditor({
  
               `filterCss` is the same function the render uses, so the frame
               here and the frame in the finished film cannot disagree. */}
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <video
-            ref={viewer}
-            data-editorviewer
-            src={source ?? undefined}
-            playsInline
-            muted={!piece.sound}
-            style={{ filter: filterCss(piece.look) || undefined }}
-            className="w-full rounded-xl border border-zinc-800 bg-black"
-          />
+          {/* ── The picture, with the mark on it where it will really be ──
+
+              Carli, 30 September 2026: *"Mens moet die logo foto fisies moet
+              kan skuif."*
+
+              The mark is drawn over the viewer rather than beside it, because
+              the only useful question about a logo is what it covers. Four
+              corner buttons cannot answer that: in a vertical clip of a
+              person, the corner that is free depends on where the person is
+              standing, and often none of them is.
+
+              Positioned from the same fractions `drawMark` uses, so what is
+              under her thumb here is what lands in the film. */}
+          <div className="relative">
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video
+              ref={viewer}
+              data-editorviewer
+              src={source ?? undefined}
+              playsInline
+              muted={!piece.sound}
+              style={{ filter: filterCss(piece.look) || undefined }}
+              className="w-full rounded-xl border border-zinc-800 bg-black"
+            />
+            {mark && (
+              <img
+                src={mark.src}
+                alt=""
+                draggable={false}
+                data-editormarkdrag
+                onPointerDown={(event) => takeMark(event)}
+                style={{
+                  width: `${markShare * 100}%`,
+                  left: `${(markAt ? markAt.x : CORNER_AT[corner].x) * 100}%`,
+                  top: `${(markAt ? markAt.y : CORNER_AT[corner].y) * 100}%`,
+                }}
+                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-move touch-none select-none opacity-80 outline-dashed outline-1 outline-emerald-400/50"
+              />
+            )}
+          </div>
           <div className="flex gap-2 flex-wrap">
             <button
               type="button"
@@ -1183,6 +1273,37 @@ export default function VideoEditor({
               />
             </label>
             {mark && (
+              <>
+              {/* Bigger and smaller. A logo that cannot be resized is a logo
+                  drawn for one video: the mark that reads on a wide advert is
+                  twice the size of the one that reads on a vertical clip. */}
+              <label className="block space-y-1.5">
+                <span className="block text-sm text-zinc-400">
+                  {t('edit.markSize', 'How big the mark is')}
+                </span>
+                <input
+                  type="range"
+                  min={MARK_SMALLEST}
+                  max={MARK_LARGEST}
+                  step={0.01}
+                  value={markShare}
+                  data-editormarksize
+                  onChange={(e) => setMarkShare(Number(e.target.value))}
+                  className="w-full accent-emerald-500"
+                />
+              </label>
+
+              {markAt && (
+                <button
+                  type="button"
+                  data-editormarkreset
+                  onClick={() => setMarkAt(null)}
+                  className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300"
+                >
+                  {t('edit.markCorner', 'Put it back in a corner')}
+                </button>
+              )}
+
               <div className="flex gap-2 flex-wrap">
                 {(['topLeft', 'topRight', 'bottomLeft', 'bottomRight'] as Corner[]).map((one) => (
                   <button
@@ -1190,7 +1311,7 @@ export default function VideoEditor({
                     type="button"
                     aria-pressed={corner === one}
                     data-editorcorner={one}
-                    onClick={() => setCorner(one)}
+                    onClick={() => { setCorner(one); setMarkAt(null); }}
                     className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
                       corner === one ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
                     }`}
@@ -1202,6 +1323,7 @@ export default function VideoEditor({
                   </button>
                 ))}
               </div>
+              </>
             )}
           </div>
 

@@ -309,6 +309,62 @@ try {
       `the fade is ${await p.locator('[data-editorfadein]').inputValue()} after one undo — a drag that files a step per pixel fills the history with one gesture`);
     void stepsBefore;
 
+    /* ── The mark, moved by hand ───────────────────────────
+
+       Carli, 30 September 2026: *"Mens moet die logo foto fisies moet kan
+       skuif."*
+
+       Four corner buttons cannot answer the only useful question about a
+       logo, which is what it covers: in a vertical clip of a person, the
+       corner that is free depends on where the person is standing.
+
+       Walked with a real PNG rather than skipped, because the drag only
+       exists once there is a mark to drag. The corner buttons are pressed
+       afterwards: a drag that could not be undone by choosing a corner again
+       would be a one-way door. */
+    const dot = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    await p.locator('[data-editormark] input[type="file"]').setInputFiles({
+      name: 'mark.png', mimeType: 'image/png', buffer: dot,
+    }).catch(() => undefined);
+    await p.waitForTimeout(1200);
+
+    const onPicture = p.locator('[data-editormarkdrag]');
+    check('the mark is drawn on the picture, not beside it',
+      (await onPicture.count()) === 1,
+      'the only useful question about a logo is what it covers');
+
+    if ((await onPicture.count()) === 1) {
+      const frame = await p.locator('[data-editorviewer]').boundingBox();
+      const was = await onPicture.boundingBox();
+      await onPicture.hover();
+      await p.mouse.down();
+      await p.mouse.move((frame?.x ?? 0) + (frame?.width ?? 0) * 0.3,
+                         (frame?.y ?? 0) + (frame?.height ?? 0) * 0.4, { steps: 10 });
+      await p.mouse.up();
+      await p.waitForTimeout(400);
+      const now = await onPicture.boundingBox();
+      check('  and it can be dragged somewhere else',
+        Math.abs((now?.x ?? 0) - (was?.x ?? 0)) > 20 || Math.abs((now?.y ?? 0) - (was?.y ?? 0)) > 20,
+        `it was at ${Math.round(was?.x ?? 0)},${Math.round(was?.y ?? 0)} and is at ${Math.round(now?.x ?? 0)},${Math.round(now?.y ?? 0)}`);
+
+      check('  and a way back to a corner appears once it has been moved',
+        (await p.locator('[data-editormarkreset]').count()) === 1,
+        'a drag with no way back is a one-way door');
+
+      await p.locator('[data-editorcorner="topLeft"]').click();
+      await p.waitForTimeout(400);
+      const back = await onPicture.boundingBox();
+      check('  and pressing a corner takes it back there',
+        (back?.x ?? 0) < (frame?.x ?? 0) + (frame?.width ?? 0) * 0.35,
+        `it is at ${Math.round(back?.x ?? 0)} with the frame starting at ${Math.round(frame?.x ?? 0)}`);
+
+      check('  and it can be made bigger and smaller',
+        (await p.locator('[data-editormarksize]').count()) === 1);
+    }
+
     /* Split, which is the one operation that proves there is a clock under
        this rather than a list: one piece becomes two, and the total length
        does not change. */

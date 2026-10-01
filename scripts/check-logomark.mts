@@ -98,14 +98,25 @@ ok('and it does not touch the edge of the safe box', MARK_INSET > 0);
 /* And it is actually drawn, in the one place that already paints every
    frame. A module nobody calls is the fault this whole thing started as. */
 const stitch = readFileSync('app/lib/stitch.ts', 'utf8');
-ok('the stitcher draws it', /drawMark\(context, cut\.mark/.test(stitch));
+/* ── Written to allow a line break, 1 October 2026 ───────────────────────
+
+   These three pinned the exact one-line form — `drawMark(context, cut.mark`
+   and `if (cut.mark) drawMark` — and went red when the call grew a fourth and
+   fifth argument and wrapped onto several lines. Nothing about the rule had
+   been broken: the guard was there, the order was there, the mark was there.
+
+   The same fault `check:align` had on 30 September, where asserting the exact
+   string `noteCost(upstream, 'align')` held a missing argument in place. A
+   check that asserts the SHAPE of a line keeps the line still, and the thing
+   worth keeping still is the behaviour. */
+ok('the stitcher draws it', /drawMark\(\s*context,\s*cut\.mark/.test(stitch));
 ok(
   '  after the caption, so the caption cannot slide over it',
-  before(stitch, 'drawCaption(context', 'drawMark(context'),
+  before(stitch, 'drawCaption(context', 'drawMark('),
 );
 ok(
   '  and only when the cut asks for one, so an unbranded film is unchanged',
-  /if \(cut\.mark\) drawMark/.test(stitch),
+  /if \(cut\.mark\)\s*\{?\s*drawMark/.test(stitch),
 );
 
 /* ── The filmed take, and the one ordering that makes it safe ────────────

@@ -63,6 +63,24 @@ export type Corner = 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight';
  */
 export const MARK_SHARE = 0.16;
 
+/** How small and how large the mark may be dragged, as a share of the width. */
+export const MARK_SMALLEST = 0.05;
+export const MARK_LARGEST = 0.45;
+
+/**
+ * Where the mark sits, as fractions of the frame, measured to its CENTRE.
+ *
+ * Fractions rather than pixels because the viewer and the finished film are
+ * different sizes: a mark dragged to x=240 in a 480-wide preview belongs at
+ * 540 in a 1080-wide render, and only a fraction says that without knowing
+ * either number. The centre rather than a corner because that is what a thumb
+ * is holding when it drags.
+ */
+export interface Spot {
+  readonly x: number;
+  readonly y: number;
+}
+
 /** A little air between the mark and the safe box it sits in. */
 export const MARK_INSET = 0.02;
 
@@ -85,6 +103,7 @@ export function markBox(
   aspect: number,
   corner: Corner = 'bottomRight',
   share = MARK_SHARE,
+  at?: Spot | null,
 ): { x: number; y: number; w: number; h: number } {
   /* The visible part of the frame, not the frame. */
   const safe = {
@@ -103,8 +122,28 @@ export function markBox(
   const top = safe.top + inset;
   const bottom = safe.bottom - inset - h;
 
-  const x = corner === 'topLeft' || corner === 'bottomLeft' ? left : right;
-  const y = corner === 'topLeft' || corner === 'topRight' ? top : bottom;
+  /* ── A place of its own, when one has been chosen ──────────────────────
+
+     Carli, 30 September 2026: *"Mens moet die logo foto fisies moet kan
+     skuif."*
+
+     Four corners is a good default and a poor answer: the corner that is
+     free depends on what is in the shot, and in a vertical clip of a person
+     it is usually none of them. So a `Spot` overrides the corner — the
+     CENTRE of the mark, in fractions of the frame, so it survives being
+     drawn at 480 pixels in the viewer and 1080 in the render. Pixels would
+     not: the viewer and the film are different sizes, and a mark dragged in
+     one would land somewhere else in the other.
+
+     The corner buttons stay. Dragging is for the shot where no corner works;
+     a corner is still the fastest way to a good default, and taking it away
+     to make room for a drag would be charging everybody for the hard case. */
+  const x = at
+    ? at.x * frameWidth - w / 2
+    : corner === 'topLeft' || corner === 'bottomLeft' ? left : right;
+  const y = at
+    ? at.y * frameHeight - h / 2
+    : corner === 'topLeft' || corner === 'topRight' ? top : bottom;
 
   /* Clamped to the frame. A safe box on a very wide clip can be shorter than
      the mark, and a negative coordinate draws nothing while reporting
@@ -150,9 +189,11 @@ export function drawMark(
   frameWidth: number,
   frameHeight: number,
   corner: Corner = 'bottomRight',
+  share = MARK_SHARE,
+  at?: Spot | null,
 ): void {
   const aspect = mark.naturalHeight > 0 ? mark.naturalWidth / mark.naturalHeight : 1;
-  const box = markBox(frameWidth, frameHeight, aspect, corner);
+  const box = markBox(frameWidth, frameHeight, aspect, corner, share, at);
   const was = context.globalAlpha;
   context.globalAlpha = MARK_OPACITY;
   context.drawImage(mark, box.x, box.y, box.w, box.h);

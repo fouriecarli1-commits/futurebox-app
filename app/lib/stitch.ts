@@ -65,7 +65,7 @@
  * right: a shot nobody asked to speak is still muted.
  */
 
-import { drawMark, type Corner } from './logomark';
+import { drawMark, MARK_SHARE, type Corner, type Spot } from './logomark';
 
 export interface Scene {
   /** The clip itself, as it came back from the engine. */
@@ -193,6 +193,16 @@ export interface Cut {
   readonly mark?: HTMLImageElement | null;
   /** Which corner the mark sits in. Defaults to bottom right. */
   readonly markCorner?: Corner;
+  /**
+   * Where the mark sits instead, if it has been dragged somewhere.
+   *
+   * Overrides the corner. In fractions of the frame to its centre, so the
+   * place chosen in a 480-wide viewer is the place it lands in a 1080-wide
+   * render — see `Spot` in `logomark.ts`.
+   */
+  readonly markAt?: Spot | null;
+  /** How wide the mark is, as a share of the frame. Defaults to `MARK_SHARE`. */
+  readonly markShare?: number;
   /** Called as each scene starts, so a screen can say where it is. */
   readonly onScene?: (index: number, total: number) => void;
 }
@@ -719,7 +729,12 @@ export async function stitch(cut: Cut): Promise<Made> {
              the mark is one more `drawImage` on a canvas being painted
              anyway — which is the whole reason the logo is burned in at the
              cut rather than in a pass of its own. */
-          if (cut.mark) drawMark(context, cut.mark, cut.width, cut.height, cut.markCorner);
+          if (cut.mark) {
+            drawMark(
+              context, cut.mark, cut.width, cut.height,
+              cut.markCorner, cut.markShare ?? MARK_SHARE, cut.markAt,
+            );
+          }
           /* ── The fade, over everything ────────────────────────────────
 
              Last, and that is the point: a fade under the caption would
