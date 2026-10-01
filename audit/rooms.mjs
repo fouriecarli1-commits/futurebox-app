@@ -39,6 +39,7 @@ export const DOORS = {
   voice_studio: 'Your voice',
   sound: 'Sound trainer',
   canvas: 'Video desk',
+  videoedit: 'Cutting room',
   hooks_feed: 'Hooks',
   channels: 'Channel',
   live: 'Live',
@@ -56,6 +57,7 @@ export const DOORS = {
  */
 export const ROOMS = [
   'Make a song', 'Studio', 'ProBooth', 'Your voice', 'Sound trainer', 'Video desk',
+  'Cutting room',
   'Hooks', 'Channel', 'Live', 'Podcast', 'Adverts', 'Collab Radar', 'Album art',
 ];
 
@@ -78,6 +80,7 @@ export const ROOMS_AF = {
   'Your voice': 'Jou stem',
   'Sound trainer': 'Klankafrigter',
   'Video desk': 'Videolessenaar',
+  'Cutting room': 'Snykamer',
   Hooks: 'Hooks',
   Channel: 'Kanaal',
   Live: 'Live',

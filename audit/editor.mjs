@@ -46,7 +46,24 @@ const { browser: b, page: p } = await enter({ at: server.url, lang: 'en' });
 p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 160)}`));
 
 await studio(p);
+
+/* ── The button she asked for, walked before anything else ──────────────
+
+   Carli, 30 September 2026: *"'N knoppie wat jou vat na sy eie kamer."*
+
+   The rail can reach the cutting room and so can the door, but neither is
+   what she described: she described the moment somebody has just made a clip
+   on the video desk and wants to cut it. That door is one button in one room,
+   and a probe that only ever arrived by the rail would have reported a
+   working editor while the button she actually asked for did nothing. */
 await toRoom(p, 'Video desk');
+await p.waitForTimeout(600);
+await p.locator('[data-tocutting]').click();
+await p.waitForTimeout(1200);
+
+const reachedByButton = (await p.locator('[data-cuttingroom]').count()) === 1;
+
+await toRoom(p, 'Cutting room');
 await unfold(p);
 
 /* The clock reads "1.4s / 12.0s" — where the playhead is, over how long the
@@ -77,6 +94,30 @@ try {
      entitlement table directly and does not need a browser at all. What a
      browser IS for is the half that cannot be unit-tested — whether a clip
      put in comes out as a block that can be cut. */
+
+  /* ── Its own room, and it looks like one ─────────────────────
+
+     Carli, 30 September 2026: *"dit moet ook sy eie studio op sy eie video
+     wees … Daardie studio kan dan ook regdeur die hele bladsy die futurebox
+     groen kleure hê … sodat daardie kamer ook anders lyk."*
+
+     Measured as a colour, not as a class name. `bg-emerald-950` in the source
+     proves somebody typed it; what she asked for is that the room LOOKS
+     different, and the only way to know that is to read what was painted. A
+     class that is overridden, purged from the bundle, or hidden under an
+     opaque child is green in the source and zinc on the screen. */
+  check('the video desk\u2019s own button reaches the cutting room',
+    reachedByButton,
+    'the rail and the door both get here; this is the one she described');
+
+  const paint = await p.locator('[data-cuttingroom]').evaluate((el) => {
+    const style = getComputedStyle(el);
+    const found = `${style.backgroundImage} ${style.backgroundColor}`;
+    return [...found.matchAll(/rgba?\((\d+),\s*(\d+),\s*(\d+)/g)].map((m) => m.slice(1).map(Number));
+  }).catch(() => []);
+  check('the cutting room is painted its own colour, not the studio\u2019s zinc',
+    paint.some(([r, g, bl]) => g > r + 6 && g > bl + 6),
+    `painted ${JSON.stringify(paint)} — zinc is grey, so green has to lead`);
 
   const room = p.locator('[data-videoeditor]');
   check('with no accounts configured the room opens, as every other room does',

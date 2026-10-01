@@ -1906,6 +1906,13 @@ export const STRINGS: Dict = {
   "tab.you": { en: "You", af: "Jy" },
   "rail.canvas": { en: "Video desk", af: "Videolessenaar" },
   "rail.canvas.hint": { en: "Adverts, podcasts, social", af: "Advertensies, potgooie, sosiaal" },
+  /* The cutting room. "Video editor" was the obvious name and the wrong one:
+     the room next door is already called the Video desk, and two rooms whose
+     names both start with "Video" is how somebody ends up in the one they did
+     not mean. A cutting room is what it is, and what every editor has been
+     called since film was film. */
+  "rail.videoedit": { en: "Cutting room", af: "Snykamer" },
+  "rail.videoedit.hint": { en: "Your own footage, on a clock", af: "Jou eie opnames, op \u2019n klok" },
 
   // ── The video desk ────────────────────────────────────────────────
   "canvas.title": { en: "Video desk", af: "Videolessenaar" },

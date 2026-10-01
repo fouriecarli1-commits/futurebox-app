@@ -39,6 +39,7 @@ export const SURFACE_IDS = [
   "studio",
   "booth",
   "canvas",
+  "videoedit",
   "hooks_feed",
   "channels",
   "collab",
@@ -389,6 +390,50 @@ export const SURFACES: Readonly<Record<SurfaceId, Surface>> = {
       {
         en: "Write three scenes for a trailer",
         af: "Skryf drie tonele vir ’n lokprent",
+      },
+    ],
+  },
+  /* ── The cutting room ──────────────────────────────────────────────────
+
+     Carli, 30 September 2026: *"Wat ons wel moet verander dit moet ook sy eie
+     studio op sy eie video wees. 'N knoppie wat jou vat na sy eie kamer en dan
+     moet dit soos die probooth die tydlyne hê."*
+
+     The editor used to sit under the video desk, and the note where it did
+     said why: a room of its own meant touching this registry, the copilot's
+     map and four checks, which was a lot of blast radius for a door that
+     belonged on a desk somebody was already at.
+
+     That reasoning was right while the editor was one card. It is now a clock,
+     a ruler, a playhead, a trim viewer, fade handles, looks, words, a sound
+     bed and an export — and a desk that holds a brief AND a cutting room is
+     two rooms wearing one name. The blast radius is the price, and the price
+     is now worth paying.
+
+     No `next`. The editor is where work ENDS: the film comes out of it and
+     goes to a device. Pointing somewhere after it would be inventing a step. */
+  videoedit: {
+    id: "videoedit",
+    stage: "show",
+    purpose:
+      "The cutting room: their own footage on a clock, trimmed, split, reordered, faded and put together in the browser. Nothing here calls an engine and nothing here costs credits \u2014 the three that would (taking a background out, taking an item out, generating a missing piece) are doors that say so. Do not offer to write a shot list here; that is the video desk.",
+    helps: {
+      en: "I can tell you what each control does, but the cutting is yours \u2014 nothing in this room asks me to do anything.",
+      af: "Ek kan jou s\u00ea wat elke kontrole doen, maar die sny is joune \u2014 niks in hierdie kamer vra my om iets te doen nie.",
+    },
+    can: [],
+    seeds: [
+      {
+        en: "How do I fade the start of my film?",
+        af: "Hoe laat ek die begin van my film infaai?",
+      },
+      {
+        en: "What is the difference between splitting and trimming?",
+        af: "Wat is die verskil tussen split en trim?",
+      },
+      {
+        en: "Why does putting it together take as long as the film?",
+        af: "Hoekom vat dit so lank soos die film om dit saam te sit?",
       },
     ],
   },

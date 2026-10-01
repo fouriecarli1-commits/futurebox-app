@@ -13,7 +13,7 @@ import {
   Crown, Zap, RefreshCw, Send, Mail, Check, Star, Loader2,
   ArrowLeft, User, LogIn, ChevronDown, SlidersHorizontal, 
   Copy, Video, Flame, Library, PlayCircle, Mic2, Pause, Heart,
-  Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard} from 'lucide-react';
+  Share2, Repeat, Sliders, Smartphone, Monitor, Eye, Handshake, Trophy, Paintbrush, Clapperboard, Scissors} from 'lucide-react';
 import {
   TRACK_FLAVOURS,
 } from './data/studio';
@@ -696,6 +696,7 @@ export default function FutureBoxHome() {
     studio: { label: t('rail.studio'), hint: t('rail.studio.hint'), icon: Sliders },
     booth: { label: t('rail.booth'), hint: t('rail.booth.hint'), icon: Mic },
     canvas: { label: t('rail.canvas'), hint: t('rail.canvas.hint'), icon: Clapperboard },
+    videoedit: { label: t('rail.videoedit'), hint: t('rail.videoedit.hint'), icon: Scissors },
     hooks_feed: { label: t('rail.hooks'), hint: t('rail.hooks.hint'), icon: Smartphone },
     channels: { label: t('rail.channel'), hint: t('rail.channel.hint'), icon: ListMusic },
     collab: { label: t('rail.collab'), hint: t('rail.collab.hint'), icon: Handshake },
@@ -4077,8 +4078,42 @@ export default function FutureBoxHome() {
                     Plan-gated on `video.editor` — the same row the plan
                     cards are drawn from, so the card and the door cannot
                     say different things. */}
-                <VideoEditor plan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
+                {/* ── And the way into the cutting room ──────────────────
+
+                    Carli, 30 September 2026: *"'N knoppie wat jou vat na sy
+                    eie kamer."* The editor moved out of this desk on 1
+                    October; what stays here is the door to it, because this
+                    is where somebody who has just made a clip is standing. */}
+                <button
+                  type="button"
+                  data-tocutting
+                  onClick={() => goToRoom('videoedit')}
+                  className="w-full min-h-[44px] rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-left text-sm font-semibold text-emerald-300 inline-flex items-center justify-between gap-3"
+                >
+                  <span className="flex items-center gap-2">
+                    <Scissors className="w-4 h-4 flex-shrink-0" />
+                    {t('rail.videoedit')}
+                  </span>
+                  <ArrowRight className="w-4 h-4 flex-shrink-0" />
+                </button>
               </>
+            )}
+
+            {/* ── The cutting room ────────────────────────────────────────
+
+                Its own room since 1 October, and it looks like it: the whole
+                page carries the FutureBox green rather than the studio's
+                zinc, so there is no mistaking which room you are standing in.
+                Carli: *"Daardie studio kan dan ook regdeur die hele bladsy
+                die futurebox groen kleure hê … sodat daardie kamer ook anders
+                lyk."* */}
+            {studioTab === 'videoedit' && (
+              <div
+                data-cuttingroom
+                className="-m-3 md:-m-5 rounded-none bg-gradient-to-b from-emerald-950 via-emerald-950/80 to-zinc-950 p-3 md:p-5 space-y-4"
+              >
+                <VideoEditor plan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
+              </div>
             )}
             {studioTab === 'hooks_feed' && (
               <Hooks

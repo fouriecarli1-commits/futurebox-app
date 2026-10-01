@@ -57,7 +57,7 @@ const inTheVideoDesk = async () =>
 
 try {
   await studio(p);
-  await toRoom(p, 'Video desk');
+  await toRoom(p, 'Cutting room');
   await p.waitForTimeout(800);
 
   check('she is in the room she walked into', await inTheVideoDesk());

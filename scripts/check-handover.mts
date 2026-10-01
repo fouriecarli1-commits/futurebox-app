@@ -148,6 +148,12 @@ const PLAIN: Readonly<Record<string, string>> = {
   'podcast|onGoToPodcast': 'a hint from the voice studio: a show lives next door',
   'sound|onGoToSound': 'a hint: where a voice is trained',
   'make|onGoToMake': 'a hint from an empty room — make something first. There is nothing yet to carry',
+  /* The cutting room works on files from the device, not on anything the
+     video desk is holding. A clip is brought in there, by her, through a file
+     picker — so there is nothing the desk could hand over, and a handoff that
+     carried the desk's shot list would be putting a brief in a room that has
+     no use for one. */
+  'videoedit|onClick': 'the door from the video desk: the cutting room takes files from the device, not a brief from the desk',
   'live|onClick': 'the front page pointing at the room where members’ real work is, now that the invented card is gone. It is "go and look", not "here is the thing you asked for"',
 };
 
