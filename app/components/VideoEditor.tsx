@@ -65,6 +65,7 @@ import {
 import { fit } from '../lib/imagefile';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { check, type Plan } from '../lib/entitlements';
+import { CREDITS, perMinute } from '../lib/credits';
 import { KEEP_STEPS } from '../lib/undo';
 import {
   NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
@@ -704,6 +705,39 @@ export default function VideoEditor({
         );
         return;
       }
+      /* ── Paid for here, with the film already in hand ────────────
+
+         Carli, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk
+         is wat krediete werd is."*
+
+         After the render and before the film is handed over, which is the
+         order `app/api/filmout` is written for: charging first would mean a
+         refund path, a refund path needs an amount, and the only place a
+         later request could get one is the browser. Charging for a film that
+         exists needs none of that and can never charge for one that does not.
+
+         A reference per attempt, so an answer lost on a bad connection and
+         retried is one charge rather than two. */
+      const ref = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      try {
+        const answer = await fetch('/api/filmout', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ seconds: result.seconds, ref }),
+        });
+        const said = (await answer.json().catch(() => null)) as { message?: string } | null;
+        if (!answer.ok) {
+          /* Their words, not ours: `charge` says whether it is a sign-in, an
+             empty balance or a plan, and each needs a different thing done
+             about it. A sentence of our own here would be a guess at which. */
+          setProblem(said?.message ?? t('edit.notPaid', 'That could not be paid for just now.'));
+          return;
+        }
+      } catch {
+        setProblem(t('edit.notPaid', 'That could not be paid for just now.'));
+        return;
+      }
+
       if (made_.current) URL.revokeObjectURL(made_.current);
       made_.current = URL.createObjectURL(result.blob);
       setMade({ url: made_.current, blob: result.blob, ext: result.ext, seconds: result.seconds });
@@ -1654,12 +1688,24 @@ export default function VideoEditor({
           >
             {busy === 'make' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             {t('edit.make', 'Put it together')}
+            {/* ── The price, on the button, before it is pressed ──────────
+
+                A charge somebody meets afterwards is a surprise, and a
+                surprise about money is the thing that makes people stop
+                trusting a room. Everything up to this button is free and
+                stays free; this is the one press that costs, so this is
+                where the number goes. */}
+            {total > 0 && (
+              <span data-editorprice className="rounded-lg bg-zinc-950/20 px-2 py-0.5 text-[11px]">
+                {perMinute(total, CREDITS.filmOut)} {t('edit.credits', 'credits')}
+              </span>
+            )}
           </button>
 
           <Note>
             {t(
               'edit.realTime',
-              'It plays the film through once to record it, so it takes about as long as the film is. That is the trade for it costing nothing.',
+              'Cutting, fades, looks and words are free however long you take. Putting the film together is what costs, and it plays the film through once to record it — so it takes about as long as the film is.',
             )}
           </Note>
 

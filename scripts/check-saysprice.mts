@@ -1,0 +1,90 @@
+/**
+ * A room that charges says what it costs before the press, not after.
+ *
+ * ── Why this rule, on this day ───────────────────────────────────────────
+ *
+ * The cutting room started charging on 1 October 2026. Carli: *"Onthou dat
+ * hierdie ook 'n betaalde produk is wat krediete werd is."*
+ *
+ * Everything in that room is free — the trimming, the splitting, the fades,
+ * the looks, the words, the sound bed, the zoom, however long somebody sits
+ * there. Exactly one press costs anything. A room shaped like that is the
+ * easiest possible place to meet a charge you did not expect: nothing has
+ * cost money for twenty minutes, so nothing feels like it is about to.
+ *
+ * A surprise about money is the thing that makes somebody stop trusting a
+ * room, and they do not come back to check whether it was fair.
+ *
+ * ── What is measured ─────────────────────────────────────────────────────
+ *
+ * Three things that together mean "it said so":
+ *
+ *   1. The price is read from `CREDITS`, not typed. A number typed beside a
+ *      button is a number that is right on the day it is typed.
+ *   2. It is shown in the same control that spends it.
+ *   3. The charge is asked for AFTER the film exists, which is what makes a
+ *      failed render free. `app/api/filmout` is written around that order
+ *      and its own comment explains why reversing it needs a refund path
+ *      that cannot be made safe.
+ */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { code, withoutComments } from './prose.mts';
+import { before } from './order.mts';
+
+const ROOM = join('app', 'components', 'VideoEditor.tsx');
+const ROUTE = join('app', 'api', 'filmout', 'route.ts');
+
+/* Two readings of the same file, and the difference is not a detail.
+   `code()` blanks comments AND string bodies, which is what a rule about the
+   SHAPE of the code needs. `withoutComments()` blanks only the comments,
+   which is what a rule looking FOR a string needs — and the first draft of
+   this check used `code()` for both and reported that the room never calls
+   `/api/filmout`, while reading the one line that does. The same mistake
+   `check:earsopen` made in September. */
+const roomRaw = readFileSync(ROOM, 'utf8');
+const room = code(roomRaw);
+const roomText = withoutComments(roomRaw);
+const route = code(readFileSync(ROUTE, 'utf8'));
+
+let bad = 0;
+const ok = (what: string, passed: boolean, detail = ''): void => {
+  console.log(`  ${passed ? 'ok ' : '✗  '} ${what}${passed || !detail ? '' : ` — ${detail}`}`);
+  if (!passed) bad += 1;
+};
+
+ok('the room works its price out from the table rather than printing one',
+  /perMinute\(\s*total\s*,\s*CREDITS\.filmOut\s*\)/.test(room),
+  'a number typed beside a button is right on the day it is typed and never checked again');
+
+/* The same control. A price in a note three cards away is a price nobody
+   read, and this rule exists because that is the easy way to satisfy the
+   first one without satisfying the person. */
+const button = /data-editormake[\s\S]{0,2000}?<\/button>/.exec(room)?.[0] ?? '';
+ok('  and shows it on the button that spends it',
+  /data-editorprice/.test(button) && /CREDITS\.filmOut/.test(button),
+  'a price in a note three cards away is a price nobody read');
+
+ok('the charge is asked for after the film exists, so a failed render is free',
+  /stitch\(\{[\s\S]*?\/api\/filmout/.test(roomText),
+  'charging first needs a refund path, and a refund path needs an amount the browser would have to be trusted for');
+
+ok('  and the route prices by the table and by the minute',
+  /perMinute\(\s*seconds\s*,\s*CREDITS\.filmOut\s*\)/.test(route),
+  'the room and the server must not be able to disagree about what a film costs');
+
+/* `before` and not two `indexOf` calls compared against each other, which is
+   what this was and what `check:ordering` exists to stop: a missing brake
+   answers -1, and -1 is less than everything, so the version of this line
+   that read `indexOf(...) < indexOf(...)` would have PASSED a route with no
+   brake in it at all. The rule caught it on the first run. */
+ok('  and brakes before it charges',
+  before(route, 'refuseIfTooMany', 'charge('),
+  'a retry loop has to be stopped before the money');
+
+if (bad > 0) {
+  console.log(`\ncheck:saysprice — ${bad} thing(s) about the price are not said before the press.`);
+  process.exitCode = 1;
+} else {
+  console.log('\ncheck:saysprice — the one press that costs says so, in the table’s own number, before it is pressed.');
+}

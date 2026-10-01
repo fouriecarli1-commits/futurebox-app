@@ -205,7 +205,7 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
     area: 'Video desk',
     caps: { free: 0, maker: null, studio: null, label: null },
     unit: '',
-    freeNote: 'Sketching a video in your own browser stays free. The editor is the timeline version: pieces you cut and reorder, fades, sound under it, and the filters that need an engine behind them.',
+    freeNote: 'Sketching a video in your own browser stays free. The cutting room is the timeline version: pieces you cut and reorder, fades, looks, words and sound under it, all of it unlimited. Putting the finished film together costs 3 credits a minute.',
   },
   'market.desk': {
     label: 'The marketing desk',

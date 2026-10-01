@@ -136,6 +136,50 @@ export const CREDITS = {
    * of anything is a bill.
    */
   cover: 2,
+  /**
+   * Putting a film together in the cutting room. **Per minute of finished
+   * film**, floored at one by `perMinute`.
+   *
+   * ── Her decision, over my advice, and that is worth recording ─────
+   *
+   * On 30 September I argued in `docs/WAT-OM-TE-HEF.md` that the editor
+   * should charge nothing: the cutting happens in her browser, it costs this
+   * app nothing to serve, the plan cards already sell the room, and a member
+   * who paid R149 and then pays again to trim a clip has paid twice. I also
+   * quoted her own words back — *"Te veel aankoop punte gaan mense afsit"* —
+   * which is why `ADDONS` was deleted.
+   *
+   * Carli, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
+   * krediete werd is."*
+   *
+   * She is the one selling it, she has heard the objection, and she has said
+   * it twice. So it charges. What my objection does buy is the SHAPE: it is
+   * charged where every other product in this app is charged, at the moment
+   * something is produced, and not for entering the room or for any of the
+   * work inside it.
+   *
+   * ── Why three, and why per minute ──────────────────────────
+   *
+   * Per minute because that is what scales with what she actually got, and
+   * because every other thing in this app measured in time — stems, clean,
+   * voice change, dub, transcribe — is priced that way. A three-minute music
+   * video is worth more than an eight-second advert and should cost more.
+   *
+   *     an 8-second advert    1 minute floored    3 credits   R4.97
+   *     a 3-minute video      3 minutes           9 credits   R14.90
+   *
+   * Three and not more because she also said *"Dit moenie te duur wees nie"*,
+   * and because this is the one price in the file with no supplier behind it.
+   * Every other number here is a markup on something somebody invoices us
+   * for; this one is purely what the work is worth, and a number nobody can
+   * check against a cost should be the modest one.
+   *
+   * Maker's 90 buys thirty one-minute films a month, which is the figure that
+   * matters: the thing an editor is FOR is trying again, and a price that
+   * makes somebody think twice about a second attempt has broken the room it
+   * is charging for.
+   */
+  filmOut: 3,
   /** Drawn on the device instead. Costs nothing to run, so it costs nothing. */
   browserVideo: 0,
   /**

@@ -41,14 +41,54 @@ Krediete hef om die editor te **gebruik** is dieselfde fout in 'n ander pak:
 leer mense om minder te gebruik aan die een ding wat hulle aan die plan gebonde
 hou.
 
-> **My aanbeveling: moenie krediete aan die editor of die Booth se blaaierwerk
-> heg nie.** Nie omdat dit nie kan nie, maar omdat dit die enigste ding wegvat
-> wat hulle onweerstaanbaar maak: onbeperkte oefening teen geen koste.
+> **My aanbeveling was: moenie krediete aan die editor of die Booth se
+> blaaierwerk heg nie.** Nie omdat dit nie kan nie, maar omdat dit die enigste
+> ding wegvat wat hulle onweerstaanbaar maak: onbeperkte oefening teen geen
+> koste.
 
-As jy dit steeds wil doen, is die eerlike weergawe nie krediete nie maar 'n
-**plafon per plan** — dieselfde meganisme as `songwriter.help` (gratis 3,
-Maker 20, Studio onbeperk). Dit gee 'n rede om op te gradeer sonder om iemand
-mid-edit te stop.
+---
+
+## 2a. En haar besluit, wat die bostaande oorheers
+
+Carli, 1 Oktober 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
+krediete werd is."*
+
+Sy het die beswaar gehoor en dit twee keer gestel. **Die snykamer hef nou.**
+
+Wat die beswaar wél gekoop het, is die **vorm** — en dit maak die verskil
+tussen 'n meter en 'n prys:
+
+| | |
+|---|---|
+| **Gratis, onbeperk** | Knip, split, herorden, fades, looks, woorde, lettertipes, die logo, die klankbaan, zoom — hoe lank jy ook al sit |
+| **Kos krediete** | **Een druk:** die film saamsit. **3 krediete per minuut**, afgerond na 'n volle minuut |
+
+* 'n 8-sekonde advertensie = **3 krediete** (R4,97)
+* 'n 3-minuut musiekvideo = **9 krediete** (R14,90)
+* Maker se 90 koop **dertig** een-minuut films 'n maand
+
+Drie, en nie meer nie, om twee redes. Jy het self gesê *"Dit moenie te duur
+wees nie"*. En dit is die **enigste prys in die hele lêer sonder 'n verskaffer
+agter dit** — elke ander getal daar is 'n opslag op iets wat iemand ons
+faktureer; hierdie een is suiwer wat die werk werd is, en 'n getal wat niemand
+teen 'n koste kan nagaan nie, moet die beskeie een wees.
+
+Die dertig per maand is die syfer wat saak maak: 'n editor is daarvoor om
+**weer te probeer**, en 'n prys wat iemand twee keer laat dink oor 'n tweede
+poging, het die kamer gebreek wat dit hef.
+
+### Drie dinge wat die vorm eerlik hou
+
+1. **Die prys staan op die knoppie**, uit `CREDITS` gereken, voor die druk.
+   `check:saysprice` hou dit vas — 'n heffing wat jy agterna ontmoet, is die
+   ding wat mense laat ophou 'n kamer vertrou.
+2. **Gehef ná die film bestaan.** Eers hef en dan terugbetaal klink reg en is
+   dit nie: 'n terugbetaling het 'n bedrag nodig, en die enigste plek waar 'n
+   latere versoek een kan kry, is die blaaier. Hierdie volgorde kan nooit vir
+   'n film hef wat nooit gekom het nie.
+3. **Op elke plan-kaart**, in dieselfde sin as die kamer. `check:sold` laat die
+   build misluk as dit nie daar is nie: 'n kamer wat hef en een wat nie hef
+   nie, is twee verskillende produkte.
 
 ---
 

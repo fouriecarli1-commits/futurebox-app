@@ -557,9 +557,18 @@ try {
        correct — and then all the way forward, and the film has to come back
        exactly as it was. A history that empties the room and cannot refill
        it is the fault; an empty room with a forward button is not. */
-    for (let i = 0; i < 8; i += 1) {
+    /* Until it stops, not eight times.
+
+       Eight was enough when the walk above was shorter, and it quietly
+       stopped being enough the day the fade drag, the sound toggle, the
+       words and the mark were added — the probe then reported "1 blocks"
+       where it wanted none and read a working history as broken. A fixed
+       count is a guess about how long the test before it is, which is
+       exactly the thing that changes. The cap is only a runaway guard. */
+    for (let i = 0; i < 60; i += 1) {
+      if (await p.locator('[data-editorundo]').isDisabled().catch(() => true)) break;
       await p.locator('[data-editorundo]').click().catch(() => undefined);
-      await p.waitForTimeout(120);
+      await p.waitForTimeout(110);
     }
     check('  taking it all the way back leaves an empty clock',
       (await blocks.count()) === 0 && (await p.locator('[data-editorempty]').count()) === 1,
@@ -569,9 +578,10 @@ try {
       await p.locator('[data-editorundo]').isDisabled(),
       'a button that is pressable and does nothing is the failure this app keeps meeting');
 
-    for (let i = 0; i < 8; i += 1) {
+    for (let i = 0; i < 60; i += 1) {
+      if (await p.locator('[data-editorredo]').isDisabled().catch(() => true)) break;
       await p.locator('[data-editorredo]').click().catch(() => undefined);
-      await p.waitForTimeout(120);
+      await p.waitForTimeout(110);
     }
     check('  and forward brings the whole film back',
       (await blocks.count()) === 1,
@@ -593,6 +603,22 @@ try {
        Recorded in real time, so a two-second film takes two seconds. The
        wait is generous rather than tuned: a probe that fails because a
        loaded runner was half a second slow teaches nobody anything. */
+    /* ── The price, said before the press ─────────────────────
+
+       Carli, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is
+       wat krediete werd is."*
+
+       Everything in this room is free and exactly one press costs, which
+       makes it the easiest possible place to meet a charge nobody expected:
+       nothing has cost money for twenty minutes, so nothing feels like it is
+       about to. `check:saysprice` holds the source side of that; this reads
+       the number off the screen, because a price that is in the code and not
+       on the glass has been said to nobody. */
+    const priceTag = (await p.locator('[data-editorprice]').innerText().catch(() => '')) || '';
+    check('the button that costs says so before it is pressed',
+      /\d/.test(priceTag),
+      `the button reads "${priceTag.trim()}" — a charge met afterwards is a surprise about money`);
+
     await p.locator('[data-editormake]').click();
     const film = p.locator('[data-editormade]');
     await film.waitFor({ state: 'visible', timeout: 45000 }).catch(() => undefined);

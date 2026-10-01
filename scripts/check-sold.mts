@@ -68,7 +68,12 @@ const MUST_BE_ON_EVERY_CARD: { readonly what: string; readonly says: RegExp }[] 
      never be vague about — somebody finding that out at the door has been
      told nothing and charged nothing, which reads as the app breaking. */
   { what: 'the Pro Booth', says: /Pro Booth/ },
-  { what: 'the video editor', says: /video editor/i },
+  /* Renamed on 1 October: the editor became its own room and is called the
+     Cutting room, because the room next door is the Video desk and two rooms
+     whose names both begin with "Video" is how somebody opens the wrong one.
+     The rule is unchanged — the room is named on every card — and only the
+     name it is looking for moved. */
+  { what: 'the cutting room', says: /cutting room/i },
   { what: 'dubbing, the dearest thing here', says: /[Dd]ubbing/ },
 ];
 
@@ -104,7 +109,13 @@ const NAMED_ELSEWHERE: Record<string, string> = {
      thought about rather than forgotten. */
   marketPlan: 'on every card, priced beside the marketing desk',
   adLines: 'on every card, priced beside the marketing desk',
-  cutout: 'on every card, priced beside the video editor',
+  cutout: 'on every card, priced beside the cutting room',
+  /* The cutting room's own price, 1 October 2026. Carli: *"Onthou dat
+     hierdie ook 'n betaalde produk is wat krediete werd is."* It is on every
+     card in the same sentence as the room, because a room that charges and a
+     room that does not are two different products and the card has to say
+     which one it is selling. */
+  filmOut: 'on every card, in the same sentence as the cutting room',
   erase: 'on every card, in the same line as the background — same rate, same sentence',
 };
 

@@ -311,6 +311,8 @@ jobs:
         run: npm run check:availablereal
       - name: Only the Pro Booth may slide sideways
         run: npm run check:onlyboothmoves
+      - name: The one press that costs says so before it is pressed
+        run: npm run check:saysprice
       - name: Every room that speaks can be told it said it wrong
         run: npm run check:earsopen
 

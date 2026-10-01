@@ -788,6 +788,15 @@ export const STRINGS: Dict = {
     en: "The clock",
     af: "Die klok",
   },
+  "edit.credits": { en: "credits", af: "krediete" },
+  /* Their sentence and not ours when a charge is refused: `charge()` knows
+     whether it is a sign-in, an empty balance or a plan, and each needs a
+     different thing done about it. This is only the fallback for a request
+     that never arrived at all. */
+  "edit.notPaid": {
+    en: "That could not be paid for just now.",
+    af: "Daarvoor kon nou nie betaal word nie.",
+  },
   "edit.font": { en: "The face", af: "Die lettertipe" },
   /* The sound lane on the timeline. "Track under it" rather than "music":
      most of what goes under these is not music, and a label that says music

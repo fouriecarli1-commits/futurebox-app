@@ -161,7 +161,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Booth is free and always will be — record, sing over a track, as many takes as you like. The Pro Booth, with lanes, the grid, mixing and undo, comes with every paid plan.',
-      'Sketch a video in your own browser as much as you like. The video editor — a timeline, fades, sound under it and the filters — comes with every paid plan.',
+      'Sketch a video in your own browser as much as you like. The cutting room — a timeline, fades, looks, words and sound under it — comes with every paid plan, and the cutting itself is unlimited; putting a finished film together is 3 credits a minute.',
       'The marketing desk — the market read, the week and the queue — was R199 a month on its own. It is now in every paid plan: a month\u2019s plan is 40 credits, eight advert lines 20.',
       'Dubbing an episode into another language is the dearest thing here: 162 credits a minute, so it needs Studio or Label.',
     ],
@@ -199,7 +199,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo. Splitting stems is 4 credits a minute, changing a voice 4.',
-      'The video editor: a timeline, fades, sound under it and export. Taking a background out is 8 credits per five seconds, an item out 11; generating a piece is priced like any clip.',
+      'The cutting room: a timeline, fades, looks, words, sound under it and export — all of the cutting unlimited. Putting the finished film together is 3 credits a minute. Taking a background out is 8 credits per five seconds, an item out 11; generating a piece is priced like any clip.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing is 162 credits a minute — more than this plan holds, so it starts at Studio.',
     ],
@@ -256,7 +256,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo. Splitting stems is 4 credits a minute, changing a voice 4.',
-      'The video editor: a timeline, fades, sound under it and export. Taking a background out is 8 credits per five seconds, an item out 11; generating a piece is priced like any clip.',
+      'The cutting room: a timeline, fades, looks, words, sound under it and export — all of the cutting unlimited. Putting the finished film together is 3 credits a minute. Taking a background out is 8 credits per five seconds, an item out 11; generating a piece is priced like any clip.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing into another language, in the same voice — 162 credits a minute out of your 190.',
     ],
@@ -297,7 +297,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo. Splitting stems is 4 credits a minute, changing a voice 4.',
-      'The video editor: a timeline, fades, sound under it and export. Taking a background out is 8 credits per five seconds, an item out 11; generating a piece is priced like any clip.',
+      'The cutting room: a timeline, fades, looks, words, sound under it and export — all of the cutting unlimited. Putting the finished film together is 3 credits a minute. Taking a background out is 8 credits per five seconds, an item out 11; generating a piece is priced like any clip.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing into another language, in the same voice — 162 credits a minute out of your 440.',
     ],
