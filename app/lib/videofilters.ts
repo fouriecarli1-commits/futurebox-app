@@ -89,6 +89,71 @@ export const FILTERS: readonly VideoFilter[] = [
        is the one people reach for first. */
     css: 'brightness(1.18) contrast(1.04) saturate(1.05)',
   },
+
+  /* ── Six more, 1 October 2026 ───────────────────────────────────────────
+
+     Carli: *"Ek hou daarvan dat daar filters is, meer filters sal goed
+     wees."*
+
+     Each one is a grade somebody actually reaches for, not a slot filled to
+     make the row longer. Named for the job rather than for the arithmetic:
+     "Teal and orange" is what a colourist calls it, and nobody has ever
+     wanted "hue-rotate(-8deg) saturate(1.35)".
+
+     Still one CSS string per look, still painted by the same canvas pass, so
+     six more looks cost exactly what nought more looks cost. That is the
+     whole reason this list can grow whenever she asks. */
+  {
+    id: 'cinema',
+    en: 'Teal and orange',
+    af: 'Blougroen en oranje',
+    /* The grade every advert on television has worn for twenty years: skin
+       pulled warm, everything behind it pulled cold. Phone footage of a
+       person in a room is exactly what it was invented for. */
+    css: 'contrast(1.12) saturate(1.22) hue-rotate(-6deg) brightness(1.02)',
+  },
+  {
+    id: 'noir',
+    en: 'Hard black and white',
+    af: 'Hard swart-wit',
+    /* `mono` is grey and gentle; this one has a floor and a ceiling. For a
+       shot where the light was already doing the work. */
+    css: 'grayscale(1) contrast(1.45) brightness(0.96)',
+  },
+  {
+    id: 'soft',
+    en: 'Soft',
+    af: 'Sag',
+    /* The only one here that costs a blur, and it is kept under a pixel on
+       purpose: anything more reads as a mistake rather than as a choice, and
+       on a phone it reads as a dirty lens. */
+    css: 'blur(0.6px) brightness(1.06) saturate(0.95) contrast(0.96)',
+  },
+  {
+    id: 'night',
+    en: 'Night',
+    af: 'Nag',
+    /* Not darker — darker is what the footage already is. Cold, lifted off
+       the floor so the shadows hold detail, and desaturated the way eyes
+       actually see in low light. */
+    css: 'brightness(1.08) contrast(1.1) saturate(0.78) hue-rotate(8deg)',
+  },
+  {
+    id: 'vhs',
+    en: 'Old tape',
+    af: 'Ou band',
+    /* Washed, warm and soft, the way a cassette looked. Popular, and cheap:
+       it is three filters nobody would think to combine. */
+    css: 'saturate(1.35) contrast(0.88) brightness(1.08) sepia(0.18)',
+  },
+  {
+    id: 'bleach',
+    en: 'Bleached',
+    af: 'Gebleik',
+    /* Colour pulled most of the way out and contrast pushed hard — the look
+       for something that is meant to feel like a document rather than a film. */
+    css: 'saturate(0.35) contrast(1.3) brightness(1.05)',
+  },
 ];
 
 export const NO_FILTER = 'none';

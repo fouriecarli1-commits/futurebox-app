@@ -544,6 +544,15 @@ export const STRINGS: Dict = {
   "filter.faded": { en: "Faded", af: "Verbleik" },
   "filter.punch": { en: "Punchy", af: "Sterk" },
   "filter.bright": { en: "Brighter", af: "Helderder" },
+  /* The six added on 1 October. `check:ownfootage` holds every look to having
+     a name here as well as in the catalogue: a row of looks is the most
+     visible thing in the room and the easiest to leave in English. */
+  "filter.cinema": { en: "Teal and orange", af: "Blougroen en oranje" },
+  "filter.noir": { en: "Hard black and white", af: "Hard swart-wit" },
+  "filter.soft": { en: "Soft", af: "Sag" },
+  "filter.night": { en: "Night", af: "Nag" },
+  "filter.vhs": { en: "Old tape", af: "Ou band" },
+  "filter.bleach": { en: "Bleached", af: "Gebleik" },
   "own.bring": { en: "Bring your own video in", af: "Bring jou eie video in" },
   "own.what": { en: "Your own filming, cut into the board beside the shots the studio makes. It costs no credits, and the recording stays on this device \u2014 it is not uploaded anywhere.", af: "Jou eie opnames, in die bord in langs die shots wat die studio maak. Dit kos geen krediete nie, en die opname bly op hierdie toestel \u2014 dit word n\u00earens opgelaai nie." },
   "own.use": { en: "Put it on the board", af: "Sit dit op die bord" },
