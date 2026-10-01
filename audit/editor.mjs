@@ -309,6 +309,67 @@ try {
       `the fade is ${await p.locator('[data-editorfadein]').inputValue()} after one undo — a drag that files a step per pixel fills the history with one gesture`);
     void stepsBefore;
 
+    /* ── Words, set and placed by hand ─────────────────────
+
+       Carli, 30 September 2026: *"Die teks moet font opsies hê, en dit moet
+       ook gemanipuleer moet kan word op die skerm van die video, deur dit
+       rond te kan skuif, en groter en kleiner te kan maak."*
+
+       The size check is the one that matters and the one that nearly was not
+       here. The first version of this sized the words in `cqh` inside an
+       `@container`, which compiles to nothing without Tailwind's container
+       plugin — and `cqh` with no container resolves to a font size of
+       nought. Words that vanish, with no error anywhere. So the size is read
+       off the rendered element in pixels, which cannot be nought and cannot
+       lie. */
+    await p.locator('[data-editorwords]').fill('Dit is die woorde');
+    await p.waitForTimeout(600);
+
+    const onFilm = p.locator('[data-editorwordsdrag]');
+    check('words typed appear on the picture, not only in the box',
+      (await onFilm.count()) === 1,
+      'the only useful question about a caption is what it covers');
+
+    if ((await onFilm.count()) === 1) {
+      const small = await onFilm.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+      check('  at a real size',
+        small > 6,
+        `${small}px — nought is what a container unit resolves to when nothing is a container`);
+
+      check('  and the faces are offered',
+        (await p.locator('[data-editorfont="heavy"]').count()) === 1);
+
+      await p.locator('[data-editorfont="heavy"]').click();
+      await p.waitForTimeout(400);
+      const face = await onFilm.evaluate((el) => getComputedStyle(el).fontFamily);
+      check('  and picking one changes the face on the picture',
+        /arial black|impact|helvetica/i.test(face),
+        `the words are drawn in ${face}`);
+
+      await p.locator('[data-editorwordssize]').fill('0.1');
+      await p.waitForTimeout(400);
+      const big = await onFilm.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+      check('  and bigger is bigger',
+        big > small,
+        `${small}px became ${big}px`);
+
+      const pic = await p.locator('[data-editorviewer]').boundingBox();
+      const was = await onFilm.boundingBox();
+      await onFilm.hover();
+      await p.mouse.down();
+      await p.mouse.move((pic?.x ?? 0) + (pic?.width ?? 0) * 0.5,
+                         (pic?.y ?? 0) + (pic?.height ?? 0) * 0.25, { steps: 10 });
+      await p.mouse.up();
+      await p.waitForTimeout(400);
+      const now = await onFilm.boundingBox();
+      check('  and the words can be dragged off the bottom',
+        Math.abs((now?.y ?? 0) - (was?.y ?? 0)) > 20,
+        `they were at y=${Math.round(was?.y ?? 0)} and are at y=${Math.round(now?.y ?? 0)}`);
+
+      check('  with a way back to the bottom once they have moved',
+        (await p.locator('[data-editorwordsreset]').count()) === 1);
+    }
+
     /* ── The mark, moved by hand ───────────────────────────
 
        Carli, 30 September 2026: *"Mens moet die logo foto fisies moet kan

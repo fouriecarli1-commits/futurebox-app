@@ -59,6 +59,22 @@ export interface Piece {
   readonly look?: string;
   /** Words over this piece for as long as it is up. */
   readonly words?: string;
+  /**
+   * How those words are set: the face, the size as a share of frame height,
+   * and where on the picture they sit.
+   *
+   * Carli, 30 September 2026: *"Die teks moet font opsies hê, en dit moet ook
+   * gemanipuleer moet kan word op die skerm van die video, deur dit rond te
+   * kan skuif, en groter en kleiner te kan maak."*
+   *
+   * All three optional, and absent means exactly what it meant before they
+   * existed — plain type, the ladder of sizes `drawCaption` already tries,
+   * and the bottom of the frame. An edit made before today opens looking the
+   * way it looked.
+   */
+  readonly wordsFont?: string;
+  readonly wordsSize?: number;
+  readonly wordsAt?: { readonly x: number; readonly y: number } | null;
   /** Carry this piece's own sound. Off by default: most material is room tone. */
   readonly sound?: boolean;
   /**
@@ -220,6 +236,9 @@ export function cutFrom(edit: Edit): Cut {
          browser that does not honour the property at all. */
       ...(one.look ? { grade: filterCss(one.look) } : {}),
       ...(one.words ? { caption: one.words } : {}),
+      ...(one.words && one.wordsFont ? { captionFont: one.wordsFont } : {}),
+      ...(one.words && one.wordsSize ? { captionSize: one.wordsSize } : {}),
+      ...(one.words && one.wordsAt ? { captionAt: one.wordsAt } : {}),
       ...(one.sound ? { sound: true } : {}),
     }));
 

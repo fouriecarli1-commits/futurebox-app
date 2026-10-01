@@ -788,6 +788,20 @@ export const STRINGS: Dict = {
     en: "The clock",
     af: "Die klok",
   },
+  "edit.font": { en: "The face", af: "Die lettertipe" },
+  "edit.wordsSize": {
+    en: "How big the words are",
+    af: "Hoe groot die woorde is",
+  },
+  "edit.wordsBottom": {
+    en: "Put the words back at the bottom",
+    af: "Sit die woorde terug onderaan",
+  },
+  "font.plain": { en: "Plain", af: "Gewoon" },
+  "font.heavy": { en: "Heavy", af: "Swaar" },
+  "font.serif": { en: "Serif", af: "Skreef" },
+  "font.mono": { en: "Typewriter", af: "Tikmasjien" },
+  "font.round": { en: "Rounded", af: "Rond" },
   "edit.markSize": {
     en: "How big the mark is",
     af: "Hoe groot die merk is",

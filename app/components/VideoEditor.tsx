@@ -54,6 +54,9 @@ import Card from './Card';
 import Note from './Note';
 import { useLang } from '../lib/i18n';
 import { FILTERS, filterCss, filterName } from '../lib/videofilters';
+import {
+  FONTS, PLAIN_FONT, fontFor, WORDS_LARGEST, WORDS_SMALLEST,
+} from '../lib/videofonts';
 import { canStitch, lengthOf, stitch } from '../lib/stitch';
 import {
   loadMark, MARK_LARGEST, MARK_SHARE, MARK_SMALLEST,
@@ -195,7 +198,7 @@ export default function VideoEditor({
   readonly plan: Plan;
   readonly onUpgrade?: () => void;
 }): React.ReactElement {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [edit, setEdit] = useState<Edit>(NOTHING);
 
   /* ── Taking it back ─────────────────────────────────────────────────────
@@ -332,6 +335,22 @@ export default function VideoEditor({
   /* How wide the strip actually is, measured rather than assumed. A breakpoint
      guess would be wrong on every phone it was not written for, and the strip
      is not the window: it sits inside a card with its own padding. */
+  /* The picture's own height, so the words over it are the same share of it
+     that `drawCaption` will make them of the frame. */
+  const frame = useRef<HTMLDivElement | null>(null);
+  const [frameHeight, setFrameHeight] = useState(0);
+  useEffect(() => {
+    const box = frame.current;
+    if (!box || typeof ResizeObserver === 'undefined') return undefined;
+    const watch = new ResizeObserver(() => setFrameHeight(box.clientHeight));
+    watch.observe(box);
+    setFrameHeight(box.clientHeight);
+    return () => watch.disconnect();
+    /* Keyed on the picked piece rather than on `source`, which is declared
+       below this. Same moment either way: the frame is only ever a different
+       size because a different piece is in it. */
+  }, [picked]);
+
   const [stripWidth, setStripWidth] = useState(0);
   useEffect(() => {
     const box = strip.current;
@@ -576,7 +595,10 @@ export default function VideoEditor({
   /* Dragging the mark. The same shape as the fade handles: pointer capture,
      fractions rather than pixels, and clamped so it cannot be pushed off the
      frame and left somewhere nobody can reach it again. */
-  const takeMark = useCallback((event: React.PointerEvent<HTMLImageElement>) => {
+  const dragOnFrame = useCallback((
+    event: React.PointerEvent<HTMLElement>,
+    put: (spot: { x: number; y: number }) => void,
+  ) => {
     event.preventDefault();
     const node = event.currentTarget;
     const frame = node.parentElement;
@@ -586,7 +608,7 @@ export default function VideoEditor({
     node.setPointerCapture(event.pointerId);
 
     const move = (m: PointerEvent) => {
-      setMarkAt({
+      put({
         x: Math.max(0.03, Math.min(0.97, (m.clientX - box.left) / box.width)),
         y: Math.max(0.03, Math.min(0.97, (m.clientY - box.top) / box.height)),
       });
@@ -996,7 +1018,15 @@ export default function VideoEditor({
 
               Positioned from the same fractions `drawMark` uses, so what is
               under her thumb here is what lands in the film. */}
-          <div className="relative">
+          {/* The frame is measured rather than asked to measure itself.
+
+              This was `@container` with the words sized in `cqh`, which is
+              the elegant version and the one that can fail quietly: container
+              queries are a Tailwind plugin in v3, the class compiles to
+              nothing without it, and `cqh` then falls back to a font size of
+              nought — words that vanish, with no error anywhere. A measured
+              height cannot do that. */}
+          <div ref={frame} className="relative">
             {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
             <video
               ref={viewer}
@@ -1007,13 +1037,30 @@ export default function VideoEditor({
               style={{ filter: filterCss(piece.look) || undefined }}
               className="w-full rounded-xl border border-zinc-800 bg-black"
             />
+            {(piece.words ?? '').trim().length > 0 && (
+              <div
+                data-editorwordsdrag
+                onPointerDown={(event) => dragOnFrame(event, (spot) => tweak({ wordsAt: spot }))}
+                style={{
+                  left: `${(piece.wordsAt?.x ?? 0.5) * 100}%`,
+                  top: `${(piece.wordsAt?.y ?? 0.88) * 100}%`,
+                  fontFamily: fontFor(piece.wordsFont).stack,
+                  fontWeight: fontFor(piece.wordsFont).weight,
+                  fontSize: Math.max(9, (piece.wordsSize ?? 0.048) * frameHeight),
+                  maxWidth: '86%',
+                }}
+                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-move touch-none select-none rounded-lg bg-black/60 px-2 py-1 text-center leading-tight text-white outline-dashed outline-1 outline-emerald-400/50"
+              >
+                {piece.words}
+              </div>
+            )}
             {mark && (
               <img
                 src={mark.src}
                 alt=""
                 draggable={false}
                 data-editormarkdrag
-                onPointerDown={(event) => takeMark(event)}
+                onPointerDown={(event) => dragOnFrame(event, setMarkAt)}
                 style={{
                   width: `${markShare * 100}%`,
                   left: `${(markAt ? markAt.x : CORNER_AT[corner].x) * 100}%`,
@@ -1117,6 +1164,71 @@ export default function VideoEditor({
                 className="w-full min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 placeholder:text-zinc-600"
               />
             </label>
+
+            {/* ── How those words are set ────────────────────────────────
+
+                Carli, 30 September 2026: *"Die teks moet font opsies hê, en
+                dit moet ook gemanipuleer moet kan word op die skerm van die
+                video, deur dit rond te kan skuif, en groter en kleiner te kan
+                maak."*
+
+                Only shown once there are words. A font picker over an empty
+                caption is three rows of controls for a thing that is not on
+                the screen. */}
+            {(piece.words ?? '').trim().length > 0 && (
+              <>
+                <div className="space-y-1.5">
+                  <span className="block text-sm text-zinc-400">{t('edit.font', 'The face')}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {FONTS.map((one) => {
+                      const on = (piece.wordsFont ?? PLAIN_FONT) === one.id;
+                      return (
+                        <button
+                          key={one.id}
+                          type="button"
+                          aria-pressed={on}
+                          data-editorfont={one.id}
+                          onClick={() => tweak({ wordsFont: one.id })}
+                          style={{ fontFamily: one.stack, fontWeight: one.weight }}
+                          className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm ${
+                            on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                          }`}
+                        >
+                          {lang === 'af' ? one.af : one.en}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <label className="block space-y-1.5">
+                  <span className="block text-sm text-zinc-400">
+                    {t('edit.wordsSize', 'How big the words are')}
+                  </span>
+                  <input
+                    type="range"
+                    min={WORDS_SMALLEST}
+                    max={WORDS_LARGEST}
+                    step={0.002}
+                    value={piece.wordsSize ?? 0.048}
+                    data-editorwordssize
+                    onChange={(e) => tweak({ wordsSize: Number(e.target.value) })}
+                    className="w-full accent-emerald-500"
+                  />
+                </label>
+
+                {piece.wordsAt && (
+                  <button
+                    type="button"
+                    data-editorwordsreset
+                    onClick={() => tweak({ wordsAt: null })}
+                    className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300"
+                  >
+                    {t('edit.wordsBottom', 'Put the words back at the bottom')}
+                  </button>
+                )}
+              </>
+            )}
 
             {/* This piece's own sound. Off by default — most material is room
                 tone, and a bed of six rooms at once is noise. */}

@@ -66,6 +66,7 @@
  */
 
 import { drawMark, MARK_SHARE, type Corner, type Spot } from './logomark';
+import { fontFor } from './videofonts';
 
 export interface Scene {
   /** The clip itself, as it came back from the engine. */
@@ -120,6 +121,23 @@ export interface Scene {
    * without them for anywhere that does carry a subtitle track.
    */
   readonly caption?: string;
+  /**
+   * Which face the caption wears, which size, and where it sits.
+   *
+   * All three are per scene rather than per film, for the same reason the
+   * grade is: the case that matters is the mixed one. A title card wants
+   * heavy type across the middle; the line under it wants plain type at the
+   * bottom, out of the way of what the shot is showing.
+   *
+   * `captionAt` is in fractions of the frame to the text's CENTRE — see
+   * `Spot` in `logomark.ts`, and for the same reason: the preview is 480
+   * wide and the film is 1080, and only a fraction means the same thing in
+   * both. Left out, the caption sits where it always has, clear of the
+   * bottom eighth where every app puts its own furniture.
+   */
+  readonly captionFont?: string;
+  readonly captionSize?: number;
+  readonly captionAt?: Spot | null;
 }
 
 export interface Cut {
@@ -396,11 +414,14 @@ export function drawCaption(
   text: string,
   width: number,
   height: number,
+  set?: { readonly font?: string; readonly size?: number; readonly at?: Spot | null },
 ): void {
   const words = text.trim();
   if (!words) return;
 
-  const face = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  const chosen = fontFor(set?.font);
+  const face = chosen.stack;
+  const weight = chosen.weight;
   const room = width * 0.86;
 
   /* Made smaller before it is cut short.
@@ -410,15 +431,20 @@ export function drawCaption(
      terug", which is a different sentence. Two smaller sizes are tried first,
      and only a caption that will not fit even at the smallest is trimmed,
      with a mark to say so. */
+  /* A size she set is tried first and alone: the ladder exists to make an
+     unset caption fit, and running it over a chosen size would quietly
+     shrink the thing she had just made bigger. It still wraps, and it is
+     still cut at three lines — what it will not do is overrule her. */
+  const ladder = set?.size ? [set.size] : [0.048, 0.041, 0.035];
   let size = 0;
   let lines: string[] = [];
-  for (const share of [0.048, 0.041, 0.035]) {
+  for (const share of ladder) {
     size = Math.max(14, Math.round(height * share));
-    context.font = `700 ${size}px ${face}`;
+    context.font = `${weight} ${size}px ${face}`;
     const fit = wrapped(context, words, room);
     lines = fit.lines;
     if (!fit.over) break;
-    if (share === 0.035) {
+    if (share === ladder[ladder.length - 1]) {
       const last = lines[lines.length - 1] ?? '';
       lines[lines.length - 1] = `${last.replace(/[\s,.;:]+$/, '')}\u2026`;
     }
@@ -426,7 +452,7 @@ export function drawCaption(
   if (!lines.length) return;
 
   context.save();
-  context.font = `700 ${size}px ${face}`;
+  context.font = `${weight} ${size}px ${face}`;
   context.textAlign = 'center';
   context.textBaseline = 'alphabetic';
 
@@ -435,8 +461,17 @@ export function drawCaption(
   /* Clear of the bottom eighth, which is where every app that plays these
      puts its own furniture — the caption, the handle, the progress bar. A
      subtitle under that is a subtitle behind a username. */
-  const bottom = height - Math.round(height * 0.12);
+  const bottom = set?.at
+    /* Dragged somewhere, so the BLOCK's centre goes there and the last
+       baseline is worked back from it. Clamped inside the frame, because a
+       caption pushed off the bottom is a caption nobody can get back. */
+    ? Math.max(
+        step * lines.length,
+        Math.min(height - pad, set.at.y * height + (step * (lines.length - 1)) / 2),
+      )
+    : height - Math.round(height * 0.12);
   const firstBaseline = bottom - step * (lines.length - 1);
+  const middle = set?.at ? Math.max(0, Math.min(width, set.at.x * width)) : width / 2;
   /* Measured rather than assumed: a box built on the font size is lopsided,
      because the size includes room for descenders the first line does not
      use, and the caption then sits visibly low inside its own band. */
@@ -450,12 +485,15 @@ export function drawCaption(
 
   context.fillStyle = 'rgba(0, 0, 0, 0.62)';
   context.beginPath();
-  context.roundRect((width - boxWidth) / 2, boxTop, boxWidth, boxHeight, Math.round(size * 0.34));
+  context.roundRect(
+    Math.max(0, Math.min(width - boxWidth, middle - boxWidth / 2)),
+    boxTop, boxWidth, boxHeight, Math.round(size * 0.34),
+  );
   context.fill();
 
   context.fillStyle = '#ffffff';
   lines.forEach((one, index) => {
-    context.fillText(one, width / 2, firstBaseline + step * index);
+    context.fillText(one, middle, firstBaseline + step * index);
   });
   context.restore();
 }
@@ -722,7 +760,13 @@ export async function stitch(cut: Cut): Promise<Made> {
           /* Over the picture and over the bars alike, so a caption on a wide
              shot in a tall film sits in the black band rather than across a
              face. Painted every frame because the frame under it is. */
-          if (caption) drawCaption(context, caption, cut.width, cut.height);
+          if (caption) {
+            drawCaption(context, caption, cut.width, cut.height, {
+              font: cut.scenes[index].captionFont,
+              size: cut.scenes[index].captionSize,
+              at: cut.scenes[index].captionAt,
+            });
+          }
           /* Last, over everything. A caption that slid over the logo would
              be the worse of the two, and the caption is the one that moves.
              Costs nothing here: this loop already runs for every frame, so
