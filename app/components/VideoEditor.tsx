@@ -309,6 +309,27 @@ export default function VideoEditor({
   const [markAt, setMarkAt] = useState<Spot | null>(null);
   const [markShare, setMarkShare] = useState(MARK_SHARE);
 
+  /* How much the preview is magnified. One means no magnification at all,
+     and at one the zoom box is not a scroller — see the note where it is
+     drawn. Whole numbers only: a continuous zoom on a phone is a gesture
+     nobody can land on a round number, and the point of this is placing
+     something precisely, not exploring. */
+  const [zoom, setZoom] = useState(1);
+
+  /* How long the track under it runs. Read once when it is chosen, because
+     the lane below cannot clamp a scrub without it — and a scrub that can be
+     dragged past the end of the song is a film with silence under it and
+     nothing on screen to say why. */
+  const [underLength, setUnderLength] = useState(0);
+  useEffect(() => {
+    if (!edit.under) { setUnderLength(0); return undefined; }
+    let live = true;
+    void lengthOf(edit.under).then((found) => {
+      if (live && Number.isFinite(found) && found > 0) setUnderLength(found);
+    }).catch(() => undefined);
+    return () => { live = false; };
+  }, [edit.under]);
+
   /* ── The playhead ───────────────────────────────────────────────────────
  
      `at` is a second on the EDIT's clock, not on any one file's. Everything
@@ -527,6 +548,49 @@ export default function VideoEditor({
     if (!piece) return;
     commit((was) => change(was, piece.id, how));
   }, [piece, commit]);
+
+  /* Scrubbing the bed. Horizontal, and it moves the SONG under a fixed
+     window rather than moving the window: dragging left shows a later part,
+     the same direction a tape moves when it is pulled. One history step for
+     the whole drag, like the fades below. */
+  const scrubBed = useCallback((event: React.PointerEvent<HTMLElement>) => {
+    event.stopPropagation();
+    event.preventDefault();
+    const node = event.currentTarget;
+    const startX = event.clientX;
+    const startFrom = edit.underFrom ?? 0;
+    const ceiling = Math.max(0, underLength - total);
+    beforeDrag.current = edit;
+    node.setPointerCapture(event.pointerId);
+
+    const move = (m: PointerEvent) => {
+      const by = (startX - m.clientX) / perSecond;
+      const want = Math.round((startFrom + by) * 10) / 10;
+      /* Clamped only once the length is known. Until then a scrub still
+         works and simply cannot be stopped at the far end — which is better
+         than refusing to move at all while the file is still being read. */
+      const held = Math.max(0, underLength > 0 ? Math.min(ceiling, want) : want);
+      setEdit((was) => ({ ...was, underFrom: held }));
+    };
+    const done = () => {
+      node.removeEventListener('pointermove', move);
+      node.removeEventListener('pointerup', done);
+      node.removeEventListener('pointercancel', done);
+      try { node.releasePointerCapture(event.pointerId); } catch { /* already gone */ }
+      const was = beforeDrag.current;
+      beforeDrag.current = null;
+      if (!was) return;
+      setEdit((now) => {
+        if (now === was) return now;
+        setPast((steps) => [...steps, was].slice(-KEEP_STEPS));
+        setFuture([]);
+        return now;
+      });
+    };
+    node.addEventListener('pointermove', move);
+    node.addEventListener('pointerup', done);
+    node.addEventListener('pointercancel', done);
+  }, [edit, perSecond, total, underLength]);
 
   /* ── Dragging a fade, off the timeline ─────────────────────────────────
 
@@ -935,6 +999,59 @@ export default function VideoEditor({
                       <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-emerald-400" />
                     </div>
                   </div>
+
+                  {/* ── The sound, on a lane of its own ──────────────────
+
+                      Carli, 30 September 2026: *"dan moet dit soos die
+                      probooth die tydlyne hê, asook vir die klank."*
+
+                      Inside the same scrolling strip as the blocks, which is
+                      the only way the two can be read against each other: a
+                      lane in its own box at its own width is a second picture
+                      of time, and two pictures of time that do not line up
+                      are worse than one.
+
+                      Two things are drawn. The bed runs the whole film,
+                      because that is what a bed does — dragging it does not
+                      move it along the film, it scrubs WHICH PART of the song
+                      is used, which is the only thing about it there is to
+                      choose. And a mark under every piece that carries its
+                      own sound, so "why can I hear a room" has an answer you
+                      can see rather than six checkboxes to go and open. */}
+                  <div className="relative h-10 border-t border-zinc-800" data-editorsoundlane>
+                    {edit.under ? (
+                      <div
+                        data-editorbed
+                        onPointerDown={(event) => scrubBed(event)}
+                        style={{ width: Math.max(0, total * perSecond) }}
+                        className="absolute inset-y-1 left-0 cursor-ew-resize touch-none overflow-hidden rounded-lg border border-sky-500/40 bg-sky-500/10 px-2 py-1"
+                      >
+                        <span className="block truncate text-[11px] font-semibold text-sky-200">
+                          {t('edit.bed', 'Track under it')}
+                        </span>
+                        <span className="block text-[11px] text-sky-300/70">
+                          {t('edit.bedFrom', 'From')} {seconds(edit.underFrom ?? 0)}
+                          {underLength > 0 ? ` / ${seconds(underLength)}` : ''}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="absolute inset-y-0 left-2 flex items-center text-[11px] text-zinc-600">
+                        {t('edit.noBed', 'No track under it yet')}
+                      </span>
+                    )}
+
+                    {edit.pieces.filter((one) => one.sound).map((one) => (
+                      <span
+                        key={one.id}
+                        data-editorownsound
+                        style={{
+                          left: startsAt(edit, one.id) * perSecond,
+                          width: Math.max(THINNEST, lengthOfPiece(one) * perSecond),
+                        }}
+                        className="pointer-events-none absolute bottom-0 h-1 rounded-full bg-emerald-400/80"
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -1026,7 +1143,62 @@ export default function VideoEditor({
               nothing without it, and `cqh` then falls back to a font size of
               nought — words that vanish, with no error anywhere. A measured
               height cannot do that. */}
-          <div ref={frame} className="relative">
+
+          {/* ── Zooming the picture ────────────────────────────────────────
+
+              Carli, 30 September 2026: *"mens moet op die prent van die video
+              kan kliek en in en uit zoom."*
+
+              This zooms the PREVIEW and not the film. It is the magnifying
+              glass over the thing being worked on, not a punch-in on the
+              shot — nothing below changes a single frame of what comes out,
+              and that is deliberate: she asked for it in the same breath as
+              moving the logo and placing the words, which are the two jobs
+              that are guesswork at 390 pixels wide.
+
+              A punch-in on the shot itself is a different and also useful
+              thing, and it is not this. Saying so here because "zoom" means
+              both, and shipping the wrong one silently would be worse than
+              shipping neither.
+
+              The overlays scale with the picture because they are positioned
+              in percentages inside the same box, so a logo placed at 2x is
+              still in the same place at 1x. */}
+          <div className="flex items-center justify-end gap-2">
+            <span className="text-sm text-zinc-500" data-editorzoomnow>{`${zoom}×`}</span>
+            <button
+              type="button"
+              data-editorzoomout
+              disabled={zoom <= 1}
+              onClick={() => setZoom((was) => Math.max(1, was - 1))}
+              className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
+            >
+              &minus;
+            </button>
+            <button
+              type="button"
+              data-editorzoomin
+              disabled={zoom >= 4}
+              onClick={() => setZoom((was) => Math.min(4, was + 1))}
+              className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
+
+          {/* sideways on purpose: only ever at a zoom she has chosen. At 1x
+              the inner box is exactly the outer one and there is nothing to
+              scroll; above it, panning IS the feature, and native scrolling
+              is the only panning that behaves like the phone it is on. */}
+          <div
+            data-editorzoombox
+            className={zoom > 1 ? 'overflow-auto rounded-xl' : ''}
+          >
+          <div
+            ref={frame}
+            className="relative origin-top-left"
+            style={zoom > 1 ? { width: `${zoom * 100}%` } : undefined}
+          >
             {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
             <video
               ref={viewer}
@@ -1069,6 +1241,7 @@ export default function VideoEditor({
                 className="absolute -translate-x-1/2 -translate-y-1/2 cursor-move touch-none select-none opacity-80 outline-dashed outline-1 outline-emerald-400/50"
               />
             )}
+          </div>
           </div>
           <div className="flex gap-2 flex-wrap">
             <button

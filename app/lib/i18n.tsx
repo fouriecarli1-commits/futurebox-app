@@ -789,6 +789,17 @@ export const STRINGS: Dict = {
     af: "Die klok",
   },
   "edit.font": { en: "The face", af: "Die lettertipe" },
+  /* The sound lane on the timeline. "Track under it" rather than "music":
+     most of what goes under these is not music, and a label that says music
+     quietly discourages putting an interview bed or room tone there.
+
+     "Klank" and not "snit" in Afrikaans. `check:afrikaans` bans "snit" in
+     favour of "liedjie" — and both of those are wrong here for the same
+     reason the English is not "music". "Klank" says what it is without
+     claiming it is a song. */
+  "edit.bed": { en: "Track under it", af: "Klank daaronder" },
+  "edit.bedFrom": { en: "From", af: "Van" },
+  "edit.noBed": { en: "No track under it yet", af: "Nog geen klank daaronder nie" },
   "edit.wordsSize": {
     en: "How big the words are",
     af: "Hoe groot die woorde is",

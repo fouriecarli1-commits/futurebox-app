@@ -309,6 +309,73 @@ try {
       `the fade is ${await p.locator('[data-editorfadein]').inputValue()} after one undo — a drag that files a step per pixel fills the history with one gesture`);
     void stepsBefore;
 
+    /* ── The sound, on a lane of its own ───────────────────────────────
+
+       Carli, 30 September 2026: *"dan moet dit soos die probooth die tydlyne
+       hê, asook vir die klank."*
+
+       The lane is in the same scrolling strip as the blocks, so what is
+       measured is that it exists AND that it lines up: a lane at its own
+       width is a second picture of time, and two pictures of time that do
+       not agree are worse than one.
+
+       With no track under it the lane still has to be there and still has to
+       say so — an empty lane with nothing in it reads as a rendering fault,
+       and the room has to be able to tell "nothing yet" from "broken". */
+    /* ── Zoom, which magnifies the preview and not the film ────────────
+
+       Carli, 30 September 2026: *"mens moet op die prent van die video kan
+       kliek en in en uit zoom."*
+
+       Measured as a change to the PICTURE's rendered width, not as a class
+       or a state readout: a zoom control that lights up and leaves the
+       picture the size it was is the exact failure this app keeps meeting.
+
+       And the last check is the one that says what this is: the film must be
+       unchanged. A preview zoom that quietly cropped the shot would be a
+       different feature wearing this one's name. */
+    const plain = (await p.locator('[data-editorviewer]').boundingBox())?.width ?? 0;
+    const lengthBefore = (await p.locator('[data-editorruns]').innerText().catch(() => '')) || '';
+    await p.locator('[data-editorzoomin]').click();
+    await p.waitForTimeout(500);
+    const magnified = (await p.locator('[data-editorviewer]').boundingBox())?.width ?? 0;
+    check('zooming in makes the picture bigger',
+      magnified > plain + 10,
+      `${Math.round(plain)}px became ${Math.round(magnified)}px`);
+
+    check('  and the film itself is untouched by it',
+      ((await p.locator('[data-editorruns]').innerText().catch(() => '')) || '') === lengthBefore,
+      'this magnifies the preview; a zoom that cropped the shot would be a different feature wearing this name');
+
+    await p.locator('[data-editorzoomout]').click();
+    await p.waitForTimeout(500);
+    check('  and zooming back out returns it',
+      Math.abs(((await p.locator('[data-editorviewer]').boundingBox())?.width ?? 0) - plain) < 12,
+      `it came back to ${Math.round((await p.locator('[data-editorviewer]').boundingBox())?.width ?? 0)}px against ${Math.round(plain)}px`);
+
+    check('the timeline has a lane for the sound',
+      (await p.locator('[data-editorsoundlane]').count()) === 1);
+
+    check('  and with no track under it, it says so rather than sitting empty',
+      (await p.locator('[data-editornobed], [data-editorsoundlane]').first().innerText().catch(() => '')).trim().length > 0
+        || (await p.locator('[data-editorbed]').count()) === 1,
+      'an empty lane with nothing in it reads as a rendering fault');
+
+    /* A piece carrying its own sound is marked on the lane, which is the
+       whole reason the lane is worth drawing with no bed in it: "why can I
+       hear a room" should have an answer you can see. */
+    const soundOn = p.locator('[data-editorsound]');
+    if ((await soundOn.count()) === 1) {
+      const before = await p.locator('[data-editorownsound]').count();
+      await soundOn.click();
+      await p.waitForTimeout(500);
+      check('  and turning a piece’s own sound on marks it there',
+        (await p.locator('[data-editorownsound]').count()) !== before,
+        `${before} marks before, ${await p.locator('[data-editorownsound]').count()} after`);
+      await soundOn.click();
+      await p.waitForTimeout(400);
+    }
+
     /* ── Words, set and placed by hand ─────────────────────
 
        Carli, 30 September 2026: *"Die teks moet font opsies hê, en dit moet
