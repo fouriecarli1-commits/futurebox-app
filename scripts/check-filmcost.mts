@@ -17,7 +17,7 @@
  * A table of examples in a comment goes stale the first time a price moves and
  * nothing notices. This repository has had that three times.
  */
-import { CREDITS, perMinute } from '../app/lib/credits';
+import { CREDITS } from '../app/lib/credits';
 import { TIER_CREDITS } from '../app/lib/credits';
 import {
   NOTHING_IN_IT, billFor, billForEdit, inTheFilm, type InTheFilm,
@@ -55,66 +55,71 @@ const LONGER = film({ seconds: 90, words: 3, looks: 3, joins: 2, mark: true, und
 const DRESSED = film({ seconds: 180, words: 6, looks: 6, joins: 5, mark: true, under: true });
 
 const bareBill = billFor(BARE);
-ok('a bare twenty-second film costs what it always did',
+ok('a bare twenty-second film is one half-minute at the film rate',
   bareBill.total === CREDITS.filmOut,
   `${bareBill.total} credits · ${rand(bareBill.total)} · ${perMonth(bareBill.total)} a month on Maker`);
 
-ok('  so nothing anybody already makes got dearer',
-  bareBill.total === perMinute(20, CREDITS.filmOut),
-  'a new price that raises the simplest case is a price rise wearing a feature');
+ok('  and a floor of one unit, so the shortest work is not free',
+  billFor(film({ seconds: 1 })).total === CREDITS.filmOut);
 
 const advertBill = billFor(ADVERT);
-ok('an advert with words, a look, a join, a logo and a track costs six',
-  advertBill.total === 6,
+ok('a twenty-second advert using all five functions is 35',
+  advertBill.total === 35,
   `${advertBill.total} credits · ${rand(advertBill.total)} · ${perMonth(advertBill.total)} a month on Maker`);
 
 const longerBill = billFor(LONGER);
-ok('a minute and a half, fully dressed, costs twelve',
-  longerBill.total === 12,
+ok('a minute and a half using all five is 55',
+  longerBill.total === 55,
   `${longerBill.total} credits · ${rand(longerBill.total)} · ${perMonth(longerBill.total)} a month on Maker`);
 
 const dressedBill = billFor(DRESSED);
-ok('a three-minute music video with everything on it costs eighteen',
-  dressedBill.total === 18,
+ok('a three-minute music video using all five is 85',
+  dressedBill.total === 85,
   `${dressedBill.total} credits · ${rand(dressedBill.total)} · ${perMonth(dressedBill.total)} a month on Maker`);
 
 /* ── And "affordable" as a number rather than a feeling ────────────────── */
 
-ok('a Maker can make at least ten adverts a month and still have credits left',
-  perMonth(advertBill.total) >= 10,
-  `${perMonth(advertBill.total)} adverts at ${advertBill.total} credits from ${TIER_CREDITS.maker}`);
+/* ── The one that has to hold, at any price she sets ────────────────────
 
-ok('  and at least three full music videos',
-  perMonth(dressedBill.total) >= 3,
-  `${perMonth(dressedBill.total)} at ${dressedBill.total} credits`);
+   A plan has to afford at least one of the films it is sold for. Maker's card
+   says "3 music videos"; a Maker who cannot finish ONE dressed three-minute
+   film has been sold something the plan cannot do, and that is the failure this
+   assertion exists for — not "is it cheap", which is hers to decide.
 
-ok('  and the dearest film costs less than two full songs',
-  dressedBill.total < CREDITS.song * 2,
-  `${dressedBill.total} against a song's ${CREDITS.song}`
-  + ' — a browser-rendered film costing more than two songs we actually pay for'
-  + ' would be a price with nothing behind it');
+   At 10 a half minute and 5 a function it is 85 against 90. It fits by five
+   credits, which is tight and is worth knowing rather than discovering. */
+ok('a Maker can afford at least one fully dressed three-minute film',
+  dressedBill.total <= TIER_CREDITS.maker,
+  `${dressedBill.total} credits against Maker's ${TIER_CREDITS.maker}`
+  + ' — a card that sells three music videos on a plan that cannot finish one'
+  + ' is a card that lies');
 
-/* ── The ceiling, which is what keeps the last one true ────────────────── */
+ok('  and a Studio member can afford at least two',
+  dressedBill.total * 2 <= TIER_CREDITS.studio,
+  `${dressedBill.total * 2} against Studio's ${TIER_CREDITS.studio}`);
 
-ok('the elements never cost more than the film itself',
-  [BARE, ADVERT, LONGER, DRESSED].every((one) => billFor(one).elements <= billFor(one).base),
-  'the one sentence this whole design rests on');
+/* ── Per FUNCTION, not per use, which is the whole shape of it ─────────── */
 
-ok('  so the dearest film is exactly twice the cheapest of the same length',
+ok('words on six shots cost the same as words on one',
+  billFor(film({ seconds: 60, words: 6 })).total === billFor(film({ seconds: 60, words: 1 })).total,
+  'what is charged for is reaching for the text tool, not each caption —'
+  + ' a room that charged per caption would be charging most to the people'
+  + ' using it most');
+
+ok('  and the same for looks and transitions',
+  billFor(film({ seconds: 60, looks: 9, joins: 9 })).total
+    === billFor(film({ seconds: 60, looks: 1, joins: 1 })).total);
+
+ok('  so the dearest film of a length is the base plus five functions',
   billFor(film({
     seconds: 180, words: 99, looks: 99, joins: 99, mark: true, under: true,
-  })).total === billFor(film({ seconds: 180 })).total * 2,
+  })).total === billFor(film({ seconds: 180 })).total + CREDITS.filmWords * 5,
   'whatever somebody piles on, the price has a known top');
 
-ok('  and the ceiling says so when it is doing something',
-  billFor(ADVERT).ceiling === true && billFor(BARE).ceiling === false,
-  'a discount nobody is told about is a price nobody can check');
-
-ok('  while each row still shows what that element really comes to',
-  billFor(ADVERT).lines.filter((one) => one.id !== 'film')
-    .reduce((all, one) => all + one.credits, 0) === billFor(ADVERT).asked,
-  'a row reading "3 looks · 2 credits" because the ceiling took a third off the'
-  + ' middle of it is a row nobody can check against the price beside it');
+ok('  and each row still says how many shots carry it',
+  billFor(film({ seconds: 60, words: 3 })).lines.find((one) => one.id === 'words')?.count === 3,
+  'the price asks whether any shot has words; the ROW has to say three, because'
+  + ' that is what somebody needs in order to decide what to take off');
 
 /* ── Longer films are dearer, which is the thing that should move it ───── */
 
@@ -122,9 +127,11 @@ ok('length is what moves the price',
   billFor(film({ seconds: 30 })).total < billFor(film({ seconds: 150 })).total,
   'and not how hard somebody worked in a room whose value is that they do');
 
-ok('  by the minute, floored at one',
+ok('  by the half minute, floored at one',
   billFor(film({ seconds: 1 })).total === CREDITS.filmOut
-  && billFor(film({ seconds: 61 })).total === CREDITS.filmOut * 2);
+  && billFor(film({ seconds: 31 })).total === CREDITS.filmOut * 2
+  && billFor(film({ seconds: 30 })).total === CREDITS.filmOut,
+  `30s is ${billFor(film({ seconds: 30 })).total}, 31s is ${billFor(film({ seconds: 31 })).total}`);
 
 /* ── Counting what is in an edit ───────────────────────────────────────── */
 
@@ -193,7 +200,8 @@ if (bad) {
   process.exit(1);
 }
 console.log(
-  '\ncheck:filmcost — an advert is six credits and a full music video eighteen,'
-  + ' the elements never cost more than the film itself, and the price is worked'
-  + ' out by the server rather than sent by the browser.',
+  '\ncheck:filmcost — ten credits a half minute and five a function, so a'
+  + ' twenty-second advert is 35 and a dressed three-minute film is 85 against'
+  + " Maker's 90; words on six shots cost what words on one cost, and the price"
+  + ' is worked out by the server rather than sent by the browser.',
 );

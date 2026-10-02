@@ -179,7 +179,7 @@ export const CREDITS = {
    * makes somebody think twice about a second attempt has broken the room it
    * is charging for.
    */
-  filmOut: 3,
+  filmOut: 10,
   /**
    * ── What is IN the film, on top of the film itself ──────────────────────
    *
@@ -217,16 +217,47 @@ export const CREDITS = {
    * thing that moves the price is the LENGTH — which is the thing that moves
    * what the film is worth.
    */
-  /** Words on a piece. Counted per piece that carries them, not per letter. */
-  filmWords: 1,
-  /** A look on a piece. Counted per piece that carries one. */
-  filmLook: 1,
-  /** A join between two pieces that is not a straight cut. One each. */
-  filmJoin: 1,
-  /** Her own mark on the film. Once, whatever it is on. */
-  filmMark: 1,
-  /** A track under the whole thing. Once. */
-  filmUnder: 1,
+  /**
+   * ── Five each, and counted PER FUNCTION rather than per use ─────────────
+   *
+   * Carli, 4 October 2026: *"3 krediete om 'n video te maak op video editor is
+   * te goedkoop. Elke funksie moet krediete dra, die teks, filters etc. En om
+   * net 'n video te maak, moet 10 krediete per 30 sekondes wees. En dan 5
+   * krediete vir elke bykomende funksies soos filters, teks, ens."*
+   *
+   * "Elke bykomende FUNKSIE" — each additional function, not each use of one.
+   * So putting words on six shots is five credits, the same as putting them on
+   * one: what is charged for is reaching for the text tool at all.
+   *
+   * That reading is the one that works, and the arithmetic says so rather than
+   * my taste. Per USE, a three-minute video with a caption and a look on each of
+   * six shots comes to 155 credits against Maker's 90 — a plan that cannot
+   * afford one of the films it is sold for. Per FUNCTION it is 85, which fits,
+   * and the price still rises with the length because the length is what is
+   * worth more.
+   *
+   *     20 seconds, nothing on it          10 credits   R16.56
+   *     20 seconds, all five functions     35 credits   R57.96
+   *     three minutes, all five            85 credits   R140.77
+   *
+   * ── And the ceiling is gone ─────────────────────────────────────────────
+   *
+   * There was one, on 3 October: the elements together could never cost more
+   * than the film itself. It existed because at one credit per USE a long film
+   * with a lot on it ran away. Counting per function solves the same problem at
+   * its source, and a cap on top of it would only make the fourth function free
+   * — which is the opposite of what she asked for.
+   */
+  /** Words anywhere in the film. Five, however many shots carry them. */
+  filmWords: 5,
+  /** A look anywhere in the film. Five, however many shots carry one. */
+  filmLook: 5,
+  /** Any transition that is not a straight cut. Five, however many there are. */
+  filmJoin: 5,
+  /** Her own mark on the film. */
+  filmMark: 5,
+  /** A track under the whole thing. */
+  filmUnder: 5,
   /**
    * Bouncing a mix out of the Pro Booth. **Per minute of finished mix.**
    *
@@ -662,6 +693,23 @@ export function filterCost(seconds: number, rate: number): number {
 export function perMinute(seconds: number, rate: number): number {
   const minutes = Math.max(1, Math.ceil(Math.max(0, seconds) / 60));
   return minutes * rate;
+}
+
+/**
+ * The same, by the half minute.
+ *
+ * Carli, 4 October 2026: *"om net 'n video te maak, moet 10 krediete per 30
+ * sekondes wees."* A film is the one thing in this app priced in half minutes,
+ * because most of what leaves this room is an advert and a minute is three
+ * adverts rounded up to one.
+ *
+ * Floored at one unit for the same reason `perMinute` is: an eight-second
+ * advert is a film somebody made, and a floor of nought would make the shortest
+ * work free.
+ */
+export function perHalfMinute(seconds: number, rate: number): number {
+  const units = Math.max(1, Math.ceil(Math.max(0, seconds) / 30));
+  return units * rate;
 }
 
 export function readCost(characters: number): number {

@@ -161,7 +161,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Booth is free and always will be — record, sing over a track, as many takes as you like. The Pro Booth, with lanes, the grid, mixing and undo, comes with every paid plan. Bouncing a finished mix out of it is 1 credit a minute.',
-      'The cutting room is open on this plan too — a timeline, trims, fades, looks, words, transitions, your logo and sound under it, all of it unlimited and free, because it runs in your own browser. Putting the finished film together is what costs: 3 credits a minute plus 1 for each thing in it, and this plan holds no credits — so you can build and try everything here, and the film waits for you.',
+      'The cutting room is open on this plan too — a timeline, trims, fades, looks, words, transitions, your logo and sound under it, all of it unlimited and free, because it runs in your own browser. Putting the finished film together is what costs: 10 credits per 30 seconds plus 5 for each function you used. This plan holds no credits, so you can build and try everything here, and the film waits for you.',
       'The marketing desk — the market read, the week and the queue — was R199 a month on its own. It is now in every paid plan: a month\u2019s plan is 40 credits, eight advert lines 20.',
       'Dubbing an episode into another language is the dearest thing here: 162 credits a minute, so it needs Studio or Label.',
     ],
@@ -199,7 +199,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 1 credit a minute. Splitting stems is 4 credits a minute, changing a voice 4.',
-      'The cutting room: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and free. Putting the finished film together is 3 credits a minute plus 1 for each thing in it, and what is in it never costs more than the film itself — a twenty-second advert with words, a look, a transition, your logo and a track is 6. Taking a background out is 8 credits per five seconds, an item out 11.',
+      'The cutting room: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and free, on every plan. Putting the finished film together is 10 credits per 30 seconds, plus 5 for each function you used — words, looks, transitions, your logo, a track — however many shots it is on. A twenty-second advert using all five is 35; a dressed three-minute film is 85. Taking a background out is 8 credits per five seconds, an item out 11.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing is 162 credits a minute — more than this plan holds, so it starts at Studio.',
     ],
@@ -256,7 +256,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 1 credit a minute. Splitting stems is 4 credits a minute, changing a voice 4.',
-      'The cutting room: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and free. Putting the finished film together is 3 credits a minute plus 1 for each thing in it, and what is in it never costs more than the film itself — a twenty-second advert with words, a look, a transition, your logo and a track is 6. Taking a background out is 8 credits per five seconds, an item out 11.',
+      'The cutting room: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and free, on every plan. Putting the finished film together is 10 credits per 30 seconds, plus 5 for each function you used — words, looks, transitions, your logo, a track — however many shots it is on. A twenty-second advert using all five is 35; a dressed three-minute film is 85. Taking a background out is 8 credits per five seconds, an item out 11.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing into another language, in the same voice — 162 credits a minute out of your 190.',
     ],
@@ -297,7 +297,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 1 credit a minute. Splitting stems is 4 credits a minute, changing a voice 4.',
-      'The cutting room: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and free. Putting the finished film together is 3 credits a minute plus 1 for each thing in it, and what is in it never costs more than the film itself — a twenty-second advert with words, a look, a transition, your logo and a track is 6. Taking a background out is 8 credits per five seconds, an item out 11.',
+      'The cutting room: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and free, on every plan. Putting the finished film together is 10 credits per 30 seconds, plus 5 for each function you used — words, looks, transitions, your logo, a track — however many shots it is on. A twenty-second advert using all five is 35; a dressed three-minute film is 85. Taking a background out is 8 credits per five seconds, an item out 11.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing into another language, in the same voice — 162 credits a minute out of your 440.',
     ],

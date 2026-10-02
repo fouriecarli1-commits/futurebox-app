@@ -279,8 +279,10 @@ jobs:
         run: npm run check:joins
       - name: The film clock and the file clock stay apart, at every speed
         run: npm run check:cutmaths
-      - name: An advert is six credits, a music video eighteen, and the browser never sends a price
+      - name: The film price is worked out by the server, never sent by the browser
         run: npm run check:filmcost
+      - name: A room is called one thing, and its screen reads the rail's own key
+        run: npm run check:oneroomname
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped

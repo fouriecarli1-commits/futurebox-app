@@ -27,22 +27,23 @@
  * a rounding, a stale constant, a change made in one file — where the number
  * shown and the number charged quietly stop being the same number.
  *
- * ── The ceiling ──────────────────────────────────────────────────────────
+ * ── Counted per FUNCTION, which is what replaced the ceiling ─────────────
  *
- * The elements together never cost more than the film itself.
+ * Carli, 4 October 2026: *"5 krediete vir elke bykomende funksies soos filters,
+ * teks, ens."* Each additional FUNCTION, not each use of one. Words on six
+ * shots is one charge for words.
  *
- * One sentence, and it is the whole of what keeps this affordable. Without it,
- * a three-minute video with a caption on every shot comes to twenty-eight
- * credits — and a room whose entire value is that people use it would be
- * charging most to the people using it most, which is the fault this app keeps
- * finding in its own pricing.
+ * There was a ceiling here on 3 October — the elements could never cost more
+ * than the film itself — and it existed because at a credit per USE a long film
+ * with a lot on it ran away. Counting per function solves that at its source,
+ * so the ceiling is gone: a cap on top of it would only have made the fourth
+ * function free, which is the opposite of what was asked for.
  *
- * With it, the dearest film anybody can make is exactly twice the cheapest one
- * of the same length, and the thing that moves the price is the LENGTH, which
- * is the thing that moves what the film is worth.
+ * The price still rises with the LENGTH, because the length is what moves what
+ * a film is worth. `check:filmcost` holds the worked examples.
  */
 
-import { CREDITS, perMinute } from './credits';
+import { CREDITS, perHalfMinute } from './credits';
 import { lengthOfPiece, runs, type Edit } from './videoedit';
 
 /**
@@ -55,11 +56,17 @@ import { lengthOfPiece, runs, type Edit } from './videoedit';
 export interface InTheFilm {
   /** How long the finished film runs, in seconds. */
   readonly seconds: number;
-  /** How many pieces carry words. */
+  /**
+   * How many pieces carry words, a look, and a transition.
+   *
+   * Still counted rather than reduced to a yes, and that is deliberate even
+   * though the PRICE only asks whether any of them is above nought: the bill on
+   * screen says "words on 3 shots", which is what somebody needs in order to
+   * decide what to take off. A count can always answer "is there one"; a
+   * boolean can never answer "how many".
+   */
   readonly words: number;
-  /** How many pieces carry a look. */
   readonly looks: number;
-  /** How many joins are not a straight cut. */
   readonly joins: number;
   /** Whether her own mark is on it. */
   readonly mark: boolean;
@@ -85,14 +92,12 @@ export interface BillLine {
 export interface Bill {
   /** Every row that is not nought, the film itself first. */
   readonly lines: readonly BillLine[];
-  /** The film itself, by the minute. */
+  /** The film itself, by the half minute. */
   readonly base: number;
-  /** What the elements come to before the ceiling. */
-  readonly asked: number;
-  /** What the elements actually cost, after it. */
+  /** What the functions used come to. */
   readonly elements: number;
-  /** Whether the ceiling is doing anything, so a screen can say so. */
-  readonly ceiling: boolean;
+  /** How many functions were reached for at all. */
+  readonly functions: number;
   /** What is charged. */
   readonly total: number;
 }
@@ -140,13 +145,14 @@ export function billFor(what: InTheFilm): Bill {
      is right for a film and wrong for nothing at all — so the nothing case is
      answered before it, rather than by it. */
   if (seconds <= 0) {
-    return {
-      lines: [], base: 0, asked: 0, elements: 0, ceiling: false, total: 0,
-    };
+    return { lines: [], base: 0, elements: 0, functions: 0, total: 0 };
   }
 
-  const base = perMinute(seconds, CREDITS.filmOut);
+  const base = perHalfMinute(seconds, CREDITS.filmOut);
 
+  /* `count` is how many shots carry it, for the row on screen. `each` is what
+     the FUNCTION costs, charged once if the count is above nought — see the
+     note at the top of this file for why it is per function and not per use. */
   const parts: readonly { readonly id: BillLine['id']; readonly count: number; readonly each: number }[] = [
     { id: 'words', count: counted(what.words), each: CREDITS.filmWords },
     { id: 'look', count: counted(what.looks), each: CREDITS.filmLook },
@@ -155,32 +161,24 @@ export function billFor(what: InTheFilm): Bill {
     { id: 'under', count: what.under ? 1 : 0, each: CREDITS.filmUnder },
   ];
 
-  const asked = parts.reduce((all, one) => all + one.count * one.each, 0);
-  const elements = Math.min(asked, base);
+  const used = parts.filter((one) => one.count > 0);
+  const elements = used.reduce((all, one) => all + one.each, 0);
 
-  /* ── The rows shown, and why they are what was ASKED ────────────────────
-
-     Each row carries what that element comes to on its own, not its share of
-     the capped total. A row reading "3 looks · 2 credits" because the ceiling
-     took a third off the middle of it is a row nobody can check against the
-     price beside it.
-
-     The ceiling is its own fact, said separately, which is the honest shape:
-     here is what is in your film, and here is the discount for having made a
-     lot of it. */
   const lines: BillLine[] = [
-    { id: 'film', count: Math.max(1, Math.ceil(seconds / 60)), each: CREDITS.filmOut, credits: base },
-    ...parts
-      .filter((one) => one.count > 0)
-      .map((one) => ({ ...one, credits: one.count * one.each })),
+    {
+      id: 'film',
+      count: Math.max(1, Math.ceil(seconds / 30)),
+      each: CREDITS.filmOut,
+      credits: base,
+    },
+    ...used.map((one) => ({ ...one, credits: one.each })),
   ];
 
   return {
     lines,
     base,
-    asked,
     elements,
-    ceiling: asked > base,
+    functions: used.length,
     total: base + elements,
   };
 }

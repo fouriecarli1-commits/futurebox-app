@@ -756,10 +756,16 @@ export const STRINGS: Dict = {
      A room that opens in English because nobody wrote the other half is a
      room that is not finished. `check:afrikaans` caught every one of these
      before the build, which is what it is for. */
-  "edit.title": {
-    en: "Video editor",
-    af: "Video-redigeerder",
-  },
+  /* ── Deleted, 3 October 2026: one room had two names ────────────────────
+
+     The rail called this room "Cutting room / Snykamer". Its own heading, right
+     at the top of the screen somebody is standing in, said "Video editor /
+     Video-redigeerder". Carli, twice: *"Die video editor se naam het steeds nie
+     verander nie."* I went looking in the app's metadata both times. It was
+     here.
+
+     The room reads `rail.videoedit` now — the same key the rail draws — so there
+     is one name and it cannot drift again. `check:oneroomname` holds it. */
   "edit.what": {
     en: "Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device \u2014 no credits, no queue, no waiting.",
     af: "Bring jou eie knipsels in, sny hulle op die klok, en vat die film uit. Alles op hierdie bladsy gebeur op jou eie toestel \u2014 geen krediete, geen tou, geen wag nie.",
@@ -932,9 +938,12 @@ export const STRINGS: Dict = {
   /* Said out loud whenever it is doing something. A discount nobody is told
      about is a price nobody can check, and this one is the whole reason a film
      with a caption on every shot is still affordable. */
-  "edit.billCeiling": {
-    en: "What is in it never costs more than the film itself, so {asked} comes down to {paid}.",
-    af: "Wat daarin is, kos nooit meer as die film self nie, so {asked} kom af na {paid}.",
+  /* Said where the number is, because it is the thing somebody will ask: why
+     is one caption the same price as six? Because it is the text TOOL that is
+     charged for, not each caption. */
+  "edit.billPerFunction": {
+    en: "{n} credits for each function you used, however many shots it is on.",
+    af: "{n} krediete vir elke funksie wat jy gebruik het, op hoeveel skote ook al.",
   },
   "edit.billTotal": { en: "Altogether", af: "Altesaam" },
   "edit.billHave": { en: "You have {n}.", af: "Jy het {n}." },

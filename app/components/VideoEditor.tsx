@@ -1222,7 +1222,7 @@ export default function VideoEditor({
 
   if (!allowed) {
     return (
-      <Card title={t('edit.title', 'Video editor')} icon={<Film className="w-4 h-4" />}>
+      <Card title={t('rail.videoedit', 'Cutting room')} icon={<Film className="w-4 h-4" />}>
         <div data-editorlocked className="space-y-3">
           <p className="text-sm text-zinc-300 leading-relaxed">
             {t(
@@ -1254,7 +1254,7 @@ export default function VideoEditor({
 
   return (
     <div className="space-y-4" data-videoeditor>
-      <Card title={t('edit.title', 'Video editor')} icon={<Film className="w-4 h-4" />}>
+      <Card title={t('rail.videoedit', 'Cutting room')} icon={<Film className="w-4 h-4" />}>
         <div className="space-y-4">
           <Note>
             {t(
@@ -2684,16 +2684,17 @@ export default function VideoEditor({
                 ))}
               </ul>
 
-              {/* Said out loud whenever it is doing something. A discount
-                  nobody is told about is a price nobody can check — and this
-                  one is the whole reason a film with a caption on every shot is
-                  still affordable. */}
-              {bill.ceiling && (
-                <p data-editorceiling className="text-sm text-emerald-400">
+              {/* What a function costs is said once, under the rows, because
+                  it is the thing somebody will ask: why is one caption the same
+                  price as six? Because it is the TEXT TOOL that is charged for,
+                  not each caption — and that is worth saying where the number
+                  is, not only in a file nobody reads. */}
+              {bill.functions > 0 && (
+                <p data-editorperfunction className="text-sm text-emerald-400">
                   {t(
-                    'edit.billCeiling',
-                    'What is in it never costs more than the film itself, so {asked} comes down to {paid}.',
-                  ).replace('{asked}', String(bill.asked)).replace('{paid}', String(bill.elements))}
+                    'edit.billPerFunction',
+                    '{n} credits for each function you used, however many shots it is on.',
+                  ).replace('{n}', String(CREDITS.filmWords))}
                 </p>
               )}
 
