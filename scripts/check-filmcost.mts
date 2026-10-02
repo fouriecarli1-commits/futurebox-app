@@ -11,7 +11,7 @@
  * "Affordable" is not a feeling, it is a number of films a month. So the four
  * worked examples below are assertions rather than prose: a bare film, an
  * advert, a long clip and a fully dressed music video, each with what it costs
- * and how many of them a Maker's ninety buys. Change any price in `credits.ts`
+ * and how many of them a Maker's hundred buys. Change any price in `credits.ts`
  * and whichever of those stops being true says so by name.
  *
  * A table of examples in a comment goes stale the first time a price moves and
@@ -32,7 +32,7 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
 };
 
 /** What a credit is worth, for saying prices in money. */
-const RAND = 149 / 90;
+const RAND = 149 / TIER_CREDITS.maker;
 const rand = (credits: number): string => `R${(credits * RAND).toFixed(2)}`;
 const perMonth = (credits: number): number => Math.floor(TIER_CREDITS.maker / credits);
 
@@ -63,18 +63,18 @@ ok('  and a floor of one unit, so the shortest work is not free',
   billFor(film({ seconds: 1 })).total === CREDITS.filmOut);
 
 const advertBill = billFor(ADVERT);
-ok('a twenty-second advert using all five functions is 35',
-  advertBill.total === 35,
+ok('a twenty-second advert using all five functions is 25',
+  advertBill.total === 25,
   `${advertBill.total} credits · ${rand(advertBill.total)} · ${perMonth(advertBill.total)} a month on Maker`);
 
 const longerBill = billFor(LONGER);
-ok('a minute and a half using all five is 55',
-  longerBill.total === 55,
+ok('a minute and a half using all five is 45',
+  longerBill.total === 45,
   `${longerBill.total} credits · ${rand(longerBill.total)} · ${perMonth(longerBill.total)} a month on Maker`);
 
 const dressedBill = billFor(DRESSED);
-ok('a three-minute music video using all five is 85',
-  dressedBill.total === 85,
+ok('a three-minute music video using all five is 75',
+  dressedBill.total === 75,
   `${dressedBill.total} credits · ${rand(dressedBill.total)} · ${perMonth(dressedBill.total)} a month on Maker`);
 
 /* ── And "affordable" as a number rather than a feeling ────────────────── */
@@ -86,8 +86,10 @@ ok('a three-minute music video using all five is 85',
    film has been sold something the plan cannot do, and that is the failure this
    assertion exists for — not "is it cheap", which is hers to decide.
 
-   At 10 a half minute and 5 a function it is 85 against 90. It fits by five
-   credits, which is tight and is worth knowing rather than discovering. */
+   At 10 a half minute and 3 a function it is 75 against 100. It fits with
+   twenty-five over, which is the room the 4 October price change was for: at
+   five a function it was 85 against 90 and a Maker who made one film had four
+   credits left for the whole month. */
 ok('a Maker can afford at least one fully dressed three-minute film',
   dressedBill.total <= TIER_CREDITS.maker,
   `${dressedBill.total} credits against Maker's ${TIER_CREDITS.maker}`
@@ -178,6 +180,43 @@ ok('  and the mark and the track are each counted once',
 ok('  and billForEdit agrees with billFor on the same edit',
   billForEdit(edit, true).total === billFor(counted).total);
 
+/* ── And the cards say the same numbers ────────────────────────────────── */
+
+/* The prices above are only half the promise. The other half is the sentence
+   on the packages screen, which quotes them in words — "plus 3 for each
+   function you used … a twenty-second advert using all five is 25; a dressed
+   three-minute film is 75".
+
+   That sentence is prose, so nothing in TypeScript makes it true. It has gone
+   stale before: the cards carried "plus 5 … 35 … 85" for the whole time the
+   constants said something else would be charged, which is a card that lies
+   about a price somebody is about to pay. So the numbers in it are read back
+   out of the file and held against the bills. */
+
+const cards = readFileSync('app/lib/plans.ts', 'utf8');
+const quoted = (what: string, re: RegExp): number[] =>
+  [...cards.matchAll(re)].map((m) => Number(m[1]));
+
+const perFunction = quoted('per function', /plus (\d+) for each function/g);
+ok('every card quotes the per-function price the constants charge',
+  perFunction.length >= 4 && perFunction.every((n) => n === CREDITS.filmWords),
+  `cards say ${perFunction.join(', ')}; the file charges ${CREDITS.filmWords}`);
+
+const advertSaid = quoted('advert', /advert using all five is (\d+)/g);
+ok('  and the advert they quote is the advert they will be billed',
+  advertSaid.length >= 3 && advertSaid.every((n) => n === advertBill.total),
+  `cards say ${advertSaid.join(', ')}; the bill is ${advertBill.total}`);
+
+const dressedSaid = quoted('dressed', /dressed three-minute film is (\d+)/g);
+ok('  and the dressed three-minute film likewise',
+  dressedSaid.length >= 3 && dressedSaid.every((n) => n === dressedBill.total),
+  `cards say ${dressedSaid.join(', ')}; the bill is ${dressedBill.total}`);
+
+const half = quoted('half minute', /(\d+) credits per 30 seconds/g);
+ok('  and the base, per thirty seconds, on every card that names it',
+  half.length >= 3 && half.every((n) => n === CREDITS.filmOut),
+  `cards say ${half.join(', ')}; the file charges ${CREDITS.filmOut}`);
+
 /* ── A browser never sends a price ─────────────────────────────────────── */
 
 const route = readFileSync('app/api/madehere/route.ts', 'utf8');
@@ -199,9 +238,14 @@ if (bad) {
   console.error(`\ncheck:filmcost — ${bad} assertion(s) failed.\n`);
   process.exit(1);
 }
+/* Said with the numbers rather than about them. This sentence was written out
+   in full once and then carried "35 … 85 … 90" for the whole time the file
+   charged something else — a summary line that lies is worse than none. */
 console.log(
-  '\ncheck:filmcost — ten credits a half minute and five a function, so a'
-  + ' twenty-second advert is 35 and a dressed three-minute film is 85 against'
-  + " Maker's 90; words on six shots cost what words on one cost, and the price"
-  + ' is worked out by the server rather than sent by the browser.',
+  `\ncheck:filmcost — ${CREDITS.filmOut} credits a half minute and`
+  + ` ${CREDITS.filmWords} a function, so a twenty-second advert is`
+  + ` ${advertBill.total} and a dressed three-minute film is ${dressedBill.total}`
+  + ` against Maker's ${TIER_CREDITS.maker}; words on six shots cost what words`
+  + ' on one cost, the cards quote the same numbers, and the price is worked out'
+  + ' by the server rather than sent by the browser.',
 );

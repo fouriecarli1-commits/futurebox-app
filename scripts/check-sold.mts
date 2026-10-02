@@ -16,7 +16,7 @@
  *   already being inside the adverts room. A price nobody browsing prices can
  *   see is not a price.
  * - **Dubbing**, at 162 credits a minute, is the dearest thing here and was
- *   on no card. Maker gives 90 credits a month, so a Maker member cannot dub
+ *   on no card. Maker gave 90 credits a month then, so a Maker member could not dub
  *   one minute — and nothing said so until they tried.
  *
  * And the album-art line she asked for by name was in `plans.ts` and still
@@ -35,7 +35,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { CREDITS, TIER_CREDITS, dubCost } from '../app/lib/credits';
+import { CREDITS, TIER_CREDITS, dubCost, videoCost } from '../app/lib/credits';
 import { ADDONS } from '../app/lib/addons';
 import { TIER_SPECS, type Tier } from '../app/lib/plans';
 
@@ -220,6 +220,62 @@ for (const tier of ['maker', 'studio', 'label'] as const) {
       month >= one.credits,
       `${month} credits a month against ${one.credits} — either the price comes down or the card must say which plan it starts at`);
   }
+}
+
+/* ── 3. And the headline each card leads with says the plan's real size ──
+
+   Every paid card opens with the same shape of sentence: "100 credits a month
+   — 10 full songs, or 3 music videos". Three numbers, all of them prose, none
+   of them checked by anything — and the first number is the single most
+   important fact on the card.
+
+   The three went stale on 4 October 2026. The allowances were raised to 100,
+   210 and 490 and the cards went on saying 90, 190 and 440 for as long as it
+   took somebody to notice, which is a card that undersells a plan somebody is
+   deciding whether to buy. (Underselling, this time. The same drift in the
+   other direction is a card that promises music the plan cannot make.)
+
+   So the sentence is read back and held against the constants: the credits
+   against `TIER_CREDITS`, and the two counts against what a song and a short
+   video actually cost. */
+
+/* Ten seconds at the base grade, which is what "a music video" has meant on
+   these cards since they were written: the standard engine's own default
+   length, and the one the counts were worked out from. */
+const VIDEO_SECONDS = 10;
+const videoPrice = videoCost('standard', VIDEO_SECONDS);
+
+for (const tier of ['maker', 'studio', 'label'] as const) {
+  const headline = TIER_SPECS[tier].includes[0] ?? '';
+  const said = /^(\d+) credits a month — (\d+) full songs, or (\d+) music videos$/
+    .exec(headline);
+
+  ok(`${TIER_SPECS[tier].name}'s headline is the sentence this check can read`,
+    said !== null,
+    `"${headline}" — if the shape of the line changes, change the pattern with it`
+    + ' rather than letting the numbers go unread');
+
+  if (!said) continue;
+  const [, credits, songs, videos] = said.map(Number);
+
+  ok(`  and the credits it leads with are the credits the plan grants`,
+    credits === TIER_CREDITS[tier],
+    `the card says ${credits}, the plan grants ${TIER_CREDITS[tier]}`);
+
+  ok(`  and the songs it promises are what ${credits} credits buy`,
+    songs === Math.floor(TIER_CREDITS[tier] / CREDITS.song),
+    `the card says ${songs}, ${TIER_CREDITS[tier]} credits buy`
+    + ` ${Math.floor(TIER_CREDITS[tier] / CREDITS.song)} at ${CREDITS.song} a song`);
+
+  ok(`  and the music videos likewise, at ${VIDEO_SECONDS} seconds each`,
+    videos === Math.floor(TIER_CREDITS[tier] / videoPrice),
+    `the card says ${videos}, ${TIER_CREDITS[tier]} credits buy`
+    + ` ${Math.floor(TIER_CREDITS[tier] / videoPrice)} at ${videoPrice} a video`);
+
+  ok(`  and TIER_SPECS.${tier} counts the same as its own sentence`,
+    TIER_SPECS[tier].songs === songs && TIER_SPECS[tier].videos === videos,
+    `the fields say ${TIER_SPECS[tier].songs} songs and ${TIER_SPECS[tier].videos}`
+    + ` videos, the sentence beside them says ${songs} and ${videos}`);
 }
 
 if (failures) {

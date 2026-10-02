@@ -60,7 +60,7 @@
  *
  * And it is not a leak even above the ceiling: ElevenLabs' own top-up rate is
  * $0.000165 a credit, so a song bought beyond the plan costs R4.75 against
- * the R16.56 ten credits sell for on Maker. Three and a half times, at the
+ * the R14.90 ten credits sell for on Maker. Three and a half times, at the
  * worst point on the curve.
  *
  * The 3.0x is not the marketing desk's mistake wearing a different hat. That
@@ -137,8 +137,8 @@ export const CREDITS = {
    */
   cover: 2,
   /**
-   * Putting a film together in the cutting room. **Per minute of finished
-   * film**, floored at one by `perMinute`.
+   * Putting a film together in the cutting room. **Per half minute of
+   * finished film**, floored at one by `perHalfMinute`.
    *
    * ── Her decision, over my advice, and that is worth recording ─────
    *
@@ -158,26 +158,27 @@ export const CREDITS = {
    * something is produced, and not for entering the room or for any of the
    * work inside it.
    *
-   * ── Why three, and why per minute ──────────────────────────
+   * ── Why by the clock, and why ten ───────────────────────────────────────
    *
-   * Per minute because that is what scales with what she actually got, and
+   * By the clock because that is what scales with what she actually got, and
    * because every other thing in this app measured in time — stems, clean,
    * voice change, dub, transcribe — is priced that way. A three-minute music
    * video is worth more than an eight-second advert and should cost more.
    *
-   *     an 8-second advert    1 minute floored    3 credits   R4.97
-   *     a 3-minute video      3 minutes           9 credits   R14.90
+   * This was **three a minute** when the room first charged, on 1 October. It
+   * is ten a half minute because Carli said so on 4 October: *"3 krediete om
+   * 'n video te maak op video editor is te goedkoop ... om net 'n video te
+   * maak, moet 10 krediete per 30 sekondes wees."*
    *
-   * Three and not more because she also said *"Dit moenie te duur wees nie"*,
-   * and because this is the one price in the file with no supplier behind it.
-   * Every other number here is a markup on something somebody invoices us
-   * for; this one is purely what the work is worth, and a number nobody can
-   * check against a cost should be the modest one.
+   *     an 8-second advert     half minute floored     10 credits   R14.90
+   *     a 3-minute video       6 half minutes          60 credits   R89.40
    *
-   * Maker's 90 buys thirty one-minute films a month, which is the figure that
-   * matters: the thing an editor is FOR is trying again, and a price that
-   * makes somebody think twice about a second attempt has broken the room it
-   * is charging for.
+   * That is a twentyfold rise on the long film and it is hers to make: she is
+   * the one selling it, and the old three was my number, argued down from
+   * nothing. Maker's hundred buys ten half-minute films a month, or one fully
+   * dressed three-minute music video with twenty-five credits over — which is
+   * the figure that matters, because the thing an editor is FOR is trying
+   * again, and a plan that affords one attempt affords none.
    */
   filmOut: 10,
   /**
@@ -189,13 +190,12 @@ export const CREDITS = {
    * hoë krediete nie, dit moet bekostigbaar wees om 'n video uiteindelik te
    * export."*
    *
-   * One credit each, which is R1.66. They are deliberately the smallest number
-   * that is not nought, for a reason worth writing down: **none of these costs
-   * this app a cent.** The whole room renders in her own browser. Every other
+   * Three credits each, which is R4.47. They are deliberately a small number
+   * rather than a proportionate one, for a reason worth writing down: **none of
+   * these costs this app a cent.** The whole room renders in her own browser. Every other
    * number in this file is a markup on an invoice somebody sends us; these five
    * are purely what the work is worth, and a price nobody can check against a
-   * cost should be the modest one. The same argument that put `filmOut` at
-   * three rather than ten.
+   * cost should be the modest one.
    *
    * ── Charged at the export and nowhere else ──────────────────────────────
    *
@@ -236,9 +236,32 @@ export const CREDITS = {
    * and the price still rises with the length because the length is what is
    * worth more.
    *
-   *     20 seconds, nothing on it          10 credits   R16.56
-   *     20 seconds, all five functions     35 credits   R57.96
-   *     three minutes, all five            85 credits   R140.77
+   * ── Five became three, 4 October 2026 ──────────────────────────────────
+   *
+   * Carli: *"Ek dink jy moet besluit wat kos 'n video, want ons wil nie dit
+   * onmoontlik maak vir mense op maker plan om videos te maak nie."*
+   *
+   * At five a function, a twenty-second advert with words, a look, a logo, a
+   * transition and a track came to 35 credits — two a month on Maker's plan.
+   * Two adverts a month is not a plan somebody keeps paying for, and the room
+   * they are being kept out of costs this app nothing to run.
+   *
+   * The BASE did not move, because her number for it is right: ten credits for
+   * thirty seconds of finished film is R14.90, and the thing that should carry
+   * the price is the length, which is what carries the value.
+   *
+   *     20 seconds, nothing on it            10 credits   R14.90   10 a month
+   *     20 seconds, words, a look, a logo    19 credits   R28.31    5 a month
+   *     20 seconds, all five functions       25 credits   R37.25    4 a month
+   *     ninety seconds, all five             45 credits   R67.05    2 a month
+   *     three minutes, all five              75 credits  R111.75    1 a month
+   *
+   * The rand are at R1.49 a credit, which is Maker's R149 over its hundred —
+   * the plan rose in the same decision, so every rand figure in this file that
+   * was written against the old R1.656 is a tenth too high until it is
+   * reworked.
+   *
+   * Against Maker's hundred. `check:filmcost` holds every one of those.
    *
    * ── And the ceiling is gone ─────────────────────────────────────────────
    *
@@ -248,16 +271,16 @@ export const CREDITS = {
    * its source, and a cap on top of it would only make the fourth function free
    * — which is the opposite of what she asked for.
    */
-  /** Words anywhere in the film. Five, however many shots carry them. */
-  filmWords: 5,
-  /** A look anywhere in the film. Five, however many shots carry one. */
-  filmLook: 5,
-  /** Any transition that is not a straight cut. Five, however many there are. */
-  filmJoin: 5,
+  /** Words anywhere in the film. Three, however many shots carry them. */
+  filmWords: 3,
+  /** A look anywhere in the film. Three, however many shots carry one. */
+  filmLook: 3,
+  /** Any transition that is not a straight cut. Three, however many there are. */
+  filmJoin: 3,
   /** Her own mark on the film. */
-  filmMark: 5,
+  filmMark: 3,
   /** A track under the whole thing. */
-  filmUnder: 5,
+  filmUnder: 3,
   /**
    * Bouncing a mix out of the Pro Booth. **Per minute of finished mix.**
    *
@@ -795,12 +818,38 @@ export const TIER_CREDITS: Record<Tier, number> = {
      kommersiële regte, voorrang in die tou, meer stemme.
 
      Sien `docs/OPSIE-E.md` vir die hele som. */
-  maker: 90,
+  /* ── Ninety became a hundred, 4 October 2026 ────────────────────────────
+
+     Carli: *"aangesien ons self ook monotize moet ons, klein bietjie ekstra
+     krediete by elke plan sit."*
+
+     Eleven percent on each tier, and it is not free. At full consumption a
+     credit costs this app about R0.40, so the worst case is:
+
+                       was    now    cost of the extra    margin
+       Maker    R149    90    100          R3.97       76% → 73.3%
+       Studio   R349   190    210          R7.71       79% → 76.8%
+       Label    R899   440    490         R19.41       81% → 78.8%
+
+     Between two and three points off each, and that figure is the WORST case —
+     it assumes every new credit is spent on something with an engine behind it.
+     Most of them will not be: the extra exists because of the cutting room, and
+     a film rendered in somebody's own browser costs us nothing at all.
+
+     The number that is not softened by that is the ceiling. ElevenLabs' bucket
+     is fixed, so a plan that hands out eleven percent more credits feeds about
+     ten percent fewer members at the cap — `docs/OPSIE-E.md` §3 has the
+     original arithmetic, and §8 the addendum for this.
+
+     Said plainly rather than buried: this is a real cost, she asked for it with
+     her eyes open, and it buys a Maker five finished adverts a month instead of
+     two. */
+  maker: 100,
   /* 220 → 190 with the price, 10 September 2026. See TIER_SPECS.studio
      in plans.ts for the arithmetic; the short version is that R349 holds the
      same margin at 190 and buys a whole number of songs. */
-  studio: 190,
-  label: 440,
+  studio: 210,
+  label: 490,
 };
 
 /**
@@ -863,18 +912,21 @@ export interface Pack {
  * member asks is *should I top up or move up*, so a pack has to be dearer
  * than the **marginal** cost of the next plan:
  *
- *   Maker → Studio   +R200 for +100 credits = R2.00 a credit
- *   Studio → Label   +R550 for +250 credits = R2.20 a credit
+ *   Maker → Studio   +R200 for +110 credits = R1.82 a credit
+ *   Studio → Label   +R550 for +280 credits = R1.96 a credit
  *
- * Anything at or under R2.20 and a Studio member tops up forever instead of
- * becoming a Label member. R2.50 clears every plan rate (R1.66–R2.04) and
+ * Anything at or under R1.96 and a Studio member tops up forever instead of
+ * becoming a Label member. R2.50 clears every plan rate (R1.49–R1.84) and
  * every upgrade step, with room to move.
  *
- * Those two steps moved on 10 September when Studio went from R399/220 to
- * R349/190 — the marginal credit got DEARER on the way up (R1.92 → R2.00) and
- * cheaper on the way to Label (R2.27 → R2.20). R2.50 still clears both, but
- * the second one has less room than it had, and it is the one to watch if the
- * Label price ever moves.
+ * Those two steps have moved twice. On 10 September Studio went from R399/220
+ * to R349/190 and the marginal credit got DEARER on the way up (R1.92 → R2.00)
+ * while the way to Label got cheaper (R2.27 → R2.20) — which left the second
+ * step with little room. On 4 October every allowance rose by about a tenth
+ * (90/190/440 → 100/210/490) and both steps came down again, to R1.82 and
+ * R1.96, so R2.50 clears them with more air than it has had at any point. The
+ * step to watch is still Studio → Label, because it is the narrower of the
+ * two and it is the one a Label price rise would close.
  *
  * **This number is hers.** It is one constant and everything else is derived
  * from it, so changing the business does not mean editing a table and hoping

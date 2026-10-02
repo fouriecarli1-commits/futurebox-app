@@ -246,3 +246,86 @@ bevestig: *"Ons het nog nie betalende kliente nie."* Niemand hang aan die ou
 kodes nie, so §6 se waarskuwing om die ou planne te hou geld nie hier nie.
 Dieselfde verandering ná die eerste betalende lid is 'n migrasie — dit moet
 weer nagegaan word by launch.
+
+---
+
+## Byvoegsel — elke plan kry 11% meer krediete, 4 Oktober 2026
+
+Carli: *"Ek dink aangesien ons self ook monotize moet ons, klein bietjie
+ekstra krediete by elke plan sit. Ek dink jy moet besluit wat kos 'n video,
+want ons wil nie dit onmoontlik maak vir mense op maker plan om videos te
+maak nie."*
+
+Twee goed in een opdrag: die plan word groter, en ek moet die film se prys
+besluit. Hier is albei, en wat hulle kos.
+
+### Die film se prys
+
+Die basis bly **10 krediete per 30 sekondes**. Dit is haar eie getal van
+3 Oktober en dit is reg: lengte is wat die film werd maak, en lengte is
+daarom wat die prys moet dra. R16,56 vir 'n halwe minuut klaar film.
+
+Wat beweeg het is **elke funksie, van 5 na 3**. By vyf was 'n
+twintig-sekonde advert met woorde, 'n look, 'n logo, 'n transition en 'n
+track 35 krediete — **twee adverts 'n maand** op Maker se ou negentig. Twee
+adverts 'n maand is nie 'n plan waarvoor iemand aanhou betaal nie, en die
+kamer waaruit hulle gehou word kos ons niks om te laat loop nie. Die hele
+cutting room render in haar eie browser.
+
+| Film | Krediete | Rand | Op Maker se 100 |
+|---|---|---|---|
+| 20 sekondes, niks op nie | 10 | R14,90 | 10 'n maand |
+| 20 sekondes, woorde + look + logo | 19 | R28,31 | 5 'n maand |
+| 20 sekondes, al vyf funksies | 25 | R37,25 | 4 'n maand |
+| 90 sekondes, al vyf | 45 | R67,05 | 2 'n maand |
+| 3 minute, al vyf | 75 | R111,75 | 1 'n maand |
+
+`check:filmcost` hou elkeen van daardie getalle vas, en hou nou ook die
+**kaarte** daarteen: die sin op die packages-skerm wat "plus 3 for each
+function … is 25 … is 75" sê, word uit `plans.ts` teruggelees en teen die
+rekening gemeet. Daardie sin het reeds een keer verouder — die kaarte het
+"plus 5 … 35 … 85" gesê terwyl die kode iets anders gehef het.
+
+### Die ekstra krediete, en wat hulle kos
+
+| Plan | Prys | Was | Nou | Per krediet, was | Per krediet, nou |
+|---|---|---|---|---|---|
+| Maker | R149 | 90 | **100** | R1,656 | **R1,490** |
+| Studio | R349 | 190 | **210** | R1,837 | **R1,662** |
+| Label | R899 | 440 | **490** | R2,043 | **R1,835** |
+
+Dit is nie gratis nie, en dit moet hier staan:
+
+| Plan | Marge, was | Marge, nou (slegste geval) | Verloor |
+|---|---|---|---|
+| Maker | 76,0% | **73,3%** | 2,7 punte |
+| Studio | 79,0% | **76,8%** | 2,2 punte |
+| Label | 81,0% | **78,8%** | 2,2 punte |
+
+**Slegste geval** beteken: elke lid brand elke krediet op musiek. Niemand
+doen dit nie, maar dit is die enigste getal wat veilig is om op te bou.
+
+En die tweede koste, wat makliker is om mis te kyk: ElevenLabs se emmer is
+**vas**. R18 216 koop 6 000 000 krediete, en 11% meer per lid beteken
+ongeveer **10% minder lede** voordat die plan opdroog. Die plafon skuif
+nader, nie die break-even nie — `npm run costs:eleven` reken dit uit en
+`docs/KOSTE-EN-WINS.md` dra die tabel.
+
+Wat dit versag: die ekstra krediete bestaan vir die **cutting room**, en die
+cutting room raak ElevenLabs nooit aan nie. Dit render op die toestel. So
+die 10% is die ergste wat kan gebeur, en die ding waarvoor die krediete
+bygesit is, is die een ding wat dit nie laat gebeur nie.
+
+### Die trap, wat nagegaan moes word
+
+'n Top-up mag nooit goedkoper wees as om op te skuif nie, anders koop 'n lid
+vir altyd krediete in plaas daarvan om 'n vlak hoër te gaan.
+
+| Trap | Was | Nou |
+|---|---|---|
+| Maker → Studio | R2,00 | **R1,82** |
+| Studio → Label | R2,20 | **R1,96** |
+
+Top-ups is R2,50, so albei is steeds gedek — en met méér lug as vroeër, nie
+minder nie, want albei stappe gee nou meer krediete vir dieselfde rand.
+`check:topups` meet dit uit die kode.
