@@ -40,6 +40,13 @@
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { agreeAndSubmit, launchOptions, serve, shot } from './where.mjs';
+/* The door's own dismissal, shared rather than guessed at.
+ 
+   The first attempt at this inlined a dismissal and guessed at the button's
+   words — "Later", "Close", "Continue" — and none of them is what the door
+   says. It says "Not now". A probe that guesses at a word it could have
+   imported is a probe that fails for a reason nobody can see. */
+import { toThePage } from './enter.mjs';
 import { unfold } from './enter.mjs';
 
 const PORT = process.argv[2] || '3253';
@@ -382,6 +389,22 @@ await p.waitForTimeout(900);
    library a moment after being told to leave. A real project revokes the
    session when it is asked to; this is that. */
 signedOut = true;
+/* ── The door comes down before the press ───────────────────────────────
+
+   "Back to FutureBox" lands on the studio, and the studio opens on its arrival
+   door — which this probe asserts four screens above as correct behaviour. The
+   door is `fixed inset-0 z-[55]`, so it sits over the account panel and over
+   the Sign out button on it.
+
+   This click therefore spent thirty seconds being told "subtree intercepts
+   pointer events" by a door the probe had already proved was supposed to be
+   there. Nothing was wrong with the app; the probe was reaching through a
+   screen a person would close first.
+
+   Pressed rather than waited out, because the door does not close on its own —
+   the same thing `enter.mjs`'s `dismissDoor` does, inlined here because this
+   probe builds its own browser rather than going through `enter()`. */
+await toThePage(p);
 await p.locator('button').filter({ hasText: af ? /^Teken uit$/ : /^Sign out$/ }).first().click();
 await p.waitForTimeout(1500);
 check('signing out closes the door behind them',

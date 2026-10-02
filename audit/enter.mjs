@@ -152,6 +152,73 @@ export async function dismissDoor(page) {
   await page.waitForTimeout(400);
 }
 
+/**
+ * Back to the page itself, with nothing full-screen over it.
+ *
+ * ── Why this is shared and not inlined per probe ─────────────────────────
+ *
+ * The header, the account panel and the sign-out button live on the PAGE. The
+ * studio is `fixed inset-0 z-50` over it and the arrival door is `z-[55]` over
+ * that, so any probe that walks into the studio and then reaches for something
+ * on the header spends thirty seconds being told "subtree intercepts pointer
+ * events" by a screen it opened itself.
+ *
+ * Three probes hit that on 3 October — `check:greeting` reaching for Sign out
+ * among them — each with a different screen on top, and each read like a layout
+ * fault in the app. None of them was: a person closes what they are looking at
+ * before pressing something behind it, and the probes were not.
+ *
+ * The door first, because it is over the studio; then the studio's own back
+ * arrow, which is what the app puts on every layer. Capped, because a loop on a
+ * button that has stopped working is a probe that hangs instead of failing.
+ */
+export async function toThePage(page) {
+  await dismissDoor(page);
+  const over = page.locator('div.fixed.inset-0.z-50');
+  for (let n = 0; n < 6; n += 1) {
+    if ((await over.count().catch(() => 0)) === 0) break;
+    const out = page.locator('[data-backout]').first();
+    if ((await out.count().catch(() => 0)) === 0) break;
+    /* `force`, and this is the one place in these probes where it is right.
+ 
+       The arrow is the app's own way out of the studio and it is inside the
+       studio, so Playwright's own hit-test keeps answering that the overlay
+       intercepts the click on its own control — which is true and useless. Every
+       other click in these probes stays honest about interception; this single
+       one is "press the way out", and there is nothing underneath it that could
+       receive the press instead. */
+    await out.click({ timeout: 4000, force: true }).catch(() => {});
+    await page.waitForTimeout(600);
+    await dismissDoor(page);
+  }
+
+  /* ── And if it is still there, start the tab again ──────────────────────
+
+     The back arrow walks out of ROOMS. From the studio's own front door, with
+     no room open, there is no further layer for it to leave and the overlay
+     stays — which is correct behaviour and is exactly the state a probe
+     reaching for the header is in.
+
+     So the same last resort `studio()` uses, for the same reason: a probe
+     helper's job is to be deterministic, and a person who cannot get back to a
+     page reloads it. The per-tab room memory is cleared first so the reload
+     lands on the page rather than back in the room.
+
+     This is the fourth helper in this file to end in "and otherwise reload".
+     That is not a smell: every one of them is a contract about WHERE the
+     caller is, and a contract that cannot be met by pressing things has to be
+     met some other way or it is not a contract. */
+  if ((await over.count().catch(() => 0)) > 0) {
+    await page.evaluate(() => {
+      try { sessionStorage.clear(); } catch { /* a private tab refuses, and that is fine */ }
+    }).catch(() => {});
+    await page.goto(new URL('/', page.url()).toString(), { waitUntil: 'networkidle' }).catch(() => {});
+    await page.waitForTimeout(800);
+    await dismissDoor(page);
+  }
+  await page.waitForTimeout(300);
+}
+
 /** The studio overlay, which is the room you work in. */
 export async function studio(page) {
   /* The door is dismissed AFTER the header button, not before it.
@@ -174,6 +241,114 @@ export async function studio(page) {
      Both are matched, because a probe that silently stops finding its way in
      reports every room as clean — which is what this one did until somebody
      noticed it had been passing without visiting anything. */
+  /* ── Already inside? Then there is nothing to press ─────────────────────
+
+     3 October 2026. `check:realartwalk` and `check:nameupload` had been red
+     since at least 30 September with a thirty-second timeout on this click, and
+     the message read like the header button being broken.
+
+     It is not. Both probes RELOAD the page partway through and then ask to be
+     in the studio again — and after that reload the studio overlay is already
+     open, with one of its own cards sitting over the header button. The button
+     was visible and enabled the whole time; `document.elementFromPoint` at its
+     centre answered a card from the overlay. Playwright waits for a click to
+     land, the card never moves, thirty seconds pass.
+
+     So the fault was this helper's contract. It is named for a PLACE — be in
+     the studio — and it was written as an ACTION, press the button that gets
+     there. Asking somebody already in a room to walk into it is how a helper
+     fails on correct behaviour, which is the direction that gets probes
+     switched off.
+
+     ── And "already there" has to mean the RAIL, not any overlay ───────────
+
+     The first version of this tested `div.fixed.inset-0.z-50`, which is what
+     this function hands back — and a ROOM is one of those too. So it answered
+     "already in the studio" while standing inside the Channel room, and the
+     next line went looking for the rail and reported "no way into Channel".
+     The timeout became a different wrong answer, which is not progress.
+
+     The test is the rail itself: the same `z-50 nav button` that `toRoom`
+     reads. If the thing that gets you to another room is on the screen, you are
+     in the studio; if it is not, you are somewhere else and the header button
+     is the way back. */
+  const already = page.locator('div.fixed.inset-0.z-50').first();
+  /* `:visible` on the SET rather than `.first().isVisible()`.
+ 
+     The rail's first button is not always the one on screen — a room can leave
+     the list mounted with the top of it clipped — and asking the first one
+     answered "no rail" while fourteen of its fifteen buttons were on the glass.
+     What the caller needs to know is whether there is a way to another room in
+     front of them, which is "any of these is visible". */
+  const atRail = async () => (
+    await page.locator('div.fixed.inset-0.z-50 nav button:visible').count().catch(() => 0)
+  ) > 0;
+
+  if (await atRail()) {
+    /* A door may still have opened over it — a reload can restore both — and
+       the caller wants what is BEHIND the door either way. */
+    await dismissDoor(page);
+    await page.waitForTimeout(300);
+    return already;
+  }
+
+  /* ── Inside a ROOM: walk out of it the way a person does ────────────────
+
+     This is the state both red probes were actually in, and it took three
+     wrong answers to find. After their reload the page came back INSIDE the
+     Channel room: one z-50 overlay, `data-copilot="channels"`, and fifteen rail
+     buttons sitting in the DOM with no box on them, because the rail does not
+     show while a room is open.
+
+     So "is the rail there" answered no, and the old code reached for the header
+     button — which is behind the room. Pressing a control that is covered by the
+     thing you are trying to leave is not how anybody gets out of a room, and
+     Playwright spent thirty seconds proving it.
+
+     `data-backout` is the arrow the app itself puts on every room, and pressing
+     it is exactly what a person does. Four presses at most: a room nests at most
+     a couple of layers deep, and a loop with no ceiling on a button that stops
+     working is a probe that hangs instead of failing. */
+  for (let n = 0; n < 4; n += 1) {
+    if (await atRail()) break;
+    const out = page.locator('[data-backout]:visible').first();
+    if ((await out.count().catch(() => 0)) === 0) break;
+    await out.scrollIntoViewIfNeeded().catch(() => {});
+    await out.click({ timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(700);
+  }
+  if (await atRail()) {
+    await dismissDoor(page);
+    await page.waitForTimeout(300);
+    return already;
+  }
+
+  /* ── Last resort: start the tab again ───────────────────────────────────
+
+     If the back arrow did not reach the rail, we are somewhere this helper
+     cannot reason about — and the honest thing for a PROBE helper is to be
+     deterministic rather than clever. A person who is lost reloads; this does
+     the same, and clears the per-tab room memory first so the reload lands at
+     the front door instead of back where it started.
+
+     `whereiwas.ts` is what puts it back: it remembers the room in
+     `sessionStorage` so a tab the phone discarded comes back where she was.
+     That is right for a person and is exactly what makes "reload to get out"
+     not work for a probe, so the probe clears it on purpose and nothing about
+     the feature changes.
+
+     Four wrong answers went before this one and each was worth keeping: the
+     overlay test that matched rooms too, the rail test that read only the first
+     button, and the back arrow that does not always land. They are the reason
+     the three cheap paths above exist; this is the one that cannot fail. */
+  if (!(await atRail())) {
+    await page.evaluate(() => {
+      try { sessionStorage.clear(); } catch { /* a private tab refuses, and that is fine */ }
+    }).catch(() => {});
+    await page.goto(new URL('/', page.url()).toString(), { waitUntil: 'networkidle' }).catch(() => {});
+    await page.waitForTimeout(800);
+  }
+
   await studioDoor(page);
   await dismissDoor(page);
   await page.waitForTimeout(700);

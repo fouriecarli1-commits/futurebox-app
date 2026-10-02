@@ -68,7 +68,7 @@
 import { execSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { launchOptions, serve, shot } from './where.mjs';
-import { studio, toRoom } from './enter.mjs';
+import { studio, toRoom, toThePage } from './enter.mjs';
 
 const PORT = process.argv[2] || '3105';
 const af = process.argv[3] === 'af';
@@ -258,6 +258,9 @@ check('and the fine print is not back on the welcome screen',
 // ── It can be seen, and stopped ──────────────────────────────────────────
 await p.locator('button').filter({ hasText: af ? /^Nie nou nie/ : /^Not now/ }).first().click();
 await p.waitForTimeout(1200);
+/* The header is on the PAGE and the studio is over it, so this press was
+   landing on a button behind an overlay this probe had opened itself. */
+await toThePage(p);
 await p.locator('header button').filter({ hasText: /carli/i }).first().click();
 await p.waitForTimeout(1500);
 const panel = p.locator('[role="dialog"]').first();

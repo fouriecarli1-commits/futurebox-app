@@ -26,7 +26,7 @@ import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
-import { dismissDoor, unfold } from './enter.mjs';
+import { dismissDoor, studio, unfold } from './enter.mjs';
 import { agreeAndSubmit, launchOptions, shot } from './where.mjs';
 
 const PORT = process.argv[2] || '3071';
@@ -131,7 +131,14 @@ try {
     throw new Error(`no way into ${name}`);
   };
 
-  await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
+  /* Through `studio()` rather than pressing the header button by hand.
+ 
+     Both of these were a hand-rolled copy of what that helper does, written
+     before it had a way out of anything — so when this probe reached them with
+     a room already open, the press landed on a button behind the room and spent
+     thirty seconds there. The helper knows how to be in the studio from
+     wherever it is; a copy of its first line does not. */
+  await studio(p);
   await p.waitForTimeout(1800);
   const room = p.locator('div.fixed.inset-0.z-50').first();
 
@@ -221,7 +228,14 @@ try {
      The door being open already is the good case, not a special one. */
   const atDoor = p.locator('div.fixed.inset-0.z-\\[55\\] button').first();
   if (!(await atDoor.isVisible().catch(() => false))) {
-    await p.locator('header button').filter({ hasText: /Studio/i }).first().click();
+    /* Through `studio()` rather than pressing the header button by hand.
+ 
+     Both of these were a hand-rolled copy of what that helper does, written
+     before it had a way out of anything — so when this probe reached them with
+     a room already open, the press landed on a button behind the room and spent
+     thirty seconds there. The helper knows how to be in the studio from
+     wherever it is; a copy of its first line does not. */
+  await studio(p);
     await atDoor.waitFor({ state: 'visible', timeout: 20000 }).catch(() => undefined);
   }
   await intoRoom('Video desk');
