@@ -121,6 +121,17 @@ export interface Scene {
    * without them for anywhere that does carry a subtitle track.
    */
   readonly caption?: string;
+  /** How fast this scene plays, as a multiple. One is as filmed. */
+  readonly speed?: number;
+  /**
+   * How loud its own sound is, 0 to 2, when `sound` is on.
+   *
+   * The same range `Piece.loud` has carried since it was written, and the
+   * range matters: an element's `volume` stops at one, so anything above it
+   * is clamped here rather than silently ignored. Louder than the material
+   * needs a gain node, which is the Pro Booth's job and not this one's.
+   */
+  readonly loud?: number;
   /**
    * Which face the caption wears, which size, and where it sits.
    *
@@ -138,6 +149,17 @@ export interface Scene {
   readonly captionFont?: string;
   readonly captionSize?: number;
   readonly captionAt?: Spot | null;
+  /**
+   * Turned, how solid, and how round its band is.
+   *
+   * Carli, 2 October 2026, with Canva's Position, Transparency and Corners
+   * sheets open: every element there carries these. Ours carried a place, a
+   * size and a face. The three below are what turns "words on a picture" into
+   * an element somebody is designing with.
+   */
+  readonly captionTurn?: number;
+  readonly captionSolid?: number;
+  readonly captionRound?: number;
 }
 
 export interface Cut {
@@ -221,6 +243,20 @@ export interface Cut {
   readonly markAt?: Spot | null;
   /** How wide the mark is, as a share of the frame. Defaults to `MARK_SHARE`. */
   readonly markShare?: number;
+  /** Turned, in degrees, about its own centre. */
+  readonly markTurn?: number;
+  /** How solid, as a share of full. Defaults to `MARK_OPACITY`. */
+  readonly markSolid?: number;
+  /**
+   * Drawn UNDER the words rather than over them.
+   *
+   * Canva calls this Layers, and it is one flag here because there are only
+   * two things on this canvas that are ours: the mark and the caption. The
+   * default keeps what was always true — the mark last, over everything —
+   * because a caption sliding over a logo is the fault the ordering comment
+   * below was written for.
+   */
+  readonly markUnder?: boolean;
   /** Called as each scene starts, so a screen can say where it is. */
   readonly onScene?: (index: number, total: number) => void;
 }
@@ -409,12 +445,29 @@ function wrapped(
   return { lines, over: false };
 }
 
+/**
+ * How round the caption's band is by default, as a share of its own height.
+ *
+ * Named because two places need it: the renderer below, and the slider in the
+ * cutting room that has to open at the value the film is already using. A
+ * slider that opened at nought would square off every caption the moment it
+ * was touched.
+ */
+export const CAPTION_ROUND = 0.34;
+
 export function drawCaption(
   context: CanvasRenderingContext2D,
   text: string,
   width: number,
   height: number,
-  set?: { readonly font?: string; readonly size?: number; readonly at?: Spot | null },
+  set?: {
+    readonly font?: string;
+    readonly size?: number;
+    readonly at?: Spot | null;
+    readonly turn?: number;
+    readonly solid?: number;
+    readonly round?: number;
+  },
 ): void {
   const words = text.trim();
   if (!words) return;
@@ -452,6 +505,7 @@ export function drawCaption(
   if (!lines.length) return;
 
   context.save();
+  context.globalAlpha = Math.max(0, Math.min(1, set?.solid ?? 1));
   context.font = `${weight} ${size}px ${face}`;
   context.textAlign = 'center';
   context.textBaseline = 'alphabetic';
@@ -483,11 +537,26 @@ export function drawCaption(
   const widest = Math.max(...lines.map((one) => context.measureText(one).width));
   const boxWidth = Math.min(width * 0.94, widest + pad * 2.4);
 
+  /* Turned about the middle of its own band, which is what a thumb is
+     holding. Applied after the band has been measured and before anything is
+     painted, so the words and the box behind them turn together — turning
+     them separately is two elements at two angles. */
+  if (set?.turn) {
+    const spin = { x: middle, y: boxTop + boxHeight / 2 };
+    context.translate(spin.x, spin.y);
+    context.rotate((set.turn * Math.PI) / 180);
+    context.translate(-spin.x, -spin.y);
+  }
+
   context.fillStyle = 'rgba(0, 0, 0, 0.62)';
   context.beginPath();
   context.roundRect(
     Math.max(0, Math.min(width - boxWidth, middle - boxWidth / 2)),
-    boxTop, boxWidth, boxHeight, Math.round(size * 0.34),
+    boxTop, boxWidth, boxHeight,
+    /* Canva's Corner rounding, as a share of the band's own height so it
+       means the same thing at any size. Zero is a square box, one is a
+       lozenge; the default is what it has always been. */
+    Math.round((set?.round ?? CAPTION_ROUND) * Math.min(size, boxHeight / 2)),
   );
   context.fill();
 
@@ -666,6 +735,20 @@ export async function stitch(cut: Cut): Promise<Made> {
          export is a recording, not a playback. */
       const talking = Boolean(cut.scenes[index].sound) && Boolean(audioContext && destination);
       video.muted = !talking;
+      /* Canva's Volume slider, per clip. Only meaningful where the clip is
+         heard at all — `sound` is whether, this is how much — and the two are
+         kept apart because somebody who wants a room quietly under a song
+         should not have to choose between all of it and none. */
+      /* Clamped at one because `HTMLMediaElement.volume` is: above it the
+         browser throws, and a thrown export over a slider is the worse
+         trade. Carrying 0–2 anyway keeps one range across the app. */
+      if (talking) video.volume = Math.max(0, Math.min(1, cut.scenes[index].loud ?? 1));
+      /* And Canva's Speed. Set before play, because a rate changed mid-play
+         is audible as a lurch, and read back into `lengthOfPiece` on the
+         editor's side so the ruler and the film agree about how long this
+         piece now is. */
+      const fast = Math.max(0.1, Math.min(4, cut.scenes[index].speed ?? 1));
+      if (fast !== 1) video.playbackRate = fast;
       if (talking && audioContext && destination) {
         try {
           audioContext.createMediaElementSource(video).connect(destination);
@@ -760,25 +843,45 @@ export async function stitch(cut: Cut): Promise<Made> {
           /* Over the picture and over the bars alike, so a caption on a wide
              shot in a tall film sits in the black band rather than across a
              face. Painted every frame because the frame under it is. */
-          if (caption) {
+          const painted = cut.scenes[index];
+          const words = (): void => {
+            if (!caption) return;
             drawCaption(context, caption, cut.width, cut.height, {
-              font: cut.scenes[index].captionFont,
-              size: cut.scenes[index].captionSize,
-              at: cut.scenes[index].captionAt,
+              font: painted.captionFont,
+              size: painted.captionSize,
+              at: painted.captionAt,
+              turn: painted.captionTurn,
+              solid: painted.captionSolid,
+              round: painted.captionRound,
             });
-          }
-          /* Last, over everything. A caption that slid over the logo would
-             be the worse of the two, and the caption is the one that moves.
-             Costs nothing here: this loop already runs for every frame, so
-             the mark is one more `drawImage` on a canvas being painted
-             anyway — which is the whole reason the logo is burned in at the
-             cut rather than in a pass of its own. */
-          if (cut.mark) {
+          };
+          const badge = (): void => {
+            if (!cut.mark) return;
             drawMark(
               context, cut.mark, cut.width, cut.height,
               cut.markCorner, cut.markShare ?? MARK_SHARE, cut.markAt,
+              cut.markTurn, cut.markSolid,
             );
-          }
+          };
+          /* ── Which of the two is on top ──────────────────────────────
+
+             Canva calls this Layers. One flag rather than a list, because
+             exactly two things on this canvas are ours rather than hers.
+
+             The DEFAULT keeps what was always true: the mark last, over
+             everything. A caption that slid over the logo would be the worse
+             of the two and the caption is the one that moves, so the mark
+             only goes underneath when the cut asks for it.
+
+             Costs nothing either way: this loop already runs for every frame,
+             so the mark is one more `drawImage` on a canvas being painted
+             anyway — which is the whole reason the logo is burned in at the
+             cut rather than in a pass of its own.
+
+             `check:logomark` asserts this dispatch and not the order the two
+             closures are WRITTEN in. It used to assert the latter, which
+             stayed green with the branches swapped. */
+          if (cut.markUnder) { badge(); words(); } else { words(); badge(); }
           /* ── The fade, over everything ────────────────────────────────
 
              Last, and that is the point: a fade under the caption would

@@ -49,6 +49,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
   Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2,
+  RotateCw, Layers, Gauge, Move,
 } from 'lucide-react';
 import Card from './Card';
 import Note from './Note';
@@ -57,9 +58,9 @@ import { FILTERS, filterCss, filterName } from '../lib/videofilters';
 import {
   FONTS, PLAIN_FONT, fontFor, WORDS_LARGEST, WORDS_SMALLEST,
 } from '../lib/videofonts';
-import { canStitch, lengthOf, stitch } from '../lib/stitch';
+import { canStitch, CAPTION_ROUND, lengthOf, stitch } from '../lib/stitch';
 import {
-  loadMark, MARK_LARGEST, MARK_SHARE, MARK_SMALLEST,
+  loadMark, MARK_LARGEST, MARK_OPACITY, MARK_SHARE, MARK_SMALLEST,
   type Corner, type Spot,
 } from '../lib/logomark';
 import { fit } from '../lib/imagefile';
@@ -139,6 +140,129 @@ const CORNER_AT: Record<Corner, { readonly x: number; readonly y: number }> = {
   bottomLeft: { x: 0.13, y: 0.86 },
   bottomRight: { x: 0.87, y: 0.86 },
 };
+
+/**
+ * How close to an edge anything on the frame may be put, as a fraction.
+ *
+ * Three percent, and it is one number rather than one per control on purpose:
+ * the drag clamps to it, the nudge buttons clamp to it, and the align buttons
+ * sit inside it. A nudge that could reach 1.02 would leave a logo where no
+ * drag can pick it up again, which is the exact fault the drag's own clamp was
+ * written against — so they share the clamp instead of each having one.
+ */
+const EDGE = 0.03;
+
+/** A spot kept inside the frame. The only clamp in this room. */
+function penned(spot: Spot): Spot {
+  return {
+    x: Math.max(EDGE, Math.min(1 - EDGE, spot.x)),
+    y: Math.max(EDGE, Math.min(1 - EDGE, spot.y)),
+  };
+}
+
+/**
+ * Where an align button puts a thing's CENTRE, on one axis.
+ *
+ * Carli, 2 October 2026, with Canva's Position sheet open. What Align does
+ * there is move an element to an edge or to the middle on ONE axis and leave
+ * the other where it was, and that is the behaviour somebody wants: "put it at
+ * the top" should not also drag it sideways into the middle.
+ *
+ * The edge figures are READ OUT of `CORNER_AT` rather than typed again, so
+ * "left" here and "top left" there are the same place. Two sets of numbers for
+ * one edge is how a room ends up with an align button that puts a logo
+ * somewhere the corner buttons say is not the edge.
+ */
+const ALIGNS = [
+  { id: 'left', axis: 'x', to: CORNER_AT.topLeft.x, en: 'Left', af: 'Links' },
+  { id: 'across', axis: 'x', to: 0.5, en: 'Middle', af: 'Middel' },
+  { id: 'right', axis: 'x', to: CORNER_AT.topRight.x, en: 'Right', af: 'Regs' },
+  { id: 'top', axis: 'y', to: CORNER_AT.topLeft.y, en: 'Top', af: 'Bo' },
+  { id: 'down', axis: 'y', to: 0.5, en: 'Centre', af: 'Senter' },
+  { id: 'bottom', axis: 'y', to: CORNER_AT.bottomLeft.y, en: 'Bottom', af: 'Onder' },
+] as const satisfies readonly {
+  readonly id: string; readonly axis: 'x' | 'y'; readonly to: number;
+  readonly en: string; readonly af: string;
+}[];
+
+/**
+ * How far one nudge moves a thing, as a share of the frame.
+ *
+ * One percent. Canva nudges with the arrow keys; a phone has no arrow keys, so
+ * it is four buttons — and the reason they are here at all is the same reason
+ * the zoom is: a drag on a 390-pixel preview cannot be landed on a round
+ * number, and "a bit left" is most of what somebody actually wants.
+ */
+const NUDGE = 0.01;
+
+const NUDGES = [
+  { id: 'left', dx: -NUDGE, dy: 0, turn: 'rotate-180' },
+  { id: 'up', dx: 0, dy: -NUDGE, turn: '-rotate-90' },
+  { id: 'down', dx: 0, dy: NUDGE, turn: 'rotate-90' },
+  { id: 'right', dx: NUDGE, dy: 0, turn: '' },
+] as const;
+
+/**
+ * Where the words sit when nobody has moved them.
+ *
+ * The same place `drawCaption` puts an unplaced caption: a twelfth of the
+ * frame up from the bottom, in the middle. Named here because the align and
+ * nudge buttons have to start from somewhere, and starting them from a
+ * different place than the renderer draws would make the first tap on an arrow
+ * jump the words rather than move them.
+ */
+const WORDS_AT: Spot = { x: 0.5, y: 0.88 };
+
+/**
+ * Align and nudge, for anything that sits on the frame.
+ *
+ * One component for the words and for the mark, because they are the same six
+ * buttons and the same four arrows over two different spots. Two copies would
+ * be two places to fix the day the nudge changes, and the words' copy is
+ * always the one that gets forgotten.
+ */
+function Placing({ which, at, put }: {
+  readonly which: 'words' | 'mark';
+  readonly at: Spot;
+  readonly put: (spot: Spot) => void;
+}): React.ReactElement {
+  const { t, lang } = useLang();
+  return (
+    <div className="space-y-1.5">
+      <span className="text-sm text-zinc-400 inline-flex items-center gap-1.5">
+        <Move className="w-3.5 h-3.5" />
+        {t('edit.place', 'Where it sits')}
+      </span>
+      <div className="flex flex-wrap gap-2">
+        {ALIGNS.map((one) => (
+          <button
+            key={one.id}
+            type="button"
+            data-editoralign={`${which}:${one.id}`}
+            onClick={() => put(penned(one.axis === 'x' ? { ...at, x: one.to } : { ...at, y: one.to }))}
+            className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-300"
+          >
+            {lang === 'af' ? one.af : one.en}
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        {NUDGES.map((one) => (
+          <button
+            key={one.id}
+            type="button"
+            aria-label={t('edit.nudge', 'A little at a time')}
+            data-editornudge={`${which}:${one.id}`}
+            onClick={() => put(penned({ x: at.x + one.dx, y: at.y + one.dy }))}
+            className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-300 inline-flex items-center justify-center"
+          >
+            <ChevronRight className={`w-4 h-4 ${one.turn}`} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /**
  * How far apart the marks on the ruler are, for a film of a given length.
@@ -309,6 +433,14 @@ export default function VideoEditor({
      default would silently ignore them. */
   const [markAt, setMarkAt] = useState<Spot | null>(null);
   const [markShare, setMarkShare] = useState(MARK_SHARE);
+  /* Turned, how solid, and whether it goes under the words.
+ 
+     All three live here rather than on the `Edit` for the same reason the
+     image does: there is one mark over the whole film, not one per piece. The
+     words' three are on the piece, because a caption is a piece's caption. */
+  const [markTurn, setMarkTurn] = useState(0);
+  const [markSolid, setMarkSolid] = useState(MARK_OPACITY);
+  const [markUnder, setMarkUnder] = useState(false);
 
   /* How much the preview is magnified. One means no magnification at all,
      and at one the zoom box is not a scroller — see the note where it is
@@ -432,6 +564,28 @@ export default function VideoEditor({
        object every keystroke and the material behind it has not changed. */
   }, [piece?.clip]);
 
+  /* The speed and the volume, onto the element that is being watched.
+ 
+     Set here rather than as attributes on the `<video>` because neither is a
+     React attribute that re-renders cleanly: `playbackRate` and `volume` are
+     properties, and a `defaultPlaybackRate` is a different thing that only
+     applies after a load.
+ 
+     The point of doing it at all is that the preview is the only place she can
+     check a decision before paying to render it. A speed slider that moved the
+     strip and the export but not the picture under her thumb would be a
+     control she has to guess at. */
+  useEffect(() => {
+    const v = viewer.current;
+    if (!v) return;
+    v.playbackRate = Math.max(0.1, Math.min(4, piece?.speed ?? 1));
+    /* Clamped at one for the same reason `stitch` clamps it: an element's
+       `volume` throws above one, and the 0–2 range is kept across the app so
+       the slider means one thing everywhere. Louder than the material needs a
+       gain node, which this preview does not have and the Pro Booth does. */
+    v.volume = Math.max(0, Math.min(1, piece?.loud ?? 1));
+  }, [piece?.speed, piece?.loud, source]);
+
   /* A waiting seek, landed the moment the element can take one. */
   useEffect(() => {
     const v = viewer.current;
@@ -545,10 +699,86 @@ export default function VideoEditor({
     }
   }, [edit, commit, t]);
 
+  /* ── One press of Back for a whole gesture ─────────────────────────────
+
+     The edit as it was when a gesture STARTED, held here until it ends.
+ 
+     Carli will never read this, and it is the reason a slider in this room is
+     usable at all. A `<input type="range">` fires `change` on every pixel it
+     is dragged across, and every one of those used to go through `commit`,
+     which files a history step. One pull of the size slider was therefore
+     thirty or forty steps — `KEEP_STEPS` is twenty — so a single drag emptied
+     the history and Back meant "a pixel and a half ago". Everything before it,
+     including bringing the clip in, was gone.
+ 
+     Found by `check:editor` on 2 October 2026 and not by looking: the walk
+     that undoes everything stopped reaching the empty clock the moment this
+     room grew enough sliders to overflow twenty steps in one probe. The
+     tempting fix was to raise `KEEP_STEPS`, which would have moved the number
+     the fault appears at without touching the fault.
+ 
+     The fade handles already did it this way. These helpers are that
+     mechanism, lifted out so the sliders and the drags share one copy. */
+  const beforeDrag = useRef<Edit | null>(null);
+
+  /** A gesture started: remember the film as it is, file nothing yet. */
+  const holding = useCallback(() => {
+    /* Only if nothing is held already. A held arrow key repeats `keydown`, and
+       re-reading the edit on each repeat would shrink the step to the last
+       repeat alone — Back would then undo one key press out of fifty. */
+    if (beforeDrag.current === null) beforeDrag.current = edit;
+  }, [edit]);
+
+  /** A gesture ended: file ONE step, covering everything it changed. */
+  const held = useCallback(() => {
+    const was = beforeDrag.current;
+    beforeDrag.current = null;
+    if (!was) return;
+    setEdit((now) => {
+      if (now === was) return now;
+      setPast((steps) => [...steps, was].slice(-KEEP_STEPS));
+      setFuture([]);
+      return now;
+    });
+  }, []);
+
+  /** The handlers a slider needs to be one press of Back, however far it goes. */
+  const gesture = {
+    onPointerDown: holding,
+    onPointerUp: held,
+    onPointerCancel: held,
+    /* The arrow keys on a focused slider are a gesture too, and `onBlur` is
+       the backstop for a pointer that went up somewhere this element never
+       heard about. Both are no-ops when nothing is held. */
+    onKeyDown: holding,
+    onKeyUp: held,
+    onBlur: held,
+  };
+
   const tweak = useCallback((how: Partial<Omit<Piece, 'id'>>) => {
     if (!piece) return;
     commit((was) => change(was, piece.id, how));
   }, [piece, commit]);
+
+  /**
+   * The same change, but inside a gesture: no history step of its own.
+   *
+   * Falls back to `tweak` when nothing is being held, so a change that arrives
+   * without a pointer or a key — a test filling the input, an assistive device
+   * setting it directly — is still one step on the history rather than none at
+   * all. Silently unrepeatable is worse than one step too many.
+   */
+  const slide = useCallback((how: Partial<Omit<Piece, 'id'>>) => {
+    if (!piece) return;
+    if (beforeDrag.current === null) { commit((was) => change(was, piece.id, how)); return; }
+    setEdit((was) => change(was, piece.id, how));
+  }, [piece, commit]);
+
+  /** And the same, for a change to the film as a whole rather than a piece. */
+  const slideFilm = useCallback((how: (was: Edit) => Edit) => {
+    if (beforeDrag.current === null) { commit(how); return; }
+    setEdit(how);
+  }, [commit]);
 
   /* Scrubbing the bed. Horizontal, and it moves the SONG under a fixed
      window rather than moving the window: dragging left shows a later part,
@@ -617,8 +847,6 @@ export default function VideoEditor({
      The handles sit on the track, whose `onPointerDown` moves the clock. So
      the event is stopped here: grabbing a fade handle and having the playhead
      jump under it is two answers to one gesture. */
-  const beforeDrag = useRef<Edit | null>(null);
-
   const takeFade = useCallback((which: 'in' | 'out', event: React.PointerEvent<HTMLElement>) => {
     event.stopPropagation();
     event.preventDefault();
@@ -663,6 +891,10 @@ export default function VideoEditor({
   const dragOnFrame = useCallback((
     event: React.PointerEvent<HTMLElement>,
     put: (spot: { x: number; y: number }) => void,
+    /* Called once, when the drag ends. The words pass `held` through it so one
+       drag is one press of Back; the mark passes nothing, because where the
+       mark sits is not on the `Edit` and was never on the history. */
+    ended?: () => void,
   ) => {
     event.preventDefault();
     const node = event.currentTarget;
@@ -673,16 +905,21 @@ export default function VideoEditor({
     node.setPointerCapture(event.pointerId);
 
     const move = (m: PointerEvent) => {
-      put({
-        x: Math.max(0.03, Math.min(0.97, (m.clientX - box.left) / box.width)),
-        y: Math.max(0.03, Math.min(0.97, (m.clientY - box.top) / box.height)),
-      });
+      /* Through `penned`, which the nudge buttons also use. This used to clamp
+         with its own two numbers and the nudge would have had a second pair —
+         and a drag that stops at 0.97 beside a nudge that stops at 0.95 is two
+         controls that disagree about where the frame ends. */
+      put(penned({
+        x: (m.clientX - box.left) / box.width,
+        y: (m.clientY - box.top) / box.height,
+      }));
     };
     const done = () => {
       node.removeEventListener('pointermove', move);
       node.removeEventListener('pointerup', done);
       node.removeEventListener('pointercancel', done);
       try { node.releasePointerCapture(event.pointerId); } catch { /* already gone */ }
+      ended?.();
     };
     node.addEventListener('pointermove', move);
     node.addEventListener('pointerup', done);
@@ -696,6 +933,7 @@ export default function VideoEditor({
     try {
       const result = await stitch({
         ...cutFrom(edit), mark, markCorner: corner, markAt, markShare,
+        markTurn, markSolid, markUnder,
       });
       if (!result.ok) {
         setProblem(
@@ -746,7 +984,7 @@ export default function VideoEditor({
     } finally {
       setBusy(null);
     }
-  }, [edit, busy, mark, corner, markAt, markShare, t]);
+  }, [edit, busy, mark, corner, markAt, markShare, markTurn, markSolid, markUnder, t]);
 
   if (!allowed) {
     return (
@@ -1246,16 +1484,38 @@ export default function VideoEditor({
             {(piece.words ?? '').trim().length > 0 && (
               <div
                 data-editorwordsdrag
-                onPointerDown={(event) => dragOnFrame(event, (spot) => tweak({ wordsAt: spot }))}
+                /* Through `holding`/`held` and `slide`, not `tweak`: a drag
+                   across the frame is a few hundred pointermoves, and one of
+                   them per history step was the other half of the fault the
+                   note beside `beforeDrag` describes. One drag, one Back. */
+                onPointerDown={(event) => {
+                  holding();
+                  dragOnFrame(event, (spot) => slide({ wordsAt: spot }), held);
+                }}
                 style={{
-                  left: `${(piece.wordsAt?.x ?? 0.5) * 100}%`,
-                  top: `${(piece.wordsAt?.y ?? 0.88) * 100}%`,
+                  left: `${(piece.wordsAt?.x ?? WORDS_AT.x) * 100}%`,
+                  top: `${(piece.wordsAt?.y ?? WORDS_AT.y) * 100}%`,
                   fontFamily: fontFor(piece.wordsFont).stack,
                   fontWeight: fontFor(piece.wordsFont).weight,
                   fontSize: Math.max(9, (piece.wordsSize ?? 0.048) * frameHeight),
                   maxWidth: '86%',
+                  /* The centring is in the transform rather than in a
+                     `-translate-x-1/2` class, because an inline `transform`
+                     replaces the whole property and would have thrown the
+                     Tailwind translate away — the words would have hung off to
+                     the right of where they land in the film, which is the
+                     quiet kind of wrong this preview exists to prevent. */
+                  transform: `translate(-50%, -50%) rotate(${piece.wordsTurn ?? 0}deg)`,
+                  opacity: piece.wordsSolid ?? 1,
+                  /* Approximate, and said so rather than implied: the renderer
+                     rounds against the band's MEASURED height, and the band
+                     here is a div that has not been measured. It moves the
+                     right way and lands within a pixel or two of the film. */
+                  borderRadius: (piece.wordsRound ?? CAPTION_ROUND)
+                    * Math.max(9, (piece.wordsSize ?? 0.048) * frameHeight),
+                  zIndex: 2,
                 }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-move touch-none select-none rounded-lg bg-black/60 px-2 py-1 text-center leading-tight text-white outline-dashed outline-1 outline-emerald-400/50"
+                className="absolute cursor-move touch-none select-none bg-black/60 px-2 py-1 text-center leading-tight text-white outline-dashed outline-1 outline-emerald-400/50"
               >
                 {piece.words}
               </div>
@@ -1271,8 +1531,17 @@ export default function VideoEditor({
                   width: `${markShare * 100}%`,
                   left: `${(markAt ? markAt.x : CORNER_AT[corner].x) * 100}%`,
                   top: `${(markAt ? markAt.y : CORNER_AT[corner].y) * 100}%`,
+                  transform: `translate(-50%, -50%) rotate(${markTurn}deg)`,
+                  /* `markSolid`, not the `opacity-80` class that was here. The
+                     class was a third opacity — the render used
+                     `MARK_OPACITY`, 0.92, and the preview showed 0.80, so the
+                     logo was always slightly fainter here than in the film.
+                     Reading the slider fixes a disagreement as well as adding
+                     a control. */
+                  opacity: markSolid,
+                  zIndex: markUnder ? 1 : 3,
                 }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 cursor-move touch-none select-none opacity-80 outline-dashed outline-1 outline-emerald-400/50"
+                className="absolute cursor-move touch-none select-none outline-dashed outline-1 outline-emerald-400/50"
               />
             )}
           </div>
@@ -1323,6 +1592,37 @@ export default function VideoEditor({
                 />
               </label>
             </div>
+
+            {/* ── How fast it plays ────────────────────────────────────
+
+                Canva's clip toolbar has Speed, and it is the one control there
+                that changes how LONG the piece is as well as how it looks —
+                which is why `lengthOfPiece` divides by it. A four-second take
+                at two times is two seconds of film, the strip draws it two
+                seconds wide, and the ruler under it still tells the truth.
+
+                Nought-point-five to two, not nought-point-one to four, though
+                the model carries the wider range: past two the browser drops
+                the audio and the picture stutters, and a slider that can be
+                put somewhere the export looks broken is a slider that makes
+                support calls. */}
+            <label className="block space-y-1.5">
+              <span className="block text-sm text-zinc-400 inline-flex items-center gap-1.5">
+                <Gauge className="w-3.5 h-3.5" />
+                {t('edit.speed', 'How fast it plays')}
+              </span>
+              <input
+                type="range" min={0.5} max={2} step={0.05}
+                value={piece.speed ?? 1}
+                data-editorspeed
+                {...gesture}
+                onChange={(e) => slide({ speed: Number(e.target.value) })}
+                className="w-full accent-emerald-500"
+              />
+              <span className="block text-sm text-zinc-500" data-editorspeednow>
+                {`${(piece.speed ?? 1).toFixed(2)}×`}
+              </span>
+            </label>
 
             {/* The looks. Seven, free, and applied in the browser — the same
                 `filterCss` the render uses, so the preview swatch and the
@@ -1419,10 +1719,74 @@ export default function VideoEditor({
                     step={0.002}
                     value={piece.wordsSize ?? 0.048}
                     data-editorwordssize
-                    onChange={(e) => tweak({ wordsSize: Number(e.target.value) })}
+                    {...gesture}
+                    onChange={(e) => slide({ wordsSize: Number(e.target.value) })}
                     className="w-full accent-emerald-500"
                   />
                 </label>
+
+                {/* ── Turned, faint, and round ───────────────────────────
+
+                    Carli, 2 October 2026, having sent two-and-thirty screens
+                    of Canva's editor: *"Kyk asb na hierdie, hoe 'n video
+                    editor prakties lyk, asook die elemente wat dit het."*
+
+                    Four of those screens are one sheet — Position, with a
+                    rotation on it; Transparency; and Corner rounding. They are
+                    what makes a caption an element somebody is designing with
+                    rather than a subtitle the renderer decided on. All three
+                    were already in `drawCaption`; these are the handles. */}
+                <label className="block space-y-1.5">
+                  <span className="block text-sm text-zinc-400 inline-flex items-center gap-1.5">
+                    <RotateCw className="w-3.5 h-3.5" />
+                    {t('edit.wordsTurn', 'Turned')}
+                  </span>
+                  <input
+                    type="range" min={-180} max={180} step={1}
+                    value={piece.wordsTurn ?? 0}
+                    data-editorwordsturn
+                    {...gesture}
+                    onChange={(e) => slide({ wordsTurn: Number(e.target.value) })}
+                    className="w-full accent-emerald-500"
+                  />
+                  <span className="block text-sm text-zinc-500" data-editorwordsturnnow>
+                    {`${Math.round(piece.wordsTurn ?? 0)}°`}
+                  </span>
+                </label>
+
+                <label className="block space-y-1.5">
+                  <span className="block text-sm text-zinc-400">
+                    {t('edit.wordsSolid', 'How solid the words are')}
+                  </span>
+                  <input
+                    type="range" min={0.1} max={1} step={0.05}
+                    value={piece.wordsSolid ?? 1}
+                    data-editorwordssolid
+                    {...gesture}
+                    onChange={(e) => slide({ wordsSolid: Number(e.target.value) })}
+                    className="w-full accent-emerald-500"
+                  />
+                </label>
+
+                <label className="block space-y-1.5">
+                  <span className="block text-sm text-zinc-400">
+                    {t('edit.wordsRound', 'How round the band behind them is')}
+                  </span>
+                  <input
+                    type="range" min={0} max={1} step={0.05}
+                    value={piece.wordsRound ?? CAPTION_ROUND}
+                    data-editorwordsround
+                    {...gesture}
+                    onChange={(e) => slide({ wordsRound: Number(e.target.value) })}
+                    className="w-full accent-emerald-500"
+                  />
+                </label>
+
+                <Placing
+                  which="words"
+                  at={piece.wordsAt ?? WORDS_AT}
+                  put={(spot) => tweak({ wordsAt: spot })}
+                />
 
                 {piece.wordsAt && (
                   <button
@@ -1459,7 +1823,8 @@ export default function VideoEditor({
                     type="range" min={0} max={2} step={0.05}
                     value={piece.loud ?? 1}
                     data-editorloud
-                    onChange={(e) => tweak({ loud: Number(e.target.value) })}
+                    {...gesture}
+                    onChange={(e) => slide({ loud: Number(e.target.value) })}
                     className="w-32 accent-emerald-500"
                   />
                 </label>
@@ -1531,7 +1896,8 @@ export default function VideoEditor({
                 type="range" min={0} max={2} step={0.05}
                 value={edit.underLoud ?? 1}
                 data-editorunderloud
-                onChange={(e) => commit((was) => ({ ...was, underLoud: Number(e.target.value) }))}
+                {...gesture}
+                onChange={(e) => slideFilm((was) => ({ ...was, underLoud: Number(e.target.value) }))}
                 className="w-32 accent-emerald-500"
               />
             </label>
@@ -1612,6 +1978,66 @@ export default function VideoEditor({
                 />
               </label>
 
+              {/* Turned and faint, the same two the words carry. A watermark
+                  is the one thing on a film that is usually MEANT to be faint,
+                  and until tonight ours was pinned at `MARK_OPACITY` with no
+                  way to quieten it behind a shot. */}
+              <label className="block space-y-1.5">
+                <span className="block text-sm text-zinc-400 inline-flex items-center gap-1.5">
+                  <RotateCw className="w-3.5 h-3.5" />
+                  {t('edit.markTurn', 'Turned')}
+                </span>
+                <input
+                  type="range" min={-180} max={180} step={1}
+                  value={markTurn}
+                  data-editormarkturn
+                  onChange={(e) => setMarkTurn(Number(e.target.value))}
+                  className="w-full accent-emerald-500"
+                />
+                <span className="block text-sm text-zinc-500" data-editormarkturnnow>
+                  {`${Math.round(markTurn)}°`}
+                </span>
+              </label>
+
+              <label className="block space-y-1.5">
+                <span className="block text-sm text-zinc-400">
+                  {t('edit.markSolid', 'How solid the mark is')}
+                </span>
+                <input
+                  type="range" min={0.1} max={1} step={0.05}
+                  value={markSolid}
+                  data-editormarksolid
+                  onChange={(e) => setMarkSolid(Number(e.target.value))}
+                  className="w-full accent-emerald-500"
+                />
+              </label>
+
+              {/* Canva calls this Layers. There are exactly two things on this
+                  canvas that are ours rather than hers — the mark and the
+                  words — so it is one switch rather than a list, and the
+                  default keeps what was always true: the mark last, over
+                  everything. */}
+              <button
+                type="button"
+                aria-pressed={markUnder}
+                data-editormarkunder
+                onClick={() => setMarkUnder((was) => !was)}
+                className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold inline-flex items-center gap-2 ${
+                  markUnder ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                }`}
+              >
+                <Layers className="w-4 h-4" />
+                {markUnder
+                  ? t('edit.markUnder', 'The mark goes under the words')
+                  : t('edit.markOver', 'The mark goes over the words')}
+              </button>
+
+              <Placing
+                which="mark"
+                at={markAt ?? CORNER_AT[corner]}
+                put={setMarkAt}
+              />
+
               {markAt && (
                 <button
                   type="button"
@@ -1656,7 +2082,8 @@ export default function VideoEditor({
                 type="range" min={0} max={LONGEST_FADE} step={0.1}
                 value={edit.fadeIn ?? 0}
                 data-editorfadein
-                onChange={(e) => commit((was) => ({ ...was, fadeIn: Number(e.target.value) }))}
+                {...gesture}
+                onChange={(e) => slideFilm((was) => ({ ...was, fadeIn: Number(e.target.value) }))}
                 className="w-full accent-emerald-500"
               />
               <span className="block text-sm text-zinc-500">{seconds(fades.in)}</span>
@@ -1667,7 +2094,8 @@ export default function VideoEditor({
                 type="range" min={0} max={LONGEST_FADE} step={0.1}
                 value={edit.fadeOut ?? 0}
                 data-editorfadeout
-                onChange={(e) => commit((was) => ({ ...was, fadeOut: Number(e.target.value) }))}
+                {...gesture}
+                onChange={(e) => slideFilm((was) => ({ ...was, fadeOut: Number(e.target.value) }))}
                 className="w-full accent-emerald-500"
               />
               <span className="block text-sm text-zinc-500">{seconds(fades.out)}</span>

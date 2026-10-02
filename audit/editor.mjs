@@ -25,8 +25,16 @@
  * about whether the editor works, and a probe that also had to hold a
  * membership row upright would fail for reasons that are not about editing.
  */
+import { readFileSync } from 'node:fs';
 import { enter, studio, toRoom, unfold } from './enter.mjs';
 import { serve } from './where.mjs';
+
+/* How deep the history actually is, read out of the module that sets it
+   rather than typed here. A probe holding its own copy of twenty would go
+   green on a release that quietly dropped it to three. */
+const KEEP_STEPS = Number(
+  /export const KEEP_STEPS = (\d+)/.exec(readFileSync('app/lib/undo.ts', 'utf8'))?.[1] ?? '0',
+);
 
 const PORT = 3329;
 const problems = [];
@@ -420,6 +428,36 @@ try {
         big > small,
         `${small}px became ${big}px`);
 
+      /* ── One press of Back for one pull of a slider ─────────────────────
+
+         Dragged with the mouse and not filled, because `fill` fires ONE change
+         event and this fault only exists across many. A range input fires
+         `change` on every pixel it is dragged over, and every one of those used
+         to file a history step: one pull of this slider was thirty or forty
+         steps where `KEEP_STEPS` is twenty, so bringing the clip in fell off
+         the end of the history and Back could no longer reach the empty clock.
+
+         Found by the walk at the bottom of this file going red, not by looking
+         at the screen — and the tempting fix was to raise `KEEP_STEPS`, which
+         would have moved the number the fault shows up at and left the fault. */
+      const sizer = p.locator('[data-editorwordssize]');
+      const sizeBox = await sizer.boundingBox();
+      const sizeWas = await sizer.inputValue();
+      const midY = (sizeBox?.y ?? 0) + (sizeBox?.height ?? 0) / 2;
+      await p.mouse.move((sizeBox?.x ?? 0) + (sizeBox?.width ?? 0) * 0.9, midY);
+      await p.mouse.down();
+      await p.mouse.move((sizeBox?.x ?? 0) + (sizeBox?.width ?? 0) * 0.1, midY, { steps: 25 });
+      await p.mouse.up();
+      await p.waitForTimeout(400);
+      check('  and pulling the slider across really moves it',
+        (await sizer.inputValue()) !== sizeWas,
+        `it read ${sizeWas} and reads ${await sizer.inputValue()}`);
+      await p.locator('[data-editorundo]').click();
+      await p.waitForTimeout(400);
+      check('    and the whole pull is ONE press of Back, not twenty-five',
+        (await sizer.inputValue()) === sizeWas,
+        `it reads ${await sizer.inputValue()} after one undo where it was ${sizeWas} — a slider that files a step per pixel empties the history with one gesture`);
+
       const pic = await p.locator('[data-editorviewer]').boundingBox();
       const was = await onFilm.boundingBox();
       await onFilm.hover();
@@ -435,6 +473,83 @@ try {
 
       check('  with a way back to the bottom once they have moved',
         (await p.locator('[data-editorwordsreset]').count()) === 1);
+
+      /* ── Turned, faint, round, and nudged ──────────────────────────────
+
+         Carli, 2 October 2026, having sent two-and-thirty screens of Canva's
+         editor. Four of them are one sheet: Position, with a rotation on it,
+         plus Transparency and Corner rounding.
+
+         Measured off the RENDERED element — the computed transform, the
+         computed opacity, the computed radius, the bounding box — and not off
+         the input's own value. An input holding 45 proves a slider moved; the
+         box growing taller proves the words turned. The `@container` fault on
+         30 September was exactly a control whose value was right and whose
+         picture was nought. */
+      const flat = await onFilm.boundingBox();
+      await p.locator('[data-editorwordsturn]').fill('45');
+      await p.waitForTimeout(400);
+      const turned = await onFilm.boundingBox();
+      const spin = await onFilm.evaluate((el) => getComputedStyle(el).transform);
+      check('  and the words can be turned',
+        (turned?.height ?? 0) > (flat?.height ?? 0) + 4,
+        `${Math.round(flat?.height ?? 0)}px tall flat became ${Math.round(turned?.height ?? 0)}px at 45° — ${spin}`);
+      check('    and the turn is on the picture, not only in the slider',
+        /matrix\(/.test(spin) && !/matrix\(1,\s*0,\s*0,\s*1/.test(spin),
+        spin);
+      check('    and the degrees are written out, because 45 on a slider is not readable',
+        (await p.locator('[data-editorwordsturnnow]').innerText()).includes('45'));
+      await p.locator('[data-editorwordsturn]').fill('0');
+      await p.waitForTimeout(300);
+
+      await p.locator('[data-editorwordssolid]').fill('0.3');
+      await p.waitForTimeout(400);
+      const faint = await onFilm.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
+      check('  and they can be made faint',
+        Math.abs(faint - 0.3) < 0.02,
+        `the element is at opacity ${faint}`);
+      await p.locator('[data-editorwordssolid]').fill('1');
+      await p.waitForTimeout(300);
+
+      const round = await onFilm.evaluate((el) => parseFloat(getComputedStyle(el).borderTopLeftRadius));
+      await p.locator('[data-editorwordsround]').fill('0');
+      await p.waitForTimeout(400);
+      const square = await onFilm.evaluate((el) => parseFloat(getComputedStyle(el).borderTopLeftRadius));
+      check('  and the band behind them can be squared off',
+        round > 1 && square < 1,
+        `the corner was ${round}px and is ${square}px`);
+
+      /* Align, and the one thing about it that is worth checking: it moves ONE
+         axis. Canva's sheet does, and a "top" button that also slid the words
+         into the middle sideways would undo a placement she had just made. */
+      const spread = await p.locator('[data-editorviewer]').boundingBox();
+      const placed = await onFilm.boundingBox();
+      await p.locator('[data-editoralign="words:top"]').click();
+      await p.waitForTimeout(400);
+      const up = await onFilm.boundingBox();
+      check('  and an align button moves them to the top',
+        (up?.y ?? 0) < (spread?.y ?? 0) + (spread?.height ?? 0) * 0.3,
+        `they are at y=${Math.round(up?.y ?? 0)} with the picture starting at ${Math.round(spread?.y ?? 0)}`);
+      check('    and leaves the other axis where she put it, which is the point of one-axis align',
+        Math.abs((up?.x ?? 0) - (placed?.x ?? 0)) < 6,
+        `x was ${Math.round(placed?.x ?? 0)} and is ${Math.round(up?.x ?? 0)}`);
+
+      /* The nudge, which is why it is here at all: a drag on a 390-pixel
+         preview cannot be landed on a round number. Three taps, because one
+         percent of a narrow frame is under four pixels and a single tap is
+         inside the noise of a bounding box. */
+      const before3 = await onFilm.boundingBox();
+      for (let i = 0; i < 3; i += 1) {
+        await p.locator('[data-editornudge="words:right"]').click();
+        await p.waitForTimeout(120);
+      }
+      await p.waitForTimeout(300);
+      const after3 = await onFilm.boundingBox();
+      const moved = (after3?.x ?? 0) - (before3?.x ?? 0);
+      const want = (spread?.width ?? 0) * 0.03;
+      check('  and three nudges move them three percent of the frame, not a guess',
+        moved > want * 0.5 && moved < want * 1.8,
+        `${Math.round(moved)}px moved where three percent of ${Math.round(spread?.width ?? 0)} is ${Math.round(want)}px`);
     }
 
     /* ── The mark, moved by hand ───────────────────────────
@@ -491,7 +606,81 @@ try {
 
       check('  and it can be made bigger and smaller',
         (await p.locator('[data-editormarksize]').count()) === 1);
+
+      /* The same three the words carry, on the mark. A watermark is the one
+         thing on a film that is usually MEANT to be faint, and until tonight
+         ours was pinned at `MARK_OPACITY` with no handle on it. */
+      await p.locator('[data-editormarkturn]').fill('45');
+      await p.waitForTimeout(400);
+      const spun = await onPicture.evaluate((el) => getComputedStyle(el).transform);
+      check('  and it can be turned',
+        /matrix\(/.test(spun) && !/matrix\(1,\s*0,\s*0,\s*1/.test(spun),
+        spun);
+      await p.locator('[data-editormarkturn]').fill('0');
+      await p.waitForTimeout(300);
+
+      await p.locator('[data-editormarksolid]').fill('0.3');
+      await p.waitForTimeout(400);
+      const dim = await onPicture.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
+      check('  and quietened behind the picture',
+        Math.abs(dim - 0.3) < 0.02,
+        `the mark is at opacity ${dim}`);
+
+      /* ── Layers ─────────────────────────────────────────────────────────
+
+         Canva's Layers, and one switch rather than a list because exactly two
+         things on this canvas are ours. Read off the computed `z-index` of both
+         overlays rather than off the switch: a toggle that flips a flag and
+         leaves the stacking alone is the kind of control that is green in a
+         check and wrong on the screen.
+
+         The film's own ordering is a source assertion in `check:logomark`,
+         because a canvas has no z-index to read. */
+      const stacked = async () => ({
+        mark: parseInt(await onPicture.evaluate((el) => getComputedStyle(el).zIndex), 10),
+        words: parseInt(await onFilm.evaluate((el) => getComputedStyle(el).zIndex), 10),
+      });
+      const over = await stacked();
+      check('the mark is over the words to begin with, which is what it always was',
+        over.mark > over.words,
+        `mark at ${over.mark}, words at ${over.words}`);
+      await p.locator('[data-editormarkunder]').click();
+      await p.waitForTimeout(400);
+      const under = await stacked();
+      check('  and the switch really puts it underneath them',
+        under.mark < under.words,
+        `mark at ${under.mark}, words at ${under.words}`);
+      await p.locator('[data-editormarkunder]').click();
+      await p.waitForTimeout(300);
     }
+
+    /* ── Speed ────────────────────────────────────────────────────────────
+
+       The strongest assertion in this room, and the reason the slider was
+       worth building: speed changes how LONG the piece is, so the FILM gets
+       shorter. Read off the clock, which is read off `runs()`, which is read
+       off `lengthOfPiece` — so a ruler that did not divide by the speed would
+       be caught here rather than discovered on an export.
+
+       Checked before the split below, because a split makes two pieces and
+       the slider only governs the one that is picked. */
+    const asFilmed = await filmLength();
+    await p.locator('[data-editorspeed]').fill('2');
+    await p.waitForTimeout(600);
+    const fast = await filmLength();
+    check('playing a piece at twice the speed makes the film half as long',
+      asFilmed > 0 && Math.abs(fast - asFilmed / 2) < 0.4,
+      `${asFilmed}s as filmed became ${fast}s at 2× — a ruler that did not divide by the speed would say ${asFilmed}s`);
+    check('  and the picture under her thumb plays at that speed too',
+      Math.abs(await p.locator('[data-editorviewer]').evaluate((el) => el.playbackRate) - 2) < 0.01,
+      `the viewer is at ${await p.locator('[data-editorviewer]').evaluate((el) => el.playbackRate)}×`);
+    check('  and the multiple is written out beside the slider',
+      (await p.locator('[data-editorspeednow]').innerText()).includes('2'));
+    await p.locator('[data-editorspeed]').fill('1');
+    await p.waitForTimeout(600);
+    check('  and putting it back makes the film what it was',
+      Math.abs((await filmLength()) - asFilmed) < 0.2,
+      `${asFilmed}s before, ${await filmLength()}s after`);
 
     /* Split, which is the one operation that proves there is a clock under
        this rather than a list: one piece becomes two, and the total length
@@ -546,44 +735,68 @@ try {
       (await blocks.count()) === 2,
       `${await blocks.count()} after stepping forward`);
 
-    /* ── All the way back, and all the way forward again ────────────
- 
-       The first version of this asserted that the clip survives being taken
-       back to the beginning. That was my assumption and not a rule: every
-       editor lets you undo an import, and this one does.
- 
-       What matters is that nothing is LOST. So it goes all the way back to
-       an empty clock — which is the state before the clip arrived, and is
-       correct — and then all the way forward, and the film has to come back
-       exactly as it was. A history that empties the room and cannot refill
-       it is the fault; an empty room with a forward button is not. */
-    /* Until it stops, not eight times.
+    /* ── All the way back, and all the way forward again ────────────────
 
-       Eight was enough when the walk above was shorter, and it quietly
-       stopped being enough the day the fade drag, the sound toggle, the
-       words and the mark were added — the probe then reported "1 blocks"
-       where it wanted none and read a working history as broken. A fixed
-       count is a guess about how long the test before it is, which is
-       exactly the thing that changes. The cap is only a runaway guard. */
-    for (let i = 0; i < 60; i += 1) {
-      if (await p.locator('[data-editorundo]').isDisabled().catch(() => true)) break;
-      await p.locator('[data-editorundo]').click().catch(() => undefined);
+       This asked for an EMPTY clock: back past the import, the room as it
+       opened. That was true when it was written and stopped being true on
+       2 October 2026 — and not because undo broke.
+
+       The history is `KEEP_STEPS` deep, twenty, shared with the Pro Booth on
+       purpose. The walk above this line now makes more than twenty changes, so
+       the clip's arrival has fallen off the far end of it and no number of
+       presses can reach a clock that never had the clip on it. A probe asking
+       for one is asking for an unbounded history this app has never had.
+
+       Both tempting fixes were wrong. Raising `KEEP_STEPS` moves the number
+       the probe breaks at and leaves the probe making a claim the app does not
+       make. Loosening it to "some blocks remain" would pass for a history one
+       step deep, which is the thing actually worth catching.
+
+       So what is measured is what is true and what matters: Back walks a real
+       history rather than a step or two, it stops rather than staying
+       pressable, forward returns exactly as many steps as Back took, and the
+       film comes back as it was. A one-deep history fails the first. A history
+       that empties the room and cannot refill it fails the third and fourth.
+       Neither can be made to pass by adding or removing a check above. */
+    /* The forward list is drained first, and that is not tidying.
+
+       The two undos and the redo above leave ONE step already sitting in
+       front, so the first run of this reported nineteen back and twenty
+       forward and called a working history broken. The counts can only be
+       compared from a known start: nothing in front, then back as far as it
+       goes, then forward as far as it goes. */
+    for (let i = 0; i < 90; i += 1) {
+      if (await p.locator('[data-editorredo]').isDisabled().catch(() => true)) break;
+      await p.locator('[data-editorredo]').click().catch(() => undefined);
       await p.waitForTimeout(110);
     }
-    check('  taking it all the way back leaves an empty clock',
-      (await blocks.count()) === 0 && (await p.locator('[data-editorempty]').count()) === 1,
-      `${await blocks.count()} blocks — back past the import should be the room as it opened`);
+
+    let backs = 0;
+    for (let i = 0; i < 90; i += 1) {
+      if (await p.locator('[data-editorundo]').isDisabled().catch(() => true)) break;
+      await p.locator('[data-editorundo]').click().catch(() => undefined);
+      backs += 1;
+      await p.waitForTimeout(110);
+    }
+    check('  Back walks a real history, as deep as the app says it keeps',
+      backs >= 10 && backs <= KEEP_STEPS && KEEP_STEPS > 0,
+      `${backs} presses where the app keeps ${KEEP_STEPS} — a history a step or two deep is an undo button that lies`);
 
     check('  and Back is then disabled rather than doing nothing',
       await p.locator('[data-editorundo]').isDisabled(),
       'a button that is pressable and does nothing is the failure this app keeps meeting');
 
-    for (let i = 0; i < 60; i += 1) {
+    let forwards = 0;
+    for (let i = 0; i < 90; i += 1) {
       if (await p.locator('[data-editorredo]').isDisabled().catch(() => true)) break;
       await p.locator('[data-editorredo]').click().catch(() => undefined);
+      forwards += 1;
       await p.waitForTimeout(110);
     }
-    check('  and forward brings the whole film back',
+    check('  and forward returns exactly as many steps as Back took',
+      forwards === backs,
+      `${backs} back and ${forwards} forward — a step that cannot be walked again is a step that was lost`);
+    check('  and the film comes back as it was',
       (await blocks.count()) === 1,
       `${await blocks.count()} after stepping all the way forward — nothing may be lost on the way back`);
   }

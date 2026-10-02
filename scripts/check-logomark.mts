@@ -23,7 +23,7 @@
 import { readFileSync } from 'node:fs';
 import { markBox, MARK_SHARE, MARK_INSET } from '../app/lib/logomark';
 import { ZONES, type Zone } from '../app/lib/safezones';
-import { before } from './order.mts';
+import { before, from, upTo } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -110,13 +110,61 @@ const stitch = readFileSync('app/lib/stitch.ts', 'utf8');
    check that asserts the SHAPE of a line keeps the line still, and the thing
    worth keeping still is the behaviour. */
 ok('the stitcher draws it', /drawMark\(\s*context,\s*cut\.mark/.test(stitch));
+
+/* ── Why this is no longer `before(drawCaption, drawMark)` ────────────────
+
+   2 October 2026. The two calls moved into closures — `words()` and
+   `badge()` — so that `markUnder` can swap them, and the ordering is now the
+   line that CALLS them. The order they are DEFINED in says nothing about what
+   gets painted first.
+
+   The old assertion, `before(stitch, 'drawCaption(context', 'drawMark(')`,
+   stayed GREEN through that change, because `drawCaption(` is still earlier in
+   the file than `drawMark(`. It would have stayed green with the dispatch
+   written the wrong way round. That is a check measuring the thing beside the
+   real thing, which is the one fault this repository keeps finding, so the
+   assertion moved onto the dispatch itself.
+
+   Sliced rather than regexed so it tolerates the line wrapping, which is the
+   lesson of the note above this. The window ends at the next comment rather
+   than at a newline, for the same reason: a dispatch that grows long enough to
+   wrap is still the same dispatch, and a slice that stopped at the first
+   newline would read half of it and report an ordering that is not there. */
+const dispatch = upTo(from(stitch, 'if (cut.markUnder)'), '/*');
+const otherwise = from(dispatch, 'else');
 ok(
-  '  after the caption, so the caption cannot slide over it',
-  before(stitch, 'drawCaption(context', 'drawMark('),
+  '  with the caption and the mark dispatched, not called where they are written',
+  dispatch.includes('words()') && dispatch.includes('badge()'),
+);
+ok(
+  '  after the caption by default, so the caption cannot slide over it',
+  before(otherwise, 'words()', 'badge()'),
+);
+ok(
+  '  and under it only when the cut asks, which is the only way round it',
+  before(upTo(dispatch, 'else'), 'badge()', 'words()'),
 );
 ok(
   '  and only when the cut asks for one, so an unbranded film is unchanged',
-  /if \(cut\.mark\)\s*\{?\s*drawMark/.test(stitch),
+  /if \(!cut\.mark\) return;/.test(stitch) || /if \(cut\.mark\)\s*\{?\s*drawMark/.test(stitch),
+);
+
+/* ── And the preview agrees about which is on top ─────────────────────────
+
+   The same reason `CORNER_AT` is measured against `markBox`: the render
+   stacks with the order it paints in and the preview stacks with `z-index`,
+   and nothing can be shared between a canvas and a `<div>`. So the one thing
+   that CAN be checked is that both sides read the same flag — a preview that
+   showed the mark on top while the film put it underneath would be a decision
+   she makes on a lie. */
+const room = readFileSync('app/components/VideoEditor.tsx', 'utf8');
+ok(
+  'the preview stacks the mark from the same flag the film does',
+  /zIndex:\s*markUnder \?/.test(room),
+);
+ok(
+  '  and the flag reaches the stitcher',
+  /markTurn,\s*markSolid,\s*markUnder,/.test(room),
 );
 
 /* ── The filmed take, and the one ordering that makes it safe ────────────

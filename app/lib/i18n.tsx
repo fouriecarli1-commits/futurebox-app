@@ -822,6 +822,48 @@ export const STRINGS: Dict = {
     en: "Put the words back at the bottom",
     af: "Sit die woorde terug onderaan",
   },
+  /* ── The layer sheet ───────────────────────────────────────────────────
+
+     Carli, 2 October 2026, with two-and-thirty screens of Canva's editor:
+     *"Kyk asb na hierdie, hoe 'n video editor prakties lyk, asook die elemente
+     wat dit het."* Canva's Position sheet carries a rotation and an align
+     grid, and there are sheets of their own for Transparency and for Corner
+     rounding. These are those, for the words and for the mark alike.
+
+     "Gedraai" and not "rotasie": she gets the Afrikaans, and a sheet that says
+     rotasie is a sheet written by somebody translating a menu. */
+  "edit.wordsTurn": { en: "Turned", af: "Gedraai" },
+  "edit.markTurn": { en: "Turned", af: "Gedraai" },
+  "edit.wordsSolid": {
+    en: "How solid the words are",
+    af: "Hoe solied die woorde is",
+  },
+  "edit.markSolid": {
+    en: "How solid the mark is",
+    af: "Hoe solied die merk is",
+  },
+  "edit.wordsRound": {
+    en: "How round the band behind them is",
+    af: "Hoe rond die blokkie agter hulle is",
+  },
+  /* One switch rather than a list, because two things on this canvas are ours.
+     Both halves are written out: a button that says only "under" leaves
+     somebody guessing what it is doing right now. */
+  "edit.markUnder": {
+    en: "The mark goes under the words",
+    af: "Die merk gaan onder die woorde",
+  },
+  "edit.markOver": {
+    en: "The mark goes over the words",
+    af: "Die merk gaan oor die woorde",
+  },
+  "edit.place": { en: "Where it sits", af: "Waar dit sit" },
+  /* The four arrows. One label for all four, read out by a screen reader
+     beside the direction the arrow itself shows. */
+  "edit.nudge": { en: "A little at a time", af: "Stukkie vir stukkie" },
+  /* Canva's Speed. "Hoe vinnig dit speel" and not "spoed", for the same reason
+     as "gedraai": it says what moving it does. */
+  "edit.speed": { en: "How fast it plays", af: "Hoe vinnig dit speel" },
   "font.plain": { en: "Plain", af: "Gewoon" },
   "font.heavy": { en: "Heavy", af: "Swaar" },
   "font.serif": { en: "Serif", af: "Skreef" },

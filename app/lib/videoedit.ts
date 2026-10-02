@@ -75,6 +75,20 @@ export interface Piece {
   readonly wordsFont?: string;
   readonly wordsSize?: number;
   readonly wordsAt?: { readonly x: number; readonly y: number } | null;
+  /** Turned, in degrees. How solid, nought to one. How round its band is. */
+  readonly wordsTurn?: number;
+  readonly wordsSolid?: number;
+  readonly wordsRound?: number;
+  /**
+   * How fast this piece plays, as a multiple. One is as filmed.
+   *
+   * Canva's Speed slider, and one of the two things on its clip toolbar that
+   * we had nothing for. It changes how LONG the piece is as well as how it
+   * looks, which is why `lengthOfPiece` has to divide by it: a four-second
+   * take at two times is two seconds of film, and a timeline that drew it as
+   * four would be a ruler that lies.
+   */
+  readonly speed?: number;
   /** Carry this piece's own sound. Off by default: most material is room tone. */
   readonly sound?: boolean;
   /**
@@ -137,7 +151,13 @@ export const NOTHING: Edit = { pieces: [] };
 
 /** How long a piece is on screen, in seconds. */
 export function lengthOfPiece(piece: Piece): number {
-  return Math.max(0, piece.to - piece.from);
+  /* Divided by the speed, and this is the line that makes the ruler honest.
+     A four-second take at two times is two seconds OF FILM, and a timeline
+     drawing it as four would put every block after it in the wrong place and
+     the playhead on the wrong frame. Canva's Speed slider changes a clip's
+     length on its timeline for the same reason. */
+  const fast = Math.max(0.1, Math.min(4, piece.speed ?? 1));
+  return Math.max(0, (piece.to - piece.from) / fast);
 }
 
 /** How long the whole edit runs, in seconds. */
@@ -239,6 +259,11 @@ export function cutFrom(edit: Edit): Cut {
       ...(one.words && one.wordsFont ? { captionFont: one.wordsFont } : {}),
       ...(one.words && one.wordsSize ? { captionSize: one.wordsSize } : {}),
       ...(one.words && one.wordsAt ? { captionAt: one.wordsAt } : {}),
+      ...(one.words && one.wordsTurn ? { captionTurn: one.wordsTurn } : {}),
+      ...(one.words && one.wordsSolid !== undefined ? { captionSolid: one.wordsSolid } : {}),
+      ...(one.words && one.wordsRound !== undefined ? { captionRound: one.wordsRound } : {}),
+      ...(one.speed && one.speed !== 1 ? { speed: one.speed } : {}),
+      ...(one.loud !== undefined ? { loud: one.loud } : {}),
       ...(one.sound ? { sound: true } : {}),
     }));
 

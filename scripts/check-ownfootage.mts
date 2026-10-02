@@ -27,6 +27,7 @@
 
 import { readFileSync } from 'node:fs';
 import { FILTERS, NO_FILTER, filterCss } from '../app/lib/videofilters';
+import { before, from } from './order.mts';
 
 let failures = 0;
 const ok = (what: string, passed: boolean, detail = ''): void => {
@@ -75,8 +76,21 @@ ok('  and the blurred fill behind it as well',
   /if \(grade\) context\.filter = grade;[\s\S]{0,200}?backdrop\(context,/.test(cutter),
   'a black-and-white shot sitting in a wash of the colour it just had taken out');
 
+/* ── Written as an ordering, 2 October 2026 ───────────────────────────────
+
+   This was `/context\.filter = 'none';[\s\S]{0,300}?drawCaption\(/` and went
+   red the day the caption and the mark moved into closures so that `markUnder`
+   could swap them: the reset was still before the words, and the three hundred
+   characters between them had become four hundred. Nothing about the rule was
+   broken — the probe was measuring a gap in the TEXT.
+
+   The same fault as `check:align` pinning `noteCost(upstream, 'align')` and
+   `check:logomark` pinning the one-line `drawMark(` call. An ordering is what
+   the rule is, so an ordering is what it asks. */
+const drawing = from(cutter, 'const grade = cut.scenes[index].grade');
 ok('  and takes it off before the words and the mark go on',
-  /if \(grade\) context\.filter = 'none';[\s\S]{0,300}?drawCaption\(/.test(cutter),
+  before(drawing, "context.filter = 'none'", 'drawCaption(')
+  && before(drawing, "context.filter = 'none'", 'drawMark('),
   'the caption comes out tinted, and the one thing a grade must not touch is the text somebody has to read');
 
 /* ── Both cut paths, not one ─────────────────────────────────────────── */

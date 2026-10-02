@@ -191,13 +191,32 @@ export function drawMark(
   corner: Corner = 'bottomRight',
   share = MARK_SHARE,
   at?: Spot | null,
+  /**
+   * Turned, and how solid, in degrees and in a share of full.
+   *
+   * Carli, 2 October 2026, with Canva's Position sheet open: every element
+   * there carries a rotation, an opacity and a place. Ours carried a place
+   * and nothing else, which is why a logo could be put where she wanted and
+   * then not quietened behind the picture or set at an angle.
+   *
+   * Rotated about its own CENTRE and not its corner, which is the only
+   * rotation anybody means: turning a logo about its top-left corner swings
+   * it out of frame, and nobody has ever wanted that.
+   */
+  turn = 0,
+  solid = MARK_OPACITY,
 ): void {
   const aspect = mark.naturalHeight > 0 ? mark.naturalWidth / mark.naturalHeight : 1;
   const box = markBox(frameWidth, frameHeight, aspect, corner, share, at);
-  const was = context.globalAlpha;
-  context.globalAlpha = MARK_OPACITY;
+  context.save();
+  context.globalAlpha = Math.max(0, Math.min(1, solid));
+  if (turn) {
+    context.translate(box.x + box.w / 2, box.y + box.h / 2);
+    context.rotate((turn * Math.PI) / 180);
+    context.translate(-(box.x + box.w / 2), -(box.y + box.h / 2));
+  }
   context.drawImage(mark, box.x, box.y, box.w, box.h);
-  context.globalAlpha = was;
+  context.restore();
 }
 
 /* ════════════════════════════════════════════════════════════════════════
