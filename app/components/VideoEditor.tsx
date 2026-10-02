@@ -49,7 +49,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
   Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2,
-  RotateCw, Layers, Gauge, Move,
+  RotateCw, Layers, Gauge, Move, Copy, Shuffle,
 } from 'lucide-react';
 import Card from './Card';
 import Note from './Note';
@@ -70,9 +70,13 @@ import { CREDITS, perMinute } from '../lib/credits';
 import { KEEP_STEPS } from '../lib/undo';
 import {
   NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
-  add, atSecond, change, cutFrom, drop, fadesFor, lengthOfPiece, move, runs, split, startsAt,
+  add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
+  move, runs, split, startsAt,
   type Edit, type Piece,
 } from '../lib/videoedit';
+import {
+  JOINS, JOIN_FOR, LONGEST_JOIN, joinFits, joinName, needsHeld,
+} from '../lib/videojoins';
 
 /** A block on the strip is never thinner than this, however short the piece. */
 const THINNEST = 11;
@@ -645,7 +649,13 @@ export default function VideoEditor({
     const v = viewer.current;
     if (!v || !piece) return undefined;
     const tick = () => {
-      if (running) setAt(startsAt(edit, piece.id) + Math.max(0, v.currentTime - piece.from));
+      /* Through `filmSecond`, which divides by the speed. This read
+         `startsAt(...) + (v.currentTime - piece.from)` and so ran the line at
+         the rate of the FILE rather than of the film: on a piece at two times
+         the playhead finished the block while the picture was halfway through
+         it. The inverse of this conversion lives beside it in `videoedit.ts`
+         and `check:cutmaths` walks out through one and back through the other. */
+      if (running) setAt(filmSecond(edit, piece.id, v.currentTime));
       if (v.currentTime < piece.to) return;
       if (!running) { v.pause(); return; }
       const after = edit.pieces[edit.pieces.findIndex((one) => one.id === piece.id) + 1];
@@ -1195,6 +1205,39 @@ export default function VideoEditor({
                       );
                     })}
 
+                    {/* ── The joins, where they actually are ────────────────
+
+                        A mark on the strip at every join that is not a hard
+                        cut, as wide as the join really lasts.
+
+                        Here rather than only in the inspector, because a
+                        transition is the one control in this room whose effect
+                        cannot be seen in the preview: the preview plays one
+                        piece at a time and a join is the seam between two. The
+                        strip is the honest answer — she can see WHERE it is and
+                        HOW LONG it is, measured through `joinFits` so the mark
+                        is the join's real length and not the slider's number.
+
+                        Pointer-events off, so it never eats a tap meant for the
+                        block underneath or for the track. */}
+                    {edit.pieces.map((one, i) => {
+                      if (i === 0) return null;
+                      const kind = one.join ?? 'cut';
+                      if (kind === 'cut') return null;
+                      const lasts = joinFits(one.joinFor ?? JOIN_FOR, lengthOfPiece(one));
+                      if (lasts <= 0) return null;
+                      const at = startsAt(edit, one.id) * perSecond;
+                      return (
+                        <div
+                          key={`join-${one.id}`}
+                          data-editorjoinmark={kind}
+                          title={joinName(kind, lang)}
+                          style={{ left: at, width: Math.max(4, lasts * perSecond) }}
+                          className="pointer-events-none absolute top-0 h-full border-x border-emerald-400/70 bg-emerald-400/25"
+                        />
+                      );
+                    })}
+
                     {/* ── The fades, as something to pull ──────────────────
 
                         A shaded wedge at each end showing what is being faded,
@@ -1593,6 +1636,78 @@ export default function VideoEditor({
               </label>
             </div>
 
+            {/* ── How it arrives after the piece before it ────────────────
+
+                Carli, 3 October 2026: *"net 'n praktiese video editing en die
+                elemente wat moontlik is."* Every join in this room was a hard
+                cut until now, which is the most ordinary thing a timeline
+                editor has and the most obvious thing ours was missing.
+
+                Only from the second piece on. The first piece of a film has
+                nothing behind it to arrive from, and a picker offering a
+                dissolve there would be a control that does nothing — which this
+                app treats as worse than a control that is absent.
+
+                `videojoins.ts` holds every number and the honest note about
+                what the outgoing half of a dissolve is in this renderer: one
+                `<video>` decodes at a time, so it is the last frame of the shot
+                before, held. At six tenths of a second that is invisible; two
+                seconds of it would be a freeze, which is why six tenths is the
+                ceiling. */}
+            {startsAt(edit, piece.id) > 0 && (
+              <div className="space-y-1.5">
+                <span className="text-sm text-zinc-400 inline-flex items-center gap-1.5">
+                  <Shuffle className="w-3.5 h-3.5" />
+                  {t('edit.join', 'How it comes in')}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {JOINS.map((one) => {
+                    const on = (piece.join ?? 'cut') === one.id;
+                    return (
+                      <button
+                        key={one.id}
+                        type="button"
+                        aria-pressed={on}
+                        data-editorjoin={one.id}
+                        onClick={() => tweak({ join: one.id })}
+                        className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
+                          on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                        }`}
+                      >
+                        {joinName(one.id, lang)}
+                      </button>
+                    );
+                  })}
+                </div>
+                {(piece.join ?? 'cut') !== 'cut' && (
+                  <label className="block space-y-1.5">
+                    <span className="block text-sm text-zinc-400">
+                      {t('edit.joinFor', 'How long it takes')}
+                    </span>
+                    <input
+                      type="range" min={0.1} max={LONGEST_JOIN} step={0.05}
+                      value={piece.joinFor ?? JOIN_FOR}
+                      data-editorjoinfor
+                      {...gesture}
+                      onChange={(e) => slide({ joinFor: Number(e.target.value) })}
+                      className="w-full accent-emerald-500"
+                    />
+                    {/* What it will REALLY be, not what the slider says. A
+                        join is capped at half the piece it arrives on, so a
+                        six-tenth join on a four-tenth shot is two tenths —
+                        and a slider reading 0.6 over a join that lasts 0.2
+                        is a control that lies about itself. */}
+                    <span className="block text-sm text-zinc-500" data-editorjoinnow>
+                      {seconds(joinFits(piece.joinFor ?? JOIN_FOR, lengthOfPiece(piece)))}
+                      {needsHeld(piece.join ?? 'cut')
+                        ? ` · ${t('edit.joinHeld', 'over the frame the last shot left')}`
+                        : ''}
+                    </span>
+                  </label>
+                )}
+              </div>
+            )}
+
             {/* ── How fast it plays ────────────────────────────────────
 
                 A clip's speed is the one control on it that changes how LONG
@@ -1852,11 +1967,31 @@ export default function VideoEditor({
               </button>
               <button
                 type="button" data-editorsplit
-                onClick={() => commit((was) => split(was, piece.id, piece.from + lengthOfPiece(piece) / 2))}
+                /* `startsAt` and not `piece.from`. `split` takes a second on
+                   the FILM's clock; `piece.from` is a position in the file, and
+                   the two are only the same number for a piece that is first in
+                   the film and untrimmed. Splitting the second piece of a film
+                   cut it at the wrong place, and `check:editor` could not see it
+                   because it only ever split the first one. */
+                onClick={() => commit((was) => split(
+                  was, piece.id, startsAt(was, piece.id) + lengthOfPiece(piece) / 2,
+                ))}
                 className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
               >
                 <Scissors className="w-4 h-4" />
                 {t('edit.split', 'Split in two')}
+              </button>
+              {/* A copy, with every grade, caption, speed and placement on it.
+                  A shot that has been framed and graded is twenty seconds of
+                  work, and wanting it twice should not mean doing all of it
+                  again. */}
+              <button
+                type="button" data-editorcopy
+                onClick={() => commit((was) => duplicate(was, piece.id))}
+                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
+              >
+                <Copy className="w-4 h-4" />
+                {t('edit.copy', 'Make a copy')}
               </button>
               <button
                 type="button" data-editordrop

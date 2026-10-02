@@ -706,35 +706,168 @@ try {
       Math.abs(await p.locator('[data-editorviewer]').evaluate((el) => el.currentTime) - 1.5) < 0.45,
       `the line says ${await playheadAt()}s and the picture is at ${await p.locator('[data-editorviewer]').evaluate((el) => el.currentTime)}s`);
 
-    /* And taking one out puts it back to one. */
+    /* ── Splitting the SECOND piece, which is where the bug lived ─────────
+
+       Everything above split the first piece of a film, starting at nought and
+       untrimmed — and for exactly that piece, a position in the file and a
+       second on the film's clock are the same number. So the editor passed
+       `piece.from + length/2` where `split` wanted a film second, and it worked.
+
+       On the second piece it does not: `startsAt` is three and `from` is nought,
+       so the cut landed three seconds early. `check:editor` could not see it
+       because the only thing it asserted was that the film was still as long as
+       it was, which is true wherever the cut falls.
+
+       What is measured here is WHERE. Two pieces out of a split in the middle
+       have to be the same length as each other, give or take a tenth. A cut at
+       the wrong place makes one of them long and one short, and the total is
+       unchanged either way. */
+    await p.locator('[data-editorblock]').nth(1).click();
+    await p.waitForTimeout(400);
+    const halves = await blocks.count();
+    const wholeFilm = await filmLength();
+    await p.locator('[data-editorsplit]').click();
+    await p.waitForTimeout(700);
+    check('  and the SECOND piece splits in the middle of itself, not of the film',
+      (await blocks.count()) === halves + 1,
+      `${await blocks.count()} blocks where ${halves + 1} was wanted`);
+
+    const widths = await blocks.evaluateAll(
+      (all) => all.map((el) => el.getBoundingClientRect().width),
+    );
+    const two = widths.slice(-2);
+    check('    and the two halves are the same length as each other',
+      two.length === 2 && Math.abs(two[0] - two[1]) < Math.max(6, two[0] * 0.15),
+      `the halves are ${two.map((w) => Math.round(w)).join('px and ')}px wide — `
+      + 'a cut at the wrong place leaves one long and one short, and the total unchanged either way');
+    check('    and the film is still as long as it was',
+      Math.abs((await filmLength()) - wholeFilm) < 0.2,
+      `${wholeFilm}s before, ${await filmLength()}s after`);
+
+    /* ── How a piece comes in ─────────────────────────────────────────────
+
+       Carli, 3 October 2026: *"net 'n praktiese video editing en die elemente
+       wat moontlik is."* Every join in this room was a hard cut until today.
+
+       The arithmetic is read without a browser by `check:joins` — a four-tenth
+       transition cannot be told from a hard cut by a real-time recording on a
+       shared runner, and pretending otherwise would be a probe that passes on
+       noise. What is walked HERE is what only a browser can answer: that the
+       picker is absent on the first piece and present on the second, that
+       choosing one marks the strip where the join really is, and that a film
+       with joins in it still comes out. */
+    await p.locator('[data-editorblock]').first().click();
+    await p.waitForTimeout(400);
+    check('the first piece is offered no join, because there is nothing behind it',
+      (await p.locator('[data-editorjoin="dissolve"]').count()) === 0,
+      'a picker that cannot change anything is worse than a picker that is absent');
+
+    await p.locator('[data-editorblock]').nth(1).click();
+    await p.waitForTimeout(400);
+    check('  and the second piece is',
+      (await p.locator('[data-editorjoin="dissolve"]').count()) === 1);
+
+    check('  with no join marked on the strip while every cut is a hard one',
+      (await p.locator('[data-editorjoinmark]').count()) === 0);
+
+    await p.locator('[data-editorjoin="dissolve"]').click();
+    await p.waitForTimeout(500);
+    check('  and choosing one marks the strip where that join is',
+      (await p.locator('[data-editorjoinmark="dissolve"]').count()) === 1,
+      'a transition is the one control in this room whose effect the preview cannot show,'
+      + ' so the strip has to');
+
+    const mark = await p.locator('[data-editorjoinmark="dissolve"]').boundingBox();
+    const second = await p.locator('[data-editorblock]').nth(1).boundingBox();
+    check('    at the start of the piece it belongs to',
+      Math.abs((mark?.x ?? 0) - (second?.x ?? 0)) < 8,
+      `the mark is at ${Math.round(mark?.x ?? 0)} and the piece starts at ${Math.round(second?.x ?? 0)}`);
+
+    /* And the mark is the join's REAL length, not the slider's number. A join is
+       capped at half the piece it arrives on, so a long join on a short piece is
+       shorter than asked — and a strip drawing the asked-for length would be
+       showing her a transition that does not happen. */
+    await p.locator('[data-editorjoinfor]').fill('0.6');
+    await p.waitForTimeout(500);
+    const said = await p.locator('[data-editorjoinnow]').innerText();
+    const wide = (await p.locator('[data-editorjoinmark="dissolve"]').boundingBox())?.width ?? 0;
+    const asSeconds2 = Number((said.match(/([\d.]+)/) ?? [])[1] ?? '0');
+    check('    and as wide as the join really lasts, not as wide as it was asked for',
+      asSeconds2 > 0 && Math.abs(wide - asSeconds2 * perSecond) < Math.max(6, perSecond * 0.2),
+      `the strip draws ${Math.round(wide)}px for a join the room says lasts ${said}`
+      + ` at ${Math.round(perSecond)}px a second`);
+
+    check('    and it says so where the slider is, not only on the strip',
+      said.length > 0 && /frame|prent/i.test(said),
+      `"${said}" — the outgoing half of a dissolve here is a held frame, and a`
+      + ' control that hid that would be a control that lies');
+
+    /* A copy, which carries everything that was decided about the piece. */
+    const wasBlocks = await blocks.count();
+    const wasLong = await filmLength();
+    await p.locator('[data-editorcopy]').click();
+    await p.waitForTimeout(600);
+    check('a piece can be copied',
+      (await blocks.count()) === wasBlocks + 1,
+      `${await blocks.count()} blocks after a copy where ${wasBlocks + 1} was wanted`);
+    check('  and the copy makes the film longer by its own length',
+      (await filmLength()) > wasLong,
+      `${wasLong}s became ${await filmLength()}s`);
+    await p.locator('[data-editorundo]').click();
+    await p.waitForTimeout(500);
+    check('  and one press of Back removes it again',
+      (await blocks.count()) === wasBlocks,
+      `${await blocks.count()} after undoing the copy`);
+
+    /* ── Dropping one, and walking it back ────────────────────────────────
+
+       Counted against whatever is on the clock NOW rather than against one and
+       two. These four read `=== 1` and `=== 2` until 3 October 2026, because the
+       walk above them happened to leave exactly two blocks — and the moment a
+       second split was added above, four checks about undo went red having found
+       nothing wrong with undo.
+
+       An editor without undo is worse than a booth without one: a split you did
+       not mean, and the only way back is bringing the file in again and doing
+       every trim over. That is what these four are about, and a count relative
+       to where the walk got to cannot be broken by lengthening the walk. */
+    const onClock = await blocks.count();
     await p.locator('[data-editordrop]').click();
     await p.waitForTimeout(600);
     check('taking a piece out leaves the rest',
-      (await blocks.count()) === 1,
-      `${await blocks.count()} after removing one of two`);
+      (await blocks.count()) === onClock - 1,
+      `${await blocks.count()} after removing one of ${onClock}`);
 
-    /* ── And it can be taken back ─────────────────────────────────────
- 
-       An editor without undo is worse than a booth without one: a split you
-       did not mean and the only way back is bringing the file in again and
-       doing every trim over. So the whole sequence is walked backwards. */
     await p.locator('[data-editorundo]').click();
     await p.waitForTimeout(500);
     check('undo puts the dropped piece back',
-      (await blocks.count()) === 2,
-      `${await blocks.count()} after taking back a removal`);
+      (await blocks.count()) === onClock,
+      `${await blocks.count()} after taking back a removal, where ${onClock} was wanted`);
+
+    /* ── A round trip on ONE step, rather than a guess about the step before ─
+
+       This was "and again undoes the split", pressing Back a second time and
+       expecting the split above to come apart. That was true of the walk as it
+       stood on 2 October and false on 3 October, because the step immediately
+       before the drop had become the undo of a copy. The check went red having
+       found nothing wrong.
+
+       A guess about which action is one step back is a guess about everything
+       written above, which is the thing that keeps changing. So the round trip
+       is taken on the one action this section performed: drop, back, forward,
+       back. Both directions, on a known step, and nothing added above can move
+       it. How DEEP the history goes is measured on its own below. */
+    await p.locator('[data-editorredo]').click();
+    await p.waitForTimeout(500);
+    check('  and forward drops it again',
+      (await blocks.count()) === onClock - 1,
+      `${await blocks.count()} after stepping forward, where ${onClock - 1} was wanted`);
 
     await p.locator('[data-editorundo]').click();
     await p.waitForTimeout(500);
-    check('  and again undoes the split',
-      (await blocks.count()) === 1,
-      `${await blocks.count()} after taking back the split too`);
-
-    await p.locator('[data-editorredo]').click();
-    await p.waitForTimeout(500);
-    check('  and forward puts the split back',
-      (await blocks.count()) === 2,
-      `${await blocks.count()} after stepping forward`);
+    check('  and back once more puts it right, so the step goes both ways',
+      (await blocks.count()) === onClock,
+      `${await blocks.count()} after the second trip back`);
 
     /* ── All the way back, and all the way forward again ────────────────
 
@@ -797,9 +930,13 @@ try {
     check('  and forward returns exactly as many steps as Back took',
       forwards === backs,
       `${backs} back and ${forwards} forward — a step that cannot be walked again is a step that was lost`);
+    /* `onClock - 1`: all the way forward is the state after the drop, which is
+       one block fewer than the walk had before it. Relative, for the same reason
+       the four above are. */
     check('  and the film comes back as it was',
-      (await blocks.count()) === 1,
-      `${await blocks.count()} after stepping all the way forward — nothing may be lost on the way back`);
+      (await blocks.count()) === onClock - 1,
+      `${await blocks.count()} after stepping all the way forward, where ${onClock - 1} was wanted`
+      + ' — nothing may be lost on the way back');
   }
 
     /* ── And it comes out the other end ───────────────────────

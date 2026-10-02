@@ -111,6 +111,8 @@
     "check:adhandover": "tsx scripts/check-adhandover.mts",
     "check:ownfootage": "tsx scripts/check-ownfootage.mts",
     "check:ownwords": "tsx scripts/check-ownwords.mts",
+    "check:joins": "tsx scripts/check-joins.mts",
+    "check:cutmaths": "tsx scripts/check-cutmaths.mts",
     "check:opencard": "tsx scripts/check-opencard.mts",
     "check:ordering": "tsx scripts/check-ordering.mts",
     "check:whofirst": "tsx scripts/check-whofirst.mts",

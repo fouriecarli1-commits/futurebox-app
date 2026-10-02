@@ -275,6 +275,10 @@ jobs:
         run: npm run check:ownfootage
       - name: No rival's product is named as the source of a control we built
         run: npm run check:ownwords
+      - name: The five joins between pieces are clamped, and the last piece cannot end in black
+        run: npm run check:joins
+      - name: The film clock and the file clock stay apart, at every speed
+        run: npm run check:cutmaths
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped

@@ -67,6 +67,7 @@
 
 import { drawMark, MARK_SHARE, type Corner, type Spot } from './logomark';
 import { fontFor } from './videofonts';
+import { joiningAt, needsHeld, type Join } from './videojoins';
 
 export interface Scene {
   /** The clip itself, as it came back from the engine. */
@@ -123,6 +124,21 @@ export interface Scene {
   readonly caption?: string;
   /** How fast this scene plays, as a multiple. One is as filmed. */
   readonly speed?: number;
+  /**
+   * How this scene ARRIVES after the one before it, and over how long.
+   *
+   * On the arriving scene rather than on the one it leaves, because that is
+   * where somebody looks for it: a join belongs to the shot being chosen, the
+   * way a fade-in belongs to the thing fading in. The renderer reads the NEXT
+   * scene's `join` to know whether to darken the end of this one, which is why
+   * `joiningAt` takes both.
+   *
+   * Ignored on the first scene of a film: there is nothing behind it to arrive
+   * from, and `videojoins.ts` answers nothing rather than holding the frame of
+   * a film that has not started.
+   */
+  readonly join?: Join;
+  readonly joinFor?: number;
   /**
    * How loud its own sound is, 0 to 2, when `sound` is on.
    *
@@ -702,6 +718,31 @@ export async function stitch(cut: Cut): Promise<Made> {
   /** Seconds of film laid down before the scene now playing. */
   let laid = 0;
 
+  /* ── The frame the last scene left behind ───────────────────────────────
+
+     A dissolve, a wipe and a slide need the OUTGOING picture while the
+     arriving one plays. One `<video>` decodes at a time in this renderer —
+     that is what makes the room free, there is no per-minute render bill
+     anywhere in it — so the outgoing half is the last frame of the shot
+     before, held on a canvas of its own.
+
+     Built only when a scene actually asks for one of those three. A film of
+     hard cuts and dips copies nothing: a full-size canvas copied every frame
+     of every film, for a feature nobody switched on, is the sort of cost that
+     shows up as "the export is slower than it was" with nothing to point at.
+
+     `videojoins.ts` carries the honest note about what a held frame is and is
+     not, and `LONGEST_JOIN` is six tenths of a second because of it. */
+  const wantsHeld = cut.scenes.some((one, i) => i > 0 && one.join && needsHeld(one.join));
+  const heldFrame = wantsHeld ? document.createElement('canvas') : null;
+  if (heldFrame) {
+    heldFrame.width = cut.width;
+    heldFrame.height = cut.height;
+  }
+  const holder = heldFrame?.getContext('2d') ?? null;
+  /** Whether anything has been held yet. False through the whole first scene. */
+  let heldReady = false;
+
   const recorder = new MediaRecorder(stream, { mimeType });
   const parts: Blob[] = [];
   recorder.ondataavailable = (event) => {
@@ -884,6 +925,59 @@ export async function stitch(cut: Cut): Promise<Made> {
              closures are WRITTEN in. It used to assert the latter, which
              stayed green with the branches swapped. */
           if (cut.markUnder) { badge(); words(); } else { words(); badge(); }
+
+          /* ── The join, over the picture and its furniture ───────────────
+
+             Over the words and the mark, and under the film-wide fade.
+
+             Over the words, because a caption sitting at full brightness on a
+             dissolving picture reads as a rendering fault rather than as a
+             transition — the same reason the film-wide fade below is painted
+             last of all, written in its own note. And a held frame carries the
+             words that were on the OUTGOING shot, because they were on the
+             canvas when it was copied, which is exactly right: they leave with
+             their own shot.
+
+             Every number comes out of `joiningAt`. Nothing here decides what a
+             dissolve looks like; it paints what that function answers, so there
+             is one copy of the arithmetic and `check:joins` can read it without
+             a browser. */
+          const joining = (): void => {
+            const now = joiningAt({
+              arrive: painted.join ?? 'cut',
+              arriveFor: painted.joinFor,
+              leave: cut.scenes[index + 1]?.join ?? 'cut',
+              leaveFor: cut.scenes[index + 1]?.joinFor,
+              into: Math.max(0, video.currentTime - window.from),
+              runs: Math.max(0, window.to - window.from),
+              first: index === 0,
+              last: index === cut.scenes.length - 1,
+            });
+            if (now.held && heldFrame && heldReady) {
+              context.save();
+              context.globalAlpha = Math.max(0, Math.min(1, now.held.solid));
+              if (now.held.keepFrom > 0) {
+                /* A wipe. The outgoing frame is clipped to the part of the
+                   width it still owns, so the arriving shot is revealed from
+                   the left rather than faded into. */
+                const from = now.held.keepFrom * cut.width;
+                context.beginPath();
+                context.rect(from, 0, cut.width - from, cut.height);
+                context.clip();
+              }
+              context.drawImage(heldFrame, -now.held.slid * cut.width, 0);
+              context.restore();
+            }
+            if (now.wash) {
+              context.save();
+              context.globalAlpha = Math.max(0, Math.min(1, now.wash.solid));
+              context.fillStyle = now.wash.colour;
+              context.fillRect(0, 0, cut.width, cut.height);
+              context.restore();
+            }
+          };
+          joining();
+
           /* ── The fade, over everything ────────────────────────────────
 
              Last, and that is the point: a fade under the caption would
@@ -927,6 +1021,18 @@ export async function stitch(cut: Cut): Promise<Made> {
          film's real length, so an error here moves the fade rather than
          shortening it, which is the kind of wrong nobody can point at. */
       laid += Math.max(0, window.to - window.from);
+
+      /* And its last frame is kept, for whatever arrives next.
+ 
+         Copied here rather than inside the draw loop: the canvas already holds
+         the frame this scene ended on, and copying it every frame would be a
+         full-size `drawImage` per frame for the one frame in a thousand that
+         gets used. Only when something downstream actually asked. */
+      if (holder && heldFrame) {
+        holder.clearRect(0, 0, heldFrame.width, heldFrame.height);
+        holder.drawImage(canvas, 0, 0, heldFrame.width, heldFrame.height);
+        heldReady = true;
+      }
     }
 
     recorder.stop();

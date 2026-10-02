@@ -869,6 +869,23 @@ export const STRINGS: Dict = {
   /* "Hoe vinnig dit speel" and not "spoed", for the same reason as "gedraai":
      it says what moving it does. */
   "edit.speed": { en: "How fast it plays", af: "Hoe vinnig dit speel" },
+  /* ── The joins between pieces ─────────────────────────────────────────
+
+     "Hoe dit inkom" rather than "oorgang". A transition is a word from a menu;
+     how a shot comes in is what somebody is actually choosing. The five names
+     themselves live in `videojoins.ts` beside the arithmetic, so a join cannot
+     be added without a name in both languages — `check:joins` holds that. */
+  "edit.join": { en: "How it comes in", af: "Hoe dit inkom" },
+  "edit.joinFor": { en: "How long it takes", af: "Hoe lank dit neem" },
+  /* Said out loud rather than hidden, because it is the one honest limit of
+     rendering in a browser: one video decodes at a time, so the shot that is
+     leaving is its last frame held still. At six tenths of a second nobody can
+     see it. A control that quietly froze the picture would be worse than none. */
+  "edit.joinHeld": {
+    en: "over the frame the last shot left",
+    af: "oor die laaste prent van die vorige skoot",
+  },
+  "edit.copy": { en: "Make a copy", af: "Maak \u2019n kopie" },
   "font.plain": { en: "Plain", af: "Gewoon" },
   "font.heavy": { en: "Heavy", af: "Swaar" },
   "font.serif": { en: "Serif", af: "Skreef" },
