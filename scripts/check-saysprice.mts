@@ -57,17 +57,56 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
   if (!passed) bad += 1;
 };
 
+/* ── Written as the rule, 3 October 2026 ──────────────────────────────────
+
+   These two pinned the exact expression `perMinute(total, CREDITS.filmOut)` and
+   went red the day the price stopped being that — not because anything about
+   the rule broke, but because the room now asks `billForEdit`, which is the
+   same table read through one more function and is strictly better than what
+   was pinned.
+
+   The fourth time this week a check has held an implementation still instead of
+   a behaviour: `check:logomark` pinned a one-line call, `check:ownfootage`
+   pinned a gap of three hundred characters, `check:editor` pinned a block
+   count. The rule here is "the number is worked out, not typed, and it is on
+   the button that spends" — so that is what is asked.
+
+   Stronger than before, too: it now also insists the room and the ROUTE read
+   the same module, which is the thing that actually guarantees the figure
+   somebody agreed to is the figure charged. */
 ok('the room works its price out from the table rather than printing one',
-  /perMinute\(\s*total\s*,\s*CREDITS\.filmOut\s*\)/.test(room),
+  /billForEdit\(/.test(room),
   'a number typed beside a button is right on the day it is typed and never checked again');
+
+ok('  from the same module the route charges from',
+  /from '\.\.\/lib\/filmcost'/.test(roomText) && /filmcost'/.test(readFileSync(ROUTE, 'utf8')),
+  'two copies of a price is two prices, and the one on the button is the one somebody agreed to');
 
 /* The same control. A price in a note three cards away is a price nobody
    read, and this rule exists because that is the easy way to satisfy the
    first one without satisfying the person. */
 const button = /data-editormake[\s\S]{0,2000}?<\/button>/.exec(room)?.[0] ?? '';
 ok('  and shows it on the button that spends it',
-  /data-editorprice/.test(button) && /CREDITS\.filmOut/.test(button),
+  /data-editorprice/.test(button) && /bill\.total/.test(button),
   'a price in a note three cards away is a price nobody read');
+
+/* ── And the press that spends is the one after the number ────────────────
+
+   Carli, 3 October 2026: *"hulle moet dan confirm of hulle wil voortgaan."*
+
+   The button that used to start the render now opens the bill. That is the
+   difference between a price said and a price agreed to, and it is held here
+   rather than only in a browser because a probe can only ever walk the one path
+   the room happened to be in. */
+ok('  and pressing it opens the bill rather than starting the render',
+  /data-editormake[\s\S]{0,900}?setAsking\(true\)/.test(room)
+  && !/data-editormake[\s\S]{0,900}?onClick=\{\(\) => void preview\(\)\}/.test(room),
+  'a confirm screen that appears while the thing it confirms is already running is not a confirm screen');
+
+ok('  and the bill is itemised rather than one number',
+  /data-editorbillline/.test(room) && /bill\.lines\.map/.test(room),
+  'a number on its own is something to accept or refuse; a list is something to'
+  + ' change your mind about');
 
 ok('the charge is asked for after the film exists, so a failed render is free',
   /stitch\(\{[\s\S]*?\/api\/madehere/.test(roomText),

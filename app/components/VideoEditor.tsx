@@ -67,6 +67,8 @@ import { fit } from '../lib/imagefile';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { check, type Plan } from '../lib/entitlements';
 import { CREDITS, perMinute } from '../lib/credits';
+import { billForEdit, inTheFilm, type BillLine } from '../lib/filmcost';
+import { loadWallet, NO_WALLET, type Wallet } from '../lib/wallet';
 import { KEEP_STEPS } from '../lib/undo';
 import {
   NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
@@ -77,6 +79,35 @@ import {
 import {
   JOINS, JOIN_FOR, LONGEST_JOIN, joinFits, joinName, needsHeld,
 } from '../lib/videojoins';
+
+/**
+ * One row of the bill, in words.
+ *
+ * Here rather than inside the component so the sentence for each row is in one
+ * place and `check:afrikaans` can see every key. The count goes into the
+ * sentence rather than beside it, because "3 pieces with words" and "words · 3"
+ * read differently to somebody deciding what to take off.
+ */
+function billWord(
+  t: (key: string, fallback: string) => string,
+  line: BillLine,
+): string {
+  const n = String(line.count);
+  switch (line.id) {
+    case 'film':
+      return t('bill.film', 'The film, {n} minute(s)').replace('{n}', n);
+    case 'words':
+      return t('bill.words', 'Words on {n} piece(s)').replace('{n}', n);
+    case 'look':
+      return t('bill.look', 'A look on {n} piece(s)').replace('{n}', n);
+    case 'join':
+      return t('bill.join', '{n} transition(s)').replace('{n}', n);
+    case 'mark':
+      return t('bill.mark', 'Your mark on it');
+    default:
+      return t('bill.under', 'A track under it');
+  }
+}
 
 /** A block on the strip is never thinner than this, however short the piece. */
 const THINNEST = 11;
@@ -442,6 +473,19 @@ export default function VideoEditor({
      All three live here rather than on the `Edit` for the same reason the
      image does: there is one mark over the whole film, not one per piece. The
      words' three are on the piece, because a caption is a piece's caption. */
+  /* ── What this film will cost, worked out as she builds it ──────────────
+
+     Carli, 3 October 2026: *"wanneer die video klaar is, en hulle op die export
+     knoppie druk dan wys daar die hoeveelheid krediete, en hulle moet dan
+     confirm of hulle wil voortgaan."*
+
+     `billForEdit` is the same function the route runs to charge. Not a copy of
+     it with the same numbers in — the same function — because two copies of a
+     price is two prices, and the one on the button is the one somebody agreed
+     to. `check:filmcost` holds both ends against it. */
+  const [asking, setAsking] = useState(false);
+  const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
+
   const [markTurn, setMarkTurn] = useState(0);
   const [markSolid, setMarkSolid] = useState(MARK_OPACITY);
   const [markUnder, setMarkUnder] = useState(false);
@@ -547,6 +591,11 @@ export default function VideoEditor({
 
   const step = stepFor(total, perSecond);
   const fades = fadesFor(edit);
+
+  /* Recomputed as she builds, so the number on the button is never stale. Cheap
+     — it walks the pieces once and adds up — and it has to be live, because the
+     whole promise is that the price is known before the press. */
+  const bill = useMemo(() => billForEdit(edit, Boolean(mark)), [edit, mark]);
 
   /* The clock cannot point past the end of the film. Dropping the last piece
      while the playhead is inside it used to leave the line hanging off the
@@ -1133,7 +1182,20 @@ export default function VideoEditor({
         const answer = await fetch('/api/madehere', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ kind: 'film', seconds: result.seconds, ref }),
+          /* What is IN the film, as counts — never a price.
+ 
+             The route runs `billFor` on these itself, which is the same
+             function that put the number on the button she just agreed to. A
+             browser that sent a figure would be a browser choosing what to pay.
+ 
+             `result.seconds` and not `runs(edit)`: the length charged for is the
+             length of the file that actually came out, measured off it. */
+          body: JSON.stringify({
+            kind: 'film',
+            seconds: result.seconds,
+            ref,
+            inIt: inTheFilm(edit, Boolean(mark)),
+          }),
         });
         const said = (await answer.json().catch(() => null)) as { message?: string } | null;
         if (!answer.ok) {
@@ -2552,7 +2614,18 @@ export default function VideoEditor({
             type="button"
             disabled={!edit.pieces.length || busy !== null || !canStitch()}
             data-editormake
-            onClick={() => void preview()}
+            /* Opens the bill rather than starting the render. Everything before
+               this button is free and stays free; this is the one press that
+               spends, so it asks first. */
+            onClick={() => {
+              setProblem('');
+              setAsking(true);
+              /* Asked fresh every time rather than held from the room opening:
+                 a balance read when the room opened is a balance from before
+                 whatever else she spent this hour, and a confirm screen showing
+                 a stale number is worse than one showing none. */
+              void loadWallet().then(setWallet);
+            }}
             className="min-h-[44px] rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40 inline-flex items-center gap-2"
           >
             {busy === 'make' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
@@ -2564,12 +2637,131 @@ export default function VideoEditor({
                 trusting a room. Everything up to this button is free and
                 stays free; this is the one press that costs, so this is
                 where the number goes. */}
-            {total > 0 && (
+            {bill.total > 0 && (
               <span data-editorprice className="rounded-lg bg-zinc-950/20 px-2 py-0.5 text-[11px]">
-                {perMinute(total, CREDITS.filmOut)} {t('edit.credits', 'credits')}
+                {bill.total} {t('edit.credits', 'credits')}
               </span>
             )}
           </button>
+
+          {/* ── The bill, and the press that agrees to it ──────────────────
+
+              Carli, 3 October 2026: *"dan wys daar die hoeveelheid krediete, en
+              hulle moet dan confirm of hulle wil voortgaan."*
+
+              Itemised rather than a total, and that is the point of it: a
+              number on its own is something to accept or refuse, and a list is
+              something to change your mind about. Somebody looking at "3
+              transitions · 3" who did not care much about the transitions now
+              knows exactly what taking them off saves.
+
+              Shown BEFORE the render and not after, which matters most to
+              whoever cannot afford it. The charge happens after the film exists
+              — deliberately, so nobody is ever billed for a film that never
+              arrived — and the cost of that order is that somebody with an
+              empty balance would otherwise sit through a full real-time render
+              to be told no at the end. The balance is read here so that the
+              answer comes first. */}
+          {asking && bill.total > 0 && (
+            <div
+              data-editorbill
+              className="space-y-3 rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3.5"
+            >
+              <p className="text-sm font-semibold text-zinc-100">
+                {t('edit.billTitle', 'What this film costs')}
+              </p>
+
+              <ul className="space-y-1.5">
+                {bill.lines.map((line) => (
+                  <li
+                    key={line.id}
+                    data-editorbillline={line.id}
+                    className="flex items-baseline justify-between gap-3 text-sm text-zinc-400"
+                  >
+                    <span>{billWord(t, line)}</span>
+                    <span className="shrink-0 tabular-nums text-zinc-300">{line.credits}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Said out loud whenever it is doing something. A discount
+                  nobody is told about is a price nobody can check — and this
+                  one is the whole reason a film with a caption on every shot is
+                  still affordable. */}
+              {bill.ceiling && (
+                <p data-editorceiling className="text-sm text-emerald-400">
+                  {t(
+                    'edit.billCeiling',
+                    'What is in it never costs more than the film itself, so {asked} comes down to {paid}.',
+                  ).replace('{asked}', String(bill.asked)).replace('{paid}', String(bill.elements))}
+                </p>
+              )}
+
+              <p className="flex items-baseline justify-between gap-3 border-t border-zinc-800 pt-2 text-sm font-semibold text-zinc-100">
+                <span>{t('edit.billTotal', 'Altogether')}</span>
+                <span data-editorbilltotal className="tabular-nums">
+                  {bill.total} {t('edit.credits', 'credits')}
+                </span>
+              </p>
+
+              {/* What they have, when there is anything to say. A signed-out
+                  visitor and an app with no accounts both get nothing here
+                  rather than a zero, because a zero reads as "you have used
+                  them up" — the same distinction `Balance.tsx` makes. */}
+              {wallet.metered && wallet.signedIn && wallet.ready && (
+                <p data-editorbalance className="text-sm text-zinc-500">
+                  {t('edit.billHave', 'You have {n}.').replace('{n}', String(wallet.balance))}
+                </p>
+              )}
+
+              {wallet.metered && wallet.signedIn && wallet.ready && wallet.balance < bill.total ? (
+                /* ── Short, and told so before the render rather than after ──
+
+                    She asked for exactly this: *"Dit gaan dan ook mense wat op
+                    die free version is keer om videos te export, menend hulle
+                    kan 'n video bou, en die funksies toets, maar nie hulle video
+                    export nie."* The room stays open, the work stays theirs, and
+                    the one press that spends is the one that stops. */
+                <div className="space-y-2" data-editorshort>
+                  <p className="text-sm text-rose-400">
+                    {t(
+                      'edit.billShort',
+                      'That is {n} more than you have. The film stays here — nothing is lost.',
+                    ).replace('{n}', String(bill.total - wallet.balance))}
+                  </p>
+                  {onUpgrade && (
+                    <button
+                      type="button"
+                      data-editorbillplans
+                      onClick={onUpgrade}
+                      className="min-h-[44px] rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950"
+                    >
+                      {t('edit.billSeePlans', 'See the plans')}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  data-editorbillgo
+                  disabled={busy !== null}
+                  onClick={() => { setAsking(false); void preview(); }}
+                  className="min-h-[44px] w-full rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 disabled:opacity-40"
+                >
+                  {t('edit.billGo', 'Yes, put it together')}
+                </button>
+              )}
+
+              <button
+                type="button"
+                data-editorbillno
+                onClick={() => setAsking(false)}
+                className="min-h-[44px] w-full rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-zinc-300"
+              >
+                {t('edit.billNo', 'Not yet')}
+              </button>
+            </div>
+          )}
 
           <Note>
             {t(

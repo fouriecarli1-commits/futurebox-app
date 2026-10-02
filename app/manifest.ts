@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { BAR_COLOUR } from './lib/brand';
+import { BAR_COLOUR, APP_LINE, APP_NAME, APP_SHORT } from './lib/brand';
 
 /**
  * What a phone reads when somebody adds this to their home screen.
@@ -27,8 +27,12 @@ import { BAR_COLOUR } from './lib/brand';
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'FutureBox — write it, sing it, film it',
-    short_name: 'FutureBox',
+    /* A third name for one app lived here — "FutureBox — write it, sing it,
+       film it" — beside the tab's and the Open Graph one. All three are read
+       from `brand.ts` now, because the one an installed app shows under its
+       icon is the one nobody looks at again after the day it was installed. */
+    name: `${APP_NAME} — ${APP_LINE}`,
+    short_name: APP_SHORT,
     description:
       'The whole studio in one place: write a song with AI and sing on it yourself, clone your voice for the show, and put a video to it.',
     start_url: '/',

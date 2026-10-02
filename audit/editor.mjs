@@ -1181,7 +1181,72 @@ try {
       /\d/.test(priceTag),
       `the button reads "${priceTag.trim()}" — a charge met afterwards is a surprise about money`);
 
+    /* ── The bill, and the press that agrees to it ────────────────────────
+
+       Carli, 3 October 2026: *"wanneer die video klaar is, en hulle op die
+       export knoppie druk dan wys daar die hoeveelheid krediete, en hulle moet
+       dan confirm of hulle wil voortgaan."*
+
+       Three things, and the first is the one with teeth: pressing the export
+       button must NOT start a render. A confirm screen that appears while the
+       thing it is confirming is already running is not a confirm screen. */
     await p.locator('[data-editormake]').click();
+    await p.waitForTimeout(900);
+
+    const bill = p.locator('[data-editorbill]');
+    check('the export button opens a bill rather than starting the render',
+      (await bill.count()) === 1,
+      'a confirm that appears while the thing it confirms is already running is not a confirm');
+
+    /* Read off the BUSY state and not off whether a film exists yet.
+
+       The first version asked whether `data-editormade` was there, and when the
+       confirm was deliberately broken to render anyway, that assertion stayed
+       green — a real-time render of a two-second film simply had not finished in
+       the 900ms before it looked. It was measuring "has it finished" where the
+       rule is "has it started", which is the adjacent-measurement fault this
+       repository keeps finding.
+
+       The button disables itself the moment a render begins, so an enabled
+       button is proof nothing is running. The one that caught the broken
+       version was the "not yet" check below it, by accident. */
+    check('  and nothing has started running',
+      (await p.locator('[data-editormake]').isDisabled()) === false
+      && (await p.locator('[data-editormade]').count()) === 0,
+      'the press that spends has to be the one after the number, not before it');
+
+    /* Itemised, because a number on its own is something to accept or refuse
+       and a list is something to change your mind about. The film's own row is
+       always there; the rest depend on what was built above, and by this point
+       in the walk there is a look, words and a transition on it. */
+    const rows = await p.locator('[data-editorbillline]').count();
+    check('  and it is itemised, not one number',
+      rows >= 2,
+      `${rows} rows — somebody looking at "3 transitions · 3" knows what taking`
+      + ' them off saves; somebody looking at "9" does not');
+
+    check('    with the film itself on it',
+      (await p.locator('[data-editorbillline="film"]').count()) === 1);
+
+    /* And the total on the bill is the same number as the one on the button
+       she pressed to get here. Two copies of a price is two prices. */
+    const onBill = (await p.locator('[data-editorbilltotal]').innerText().catch(() => '')) || '';
+    const billNumber = Number((onBill.match(/(\d+)/) ?? [])[1] ?? '-1');
+    const buttonNumber = Number((priceTag.match(/(\d+)/) ?? [])[1] ?? '-2');
+    check('  and the bill agrees with the button that opened it',
+      billNumber > 0 && billNumber === buttonNumber,
+      `the button said ${buttonNumber} and the bill says ${billNumber}`);
+
+    /* Backing out leaves everything exactly as it was. A confirm with no way
+       back is not a confirm either. */
+    await p.locator('[data-editorbillno]').click();
+    await p.waitForTimeout(400);
+    check('  and saying "not yet" puts it away without making anything',
+      (await bill.count()) === 0 && (await p.locator('[data-editormade]').count()) === 0);
+
+    await p.locator('[data-editormake]').click();
+    await p.waitForTimeout(900);
+    await p.locator('[data-editorbillgo]').click();
     const film = p.locator('[data-editormade]');
     await film.waitFor({ state: 'visible', timeout: 45000 }).catch(() => undefined);
 

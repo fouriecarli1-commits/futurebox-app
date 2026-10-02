@@ -910,6 +910,44 @@ export const STRINGS: Dict = {
     en: "Where it ends in the clip",
     af: "Waar dit in die knipsel eindig",
   },
+  /* On the account screen, at the bottom. The one question asked before any
+     other about a reported fault — is this the app with the fix in it — and
+     until 3 October 2026 the only place it could be answered was `/oops`, a
+     page you reach by crashing. */
+  "account.build": { en: "Version", af: "Weergawe" },
+  /* ── The bill in the cutting room ──────────────────────────────────────
+
+     Carli, 3 October 2026: *"dan wys daar die hoeveelheid krediete, en hulle
+     moet dan confirm of hulle wil voortgaan."*
+
+     Itemised and not a total, because a number on its own is something to
+     accept or refuse and a list is something to change your mind about. */
+  "edit.billTitle": { en: "What this film costs", af: "Wat hierdie film kos" },
+  "bill.film": { en: "The film, {n} minute(s)", af: "Die film, {n} minuut(e)" },
+  "bill.words": { en: "Words on {n} piece(s)", af: "Woorde op {n} stuk(ke)" },
+  "bill.look": { en: "A look on {n} piece(s)", af: "\u2019n Voorkoms op {n} stuk(ke)" },
+  "bill.join": { en: "{n} transition(s)", af: "{n} oorgang(e)" },
+  "bill.mark": { en: "Your mark on it", af: "Jou merk daarop" },
+  "bill.under": { en: "A track under it", af: "Klank daaronder" },
+  /* Said out loud whenever it is doing something. A discount nobody is told
+     about is a price nobody can check, and this one is the whole reason a film
+     with a caption on every shot is still affordable. */
+  "edit.billCeiling": {
+    en: "What is in it never costs more than the film itself, so {asked} comes down to {paid}.",
+    af: "Wat daarin is, kos nooit meer as die film self nie, so {asked} kom af na {paid}.",
+  },
+  "edit.billTotal": { en: "Altogether", af: "Altesaam" },
+  "edit.billHave": { en: "You have {n}.", af: "Jy het {n}." },
+  /* The film stays. That sentence is the important half: somebody short of
+     credits has not lost an evening's cutting, and a screen that did not say so
+     would read like the work had gone with the refusal. */
+  "edit.billShort": {
+    en: "That is {n} more than you have. The film stays here \u2014 nothing is lost.",
+    af: "Dit is {n} meer as wat jy het. Die film bly hier \u2014 niks is verloor nie.",
+  },
+  "edit.billSeePlans": { en: "See the plans", af: "Kyk na die planne" },
+  "edit.billGo": { en: "Yes, put it together", af: "Ja, sit dit saam" },
+  "edit.billNo": { en: "Not yet", af: "Nog nie" },
   "font.plain": { en: "Plain", af: "Gewoon" },
   "font.heavy": { en: "Heavy", af: "Swaar" },
   "font.serif": { en: "Serif", af: "Skreef" },

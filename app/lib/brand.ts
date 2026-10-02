@@ -58,6 +58,49 @@ export const BAR_COLOUR = '#fafaf9';
 /** The full origin, for links rather than for printing. */
 export const SITE_URL = `https://${SITE_HOST}`;
 
+/**
+ * What this app is called, in public.
+ *
+ * ── Why it carries the word, and why that is not decoration ──────────────
+ *
+ * `docs/GOING_LIVE.md` §2 settled the name and wrote down the reason: every
+ * short form of the plain name was taken and serving, FIVE of them by other
+ * people using the FutureBox name itself. "Studio" is the distinctive part. In
+ * trademark terms "the" and "app" are not distinctive, so a name built on one
+ * of those would have had somebody else's mark at the centre of it.
+ *
+ * The domain followed that reasoning — `futurebox.studio` — and the company
+ * followed it, FUTUREBOXSTUDIO (Pty) Ltd. The app's own title did not: it read
+ * "FutureBox — Digital Learning & Creative AI Platform", which is the one place
+ * a member, a search engine and anybody sending a link actually sees a name.
+ *
+ * Carli, 3 October 2026: *"Ons kan onsself nie vasloop met legal in probleme
+ * met die uitleg en die tools wat ons bou nie."* Said about the editor, and
+ * true of this: the registered name and the public name have to be the same
+ * name, and the reason this one has a second word is the whole point of it.
+ *
+ * ── Short and long ───────────────────────────────────────────────────────
+ *
+ * `APP_SHORT` is for the places with no room — an icon on a home screen, a
+ * tab, a byline. It is the same name shortened by its owner, which is ordinary
+ * and is not the same as a public title that drops the distinctive word.
+ */
+export const APP_NAME = 'FutureBox Studio';
+
+/** The short form, for an icon label and anywhere with no room for the rest. */
+export const APP_SHORT = 'FutureBox';
+
+/**
+ * What it does, in one line, for a tab and a shared link.
+ *
+ * This read "The Black Box for the Future: Masterclasses, Podcasts, Creative AI
+ * & Intelligence Radar" — written before the app made a single song. The line
+ * below was already in the same file, under `openGraph`, and is what the app
+ * actually does. Two descriptions of one product in one file, and the stale one
+ * was the one on the tab.
+ */
+export const APP_LINE = 'Make a song, make the video, and put it out. In English or Afrikaans.';
+
 /** A creator's public address, as it is shown to them. */
 export function profileAddress(handle: string): string {
   return `${SITE_HOST}/@${handle.replace(/^@/, '')}`;

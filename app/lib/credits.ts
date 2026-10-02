@@ -181,6 +181,53 @@ export const CREDITS = {
    */
   filmOut: 3,
   /**
+   * ── What is IN the film, on top of the film itself ──────────────────────
+   *
+   * Carli, 3 October 2026: *"elke element wat op die video editing gebruik word
+   * [moet] krediete dra ... Dus moet die tekste, die filters, die generations
+   * ens alles krediete dra."* And in the same breath, the constraint: *"Nie te
+   * hoë krediete nie, dit moet bekostigbaar wees om 'n video uiteindelik te
+   * export."*
+   *
+   * One credit each, which is R1.66. They are deliberately the smallest number
+   * that is not nought, for a reason worth writing down: **none of these costs
+   * this app a cent.** The whole room renders in her own browser. Every other
+   * number in this file is a markup on an invoice somebody sends us; these five
+   * are purely what the work is worth, and a price nobody can check against a
+   * cost should be the modest one. The same argument that put `filmOut` at
+   * three rather than ten.
+   *
+   * ── Charged at the export and nowhere else ──────────────────────────────
+   *
+   * Trying is free. A look applied, undone and applied again costs nothing, and
+   * must — the thing an editor is FOR is trying, and a room that charged per
+   * tap would have priced away its own purpose. Nothing is counted until the
+   * film is put together, and then it is counted once.
+   *
+   * ── And the ceiling, which is the part that keeps it affordable ─────────
+   *
+   * The elements together never cost more than the film itself. See
+   * `filmcost.ts`, which is where the arithmetic lives and `check:filmcost`
+   * reads it.
+   *
+   * Without that ceiling a three-minute video with a caption on every shot runs
+   * to twenty-eight credits, and a room whose value is that people use it would
+   * be charging most for the people using it most. With it, the dearest film
+   * anybody can make is twice the cheapest one of the same length, and the
+   * thing that moves the price is the LENGTH — which is the thing that moves
+   * what the film is worth.
+   */
+  /** Words on a piece. Counted per piece that carries them, not per letter. */
+  filmWords: 1,
+  /** A look on a piece. Counted per piece that carries one. */
+  filmLook: 1,
+  /** A join between two pieces that is not a straight cut. One each. */
+  filmJoin: 1,
+  /** Her own mark on the film. Once, whatever it is on. */
+  filmMark: 1,
+  /** A track under the whole thing. Once. */
+  filmUnder: 1,
+  /**
    * Bouncing a mix out of the Pro Booth. **Per minute of finished mix.**
    *
    * One, against the cutting room's three, and the difference is the whole

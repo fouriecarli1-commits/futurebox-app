@@ -64,6 +64,7 @@
 import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { charge } from '@/app/lib/server/credits';
 import { CREDITS, perMinute } from '@/app/lib/credits';
+import { billFor, NOTHING_IN_IT, type InTheFilm } from '@/app/lib/filmcost';
 
 /** The longest thing this will price in one go, in seconds. */
 const LONGEST = 60 * 30;
@@ -87,7 +88,9 @@ export async function POST(request: Request): Promise<Response> {
   const flood = refuseIfTooMany('madehere', request, GENERATION);
   if (flood) return flood;
 
-  let body: { seconds?: unknown; ref?: unknown; kind?: unknown };
+  let body: {
+    seconds?: unknown; ref?: unknown; kind?: unknown; inIt?: unknown;
+  };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -124,11 +127,62 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'no_ref', message: 'Could not read that.' }, { status: 400 });
   }
 
-  const price = perMinute(seconds, rate);
+  /* ── What is in the film, and who decides what it costs ────────────────
+
+     Carli, 3 October 2026: *"elke element wat op die video editing gebruik word
+     [moet] krediete dra."*
+
+     The browser sends COUNTS — how many pieces carry words, how many joins are
+     not straight cuts, whether there is a mark and a track. It does not send a
+     price, and nothing below reads one. `billFor` is the same function the
+     editor ran to put a number on the button, so the figure somebody agreed to
+     and the figure charged are the same arithmetic rather than two copies of
+     it.
+
+     Every count is clamped here rather than trusted. A browser reporting
+     nine hundred captions is a bug on our side or a hand on the wire, and the
+     answer to both is the same: it cannot cost more than the film can hold.
+     One element per second of film is already far beyond anything real.
+
+     Only the cutting room sends this. A mix has no captions, so the Booth's
+     charge stays exactly what it was — `perMinute` of `mixOut`. */
+  const price = kind === 'film'
+    ? billFor(inItFrom(body.inIt, seconds)).total
+    : perMinute(seconds, rate);
   const paid = await charge(request, price, `madehere.${kind}`, `madehere:${kind}:${ref}`);
   if (!paid.ok) return paid.response;
 
   return Response.json({ ok: true, credits: price });
+}
+
+/**
+ * The counts off a request, clamped to what a film of this length can hold.
+ *
+ * Anything unreadable is nought rather than refused: a film that arrived is
+ * handed over, and the worst a missing count can do is charge less. Refusing
+ * somebody's finished work over a malformed number would be the one
+ * unforgivable version of this route, which is the same reason the length above
+ * is clamped rather than rejected.
+ */
+function inItFrom(raw: unknown, seconds: number): InTheFilm {
+  if (!raw || typeof raw !== 'object') return { ...NOTHING_IN_IT, seconds };
+  const sent = raw as Record<string, unknown>;
+  /* One element per second is already far past anything a person makes, and it
+     is a ceiling that scales with the film rather than a constant that would be
+     wrong at both ends. */
+  const most = Math.max(1, Math.floor(seconds));
+  const count = (what: unknown): number => {
+    const one = Number(what);
+    return Number.isFinite(one) && one > 0 ? Math.min(Math.floor(one), most) : 0;
+  };
+  return {
+    seconds,
+    words: count(sent.words),
+    looks: count(sent.looks),
+    joins: count(sent.joins),
+    mark: sent.mark === true,
+    under: sent.under === true,
+  };
 }
 
 /** What something of this length would cost, so a room can say so first. */

@@ -67,6 +67,44 @@ ok(
   /Weergawe · Build:/.test(oops),
 );
 
+/* ── And on a screen somebody reaches without crashing ────────────────────
+
+   3 October 2026. Carli: *"Het jy enige iets gepush en gestoot? Ek sien nie
+   veranderings nie."* Six commits had gone to `main` that morning, and neither
+   of us could tell whether her phone was holding any of them.
+
+   The answer existed. It was on `/oops`, which is the page you reach by
+   crashing — so the one thing that answers "is this the app with the fix in
+   it" lived behind a fault, and the moment it is needed most is the one where
+   nothing has crashed at all. It was the right stamp in a room nobody visits.
+
+   The account screen, because that is where a version number belongs and where
+   somebody looks for one. Asserted separately from the `/oops` copy: the two
+   can be removed one at a time, and losing the one you can reach on purpose is
+   the loss that matters. */
+const account = readFileSync('app/components/Account.tsx', 'utf8');
+/* And the host, which is the fault nothing in this repository can see.
+
+   `SITE_HOST` falls back to the Vercel address for good reasons, and the cost
+   is that a production deploy with `NEXT_PUBLIC_SITE_HOST` unset looks exactly
+   like a working one — every canonical link, sitemap entry and Open Graph tag
+   pointing somewhere the app is not. Whether the variable was set lives in
+   somebody else's dashboard, so no check here can read it. What a check CAN do
+   is insist the app print what it believes, where a person will see it. */
+ok(
+  'the line says which address this build thinks it is served from',
+  /SITE_HOST/.test(lib) && /builtFor/.test(lib),
+  'a deploy with the domain variable unset is indistinguishable from a working'
+  + ' one, and the difference is every shared link going to the wrong place',
+);
+
+ok(
+  'and on the account screen, which is reached without crashing first',
+  /data-build/.test(account) && /buildLine\(\)/.test(account),
+  'a build stamp only on the error page answers the question only after a fault,'
+  + ' and the question that needs it most is asked when nothing has crashed',
+);
+
 if (failures) {
   console.error(
     '\ncheck:whichbuild — "is this the build with the fix in it" is the first question about\n' +

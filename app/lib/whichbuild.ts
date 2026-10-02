@@ -1,5 +1,7 @@
 'use client';
 
+import { SITE_HOST } from './brand';
+
 /**
  * Which build of this app is on this phone.
  *
@@ -43,10 +45,43 @@ export function builtAt(): string {
   return process.env.NEXT_PUBLIC_BUILT_AT ?? '';
 }
 
-/** One line for a screen, in both languages' one shared shape: id and date. */
+/**
+ * Which address this build thinks it is served from.
+ *
+ * ── Why this is on the screen and not only in a dashboard ────────────────
+ *
+ * `SITE_HOST` falls back to the Vercel address on purpose — a preview
+ * deployment and a laptop genuinely are that, and a default claiming the real
+ * domain would have every branch printing an address it is not served from.
+ *
+ * The cost of that correct default is that a PRODUCTION deploy with
+ * `NEXT_PUBLIC_SITE_HOST` unset looks exactly like a working one. Every
+ * canonical link, every sitemap entry and every Open Graph tag then points at
+ * `futurebox-app.vercel.app` while the app answers on `futurebox.studio` — a
+ * map to a place nobody is, with nothing on any screen to say so.
+ *
+ * `docs/GOING_LIVE.md` §2 says to set it once the domain is added. Whether it
+ * WAS set is not something a check in this repository can know, because it is a
+ * setting in somebody else's dashboard. So the app prints what it believes,
+ * beside the build it belongs to, and a wrong answer is readable at a glance
+ * instead of invisible until a shared link goes to the wrong place.
+ */
+export function builtFor(): string {
+  return SITE_HOST;
+}
+
+/**
+ * One line for a screen: which commit, when, and where it thinks it lives.
+ *
+ * Three facts and not two. Carli, 3 October 2026, looking at
+ * `futurebox-app.vercel.app` in her own browser bar and asking whether anything
+ * had been pushed at all: the commit answers that question, and the host
+ * answers the one she had not asked yet.
+ */
 export function buildLine(): string {
   const sha = builtFrom();
   const when = builtAt();
-  if (!sha && !when) return 'plaaslik · local';
-  return [sha || 'onbekend · unknown', when].filter(Boolean).join(' · ');
+  const where = builtFor();
+  if (!sha && !when) return `plaaslik · local · ${where}`;
+  return [sha || 'onbekend · unknown', when, where].filter(Boolean).join(' · ');
 }

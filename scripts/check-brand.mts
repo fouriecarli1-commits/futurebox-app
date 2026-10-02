@@ -22,6 +22,7 @@
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { withoutComments } from './prose.mts';
 
 let bad = 0;
 const check = (label: string, ok: boolean, detail = ''): void => {
@@ -109,6 +110,66 @@ check('the address is not typed anywhere but brand.ts', typed.length === 0, type
   check('and lists the pages rather than people',
     urls.every((one) => !one.includes('@') && !one.includes('channel')),
     urls.join(' | '));
+}
+
+/* ── The NAME, which had drifted the way the address once did ─────────────
+
+   3 October 2026. Carli: *"die naam is nogsteeds nie verander nie."*
+
+   The app was calling itself three different things in three files — "FutureBox
+   — Digital Learning & Creative AI Platform" on the tab, "FutureBox" in the
+   Open Graph tags, and "FutureBox — write it, sing it, film it" under the icon
+   of an installed app — none of them read from anywhere, all of them typed.
+
+   The first was written before the app made a single song, and it was the one
+   on the tab and in search.
+
+   `docs/GOING_LIVE.md` §2 settled the name and wrote the reason down: every
+   short form of the plain name is taken and serving, FIVE of them by other
+   people using the FutureBox name itself, so the distinctive part of ours is
+   "Studio". The domain followed that and so did the company. The public title
+   did not — and the one place a name has to carry its distinctive part is the
+   place the public reads it.
+
+   This is the address rule applied to the name, for the same reason: one
+   source, and everything that prints it reads that source. */
+{
+  const brand = readFileSync('app/lib/brand.ts', 'utf8');
+  check('the name lives in brand.ts', /export const APP_NAME/.test(brand));
+  check('  and carries the word that makes it distinctive',
+    /APP_NAME = '[^']*Studio'/.test(brand),
+    'GOING_LIVE §2: five other parties serve the plain name, so "Studio" is the'
+    + ' distinctive part — a public title without it puts somebody else\'s mark'
+    + ' at the centre of ours');
+  check('  and says what the app does in one line',
+    /export const APP_LINE/.test(brand));
+
+  for (const [file, what] of [
+    ['app/layout.tsx', 'the tab and the shared link'],
+    ['app/manifest.ts', 'the label under an installed icon'],
+  ] as const) {
+    const text = readFileSync(file, 'utf8');
+    check(`${what} reads the name rather than typing it`,
+      /APP_NAME/.test(text),
+      file);
+    /* Through `withoutComments`, and this check caught itself on the first run
+       without it: the comment in `layout.tsx` explaining WHY the name changed
+       quotes the old title, in double quotes, and the scan read its own
+       documentation as the fault it describes. Exactly what check:brand's
+       sitemap rule met once already, and the third time this repository has
+       made it.
+ 
+       `withoutComments` and not `code`: `code` blanks string bodies too, and a
+       hard-coded name IS a string body — the thing being looked for. Getting
+       that pair the wrong way round has caused three separate false negatives
+       in this repository, so it is named here as well. */
+    const typed = [...withoutComments(text).matchAll(/['"`][^'"`\n]*FutureBox[^'"`\n]*['"`]/g)]
+      .map((m) => m[0])
+      .filter((one) => !one.includes('${'));
+    check(`  and names it nowhere else in ${file}`,
+      typed.length === 0,
+      typed.join(' | '));
+  }
 }
 
 if (bad) {

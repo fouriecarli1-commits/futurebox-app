@@ -42,6 +42,7 @@ import { loadTaste, forgetTaste, NO_TASTE, type Taste } from '../lib/taste';
 import Subscription from './Subscription';
 import Authenticators from './Authenticators';
 import Note from './Note';
+import { buildLine } from '../lib/whichbuild';
 
 export default function Account({
   open,
@@ -421,6 +422,28 @@ export default function Account({
             <DeleteAccount email={email} />
           </section>
         )}
+
+        {/* ── Which build this phone is holding ────────────────────────
+
+            Carli, 3 October 2026: *"Het jy enige iets gepush en gestoot? Ek
+            sien nie veranderings nie."* Six commits had gone to `main` that
+            morning and neither of us could tell whether her phone had them.
+
+            `whichbuild.ts` was written in September for exactly this and put
+            on `/oops` — a page somebody only reaches after a crash. So the
+            one thing that answers "is this the app with the fix in it" lived
+            behind a fault, and the question that needed it most is the one
+            asked when nothing has crashed at all.
+
+            It is here now, at the bottom of the screen everybody can find.
+            Seven characters and a date: short enough to read down a phone
+            line, long enough to name one commit. */}
+        <p
+          data-build
+          className="text-xs text-zinc-600 font-mono"
+        >
+          {t('account.build', 'Version')}: {buildLine()}
+        </p>
 
         <p className="text-xs text-zinc-600 leading-relaxed">
           {t('account.legal', 'The')}{' '}

@@ -123,6 +123,26 @@ const NAMED_ELSEWHERE: Record<string, string> = {
      `lib/credits.ts` for the whole of that reasoning. */
   mixOut: 'on every card, in the same sentence as the Pro Booth',
   erase: 'on every card, in the same line as the background — same rate, same sentence',
+  /* ── What is IN the film, 3 October 2026 ───────────────────────────────
+
+     Carli: *"elke element wat op die video editing gebruik word [moet]
+     krediete dra ... Dus moet die tekste, die filters, die generations ens
+     alles krediete dra."*
+
+     On every card, but as ONE line rather than five. "1 for each thing in it"
+     with the cap in the same sentence and a worked example beside it — a card
+     listing five one-credit rows would be read by nobody, which is the whole
+     reason this list exists.
+
+     What the card has to carry is the SHAPE, because that is what somebody is
+     buying: the cutting is free, the export costs, and the price has a known
+     top. The five rows themselves are shown itemised at the moment they are
+     charged, on the bill in the room, where somebody can act on them. */
+  filmWords: 'on every card as "1 for each thing in it"; itemised on the bill in the room',
+  filmLook: 'the same line; itemised on the bill in the room',
+  filmJoin: 'the same line; itemised on the bill in the room',
+  filmMark: 'the same line; itemised on the bill in the room',
+  filmUnder: 'the same line; itemised on the bill in the room',
 };
 
 const priced = Object.keys(CREDITS);

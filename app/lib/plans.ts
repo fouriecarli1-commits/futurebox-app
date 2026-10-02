@@ -199,7 +199,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 1 credit a minute. Splitting stems is 4 credits a minute, changing a voice 4.',
-      'The cutting room: a timeline, fades, looks, words, sound under it and export — all of the cutting unlimited. Putting the finished film together is 3 credits a minute. Taking a background out is 8 credits per five seconds, an item out 11; generating a piece is priced like any clip.',
+      'The cutting room: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and free. Putting the finished film together is 3 credits a minute plus 1 for each thing in it, and what is in it never costs more than the film itself — a twenty-second advert with words, a look, a transition, your logo and a track is 6. Taking a background out is 8 credits per five seconds, an item out 11.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing is 162 credits a minute — more than this plan holds, so it starts at Studio.',
     ],
@@ -256,7 +256,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 1 credit a minute. Splitting stems is 4 credits a minute, changing a voice 4.',
-      'The cutting room: a timeline, fades, looks, words, sound under it and export — all of the cutting unlimited. Putting the finished film together is 3 credits a minute. Taking a background out is 8 credits per five seconds, an item out 11; generating a piece is priced like any clip.',
+      'The cutting room: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and free. Putting the finished film together is 3 credits a minute plus 1 for each thing in it, and what is in it never costs more than the film itself — a twenty-second advert with words, a look, a transition, your logo and a track is 6. Taking a background out is 8 credits per five seconds, an item out 11.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing into another language, in the same voice — 162 credits a minute out of your 190.',
     ],
@@ -297,7 +297,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Pro Booth: lanes, the grid, the metronome, mixing, mastering and undo — all of it unlimited. Bouncing the finished mix out is 1 credit a minute. Splitting stems is 4 credits a minute, changing a voice 4.',
-      'The cutting room: a timeline, fades, looks, words, sound under it and export — all of the cutting unlimited. Putting the finished film together is 3 credits a minute. Taking a background out is 8 credits per five seconds, an item out 11; generating a piece is priced like any clip.',
+      'The cutting room: a timeline, trims, fades, looks, words, transitions and sound under it — all of the cutting unlimited and free. Putting the finished film together is 3 credits a minute plus 1 for each thing in it, and what is in it never costs more than the film itself — a twenty-second advert with words, a look, a transition, your logo and a track is 6. Taking a background out is 8 credits per five seconds, an item out 11.',
       'The marketing desk — the market read, the week and the queue. A month\u2019s plan is 40 credits; eight advert lines are 20.',
       'Dubbing into another language, in the same voice — 162 credits a minute out of your 440.',
     ],
