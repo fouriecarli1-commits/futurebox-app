@@ -293,6 +293,77 @@ try {
     check('the timeline carries a fade handle at each end',
       (await handle.count()) === 1 && (await p.locator('[data-editorfadeouthandle]').count()) === 1);
 
+    /* ── Trimming by the edge of the block ────────────────────────────────
+
+       The most ordinary thing a timeline has, and this room did not have it
+       until 3 October 2026: the ends of a piece were two number boxes in a card
+       below, and the strip was the one place in this app where you could see a
+       length and not change it.
+
+       Only on the PICKED block, which is the first thing measured — handles on
+       every block at once is eight grab targets in a 334-pixel strip.
+
+       The right edge is the one walked, because it is the one that follows the
+       thumb: this strip has no gaps, so where a block STARTS is decided by the
+       pieces before it and trimming the in-point shortens the block at its far
+       end. Both are read for a length change; only the right one is asserted to
+       move under the pointer. */
+    check('the picked block carries a handle at each end',
+      (await p.locator('[data-editortrimfrom]').count()) === 1
+      && (await p.locator('[data-editortrimto]').count()) === 1,
+      'the strip was the one place in this app showing a length you could not change');
+
+    const beforeTrim = await filmLength();
+    const rightEdge = p.locator('[data-editortrimto]');
+    await rightEdge.hover();
+    await p.waitForTimeout(200);
+    const edgeBox = await rightEdge.boundingBox();
+    await p.mouse.down();
+    await p.mouse.move((edgeBox?.x ?? 0) - perSecond * 0.6, (edgeBox?.y ?? 0) + 10, { steps: 12 });
+    await p.mouse.up();
+    await p.waitForTimeout(500);
+    const afterTrim = await filmLength();
+    check('  and pulling the end in makes the film shorter',
+      afterTrim < beforeTrim - 0.2,
+      `${beforeTrim}s became ${afterTrim}s after dragging the end in most of a second`);
+
+    check('    and the number box in the card agrees with the edge',
+      Math.abs(Number(await p.locator('[data-editorto]').inputValue()) - afterTrim) < 0.3,
+      `the box reads ${await p.locator('[data-editorto]').inputValue()} for a ${afterTrim}s film`
+      + ' — two controls for one number that disagree is worse than one');
+
+    check('    and the whole drag is one press of Back',
+      await (async () => {
+        await p.locator('[data-editorundo]').click();
+        await p.waitForTimeout(500);
+        return Math.abs((await filmLength()) - beforeTrim) < 0.2;
+      })(),
+      `${await filmLength()}s after one undo where it was ${beforeTrim}s`);
+
+    /* And it can be pulled back OUT, which is the whole reason the material's
+       length is kept on the piece. A trim that only goes one way is a one-way
+       door. Pulled in with the keyboard this time, then back out past where it
+       started, which is only possible against a real ceiling. */
+    await p.locator('[data-editortrimto]').focus();
+    for (let i = 0; i < 5; i += 1) {
+      await p.keyboard.press('ArrowLeft');
+      await p.waitForTimeout(80);
+    }
+    await p.waitForTimeout(400);
+    const pulledIn = await filmLength();
+    check('  and the end can be pulled in with the arrow keys too',
+      pulledIn < beforeTrim,
+      `${beforeTrim}s became ${pulledIn}s after five taps`);
+    for (let i = 0; i < 9; i += 1) {
+      await p.keyboard.press('ArrowRight');
+      await p.waitForTimeout(80);
+    }
+    await p.waitForTimeout(400);
+    check('    and back out again, because the clip remembers how long it is',
+      (await filmLength()) > pulledIn + 0.2,
+      `${pulledIn}s became ${await filmLength()}s — without the material's length`
+      + ' the only ceiling is wherever the edge was left');
+
     const stepsBefore = await p.locator('[data-editorundo]').isDisabled();
     await handle.hover();
     await p.mouse.down();

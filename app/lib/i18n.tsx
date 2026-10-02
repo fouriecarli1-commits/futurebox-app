@@ -898,6 +898,18 @@ export const STRINGS: Dict = {
     en: "Whole picture, bars where it does not fit",
     af: "Hele prent, balke waar dit nie pas nie",
   },
+  /* The two edges of a block on the strip. Read out by a screen reader, where
+     "where it starts in the clip" has to be unambiguous about WHICH clock — the
+     film's or the file's — because the two are different numbers and the whole of
+     3 October's bug hunt was about telling them apart. */
+  "edit.trimFrom": {
+    en: "Where it starts in the clip",
+    af: "Waar dit in die knipsel begin",
+  },
+  "edit.trimTo": {
+    en: "Where it ends in the clip",
+    af: "Waar dit in die knipsel eindig",
+  },
   "font.plain": { en: "Plain", af: "Gewoon" },
   "font.heavy": { en: "Heavy", af: "Swaar" },
   "font.serif": { en: "Serif", af: "Skreef" },

@@ -71,7 +71,7 @@ import { KEEP_STEPS } from '../lib/undo';
 import {
   NOTHING, SHAPES, LONGEST_FADE, SHORTEST_PIECE,
   add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
-  move, runs, split, startsAt,
+  move, runs, split, startsAt, trim,
   type Edit, type Piece,
 } from '../lib/videoedit';
 import {
@@ -721,6 +721,11 @@ export default function VideoEditor({
           name: file.name.replace(/\.[^.]+$/, ''),
           from: 0,
           to: length,
+          /* What the material actually holds, so a trim can be dragged back out
+             again. See the note on `holds`: without it the only ceiling is
+             wherever the edge is now, and a trim you cannot undo by dragging is
+             a one-way door. */
+          holds: length,
         });
       }
       commit(() => next);
@@ -955,6 +960,72 @@ export default function VideoEditor({
     node.addEventListener('pointerup', done);
     node.addEventListener('pointercancel', done);
   }, []);
+
+  /* ── Trimming by the edge of the block ──────────────────────────────────
+
+     The most ordinary thing a timeline has, and this room did not have it: the
+     ends of a piece were two number boxes in a card below. The boxes stay — a
+     number is the only way to say "exactly half a second" — but the gesture
+     somebody reaches for is the edge of the block, and until now the strip was
+     the one place in this app you could see a length and not change it.
+
+     The same shape as the fade handles above: pointer capture, the edit held at
+     pointerdown and filed once at pointerup, and `stopPropagation` so grabbing an
+     edge does not also scrub the track underneath.
+
+     ── And it goes through `trim`, which owns every clamp ───────────────────
+
+     A pixel on the strip is a FILM second; an edge of a window is a position in
+     the FILE; a piece at two times covers two of the second per one of the first.
+     That conversion and the four clamps — nought, `holds`, not crossing, and
+     `SHORTEST_PIECE` apart — live in `videoedit.ts` where `check:cutmaths` reads
+     them with numbers, not here where only a browser could. */
+  const takeEdge = useCallback((
+    which: 'from' | 'to',
+    id: string,
+    event: React.PointerEvent<HTMLElement>,
+  ) => {
+    event.stopPropagation();
+    event.preventDefault();
+    const node = event.currentTarget;
+    const track = node.parentElement;
+    if (!track || perSecond <= 0) return;
+    const box = track.getBoundingClientRect();
+    beforeDrag.current = edit;
+    node.setPointerCapture(event.pointerId);
+
+    const move = (m: PointerEvent) => {
+      setEdit((was) => {
+        const piece = was.pieces.find((one) => one.id === id);
+        if (!piece) return was;
+        /* Where the pointer is, on the FILM's clock... */
+        const second = (m.clientX - box.left) / perSecond;
+        /* ...turned into how far into this piece that is... */
+        const into = second - startsAt(was, id);
+        const fast = Math.max(0.1, Math.min(4, piece.speed ?? 1));
+        /* ...and then into a position in the FILE.
+ 
+           The right edge is measured from the piece's own start, so dragging it
+           sets `to` to "this much material from `from`". The left edge is a
+           position in the material directly: moving it changes where in the file
+           the window opens, and the block's left edge on the strip is wherever
+           the pieces before it end. */
+        return which === 'to'
+          ? trim(was, id, 'to', piece.from + Math.max(0, into) * fast)
+          : trim(was, id, 'from', piece.from + into * fast);
+      });
+    };
+    const done = () => {
+      node.removeEventListener('pointermove', move);
+      node.removeEventListener('pointerup', done);
+      node.removeEventListener('pointercancel', done);
+      try { node.releasePointerCapture(event.pointerId); } catch { /* already gone */ }
+      held();
+    };
+    node.addEventListener('pointermove', move);
+    node.addEventListener('pointerup', done);
+    node.addEventListener('pointercancel', done);
+  }, [edit, perSecond, held]);
 
   /* ── Resizing by the corner, on the picture ─────────────────────────────
 
@@ -1328,6 +1399,87 @@ export default function VideoEditor({
                         />
                       );
                     })}
+
+                    {/* ── The ends of the picked piece, as something to pull ──
+
+                        Only on the piece that is picked. Handles on every block
+                        at once is eight grab targets in a 334-pixel strip, and
+                        the thing somebody is trimming is the thing they just
+                        tapped. Every editor that has these shows them on the
+                        selection.
+
+                        ── What each one looks like it does, and what it does ──
+
+                        The right edge follows the thumb exactly: drag it left and
+                        the block ends there.
+
+                        The left edge does NOT move under the thumb, and that is
+                        worth saying rather than hiding. This strip has no gaps —
+                        pieces are laid end to end — so where a block STARTS on the
+                        film's clock is decided by the pieces before it, and
+                        nothing about trimming this one's in-point can change it.
+                        Dragging it right takes material off the start, so the
+                        block gets shorter at its far end and the pieces after it
+                        slide left.
+
+                        What makes that legible is the picture: the viewer seeks to
+                        the new start as it moves, so she is watching the frame the
+                        piece will now open on. That is the feedback that matters,
+                        and it was already there — the effect that seeks on a
+                        changed `from` has been in this room since the trim boxes
+                        were. */}
+                    {picked && edit.pieces.some((one) => one.id === picked) && (() => {
+                      const one = edit.pieces.find((two) => two.id === picked);
+                      if (!one) return null;
+                      const opens = startsAt(edit, one.id) * perSecond;
+                      const shuts = opens + lengthOfPiece(one) * perSecond;
+                      return (
+                        <>
+                          <div
+                            data-editortrimfrom
+                            role="slider"
+                            aria-label={t('edit.trimFrom', 'Where it starts in the clip')}
+                            aria-valuemin={0}
+                            aria-valuemax={one.holds ?? one.to}
+                            aria-valuenow={one.from}
+                            tabIndex={0}
+                            onPointerDown={(event) => takeEdge('from', one.id, event)}
+                            onKeyDown={(event) => {
+                              const by = event.key === 'ArrowRight' ? 0.1
+                                : event.key === 'ArrowLeft' ? -0.1 : 0;
+                              if (!by) return;
+                              event.preventDefault();
+                              commit((was) => trim(was, one.id, 'from', one.from + by));
+                            }}
+                            style={{ left: Math.max(0, opens - 1) }}
+                            className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
+                          >
+                            <span className="pointer-events-none absolute inset-y-1 left-0 w-1 rounded-full bg-emerald-400" />
+                          </div>
+                          <div
+                            data-editortrimto
+                            role="slider"
+                            aria-label={t('edit.trimTo', 'Where it ends in the clip')}
+                            aria-valuemin={0}
+                            aria-valuemax={one.holds ?? one.to}
+                            aria-valuenow={one.to}
+                            tabIndex={0}
+                            onPointerDown={(event) => takeEdge('to', one.id, event)}
+                            onKeyDown={(event) => {
+                              const by = event.key === 'ArrowRight' ? 0.1
+                                : event.key === 'ArrowLeft' ? -0.1 : 0;
+                              if (!by) return;
+                              event.preventDefault();
+                              commit((was) => trim(was, one.id, 'to', one.to + by));
+                            }}
+                            style={{ left: Math.max(0, shuts - 12) }}
+                            className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
+                          >
+                            <span className="pointer-events-none absolute inset-y-1 right-0 w-1 rounded-full bg-emerald-400" />
+                          </div>
+                        </>
+                      );
+                    })()}
 
                     {/* ── The fades, as something to pull ──────────────────
 

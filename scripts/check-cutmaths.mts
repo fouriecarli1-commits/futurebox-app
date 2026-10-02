@@ -33,7 +33,7 @@
 import {
   NOTHING, SHORTEST_PIECE, SHAPES,
   add, atSecond, change, cutFrom, drop, duplicate, fadesFor, filmSecond, lengthOfPiece,
-  move, runs, split, startsAt,
+  move, runs, split, startsAt, trim,
   type Edit, type Piece,
 } from '../app/lib/videoedit';
 
@@ -216,6 +216,61 @@ ok('  and splitting an id that is not there changes nothing',
 ok('  and the two halves have ids of their own',
   new Set(halves.pieces.map((one) => one.id)).size === 3,
   'two pieces with one id is a picker that picks whichever find reaches first');
+
+/* ── Trimming an edge, and the ceiling that makes it two-way ───────────── */
+
+const held: Edit = { pieces: [piece('one', 2, 6, { holds: 10 })] };
+
+ok('the start of a window can be moved later',
+  trim(held, 'one', 'from', 3).pieces[0].from === 3);
+
+ok('  and back earlier again, down to the top of the material',
+  trim(held, 'one', 'from', -5).pieces[0].from === 0,
+  `${trim(held, 'one', 'from', -5).pieces[0].from} from an ask of -5`);
+
+ok('  and the end out to what the material actually holds',
+  trim(held, 'one', 'to', 99).pieces[0].to === 10,
+  `${trim(held, 'one', 'to', 99).pieces[0].to} against ten seconds of material —`
+  + ' an end past the end of the file is a piece that renders as nothing');
+
+ok('  but no further, so the window cannot be dragged off the end of the clip',
+  trim(held, 'one', 'to', 10.5).pieces[0].to === 10);
+
+/* The two-way part, which is the reason `holds` exists at all. A trim that
+   cannot be dragged back out is a one-way door — the same objection that put a
+   "back to a corner" button under the logo. */
+const pulledIn = trim(held, 'one', 'to', 4);
+ok('  and a trim pulled in can be pulled back out, which is why `holds` is kept',
+  pulledIn.pieces[0].to === 4 && trim(pulledIn, 'one', 'to', 9).pieces[0].to === 9,
+  'without the material\'s length the only ceiling is wherever the edge is now');
+
+ok('  and a piece with no `holds` trims inward and will not go past where it is',
+  trim({ pieces: [piece('one', 2, 6)] }, 'one', 'to', 99).pieces[0].to === 6,
+  'honest, and not a crash: an edit from anything that does not set it still cuts');
+
+/* Neither edge may cross the other, and they may not come closer than a block
+   somebody can still pick up. */
+ok('the two edges cannot cross',
+  trim(held, 'one', 'from', 99).pieces[0].from < trim(held, 'one', 'from', 99).pieces[0].to,
+  `${JSON.stringify(trim(held, 'one', 'from', 99).pieces[0].from)} against a `
+  + `${held.pieces[0].to} end`);
+
+ok('  and stay at least a pickable block apart, at both edges',
+  near(trim(held, 'one', 'from', 99).pieces[0].from, 6 - SHORTEST_PIECE)
+  && near(trim(held, 'one', 'to', -99).pieces[0].to, 2 + SHORTEST_PIECE),
+  `${trim(held, 'one', 'from', 99).pieces[0].from} and `
+  + `${trim(held, 'one', 'to', -99).pieces[0].to}`);
+
+ok('  and a trim to where the edge already is files no change',
+  trim(held, 'one', 'from', 2) === held,
+  'a new object for no change is a history step for nothing');
+
+ok('  and trimming an id that is not there changes nothing',
+  trim(held, 'nope', 'to', 3) === held);
+
+ok('  and a trim to nothing readable changes nothing',
+  trim(held, 'one', 'to', Number.NaN) === held,
+  'NaN through a clamp comes out NaN, and a block of NaN length does not appear');
 
 /* ── A copy carries everything that was decided ────────────────────────── */
 

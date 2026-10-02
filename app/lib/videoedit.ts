@@ -102,6 +102,25 @@ export interface Piece {
   readonly join?: Join;
   readonly joinFor?: number;
   /**
+   * How long the MATERIAL is, in seconds, whatever this window shows of it.
+   *
+   * ── Why this has to be kept ──────────────────────────────────────────────
+   *
+   * `from` and `to` are a window on a file, and until 3 October 2026 nothing
+   * remembered how long the file was. That was fine while trimming was two
+   * number boxes you typed into — you could type `to` back up. The moment the
+   * edge of a block can be DRAGGED, it stops being fine: dragging the right edge
+   * inward and then back out needs a ceiling, and without one the only honest
+   * ceiling is wherever it is now. A trim you cannot drag back out is a one-way
+   * door, which is the same objection that put a "back to a corner" button under
+   * the logo.
+   *
+   * Absent means "as much as the window already shows", so an edit made by
+   * anything that does not set it still trims inward and simply cannot be pulled
+   * back past where it starts. Honest, and not a crash.
+   */
+  readonly holds?: number;
+  /**
    * Fill the frame, cropping what will not fit, instead of letterboxing it.
    *
    * ── Why this is per piece and not per film ───────────────────────────────
@@ -381,6 +400,37 @@ export function cutFrom(edit: Edit): Cut {
 /** A piece added at the end. */
 export function add(edit: Edit, piece: Piece): Edit {
   return { ...edit, pieces: [...edit.pieces, piece] };
+}
+
+/**
+ * One edge of a piece's window, moved.
+ *
+ * `at` is a position in the FILE, because that is what an edge of a window is —
+ * and the room converts a pixel on the strip into one by multiplying by the
+ * speed, the same way `split` does. The two clocks are described at length on
+ * `filmSecond`; this function is on the file's side of them.
+ *
+ * Every clamp is here rather than at the three call sites a drag, a number box
+ * and an arrow key would otherwise be:
+ *
+ * - the start cannot go below nought, and the end cannot pass `holds`;
+ * - neither may cross the other, and they must stay `SHORTEST_PIECE` apart,
+ *   because a block thinner than that cannot be picked up again;
+ * - an unknown id changes nothing, so a stale selection is a no-op rather than
+ *   an edit of whatever `find` reached first.
+ */
+export function trim(edit: Edit, id: string, which: 'from' | 'to', at: number): Edit {
+  const piece = edit.pieces.find((one) => one.id === id);
+  if (!piece || !Number.isFinite(at)) return edit;
+  /* Absent `holds` means "no more than it already shows". See the note on the
+     field: it trims inward and refuses to be pulled back out, which is a limit
+     somebody can feel rather than a ceiling nobody set. */
+  const ceiling = Number.isFinite(piece.holds) ? (piece.holds as number) : piece.to;
+  const put = which === 'from'
+    ? Math.max(0, Math.min(at, piece.to - SHORTEST_PIECE))
+    : Math.max(piece.from + SHORTEST_PIECE, Math.min(at, ceiling));
+  if (put === piece[which]) return edit;
+  return change(edit, id, { [which]: put } as Partial<Omit<Piece, 'id'>>);
 }
 
 /**
