@@ -293,6 +293,8 @@ jobs:
         run: npm run check:videoquality
       - name: Two lines take a span out, the film closes up, and the song follows or does not
         run: npm run check:cutspan
+      - name: The cover is a frame out of the film or a picture brought in, and it travels with it
+        run: npm run check:filmcover
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped

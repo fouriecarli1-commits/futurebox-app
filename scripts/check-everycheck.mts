@@ -103,6 +103,29 @@ check(`package.json asks for Node ${wanted} or newer`,
   'so an install on the wrong runtime says so rather than failing later and'
   + ' somewhere else');
 
+/* ── And is any script defined twice ──────────────────────────────────
+
+   `JSON.parse` keeps the LAST of two keys with the same name and says nothing.
+   So a second `"check:videocover"` added to package.json does not fail, does
+   not warn, and does not show up in any count — it silently replaces the first
+   one, and the check that used to run under that name stops running while
+   every list still shows it.
+
+   That happened on 4 October: a new source check was given a name an existing
+   browser probe already had, and the only reason it was caught was that the
+   wrong summary line printed. Nothing else would have.
+
+   Read off the TEXT rather than the parsed object, because by the time it is
+   an object the evidence is gone. */
+const packageText = readFileSync('package.json', 'utf8');
+const written = [...packageText.matchAll(/^\s*"(check:[a-z0-9]+)":/gm)].map((one) => one[1]);
+const twice = written.filter((one, i) => written.indexOf(one) !== i);
+
+check('no check is defined twice in package.json',
+  twice.length === 0,
+  `${[...new Set(twice)].join(', ')} — JSON.parse keeps the last and says`
+  + ' nothing, so the first one stops running while every list still shows it');
+
 /* ── Before anything else: can GitHub read it ──────────────────────────── */
 
 let broken = 0;

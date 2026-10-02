@@ -1148,6 +1148,82 @@ try {
         + ' CUT');
     }
 
+    /* ── The cover ──────────────────────────────────────────────────────
+
+       Carli, 4 October 2026: *"'n opsie ... om 'n cover foto vir die video te
+       screen shot uit die video, of een in te bring wat dan die video se
+       voorblad foto word ook wanneer die video ge-export word."*
+
+       `check:filmcover` holds what a cover is and that the room wires it. What
+       a browser is for is whether pressing the button actually produces a
+       picture — a canvas that draws nothing still returns a Blob, and a cover
+       of a black rectangle would pass every source check there is. */
+    await bench('film');
+    await p.waitForTimeout(400);
+    const shot = p.locator('[data-editorcovershot]');
+    check('the film bench offers to take a frame as the cover',
+      (await shot.count()) === 1 && !(await shot.isDisabled()),
+      'disabled with a clip on the clock would mean the one case it is for');
+
+    if ((await shot.count()) && !(await shot.isDisabled())) {
+      await shot.click();
+      await p.waitForTimeout(900);
+      const shown = p.locator('[data-editorcovershown]');
+      check('  and pressing it puts a cover on the bench',
+        (await shown.count()) === 1,
+        `${await shown.count()}`);
+
+      /* The picture itself, not just an element. A canvas that drew nothing
+         still hands back a Blob and still makes an <img> — so this reads the
+         decoded pixels and asks whether anything is in them. */
+      const look = await shown.evaluate((el) => new Promise((done) => {
+        const img = el;
+        const go = () => {
+          const c = document.createElement('canvas');
+          c.width = Math.min(64, img.naturalWidth || 0);
+          c.height = Math.min(64, img.naturalHeight || 0);
+          if (!c.width || !c.height) { done({ wide: 0, tall: 0, lit: 0 }); return; }
+          const g = c.getContext('2d');
+          g.drawImage(img, 0, 0, c.width, c.height);
+          const px = g.getImageData(0, 0, c.width, c.height).data;
+          let lit = 0;
+          for (let i = 0; i < px.length; i += 4) {
+            if (px[i] > 12 || px[i + 1] > 12 || px[i + 2] > 12) lit += 1;
+          }
+          done({ wide: img.naturalWidth, tall: img.naturalHeight, lit });
+        };
+        if (img.complete && img.naturalWidth) go();
+        else img.addEventListener('load', go, { once: true });
+      }));
+
+      check('    and the cover is a real picture, not a black rectangle',
+        look.lit > 0,
+        `${look.wide}x${look.tall}, ${look.lit} lit pixels of 4096 — a canvas`
+        + ' that drew nothing still returns a Blob and still makes an <img>');
+
+      check('    and it is the FILM\u2019s shape, not the clip\u2019s',
+        look.wide > 0 && Math.abs((look.wide / look.tall) - (1080 / 1920)) < 0.02,
+        `${look.wide}x${look.tall} — a shot might be wide inside a tall film,`
+        + ' and a cover at the clip\u2019s shape is a different picture from the'
+        + ' one the film shows at that second');
+
+      const off = p.locator('[data-editorcoverclear]');
+      check('  and it can be taken off again',
+        (await off.count()) === 1);
+      if (await off.count()) {
+        await off.click();
+        await p.waitForTimeout(500);
+        check('    and taking it off really removes it',
+          (await p.locator('[data-editorcovershown]').count()) === 0);
+      }
+    }
+
+    check('and a picture can be brought in instead',
+      (await p.locator('[data-editorcoverbring] input[type=file]').count()) === 1,
+      'a frame out of the film is quicker; a picture brought in is what'
+      + ' somebody with a designed thumbnail wants, and there is no guessing'
+      + ' which');
+
     /* Back to the shot's own bench, which is where the cutting controls are.
        The block above opened Words to type a caption, and a probe that leaves
        a drawer open reaches into the wrong one next. */

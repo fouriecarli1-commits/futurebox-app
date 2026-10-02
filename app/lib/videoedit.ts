@@ -49,6 +49,7 @@ import { gradeCss, type Adjust } from './videoadjust';
 import { BACK_DEFAULT, INK_DEFAULT, paintFor, roundFor, type BoxShape } from './videopaint';
 import { bitsFor, rateFor, sizeFor } from './videoquality';
 import { withSkip } from './videospan';
+import type { CoverFrom } from './videocover';
 
 /** A piece of video on the clock. */
 export interface Piece {
@@ -246,6 +247,23 @@ export interface Edit {
    * see `withSkip` in `videospan.ts` for why those two clocks cannot be the
    * same number.
    */
+  /**
+   * The film's cover, and where it came from.
+   *
+   * Carli, 4 October 2026: *"'n opsie ... om 'n cover foto vir die video te
+   * screen shot uit die video, of een in te bring wat dan die video se
+   * voorblad foto word ook wanneer die video ge-export word."*
+   *
+   * Not part of the film and deliberately not in `cutFrom`: a cover is a
+   * separate picture shown in the film's place, and there is no way to put one
+   * inside a webm the browser writes — see `videocover.ts` for why, and why
+   * making it the first frame would be worse.
+   *
+   * `coverFrom` is only so the room can say which of the two it was. A grabbed
+   * frame and a brought-in picture behave identically once they exist.
+   */
+  readonly cover?: Blob | null;
+  readonly coverFrom?: CoverFrom;
   readonly span?: { readonly from: number; readonly to: number } | null;
   readonly locked?: boolean;
   /**

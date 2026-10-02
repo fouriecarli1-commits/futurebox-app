@@ -389,7 +389,7 @@ export function canStitch(): boolean {
  * it wrong. Bars are the honest option and are what the black background is
  * for.
  */
-function fitted(
+export function fitted(
   video: HTMLVideoElement,
   width: number,
   height: number,
@@ -412,7 +412,7 @@ function fitted(
  * edges of a copy of the picture costs nothing — the picture itself is still
  * drawn whole, on top.
  */
-function covering(
+export function covering(
   video: HTMLVideoElement,
   width: number,
   height: number,

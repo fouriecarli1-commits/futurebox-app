@@ -57,6 +57,7 @@ import DeskSheet from './BoothCard';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
 import { heldWords, pointsOf, spanReady, tidy, wordsSpan } from '../lib/videospan';
+import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import {
   BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, paintFor, roundFor,
 } from '../lib/videopaint';
@@ -817,6 +818,44 @@ export default function VideoEditor({
 
   const step = stepFor(total, perSecond);
   const fades = fadesFor(edit);
+
+  /* ── The cover, as something to look at ───────────────────────────────
+
+     An object URL for whichever Blob the edit is carrying, revoked when it
+     changes or the room closes. Without the revoke every frame she grabs
+     leaks one, and a room somebody spends an evening in is where that shows.
+
+     Keyed on the Blob itself rather than on a counter: a new Blob is a new
+     cover and the same Blob is the same cover, which is exactly the question
+     this effect has to answer. */
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const blob = edit.cover ?? null;
+    if (!blob) { setCoverUrl(null); return undefined; }
+    const url = URL.createObjectURL(blob);
+    setCoverUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [edit.cover]);
+
+  /**
+   * One frame out of the film, at the film's own shape.
+   *
+   * Taken from the viewer that is already showing that second, which is the
+   * only element in the room with the right frame decoded — asking a fresh
+   * `<video>` for it would mean loading the clip again and seeking, and the
+   * picture she is looking at IS the picture she means.
+   */
+  const takeCover = useCallback(async () => {
+    const node = viewer.current;
+    if (!node || !piece) return;
+    const shot = await frameFrom(node, shape.width, shape.height, piece.fill ?? false);
+    if (!shot) {
+      setProblem(t('edit.coverNoFrame', 'That frame could not be read.'));
+      return;
+    }
+    setProblem('');
+    commit((was) => ({ ...was, cover: shot, coverFrom: 'shot' }));
+  }, [piece, shape, commit, t]);
 
   /* ── The two red lines, and where they stick ──────────────────────────
 
@@ -2699,11 +2738,26 @@ export default function VideoEditor({
         {made && (
           <div className="space-y-2" data-editormade>
             {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-            <video src={made.url} controls className="w-full rounded-xl border border-zinc-800 bg-black" />
+            <video
+              src={made.url}
+              /* The cover, where a cover belongs: the picture a player shows in
+                 the film's place before it has loaded. */
+              poster={coverUrl ?? undefined}
+              controls
+              className="w-full rounded-xl border border-zinc-800 bg-black"
+            />
             <button
               type="button"
               data-editorsave
-              onClick={() => downloadBlob(made.blob, safeFilename(edit.pieces[0]?.name ?? 'film', made.ext))}
+              onClick={() => {
+                const name = safeFilename(edit.pieces[0]?.name ?? 'film', made.ext);
+                downloadBlob(made.blob, name);
+                /* And the cover beside it. "Wanneer die video ge-export word"
+                   is the whole request — a cover that is only ever on screen
+                   is a feature that exists nowhere else. Named off the film's
+                   own name so the two sit together in a downloads folder. */
+                if (edit.cover) downloadBlob(edit.cover, coverName(name));
+              }}
               className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center justify-center gap-2"
             >
               <Download className="w-4 h-4" />
@@ -3742,6 +3796,95 @@ export default function VideoEditor({
                     </button>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* ── The cover ──────────────────────────────────────────────
+
+                Carli, 4 October 2026: *"Daar moet ook 'n opsie wees om 'n
+                cover foto vir die video te screen shot uit die video, of een in
+                te bring wat dan die video se voorblad foto word ook wanneer die
+                video ge-export word."*
+
+                Both ways, side by side, because neither is the obvious one: a
+                frame out of the film is quicker, a picture brought in is what
+                somebody with a designed thumbnail wants, and there is no
+                guessing which. See `videocover.ts` for why a cover cannot live
+                inside the film file and what it is instead. */}
+            <div className="space-y-2">
+              <span className="block text-sm text-zinc-400">
+                {t('edit.cover', 'The cover')}
+              </span>
+
+              {coverUrl ? (
+                <div className="flex items-start gap-3">
+                  <img
+                    src={coverUrl}
+                    alt={t('edit.coverShown', 'The film\u2019s cover')}
+                    data-editorcovershown
+                    className="h-24 w-auto rounded-lg border"
+                    style={{ borderColor: 'rgba(16,185,129,0.45)', background: '#000' }}
+                  />
+                  <div className="space-y-2">
+                    <p className="text-sm" style={{ color: INK_DIM }}>
+                      {edit.coverFrom === 'brought'
+                        ? t('edit.coverBrought', 'A picture you brought in.')
+                        : t('edit.coverShot', 'A frame out of the film.')}
+                    </p>
+                    <button
+                      type="button"
+                      data-editorcoverclear
+                      onClick={() => commit((was) => ({ ...was, cover: null, coverFrom: undefined }))}
+                      className="min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold"
+                      style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
+                    >
+                      {t('edit.coverClear', 'Take it off')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm" style={{ color: INK_DIM }}>
+                  {t('edit.coverHint', 'The picture shown in the film\u2019s place before it plays. It is saved beside the film.')}
+                </p>
+              )}
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  data-editorcovershot
+                  disabled={!piece}
+                  onClick={() => { void takeCover(); }}
+                  className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold inline-flex items-center gap-1.5 disabled:opacity-40"
+                  style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  {t('edit.coverTake', 'Take this frame')}
+                </button>
+                <label
+                  data-editorcoverbring
+                  className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                  style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {t('edit.coverBring', 'Bring one in')}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] ?? null;
+                      event.target.value = '';
+                      /* Asked here rather than trusted to `accept`, which is a
+                         filter on a picker and not a rule. */
+                      if (!isPicture(file)) {
+                        setProblem(t('edit.coverNotPicture', 'That is not a picture.'));
+                        return;
+                      }
+                      setProblem('');
+                      commit((was) => ({ ...was, cover: file, coverFrom: 'brought' }));
+                    }}
+                  />
+                </label>
               </div>
             </div>
 
