@@ -49,7 +49,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
   Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown,
-  RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop,
+  RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop, RefreshCw,
 } from 'lucide-react';
 import Card from './Card';
 import CutDock, { type Bench } from './CutDock';
@@ -79,6 +79,7 @@ import {
   type Corner, type Spot,
 } from '../lib/logomark';
 import { fit } from '../lib/imagefile';
+import { myVideos, type MyVideo } from '../lib/filmed';
 import { downloadBlob, safeFilename } from '../lib/library';
 import { check, type Plan } from '../lib/entitlements';
 import { CREDITS, perMinute } from '../lib/credits';
@@ -744,6 +745,20 @@ export default function VideoEditor({
   /** Which bench is out. `null` is all of them shut — see `CutDock.tsx`. */
   const [bench, setBench] = useState<Bench>(null);
 
+  /* ── What is already in her channel ──────────────────────────────────────
+
+     Carli, 4 October 2026: *"die button wat sê bring it in, or choose from
+     channel"*.
+
+     `null` is "not asked yet" and `[]` is "asked, and there is nothing" —
+     two different sentences on screen, and one state cannot say both. The
+     listing is fetched when she presses, not on mount: the room opens for
+     everybody including signed-out, and a request that comes back 401 before
+     anybody asked for it is a wasted round trip on a phone. */
+  const [channel, setChannel] = useState<MyVideo[] | null>(null);
+  /** Which video's file is being pulled down, so its own card can say so. */
+  const [pulling, setPulling] = useState<string | null>(null);
+
   const [asking, setAsking] = useState(false);
   const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
 
@@ -1070,7 +1085,12 @@ export default function VideoEditor({
     else v.pause();
   }, [running, source]);
 
-  const bringIn = useCallback(async (files: FileList | null) => {
+  /* Takes a `FileList` from the file input, or a plain array from
+     `bringFromChannel`. `Array.from` reads both, so the channel path does not
+     need a second copy of the length check, the decode, or the `holds` note
+     below — a second copy is how the two ways in end up disagreeing about
+     what a clip is. */
+  const bringIn = useCallback(async (files: FileList | readonly File[] | null) => {
     if (!files?.length) return;
     setProblem('');
     setBusy('bring');
@@ -1107,6 +1127,54 @@ export default function VideoEditor({
       setBusy(null);
     }
   }, [edit, commit, t]);
+
+  /**
+   * Ask the server what is in her channel.
+   *
+   * Rows whose `url` came back null are dropped here and not drawn: the row
+   * has outlived its file, and a card that cannot be opened is worse than a
+   * card that is not there — she presses it, nothing happens, and the room
+   * looks broken rather than empty.
+   */
+  const loadChannel = useCallback(async () => {
+    setProblem('');
+    setBusy('channel');
+    try {
+      const mine = await myVideos();
+      setChannel(mine.filter((one) => !!one.url));
+    } finally {
+      setBusy(null);
+    }
+  }, []);
+
+  /**
+   * Pull one of her kept videos down and put it on the clock.
+   *
+   * The room works on Blobs it can decode, draw and stitch — a title and an
+   * id are not one, which is why `/api/video/kept` had to start signing a
+   * link per row before this could exist at all. The link is short-lived, so
+   * the fetch happens on the press and not when the list was drawn.
+   */
+  const bringFromChannel = useCallback(async (one: MyVideo) => {
+    if (!one.url) return;
+    setProblem('');
+    setPulling(one.id);
+    try {
+      const response = await fetch(one.url);
+      if (!response.ok) throw new Error(String(response.status));
+      const blob = await response.blob();
+      const kind = blob.type || 'video/mp4';
+      const ext = kind.includes('webm') ? 'webm' : 'mp4';
+      await bringIn([new File([blob], `${one.title || 'video'}.${ext}`, { type: kind })]);
+    } catch {
+      setProblem(t(
+        'edit.channelfailed',
+        'That one could not be fetched. Open the page again so the links are fresh, and try once more.',
+      ));
+    } finally {
+      setPulling(null);
+    }
+  }, [bringIn, t]);
 
   /* ── One press of Back for a whole gesture ─────────────────────────────
 
@@ -2129,9 +2197,72 @@ export default function VideoEditor({
             three-minute strip. A timeline that squeezes to fit is a
             proportion bar wearing a ruler. */}
         {edit.pieces.length === 0 ? (
-          <p className="text-sm text-zinc-500 leading-relaxed" data-editorempty>
-            {t('edit.nothing', 'Nothing on the clock yet. Bring a clip in and it appears here as a block you can cut.')}
-          </p>
+          /* ── What this room is, and the two ways in ────────────────────
+
+              Carli, 4 October 2026: *"Die probooth se opening page het half 'n
+              verduideliking wat hierdie funksie doen. Kan die video editor
+              dieselfde hê en dan die button wat sê bring it in, or choose from
+              channel."*
+
+              The same shape as `Booth.tsx`'s opening, and for the reason
+              written there: what the room can do is the reason to press, so
+              the press comes first and reads as the answer to it. On an empty
+              film there is nothing else on this screen worth the room.
+
+              Two ways in, because there are two: a clip off the phone, and
+              something already in her channel. The second needed a signed link
+              on the listing before it could exist — see `app/api/video/kept`. */
+          <div className="space-y-3" data-editoropening>
+            <div className="flex items-start gap-3">
+              <span
+                className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl"
+                style={{ background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: `0 0 0 1px rgba(16,185,129,0.35)` }}
+              >
+                <Scissors className="h-6 w-6" />
+              </span>
+              <div className="min-w-0">
+                <h4 className="text-2xl font-black leading-tight tracking-tight" style={{ color: INK }}>
+                  {t('rail.videoedit', 'Video Editor')}
+                </h4>
+                <p className="max-w-2xl pt-1 text-sm leading-snug sm:text-base" style={{ color: INK }}>
+                  {t('edit.room.sub', 'Your own footage, on a clock. Bring clips in, cut them where you want, put words and a look and your logo on them, and lay a song underneath — all of it on this device, free, as many times as you like. Only putting the finished film together costs anything, and it shows the bill first.')}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label
+                data-editoropenbring
+                className="min-h-[48px] w-full rounded-xl border px-3.5 py-2.5 text-sm font-bold inline-flex items-center justify-center gap-2 cursor-pointer"
+                style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
+              >
+                {busy === 'bring' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                {t('edit.bring', 'Bring clips in')}
+                <input
+                  type="file"
+                  accept="video/*"
+                  multiple
+                  className="hidden"
+                  onChange={(event) => { void bringIn(event.target.files); event.target.value = ''; }}
+                />
+              </label>
+
+              <button
+                type="button"
+                data-editoropenchannel
+                onClick={() => { setBench('folder'); void loadChannel(); }}
+                className="min-h-[48px] w-full rounded-xl border px-3.5 py-2.5 text-sm font-bold inline-flex items-center justify-center gap-2"
+                style={{ borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE }}
+              >
+                <Film className="w-4 h-4" />
+                {t('edit.fromChannel', 'Choose from your channel')}
+              </button>
+            </div>
+
+            <p className="text-sm leading-relaxed" style={{ color: INK_DIM }} data-editorempty>
+              {t('edit.nothing', 'Nothing on the clock yet. Bring a clip in and it appears here as a block you can cut.')}
+            </p>
+          </div>
         ) : (
           <div className="space-y-2">
             <div className="flex items-baseline justify-between">
@@ -3000,6 +3131,67 @@ export default function VideoEditor({
             />
           </label>
 
+          {/* ── Or something already in her channel ──────────────────────
+
+              Carli, 4 October 2026: *"die button wat sê bring it in, or
+              choose from channel"*.
+
+              The opening page sends her here with the list already loading.
+              It is the same bench either way, so there is one copy of the
+              cards and not a second set behind the opening. */}
+          <div className="space-y-2" data-editorchannel>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="block text-sm text-zinc-400">
+                {t('edit.channel', 'From your channel')}
+              </span>
+              <button
+                type="button"
+                data-editorchannelload
+                onClick={() => { void loadChannel(); }}
+                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600"
+              >
+                {busy === 'channel'
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <RefreshCw className="w-4 h-4" />}
+                {channel === null
+                  ? t('edit.channelLook', 'Look')
+                  : t('edit.channelAgain', 'Again')}
+              </button>
+            </div>
+
+            {channel !== null && channel.length === 0 && (
+              <p className="text-sm text-zinc-400" data-editorchannelnone>
+                {t(
+                  'edit.channelNone',
+                  'Nothing in your channel yet. Film something in Pro Booth, or bring a clip in from this device.',
+                )}
+              </p>
+            )}
+
+            {channel !== null && channel.length > 0 && (
+              <ul className="space-y-2">
+                {channel.map((one) => (
+                  <li key={one.id}>
+                    <button
+                      type="button"
+                      data-editorchannelpick
+                      disabled={!!pulling}
+                      onClick={() => { void bringFromChannel(one); }}
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-left text-sm text-zinc-200 inline-flex items-center gap-2 hover:border-zinc-600 disabled:opacity-60"
+                    >
+                      {pulling === one.id
+                        ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                        : <Film className="w-4 h-4 flex-shrink-0" />}
+                      <span className="min-w-0 flex-1 truncate font-semibold">
+                        {one.title || t('edit.channelUntitled', 'Untitled')}
+                      </span>
+                      <span className="flex-shrink-0 text-zinc-400">{seconds(one.seconds)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           </div>
         )}

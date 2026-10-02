@@ -162,6 +162,56 @@ try {
     (await p.locator('[data-editorempty]').count()) === 1,
     'an editor with no material should say so, not show an empty strip');
 
+  /* ── The opening page, before anything is on the clock ──────────────────
+
+     Carli, 4 October 2026: *"Die probooth se opening page het half 'n
+     verduideliking wat hierdie funksie doen. Kan die video editor dieselfde hê
+     en dan die button wat sê bring it in, or choose from channel"*.
+
+     Measured in a browser and not only in the source, because the two things
+     that can go wrong here are both invisible to a grep: a block that is in
+     the markup but scrolled or clipped off the first screen, and a button that
+     is drawn but not wired to the picker. */
+  const opening = p.locator('[data-editoropening]');
+  check('the room opens with an explanation of what it is for',
+    await opening.isVisible().catch(() => false),
+    'a room whose first screen is its own controls is a room nobody knows the'
+    + ' use of — the Pro Booth earned its opening the same way');
+
+  const explains = ((await opening.innerText().catch(() => '')) || '').replace(/\s+/g, ' ');
+  check('  and the explanation is a paragraph, not a label',
+    explains.length > 180,
+    `${explains.length} characters painted — "half 'n verduideliking" is a`
+    + ' paragraph, and a sentence that is in the markup but painted at zero'
+    + ' height is not on the screen');
+
+  const fold = await opening.boundingBox().catch(() => null);
+  const tall = p.viewportSize()?.height ?? 0;
+  check('  and it is on the first screen, not below a scroll',
+    !!fold && fold.y >= 0 && fold.y < tall * 0.9,
+    `top at ${Math.round(fold?.y ?? -1)} of ${tall} — an explanation she has`
+    + ' to scroll to find explains nothing');
+
+  check('two ways in are offered, and both are visible',
+    (await p.locator('[data-editoropenbring]').isVisible().catch(() => false))
+    && (await p.locator('[data-editoropenchannel]').isVisible().catch(() => false)),
+    'her words: "bring it in, or choose from channel"');
+
+  await p.locator('[data-editoropenchannel]').click({ timeout: 10000 }).catch(() => undefined);
+  await p.waitForTimeout(1200);
+
+  check('pressing "choose from channel" opens the bench that holds the cards',
+    await p.locator('[data-editorchannel]').isVisible().catch(() => false),
+    'one press for one intention — a button that only opens a drawer and'
+    + ' leaves the list unasked makes her press twice');
+
+  check('  and with no account it says the channel is empty rather than hanging',
+    (await p.locator('[data-editorchannelnone]').count()) === 1
+    || (await p.locator('[data-editorchannelpick]').count()) > 0,
+    'nothing is metered in this run, so the listing comes back empty — the'
+    + ' sentence has to arrive, because a spinner that never resolves reads as'
+    + ' her channel being broken');
+
   /* ── A real clip, recorded in the page and handed to the file input ── */
 
   const made = await p.evaluate(async () => {
@@ -231,14 +281,36 @@ try {
   if (!made) {
     console.log('  --  this browser cannot record webm; the walk below is skipped rather than faked.');
   } else {
-    /* Bringing material in is behind the folder, which is where it belongs */
-    await bench('folder');
-    await p.locator('[data-editorbring] input[type="file"]').setInputFiles({
+    /* ── Brought in through the OPENING's own button ─────────────────
+
+       Not through the folder bench, which is what this probe used to do. The
+       bench is where somebody goes for a SECOND clip; the opening is the
+       button she will actually press first, and a picker wired to nothing
+       looks identical in the markup to one wired to `bringIn`. So the first
+       clip of the walk goes in the way she comes in, and the bench's own
+       input is asserted separately below. */
+    await p.locator('[data-editoropenbring] input[type="file"]').setInputFiles({
       name: 'a-take.webm',
       mimeType: 'video/webm',
       buffer: Buffer.from(made),
     });
     await p.waitForTimeout(2500);
+
+    check('the opening\u2019s own button puts a clip on the clock',
+      (await p.locator('[data-editorblock]').count()) === 1,
+      'the two ways in are the whole request; a button beside a working one'
+      + ' that does nothing is worse than no button');
+
+    check('  and the explanation gives way to the clock once there is a film',
+      (await p.locator('[data-editoropening]').count()) === 0,
+      'an explanation standing over a film she is already cutting is in the'
+      + ' way, and this room has the whole screen');
+
+    await bench('folder');
+    check('  while the bench still carries a way to bring the next one in',
+      (await p.locator('[data-editorbring] input[type="file"]').count()) === 1,
+      'the opening is gone for good once a clip lands, so the only route to a'
+      + ' second clip is the bench');
 
     const blocks = p.locator('[data-editorblock]');
     check('a clip brought in becomes a block on the clock',

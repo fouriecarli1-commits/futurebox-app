@@ -71,10 +71,54 @@ export async function GET(request: Request): Promise<Response> {
     .order('created_at', { ascending: false })
     .limit(60);
 
+  /* ── A link to the file, so the Video Editor can bring one in ─────────
+
+     Carli, 4 October 2026: *"die button wat sê bring it in, or choose from
+     channel."*
+
+     The listing has always carried the path and never a way to reach the file,
+     so "choose from channel" had nothing to choose INTO: the editor works on
+     Blobs it can decode, trim and draw, and a title is not one.
+
+     Signed in a batch rather than one call per row — `createSignedUrls` takes
+     the whole list, which is one round trip instead of however many videos
+     somebody has kept. A row whose file has gone gets a null and is dropped by
+     the reader rather than appearing as a card that cannot be opened.
+
+     The same `LINK_SECONDS` the POST above uses. These are private files and a
+     link that outlives the page is a link that outlives the session. */
+  const paths = (data ?? []).map((one) => String(one.path ?? '')).filter(Boolean);
+  const linkFor = new Map<string, string>();
+  if (paths.length) {
+    const { data: links, error: unsigned } = await client.storage
+      .from('videos')
+      .createSignedUrls(paths, LINK_SECONDS);
+    /* Said out loud rather than swallowed, and this is not a formality.
+       `check:couldnotask` named this exact line on 4 October: a signing call
+       whose error is ignored comes back as an empty list, every row then
+       carries a null link, the Video Editor drops every one of them, and she
+       is shown "nothing in your channel yet" about a channel that is full.
+       A storage outage would have read as her own work being gone. */
+    if (unsigned) {
+      return Response.json(
+        {
+          videos: [],
+          signedIn: true,
+          message: 'Your videos are there, but their links could not be made right now. Try again in a moment.',
+        },
+        { status: 503 },
+      );
+    }
+    for (const one of links ?? []) {
+      if (one.path && one.signedUrl) linkFor.set(one.path, one.signedUrl);
+    }
+  }
+
   return Response.json({
     signedIn: true,
     videos: (data ?? []).map((one) => ({
       id: one.id as string,
+      url: linkFor.get(String(one.path ?? '')) ?? null,
       /* The name a person gave it, and the prompt only as a fallback. A
          generated video has no title of its own and its prompt is the nearest
          thing to one; a filmed take has a title and its prompt is empty. */

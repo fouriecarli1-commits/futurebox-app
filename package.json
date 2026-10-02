@@ -122,6 +122,8 @@
     "check:videoquality": "tsx scripts/check-videoquality.mts",
     "check:cutspan": "tsx scripts/check-cutspan.mts",
     "check:filmcover": "tsx scripts/check-filmcover.mts",
+    "check:editoropen": "tsx scripts/check-editoropen.mts",
+    "check:blanker": "tsx scripts/check-blanker.mts",
     "check:opencard": "tsx scripts/check-opencard.mts",
     "check:ordering": "tsx scripts/check-ordering.mts",
     "check:whofirst": "tsx scripts/check-whofirst.mts",

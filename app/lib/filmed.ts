@@ -116,13 +116,26 @@ export async function keepFilmed(
 /** One of your kept videos, as the room's composer needs it. */
 export interface MyVideo {
   readonly id: string;
+  /**
+   * A signed link to the file, for as long as the listing is fresh.
+   *
+   * Null when the row has outlived its file. The Video Editor drops those
+   * rather than drawing a card that cannot be opened — see `bringFromChannel`.
+   */
+  readonly url: string | null;
   readonly title: string;
   readonly seconds: number;
   readonly filmed: boolean;
   readonly createdAt: string;
 }
 
-/** Everything of yours that could go in the live room. Empty when signed out. */
+/**
+ * Everything of yours that could go in the live room, or into the cutting room.
+ *
+ * Carries a signed link per video since 4 October, so the Video Editor's
+ * "Choose from channel" has something to bring IN — it works on Blobs it can
+ * decode and draw, and a title is not one.
+ */
 export async function myVideos(): Promise<MyVideo[]> {
   const token = await accessToken();
   try {

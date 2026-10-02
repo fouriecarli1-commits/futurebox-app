@@ -792,6 +792,48 @@ export const STRINGS: Dict = {
     en: "Bring clips in",
     af: "Bring knipsels in",
   },
+
+  /* ── The room's opening page ───────────────────────────────────────────
+
+     Carli, 4 October 2026: *"Die probooth se opening page het half 'n
+     verduideliking wat hierdie funksie doen. Kan die video editor dieselfde
+     hê en dan die button wat sê bring it in, or choose from channel"*.
+
+     The sentence says what the room does AND what it costs, because the plan
+     cards sell this room and somebody arriving from one needs to know the
+     cutting is free and only the finished film is billed. */
+  "edit.room.sub": {
+    en: "Your own footage, on a clock. Bring clips in, cut them where you want, put words and a look and your logo on them, and lay a song underneath \u2014 all of it on this device, free, as many times as you like. Only putting the finished film together costs anything, and it shows the bill first.",
+    af: "Jou eie opnames, op \u2019n klok. Bring knipsels in, sny hulle waar jy wil, sit woorde en \u2019n voorkoms en jou logo op hulle, en l\u00ea \u2019n liedjie daaronder \u2014 alles op hierdie toestel, gratis, so baie keer as jy wil. Net om die klaar film saam te sit kos iets, en dit wys die rekening eerste.",
+  },
+  "edit.fromChannel": {
+    en: "Choose from your channel",
+    af: "Kies uit jou kanaal",
+  },
+  "edit.channel": {
+    en: "From your channel",
+    af: "Uit jou kanaal",
+  },
+  "edit.channelLook": {
+    en: "Look",
+    af: "Kyk",
+  },
+  "edit.channelAgain": {
+    en: "Again",
+    af: "Weer",
+  },
+  "edit.channelNone": {
+    en: "Nothing in your channel yet. Film something in Pro Booth, or bring a clip in from this device.",
+    af: "Nog niks in jou kanaal nie. Film iets in Pro Booth, of bring \u2019n knipsel van hierdie toestel in.",
+  },
+  "edit.channelUntitled": {
+    en: "Untitled",
+    af: "Sonder titel",
+  },
+  "edit.channelfailed": {
+    en: "That one could not be fetched. Open the page again so the links are fresh, and try once more.",
+    af: "Daardie een kon nie gehaal word nie. Maak die bladsy weer oop sodat die skakels vars is, en probeer nog een keer.",
+  },
   "edit.shape": {
     en: "Shape",
     af: "Vorm",

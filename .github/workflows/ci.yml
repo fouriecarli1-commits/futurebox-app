@@ -295,6 +295,10 @@ jobs:
         run: npm run check:cutspan
       - name: The cover is a frame out of the film or a picture brought in, and it travels with it
         run: npm run check:filmcover
+      - name: "The Video Editor opens by saying what it is for, and the channel way in ends with a real file"
+        run: npm run check:editoropen
+      - name: "A comment opener inside a string is text, so no check reads a file with a hole in it"
+        run: npm run check:blanker
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped
