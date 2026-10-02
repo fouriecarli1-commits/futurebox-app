@@ -1005,6 +1005,24 @@ export const STRINGS: Dict = {
     af: "Jou logo op die film \u2014 waar dit sit, hoe groot, gedraai, hoe solied, en of dit oor die woorde gaan of daaronder.",
   },
   "cut.shut": { en: "Close this bench", af: "Maak hierdie werkbank toe" },
+
+  /* ── The dials under the looks ─────────────────────────────────────────
+
+     "Kleur" and not "versadiging". Saturation is the word a colourist uses and
+     the word a stranger has to look up, and this room is for somebody with a
+     phone and an afternoon.
+
+     "Sagtheid" rather than "skerpte", and that is not a translation choice: CSS
+     has a blur and no sharpen, so the dial runs from soft to none. A name that
+     promised sharpening would be a dial that moves and changes nothing, which
+     is the one thing `videoadjust.ts` was written to avoid. */
+  "adj.title": { en: "Adjust", af: "Stel by" },
+  "adj.reset": { en: "Put them all back", af: "Sit almal terug" },
+  "adj.bright": { en: "Brightness", af: "Helderheid" },
+  "adj.contrast": { en: "Contrast", af: "Kontras" },
+  "adj.colour": { en: "Colour", af: "Kleur" },
+  "adj.warm": { en: "Warmth", af: "Warmte" },
+  "adj.sharp": { en: "Softness", af: "Sagtheid" },
   "cut.paidHere": {
     en: "All of the cutting is free. Putting the finished film together is the one press that spends, and it shows the bill before it does.",
     af: "Al die sny is gratis. Om die klaar film saam te sit is die een druk wat spandeer, en dit wys die rekening voor dit dit doen.",

@@ -56,6 +56,7 @@ import CutDock, { type Bench } from './CutDock';
 import Note from './Note';
 import { useLang } from '../lib/i18n';
 import { FILTERS, filterCss, filterName } from '../lib/videofilters';
+import { DIALS, NO_ADJUST, adjusted, gradeCss } from '../lib/videoadjust';
 import {
   FONTS, PLAIN_FONT, fontFor, WORDS_LARGEST, WORDS_SMALLEST,
 } from '../lib/videofonts';
@@ -1289,6 +1290,57 @@ export default function VideoEditor({
          surface to the edges; this is the height that matches. */
       style={{ minHeight: 'calc(100dvh - 7.5rem)' }}
     >
+      {/* ── The one press that spends, where every editor puts it ─────────
+
+          Top right, above the picture. Carli's screenshots all have it there
+          and so does every editor she sent: the thing that finishes the work
+          is the thing you reach for last, and it is the one control that
+          should never be behind a drawer.
+
+          It was on the film bench until now, which meant the only way to
+          finish was to remember which of seven icons the finishing lived
+          behind. The bench still holds the shape, the fades and the bill; this
+          is the way in to them. */}
+      <div className="flex items-center justify-end gap-2 px-1 pb-2">
+          <button
+            type="button"
+            disabled={!edit.pieces.length || busy !== null || !canStitch()}
+            data-editormake
+            /* Opens the bill rather than starting the render. Everything before
+               this button is free and stays free; this is the one press that
+               spends, so it asks first. */
+            onClick={() => {
+            setProblem('');
+            /* The bill lives on the film bench, so pressing this opens it.
+               A confirm screen that appears somewhere she is not looking is
+               a confirm screen nobody confirms. */
+            setBench('film');
+            setAsking(true);
+              /* Asked fresh every time rather than held from the room opening:
+                 a balance read when the room opened is a balance from before
+                 whatever else she spent this hour, and a confirm screen showing
+                 a stale number is worse than one showing none. */
+              void loadWallet().then(setWallet);
+            }}
+            className="min-h-[44px] rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40 inline-flex items-center gap-2"
+          >
+            {busy === 'make' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            {t('edit.make', 'Put it together')}
+            {/* ── The price, on the button, before it is pressed ──────────
+
+                A charge somebody meets afterwards is a surprise, and a
+                surprise about money is the thing that makes people stop
+                trusting a room. Everything up to this button is free and
+                stays free; this is the one press that costs, so this is
+                where the number goes. */}
+            {bill.total > 0 && (
+              <span data-editorprice className="rounded-lg bg-zinc-950/20 px-2 py-0.5 text-[11px]">
+                {bill.total} {t('edit.credits', 'credits')}
+              </span>
+            )}
+          </button>
+      </div>
+
       {/* ── The picture, and the clock right under it ──────────────────── */}
       <div className="flex-1 overflow-y-auto px-1 pb-3 space-y-3">
         {piece ? (
@@ -1423,7 +1475,11 @@ export default function VideoEditor({
                 src={source ?? undefined}
                 playsInline
                 muted={!piece.sound}
-                style={{ filter: filterCss(piece.look) || undefined }}
+                /* Through `gradeCss`, which is the same function `cutFrom`
+                   runs — so a dial moved here changes the picture she is
+                   judging and the film that comes out, in that order and by
+                   the same string. */
+                style={{ filter: gradeCss(filterCss(piece.look), piece.adjust) || undefined }}
                 /* `contain` or `cover`, from the same flag the renderer reads, so
                    the bars she sees are the bars she gets. */
                 className={`absolute inset-0 h-full w-full ${
@@ -1596,12 +1652,58 @@ export default function VideoEditor({
                     ten-second film is marked every second and a five-minute
                     one every thirty — the alternative is either three marks
                     or three hundred. */}
-                <div className="relative h-5 border-b border-zinc-800" data-editorruler>
+                {/* ── The ruler ───────────────────────────────────────────
+
+                    Carli, 4 October 2026: *"die tydlyn moet mooi en netjies lyk
+                    nes in probooth."*
+
+                    So it is drawn the way the booth's is, and the booth's shape
+                    is three rules rather than a palette:
+
+                    A tall tick where a number is and a short one halfway
+                    between. A number every `step` seconds is a number every
+                    forty-four pixels at best, which on a long film is a wall of
+                    figures; a minor tick between them keeps the scale readable
+                    without adding anything to read.
+
+                    The label sits beside its tick and never on it, which is why
+                    the ticks are drawn first.
+
+                    And `pointer-events-none` on all of it. The whole strip is
+                    one scrub target, and a mark that swallowed a press would
+                    make the ruler dead in exactly the places a thumb aims at.
+                    The booth learnt that one the hard way. */}
+                <div
+                  className="relative h-6 border-b"
+                  style={{ borderColor: 'rgba(16,185,129,0.22)' }}
+                  data-editorruler
+                >
+                  {Array.from(
+                    { length: Math.floor(total / (step / 2)) + 1 },
+                    (_, i) => (i * step) / 2,
+                  ).map((mark) => {
+                    const major = Math.abs(mark / step - Math.round(mark / step)) < 1e-6;
+                    return (
+                      <span
+                        key={`t${mark}`}
+                        data-tick={major ? 'major' : 'minor'}
+                        aria-hidden
+                        className="pointer-events-none absolute bottom-0 w-px"
+                        style={{
+                          left: mark * perSecond,
+                          height: major ? 9 : 4,
+                          background: major
+                            ? 'rgba(236,253,245,0.42)'
+                            : 'rgba(236,253,245,0.18)',
+                        }}
+                      />
+                    );
+                  })}
                   {Array.from({ length: Math.floor(total / step) + 1 }, (_, i) => i * step).map((mark) => (
                     <span
                       key={mark}
-                      style={{ left: mark * perSecond }}
-                      className="absolute top-0 h-full border-l border-zinc-700 pl-1 text-[10px] leading-5 text-zinc-500"
+                      style={{ left: mark * perSecond + 3, color: 'rgba(236,253,245,0.5)' }}
+                      className="pointer-events-none absolute top-0 text-[10px] leading-4 tabular-nums"
                     >
                       {seconds(mark)}
                     </span>
@@ -1629,16 +1731,67 @@ export default function VideoEditor({
                         aria-pressed={on}
                         data-editorblock
                         onClick={() => setPicked(one.id)}
-                        style={{ left: from * perSecond, width: Math.max(THINNEST, wide) }}
-                        className={`absolute top-1 bottom-1 overflow-hidden rounded-lg border-2 px-2 py-1 text-left ${
-                          on ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
-                        }`}
+                        className="absolute top-1 bottom-1 overflow-hidden rounded-lg px-2 py-1 text-left"
+                        style={{
+                          left: from * perSecond,
+                          width: Math.max(THINNEST, wide),
+                          /* The booth's own shape for a picked block: a filled
+                             inset ring rather than a border that moves the
+                             contents by two pixels when it thickens. A block
+                             that shifts when you select it is a block that looks
+                             like it moved on the clock. */
+                          background: on ? 'rgba(52,211,153,0.18)' : 'rgba(236,253,245,0.07)',
+                          boxShadow: on
+                            ? '0 0 0 2px rgba(52,211,153,0.85) inset'
+                            : '0 0 0 1px rgba(16,185,129,0.22) inset',
+                        }}
                       >
-                        <span className="block truncate text-[11px] font-semibold text-zinc-200">{one.name}</span>
-                        <span className="block text-[11px] text-zinc-500">{seconds(lengthOfPiece(one))}</span>
+                        <span
+                          className="block truncate text-[11px] font-semibold"
+                          style={{ color: on ? '#ecfdf5' : 'rgba(236,253,245,0.8)' }}
+                        >
+                          {one.name}
+                        </span>
+                        <span className="block text-[11px] tabular-nums" style={{ color: 'rgba(236,253,245,0.45)' }}>
+                          {seconds(lengthOfPiece(one))}
+                        </span>
                       </button>
                     );
                   })}
+
+                  {/* ── The way to more material, at the end of what there is ──
+
+                      Carli's screenshots all carry one: a square with a plus on
+                      it, sitting after the last clip on the strip.
+
+                      It is the same door the Bring-it-in bench is, and that is
+                      the point of it being here as well. Somebody who has just
+                      watched their film end is looking at the end of the strip,
+                      not at a bar five controls away — so the thing they want
+                      next is under their thumb rather than two presses off.
+
+                      Inside the scrolling strip, after the last block, so it
+                      moves with the film instead of floating over it. */}
+                  <button
+                    type="button"
+                    data-editoradd
+                    aria-label={t('cut.folder', 'Bring it in')}
+                    onClick={() => setBench('folder')}
+                    style={{ left: total * perSecond + 6 }}
+                    title={t('cut.folder', 'Bring it in')}
+                    className="absolute top-1 bottom-1 w-11 rounded-lg inline-flex items-center justify-center"
+                  >
+                    <span
+                      className="flex h-full w-full items-center justify-center rounded-lg"
+                      style={{
+                        background: 'rgba(236,253,245,0.07)',
+                        boxShadow: '0 0 0 1px rgba(16,185,129,0.22) inset',
+                        color: 'rgba(236,253,245,0.7)',
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </span>
+                  </button>
 
                   {/* ── The joins, where they actually are ────────────────
 
@@ -2268,7 +2421,7 @@ export default function VideoEditor({
         )}
 
         {bench === 'looks' && piece && (
-          <div className="space-y-3">
+          <div className="space-y-4">
           {/* The looks. Seven, free, and applied in the browser — the same
               `filterCss` the render uses, so the preview swatch and the
               finished film cannot disagree. */}
@@ -2300,6 +2453,73 @@ export default function VideoEditor({
               })}
             </div>
           </div>
+
+          {/* ── The dials, under the looks ──────────────────────────────
+
+              Carli, 4 October 2026, after sending seven more screenshots:
+              *"Om seker te maak al die video editing tools is daar."*
+
+              Her Adjust sheet carries about twenty of these. Five of them are
+              a `filter` string the browser applies for free, in real time, on
+              the preview and on the render alike — these five. The other
+              fifteen are a tone map or a second pass over the pixels, and
+              `videoadjust.ts` names every one of them and says why it is not
+              here, rather than leaving somebody to find out by moving a dial
+              that does nothing.
+
+              In the same bench as the looks because they are one decision seen
+              twice: the look is the choice, the dials are the correction, and
+              judging either without the other is judging half a picture. */}
+          <div className="space-y-2" data-editoradjust>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-sm text-zinc-400">{t('adj.title', 'Adjust')}</span>
+              {adjusted(piece.adjust) && (
+                <button
+                  type="button"
+                  data-editoradjustreset
+                  onClick={() => tweak({ adjust: { ...NO_ADJUST } })}
+                  className="min-h-[44px] rounded-xl border border-zinc-700 px-3 text-sm font-semibold text-zinc-300 inline-flex items-center gap-1.5"
+                >
+                  <Undo2 className="w-3.5 h-3.5" />
+                  {t('adj.reset', 'Put them all back')}
+                </button>
+              )}
+            </div>
+
+            {DIALS.map((dial) => {
+              const at = piece.adjust?.[dial.id] ?? dial.rest;
+              return (
+                <label key={dial.id} className="block space-y-1">
+                  <span className="flex items-baseline justify-between gap-2 text-sm text-zinc-400">
+                    <span>{t(dial.label[0], dial.label[1])}</span>
+                    {/* The number beside the name, because a slider at two
+                        thirds of its track is not a value anybody can report
+                        back to me down a phone line. */}
+                    <span
+                      data-editordialnow={dial.id}
+                      className="tabular-nums text-zinc-500"
+                    >
+                      {dial.id === 'warm' ? `${Math.round(at)}°` : at.toFixed(2)}
+                    </span>
+                  </span>
+                  <input
+                    type="range"
+                    min={dial.least}
+                    max={dial.most}
+                    step={dial.step}
+                    value={at}
+                    data-editordial={dial.id}
+                    {...gesture}
+                    onChange={(e) => slide({
+                      adjust: { ...NO_ADJUST, ...piece.adjust, [dial.id]: Number(e.target.value) },
+                    })}
+                    className="w-full accent-emerald-500"
+                  />
+                </label>
+              );
+            })}
+          </div>
+
           </div>
         )}
 
@@ -2714,40 +2934,6 @@ export default function VideoEditor({
                 })}
               </div>
             </div>
-
-          <button
-            type="button"
-            disabled={!edit.pieces.length || busy !== null || !canStitch()}
-            data-editormake
-            /* Opens the bill rather than starting the render. Everything before
-               this button is free and stays free; this is the one press that
-               spends, so it asks first. */
-            onClick={() => {
-              setProblem('');
-              setAsking(true);
-              /* Asked fresh every time rather than held from the room opening:
-                 a balance read when the room opened is a balance from before
-                 whatever else she spent this hour, and a confirm screen showing
-                 a stale number is worse than one showing none. */
-              void loadWallet().then(setWallet);
-            }}
-            className="min-h-[44px] rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 disabled:opacity-40 inline-flex items-center gap-2"
-          >
-            {busy === 'make' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            {t('edit.make', 'Put it together')}
-            {/* ── The price, on the button, before it is pressed ──────────
-
-                A charge somebody meets afterwards is a surprise, and a
-                surprise about money is the thing that makes people stop
-                trusting a room. Everything up to this button is free and
-                stays free; this is the one press that costs, so this is
-                where the number goes. */}
-            {bill.total > 0 && (
-              <span data-editorprice className="rounded-lg bg-zinc-950/20 px-2 py-0.5 text-[11px]">
-                {bill.total} {t('edit.credits', 'credits')}
-              </span>
-            )}
-          </button>
 
           {/* ── The bill, and the press that agrees to it ──────────────────
 

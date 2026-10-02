@@ -45,6 +45,7 @@
 import { filterCss } from './videofilters';
 import type { Cut, Scene } from './stitch';
 import type { Join } from './videojoins';
+import { gradeCss, type Adjust } from './videoadjust';
 
 /** A piece of video on the clock. */
 export interface Piece {
@@ -101,6 +102,16 @@ export interface Piece {
    */
   readonly join?: Join;
   readonly joinFor?: number;
+  /**
+   * The dials under the look: brightness, contrast, colour, warmth, softness.
+   *
+   * Separate from `look` because they are a different KIND of decision. A look
+   * is one of thirteen, chosen; these are a correction — the shot was dark, the
+   * shot was flat — and they compose with whichever look is on. See
+   * `videoadjust.ts` for why, and for the honest list of what a browser can and
+   * cannot do here.
+   */
+  readonly adjust?: Adjust;
   /**
    * How long the MATERIAL is, in seconds, whatever this window shows of it.
    *
@@ -361,7 +372,14 @@ export function cutFrom(edit: Edit): Cut {
          empty grade leaves the canvas filter untouched — which is not the
          same as setting it to `none`, and is the right behaviour for a
          browser that does not honour the property at all. */
-      ...(one.look ? { grade: filterCss(one.look) } : {}),
+      /* The look and the dials as one filter string, through `gradeCss`, so
+         the preview and the render cannot compose them in different orders.
+         `filterCss` answers '' for a look that is not in the list, and an empty
+         grade leaves the canvas untouched — which is not the same as `none`,
+         and is right for a browser that does not honour the property at all. */
+      ...(gradeCss(filterCss(one.look), one.adjust)
+        ? { grade: gradeCss(filterCss(one.look), one.adjust) }
+        : {}),
       ...(one.words ? { caption: one.words } : {}),
       ...(one.words && one.wordsFont ? { captionFont: one.wordsFont } : {}),
       ...(one.words && one.wordsSize ? { captionSize: one.wordsSize } : {}),
