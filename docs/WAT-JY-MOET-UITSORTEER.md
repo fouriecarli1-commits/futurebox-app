@@ -15,15 +15,16 @@ Niks hier is kode nie. Alles hier is iets wat net jy kan doen.
 
 | # | Wat | Hoe lank | Wie |
 |---|---|---|---|
-| 1 | Stuur die fal.ai-brief | 10 min | jy |
-| 2 | Stuur die Kits.AI-brief | 10 min | jy |
+| 1 | Stuur die fal.ai-brief (`docs/EPOS-FAL.md`) | 10 min | jy |
+| 2 | Stuur die Kits.AI-brief (`docs/EPOS-KITS.md`) | 10 min | jy |
 | 3 | Registreer die Inligtingsbeampte | 30 min | jy |
-| 4 | Vra Music.ai, Resend en Kling vir hul DPA | 15 min | jy |
+| 4 | Vra Music.ai, Resend en Kling (`docs/EPOS-DPA-KORT.md`) | 15 min | jy |
 | 5 | Sit `FUTUREBOX_LEGAL_EMAIL` in Vercel | 2 min | jy |
 | 6 | Laat 'n prokureur die lys teen die Staatskoerant hou | — | iemand anders |
 
-Items 1 en 2 is die twee wat regtig iets oopmaak. Die res is netheid wat 'n
-ouditeur gaan vra.
+**Al vier die briewe is klaar geskryf.** Jy hoef niks op te stel nie — vul jou
+naam en 'n kontak-e-pos in en stuur. Items 1 en 2 is die twee wat regtig iets
+oopmaak; die res is netheid wat 'n ouditeur gaan vra.
 
 ---
 
@@ -82,9 +83,10 @@ knoppie waarop dit van toepassing is** — watter enjin 'n ooreenkoms het en
 watter nie, en dat iemand wat hulle stem net na die een wil stuur, die
 sangomskakeling moet los. Dit is 'n eerlike bekendmaking, nie 'n oplossing nie.
 
-**Wat om te doen:** vra Kits.AI vir hul DPA. Dieselfde vier vrae as die
-fal.ai-brief werk woordeliks — DPA, sub-verwerkers en oorgrens, opleiding,
-bewaring. Sê ek moet 'n Kits-brief skryf en dit is oor tien minute klaar.
+**Wat om te doen:** die brief is klaar geskryf — `docs/EPOS-KITS.md`. Vier vrae,
+en die vierde is een wat net hierdie verskaffer het: Kits se §1.1 verleen die
+regte aan die **intekenaar**, en dit is ons, nie 'n lid nie. Dit is nie 'n verbod
+nie, net iets om op skrif te hê eerder as af te lei.
 
 **As hulle nee sê:** dan hou ons op om stemme daarheen te stuur. Daardie
 besluit is joune, en dit is 'n regte een — die sangomskakeling hang daaraan.
@@ -112,8 +114,12 @@ Die veranderlike wag reeds; die regsbladsy wys dit die oomblik dit gestel is.
 stem nie — maar POPIA 72 vra 'n grond vir **elkeen** wat data oor die grens
 kry.
 
-Een e-pos elk: *"Do you have a standard DPA, and does it bind your
-sub-processors on onward transfer?"* Sê die woord en ek skryf al drie.
+Al drie is klaar geskryf — `docs/EPOS-DPA-KORT.md`. Een gedeelde liggaam, vier
+vrae, en 'n aanhef elk met die een ekstra vraag wat net daardie verskaffer het.
+Vyftien minute vir al drie.
+
+Nie een van hulle blokkeer vandag 'n funksie nie. Hulle is die netheid wat 'n
+ouditeur gaan vra, en goedkoper om nou te vra as agterna.
 
 ---
 
