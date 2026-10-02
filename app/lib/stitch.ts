@@ -251,6 +251,17 @@ export interface Cut {
   readonly width: number;
   readonly height: number;
   /**
+   * How the file is written: frames a second, and bits a second.
+   *
+   * Carli, 4 October 2026: *"Die export moet ook 'n keuse van kwaliteit hê
+   * waarin dit export."* The SIZE is already `width`/`height` above — a grade
+   * is applied by `videoquality.ts` before a cut is built, so by the time it
+   * reaches here the film simply is that size. These two are the parts the
+   * recorder needs told.
+   */
+  readonly fps?: number;
+  readonly bits?: number;
+  /**
    * What goes in the space a clip does not fill.
    *
    * `'black'` is the plain letterbox. `'blur'` fills it with an enlarged,
@@ -700,7 +711,13 @@ export async function stitch(cut: Cut): Promise<Made> {
   scratch.width = Math.max(2, Math.round(cut.width * scale));
   scratch.height = Math.max(2, Math.round(cut.height * scale));
 
-  const stream = canvas.captureStream(30);
+  /* The rate she chose, not a constant thirty.
+
+     `captureStream` takes the rate the canvas is sampled at, so this is the
+     film's real frame rate rather than a hint: asking for 24 and sampling at
+     30 would write a 30fps file with duplicated frames in it, which is the
+     file size of 30 and the motion of 24. */
+  const stream = canvas.captureStream(cut.fps ?? 30);
 
   /* The song, on the same stream as the pictures.
 
@@ -807,7 +824,14 @@ export async function stitch(cut: Cut): Promise<Made> {
   /** Whether anything has been held yet. False through the whole first scene. */
   let heldReady = false;
 
-  const recorder = new MediaRecorder(stream, { mimeType });
+  /* The bitrate too, and `?? undefined` rather than a default written here:
+     an undefined `videoBitsPerSecond` means "the browser decides", which is
+     what this did before and is still right when nothing was chosen.
+     `videoquality.ts` works out the number from the frame and the rate. */
+  const recorder = new MediaRecorder(stream, {
+    mimeType,
+    ...(cut.bits ? { videoBitsPerSecond: cut.bits } : {}),
+  });
   const parts: Blob[] = [];
   recorder.ondataavailable = (event) => {
     if (event.data.size) parts.push(event.data);

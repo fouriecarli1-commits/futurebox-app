@@ -86,6 +86,9 @@ const SAME_IN_BOTH = new Set([
      are the same word in Afrikaans — "Amber" is amber and "Sand" is sand — and
      the honest alternative would be renaming a colour to dodge a check. */
   'Amber', 'Sand',
+  /* Picture sizes. "480p" is 480p in every language, and translating a
+     standard's own name would make it harder to recognise, not easier. */
+  '480p', '720p', '1080p',
   /* The app on your phone that makes the six digits. Every one of them is
      called this on both app stores here, and "verifikasie-toepassing" is a
      word somebody would have to translate back before they knew what to go

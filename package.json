@@ -119,6 +119,7 @@
     "check:oneroomname": "tsx scripts/check-oneroomname.mts",
     "check:adjust": "tsx scripts/check-adjust.mts",
     "check:videopaint": "tsx scripts/check-videopaint.mts",
+    "check:videoquality": "tsx scripts/check-videoquality.mts",
     "check:opencard": "tsx scripts/check-opencard.mts",
     "check:ordering": "tsx scripts/check-ordering.mts",
     "check:whofirst": "tsx scripts/check-whofirst.mts",

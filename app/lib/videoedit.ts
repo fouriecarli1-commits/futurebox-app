@@ -47,6 +47,7 @@ import type { Cut, Scene } from './stitch';
 import type { Join } from './videojoins';
 import { gradeCss, type Adjust } from './videoadjust';
 import { BACK_DEFAULT, INK_DEFAULT, paintFor, roundFor, type BoxShape } from './videopaint';
+import { bitsFor, rateFor, sizeFor } from './videoquality';
 
 /** A piece of video on the clock. */
 export interface Piece {
@@ -200,6 +201,17 @@ export interface Edit {
   readonly pieces: readonly Piece[];
   /** Absent is tall: most of what leaves this app is watched on a phone. */
   readonly shape?: keyof typeof SHAPES;
+  /**
+   * What the file is written at.
+   *
+   * Carli, 4 October 2026: *"Die export moet ook 'n keuse van kwaliteit hê
+   * waarin dit export."* A grade id from `videoquality.ts` and a frame rate;
+   * the bitrate is worked out from those two rather than being a third thing
+   * to choose, because the number that matters is bits per pixel per frame and
+   * nobody should have to know that.
+   */
+  readonly grade?: string;
+  readonly fps?: number;
   /** A song under the whole thing, and where in it to start. */
   readonly under?: Blob | null;
   readonly underFrom?: number;
@@ -430,11 +442,22 @@ export function cutFrom(edit: Edit): Cut {
     }));
 
   const shape = SHAPES[edit.shape ?? 'tall'] ?? SHAPES.tall;
+  /* The chosen grade applied HERE, at the one place an edit becomes a cut.
+ 
+     So the renderer never learns what a grade is — by the time a cut reaches
+     it the film simply is that size, and every measurement downstream (the
+     letterbox, the caption's size as a share of height, the logo's corner)
+     goes on being a share of the real frame. A renderer that scaled at the end
+     would have a caption sized for one frame drawn into another. */
+  const frame = sizeFor(shape, edit.grade);
+  const fps = rateFor(edit.fps);
   return {
     scenes,
     audio: edit.under ?? null,
-    width: shape.width,
-    height: shape.height,
+    width: frame.width,
+    height: frame.height,
+    fps,
+    bits: bitsFor(frame.width, frame.height, fps),
     ...(edit.underFrom ? { audioFrom: edit.underFrom } : {}),
   };
 }

@@ -289,6 +289,8 @@ jobs:
         run: npm run check:solidroom
       - name: The caption palette is a real variety, and the brush is a stroke
         run: npm run check:videopaint
+      - name: The export's quality is a real choice, and it reaches the file
+        run: npm run check:videoquality
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped

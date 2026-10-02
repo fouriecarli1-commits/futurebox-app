@@ -58,6 +58,9 @@ import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook
 import {
   BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, paintFor, roundFor,
 } from '../lib/videopaint';
+import {
+  GRADES, GRADE_DEFAULT, RATES, bitsFor, gradeFor, rateFor, sizeFor, weighs,
+} from '../lib/videoquality';
 import Note from './Note';
 import { useOwnScreen } from '../lib/fullroom';
 import { useLang } from '../lib/i18n';
@@ -3316,6 +3319,95 @@ export default function VideoEditor({
                 })}
               </div>
             </div>
+
+            {/* ── What the file is written at ────────────────────────────
+
+                Carli, 4 October 2026: *"Die export moet ook 'n keuse van
+                kwaliteit hê waarin dit export."*
+
+                Two choices, not three. The bitrate is the number that actually
+                governs how a compressed picture looks, and it is the one
+                nobody can set sensibly without knowing the frame and the rate
+                — so it is worked out from those two in `videoquality.ts` and
+                shown as the size of the file, which is the thing she can act
+                on. See `bitsFor`. */}
+            <div className="space-y-1.5">
+              <span className="block text-sm text-zinc-400">
+                {t('edit.grade', 'How big a picture')}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {GRADES.map((one) => {
+                  const on = (edit.grade ?? GRADE_DEFAULT) === one.id;
+                  return (
+                    <button
+                      key={one.id}
+                      type="button"
+                      aria-pressed={on}
+                      data-editorgrade={one.id}
+                      title={t(one.what[0], one.what[1])}
+                      onClick={() => commit((was) => ({ ...was, grade: one.id }))}
+                      className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold"
+                      style={on ? {
+                        borderColor: LIT, background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: PRESS,
+                      } : {
+                        borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE,
+                      }}
+                    >
+                      {t(one.name[0], one.name[1])}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="block text-sm" style={{ color: INK_DIM }}>
+                {t(gradeFor(edit.grade).what[0], gradeFor(edit.grade).what[1])}
+              </span>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="block text-sm text-zinc-400">
+                {t('edit.fps', 'Frames a second')}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {RATES.map((one) => {
+                  const on = rateFor(edit.fps) === one;
+                  return (
+                    <button
+                      key={one}
+                      type="button"
+                      aria-pressed={on}
+                      data-editorfps={one}
+                      onClick={() => commit((was) => ({ ...was, fps: one }))}
+                      className="min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold tabular-nums"
+                      style={on ? {
+                        borderColor: LIT, background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: PRESS,
+                      } : {
+                        borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE,
+                      }}
+                    >
+                      {one}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* The size, before the press rather than after it.
+
+                A number afterwards is a surprise, and on a metered connection
+                a surprise about size is the same kind of problem as a surprise
+                about money. "About" because the bitrate is a target the
+                encoder is free to miss, and claiming a tenth of a megabyte
+                would be claiming precision this does not have. */}
+            <p className="text-sm" style={{ color: INK_DIM }} data-editorweight>
+              {(() => {
+                const frame = sizeFor(SHAPES[edit.shape ?? 'tall'] ?? SHAPES.tall, edit.grade);
+                const mb = weighs(total, bitsFor(frame.width, frame.height, rateFor(edit.fps)));
+                return t('edit.weighs', 'About {mb} MB, at {w}×{h}')
+                  .replace('{mb}', String(mb))
+                  .replace('{w}', String(frame.width))
+                  .replace('{h}', String(frame.height));
+              })()}
+            </p>
 
           {/* ── The bill, and the press that agrees to it ──────────────────
 
