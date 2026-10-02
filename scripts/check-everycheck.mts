@@ -65,6 +65,44 @@ const workflow = files
   .map((one) => readFileSync(`.github/workflows/${one}`, 'utf8'))
   .join('\n');
 
+/* ── And does it run the Node the sweep runs on ────────────────────────
+
+   CI ran Node 20 while this machine ran Node 22, and nobody knew, because for
+   four days the workflow did not parse and no job ever started. The first run
+   after it was fixed went 108 checks deep and then failed on `check:paidonce`
+   — a check that passes here, every time, and has done all along.
+
+   That is the worst shape a check can have: green on the machine the work is
+   done on, red on the machine that decides whether it ships, for a reason
+   neither one states. It is the same fault as a check that measures something
+   adjacent, one level up — CI was not measuring this repository, it was
+   measuring this repository on a different runtime.
+
+   So the version is written down in one place, and both the workflow and
+   `package.json` are held against it. A `.nvmrc` is also what `nvm use` and
+   most editors read, so the next person's shell agrees with CI without being
+   told. */
+
+const wanted = readFileSync('.nvmrc', 'utf8').trim();
+
+check('.nvmrc names the Node this repository is built on', /^\d+$/.test(wanted),
+  `"${wanted}" — a major version on its own, so the workflow can quote it`);
+
+for (const one of files) {
+  const text = readFileSync(`.github/workflows/${one}`, 'utf8');
+  const asked = [...text.matchAll(/node-version:\s*'?(\d+)'?/g)].map((m) => m[1]);
+  check(`.github/workflows/${one} runs Node ${wanted} in every job it sets up`,
+    asked.length > 0 && asked.every((v) => v === wanted),
+    `the workflow asks for ${[...new Set(asked)].join(', ') || 'nothing'};`
+    + ` .nvmrc says ${wanted}. A check that passes on one Node and fails on the`
+    + ' other is a check nobody can act on');
+}
+
+check(`package.json asks for Node ${wanted} or newer`,
+  new RegExp(`"node":\\s*">=\\s*${wanted}`).test(readFileSync('package.json', 'utf8')),
+  'so an install on the wrong runtime says so rather than failing later and'
+  + ' somewhere else');
+
 /* ── Before anything else: can GitHub read it ──────────────────────────── */
 
 let broken = 0;
