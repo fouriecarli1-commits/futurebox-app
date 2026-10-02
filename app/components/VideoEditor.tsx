@@ -52,6 +52,7 @@ import {
   RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop,
 } from 'lucide-react';
 import Card from './Card';
+import CutDock, { type Bench } from './CutDock';
 import Note from './Note';
 import { useLang } from '../lib/i18n';
 import { FILTERS, filterCss, filterName } from '../lib/videofilters';
@@ -483,6 +484,9 @@ export default function VideoEditor({
      it with the same numbers in — the same function — because two copies of a
      price is two prices, and the one on the button is the one somebody agreed
      to. `check:filmcost` holds both ends against it. */
+  /** Which bench is out. `null` is all of them shut — see `CutDock.tsx`. */
+  const [bench, setBench] = useState<Bench>(null);
+
   const [asking, setAsking] = useState(false);
   const [wallet, setWallet] = useState<Wallet>(NO_WALLET);
 
@@ -1253,9 +1257,745 @@ export default function VideoEditor({
   }
 
   return (
-    <div className="space-y-4" data-videoeditor>
-      <Card title={t('rail.videoedit', 'Cutting room')} icon={<Film className="w-4 h-4" />}>
-        <div className="space-y-4">
+    /* ── One room, in the shape she drew ──────────────────────────────────
+
+       Carli, 4 October 2026: *"Die tydlyne moet reg onder die video prent wees.
+       … Dit is funksioneel nes soos die probooth. Dit moet lyk soos 'n editing
+       kamer. Daar moet nie allerhande buttons wees soos daar nou is nie, alles
+       moet binne een kamer wees en met icons. … Die oorhoofse editing funksies
+       moet heel onder op die hoof bar wees en moet vas wees soos in die probooth
+       en dan van daar af wees funksies op pop waarvan mens kan kies."*
+
+       What was here was eight cards down one scrolling page: bring-in, undo,
+       shape, clock, strip, preview, inspector, sound, fades, export. Somebody
+       looking for the looks scrolled past the sound to find them, and the
+       picture they were cutting was three cards below the clock they were
+       cutting it on.
+
+       Now it is a screen rather than a page. The picture; the clock directly
+       under it; and a fixed bar at the bottom whose seven icons open the room's
+       own benches. The same shape the Pro Booth got in September, after the same
+       complaint, for the same reason — `BoothDock.tsx` carries that note and
+       `CutDock.tsx` is this room's copy of the idea.
+
+       Not one new control is below. Every one of them was already in this room.
+       What changed is that the room has a floor. */
+    <div
+      className="flex flex-col"
+      data-videoeditor
+      data-cutroom
+      /* The room takes the screen rather than growing a page under it, so that
+         the bar at the bottom is AT the bottom. `page.tsx` already bleeds this
+         surface to the edges; this is the height that matches. */
+      style={{ minHeight: 'calc(100dvh - 7.5rem)' }}
+    >
+      {/* ── The picture, and the clock right under it ──────────────────── */}
+      <div className="flex-1 overflow-y-auto px-1 pb-3 space-y-3">
+        {piece ? (
+          <section data-editorpiece className="space-y-3">
+            <h3 className="text-sm font-semibold text-zinc-100 inline-flex items-center gap-2">
+              <Scissors className="w-4 h-4 text-emerald-400" />
+              {piece.name}
+            </h3>
+            {/* ── You were cutting blind ─────────────────────────────────────
+
+                The first version of this panel had two number boxes and no
+                picture. "Starts at 3.4" is not a decision anybody can make
+                about a shot they cannot see — it is a guess, checked by
+                exporting the whole film and watching it.
+
+                So the piece is on screen, the look is on it, and moving either
+                end seeks to that end. Watching the frame you are trimming TO is
+                the entire job.
+
+                `filterCss` is the same function the render uses, so the frame
+                here and the frame in the finished film cannot disagree. */}
+            {/* ── The picture, with the mark on it where it will really be ──
+
+                Carli, 30 September 2026: *"Mens moet die logo foto fisies moet
+                kan skuif."*
+
+                The mark is drawn over the viewer rather than beside it, because
+                the only useful question about a logo is what it covers. Four
+                corner buttons cannot answer that: in a vertical clip of a
+                person, the corner that is free depends on where the person is
+                standing, and often none of them is.
+
+                Positioned from the same fractions `drawMark` uses, so what is
+                under her thumb here is what lands in the film. */}
+            {/* The frame is measured rather than asked to measure itself.
+
+                This was `@container` with the words sized in `cqh`, which is
+                the elegant version and the one that can fail quietly: container
+                queries are a Tailwind plugin in v3, the class compiles to
+                nothing without it, and `cqh` then falls back to a font size of
+                nought — words that vanish, with no error anywhere. A measured
+                height cannot do that. */}
+
+            {/* ── Zooming the picture ────────────────────────────────────────
+
+                Carli, 30 September 2026: *"mens moet op die prent van die video
+                kan kliek en in en uit zoom."*
+
+                This zooms the PREVIEW and not the film. It is the magnifying
+                glass over the thing being worked on, not a punch-in on the
+                shot — nothing below changes a single frame of what comes out,
+                and that is deliberate: she asked for it in the same breath as
+                moving the logo and placing the words, which are the two jobs
+                that are guesswork at 390 pixels wide.
+
+                A punch-in on the shot itself is a different and also useful
+                thing, and it is not this. Saying so here because "zoom" means
+                both, and shipping the wrong one silently would be worse than
+                shipping neither.
+
+                The overlays scale with the picture because they are positioned
+                in percentages inside the same box, so a logo placed at 2x is
+                still in the same place at 1x. */}
+            <div className="flex items-center justify-end gap-2">
+              <span className="text-sm text-zinc-500" data-editorzoomnow>{`${zoom}×`}</span>
+              <button
+                type="button"
+                data-editorzoomout
+                disabled={zoom <= 1}
+                onClick={() => setZoom((was) => Math.max(1, was - 1))}
+                className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
+              >
+                &minus;
+              </button>
+              <button
+                type="button"
+                data-editorzoomin
+                disabled={zoom >= 4}
+                onClick={() => setZoom((was) => Math.min(4, was + 1))}
+                className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
+              >
+                +
+              </button>
+            </div>
+
+            {/* sideways on purpose: only ever at a zoom she has chosen. At 1x
+                the inner box is exactly the outer one and there is nothing to
+                scroll; above it, panning IS the feature, and native scrolling
+                is the only panning that behaves like the phone it is on. */}
+            <div
+              data-editorzoombox
+              className={zoom > 1 ? 'overflow-auto rounded-xl' : ''}
+            >
+            <div
+              ref={frame}
+              data-editorframe
+              /* The FILM's shape, not the clip's. The box is the frame, so a
+                 fraction means the same thing here as it does in the render —
+                 and the black bars somebody's clip will really have are the
+                 black of this box showing through `object-contain`. */
+              style={{
+                aspectRatio: `${shape.width} / ${shape.height}`,
+                /* ── Capped, so the picture always fits the room ─────────────
+
+                   Carli, 4 October 2026, with screenshots of a phone editor
+                   open: the picture sits in a band at the top and the clock and
+                   the controls get the rest of the screen.
+
+                   Ours was full width, which on a tall film is 693 pixels of a
+                   727-pixel screen. That was fine while the room was a scrolling
+                   page and wrong the moment it became a screen with a bar at the
+                   bottom and a bench above it.
+
+                   `check:editor` found it before she did: with the Words bench
+                   open, the corner handle for resizing a caption was below the
+                   bottom of the room, and the probe reported a resize handle
+                   that does not resize.
+
+                   Height-led rather than width-led, so a wide film and a tall
+                   one land inside the same band instead of one of them deciding
+                   how tall the room is. */
+                ...(zoom > 1
+                  ? { width: `${zoom * 100}%` }
+                  : { maxHeight: '38dvh', width: 'auto', margin: '0 auto' }),
+              }}
+              className="relative origin-top-left overflow-hidden rounded-xl border border-zinc-800 bg-black"
+            >
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              <video
+                ref={viewer}
+                data-editorviewer
+                src={source ?? undefined}
+                playsInline
+                muted={!piece.sound}
+                style={{ filter: filterCss(piece.look) || undefined }}
+                /* `contain` or `cover`, from the same flag the renderer reads, so
+                   the bars she sees are the bars she gets. */
+                className={`absolute inset-0 h-full w-full ${
+                  piece.fill ? 'object-cover' : 'object-contain'
+                }`}
+              />
+              {(piece.words ?? '').trim().length > 0 && (
+                <div
+                  data-editorwordsdrag
+                  /* Through `holding`/`held` and `slide`, not `tweak`: a drag
+                     across the frame is a few hundred pointermoves, and one of
+                     them per history step was the other half of the fault the
+                     note beside `beforeDrag` describes. One drag, one Back. */
+                  onPointerDown={(event) => {
+                    holding();
+                    dragOnFrame(event, (spot) => slide({ wordsAt: spot }), held);
+                  }}
+                  style={{
+                    left: `${(piece.wordsAt?.x ?? WORDS_AT.x) * 100}%`,
+                    top: `${(piece.wordsAt?.y ?? WORDS_AT.y) * 100}%`,
+                    fontFamily: fontFor(piece.wordsFont).stack,
+                    fontWeight: fontFor(piece.wordsFont).weight,
+                    fontSize: Math.max(9, (piece.wordsSize ?? 0.048) * frameHeight),
+                    maxWidth: '86%',
+                    /* The centring is in the transform rather than in a
+                       `-translate-x-1/2` class, because an inline `transform`
+                       replaces the whole property and would have thrown the
+                       Tailwind translate away — the words would have hung off to
+                       the right of where they land in the film, which is the
+                       quiet kind of wrong this preview exists to prevent. */
+                    transform: `translate(-50%, -50%) rotate(${piece.wordsTurn ?? 0}deg)`,
+                    opacity: piece.wordsSolid ?? 1,
+                    /* Approximate, and said so rather than implied: the renderer
+                       rounds against the band's MEASURED height, and the band
+                       here is a div that has not been measured. It moves the
+                       right way and lands within a pixel or two of the film. */
+                    borderRadius: (piece.wordsRound ?? CAPTION_ROUND)
+                      * Math.max(9, (piece.wordsSize ?? 0.048) * frameHeight),
+                    zIndex: 2,
+                  }}
+                  className="absolute cursor-move touch-none select-none bg-black/60 px-2 py-1 text-center leading-tight text-white outline-dashed outline-1 outline-emerald-400/50"
+                >
+                  {piece.words}
+                  {/* The corner. Sits half outside the band so the whole of it is
+                      grabbable without covering a letter, and `touch-none` so a
+                      phone does not scroll the page instead. */}
+                  <span
+                    data-editorwordsgrip
+                    onPointerDown={(event) => {
+                      holding();
+                      grip(
+                        event, piece.wordsSize ?? 0.048,
+                        (size) => slide({ wordsSize: size }),
+                        WORDS_SMALLEST, WORDS_LARGEST, held,
+                      );
+                    }}
+                    className="absolute -bottom-2 -right-2 h-5 w-5 cursor-nwse-resize touch-none rounded-full border-2 border-emerald-400 bg-zinc-950"
+                  />
+                </div>
+              )}
+              {mark && (
+                /* Wrapped rather than left as a bare `<img>`, so the corner handle
+                   has something to sit in the corner OF. The wrapper carries the
+                   place, the size and the turn; the picture fills it. */
+                <div
+                  data-editormarkdrag
+                  onPointerDown={(event) => dragOnFrame(event, setMarkAt)}
+                  style={{
+                    width: `${markShare * 100}%`,
+                    left: `${(markAt ? markAt.x : CORNER_AT[corner].x) * 100}%`,
+                    top: `${(markAt ? markAt.y : CORNER_AT[corner].y) * 100}%`,
+                    transform: `translate(-50%, -50%) rotate(${markTurn}deg)`,
+                    /* `markSolid`, not the `opacity-80` class that was here. The
+                       class was a third opacity — the render used
+                       `MARK_OPACITY`, 0.92, and the preview showed 0.80, so the
+                       logo was always slightly fainter here than in the film.
+                       Reading the slider fixes a disagreement as well as adding
+                       a control. */
+                    opacity: markSolid,
+                    zIndex: markUnder ? 1 : 3,
+                  }}
+                  className="absolute cursor-move touch-none select-none outline-dashed outline-1 outline-emerald-400/50"
+                >
+                  <img src={mark.src} alt="" draggable={false} className="block w-full" />
+                  <span
+                    data-editormarkgrip
+                    onPointerDown={(event) => grip(
+                      event, markShare, setMarkShare, MARK_SMALLEST, MARK_LARGEST,
+                    )}
+                    className="absolute -bottom-2 -right-2 h-5 w-5 cursor-nwse-resize touch-none rounded-full border-2 border-emerald-400 bg-zinc-950"
+                  />
+                </div>
+              )}
+            </div>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                type="button"
+                data-editorplaypiece
+                onClick={() => {
+                  const v = viewer.current;
+                  if (!v) return;
+                  v.currentTime = piece.from;
+                  void v.play();
+                }}
+                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
+              >
+                <Play className="w-4 h-4" />
+                {t('edit.playPiece', 'Play this piece')}
+              </button>
+              <span className="self-center text-sm text-zinc-500" data-editorpiecelen>
+                {seconds(lengthOfPiece(piece))}
+              </span>
+            </div>
+          </section>
+        ) : (
+          <Note>
+            {t(
+              'edit.what',
+              'Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device — no credits, no queue, no waiting.',
+            )}
+          </Note>
+        )}
+
+        {/* ── The clock ────────────────────────────────────────────────
+
+            Carli, 29 September: *"dit moet seker ook op 'n tydlyn wees.
+            Die ordentlike editor."*
+
+            The first version drew the pieces as blocks in a row, sized by
+            how long each ran as a SHARE of the whole. That reads as a
+            proportion and not as time: a ten-second piece and a ten-second
+            piece next to a two-minute one were both slivers, and there was
+            nowhere to point at "eighteen seconds in".
+
+            So it is a real clock now. Seconds are pixels — `PER_SECOND` of
+            them — the strip is as wide as the film is long and scrolls, a
+            ruler above it carries the marks, and a playhead says where you
+            are. Tap anywhere on it and the viewer shows that frame.
+
+            The width is the honest part: a three-minute film is a
+            three-minute strip. A timeline that squeezes to fit is a
+            proportion bar wearing a ruler. */}
+        {edit.pieces.length === 0 ? (
+          <p className="text-sm text-zinc-500 leading-relaxed" data-editorempty>
+            {t('edit.nothing', 'Nothing on the clock yet. Bring a clip in and it appears here as a block you can cut.')}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-baseline justify-between">
+              <span className="text-sm text-zinc-400">{t('edit.clock', 'The clock')}</span>
+              <span className="text-sm text-zinc-500" data-editorruns>
+                {seconds(at)} / {seconds(total)}
+              </span>
+            </div>
+
+            <div
+              ref={strip}
+              /* sideways on purpose, and only past the floor: `perSecond`
+                 fits the film to this strip, so everything this app makes —
+                 Veo's lengths are four, six and eight seconds — fills the
+                 width and stays still. It scrolls only below
+                 `LEAST_PER_SECOND`, where a film really is longer than a
+                 phone and the alternative is blocks half a pixel wide. */
+              className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950"
+              data-editorstrip
+            >
+              <div style={{ width: Math.max(stripWidth || 280, total * perSecond) }} className="relative select-none">
+                {/* The ruler. A mark every `stepFor` seconds, so a
+                    ten-second film is marked every second and a five-minute
+                    one every thirty — the alternative is either three marks
+                    or three hundred. */}
+                <div className="relative h-5 border-b border-zinc-800" data-editorruler>
+                  {Array.from({ length: Math.floor(total / step) + 1 }, (_, i) => i * step).map((mark) => (
+                    <span
+                      key={mark}
+                      style={{ left: mark * perSecond }}
+                      className="absolute top-0 h-full border-l border-zinc-700 pl-1 text-[10px] leading-5 text-zinc-500"
+                    >
+                      {seconds(mark)}
+                    </span>
+                  ))}
+                </div>
+
+                {/* The blocks, at their real place in time. */}
+                <div
+                  className="relative h-16"
+                  data-editortrack
+                  data-persecond={perSecond.toFixed(3)}
+                  onPointerDown={(event) => {
+                    const box = event.currentTarget.getBoundingClientRect();
+                    scrubTo((event.clientX - box.left) / perSecond);
+                  }}
+                >
+                  {edit.pieces.map((one) => {
+                    const from = startsAt(edit, one.id);
+                    const wide = lengthOfPiece(one) * perSecond;
+                    const on = one.id === picked;
+                    return (
+                      <button
+                        key={one.id}
+                        type="button"
+                        aria-pressed={on}
+                        data-editorblock
+                        onClick={() => setPicked(one.id)}
+                        style={{ left: from * perSecond, width: Math.max(THINNEST, wide) }}
+                        className={`absolute top-1 bottom-1 overflow-hidden rounded-lg border-2 px-2 py-1 text-left ${
+                          on ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
+                        }`}
+                      >
+                        <span className="block truncate text-[11px] font-semibold text-zinc-200">{one.name}</span>
+                        <span className="block text-[11px] text-zinc-500">{seconds(lengthOfPiece(one))}</span>
+                      </button>
+                    );
+                  })}
+
+                  {/* ── The joins, where they actually are ────────────────
+
+                      A mark on the strip at every join that is not a hard
+                      cut, as wide as the join really lasts.
+
+                      Here rather than only in the inspector, because a
+                      transition is the one control in this room whose effect
+                      cannot be seen in the preview: the preview plays one
+                      piece at a time and a join is the seam between two. The
+                      strip is the honest answer — she can see WHERE it is and
+                      HOW LONG it is, measured through `joinFits` so the mark
+                      is the join's real length and not the slider's number.
+
+                      Pointer-events off, so it never eats a tap meant for the
+                      block underneath or for the track. */}
+                  {edit.pieces.map((one, i) => {
+                    if (i === 0) return null;
+                    const kind = one.join ?? 'cut';
+                    if (kind === 'cut') return null;
+                    const lasts = joinFits(one.joinFor ?? JOIN_FOR, lengthOfPiece(one));
+                    if (lasts <= 0) return null;
+                    const at = startsAt(edit, one.id) * perSecond;
+                    return (
+                      <div
+                        key={`join-${one.id}`}
+                        data-editorjoinmark={kind}
+                        title={joinName(kind, lang)}
+                        style={{ left: at, width: Math.max(4, lasts * perSecond) }}
+                        className="pointer-events-none absolute top-0 h-full border-x border-emerald-400/70 bg-emerald-400/25"
+                      />
+                    );
+                  })}
+
+                  {/* ── The ends of the picked piece, as something to pull ──
+
+                      Only on the piece that is picked. Handles on every block
+                      at once is eight grab targets in a 334-pixel strip, and
+                      the thing somebody is trimming is the thing they just
+                      tapped. Every editor that has these shows them on the
+                      selection.
+
+                      ── What each one looks like it does, and what it does ──
+
+                      The right edge follows the thumb exactly: drag it left and
+                      the block ends there.
+
+                      The left edge does NOT move under the thumb, and that is
+                      worth saying rather than hiding. This strip has no gaps —
+                      pieces are laid end to end — so where a block STARTS on the
+                      film's clock is decided by the pieces before it, and
+                      nothing about trimming this one's in-point can change it.
+                      Dragging it right takes material off the start, so the
+                      block gets shorter at its far end and the pieces after it
+                      slide left.
+
+                      What makes that legible is the picture: the viewer seeks to
+                      the new start as it moves, so she is watching the frame the
+                      piece will now open on. That is the feedback that matters,
+                      and it was already there — the effect that seeks on a
+                      changed `from` has been in this room since the trim boxes
+                      were. */}
+                  {picked && edit.pieces.some((one) => one.id === picked) && (() => {
+                    const one = edit.pieces.find((two) => two.id === picked);
+                    if (!one) return null;
+                    const opens = startsAt(edit, one.id) * perSecond;
+                    const shuts = opens + lengthOfPiece(one) * perSecond;
+                    return (
+                      <>
+                        <div
+                          data-editortrimfrom
+                          role="slider"
+                          aria-label={t('edit.trimFrom', 'Where it starts in the clip')}
+                          aria-valuemin={0}
+                          aria-valuemax={one.holds ?? one.to}
+                          aria-valuenow={one.from}
+                          tabIndex={0}
+                          onPointerDown={(event) => takeEdge('from', one.id, event)}
+                          onKeyDown={(event) => {
+                            const by = event.key === 'ArrowRight' ? 0.1
+                              : event.key === 'ArrowLeft' ? -0.1 : 0;
+                            if (!by) return;
+                            event.preventDefault();
+                            commit((was) => trim(was, one.id, 'from', one.from + by));
+                          }}
+                          style={{ left: Math.max(0, opens - 1) }}
+                          className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
+                        >
+                          <span className="pointer-events-none absolute inset-y-1 left-0 w-1 rounded-full bg-emerald-400" />
+                        </div>
+                        <div
+                          data-editortrimto
+                          role="slider"
+                          aria-label={t('edit.trimTo', 'Where it ends in the clip')}
+                          aria-valuemin={0}
+                          aria-valuemax={one.holds ?? one.to}
+                          aria-valuenow={one.to}
+                          tabIndex={0}
+                          onPointerDown={(event) => takeEdge('to', one.id, event)}
+                          onKeyDown={(event) => {
+                            const by = event.key === 'ArrowRight' ? 0.1
+                              : event.key === 'ArrowLeft' ? -0.1 : 0;
+                            if (!by) return;
+                            event.preventDefault();
+                            commit((was) => trim(was, one.id, 'to', one.to + by));
+                          }}
+                          style={{ left: Math.max(0, shuts - 12) }}
+                          className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
+                        >
+                          <span className="pointer-events-none absolute inset-y-1 right-0 w-1 rounded-full bg-emerald-400" />
+                        </div>
+                      </>
+                    );
+                  })()}
+
+                  {/* ── The fades, as something to pull ──────────────────
+
+                      A shaded wedge at each end showing what is being faded,
+                      and a handle on its inside edge to drag. The wedge
+                      ignores pointers so it never eats a tap meant for a
+                      block; only the handle takes one. */}
+                  {fades.in > 0 && (
+                    <div
+                      style={{ width: fades.in * perSecond }}
+                      className="pointer-events-none absolute inset-y-0 left-0 rounded-l-lg bg-gradient-to-r from-black/80 to-transparent"
+                    />
+                  )}
+                  {fades.out > 0 && (
+                    <div
+                      style={{ width: fades.out * perSecond }}
+                      className="pointer-events-none absolute inset-y-0 right-0 rounded-r-lg bg-gradient-to-l from-black/80 to-transparent"
+                    />
+                  )}
+                  <div
+                    data-editorfadeinhandle
+                    role="slider"
+                    aria-label={t('edit.fadeIn', 'Fade in')}
+                    aria-valuemin={0}
+                    aria-valuemax={LONGEST_FADE}
+                    aria-valuenow={fades.in}
+                    tabIndex={0}
+                    onPointerDown={(event) => takeFade('in', event)}
+                    onKeyDown={(event) => {
+                      const by = event.key === 'ArrowRight' ? 0.1 : event.key === 'ArrowLeft' ? -0.1 : 0;
+                      if (!by) return;
+                      event.preventDefault();
+                      commit((was) => ({
+                        ...was,
+                        fadeIn: Math.max(0, Math.min(LONGEST_FADE, Math.round(((was.fadeIn ?? 0) + by) * 10) / 10)),
+                      }));
+                    }}
+                    style={{ left: Math.max(0, fades.in * perSecond - 7) }}
+                    className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
+                  >
+                    <span className="absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full bg-amber-400/90" />
+                  </div>
+                  <div
+                    data-editorfadeouthandle
+                    role="slider"
+                    aria-label={t('edit.fadeOut', 'Fade out')}
+                    aria-valuemin={0}
+                    aria-valuemax={LONGEST_FADE}
+                    aria-valuenow={fades.out}
+                    tabIndex={0}
+                    onPointerDown={(event) => takeFade('out', event)}
+                    onKeyDown={(event) => {
+                      const by = event.key === 'ArrowLeft' ? 0.1 : event.key === 'ArrowRight' ? -0.1 : 0;
+                      if (!by) return;
+                      event.preventDefault();
+                      commit((was) => ({
+                        ...was,
+                        fadeOut: Math.max(0, Math.min(LONGEST_FADE, Math.round(((was.fadeOut ?? 0) + by) * 10) / 10)),
+                      }));
+                    }}
+                    style={{ right: Math.max(0, fades.out * perSecond - 7) }}
+                    className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
+                  >
+                    <span className="absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full bg-amber-400/90" />
+                  </div>
+
+                  {/* The playhead. Drawn over the blocks and ignoring
+                      pointers, so tapping "on the line" still reaches the
+                      track underneath and moves it. */}
+                  <div
+                    data-editorplayhead
+                    style={{ left: Math.min(at, total) * perSecond }}
+                    className="pointer-events-none absolute inset-y-0 w-0.5 bg-emerald-400"
+                  >
+                    <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                  </div>
+                </div>
+
+                {/* ── The sound, on a lane of its own ──────────────────
+
+                    Carli, 30 September 2026: *"dan moet dit soos die
+                    probooth die tydlyne hê, asook vir die klank."*
+
+                    Inside the same scrolling strip as the blocks, which is
+                    the only way the two can be read against each other: a
+                    lane in its own box at its own width is a second picture
+                    of time, and two pictures of time that do not line up
+                    are worse than one.
+
+                    Two things are drawn. The bed runs the whole film,
+                    because that is what a bed does — dragging it does not
+                    move it along the film, it scrubs WHICH PART of the song
+                    is used, which is the only thing about it there is to
+                    choose. And a mark under every piece that carries its
+                    own sound, so "why can I hear a room" has an answer you
+                    can see rather than six checkboxes to go and open. */}
+                <div className="relative h-10 border-t border-zinc-800" data-editorsoundlane>
+                  {edit.under ? (
+                    <div
+                      data-editorbed
+                      onPointerDown={(event) => scrubBed(event)}
+                      style={{ width: Math.max(0, total * perSecond) }}
+                      className="absolute inset-y-1 left-0 cursor-ew-resize touch-none overflow-hidden rounded-lg border border-sky-500/40 bg-sky-500/10 px-2 py-1"
+                    >
+                      <span className="block truncate text-[11px] font-semibold text-sky-200">
+                        {t('edit.bed', 'Track under it')}
+                      </span>
+                      <span className="block text-[11px] text-sky-300/70">
+                        {t('edit.bedFrom', 'From')} {seconds(edit.underFrom ?? 0)}
+                        {underLength > 0 ? ` / ${seconds(underLength)}` : ''}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="absolute inset-y-0 left-2 flex items-center text-[11px] text-zinc-600">
+                      {t('edit.noBed', 'No track under it yet')}
+                    </span>
+                  )}
+
+                  {edit.pieces.filter((one) => one.sound).map((one) => (
+                    <span
+                      key={one.id}
+                      data-editorownsound
+                      style={{
+                        left: startsAt(edit, one.id) * perSecond,
+                        width: Math.max(THINNEST, lengthOfPiece(one) * perSecond),
+                      }}
+                      className="pointer-events-none absolute bottom-0 h-1 rounded-full bg-emerald-400/80"
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Playing the whole film in place, rather than only on export.
+                It hops the viewer from piece to piece as the clock runs,
+                which is the one thing that makes a timeline a timeline and
+                not a list of files. */}
+            <div className="flex gap-2 flex-wrap">
+              <button
+                type="button"
+                data-editorplayall
+                onClick={() => setRunning((was) => !was)}
+                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
+              >
+                {running ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                {running ? t('edit.pause', 'Pause') : t('edit.playAll', 'Play the film')}
+              </button>
+              <button
+                type="button"
+                data-editorrewind
+                onClick={() => { setRunning(false); scrubTo(0); }}
+                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
+              >
+                <SkipBack className="w-4 h-4" />
+                {t('edit.rewind', 'Back to the start')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Taking it back, always on the screen ────────────────────────
+
+            Not behind a bench, and that is the one thing in this room that
+            must not be. Undo is reached for in the half second AFTER a mistake,
+            and a mistake made with the Looks bench open is undone with the
+            Looks bench open — so a pair of arrows that first need a bench
+            closed and another opened is a pair of arrows nobody reaches in
+            time. Every editor keeps them on the surface.
+
+            Under the clock rather than over the picture, because the picture is
+            the thing being judged and the clock is the thing being changed. */}
+        {/* ── Take it back ────────────────────────────────────────────
+
+            Beside the way in rather than beside each thing it undoes: one
+            pair of buttons for the whole room is what every editor does,
+            and a per-control undo is a room full of arrows.
+
+            Disabled rather than hidden when there is nothing to take back.
+            A button that appears and disappears moves everything beside it,
+            and on a phone that means pressing the wrong thing. */}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            data-editorundo
+            disabled={past.length === 0}
+            onClick={stepBack}
+            title={t('edit.undo', 'Take back the last change')}
+            className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 disabled:opacity-40 inline-flex items-center gap-1.5"
+          >
+            <Undo2 className="w-4 h-4" />
+            {t('edit.undoShort', 'Back')}
+          </button>
+          <button
+            type="button"
+            data-editorredo
+            disabled={future.length === 0}
+            onClick={stepForward}
+            title={t('edit.redo', 'Put the change back')}
+            className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 disabled:opacity-40 inline-flex items-center gap-1.5"
+          >
+            <Redo2 className="w-4 h-4" />
+            {t('edit.redoShort', 'Forward')}
+          </button>
+        </div>
+
+        {problem && (
+          <p role="alert" className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-2.5 text-sm text-rose-400">
+            {problem}
+          </p>
+        )}
+
+        {/* The finished film, outside the benches on purpose: a film that
+            arrived behind a panel somebody has to reopen is a film they are
+            not sure they got. */}
+        {made && (
+          <div className="space-y-2" data-editormade>
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video src={made.url} controls className="w-full rounded-xl border border-zinc-800 bg-black" />
+            <button
+              type="button"
+              data-editorsave
+              onClick={() => downloadBlob(made.blob, safeFilename(edit.pieces[0]?.name ?? 'film', made.ext))}
+              className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center justify-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              {t('edit.save', 'Save it')}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── The bar, and what comes out from behind it ──────────────────── */}
+      <CutDock
+        open={bench}
+        onOpen={setBench}
+        playing={running}
+        onPlay={() => setRunning((was) => !was)}
+        onSkip={(by) => scrubTo(at + by)}
+        place={total > 0 ? `${seconds(at)} / ${seconds(total)}` : undefined}
+        noClip={!piece}
+      >
+        {bench === 'folder' && (
+          <div className="space-y-3">
           <Note>
             {t(
               'edit.what',
@@ -1279,1011 +2019,166 @@ export default function VideoEditor({
             />
           </label>
 
-          {/* ── Take it back ────────────────────────────────────────────
- 
-              Beside the way in rather than beside each thing it undoes: one
-              pair of buttons for the whole room is what every editor does,
-              and a per-control undo is a room full of arrows.
- 
-              Disabled rather than hidden when there is nothing to take back.
-              A button that appears and disappears moves everything beside it,
-              and on a phone that means pressing the wrong thing. */}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              data-editorundo
-              disabled={past.length === 0}
-              onClick={stepBack}
-              title={t('edit.undo', 'Take back the last change')}
-              className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 disabled:opacity-40 inline-flex items-center gap-1.5"
-            >
-              <Undo2 className="w-4 h-4" />
-              {t('edit.undoShort', 'Back')}
-            </button>
-            <button
-              type="button"
-              data-editorredo
-              disabled={future.length === 0}
-              onClick={stepForward}
-              title={t('edit.redo', 'Put the change back')}
-              className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 disabled:opacity-40 inline-flex items-center gap-1.5"
-            >
-              <Redo2 className="w-4 h-4" />
-              {t('edit.redoShort', 'Forward')}
-            </button>
+
           </div>
+        )}
 
-          {/* ── The shape, which changes what you are looking at ────── */}
-          <div className="space-y-1.5">
-            <span className="text-sm text-zinc-400">{t('edit.shape', 'Shape')}</span>
-            <div className="flex gap-2">
-              {(Object.keys(SHAPES) as (keyof typeof SHAPES)[]).map((one) => {
-                const on = (edit.shape ?? 'tall') === one;
-                return (
-                  <button
-                    key={one}
-                    type="button"
-                    aria-pressed={on}
-                    data-editorshape={one}
-                    onClick={() => commit((was) => ({ ...was, shape: one }))}
-                    className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold ${
-                      on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
-                    }`}
-                  >
-                    {one === 'tall' ? t('edit.tall', 'Tall') : one === 'wide' ? t('edit.wide', 'Wide') : t('edit.square', 'Square')}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── The clock ────────────────────────────────────────────────
- 
-              Carli, 29 September: *"dit moet seker ook op 'n tydlyn wees.
-              Die ordentlike editor."*
- 
-              The first version drew the pieces as blocks in a row, sized by
-              how long each ran as a SHARE of the whole. That reads as a
-              proportion and not as time: a ten-second piece and a ten-second
-              piece next to a two-minute one were both slivers, and there was
-              nowhere to point at "eighteen seconds in".
- 
-              So it is a real clock now. Seconds are pixels — `PER_SECOND` of
-              them — the strip is as wide as the film is long and scrolls, a
-              ruler above it carries the marks, and a playhead says where you
-              are. Tap anywhere on it and the viewer shows that frame.
- 
-              The width is the honest part: a three-minute film is a
-              three-minute strip. A timeline that squeezes to fit is a
-              proportion bar wearing a ruler. */}
-          {edit.pieces.length === 0 ? (
-            <p className="text-sm text-zinc-500 leading-relaxed" data-editorempty>
-              {t('edit.nothing', 'Nothing on the clock yet. Bring a clip in and it appears here as a block you can cut.')}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex items-baseline justify-between">
-                <span className="text-sm text-zinc-400">{t('edit.clock', 'The clock')}</span>
-                <span className="text-sm text-zinc-500" data-editorruns>
-                  {seconds(at)} / {seconds(total)}
-                </span>
-              </div>
-
-              <div
-                ref={strip}
-                /* sideways on purpose, and only past the floor: `perSecond`
-                   fits the film to this strip, so everything this app makes —
-                   Veo's lengths are four, six and eight seconds — fills the
-                   width and stays still. It scrolls only below
-                   `LEAST_PER_SECOND`, where a film really is longer than a
-                   phone and the alternative is blocks half a pixel wide. */
-                className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950"
-                data-editorstrip
-              >
-                <div style={{ width: Math.max(stripWidth || 280, total * perSecond) }} className="relative select-none">
-                  {/* The ruler. A mark every `stepFor` seconds, so a
-                      ten-second film is marked every second and a five-minute
-                      one every thirty — the alternative is either three marks
-                      or three hundred. */}
-                  <div className="relative h-5 border-b border-zinc-800" data-editorruler>
-                    {Array.from({ length: Math.floor(total / step) + 1 }, (_, i) => i * step).map((mark) => (
-                      <span
-                        key={mark}
-                        style={{ left: mark * perSecond }}
-                        className="absolute top-0 h-full border-l border-zinc-700 pl-1 text-[10px] leading-5 text-zinc-500"
-                      >
-                        {seconds(mark)}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* The blocks, at their real place in time. */}
-                  <div
-                    className="relative h-16"
-                    data-editortrack
-                    data-persecond={perSecond.toFixed(3)}
-                    onPointerDown={(event) => {
-                      const box = event.currentTarget.getBoundingClientRect();
-                      scrubTo((event.clientX - box.left) / perSecond);
-                    }}
-                  >
-                    {edit.pieces.map((one) => {
-                      const from = startsAt(edit, one.id);
-                      const wide = lengthOfPiece(one) * perSecond;
-                      const on = one.id === picked;
-                      return (
-                        <button
-                          key={one.id}
-                          type="button"
-                          aria-pressed={on}
-                          data-editorblock
-                          onClick={() => setPicked(one.id)}
-                          style={{ left: from * perSecond, width: Math.max(THINNEST, wide) }}
-                          className={`absolute top-1 bottom-1 overflow-hidden rounded-lg border-2 px-2 py-1 text-left ${
-                            on ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
-                          }`}
-                        >
-                          <span className="block truncate text-[11px] font-semibold text-zinc-200">{one.name}</span>
-                          <span className="block text-[11px] text-zinc-500">{seconds(lengthOfPiece(one))}</span>
-                        </button>
-                      );
-                    })}
-
-                    {/* ── The joins, where they actually are ────────────────
-
-                        A mark on the strip at every join that is not a hard
-                        cut, as wide as the join really lasts.
-
-                        Here rather than only in the inspector, because a
-                        transition is the one control in this room whose effect
-                        cannot be seen in the preview: the preview plays one
-                        piece at a time and a join is the seam between two. The
-                        strip is the honest answer — she can see WHERE it is and
-                        HOW LONG it is, measured through `joinFits` so the mark
-                        is the join's real length and not the slider's number.
-
-                        Pointer-events off, so it never eats a tap meant for the
-                        block underneath or for the track. */}
-                    {edit.pieces.map((one, i) => {
-                      if (i === 0) return null;
-                      const kind = one.join ?? 'cut';
-                      if (kind === 'cut') return null;
-                      const lasts = joinFits(one.joinFor ?? JOIN_FOR, lengthOfPiece(one));
-                      if (lasts <= 0) return null;
-                      const at = startsAt(edit, one.id) * perSecond;
-                      return (
-                        <div
-                          key={`join-${one.id}`}
-                          data-editorjoinmark={kind}
-                          title={joinName(kind, lang)}
-                          style={{ left: at, width: Math.max(4, lasts * perSecond) }}
-                          className="pointer-events-none absolute top-0 h-full border-x border-emerald-400/70 bg-emerald-400/25"
-                        />
-                      );
-                    })}
-
-                    {/* ── The ends of the picked piece, as something to pull ──
-
-                        Only on the piece that is picked. Handles on every block
-                        at once is eight grab targets in a 334-pixel strip, and
-                        the thing somebody is trimming is the thing they just
-                        tapped. Every editor that has these shows them on the
-                        selection.
-
-                        ── What each one looks like it does, and what it does ──
-
-                        The right edge follows the thumb exactly: drag it left and
-                        the block ends there.
-
-                        The left edge does NOT move under the thumb, and that is
-                        worth saying rather than hiding. This strip has no gaps —
-                        pieces are laid end to end — so where a block STARTS on the
-                        film's clock is decided by the pieces before it, and
-                        nothing about trimming this one's in-point can change it.
-                        Dragging it right takes material off the start, so the
-                        block gets shorter at its far end and the pieces after it
-                        slide left.
-
-                        What makes that legible is the picture: the viewer seeks to
-                        the new start as it moves, so she is watching the frame the
-                        piece will now open on. That is the feedback that matters,
-                        and it was already there — the effect that seeks on a
-                        changed `from` has been in this room since the trim boxes
-                        were. */}
-                    {picked && edit.pieces.some((one) => one.id === picked) && (() => {
-                      const one = edit.pieces.find((two) => two.id === picked);
-                      if (!one) return null;
-                      const opens = startsAt(edit, one.id) * perSecond;
-                      const shuts = opens + lengthOfPiece(one) * perSecond;
-                      return (
-                        <>
-                          <div
-                            data-editortrimfrom
-                            role="slider"
-                            aria-label={t('edit.trimFrom', 'Where it starts in the clip')}
-                            aria-valuemin={0}
-                            aria-valuemax={one.holds ?? one.to}
-                            aria-valuenow={one.from}
-                            tabIndex={0}
-                            onPointerDown={(event) => takeEdge('from', one.id, event)}
-                            onKeyDown={(event) => {
-                              const by = event.key === 'ArrowRight' ? 0.1
-                                : event.key === 'ArrowLeft' ? -0.1 : 0;
-                              if (!by) return;
-                              event.preventDefault();
-                              commit((was) => trim(was, one.id, 'from', one.from + by));
-                            }}
-                            style={{ left: Math.max(0, opens - 1) }}
-                            className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
-                          >
-                            <span className="pointer-events-none absolute inset-y-1 left-0 w-1 rounded-full bg-emerald-400" />
-                          </div>
-                          <div
-                            data-editortrimto
-                            role="slider"
-                            aria-label={t('edit.trimTo', 'Where it ends in the clip')}
-                            aria-valuemin={0}
-                            aria-valuemax={one.holds ?? one.to}
-                            aria-valuenow={one.to}
-                            tabIndex={0}
-                            onPointerDown={(event) => takeEdge('to', one.id, event)}
-                            onKeyDown={(event) => {
-                              const by = event.key === 'ArrowRight' ? 0.1
-                                : event.key === 'ArrowLeft' ? -0.1 : 0;
-                              if (!by) return;
-                              event.preventDefault();
-                              commit((was) => trim(was, one.id, 'to', one.to + by));
-                            }}
-                            style={{ left: Math.max(0, shuts - 12) }}
-                            className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
-                          >
-                            <span className="pointer-events-none absolute inset-y-1 right-0 w-1 rounded-full bg-emerald-400" />
-                          </div>
-                        </>
-                      );
-                    })()}
-
-                    {/* ── The fades, as something to pull ──────────────────
-
-                        A shaded wedge at each end showing what is being faded,
-                        and a handle on its inside edge to drag. The wedge
-                        ignores pointers so it never eats a tap meant for a
-                        block; only the handle takes one. */}
-                    {fades.in > 0 && (
-                      <div
-                        style={{ width: fades.in * perSecond }}
-                        className="pointer-events-none absolute inset-y-0 left-0 rounded-l-lg bg-gradient-to-r from-black/80 to-transparent"
-                      />
-                    )}
-                    {fades.out > 0 && (
-                      <div
-                        style={{ width: fades.out * perSecond }}
-                        className="pointer-events-none absolute inset-y-0 right-0 rounded-r-lg bg-gradient-to-l from-black/80 to-transparent"
-                      />
-                    )}
-                    <div
-                      data-editorfadeinhandle
-                      role="slider"
-                      aria-label={t('edit.fadeIn', 'Fade in')}
-                      aria-valuemin={0}
-                      aria-valuemax={LONGEST_FADE}
-                      aria-valuenow={fades.in}
-                      tabIndex={0}
-                      onPointerDown={(event) => takeFade('in', event)}
-                      onKeyDown={(event) => {
-                        const by = event.key === 'ArrowRight' ? 0.1 : event.key === 'ArrowLeft' ? -0.1 : 0;
-                        if (!by) return;
-                        event.preventDefault();
-                        commit((was) => ({
-                          ...was,
-                          fadeIn: Math.max(0, Math.min(LONGEST_FADE, Math.round(((was.fadeIn ?? 0) + by) * 10) / 10)),
-                        }));
-                      }}
-                      style={{ left: Math.max(0, fades.in * perSecond - 7) }}
-                      className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
-                    >
-                      <span className="absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full bg-amber-400/90" />
-                    </div>
-                    <div
-                      data-editorfadeouthandle
-                      role="slider"
-                      aria-label={t('edit.fadeOut', 'Fade out')}
-                      aria-valuemin={0}
-                      aria-valuemax={LONGEST_FADE}
-                      aria-valuenow={fades.out}
-                      tabIndex={0}
-                      onPointerDown={(event) => takeFade('out', event)}
-                      onKeyDown={(event) => {
-                        const by = event.key === 'ArrowLeft' ? 0.1 : event.key === 'ArrowRight' ? -0.1 : 0;
-                        if (!by) return;
-                        event.preventDefault();
-                        commit((was) => ({
-                          ...was,
-                          fadeOut: Math.max(0, Math.min(LONGEST_FADE, Math.round(((was.fadeOut ?? 0) + by) * 10) / 10)),
-                        }));
-                      }}
-                      style={{ right: Math.max(0, fades.out * perSecond - 7) }}
-                      className="absolute top-0 h-full w-3.5 cursor-ew-resize touch-none"
-                    >
-                      <span className="absolute inset-y-1 left-1/2 w-1 -translate-x-1/2 rounded-full bg-amber-400/90" />
-                    </div>
-
-                    {/* The playhead. Drawn over the blocks and ignoring
-                        pointers, so tapping "on the line" still reaches the
-                        track underneath and moves it. */}
-                    <div
-                      data-editorplayhead
-                      style={{ left: Math.min(at, total) * perSecond }}
-                      className="pointer-events-none absolute inset-y-0 w-0.5 bg-emerald-400"
-                    >
-                      <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                    </div>
-                  </div>
-
-                  {/* ── The sound, on a lane of its own ──────────────────
-
-                      Carli, 30 September 2026: *"dan moet dit soos die
-                      probooth die tydlyne hê, asook vir die klank."*
-
-                      Inside the same scrolling strip as the blocks, which is
-                      the only way the two can be read against each other: a
-                      lane in its own box at its own width is a second picture
-                      of time, and two pictures of time that do not line up
-                      are worse than one.
-
-                      Two things are drawn. The bed runs the whole film,
-                      because that is what a bed does — dragging it does not
-                      move it along the film, it scrubs WHICH PART of the song
-                      is used, which is the only thing about it there is to
-                      choose. And a mark under every piece that carries its
-                      own sound, so "why can I hear a room" has an answer you
-                      can see rather than six checkboxes to go and open. */}
-                  <div className="relative h-10 border-t border-zinc-800" data-editorsoundlane>
-                    {edit.under ? (
-                      <div
-                        data-editorbed
-                        onPointerDown={(event) => scrubBed(event)}
-                        style={{ width: Math.max(0, total * perSecond) }}
-                        className="absolute inset-y-1 left-0 cursor-ew-resize touch-none overflow-hidden rounded-lg border border-sky-500/40 bg-sky-500/10 px-2 py-1"
-                      >
-                        <span className="block truncate text-[11px] font-semibold text-sky-200">
-                          {t('edit.bed', 'Track under it')}
-                        </span>
-                        <span className="block text-[11px] text-sky-300/70">
-                          {t('edit.bedFrom', 'From')} {seconds(edit.underFrom ?? 0)}
-                          {underLength > 0 ? ` / ${seconds(underLength)}` : ''}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="absolute inset-y-0 left-2 flex items-center text-[11px] text-zinc-600">
-                        {t('edit.noBed', 'No track under it yet')}
-                      </span>
-                    )}
-
-                    {edit.pieces.filter((one) => one.sound).map((one) => (
-                      <span
-                        key={one.id}
-                        data-editorownsound
-                        style={{
-                          left: startsAt(edit, one.id) * perSecond,
-                          width: Math.max(THINNEST, lengthOfPiece(one) * perSecond),
-                        }}
-                        className="pointer-events-none absolute bottom-0 h-1 rounded-full bg-emerald-400/80"
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Playing the whole film in place, rather than only on export.
-                  It hops the viewer from piece to piece as the clock runs,
-                  which is the one thing that makes a timeline a timeline and
-                  not a list of files. */}
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  type="button"
-                  data-editorplayall
-                  onClick={() => setRunning((was) => !was)}
-                  className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
-                >
-                  {running ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  {running ? t('edit.pause', 'Pause') : t('edit.playAll', 'Play the film')}
-                </button>
-                <button
-                  type="button"
-                  data-editorrewind
-                  onClick={() => { setRunning(false); scrubTo(0); }}
-                  className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
-                >
-                  <SkipBack className="w-4 h-4" />
-                  {t('edit.rewind', 'Back to the start')}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* ── The piece you picked ───────────────────────────────────────
- 
-          Not a Card, and that is a decision rather than an oversight.
- 
-          Every card in this app starts folded, which is right for a room
-          somebody is reading and wrong for the panel that exists BECAUSE
-          they just picked something. `check:editor` caught it the first time
-          it ran: a clip went in, a block appeared, and the controls for that
-          block were behind a fold nobody asked for.
- 
-          `openOn` looked like the fix and is not — a Card skips the first
-          change on purpose, so a panel that mounts already picked mounts
-          shut. Which is the tell that this was never a card. A card folds
-          because a room is long; an inspector that folds is a control panel
-          hiding itself from the person holding it. */}
-      {piece && (
-        <section
-          className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-4"
-          data-editorpiece
-        >
-          <h3 className="text-sm font-semibold text-zinc-100 inline-flex items-center gap-2">
-            <Scissors className="w-4 h-4 text-emerald-400" />
-            {piece.name}
-          </h3>
-
-          {/* ── You were cutting blind ─────────────────────────────────────
- 
-              The first version of this panel had two number boxes and no
-              picture. "Starts at 3.4" is not a decision anybody can make
-              about a shot they cannot see — it is a guess, checked by
-              exporting the whole film and watching it.
- 
-              So the piece is on screen, the look is on it, and moving either
-              end seeks to that end. Watching the frame you are trimming TO is
-              the entire job.
- 
-              `filterCss` is the same function the render uses, so the frame
-              here and the frame in the finished film cannot disagree. */}
-          {/* ── The picture, with the mark on it where it will really be ──
-
-              Carli, 30 September 2026: *"Mens moet die logo foto fisies moet
-              kan skuif."*
-
-              The mark is drawn over the viewer rather than beside it, because
-              the only useful question about a logo is what it covers. Four
-              corner buttons cannot answer that: in a vertical clip of a
-              person, the corner that is free depends on where the person is
-              standing, and often none of them is.
-
-              Positioned from the same fractions `drawMark` uses, so what is
-              under her thumb here is what lands in the film. */}
-          {/* The frame is measured rather than asked to measure itself.
-
-              This was `@container` with the words sized in `cqh`, which is
-              the elegant version and the one that can fail quietly: container
-              queries are a Tailwind plugin in v3, the class compiles to
-              nothing without it, and `cqh` then falls back to a font size of
-              nought — words that vanish, with no error anywhere. A measured
-              height cannot do that. */}
-
-          {/* ── Zooming the picture ────────────────────────────────────────
-
-              Carli, 30 September 2026: *"mens moet op die prent van die video
-              kan kliek en in en uit zoom."*
-
-              This zooms the PREVIEW and not the film. It is the magnifying
-              glass over the thing being worked on, not a punch-in on the
-              shot — nothing below changes a single frame of what comes out,
-              and that is deliberate: she asked for it in the same breath as
-              moving the logo and placing the words, which are the two jobs
-              that are guesswork at 390 pixels wide.
-
-              A punch-in on the shot itself is a different and also useful
-              thing, and it is not this. Saying so here because "zoom" means
-              both, and shipping the wrong one silently would be worse than
-              shipping neither.
-
-              The overlays scale with the picture because they are positioned
-              in percentages inside the same box, so a logo placed at 2x is
-              still in the same place at 1x. */}
-          <div className="flex items-center justify-end gap-2">
-            <span className="text-sm text-zinc-500" data-editorzoomnow>{`${zoom}×`}</span>
-            <button
-              type="button"
-              data-editorzoomout
-              disabled={zoom <= 1}
-              onClick={() => setZoom((was) => Math.max(1, was - 1))}
-              className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
-            >
-              &minus;
-            </button>
-            <button
-              type="button"
-              data-editorzoomin
-              disabled={zoom >= 4}
-              onClick={() => setZoom((was) => Math.min(4, was + 1))}
-              className="min-h-[44px] min-w-[44px] rounded-xl border border-zinc-700 bg-zinc-900 text-sm font-semibold text-zinc-200 disabled:opacity-40"
-            >
-              +
-            </button>
-          </div>
-
-          {/* sideways on purpose: only ever at a zoom she has chosen. At 1x
-              the inner box is exactly the outer one and there is nothing to
-              scroll; above it, panning IS the feature, and native scrolling
-              is the only panning that behaves like the phone it is on. */}
-          <div
-            data-editorzoombox
-            className={zoom > 1 ? 'overflow-auto rounded-xl' : ''}
-          >
-          <div
-            ref={frame}
-            data-editorframe
-            /* The FILM's shape, not the clip's. The box is the frame, so a
-               fraction means the same thing here as it does in the render —
-               and the black bars somebody's clip will really have are the
-               black of this box showing through `object-contain`. */
-            style={{
-              aspectRatio: `${shape.width} / ${shape.height}`,
-              ...(zoom > 1 ? { width: `${zoom * 100}%` } : {}),
-            }}
-            className="relative origin-top-left overflow-hidden rounded-xl border border-zinc-800 bg-black"
-          >
-            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-            <video
-              ref={viewer}
-              data-editorviewer
-              src={source ?? undefined}
-              playsInline
-              muted={!piece.sound}
-              style={{ filter: filterCss(piece.look) || undefined }}
-              /* `contain` or `cover`, from the same flag the renderer reads, so
-                 the bars she sees are the bars she gets. */
-              className={`absolute inset-0 h-full w-full ${
-                piece.fill ? 'object-cover' : 'object-contain'
-              }`}
-            />
-            {(piece.words ?? '').trim().length > 0 && (
-              <div
-                data-editorwordsdrag
-                /* Through `holding`/`held` and `slide`, not `tweak`: a drag
-                   across the frame is a few hundred pointermoves, and one of
-                   them per history step was the other half of the fault the
-                   note beside `beforeDrag` describes. One drag, one Back. */
-                onPointerDown={(event) => {
-                  holding();
-                  dragOnFrame(event, (spot) => slide({ wordsAt: spot }), held);
-                }}
-                style={{
-                  left: `${(piece.wordsAt?.x ?? WORDS_AT.x) * 100}%`,
-                  top: `${(piece.wordsAt?.y ?? WORDS_AT.y) * 100}%`,
-                  fontFamily: fontFor(piece.wordsFont).stack,
-                  fontWeight: fontFor(piece.wordsFont).weight,
-                  fontSize: Math.max(9, (piece.wordsSize ?? 0.048) * frameHeight),
-                  maxWidth: '86%',
-                  /* The centring is in the transform rather than in a
-                     `-translate-x-1/2` class, because an inline `transform`
-                     replaces the whole property and would have thrown the
-                     Tailwind translate away — the words would have hung off to
-                     the right of where they land in the film, which is the
-                     quiet kind of wrong this preview exists to prevent. */
-                  transform: `translate(-50%, -50%) rotate(${piece.wordsTurn ?? 0}deg)`,
-                  opacity: piece.wordsSolid ?? 1,
-                  /* Approximate, and said so rather than implied: the renderer
-                     rounds against the band's MEASURED height, and the band
-                     here is a div that has not been measured. It moves the
-                     right way and lands within a pixel or two of the film. */
-                  borderRadius: (piece.wordsRound ?? CAPTION_ROUND)
-                    * Math.max(9, (piece.wordsSize ?? 0.048) * frameHeight),
-                  zIndex: 2,
-                }}
-                className="absolute cursor-move touch-none select-none bg-black/60 px-2 py-1 text-center leading-tight text-white outline-dashed outline-1 outline-emerald-400/50"
-              >
-                {piece.words}
-                {/* The corner. Sits half outside the band so the whole of it is
-                    grabbable without covering a letter, and `touch-none` so a
-                    phone does not scroll the page instead. */}
-                <span
-                  data-editorwordsgrip
-                  onPointerDown={(event) => {
-                    holding();
-                    grip(
-                      event, piece.wordsSize ?? 0.048,
-                      (size) => slide({ wordsSize: size }),
-                      WORDS_SMALLEST, WORDS_LARGEST, held,
-                    );
-                  }}
-                  className="absolute -bottom-2 -right-2 h-5 w-5 cursor-nwse-resize touch-none rounded-full border-2 border-emerald-400 bg-zinc-950"
-                />
-              </div>
-            )}
-            {mark && (
-              /* Wrapped rather than left as a bare `<img>`, so the corner handle
-                 has something to sit in the corner OF. The wrapper carries the
-                 place, the size and the turn; the picture fills it. */
-              <div
-                data-editormarkdrag
-                onPointerDown={(event) => dragOnFrame(event, setMarkAt)}
-                style={{
-                  width: `${markShare * 100}%`,
-                  left: `${(markAt ? markAt.x : CORNER_AT[corner].x) * 100}%`,
-                  top: `${(markAt ? markAt.y : CORNER_AT[corner].y) * 100}%`,
-                  transform: `translate(-50%, -50%) rotate(${markTurn}deg)`,
-                  /* `markSolid`, not the `opacity-80` class that was here. The
-                     class was a third opacity — the render used
-                     `MARK_OPACITY`, 0.92, and the preview showed 0.80, so the
-                     logo was always slightly fainter here than in the film.
-                     Reading the slider fixes a disagreement as well as adding
-                     a control. */
-                  opacity: markSolid,
-                  zIndex: markUnder ? 1 : 3,
-                }}
-                className="absolute cursor-move touch-none select-none outline-dashed outline-1 outline-emerald-400/50"
-              >
-                <img src={mark.src} alt="" draggable={false} className="block w-full" />
-                <span
-                  data-editormarkgrip
-                  onPointerDown={(event) => grip(
-                    event, markShare, setMarkShare, MARK_SMALLEST, MARK_LARGEST,
-                  )}
-                  className="absolute -bottom-2 -right-2 h-5 w-5 cursor-nwse-resize touch-none rounded-full border-2 border-emerald-400 bg-zinc-950"
-                />
-              </div>
-            )}
-          </div>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              type="button"
-              data-editorplaypiece
-              onClick={() => {
-                const v = viewer.current;
-                if (!v) return;
-                v.currentTime = piece.from;
-                void v.play();
-              }}
-              className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-1.5"
-            >
-              <Play className="w-4 h-4" />
-              {t('edit.playPiece', 'Play this piece')}
-            </button>
-            <span className="self-center text-sm text-zinc-500" data-editorpiecelen>
-              {seconds(lengthOfPiece(piece))}
-            </span>
-          </div>
-
+        {bench === 'clip' && piece && (
           <div className="space-y-4">
-            {/* Trim. Two numbers rather than a drag: a drag on a phone is a
-                guess, and the thing somebody wants is usually "start half a
-                second later", which is a number. */}
-            <div className="grid grid-cols-2 gap-3">
-              <label className="space-y-1.5">
-                <span className="block text-sm text-zinc-400">{t('edit.from', 'Starts at')}</span>
-                <input
-                  type="number" step="0.1" min={0} max={Math.max(0, piece.to - SHORTEST_PIECE)}
-                  value={piece.from.toFixed(1)}
-                  data-editorfrom
-                  onChange={(e) => tweak({ from: Number(e.target.value) })}
-                  className="w-full min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="block text-sm text-zinc-400">{t('edit.to', 'Ends at')}</span>
-                <input
-                  type="number" step="0.1" min={piece.from + SHORTEST_PIECE}
-                  value={piece.to.toFixed(1)}
-                  data-editorto
-                  onChange={(e) => tweak({ to: Number(e.target.value) })}
-                  className="w-full min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
-                />
-              </label>
-            </div>
-
-            {/* ── Fill the frame, or fit the whole picture in ─────────────
-
-                A wide clip in a vertical film is letterboxed, with the blurred
-                wash behind the bars. That is right for an establishing shot and
-                wrong for a face, so it is a choice per piece rather than one
-                answer for the film.
-
-                `covering` has been in `stitch.ts` since it was written, for the
-                background. This points it at the picture, so there is one piece
-                of arithmetic for "fill this frame" and the preview's
-                `object-cover` is showing the same crop. */}
-            <button
-              type="button"
-              aria-pressed={piece.fill === true}
-              data-editorfill
-              onClick={() => tweak({ fill: !piece.fill })}
-              className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold inline-flex items-center gap-2 ${
-                piece.fill ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
-              }`}
-            >
-              <Crop className="w-4 h-4" />
-              {piece.fill
-                ? t('edit.fillOn', 'Filling the frame, sides cropped')
-                : t('edit.fillOff', 'Whole picture, bars where it does not fit')}
-            </button>
-
-            {/* ── How it arrives after the piece before it ────────────────
-
-                Carli, 3 October 2026: *"net 'n praktiese video editing en die
-                elemente wat moontlik is."* Every join in this room was a hard
-                cut until now, which is the most ordinary thing a timeline
-                editor has and the most obvious thing ours was missing.
-
-                Only from the second piece on. The first piece of a film has
-                nothing behind it to arrive from, and a picker offering a
-                dissolve there would be a control that does nothing — which this
-                app treats as worse than a control that is absent.
-
-                `videojoins.ts` holds every number and the honest note about
-                what the outgoing half of a dissolve is in this renderer: one
-                `<video>` decodes at a time, so it is the last frame of the shot
-                before, held. At six tenths of a second that is invisible; two
-                seconds of it would be a freeze, which is why six tenths is the
-                ceiling. */}
-            {startsAt(edit, piece.id) > 0 && (
-              <div className="space-y-1.5">
-                <span className="text-sm text-zinc-400 inline-flex items-center gap-1.5">
-                  <Shuffle className="w-3.5 h-3.5" />
-                  {t('edit.join', 'How it comes in')}
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {JOINS.map((one) => {
-                    const on = (piece.join ?? 'cut') === one.id;
-                    return (
-                      <button
-                        key={one.id}
-                        type="button"
-                        aria-pressed={on}
-                        data-editorjoin={one.id}
-                        onClick={() => tweak({ join: one.id })}
-                        className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
-                          on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
-                        }`}
-                      >
-                        {joinName(one.id, lang)}
-                      </button>
-                    );
-                  })}
-                </div>
-                {(piece.join ?? 'cut') !== 'cut' && (
-                  <label className="block space-y-1.5">
-                    <span className="block text-sm text-zinc-400">
-                      {t('edit.joinFor', 'How long it takes')}
-                    </span>
-                    <input
-                      type="range" min={0.1} max={LONGEST_JOIN} step={0.05}
-                      value={piece.joinFor ?? JOIN_FOR}
-                      data-editorjoinfor
-                      {...gesture}
-                      onChange={(e) => slide({ joinFor: Number(e.target.value) })}
-                      className="w-full accent-emerald-500"
-                    />
-                    {/* What it will REALLY be, not what the slider says. A
-                        join is capped at half the piece it arrives on, so a
-                        six-tenth join on a four-tenth shot is two tenths —
-                        and a slider reading 0.6 over a join that lasts 0.2
-                        is a control that lies about itself. */}
-                    <span className="block text-sm text-zinc-500" data-editorjoinnow>
-                      {seconds(joinFits(piece.joinFor ?? JOIN_FOR, lengthOfPiece(piece)))}
-                      {needsHeld(piece.join ?? 'cut')
-                        ? ` · ${t('edit.joinHeld', 'over the frame the last shot left')}`
-                        : ''}
-                    </span>
-                  </label>
-                )}
-              </div>
-            )}
-
-            {/* ── How fast it plays ────────────────────────────────────
-
-                A clip's speed is the one control on it that changes how LONG
-                the piece is as well as how it looks — which is why
-                `lengthOfPiece` divides by it. A four-second take
-                at two times is two seconds of film, the strip draws it two
-                seconds wide, and the ruler under it still tells the truth.
-
-                Nought-point-five to two, not nought-point-one to four, though
-                the model carries the wider range: past two the browser drops
-                the audio and the picture stutters, and a slider that can be
-                put somewhere the export looks broken is a slider that makes
-                support calls. */}
-            <label className="block space-y-1.5">
-              <span className="block text-sm text-zinc-400 inline-flex items-center gap-1.5">
-                <Gauge className="w-3.5 h-3.5" />
-                {t('edit.speed', 'How fast it plays')}
-              </span>
+          {/* Trim. Two numbers rather than a drag: a drag on a phone is a
+              guess, and the thing somebody wants is usually "start half a
+              second later", which is a number. */}
+          <div className="grid grid-cols-2 gap-3">
+            <label className="space-y-1.5">
+              <span className="block text-sm text-zinc-400">{t('edit.from', 'Starts at')}</span>
               <input
-                type="range" min={0.5} max={2} step={0.05}
-                value={piece.speed ?? 1}
-                data-editorspeed
-                {...gesture}
-                onChange={(e) => slide({ speed: Number(e.target.value) })}
-                className="w-full accent-emerald-500"
+                type="number" step="0.1" min={0} max={Math.max(0, piece.to - SHORTEST_PIECE)}
+                value={piece.from.toFixed(1)}
+                data-editorfrom
+                onChange={(e) => tweak({ from: Number(e.target.value) })}
+                className="w-full min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
               />
-              <span className="block text-sm text-zinc-500" data-editorspeednow>
-                {`${(piece.speed ?? 1).toFixed(2)}×`}
-              </span>
             </label>
+            <label className="space-y-1.5">
+              <span className="block text-sm text-zinc-400">{t('edit.to', 'Ends at')}</span>
+              <input
+                type="number" step="0.1" min={piece.from + SHORTEST_PIECE}
+                value={piece.to.toFixed(1)}
+                data-editorto
+                onChange={(e) => tweak({ to: Number(e.target.value) })}
+                className="w-full min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
+              />
+            </label>
+          </div>
 
-            {/* The looks. Seven, free, and applied in the browser — the same
-                `filterCss` the render uses, so the preview swatch and the
-                finished film cannot disagree. */}
+          {/* ── Fill the frame, or fit the whole picture in ─────────────
+
+              A wide clip in a vertical film is letterboxed, with the blurred
+              wash behind the bars. That is right for an establishing shot and
+              wrong for a face, so it is a choice per piece rather than one
+              answer for the film.
+
+              `covering` has been in `stitch.ts` since it was written, for the
+              background. This points it at the picture, so there is one piece
+              of arithmetic for "fill this frame" and the preview's
+              `object-cover` is showing the same crop. */}
+          <button
+            type="button"
+            aria-pressed={piece.fill === true}
+            data-editorfill
+            onClick={() => tweak({ fill: !piece.fill })}
+            className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold inline-flex items-center gap-2 ${
+              piece.fill ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+            }`}
+          >
+            <Crop className="w-4 h-4" />
+            {piece.fill
+              ? t('edit.fillOn', 'Filling the frame, sides cropped')
+              : t('edit.fillOff', 'Whole picture, bars where it does not fit')}
+          </button>
+
+          {/* ── How it arrives after the piece before it ────────────────
+
+              Carli, 3 October 2026: *"net 'n praktiese video editing en die
+              elemente wat moontlik is."* Every join in this room was a hard
+              cut until now, which is the most ordinary thing a timeline
+              editor has and the most obvious thing ours was missing.
+
+              Only from the second piece on. The first piece of a film has
+              nothing behind it to arrive from, and a picker offering a
+              dissolve there would be a control that does nothing — which this
+              app treats as worse than a control that is absent.
+
+              `videojoins.ts` holds every number and the honest note about
+              what the outgoing half of a dissolve is in this renderer: one
+              `<video>` decodes at a time, so it is the last frame of the shot
+              before, held. At six tenths of a second that is invisible; two
+              seconds of it would be a freeze, which is why six tenths is the
+              ceiling. */}
+          {startsAt(edit, piece.id) > 0 && (
             <div className="space-y-1.5">
-              <span className="text-sm text-zinc-400">{t('edit.look', 'Look')}</span>
-              {/* Wrapped, not scrolled. Seven looks at `shrink-0` came to 644
-                  pixels in a 334 pixel strip, so this was the second thing on
-                  this desk that moved under a thumb. Three rows of buttons
-                  that stay still beat one row that slides — and a look nobody
-                  scrolled to is a look nobody knows is there. */}
-              <div className="flex flex-wrap gap-2 pb-1">
-                {FILTERS.map((one) => {
-                  const on = (piece.look ?? 'none') === one.id;
+              <span className="text-sm text-zinc-400 inline-flex items-center gap-1.5">
+                <Shuffle className="w-3.5 h-3.5" />
+                {t('edit.join', 'How it comes in')}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {JOINS.map((one) => {
+                  const on = (piece.join ?? 'cut') === one.id;
                   return (
                     <button
                       key={one.id}
                       type="button"
                       aria-pressed={on}
-                      data-editorlook={one.id}
-                      onClick={() => tweak({ look: one.id })}
-                      style={{ filter: filterCss(one.id) || undefined }}
-                      className={`min-h-[44px] shrink-0 rounded-xl border px-3 py-2 text-sm font-semibold ${
+                      data-editorjoin={one.id}
+                      onClick={() => tweak({ join: one.id })}
+                      className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold ${
                         on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
                       }`}
                     >
-                      {filterName(one.id, 'en')}
+                      {joinName(one.id, lang)}
                     </button>
                   );
                 })}
               </div>
+              {(piece.join ?? 'cut') !== 'cut' && (
+                <label className="block space-y-1.5">
+                  <span className="block text-sm text-zinc-400">
+                    {t('edit.joinFor', 'How long it takes')}
+                  </span>
+                  <input
+                    type="range" min={0.1} max={LONGEST_JOIN} step={0.05}
+                    value={piece.joinFor ?? JOIN_FOR}
+                    data-editorjoinfor
+                    {...gesture}
+                    onChange={(e) => slide({ joinFor: Number(e.target.value) })}
+                    className="w-full accent-emerald-500"
+                  />
+                  {/* What it will REALLY be, not what the slider says. A
+                      join is capped at half the piece it arrives on, so a
+                      six-tenth join on a four-tenth shot is two tenths —
+                      and a slider reading 0.6 over a join that lasts 0.2
+                      is a control that lies about itself. */}
+                  <span className="block text-sm text-zinc-500" data-editorjoinnow>
+                    {seconds(joinFits(piece.joinFor ?? JOIN_FOR, lengthOfPiece(piece)))}
+                    {needsHeld(piece.join ?? 'cut')
+                      ? ` · ${t('edit.joinHeld', 'over the frame the last shot left')}`
+                      : ''}
+                  </span>
+                </label>
+              )}
             </div>
+          )}
 
-            {/* Words over the piece. */}
-            <label className="space-y-1.5 block">
-              <span className="text-sm text-zinc-400 inline-flex items-center gap-1.5">
-                <Type className="w-3.5 h-3.5" />
-                {t('edit.words', 'Words on screen')}
-              </span>
-              <input
-                type="text"
-                value={piece.words ?? ''}
-                data-editorwords
-                placeholder={t('edit.wordsAsk', 'Up for as long as this piece is')}
-                onChange={(e) => tweak({ words: e.target.value })}
-                className="w-full min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 placeholder:text-zinc-600"
-              />
-            </label>
+          {/* ── How fast it plays ────────────────────────────────────
 
-            {/* ── How those words are set ────────────────────────────────
+              A clip's speed is the one control on it that changes how LONG
+              the piece is as well as how it looks — which is why
+              `lengthOfPiece` divides by it. A four-second take
+              at two times is two seconds of film, the strip draws it two
+              seconds wide, and the ruler under it still tells the truth.
 
-                Carli, 30 September 2026: *"Die teks moet font opsies hê, en
-                dit moet ook gemanipuleer moet kan word op die skerm van die
-                video, deur dit rond te kan skuif, en groter en kleiner te kan
-                maak."*
-
-                Only shown once there are words. A font picker over an empty
-                caption is three rows of controls for a thing that is not on
-                the screen. */}
-            {(piece.words ?? '').trim().length > 0 && (
-              <>
-                <div className="space-y-1.5">
-                  <span className="block text-sm text-zinc-400">{t('edit.font', 'The face')}</span>
-                  <div className="flex flex-wrap gap-2">
-                    {FONTS.map((one) => {
-                      const on = (piece.wordsFont ?? PLAIN_FONT) === one.id;
-                      return (
-                        <button
-                          key={one.id}
-                          type="button"
-                          aria-pressed={on}
-                          data-editorfont={one.id}
-                          onClick={() => tweak({ wordsFont: one.id })}
-                          style={{ fontFamily: one.stack, fontWeight: one.weight }}
-                          className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm ${
-                            on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
-                          }`}
-                        >
-                          {lang === 'af' ? one.af : one.en}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <label className="block space-y-1.5">
-                  <span className="block text-sm text-zinc-400">
-                    {t('edit.wordsSize', 'How big the words are')}
-                  </span>
-                  <input
-                    type="range"
-                    min={WORDS_SMALLEST}
-                    max={WORDS_LARGEST}
-                    step={0.002}
-                    value={piece.wordsSize ?? 0.048}
-                    data-editorwordssize
-                    {...gesture}
-                    onChange={(e) => slide({ wordsSize: Number(e.target.value) })}
-                    className="w-full accent-emerald-500"
-                  />
-                </label>
-
-                {/* ── Turned, faint, and round ───────────────────────────
-
-                    Carli, 2 October 2026: *"Kyk asb na hierdie, hoe 'n video
-                    editor prakties lyk, asook die elemente wat dit het."* And
-                    the day after, correcting me: *"Hierdie is hoe meeste video
-                    editing programme lyk."*
-
-                    Turned, how solid, how round: the ordinary handles on
-                    anything sitting on a frame. They are what makes a caption
-                    an element somebody is designing with rather than a subtitle
-                    the renderer decided on. All three were already in
-                    `drawCaption`; these are the handles. */}
-                <label className="block space-y-1.5">
-                  <span className="block text-sm text-zinc-400 inline-flex items-center gap-1.5">
-                    <RotateCw className="w-3.5 h-3.5" />
-                    {t('edit.wordsTurn', 'Turned')}
-                  </span>
-                  <input
-                    type="range" min={-180} max={180} step={1}
-                    value={piece.wordsTurn ?? 0}
-                    data-editorwordsturn
-                    {...gesture}
-                    onChange={(e) => slide({ wordsTurn: Number(e.target.value) })}
-                    className="w-full accent-emerald-500"
-                  />
-                  <span className="block text-sm text-zinc-500" data-editorwordsturnnow>
-                    {`${Math.round(piece.wordsTurn ?? 0)}°`}
-                  </span>
-                </label>
-
-                <label className="block space-y-1.5">
-                  <span className="block text-sm text-zinc-400">
-                    {t('edit.wordsSolid', 'How solid the words are')}
-                  </span>
-                  <input
-                    type="range" min={0.1} max={1} step={0.05}
-                    value={piece.wordsSolid ?? 1}
-                    data-editorwordssolid
-                    {...gesture}
-                    onChange={(e) => slide({ wordsSolid: Number(e.target.value) })}
-                    className="w-full accent-emerald-500"
-                  />
-                </label>
-
-                <label className="block space-y-1.5">
-                  <span className="block text-sm text-zinc-400">
-                    {t('edit.wordsRound', 'How round the band behind them is')}
-                  </span>
-                  <input
-                    type="range" min={0} max={1} step={0.05}
-                    value={piece.wordsRound ?? CAPTION_ROUND}
-                    data-editorwordsround
-                    {...gesture}
-                    onChange={(e) => slide({ wordsRound: Number(e.target.value) })}
-                    className="w-full accent-emerald-500"
-                  />
-                </label>
-
-                <Placing
-                  which="words"
-                  at={piece.wordsAt ?? WORDS_AT}
-                  put={(spot) => tweak({ wordsAt: spot })}
-                />
-
-                {piece.wordsAt && (
-                  <button
-                    type="button"
-                    data-editorwordsreset
-                    onClick={() => tweak({ wordsAt: null })}
-                    className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300"
-                  >
-                    {t('edit.wordsBottom', 'Put the words back at the bottom')}
-                  </button>
-                )}
-              </>
-            )}
-
+              Nought-point-five to two, not nought-point-one to four, though
+              the model carries the wider range: past two the browser drops
+              the audio and the picture stutters, and a slider that can be
+              put somewhere the export looks broken is a slider that makes
+              support calls. */}
+          <label className="block space-y-1.5">
+            <span className="block text-sm text-zinc-400 inline-flex items-center gap-1.5">
+              <Gauge className="w-3.5 h-3.5" />
+              {t('edit.speed', 'How fast it plays')}
+            </span>
+            <input
+              type="range" min={0.5} max={2} step={0.05}
+              value={piece.speed ?? 1}
+              data-editorspeed
+              {...gesture}
+              onChange={(e) => slide({ speed: Number(e.target.value) })}
+              className="w-full accent-emerald-500"
+            />
+            <span className="block text-sm text-zinc-500" data-editorspeednow>
+              {`${(piece.speed ?? 1).toFixed(2)}×`}
+            </span>
+          </label>
             {/* This piece's own sound. Off by default — most material is room
                 tone, and a bed of six rooms at once is noise. */}
             <div className="flex items-center gap-2 flex-wrap">
@@ -2370,12 +2265,196 @@ export default function VideoEditor({
               </button>
             </div>
           </div>
-        </section>
-      )}
+        )}
 
-      {/* ── Under the whole thing ────────────────────────────────────── */}
-      <Card title={t('edit.under', 'Sound and fades')} icon={<Volume2 className="w-4 h-4" />}>
-        <div className="space-y-4">
+        {bench === 'looks' && piece && (
+          <div className="space-y-3">
+          {/* The looks. Seven, free, and applied in the browser — the same
+              `filterCss` the render uses, so the preview swatch and the
+              finished film cannot disagree. */}
+          <div className="space-y-1.5">
+            <span className="text-sm text-zinc-400">{t('edit.look', 'Look')}</span>
+            {/* Wrapped, not scrolled. Seven looks at `shrink-0` came to 644
+                pixels in a 334 pixel strip, so this was the second thing on
+                this desk that moved under a thumb. Three rows of buttons
+                that stay still beat one row that slides — and a look nobody
+                scrolled to is a look nobody knows is there. */}
+            <div className="flex flex-wrap gap-2 pb-1">
+              {FILTERS.map((one) => {
+                const on = (piece.look ?? 'none') === one.id;
+                return (
+                  <button
+                    key={one.id}
+                    type="button"
+                    aria-pressed={on}
+                    data-editorlook={one.id}
+                    onClick={() => tweak({ look: one.id })}
+                    style={{ filter: filterCss(one.id) || undefined }}
+                    className={`min-h-[44px] shrink-0 rounded-xl border px-3 py-2 text-sm font-semibold ${
+                      on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                    }`}
+                  >
+                    {filterName(one.id, 'en')}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          </div>
+        )}
+
+        {bench === 'words' && piece && (
+          <div className="space-y-3">
+          {/* Words over the piece. */}
+          <label className="space-y-1.5 block">
+            <span className="text-sm text-zinc-400 inline-flex items-center gap-1.5">
+              <Type className="w-3.5 h-3.5" />
+              {t('edit.words', 'Words on screen')}
+            </span>
+            <input
+              type="text"
+              value={piece.words ?? ''}
+              data-editorwords
+              placeholder={t('edit.wordsAsk', 'Up for as long as this piece is')}
+              onChange={(e) => tweak({ words: e.target.value })}
+              className="w-full min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 placeholder:text-zinc-600"
+            />
+          </label>
+
+          {/* ── How those words are set ────────────────────────────────
+
+              Carli, 30 September 2026: *"Die teks moet font opsies hê, en
+              dit moet ook gemanipuleer moet kan word op die skerm van die
+              video, deur dit rond te kan skuif, en groter en kleiner te kan
+              maak."*
+
+              Only shown once there are words. A font picker over an empty
+              caption is three rows of controls for a thing that is not on
+              the screen. */}
+          {(piece.words ?? '').trim().length > 0 && (
+            <>
+              <div className="space-y-1.5">
+                <span className="block text-sm text-zinc-400">{t('edit.font', 'The face')}</span>
+                <div className="flex flex-wrap gap-2">
+                  {FONTS.map((one) => {
+                    const on = (piece.wordsFont ?? PLAIN_FONT) === one.id;
+                    return (
+                      <button
+                        key={one.id}
+                        type="button"
+                        aria-pressed={on}
+                        data-editorfont={one.id}
+                        onClick={() => tweak({ wordsFont: one.id })}
+                        style={{ fontFamily: one.stack, fontWeight: one.weight }}
+                        className={`min-h-[44px] rounded-xl border px-3 py-2 text-sm ${
+                          on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                        }`}
+                      >
+                        {lang === 'af' ? one.af : one.en}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <label className="block space-y-1.5">
+                <span className="block text-sm text-zinc-400">
+                  {t('edit.wordsSize', 'How big the words are')}
+                </span>
+                <input
+                  type="range"
+                  min={WORDS_SMALLEST}
+                  max={WORDS_LARGEST}
+                  step={0.002}
+                  value={piece.wordsSize ?? 0.048}
+                  data-editorwordssize
+                  {...gesture}
+                  onChange={(e) => slide({ wordsSize: Number(e.target.value) })}
+                  className="w-full accent-emerald-500"
+                />
+              </label>
+
+              {/* ── Turned, faint, and round ───────────────────────────
+
+                  Carli, 2 October 2026: *"Kyk asb na hierdie, hoe 'n video
+                  editor prakties lyk, asook die elemente wat dit het."* And
+                  the day after, correcting me: *"Hierdie is hoe meeste video
+                  editing programme lyk."*
+
+                  Turned, how solid, how round: the ordinary handles on
+                  anything sitting on a frame. They are what makes a caption
+                  an element somebody is designing with rather than a subtitle
+                  the renderer decided on. All three were already in
+                  `drawCaption`; these are the handles. */}
+              <label className="block space-y-1.5">
+                <span className="block text-sm text-zinc-400 inline-flex items-center gap-1.5">
+                  <RotateCw className="w-3.5 h-3.5" />
+                  {t('edit.wordsTurn', 'Turned')}
+                </span>
+                <input
+                  type="range" min={-180} max={180} step={1}
+                  value={piece.wordsTurn ?? 0}
+                  data-editorwordsturn
+                  {...gesture}
+                  onChange={(e) => slide({ wordsTurn: Number(e.target.value) })}
+                  className="w-full accent-emerald-500"
+                />
+                <span className="block text-sm text-zinc-500" data-editorwordsturnnow>
+                  {`${Math.round(piece.wordsTurn ?? 0)}°`}
+                </span>
+              </label>
+
+              <label className="block space-y-1.5">
+                <span className="block text-sm text-zinc-400">
+                  {t('edit.wordsSolid', 'How solid the words are')}
+                </span>
+                <input
+                  type="range" min={0.1} max={1} step={0.05}
+                  value={piece.wordsSolid ?? 1}
+                  data-editorwordssolid
+                  {...gesture}
+                  onChange={(e) => slide({ wordsSolid: Number(e.target.value) })}
+                  className="w-full accent-emerald-500"
+                />
+              </label>
+
+              <label className="block space-y-1.5">
+                <span className="block text-sm text-zinc-400">
+                  {t('edit.wordsRound', 'How round the band behind them is')}
+                </span>
+                <input
+                  type="range" min={0} max={1} step={0.05}
+                  value={piece.wordsRound ?? CAPTION_ROUND}
+                  data-editorwordsround
+                  {...gesture}
+                  onChange={(e) => slide({ wordsRound: Number(e.target.value) })}
+                  className="w-full accent-emerald-500"
+                />
+              </label>
+
+              <Placing
+                which="words"
+                at={piece.wordsAt ?? WORDS_AT}
+                put={(spot) => tweak({ wordsAt: spot })}
+              />
+
+              {piece.wordsAt && (
+                <button
+                  type="button"
+                  data-editorwordsreset
+                  onClick={() => tweak({ wordsAt: null })}
+                  className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-300"
+                >
+                  {t('edit.wordsBottom', 'Put the words back at the bottom')}
+                </button>
+              )}
+            </>
+          )}
+          </div>
+        )}
+
+        {bench === 'sound' && (
+          <div className="space-y-3">
           <label
             data-editorunder
             className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2 cursor-pointer hover:border-zinc-600"
@@ -2405,9 +2484,42 @@ export default function VideoEditor({
               />
             </label>
           )}
+          {/* Fades. Clamped by `fadesFor`, which also stops the two of them
+              together being longer than the film — a two-second fade each end
+              on a three-second cut is a cut nobody ever sees. */}
+          <div className="grid grid-cols-2 gap-3">
+            <label className="space-y-1.5">
+              <span className="block text-sm text-zinc-400">{t('edit.fadeIn', 'Fade in')}</span>
+              <input
+                type="range" min={0} max={LONGEST_FADE} step={0.1}
+                value={edit.fadeIn ?? 0}
+                data-editorfadein
+                {...gesture}
+                onChange={(e) => slideFilm((was) => ({ ...was, fadeIn: Number(e.target.value) }))}
+                className="w-full accent-emerald-500"
+              />
+              <span className="block text-sm text-zinc-500">{seconds(fades.in)}</span>
+            </label>
+            <label className="space-y-1.5">
+              <span className="block text-sm text-zinc-400">{t('edit.fadeOut', 'Fade out')}</span>
+              <input
+                type="range" min={0} max={LONGEST_FADE} step={0.1}
+                value={edit.fadeOut ?? 0}
+                data-editorfadeout
+                {...gesture}
+                onChange={(e) => slideFilm((was) => ({ ...was, fadeOut: Number(e.target.value) }))}
+                className="w-full accent-emerald-500"
+              />
+              <span className="block text-sm text-zinc-500">{seconds(fades.out)}</span>
+            </label>
+          </div>
+          </div>
+        )}
 
+        {bench === 'mark' && (
+          <div className="space-y-3">
           {/* ── A mark in the corner ──────────────────────────────────
- 
+
               Sized and placed by `logomark.ts`, which every other route that
               brands a clip already uses. Same share of the frame, same
               inset, same opacity — a second set of numbers here would mean a
@@ -2431,7 +2543,7 @@ export default function VideoEditor({
                   e.target.value = '';
                   if (!file) return;
                   /* Through `fit` rather than straight into a FileReader.
- 
+
                      `check:photopath` caught the first version: a photograph
                      off a modern phone is two hundred megapixels and ten
                      megabytes, a byte ceiling lets it through, and the decode
@@ -2439,7 +2551,7 @@ export default function VideoEditor({
                      console. Every other picture input in this app goes
                      through the same function, so a logo behaves here the way
                      it behaves in Cast.
- 
+
                      The mark is painted at 16% of the frame's width
                      (`MARK_SHARE`), so 1024 on the longest edge is more than
                      it can ever use. */
@@ -2574,42 +2686,35 @@ export default function VideoEditor({
               </>
             )}
           </div>
-
-          {/* Fades. Clamped by `fadesFor`, which also stops the two of them
-              together being longer than the film — a two-second fade each end
-              on a three-second cut is a cut nobody ever sees. */}
-          <div className="grid grid-cols-2 gap-3">
-            <label className="space-y-1.5">
-              <span className="block text-sm text-zinc-400">{t('edit.fadeIn', 'Fade in')}</span>
-              <input
-                type="range" min={0} max={LONGEST_FADE} step={0.1}
-                value={edit.fadeIn ?? 0}
-                data-editorfadein
-                {...gesture}
-                onChange={(e) => slideFilm((was) => ({ ...was, fadeIn: Number(e.target.value) }))}
-                className="w-full accent-emerald-500"
-              />
-              <span className="block text-sm text-zinc-500">{seconds(fades.in)}</span>
-            </label>
-            <label className="space-y-1.5">
-              <span className="block text-sm text-zinc-400">{t('edit.fadeOut', 'Fade out')}</span>
-              <input
-                type="range" min={0} max={LONGEST_FADE} step={0.1}
-                value={edit.fadeOut ?? 0}
-                data-editorfadeout
-                {...gesture}
-                onChange={(e) => slideFilm((was) => ({ ...was, fadeOut: Number(e.target.value) }))}
-                className="w-full accent-emerald-500"
-              />
-              <span className="block text-sm text-zinc-500">{seconds(fades.out)}</span>
-            </label>
           </div>
-        </div>
-      </Card>
+        )}
 
-      {/* ── Take it out ──────────────────────────────────────────────── */}
-      <Card title={t('edit.out', 'Put it together')} icon={<Play className="w-4 h-4" />}>
-        <div className="space-y-3">
+        {bench === 'film' && (
+          <div className="space-y-4">
+            {/* ── The shape, which changes what you are looking at ────── */}
+            <div className="space-y-1.5">
+              <span className="text-sm text-zinc-400">{t('edit.shape', 'Shape')}</span>
+              <div className="flex gap-2">
+                {(Object.keys(SHAPES) as (keyof typeof SHAPES)[]).map((one) => {
+                  const on = (edit.shape ?? 'tall') === one;
+                  return (
+                    <button
+                      key={one}
+                      type="button"
+                      aria-pressed={on}
+                      data-editorshape={one}
+                      onClick={() => commit((was) => ({ ...was, shape: one }))}
+                      className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold ${
+                        on ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                      }`}
+                    >
+                      {one === 'tall' ? t('edit.tall', 'Tall') : one === 'wide' ? t('edit.wide', 'Wide') : t('edit.square', 'Square')}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
           <button
             type="button"
             disabled={!edit.pieces.length || busy !== null || !canStitch()}
@@ -2777,41 +2882,23 @@ export default function VideoEditor({
             </p>
           )}
 
-          {made && (
-            <div className="space-y-2" data-editormade>
-              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-              <video src={made.url} controls className="w-full rounded-xl border border-zinc-800 bg-black" />
-              <button
-                type="button"
-                data-editorsave
-                onClick={() => downloadBlob(made.blob, safeFilename(edit.pieces[0]?.name ?? 'film', made.ext))}
-                className="min-h-[44px] rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2 text-sm font-semibold text-zinc-200 inline-flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                {t('edit.save', 'Save it')}
-              </button>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* ── The three that need an engine ────────────────────────────── */}
-      <Card title={t('edit.engine', 'The ones that need an engine')} icon={<Sparkles className="w-4 h-4" />}>
-        <div className="space-y-2" data-editorcoming>
-          <p className="text-sm text-zinc-400 leading-relaxed">
-            {t(
-              'edit.engineWhat',
-              'Taking a background out, taking an item out of a shot, and generating a piece you do not have. These three cannot happen on your device — they need an engine, and they cost credits.',
-            )}
-          </p>
-          <p className="text-sm text-zinc-400 leading-relaxed">
-            {t(
-              'edit.engineWhen',
-              'They are priced and on the plan cards, and they are not switched on yet. Sending video of a person to another company needs an answer about what that company may do with it first, and that answer is being got rather than assumed.',
-            )}
-          </p>
-        </div>
-      </Card>
+          <div className="space-y-2" data-editorcoming>
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              {t(
+                'edit.engineWhat',
+                'Taking a background out, taking an item out of a shot, and generating a piece you do not have. These three cannot happen on your device — they need an engine, and they cost credits.',
+              )}
+            </p>
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              {t(
+                'edit.engineWhen',
+                'They are priced and on the plan cards, and they are not switched on yet. Sending video of a person to another company needs an answer about what that company may do with it first, and that answer is being got rather than assumed.',
+              )}
+            </p>
+          </div>
+          </div>
+        )}
+      </CutDock>
     </div>
   );
 }

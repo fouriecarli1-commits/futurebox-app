@@ -957,6 +957,58 @@ export const STRINGS: Dict = {
   "edit.billSeePlans": { en: "See the plans", af: "Kyk na die planne" },
   "edit.billGo": { en: "Yes, put it together", af: "Ja, sit dit saam" },
   "edit.billNo": { en: "Not yet", af: "Nog nie" },
+
+  /* ── The cutting room's bar ────────────────────────────────────────────
+
+     Carli, 4 October 2026: *"alles moet binne een kamer wees en met icons …
+     Die oorhoofse editing funksies moet heel onder op die hoof bar wees en moet
+     vas wees soos in die probooth en dan van daar af wees funksies op pop
+     waarvan mens kan kies."*
+
+     Seven icons, and an icon is not a word — so each one carries its name AND
+     the sentence that says what it does, both read out to a screen reader,
+     because nothing hovers on a phone. The booth's bar learnt this in
+     September; `BoothDock.tsx` has that note. */
+  "cut.clip": { en: "This shot", af: "Hierdie skoot" },
+  "cut.clipWhat": {
+    en: "Where it starts and ends, splitting it in two, a copy of it, how fast it plays, whether it fills the frame, its own sound, and how it comes in after the shot before it.",
+    af: "Waar dit begin en eindig, om dit in twee te sny, \u2019n kopie daarvan, hoe vinnig dit speel, of dit die raam vul, sy eie klank, en hoe dit inkom n\u00e1 die skoot voor dit.",
+  },
+  "cut.film": { en: "The film", af: "Die film" },
+  "cut.filmWhat": {
+    en: "The shape it comes out in, the fade up at the start and down at the end, and putting the whole thing together.",
+    af: "Die vorm waarin dit uitkom, die infaai aan die begin en uitfaai aan die einde, en om die hele ding saam te sit.",
+  },
+  "cut.folder": { en: "Bring it in", af: "Bring dit in" },
+  "cut.folderWhat": {
+    en: "Clips off this device, and everything you have already made in the studio — pick from either and it lands on the clock.",
+    af: "Knipsels van hierdie toestel, en alles wat jy reeds in die ateljee gemaak het \u2014 kies uit enigeen en dit land op die klok.",
+  },
+  "cut.looks": { en: "Looks", af: "Voorkoms" },
+  "cut.looksWhat": {
+    en: "Thirteen looks, applied in your own browser, on the shot you have picked.",
+    af: "Dertien voorkomste, toegepas in jou eie blaaier, op die skoot wat jy gekies het.",
+  },
+  "cut.words": { en: "Words", af: "Woorde" },
+  "cut.wordsWhat": {
+    en: "Words over the shot, with a face, a size, a place on the frame, an angle and how solid they are.",
+    af: "Woorde oor die skoot, met \u2019n lettertipe, \u2019n grootte, \u2019n plek op die raam, \u2019n hoek en hoe solied hulle is.",
+  },
+  "cut.sound": { en: "Sound", af: "Klank" },
+  "cut.soundWhat": {
+    en: "A track under the whole film, and whether each shot carries its own sound and how loud.",
+    af: "Klank onder die hele film, en of elke skoot sy eie klank dra en hoe hard.",
+  },
+  "cut.mark": { en: "Your mark", af: "Jou merk" },
+  "cut.markWhat": {
+    en: "Your logo on the film — where it sits, how big, turned, how solid, and whether it goes over the words or under them.",
+    af: "Jou logo op die film \u2014 waar dit sit, hoe groot, gedraai, hoe solied, en of dit oor die woorde gaan of daaronder.",
+  },
+  "cut.shut": { en: "Close this bench", af: "Maak hierdie werkbank toe" },
+  "cut.paidHere": {
+    en: "All of the cutting is free. Putting the finished film together is the one press that spends, and it shows the bill before it does.",
+    af: "Al die sny is gratis. Om die klaar film saam te sit is die een druk wat spandeer, en dit wys die rekening voor dit dit doen.",
+  },
   "font.plain": { en: "Plain", af: "Gewoon" },
   "font.heavy": { en: "Heavy", af: "Swaar" },
   "font.serif": { en: "Serif", af: "Skreef" },

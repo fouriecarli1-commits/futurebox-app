@@ -53,6 +53,32 @@ const server = await serve(PORT);
 const { browser: b, page: p } = await enter({ at: server.url, lang: 'en' });
 p.on('pageerror', (e) => problems.push(`pageerror: ${String(e).slice(0, 160)}`));
 
+/**
+ * Open a bench on the bar, the way a person does.
+ *
+ * ── Why most of this file now starts with one of these ───────────────────
+ *
+ * Carli, 4 October 2026: *"Daar moet nie allerhande buttons wees soos daar nou
+ * is nie, alles moet binne een kamer wees en met icons … en dan van daar af wees
+ * funksies op pop waarvan mens kan kies."*
+ *
+ * So the controls are not all on the glass any more. They are behind seven
+ * icons on a fixed bar, and a probe that reached straight for a slider was
+ * reaching into a drawer it had not opened.
+ *
+ * Pressing the one that is already open would SHUT it — that is what the second
+ * press does, on purpose — so this asks first. A helper that toggled would
+ * close the bench for every assertion after the first one in a group, and the
+ * failure would read as the control being missing.
+ */
+const bench = async (which) => {
+  const button = p.locator(`[data-cutbench="${which}"]`);
+  if ((await button.getAttribute('aria-pressed').catch(() => null)) === 'true') return;
+  await button.click({ timeout: 10000 }).catch(() => undefined);
+  await p.waitForTimeout(500);
+};
+
+
 await studio(p);
 
 /* ── The button she asked for, walked before anything else ──────────────
@@ -171,6 +197,8 @@ try {
   if (!made) {
     console.log('  --  this browser cannot record webm; the walk below is skipped rather than faked.');
   } else {
+    /* Bringing material in is behind the folder, which is where it belongs */
+    await bench('folder');
     await p.locator('[data-editorbring] input[type="file"]').setInputFiles({
       name: 'a-take.webm',
       mimeType: 'video/webm',
@@ -201,6 +229,7 @@ try {
     /* The look has to be ON the viewer, not only in the render — a swatch
        that previews one thing while the film does another is worse than no
        preview. `filterCss` is the same function on both sides. */
+    await bench('looks');
     await p.locator('[data-editorlook="mono"]').click();
     await p.waitForTimeout(400);
     const styled = await viewer.evaluate((el) => el.style.filter || '');
@@ -327,6 +356,8 @@ try {
       afterTrim < beforeTrim - 0.2,
       `${beforeTrim}s became ${afterTrim}s after dragging the end in most of a second`);
 
+    /* The edge is on the strip; the number box that has to agree with it is on the clip bench */
+    await bench('clip');
     check('    and the number box in the card agrees with the edge',
       Math.abs(Number(await p.locator('[data-editorto]').inputValue()) - afterTrim) < 0.3,
       `the box reads ${await p.locator('[data-editorto]').inputValue()} for a ${afterTrim}s film`
@@ -371,6 +402,8 @@ try {
     await p.mouse.up();
     await p.waitForTimeout(500);
 
+    /* The fade sliders moved in beside the track they fade */
+    await bench('sound');
     const pulled = Number(await p.locator('[data-editorfadein]').inputValue().catch(() => '0'));
     check('  and pulling it sets the fade',
       pulled > 0.2,
@@ -437,7 +470,7 @@ try {
 
     check('  and with no track under it, it says so rather than sitting empty',
       (await p.locator('[data-editornobed], [data-editorsoundlane]').first().innerText().catch(() => '')).trim().length > 0
-        || (await p.locator('[data-editorbed]').count()) === 1,
+      || (await p.locator('[data-editorbed]').count()) === 1,
       'an empty lane with nothing in it reads as a rendering fault');
 
     /* A piece carrying its own sound is marked on the lane, which is the
@@ -468,6 +501,7 @@ try {
        nought. Words that vanish, with no error anywhere. So the size is read
        off the rendered element in pixels, which cannot be nought and cannot
        lie. */
+    await bench('words');
     await p.locator('[data-editorwords]').fill('Dit is die woorde');
     await p.waitForTimeout(600);
 
@@ -573,6 +607,7 @@ try {
         + `a ratio of ${ratio.toFixed(3)} where a tall film is ${(1080 / 1920).toFixed(3)}`
         + ' — a logo placed at the bottom of a box that is not the frame lands in the black bar');
 
+      await bench('film');
       await p.locator('[data-editorshape="wide"]').click();
       await p.waitForTimeout(500);
       const wideBox = await p.locator('[data-editorframe]').boundingBox();
@@ -588,6 +623,7 @@ try {
          thing that decides whether there are bars at all. */
       check('  the picture fits whole inside it, with bars, as it always did',
         (await p.locator('[data-editorviewer]').evaluate((el) => getComputedStyle(el).objectFit)) === 'contain');
+      await bench('clip');
       await p.locator('[data-editorfill]').click();
       await p.waitForTimeout(500);
       check('    and filling the frame crops the sides instead',
@@ -609,6 +645,8 @@ try {
          box growing taller proves the words turned. The `@container` fault on
          30 September was exactly a control whose value was right and whose
          picture was nought. */
+      /* Back to the words after the frame and fill checks borrowed two other benches */
+      await bench('words');
       const flat = await onFilm.boundingBox();
       await p.locator('[data-editorwordsturn]').fill('45');
       await p.waitForTimeout(400);
@@ -673,7 +711,15 @@ try {
       const sized = await onFilm.boundingBox();
       const griped = await grip.boundingBox();
       const beforeGrip = await p.locator('[data-editorwordssize]').inputValue();
-      await p.mouse.move((griped?.x ?? 0) + 2, (griped?.y ?? 0) + 2);
+      /* Pressed where `hover` put the pointer, not at a corner this probe
+         worked out for itself.
+
+         The first version moved to `box.x + 2, box.y + 2` and `elementFromPoint`
+         at those coordinates answered the BAND rather than the handle — a
+         twenty-pixel target, measured correctly and still missed. Hover puts the
+         pointer at the element's own centre and Playwright guarantees it landed
+         there, so there is no arithmetic left to be wrong. */
+      await grip.hover();
       await p.mouse.down();
       await p.mouse.move(
         (griped?.x ?? 0) + (sized?.width ?? 0) * 0.6,
@@ -747,6 +793,7 @@ try {
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
       'base64',
     );
+    await bench('mark');
     await p.locator('[data-editormark] input[type="file"]').setInputFiles({
       name: 'mark.png', mimeType: 'image/png', buffer: dot,
     }).catch(() => undefined);
@@ -813,7 +860,8 @@ try {
       await p.waitForTimeout(200);
       const markWas = await onPicture.boundingBox();
       const atGrip = await markGrip.boundingBox();
-      await p.mouse.move((atGrip?.x ?? 0) + 2, (atGrip?.y ?? 0) + 2);
+      /* Hover-then-press, for the reason written on the words' handle above. */
+      await markGrip.hover();
       await p.mouse.down();
       await p.mouse.move(
         (atGrip?.x ?? 0) + (markWas?.width ?? 0),
@@ -877,6 +925,7 @@ try {
        Checked before the split below, because a split makes two pieces and
        the slider only governs the one that is picked. */
     const asFilmed = await filmLength();
+    await bench('clip');
     await p.locator('[data-editorspeed]').fill('2');
     await p.waitForTimeout(600);
     const fast = await filmLength();
@@ -898,6 +947,7 @@ try {
        this rather than a list: one piece becomes two, and the total length
        does not change. */
     const before = await filmLength();
+    await bench('clip');
     await p.locator('[data-editorsplit]').click();
     await p.waitForTimeout(600);
     check('splitting a piece makes two blocks out of one',
@@ -969,6 +1019,7 @@ try {
        with joins in it still comes out. */
     await p.locator('[data-editorblock]').first().click();
     await p.waitForTimeout(400);
+    await bench('clip');
     check('the first piece is offered no join, because there is nothing behind it',
       (await p.locator('[data-editorjoin="dissolve"]').count()) === 0,
       'a picker that cannot change anything is worse than a picker that is absent');
@@ -1042,6 +1093,8 @@ try {
        not mean, and the only way back is bringing the file in again and doing
        every trim over. That is what these four are about, and a count relative
        to where the walk got to cannot be broken by lengthening the walk. */
+    /* Dropping a piece is a clip control */
+    await bench('clip');
     const onClock = await blocks.count();
     await p.locator('[data-editordrop]').click();
     await p.waitForTimeout(600);
@@ -1176,6 +1229,10 @@ try {
        about to. `check:saysprice` holds the source side of that; this reads
        the number off the screen, because a price that is in the code and not
        on the glass has been said to nobody. */
+    /* The price is on the button that spends, and that button is on the film
+       bench — so the bench is opened first, the way somebody about to put a
+       film together opens it. */
+    await bench('film');
     const priceTag = (await p.locator('[data-editorprice]').innerText().catch(() => '')) || '';
     check('the button that costs says so before it is pressed',
       /\d/.test(priceTag),
@@ -1190,6 +1247,7 @@ try {
        Three things, and the first is the one with teeth: pressing the export
        button must NOT start a render. A confirm screen that appears while the
        thing it is confirming is already running is not a confirm screen. */
+    await bench('film');
     await p.locator('[data-editormake]').click();
     await p.waitForTimeout(900);
 
@@ -1246,7 +1304,14 @@ try {
 
     await p.locator('[data-editormake]').click();
     await p.waitForTimeout(900);
+    console.error('TRACE billgo count', await p.locator('[data-editorbillgo]').count(),
+      'make disabled', await p.locator('[data-editormake]').isDisabled().catch(() => 'err'),
+      'bill', await p.locator('[data-editorbill]').count());
     await p.locator('[data-editorbillgo]').click();
+    await p.waitForTimeout(2500);
+    console.error('TRACE after go: made', await p.locator('[data-editormade]').count(),
+      'alert', await p.locator('[data-videoeditor] [role="alert"]').innerText().catch(() => 'none'),
+      'makeDisabled', await p.locator('[data-editormake]').isDisabled().catch(() => 'err'));
     const film = p.locator('[data-editormade]');
     await film.waitFor({ state: 'visible', timeout: 45000 }).catch(() => undefined);
 
