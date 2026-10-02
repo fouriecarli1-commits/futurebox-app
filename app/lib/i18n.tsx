@@ -886,6 +886,18 @@ export const STRINGS: Dict = {
     af: "oor die laaste prent van die vorige skoot",
   },
   "edit.copy": { en: "Make a copy", af: "Maak \u2019n kopie" },
+  /* Both halves written out, because the one that is off is the one somebody
+     needs to read: "whole picture, bars where it does not fit" says what is
+     happening now, and a button reading only "fill the frame" leaves them
+     guessing which of the two they are looking at. */
+  "edit.fillOn": {
+    en: "Filling the frame, sides cropped",
+    af: "Vul die raam, kante afgesny",
+  },
+  "edit.fillOff": {
+    en: "Whole picture, bars where it does not fit",
+    af: "Hele prent, balke waar dit nie pas nie",
+  },
   "font.plain": { en: "Plain", af: "Gewoon" },
   "font.heavy": { en: "Heavy", af: "Swaar" },
   "font.serif": { en: "Serif", af: "Skreef" },

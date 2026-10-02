@@ -125,6 +125,16 @@ export interface Scene {
   /** How fast this scene plays, as a multiple. One is as filmed. */
   readonly speed?: number;
   /**
+   * Fill the frame, cropping the overflow, instead of fitting the whole picture
+   * in and putting something behind the bars.
+   *
+   * `covering` has been in this file since it was written, for the blurred
+   * background. It was never offered for the picture itself, which meant a wide
+   * clip in a vertical film was always letterboxed — right for an establishing
+   * shot, wrong for a face.
+   */
+  readonly fill?: boolean;
+  /**
    * How this scene ARRIVES after the one before it, and over how long.
    *
    * On the arriving scene rather than on the one it leaves, because that is
@@ -834,7 +844,13 @@ export async function stitch(cut: Cut): Promise<Made> {
       }
 
       await video.play().catch(() => undefined);
-      const box = fitted(video, cut.width, cut.height);
+      /* `covering` when the scene asked to fill the frame. The same function
+         the blurred background has always used, pointed at the picture — so
+         there is one piece of arithmetic for "fill this frame" rather than two,
+         and the editor's `object-cover` is showing the same crop. */
+      const box = cut.scenes[index].fill
+        ? covering(video, cut.width, cut.height)
+        : fitted(video, cut.width, cut.height);
       /* A clip already the shape of the film has no bars to fill, and painting
          a background behind an opaque frame would be work for nothing. The
          slack is for rounding, not for a shape that is nearly right: an eight

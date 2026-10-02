@@ -49,7 +49,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
   Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2,
-  RotateCw, Layers, Gauge, Move, Copy, Shuffle,
+  RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop,
 } from 'lucide-react';
 import Card from './Card';
 import Note from './Note';
@@ -445,6 +445,26 @@ export default function VideoEditor({
   const [markTurn, setMarkTurn] = useState(0);
   const [markSolid, setMarkSolid] = useState(MARK_OPACITY);
   const [markUnder, setMarkUnder] = useState(false);
+
+  /* ── The shape the film is actually coming out in ───────────────────────
+ 
+     Read here because the preview has to be drawn in it, and until 3 October
+     2026 it was not: the preview showed the CLIP at the clip's own shape, and
+     the film comes out at the film's.
+ 
+     That was a quiet lie about placement. Everything on the frame — the logo,
+     the words — is positioned in FRACTIONS of the frame, and `drawMark` and
+     `drawCaption` read those fractions against the film's 1080x1920. The
+     preview read them against whatever shape the clip happened to be. So a
+     logo dragged to the bottom of a landscape clip, in a vertical film, landed
+     at the same fraction in the film — which in the film is inside the black
+     bar, with the picture letterboxed above it.
+ 
+     She placed it on a picture and it came out on nothing. Nothing in the app
+     could have told her: `check:logomark` measures the preview's fractions
+     against `markBox`'s and they agreed exactly. They were both right about the
+     fraction and the preview was wrong about the frame. */
+  const shape = SHAPES[edit.shape ?? 'tall'] ?? SHAPES.tall;
 
   /* How much the preview is magnified. One means no magnification at all,
      and at one the zoom box is not a scroller — see the note where it is
@@ -1511,8 +1531,16 @@ export default function VideoEditor({
           >
           <div
             ref={frame}
-            className="relative origin-top-left"
-            style={zoom > 1 ? { width: `${zoom * 100}%` } : undefined}
+            data-editorframe
+            /* The FILM's shape, not the clip's. The box is the frame, so a
+               fraction means the same thing here as it does in the render —
+               and the black bars somebody's clip will really have are the
+               black of this box showing through `object-contain`. */
+            style={{
+              aspectRatio: `${shape.width} / ${shape.height}`,
+              ...(zoom > 1 ? { width: `${zoom * 100}%` } : {}),
+            }}
+            className="relative origin-top-left overflow-hidden rounded-xl border border-zinc-800 bg-black"
           >
             {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
             <video
@@ -1522,7 +1550,11 @@ export default function VideoEditor({
               playsInline
               muted={!piece.sound}
               style={{ filter: filterCss(piece.look) || undefined }}
-              className="w-full rounded-xl border border-zinc-800 bg-black"
+              /* `contain` or `cover`, from the same flag the renderer reads, so
+                 the bars she sees are the bars she gets. */
+              className={`absolute inset-0 h-full w-full ${
+                piece.fill ? 'object-cover' : 'object-contain'
+              }`}
             />
             {(piece.words ?? '').trim().length > 0 && (
               <div
@@ -1635,6 +1667,32 @@ export default function VideoEditor({
                 />
               </label>
             </div>
+
+            {/* ── Fill the frame, or fit the whole picture in ─────────────
+
+                A wide clip in a vertical film is letterboxed, with the blurred
+                wash behind the bars. That is right for an establishing shot and
+                wrong for a face, so it is a choice per piece rather than one
+                answer for the film.
+
+                `covering` has been in `stitch.ts` since it was written, for the
+                background. This points it at the picture, so there is one piece
+                of arithmetic for "fill this frame" and the preview's
+                `object-cover` is showing the same crop. */}
+            <button
+              type="button"
+              aria-pressed={piece.fill === true}
+              data-editorfill
+              onClick={() => tweak({ fill: !piece.fill })}
+              className={`min-h-[44px] rounded-xl border px-3.5 py-2 text-sm font-semibold inline-flex items-center gap-2 ${
+                piece.fill ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300' : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+              }`}
+            >
+              <Crop className="w-4 h-4" />
+              {piece.fill
+                ? t('edit.fillOn', 'Filling the frame, sides cropped')
+                : t('edit.fillOff', 'Whole picture, bars where it does not fit')}
+            </button>
 
             {/* ── How it arrives after the piece before it ────────────────
 

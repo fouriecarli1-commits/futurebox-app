@@ -474,6 +474,58 @@ try {
       check('  with a way back to the bottom once they have moved',
         (await p.locator('[data-editorwordsreset]').count()) === 1);
 
+      /* ── The preview is the FILM's frame, not the clip's ───────────────
+
+         The fault this catches was invisible to everything, including a check
+         written about exactly this subject.
+
+         Everything on the frame is placed in FRACTIONS — `markAt` and `wordsAt`
+         are x and y between nought and one — and `drawMark` and `drawCaption`
+         read those fractions against the FILM's 1080x1920. The preview read
+         them against whatever shape the clip happened to be. Both were right
+         about the fraction. The preview was wrong about the frame.
+
+         So a logo dragged to the bottom of a landscape clip, in a vertical film,
+         came out in the black bar below the picture. `check:logomark` compares
+         the preview's corner fractions with `markBox`'s and they agreed exactly,
+         which is why it stayed green: the two numbers matched and the box they
+         were fractions OF did not.
+
+         Measured as a ratio, because that is the whole claim: the box the
+         overlays are positioned inside has to be the shape the film comes out
+         in. A tall film is 1080x1920, so 0.5625. */
+      const framed = await p.locator('[data-editorframe]').boundingBox();
+      const ratio = (framed?.width ?? 0) / Math.max(1, framed?.height ?? 1);
+      check('  and the preview box is the shape the FILM comes out in',
+        Math.abs(ratio - 1080 / 1920) < 0.02,
+        `the box is ${Math.round(framed?.width ?? 0)}x${Math.round(framed?.height ?? 0)}, `
+        + `a ratio of ${ratio.toFixed(3)} where a tall film is ${(1080 / 1920).toFixed(3)}`
+        + ' — a logo placed at the bottom of a box that is not the frame lands in the black bar');
+
+      await p.locator('[data-editorshape="wide"]').click();
+      await p.waitForTimeout(500);
+      const wideBox = await p.locator('[data-editorframe]').boundingBox();
+      const wideRatio = (wideBox?.width ?? 0) / Math.max(1, wideBox?.height ?? 1);
+      check('    and follows the shape when the shape is changed',
+        Math.abs(wideRatio - 1920 / 1080) < 0.05,
+        `a ratio of ${wideRatio.toFixed(3)} where a wide film is ${(1920 / 1080).toFixed(3)}`);
+      await p.locator('[data-editorshape="tall"]').click();
+      await p.waitForTimeout(500);
+
+      /* And filling the frame crops rather than bars. Read off the computed
+         `object-fit` of the element the bars belong to, because that is the one
+         thing that decides whether there are bars at all. */
+      check('  the picture fits whole inside it, with bars, as it always did',
+        (await p.locator('[data-editorviewer]').evaluate((el) => getComputedStyle(el).objectFit)) === 'contain');
+      await p.locator('[data-editorfill]').click();
+      await p.waitForTimeout(500);
+      check('    and filling the frame crops the sides instead',
+        (await p.locator('[data-editorviewer]').evaluate((el) => getComputedStyle(el).objectFit)) === 'cover',
+        'a wide clip letterboxed into a vertical film is right for an establishing'
+        + ' shot and wrong for a face');
+      await p.locator('[data-editorfill]').click();
+      await p.waitForTimeout(400);
+
       /* ── Turned, faint, round, and nudged ──────────────────────────────
 
          Carli, 2 October 2026, having sent two-and-thirty screens of a video

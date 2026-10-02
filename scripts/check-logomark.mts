@@ -167,6 +167,31 @@ ok(
   /markTurn,\s*markSolid,\s*markUnder,/.test(room),
 );
 
+/* ── The box those fractions are fractions OF ─────────────────────────────
+
+   3 October 2026, and this is the fault the two assertions above could not see.
+
+   They compare `CORNER_AT`'s fractions with `markBox`'s arithmetic and they
+   agreed exactly — both right about the fraction. What neither of them asked was
+   what the preview was positioning those fractions INSIDE: it was the clip's own
+   shape, and `markBox` reads the FILM's. A logo dragged to the bottom of a
+   landscape clip in a vertical film came out in the black bar under the picture,
+   with every number in this check green.
+
+   A check comparing two halves of a calculation has to assert what they are
+   calculations of. `check:editor` measures the box's real ratio in a browser;
+   this holds the one line that makes it so. */
+ok(
+  'the preview is drawn in the FILM\'s shape, so a fraction means one thing',
+  /aspectRatio:\s*`\$\{shape\.width\} \/ \$\{shape\.height\}`/.test(room),
+  'fractions of the clip\'s box and fractions of the film\'s frame are different'
+  + ' places, and the logo is placed in one and painted in the other',
+);
+ok(
+  '  and that shape is the one the edit asked for, not a constant',
+  /const shape = SHAPES\[edit\.shape \?\? 'tall'\]/.test(room),
+);
+
 /* ── The filmed take, and the one ordering that makes it safe ────────────
 
    A take cannot be re-recorded. The moment has gone. So the marking pass

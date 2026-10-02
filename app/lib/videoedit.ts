@@ -101,6 +101,22 @@ export interface Piece {
    */
   readonly join?: Join;
   readonly joinFor?: number;
+  /**
+   * Fill the frame, cropping what will not fit, instead of letterboxing it.
+   *
+   * ── Why this is per piece and not per film ───────────────────────────────
+   *
+   * A film is one shape and its material is not: a phone clip shot upright and
+   * a camera clip shot wide go into the same vertical film, and the right
+   * answer is different for each. The wide establishing shot wants its whole
+   * frame and can live with bars; the close-up of a face wants to fill the
+   * screen and can lose its sides.
+   *
+   * Off by default, which is the behaviour this app has always had: fit the
+   * whole picture in, and put the blurred wash behind it. Nothing anybody has
+   * already made changes.
+   */
+  readonly fill?: boolean;
   /** Carry this piece's own sound. Off by default: most material is room tone. */
   readonly sound?: boolean;
   /**
@@ -336,6 +352,7 @@ export function cutFrom(edit: Edit): Cut {
       ...(one.words && one.wordsRound !== undefined ? { captionRound: one.wordsRound } : {}),
       ...(one.speed && one.speed !== 1 ? { speed: one.speed } : {}),
       ...(one.loud !== undefined ? { loud: one.loud } : {}),
+      ...(one.fill ? { fill: true } : {}),
       ...(one.sound ? { sound: true } : {}),
       /* The hard cut is the default everywhere, so it is not carried: a scene
          with no `join` and a scene with `join: 'cut'` render the same, and
