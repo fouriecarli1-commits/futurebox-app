@@ -169,6 +169,39 @@ try {
     canvas.width = 320; canvas.height = 240;
     const c = canvas.getContext('2d');
     const stream = canvas.captureStream(30);
+    /* ── With a real sound in it, and a sound that CHANGES ──────────────
+
+       A canvas stream carries pictures only, so until now the clip this probe
+       made was silent — and a silent clip draws a flat line on the sound lane,
+       correctly. The assertion that the wave is a picture of a sound rather
+       than a texture had nothing to measure, and said so.
+
+       A tone whose level swings is the smallest fixture that makes the lane's
+       job visible: if the drawn wave does not change height along a clip whose
+       loudness does, the wave is not coming from the audio. */
+    let shut = null;
+    try {
+      const Ctx = window.AudioContext ?? window.webkitAudioContext;
+      if (Ctx) {
+        const audio = new Ctx();
+        const to = audio.createMediaStreamDestination();
+        const tone = audio.createOscillator();
+        const level = audio.createGain();
+        tone.frequency.value = 220;
+        /* Swinging between near-silent and loud about twice a second, so a few
+           hundred columns of wave have obvious peaks and troughs in them. */
+        const swing = audio.createOscillator();
+        const depth = audio.createGain();
+        swing.frequency.value = 2.2;
+        depth.gain.value = 0.48;
+        level.gain.value = 0.5;
+        swing.connect(depth); depth.connect(level.gain);
+        tone.connect(level); level.connect(to);
+        tone.start(); swing.start();
+        for (const track of to.stream.getAudioTracks()) stream.addTrack(track);
+        shut = () => { try { tone.stop(); swing.stop(); void audio.close(); } catch { /* done */ } };
+      }
+    } catch { /* No audio here; the clip is silent and the wave is a line. */ }
     const type = ['video/webm;codecs=vp8,opus', 'video/webm'].find((t) => MediaRecorder.isTypeSupported(t));
     if (!type) return null;
     const rec = new MediaRecorder(stream, { mimeType: type });
@@ -189,6 +222,7 @@ try {
     });
     rec.stop();
     await stopped;
+    shut?.();
     const blob = new Blob(parts, { type });
     const buf = await blob.arrayBuffer();
     return Array.from(new Uint8Array(buf));
@@ -1146,6 +1180,111 @@ try {
         'it is how she is looking at the film, not something about the film —'
         + ' pressing Back after dragging the clock taller has to undo her last'
         + ' CUT');
+    }
+
+    /* ── Two sound lanes, each with the sound's real shape in it ────────
+
+       Carli, 4 October 2026: *"Die eie video se klank moet sy eie klankbaan hê,
+       en die musiek wat in gebring word moet nog 'n tydlyn wees onder die video
+       se klankbaan. Elke klankbaan moet golwe hê, sodat golwe gematch kan word
+       wanneer nodig."*
+
+       "Sodat golwe gematch kan word" is the specification, and it is the part a
+       source check cannot reach: a canvas with a decorative squiggle on it
+       passes every rule about lanes existing. So this reads the drawn pixels
+       and asks whether what is in them VARIES — a wave that is the same height
+       all the way across is a texture, not a picture of a sound. */
+    /* ── Every lane is there before it has anything on it ──────────────
+
+       Carli, 4 October 2026, about two things that had already been built and
+       pushed: *"Ek sien die timeline kan nog nie gerek word nie"* and *"onthou
+       die teks moet ook op sy eie tydlyn kan kom."*
+
+       Both worked. The words lane appeared only once a caption existed, and
+       the resize handle was a bare ten-pixel line — so with an empty film
+       there was nothing to tell her either one was there. She was right about
+       the room and wrong only about the cause, which is the most expensive
+       kind of report to get: it looks like a bug report about a feature that
+       passes every test.
+
+       So the rule is now that a lane exists before it has anything in it. The
+       music lane has worked that way since it was built, which is why she
+       never said the music had no lane. */
+    const bare = await p.evaluate(() => ({
+      words: !!document.querySelector('[data-editorwordslane]'),
+      shots: !!document.querySelector('[data-editorshotlane]'),
+      music: !!document.querySelector('[data-editorsoundlane]'),
+      grip: !!document.querySelector('[data-editorlanegrip]'),
+      gripSays: (document.querySelector('[data-editorlanegrip]')?.innerText ?? '').trim().length,
+    }));
+    check('every lane is on the clock before anything is on it',
+      bare.words && bare.shots && bare.music,
+      JSON.stringify(bare)
+      + ' — an empty lane with its name on it is how somebody learns the room'
+      + ' has one');
+
+    check('  and the handle that resizes the clock says what it is',
+      bare.grip && bare.gripSays > 0,
+      'a bare ten-pixel line is a handle nobody can see, which is a handle that'
+      + ' is not there');
+
+    check('the shots have a sound lane of their own',
+      (await p.locator('[data-editorshotlane]').count()) === 1,
+      'it was one lane with the music in it and a one-pixel line per talking'
+      + ' shot, which said THAT a shot had sound and nothing about what it was');
+
+    check('  and the music has another, under it',
+      (await p.locator('[data-editorsoundlane]').count()) === 1,
+      'in that order, because that is the order they are mixed in');
+
+    const lanesInOrder = await p.evaluate(() => {
+      const a = document.querySelector('[data-editorshotlane]');
+      const b = document.querySelector('[data-editorsoundlane]');
+      if (!a || !b) return null;
+      return { shots: Math.round(a.getBoundingClientRect().top), music: Math.round(b.getBoundingClientRect().top) };
+    });
+    check('  and the music really is the lower of the two',
+      lanesInOrder !== null && lanesInOrder.music > lanesInOrder.shots,
+      JSON.stringify(lanesInOrder));
+
+    /* The clip brought in earlier is silent, so turn its sound on to get a
+       wave to look at — a silent clip draws a flat line, correctly, and a flat
+       line is exactly what this assertion is written to reject. */
+    await bench('clip');
+    const speak = p.locator('[data-editorsound]');
+    if (await speak.count()) {
+      if ((await speak.getAttribute('aria-pressed')) !== 'true') await speak.click();
+      await p.waitForTimeout(1400);
+    }
+
+    const wave = p.locator('[data-editorshotlane] canvas[data-wave]').first();
+    check('  and a talking shot draws a wave on it',
+      (await wave.count()) === 1,
+      `${await wave.count()} — read from the clip by the same reader the Pro`
+      + ' Booth uses, not drawn');
+
+    if (await wave.count()) {
+      const ink = await wave.evaluate((el) => {
+        const g = el.getContext('2d');
+        if (!g || !el.width || !el.height) return null;
+        const px = g.getImageData(0, 0, el.width, el.height).data;
+        /* How tall the drawn column is at each x: the top-most lit row. A real
+           wave's columns differ; a texture's do not. */
+        const tops = [];
+        for (let x = 0; x < el.width; x += Math.max(1, Math.floor(el.width / 40))) {
+          let top = el.height;
+          for (let y = 0; y < el.height; y += 1) {
+            if (px[(y * el.width + x) * 4 + 3] > 10) { top = y; break; }
+          }
+          tops.push(top);
+        }
+        return { tops, heights: new Set(tops).size };
+      });
+      check('    and the wave is a picture of a sound, not a texture',
+        ink !== null && ink.heights > 3,
+        `${ink?.heights} different column heights across the block — a wave that`
+        + ' is the same height all the way across is a squiggle, and you cannot'
+        + ' match a drum hit to a cut with one');
     }
 
     /* ── The cover ──────────────────────────────────────────────────────

@@ -48,7 +48,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Film, Scissors, Trash2, ChevronLeft, ChevronRight, Loader2, Download,
-  Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2,
+  Play, Pause, SkipBack, Plus, Volume2, VolumeX, Type, Sparkles, Lock, Image as ImageIcon, Undo2, Redo2, ChevronsUpDown,
   RotateCw, Layers, Gauge, Move, Copy, Shuffle, Crop,
 } from 'lucide-react';
 import Card from './Card';
@@ -58,6 +58,7 @@ import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook
 import { REACH, pullTo, reachOf } from '../lib/magnet';
 import { heldWords, pointsOf, spanReady, tidy, wordsSpan } from '../lib/videospan';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
+import WaveBlock from './WaveBlock';
 import {
   BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, paintFor, roundFor,
 } from '../lib/videopaint';
@@ -521,6 +522,19 @@ export default function VideoEditor({
    * where the film is still editable.
    */
   const SHORTEST_LANE = 52;
+  /**
+   * How tall a sound lane is, which follows the picture lane.
+   *
+   * Carli asked for the clock's height to be hers; a sound lane that stayed 40
+   * pixels while the picture lane grew to 180 would be a wave she still cannot
+   * read, which is the thing she wanted the height FOR. So it grows with it —
+   * at a share, because a waveform needs less room than a row of thumbnails
+   * and giving it the same would push the picture off the screen.
+   *
+   * Floored at 34, which is where a wave stops being a wave and becomes a
+   * texture.
+   */
+  const soundTall = Math.max(34, Math.round(laneTall * 0.62));
 
   /** Whether the copilot's sheet is over the room. */
   const [asking2, setAsking2] = useState(false);
@@ -2170,15 +2184,30 @@ export default function VideoEditor({
 
                     A block per piece that has words, at that caption's own
                     stretch rather than its piece's — which is the whole point.
-                    Drawn only when there is something to draw: an empty lane
-                    above a film with no captions is a strip of nothing taking
-                    room from the one bar she is working in. */}
-                {edit.pieces.some((one) => (one.words ?? '').trim()) && (
-                  <div
-                    className="relative mb-1"
-                    style={{ height: Math.max(18, Math.round(laneTall * 0.34)) }}
-                    data-editorwordslane
-                  >
+                    Always drawn, even with nothing on it. It used to appear
+                    only once a piece had words, which is tidier and is why
+                    Carli said on 4 October — after it was built and pushed —
+                    that the text still had no lane of its own: with no caption
+                    typed there was no lane to see, so nothing told her the
+                    lane existed or that a caption could be timed at all.
+
+                    The music lane has said "No track under it yet" since it
+                    was built, for exactly that reason. An empty lane with its
+                    name on it is how somebody learns a room has one. */}
+                <div
+                  className="relative mb-1"
+                  style={{ height: Math.max(22, Math.round(laneTall * 0.34)) }}
+                  data-editorwordslane
+                >
+                  <span className="pointer-events-none absolute left-2 top-0 z-10 text-[10px] font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
+                    {t('edit.wordsLane', 'The words')}
+                  </span>
+                  {!edit.pieces.some((one) => (one.words ?? '').trim()) && (
+                    <span className="absolute inset-y-0 right-2 flex items-center text-[11px]" style={{ color: INK_DIM }}>
+                      {t('edit.noWords', 'No words on it yet')}
+                    </span>
+                  )}
+                  <>
                     {edit.pieces.map((one) => {
                       const said = (one.words ?? '').trim();
                       if (!said) return null;
@@ -2221,8 +2250,8 @@ export default function VideoEditor({
                         </div>
                       );
                     })}
-                  </div>
-                )}
+                  </>
+                </div>
 
                 {/* The blocks, at their real place in time. */}
                 <div
@@ -2590,13 +2619,25 @@ export default function VideoEditor({
                     node.addEventListener('pointerup', done);
                     node.addEventListener('pointercancel', done);
                   }}
-                  className="mt-1 flex h-8 cursor-ns-resize touch-none items-center justify-center"
+                  className="mt-1 flex h-9 cursor-ns-resize touch-none items-center justify-center gap-2 rounded-lg"
+                  style={{ background: 'rgba(52,211,153,0.10)' }}
                 >
-                  <span
-                    aria-hidden
-                    className="block h-1 w-10 rounded-full"
-                    style={{ background: 'rgba(16,185,129,0.45)' }}
-                  />
+                  {/* ── It says what it is ──────────────────────────────
+
+                      This was a bare ten-pixel line. It worked — the probe
+                      drags it and the clock really changes height — and Carli
+                      said on 4 October, after it was built and pushed, that
+                      the timeline still could not be stretched. She was not
+                      wrong about anything except the cause: a handle nobody
+                      can see is a handle that is not there.
+
+                      So it carries its own name and two arrows. A grip in a
+                      room full of green blocks has to look like a control
+                      rather than like a divider between two of them. */}
+                  <ChevronsUpDown aria-hidden className="h-3.5 w-3.5" style={{ color: LIT }} />
+                  <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
+                    {t('edit.laneDrag', 'Drag to resize the clock')}
+                  </span>
                 </div>
 
                 {/* ── The sound, on a lane of its own ──────────────────
@@ -2617,39 +2658,103 @@ export default function VideoEditor({
                     choose. And a mark under every piece that carries its
                     own sound, so "why can I hear a room" has an answer you
                     can see rather than six checkboxes to go and open. */}
-                <div className="relative h-10 border-t border-zinc-800" data-editorsoundlane>
+                {/* ── The shots' own sound, on a lane of its own ─────────
+
+                    Carli, 4 October 2026: *"Die eie video se klank moet sy eie
+                    klankbaan hê, en die musiek wat in gebring word moet nog 'n
+                    tydlyn wees onder die video se klankbaan. Elke klankbaan
+                    moet golwe hê, sodat golwe gematch kan word wanneer
+                    nodig."*
+
+                    Two lanes, in that order, because that is the order they
+                    are mixed in: the shot is the thing and the music is under
+                    it. This was one lane with the music in it and a
+                    one-pixel line per talking shot — which said THAT a shot
+                    had sound and nothing about what the sound was.
+
+                    "Sodat golwe gematch kan word" is the specification. Every
+                    wave here is read from the file it sits under, by the same
+                    reader the Pro Booth's lanes use. A drawn squiggle would be
+                    a picture of nothing and you could not line a drum hit up
+                    against a cut with it. */}
+                <div
+                  className="relative border-t border-zinc-800"
+                  style={{ height: soundTall }}
+                  data-editorshotlane
+                >
+                  <span className="pointer-events-none absolute left-2 top-0.5 z-10 text-[10px] font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
+                    {t('edit.shotSound', 'The shots')}
+                  </span>
+                  {edit.pieces.filter((one) => one.sound).map((one) => (
+                    <div
+                      key={one.id}
+                      data-editorownsound={one.id}
+                      style={{
+                        left: startsAt(edit, one.id) * perSecond,
+                        width: Math.max(THINNEST, lengthOfPiece(one) * perSecond),
+                      }}
+                      className="pointer-events-none absolute inset-y-1 overflow-hidden rounded-md"
+                    >
+                      <WaveBlock
+                        sound={one.clip}
+                        wide={Math.max(THINNEST, lengthOfPiece(one) * perSecond)}
+                        tall={Math.max(8, soundTall - 8)}
+                        colour="rgba(52,211,153,0.9)"
+                        /* The trim, so the wave is the part of the clip that is
+                           actually in the film — a wave of the whole file under
+                           a block showing four seconds of it is a wave of
+                           something nobody hears. */
+                        from={one.from}
+                        long={Math.max(0.01, one.to - one.from)}
+                      />
+                    </div>
+                  ))}
+                  {!edit.pieces.some((one) => one.sound) && (
+                    <span className="absolute inset-y-0 right-2 flex items-center text-[11px]" style={{ color: INK_DIM }}>
+                      {t('edit.noShotSound', 'No shot is speaking yet')}
+                    </span>
+                  )}
+                </div>
+
+                {/* ── And the music, under it ────────────────────────────── */}
+                <div
+                  className="relative border-t border-zinc-800"
+                  style={{ height: soundTall }}
+                  data-editorsoundlane
+                >
+                  <span className="pointer-events-none absolute left-2 top-0.5 z-10 text-[10px] font-bold uppercase tracking-wide" style={{ color: INK_DIM }}>
+                    {t('edit.musicLane', 'The music')}
+                  </span>
                   {edit.under ? (
                     <div
                       data-editorbed
                       onPointerDown={(event) => scrubBed(event)}
                       style={{ width: Math.max(0, total * perSecond) }}
-                      className="absolute inset-y-1 left-0 cursor-ew-resize touch-none overflow-hidden rounded-lg border border-sky-500/40 bg-sky-500/10 px-2 py-1"
+                      className="absolute inset-y-1 left-0 cursor-ew-resize touch-none overflow-hidden rounded-lg border border-sky-500/40 bg-sky-500/10"
                     >
-                      <span className="block truncate text-[11px] font-semibold text-sky-200">
-                        {t('edit.bed', 'Track under it')}
-                      </span>
-                      <span className="block text-[11px] text-sky-300/70">
+                      <WaveBlock
+                        sound={edit.under}
+                        wide={Math.max(0, total * perSecond)}
+                        tall={Math.max(8, soundTall - 8)}
+                        colour="rgba(125,211,252,0.9)"
+                        /* From wherever she dragged it to, for as long as the
+                           film runs: the bed is scrubbed rather than moved, so
+                           what changes is WHICH PART of the song is under the
+                           film. A wave drawn from the top of the file would be
+                           the shape of a part nobody is hearing. */
+                        from={edit.underFrom ?? 0}
+                        long={total}
+                      />
+                      <span className="pointer-events-none absolute inset-x-0 bottom-0 truncate px-2 text-[10px] font-semibold text-sky-200">
                         {t('edit.bedFrom', 'From')} {seconds(edit.underFrom ?? 0)}
                         {underLength > 0 ? ` / ${seconds(underLength)}` : ''}
                       </span>
                     </div>
                   ) : (
-                    <span className="absolute inset-y-0 left-2 flex items-center text-[11px] text-zinc-600">
+                    <span className="absolute inset-y-0 right-2 flex items-center text-[11px]" style={{ color: INK_DIM }}>
                       {t('edit.noBed', 'No track under it yet')}
                     </span>
                   )}
-
-                  {edit.pieces.filter((one) => one.sound).map((one) => (
-                    <span
-                      key={one.id}
-                      data-editorownsound
-                      style={{
-                        left: startsAt(edit, one.id) * perSecond,
-                        width: Math.max(THINNEST, lengthOfPiece(one) * perSecond),
-                      }}
-                      className="pointer-events-none absolute bottom-0 h-1 rounded-full bg-emerald-400/80"
-                    />
-                  ))}
                 </div>
               </div>
             </div>
