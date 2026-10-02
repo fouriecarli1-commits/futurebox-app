@@ -956,6 +956,77 @@ export default function VideoEditor({
     node.addEventListener('pointercancel', done);
   }, []);
 
+  /* ── Resizing by the corner, on the picture ─────────────────────────────
+
+     Carli, 30 September 2026: *"dit moet ook gemanipuleer moet kan word op die
+     skerm van die video, deur dit rond te kan skuif, en groter en kleiner te kan
+     maak."*
+
+     She got the first half the same week. The second half has been a slider in
+     another card ever since, which is reaching away from the thing being judged
+     — the same objection that put the fade handles on the strip.
+
+     ── Scaled by the distance from the middle, not by pixels ────────────────
+
+     The size is multiplied by how much further out the thumb has got than where
+     it started: a factor, not an offset. Three reasons, and the third is why.
+
+     It needs no assumption about which way the thing is wider, so one function
+     serves the logo (a share of the frame's WIDTH) and the words (a share of its
+     HEIGHT) without either of them being a special case.
+
+     It behaves the same on a 390-pixel phone and a 1200-pixel desk, because a
+     factor has no units.
+
+     And it works on a rotated element. The box of a turned overlay is its
+     axis-aligned bounds, so its WIDTH is not its width — but its centre is
+     still its centre, and a distance from the centre is still a distance.
+
+     The centre is read once, at pointerdown. The overlay grows under the thumb
+     and the centre does not move, because both overlays are positioned BY their
+     centre — so re-reading it every frame would be measuring a box that is
+     changing because of the thing being measured. */
+  const grip = useCallback((
+    event: React.PointerEvent<HTMLElement>,
+    /** The size it is at now, in whatever unit the caller keeps it in. */
+    from: number,
+    put: (size: number) => void,
+    least: number,
+    most: number,
+    /** Called once, when the drag ends. The words pass `held` through it. */
+    ended?: () => void,
+  ) => {
+    event.preventDefault();
+    /* Or the overlay underneath starts a move at the same time, and one gesture
+       gets two answers — the fault the fade handles' own note describes. */
+    event.stopPropagation();
+    const node = event.currentTarget;
+    const overlay = node.parentElement;
+    if (!overlay) return;
+    const box = overlay.getBoundingClientRect();
+    const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    const began = Math.hypot(event.clientX - middle.x, event.clientY - middle.y);
+    /* A grab landing on the centre would divide by nearly nothing and send the
+       size to its ceiling on the first pixel of movement. */
+    if (began < 6) return;
+    node.setPointerCapture(event.pointerId);
+
+    const move = (m: PointerEvent) => {
+      const now = Math.hypot(m.clientX - middle.x, m.clientY - middle.y);
+      put(Math.max(least, Math.min(most, from * (now / began))));
+    };
+    const done = () => {
+      node.removeEventListener('pointermove', move);
+      node.removeEventListener('pointerup', done);
+      node.removeEventListener('pointercancel', done);
+      try { node.releasePointerCapture(event.pointerId); } catch { /* already gone */ }
+      ended?.();
+    };
+    node.addEventListener('pointermove', move);
+    node.addEventListener('pointerup', done);
+    node.addEventListener('pointercancel', done);
+  }, []);
+
   const preview = useCallback(async () => {
     if (!edit.pieces.length || busy) return;
     setProblem('');
@@ -1593,13 +1664,28 @@ export default function VideoEditor({
                 className="absolute cursor-move touch-none select-none bg-black/60 px-2 py-1 text-center leading-tight text-white outline-dashed outline-1 outline-emerald-400/50"
               >
                 {piece.words}
+                {/* The corner. Sits half outside the band so the whole of it is
+                    grabbable without covering a letter, and `touch-none` so a
+                    phone does not scroll the page instead. */}
+                <span
+                  data-editorwordsgrip
+                  onPointerDown={(event) => {
+                    holding();
+                    grip(
+                      event, piece.wordsSize ?? 0.048,
+                      (size) => slide({ wordsSize: size }),
+                      WORDS_SMALLEST, WORDS_LARGEST, held,
+                    );
+                  }}
+                  className="absolute -bottom-2 -right-2 h-5 w-5 cursor-nwse-resize touch-none rounded-full border-2 border-emerald-400 bg-zinc-950"
+                />
               </div>
             )}
             {mark && (
-              <img
-                src={mark.src}
-                alt=""
-                draggable={false}
+              /* Wrapped rather than left as a bare `<img>`, so the corner handle
+                 has something to sit in the corner OF. The wrapper carries the
+                 place, the size and the turn; the picture fills it. */
+              <div
                 data-editormarkdrag
                 onPointerDown={(event) => dragOnFrame(event, setMarkAt)}
                 style={{
@@ -1617,7 +1703,16 @@ export default function VideoEditor({
                   zIndex: markUnder ? 1 : 3,
                 }}
                 className="absolute cursor-move touch-none select-none outline-dashed outline-1 outline-emerald-400/50"
-              />
+              >
+                <img src={mark.src} alt="" draggable={false} className="block w-full" />
+                <span
+                  data-editormarkgrip
+                  onPointerDown={(event) => grip(
+                    event, markShare, setMarkShare, MARK_SMALLEST, MARK_LARGEST,
+                  )}
+                  className="absolute -bottom-2 -right-2 h-5 w-5 cursor-nwse-resize touch-none rounded-full border-2 border-emerald-400 bg-zinc-950"
+                />
+              </div>
             )}
           </div>
           </div>

@@ -571,6 +571,60 @@ try {
         round > 1 && square < 1,
         `the corner was ${round}px and is ${square}px`);
 
+      /* ── Bigger and smaller by the corner ──────────────────────────────
+
+         Carli, 30 September 2026: *"dit moet ook gemanipuleer moet kan word op
+         die skerm van die video, deur dit rond te kan skuif, en groter en
+         kleiner te kan maak."* The dragging landed that week; the resizing has
+         been a slider in another card ever since, which is reaching away from
+         the thing being judged — the same objection that put the fade handles
+         on the strip.
+
+         Dragged OUTWARD from the middle so the size goes up, then one press of
+         Back: the size is written on every pointermove, and a history step per
+         move is the fault the sliders had. */
+      const grip = p.locator('[data-editorwordsgrip]');
+      check('  the words carry a corner to drag',
+        (await grip.count()) === 1);
+
+      /* `hover` first, and only then read the boxes.
+ 
+         `boundingBox` answers in VIEWPORT coordinates and `mouse.move` takes
+         them, and by this point in the walk the page has scrolled — the first
+         version read the handle at y = -259, off the top of the window, and
+         `elementFromPoint` there is nothing at all. So the pointer went down on
+         the page and the probe reported a resize handle that does not resize.
+ 
+         `hover` scrolls the element into view, which is why the drags written
+         before this one all start with it. */
+      await grip.hover();
+      await p.waitForTimeout(200);
+      const sized = await onFilm.boundingBox();
+      const griped = await grip.boundingBox();
+      const beforeGrip = await p.locator('[data-editorwordssize]').inputValue();
+      await p.mouse.move((griped?.x ?? 0) + 2, (griped?.y ?? 0) + 2);
+      await p.mouse.down();
+      await p.mouse.move(
+        (griped?.x ?? 0) + (sized?.width ?? 0) * 0.6,
+        (griped?.y ?? 0) + (sized?.height ?? 0) * 0.6,
+        { steps: 15 },
+      );
+      await p.mouse.up();
+      await p.waitForTimeout(400);
+      const afterGrip = await p.locator('[data-editorwordssize]').inputValue();
+      check('    and pulling it outward makes them bigger',
+        Number(afterGrip) > Number(beforeGrip),
+        `the size was ${beforeGrip} and is ${afterGrip}`);
+      check('    and the words on the picture grew with it, not only the number',
+        (await onFilm.boundingBox())?.height > (sized?.height ?? 0),
+        `the band was ${Math.round(sized?.height ?? 0)}px tall`);
+      await p.locator('[data-editorundo]').click();
+      await p.waitForTimeout(400);
+      check('    and the whole pull is one press of Back',
+        (await p.locator('[data-editorwordssize]').inputValue()) === beforeGrip,
+        `${await p.locator('[data-editorwordssize]').inputValue()} after one undo`
+        + ` where it was ${beforeGrip}`);
+
       /* Align, and the one thing about it that is worth checking: it moves ONE
          axis, which is what an align control does everywhere, and a "top"
          button that also slid the words into the middle sideways would undo a
@@ -678,6 +732,40 @@ try {
       check('  and quietened behind the picture',
         Math.abs(dim - 0.3) < 0.02,
         `the mark is at opacity ${dim}`);
+
+      /* The same corner on the mark, which keeps no history: where the mark sits
+         and how big it is are not on the `Edit` and never were. */
+      const markGrip = p.locator('[data-editormarkgrip]');
+      check('  and carries a corner to drag as well',
+        (await markGrip.count()) === 1);
+      await markGrip.hover();
+      await p.waitForTimeout(200);
+      const markWas = await onPicture.boundingBox();
+      const atGrip = await markGrip.boundingBox();
+      await p.mouse.move((atGrip?.x ?? 0) + 2, (atGrip?.y ?? 0) + 2);
+      await p.mouse.down();
+      await p.mouse.move(
+        (atGrip?.x ?? 0) + (markWas?.width ?? 0),
+        (atGrip?.y ?? 0) + (markWas?.height ?? 0),
+        { steps: 15 },
+      );
+      await p.mouse.up();
+      await p.waitForTimeout(400);
+      const markNow = await onPicture.boundingBox();
+      check('    and pulling it outward makes the mark bigger on the picture',
+        (markNow?.width ?? 0) > (markWas?.width ?? 0) + 4,
+        `it was ${Math.round(markWas?.width ?? 0)}px and is ${Math.round(markNow?.width ?? 0)}px wide`);
+
+      /* The two controls for one number, measured against each other: the slider
+         is a share of the FRAME's width, so the mark's pixels over the frame's
+         pixels has to come back to what the slider reads. Two controls for one
+         number that disagree is worse than one. */
+      const frameWide = (await p.locator('[data-editorframe]').boundingBox())?.width ?? 1;
+      const said = Number(await p.locator('[data-editormarksize]').inputValue());
+      check('    and the size slider in the card reads the same share',
+        Math.abs(said - (markNow?.width ?? 0) / Math.max(1, frameWide)) < 0.03,
+        `the slider reads ${said} for a mark ${Math.round(markNow?.width ?? 0)}px`
+        + ` wide in a frame ${Math.round(frameWide)}px wide`);
 
       /* ── Layers ─────────────────────────────────────────────────────────
 
