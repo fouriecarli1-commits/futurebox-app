@@ -109,12 +109,52 @@ async function withProviders(external) {
 {
   const { p, names } = await withProviders({ google: true, apple: true, facebook: true, github: true });
   const said = names.filter((one) => /Google|Apple|Facebook|GitHub/.test(one));
-  check('all three switched on are all three offered',
-    said.length === 3 && said.some((o) => /Google/.test(o)) && said.some((o) => /Apple/.test(o)) &&
-      said.some((o) => /Facebook/.test(o)),
+
+  /* ── Rewritten 3 October 2026, because the app grew and this did not ─────
+
+     These two asserted that exactly three buttons drew and that GitHub was
+     never one of them — "a provider this app cannot draw is not invented". That
+     was the right rule when the component could draw three logos and fell
+     through to FACEBOOK's mark for anything else, which would have put
+     Facebook's logo on a GitHub button.
+
+     The component fixed that properly: nine providers, each with its own colour
+     from its own brand page, and anything without a hand-drawn logo gets its
+     own first letter instead of a guess at somebody else's mark. So a fourth
+     switched-on provider now draws correctly, and the check was calling correct
+     behaviour a fault — the direction that gets checks switched off.
+
+     What the rule was always protecting is below, and it is stronger: every
+     provider the project switches on is offered, nothing it has not switched on
+     is invented, and no button carries a logo that is not that company's. */
+  check('every provider the project switches on is offered',
+    said.length === 4 && ['Google', 'Apple', 'Facebook', 'GitHub']
+      .every((one) => said.some((o) => o.includes(one))),
     said.join(' | '));
-  check('and a provider this app cannot draw is not invented',
-    !said.some((one) => /GitHub/.test(one)), said.join(' | '));
+
+  /* The real rule, measured on the markup rather than on the text.
+
+     A hand-drawn logo is an `<svg>`; the fallback is a `<span>` with the
+     company's own first letter in it. So a provider we have a mark for must
+     carry one, and a provider we do not must carry a letter — never another
+     company's path. An approximation of a mark is a mark used badly, and every
+     one of these companies has rules about that. */
+  const logoOf = async (word) => {
+    const button = p.locator('button').filter({ hasText: new RegExp(word) }).first();
+    return {
+      svg: await button.locator('svg').count().catch(() => 0),
+      letter: (await button.locator('span[aria-hidden="true"]').first().innerText().catch(() => '')).trim(),
+    };
+  };
+  const fb = await logoOf('Facebook');
+  const gh = await logoOf('GitHub');
+  check('a provider we have a mark for carries its own mark',
+    fb.svg > 0, `Facebook drew ${fb.svg} svg(s)`);
+  check('and one we do not carries its own letter, not somebody else\'s logo',
+    gh.svg === 0 && gh.letter === 'G',
+    `GitHub drew ${gh.svg} svg(s) and the letter "${gh.letter}" —`
+    + ' falling through to another company\'s path is confidently wrong,'
+    + ' which is worse than a plain letter');
   check('Google comes first — most people are already signed into it',
     /Google/.test(said[0] ?? ''), said[0] ?? 'none');
   check('and the divider is there when there is something to divide',
