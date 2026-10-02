@@ -89,6 +89,10 @@ const SAME_IN_BOTH = new Set([
   /* Picture sizes. "480p" is 480p in every language, and translating a
      standard's own name would make it harder to recognise, not easier. */
   '480p', '720p', '1080p',
+  /* The room's own name, hers in both languages. Carli, 4 October 2026, asked
+     directly which name she meant: *"Nee, Video Editor."* "Video-redigeerder"
+     is the dictionary answer and is not what anybody in this country calls it. */
+  'Video Editor',
   /* The app on your phone that makes the six digits. Every one of them is
      called this on both app stores here, and "verifikasie-toepassing" is a
      word somebody would have to translate back before they knew what to go

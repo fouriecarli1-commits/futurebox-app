@@ -68,12 +68,16 @@ const MUST_BE_ON_EVERY_CARD: { readonly what: string; readonly says: RegExp }[] 
      never be vague about — somebody finding that out at the door has been
      told nothing and charged nothing, which reads as the app breaking. */
   { what: 'the Pro Booth', says: /Pro Booth/ },
-  /* Renamed on 1 October: the editor became its own room and is called the
-     Cutting room, because the room next door is the Video desk and two rooms
-     whose names both begin with "Video" is how somebody opens the wrong one.
-     The rule is unchanged — the room is named on every card — and only the
-     name it is looking for moved. */
-  { what: 'the cutting room', says: /cutting room/i },
+  /* Renamed twice. On 1 October the editor became its own room and was called
+     the Cutting room, because the room next door is the Video desk and two
+     rooms whose names both begin with "Video" is how somebody opens the wrong
+     one. On 4 October Carli, asked directly, said *"Nee, Video Editor"* — so
+     that cost is one she has weighed and accepted, and the room carries the
+     name she wants it to carry.
+
+     The rule has not moved either time: the room is named on every card. Only
+     the name it looks for has. */
+  { what: 'the Video Editor', says: /video editor/i },
   { what: 'dubbing, the dearest thing here', says: /[Dd]ubbing/ },
 ];
 

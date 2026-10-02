@@ -97,7 +97,7 @@ await p.waitForTimeout(1200);
 
 const reachedByButton = (await p.locator('[data-cuttingroom]').count()) === 1;
 
-await toRoom(p, 'Cutting room');
+await toRoom(p, 'Video Editor');
 await unfold(p);
 
 /* The clock reads "1.4s / 12.0s" — where the playhead is, over how long the
@@ -1587,7 +1587,7 @@ try {
   try {
     const q = phone.page;
     await studio(q);
-    await toRoom(q, 'Cutting room');
+    await toRoom(q, 'Video Editor');
     await q.waitForTimeout(900);
 
     const edges = await q.evaluate(() => {

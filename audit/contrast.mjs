@@ -65,7 +65,7 @@ for (const name of ROOMS) {
      That is this probe's own failure mode, not the room's: a measurement of
      the part that happens to be visible, reported as a measurement of the
      room. Each bench is opened and measured in turn now. */
-  if (name === 'Cutting room') {
+  if (name === 'Video Editor') {
     const benches = await page.locator('[data-cutbench]').evaluateAll(
       (all) => all.map((one) => one.getAttribute('data-cutbench')),
     );

@@ -1438,7 +1438,7 @@ export default function VideoEditor({
 
   if (!allowed) {
     return (
-      <Card title={t('rail.videoedit', 'Cutting room')} icon={<Film className="w-4 h-4" />}>
+      <Card title={t('rail.videoedit', 'Video Editor')} icon={<Film className="w-4 h-4" />}>
         <div data-editorlocked className="space-y-3">
           <p className="text-sm text-zinc-300 leading-relaxed">
             {t(

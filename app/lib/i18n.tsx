@@ -765,7 +765,25 @@ export const STRINGS: Dict = {
      here.
 
      The room reads `rail.videoedit` now — the same key the rail draws — so there
-     is one name and it cannot drift again. `check:oneroomname` holds it. */
+     is one name and it cannot drift again. `check:oneroomname` holds it.
+
+     ── And on 4 October it turned out I had unified it onto the wrong one ──
+
+     Carli, asked directly which name she meant: *"Nee, Video Editor."*
+
+     She had said *"Die video editor se naam het steeds nie verander nie"* four
+     times, and all four times I read it as "this room has two names" and fixed
+     the drift. It was not a complaint about drift. It was a request for a
+     NAME, and the name she wanted was the one I deleted — twice, and the
+     second time I wrote a note explaining why deleting it was right.
+
+     The reason recorded for choosing "Cutting room" still stands as a fact:
+     the room next door is the Video desk, and two rooms whose names both begin
+     with "Video" is how somebody opens the wrong one. It is a real cost and it
+     is hers to weigh; she has now weighed it twice. Said once, in one line,
+     and then done — `check:sold` looks for the new name on every card.
+
+     "Video Editor" in both languages, which is her own word in both. */
   "edit.what": {
     en: "Bring your own clips in, cut them on the clock, and take the film out. Everything on this page happens on your own device \u2014 no credits, no queue, no waiting.",
     af: "Bring jou eie knipsels in, sny hulle op die klok, en vat die film uit. Alles op hierdie bladsy gebeur op jou eie toestel \u2014 geen krediete, geen tou, geen wag nie.",
@@ -2222,7 +2240,7 @@ export const STRINGS: Dict = {
      names both start with "Video" is how somebody ends up in the one they did
      not mean. A cutting room is what it is, and what every editor has been
      called since film was film. */
-  "rail.videoedit": { en: "Cutting room", af: "Snykamer" },
+  "rail.videoedit": { en: "Video Editor", af: "Video Editor" },
   "rail.videoedit.hint": { en: "Your own footage, on a clock", af: "Jou eie opnames, op \u2019n klok" },
 
   // ── The video desk ────────────────────────────────────────────────
