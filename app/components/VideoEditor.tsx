@@ -55,6 +55,9 @@ import Card from './Card';
 import CutDock, { type Bench } from './CutDock';
 import DeskSheet from './BoothCard';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
+import {
+  BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, paintFor, roundFor,
+} from '../lib/videopaint';
 import Note from './Note';
 import { useOwnScreen } from '../lib/fullroom';
 import { useLang } from '../lib/i18n';
@@ -354,6 +357,85 @@ function seconds(value: number): string {
   const mins = Math.floor(whole / 60);
   const rest = whole - mins * 60;
   return mins > 0 ? `${mins}:${rest.toFixed(1).padStart(4, '0')}` : `${rest.toFixed(1)}s`;
+}
+
+/**
+ * A row of colours to choose from.
+ *
+ * Written once and used twice — the words and what is behind them — because
+ * two copies of a colour grid is two grids that drift apart the first time one
+ * of them gets a swatch the other does not.
+ *
+ * ── Why the swatch is the colour and not a label ─────────────────────────
+ *
+ * Carli asked for *"'n goeie variety van kleur keuses"*. Twenty named buttons
+ * is a list to read; twenty filled circles is a palette to look at, and the
+ * eye finds the one it wants before it has read anything. The name is still
+ * there for a screen reader and on hover, which is where a name belongs when
+ * the thing itself is on the screen.
+ *
+ * The chosen one is marked with a ring rather than a tick: a tick has to be
+ * dark on a light swatch and light on a dark one, and a ring OUTSIDE the
+ * circle is legible against all twenty without knowing which is under it.
+ */
+/** A hex at an alpha, for the preview — the same 62% the renderer paints at. */
+function tintOf(hex: string, alpha: number): string {
+  const full = /^#([0-9a-fA-F]{6})$/.exec(hex.trim());
+  if (!full) return `rgba(0, 0, 0, ${alpha})`;
+  const n = parseInt(full[1], 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
+function Swatches({
+  label, mark, chosen, onPick, t,
+}: {
+  readonly label: string;
+  readonly mark: string;
+  readonly chosen: string;
+  readonly onPick: (id: string) => void;
+  readonly t: (key: string, fallback?: string) => string;
+}): React.ReactElement {
+  return (
+    <div className="space-y-1.5">
+      <span className="block text-sm text-zinc-400">{label}</span>
+      <div className="flex flex-wrap gap-2">
+        {PAINTS.map((one) => {
+          const on = chosen === one.id;
+          const name = t(one.name[0], one.name[1]);
+          return (
+            <button
+              key={one.id}
+              type="button"
+              aria-pressed={on}
+              aria-label={name}
+              title={name}
+              data-editorpaint={`${mark}:${one.id}`}
+              onClick={() => onPick(one.id)}
+              /* 44 by 44 for the thumb, with the colour drawn smaller inside
+                 it — a 44-pixel circle of colour is a very loud grid, and the
+                 target has to be the thumb's size whatever the dot's size. */
+              className="flex h-11 w-11 items-center justify-center rounded-full"
+              style={{
+                background: 'transparent',
+                boxShadow: on ? `0 0 0 2px ${LIT}` : 'none',
+              }}
+            >
+              <span
+                aria-hidden
+                className="block h-7 w-7 rounded-full"
+                style={{
+                  background: one.hex,
+                  /* A hairline, so white on the panel and black on the panel
+                     are both circles rather than a hole and a blank. */
+                  boxShadow: 'inset 0 0 0 1px rgba(236,253,245,0.35)',
+                }}
+              />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 export default function VideoEditor({
@@ -1685,11 +1767,26 @@ export default function VideoEditor({
                        rounds against the band's MEASURED height, and the band
                        here is a div that has not been measured. It moves the
                        right way and lands within a pixel or two of the film. */
-                    borderRadius: (piece.wordsRound ?? CAPTION_ROUND)
-                      * Math.max(9, (piece.wordsSize ?? 0.048) * frameHeight),
+                    borderRadius: (piece.wordsBox ?? BOX_DEFAULT) === 'brush'
+                      /* The brush is a painted path on the canvas and cannot be
+                         a border radius. A lozenge is the closest an element
+                         gets, and the preview says "a shape, not a box" rather
+                         than pretending to be the stroke. The film draws the
+                         real one; `check:videopaint` holds that they agree on
+                         everything a radius CAN carry. */
+                      ? '48% 44% 46% 50% / 60% 56% 58% 54%'
+                      : (piece.wordsRound ?? roundFor(piece.wordsBox ?? BOX_DEFAULT))
+                        * Math.max(9, (piece.wordsSize ?? 0.048) * frameHeight),
+                    /* The same 62% the renderer paints the box at, so the
+                       preview shows the picture through it exactly as the film
+                       will. `none` draws nothing, which is a title card. */
+                    background: (piece.wordsBox ?? BOX_DEFAULT) === 'none'
+                      ? 'transparent'
+                      : tintOf(paintFor(piece.wordsBack ?? 'black')?.hex ?? BACK_DEFAULT, 0.62),
+                    color: paintFor(piece.wordsInk ?? 'white')?.hex ?? INK_DEFAULT,
                     zIndex: 2,
                   }}
-                  className="absolute cursor-move touch-none select-none bg-black/60 px-2 py-1 text-center leading-tight text-white outline-dashed outline-1 outline-emerald-400/50"
+                  className="absolute cursor-move touch-none select-none px-2 py-1 text-center leading-tight outline-dashed outline-1 outline-emerald-400/50"
                 >
                   {piece.words}
                   {/* The corner. Sits half outside the band so the whole of it is
@@ -2753,6 +2850,66 @@ export default function VideoEditor({
               the screen. */}
           {(piece.words ?? '').trim().length > 0 && (
             <>
+              {/* ── The colour of the words, and what sits behind them ────
+
+                  Carli, 4 October 2026: *"Onthou dat die teks 'n kleur keuse
+                  ook moet hê, en 'n keuse van agtergrond vir woorde, 'n
+                  square, 'n square met ronde punte, 'n verfkwas. Die
+                  agtergrond moet ook kleur keuse hê. Daar moet 'n goeie
+                  variety van kleur keuses wees."*
+
+                  The shape first, because it decides whether the second row of
+                  swatches means anything: with no box there is no background to
+                  colour, so that row is not drawn rather than drawn dead. */}
+              <div className="space-y-1.5">
+                <span className="block text-sm text-zinc-400">
+                  {t('edit.wordsBox', 'Behind the words')}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {BOXES.map((one) => {
+                    const on = (piece.wordsBox ?? BOX_DEFAULT) === one.id;
+                    return (
+                      <button
+                        key={one.id}
+                        type="button"
+                        aria-pressed={on}
+                        data-editorwordsbox={one.id}
+                        /* `wordsRound: undefined` with it: the shape sets the
+                           corner radius, and a number left over from the last
+                           shape would make a square with rounded corners. */
+                        onClick={() => tweak({ wordsBox: one.id, wordsRound: undefined })}
+                        className="min-h-[44px] rounded-xl border px-3 py-2 text-sm font-semibold"
+                        style={on ? {
+                          borderColor: LIT, background: 'rgba(52,211,153,0.16)', color: LIT, boxShadow: PRESS,
+                        } : {
+                          borderColor: 'rgba(16,185,129,0.45)', background: 'rgba(52,211,153,0.18)', color: INK, boxShadow: RAISE,
+                        }}
+                      >
+                        {t(one.name[0], one.name[1])}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <Swatches
+                label={t('edit.wordsInk', 'The words')}
+                mark="ink"
+                chosen={piece.wordsInk ?? 'white'}
+                onPick={(id) => tweak({ wordsInk: id })}
+                t={t}
+              />
+
+              {(piece.wordsBox ?? BOX_DEFAULT) !== 'none' && (
+                <Swatches
+                  label={t('edit.wordsBack', 'What is behind them')}
+                  mark="back"
+                  chosen={piece.wordsBack ?? 'black'}
+                  onPick={(id) => tweak({ wordsBack: id })}
+                  t={t}
+                />
+              )}
+
               <div className="space-y-1.5">
                 <span className="block text-sm text-zinc-400">{t('edit.font', 'The face')}</span>
                 <div className="flex flex-wrap gap-2">

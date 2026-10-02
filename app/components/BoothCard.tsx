@@ -172,6 +172,7 @@ export default function DeskSheet({
   closeSays,
   place,
   plain,
+  single,
   look,
   onClose,
   children,
@@ -213,6 +214,24 @@ export default function DeskSheet({
    * expects everywhere. It is only the body that differs.
    */
   readonly plain?: boolean;
+  /**
+   * One column instead of two, still scrolling.
+   *
+   * The two-column grid below is right for a Pro Booth desk: six or eight
+   * cards, each a name and one control, and two columns puts eight on a
+   * 727-pixel screen where one puts four.
+   *
+   * It is wrong for the cutting room's benches, which are not cards. Each one
+   * passes a single `<div className="space-y-3">` — a text box, a row of
+   * shapes, a grid of colours — so the whole bench landed in ONE column and
+   * the other half of the sheet was empty. Measured on a 390-pixel phone that
+   * made the column about 170 pixels: the colour swatches wrapped after three
+   * of twenty, and the caption box was half the width of its own sheet.
+   *
+   * Carli, 4 October 2026: *"Kyk dan mooi dat alles mooi allign en netjies
+   * is."* Half an empty sheet is the loudest version of that.
+   */
+  readonly single?: boolean;
   readonly closeSays: string;
   /**
    * Where the playhead is, in bars and beats.
@@ -303,7 +322,7 @@ export default function DeskSheet({
               — the few that genuinely do are marked `wide` and take the row.
               At 360 pixels a column is 166, which is why every `Row` wraps
               rather than squeezes. */
-          <div className="grid grid-cols-2 gap-2.5">{children}</div>
+          <div className={single ? 'space-y-3' : 'grid grid-cols-2 gap-2.5'}>{children}</div>
         )}
       </div>
     </div>

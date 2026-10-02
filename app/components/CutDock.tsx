@@ -247,6 +247,9 @@ export default function CutDock({
       closeSays={t('cut.shut', 'Close this bench')}
       place={place}
       look={CUT_LOOK}
+      /* One column. A bench here is a panel of controls, not the booth's grid
+         of little cards — see `single`. */
+      single
       onClose={() => onOpen(null)}
     >
       {children}

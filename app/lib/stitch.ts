@@ -67,6 +67,7 @@
 
 import { drawMark, MARK_SHARE, type Corner, type Spot } from './logomark';
 import { fontFor } from './videofonts';
+import { brushPath } from './videopaint';
 import { joiningAt, needsHeld, type Join } from './videojoins';
 
 export interface Scene {
@@ -186,6 +187,21 @@ export interface Scene {
   readonly captionTurn?: number;
   readonly captionSolid?: number;
   readonly captionRound?: number;
+  /**
+   * The colour of the words, the shape behind them and that shape's colour.
+   *
+   * Carli, 4 October 2026: *"die teks 'n kleur keuse ook moet hê, en 'n keuse
+   * van agtergrond vir woorde, 'n square, 'n square met ronde punte, 'n
+   * verfkwas. Die agtergrond moet ook kleur keuse hê."*
+   *
+   * Hex rather than a swatch id, because this type is what the renderer reads
+   * and a renderer that has to look an id up in a palette is a renderer that
+   * can be handed an id the palette does not have. `videopaint.ts` owns the
+   * swatches; by the time a scene reaches here it is a colour.
+   */
+  readonly captionInk?: string;
+  readonly captionBack?: string;
+  readonly captionBox?: 'none' | 'square' | 'round' | 'brush';
 }
 
 export interface Cut {
@@ -494,6 +510,9 @@ export function drawCaption(
     readonly turn?: number;
     readonly solid?: number;
     readonly round?: number;
+    readonly ink?: string;
+    readonly back?: string;
+    readonly box?: 'none' | 'square' | 'round' | 'brush';
   },
 ): void {
   const words = text.trim();
@@ -575,23 +594,58 @@ export function drawCaption(
     context.translate(-spin.x, -spin.y);
   }
 
-  context.fillStyle = 'rgba(0, 0, 0, 0.62)';
-  context.beginPath();
-  context.roundRect(
-    Math.max(0, Math.min(width - boxWidth, middle - boxWidth / 2)),
-    boxTop, boxWidth, boxHeight,
-    /* Rounded as a share of the band's own height, so the setting
-       means the same thing at any size. Zero is a square box, one is a
-       lozenge; the default is what it has always been. */
-    Math.round((set?.round ?? CAPTION_ROUND) * Math.min(size, boxHeight / 2)),
-  );
-  context.fill();
+  /* ── What sits behind the words ───────────────────────────────────────
 
-  context.fillStyle = '#ffffff';
+     `none` draws nothing at all, which is a title card and is a choice rather
+     than the absence of one. `brush` is a painted stroke from `videopaint.ts`.
+     Everything else is the rounded box this has always drawn, with the corner
+     radius coming from the shape.
+
+     The fill was `rgba(0, 0, 0, 0.62)` — black at 62%. A chosen colour keeps
+     that same 62%, so a caption she has coloured sits on the picture the way
+     the black one did rather than becoming an opaque slab: the whole point of
+     a caption box is that you can still see what is behind it. */
+  const boxLeft = Math.max(0, Math.min(width - boxWidth, middle - boxWidth / 2));
+  const shape = set?.box ?? 'round';
+
+  if (shape !== 'none') {
+    context.fillStyle = tint(set?.back ?? '#000000', 0.62);
+    if (shape === 'brush') {
+      brushPath(context, boxLeft, boxTop, boxWidth, boxHeight);
+    } else {
+      context.beginPath();
+      context.roundRect(
+        boxLeft, boxTop, boxWidth, boxHeight,
+        /* Rounded as a share of the band's own height, so the setting
+           means the same thing at any size. Zero is a square box, one is a
+           lozenge; the default is what it has always been. */
+        Math.round((set?.round ?? CAPTION_ROUND) * Math.min(size, boxHeight / 2)),
+      );
+    }
+    context.fill();
+  }
+
+  context.fillStyle = set?.ink ?? '#ffffff';
   lines.forEach((one, index) => {
     context.fillText(one, middle, firstBaseline + step * index);
   });
   context.restore();
+}
+
+/**
+ * A hex colour at an alpha, as a canvas fill.
+ *
+ * The caption box has always been painted at 62% so the picture shows through
+ * it; a chosen colour has to keep that, or picking a colour would also be
+ * picking an opaque slab over the shot. Written out rather than using
+ * `globalAlpha`, which is already carrying the caption's own `solid` and would
+ * multiply the two.
+ */
+function tint(hex: string, alpha: number): string {
+  const full = /^#([0-9a-fA-F]{6})$/.exec(hex.trim());
+  if (!full) return `rgba(0, 0, 0, ${alpha})`;
+  const n = parseInt(full[1], 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
 export function windowOf(scene: Scene, duration: number): { from: number; to: number } {
@@ -908,6 +962,9 @@ export async function stitch(cut: Cut): Promise<Made> {
               font: painted.captionFont,
               size: painted.captionSize,
               at: painted.captionAt,
+              ink: painted.captionInk,
+              back: painted.captionBack,
+              box: painted.captionBox,
               turn: painted.captionTurn,
               solid: painted.captionSolid,
               round: painted.captionRound,

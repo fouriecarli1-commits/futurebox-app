@@ -46,6 +46,7 @@ import { filterCss } from './videofilters';
 import type { Cut, Scene } from './stitch';
 import type { Join } from './videojoins';
 import { gradeCss, type Adjust } from './videoadjust';
+import { BACK_DEFAULT, INK_DEFAULT, paintFor, roundFor, type BoxShape } from './videopaint';
 
 /** A piece of video on the clock. */
 export interface Piece {
@@ -81,6 +82,21 @@ export interface Piece {
   readonly wordsTurn?: number;
   readonly wordsSolid?: number;
   readonly wordsRound?: number;
+  /**
+   * The colour of the words, the shape behind them, and that shape's colour.
+   *
+   * Carli, 4 October 2026: *"Onthou dat die teks 'n kleur keuse ook moet hê, en
+   * 'n keuse van agtergrond vir woorde, 'n square, 'n square met ronde punte,
+   * 'n verfkwas. Die agtergrond moet ook kleur keuse hê."*
+   *
+   * Held as swatch IDS here and resolved to colours on the way to the
+   * renderer. The edit is what gets saved and reloaded, and an id survives the
+   * palette being retuned — a hex frozen into a saved edit would keep a colour
+   * that is no longer one of the twenty on offer. `videopaint.ts` owns both.
+   */
+  readonly wordsInk?: string;
+  readonly wordsBack?: string;
+  readonly wordsBox?: BoxShape;
   /**
    * How fast this piece plays, as a multiple. One is as filmed.
    *
@@ -387,6 +403,20 @@ export function cutFrom(edit: Edit): Cut {
       ...(one.words && one.wordsTurn ? { captionTurn: one.wordsTurn } : {}),
       ...(one.words && one.wordsSolid !== undefined ? { captionSolid: one.wordsSolid } : {}),
       ...(one.words && one.wordsRound !== undefined ? { captionRound: one.wordsRound } : {}),
+      /* Resolved from a swatch id to a colour here, at the one place the edit
+         becomes a scene. An unknown id falls back to the default rather than to
+         the first swatch: a caption that quietly turns white is a caption
+         somebody can see is wrong, and one that quietly turns pink is not. */
+      ...(one.words && one.wordsInk
+        ? { captionInk: paintFor(one.wordsInk)?.hex ?? INK_DEFAULT } : {}),
+      ...(one.words && one.wordsBack
+        ? { captionBack: paintFor(one.wordsBack)?.hex ?? BACK_DEFAULT } : {}),
+      ...(one.words && one.wordsBox ? { captionBox: one.wordsBox } : {}),
+      /* The shape decides the corner radius, so a square really is square.
+         Only when she has not set `wordsRound` by hand — a number she dragged
+         is hers, and a shape button overruling it would undo a gesture. */
+      ...(one.words && one.wordsBox && one.wordsRound === undefined
+        ? { captionRound: roundFor(one.wordsBox) } : {}),
       ...(one.speed && one.speed !== 1 ? { speed: one.speed } : {}),
       ...(one.loud !== undefined ? { loud: one.loud } : {}),
       ...(one.fill ? { fill: true } : {}),
