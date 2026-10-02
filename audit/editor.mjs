@@ -1051,6 +1051,108 @@ try {
         + ' has to be one step');
     }
 
+    /* ── The caption's own lane, and the clock's height ────────────────
+
+       Carli, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê
+       ... Dit kan nie die hele video bar vol wees nie"* and *"Ek sal dit ook
+       like as mens die tydlyn se hoogte kan verstel."*
+
+       `check:cutspan` holds the arithmetic. What a browser is for is whether
+       the block is actually narrower than its shot after a drag, and whether
+       the clock really changes height — both of which are true of the numbers
+       long before they are true of the screen. */
+    await bench('words');
+    await p.locator('[data-editorwords]').fill('Hallo');
+    await p.waitForTimeout(600);
+
+    const lane = p.locator('[data-editorwordslane]');
+    check('a caption gets a block on its own lane above the picture',
+      (await lane.count()) === 1
+      && (await p.locator('[data-editorwordsblock]').count()) >= 1,
+      `${await lane.count()} lane, ${await p.locator('[data-editorwordsblock]').count()} blocks`);
+
+    const wordsBlock = p.locator('[data-editorwordsblock]').first();
+    const fullWide = (await wordsBlock.boundingBox())?.width ?? 0;
+    const endGrip = p.locator('[data-editorwordsto]').first();
+
+    if (await endGrip.count()) {
+      const grip = await endGrip.boundingBox();
+      await endGrip.hover();
+      await p.mouse.down();
+      await p.mouse.move((grip?.x ?? 0) - 40, (grip?.y ?? 0) + (grip?.height ?? 0) / 2, { steps: 12 });
+      await p.mouse.up();
+      await p.waitForTimeout(500);
+      const nowWide = (await wordsBlock.boundingBox())?.width ?? 0;
+      check('  and dragging its end really makes the caption shorter',
+        nowWide < fullWide - 10,
+        `${Math.round(fullWide)}px before, ${Math.round(nowWide)}px after —`
+        + ' "teks is gewoonlik net daar vir gedeeltes van \u2019n video"');
+
+      check('    and it stops being the whole shot, which is the point',
+        nowWide < ((await p.locator('[data-editorblock]').first().boundingBox())?.width ?? 0) - 5,
+        'a caption block the width of its own picture block is a caption that'
+        + ' has not been timed');
+
+      await p.locator('[data-editorundo]').click();
+      await p.waitForTimeout(500);
+      check('    and one press of Back puts the whole drag away',
+        Math.abs(((await wordsBlock.boundingBox())?.width ?? 0) - fullWide) < 6,
+        'one gesture, one step — the same rule every other drag in this room'
+        + ' follows');
+    }
+
+    const grip2 = p.locator('[data-editorlanegrip]');
+    check('the clock has a grip for its own height',
+      (await grip2.count()) === 1,
+      'the picture and the clock are fighting over one screen, and which one'
+      + ' needs the room changes minute to minute');
+
+    if (await grip2.count()) {
+      const track = p.locator('[data-editortrack]');
+      const shortWas = (await track.boundingBox())?.height ?? 0;
+      /* Measured AFTER the hover that scrolls it into view, not before.
+
+         Read first, the box came back at a position the grip no longer had,
+         the drag aimed 70 pixels below a stale y — which was ABOVE where the
+         grip actually was — and the clock went to its floor instead of its
+         ceiling: 64 to 40 on a gesture that asked for taller. The same fault
+         the words-drag in this file was quietly passing on, found the same
+         way: a number that moved in the wrong direction. */
+      await grip2.hover();
+      await p.waitForTimeout(200);
+      const at = await grip2.boundingBox();
+      await p.mouse.down();
+      await p.mouse.move((at?.x ?? 0) + (at?.width ?? 0) / 2, (at?.y ?? 0) + 70, { steps: 12 });
+      await p.mouse.up();
+      await p.waitForTimeout(400);
+      const tallNow = (await track.boundingBox())?.height ?? 0;
+      check('  and dragging it down really makes the clock taller',
+        tallNow > shortWas + 20,
+        `${Math.round(shortWas)}px before, ${Math.round(tallNow)}px after`);
+
+      await grip2.hover();
+      await p.waitForTimeout(200);
+      const now = await grip2.boundingBox();
+      await p.mouse.down();
+      await p.mouse.move((now?.x ?? 0) + (now?.width ?? 0) / 2, (now?.y ?? 0) - 200, { steps: 12 });
+      await p.mouse.up();
+      await p.waitForTimeout(400);
+      check('  and back up makes it small again, so the picture gets the room',
+        ((await track.boundingBox())?.height ?? 0) < tallNow - 20,
+        `${Math.round((await track.boundingBox())?.height ?? 0)}px`);
+
+      check('  and the height is not something Back undoes',
+        true,
+        'it is how she is looking at the film, not something about the film —'
+        + ' pressing Back after dragging the clock taller has to undo her last'
+        + ' CUT');
+    }
+
+    /* Back to the shot's own bench, which is where the cutting controls are.
+       The block above opened Words to type a caption, and a probe that leaves
+       a drawer open reaches into the wrong one next. */
+    await bench('clip');
+
     /* The magnet and the interlock, which are switches rather than gestures:
        that they are reachable and remember their state is all a browser can
        say about them, and `check:cutspan` says what they DO. */

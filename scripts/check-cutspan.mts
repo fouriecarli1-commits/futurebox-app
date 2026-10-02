@@ -25,7 +25,8 @@
  * impossible to hear.
  */
 import {
-  SHORTEST_SPAN, pointsOf, spanReady, stretches, tidy, withSkip,
+  SHORTEST_SPAN, SHORTEST_WORDS, heldWords, pointsOf, spanReady, stretches,
+  tidy, withSkip, wordsSpan,
 } from '../app/lib/videospan';
 import { pullTo } from '../app/lib/magnet';
 import { cutOut, runs, splitHere, startsAt } from '../app/lib/videoedit';
@@ -221,6 +222,43 @@ ok('and the lines are put away once their span has been cut',
   cutOut({ ...three, span: { from: 10, to: 20 } }, { from: 10, to: 20 }).span === null,
   'two red lines still lying across a film that no longer has that span is an'
   + ' invitation to press cut again and take the wrong ten seconds');
+
+/* ── The caption's own lane ────────────────────────────────────────────
+
+   Carli, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê ...
+   Dit kan nie die hele video bar vol wees nie, want teks is gewoonlik net daar
+   vir gedeeltes van 'n video."* */
+
+ok('a caption that was never timed is up for the whole shot',
+  wordsSpan({}, 10).from === 0 && wordsSpan({}, 10).to === 10,
+  'every caption typed before this existed has no numbers on it, and text that'
+  + ' vanished the day it could be timed would be a feature taking something'
+  + ' away');
+
+ok('  and one that was timed keeps its own stretch',
+  wordsSpan({ wordsFrom: 2, wordsTo: 5 }, 10).from === 2
+  && wordsSpan({ wordsFrom: 2, wordsTo: 5 }, 10).to === 5,
+  JSON.stringify(wordsSpan({ wordsFrom: 2, wordsTo: 5 }, 10)));
+
+ok('  and a stretch longer than its shot is cut to the shot',
+  wordsSpan({ wordsFrom: 0, wordsTo: 99 }, 10).to === 10,
+  `${wordsSpan({ wordsFrom: 0, wordsTo: 99 }, 10).to} — a caption cannot be up`
+  + ' after its own picture has gone');
+
+ok('dragging a caption keeps it inside its shot',
+  heldWords(-4, 99, 10).from === 0 && heldWords(-4, 99, 10).to === 10,
+  JSON.stringify(heldWords(-4, 99, 10)));
+
+ok('  and never squashes it below something anybody can read',
+  heldWords(5, 5, 10).to - heldWords(5, 5, 10).from >= SHORTEST_WORDS,
+  `${heldWords(5, 5, 10).to - heldWords(5, 5, 10).from}s — half a second, not a`
+  + ' frame: the limit here is the eye rather than the encoder, because a'
+  + ' caption is something somebody has to READ');
+
+ok('  and a shot shorter than that still gives the caption the whole of it',
+  heldWords(0, 0.2, 0.2).from === 0 && heldWords(0, 0.2, 0.2).to === 0.2,
+  JSON.stringify(heldWords(0, 0.2, 0.2))
+  + ' — refusing would mean a shot with words on it that cannot be timed');
 
 if (bad) {
   console.error(`\ncheck:cutspan — ${bad} assertion(s) failed.\n`);

@@ -1163,6 +1163,7 @@ export const STRINGS: Dict = {
   "grade.720.what": { en: "Half the size of 1080p and still sharp on a phone.", af: "Half so groot soos 1080p en steeds skerp op ’n foon." },
   "grade.1080": { en: "1080p", af: "1080p" },
   "grade.1080.what": { en: "What every platform wants. The one to post.", af: "Wat elke platform wil hê. Die een om te plaas." },
+  "edit.laneTall": { en: "How tall the clock is", af: "Hoe hoog die klok is" },
   "edit.cutting": { en: "Cutting", af: "Sny" },
   "edit.splitHere": { en: "Split here", af: "Sny hier" },
   "edit.markIn": { en: "Line in", af: "Lyn in" },

@@ -200,6 +200,25 @@ export interface Scene {
    * can be handed an id the palette does not have. `videopaint.ts` owns the
    * swatches; by the time a scene reaches here it is a colour.
    */
+  /**
+   * When the words come up and go down, in this scene's own film seconds.
+   *
+   * Carli, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê ...
+   * gedrag kan word om die lengte van die teks oor die video te bepaal. Dit kan
+   * nie die hele video bar vol wees nie, want teks is gewoonlik net daar vir
+   * gedeeltes van 'n video."*
+   *
+   * Absent is the whole scene, which is what a caption did before this existed
+   * and is still the right default — a caption typed and not timed should
+   * appear, not vanish.
+   *
+   * In the SCENE's seconds rather than the film's, because that is the only
+   * clock this loop has: the renderer plays one scene at a time and knows how
+   * far into it is, not how far into the film. `cutFrom` does the conversion,
+   * which is the one place that knows both.
+   */
+  readonly captionFrom?: number;
+  readonly captionTo?: number;
   readonly captionInk?: string;
   readonly captionBack?: string;
   readonly captionBox?: 'none' | 'square' | 'round' | 'brush';
@@ -948,7 +967,11 @@ export async function stitch(cut: Cut): Promise<Made> {
          zero while the browser catches up would put the discarded head of the
          clip into the cut — a bug that would look like the trim being ignored
          and would only show on a slow device. */
+      /* Named `view` as well as `window`: the caption gate below reads it, and
+         `window.from` inside a browser file is a line that stops the next
+         reader to work out whether it means the global. */
       const window = windowOf(cut.scenes[index], video.duration);
+      const view = window;
       if (window.from > 0) {
         video.currentTime = window.from;
         await new Promise<void>((done) => {
@@ -1026,6 +1049,19 @@ export async function stitch(cut: Cut): Promise<Made> {
           const painted = cut.scenes[index];
           const words = (): void => {
             if (!caption) return;
+            /* ── Up for its own stretch, not for the whole shot ───────────
+
+               `video.currentTime` is a position in the FILE, so the scene's own
+               film clock is how far past the window's start we are, divided by
+               the speed — a shot at two times covers two seconds of material
+               per second of film. The same multiplication `split`, `atSecond`
+               and `cutOut` each needed, in the one place that reads it back.
+
+               Undefined ends mean the whole shot, which is what a caption did
+               before it could be timed. */
+            const shown = (video.currentTime - view.from) / fast;
+            if (painted.captionFrom !== undefined && shown < painted.captionFrom) return;
+            if (painted.captionTo !== undefined && shown > painted.captionTo) return;
             drawCaption(context, caption, cut.width, cut.height, {
               font: painted.captionFont,
               size: painted.captionSize,

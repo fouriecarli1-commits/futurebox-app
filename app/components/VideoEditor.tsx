@@ -56,7 +56,7 @@ import CutDock, { type Bench } from './CutDock';
 import DeskSheet from './BoothCard';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
-import { pointsOf, spanReady, tidy } from '../lib/videospan';
+import { heldWords, pointsOf, spanReady, tidy, wordsSpan } from '../lib/videospan';
 import {
   BACK_DEFAULT, BOXES, BOX_DEFAULT, INK_DEFAULT, PAINTS, paintFor, roundFor,
 } from '../lib/videopaint';
@@ -485,6 +485,41 @@ export default function VideoEditor({
      as this room is mounted. The height below then measures no bar and the room
      grows into the space, which is the rest of what she asked for. */
   useOwnScreen();
+
+  /* ── How tall the clock is, which she can change ──────────────────────
+
+     Carli, 4 October 2026: *"Ek sal dit ook like as mens die tydlyn se hoogte
+     kan verstel, menend dit vir oomblikke groter kan drag sodat mens die
+     tydlyn mooi kan sien wanneer mens edit. En dan weer kleiner kan maak
+     wanneer mens die video prent weer beter wil sien."*
+
+     Which is the trade this room is built on: the picture and the clock are
+     fighting over one screen, and which one needs the room changes minute to
+     minute. So it is hers to set rather than a number I pick.
+
+     Local state and not part of the edit, deliberately. This is how she is
+     looking at the film, not something about the film — it does not belong in
+     an export, in a saved edit, or in the history. Pressing Back after
+     dragging the clock taller should undo her last CUT, not her last look.
+
+     64 is what it was before it could move. The floor is a block still being
+     tappable; the ceiling is leaving the picture something. */
+  const [laneTall, setLaneTall] = useState(64);
+  const TALLEST_LANE = 180;
+  /**
+   * 52, and the number is not a taste — it is the thumb rule, backwards.
+   *
+   * A block is drawn `top-1 bottom-1` inside this, so it is eight pixels
+   * shorter than whatever this says. At the 40 I first wrote, a block came out
+   * 32 pixels tall, and `check:editor`'s "every control the editor adds is a
+   * thumb tall" caught it: she could shrink the clock to a size where the
+   * blocks on it could not reliably be tapped.
+   *
+   * The rule was right and the floor was wrong. 52 less the eight is 44, which
+   * is the smallest a target may be — so every height she can reach is one
+   * where the film is still editable.
+   */
+  const SHORTEST_LANE = 52;
 
   /** Whether the copilot's sheet is over the room. */
   const [asking2, setAsking2] = useState(false);
@@ -1292,6 +1327,80 @@ export default function VideoEditor({
     node.addEventListener('pointercancel', done);
   }, [edit, perSecond, held]);
 
+  /* ── Dragging a caption along its own lane ──────────────────────────────
+
+     Carli, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê.
+     Dit moet bo op die video tydlyn kom en dan ook gedrag kan word om die
+     lengte van die teks oor die video te bepaal."*
+
+     `edge` is which end, or `null` for the whole block — moving it along
+     without changing how long it is up, which is the commonest adjustment and
+     the one that would be impossible if only the ends could be grabbed.
+
+     One history step per gesture, through `beforeDrag`/`held`, the same as
+     every other drag in this room: a caption nudged half a second should not
+     cost twenty presses of Back. */
+  const takeWords = useCallback((
+    which: 'from' | 'to' | null,
+    id: string,
+    event: React.PointerEvent<HTMLElement>,
+  ) => {
+    event.stopPropagation();
+    event.preventDefault();
+    const node = event.currentTarget;
+    const lane = node.closest('[data-editorwordslane]');
+    if (!lane || perSecond <= 0) return;
+    const box = lane.getBoundingClientRect();
+    beforeDrag.current = edit;
+    node.setPointerCapture(event.pointerId);
+    const grabbedAt = (event.clientX - box.left) / perSecond;
+
+    const move = (m: PointerEvent) => {
+      setEdit((was) => {
+        const piece = was.pieces.find((one) => one.id === id);
+        if (!piece) return was;
+        const long = lengthOfPiece(piece);
+        const had = wordsSpan(piece, long);
+        /* Where the pointer is on the FILM's clock, turned into how far into
+           this piece that is — the caption's clock is its own piece's. */
+        const into = (m.clientX - box.left) / perSecond - startsAt(was, id);
+        let want = had;
+        if (which === 'from') want = { from: into, to: had.to };
+        else if (which === 'to') want = { from: had.from, to: into };
+        else {
+          /* Moved by the distance the pointer has travelled, not snapped to
+             the pointer: grabbing a block in its middle and having it jump so
+             its start is under the finger is the thing that makes a drag feel
+             like a throw. */
+          const by = into - (grabbedAt - startsAt(was, id));
+          want = { from: had.from + by, to: had.to + by };
+          /* Kept the same length while it slides, which clamping the two ends
+             separately would not do — a block pushed against the start would
+             otherwise stretch instead of stopping. */
+          const wide = had.to - had.from;
+          const first = Math.max(0, Math.min(want.from, long - wide));
+          want = { from: first, to: first + wide };
+        }
+        const next = heldWords(want.from, want.to, long);
+        return {
+          ...was,
+          pieces: was.pieces.map((one) => (one.id === id
+            ? { ...one, wordsFrom: next.from, wordsTo: next.to } : one)),
+        };
+      });
+    };
+    const done = () => {
+      node.removeEventListener('pointermove', move);
+      node.removeEventListener('pointerup', done);
+      node.removeEventListener('pointercancel', done);
+      try { node.releasePointerCapture(event.pointerId); } catch { /* already gone */ }
+      held();
+    };
+    node.addEventListener('pointermove', move);
+    node.addEventListener('pointerup', done);
+    node.addEventListener('pointercancel', done);
+  }, [edit, perSecond, held]);
+
   /* ── Resizing by the corner, on the picture ─────────────────────────────
 
      Carli, 30 September 2026: *"dit moet ook gemanipuleer moet kan word op die
@@ -2007,9 +2116,79 @@ export default function VideoEditor({
                   ))}
                 </div>
 
+                {/* ── The words, on a lane above the picture ────────────
+
+                    Carli, 4 October 2026: *"Video editor se teks moet ook sy
+                    eie tydlyn hê. Dit moet bo op die video tydlyn kom en dan
+                    ook gedrag kan word om die lengte van die teks oor die
+                    video te bepaal. Dit kan nie die hele video bar vol wees
+                    nie, want teks is gewoonlik net daar vir gedeeltes van 'n
+                    video."*
+
+                    Above, because that is where she asked for it and where
+                    every editor puts it: the picture is the thing, and what is
+                    laid over the picture is drawn over it here too.
+
+                    A block per piece that has words, at that caption's own
+                    stretch rather than its piece's — which is the whole point.
+                    Drawn only when there is something to draw: an empty lane
+                    above a film with no captions is a strip of nothing taking
+                    room from the one bar she is working in. */}
+                {edit.pieces.some((one) => (one.words ?? '').trim()) && (
+                  <div
+                    className="relative mb-1"
+                    style={{ height: Math.max(18, Math.round(laneTall * 0.34)) }}
+                    data-editorwordslane
+                  >
+                    {edit.pieces.map((one) => {
+                      const said = (one.words ?? '').trim();
+                      if (!said) return null;
+                      const long = lengthOfPiece(one);
+                      const when = wordsSpan(one, long);
+                      const left = (startsAt(edit, one.id) + when.from) * perSecond;
+                      const wide = Math.max(6, (when.to - when.from) * perSecond);
+                      return (
+                        <div
+                          key={one.id}
+                          data-editorwordsblock={one.id}
+                          onPointerDown={(event) => { holding(); takeWords(null, one.id, event); }}
+                          title={said}
+                          style={{ left, width: wide, background: 'rgba(52,211,153,0.28)' }}
+                          className="absolute inset-y-0 cursor-move touch-none overflow-hidden rounded-md"
+                        >
+                          <span
+                            className="pointer-events-none block truncate px-2 text-[10px] font-bold leading-[18px]"
+                            style={{ color: INK }}
+                          >
+                            {said}
+                          </span>
+                          {/* Both ends, each its own grab. Wider than they
+                              look, because a two-pixel target is a target
+                              nobody hits with a thumb. */}
+                          <span
+                            data-editorwordsfrom={one.id}
+                            onPointerDown={(event) => { holding(); takeWords('from', one.id, event); }}
+                            className="absolute inset-y-0 left-0 w-3 cursor-ew-resize touch-none"
+                          >
+                            <span className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-full" style={{ background: LIT }} />
+                          </span>
+                          <span
+                            data-editorwordsto={one.id}
+                            onPointerDown={(event) => { holding(); takeWords('to', one.id, event); }}
+                            className="absolute inset-y-0 right-0 w-3 cursor-ew-resize touch-none"
+                          >
+                            <span className="pointer-events-none absolute inset-y-0 right-0 w-1 rounded-full" style={{ background: LIT }} />
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {/* The blocks, at their real place in time. */}
                 <div
-                  className="relative h-16"
+                  className="relative"
+                  style={{ height: laneTall }}
                   data-editortrack
                   data-persecond={perSecond.toFixed(3)}
                   onPointerDown={(event) => {
@@ -2325,6 +2504,60 @@ export default function VideoEditor({
                   >
                     <span className="absolute -top-1 -left-1 block h-2.5 w-2.5 rounded-full bg-emerald-400" />
                   </div>
+                </div>
+
+                {/* ── The grip that makes the clock taller ──────────────
+
+                    Under the picture lane, which is the one it resizes: a
+                    handle above the ruler is a handle between her and the thing
+                    she is reading, and the gesture is "pull the bottom of the
+                    clock down", which is where the bottom is.
+
+                    `touch-none` so a phone drags the clock instead of
+                    scrolling the room, and a real 44-pixel target with a
+                    hairline drawn inside it — the handle has to be a thumb
+                    tall even though it looks like a line. */}
+                <div
+                  data-editorlanegrip
+                  role="separator"
+                  aria-label={t('edit.laneTall', 'How tall the clock is')}
+                  aria-valuenow={laneTall}
+                  aria-valuemin={SHORTEST_LANE}
+                  aria-valuemax={TALLEST_LANE}
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    const by = event.key === 'ArrowUp' ? -8 : event.key === 'ArrowDown' ? 8 : 0;
+                    if (!by) return;
+                    event.preventDefault();
+                    setLaneTall((was) => Math.max(SHORTEST_LANE, Math.min(TALLEST_LANE, was + by)));
+                  }}
+                  onPointerDown={(event) => {
+                    const node = event.currentTarget;
+                    const startY = event.clientY;
+                    const startTall = laneTall;
+                    node.setPointerCapture(event.pointerId);
+                    const move = (m: PointerEvent) => {
+                      setLaneTall(Math.max(SHORTEST_LANE, Math.min(
+                        TALLEST_LANE, startTall + (m.clientY - startY),
+                      )));
+                    };
+                    const done = () => {
+                      node.removeEventListener('pointermove', move);
+                      node.removeEventListener('pointerup', done);
+                      node.removeEventListener('pointercancel', done);
+                      try { node.releasePointerCapture(event.pointerId); } catch { /* gone */ }
+                    };
+                    node.addEventListener('pointermove', move);
+                    node.addEventListener('pointerup', done);
+                    node.addEventListener('pointercancel', done);
+                  }}
+                  className="mt-1 flex h-8 cursor-ns-resize touch-none items-center justify-center"
+                >
+                  <span
+                    aria-hidden
+                    className="block h-1 w-10 rounded-full"
+                    style={{ background: 'rgba(16,185,129,0.45)' }}
+                  />
                 </div>
 
                 {/* ── The sound, on a lane of its own ──────────────────

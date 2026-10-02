@@ -164,3 +164,40 @@ export function stretches(
   if (film < filmLong) out.push({ at: film, from: song, long: filmLong - film });
   return out;
 }
+
+/**
+ * Where a caption sits inside its own piece, with both ends filled in.
+ *
+ * Carli, 4 October 2026: *"Video editor se teks moet ook sy eie tydlyn hê. Dit
+ * moet bo op die video tydlyn kom en dan ook gedrag kan word om die lengte van
+ * die teks oor die video te bepaal."*
+ *
+ * The lane has to draw a block for every caption, including the ones typed
+ * before this existed and never timed — and those have no numbers on them.
+ * Absent means "the whole piece", so this fills that in rather than making
+ * every caller write the same two `??`s and one of them forget.
+ */
+export function wordsSpan(
+  piece: { readonly wordsFrom?: number; readonly wordsTo?: number },
+  pieceLong: number,
+): Span {
+  const from = Math.max(0, Math.min(piece.wordsFrom ?? 0, pieceLong));
+  const to = Math.max(from, Math.min(piece.wordsTo ?? pieceLong, pieceLong));
+  return { from, to };
+}
+
+/**
+ * The shortest a caption can be dragged to.
+ *
+ * Half a second, not a frame. A caption is something somebody has to READ, and
+ * a word on the screen for two frames is a flicker — the limit here is the eye
+ * rather than the encoder, which is why it is not `SHORTEST_SPAN`.
+ */
+export const SHORTEST_WORDS = 0.5;
+
+/** A caption's ends, clamped inside its piece and kept readable. */
+export function heldWords(from: number, to: number, pieceLong: number): Span {
+  const a = Math.max(0, Math.min(from, Math.max(0, pieceLong - SHORTEST_WORDS)));
+  const b = Math.min(pieceLong, Math.max(to, a + SHORTEST_WORDS));
+  return { from: a, to: b };
+}

@@ -96,6 +96,24 @@ export interface Piece {
    * palette being retuned — a hex frozen into a saved edit would keep a colour
    * that is no longer one of the twenty on offer. `videopaint.ts` owns both.
    */
+  /**
+   * When the words come up and go down, in seconds into this piece.
+   *
+   * Carli, 4 October 2026: *"Dit kan nie die hele video bar vol wees nie, want
+   * teks is gewoonlik net daar vir gedeeltes van 'n video."*
+   *
+   * Both absent is the whole piece, which is what a caption did before it
+   * could be timed and is still the right default: text typed and not timed
+   * should appear rather than vanish.
+   *
+   * Into the PIECE, not into the film, so a caption stays with its shot when
+   * the shot moves or the film is cut in front of it. A caption pinned to film
+   * seconds would slide off its own picture the first time anything before it
+   * changed length — which is the whole reason the pieces themselves are
+   * stored as trims rather than as positions.
+   */
+  readonly wordsFrom?: number;
+  readonly wordsTo?: number;
   readonly wordsInk?: string;
   readonly wordsBack?: string;
   readonly wordsBox?: BoxShape;
@@ -451,6 +469,8 @@ export function cutFrom(edit: Edit): Cut {
       ...(one.words && one.wordsBack
         ? { captionBack: paintFor(one.wordsBack)?.hex ?? BACK_DEFAULT } : {}),
       ...(one.words && one.wordsBox ? { captionBox: one.wordsBox } : {}),
+      ...(one.words && one.wordsFrom !== undefined ? { captionFrom: one.wordsFrom } : {}),
+      ...(one.words && one.wordsTo !== undefined ? { captionTo: one.wordsTo } : {}),
       /* The shape decides the corner radius, so a square really is square.
          Only when she has not set `wordsRound` by hand — a number she dragged
          is hers, and a shape button overruling it would undo a gesture. */
