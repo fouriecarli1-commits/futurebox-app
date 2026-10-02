@@ -170,6 +170,7 @@ export default function DeskSheet({
   paidLine,
   closeSays,
   place,
+  plain,
   onClose,
   children,
 }: {
@@ -191,6 +192,25 @@ export default function DeskSheet({
    * of explanation, on a panel 378 pixels tall.
    */
   readonly paidLine?: string;
+  /**
+   * One thing filling the sheet, rather than a grid of little control cards.
+   *
+   * Every desk in the Pro Booth and every bench in the cutting room is the
+   * same shape — six or eight cards, each a name and one control — so the
+   * body of this sheet is a two-column grid, and that is right for all of
+   * them.
+   *
+   * It is wrong for exactly one thing: the copilot, which the cutting room
+   * opens in this frame since 4 October. A conversation is not a control
+   * card. Dropped into the grid it became one cell of two, 190 pixels wide
+   * on a 390-pixel phone, with its own messages wrapping four words to a
+   * line and half the sheet beside it empty.
+   *
+   * The frame is still worth sharing — the header, the name, the close
+   * button and the way it opens are the things somebody learns once and
+   * expects everywhere. It is only the body that differs.
+   */
+  readonly plain?: boolean;
   readonly closeSays: string;
   /**
    * Where the playhead is, in bars and beats.
@@ -244,16 +264,25 @@ export default function DeskSheet({
       )}
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
-        {/* Two columns even on a phone.
-
-            One column put four cards on a 727-pixel screen and pushed the
-            other three below the fold; two puts eight there. A card is a
-            name and one control, and one control does not need 360 pixels
-            — the few that genuinely do are marked `wide` and take the row.
-            At 360 pixels a column is 166, which is why every `Row` wraps
-            rather than squeezes. */}
-        <div className="grid grid-cols-2 gap-2.5">{children}</div>
+      <div className={`min-h-0 flex-1 overscroll-contain p-3 ${plain ? 'flex flex-col' : 'overflow-y-auto'}`}>
+        {plain ? (
+          /* One thing, filling the sheet, scrolling itself.
+ 
+             See `plain`. No grid and no `overflow-y-auto` on the wrapper: a
+             panel that scrolls its own body inside a box that also scrolls is
+             two scrollbars for one list, and the outer one wins the gesture. */
+          children
+        ) : (
+          /* Two columns even on a phone.
+ 
+              One column put four cards on a 727-pixel screen and pushed the
+              other three below the fold; two puts eight there. A card is a
+              name and one control, and one control does not need 360 pixels
+              — the few that genuinely do are marked `wide` and take the row.
+              At 360 pixels a column is 166, which is why every `Row` wraps
+              rather than squeezes. */
+          <div className="grid grid-cols-2 gap-2.5">{children}</div>
+        )}
       </div>
     </div>
   );

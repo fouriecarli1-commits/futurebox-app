@@ -53,7 +53,9 @@ import {
 } from 'lucide-react';
 import Card from './Card';
 import CutDock, { type Bench } from './CutDock';
+import DeskSheet from './BoothCard';
 import Note from './Note';
+import { BAR_HEIGHT } from './TabBar';
 import { useLang } from '../lib/i18n';
 import { FILTERS, filterCss, filterName } from '../lib/videofilters';
 import { DIALS, NO_ADJUST, adjusted, gradeCss } from '../lib/videoadjust';
@@ -356,12 +358,82 @@ function seconds(value: number): string {
 export default function VideoEditor({
   plan,
   onUpgrade,
+  copilot,
 }: {
   readonly plan: Plan;
   readonly onUpgrade?: () => void;
+  /**
+   * The thing you talk to, handed in rather than built here.
+   *
+   * Carli, 4 October 2026: *"Die copilot kan ook net 'n button wees wat uit
+   * pop."* Everywhere else in the studio it is the third pane of a scrolling
+   * page and that is right. This room does not scroll — it is a screen with a
+   * bar at its foot — so a pane below it was a second screenful nobody ever
+   * reached, and it undid the one thing the rebuild was for.
+   *
+   * It stays `page.tsx`'s copilot, with the same bus and the same canvas, so
+   * what it is told here is what it would be told anywhere. Only the way in
+   * changes: a button, and a sheet over the room.
+   */
+  readonly copilot?: React.ReactNode;
 }): React.ReactElement {
   const { t, lang } = useLang();
   const [edit, setEdit] = useState<Edit>(NOTHING);
+  /** Whether the copilot's sheet is over the room. */
+  const [asking2, setAsking2] = useState(false);
+
+  /* ── How tall the room is, measured rather than guessed ─────────────────
+
+     The room is a fixed-height column with a bar at its foot, which is the
+     whole shape of the October rebuild. To be that, it needs a height — and
+     the height is the screen less whatever is above it less the app's own bar.
+
+     "Whatever is above it" was a constant: `calc(100dvh - 7.5rem)`. It is not
+     a constant. The header over this room is a back arrow, a search and an
+     "All rooms / Cutting room" card, and how tall that stack is depends on the
+     width, the language and whether the card is folded. Measured on a 390x844
+     phone the room started 155 pixels down, so 7.5rem of allowance left it
+     ending 93 pixels below the bottom of the screen — and what was down there
+     was the lower half of the bar: Bring it in, Looks, Words, Sound, Your mark.
+
+     Two probes said so and neither could say why, because neither could see
+     the guess: `audit/underbar.mjs` reported five controls under the tab bar,
+     and the screenshot showed the icon row sliced through the middle.
+
+     So it is read off the element. One number, recomputed when the window
+     changes size or the layout above it moves, and correct by construction at
+     every width rather than at the one somebody measured. */
+  const shell = useRef<HTMLDivElement | null>(null);
+  const [tall, setTall] = useState<number | null>(null);
+
+  useEffect(() => {
+    const box = shell.current;
+    if (!box) return undefined;
+    const fit = (): void => {
+      const top = box.getBoundingClientRect().top;
+      /* `visualViewport` rather than `innerHeight` where it exists: on a phone
+         the address bar coming and going changes one and not the other, and
+         the one that matches what she can see is the visual viewport. */
+      const screen = window.visualViewport?.height ?? window.innerHeight;
+      /* The bar measured, not assumed, for the same reason the top is. On a
+         phone with a home indicator it is `BAR_HEIGHT` plus the safe area, and
+         the safe area is a number only the device knows. `BAR_HEIGHT` is the
+         fallback for the frame before the bar exists. */
+      const bar = document.querySelector('nav.fixed.bottom-0');
+      const under = bar ? bar.getBoundingClientRect().height : BAR_HEIGHT;
+      setTall(Math.max(320, Math.round(screen - top - under)));
+    };
+    fit();
+    const watch = new ResizeObserver(fit);
+    watch.observe(document.body);
+    window.addEventListener('resize', fit);
+    window.visualViewport?.addEventListener('resize', fit);
+    return () => {
+      watch.disconnect();
+      window.removeEventListener('resize', fit);
+      window.visualViewport?.removeEventListener('resize', fit);
+    };
+  }, []);
 
   /* ── Taking it back ─────────────────────────────────────────────────────
  
@@ -1285,10 +1357,36 @@ export default function VideoEditor({
       className="flex flex-col"
       data-videoeditor
       data-cutroom
+      ref={shell}
       /* The room takes the screen rather than growing a page under it, so that
          the bar at the bottom is AT the bottom. `page.tsx` already bleeds this
-         surface to the edges; this is the height that matches. */
-      style={{ minHeight: 'calc(100dvh - 7.5rem)' }}
+         surface to the edges; this is the height that matches.
+
+         ── A minimum is not a height, and that was the first bug ──────────
+
+         This was `minHeight` alone, which says "at least this tall" and
+         nothing about the top. A floor with no ceiling is not a screen: the
+         scroller inside is `flex-1`, and `flex-1` in a column with no height
+         to divide up does not scroll — it grows. So the room grew a page under
+         itself, the dock went wherever the content ended, and the only reason
+         it looked right was that the content was usually short.
+
+         `audit/editor.mjs` found it the moment the copilot sheet gave the
+         column something tall to hold: the dock measured 3,642 pixels down a
+         900-pixel window. The bar she works from was off the bottom of the
+         screen, and with it the play button and the way back out of the sheet.
+
+         ── And a constant is not a measurement, which was the second ──────
+
+         `calc(100dvh - 7.5rem)` then put the dock 93 pixels below the bottom
+         of a 390x844 phone. See `tall` above: the allowance is read off this
+         element rather than assumed. The `calc` stays as the value before the
+         first measurement lands, so the room is the right shape on the frame
+         it is painted rather than snapping a moment later. */
+      style={{
+        height: tall === null ? 'calc(100dvh - 7.5rem)' : tall,
+        maxHeight: tall === null ? 'calc(100dvh - 7.5rem)' : tall,
+      }}
     >
       {/* ── The one press that spends, where every editor puts it ─────────
 
@@ -1301,7 +1399,42 @@ export default function VideoEditor({
           finish was to remember which of seven icons the finishing lived
           behind. The bench still holds the shape, the fades and the bill; this
           is the way in to them. */}
-      <div className="flex items-center justify-end gap-2 px-1 pb-2">
+      <div className="flex items-center justify-between gap-2 px-3 pb-2 pt-2">
+          {/* ── The copilot, as a button ────────────────────────────────
+
+              Opposite the one that spends, which is the only pair of controls
+              in this room that are not about the film itself: one asks, one
+              finishes. Everything between them is the work.
+
+              A button and not a pane, because this room is a screen. See the
+              `copilot` prop. When nothing is handed in — a desktop, where the
+              third column is drawn properly — nothing is drawn here either,
+              rather than a button that opens an empty sheet. */}
+          {copilot ? (
+            <button
+              type="button"
+              data-editorask
+              /* `aria-pressed`, not `aria-expanded`, and the difference is not
+                 pedantry. Every bench button on the bar below uses pressed,
+                 because this is a panel you toggle rather than a fold that
+                 discloses the next part of a page — and `unfold()` in
+                 `audit/enter.mjs` presses every `aria-expanded="false"`
+                 button with a label on its way into a room. With expanded on
+                 it, the copilot was open over the room on arrival, every
+                 time, in every probe and in every screenshot. */
+              aria-pressed={asking2}
+              onClick={() => setAsking2(true)}
+              className="min-h-[44px] rounded-xl border px-3 py-2.5 text-sm font-semibold inline-flex items-center gap-2"
+              style={{
+                background: 'rgba(52,211,153,0.10)',
+                borderColor: 'rgba(16,185,129,0.35)',
+                color: '#6ee7b7',
+              }}
+            >
+              <Sparkles className="w-4 h-4" />
+              {t('edit.ask', 'Ask')}
+            </button>
+          ) : <span />}
           <button
             type="button"
             disabled={!edit.pieces.length || busy !== null || !canStitch()}
@@ -1342,7 +1475,7 @@ export default function VideoEditor({
       </div>
 
       {/* ── The picture, and the clock right under it ──────────────────── */}
-      <div className="flex-1 overflow-y-auto px-1 pb-3 space-y-3">
+      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-3">
         {piece ? (
           <section data-editorpiece className="space-y-3">
             <h3 className="text-sm font-semibold text-zinc-100 inline-flex items-center gap-2">
@@ -2136,6 +2269,36 @@ export default function VideoEditor({
           </div>
         )}
       </div>
+
+      {/* ── The copilot, over the room ──────────────────────────────────
+
+          The same sheet the benches use, so it opens the way everything else
+          in this room opens and closes with the same word. Taller than a
+          bench — it is a conversation, not five sliders — and still capped,
+          because the bar underneath it has to stay reachable: a chat panel
+          that covers the transport is a chat panel you have to close to press
+          play. */}
+      {copilot && asking2 && (
+        <div className="flex min-h-0 max-h-[72dvh] flex-col">
+          <DeskSheet
+            icon={<Sparkles className="w-4 h-4" />}
+            title={t('edit.ask.title', 'Ask the copilot')}
+            what={t(
+              'edit.ask.what',
+              'It knows which room you are in and what is on the clock. Ask it what a tool does, or what to try next.',
+            )}
+            closeSays={t('edit.ask.shut', 'Close the copilot')}
+            plain
+            onClose={() => setAsking2(false)}
+          >
+            {/* Filling the sheet. `Copilot.tsx`'s root is `h-full min-h-0`,
+                which needs a parent with a height to be full of — without
+                this it sizes to its content and the box she types into ends
+                up wherever the last message left it. */}
+            <div className="flex min-h-0 flex-1 flex-col">{copilot}</div>
+          </DeskSheet>
+        </div>
+      )}
 
       {/* ── The bar, and what comes out from behind it ──────────────────── */}
       <CutDock

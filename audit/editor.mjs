@@ -1377,6 +1377,85 @@ try {
     tiny.length === 0,
     tiny.join(', '));
 
+  /* ── The copilot, and the thing that can go wrong with moving it ──────
+
+     Carli, 4 October 2026: *"Die copilot kan ook net 'n button wees wat uit
+     pop."* It was a 22rem pane below this room and is a button on its top row
+     now, opening a sheet over the room.
+
+     `check:solidroom` holds that the button exists and that the pane is not
+     also drawn. What it cannot know is the thing that actually breaks: the
+     room has a fixed bar at its foot, and a sheet that opens OVER the room can
+     put the box she types into behind that bar. That is the same fault
+     `audit/copilotbar.mjs` exists for in every other room, and it does not
+     cover this one any more, because in this one the copilot is not in the
+     page flow at all. So it is measured here, where the sheet is. */
+  const ask = p.locator('[data-editorask]');
+  check('the copilot is a button in the room rather than a pane under it',
+    (await ask.count()) === 1,
+    `${await ask.count()} — a pane below a room that does not scroll is a pane nobody reaches`);
+
+  if (await ask.count()) {
+    await ask.click();
+    await p.waitForTimeout(400);
+
+    /* By its own handle, not by shape. `Copilot.tsx` carries `data-copilot-ask`
+       precisely because matching the box by placeholder or by "the last input"
+       picked the wrong element three times — and the first version of this
+       assertion proved the point again by asking for `input[type="text"]`,
+       which that input is not: it has no type attribute at all. */
+    const box = p.locator('[data-videoeditor] [data-copilot-ask]');
+    const seen = await box.count();
+    check('  and pressing it brings a box she can type into',
+      seen === 1,
+      `${seen} — the button opening an empty sheet is the copilot gone, not moved`);
+
+    if (seen === 1) {
+      const clear = await box.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const dock = document.querySelector('[data-cutdock]');
+        const d = dock ? dock.getBoundingClientRect().top : window.innerHeight;
+        return { bottom: Math.round(r.bottom), dock: Math.round(d), hidden: Math.round(r.bottom - d) };
+      });
+      check('  and that box is clear of the bar, not behind it',
+        clear.hidden <= 0,
+        `${clear.hidden}px of it is under the dock — box ends ${clear.bottom}, bar starts ${clear.dock};`
+        + ' a chat panel you have to close before you can press play is a chat panel'
+        + ' that has taken the room away');
+
+      /* The one that actually bites, and the first version of this probe did
+         not have it.
+
+         The sheet is a flex sibling ABOVE the dock, so it can never overlap
+         it — which means the rule above passes however tall the sheet grows.
+         What an uncapped sheet does instead is push the dock off the bottom of
+         the screen, and a bar pushed off the screen is the same loss by a
+         different route: she cannot press play, and she cannot close the sheet
+         from the bar either.
+
+         Removing the sheet's `max-h` leaves the assertion above green and
+         fails this one. That is how it was found. */
+      const bar = await p.locator('[data-cutdock]').evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return { bottom: Math.round(r.bottom), top: Math.round(r.top), view: window.innerHeight };
+      });
+      check('  and the bar is still on the screen with the sheet open',
+        bar.bottom <= bar.view + 1 && bar.top < bar.view,
+        `the dock runs ${bar.top}–${bar.bottom} in a ${bar.view}px window —`
+        + ' a sheet tall enough to push the transport off the bottom has taken'
+        + ' away the play button and the way back out of itself');
+    }
+
+    const shut = p.locator('[data-videoeditor] [aria-label*="copilot" i], [data-videoeditor] [title*="copilot" i]').last();
+    if (await shut.count()) {
+      await shut.click();
+      await p.waitForTimeout(300);
+      check('  and it closes again, leaving the room as it was',
+        (await p.locator('[data-videoeditor] [data-copilot-ask]').count()) === 0,
+        'a sheet that will not close is a room with one screen in it');
+    }
+  }
+
 } catch (thrown) {
   problems.push(`threw: ${String(thrown).slice(0, 200)}`);
 } finally {

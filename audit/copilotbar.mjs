@@ -37,6 +37,25 @@ try {
   for (const name of ROOMS) {
     await toRoom(page, name);
     await page.waitForTimeout(700);
+
+    /* ── The one room where the copilot is behind a button ───────────────
+
+       Carli, 4 October 2026: *"Die copilot kan ook net 'n button wees wat uit
+       pop."* The cutting room is a fixed-height screen with a bar at its foot
+       rather than a page that scrolls, so the third pane below it was a second
+       screenful nobody reached. It opens from a button on the room's top row
+       now.
+
+       Pressed here rather than the room skipped, because the question this
+       probe asks is MORE live in a sheet than in a column: a panel that opens
+       over a room can put the box she types into behind the bar just as easily
+       as a pane below one can, and nothing else at this width would notice.
+       Skipping the room would have been a green run that stopped looking. */
+    const ask = page.locator('[data-editorask]');
+    if (await ask.count()) {
+      await ask.click();
+      await page.waitForTimeout(600);
+    }
     /* Playwright finds the scroller, because two hand-rolled attempts did not.
 
        The studio is inside a fixed, independently scrolling layer with the

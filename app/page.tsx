@@ -1721,6 +1721,9 @@ export default function FutureBoxHome() {
      the voice room under the script, the foot of the page everywhere else. */
   const copilotPane = (
   <Copilot
+    /* Bare in the cutting room, because there it is handed into a sheet that
+       is already a panel with a title and a close button on it. See the prop. */
+    bare={studioTab === 'videoedit'}
     context={{
       surface: studioTab,
       /* Only in the room it was carried into. An errand that leaked into
@@ -1800,7 +1803,10 @@ export default function FutureBoxHome() {
   />
   );
 
-  const copilotInside = studioTab === 'voice_studio';
+  /* The rooms that hold the copilot themselves, so the third column is not
+     drawn below them as well. The voice studio puts it inside a pane of its
+     own; the cutting room puts it behind a button on the dock. */
+  const copilotInside = studioTab === 'voice_studio' || studioTab === 'videoedit';
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -4108,11 +4114,52 @@ export default function FutureBoxHome() {
                 die futurebox groen kleure hê … sodat daardie kamer ook anders
                 lyk."* */}
             {studioTab === 'videoedit' && (
+              /* ── Solid, and edge to edge ───────────────────────────────
+
+                 Carli, 4 October 2026, with a photograph of it: *"Dit lyk
+                 nie goed nie ... Die hele kamer moet solid wees."*
+
+                 It was `bg-gradient-to-b from-emerald-950 via-emerald-950/80
+                 to-zinc-950`, and the `/80` in the middle is the whole fault:
+                 a translucent stop lets the page's own background through, so
+                 on a light phone the room faded to white halfway down and
+                 every word in it — the hint, the empty note, Back and Forward
+                 — went grey on grey. A room you can see through is not a room.
+
+                 One flat colour now, the same `#05180f` the dock and the
+                 benches are painted, so the floor, the walls and the bar are
+                 one surface rather than three shades of one.
+
+                 And no padding: the dock inside this sits at the foot of the
+                 room, and `p-3` put a three-pixel-each-side frame of a
+                 lighter green around it. The room's own scroller carries the
+                 padding for the things that need it; the bar reaches the
+                 edges, which is what makes it read as a floor.
+
+                 `check:solidroom` holds both — no translucent stop, no
+                 gradient, and the padding left where the scroller is. */
               <div
                 data-cuttingroom
-                className="-m-3 md:-m-5 rounded-none bg-gradient-to-b from-emerald-950 via-emerald-950/80 to-zinc-950 p-3 md:p-5 space-y-4"
+                className="-m-3 md:-m-5 rounded-none"
+                style={{ background: '#05180f' }}
               >
-                <VideoEditor plan={userPlan} onUpgrade={() => setPricingModalOpen(true)} />
+                <VideoEditor
+                  plan={userPlan}
+                  onUpgrade={() => setPricingModalOpen(true)}
+                  /* The copilot as a button rather than a column.
+
+                     Carli, same message: *"Die copilot kan ook net 'n button
+                     wees wat uit pop."* In every other room it is the third
+                     pane and that is right, because in every other room the
+                     page scrolls. This room does not — it is a screen with a
+                     bar at the foot — so a 22rem pane below it was a second
+                     screenful nobody scrolled to, and it broke the one thing
+                     the rebuild was for.
+
+                     So it comes in here and opens in a sheet off the dock.
+                     `copilotInside` keeps the column from being drawn twice. */
+                  copilot={copilotPane}
+                />
               </div>
             )}
             {studioTab === 'hooks_feed' && (

@@ -55,7 +55,28 @@ export type Bench = 'clip' | 'film' | 'folder' | 'looks' | 'words' | 'sound' | '
 /* The room's own colours. Green rather than the booth's blue, and literal
    rather than themed, because the cutting room does not follow the theme — the
    same decision, for the same reason, as the booth's black. */
-const PANEL = '#09120d';
+/**
+ * The surface the bar, the benches and the room's own floor are all painted.
+ *
+ * It was `#09120d`, which is rgb(9, 18, 13) — green by nine over red and by
+ * five over blue, which is to say green in a colour picker and black to an
+ * eye. That was tolerable while the room around it was a green gradient and
+ * the bar was a dark band inside it. On 4 October the gradient came out (see
+ * `page.tsx`, and Carli's *"Die hele kamer moet solid wees"*) and this colour
+ * became the WHOLE room — at which point barely-green stopped being a detail
+ * of the furniture and became the answer to "which room am I in".
+ *
+ * `audit/editor.mjs` has asked since 30 September that green lead red and blue
+ * by more than six, and it caught this the first run after the gradient went:
+ * the room passed as green while it was a gradient and failed the moment the
+ * gradient was the only thing making it so. The probe reads the painted colour
+ * rather than the class name, which is the only reason it could.
+ *
+ * rgb(5, 24, 15): nineteen over red, nine over blue. Still a near-black — it
+ * has to be, the picture is the bright thing in this room — and now green
+ * enough to be green.
+ */
+const PANEL = '#05180f';
 const EDGE = 'rgba(16,185,129,0.22)';
 const INK = '#ecfdf5';
 const INK_DIM = 'rgba(236,253,245,0.52)';
@@ -343,6 +364,23 @@ export default function CutDock({
       <div
         data-cutdock=""
         className="flex-shrink-0"
+        /* ── Nothing reserved here, and that is deliberate ───────────────
+ 
+           This carried `paddingBottom: barClearance(0)` for an afternoon,
+           because the bottom of the icon row was sitting behind the app's tab
+           bar and `audit/underbar.mjs` named all five controls that were under
+           it. The padding fixed the symptom and the cause was a floor above:
+           the room's height was `calc(100dvh - 7.5rem)`, a guess at how much
+           sits above it, and the guess was 93 pixels short on a 390x844 phone.
+ 
+           `VideoEditor.tsx` measures that now — its own top, and the bar's own
+           height — so the room already ends exactly where the bar begins. The
+           padding on top of it was 64 pixels of dead green between this bar and
+           that one, which is what the screenshot after the fix showed.
+ 
+           Left as a note rather than deleted silently: a reservation removed
+           without a reason tends to come back the next time somebody sees
+           something under a bar. */
         style={{ background: PANEL, borderTop: `1px solid ${EDGE}` }}
       >
         {/* ── The transport, with a bench either side ──────────────────── */}

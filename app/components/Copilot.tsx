@@ -101,9 +101,30 @@ function costOf(action: CopilotAction, engineReady: boolean): string | null {
 export default function Copilot({
   context,
   onAction,
+  bare,
 }: {
   context: CopilotContext;
   onAction: (action: CopilotAction) => void | Promise<void>;
+  /**
+   * Already inside something that is a panel, so do not be one.
+   *
+   * Everywhere in the studio this is the third column of a scrolling page and
+   * it has to look like a card: its own rounded border, its own faint fill,
+   * its own name at the top. That is what tells you it is a thing beside the
+   * room rather than part of it.
+   *
+   * The cutting room opens it in a sheet instead, since 4 October — Carli:
+   * *"Die copilot kan ook net 'n button wees wat uit pop."* A sheet already
+   * has a border, a fill and a title with a close button on it, so the card
+   * inside it was a second panel drawn on the first: a grey translucent box
+   * four pixels in from a near-black one, under two headings, one saying "Ask
+   * the copilot" and the next saying "Copilot".
+   *
+   * `bare` drops the chrome and the name. It keeps the reset — Carli asked
+   * for that by name in September and it is the only control in the header —
+   * and it keeps everything below, which is the whole panel.
+   */
+  bare?: boolean;
 }) {
   const { t, lang } = useLang();
   const bus = useCopilotBusContext();
@@ -239,11 +260,17 @@ export default function Copilot({
   return (
     <div
       data-copilot={context.surface}
-      className="flex flex-col h-full min-h-0 rounded-2xl border border-zinc-800 bg-zinc-900/60"
+      className={`flex flex-col h-full min-h-0 ${
+        bare ? '' : 'rounded-2xl border border-zinc-800 bg-zinc-900/60'
+      }`}
     >
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800 flex-shrink-0">
-        <Sparkles className="w-4 h-4 text-emerald-400" />
-        <p className="text-sm font-bold text-white">{t('copilot.title')}</p>
+      <div
+        className={`flex items-center gap-2 flex-shrink-0 ${
+          bare ? 'px-1 pb-1' : 'px-4 py-3 border-b border-zinc-800'
+        }`}
+      >
+        {!bare && <Sparkles className="w-4 h-4 text-emerald-400" />}
+        {!bare && <p className="text-sm font-bold text-white">{t('copilot.title')}</p>}
         {/* ── Start again ────────────────────────────────────────────────
 
             Carli, 21 September 2026: *"Copilot en daardie kamer moet 'n

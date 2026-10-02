@@ -114,6 +114,7 @@
     "check:joins": "tsx scripts/check-joins.mts",
     "check:cutmaths": "tsx scripts/check-cutmaths.mts",
     "check:filmcost": "tsx scripts/check-filmcost.mts",
+    "check:solidroom": "tsx scripts/check-solidroom.mts",
     "check:oneroomname": "tsx scripts/check-oneroomname.mts",
     "check:adjust": "tsx scripts/check-adjust.mts",
     "check:opencard": "tsx scripts/check-opencard.mts",

@@ -285,6 +285,8 @@ jobs:
         run: npm run check:oneroomname
       - name: The picture dials make a real filter, and the ones that are missing are named
         run: npm run check:adjust
+      - name: The cutting room is one opaque colour, and the copilot is a button over it
+        run: npm run check:solidroom
       - name: A capture is found once and kept, and never evicted over a starred one
         run: npm run check:ampshelf
       - name: The recurring payment can be seen, its card changed and the payment stopped
