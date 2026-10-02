@@ -368,14 +368,24 @@ export default function CutDock({
         style={{ background: PANEL, borderTop: `1px solid ${EDGE}` }}
       >
         {/* ── The transport, with a bench either side ──────────────────── */}
-        <div className="flex items-center justify-center gap-1 px-2 pt-2">
+        {/* `px-3`, which is the room's own gutter.
+ 
+            It was `px-2`. Measured at 390 pixels that put the first bench's
+            left edge at 8 and the last one's right edge at 382, while the back
+            button, the Ask button, the hint and the export all sat at 12 and
+            378 — so the bar was four pixels wider than everything above it on
+            both sides, which is exactly the kind of thing Carli meant by *"Kyk
+            dan mooi dat alles mooi allign en netjies is."* Four pixels is not
+            visible as four pixels; it is visible as a bar that does not line
+            up with the room. */}
+        <div className="flex items-center justify-center gap-1 px-3 pt-2">
           <BenchButton spec={UPPER[0]} open={open} onOpen={onOpen} t={t} dim={noClip} />
           {transport}
           <BenchButton spec={UPPER[1]} open={open} onOpen={onOpen} t={t} />
         </div>
 
         {/* ── The five, which replace the app's own bar ─────────────────── */}
-        <div className="flex items-stretch gap-1 px-2 pb-2 pt-1">
+        <div className="flex items-stretch gap-1 px-3 pb-2 pt-1">
           {LOWER.map((spec) => (
             <BenchButton key={spec.id} spec={spec} open={open} onOpen={onOpen} t={t} />
           ))}

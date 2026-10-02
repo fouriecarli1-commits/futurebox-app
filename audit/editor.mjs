@@ -563,12 +563,37 @@ try {
         (await sizer.inputValue()) === sizeWas,
         `it reads ${await sizer.inputValue()} after one undo where it was ${sizeWas} — a slider that files a step per pixel empties the history with one gesture`);
 
+      /* Scrolled into view FIRST, then measured.
+
+         `pic` and `was` used to be read before the `hover()` that scrolls the
+         words into reach. With the words bench open the preview is above the
+         top of the room's scroller — measured at y=-229 — so both boxes came
+         back with negative coordinates, the mouse target computed from them
+         was negative too, and the browser clamped the pointer to the top edge.
+
+         The drag therefore ended in the same place whatever it aimed at, and
+         the test "passed" on a 20-pixel clamp rather than on a drag. Changing
+         what it aimed at changed nothing at all, byte for byte, which is the
+         tell: a measurement that does not move when its input moves was never
+         reading its input. */
+      await onFilm.scrollIntoViewIfNeeded();
+      await p.waitForTimeout(250);
       const pic = await p.locator('[data-editorviewer]').boundingBox();
       const was = await onFilm.boundingBox();
       await onFilm.hover();
       await p.mouse.down();
+      /* A tenth up the picture, not a quarter.
+
+         At a quarter this moved the words by exactly 20 pixels against a
+         `> 20` threshold — it passed for as long as the preview happened to be
+         one size and failed the moment the room grew into the space the app's
+         bar gave back, which changed the frame's height and nothing else.
+
+         Loosening the threshold would be the wrong fix: 20 pixels of movement
+         is a weak proof that a thing can be dragged. Dragging further is the
+         right one, and the assertion stays as strict as it was. */
       await p.mouse.move((pic?.x ?? 0) + (pic?.width ?? 0) * 0.5,
-                         (pic?.y ?? 0) + (pic?.height ?? 0) * 0.25, { steps: 10 });
+                         (pic?.y ?? 0) + (pic?.height ?? 0) * 0.1, { steps: 10 });
       await p.mouse.up();
       await p.waitForTimeout(400);
       const now = await onFilm.boundingBox();
@@ -1454,6 +1479,128 @@ try {
         (await p.locator('[data-videoeditor] [data-copilot-ask]').count()) === 0,
         'a sheet that will not close is a room with one screen in it');
     }
+  }
+
+  /* ── And then the same room on a phone ────────────────────────────────
+
+     Everything above runs at 1280x900, which is right for most of it. Three
+     of Carli's complaints on 4 October are only true on a phone, and two of
+     them cannot even be asked at a desk:
+
+       *"Kyk mooi alles allign nie."*
+       *"Daai onderste harde bar van die hele app moet weg wees binne die
+         kamer ... en die hele kamer moet groter wees."*
+
+     A second session rather than `setViewportSize` on this one, and it is not
+     tidiness: `check:probes` holds that any probe opening a phone-sized window
+     asks for a touch pointer, because a 390-pixel window with a mouse pointer
+     gets the hover rules a real phone never sees. Resizing the desk session
+     slipped a phone width past that rule, and the check said so. */
+  const phone = await enter({ at: server.url, lang: 'en', width: 390, height: 844, touch: true });
+  try {
+    const q = phone.page;
+    await studio(q);
+    await toRoom(q, 'Cutting room');
+    await q.waitForTimeout(900);
+
+    const edges = await q.evaluate(() => {
+      const at = (sel) => {
+        const el = document.querySelector(sel);
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { left: Math.round(r.left), right: Math.round(r.right) };
+      };
+      return {
+        back: at('[data-backout]'),
+        ask: at('[data-editorask]'),
+        make: at('[data-editormake]'),
+        hint: at('[data-editorempty]'),
+        first: at('[data-cutbench="folder"]'),
+        last: at('[data-cutbench="mark"]'),
+      };
+    });
+
+    /* Measured rather than read off the class names, because the gutter is the
+       sum of a wrapper's padding, a negative margin and the scroller's own
+       padding in three different files — and a rule about `px-3` would go on
+       passing the first time one of those three moved.
+
+       It was four pixels out: the bar carried `px-2` while the room carried
+       `px-3`, so the first bench started at 8 and the last ended at 382
+       against 12 and 378 for everything above them. Four pixels is not visible
+       as four pixels; it is visible as a bar that does not line up. */
+    const lefts = ['back', 'ask', 'hint', 'first']
+      .map((k) => [k, edges[k]?.left]).filter((one) => one[1] != null);
+    const rights = ['make', 'hint', 'last']
+      .map((k) => [k, edges[k]?.right]).filter((one) => one[1] != null);
+
+    check('phone · everything in the room stands on one left gutter',
+      lefts.length >= 3 && new Set(lefts.map((one) => one[1])).size === 1,
+      lefts.map(([k, v]) => `${k} ${v}`).join(', ')
+      + ' — the bar, the back button and the words have to start at the same x,'
+      + ' or the room reads as a bar lying under somebody else\u2019s page');
+
+    check('phone ·   and ends on one right gutter',
+      rights.length >= 2 && new Set(rights.map((one) => one[1])).size === 1,
+      rights.map(([k, v]) => `${k} ${v}`).join(', '));
+
+    /* The app\u2019s own bar, which she asked to have out of the way — the same
+       thing she asked for the Pro Booth in September, which is why
+       `app/lib/fullroom.ts` already existed. The cutting room simply never
+       claimed the screen, so it had both bars. */
+    const whole = await q.evaluate(() => ({
+      bar: !!document.querySelector('nav.fixed.bottom-0'),
+      room: Math.round(document.querySelector('[data-videoeditor]')?.getBoundingClientRect().height ?? 0),
+      dockBottom: Math.round(document.querySelector('[data-cutdock]')?.getBoundingClientRect().bottom ?? 0),
+      view: window.innerHeight,
+    }));
+
+    check('phone · the app\u2019s own bar steps aside inside the room',
+      whole.bar === false,
+      'two rows of the room\u2019s buttons under a third row belonging to the app'
+      + ' is three rows of buttons, and the bottom one is a different application');
+
+    check('phone ·   and the room takes the space it leaves',
+      whole.dockBottom >= whole.view - 1,
+      `the bar ends at ${whole.dockBottom} in a ${whole.view}px window — the room`
+      + ' claims the screen, so anything short of the bottom is a strip of nothing');
+
+    check('phone ·   so the room is most of the screen',
+      whole.room >= whole.view * 0.9,
+      `${whole.room} of ${whole.view} — it was 627 of 844 while the app\u2019s bar`
+      + ' was still drawn under it');
+
+    /* Nothing above the room but the way out.
+ 
+       *"Daai boonste goed moet weg wees, die kamer moet net \u2019n back knoppie
+       hê."* There were four controls and a heading up there, two of which were
+       two ways to make the same press. */
+    const above = await q.evaluate(() => {
+      const room = document.querySelector('[data-videoeditor]');
+      if (!room) return -1;
+      /* Inside the studio layer only.
+ 
+         Counting the whole document gave 13, because the studio is a fixed
+         overlay and the feed behind it is still laid out underneath with every
+         one of its own buttons at its own coordinates. They are not above the
+         room; they are behind it. */
+      const shell = document.querySelector('div.fixed.inset-0.z-50') ?? document.body;
+      const top = room.getBoundingClientRect().top;
+      let n = 0;
+      for (const el of shell.querySelectorAll('button, a, input')) {
+        if (room.contains(el)) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width < 8 || r.height < 8) continue;
+        if (r.bottom <= top + 1) n += 1;
+      }
+      return n;
+    });
+    check('phone · nothing above the room but the one way back',
+      above === 1,
+      `${above} controls sit above the room — a balance, a search, her own handle`
+      + ' and a second back arrow all used to, and none of them is about the film');
+  } finally {
+    await phone.browser.close().catch(() => undefined);
   }
 
 } catch (thrown) {

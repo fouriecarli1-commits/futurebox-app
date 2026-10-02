@@ -103,8 +103,41 @@ try {
       return { open: true, hidden: [...new Set(hidden)] };
     });
 
+    /* ── A room that claims the screen has no bar, and that is the point ──
+
+       Carli asked for it twice, about two rooms: *"daai buttons vervang die
+       harde buttons van die hele app, dan val daai hele bar van die app in die
+       booth weg"* (14 September, the Pro Booth) and *"Daai onderste harde bar
+       van die hele app moet weg wees binne die kamer"* (4 October, the cutting
+       room). `app/lib/fullroom.ts` is how a room does it.
+
+       So "no tab bar" is not one answer here, it is two: a bar that failed to
+       draw, and a room that correctly sent it away. Telling them apart is what
+       `[data-cutdock]`/`[data-boothdock]` is for — a room that claims the
+       screen owes one of its own in that space, and a room with neither has
+       simply lost its navigation.
+
+       Without this the probe reported the cutting room as broken for doing
+       exactly what it was asked to do, which is the kind of failure that gets
+       a probe switched off. */
+    const instead = await page.evaluate(() => {
+      const own = document.querySelector('[data-cutdock], [data-boothdock]');
+      if (!own) return null;
+      const r = own.getBoundingClientRect();
+      return { bottom: Math.round(r.bottom), view: window.innerHeight };
+    });
+
+    if (!found.open && instead) {
+      check(`${room}: the app's bar steps aside for the room's own`,
+        instead.bottom >= instead.view - 1,
+        `the room's own bar ends at ${instead.bottom} in a ${instead.view}px`
+        + " window — it took the app bar's space, so it has to fill it");
+      continue;
+    }
+
     check(`${room}: the bar stands on nothing`, found.open && found.hidden.length === 0,
-      found.hidden.join(', '));
+      found.hidden.join(', ')
+      + (found.open ? '' : ' — and the room draws no bar of its own in its place'));
   }
 
   await page.screenshot({ path: shot('underbar.png'), fullPage: false });

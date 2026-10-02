@@ -137,14 +137,45 @@ ok('  and the bar and the benches take their colours from that same file',
   + ' a blue-black body and a sky-blue heading icon inside a green room. It'
   + ' takes a `look` now, and the cutting room has to hand it one');
 
+const css = readFileSync('app/globals.css', 'utf8');
+
 ok('  and the room restates the surface ramp for a dark room',
-  /\[data-cuttingroom\]\s*\{[^}]*--fb-surface-400/.test(
-    readFileSync('app/globals.css', 'utf8'),
-  ),
+  /\[data-cuttingroom\],\s*\n\s*\[data-cutshell\]\s*\{[^}]*--fb-surface-400/.test(css),
   'zinc maps onto the surface family and the theme this app ships is light,'
   + ' which inverts the ramp — so every text-zinc-400 in a dark room resolves'
   + ' to a dark warm grey. Measured at 1.88:1 before this block existed, which'
-  + ' is what Carli meant by "niks is duidelik nie"');
+  + ' is what Carli meant by "niks is duidelik nie". The SHELL takes the same'
+  + ' block: on the room alone it painted the floor and stopped at the header,'
+  + ' so the back button sat on a white strip above a green room');
+
+/* ── And the shell, which is the difference between a room and a card ───
+
+   Carli, 4 October 2026: *"Plus moet die hele kamer dieselfde lyk, tot bo."*
+   The booth and the gallery both learnt this and both solved it the same way —
+   the flag goes on the studio's OWN root, not on the room inside it, so the
+   header above the room is the room too. */
+
+ok('the studio shell wears the room\u2019s colours while the room is open',
+  /'data-cutshell'/.test(page),
+  'without it the room is a green card sitting in a pale page, and the back'
+  + ' button above it stands on the pale part');
+
+ok('  and the shell paints itself rather than only setting a variable',
+  /\[data-cutshell\]\s*\{\s*background:/.test(css),
+  'the studio surface is set by a class, and a variable nothing reads changes'
+  + ' nothing');
+
+ok('  and the room claims the whole screen, so the app bar steps aside',
+  /useOwnScreen\(\)/.test(room),
+  'app/lib/fullroom.ts was built in September for this exact request about the'
+  + ' Pro Booth; the cutting room grew its own bar in October and never claimed'
+  + ' the screen, so it had both');
+
+ok('  and the top of the room carries nothing but the way out',
+  /const bareRoom = studioTab === 'videoedit'/.test(page)
+  && /\{!bareRoom && \(/.test(page),
+  'a balance, a search, her own handle and a second back arrow were above a'
+  + " room whose whole point is that it is a screen");
 
 /* ── 2. Edge to edge, so the bar reads as a floor ─────────────────────── */
 

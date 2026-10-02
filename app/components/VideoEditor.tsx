@@ -56,7 +56,7 @@ import CutDock, { type Bench } from './CutDock';
 import DeskSheet from './BoothCard';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 import Note from './Note';
-import { BAR_HEIGHT } from './TabBar';
+import { useOwnScreen } from '../lib/fullroom';
 import { useLang } from '../lib/i18n';
 import { FILTERS, filterCss, filterName } from '../lib/videofilters';
 import { DIALS, NO_ADJUST, adjusted, gradeCss } from '../lib/videoadjust';
@@ -380,6 +380,25 @@ export default function VideoEditor({
 }): React.ReactElement {
   const { t, lang } = useLang();
   const [edit, setEdit] = useState<Edit>(NOTHING);
+  /* ── The room takes the whole screen ──────────────────────────────────
+ 
+     Carli, 4 October 2026: *"Daai onderste harde bar van die hele app moet weg
+     wees binne die kamer, dan moet die kamer se knoppies in daai spasie wees en
+     die hele kamer moet groter wees."*
+ 
+     Which is word for word what she asked for the Pro Booth on 14 September:
+     *"daai buttons vervang die harde buttons van die hele app, dan val daai hele
+     bar van die app in die booth weg."* `app/lib/fullroom.ts` was built that
+     day, for that request, and carries the reasoning — two rows of buttons under
+     a third row of buttons is three rows of buttons, and the bottom one belongs
+     to a different application.
+ 
+     The cutting room grew its own bar on 1 October and never claimed the
+     screen, so it had both. One line, and the app's bar steps aside for as long
+     as this room is mounted. The height below then measures no bar and the room
+     grows into the space, which is the rest of what she asked for. */
+  useOwnScreen();
+
   /** Whether the copilot's sheet is over the room. */
   const [asking2, setAsking2] = useState(false);
 
@@ -417,11 +436,17 @@ export default function VideoEditor({
          the one that matches what she can see is the visual viewport. */
       const screen = window.visualViewport?.height ?? window.innerHeight;
       /* The bar measured, not assumed, for the same reason the top is. On a
-         phone with a home indicator it is `BAR_HEIGHT` plus the safe area, and
-         the safe area is a number only the device knows. `BAR_HEIGHT` is the
-         fallback for the frame before the bar exists. */
+         phone with a home indicator it is the bar's height plus the safe area,
+         and the safe area is a number only the device knows. */
+      /* Nought when there is no bar, not `BAR_HEIGHT`.
+ 
+         This room claims the screen, so the app's bar is not drawn while it is
+         open and the space under it is the room's. The fallback is only for the
+         frame before the bar would have mounted in a room that does not claim
+         it — reserving 64 pixels for a bar that is not there is how a room ends
+         up with a strip of nothing along the bottom. */
       const bar = document.querySelector('nav.fixed.bottom-0');
-      const under = bar ? bar.getBoundingClientRect().height : BAR_HEIGHT;
+      const under = bar ? bar.getBoundingClientRect().height : 0;
       setTall(Math.max(320, Math.round(screen - top - under)));
     };
     fit();

@@ -1803,6 +1803,27 @@ export default function FutureBoxHome() {
   />
   );
 
+  /* ── The cutting room keeps nothing above it but the way out ──────────
+
+     Carli, 4 October 2026, with a photograph: *"Daai boonste goed moet weg
+     wees, die kamer moet net 'n back knoppie hê."*
+
+     Above the room were a balance, a search button, her own handle, and under
+     them a card reading "All rooms / Cutting room" with a second back arrow on
+     it. Four controls and a heading, none of them about the film, taking the
+     top fifth of the screen off a room whose whole point is that it is a
+     screen — and two of them were two ways to do the same thing.
+
+     `stepOut` already walks back one layer, and inside a room that layer is
+     the room list, so the arrow in the top-left corner was ALREADY the way
+     back to all rooms. The card under it was a second button for the press the
+     first one makes. So the card goes, the cluster goes, and what is left is
+     one back button, which is what she asked for and what was already there.
+
+     The balance is not lost: nothing in this room spends without showing the
+     bill first, and the bill carries the balance. */
+  const bareRoom = studioTab === 'videoedit';
+
   /* The rooms that hold the copilot themselves, so the third column is not
      drawn below them as well. The voice studio puts it inside a pane of its
      own; the cutting room puts it behind a button on the dock. */
@@ -3769,9 +3790,25 @@ export default function FutureBoxHome() {
             gallery — which is the whole difference between a room and a
             card sitting in somebody else's page. See `[data-gallery]` in
             `globals.css` and `GALLERY_THEME` in `lib/theme.ts`. */}
+        {/* And the cutting room, the same way and for the same reason.
+
+            Carli, 4 October 2026: *"Plus moet die hele kamer dieselfde lyk,
+            tot bo."* Which is the sentence the gallery got above, almost word
+            for word, and the answer is the same one: the flag goes on the
+            studio's OWN root, not on the room inside it.
+
+            On the room alone it painted the floor and the walls and stopped at
+            the header — so the back button sat on a white strip above a green
+            room, which is a room inside somebody else's page rather than a
+            room. `[data-cutshell]` carries the same block as
+            `[data-cuttingroom]` in `globals.css`.
+
+            Not while the door is up: `atDoor` means the room list is covering
+            this, and that is the app's screen, not the room's. */}
         <div
           {...(studioTab === 'booth' ? { 'data-booth': '' } : {})}
           {...(studioTab === 'albumart' ? { 'data-gallery': '' } : {})}
+          {...(bareRoom && !atDoor ? { 'data-cutshell': '' } : {})}
           /* Whether the door is up, as a fact a probe can read.
            *
            * `audit/paidback.mjs` needed to assert that coming back from a
@@ -3799,7 +3836,9 @@ export default function FutureBoxHome() {
           >
             
             {/* Top Back Bar */}
-            <div className="flex-shrink-0 flex items-center justify-between border-b border-zinc-800 pb-4">
+            <div className={`flex-shrink-0 flex items-center justify-between ${
+              bareRoom ? '' : 'border-b border-zinc-800 pb-4'
+            }`}>
               <button
                 onClick={stepOut}
                 data-backout
@@ -3814,6 +3853,7 @@ export default function FutureBoxHome() {
                 <span className="hidden sm:inline">{t('feed.backToPlatform')}</span>
               </button>
 
+              {!bareRoom && (
               <div className="flex items-center gap-2 justify-end min-w-0">
                 {/* What is left, where the spending happens.
 
@@ -3856,6 +3896,7 @@ export default function FutureBoxHome() {
                   </span>
                 )}
               </div>
+              )}
             </div>
 
             {/* Studio shell: rail on the left, one working surface on the right. */}
@@ -3874,7 +3915,9 @@ export default function FutureBoxHome() {
               <button
                 type="button"
                 onClick={() => setAtDoor(true)}
-                className="md:hidden w-full flex items-center gap-3 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-3 text-left flex-shrink-0"
+                /* Not in the cutting room: the arrow in the top-left corner
+                   already makes this exact press. See `bareRoom`. */
+                className={`${bareRoom ? 'hidden' : 'md:hidden'} w-full flex items-center gap-3 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-3 text-left flex-shrink-0`}
               >
                 <Cpu className="w-[18px] h-[18px] text-emerald-400 flex-shrink-0" />
                 <span className="min-w-0 flex-1">

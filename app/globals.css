@@ -575,7 +575,8 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
  * they are in the booth: in a room that fills the screen they are not
  * decoration, they are the body text, and they have to clear 4.5 on PANEL.
  */
-[data-cuttingroom] {
+[data-cuttingroom],
+[data-cutshell] {
   --fb-surface-50: 240 250 244;
   --fb-surface-100: 223 242 230;
   --fb-surface-200: 198 228 210;
@@ -603,6 +604,13 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
   --fb-scrim: 1 6 4;
 
   color: rgb(var(--fb-ink));
+}
+
+/* The shell paints itself, so the strip above the room is the room.
+   `--fb-page` alone is not enough: the studio's own surface is set by a class,
+   and a variable nothing reads changes nothing. */
+[data-cutshell] {
+  background: rgb(var(--fb-page));
 }
 
 /* ── Buttons in a dark room ──────────────────────────────────────────────
@@ -645,8 +653,8 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
  * the rule above gives for doing the same: a rule you opt into is a rule the
  * next button forgets. Scoped to this room, because the rest of the app is a
  * pale flat page where this would look like a toy. */
-[data-cuttingroom] button[class*="border"]:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-gradient"]):not([class*="bg-transparent"]):not(:disabled),
-[data-cuttingroom] label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([class*="bg-amber"]) {
+[data-cutshell] button[class*="border"]:not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-gradient"]):not([class*="bg-transparent"]):not(:disabled),
+[data-cutshell] label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([class*="bg-amber"]) {
   background-color: rgb(var(--fb-primary-500) / 0.18);
   border-color: rgb(var(--fb-primary-500) / 0.45);
   color: rgb(var(--fb-surface-100));
@@ -657,8 +665,8 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
   transition: background-color 90ms ease, box-shadow 90ms ease, transform 90ms ease;
 }
 
-[data-cuttingroom] button[class*="border"]:not([class*="bg-gradient"]):not(:disabled):active,
-[data-cuttingroom] label[class*="border"][class*="cursor-pointer"]:active {
+[data-cutshell] button[class*="border"]:not([class*="bg-gradient"]):not(:disabled):active,
+[data-cutshell] label[class*="border"][class*="cursor-pointer"]:active {
   background-color: rgb(var(--fb-primary-500) / 0.26);
   box-shadow:
     0 1px 0 0 rgba(0, 0, 0, 0.5) inset,
@@ -668,7 +676,7 @@ label[class*="border"][class*="cursor-pointer"]:not([class*="bg-emerald"]):not([
 
 /* A control that is off is flat. Depth says "press me", and a disabled button
    saying that is the one lie a button can tell. */
-[data-cuttingroom] button:disabled {
+[data-cutshell] button:disabled {
   box-shadow: none;
 }
 

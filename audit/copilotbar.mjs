@@ -121,7 +121,20 @@ try {
     console.log('    scroll:', JSON.stringify(how));
 
     const seen = await page.evaluate(() => {
-      const bar = document.querySelector('nav[aria-label]');
+      /* The bar this room actually has.
+
+         A room that claims the screen (see `app/lib/fullroom.ts`) sends the
+         app's tab bar away and draws its own in that space — Carli asked for
+         it for the Pro Booth in September and for the cutting room in October.
+         So in those rooms `nav[aria-label]` is correctly absent, and this
+         probe returned null and reported "no input or no bar on this screen",
+         which reads as the copilot being missing.
+
+         The question the probe asks is unchanged and still the right one: can
+         she see the whole box she types into, clear of whatever bar is pinned
+         to the bottom of this screen. Only which element that is changes. */
+      const bar = document.querySelector('nav[aria-label]')
+        ?? document.querySelector('[data-cutdock], [data-boothdock]');
       /* The copilot's own box: the one text input inside the pane that holds
          the conversation. Matched on the placeholder rather than a class, so
          restyling it does not quietly stop this looking. */

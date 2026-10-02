@@ -453,7 +453,26 @@ export async function toRoom(page, name, { folded = false } = {}) {
       if (!folded) await unfold(page);
       return;
     }
-    const back = page.locator('button').filter({ hasText: /All rooms|Alle kamers/ }).first();
+    /* The card, if the room draws one — and `:visible`, which it did not ask.
+
+       The cutting room stopped drawing it on 4 October: Carli asked for *"net
+       'n back knoppie"* and the arrow in the top-left corner already made the
+       same press, so the card is `hidden` there rather than removed. `count()`
+       still finds a hidden button, so this helper picked it, waited thirty
+       seconds for an element that will never be visible, and threw.
+
+       What that looked like was much worse than a helper bug: `underbar` and
+       `copilotbar` reported EIGHT rooms with no tab bar, because the probe
+       never actually left the cutting room and kept measuring it under the
+       next room's name. A probe that cannot leave a room reports the rooms it
+       never reached. */
+    const card = page.locator('button').filter({ hasText: /All rooms|Alle kamers/ }).first();
+    const back = (await card.count()) && (await card.isVisible().catch(() => false))
+      ? card
+      /* Every room has this one, and it steps back exactly one layer — which
+         inside a room is the room list. It is the way out a person uses when
+         the card is not drawn. */
+      : page.locator('[data-backout]:visible').first();
     if (await back.count()) {
       await back.click();
       /* The door fades in. Reading it the instant the press lands finds an
