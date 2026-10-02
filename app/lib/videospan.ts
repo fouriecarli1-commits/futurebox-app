@@ -201,3 +201,33 @@ export function heldWords(from: number, to: number, pieceLong: number): Span {
   const b = Math.min(pieceLong, Math.max(to, a + SHORTEST_WORDS));
   return { from: a, to: b };
 }
+
+/**
+ * A caption slid along its own shot, keeping its length.
+ *
+ * ── Why this is here and not inside the drag handler ─────────────────────
+ *
+ * It was inside it, and it had the bug Carli reported on 4 October: *"Al haal
+ * ek die magnet af spring die teks nogsteeds rond asof die magnet aan is."*
+ * The displacement was applied to the span read from the LIVE piece on every
+ * pointermove, while the distance was measured from the pointer's original
+ * grab — so each move added the whole distance again to an already-moved
+ * block, and it accelerated away in growing jumps.
+ *
+ * The fix is one word: the origin is the span at the START of the gesture. The
+ * reason it is a function now is that the browser probe could not prove it. The
+ * fixture clip is 2.4 seconds long, so a runaway hits the end of the shot
+ * within one move and lands exactly where a correct drag lands — the clamp
+ * hides the fault. Reinstating the bug left the probe green, which is the only
+ * honest reason to move a rule somewhere it can be given a sixty-second shot
+ * and no clamp at all.
+ *
+ * `began` is where the caption was when the finger went down. `by` is how far
+ * the finger has travelled since, in seconds. Neither is read from anything
+ * that moves while the gesture runs.
+ */
+export function slidWords(began: Span, by: number, pieceLong: number): Span {
+  const wide = Math.max(0, began.to - began.from);
+  const first = Math.max(0, Math.min(began.from + by, pieceLong - wide));
+  return heldWords(first, first + wide, pieceLong);
+}

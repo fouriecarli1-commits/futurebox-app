@@ -56,7 +56,7 @@ import CutDock, { type Bench } from './CutDock';
 import DeskSheet from './BoothCard';
 import { CUT_LOOK, INK, INK_DIM, LIT, PANEL, RAISE, PRESS } from '../lib/cutlook';
 import { REACH, pullTo, reachOf } from '../lib/magnet';
-import { heldWords, pointsOf, spanReady, tidy, wordsSpan } from '../lib/videospan';
+import { heldWords, pointsOf, slidWords, spanReady, tidy, wordsSpan } from '../lib/videospan';
 import { coverName, frameFrom, isPicture } from '../lib/videocover';
 import WaveBlock from './WaveBlock';
 import {
@@ -449,6 +449,7 @@ export default function VideoEditor({
   plan,
   onUpgrade,
   copilot,
+  covered,
 }: {
   readonly plan: Plan;
   readonly onUpgrade?: () => void;
@@ -466,6 +467,20 @@ export default function VideoEditor({
    * changes: a button, and a sheet over the room.
    */
   readonly copilot?: React.ReactNode;
+  /**
+   * Whether something is drawn over this room.
+   *
+   * The room claims the whole screen while it is open, which is what sends the
+   * app's own bar away — see `useOwnScreen` below. It stays MOUNTED when the
+   * room list is opened over it, so without this it goes on holding the screen
+   * while she is looking at a different thing entirely, and the bar is missing
+   * from the door and from every tab she reaches through it.
+   *
+   * Carli, 4 October 2026: *"Die res van die app se harde buttons onder het
+   * verdwyn seker toe jy die nuwe video kamer gebou het."* She was right about
+   * the cause as well as the symptom.
+   */
+  readonly covered?: boolean;
 }): React.ReactElement {
   const { t, lang } = useLang();
   const [edit, setEdit] = useState<Edit>(NOTHING);
@@ -486,7 +501,13 @@ export default function VideoEditor({
      screen, so it had both. One line, and the app's bar steps aside for as long
      as this room is mounted. The height below then measures no bar and the room
      grows into the space, which is the rest of what she asked for. */
-  useOwnScreen();
+  /* Released the moment anything is drawn over the room. A claim is a claim on
+     the SCREEN, and a room that is not the screen any more must not hold one.
+
+     `page.tsx` already knew this about the paint — `data-cutshell` is guarded
+     with `!atDoor`, so the door does not wear the room's colours. The claim
+     needed the same guard and did not have it. */
+  useOwnScreen(!covered);
 
   /* ── How tall the clock is, which she can change ──────────────────────
 
@@ -1407,12 +1428,42 @@ export default function VideoEditor({
     beforeDrag.current = edit;
     node.setPointerCapture(event.pointerId);
     const grabbedAt = (event.clientX - box.left) / perSecond;
+    /* ── Where it was when she grabbed it, read once ──────────────────────
+
+       Carli, 4 October 2026: *"Al haal ek die magnet af spring die teks
+       nogsteeds rond asof die magnet aan is."*
+
+       It was not the magnet — there is no magnet on this drag at all, which is
+       why switching it off changed nothing. It was a runaway.
+
+       `had` used to be read from the LIVE piece inside `setEdit`, while `by` is
+       measured from the pointer's ORIGINAL grab point. So the first move added
+       the full distance to the block's start, the second added the same full
+       distance to the already-moved block, and the third added it again: the
+       block accelerated away from the finger in jumps that got bigger. On a
+       phone, where pointermove fires every frame, that reads exactly like a
+       magnet yanking it about.
+
+       The origin has to be fixed for the whole gesture, like `beforeDrag`
+       beside it. Read once, here. */
+    const began = (() => {
+      const piece = edit.pieces.find((one) => one.id === id);
+      if (!piece) return null;
+      return wordsSpan(piece, lengthOfPiece(piece));
+    })();
 
     const move = (m: PointerEvent) => {
       setEdit((was) => {
         const piece = was.pieces.find((one) => one.id === id);
         if (!piece) return was;
         const long = lengthOfPiece(piece);
+        /* The live span for the two edges — each of those sets one end to an
+           absolute position and leaves the other where it is, so reading it
+           back every move is correct and is what keeps the other end still.
+
+           The MOVE uses `began` instead: it is a displacement from where the
+           gesture started, and a displacement applied to a moving origin is
+           the runaway described above. */
         const had = wordsSpan(piece, long);
         /* Where the pointer is on the FILM's clock, turned into how far into
            this piece that is — the caption's clock is its own piece's. */
@@ -1425,14 +1476,9 @@ export default function VideoEditor({
              the pointer: grabbing a block in its middle and having it jump so
              its start is under the finger is the thing that makes a drag feel
              like a throw. */
-          const by = into - (grabbedAt - startsAt(was, id));
-          want = { from: had.from + by, to: had.to + by };
-          /* Kept the same length while it slides, which clamping the two ends
-             separately would not do — a block pushed against the start would
-             otherwise stretch instead of stopping. */
-          const wide = had.to - had.from;
-          const first = Math.max(0, Math.min(want.from, long - wide));
-          want = { from: first, to: first + wide };
+          /* `slidWords` owns this, so it can be given a sixty-second shot in
+             `check:cutspan` and proved without a clamp in the way. */
+          want = slidWords(began ?? had, into - (grabbedAt - startsAt(was, id)), long);
         }
         const next = heldWords(want.from, want.to, long);
         return {
@@ -2233,17 +2279,33 @@ export default function VideoEditor({
                           {/* Both ends, each its own grab. Wider than they
                               look, because a two-pixel target is a target
                               nobody hits with a thumb. */}
+                          {/* ── The grips leave a middle to grab ────────
+
+                              Twelve pixels each, until the block is narrower
+                              than about forty — then a third of it each, so
+                              there is always a middle third that moves the
+                              caption rather than resizing it.
+
+                              Found by `audit/editor.mjs`: a caption dragged
+                              down to its shortest was twenty pixels wide, and
+                              twenty pixels is two twelve-pixel grips with a
+                              negative gap between them. The centre of the
+                              block — which is where a hand aims to MOVE a
+                              thing — was inside the left grip, so the only
+                              gesture a short caption had was resizing. */}
                           <span
                             data-editorwordsfrom={one.id}
                             onPointerDown={(event) => { holding(); takeWords('from', one.id, event); }}
-                            className="absolute inset-y-0 left-0 w-3 cursor-ew-resize touch-none"
+                            style={{ width: Math.max(6, Math.min(12, wide / 3)) }}
+                            className="absolute inset-y-0 left-0 cursor-ew-resize touch-none"
                           >
                             <span className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-full" style={{ background: LIT }} />
                           </span>
                           <span
                             data-editorwordsto={one.id}
                             onPointerDown={(event) => { holding(); takeWords('to', one.id, event); }}
-                            className="absolute inset-y-0 right-0 w-3 cursor-ew-resize touch-none"
+                            style={{ width: Math.max(6, Math.min(12, wide / 3)) }}
+                            className="absolute inset-y-0 right-0 cursor-ew-resize touch-none"
                           >
                             <span className="pointer-events-none absolute inset-y-0 right-0 w-1 rounded-full" style={{ background: LIT }} />
                           </span>

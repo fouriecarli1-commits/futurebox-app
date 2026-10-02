@@ -166,10 +166,26 @@ ok('  and the shell paints itself rather than only setting a variable',
   + ' nothing');
 
 ok('  and the room claims the whole screen, so the app bar steps aside',
-  /useOwnScreen\(\)/.test(room),
+  /useOwnScreen\(/.test(room),
   'app/lib/fullroom.ts was built in September for this exact request about the'
   + ' Pro Booth; the cutting room grew its own bar in October and never claimed'
   + ' the screen, so it had both');
+
+/* ── And gives it back the moment it stops being the screen ─────────────
+
+   Carli, 4 October 2026: *"Die res van die app se harde buttons onder het
+   verdwyn seker toe jy die nuwe video kamer gebou het."*
+
+   The room stays MOUNTED when the room list is drawn over it, so an
+   unconditional claim went on holding the screen while she was looking at the
+   door — and the bar was missing from the door and from every tab reached
+   through it. `page.tsx` already knew the door is a different screen for the
+   PAINT (`data-cutshell` is guarded with `!atDoor`); the claim needed the same
+   guard and did not have it. */
+ok('    and gives it back when something is drawn over the room',
+  /useOwnScreen\(!covered\)/.test(room) && /covered=\{atDoor\}/.test(page),
+  'a claim is a claim on the SCREEN, and a room under the door is not the'
+  + " screen — a claim it keeps holding takes the whole app's navigation away");
 
 ok('  and the top of the room carries nothing but the way out',
   /const bareRoom = studioTab === 'videoedit'/.test(page)

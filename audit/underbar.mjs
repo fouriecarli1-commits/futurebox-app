@@ -140,6 +140,50 @@ try {
       + (found.open ? '' : ' — and the room draws no bar of its own in its place'));
   }
 
+  /* ── And the bar comes BACK when the room stops being the screen ───────
+
+     Carli, 4 October 2026: *"Die res van die app se harde buttons onder het
+     verdwyn seker toe jy die nuwe video kamer gebou het."*
+
+     She was right about the cause as well as the symptom. A room that claims
+     the screen sends the app's bar away, which is what she asked for twice —
+     but the cutting room stays MOUNTED when the room list is opened over it,
+     so it went on holding the screen while she was looking at the door. The
+     bar was missing from the door and from everything she reached through it,
+     and the only way to get it back was to open a different room.
+
+     Every assertion above walks INTO a room. None of them walked back out and
+     looked, which is why this passed for a day: "the bar stands on nothing" is
+     true of a bar that is not drawn at all.
+
+     So: into the room that claims the screen, back out to the door, and the
+     bar has to be there. */
+  const claiming = ROOMS.find((one) => one === 'Video Editor');
+  if (claiming) {
+    try {
+      await toRoom(page, claiming);
+      await page.waitForTimeout(700);
+      const inside = await page.evaluate(() => !!document.querySelector('nav.fixed.bottom-0'));
+      check(`${claiming}: the app's bar is away while the room IS the screen`,
+        inside === false,
+        'this is the whole point of a room that claims the screen');
+
+      await page.locator('[data-backout]:visible').first().click();
+      await page.waitForTimeout(900);
+      const after = await page.evaluate(() => ({
+        bar: !!document.querySelector('nav.fixed.bottom-0'),
+        room: !!document.querySelector('[data-videoeditor]'),
+      }));
+      check(`${claiming}: and it comes back the moment she steps out`,
+        after.bar === true,
+        `bar ${after.bar}, room still mounted ${after.room} — a room drawn`
+        + ' under the door is not the screen any more, and a claim it keeps'
+        + " holding takes the whole app's navigation away");
+    } catch (why) {
+      problems.push(`${claiming}: could not walk out — ${String(why).slice(0, 80)}`);
+    }
+  }
+
   await page.screenshot({ path: shot('underbar.png'), fullPage: false });
 } catch (problem) {
   problems.push(`the walk itself fell over — ${String(problem).slice(0, 200)}`);

@@ -377,9 +377,23 @@ check('there is a way past it that is not a room',
   !/Hello, Carli!|Hallo, Carli!/.test(await p.locator('body').innerText()),
   'the greeting was still up');
 
-// Out of the studio next: the overlay covers the header the sign-out lives
-// in, which is also the route somebody takes to sign out in real life.
-await p.locator('button').filter({ hasText: af ? /^Terug na FutureBox$/ : /^Back to FutureBox$/ }).first().click();
+/* Out of the studio next: the overlay covers the header the sign-out lives in,
+   which is also the route somebody takes to sign out in real life.
+
+   Only if that button is still there. Pressing "Not now — take me to the feed"
+   above used to lower the door and leave the studio open behind it, so this
+   step was needed. On 4 October that button started doing what it says —
+   Carli: *"Daai not now - take me to the feed button vat my na die video
+   editor. Ek vermoed daai button moet my na spotlight toe vat."* — and the
+   feed is not inside the studio, so by the time we get here we are already
+   where this click was going.
+
+   Written as "if it is there" rather than deleted: both routes end in the same
+   place, and a probe that insists on a particular press is a probe that fails
+   the next time the app finds a shorter way to the same screen. */
+const leave = p.locator('button').filter({ hasText: af ? /^Terug na FutureBox$/ : /^Back to FutureBox$/ }).first();
+if (await leave.count()) await leave.click().catch(() => undefined);
+await p.waitForTimeout(500);
 await p.waitForTimeout(900);
 /* Refused before the press, not after it.
 

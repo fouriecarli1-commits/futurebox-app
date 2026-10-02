@@ -26,7 +26,7 @@
  */
 import {
   SHORTEST_SPAN, SHORTEST_WORDS, heldWords, pointsOf, spanReady, stretches,
-  tidy, withSkip, wordsSpan,
+  slidWords, tidy, withSkip, wordsSpan,
 } from '../app/lib/videospan';
 import { pullTo } from '../app/lib/magnet';
 import { cutOut, runs, splitHere, startsAt } from '../app/lib/videoedit';
@@ -259,6 +259,50 @@ ok('  and a shot shorter than that still gives the caption the whole of it',
   heldWords(0, 0.2, 0.2).from === 0 && heldWords(0, 0.2, 0.2).to === 0.2,
   JSON.stringify(heldWords(0, 0.2, 0.2))
   + ' — refusing would mean a shot with words on it that cannot be timed');
+
+/* ── Sliding a caption, which is where the runaway was ──────────────────
+
+   Carli, 4 October 2026: *"Al haal ek die magnet af spring die teks nogsteeds
+   rond asof die magnet aan is."* It was not the magnet — there is no magnet on
+   that drag, which is why switching it off changed nothing.
+
+   Given a sixty-second shot, so a runaway has room to run. The browser probe
+   could not show this: its fixture clip is 2.4 seconds, a runaway hits the end
+   of the shot within one move, and the clamp puts it exactly where a correct
+   drag puts it. Reinstating the bug left that probe green. */
+
+const SHOT = 60;
+const began = { from: 10, to: 14 };
+
+ok('sliding a caption moves it by exactly what the finger moved',
+  slidWords(began, 6, SHOT).from === 16 && slidWords(began, 6, SHOT).to === 20,
+  JSON.stringify(slidWords(began, 6, SHOT)));
+
+ok('  and keeps its length, so moving is not resizing',
+  slidWords(began, 6, SHOT).to - slidWords(began, 6, SHOT).from === 4,
+  'clamping the two ends separately would stretch a block pushed against the'
+  + ' start of its shot instead of stopping it');
+
+/* The runaway, written out as the arithmetic it was. Each move applied the
+   whole distance to the already-moved span, so three moves of six seconds put
+   it 18 seconds further on instead of six. */
+ok('  and a gesture is measured from where it STARTED, not from where it is now',
+  (() => {
+    let live = began;
+    for (let i = 0; i < 3; i += 1) live = slidWords(began, 6, SHOT);
+    return live.from === 16;
+  })(),
+  'applying the displacement to the live span on every pointermove is what'
+  + ' made the caption accelerate away from the finger in growing jumps');
+
+ok('  and it stops at the end of its shot rather than sliding past it',
+  slidWords(began, 999, SHOT).to === SHOT
+  && slidWords(began, 999, SHOT).from === SHOT - 4,
+  JSON.stringify(slidWords(began, 999, SHOT)));
+
+ok('  and at the start, the same way',
+  slidWords(began, -999, SHOT).from === 0 && slidWords(began, -999, SHOT).to === 4,
+  JSON.stringify(slidWords(began, -999, SHOT)));
 
 if (bad) {
   console.error(`\ncheck:cutspan — ${bad} assertion(s) failed.\n`);

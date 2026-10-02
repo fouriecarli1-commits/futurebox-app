@@ -350,7 +350,25 @@ export async function studio(page) {
   }
 
   await studioDoor(page);
-  await dismissDoor(page);
+  /* ── The door is left UP, and that is the fix rather than a shortcut ────
+
+     This used to end `await dismissDoor(page)`, which presses "Not now — take
+     me to the feed".
+
+     On 4 October that button started doing what it says. It used to only lower
+     the door, leaving whatever room was behind it — Carli: *"Daai not now -
+     take me to the feed button vat my na die video editor."* It now calls the
+     app's own `goTab('spotlight')`, which closes the studio as well, because
+     the feed is not inside the studio.
+
+     So this line walked in through the header button and immediately walked
+     back out, and every probe after it reported "no way into <room>". The
+     helper had encoded the button's old, wrong meaning as its way in.
+
+     Nothing needs to replace it. This function is named for a PLACE — be in
+     the studio — and the door IS in the studio: `toRoom` reads the door first
+     and only falls back to the rail. Leaving it up is both correct and one
+     fewer press. */
   await page.waitForTimeout(700);
   return page.locator('div.fixed.inset-0.z-50').first();
 }

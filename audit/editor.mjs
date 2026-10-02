@@ -1135,6 +1135,78 @@ try {
         + ' follows');
     }
 
+    /* ── A drag moves it by what the hand moved, and no more ───────────
+
+       Carli, 4 October 2026: *"Al haal ek die magnet af spring die teks
+       nogsteeds rond asof die magnet aan is."*
+
+       It was not the magnet. `had` was read from the LIVE piece on every
+       pointermove while the displacement was measured from the original grab,
+       so each move added the full distance to an already-moved block and it
+       accelerated away in growing jumps. On a phone, where pointermove fires
+       every frame, that reads exactly like a magnet yanking it about.
+
+       The old assertions could not see it: they checked the block got SHORTER
+       after an end-drag, which it did, and a runaway that overshoots is still
+       shorter. This measures the distance instead — a thing that moves further
+       than the hand did is the whole fault, in one number. */
+    /* Shortened first, because a caption that fills its whole shot has nowhere
+       to move and correctly does not — `heldWords` pins it, and the first
+       version of this measured 0px against a block that was right to stay put.
+       The end-drag above is undone by the assertion before this one, so the
+       caption is back to full width by the time we get here. */
+    const shorten = await endGrip.boundingBox();
+    await endGrip.hover();
+    await p.waitForTimeout(150);
+    const shorten2 = await endGrip.boundingBox();
+    await p.mouse.move((shorten2?.x ?? shorten?.x ?? 0), (shorten2?.y ?? 0) + (shorten2?.height ?? 0) / 2);
+    await p.mouse.down();
+    await p.mouse.move((shorten2?.x ?? 0) - 40, (shorten2?.y ?? 0) + (shorten2?.height ?? 0) / 2, { steps: 10 });
+    await p.mouse.up();
+    await p.waitForTimeout(400);
+
+    const blockWas = await wordsBlock.boundingBox();
+    const by = 36;
+    await wordsBlock.hover();
+    await p.waitForTimeout(150);
+    const held2 = await wordsBlock.boundingBox();
+    await p.mouse.move((held2?.x ?? 0) + (held2?.width ?? 0) / 2, (held2?.y ?? 0) + (held2?.height ?? 0) / 2);
+    await p.mouse.down();
+    /* In several steps, because one step is one pointermove and a runaway
+       needs more than one move to run away — a single-step drag would have
+       passed against the broken version. */
+    await p.mouse.move((held2?.x ?? 0) + (held2?.width ?? 0) / 2 + by, (held2?.y ?? 0) + (held2?.height ?? 0) / 2, { steps: 10 });
+    await p.mouse.up();
+    await p.waitForTimeout(400);
+    const blockNow = await wordsBlock.boundingBox();
+    const moved = Math.round((blockNow?.x ?? 0) - (blockWas?.x ?? 0));
+
+    /* Toward the hand, and never past it.
+
+       Not "exactly as far": a caption cannot slide past the end of its own
+       shot, so a drag that asks for more than the room left correctly delivers
+       less. Asserting equality would fail on a correct clamp and would have to
+       be loosened the first time it did — which is how an assertion stops
+       meaning anything.
+
+       The fault this is written for has one signature and it is the other
+       side: the block ran FURTHER than the hand, further each move, because
+       the displacement was applied to an origin that was itself moving. */
+    check('dragging a caption moves it with the hand, never past it',
+      moved > 2 && moved <= by + 4,
+      `the hand moved ${by}px and the block moved ${moved}px — further than the`
+      + ' hand is the runaway, and a runaway reads as a magnet nobody can'
+      + ' switch off');
+
+    check('  and its length is unchanged by being moved',
+      Math.abs((blockNow?.width ?? 0) - (blockWas?.width ?? 0)) <= 4,
+      `${Math.round(blockWas?.width ?? 0)}px before, ${Math.round(blockNow?.width ?? 0)}px after`
+      + ' — moving a block is not resizing it, and clamping the two ends'
+      + ' separately would stretch it against the start of its shot');
+
+    await p.locator('[data-editorundo]').click();
+    await p.waitForTimeout(400);
+
     const grip2 = p.locator('[data-editorlanegrip]');
     check('the clock has a grip for its own height',
       (await grip2.count()) === 1,

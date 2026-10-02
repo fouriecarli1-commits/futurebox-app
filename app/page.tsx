@@ -3677,7 +3677,23 @@ export default function FutureBoxHome() {
                 setUploadModalOpen(true);
                 goToRoom(id);
               }}
-              onClose={() => setAtDoor(false)}
+              /* ── To the feed, which is what the button says ───────────
+
+                 Carli, 4 October 2026: *"Daai not now - take me to the feed
+                 button vat my na die video editor. Ek vermoed daai button moet
+                 my na spotlight toe vat."* She is right on both counts.
+
+                 It was `setAtDoor(false)`, which only takes the door down — and
+                 what is behind the door is whatever room she was last in. For
+                 anybody who has never opened a room that is the Make screen,
+                 which looks enough like a landing page that nobody noticed. For
+                 anybody who was last in the Video Editor it is the Video
+                 Editor, and the button plainly lied.
+
+                 `goTab('spotlight')` is the one that means the feed: it closes
+                 the studio AND puts the door down, which is the pair of things
+                 "take me to the feed" has to do. */
+              onClose={() => goTab('spotlight')}
             />
 
             {/* ── The music question ─────────────────────────────────────
@@ -4202,6 +4218,10 @@ export default function FutureBoxHome() {
                      So it comes in here and opens in a sheet off the dock.
                      `copilotInside` keeps the column from being drawn twice. */
                   copilot={copilotPane}
+                  /* The room list is drawn over this room without unmounting
+                     it, so the room has to be told rather than left to assume
+                     it is still the screen. See `covered`. */
+                  covered={atDoor}
                 />
               </div>
             )}
