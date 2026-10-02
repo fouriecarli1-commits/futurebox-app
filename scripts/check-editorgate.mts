@@ -1,5 +1,5 @@
 /**
- * The editor is shut on Free and open on every paid plan.
+ * The cutting room is open to everybody, and the EXPORT is the gate.
  *
  * ── Why this is not in the browser probe ─────────────────────────────────
  *
@@ -25,6 +25,8 @@
  */
 import { check, ENTITLEMENTS } from '../app/lib/entitlements.ts';
 import { TIER_SPECS } from '../app/lib/plans.ts';
+import { TIER_CREDITS } from '../app/lib/credits.ts';
+import { billFor, NOTHING_IN_IT } from '../app/lib/filmcost.ts';
 import { readFileSync } from 'node:fs';
 
 let bad = 0;
@@ -33,27 +35,56 @@ const ok = (what: string, passed: boolean, detail = ''): void => {
   if (!passed) bad += 1;
 };
 
-ok('the editor is shut on Free',
-  check('video.editor', 'free').allowed === false,
-  'every plan card says it comes with a paid plan');
+/* ── The room, 3 October 2026 ─────────────────────────────────────────────
 
-for (const tier of ['maker', 'studio', 'label'] as const) {
-  ok(`  and open on ${TIER_SPECS[tier].name}`,
+   This read "the editor is shut on Free" until today, and it was right about
+   what the app did. Carli: *"hulle kan 'n video bou, en die funksies toets,
+   maar nie hulle video export nie want hulle het nie genoeg krediete nie."*
+
+   The room renders in the member's own browser and costs this app nothing to
+   serve, however many hours somebody sits in it. A door on a room that costs
+   nothing keeps people out of the one place where they find out what the
+   product is. So the door comes off and the gate moves to where the value
+   actually is: the press that hands over a finished film.
+
+   A free account holds nought credits, so the gate holds without a door. */
+for (const tier of ['free', 'maker', 'studio', 'label'] as const) {
+  ok(`the cutting room is open on ${TIER_SPECS[tier].name}`,
     check('video.editor', tier).allowed === true,
-    'a card that sells a room the plan cannot open is worse than not selling it');
+    'it renders in their own browser and costs us nothing to serve');
 }
 
-/* The refusal has to name a plan somebody can actually buy. "Needs a paid
-   plan" to a Maker member who is already paying is the small lie this
-   codebase has been caught in before. */
-const room = readFileSync('app/components/VideoEditor.tsx', 'utf8');
-ok('the shut room says what is still free',
-  /stays free/i.test(room),
-  'a locked room that does not say what you still have reads as the app breaking');
+ok('  and a free account has nothing to spend, so the export is the gate',
+  TIER_CREDITS.free === 0,
+  'the whole design rests on this: the room is free and the film is not');
 
-ok('  and offers a way to the plans',
-  /data-editorupgrade/.test(room),
-  'a door with no handle is a wall');
+ok('  and the cheapest film costs more than nought, or there is no gate at all',
+  billFor({ ...NOTHING_IN_IT, seconds: 1 }).total > 0,
+  'a free export would open the room AND the film, which is not what was asked');
+
+const room = readFileSync('app/components/VideoEditor.tsx', 'utf8');
+
+/* ── What replaced the door ───────────────────────────────────────────────
+
+   A door says "you cannot come in". The bill says "here is what this costs,
+   here is what you have, and your film is still here" — which is the same
+   refusal with the work preserved and a reason attached.
+
+   These three are what the old `stays free` and `data-editorupgrade` rules
+   were really protecting: that a refusal names what is still theirs, and that
+   it offers a way forward rather than a wall. */
+ok('the room reads the balance before it renders, not after',
+  /loadWallet\(\)/.test(room),
+  'the charge lands after the film exists, so without this a free member sits'
+  + ' through a full real-time render to be told no at the end');
+
+ok('  and tells somebody short of credits that the film is not lost',
+  /edit\.billShort/.test(room) && /data-editorshort/.test(room),
+  'a refusal that does not say the work survived reads as the work going with it');
+
+ok('  and offers a way to the plans from the bill',
+  /data-editorbillplans/.test(room),
+  'a door with no handle is a wall, and so is a price with no way to pay it');
 
 /* And the Pro Booth's gate exists for the same reason, on the same table. It
    is asserted here rather than in a second file: one question, one place. */
@@ -92,5 +123,8 @@ if (bad > 0) {
   console.log(`\ncheck:editorgate — ${bad} problem(s) between what the cards sell and what the rooms open.`);
   process.exitCode = 1;
 } else {
-  console.log('\ncheck:editorgate — the editor and the Pro Booth are shut on Free, open on every paid plan, and say what stays free.');
+  console.log(
+    '\ncheck:editorgate — the cutting room is open to everybody and the export is'
+    + ' the gate; the Pro Booth is shut on Free and says what stays free.',
+  );
 }

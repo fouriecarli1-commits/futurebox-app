@@ -161,7 +161,7 @@ export const TIER_SPECS: Record<Tier, TierSpec> = {
          a month. The line says which plan it starts at rather than leaving
          somebody to find the wall. */
       'The Booth is free and always will be — record, sing over a track, as many takes as you like. The Pro Booth, with lanes, the grid, mixing and undo, comes with every paid plan. Bouncing a finished mix out of it is 1 credit a minute.',
-      'Sketch a video in your own browser as much as you like. The cutting room — a timeline, fades, looks, words and sound under it — comes with every paid plan, and the cutting itself is unlimited; putting a finished film together is 3 credits a minute.',
+      'The cutting room is open on this plan too — a timeline, trims, fades, looks, words, transitions, your logo and sound under it, all of it unlimited and free, because it runs in your own browser. Putting the finished film together is what costs: 3 credits a minute plus 1 for each thing in it, and this plan holds no credits — so you can build and try everything here, and the film waits for you.',
       'The marketing desk — the market read, the week and the queue — was R199 a month on its own. It is now in every paid plan: a month\u2019s plan is 40 credits, eight advert lines 20.',
       'Dubbing an episode into another language is the dearest thing here: 162 credits a minute, so it needs Studio or Label.',
     ],

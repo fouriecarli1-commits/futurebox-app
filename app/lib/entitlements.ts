@@ -201,11 +201,33 @@ export const ENTITLEMENTS: Record<Capability, Entitlement> = {
     freeNote: 'The Booth itself is free and always will be \u2014 record, sing over a track, as many takes as you like, no counter. The Pro Booth is the multitrack version: lanes, the grid, the metronome, mixing, mastering and undo.',
   },
   'video.editor': {
-    label: 'The video editor',
+    label: 'The cutting room',
     area: 'Video desk',
-    caps: { free: 0, maker: null, studio: null, label: null },
+    /* ── Opened to everybody, 3 October 2026 ───────────────────────────────
+
+       This was `free: 0` — the room was shut and the cards sold it as a
+       paid-plan feature. Carli: *"hulle kan 'n video bou, en die funksies
+       toets, maar nie hulle video export nie want hulle het nie genoeg
+       krediete nie."*
+
+       Which is the better shape, and the reason is the room itself: it renders
+       in the member's own browser and costs this app nothing to serve, however
+       many hours somebody spends in it. A door on a room that costs nothing
+       keeps people out of the one place where they find out what the product
+       is — and the gate moves to where the value actually is, the moment a
+       finished film is handed over.
+
+       So the room is open and the export is the gate. A free account holds
+       nought credits (`TIER_CREDITS.free`), so a free member can cut all day,
+       try every look and every transition, and is stopped at the one press that
+       spends — with the film still in the room and the screen saying so. See
+       `filmcost.ts` for the bill and `check:editorgate` for both halves.
+
+       What this costs us as an upgrade reason is a door. What it buys is
+       somebody who has already made the thing they are being asked to pay for. */
+    caps: { free: null, maker: null, studio: null, label: null },
     unit: '',
-    freeNote: 'Sketching a video in your own browser stays free. The cutting room is the timeline version: pieces you cut and reorder, fades, looks, words and sound under it, all of it unlimited. Putting the finished film together costs 3 credits a minute.',
+    freeNote: 'Open on every plan, including this one. Cut, reorder, trim, fade, add looks, words, transitions, your logo and sound under it \u2014 unlimited, free, for as long as you like, because it all happens in your own browser. Putting the finished film together is what costs: 3 credits a minute plus 1 for each thing in it, and what is in it never costs more than the film itself.',
   },
   'market.desk': {
     label: 'The marketing desk',
