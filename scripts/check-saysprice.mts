@@ -33,7 +33,8 @@ import { code, withoutComments } from './prose.mts';
 import { before } from './order.mts';
 
 const ROOM = join('app', 'components', 'VideoEditor.tsx');
-const ROUTE = join('app', 'api', 'filmout', 'route.ts');
+const BOOTH = join('app', 'components', 'ProBooth.tsx');
+const ROUTE = join('app', 'api', 'madehere', 'route.ts');
 
 /* Two readings of the same file, and the difference is not a detail.
    `code()` blanks comments AND string bodies, which is what a rule about the
@@ -45,6 +46,9 @@ const ROUTE = join('app', 'api', 'filmout', 'route.ts');
 const roomRaw = readFileSync(ROOM, 'utf8');
 const room = code(roomRaw);
 const roomText = withoutComments(roomRaw);
+const boothRaw = readFileSync(BOOTH, 'utf8');
+const booth = code(boothRaw);
+const boothText = withoutComments(boothRaw);
 const route = code(readFileSync(ROUTE, 'utf8'));
 
 let bad = 0;
@@ -66,11 +70,11 @@ ok('  and shows it on the button that spends it',
   'a price in a note three cards away is a price nobody read');
 
 ok('the charge is asked for after the film exists, so a failed render is free',
-  /stitch\(\{[\s\S]*?\/api\/filmout/.test(roomText),
+  /stitch\(\{[\s\S]*?\/api\/madehere/.test(roomText),
   'charging first needs a refund path, and a refund path needs an amount the browser would have to be trusted for');
 
 ok('  and the route prices by the table and by the minute',
-  /perMinute\(\s*seconds\s*,\s*CREDITS\.filmOut\s*\)/.test(route),
+  /film:\s*CREDITS\.filmOut/.test(route) && /perMinute\(\s*seconds\s*,\s*rate\s*\)/.test(route),
   'the room and the server must not be able to disagree about what a film costs');
 
 /* `before` and not two `indexOf` calls compared against each other, which is
@@ -78,6 +82,39 @@ ok('  and the route prices by the table and by the minute',
    answers -1, and -1 is less than everything, so the version of this line
    that read `indexOf(...) < indexOf(...)` would have PASSED a route with no
    brake in it at all. The rule caught it on the first run. */
+/* ── And the Pro Booth, under the same rule ──────────────────────
+
+   Both rooms that charge are held here, and that is the point of widening it
+   rather than writing a second file: a rule that covers one of two rooms is
+   a rule somebody satisfies by building the next room somewhere else. */
+ok('the Pro Booth works its price out from the table too',
+  /perMinute\(\s*longest\s*,\s*CREDITS\.mixOut\s*\)/.test(booth),
+  'a number typed beside a button is right on the day it is typed');
+
+/* The COMPUTED value has to be in the markup, not just the hook beside a
+   typed number. The first version of this looked only for the attribute and
+   passed a span reading "1 credit" with the price hard-coded — which is the
+   editor's half of this rule catching the same thing one file over, and the
+   reason that one reads the button's contents rather than its name. */
+const bounce = /data-proboothprice[\s\S]{0,260}?<\/span>/.exec(booth)?.[0] ?? '';
+ok('  and shows it on the button that bounces',
+  /bounceCost/.test(bounce),
+  'everything in that room is free except this press, which makes it the easiest place to meet a charge nobody expected — and a typed number is right only on the day it is typed');
+
+ok('  and charges after the mix exists, not before',
+  /mixSession\([\s\S]{0,400}?payFor\(/.test(booth),
+  'charging first needs a refund path, and a refund path needs an amount the browser would have to be trusted for');
+
+/* The Booth has TWO doors — the Library and the phone — and they are one
+   mix. The reference is a signature of the mix rather than of the moment, so
+   both presses carry the same one and `spend_credits` takes it once. Without
+   this, keeping a song and then also wanting it on a phone is charged twice,
+   and the second charge is for a download. */
+ok('  and both ways out of it share one reference, so one mix is one charge',
+  /ref:\s*signature\(/.test(boothText)
+    && (boothText.match(/payFor\(mixed\.duration\)/g) ?? []).length === 2,
+  'the Library and the phone are two doors onto one mix');
+
 ok('  and brakes before it charges',
   before(route, 'refuseIfTooMany', 'charge('),
   'a retry loop has to be stopped before the money');

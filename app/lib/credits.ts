@@ -180,6 +180,30 @@ export const CREDITS = {
    * is charging for.
    */
   filmOut: 3,
+  /**
+   * Bouncing a mix out of the Pro Booth. **Per minute of finished mix.**
+   *
+   * One, against the cutting room's three, and the difference is the whole
+   * point rather than a rounding.
+   *
+   * A film is cut and then put together, usually once. A mix is bounced
+   * **many times by its nature** — that is what mixing IS: change one fader,
+   * listen to the whole thing, change another. A price that makes somebody
+   * think twice about the next bounce has not made mixing expensive, it has
+   * made it impossible, and the room is the one thing in this app somebody
+   * spends a whole evening inside.
+   *
+   *     a 3-minute song    3 credits   R4.97 a bounce
+   *     an evening of ten bounces      30 credits, a third of Maker's month
+   *
+   * Thirty for an evening's work is a number somebody can live with. At the
+   * cutting room's three it would be ninety, which is the entire month.
+   *
+   * And the same reference makes it fairer still: the Booth can send one mix
+   * to the Library AND to the phone, and `spend_credits` now takes a charge
+   * once per reference — so that is one mix and one charge, not two.
+   */
+  mixOut: 1,
   /** Drawn on the device instead. Costs nothing to run, so it costs nothing. */
   browserVideo: 0,
   /**

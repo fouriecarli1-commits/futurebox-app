@@ -789,6 +789,11 @@ export const STRINGS: Dict = {
     af: "Die klok",
   },
   "edit.credits": { en: "credits", af: "krediete" },
+  "pro.credits": { en: "credits", af: "krediete" },
+  "pro.notPaid": {
+    en: "That could not be paid for just now.",
+    af: "Daarvoor kon nou nie betaal word nie.",
+  },
   /* Their sentence and not ours when a charge is refused: `charge()` knows
      whether it is a sign-in, an empty balance or a plan, and each needs a
      different thing done about it. This is only the fallback for a request

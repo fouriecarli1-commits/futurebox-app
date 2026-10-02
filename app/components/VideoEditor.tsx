@@ -711,7 +711,7 @@ export default function VideoEditor({
          is wat krediete werd is."*
 
          After the render and before the film is handed over, which is the
-         order `app/api/filmout` is written for: charging first would mean a
+         order `app/api/madehere` is written for: charging first would mean a
          refund path, a refund path needs an amount, and the only place a
          later request could get one is the browser. Charging for a film that
          exists needs none of that and can never charge for one that does not.
@@ -720,10 +720,10 @@ export default function VideoEditor({
          retried is one charge rather than two. */
       const ref = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
       try {
-        const answer = await fetch('/api/filmout', {
+        const answer = await fetch('/api/madehere', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ seconds: result.seconds, ref }),
+          body: JSON.stringify({ kind: 'film', seconds: result.seconds, ref }),
         });
         const said = (await answer.json().catch(() => null)) as { message?: string } | null;
         if (!answer.ok) {

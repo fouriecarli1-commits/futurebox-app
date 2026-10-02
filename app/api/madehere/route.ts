@@ -1,13 +1,26 @@
 /**
- * Charging for a film the cutting room has just made.
+ * Charging for something a room has just made on the device.
  *
  * ── Why a route at all, when nothing leaves the device ───────────────────
  *
  * Every other priced thing in this app charges on its way past the server to
- * a supplier. The cutting room has no supplier: `stitch.ts` paints the frames
- * onto a canvas in her own browser, which is why the room costs nothing to
- * run and why all of it — the trimming, the fades, the looks, the words — is
- * free however long somebody sits there.
+ * a supplier. These two rooms have no supplier: `stitch.ts` paints frames
+ * onto a canvas and `mixSession` renders audio offline, both in her own
+ * browser, which is why they cost nothing to run and why all the work inside
+ * them — the trimming, the fades, the faders, the looks — is free however
+ * long somebody sits there.
+ *
+ * ── One route, two rooms, and why not two routes ─────────────────────────
+ *
+ * The cutting room and the Pro Booth ask the same question — *something was
+ * made here, what does it cost* — and the answer differs only by which row of
+ * `CREDITS` to read. Two routes would be two copies of the brake, the clamp,
+ * the reference and the charge, and the day one of them gained a guard the
+ * other would quietly not have it.
+ *
+ * It is called `madehere` and not `filmout`, which is what it was called for
+ * a day: a route named after a film that also charges for mixes is a name
+ * that means two things, which is the fault this repository keeps undoing.
  *
  * Carli, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
  * krediete werd is."*
@@ -52,20 +65,42 @@ import { GENERATION, refuseIfTooMany } from '@/app/lib/server/brake';
 import { charge } from '@/app/lib/server/credits';
 import { CREDITS, perMinute } from '@/app/lib/credits';
 
-/** The longest film this will price in one go, in seconds. */
+/** The longest thing this will price in one go, in seconds. */
 const LONGEST = 60 * 30;
+
+/**
+ * What each room charges a minute, and the only place a kind is named.
+ *
+ * An unknown kind is refused rather than defaulted. A default here would mean
+ * a room added later, whose name nobody remembered to add, charging whatever
+ * the first row happens to be — silently, and in somebody's favour or ours
+ * depending on the order of this object.
+ */
+const RATES: Readonly<Record<string, number>> = {
+  film: CREDITS.filmOut,
+  mix: CREDITS.mixOut,
+};
 
 export async function POST(request: Request): Promise<Response> {
   /* Braked before anything is charged, like every other route that spends:
      a retry loop is stopped here rather than after the money. */
-  const flood = refuseIfTooMany('filmout', request, GENERATION);
+  const flood = refuseIfTooMany('madehere', request, GENERATION);
   if (flood) return flood;
 
-  let body: { seconds?: unknown; ref?: unknown };
+  let body: { seconds?: unknown; ref?: unknown; kind?: unknown };
   try {
     body = (await request.json()) as typeof body;
   } catch {
     return Response.json({ error: 'bad_request', message: 'Could not read that.' }, { status: 400 });
+  }
+
+  const kind = typeof body.kind === 'string' ? body.kind : '';
+  const rate = RATES[kind];
+  if (!rate) {
+    return Response.json(
+      { error: 'bad_kind', message: 'Could not read that.' },
+      { status: 400 },
+    );
   }
 
   const asked = Number(body.seconds);
@@ -89,19 +124,21 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'no_ref', message: 'Could not read that.' }, { status: 400 });
   }
 
-  const price = perMinute(seconds, CREDITS.filmOut);
-  const paid = await charge(request, price, 'filmout', `filmout:${ref}`);
+  const price = perMinute(seconds, rate);
+  const paid = await charge(request, price, `madehere.${kind}`, `madehere:${kind}:${ref}`);
   if (!paid.ok) return paid.response;
 
   return Response.json({ ok: true, credits: price });
 }
 
-/** What a film of this length would cost, so the room can say so first. */
+/** What something of this length would cost, so a room can say so first. */
 export function GET(request: Request): Response {
-  const asked = Number(new URL(request.url).searchParams.get('seconds') ?? '0');
+  const url = new URL(request.url);
+  const rate = RATES[url.searchParams.get('kind') ?? ''] ?? 0;
+  const asked = Number(url.searchParams.get('seconds') ?? '0');
   const seconds = Number.isFinite(asked) && asked > 0 ? Math.min(asked, LONGEST) : 0;
   return Response.json({
-    perMinute: CREDITS.filmOut,
-    credits: seconds > 0 ? perMinute(seconds, CREDITS.filmOut) : 0,
+    perMinute: rate,
+    credits: rate > 0 && seconds > 0 ? perMinute(seconds, rate) : 0,
   });
 }

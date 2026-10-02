@@ -98,6 +98,29 @@ begin
 
   perform pg_advisory_xact_lock(hashtext(p_owner::text));
 
+  -- ── Charged once per reference ─────────────────────────────────────────
+  --
+  -- Gevind op 2 Oktober 2026. `app/api/filmout` se kommentaar het beweer
+  -- "the reference makes a retry idempotent" — en hierdie funksie het die
+  -- ref net AANGETEKEN, nooit nagegaan nie. 'n Antwoord wat op 'n swak
+  -- verbinding verlore gaan en weer gestuur word, het twee keer gehef.
+  --
+  -- Dit maak dit waar. Dit maak ook die Pro Booth se twee uitvoerpaaie reg:
+  -- dieselfde mengsel na die Biblioteek EN na die foon is een mengsel, en
+  -- dieselfde ref beteken een heffing.
+  --
+  -- `true` eerder as `false` wanneer dit al gehef is, want die vraag wat die
+  -- roeper vra is "mag ek voortgaan" — en die antwoord daarop is ja: daar is
+  -- reeds vir hierdie ding betaal.
+  if coalesce(p_ref, '') <> '' then
+    perform 1 from public.credit_entries
+     where owner = p_owner and ref = p_ref and amount < 0
+     limit 1;
+    if found then
+      return true;
+    end if;
+  end if;
+
   select coalesce(sum(amount), 0) into balance
   from public.credit_entries
   where owner = p_owner;

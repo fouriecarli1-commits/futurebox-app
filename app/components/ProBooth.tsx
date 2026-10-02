@@ -1359,6 +1359,96 @@ export default function ProBooth({
    */
   const [layout, setLayout] = useState<Layout>('stereo');
 
+  /* ── Paying for a bounce ───────────────────────────────────────────────
+
+     Carli, 1 October 2026: *"Onthou dat hierdie ook 'n betaalde produk is wat
+     krediete werd is."* The same decision as the cutting room, and the same
+     shape: everything in this room — recording, the lanes, the grid, the
+     metronome, the faders, the mastering, undo — is free however long
+     somebody sits here. The bounce costs, at `CREDITS.mixOut` a minute.
+
+     ── Why the same mix is charged once ────────────────────────────────
+
+     There are two ways out of this room: into the Library, and onto the
+     phone. They are one mix. Somebody who keeps a song and then also wants
+     it on their phone has made one thing, and charging twice for the second
+     press would be charging for a download.
+
+     So the reference is a SIGNATURE of the mix rather than the moment: the
+     lanes and what each is set to, the master, the trim and the layout. Two
+     presses with nothing changed between them carry the same reference, and
+     `spend_credits` takes a charge once per reference — which it did not do
+     until 2 October, when this room's two doors made the gap matter.
+
+     Change a fader and the signature changes, which is right: that is a
+     different mix, and it is the one somebody is now paying for. */
+  /* What the next bounce will cost, from the table rather than typed.
+     Worked out from the lanes rather than from a finished mix, because the
+     price has to be on the button BEFORE the render that would tell us the
+     real length — and the render is the slow part. The longest lane is what
+     `mixSession` renders to, so it is the same number. */
+  const bounceCost = useMemo(() => {
+    const longest = lanes.reduce(
+      (far, one) => Math.max(far, (one.at ?? 0) + ((one.to ?? one.audio.duration) - (one.from ?? 0))),
+      0,
+    );
+    return longest > 0 ? perMinute(longest, CREDITS.mixOut) : 0;
+  }, [lanes]);
+
+  const signature = useCallback((length: number): string => {
+    /* Every field `mixSession` actually reads, and nothing else. A signature
+       over fields the render ignores would charge twice for one mix because
+       a name was edited; one that misses a field the render DOES read would
+       charge once for two different mixes, which is the worse direction. */
+    const parts = lanes.map((one) => [
+      one.id, one.gain, one.at, one.muted ? 1 : 0, one.soloed ? 1 : 0,
+      one.from ?? '', one.to ?? '',
+    ].join(':'));
+    const shape = [
+      layout, rate, Math.round(length * 100),
+      master.gain, master.ceilingDb, master.matchLoudness ? 1 : 0,
+      master.rumbleHz ?? '', master.hissDb ?? '',
+      Math.round(trim * 10_000), ...parts,
+    ].join('|');
+    /* A short, stable digest. Not a hash for security — nothing here is
+       secret and nobody gains by colliding with their own earlier mix. It is
+       only to keep the reference inside the eighty characters the route
+       takes, and to keep it the same string for the same mix. */
+    let a = 0x811c9dc5;
+    for (let i = 0; i < shape.length; i += 1) {
+      a ^= shape.charCodeAt(i);
+      a = Math.imul(a, 0x01000193) >>> 0;
+    }
+    return `${lanes.length}-${Math.round(length)}-${a.toString(36)}`;
+  }, [lanes, layout, master, rate, trim]);
+
+  /**
+   * Charges for a finished mix, and answers whether it may be handed over.
+   *
+   * Called with the mix already rendered, for the reason `app/api/madehere`
+   * sets out at length: charging first would need a refund path, a refund
+   * path needs an amount, and the only place a later request could get one
+   * is the browser.
+   */
+  const payFor = useCallback(async (length: number): Promise<boolean> => {
+    try {
+      const answer = await fetch('/api/madehere', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ kind: 'mix', seconds: length, ref: signature(length) }),
+      });
+      if (answer.ok) return true;
+      const said = (await answer.json().catch(() => null)) as { message?: string } | null;
+      /* Their sentence: `charge` knows whether it is a sign-in, an empty
+         balance or a plan, and each needs a different thing done about it. */
+      setProblem(said?.message ?? t('pro.notPaid', 'That could not be paid for just now.'));
+      return false;
+    } catch {
+      setProblem(t('pro.notPaid', 'That could not be paid for just now.'));
+      return false;
+    }
+  }, [signature, t]);
+
   const keep = useCallback(async (): Promise<boolean> => {
     setBusy(true);
     setProblem(null);
@@ -1371,6 +1461,7 @@ export default function ProBooth({
         setProblem(t('pro.mixFailed', 'The mix could not be made.'));
         return false;
       }
+      if (!(await payFor(mixed.duration))) return false;
       await onKeep(encodeWav(mixed, layout));
       return true;
     } catch {
@@ -1422,6 +1513,7 @@ export default function ProBooth({
         setProblem(t('pro.mixFailed', 'The mix could not be made.'));
         return false;
       }
+      if (!(await payFor(mixed.duration))) return false;
       const blob = encodeWav(mixed, layout);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -3373,6 +3465,15 @@ export default function ProBooth({
               and wondering how they become one file is not helped by a term
               that assumes the answer. The button now says what it makes. */}
           {t('pro.keep', 'Make one song')}
+          {/* The price, before the press. Everything in this room is free
+              and this is one of the two presses that is not, which makes it
+              the easiest place in the app to meet a charge nobody expected.
+              `check:saysprice` holds the same rule on the cutting room. */}
+          {bounceCost > 0 && (
+            <span data-proboothprice className="rounded-lg bg-zinc-950/20 px-2 py-0.5 text-[11px]">
+              {bounceCost} {t('pro.credits', 'credits')}
+            </span>
+          )}
         </button>
 
         {/* Getting the song out of the room has a card of its own on Mix &

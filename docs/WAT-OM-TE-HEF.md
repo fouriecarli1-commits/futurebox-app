@@ -77,6 +77,29 @@ Die dertig per maand is die syfer wat saak maak: 'n editor is daarvoor om
 **weer te probeer**, en 'n prys wat iemand twee keer laat dink oor 'n tweede
 poging, het die kamer gebreek wat dit hef.
 
+### En die Pro Booth, 2 Oktober
+
+Dieselfde besluit, dieselfde vorm, 'n ander prys.
+
+| | Per minuut | 'n 3-minuut ding |
+|---|---|---|
+| Snykamer: die film saamsit | **3** | R14,90 |
+| Pro Booth: die mengsel uitbons | **1** | R4,97 |
+
+Een teen drie, en die verskil is die hele punt. 'n Film word een keer gesny en
+een keer saamgesit. **'n Mengsel word van nature baie keer gebons** — dis wat
+meng *is*: skuif een fader, luister na die hele ding, skuif nog een. 'n Prys
+wat iemand twee keer laat dink oor die volgende bons, het nie meng duur gemaak
+nie, dit het dit onmoontlik gemaak.
+
+Tien bonse in 'n aand = **30 krediete**, 'n derde van Maker se maand. Teen die
+snykamer se drie sou dit negentig wees — die hele maand vir een liedjie.
+
+En die Booth het **twee deure** uit: die Biblioteek en die foon. Dis een
+mengsel. Die verwysing is 'n **handtekening van die mengsel** — die bane, wat
+elkeen op staan, die master, die trim, die uitleg — nie van die oomblik nie.
+Twee drukke met niks tussenin verander nie, dra dieselfde verwysing.
+
 ### Drie dinge wat die vorm eerlik hou
 
 1. **Die prys staan op die knoppie**, uit `CREDITS` gereken, voor die druk.

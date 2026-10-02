@@ -387,6 +387,39 @@ if (placeholder) {
   ok('  and grants the month once an address is in it', granted === '1',
     `${granted} — the tool she runs to open the desk does not open it`);
 
+  /* ── A charge with a reference happens once ─────────────────────
+
+     `app/api/filmout` claimed in its own comment that "the reference makes a
+     retry idempotent". It did not. `spend_credits` wrote the ref into the row
+     and never looked at it, so an answer lost on a bad connection and sent
+     again charged twice — and the Pro Booth, which can export the same mix to
+     the Library and to the phone, would have charged twice for one mix.
+
+     A comment claiming a behaviour the code does not have is worse than no
+     comment: the next person reads it and builds on it. This asserts the
+     behaviour rather than the sentence, because the sentence was the problem.
+
+     Measured as a BALANCE and not as a return value. Both calls answer true
+     either way — the question a caller asks is "may I go on", and the answer
+     after a successful first charge is yes. What separates the fixed version
+     from the broken one is only how much was taken. */
+  let twice = '';
+  try {
+    const owner = psql(DB, ['-tAc',
+      "insert into auth.users (id, email) values (gen_random_uuid(), 'tweekeer@futurebox.test')"
+      + ' returning id']).trim();
+    psql(DB, ['-c',
+      `insert into public.credit_entries (owner, amount, reason) values ('${owner}', 100, 'test')`]);
+    psql(DB, ['-tAc', `select public.spend_credits('${owner}', 30, 'filmout', 'filmout:same')`]);
+    psql(DB, ['-tAc', `select public.spend_credits('${owner}', 30, 'filmout', 'filmout:same')`]);
+    twice = psql(DB, ['-tAc',
+      `select coalesce(sum(amount), 0) from public.credit_entries where owner = '${owner}'`]).trim();
+  } catch (error) {
+    twice = `threw: ${(String((error as { stderr?: string }).stderr ?? error).match(/ERROR:.*/) ?? [''])[0]}`;
+  }
+  ok('the same charge, sent twice, is taken once', twice === '70',
+    `${twice} left of 100 after charging 30 twice under one reference — 40 means the reference is written down and never read`);
+
   /* And it is findable afterwards. The file's own closing note says a
      "test-" reference marks what was given away rather than bought, and
      that is the query somebody runs before a launch — so it had better

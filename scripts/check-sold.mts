@@ -116,6 +116,12 @@ const NAMED_ELSEWHERE: Record<string, string> = {
      room that does not are two different products and the card has to say
      which one it is selling. */
   filmOut: 'on every card, in the same sentence as the cutting room',
+  /* The Pro Booth's own price, 2 October 2026, and on every card for the
+     same reason: a room that charges and a room that does not are two
+     different products. One a minute against the cutting room's three,
+     because a mix is bounced many times by its nature — see `mixOut` in
+     `lib/credits.ts` for the whole of that reasoning. */
+  mixOut: 'on every card, in the same sentence as the Pro Booth',
   erase: 'on every card, in the same line as the background — same rate, same sentence',
 };
 
